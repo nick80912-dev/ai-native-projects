@@ -5,7 +5,7 @@
 專案:日本旅遊 PWA。Google Sheets 是 CMS,單一 index.html(vanilla JS)在使用者手機端抓 7 張公開 CSV 渲染,Netlify 託管。
 
 ## 閱讀順序(最省 token)
-1. 本文件 → 2. `03_DATABASE.md`(資料表與 gid)→ 3. `02_ARCHITECTURE.md` → 4. 依任務讀 04(UI)/05(程式)→ 5. `06_ROADMAP.md` 看現況
+1. `.ai-manifest.json` → 2. `PROJECT_CONSTITUTION.md` → 3. 本文件 → 4. 相關 `adr/` → 5. 依任務讀 `03_DATABASE.md` / `09_SCHEMA_MAPPING.md` / `05_CODING_RULES.md` / `11_CODING_CONVENTION.md` / `12_DEV_WORKFLOW.md`
 程式碼本體在部署包 index.html 內嵌 JS(區塊順序見 02)。
 
 ## 工作流程(必守)
@@ -32,5 +32,5 @@
 
 ## 關鍵資源
 - 正式站:https://okayamatravelteam.netlify.app/
-- CMS fileId:`1B5g7KuVi2WaFVVSdhqRMeTQV_tBpgnzOAv6aMQdFZJw`(gid 清單見 03)
+- CMS fileId:`1B5g7KuVi2WaFVVSdhqRMeTQV_tBpgnzOAv6aMQdFZJw`(gid 與資料表概覽見 03;欄位細節見 09)
 - Bar 的溝通偏好:直接執行、精簡回報、表格化 QA 結果、繁體中文

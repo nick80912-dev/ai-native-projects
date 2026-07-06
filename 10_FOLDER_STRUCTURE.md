@@ -39,16 +39,16 @@ PROJECT_CONSTITUTION.md    專案憲章(最高規範)
 00_CONTEXT_HANDOVER.md     壓縮交接檔(換 AI 時首讀的 md)
 01_PROJECT.md              願景/哲學/範圍
 02_ARCHITECTURE.md         架構/資料流/三層防線
-03_DATABASE.md             CMS 資料表(舊版欄位,以 09 為準)
+03_DATABASE.md             CMS 資料表快速概覽(現行可用)
 04_UI_GUIDELINES.md        UI 準則(色彩/元件/字體)
-05_CODING_RULES.md         程式規範(舊版,以 11 為準)
+05_CODING_RULES.md         程式規範快速概覽(現行可用)
 06_ROADMAP.md              路線圖
 07_CHANGELOG.md            版本紀錄
 08_AI_HANDOVER.md          AI 交接(閱讀順序/禁改/陷阱)
-09_SCHEMA_MAPPING.md       Schema 欄位對照(schemaDoc 產生)
+09_SCHEMA_MAPPING.md       Schema 欄位細節對照(schemaDoc 產生)
 10_FOLDER_STRUCTURE.md     本檔
-11_CODING_CONVENTION.md    編碼規範(完整版)
+11_CODING_CONVENTION.md    編碼規範細節版
 12_DEV_WORKFLOW.md         開發流程(步驟鏈)
 adr/                       架構決策紀錄(0001-0004 + README)
 ```
-> 注意:Drive 工具只能建立不能更新;更新文件=建新檔並在檔名或開頭註明取代舊檔。03/05 與 09/11 內容重疊處,以編號較大者為準。
+> 注意:Drive 工具只能建立不能更新;更新文件=建新檔並在檔名或開頭註明取代舊檔。03/05 為快速概覽,09/11 為細節規格;作廢舊檔另存為 `-old-03_DATABASE_DEPRECATED.md`、`-old-05_CODING_RULES_DEPRECATED.md`。

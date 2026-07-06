@@ -1,4 +1,4 @@
-# ⛔ 03_DATABASE — DEPRECATED(已作廢,勿讀)
+# ⛔ old 03_DATABASE — DEPRECATED(已作廢,勿讀)
 
 > **這份文件已作廢,請勿使用。**
 > 本檔描述的是 V2 早期的欄位設計(PlaceID/名稱/類型/導航關鍵字/停車費/停車備註/電話/末班船…),
@@ -9,8 +9,8 @@
 > - 唯一資料規格 → 部署包 `schema.js`(schemaDoc() 自動產生 09)
 > - 資料表關聯與擴充規則 → `12_DEV_WORKFLOW.md` + ADR `0001-schema-first` / `0003-google-sheet-cms`
 >
-> 原 `03_DATABASE.md`(fileId 10O3Ws6-8uWgkRjM4g35QQUN-ldvPVs5J)因 Drive 工具無法刪除或改名而保留,
-> 但其內容已被上述檔案取代。未來 AI 讀到原檔時,請以本作廢通知為準,直接改讀 09 與 schema.js。
+> 本檔是舊版 03_DATABASE 的封存檔,已改名為 `-old-03_DATABASE_DEPRECATED.md`。
+> 現行 `03_DATABASE.md` 已更新且可用;欄位細節仍可搭配 `09_SCHEMA_MAPPING.md` 與 `schema.js` 查核。
 
 ---
 
@@ -23,4 +23,4 @@
 | 表頭別名比對「rowsToObjects」 | 已重構為 Schema 驅動 `parseTable`(見 ADR 0001) |
 | 渡輪用「末班船」欄 | 改為時刻表連結開官方頁;末班資訊併入備註/門票欄描述 |
 
-> 一句話:**看 09_SCHEMA_MAPPING.md 與 schema.js,不要看原 03。**
+> 一句話:**不要看本 `-old-03_DATABASE_DEPRECATED.md`;現行概覽看 `03_DATABASE.md`,欄位細節看 `09_SCHEMA_MAPPING.md` 與 `schema.js`。**

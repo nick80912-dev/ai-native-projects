@@ -2,6 +2,14 @@
 
 紀錄格式:日期 / 版本 / 重點。細節不展開,新變更往上加。
 
+## 2026-07-06 — Codex Ready 文件一致性
+- README 第一閱讀順序改為 `.ai-manifest.json` → `PROJECT_CONSTITUTION.md` → `08_AI_HANDOVER.md` → 相關 ADR → 依任務讀 03/09/05/11/12
+- 修正 00_CONTEXT_HANDOVER 的「Harness 文件未建完」過期描述,改為已完成並需維護一致性
+- 對齊 08_AI_HANDOVER 的閱讀順序與 03/09、05/11 文件分工
+- 新增 `tasks/done.md`,與 `.ai-manifest.json` 的 done 狀態對齊
+- 文件一致性修正,無功能變更、無架構變更
+- 修正 03_DATABASE.md / 05_CODING_RULES.md 狀態:兩者為現行可用概覽;作廢檔為 `-old-*_DEPRECATED.md`
+
 ## 2026-07-05 — V2.1(停車強化)
 - 停車面板移除複製鈕,MAP CODE 26px 大字純顯示
 - 新增 resolveParking():「停車同Pxxx」完整繼承(MAPCODE/停車費/停車備註;深度上限3;引用不存在→原文+console.warn)

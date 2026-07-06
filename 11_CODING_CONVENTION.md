@@ -1,6 +1,6 @@
 # 11 編碼規範(Coding Convention)
 
-> 取代 05_CODING_RULES。技術基線:vanilla JS 單一 HTML,無框架、無 build、無 npm。ES5 風格(function/var),相容老舊 WebView。
+> 05_CODING_RULES 是快速概覽;本檔是細節版編碼規範。技術基線:vanilla JS 單一 HTML,無框架、無 build、無 npm。ES5 風格(function/var),相容老舊 WebView。
 
 ## 命名規則
 - 函式:camelCase 動詞開頭 — `renderTrip` `resolveParking` `parseTable` `buildHeaderMap`。

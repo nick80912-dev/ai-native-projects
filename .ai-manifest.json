@@ -7,7 +7,7 @@
   "updated": "2026-07-06",
   "live": "https://okayamatravelteam.netlify.app/",
 
-  "start_here": "先讀本檔 → PROJECT_CONSTITUTION.md(憲章/流程/禁令)→ 08_AI_HANDOVER.md → 相關 adr/ → 依任務讀 09_SCHEMA_MAPPING(欄位)/11_CODING_CONVENTION(程式)/12_DEV_WORKFLOW(步驟)",
+  "start_here": "先讀本檔 → PROJECT_CONSTITUTION.md(憲章/流程/禁令)→ 08_AI_HANDOVER.md → 相關 adr/ → 依任務讀 03_DATABASE/09_SCHEMA_MAPPING(資料與欄位)、05_CODING_RULES/11_CODING_CONVENTION(程式)、12_DEV_WORKFLOW(步驟)",
 
   "governance": {
     "constitution": "PROJECT_CONSTITUTION.md",
@@ -16,7 +16,7 @@
     "must_confirm_with_bar": ["換框架", "大重構", "破壞相容的資料模型變更", "刪功能", "改 Google Sheet Schema", "推翻既有 ADR"],
     "proposal_format": "問題分析→可行方案→優缺點比較→相容性影響→Migration Plan(五段,經 Bar 確認才做)",
     "delivery_rule": "先交預覽版 HTML 給 Bar 手機驗收 → Bar 說「打包」才產出部署 ZIP",
-    "deprecated_docs": "03_DATABASE(改讀 09)、05_CODING_RULES(改讀 11);見 *_DEPRECATED.md"
+    "deprecated_docs": "作廢檔為 -old-03_DATABASE_DEPRECATED.md、-old-05_CODING_RULES_DEPRECATED.md;現行 03_DATABASE.md 與 05_CODING_RULES.md 可用,09/11 提供更細規格"
   },
 
   "data_flow": "GoogleSheets(7表)→發布CSV→手機瀏覽器fetch→validator.js(防錯)→parser(Schema驅動)→DB→renderers→UI ;離線三層:BUILTIN內建→localStorage快取→背景同步(徽章:已是最新/部分更新/離線版/內建版)",

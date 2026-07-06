@@ -6,9 +6,18 @@
 - 使用者:Bar(產品負責人,非工程師)與同行友人
 
 ## 快速開始(給 AI / 開發者)
-1. 先讀 `08_AI_HANDOVER.md`(交接重點與禁改事項)
-2. 再讀 `02_ARCHITECTURE.md`(架構)與 `03_DATABASE.md`(CMS 資料表)
-3. 要改 UI 前讀 `04_UI_GUIDELINES.md`;寫程式前讀 `05_CODING_RULES.md`
+第一閱讀順序:
+`.ai-manifest.json` → `PROJECT_CONSTITUTION.md` → `08_AI_HANDOVER.md` → 相關 `adr/` → 依任務讀 `03_DATABASE.md` / `09_SCHEMA_MAPPING.md` / `05_CODING_RULES.md` / `11_CODING_CONVENTION.md` / `12_DEV_WORKFLOW.md`。
+
+- `.ai-manifest.json`:AI 導航檔,掌握專案全貌
+- `PROJECT_CONSTITUTION.md`:專案最高規範與 AI Harness 流程
+- `08_AI_HANDOVER.md`:交接重點、禁改事項、常見陷阱
+- `adr/`:架構決策,重構或推翻既有設計前必讀
+- `03_DATABASE.md`:CMS 資料表快速概覽
+- `09_SCHEMA_MAPPING.md`:Schema / CMS 欄位細節
+- `05_CODING_RULES.md`:程式規範快速概覽
+- `11_CODING_CONVENTION.md`:程式規範細節
+- `12_DEV_WORKFLOW.md`:常見任務步驟鏈
 
 ## 開發工作流程(必守)
 1. Bar 用白話描述需求 → AI 以資深工程團隊身分執行

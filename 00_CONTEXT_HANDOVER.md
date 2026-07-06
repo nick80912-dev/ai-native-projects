@@ -1,6 +1,6 @@
 # 00 CONTEXT HANDOVER(壓縮交接檔 · 2026-07-06)
 
-> 給接手 AI:讀完本檔即可開工。細節按需查 08_AI_HANDOVER → 09_SCHEMA_MAPPING → 02/03。
+> 給接手 AI:先讀 `.ai-manifest.json` → `PROJECT_CONSTITUTION.md` → `08_AI_HANDOVER.md` → 相關 `adr/`;再依任務查 `03_DATABASE` / `09_SCHEMA_MAPPING` / `05_CODING_RULES` / `11_CODING_CONVENTION` / `12_DEV_WORKFLOW`。
 
 ## 專案一句話
 日本旅遊 PWA(10/18-23 岡山廣島宮島自駕,朋友團用)。Google Sheets=CMS,手機瀏覽器直接抓 7 張發布 CSV 渲染,Netlify 託管,無後端。Bar=產品負責人(不會程式,繁中溝通,要直接執行不要教學);AI=全職工程團隊。
@@ -38,10 +38,11 @@ gid:行程1169222358/Places1089684162/Rest1421821084/Shop1182059264/Hotels792115
 - 正式站:https://okayamatravelteam.netlify.app/(目前仍是 V1 PWA;V2 待驗收部署)
 
 ## 待辦(依序)
-1. **Harness 文件未建完**(Bar 憲章指令已批,規格在 08/manifest 有摘要):Drive 建 PROJECT_CONSTITUTION.md(13步流程/禁令清單/提案5項格式/健康檢查義務/Token Diet)、10_FOLDER_STRUCTURE、11_CODING_CONVENTION(命名/Component/Parser/Renderer/Storage/Schema/Sheet命名/Commit/版本)、12_DEV_WORKFLOW(新增商場/欄位/表的步驟鏈)、adr/ 子資料夾(0001-schema-first/0002-data-driven-ui/0003-google-sheet-cms/0004-renderer-architecture/README,固定7段格式:Decision/Context/Alternatives/Why/Benefits/Trade-offs/Future Impact,內容取材本專案真實歷程)
+1. **Harness 文件已建置完成**:PROJECT_CONSTITUTION、10_FOLDER_STRUCTURE、11_CODING_CONVENTION、12_DEV_WORKFLOW、adr/0001-0004、tasks/current/backlog/done 已建立;後續任務只需維護一致性。
 2. Bar 手機驗收 V2 預覽版 → 說「打包」→ 部署包:index.html 改 `<script src>` 引 schema.js/validator.js 獨立檔、sw.js VERSION→v3、SHELL_ASSETS 加 schema.js/validator.js/.ai-manifest.json、Playwright 斷網回歸後出 ZIP
-3. Day3-6 行程/地點資料待 Bar 更新試算表(程式已支援自動生效);購物模式初版回饋待討論;Bar 憲章原文 1-6 點因上傳失敗未收到(必要時向 Bar 索取)
-4. 每次交付後:跑 healthCheck + 輸出健康報告 + 更新 07_CHANGELOG(建新檔)
+3. Day3-6 行程/地點資料待 Bar 更新試算表(程式已支援自動生效);購物模式初版回饋待討論。
+4. App 落地後執行 AI Native Framework 抽取(見 `FUTURE_PLAN_framework-extraction.md`)。
+5. 每次交付後:跑 healthCheck + 輸出健康報告 + 更新 07_CHANGELOG。
 
 ## 已踩過的坑(省你 Debug)
 同名 function 宣告後者勝且提升→包裝舊函式必先改名(禁 var old=fn);web_fetch 對此發布ID被 robots 擋→改走 claude-in-chrome(導航 pubhtml 後頁內 fetch;回傳含 ?&= 會被 DLP 擋,需替換佔位符);Drive read_file_content 只回第一張表;item id 含「/」→DOM 查找用 getElementById 勿用 CSS selector;CSV 直開會觸發下載留在 chrome://newtab。
