@@ -1309,14 +1309,21 @@ function renderToday(){
 
 /* ================= 購物模式(資料來自 Shopping 表) ================= */
 var _shopQ='';
+var shopOpenFloors={};
+function cssId(s){
+  return String(s).replace(/[^a-zA-Z0-9]/g,'_');
+}
 function shopQ(v){ _shopQ=v.trim().toLowerCase(); renderShopResults(); }
 function toggleWant(id){
   var w=getWants(); if(w[id]) delete w[id]; else w[id]=true;
   lsSet('trip_shop_wants',w); renderShopResults();
 }
-function toggleFloor(fid,btn){
-  var el=document.getElementById(fid);
-  var open=el.classList.toggle('open'); btn.classList.toggle('on',open);
+function toggleFloor(fkey,btn){
+  var el=document.getElementById('flbody_'+cssId(fkey));
+  var open=!shopOpenFloors[fkey];
+  shopOpenFloors[fkey]=open;
+  if(el) el.classList.toggle('open',open);
+  btn.classList.toggle('on',open);
 }
 function shopMalls(){
   var byPlace={};
@@ -1368,12 +1375,14 @@ function renderShopResults(){
     var floors={};
     m.stores.forEach(function(s){ (floors[s.floor||'其他']=floors[s.floor||'其他']||[]).push(s); });
     h+='<div class="seg" style="margin-top:14px">樓層指南（點樓層展開）</div>';
-    Object.keys(floors).forEach(function(f,fi){
-      var fid='fl_'+mi+'_'+fi;
+    Object.keys(floors).forEach(function(f){
+      var fkey=(p.placeId||('M'+mi))+'::'+f;
+      var domId='flbody_'+cssId(fkey);
+      var isOpen=!!shopOpenFloors[fkey];
       var wc=floors[f].filter(function(s){return wants['w_'+mi+'_'+s.floor+'_'+s.name];}).length;
-      h+='<div class="floor"><button class="floor-head" onclick="toggleFloor(\''+fid+'\',this)">'+
+      h+='<div class="floor"><button class="floor-head'+(isOpen?' on':'')+'" onclick="toggleFloor(\''+fkey.replace(/'/g,"\\'")+'\',this)">'+
         '<span class="fl-f">'+escapeHtml(f)+'</span><span class="fl-n">'+floors[f].length+' 家'+(wc?'｜⭐'+wc:'')+'</span><span class="fl-arw">▼</span></button>'+
-        '<div class="floor-body" id="'+fid+'">'+floors[f].map(function(s){var id='w_'+mi+'_'+s.floor+'_'+s.name;return storeRow(s,id,!!wants[id]);}).join('')+'</div></div>';
+        '<div class="floor-body'+(isOpen?' open':'')+'" id="'+domId+'">'+floors[f].map(function(s){var id='w_'+mi+'_'+s.floor+'_'+s.name;return storeRow(s,id,!!wants[id]);}).join('')+'</div></div>';
     });
     h+='</div>';
   });
