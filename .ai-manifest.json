@@ -1,0 +1,70 @@
+{
+  "$comment": "AI 導航檔 — 任何 AI 接手第一步只讀這份即可掌握全貌。這是 13 步流程的第 1 步。",
+  "project": "japan-travel-pwa(日本旅遊行程 App)",
+  "owner": "Bar(產品負責人,非工程師,繁中溝通,要直接執行不要教學;AI=全職工程團隊)",
+  "version": "2.2-harness",
+  "framework": "ai-native-framework@pending(尚未抽取;見 FUTURE_PLAN_framework-extraction.md)",
+  "updated": "2026-07-06",
+  "live": "https://okayamatravelteam.netlify.app/",
+
+  "start_here": "先讀本檔 → PROJECT_CONSTITUTION.md(憲章/流程/禁令)→ 08_AI_HANDOVER.md → 相關 adr/ → 依任務讀 09_SCHEMA_MAPPING(欄位)/11_CODING_CONVENTION(程式)/12_DEV_WORKFLOW(步驟)",
+
+  "governance": {
+    "constitution": "PROJECT_CONSTITUTION.md",
+    "workflow_13steps": "讀manifest→讀handover→讀ADR→定位模組→先設計→最小修改→跑Validator→驗證資料流→更新文件→更新CHANGELOG→一致性檢查(healthCheck)→完成→產出開發摘要",
+    "adr_dir": "adr/(0001-schema-first, 0002-data-driven-ui, 0003-google-sheet-cms, 0004-renderer-architecture);重構前必讀",
+    "must_confirm_with_bar": ["換框架", "大重構", "破壞相容的資料模型變更", "刪功能", "改 Google Sheet Schema", "推翻既有 ADR"],
+    "proposal_format": "問題分析→可行方案→優缺點比較→相容性影響→Migration Plan(五段,經 Bar 確認才做)",
+    "delivery_rule": "先交預覽版 HTML 給 Bar 手機驗收 → Bar 說「打包」才產出部署 ZIP",
+    "deprecated_docs": "03_DATABASE(改讀 09)、05_CODING_RULES(改讀 11);見 *_DEPRECATED.md"
+  },
+
+  "data_flow": "GoogleSheets(7表)→發布CSV→手機瀏覽器fetch→validator.js(防錯)→parser(Schema驅動)→DB→renderers→UI ;離線三層:BUILTIN內建→localStorage快取→背景同步(徽章:已是最新/部分更新/離線版/內建版)",
+
+  "files": {
+    "index.html": "App本體:UI殼+CSS+內嵌JS(11區塊分層,見 10_FOLDER_STRUCTURE)",
+    "schema.js": "唯一資料規格SSoT:欄位/gid/型別值/發布URL;schemaDoc()自動產09文件",
+    "validator.js": "防錯防線:AppLog六類([Schema/Parser/Data/Repository/Render/Sync Error])+buildHeaderMap+window.healthCheck()",
+    "sw.js": "Service Worker(改版bump VERSION)",
+    "manifest.json + icon-*.png": "PWA 安裝"
+  },
+
+  "cms": {
+    "driveFileId": "1B5g7KuVi2WaFVVSdhqRMeTQV_tBpgnzOAv6aMQdFZJw",
+    "pubBase_and_gid_authority": "schema.js(此處僅快查)",
+    "sheets": {
+      "itin": "1169222358", "places": "1089684162", "rest": "1421821084",
+      "shop": "1182059264", "hotels": "792115203", "exp": "1354339857", "cfg": "1070234314"
+    },
+    "type_values": "購物→shopping / 美食區→restarea / 住宿→hotel / 景點→attraction / 渡船口·渡輪→ferry / 租車點→parking(禁 AI 猜測)"
+  },
+
+  "invariants_never_break": [
+    "三層防線與『絕不空白頁』",
+    "卡片型別由 Places.Type 明確決定,禁猜測",
+    "WebView 相容:console polyfill、禁 AbortController(clone錯)、fetch 相容退回、單一吸頂容器.hdr",
+    "停車 MAP CODE 純顯示無複製鈕、『停車同Pxxx』繼承",
+    "渡輪不建班次庫(末班資訊+官方時刻表連結)",
+    "個人狀態(打卡/想逛/成員/記帳)存 localStorage 不進 CMS",
+    "產品哲學:3秒原則、不過度工程化"
+  ],
+
+  "known_traps": [
+    "同名 function 後者勝且提升 → 包裝舊函式必先改名,禁 var old=fn(無限遞迴)",
+    "Google 試算表 /edit 讀不到,須用發布 CSV;web_fetch 對此發布ID被 robots 擋 → 走 claude-in-chrome(導航 pubhtml 後頁內 fetch;回傳含 ?&= 被 DLP 擋需替換佔位符)",
+    "Drive read_file_content 只回第一張表;Drive 工具只能建立不能更新(更新=建新檔註明取代)",
+    "item id 含『/』→ DOM 查找用 getElementById 勿用 CSS selector"
+  ],
+
+  "status": {
+    "done": ["V2 Schema驅動CMS", "AI Harness治理層(憲章/10-12/ADR×4/健康檢查)", "停車引用繼承", "PWA離線", "框架抽取計畫已歸檔"],
+    "pending_in_order": [
+      "1. Bar 手機驗收 V2 預覽版(確認 7 表同步)",
+      "2. Bar 說打包 → 部署包(index.html 引 schema.js/validator.js 獨立檔、sw.js bump v3、SHELL_ASSETS 補新檔、Playwright 斷網回歸)→ Netlify",
+      "3. Day3-6 行程/地點待 Bar 更新試算表(程式已支援自動生效);購物模式回饋待討論",
+      "4. App 落地後執行框架抽取(見 FUTURE_PLAN_framework-extraction.md)"
+    ]
+  },
+
+  "after_every_delivery": "跑 window.healthCheck() + 輸出健康報告 + 更新 07_CHANGELOG(建新檔) + 必要時更新本 manifest"
+}

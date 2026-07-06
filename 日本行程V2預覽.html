@@ -1,0 +1,1536 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0e3a44">
+<title>日本行程</title>
+<style>
+:root{
+  --paper:#f5f1e8;
+  --card:#fffdf8;
+  --ink:#22303a;
+  --ink-soft:#5c6b73;
+  --ink-faint:#94a0a6;
+  --line:#e5ddcd;
+  --line-soft:#eee8db;
+  --sea:#12707f;
+  --sea-deep:#0e3a44;
+  --coral:#df5f3a;
+  --coral-bg:#fbeee7;
+  --gold:#c1963c;
+  --green:#3c8062;
+  --violet:#7659a0;
+  --shadow:0 2px 12px rgba(24,44,52,.08);
+  --shadow-lg:0 8px 28px rgba(24,44,52,.16);
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{scroll-behavior:smooth}
+body{
+  font-family:"Hiragino Sans","Noto Sans TC","PingFang TC",system-ui,-apple-system,sans-serif;
+  background:var(--paper);color:var(--ink);line-height:1.6;font-size:15px;
+  overflow-x:hidden;-webkit-font-smoothing:antialiased;
+  padding-bottom:calc(64px + env(safe-area-inset-bottom));
+}
+a{color:var(--sea)}
+
+/* ===== 頂部列 ===== */
+.hdr{position:sticky;top:0;z-index:60;box-shadow:0 2px 10px rgba(0,0,0,.18)}
+.topbar{
+  background:var(--sea-deep);
+  padding:calc(env(safe-area-inset-top) + 8px) 12px 0;
+}
+.brand{display:flex;align-items:center;gap:8px;padding-bottom:8px;justify-content:center}
+.brand .logo{
+  width:26px;height:26px;border-radius:7px;background:var(--coral);
+  color:#fff;font-size:14px;font-weight:800;display:flex;align-items:center;justify-content:center;
+}
+.brand .t{color:#fff;font-size:15px;font-weight:700;letter-spacing:.03em}
+.brand .sync{
+  position:absolute;right:12px;top:calc(env(safe-area-inset-top) + 8px);
+  font-size:11px;color:rgba(255,255,255,.7);display:flex;align-items:center;gap:4px;
+  background:rgba(255,255,255,.1);border-radius:20px;padding:5px 10px;border:none;cursor:pointer;
+  font-family:inherit;
+}
+.brand .sync .dot{width:7px;height:7px;border-radius:50%;background:#5ec27a}
+.brand .sync .dot.stale{background:var(--gold)}
+.brand .sync .dot.err{background:var(--coral)}
+.brand .sync.spinning .dot{animation:pulse 1s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+
+.trip-tabs{display:flex;gap:6px}
+.trip-tab{
+  flex:1;background:transparent;border:none;cursor:pointer;color:rgba(255,255,255,.5);
+  padding:9px 4px 11px;font-size:14px;font-weight:600;border-bottom:3px solid transparent;
+  font-family:inherit;transition:.2s;
+}
+.trip-tab .sub{display:block;font-size:10.5px;font-weight:400;opacity:.7;margin-top:1px}
+.trip-tab.active{color:#fff;border-color:var(--coral)}
+
+/* ===== 日期橫向 ===== */
+.daybar{
+  background:var(--sea);display:flex;gap:7px;overflow-x:auto;padding:8px 12px;
+  scrollbar-width:none;
+}
+.daybar::-webkit-scrollbar{display:none}
+.day-chip{
+  flex:0 0 auto;background:rgba(255,255,255,.13);border:none;border-radius:18px;cursor:pointer;
+  color:rgba(255,255,255,.85);font-family:inherit;padding:6px 13px;font-size:13px;
+  font-weight:600;white-space:nowrap;transition:.2s;line-height:1.3;text-align:center;
+}
+.day-chip .dow{font-size:9.5px;opacity:.8;display:block;font-weight:400}
+.day-chip.active{background:var(--coral);color:#fff}
+.day-chip.today-chip{box-shadow:0 0 0 2px #ffd98a inset}
+
+/* ===== 內容 ===== */
+.wrap{max-width:620px;margin:0 auto;padding:14px 12px 40px}
+.view{display:none}
+.view.active{display:block;animation:fade .3s ease}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1}}
+
+/* 今日首頁 hero */
+.today-hero{
+  background:linear-gradient(140deg,var(--sea-deep),var(--sea));color:#fff;
+  border-radius:18px;padding:18px 18px 20px;margin-bottom:16px;box-shadow:var(--shadow-lg);
+  position:relative;overflow:hidden;
+}
+.today-hero::after{
+  content:"";position:absolute;right:-30px;top:-30px;width:130px;height:130px;
+  background:radial-gradient(circle,rgba(223,95,58,.35),transparent 70%);
+}
+.today-hero .lbl{font-size:11px;letter-spacing:.14em;opacity:.75;font-weight:600}
+.today-hero .date{font-size:26px;font-weight:800;margin:2px 0 3px;position:relative}
+.today-hero .loc{font-size:13.5px;opacity:.9;position:relative}
+.today-hero .empty{font-size:14px;opacity:.9;margin-top:6px;line-height:1.6;position:relative}
+.mini-tl{margin-top:14px;position:relative}
+.mini-item{display:flex;gap:11px;align-items:flex-start;padding:6px 0}
+.mini-item .mt{font-size:12.5px;font-weight:700;color:#ffd98a;min-width:46px;padding-top:1px}
+.mini-item .mc{flex:1;font-size:14px;font-weight:600;line-height:1.4}
+.mini-item .mc small{display:block;font-size:11.5px;font-weight:400;opacity:.75;margin-top:1px}
+.mini-item .md{width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.4);margin-top:5px;flex:0 0 auto}
+.mini-item.done .mc{opacity:.5;text-decoration:line-through}
+.today-jump{
+  display:inline-block;margin-top:12px;background:rgba(255,255,255,.16);color:#fff;
+  border:none;border-radius:10px;padding:9px 16px;font-size:13.5px;font-weight:600;
+  cursor:pointer;font-family:inherit;position:relative;
+}
+
+/* 住宿卡 */
+.hotel{
+  background:var(--card);border-left:4px solid var(--gold);border-radius:12px;
+  padding:13px 15px;margin-bottom:16px;box-shadow:var(--shadow);
+}
+.hotel .h-lbl{font-size:10.5px;letter-spacing:.1em;color:var(--gold);font-weight:700;margin-bottom:4px}
+.hotel .h-name{font-size:15.5px;font-weight:700;margin-bottom:5px}
+.hotel .h-meta{font-size:12.5px;color:var(--ink-soft);line-height:1.65;white-space:pre-line}
+
+/* 日標題 */
+.day-head{display:flex;align-items:baseline;gap:10px;margin:4px 2px 14px;padding-bottom:9px;border-bottom:2px solid var(--line)}
+.day-head .num{font-size:12px;font-weight:800;color:#fff;background:var(--coral);border-radius:7px;padding:3px 9px;letter-spacing:.03em}
+.day-head .date{font-size:19px;font-weight:800;color:var(--sea-deep)}
+.day-head .prog{margin-left:auto;font-size:12px;color:var(--ink-faint);font-weight:600}
+
+/* 行程項目 */
+.item{background:var(--card);border-radius:13px;margin-bottom:10px;box-shadow:var(--shadow);border:1px solid var(--line);overflow:hidden;transition:.2s}
+.item.checked{opacity:.62}
+.item-main{display:flex;align-items:flex-start;gap:11px;padding:12px 13px}
+.chk{
+  flex:0 0 auto;width:24px;height:24px;border-radius:7px;border:2px solid var(--line);
+  background:#fff;cursor:pointer;margin-top:2px;display:flex;align-items:center;justify-content:center;
+  transition:.15s;font-size:14px;color:#fff;
+}
+.chk.on{background:var(--green);border-color:var(--green)}
+.time{flex:0 0 auto;font-size:12.5px;font-weight:700;color:var(--coral);background:var(--coral-bg);border-radius:6px;padding:3px 7px;margin-top:1px;min-width:50px;text-align:center;line-height:1.3}
+.time.blank{background:var(--line-soft);color:var(--ink-faint)}
+.body{flex:1;min-width:0}
+.act{font-size:15.5px;font-weight:700;line-height:1.35;word-break:break-word}
+.item.checked .act{text-decoration:line-through}
+.place-row{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:3px}
+.place{font-size:14px;font-weight:600;color:var(--sea);word-break:break-word}
+.tag{display:inline-block;font-size:10.5px;font-weight:700;border-radius:5px;padding:2px 6px;margin-top:5px}
+.tag.food{background:#fdeee3;color:#c0562e}
+.tag.shop{background:#e9f2ec;color:var(--green)}
+.tag.move{background:#e7f0f2;color:var(--sea)}
+.tag.stay{background:#f4ecd8;color:#9a7620}
+.tag.play{background:#efeaf6;color:var(--violet)}
+.snippet{font-size:12.5px;color:var(--ink-faint);margin-top:4px;overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical}
+
+/* 導航按鈕列 */
+.nav-btns{display:flex;gap:6px;padding:0 13px 11px 48px;flex-wrap:wrap}
+.nav-btn{
+  display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:600;
+  border:1px solid var(--line);background:#fff;border-radius:8px;padding:6px 10px;
+  cursor:pointer;font-family:inherit;color:var(--ink-soft);text-decoration:none;transition:.15s;
+}
+.nav-btn:active{transform:scale(.96)}
+.nav-btn.g{color:var(--sea);border-color:#bfe0e2;background:#eef8f8}
+.nav-btn.t{color:var(--violet);border-color:#ddd2ee;background:#f4f0fa}
+.nav-btn.u{color:#111;border-color:#ccc;background:#f4f4f4}
+
+/* 展開詳情 */
+.more-btn{
+  display:inline-flex;align-items:center;gap:5px;margin:0 13px 11px 48px;
+  font-size:12px;font-weight:600;color:var(--ink-faint);cursor:pointer;
+  background:var(--line-soft);border:none;border-radius:8px;padding:6px 11px;font-family:inherit;
+}
+.more-btn .arw{transition:transform .25s;font-size:9px}
+.more-btn.open .arw{transform:rotate(180deg)}
+.detail{display:none;margin:0 13px 12px 48px;padding:11px 13px;background:#faf8f2;border-radius:10px;border:1px solid var(--line)}
+.detail.open{display:block;animation:fade .25s ease}
+.detail .sec{font-size:12.5px;line-height:1.7;white-space:pre-line;color:#3f4a50}
+.detail .sec + .sec{margin-top:9px;padding-top:9px;border-top:1px dashed var(--line)}
+.detail .sec-lbl{font-size:11px;font-weight:700;color:var(--coral);margin-bottom:3px;letter-spacing:.05em}
+.detail .sec.move .sec-lbl{color:var(--sea)}
+.detail a{word-break:break-all}
+.detail .hl{background:#fdf0d5;padding:0 3px;border-radius:3px;color:#8a6416;font-weight:600}
+
+/* 分段標籤 */
+.seg{font-size:11.5px;font-weight:700;color:var(--ink-faint);letter-spacing:.12em;margin:18px 2px 8px;display:flex;align-items:center;gap:8px}
+.seg::before,.seg::after{content:"";height:1px;background:var(--line);flex:1}
+
+/* ===== 分帳 ===== */
+.split-intro{font-size:13px;color:var(--ink-soft);margin-bottom:14px;line-height:1.6}
+.card{background:var(--card);border-radius:13px;padding:15px;box-shadow:var(--shadow);border:1px solid var(--line);margin-bottom:13px}
+.card h3{font-size:14.5px;color:var(--sea-deep);margin-bottom:12px;font-weight:700;display:flex;align-items:center;gap:7px}
+.people-chips{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:6px}
+.pchip{background:var(--sea);color:#fff;border-radius:16px;padding:5px 11px;font-size:13px;font-weight:600;display:flex;align-items:center;gap:6px}
+.pchip .x{cursor:pointer;opacity:.7;font-weight:700}
+.inline-add{display:flex;gap:7px;margin-top:8px}
+.inline-add input{flex:1;border:1px solid var(--line);border-radius:9px;padding:9px 11px;font-size:14px;font-family:inherit;background:#fff}
+.inline-add input:focus{outline:none;border-color:var(--sea)}
+.btn{background:var(--sea);color:#fff;border:none;border-radius:9px;padding:9px 15px;font-size:13.5px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap}
+.btn:active{transform:scale(.97)}
+.btn.ghost{background:#fff;color:var(--sea);border:1px solid var(--sea)}
+.btn.coral{background:var(--coral)}
+.btn.sm{padding:7px 12px;font-size:12.5px}
+.btn.block{width:100%;margin-top:4px}
+
+.exp-item{padding:11px 0;border-top:1px dashed var(--line)}
+.exp-item:first-child{border-top:none}
+.exp-item .er1{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
+.exp-item .edesc{font-weight:600;font-size:14px}
+.exp-item .eamt{font-weight:700;color:var(--coral);white-space:nowrap;font-size:14px}
+.exp-item .er2{font-size:11.5px;color:var(--ink-faint);margin-top:3px}
+.exp-item .edel{font-size:11px;color:var(--ink-faint);cursor:pointer;margin-top:5px;display:inline-block}
+
+.result-card{background:linear-gradient(140deg,var(--sea-deep),var(--sea));color:#fff}
+.result-card h3{color:#fff}
+.bal-row{display:flex;justify-content:space-between;padding:8px 0;font-size:14px;border-top:1px solid rgba(255,255,255,.15)}
+.bal-row:first-of-type{border-top:none}
+.bal-row .who{font-weight:600}
+.bal-row .num{font-weight:700}
+.bal-row .num.pos{color:#8ff0a8}
+.bal-row .num.neg{color:#ffb59e}
+.settle{margin-top:12px;padding-top:12px;border-top:1px solid rgba(255,255,255,.2)}
+.settle .s-line{font-size:13.5px;padding:6px 0;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.settle .s-line b{color:#ffd98a}
+
+.field{margin-bottom:11px}
+.field label{display:block;font-size:12px;font-weight:600;color:var(--ink-soft);margin-bottom:5px}
+.field input,.field select{width:100%;border:1px solid var(--line);border-radius:9px;padding:10px 11px;font-size:14px;font-family:inherit;background:#fff}
+.field input:focus,.field select:focus{outline:none;border-color:var(--sea)}
+.payer-grid{display:flex;flex-wrap:wrap;gap:6px}
+.payer-opt{border:1px solid var(--line);border-radius:8px;padding:7px 12px;font-size:13px;cursor:pointer;background:#fff;font-weight:600;color:var(--ink-soft)}
+.payer-opt.on{background:var(--sea);color:#fff;border-color:var(--sea)}
+.split-with{display:flex;flex-wrap:wrap;gap:6px}
+.sw-opt{border:1px solid var(--line);border-radius:8px;padding:6px 11px;font-size:12.5px;cursor:pointer;background:#fff;font-weight:600;color:var(--ink-soft);display:flex;align-items:center;gap:5px}
+.sw-opt.on{background:#e9f2ec;color:var(--green);border-color:var(--green)}
+
+.empty-state{text-align:center;padding:30px 20px;color:var(--ink-faint);font-size:13.5px;line-height:1.7}
+
+/* ===== 底部導覽 ===== */
+.tabbar{
+  position:fixed;bottom:0;left:0;right:0;z-index:70;background:rgba(255,253,248,.96);
+  backdrop-filter:blur(10px);border-top:1px solid var(--line);display:flex;
+  padding-bottom:env(safe-area-inset-bottom);
+}
+.tabbar-btn{
+  flex:1;background:none;border:none;cursor:pointer;padding:9px 0 8px;font-family:inherit;
+  display:flex;flex-direction:column;align-items:center;gap:2px;color:var(--ink-faint);font-size:11px;font-weight:600;
+}
+.tabbar-btn .ic{font-size:19px;line-height:1}
+.tabbar-btn.active{color:var(--sea)}
+
+.totop{
+  position:fixed;right:14px;bottom:calc(74px + env(safe-area-inset-bottom));width:42px;height:42px;
+  border-radius:50%;background:var(--sea-deep);color:#fff;border:none;font-size:19px;cursor:pointer;
+  z-index:65;box-shadow:var(--shadow-lg);opacity:0;pointer-events:none;transition:.3s;
+  display:flex;align-items:center;justify-content:center;
+}
+.totop.show{opacity:.9;pointer-events:auto}
+
+.toast{
+  position:fixed;bottom:calc(80px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%) translateY(20px);
+  background:var(--sea-deep);color:#fff;padding:11px 18px;border-radius:22px;font-size:13.5px;font-weight:600;
+  z-index:90;opacity:0;pointer-events:none;transition:.3s;box-shadow:var(--shadow-lg);white-space:nowrap;
+}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+.loading{text-align:center;padding:50px 20px;color:var(--ink-faint)}
+.spinner{width:34px;height:34px;border:3px solid var(--line);border-top-color:var(--sea);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 14px}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ===== V1 元件 ===== */
+.chip-row{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.drive-chip{display:inline-block;font-size:10.5px;font-weight:700;border-radius:5px;padding:2px 7px;margin-top:5px;background:#e7f0f2;color:var(--sea)}
+.qa-row{display:flex;gap:7px;padding:0 13px 12px 48px;flex-wrap:wrap}
+.qa-btn{display:inline-flex;align-items:center;gap:4px;font-size:13px;font-weight:700;border:1px solid var(--line);background:#fff;border-radius:10px;padding:9px 13px;cursor:pointer;font-family:inherit;color:var(--ink-soft);text-decoration:none;transition:.15s;min-height:38px}
+.qa-btn:active{transform:scale(.96)}
+.qa-btn.drv{color:#fff;border-color:var(--sea);background:var(--sea)}
+.qa-btn.pk{color:#1256a0;border-color:#bcd6f0;background:#eaf3fc}
+.qa-btn.nf{color:#9a7620;border-color:#e8d9ae;background:#faf3df}
+.qa-btn.fr{color:#0e6d8c;border-color:#b8dde9;background:#e8f6fb}
+.qa-btn.sp{color:var(--green);border-color:#c4dccd;background:#edf5f0}
+.qa-btn.mo{color:var(--ink-faint);border-color:var(--line);background:var(--line-soft)}
+.qa-btn.on{outline:2px solid currentColor;outline-offset:-2px}
+.panel{display:none;margin:0 13px 12px 48px;padding:12px 13px;background:#faf8f2;border-radius:11px;border:1px solid var(--line)}
+.panel.open{display:block;animation:fade .25s ease}
+.mapcode-box{display:flex;justify-content:space-between;align-items:center;gap:10px;background:#0e3a44;color:#fff;border-radius:10px;padding:11px 13px;margin-bottom:9px}
+.mc-lbl{font-size:10px;opacity:.7;letter-spacing:.05em}
+.mc-val{font-size:18px;font-weight:800;letter-spacing:.04em;font-variant-numeric:tabular-nums}
+.copy-btn{background:var(--coral);color:#fff;border:none;border-radius:9px;padding:9px 13px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap}
+.copy-btn:active{transform:scale(.96)}
+.pc-row{display:flex;gap:10px;font-size:13px;line-height:1.6;padding:5px 0;border-top:1px dashed var(--line)}
+.pc-row:first-child,.mapcode-box+.pc-row{border-top:none}
+.pc-k{flex:0 0 auto;color:var(--ink-faint);font-weight:600;min-width:56px}
+.pc-v{flex:1;color:#3f4a50;word-break:break-word}
+.pc-tip{margin-top:9px;font-size:12.5px;line-height:1.65;color:#8a6416;background:#fdf6e0;border-radius:8px;padding:8px 11px}
+/* 下一站 */
+.nx-hero{background:var(--card);border:2px solid var(--coral);border-radius:16px;padding:16px;margin-bottom:14px;box-shadow:var(--shadow-lg)}
+.nx-hero.all-done{border-color:var(--green)}
+.nx-lbl{font-size:11px;font-weight:800;color:var(--coral);letter-spacing:.12em;margin-bottom:5px}
+.nx-time{display:inline-block;font-size:13px;font-weight:800;color:var(--coral);background:var(--coral-bg);border-radius:7px;padding:3px 9px;margin-bottom:6px}
+.nx-act{font-size:20px;font-weight:800;line-height:1.35;color:var(--ink)}
+.nx-place{font-size:13.5px;color:var(--ink-soft);margin-top:5px;line-height:1.5}
+.nx-navbtn{display:block;text-align:center;background:var(--sea);color:#fff;border-radius:12px;padding:14px;font-size:16px;font-weight:800;text-decoration:none;margin-top:12px}
+.nx-navbtn:active{transform:scale(.98)}
+.nx-done{display:block;width:100%;background:#fff;color:var(--green);border:1.5px solid var(--green);border-radius:12px;padding:11px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;margin-top:8px}
+.mini-card{display:flex;gap:10px;align-items:flex-start;background:var(--card);border:1px solid var(--line);border-radius:11px;padding:10px 13px;margin-bottom:8px;cursor:pointer}
+.mini-card .mt{font-size:12px;font-weight:700;color:var(--coral);min-width:44px;padding-top:2px}
+.mini-card .mc{flex:1;font-size:14px;font-weight:600;line-height:1.4}
+.mini-card .mc small{display:block;font-size:11.5px;font-weight:400;color:var(--ink-faint);margin-top:1px}
+.today-jump.dark{background:var(--sea-deep);color:#fff;width:100%;text-align:center;margin-top:6px}
+/* 渡輪 */
+.ferry-head{font-size:13px;font-weight:800;color:var(--sea-deep);margin-bottom:6px}
+.ferry-last{font-size:12px;font-weight:700;color:#a03b1c;background:#fdeee7;border-radius:8px;padding:7px 10px;margin-bottom:8px}
+.ferry-co{font-size:13.5px;font-weight:800;color:var(--ink);margin:10px 0 4px}
+.ferry-dir{font-size:11.5px;font-weight:700;color:var(--ink-faint);margin:6px 0 4px;display:flex;justify-content:space-between}
+.ferry-hint{font-weight:400;color:var(--coral)}
+.ft-wrap{display:flex;flex-wrap:wrap;gap:4px}
+.ft-wrap.collapsed .ft-chip:not(.hl){display:none}
+.ft-chip{font-size:11.5px;font-weight:600;background:#fff;border:1px solid var(--line);border-radius:6px;padding:3px 6px;color:var(--ink-soft);font-variant-numeric:tabular-nums}
+.ft-chip.hl{background:var(--coral);border-color:var(--coral);color:#fff;font-weight:800}
+.ft-chip i{font-style:normal;opacity:.7}
+.ft-more{display:block;width:100%;margin-top:7px;background:none;border:1px dashed var(--line);border-radius:8px;padding:7px;font-size:12px;font-weight:600;color:var(--ink-faint);cursor:pointer;font-family:inherit}
+/* 購物 */
+.shop-mall{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:15px;box-shadow:var(--shadow);margin-bottom:14px}
+.sm-name{font-size:17px;font-weight:800;color:var(--sea-deep)}
+.sm-hours{font-size:12px;color:var(--ink-soft);margin-top:4px;line-height:1.5}
+.sm-actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}
+.want-box{margin-top:12px;background:#fdf6e0;border:1px solid #eeddb0;border-radius:11px;padding:10px 12px}
+.want-title{font-size:12.5px;font-weight:800;color:#8a6416;margin-bottom:5px}
+.floor{margin-bottom:8px}
+.floor-head{display:flex;align-items:center;gap:10px;width:100%;background:#fff;border:1px solid var(--line);border-radius:11px;padding:12px 14px;cursor:pointer;font-family:inherit}
+.floor-head.on{border-color:var(--sea);background:#f2f8f8}
+.floor-head .fl-f{font-size:15px;font-weight:800;color:var(--sea)}
+.floor-head .fl-n{flex:1;text-align:left;font-size:12px;color:var(--ink-faint);font-weight:600}
+.floor-head .fl-arw{font-size:10px;color:var(--ink-faint);transition:transform .25s}
+.floor-head.on .fl-arw{transform:rotate(180deg)}
+.floor-body{display:none;padding:6px 4px}
+.floor-body.open{display:block;animation:fade .25s ease}
+.store-row{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:9px;cursor:pointer}
+.store-row:active{background:var(--line-soft)}
+.st-chk{flex:0 0 auto;width:22px;height:22px;border-radius:6px;border:2px solid var(--line);background:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;color:#fff}
+.st-chk.on{background:var(--gold);border-color:var(--gold)}
+.st-n{flex:1;font-size:14px;font-weight:600}
+.st-f{font-size:11px;color:var(--ink-faint);font-weight:600}
+/* 分帳儀表板 */
+.dash{display:flex;gap:8px;margin-bottom:13px}
+.stat{flex:1;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:11px 8px;text-align:center;box-shadow:var(--shadow)}
+.st-l{font-size:11px;color:var(--ink-faint);font-weight:700}
+.st-v{font-size:16px;font-weight:800;color:var(--sea-deep);margin-top:2px;font-variant-numeric:tabular-nums}
+
+
+.shop-search{margin-bottom:12px}
+.shop-search input{width:100%;border:1.5px solid var(--line);border-radius:12px;padding:12px 14px;font-size:15px;font-family:inherit;background:var(--card);box-shadow:var(--shadow)}
+.shop-search input:focus{outline:none;border-color:var(--sea)}
+
+
+.pc-sub{font-size:11.5px;font-weight:800;color:var(--coral);margin:10px 0 4px;letter-spacing:.05em}
+.pc-rest{padding:7px 0;border-top:1px dashed var(--line)}
+.pc-rest-n{font-size:13.5px;font-weight:700}
+.pc-rest-r{font-size:11px;color:var(--gold);font-weight:700;margin-left:4px}
+.pc-rest-d{font-size:12px;color:var(--ink-soft);line-height:1.55;margin-top:1px}
+.st-must{display:inline-block;font-size:9.5px;font-weight:800;color:#fff;background:var(--coral);border-radius:4px;padding:1px 5px;vertical-align:1px}
+.st-tax{display:inline-block;font-size:9.5px;font-weight:800;color:var(--green);border:1px solid var(--green);border-radius:4px;padding:0 4px;vertical-align:1px}
+
+.mc-val.mc-big{font-size:26px;letter-spacing:.06em;line-height:1.3}
+</style>
+</head>
+<body>
+
+<div class="hdr">
+<div class="topbar">
+  <div class="brand">
+    <span class="logo">日</span>
+    <span class="t" id="brandTitle">日本行程</span>
+    <button class="sync" id="syncBtn" onclick="manualSyncNew()">
+      <span class="dot" id="syncDot"></span><span id="syncTxt">同步中</span>
+    </button>
+  </div>
+  <div class="trip-tabs" id="tripTabs"></div>
+</div>
+
+<div class="daybar" id="daybar"></div>
+</div><!-- /hdr -->
+
+<div class="wrap">
+  <div class="view active" id="view-today"></div>
+  <div class="view" id="view-trip"></div>
+  <div class="view" id="view-shop"></div>
+  <div class="view" id="view-split"></div>
+</div>
+
+<button class="totop" id="totop" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑</button>
+<div class="toast" id="toast"></div>
+
+<div class="tabbar">
+  <button class="tabbar-btn active" data-view="today" onclick="switchView('today')">
+    <span class="ic">🏠</span><span>今天</span>
+  </button>
+  <button class="tabbar-btn" data-view="trip" onclick="switchView('trip')">
+    <span class="ic">🗺️</span><span>行程</span>
+  </button>
+  <button class="tabbar-btn" data-view="shop" onclick="switchView('shop')">
+    <span class="ic">🏬</span><span>購物</span>
+  </button>
+  <button class="tabbar-btn" data-view="split" onclick="switchView('split')">
+    <span class="ic">💴</span><span>分帳</span>
+  </button>
+</div>
+
+<script>
+/* ===== schema.js(部署為獨立檔)===== */
+/* ============================================================
+   schema.js — 唯一資料規格(Single Source of Truth)
+   ============================================================
+   整個 App 的資料層都依賴這份 Schema:
+   - Google Sheet 欄位定義(header + aliases)
+   - Parser 動態解析(不再硬編碼欄位)
+   - Validator 同步時檢查缺漏/未知欄位
+   - schemaDoc() 自動產生對照文件
+
+   ▍新增欄位 SOP(不用改 Parser):
+   1. Google Sheet 加欄
+   2. 本檔對應 sheet 的 columns 加一筆 { field, header, aliases?, required?, desc }
+   3. UI 要顯示新欄位時才需要動渲染層
+   ============================================================ */
+
+var SCHEMA = {
+  version: '2.0 (2026-07-05)',
+
+  /* 發布來源(換試算表只改這裡) */
+  pubBase: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRenmV8UxEzWbzSjKJKi4rSpYt63geBqhEkKsl1GemWVPmFKTcvv3Uk71Hjla3TGBpGIjC7bQDDdI00/pub?single=true&output=csv&gid=',
+  fetchTimeoutMs: 10000,
+  fetchRetries: 1,
+
+  sheets: {
+
+    /* ── 行程總表:固定 7 欄位置式解析 ── */
+    itin: {
+      gid: '1169222358', label: '行程總表', kind: 'itinerary',
+      columns: [
+        { field:'date',  header:'日期',     desc:'僅換日標記列使用(第N天MM/DD)' },
+        { field:'time',  header:'時間',     desc:'HH:MM 或「16:00後」等自由文字' },
+        { field:'act',   header:'詳細行程', desc:'活動名稱' },
+        { field:'place', header:'地點',     desc:'地點顯示名稱(給人看)' },
+        { field:'ref',   header:'ID',       desc:'Pxxx=地點 / Rxxx=餐廳(給程式讀)' },
+        { field:'move',  header:'交通',     desc:'交通說明;空值時卡片退回資料庫交通時間' },
+        { field:'note',  header:'備註',     desc:'自由備註' }
+      ]
+    },
+
+    /* ── Places 地點主表 ── */
+    places: {
+      gid: '1089684162', label: 'Places', kind: 'table', idField: 'placeId',
+      columns: [
+        { field:'placeId', header:'PID',           aliases:['placeid','地點id'], required:true, desc:'地點唯一ID(P001…),不得重複' },
+        { field:'name',    header:'地點',           aliases:['名稱'],            required:true, desc:'地點名稱(同時作為導航關鍵字)' },
+        { field:'type',    header:'Type',           aliases:['類型'],            required:true, desc:'決定卡片型別,禁止程式猜測',
+          values:{ '購物':'shopping','美食區':'restarea','住宿':'hotel','景點':'attraction','渡船口':'ferry','渡輪':'ferry','租車點':'parking',
+                   'shopping':'shopping','restaurantarea':'restarea','hotel':'hotel','attraction':'attraction','ferryterminal':'ferry','parking':'parking' } },
+        { field:'mapcode', header:'MAPCODE',        desc:'車用導航輸入碼(大字純顯示)' },
+        { field:'travel',  header:'交通/交通時間',  aliases:['交通時間'], desc:'開車X分鐘/步行X分鐘;行程交通欄空值時顯示' },
+        { field:'pnote',   header:'停車',           aliases:['停車備註','停車場'], desc:'停車資訊單欄;「停車同Pxxx」可繼承' },
+        { field:'hours',   header:'營業時間',       aliases:['開放時間'] },
+        { field:'ticket',  header:'門票',           desc:'門票或船票資訊' },
+        { field:'web',     header:'官網',           aliases:['網站','網址'] },
+        { field:'ttl',     header:'時刻表連結',     aliases:['時刻表'], desc:'渡輪等官方時刻表 URL' },
+        { field:'note',    header:'備註' }
+      ]
+    },
+
+    /* ── Restaurants 餐廳表 ── */
+    rest: {
+      gid: '1421821084', label: 'Restaurants', kind: 'table', idField: 'restId',
+      columns: [
+        { field:'restId',  header:'RID',        aliases:['restid','餐廳id'], required:true, desc:'餐廳唯一ID(R001…)' },
+        { field:'placeId', header:'PID(可空白)', aliases:['pid','placeid'],  desc:'所屬地點;掛上後該地點卡自動列出' },
+        { field:'name',    header:'餐廳名稱',    aliases:['店名','名稱'],     required:true },
+        { field:'rating',  header:'Tabelog',    aliases:['評分'], desc:'數字自動顯示為「Tabelog X.XX」' },
+        { field:'cat',     header:'餐廳類型',    aliases:['分類'] },
+        { field:'hours',   header:'營業時間' },
+        { field:'pay',     header:'付款方式',    aliases:['付款'] },
+        { field:'travel',  header:'交通時間',    desc:'開車/步行時間' },
+        { field:'pnote',   header:'停車' },
+        { field:'note',    header:'備註' }
+      ]
+    },
+
+    /* ── Shopping 商店表 ── */
+    shop: {
+      gid: '1182059264', label: 'Shopping', kind: 'table', idField: 'shopId',
+      columns: [
+        { field:'shopId',  header:'SID',      aliases:['shopid','商店id'], required:true, desc:'商店唯一ID(S001…)' },
+        { field:'placeId', header:'PID',      aliases:['placeid'],         required:true, desc:'所屬商場(Places.PID)' },
+        { field:'name',    header:'品牌名稱', aliases:['店名','名稱'],      required:true },
+        { field:'floor',   header:'樓層',     required:true, desc:'購物頁樓層摺疊依據' },
+        { field:'cat',     header:'分類' },
+        { field:'must',    header:'必逛',     desc:'填「是」顯示必逛徽章' },
+        { field:'taxfree', header:'免稅',     desc:'填「是」顯示免稅徽章' },
+        { field:'note',    header:'備註',     desc:'「櫃位 XXX」會顯示於店名旁' }
+      ]
+    },
+
+    /* ── Hotels 住宿表 ── */
+    hotels: {
+      gid: '792115203', label: 'Hotels', kind: 'table', idField: 'hotelId',
+      columns: [
+        { field:'hotelId', header:'HID', aliases:['hotelid','住宿id'], required:true },
+        { field:'name',    header:'名稱', required:true, desc:'以名稱比對 Places 住宿型地點' },
+        { field:'checkin', header:'入住' },
+        { field:'checkout',header:'退房' },
+        { field:'addr',    header:'地址' },
+        { field:'pnote',   header:'停車' },
+        { field:'dates',   header:'適用日期' },
+        { field:'note',    header:'備註' }
+      ]
+    },
+
+    /* ── Expenses 支出表:自由格式(非欄位表) ── */
+    exp: {
+      gid: '1354339857', label: 'Expenses', kind: 'freeform-expense',
+      layout: {
+        membersRowMark: '同行成員',   // 此列第2欄起為成員名單
+        catCol: 0,                    // 類別(交通/住宿/門票…,僅此欄有值=類別列)
+        nameCol: 1,                   // 明細
+        twdCol: 4,                    // $台幣
+        jpyCol: 5,                    // ¥日幣
+        noteCol: 6,                   // 備註
+        totalMarks: ['小計','總計']   // 合計列
+      },
+      desc: '行前團費。旅途記帳在 App 端(localStorage),兩者於分帳頁並列不重複計算'
+    },
+
+    /* ── TripConfig 設定表:Key/Value ── */
+    cfg: {
+      gid: '1070234314', label: 'TripConfig', kind: 'keyvalue',
+      keys: [
+        { field:'tripname',   header:'Trip Name',   desc:'顯示於頂欄標題' },
+        { field:'startdate',  header:'Start Date' },
+        { field:'enddate',    header:'End Date' },
+        { field:'travelmode', header:'Travel Mode', aliases:['transport','交通模式'],
+          values:{ 'driving':'drive','drive':'drive','自駕':'drive','開車':'drive',
+                   'transit':'transit','train':'transit','電車':'transit','大眾運輸':'transit' },
+          desc:'drive=🚗導航+停車卡;transit=🚃路線' },
+        { field:'currency',   header:'Currency' },
+        { field:'homepage',   header:'Home Page',   desc:'預設分頁(目前固定 Today)' }
+      ]
+    }
+  }
+};
+
+/* ── 由 Schema 自動產生對照文件(Markdown) ── */
+function schemaDoc(){
+  var md = '# CMS ↔ App 欄位對照(由 schema.js 自動產生)\n\n版本:' + SCHEMA.version + '\n';
+  Object.keys(SCHEMA.sheets).forEach(function(k){
+    var s = SCHEMA.sheets[k];
+    md += '\n## ' + s.label + '(gid=' + s.gid + ',kind=' + s.kind + ')\n';
+    if(s.columns){
+      md += '| Google Sheet 欄位 | App Property | 必填 | 說明 |\n|---|---|---|---|\n';
+      s.columns.forEach(function(c){
+        var h = c.header + (c.aliases ? '(別名:' + c.aliases.join('/') + ')' : '');
+        md += '| ' + h + ' | ' + c.field + ' | ' + (c.required?'✅':'') + ' | ' + (c.desc||'') + ' |\n';
+      });
+    }
+    if(s.keys){
+      md += '| Key | App Property | 說明 |\n|---|---|---|\n';
+      s.keys.forEach(function(c){
+        md += '| ' + c.header + ' | ' + c.field + ' | ' + (c.desc||'') + ' |\n';
+      });
+    }
+    if(s.layout){
+      md += '自由格式:成員列標記「' + s.layout.membersRowMark + '」;欄位 → 類別[' + s.layout.catCol + '] 明細[' + s.layout.nameCol + '] 台幣[' + s.layout.twdCol + '] 日幣[' + s.layout.jpyCol + '] 備註[' + s.layout.noteCol + ']\n';
+    }
+    if(s.desc) md += '> ' + s.desc + '\n';
+  });
+  return md;
+}
+if(typeof window !== 'undefined') window.schemaDoc = schemaDoc;
+
+</script>
+<script>
+/* ===== validator.js(部署為獨立檔)===== */
+/* ============================================================
+   validator.js — 自體防錯防線(Guardrails)
+   ============================================================
+   職責:
+   1. AppLog:六類錯誤日誌,格式固定「[分類] 訊息」,
+      AI Debug 時看一眼 console 即可定位,不需貼整段程式碼
+   2. 表頭驗證(buildHeaderMap):缺必填欄/未知欄位 → 警告不崩潰
+   3. healthCheck():資料一致性健康報告(重複ID/懸空引用/型別覆蓋)
+   依賴:schema.js(SCHEMA 必須先載入)
+   ============================================================ */
+
+/* ---- 六類錯誤日誌 ---- */
+var AppLog = {
+  schema: function(msg){ console.warn('[Schema Error] ' + msg); },
+  parser: function(msg){ console.warn('[Parser Error] ' + msg); },
+  data:   function(msg){ console.warn('[Data Error] ' + msg); },
+  repo:   function(msg){ console.warn('[Repository Error] ' + msg); },
+  render: function(msg){ console.error('[Render Error] ' + msg); },
+  sync:   function(msg){ console.warn('[Sync Error] ' + msg); }
+};
+
+/* ---- 表頭正規化 ---- */
+function normH(h){ return String(h||'').trim().toLowerCase().replace(/\s+/g,''); }
+function normHBase(h){ return normH(h).replace(/[（(].*?[)）]/g,''); }
+
+/* ---- 表頭驗證與對照(Schema 驅動) ---- */
+function buildHeaderMap(rows, def){
+  var result = { map:{}, headerIdx:-1 };
+  var best = { idx:-1, hits:0 };
+  for(var i=0;i<Math.min(rows.length,10);i++){
+    var hits = 0;
+    (rows[i]||[]).forEach(function(cell){
+      var h = normHBase(cell);
+      if(!h) return;
+      def.columns.forEach(function(c){
+        var cand = [c.header].concat(c.aliases||[]).map(normHBase);
+        if(cand.indexOf(h)>=0) hits++;
+      });
+    });
+    if(hits > best.hits){ best = { idx:i, hits:hits }; }
+  }
+  if(best.idx < 0 || best.hits === 0){
+    AppLog.schema(def.label + ':找不到表頭列 — 請確認工作表第一列為欄位名稱');
+    return result;
+  }
+  result.headerIdx = best.idx;
+  rows[best.idx].forEach(function(cell, idx){
+    var h = normHBase(cell);
+    if(!h) return;
+    var matched = null;
+    def.columns.forEach(function(c){
+      if(matched) return;
+      var cand = [c.header].concat(c.aliases||[]).map(normHBase);
+      if(cand.indexOf(h)>=0) matched = c.field;
+    });
+    if(matched){ if(!(matched in result.map)) result.map[matched] = idx; }
+    else AppLog.schema(def.label + ':未知欄位「' + cell + '」(第' + (idx+1) + '欄) — 已忽略;若為新欄位請更新 schema.js');
+  });
+  def.columns.forEach(function(c){
+    if(c.required && !(c.field in result.map)){
+      AppLog.schema(def.label + ":Missing required field '" + c.header + "'(" + c.field + ") — 相關卡片可能無法顯示");
+    }
+  });
+  return result;
+}
+
+/* ---- 專案健康檢查(資料一致性) ----
+   回傳 findings 陣列並輸出報告;AI 每次交付前必跑 */
+function healthCheck(){
+  var f = [];
+  function dupCheck(list, idField, label){
+    var seen = {};
+    (list||[]).forEach(function(r){
+      var id = (r[idField]||'').toUpperCase();
+      if(!id) return;
+      if(seen[id]) f.push('重複ID:' + label + ' ' + id);
+      seen[id] = true;
+    });
+    return seen;
+  }
+  var pids = dupCheck(DB.placeList, 'placeId', 'Places');
+  dupCheck(DB.rest, 'restId', 'Restaurants');
+  dupCheck(DB.shop, 'shopId', 'Shopping');
+  /* 懸空引用 */
+  (DB.rest||[]).forEach(function(r){
+    if(r.placeId && !pids[r.placeId.toUpperCase()]) f.push('懸空引用:Restaurants ' + r.restId + ' → ' + r.placeId + ' 不存在於 Places');
+  });
+  (DB.shop||[]).forEach(function(s){
+    if(s.placeId && !pids[s.placeId.toUpperCase()]) f.push('懸空引用:Shopping ' + s.shopId + ' → ' + s.placeId + ' 不存在於 Places');
+  });
+  if(DB.trip) DB.trip.days.forEach(function(d){
+    d.items.forEach(function(it){
+      var ref = (it.ref||'').toUpperCase().trim();
+      if(/^P\d+/.test(ref) && !pids[ref]) f.push('懸空引用:行程 ' + d.date + '「' + it.act + '」→ ' + ref + ' 不存在於 Places');
+      if(/^R\d+/.test(ref) && !(DB.rest||[]).some(function(r){ return (r.restId||'').toUpperCase()===ref; }))
+        f.push('懸空引用:行程 ' + d.date + '「' + it.act + '」→ ' + ref + ' 不存在於 Restaurants');
+    });
+  });
+  /* 渲染型別覆蓋:資料中出現的型別必須都有對應卡片 */
+  var covered = ['shopping','restarea','hotel','ferry','parking','attraction'];
+  (DB.placeList||[]).forEach(function(p){
+    if(covered.indexOf(p.tnorm)<0) f.push('未註冊型別:' + p.placeId + ' 型別「' + p.type + '」無對應卡片渲染');
+  });
+  /* Sheet 資料到位 */
+  Object.keys(SCHEMA.sheets).forEach(function(k){
+    if(!RAW[k]) f.push('資料缺席:工作表 ' + SCHEMA.sheets[k].label + ' 無任何資料來源(內建/快取/線上皆空)');
+  });
+  /* 輸出報告 */
+  if(f.length){
+    console.warn('━━ Project Health Check:發現 ' + f.length + ' 項 ━━');
+    f.forEach(function(x){ AppLog.data(x); });
+  }else{
+    console.log('━━ Project Health Check:PASS(資料一致性無異常)━━');
+  }
+  return f;
+}
+if(typeof window !== 'undefined') window.healthCheck = healthCheck;
+
+</script>
+<script>
+/* ===== app ===== */
+/* ============================================================
+   日本行程 App V2 — CMS 資料架構
+   Google 試算表 7 張工作表 = 內容管理系統
+   行程總表 / Places / Restaurants / Shopping / Hotels / Expenses / TripConfig
+   三層防線:內建資料 → localStorage 快取 → 背景同步
+   ============================================================ */
+
+/* console 防呆(部分 WebView 缺 console.info 等) */
+(function(){
+  try{
+    if(typeof window.console==='undefined') window.console={};
+    ['log','info','warn','error','debug'].forEach(function(k){
+      if(typeof console[k]!=='function') console[k]=function(){};
+    });
+  }catch(e){}
+})();
+
+/* ================= CONFIG(唯一設定點) ================= */
+/* 資料來源設定完全由 schema.js(SCHEMA)提供 —— 唯一資料規格 */
+var PUB = SCHEMA.pubBase;
+var SHEETS = Object.keys(SCHEMA.sheets).map(function(k){
+  return { key:k, gid:SCHEMA.sheets[k].gid };
+});
+var FETCH_TIMEOUT = SCHEMA.fetchTimeoutMs, FETCH_RETRIES = SCHEMA.fetchRetries;
+
+/* 內建後備資料(產生檔案時注入) */
+var BUILTIN_TS = 1783297150977;
+var BUILTIN = {"itin": "2026.10.18-10.23岡山四國六天五夜,,,,,,\n飯店,Guest House Life Field,,\"16:00後入住，10:00前退房\n地址:5 Chome-43-2 Honkomagome, Bunkyo-ku, Tokyo 113-0021日本\n(113-0021東京都文京区駒込5丁目43-2)\nTel: +813 6806 7972\",,,\n日期,時間,詳細行程,地點,ID,交通,備註\n,第一天10/18(日),,,,,\n\"10/18\n(日)\",9:00,check in,第一航廈1樓,,\"台灣虎航IT214班次\n去程行李20公斤/人+1手提1隨身(共10公斤)\",\"9:00開櫃\n11:30(TPE台灣桃園)-15:05(OKJ日本岡山)\"\n,11:30,出發,,,,\n,15:05,\"抵達岡山機場\n入境後前往取車\",ORIX租車 岡山機場,P012,,\"入境之後前往大廳走路5分鐘，找到位於機場内【ORIX租車公司】服務台，有提供免費接送服務\nTEL：086-294-5543 / 營業時間：08:30-18:30\n1.※必備①台灣駕照正本②「監理所」辦理駕照《日文譯本》\n2.取車時記得錄影繞車子一圈\n3.共6天，¥65,010\n訂單編號：133048833（黃柏名字訂的）/ 可刷卡可付現\"\n,,午餐時間,麵酒一照庵 岡山本店,R001,,\n,,血拚時間,永旺夢樂城 岡山,P001,,\n,,晚餐時間,隠岐島拉麺,R002,,\n,16:00後,住宿check in,Guest House Life Field,P002,,\n,第二天10/19(一),,,,,\n\"10/19\n(一)\",7:00,早餐時間,,,,\n,,廣島市區走馬看花,廣島城,P003,,\n,,,原爆圓頂館,P004,,\n,,,廣島和平紀念資料館,P005,,\n,,,廣島紙鶴塔,P006,,\n,,午餐時間,\"みっちゃんMicchan總本店\n（紙鶴塔店）\",R003,,\n,,血拚時間,本通商店街,P007,,\n,18:30前,宮島走馬看花,宮島口搭船處,P008,,\n,,,宮島,P009,,\n,,,宮島表参道商店街,P010,,\n,,,嚴島神社,P011,,\n,,晚餐時間,烤星鰻便當 上野商店,R006,,\n,,回住宿休息,Guest House Life Field,P002,,\n第三天10/20(二),,,,,,\n\"10/20\n(二)\",,前往新宿站,,,\"JR駒込站>新宿方向(內回り)>JR新宿站\n約17分鐘(7站)\",\"江之島鎌倉周遊券 ¥1,640/人\n•小田急線出發站往返藤澤一趟的車票\n•小田急列車及江之電無限次數搭乘\n•江之島手扶梯九折、新江之島水族館門票九折\"\n,07:02-08:12,新宿>>藤澤,小田急線5號月台,,\"小田急小田原線急行\n車程1小時10分鐘\",\n,08:18-08:24,藤澤>>片瀨江之島,4號月台,,\"小田急江之島線\n車程約6分鐘(3站)\",\"小田原線到藤澤後，站內2號月台轉搭江之島線往片瀨江之島的班次，不用出站\n車站出來穿過地下道就會看到江之島弁天橋\"\n,,江之島巡禮,江島神社,,步行約16分鐘,\"日本三大弁財天之一，由邊津宮、中津宮、奧津宮三座神社組成\n瑞心門入口處左側購票\n海蠟燭套票(¥1,000/人)：包含江之島ESCAR、鬥雞花園、海蠟燭觀景台\n江之島ESCAR-日本首座戶外手扶梯，共分成三段，全數僅能單向通行，搭乘電梯4分鐘就能達到山頂\n•邊津宮：本殿參拜、銭洗白龍王-將錢幣或鈔票浸放在池中，再放入放進錢包內，能提升財運\n•中津宮\n•奧津宮-御岩屋道通-有少許餐廳和紀念品店\"\n,,,江之島海蠟燭展望燈塔,,,\"營業時間：09:00-20:00\n島上最高建築，360度無敵景觀，天氣好能見到富士山和日落，和眺望整個鐮倉市容\"\n,,,江之島弁財天商店街,,,\"這裡可以吃：\n•紀之國屋本店>>百年菓子店-Tabelog3.50\n營業時間：08:30-18:00 / 可以刷卡(JCB)\"\n,,鎌倉巡禮,灌籃高手平交道,,\"江之電鐮倉高校前\n步行約2分鐘\",記得拍照禁止站在馬路中\n,,,鎌倉大佛（高德院）,,\"江之電長谷站\n步行約7分鐘\",\"開園時間：【10～3月】8:00-17:30，最後入場時間為閉園15分鐘前\n大佛參觀時間：8:00-16:30，最後入場時間為16:20\n鎌倉大佛門票¥300/人（高德院不大，停留時間一小時內）\n從長谷站步行到高德院沿途的「長谷大仏通り商店街」可以邊走邊逛\"\n,,,鶴岡八幡宮,,\"江之電鎌倉站\n步行約10分鐘\",\"營業時間：6:00-20:00\n入內不用門票就能免費參觀\"\n,,,鎌倉小町通,,鶴岡八幡宮隔壁,\"全長約350公尺，與鶴岡八幡宮前方的表參道「若宮大路」平行\n可以逛完鶴岡八幡宮再過去，順著方向走回江之電鎌倉站\n這裡可以吃：\n•Giraffa咖哩麵包>>Tabelog3.58 / 營業時間：10:00-18:00 / 可以刷卡\n•ともや大佛燒>>Tabelog3.49 / 營業時間：10:30-18:30 / 只能付現\n•鎌倉茶々本店>>抹茶冰淇淋-Tabelog3.62 / 營業時間：10:00-18:00 / 可以刷卡\n•腸詰屋>>德國香腸-Tabelog3.43 / 營業時間：10:00-19:00 / 可以刷卡\n•鎌倉五郎半月燒>>小町通必買土產-Tabelog3.26 / 營業時間：10:00-18:00 / 可以刷卡\n•鎌倉釜飯 Kamakama 本店>>傳統日式釜飯-Tabelog3.45 / 營業時間：11:00-17:00(週二) / 只能付現\"\n,,,七里濱海岸看夕陽,,\"江之電七里濱站\n步行約1分鐘\",沿岸很多咖啡廳，可以挑一間吃晚餐\n,,七里濱>>藤澤,,,\"(1)19:38-19:59\n(2)19:52-20:13\n(3)20:06-20:27\n(4)20:20-20:41\",\n,,藤澤>>新宿,小田急線5號月台,,\"(1)20:00-20:57\n(2)20:12-21:08\n(3)20:32-21:28\n(4)21:00-21:57\",\n,,回住宿休息,FL Residence Todai II,,\"JR新宿站>上野方向(外回り)>JR駒込站\n約18分鐘(7站)\",\n第四天10/21(三),,,,,,\n\"10/21\n(三)\",,前往新宿站,,,\"JR駒込站>新宿方向(內回り)>JR新宿站\n約18分鐘(7站)\",\n,,早餐時間（擇一）,だし茶漬け えん Lumine新宿店,,\"從JR新宿站南口出來右轉徒步1分鐘\n（Lumine新宿1地下2樓）\",\"高湯茶泡飯專賣店-Tabelog3.18\n營業時間：08:00-22:00 / 可以刷卡\n早餐時段(8:00-10:00)有限定的「早餐高湯茶泡飯」套餐，可從「烤鮭魚與芝麻昆布」等四種配料中選擇，並附上兩樣小菜\"\n,,,\"AFURI Lumine新宿店\n※午餐也可以選擇※\",,\"從JR新宿站南口出來右轉徒步1分鐘\n（Lumine新宿1地下2樓）\",\"阿夫利拉麵-Tabelog3.24\n營業時間：10:00-22:00 / 可以刷卡\n招牌是柚子鹽拉麵\"\n,,,Sarabeth's Lumine新宿店,,\"JR新宿站南口\n（Lumine新宿2 1樓）\",\"紐約風早餐-Tabelog3.49\n營業時間：09:00-22:00 / 可以刷卡\n早晨時段限定的早鳥菜單有「酪梨吐司」和「法式吐司盤餐」兩種，皆附有咖啡、紅茶或柳橙汁\"\n,,新宿遛達,Lumine新宿1,,JR、小田急線、京王線「新宿」站南口,\"營業時間：11:00-22:00（部分餐廳時間不一）\n品牌：SUQQU(2F)、KEEN GARAGE(5F)\"\n,,,Lumine新宿2,,JR、小田急線、京王線「新宿」站南口,\"營業時間：11:00-22:00（部分餐廳時間不一）\n品牌：SABON(2F)、Dr.Martens(4F)、UGG(4F)、CITEN(4F)、ABC-MART GRAND STAGE(5F)、無印良品(6F)\"\n,,,LUMINE EST 新宿,,JR「新宿」站東口和中央東口直通,\"營業時間：11:00-21:00（部分餐廳時間不一）\n品牌：BEAMS(B2)、@cosmeSTORE(B2)、FREAK'S STORE(B2)、SHIRO(B1)、NARS(B1)、M･A･C(B1)、CHARLES & KEITH(B1)、3COINS(3F)、PLAZA(4F)、Calvin Klein(5F)、Lee(6F)、ABC-MART GRAND STAGE(6F)、Carhartt WIP(6F)\"\n,,,Flags,,JR「新宿」站東南口,\"營業時間：11:00-21:00\n品牌：GAP旗艦店(1-2F)、UNIQLO(3-4F)、GU(7-8F)、Tower Records(9-10F)\"\n,,,NEWoMan新宿,,JR新宿站「甲州街道改札」、「新南改札」、「ミライナタワー改札」直通,\"營業時間：11:00-20:30（部分餐廳時間不一）\n品牌：Blue Bottle Coffee(1F)、LE LABO(1F)、THE MATCHA TOKYO(1F)、New Balance(M2)、emmi(M2)、CONVERSE TOKYO(2F)、無印良品(6F)\"\n,,,新宿丸井本館,,丸之內線「新宿三丁目」站A4出口,\"營業時間：11:00-20:00\n品牌：CASETiFY STUDiO(1F)、Wpc. LIMITED SHOP(1F)、LOFT(3F)\"\n,,,新宿東口的貓,,,\"JR新宿站東口，步行3分鐘\n07:00-01:00\"\n,,午餐時間（擇一）,利久牛舌 LUMINE EST新宿店,,,\"牛舌定食-Tabelog3.18\n營業時間：11:00-22:00 / 可以刷卡\"\n,,,らーめん 鴨to葱 新宿店,,,\"鴨肉和蔥為主的拉麵-Tabelog3.58\n營業時間：07:00-23:00 / 可以刷卡\n在新宿車站內西口方向的EATo LUMINE裡\"\n,,原宿遛達,哈利波特專賣店,,\"JR新宿站>品川方向(內回り)>JR原宿站\n約4分鐘(2站)\n東口出站\",營業時間：11:00-21:00\n,,,niko and …,,,營業時間：11:00-21:00\n,,澀谷遛達,澀谷十字路口,,\"JR原宿站>品川方向(內回り)>JR澀谷站\n約2分鐘(1站)\nJR線澀谷站八公口\",聖地巡禮\n,,,忠犬八公像,,,\n,,,天津甘栗店,,,\n,,,澀谷逛街地圖,,,\"逛的\n•澀谷LOFT 生活雜貨專門店 / 營業時間：11:00-21:00\nB1-文具 / 1F-禮品雜貨 / 2F-美容雜貨 / 3F、4F-家居用品 / 5F-戶外用品\n6F-創意禮品&二次元動漫商品+退稅櫃台\n退稅：商品一起拿到6樓結帳之後再到一旁的Global Blue退稅櫃台退稅，會收取1.1%的手續費\n•唐吉訶德\n•HOKA 澀谷店\n•Tower Records 澀谷店\n•澀谷PARCO / 營業時間：11:30-23:00\n品牌：SHIRO(1F)、HUMAN MADE(1F)、THE NORTH FACE LAB(3F)、CASETiFY STUDiO(3F)、Dr. Martens(4F)、哆啦A夢專賣店(5F)、泡泡瑪特(5F)、Nintendo TOKYO(6F)、寶可夢中心(6F)、SEGA STORE TOKYO(6F)\n吃的：\n•極味屋(B1F)-老辣妹推薦漢堡排>>Tabelog3.41\n營業時間：11:30-23:00 / 可以刷卡\"\n,,,青之洞窟 SHIBUYA 2025,,澀谷PARCO旁,\"點燈時間：17:00-22:00\n澀谷公園通至代代木公園欅並木，全長約900公尺\n從JR原宿站、東京Metro明治神宮前站步行約10分鐘即可抵達\"\n,,回住宿休息,FL Residence Todai II,,\"JR澀谷站>新宿方向(外回り)>JR駒込站\n約23分鐘(10站)\",\n第五天10/22(四),,,,,,\n\"10/22\n(四)\",7:00,前往淺草,,,\"JR駒込站>上野方向(外回り)>JR上野站\n約10分鐘(5站)\n轉乘東京metro銀座線>淺草方向>淺草站\n約5分鐘(3站)\",\n,,早餐時間,MISOJYU 淺草本店,,\"東京metro淺草站1號出口步行4-6分鐘\n※經過可以先拍雷門\",\"味噌湯專賣店-Tabelog3.49\n營業時間：08:00-19:00 / 可以刷卡\n早餐菜單8:00-10:00 / 常規菜單10:00-15:30\n早餐套餐：味噌湯+飯糰（可挑口味）+半熟蛋+醬菜 ¥850\n※常常排隊，需要早點去\"\n,,,らーめん 鴨to葱 淺草店,,,\"鴨肉和蔥為主的拉麵-Tabelog3.34\n營業時間：24小時 / 可以刷卡\"\n,,,ローヤル珈琲店,,,\"昭和懷舊氛圍的早餐咖啡店-Tabelog3.69\n營業時間：08:00-20:00 / 只收現金\"\n,,淺草散步,\"淺草寺\n仲見世通商店街\n西參道商店街\n淺草文化觀光中心\",,步行,\"•參拜寺廟或神社之前，需先在「手水舍」洗滌身心：\n①右手取木杓舀水清洗左手\n②換左手拿杓取水清洗右手\n③將杓柄換至右手，將水倒進左手中，用左手的水漱口（示意一下即可）\n④再洗一次左手，然後用杓內殘水洗一下杓柄，把木杓放回原位\n•淺草寺參拜流程：\n①投入香油錢 ②雙手合十祈願並鞠躬 ③再輕輕一鞠躬\n※淺草寺周遭\n•淺草文化觀光中心：營業時間9:00-20:00，8F有免費展望台，最好11:00前到\n•淺草炸肉餅、木村家本店(人形燒)、淺草花月堂(菠蘿麵包)、龜十銅鑼燒\"\n,,午餐時間+購物,晴空塔,,\"淺草站>轉東武晴空塔線>東京晴空塔站\n約8分鐘(1站)\",\"•晴空塔 / 營業時間：10:00-22:00\n門票：套票（天望甲板＋天望回廊）¥3,100/人\n天望甲板-高度350公尺，360度欣賞風景\n天望迴廊-高度450公尺的玻璃通道\n•Tokyo Solamachi東京晴空街道 / 營業時間：10:00-21:00\n2F-BEAMS(9區)、FREAK'S STORE(10區)、PLAZA(11區)\n3F-ABC-MART(6區)、UNIQLO(8區)、CITEN(9區)、TOMICA(9區)、泡泡瑪特(9區)、LOFT(11區)\n4F-神座拉麵(3區)、奧特曼官方商店(10區)、元祖食品模型店(10區)、寶可夢中心(11區)、Bear Brick(11區)、大創(12區)、名偵探柯南廣場(12區)\n5F-晴空塔商店(5區)\"\n,,銀座遛達,銀座,,\"東京晴空塔站>東武晴空塔線>淺草站\n約8分鐘(1站)\n轉乘東京metro銀座線>澀谷方向>銀座站\n約18分鐘(9站)\",\"逛的\n•Ginza Sony Park / 營業時間：11:00-19:00\n•UNIQLO、GU、資生堂、無印良品\n吃的\n•○勝-親子丼専門店>>Tabelog3.49 / 11:30-14:30；17:00-20:30 / 只能付現\n•銀座木村家-麵包店>>Tabelog3.60 / 10:00-20:00 / 可以刷卡\n•銀座 佐藤養助-烏龍麵>>Tabelog3.56 / 11:30-15:00；17:00-22:00 / 可以刷卡(17點後收10%服務費)\n•銀座 篝 本店-拉麵>>Tabelog3.66 / 11:00-21:30 / 可以刷卡\n•喫茶You-昭和懷舊蛋包飯>>Tabelog3.72 / 11:00-16:30 / 只能付現\n•煉瓦亭-蛋包飯>>Tabelog3.53 / 11:15-15:00；17:30-21:00 / 只能付現(收10%服務費)\"\n,,六本木遛達,六本木之丘聖誕 2025,,\"東京metro日比谷線>中目黑方向>六本木站\n約10分鐘(4站)\n1C出口，搭電扶梯聯通，步行約6-8分鐘\",\"點燈時間：17:00-23:00\n逛的：HOKA六本木店、LEGO六本木之丘店、大屋根Plaza有德國風情聖誕市集\"\n,19:45,,東京鐵塔,,\"東京metro日比谷線>北越谷方向>神谷町站\n約2分鐘(1站)\n1號出口，步行約7分鐘抵達鐵塔正門\",\"營業時間：\nMAIN DECK 09:00-23:00 / 最終入場22:30\nTOP DECK TOUR 09:00-22:45 / 最終入場22:15\n門票：¥3,300/人\n•TOP DECK(250m)-東京鐵塔最高點\n•MAIN DECK(150m)-腰部展望台、鐵塔大神宮、東京鐵塔郵筒、Skywalk Window\n※已於KKDAY預定門票，直接於電梯前向工作人員出示QR Code，上TOP DECK再出示一次\"\n,,回駒込民宿,,,\"東京metro日比谷線>北越谷方向>日比谷站\n約5分鐘(3站)\n出站後跟著標示走地下道轉JR山手線 步行約5-8分鐘\nJR有樂町站>上野方向(內回り)>JR駒込站\n約20分鐘(10站)\",\"轉乘路線：\n日比谷站(地下)>>東京Midtown日比谷/地下商場方向>>JR有樂町站「中央口/京橋口」附近\"\n第六天10/23(五),,,,,,\n\"10/23\n(五)\",10:00前,住宿check out,Guest House Life Field,,,歸還鑰匙詳見住宿指南\n,,秋葉原,,,\"JR駒込站>上野方向(外回り)>JR秋葉原站\n約14分鐘(7站)\",\"置物櫃位於中央剪票口內2樓，搭上前往5、6號月台中央總武線的手扶梯，下手扶梯後右手邊及左前方等地都有置物櫃\n費用：中型¥500、大型¥600、特大¥800\n支付方式：現金、IC卡\"\n,,\"前往機場\n日暮里站 JR>>京鐵\",京成電鐵日暮里站,,\"JR秋葉原站>上野方向(內回り)>JR日暮里站\n約7分鐘(4站)\n日暮里站>>Skyliner成田二航車程約36分鐘\nSkyliner（大約每20-40分鐘一班）\n※班次上網先查好\",\"JR日暮里站站內轉乘京成電鐵日暮里站\n①從7-10號車廂下車，有通往北剪票口側大廳的樓梯、手扶梯與電梯\n②沿「京成線(Keisei Line)」指標走，尋找藍色的「JR・京成線乘換改札口」\n③過轉乘閘口後，用機台兌換QR CODE換成車票\n④進閘門後前往月台，並從車票及安全閘門上確認候車位置\"\n,,二航寄放行李,1F(到達大廳)及3F(出發大廳),,,出境大廳的JAL ABC櫃台附近找到「寄物服務」（手荷物宅配），能寄放數小時（會詢問回來取件的時間），只要先付款、取得寄物收據即可\n,最晚15:15或15:45,返回機場,從Outlet搭回成田機場：和下車處是同一個地方,,,回JAL ABC櫃台領取行李\n,17:55,回台灣,岡山機場,,\"台灣虎航IT263班次\n去程行李20公斤/人+1手提1隨身(共10公斤)\",\"15:25開櫃\n17:55(OKJ日本岡山)-20:15(KHH台灣高雄)\"\n", "places": "PID,地點,Type,MAPCODE,交通/交通時間,停車,營業時間,門票,官網,時刻表連結,備註\nP001,永旺夢樂城岡山,購物,19 890 043*38,開車6分鐘,Q Parking Lot或附近均有停車場,商場10:00-21:00 / 餐廳11:00-22:00 / 美食廣場10:00-21:00 / 超市07:00-23:00,,https://tw.aeonmall.global/mall/okayama/shops-entertainment,,步行去吃飯及唐吉訶德都方便\nP002,Guest House Life Field,住宿,,開車約30分鐘,\"有付費停車位¥1,000/晚，共¥5,000，需付現\",,,,,住宿附近沒有超商，鄰近的超市Nakayama Farm Heart Sakazu，開車3分鐘\nP003,廣島城,景點,22 220 851*75,開車約2小時,タイムズ中央公園広島城三の丸，¥210/30分鐘,\"天守閣：09:00-18:00\n二之丸：09:00-16:30\",\"天守閣：¥370/人\n二之丸：可免費參觀\",,,可停留1-1.5小時\nP004,原爆圓頂館,景點,22 219 082*50,開車約5分鐘,\"CoCo PARK，¥200/30分鐘\nDolce Park 大手町１丁目，¥200/30分鐘\n大手町中央駐車場，¥400/30分鐘\",建築的內部不對外開放，只能在外圍參觀,,,,距離當時的爆炸中心僅有160公尺\nP005,廣島和平紀念資料館,景點,,步行約7分鐘,\"CoCo PARK，¥200/30分鐘\nDolce Park 大手町１丁目，¥200/30分鐘\n大手町中央駐車場，¥400/30分鐘\",7:30-19:00,¥200/人,,,可停留1.5-2小時\nP006,廣島紙鶴塔,景點,,步行約9分鐘,\"CoCo PARK，¥200/30分鐘\nDolce Park 大手町１丁目，¥200/30分鐘\n大手町中央駐車場，¥400/30分鐘\",,$453/人（KLOOK已先訂門票，含摺紙鶴體驗）,,,\"建議遊玩攻略路線：\n  •搭乘電梯直達頂樓(RF)\n  •下至12F「紙鶴廣場」體驗摺紙鶴(付費)，並將完成的紙鶴投入「紙鶴牆」\n  •沿「散步坂」步行下樓\n※館內禁止攜帶外食飲料，可停留1小時\"\nP007,廣島本通商店街,購物,,,,,,,,如果時間有夠可以逛\nP008,宮島口搭船處,渡船口,103 501 894*78,開車約30分鐘,宮島口旅客ターミナル駐車場,,,,https://jr-miyajimaferry.co.jp/timetable/,\nP009,宮島,渡輪,,「JR 西日本宮島渡輪」或「宮島松大汽船」，航程約10分鐘,,,\"JR 西日本宮島渡輪：來回¥500/人，現金、亦可刷IC卡，部分班次可近距離觀賞大鳥居\n宮島松大汽船：來回¥500/人，現金、亦可刷IC卡及信用卡\",,,\nP010,宮島表参道商店街,美食區,,,,,,,,海岸線兩側有很多的野生梅花鹿聚集\nP011,嚴島神社,景點,,步行約10分鐘,,嚴島神社06:30-17:30，寶物館08:00-17:00，千疊閣08:00-16:30,嚴島神社¥300/人，寶物館¥300/人，嚴島神社+寶物館¥500/人，千疊閣¥100/人,https://www.miyajima.or.jp/sio/sio01.php?act=cnf,,14:30-18:30預計漲潮，出發前可再次官網確認：https://www.miyajima.or.jp/sio/sio01.php?act=cnf\nP012,ORIX租車 岡山機場,租車點,,入境之後前往大廳走路5分鐘，有提供免費接送服務,,08:30-18:30,,,,\"訂單133048833/6天¥65,010/可刷卡付現\"\n", "rest": "RID,PID(可空白),餐廳名稱,Tabelog,餐廳類型,營業時間,付款方式,交通時間,停車,備註\nR001,,麵酒一照庵 岡山本店,3.52,拉麵,11:30-23:30,只能付現,開車25分鐘,附近有停車場,\nR002,,隠岐島拉麺,3.51,拉麵,11:00-14:00、17:00-21:00,只能付現（點餐機）,開車4分鐘,,\nR003,P006,みっちゃんMicchan總本店（紙鶴塔店）,3.31,廣島燒,11:00-21:00,可以刷卡,,,Tabelog可以先預訂\nR004,P010,紅葉堂炸紅葉饅頭,3.63,和菓子,09:00-17:30,只能付現,,,\nR005,P010,伊都岐珈啡,3.41,咖啡,09:00-18:00,只能付現,,,\nR006,P008,烤星鰻便當 上野商店,3.66,便當蓋飯,09:00-19:00,可以刷卡,步行3分鐘,,Tabelog可以先預訂，最後點餐時間為關閉前30分鐘，用餐限45分鐘\n", "shop": "SID,PID,品牌名稱,樓層,分類,必逛,免稅,備註\nS001,P001,無印良品,1F,生活雜貨,,,櫃位 107\nS002,P001,URBAN RESEARCH Store,1F,服飾,,,櫃位 145-1\nS003,P001,SENSE OF PLACE by UR,1F,服飾,,,櫃位 101\nS004,P001,earth music&ecology,1F,服飾,,,櫃位 135-1\nS005,P001,Cosmeme,1F,美妝,,,櫃位 139\nS006,P001,ZARA,2F,服飾,,,櫃位 201·203\nS007,P001,H&M,2F,服飾,,,櫃位 205\nS008,P001,one's terrace,2F,生活雜貨,,,櫃位 216\nS009,P001,JEANS FACTORY LALAH,2F,服飾,,,櫃位 218\nS010,P001,FREE'S MART,2F,服飾,,,櫃位 242\nS011,P001,FREAK'S STORE,2F,服飾,,,櫃位 264\nS012,P001,Gap / GapKids,2F,服飾,,,櫃位 266\nS013,P001,studio CLIP,2F,服飾,,,櫃位 248\nS014,P001,niko and…,3F,服飾雜貨,,,櫃位 302\nS015,P001,3COINS +plus,3F,生活雜貨,,,櫃位 308\nS016,P001,WEGO,3F,服飾,,,櫃位 335\nS017,P001,VILLAGE VANGUARD,3F,雜貨書店,,,櫃位 303\nS018,P001,390 THANK YOU MART,3F,雜貨,,,櫃位 340\nS019,P001,ABC-MART,3F,鞋,,,櫃位 333\nS020,P001,UNIQLO,4F,服飾,,,櫃位 401\nS021,P001,HANDS 台隆手創館,4F,生活雜貨,,,櫃位 405\nS022,P001,大創 DAISO,4F,百元店,,,櫃位 408\nS023,P001,Lattice,4F,飾品,,,櫃位 432\nS024,P001,靴下屋,4F,襪子,,,櫃位 433\nS025,P001,SNOOPY TOWN Shop,4F,角色商品,,,櫃位 446\nS026,P001,WEGO,4F,服飾,,,櫃位 455\nS027,P001,萬代扭蛋區,5F,扭蛋,,,櫃位 509\nS028,P001,GiGO 夾娃娃機,6F,遊戲,,,櫃位 624-1\n", "hotels": "HID,名稱,入住,退房,地址,停車,適用日期,備註\nH001,Guest House Life Field 生命領域公寓,16:00後,10:00前,\"〒710-0811 Okayama, Kurashiki, Kawairi, 611-1 オータムヒルIII C\",\"¥1,000/晚(共¥5,000)需付現\",10/18-10/23,附近無超商;鄰近超市Nakayama Farm Heart Sakazu開車3分鐘;歸還鑰匙詳見住宿指南\n", "exp": "同行成員:,黃柏,阿蓁,阿祺,阿芬,,\n公費：,,,,,,\n,,,,,,\n支出表,,,,,,\n,,,,,,\n項目,明細,,,$台幣,¥日幣,備註\n,,,,,,\n交通,,,,,,\n班機,虎航 TPE>OKJ / OKJ>KHH,,,\"19,000 \",,黃柏刷\n租車,,,,,,\n住宿,Guest House Life Field（2間房*5晚）,,,,\"106,248 \",\n門票,,,,,,\n,廣島紙鶴塔（含摺紙鶴體驗）-KLOOK,,,,,$453/人\neSIM卡,,,,,,\n保險,,,,,,\n,,,,,\"106,248 \",\"結算日：\n匯率：0.2\"\n小計,,,,\"19,000 \",\"21,250 \",\n總計,,,,\"40,250 \",,\n", "cfg": "Key,Value\nTrip Name,岡山四國六天五夜\nStart Date,2026-10-18\nEnd Date,2026-10-23\nTravel Mode,Driving\nCurrency,JPY\nHome Page,Today\n"};
+
+/* ================= 基礎工具 ================= */
+function lsGet(k,f){ try{ var v=localStorage.getItem(k); return v?JSON.parse(v):f; }catch(e){ AppLog.repo('讀取 '+k+' 失敗:'+(e.message||e)+' — 使用預設值'); return f; } }
+function lsSet(k,v){ try{ localStorage.setItem(k,JSON.stringify(v)); }catch(e){ AppLog.repo('寫入 '+k+' 失敗:'+(e.message||e)+' — 個人狀態可能未保存'); } }
+function escapeHtml(s){ return (s==null?'':String(s)).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function todayMD(){ var d=new Date(); return ('0'+(d.getMonth()+1)).slice(-2)+'/'+('0'+d.getDate()).slice(-2); }
+var toastTimer;
+function toast(msg){
+  var el=document.getElementById('toast'); el.textContent=msg; el.classList.add('show');
+  clearTimeout(toastTimer); toastTimer=setTimeout(function(){ el.classList.remove('show'); },2000);
+}
+function copyText(text,label){
+  var done=function(){ toast((label||'')+'已複製 ✓'); };
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(text).then(done).catch(function(){ legacyCopy(text,done); });
+  }else legacyCopy(text,done);
+}
+function legacyCopy(text,done){
+  try{
+    var ta=document.createElement('textarea'); ta.value=text; ta.style.position='fixed'; ta.style.opacity='0';
+    document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta); done();
+  }catch(e){ toast('複製失敗，請長按手動複製'); }
+}
+
+/* ================= CSV 解析 ================= */
+function parseCSV(text){
+  var rows=[],row=[],field='',inQ=false;
+  for(var i=0;i<text.length;i++){
+    var c=text[i],n=text[i+1];
+    if(inQ){
+      if(c==='"'&&n==='"'){ field+='"'; i++; }
+      else if(c==='"') inQ=false;
+      else field+=c;
+    }else{
+      if(c==='"') inQ=true;
+      else if(c===','){ row.push(field); field=''; }
+      else if(c==='\r'){}
+      else if(c==='\n'){ row.push(field); rows.push(row); row=[]; field=''; }
+      else field+=c;
+    }
+  }
+  if(field.length||row.length){ row.push(field); rows.push(row); }
+  return rows;
+}
+
+/* ================= 表格 → 物件(依表頭名稱對應,容錯欄位順序) ================= */
+/* ============================================================
+   Schema 驅動 Parser + Validator
+   欄位對應完全來自 schema.js;新增欄位只改 Schema,不改這裡
+   ============================================================ */
+/* normH / normHBase / buildHeaderMap 已抽離至 validator.js(防錯防線) */
+
+/* 表格型解析:rows → 物件陣列(欄位名 = Schema field) */
+function parseTable(csvText, sheetKey){
+  var def = SCHEMA.sheets[sheetKey];
+  var rows = parseCSV(csvText||'');
+  var hm = buildHeaderMap(rows, def);   // 驗證與警告由 validator.js 處理
+  if(hm.headerIdx < 0) return [];
+  var out = [];
+  for(var r=hm.headerIdx+1; r<rows.length; r++){
+    var row = rows[r]; if(!row) continue;
+    var o = {}, any = false;
+    for(var f in hm.map){
+      var v = (row[hm.map[f]]||'').trim();
+      o[f] = v; if(v) any = true;
+    }
+    if(any) out.push(o);
+  }
+  return out;
+}
+
+/* Key/Value 型解析(TripConfig):依 Schema keys 正規化 */
+function parseKeyValue(csvText, sheetKey){
+  var def = SCHEMA.sheets[sheetKey];
+  var rows = parseCSV(csvText||'');
+  var cfg = {};
+  rows.forEach(function(r){
+    var k = normHBase(r[0]), v = (r[1]||'').trim();
+    if(!k || k==='key') return;
+    var matched = null;
+    (def.keys||[]).forEach(function(kd){
+      if(matched) return;
+      var cand = [kd.header].concat(kd.aliases||[]).map(normHBase);
+      if(cand.indexOf(k)>=0) matched = kd;
+    });
+    if(!matched){ AppLog.schema(def.label+':未知設定鍵「'+(r[0]||'')+'」— 已忽略;若為新設定請更新 schema.js'); return; }
+    if(matched.values){
+      var nv = matched.values[normH(v)] || matched.values[v];
+      if(nv) v = nv;
+      else if(v) AppLog.schema(def.label+':「'+matched.header+'」的值「'+v+'」不在 Schema 定義中,原樣使用');
+    }
+    cfg[matched.field] = v;
+  });
+  return cfg;
+}
+
+/* 型別正規化:對照 Places.Type 欄的 Schema values;未知值警告並回退景點 */
+function schemaType(raw){
+  var col = null;
+  SCHEMA.sheets.places.columns.forEach(function(c){ if(c.field==='type') col = c; });
+  var v = (col && col.values && (col.values[String(raw||'').trim()] || col.values[normH(raw)])) || null;
+  if(!v && raw){ AppLog.schema("Places:未知型別「"+raw+"」— 以「景點」處理;請更新 schema.js 的 type.values"); }
+  return v || 'attraction';
+}
+
+/* ================= 行程解析(7欄:日期/時間/活動/地點/ID/交通/備註) ================= */
+function buildItin(rows){
+  var meta={ title:'' }, days=[], cur=null;
+  var dayRe=/第.+天\s*(\d{1,2})\/(\d{1,2})\s*[\(（]?([日一二三四五六])?/;
+  rows.forEach(function(r,idx){
+    var c=[]; for(var i=0;i<7;i++) c.push((r[i]||'').trim());
+    if(idx===0&&c[0]&&!meta.title){ meta.title=c[0]; return; }
+    if(c[0]==='飯店') return;
+    if(c[0]==='日期'&&c[1]==='時間') return;
+    var dtext=c[0]||c[1];
+    var m=dtext.match(dayRe);
+    if(/第.+天/.test(dtext)&&m){
+      cur={ date:m[1].padStart(2,'0')+'/'+m[2].padStart(2,'0'), dow:m[3]||'', items:[] };
+      days.push(cur);
+      if(!c[2]&&!c[3]) return;
+    }
+    if(!cur) return;
+    var it={ time:c[1], act:c[2], place:c[3], ref:c[4], move:c[5], note:c[6] };
+    if(!it.act&&!it.place&&!it.move&&!it.note) return;
+    cur.items.push(it);
+  });
+  days.forEach(function(d){ d.items.forEach(function(it,i){ it.id=d.date+'_'+i; }); });
+  return { meta:meta, days:days };
+}
+
+/* ================= 網路(相容模式:無 AbortController) ================= */
+function fetchWithTimeout(url,ms){
+  var bust=url+'&_ts='+Date.now();
+  var timeout=new Promise(function(_,rej){ setTimeout(function(){ rej(new Error('連線逾時')); },ms); });
+  var attempt=new Promise(function(resolve,reject){
+    var p;
+    try{ p=fetch(bust,{cache:'no-store'}); }catch(e){ p=null; }
+    if(!p){ try{ p=fetch(bust); }catch(e2){ reject(e2); return; } }
+    p.then(resolve).catch(function(err){
+      if(/clone|DataCloneError/i.test(String(err))){
+        try{ fetch(bust).then(resolve).catch(reject); }catch(e3){ reject(e3); }
+      }else reject(err);
+    });
+  });
+  return Promise.race([attempt,timeout]);
+}
+function fetchSheet(s){
+  var tryOnce=function(){
+    return fetchWithTimeout(PUB+s.gid,FETCH_TIMEOUT).then(function(res){
+      if(!res.ok) throw new Error('HTTP '+res.status);
+      return res.text();
+    }).then(function(text){
+      if(!text||text.trim().length<5) throw new Error('CSV為空');
+      return text;
+    });
+  };
+  return tryOnce().catch(function(e){
+    AppLog.sync(s.key+' 第1次抓取失敗:'+(e.message||e)+' — 自動重試');
+    return tryOnce();
+  });
+}
+
+/* ================= 資料層:三層防線 ================= */
+var RAW={};      // key → csv text(目前生效)
+var SRC={};      // key → builtin|cache|online
+function localBest(key){
+  var b = BUILTIN[key]? { text:BUILTIN[key], src:'builtin', ts:BUILTIN_TS } : null;
+  var c = lsGet('v2_cache_'+key,null);
+  if(c&&c.text&&c.ts>(b?b.ts:0)) b={ text:c.text, src:'cache', ts:c.ts };
+  return b;
+}
+function bootLocal(){
+  var ok=true;
+  SHEETS.forEach(function(s){
+    var b=localBest(s.key);
+    if(b){ RAW[s.key]=b.text; SRC[s.key]=b.src; }
+    else ok=false;
+  });
+  return ok;
+}
+function syncAll(showToast){
+  setSyncState('syncing');
+  var jobs=SHEETS.map(function(s){
+    return fetchSheet(s).then(function(text){
+      RAW[s.key]=text; SRC[s.key]='online';
+      lsSet('v2_cache_'+s.key,{text:text,ts:Date.now()});
+      return true;
+    }).catch(function(e){
+      AppLog.sync(s.key+' 同步失敗,維持'+(SRC[s.key]||'無')+'版本:'+(e.message||e));
+      return false;
+    });
+  });
+  return Promise.all(jobs).then(function(results){
+    var okN=results.filter(Boolean).length;
+    buildDB(); renderAll();
+    if(okN===SHEETS.length){ setSyncState('online'); if(showToast) toast('已更新到最新版 ✓'); }
+    else if(okN>0){ setSyncState('partial'); if(showToast) toast('部分更新('+okN+'/'+SHEETS.length+')'); }
+    else { setSyncState(SRC.itin||'error'); if(showToast) toast('無法連線，顯示'+(SRC.itin==='cache'?'上次同步版':'內建版')); }
+  });
+}
+function manualSyncNew(){ toast('正在抓取最新行程…'); return syncAll(true); }
+function manualSync(){ return manualSyncNew(); }
+function setSyncState(state){
+  var dot=document.getElementById('syncDot'),txt=document.getElementById('syncTxt'),btn=document.getElementById('syncBtn');
+  if(!dot) return;
+  btn.classList.remove('spinning'); dot.className='dot';
+  if(state==='syncing'){ btn.classList.add('spinning'); txt.textContent='同步中'; }
+  else if(state==='online'){ txt.textContent='已是最新'; }
+  else if(state==='partial'){ dot.classList.add('stale'); txt.textContent='部分更新'; }
+  else if(state==='cache'){ dot.classList.add('stale'); txt.textContent='離線版'; }
+  else if(state==='builtin'){ dot.classList.add('stale'); txt.textContent='內建版'; }
+  else { dot.classList.add('err'); txt.textContent='無法連線'; }
+}
+
+/* ================= DB 組裝(CMS → 應用資料模型) ================= */
+var DB={ places:{}, placeList:[], rest:[], shop:[], hotels:[], expCMS:[], cfg:{}, trip:null };
+function normType(t){ return schemaType(t); }
+
+/* Expenses 表為自由格式(非欄位表):
+   - 「同行成員:」列 → 成員清單(可供分帳初始化)
+   - 類別列(交通/住宿/門票…,僅第1欄有值)→ 之後項目歸此類
+   - 項目列:明細(第2欄)+ $台幣(第5欄)/ ¥日幣(第6欄)+ 備註(第7欄)
+   - 小計/總計列獨立標記 */
+function parseExpensesFree(rows){
+  var L = SCHEMA.sheets.exp.layout;   // 欄位位置由 Schema 定義
+  var members=[], items=[], curCat='';
+  rows.forEach(function(r){
+    var c0=(r[L.catCol]||'').trim(), c1=(r[L.nameCol]||'').trim(),
+        twd=(r[L.twdCol]||'').trim(), jpy=(r[L.jpyCol]||'').trim(), note=(r[L.noteCol]||'').trim();
+    if(c0.indexOf(L.membersRowMark)>=0){
+      for(var i=L.nameCol;i<r.length;i++){ var v=(r[i]||'').trim(); if(v) members.push(v); }
+      return;
+    }
+    if(c0==='項目' && c1==='明細') return;   // 表頭列
+    var isTotal = L.totalMarks.some(function(m){ return c0.indexOf(m)===0; });
+    if(isTotal){ items.push({cat:c0, name:'', twd:twd, jpy:jpy, note:note, total:true}); return; }
+    if(c0 && !c1 && !twd && !jpy && !note){ curCat=c0.replace(/[：:]$/,''); return; }
+    if(c1){ items.push({cat:(c0||curCat), name:c1, twd:twd, jpy:jpy, note:note}); }
+  });
+  return { members:members, items:items };
+}
+
+function buildDB(){
+  try{
+    DB.trip = buildItin(parseCSV(RAW.itin||''));
+  }catch(e){ AppLog.parser('行程總表解析失敗:'+(e.message||e)+' — 顯示空行程'); DB.trip={meta:{title:''},days:[]}; }
+  DB.placeList = parseTable(RAW.places, 'places');
+  DB.places={};
+  DB.placeList.forEach(function(p){ p.tnorm=normType(p.type); if(p.placeId) DB.places[p.placeId.toUpperCase()]=p; });
+  DB.rest   = parseTable(RAW.rest, 'rest');
+  DB.shop   = parseTable(RAW.shop, 'shop');
+  DB.hotels = parseTable(RAW.hotels, 'hotels');
+  var expParsed = parseExpensesFree(parseCSV(RAW.exp||''));
+  DB.expCMS = expParsed.items;
+  DB.expMembers = expParsed.members;
+  DB.cfg = parseKeyValue(RAW.cfg, 'cfg');
+}
+var _refWarned = {};
+function resolveRef(it){
+  var ref=(it.ref||'').toUpperCase().trim();
+  if(/^P\d+/.test(ref) && DB.places[ref]) return { kind:'place', p:DB.places[ref] };
+  if(/^[PR]\d+/.test(ref) && !DB.places[ref] && !_refWarned[ref]){
+    var isR = ref.charAt(0)==='R';
+    var hasR = isR && DB.rest.some(function(x){ return (x.restId||'').toUpperCase()===ref; });
+    if(!hasR && !isR){ AppLog.data('行程引用 '+ref+' 不存在於 Places — 改用名稱備援'); _refWarned[ref]=1; }
+  }
+  if(/^R\d+/.test(ref)){
+    var r=DB.rest.find(function(x){ return (x.restId||'').toUpperCase()===ref; });
+    if(r) return { kind:'rest', r:r };
+  }
+  // 名稱備援
+  if(it.place){
+    var flat=it.place.replace(/\s+/g,'');
+    var p=DB.placeList.find(function(x){ return x.name && (flat.indexOf(x.name.replace(/\s+/g,''))>=0 || x.name.replace(/\s+/g,'').indexOf(flat)>=0); });
+    if(p) return { kind:'place', p:p };
+    var r2=DB.rest.find(function(x){ return x.name && flat.indexOf(x.name.replace(/\s+/g,''))>=0; });
+    if(r2) return { kind:'rest', r:r2 };
+  }
+  return null;
+}
+function restaurantsOf(placeId){
+  return DB.rest.filter(function(r){ return (r.placeId||'').toUpperCase()===String(placeId).toUpperCase(); });
+}
+function hotelOf(place){
+  if(!DB.hotels.length) return null;
+  var flat=(place.name||'').replace(/\s+/g,'');
+  return DB.hotels.find(function(h){ return h.name && (flat.indexOf(h.name.replace(/\s+/g,''))>=0 || h.name.replace(/\s+/g,'').indexOf(flat)>=0); }) || DB.hotels[0];
+}
+function transport(){
+  return DB.cfg.travelmode || 'drive';   // 值已由 Schema(cfg.keys.values)正規化為 drive/transit
+}
+function tripName(){ return DB.cfg.tripname || ''; }
+
+/* ================= 打卡 / 想逛(個人狀態,存本機) ================= */
+function getChecks(){ return lsGet('trip_checks',{}); }
+function toggleCheck(id){ var c=getChecks(); if(c[id]) delete c[id]; else c[id]=true; lsSet('trip_checks',c); }
+function getWants(){ return lsGet('trip_shop_wants',{}); }
+
+/* ================= 導航 / 高亮 ================= */
+function navQuery(it,res){
+  var q='';
+  if(res&&res.kind==='place'&&res.p.navq) q=res.p.navq;
+  else if(res&&res.kind==='rest') q=res.r.name;
+  else q=(it.place||it.act||'').replace(/\n.*/s,'');
+  return encodeURIComponent(q+' 日本');
+}
+function navUrl(it,res){
+  var q=navQuery(it,res);
+  return transport()==='drive'
+    ? 'https://www.google.com/maps/dir/?api=1&destination='+q+'&travelmode=driving'
+    : 'https://www.google.com/maps/dir/?api=1&destination='+q+'&travelmode=transit';
+}
+function highlightNote(text){
+  var t=escapeHtml(text);
+  t=t.replace(/(https?:\/\/[^\s，、]+)/g,'<a href="$1" target="_blank" rel="noopener">$1</a>');
+  t=t.replace(/(訂單編號[：:]\s*\d+)/g,'<span class="hl">$1</span>');
+  t=t.replace(/(TEL[：:]\s*[\d\-+ ]+)/gi,'<span class="hl">$1</span>');
+  t=t.replace(/(¥[\d,]+)/g,'<span class="hl">$1</span>');
+  return t;
+}
+function extractDrive(moveText){
+  if(!moveText) return '';
+  var m=moveText.match(/開車約?\s*([\d.]+\s*(小時|分鐘)[\d.]*\s*(分鐘)?)/);
+  return m?'開車約'+m[1].replace(/\s+/g,''):'';
+}
+function typeTag(res){
+  if(!res) return null;
+  if(res.kind==='rest') return {cls:'food',label:'🍜 '+(res.r.cat||'美食')};
+  var t=res.p.tnorm;
+  if(t==='shopping') return {cls:'shop',label:'🏬 購物'};
+  if(t==='restarea') return {cls:'food',label:'🍜 美食區'};
+  if(t==='hotel') return {cls:'stay',label:'🏨 住宿'};
+  if(t==='ferry') return {cls:'move',label:'⛴ 渡輪碼頭'};
+  if(t==='parking') return {cls:'move',label:'🚗 租車/停車'};
+  return {cls:'play',label:'⛩️ 景點'};
+}
+
+/* ================= 面板內容(卡片系統,型別由 Places.類型 明確決定) ================= */
+function kvRow(k,v){ return v?'<div class="pc-row"><span class="pc-k">'+k+'</span><span class="pc-v">'+escapeHtml(v)+'</span></div>':''; }
+function linkRow(k,url,label){ return url?'<div class="pc-row"><span class="pc-k">'+k+'</span><span class="pc-v"><a href="'+escapeHtml(url)+'" target="_blank" rel="noopener">'+(label||'開啟連結')+'</a></span></div>':''; }
+function tipBox(v){ return v?'<div class="pc-tip">💡 '+escapeHtml(v)+'</div>':''; }
+
+/* 停車資訊「引用其他 Place」解析
+   規則:停車備註(或停車費)欄若寫「停車同P004」,
+   自動找到 P004 並完整繼承其停車資訊(MAPCODE/停車費/停車備註)。
+   - 支援多層引用(P006→P005→P004),深度上限 3 防止循環引用
+   - 引用的 PlaceID 不存在時:console.warn 提示、顯示原本內容、絕不報錯 */
+function resolveParking(p, depth){
+  depth = depth || 0;
+  /* 現行 Places 停車資訊 = MAPCODE + 停車(單欄文字) */
+  var park = { mapcode:p.mapcode||'', pnote:p.pnote||'' };
+  var refM = park.pnote.match(/停車同\s*(P\d+)/i);
+  if(!refM) return park;
+  if(depth >= 3){ AppLog.data('停車引用層數過深(疑似循環引用),停止解析:'+p.placeId); return park; }
+  var refId = refM[1].toUpperCase();
+  var target = DB.places[refId];
+  if(!target){ AppLog.data('找不到停車引用的地點:'+refId+'(來自 '+p.placeId+')'); return park; }
+  return resolveParking(target, depth+1);   // 完整繼承目標停車資訊
+}
+
+/* 停車面板:MAP CODE 大字純顯示(看著輸入車機),不提供複製按鈕 */
+function parkingPanel(p){
+  if(!p) return '';
+  var park = resolveParking(p);
+  var out = '';
+  if(park.mapcode){
+    out += '<div class="mapcode-box"><div style="width:100%">' +
+           '<div class="mc-lbl">MAP CODE（車用導航輸入）</div>' +
+           '<div class="mc-val mc-big">' + escapeHtml(park.mapcode) + '</div>' +
+           '</div></div>';
+  }
+  out += kvRow('停車場', park.pnote);
+  return out;
+}
+function restRows(list){
+  return list.map(function(r){
+    var rate = r.rating ? (/^[\d.]+$/.test(r.rating) ? 'Tabelog '+r.rating : r.rating) : '';
+    return '<div class="pc-rest"><div class="pc-rest-n">🍜 '+escapeHtml(r.name)+
+      (rate?' <span class="pc-rest-r">'+escapeHtml(rate)+'</span>':'')+'</div>'+
+      '<div class="pc-rest-d">'+escapeHtml([r.cat,r.hours,r.pay].filter(Boolean).join('｜'))+'</div>'+
+      (r.note?'<div class="pc-rest-d">'+escapeHtml(r.note)+'</div>':'')+'</div>';
+  }).join('');
+}
+function infoPanel(res){
+  if(!res) return '';
+  if(res.kind==='rest'){
+    var r=res.r;
+    var rate = r.rating ? (/^[\d.]+$/.test(r.rating) ? 'Tabelog '+r.rating : r.rating) : '';
+    return kvRow('⭐ 評分',rate)+kvRow('🍽 類型',r.cat)+kvRow('🕒 營業',r.hours)+
+           kvRow('💳 付款',r.pay)+kvRow('🚗 交通',r.travel)+kvRow('🅿 停車',r.pnote)+tipBox(r.note);
+  }
+  var p=res.p, t=p.tnorm, out='';
+  if(t==='hotel'){
+    var h=hotelOf(p);
+    if(h) out+=kvRow('🏨 入住',h.checkin)+kvRow('🏨 退房',h.checkout)+kvRow('📍 地址',h.addr)+
+               kvRow('🅿 停車',h.pnote)+kvRow('📅 適用',h.dates)+tipBox(h.note||p.note);
+    else out+=kvRow('🅿 停車',p.pnote)+tipBox(p.note);
+    return out;
+  }
+  if(t==='ferry'){
+    out+= kvRow('⛴ 航程/搭乘',p.travel)+kvRow('🎫 船票',p.ticket)+kvRow('🕒 營業',p.hours)+tipBox(p.note);
+    if(p.ttl) out+='<a class="nx-navbtn" style="margin-top:10px;background:var(--violet)" href="'+escapeHtml(p.ttl)+'" target="_blank" rel="noopener">⛴ 查看官方完整時刻表</a>';
+    return out;
+  }
+  out+=kvRow('🕒 營業',p.hours)+kvRow('🎫 門票',p.ticket);
+  out+=linkRow('🌐 官網',p.web);
+  if(p.ttl) out+=linkRow('⛴ 時刻表',p.ttl,'官方時刻表');
+  var rests=p.placeId?restaurantsOf(p.placeId):[];
+  if(rests.length) out+='<div class="pc-sub">這裡可以吃</div>'+restRows(rests);
+  out+=tipBox(p.note);
+  return out;
+}
+
+/* ================= 渲染:行程頁 ================= */
+var curDay=0, curView='today';
+function renderDaybar(){
+  var bar=document.getElementById('daybar');
+  if(curView==='split'||curView==='shop'){ bar.style.display='none'; return; }
+  var t=DB.trip;
+  if(!t||!t.days.length){ bar.style.display='none'; return; }
+  bar.style.display='flex';
+  var md=todayMD();
+  bar.innerHTML=t.days.map(function(d,i){
+    return '<button class="day-chip '+(i===curDay&&curView==='trip'?'active':'')+' '+(d.date===md?'today-chip':'')+'" onclick="gotoDay('+i+')">Day '+(i+1)+'<span class="dow">'+d.date+(d.dow?'·'+d.dow:'')+'</span></button>';
+  }).join('');
+}
+function gotoDay(i){
+  curDay=i;
+  if(curView!=='trip') switchView('trip');
+  else { renderDaybar(); renderTrip(); }
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+function togglePanel(itemId,kind,btn){
+  var el=document.getElementById('pn_'+kind+'_'+itemId);
+  if(!el) return;
+  var open=el.classList.toggle('open');
+  if(btn) btn.classList.toggle('on',open);
+}
+function onCheck(id){
+  toggleCheck(id);
+  if(curView==='trip') renderTrip();
+  else if(curView==='today') renderToday();
+  toast(getChecks()[id]?'已打卡 ✓':'取消打卡');
+}
+function renderItem(it,checks){
+  var done=checks[it.id];
+  var res=resolveRef(it);
+  var cat=typeTag(res);
+  if(!cat){
+    var s=it.act+(it.place||'');
+    if(/早餐|午餐|晚餐|吃/.test(s)) cat={cls:'food',label:'🍜 美食'};
+    else if(/前往|出發|抵達|回|機場|>>|搭/.test(it.act)) cat={cls:'move',label:'🚗 移動'};
+    else cat=null;
+  }
+  var hasPlaceTxt=it.place&&it.place.trim();
+  var p=res&&res.kind==='place'?res.p:null;
+  /* 交通 chip:行程「交通」欄優先;空值時退回資料庫的「交通/交通時間」欄 */
+  var drive=extractDrive(it.move) || (p&&p.travel) || (res&&res.kind==='rest'&&res.r.travel) || '';
+  var driveIcon = /開車/.test(drive) ? '🚗' : /步行|走路/.test(drive) ? '🚶' : /渡輪|航程|搭船/.test(drive) ? '⛴' : '🚗';
+
+  var qa='';
+  if(hasPlaceTxt||res){
+    qa+='<a class="qa-btn drv" href="'+navUrl(it,res)+'" target="_blank" rel="noopener">'+(transport()==='drive'?'🚗 導航':'🚃 路線')+'</a>';
+  }
+  var pk=p&&(p.mapcode||p.pfee||p.pnote)?parkingPanel(p):'';
+  if(pk&&transport()==='drive') qa+='<button class="qa-btn pk" onclick="togglePanel(\''+it.id+'\',\'pk\',this)">🅿 停車</button>';
+  var info=infoPanel(res);
+  if(info){
+    var lbl='ℹ️ 資訊';
+    if(res.kind==='rest') lbl='🍜 資訊';
+    else if(p){ lbl=({shopping:'🏬 資訊',restarea:'🍜 美食',hotel:'🏨 資訊',ferry:'⛴ 渡輪',parking:'🚗 租車'})[p.tnorm]||'ℹ️ 資訊'; }
+    qa+='<button class="qa-btn '+(p&&p.tnorm==='ferry'?'fr':'nf')+'" onclick="togglePanel(\''+it.id+'\',\'nf\',this)">'+lbl+'</button>';
+  }
+  if(p&&p.tnorm==='shopping'&&DB.shop.some(function(s){return (s.placeId||'').toUpperCase()===(p.placeId||'').toUpperCase();})){
+    qa+='<button class="qa-btn sp" onclick="switchView(\'shop\')">🏬 樓層</button>';
+  }
+  var hasMore=it.move||it.note;
+  if(hasMore) qa+='<button class="qa-btn mo" onclick="togglePanel(\''+it.id+'\',\'mo\',this)">📝 更多</button>';
+
+  var panels='';
+  if(pk) panels+='<div class="panel" id="pn_pk_'+it.id+'">'+pk+'</div>';
+  if(info) panels+='<div class="panel" id="pn_nf_'+it.id+'">'+info+'</div>';
+  if(hasMore){
+    panels+='<div class="panel" id="pn_mo_'+it.id+'">'+
+      (it.move?'<div class="sec move"><div class="sec-lbl">🚗 交通</div>'+highlightNote(it.move)+'</div>':'')+
+      (it.note?'<div class="sec" style="margin-top:8px"><div class="sec-lbl">📝 備註</div>'+highlightNote(it.note)+'</div>':'')+
+      '</div>';
+  }
+  return '<div class="item '+(done?'checked':'')+'" id="it_'+it.id+'">'+
+    '<div class="item-main">'+
+      '<div class="chk '+(done?'on':'')+'" onclick="onCheck(\''+it.id+'\')">'+(done?'✓':'')+'</div>'+
+      '<div class="time '+(it.time?'':'blank')+'">'+escapeHtml(it.time||'·')+'</div>'+
+      '<div class="body">'+
+        (it.act?'<div class="act">'+escapeHtml(it.act)+'</div>':'')+
+        (hasPlaceTxt?'<div class="place-row"><span class="place">'+escapeHtml(it.place.replace(/\n/g,' '))+'</span></div>':'')+
+        '<div class="chip-row">'+
+          (cat?'<span class="tag '+cat.cls+'">'+cat.label+'</span>':'')+
+          (drive?'<span class="drive-chip">'+driveIcon+' '+escapeHtml(drive)+'</span>':'')+
+        '</div>'+
+      '</div>'+
+    '</div>'+
+    (qa?'<div class="qa-row">'+qa+'</div>':'')+panels+
+  '</div>';
+}
+function renderTrip(){
+  var view=document.getElementById('view-trip');
+  var t=DB.trip;
+  if(!t||!t.days.length){ view.innerHTML='<div class="empty-state">行程資料載入中…</div>'; return; }
+  var day=t.days[curDay];
+  if(!day){ curDay=0; day=t.days[0]; }
+  var checks=getChecks();
+  var acts=day.items.filter(function(it){return it.act;});
+  var doneN=acts.filter(function(it){return checks[it.id];}).length;
+  view.innerHTML='<div class="day-head"><span class="num">DAY '+(curDay+1)+'</span>'+
+    '<span class="date">'+day.date+(day.dow?' ('+day.dow+')':'')+'</span>'+
+    '<span class="prog">'+doneN+'/'+acts.length+' ✓</span></div>'+
+    day.items.map(function(it){return renderItem(it,checks);}).join('');
+}
+
+/* ================= 今天模式 ================= */
+function findToday(){
+  var md=todayMD();
+  if(!DB.trip) return null;
+  var di=DB.trip.days.findIndex(function(d){return d.date===md;});
+  return di>=0?di:null;
+}
+function renderToday(){
+  var view=document.getElementById('view-today');
+  var ti=findToday();
+  var checks=getChecks();
+  if(ti===null){
+    var days=DB.trip?DB.trip.days.slice(0,3):[];
+    view.innerHTML='<div class="today-hero"><div class="lbl">TODAY · '+todayMD()+'</div>'+
+      '<div class="date">還沒到出發日</div>'+
+      '<div class="empty">今天沒有排定行程 🗓️<br>出發當天這裡會自動顯示當日安排與下一站。</div>'+
+      '<button class="today-jump" onclick="switchView(\'trip\')">查看完整行程 →</button></div>'+
+      (days.length?'<div class="seg">行程重點</div>':'')+
+      days.map(function(d,i){
+        var hl=d.items.filter(function(it){return it.act;}).slice(0,3).map(function(it){return it.act;}).join('、');
+        return '<div class="hotel" style="border-left-color:var(--sea);cursor:pointer" onclick="gotoDay('+i+')"><div class="h-lbl" style="color:var(--sea)">DAY '+(i+1)+' · '+d.date+'</div><div class="h-name" style="font-size:14px">'+escapeHtml(hl)+'</div></div>';
+      }).join('');
+    return;
+  }
+  var day=DB.trip.days[ti];
+  var items=day.items.filter(function(it){return it.act;});
+  var doneN=items.filter(function(it){return checks[it.id];}).length;
+  var next=items.find(function(it){return !checks[it.id];});
+  var h='<div class="today-hero"><div class="lbl">TODAY · DAY '+(ti+1)+'</div>'+
+    '<div class="date">'+day.date+(day.dow?' ('+day.dow+')':'')+'</div>'+
+    '<div class="loc">'+doneN+'/'+items.length+' 完成</div></div>';
+  if(next){
+    var res=resolveRef(next);
+    var pN=res&&res.kind==='place'?res.p:null;
+    var drive=extractDrive(next.move) || (pN&&pN.travel) || (res&&res.kind==='rest'&&res.r.travel) || '';
+    var canNav=(next.place&&next.place.trim())||res;
+    h+='<div class="nx-hero"><div class="nx-lbl">⬇ 下一站</div>'+
+      (next.time?'<div class="nx-time">'+escapeHtml(next.time)+'</div>':'')+
+      '<div class="nx-act">'+escapeHtml(next.act)+'</div>'+
+      (next.place?'<div class="nx-place">📍 '+escapeHtml(next.place.replace(/\n/g,' '))+(drive?'｜'+(/步行/.test(drive)?'🚶':'🚗')+' '+escapeHtml(drive):'')+'</div>':'')+
+      (canNav?'<a class="nx-navbtn" href="'+navUrl(next,res)+'" target="_blank" rel="noopener">'+(transport()==='drive'?'🚗 開始導航':'🚃 查路線')+'</a>':'')+
+      '<button class="nx-done" onclick="onCheck(\''+next.id+'\')">✓ 完成這站</button></div>';
+  }else{
+    h+='<div class="nx-hero all-done"><div class="nx-act">今天行程全部完成 🎉</div><div class="nx-place">好好休息，明天見！</div></div>';
+  }
+  var rest=items.filter(function(it){return !checks[it.id]&&it!==next;});
+  if(rest.length){
+    h+='<div class="seg">接下來還有 '+rest.length+' 站</div>'+rest.map(function(it){
+      return '<div class="mini-card" onclick="gotoDay('+ti+')"><span class="mt">'+escapeHtml(it.time||'·')+'</span><span class="mc">'+escapeHtml(it.act)+(it.place?'<small>'+escapeHtml(it.place.replace(/\n/g,' '))+'</small>':'')+'</span></div>';
+    }).join('');
+  }
+  h+='<button class="today-jump dark" onclick="gotoDay('+ti+')">看今日完整細節 →</button>';
+  view.innerHTML=h;
+}
+
+/* ================= 購物模式(資料來自 Shopping 表) ================= */
+var _shopQ='';
+function shopQ(v){ _shopQ=v.trim().toLowerCase(); renderShopResults(); }
+function toggleWant(id){
+  var w=getWants(); if(w[id]) delete w[id]; else w[id]=true;
+  lsSet('trip_shop_wants',w); renderShopResults();
+}
+function toggleFloor(fid,btn){
+  var el=document.getElementById(fid);
+  var open=el.classList.toggle('open'); btn.classList.toggle('on',open);
+}
+function shopMalls(){
+  var byPlace={};
+  DB.shop.forEach(function(s){
+    var pid=(s.placeId||'').toUpperCase(); if(!pid) return;
+    (byPlace[pid]=byPlace[pid]||[]).push(s);
+  });
+  return Object.keys(byPlace).map(function(pid){
+    return { place:DB.places[pid]||{name:pid,placeId:pid}, stores:byPlace[pid] };
+  });
+}
+function storeRow(s,id,on){
+  var must=/是|y|✓|v/i.test(s.must||'');
+  var tax=/是|y|✓|v/i.test(s.taxfree||'');
+  return '<div class="store-row" onclick="toggleWant(\''+id.replace(/'/g,"\\'")+'\')">'+
+    '<span class="st-chk'+(on?' on':'')+'">'+(on?'✓':'')+'</span>'+
+    '<span class="st-n">'+escapeHtml(s.name)+(must?' <span class="st-must">必逛</span>':'')+(tax?' <span class="st-tax">免稅</span>':'')+'</span>'+
+    '<span class="st-f">'+escapeHtml([s.floor,s.note?s.note.replace('櫃位 ',''):''].filter(Boolean).join('·'))+'</span></div>';
+}
+function renderShop(){
+  var view=document.getElementById('view-shop');
+  if(!shopMalls().length){ view.innerHTML='<div class="empty-state">Shopping 資料表尚無店家<br>在試算表新增後會自動出現</div>'; return; }
+  view.innerHTML='<div class="shop-search"><input id="shopSearchInput" placeholder="🔍 搜尋店家（如 UNIQLO、大創）" value="'+escapeHtml(_shopQ)+'" oninput="shopQ(this.value)"></div><div id="shopResults"></div>';
+  renderShopResults();
+}
+function renderShopResults(){
+  var box=document.getElementById('shopResults'); if(!box) return;
+  var wants=getWants(), h='';
+  shopMalls().forEach(function(m,mi){
+    var p=m.place;
+    if(_shopQ){
+      var hits=m.stores.filter(function(s){return (s.name||'').toLowerCase().indexOf(_shopQ)>=0;});
+      h+='<div class="shop-mall"><div class="sm-name">🏬 '+escapeHtml(p.name)+'</div>'+
+        (hits.length?hits.map(function(s){var id='w_'+mi+'_'+s.floor+'_'+s.name;return storeRow(s,id,!!wants[id]);}).join(''):'<div class="empty-state" style="padding:16px">找不到「'+escapeHtml(_shopQ)+'」</div>')+'</div>';
+      return;
+    }
+    var wanted=m.stores.filter(function(s){return wants['w_'+mi+'_'+s.floor+'_'+s.name];});
+    h+='<div class="shop-mall"><div class="sm-name">🏬 '+escapeHtml(p.name)+'</div>'+
+      (p.hours?'<div class="sm-hours">🕒 '+escapeHtml(p.hours)+'</div>':'')+
+      '<div class="sm-actions">'+
+        '<a class="qa-btn drv" href="https://www.google.com/maps/dir/?api=1&destination='+encodeURIComponent((p.navq||p.name)+' 日本')+'&travelmode=driving" target="_blank" rel="noopener">🚗 導航</a>'+
+        (p.mapcode?'<button class="qa-btn pk" onclick="copyText(\''+p.mapcode+'\',\'MAP CODE \')">📋 MAP CODE</button>':'')+
+        (p.web?'<a class="qa-btn nf" href="'+escapeHtml(p.web)+'" target="_blank" rel="noopener">🌐 官方樓層圖</a>':'')+
+      '</div>'+(p.note?'<div class="pc-tip">💡 '+escapeHtml(p.note)+'</div>':'');
+    if(wanted.length){
+      h+='<div class="want-box"><div class="want-title">⭐ 想逛清單（'+wanted.length+'）</div>'+
+        wanted.map(function(s){var id='w_'+mi+'_'+s.floor+'_'+s.name;return storeRow(s,id,true);}).join('')+'</div>';
+    }
+    var floors={};
+    m.stores.forEach(function(s){ (floors[s.floor||'其他']=floors[s.floor||'其他']||[]).push(s); });
+    h+='<div class="seg" style="margin-top:14px">樓層指南（點樓層展開）</div>';
+    Object.keys(floors).forEach(function(f,fi){
+      var fid='fl_'+mi+'_'+fi;
+      var wc=floors[f].filter(function(s){return wants['w_'+mi+'_'+s.floor+'_'+s.name];}).length;
+      h+='<div class="floor"><button class="floor-head" onclick="toggleFloor(\''+fid+'\',this)">'+
+        '<span class="fl-f">'+escapeHtml(f)+'</span><span class="fl-n">'+floors[f].length+' 家'+(wc?'｜⭐'+wc:'')+'</span><span class="fl-arw">▼</span></button>'+
+        '<div class="floor-body" id="'+fid+'">'+floors[f].map(function(s){var id='w_'+mi+'_'+s.floor+'_'+s.name;return storeRow(s,id,!!wants[id]);}).join('')+'</div></div>';
+    });
+    h+='</div>';
+  });
+  box.innerHTML=h;
+}
+
+/* ================= 分帳(App 記帳 + CMS 行前團費) ================= */
+var selectedPayer=null;
+function getPeople(){ return lsGet('trip_people',[]); }
+function getExpenses(){ return lsGet('trip_expenses',[]); }
+function selPayer(el){
+  document.querySelectorAll('#payerGrid .payer-opt').forEach(function(o){o.classList.remove('on');});
+  el.classList.add('on'); selectedPayer=el.dataset.p;
+}
+function addPerson(){
+  var inp=document.getElementById('newPerson'); var name=inp.value.trim(); if(!name) return;
+  var people=getPeople();
+  if(people.indexOf(name)>=0){ toast('這個名字已經有了'); return; }
+  people.push(name); lsSet('trip_people',people); renderSplit(); toast(name+' 加入了 👋');
+}
+function removePerson(i){ var p=getPeople(); p.splice(i,1); lsSet('trip_people',p); renderSplit(); }
+function addExpense(){
+  var desc=document.getElementById('expDesc').value.trim();
+  var amt=parseFloat(document.getElementById('expAmt').value);
+  if(!desc){ toast('請輸入項目名稱'); return; }
+  if(!amt||amt<=0){ toast('請輸入正確金額'); return; }
+  if(!selectedPayer){ toast('請選擇誰付的錢'); return; }
+  var split=Array.prototype.slice.call(document.querySelectorAll('#splitWith .sw-opt.on')).map(function(o){return o.dataset.p;});
+  if(!split.length){ toast('請至少選一個人分攤'); return; }
+  var ex=getExpenses(); ex.push({desc:desc,amt:amt,payer:selectedPayer,split:split,d:todayMD()});
+  lsSet('trip_expenses',ex); selectedPayer=null; renderSplit(); toast('已加入 ✓');
+}
+function removeExpense(i){ var e=getExpenses(); e.splice(i,1); lsSet('trip_expenses',e); renderSplit(); }
+function calcSettle(people,expenses){
+  var total=expenses.reduce(function(s,e){return s+Number(e.amt);},0);
+  var paid={},owed={};
+  people.forEach(function(p){paid[p]=0;owed[p]=0;});
+  expenses.forEach(function(e){
+    paid[e.payer]=(paid[e.payer]||0)+Number(e.amt);
+    var share=Number(e.amt)/e.split.length;
+    e.split.forEach(function(p){owed[p]=(owed[p]||0)+share;});
+  });
+  var balances=people.map(function(p){return {name:p,paid:Math.round(paid[p]||0),owed:Math.round(owed[p]||0),net:Math.round((paid[p]||0)-(owed[p]||0))};});
+  var creditors=balances.filter(function(b){return b.net>0;}).map(function(b){return {name:b.name,amt:b.net};}).sort(function(a,b){return b.amt-a.amt;});
+  var debtors=balances.filter(function(b){return b.net<0;}).map(function(b){return {name:b.name,amt:-b.net};}).sort(function(a,b){return b.amt-a.amt;});
+  var settlements=[],ci=0,di=0;
+  while(ci<creditors.length&&di<debtors.length){
+    var give=Math.min(creditors[ci].amt,debtors[di].amt);
+    if(give>0) settlements.push({from:debtors[di].name,to:creditors[ci].name,amt:Math.round(give)});
+    creditors[ci].amt-=give; debtors[di].amt-=give;
+    if(creditors[ci].amt<=0.5)ci++; if(debtors[di].amt<=0.5)di++;
+  }
+  return {total:Math.round(total),balances:balances,settlements:settlements};
+}
+function renderSplit(){
+  var view=document.getElementById('view-split');
+  var people=getPeople(), expenses=getExpenses();
+  var md=todayMD();
+  var todaySum=expenses.filter(function(e){return e.d===md;}).reduce(function(s,e){return s+Number(e.amt);},0);
+  var total=expenses.reduce(function(s,e){return s+Number(e.amt);},0);
+  var result=calcSettle(people,expenses);
+
+  var dash= expenses.length?'<div class="dash">'+
+    '<div class="stat"><div class="st-l">今日花費</div><div class="st-v">¥'+Math.round(todaySum).toLocaleString()+'</div></div>'+
+    '<div class="stat"><div class="st-l">總花費</div><div class="st-v">¥'+Math.round(total).toLocaleString()+'</div></div>'+
+    '<div class="stat"><div class="st-l">筆數</div><div class="st-v">'+expenses.length+'</div></div></div>':'';
+
+  var cms= DB.expCMS.length?'<div class="card"><h3>🧳 行前團費（來自試算表）</h3>'+
+    (DB.expMembers&&DB.expMembers.length?'<div class="er2" style="margin-bottom:8px">👥 同行成員：'+DB.expMembers.map(escapeHtml).join('、')+'</div>':'')+
+    DB.expCMS.map(function(e){
+      var amts=[];
+      if(e.twd) amts.push('NT$'+e.twd.replace(/\s/g,''));
+      if(e.jpy) amts.push('¥'+e.jpy.replace(/\s/g,''));
+      var amt=amts.join(' / ');
+      if(e.total){
+        return '<div class="exp-item" style="border-top:2px solid var(--line)"><div class="er1"><span class="edesc" style="color:var(--sea-deep)">'+escapeHtml(e.cat)+'</span><span class="eamt">'+amt+'</span></div>'+(e.note?'<div class="er2">'+escapeHtml(e.note)+'</div>':'')+'</div>';
+      }
+      return '<div class="exp-item"><div class="er1"><span class="edesc">'+escapeHtml(e.name)+'</span><span class="eamt">'+(amt||'')+'</span></div>'+
+        '<div class="er2">'+escapeHtml([e.cat,e.note].filter(Boolean).join(' · '))+'</div></div>';
+    }).join('')+'</div>':'';
+
+  var peopleChips=people.map(function(p,i){
+    return '<span class="pchip">'+escapeHtml(p)+'<span class="x" onclick="removePerson('+i+')">✕</span></span>';
+  }).join('')||'<span style="color:var(--ink-faint);font-size:13px">還沒有成員，先新增大家的名字 👇</span>';
+
+  var expHtml=expenses.length?expenses.map(function(e,i){
+    var withTxt=e.split.length===people.length?'全部人均分':e.split.join('、')+' 均分';
+    return '<div class="exp-item"><div class="er1"><span class="edesc">'+escapeHtml(e.desc)+'</span><span class="eamt">¥'+Number(e.amt).toLocaleString()+'</span></div>'+
+      '<div class="er2">'+escapeHtml(e.payer)+' 付 · '+escapeHtml(withTxt)+(e.d?' · '+e.d:'')+'</div>'+
+      '<span class="edel" onclick="removeExpense('+i+')">🗑 刪除</span></div>';
+  }).join(''):'<div class="empty-state">還沒有任何支出記錄</div>';
+
+  view.innerHTML=dash+
+    '<div class="split-intro">旅途中記每筆花費，自動算出誰該給誰。行前團費另列於下方，不重複計算 💴</div>'+
+    '<div class="card"><h3>👥 同行成員</h3><div class="people-chips">'+peopleChips+'</div>'+
+    '<div class="inline-add"><input id="newPerson" placeholder="輸入名字，如 Baron" onkeydown="if(event.key===\'Enter\')addPerson()"><button class="btn" onclick="addPerson()">新增</button></div></div>'+
+    (people.length?'<div class="card"><h3>➕ 新增一筆支出</h3>'+
+      '<div class="field"><label>項目名稱</label><input id="expDesc" placeholder="如：晚餐拉麵、渡輪票"></div>'+
+      '<div class="field"><label>金額（日幣 ¥）</label><input id="expAmt" type="number" inputmode="numeric" placeholder="如：2000"></div>'+
+      '<div class="field"><label>誰付的錢？</label><div class="payer-grid" id="payerGrid">'+
+        people.map(function(p){return '<div class="payer-opt" data-p="'+escapeHtml(p)+'" onclick="selPayer(this)">'+escapeHtml(p)+'</div>';}).join('')+'</div></div>'+
+      '<div class="field"><label>這筆分給誰？（可多選，預設全部）</label><div class="split-with" id="splitWith">'+
+        people.map(function(p){return '<div class="sw-opt on" data-p="'+escapeHtml(p)+'" onclick="this.classList.toggle(\'on\')">'+escapeHtml(p)+'</div>';}).join('')+'</div></div>'+
+      '<button class="btn coral block" onclick="addExpense()">加入這筆支出</button></div>':'')+
+    '<div class="card"><h3>🧾 支出明細 '+(expenses.length?'('+expenses.length+'筆)':'')+'</h3>'+expHtml+'</div>'+
+    (result.balances.length?'<div class="card result-card"><h3>💰 每人分攤</h3>'+
+      result.balances.map(function(b){return '<div class="bal-row"><span class="who">'+escapeHtml(b.name)+'</span><span>付了 ¥'+b.paid.toLocaleString()+' · 該付 ¥'+b.owed.toLocaleString()+' <span class="num '+(b.net>=0?'pos':'neg')+'">（'+(b.net>=0?'+':'')+b.net.toLocaleString()+'）</span></span></div>';}).join('')+
+      (result.settlements.length?'<div class="settle"><div style="font-size:12px;opacity:.8;margin-bottom:6px">👉 這樣結清：</div>'+
+        result.settlements.map(function(s){return '<div class="s-line"><b>'+escapeHtml(s.from)+'</b> 付給 <b>'+escapeHtml(s.to)+'</b> ¥'+s.amt.toLocaleString()+'</div>';}).join('')+'</div>':
+        '<div class="settle"><div style="font-size:13px;opacity:.85">目前已經平衡，不用互相轉帳 👍</div></div>')+
+      '</div>':'')+cms;
+}
+
+/* ================= 導覽 / 啟動 ================= */
+function switchView(v){
+  curView=v;
+  document.querySelectorAll('.view').forEach(function(el){el.classList.remove('active');});
+  var t=document.getElementById('view-'+v); if(t) t.classList.add('active');
+  document.querySelectorAll('.tabbar-btn').forEach(function(b){b.classList.toggle('active',b.dataset.view===v);});
+  renderDaybar();
+  renderCurrent(v);
+  window.scrollTo({top:0});
+}
+function renderCurrent(v){
+  v=v||curView;
+  var fns={ today:renderToday, trip:renderTrip, shop:renderShop, split:renderSplit };
+  if(!fns[v]) return;
+  try{ fns[v](); }
+  catch(e){
+    AppLog.render('視圖「'+v+'」渲染失敗:'+(e.message||e));
+    var el=document.getElementById('view-'+v);
+    if(el) el.innerHTML='<div class="empty-state">此頁面暫時無法顯示,請下拉重試或按右上角同步。<br><small>('+escapeHtml(e.message||'')+')</small></div>';
+  }
+}
+function renderAll(){ renderDaybar(); renderCurrent(); }
+function init(){
+  var ok=bootLocal();
+  if(ok){
+    buildDB();
+    if(tripName()){ var bt=document.getElementById('brandTitle'); if(bt) bt.textContent=tripName(); }
+    /* CMS 同行成員 → 首次使用時自動帶入分帳成員 */
+    if(getPeople().length===0 && DB.expMembers && DB.expMembers.length){
+      lsSet('trip_people', DB.expMembers.slice());
+    }
+    var ti=findToday(); if(ti!==null) curDay=ti;
+    setSyncState(SRC.itin||'builtin');
+    renderAll();
+  }else{
+    document.getElementById('view-today').innerHTML='<div class="empty-state">😕 資料載入異常，請重新下載檔案。</div>';
+  }
+  syncAll(false);
+}
+window.addEventListener('scroll',function(){
+  document.getElementById('totop').classList.toggle('show',window.scrollY>400);
+});
+init();
+
+</script>
+</body>
+</html>
