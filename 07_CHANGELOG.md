@@ -2,6 +2,12 @@
 
 紀錄格式:日期 / 版本 / 重點。細節不展開,新變更往上加。
 
+## 2026-07-07 — 天氣城市 fallback 實作
+- 首頁天氣城市推算新增 resolved 飯店資料與同日鄰近站點 fallback
+- `Guest House Life Field` 這類本身不含城市的下一站,可沿用同日合理城市顯示天氣
+- 推算結果只供天氣 chip 使用,不影響導航、schema、Google Sheet 或 CMS
+- Breaking Change:無
+
 ## 2026-07-07 — 天氣城市 fallback 實作計畫
 - 新增 `docs/superpowers/plans/2026-07-07-weather-city-fallback.md`
 - 將天氣城市推算 fallback 拆成 resolved 資料比對、同日鄰近站點 fallback、首頁天氣接線與驗證任務
