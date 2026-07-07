@@ -1414,6 +1414,45 @@ function weatherTextForItem(item,res){
 function inferWeatherCity(item,res){
   return weatherCityFromText(weatherTextForItem(item,res));
 }
+function weatherCityForItem(item){
+  if(!item) return null;
+  return inferWeatherCity(item,resolveRef(item));
+}
+function dominantWeatherCity(items){
+  var counts={}, byKey={}, topKey='', topCount=0, tied=false;
+  (items||[]).forEach(function(it){
+    var city=weatherCityForItem(it);
+    if(!city) return;
+    byKey[city.key]=city;
+    counts[city.key]=(counts[city.key]||0)+1;
+  });
+  Object.keys(counts).forEach(function(key){
+    if(counts[key]>topCount){
+      topKey=key;
+      topCount=counts[key];
+      tied=false;
+    }else if(counts[key]===topCount){
+      tied=true;
+    }
+  });
+  return topKey&&!tied?byKey[topKey]:null;
+}
+function inferWeatherCityForDay(day,item){
+  var direct=weatherCityForItem(item);
+  if(direct) return direct;
+  var items=(day&&day.items?day.items:[]).filter(function(it){ return it&&it.act; });
+  var idx=items.indexOf(item);
+  if(idx<0) return dominantWeatherCity(items);
+  for(var i=idx-1;i>=0;i--){
+    var prev=weatherCityForItem(items[i]);
+    if(prev) return prev;
+  }
+  for(var j=idx+1;j<items.length;j++){
+    var next=weatherCityForItem(items[j]);
+    if(next) return next;
+  }
+  return dominantWeatherCity(items);
+}
 function weatherIcon(code){
   code=Number(code);
   if(code===0) return '☀️';
