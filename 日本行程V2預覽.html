@@ -1647,8 +1647,8 @@ function renderWeatherChip(weather){
 }
 function requestHomeWeather(dayIndex,item){
   if(!item) return;
-  var res=resolveRef(item);
-  var city=inferWeatherCity(item,res);
+  var day=DB.trip&&DB.trip.days?DB.trip.days[dayIndex]:null;
+  var city=inferWeatherCityForDay(day,item);
   if(!city) return;
   var key='day_'+dayIndex+'_'+city.key;
   if(homeWeatherState[key]) return;
@@ -1662,7 +1662,8 @@ function requestHomeWeather(dayIndex,item){
 }
 function homeWeatherFor(dayIndex,item){
   if(!item) return null;
-  var city=inferWeatherCity(item,resolveRef(item));
+  var day=DB.trip&&DB.trip.days?DB.trip.days[dayIndex]:null;
+  var city=inferWeatherCityForDay(day,item);
   if(!city) return null;
   var key='day_'+dayIndex+'_'+city.key;
   var state=homeWeatherState[key];
