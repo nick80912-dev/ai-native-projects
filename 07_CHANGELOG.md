@@ -2,6 +2,12 @@
 
 紀錄格式:日期 / 版本 / 重點。細節不展開,新變更往上加。
 
+## 2026-07-07 — 首頁天氣摘要實作計畫
+- 新增 `docs/superpowers/plans/2026-07-07-home-weather-summary.md`
+- 將天氣摘要拆成地點推估、天氣抓取/快取、日期卡 UI 與驗收任務
+- 本次僅新增實作計畫,尚未修改 App 功能
+- Breaking Change:無
+
 ## 2026-07-07 — 首頁天氣摘要設計規格
 - 新增 `docs/superpowers/specs/2026-07-07-home-weather-summary-design.md`
 - 定義日期卡右側顯示下一站所在地天氣摘要
