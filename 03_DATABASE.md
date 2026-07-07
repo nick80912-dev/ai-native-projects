@@ -1,36 +1,96 @@
-# 03 CMS 資料表(Google Sheets)
+# 03 CMS 資料表快速概覽(Google Sheets)
 
-檔案:「261018-261023岡山四國六天五夜」(Drive fileId `1B5g7KuVi2WaFVVSdhqRMeTQV_tBpgnzOAv6aMQdFZJw`)
-發布 base:`https://docs.google.com/spreadsheets/d/e/2PACX-1vRenmV8UxEzWbzSjKJKi4rSpYt63geBqhEkKsl1GemWVPmFKTcvv3Uk71Hjla3TGBpGIjC7bQDDdI00/pub?single=true&output=csv&gid=`
+## 文件定位
+- 本文件只提供 CMS 資料表概覽與維護規則,不是欄位權威來源。
+- 欄位權威來源:`schema.js`。
+- 欄位細節文件:`09_SCHEMA_MAPPING.md`。
+- 若本文件與 `schema.js` 衝突,一律以 `schema.js` 為準。
+
+## Google Sheet 來源
+- 檔案:「261018-261023岡山四國六天五夜」
+- Drive fileId:`1B5g7KuVi2WaFVVSdhqRMeTQV_tBpgnzOAv6aMQdFZJw`
+- Published CSV base URL:`https://docs.google.com/spreadsheets/d/e/2PACX-1vRenmV8UxEzWbzSjKJKi4rSpYt63geBqhEkKsl1GemWVPmFKTcvv3Uk71Hjla3TGBpGIjC7bQDDdI00/pub?single=true&output=csv&gid=`
 
 ## 七張工作表與 gid
-| 表 | gid | 用途 |
+| Sheet | gid | kind | 用途 |
+|---|---:|---|---|
+| 行程總表 | 1169222358 | itinerary | 行程骨架(天/時間/活動),使用 ID 引用 Places 或 Restaurants |
+| Places | 1089684162 | table | 地點主表,地點資料的單一來源 |
+| Restaurants | 1421821084 | table | 餐廳資料,可用 PID 掛到 Place 卡片 |
+| Shopping | 1182059264 | table | 商場店家資料,驅動購物頁樓層/必逛/免稅顯示 |
+| Hotels | 792115203 | table | 住宿細節,以名稱比對 Places 住宿型地點 |
+| Expenses | 1354339857 | freeform-expense | 行前團費自由格式;旅途中記帳在 App 端 |
+| TripConfig | 1070234314 | keyvalue | 旅程名稱、起訖、交通模式、幣別等設定 |
+
+## 欄位權威來源
+| 內容 | 權威文件 |
+|---|---|
+| Published CSV base URL / gid / Sheet kind | `schema.js` |
+| Google Sheet header / aliases / required | `schema.js` |
+| CMS ↔ App 欄位對照 | `09_SCHEMA_MAPPING.md` |
+| Parser 表頭比對規則 | `schema.js` / `validator.js` |
+| Places.Type values 正規化 | `schema.js` |
+| Expenses layout | `schema.js` |
+
+## 各 Sheet 用途與維護方式
+| Sheet | 用途 | 維護方式 |
 |---|---|---|
-| 行程總表 | 1169222358 | 行程骨架(天/時間/活動),引用 ID |
-| Places | 1089684162 | 地點主表(單一資料來源) |
-| Restaurants | 1421821084 | 餐廳,掛在 Place 底下 |
-| Shopping | 1182059264 | 商場店家(樓層/必逛/免稅) |
-| Hotels | 792115203 | 住宿細節 |
-| Expenses | 1354339857 | 行前團費(旅途記帳在 App 端) |
-| TripConfig | 1070234314 | key,value 設定(transport=drive/transit 等) |
+| 行程總表 | 排列每日行程與引用 ID | 新增行程列;ID 使用 Pxxx 或 Rxxx |
+| Places | 維護地點、交通、停車、營業、官網等資訊 | 新地點只新增資料列;欄位異動先改 Sheet 再改 `schema.js` |
+| Restaurants | 維護餐廳資料 | 新餐廳只新增資料列;可填 PID 掛到 Place |
+| Shopping | 維護店家、樓層、必逛、免稅等資料 | 新店家只新增資料列;PID 指向商場 Place |
+| Hotels | 維護住宿細節 | 新住宿只新增資料列;住宿地點仍需在 Places 有對應資料 |
+| Expenses | 維護行前團費 | 依 `schema.js` 的 freeform layout 維護,不是一般資料列表 |
+| TripConfig | 維護 key/value 設定 | 只使用 `schema.js` 支援的 keys 與 values |
 
-## 欄位
-- 行程總表(7欄):`日期|時間|詳細行程|地點|ID|交通|備註`。「第N天MM/DD(週)」列=換日標記。ID 填 Pxxx 或 Rxxx。
-- Places:`PlaceID|名稱|類型|導航關鍵字|MAPCODE|停車費|停車備註|營業時間|門票|電話|官網|時刻表連結|末班船|備註`
-- Restaurants:`RestID|PlaceID|店名|評分|推薦菜|營業時間|均價|付款方式|訂位|備註`
-- Shopping:`ShopID|PlaceID|店名|樓層|分類|必逛|免稅|備註`(必逛/免稅填「是」)
-- Hotels:`HotelID|名稱|入住|退房|地址|電話|停車|適用日期|備註`
-- Expenses:`ExpID|日期|項目|幣別|金額|計價|付款人|狀態|備註`
-- 解析採**表頭別名比對**,欄位順序可變,新增欄位不會壞。
+## 重要資料規則
+- 新增景點/商場/住宿地點:只新增 Places 資料列,Type 必填。
+- 新增餐廳:新增 Restaurants 資料列;填 PID 後會掛到對應 Place 卡片。
+- 新增店家:新增 Shopping 資料列;PID 指向對應商場。
+- 新增欄位:先改 Google Sheet,再改 `schema.js`;Parser 不需修改。
+- ID 格式:P/R/S/H/E + 三位數;不需連號,但不得重複、不得改變既有 ID 意義。
+- 同一地點多次造訪使用同一 PID。
+- 個人狀態(打卡/想逛/成員/旅途中記帳)存 localStorage,不進 CMS。
 
-## 關聯與規則
-- **Places.類型**(必填,決定卡片,禁止 AI 猜):`Shopping / RestaurantArea / Hotel / Attraction / FerryTerminal / Parking`
-- 每個地點只存在一次;行程重複造訪同地點用**同一個 PlaceID**(例:回住宿一律 P002)
-- Restaurants.PlaceID → 該 Place 卡片自動列出所屬餐廳
-- 停車引用:`停車備註` 寫「停車同P004」→ App 完整繼承 P004 的 MAPCODE/停車費/停車備註(深度上限3;引用不存在→顯示原文+console.warn)
-- 渡輪:不建班次資料庫。FerryTerminal 用「末班船」欄(離線可見)+「時刻表連結」開官方 PDF
+## Places.Type 規則
+- Places.Type 決定卡片型別,禁止 AI 依名稱或文字自行猜測。
+- Type 值由 `schema.js` 的 values 正規化。
+- 目前支援值:
 
-## 擴充規則
-- 新地點/餐廳/店家:**只加資料列,不改程式**
-- 新行程(如12月東京行):新的行程總表分頁+TripConfig transport=transit;程式端 SHEETS 加一組 gid
-- ID 格式:P/R/S/H/E + 三位數,不需連號,但**不得重複、不得改變既有 ID 意義**
+| Google Sheet Type | App type |
+|---|---|
+| 購物 | shopping |
+| 美食區 | restarea |
+| 住宿 | hotel |
+| 景點 | attraction |
+| 渡船口 | ferry |
+| 渡輪 | ferry |
+| 租車點 | parking |
+
+- `渡船口` 與 `渡輪` 是兩個可輸入中文值,都會正規化為 `ferry`。
+- 若要新增 Type,必須修改 `schema.js` 並同步更新 `09_SCHEMA_MAPPING.md`、相關 renderer 註冊與 CHANGELOG。
+
+## 停車資料規則
+- 現行 Places 停車資訊是單一 `停車` 欄位,承載費用、地點與備註等停車資訊。
+- `停車` 欄可寫「停車同Pxxx」,App 會繼承目標 Place 的 MAPCODE 與停車資訊。
+- 停車繼承深度與容錯由程式處理;資料維護時不要拆出額外停車欄位。
+
+## Expenses 特別規則
+- Expenses 是 `freeform-expense` 自由格式,不是一般表格式資料列表。
+- 權威 layout 寫在 `schema.js`:
+  - 成員列標記:`同行成員`
+  - 類別欄:第 0 欄
+  - 明細欄:第 1 欄
+  - 台幣欄:第 4 欄
+  - 日幣欄:第 5 欄
+  - 備註欄:第 6 欄
+  - 合計列標記:`小計` / `總計`
+- 行前團費來自 Google Sheet。
+- 旅途中記帳存在 App localStorage,不回寫 CMS。
+
+## 禁止事項
+- 不要把完整欄位清單手寫在本文件作為權威。
+- 不要繞過 `schema.js` 新增或改名欄位。
+- 不要讓 AI 猜測 Type。
+- 不要把個人狀態寫回 CMS。
+- 不要把 Expenses 當成一般資料列表設計。
