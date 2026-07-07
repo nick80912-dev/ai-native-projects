@@ -2,6 +2,12 @@
 
 紀錄格式:日期 / 版本 / 重點。細節不展開,新變更往上加。
 
+## 2026-07-07 — 行程篩選與想逛清單收合設計規格
+- 新增 `docs/superpowers/specs/2026-07-07-trip-filter-shop-wants-design.md`
+- 提案 1 採兩段式 `顯示全部 / 隱藏已完成`,限定於行程分頁
+- 提案 2 採想逛清單可收合,使用記憶體 UI state,不改 Shopping 資料結構
+- Breaking Change:無
+
 ## 2026-07-07 — 天氣城市 fallback 實作
 - 首頁天氣城市推算新增 resolved 飯店資料與同日鄰近站點 fallback
 - `Guest House Life Field` 這類本身不含城市的下一站,可沿用同日合理城市顯示天氣
