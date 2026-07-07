@@ -2,6 +2,12 @@
 
 紀錄格式:日期 / 版本 / 重點。細節不展開,新變更往上加。
 
+## 2026-07-07 — 行程篩選與想逛清單收合實作計畫
+- 新增 `docs/superpowers/plans/2026-07-07-trip-filter-shop-wants.md`
+- 明確實作順序:先提案 1 行程隱藏已完成,再提案 2 想逛清單可收合
+- 限定只改預覽 HTML 與 changelog,不改 schema、validator、Google Sheet 或資料流
+- Breaking Change:無
+
 ## 2026-07-07 — 行程篩選與想逛清單收合設計規格
 - 新增 `docs/superpowers/specs/2026-07-07-trip-filter-shop-wants-design.md`
 - 提案 1 採兩段式 `顯示全部 / 隱藏已完成`,限定於行程分頁
