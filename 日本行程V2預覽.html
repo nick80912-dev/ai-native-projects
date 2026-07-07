@@ -1361,16 +1361,36 @@ function currentMinutes(){
   return d.getHours()*60+d.getMinutes();
 }
 var WEATHER_CITIES=[
-  { key:'okayama', label:'岡山', lat:34.6618, lon:133.9350, words:['岡山','倉敷','ORIX租車 岡山機場','永旺夢樂城岡山'] },
-  { key:'hiroshima', label:'廣島', lat:34.3853, lon:132.4553, words:['廣島','原爆','和平紀念','紙鶴塔','本通'] },
-  { key:'miyajima', label:'宮島', lat:34.2959, lon:132.3198, words:['宮島','嚴島','宮島口','表参道'] },
-  { key:'tokyo', label:'東京', lat:35.6762, lon:139.6503, words:['東京','新宿','淺草','銀座','六本木','澀谷','原宿','秋葉原','駒込'] },
-  { key:'kamakura', label:'鎌倉', lat:35.3192, lon:139.5467, words:['鎌倉','江之島','藤澤','七里濱'] },
-  { key:'narita', label:'成田', lat:35.7767, lon:140.3183, words:['成田','京成','Skyliner'] }
+  { key:'okayama', label:'岡山', lat:34.6618, lon:133.9350, words:['岡山','倉敷','Okayama','Kurashiki','ORIX租車 岡山機場','永旺夢樂城岡山'] },
+  { key:'hiroshima', label:'廣島', lat:34.3853, lon:132.4553, words:['廣島','Hiroshima','原爆','和平紀念','紙鶴塔','本通'] },
+  { key:'miyajima', label:'宮島', lat:34.2959, lon:132.3198, words:['宮島','Miyajima','嚴島','宮島口','表参道'] },
+  { key:'tokyo', label:'東京', lat:35.6762, lon:139.6503, words:['東京','Tokyo','新宿','淺草','銀座','六本木','澀谷','原宿','秋葉原','駒込'] },
+  { key:'kamakura', label:'鎌倉', lat:35.3192, lon:139.5467, words:['鎌倉','Kamakura','江之島','藤澤','七里濱'] },
+  { key:'narita', label:'成田', lat:35.7767, lon:140.3183, words:['成田','Narita','京成','Skyliner'] }
 ];
+function weatherCityFromText(text){
+  text=String(text||'');
+  for(var i=0;i<WEATHER_CITIES.length;i++){
+    var city=WEATHER_CITIES[i];
+    for(var j=0;j<city.words.length;j++){
+      if(text.indexOf(city.words[j])>=0) return city;
+    }
+  }
+  return null;
+}
+function weatherHotelForItem(item,res){
+  var p=res&&res.kind==='place'?res.p:null;
+  var candidates=[item&&item.place,item&&item.act,p&&p.name].filter(Boolean).map(function(v){ return String(v).replace(/\s+/g,''); });
+  if(!candidates.length||!DB.hotels||!DB.hotels.length) return null;
+  return DB.hotels.find(function(h){
+    var name=(h.name||'').replace(/\s+/g,'');
+    return name && candidates.some(function(flat){ return flat && (flat.indexOf(name)>=0 || name.indexOf(flat)>=0); });
+  }) || null;
+}
 function weatherTextForItem(item,res){
   var p=res&&res.kind==='place'?res.p:null;
   var r=res&&res.kind==='rest'?res.r:null;
+  var h=weatherHotelForItem(item,res);
   return [
     item&&item.place,
     item&&item.act,
@@ -1379,20 +1399,20 @@ function weatherTextForItem(item,res){
     p&&p.name,
     p&&p.note,
     p&&p.travel,
+    p&&p.hours,
     r&&r.name,
     r&&r.note,
-    r&&r.travel
+    r&&r.travel,
+    r&&r.hours,
+    h&&h.name,
+    h&&h.addr,
+    h&&h.pnote,
+    h&&h.note,
+    h&&h.dates
   ].filter(Boolean).join(' ');
 }
 function inferWeatherCity(item,res){
-  var text=weatherTextForItem(item,res);
-  for(var i=0;i<WEATHER_CITIES.length;i++){
-    var city=WEATHER_CITIES[i];
-    for(var j=0;j<city.words.length;j++){
-      if(text.indexOf(city.words[j])>=0) return city;
-    }
-  }
-  return null;
+  return weatherCityFromText(weatherTextForItem(item,res));
 }
 function weatherIcon(code){
   code=Number(code);

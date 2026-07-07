@@ -92,11 +92,6 @@ function weatherCityFromText(text){
   return null;
 }
 function weatherHotelForItem(item,res){
-  var p=res&&res.kind==='place'?res.p:null;
-  if(p){
-    var hp=hotelOf(p);
-    if(hp) return hp;
-  }
   var flat=[item&&item.place,item&&item.act].filter(Boolean).join(' ').replace(/\s+/g,'');
   if(!flat||!DB.hotels||!DB.hotels.length) return null;
   return DB.hotels.find(function(h){
@@ -122,8 +117,8 @@ function weatherTextForItem(item,res){
     r&&r.travel,
     r&&r.hours,
     h&&h.name,
-    h&&h.address,
-    h&&h.parking,
+    h&&h.addr,
+    h&&h.pnote,
     h&&h.note,
     h&&h.dates
   ].filter(Boolean).join(' ');
