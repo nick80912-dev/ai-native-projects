@@ -105,6 +105,10 @@ a{color:var(--sea)}
 .today-hero .date{font-size:26px;font-weight:800;margin:2px 0 3px;position:relative}
 .today-hero .loc{font-size:13.5px;opacity:.9;position:relative}
 .today-hero .empty{font-size:14px;opacity:.9;margin-top:6px;line-height:1.6;position:relative}
+.today-hero.weather-on{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.today-hero-main{min-width:0;position:relative}
+.weather-chip{flex:0 0 auto;text-align:right;font-size:12px;line-height:1.35;background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.26);border-radius:999px;padding:7px 9px;color:#fff;font-weight:800;white-space:nowrap;position:relative}
+.weather-chip .city{font-size:12px;opacity:.9;font-weight:700;margin-right:2px}
 .mini-tl{margin-top:14px;position:relative}
 .mini-item{display:flex;gap:11px;align-items:flex-start;padding:6px 0}
 .mini-item .mt{font-size:12.5px;font-weight:700;color:#ffd98a;min-width:46px;padding-top:1px}
@@ -1330,6 +1334,92 @@ function currentMinutes(){
   var d=new Date();
   return d.getHours()*60+d.getMinutes();
 }
+var WEATHER_CITIES=[
+  { key:'okayama', label:'岡山', lat:34.6618, lon:133.9350, words:['岡山','倉敷','ORIX租車 岡山機場','永旺夢樂城岡山'] },
+  { key:'hiroshima', label:'廣島', lat:34.3853, lon:132.4553, words:['廣島','原爆','和平紀念','紙鶴塔','本通'] },
+  { key:'miyajima', label:'宮島', lat:34.2959, lon:132.3198, words:['宮島','嚴島','宮島口','表参道'] },
+  { key:'tokyo', label:'東京', lat:35.6762, lon:139.6503, words:['東京','新宿','淺草','銀座','六本木','澀谷','原宿','秋葉原','駒込'] },
+  { key:'kamakura', label:'鎌倉', lat:35.3192, lon:139.5467, words:['鎌倉','江之島','藤澤','七里濱'] },
+  { key:'narita', label:'成田', lat:35.7767, lon:140.3183, words:['成田','京成','Skyliner'] }
+];
+function weatherTextForItem(item,res){
+  var p=res&&res.kind==='place'?res.p:null;
+  var r=res&&res.kind==='rest'?res.r:null;
+  return [
+    item&&item.place,
+    item&&item.act,
+    item&&item.move,
+    item&&item.note,
+    p&&p.name,
+    p&&p.note,
+    p&&p.travel,
+    r&&r.name,
+    r&&r.note,
+    r&&r.travel
+  ].filter(Boolean).join(' ');
+}
+function inferWeatherCity(item,res){
+  var text=weatherTextForItem(item,res);
+  for(var i=0;i<WEATHER_CITIES.length;i++){
+    var city=WEATHER_CITIES[i];
+    for(var j=0;j<city.words.length;j++){
+      if(text.indexOf(city.words[j])>=0) return city;
+    }
+  }
+  return null;
+}
+function weatherIcon(code){
+  code=Number(code);
+  if(code===0) return '☀️';
+  if(code===1||code===2) return '🌤️';
+  if(code===3) return '☁️';
+  if(code===45||code===48) return '🌫️';
+  if((code>=51&&code<=67)||(code>=80&&code<=82)) return '🌧️';
+  if(code>=71&&code<=77) return '❄️';
+  if(code>=95) return '⛈️';
+  return '☁️';
+}
+function weatherCacheKey(city){ return 'trip_weather_'+city.key; }
+function getCachedWeather(city){
+  var cached=lsGet(weatherCacheKey(city),null);
+  if(!cached||!cached.t) return null;
+  var maxAge=3*60*60*1000;
+  return (Date.now()-cached.t)<maxAge?cached.data:null;
+}
+function setCachedWeather(city,data){
+  lsSet(weatherCacheKey(city),{ t:Date.now(), data:data });
+}
+function fetchWeather(city){
+  var url='https://api.open-meteo.com/v1/forecast?latitude='+encodeURIComponent(city.lat)+
+    '&longitude='+encodeURIComponent(city.lon)+
+    '&current=temperature_2m,weather_code'+
+    '&hourly=precipitation_probability'+
+    '&forecast_days=1&timezone=Asia%2FTokyo';
+  return fetchWithTimeout(url,6500).then(function(r){
+    if(!r.ok) throw new Error('weather '+r.status);
+    return r.json();
+  }).then(function(json){
+    var rain=0;
+    if(json.hourly&&json.hourly.precipitation_probability&&json.hourly.precipitation_probability.length){
+      rain=Math.max.apply(null,json.hourly.precipitation_probability.filter(function(v){return typeof v==='number';}));
+    }
+    var temp=json.current&&typeof json.current.temperature_2m==='number'?Math.round(json.current.temperature_2m):null;
+    var code=json.current?json.current.weather_code:null;
+    if(temp===null) return null;
+    return { city:city.label, temp:temp, rain:rain||0, icon:weatherIcon(code), code:code };
+  });
+}
+function loadWeatherForCity(city){
+  var cached=getCachedWeather(city);
+  if(cached) return Promise.resolve(cached);
+  return fetchWeather(city).then(function(data){
+    if(data) setCachedWeather(city,data);
+    return data;
+  }).catch(function(err){
+    AppLog&&AppLog.data&&AppLog.data('天氣讀取失敗:'+city.label+' '+(err.message||err));
+    return getCachedWeather(city);
+  });
+}
 function pickNextStop(items,progress,checks,nowMinutes){
   items=(items||[]).filter(function(it){ return it&&it.act; });
   progress=normalizeDayProgress(progress);
@@ -1428,6 +1518,35 @@ function onNextStopSkip(dayIndex,itemId){
   renderToday();
   toast('已跳過這站');
 }
+var homeWeatherState={};
+function renderWeatherChip(weather){
+  if(!weather) return '';
+  return '<div class="weather-chip"><span class="city">'+escapeHtml(weather.city)+'</span>'+escapeHtml(' '+weather.icon+' '+weather.temp+'° 雨'+weather.rain+'%')+'</div>';
+}
+function requestHomeWeather(dayIndex,item){
+  if(!item) return;
+  var res=resolveRef(item);
+  var city=inferWeatherCity(item,res);
+  if(!city) return;
+  var key='day_'+dayIndex+'_'+city.key;
+  if(homeWeatherState[key]) return;
+  var cached=getCachedWeather(city);
+  if(cached){ homeWeatherState[key]=cached; return; }
+  homeWeatherState[key]={ loading:true };
+  loadWeatherForCity(city).then(function(weather){
+    if(weather){ homeWeatherState[key]=weather; if(curView==='today') renderToday(); }
+    else delete homeWeatherState[key];
+  });
+}
+function homeWeatherFor(dayIndex,item){
+  if(!item) return null;
+  var city=inferWeatherCity(item,resolveRef(item));
+  if(!city) return null;
+  var key='day_'+dayIndex+'_'+city.key;
+  var state=homeWeatherState[key];
+  if(state&&state.loading) return null;
+  return state||getCachedWeather(city);
+}
 function renderToday(){
   var view=document.getElementById('view-today');
   var ti=findToday();
@@ -1450,9 +1569,12 @@ function renderToday(){
   var progress=getDayProgress(day,ti);
   var pick=pickNextStop(items,progress,checks,currentMinutes());
   var completed=items.length-(pick.remaining+(pick.item?1:0));
-  var h='<div class="today-hero"><div class="lbl">TODAY · DAY '+(ti+1)+'</div>'+
+  requestHomeWeather(ti,pick.item);
+  var weather=homeWeatherFor(ti,pick.item);
+  var h='<div class="today-hero'+(weather?' weather-on':'')+'"><div class="today-hero-main"><div class="lbl">TODAY · DAY '+(ti+1)+'</div>'+
     '<div class="date">'+day.date+(day.dow?' ('+day.dow+')':'')+'</div>'+
-    '<div class="loc">'+completed+'/'+items.length+' 已處理</div></div>';
+    '<div class="loc">'+completed+'/'+items.length+' 已處理</div></div>'+
+    renderWeatherChip(weather)+'</div>';
   h+=renderNextStopCard(day,ti,pick);
   h+='<button class="today-jump dark" onclick="gotoDay('+ti+')">看今日完整細節 →</button>';
   view.innerHTML=h;
