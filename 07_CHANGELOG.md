@@ -2,6 +2,12 @@
 
 紀錄格式:日期 / 版本 / 重點。細節不展開,新變更往上加。
 
+## 2026-07-07 — 天氣城市 fallback 設計規格
+- 新增 `docs/superpowers/specs/2026-07-07-weather-city-fallback-design.md`
+- 定義下一站無法直接判斷城市時,可依同日鄰近站點與當日主要城市保守推算天氣城市
+- 限定推算結果只供天氣 chip 使用,不影響導航、schema、Google Sheet 或 CMS
+- Breaking Change:無
+
 ## 2026-07-07 — 專案規畫進度同步
 - 從 GitHub fast-forward 更新到最新 main,納入首頁下一站與天氣摘要相關提交
 - 新增 `13_PROJECT_STATUS.md`,彙整目前階段、已完成、等待事項、下一步與風險
