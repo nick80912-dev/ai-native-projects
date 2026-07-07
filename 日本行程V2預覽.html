@@ -359,6 +359,11 @@ a{color:var(--sea)}
 .sm-name{font-size:17px;font-weight:800;color:var(--sea-deep)}
 .sm-hours{font-size:12px;color:var(--ink-soft);margin-top:4px;line-height:1.5}
 .sm-actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}
+.shop-filter{display:flex;gap:7px;overflow-x:auto;padding:2px 2px 10px;margin-bottom:8px;scrollbar-width:none}
+.shop-filter::-webkit-scrollbar{display:none}
+.shop-filter-btn{flex:0 0 auto;border:1px solid var(--line);background:#fff;color:var(--ink-soft);border-radius:999px;padding:8px 12px;font-size:12.5px;font-weight:800;font-family:inherit;box-shadow:var(--shadow);cursor:pointer}
+.shop-filter-btn.on{background:var(--sea);border-color:var(--sea);color:#fff}
+.shop-filter-btn small{font-size:10px;font-weight:800;opacity:.72;margin-left:3px}
 .want-box{margin-top:12px;background:#fdf6e0;border:1px solid #eeddb0;border-radius:11px;padding:10px 12px}
 .want-title{font-size:12.5px;font-weight:800;color:#8a6416;margin-bottom:5px}
 .want-head{width:100%;border:0;background:transparent;color:#8a6416;font-size:13px;font-weight:900;display:flex;align-items:center;justify-content:space-between;padding:0;text-align:left;font-family:inherit}
@@ -1720,6 +1725,7 @@ function renderToday(){
 
 /* ================= 購物模式(資料來自 Shopping 表) ================= */
 var _shopQ='';
+var shopPlaceFilter='all';
 var shopOpenFloors={};
 var shopWantListOpen={};
 function cssId(s){
@@ -1730,6 +1736,10 @@ function shopWantKey(place,index){
 }
 function toggleShopWantList(key){
   shopWantListOpen[key]=!shopWantListOpen[key];
+  renderShopResults();
+}
+function setShopPlaceFilter(key){
+  shopPlaceFilter=key||'all';
   renderShopResults();
 }
 function shopQ(v){ _shopQ=v.trim().toLowerCase(); renderShopResults(); }
@@ -1750,9 +1760,33 @@ function shopMalls(){
     var pid=(s.placeId||'').toUpperCase(); if(!pid) return;
     (byPlace[pid]=byPlace[pid]||[]).push(s);
   });
-  return Object.keys(byPlace).map(function(pid){
-    return { place:DB.places[pid]||{name:pid,placeId:pid}, stores:byPlace[pid] };
+  var itineraryOrder={};
+  var seq=0;
+  if(DB.trip&&DB.trip.days){
+    DB.trip.days.forEach(function(d){
+      (d.items||[]).forEach(function(it){
+        var pid=(it.ref||'').toUpperCase();
+        if(pid&&!itineraryOrder[pid]) itineraryOrder[pid]=++seq;
+      });
+    });
+  }
+  var seen={};
+  var malls=[];
+  DB.placeList.forEach(function(p){
+    var pid=(p.placeId||'').toUpperCase();
+    if(!pid||p.tnorm!=='shopping') return;
+    seen[pid]=true;
+    malls.push({ place:p, stores:byPlace[pid]||[], order:itineraryOrder[pid]||9999 });
   });
+  Object.keys(byPlace).forEach(function(pid){
+    if(seen[pid]) return;
+    malls.push({ place:DB.places[pid]||{name:pid,placeId:pid}, stores:byPlace[pid], order:itineraryOrder[pid]||9999 });
+  });
+  malls.sort(function(a,b){
+    if(a.order!==b.order) return a.order-b.order;
+    return String(a.place.name||'').localeCompare(String(b.place.name||''),'zh-Hant');
+  });
+  return malls;
 }
 function storeRow(s,id,on){
   var must=/是|y|✓|v/i.test(s.must||'');
@@ -1764,28 +1798,47 @@ function storeRow(s,id,on){
 }
 function renderShop(){
   var view=document.getElementById('view-shop');
-  if(!shopMalls().length){ view.innerHTML='<div class="empty-state">Shopping 資料表尚無店家<br>在試算表新增後會自動出現</div>'; return; }
+  if(!shopMalls().length){ view.innerHTML='<div class="empty-state">尚無購物地點<br>在 Places 新增 Type=購物 後會自動出現</div>'; return; }
   view.innerHTML='<div class="shop-search"><input id="shopSearchInput" placeholder="🔍 搜尋店家（如 UNIQLO、大創）" value="'+escapeHtml(_shopQ)+'" oninput="shopQ(this.value)"></div><div id="shopResults"></div>';
   renderShopResults();
 }
 function renderShopResults(){
   var box=document.getElementById('shopResults'); if(!box) return;
-  var wants=getWants(), h='';
-  shopMalls().forEach(function(m,mi){
+  var wants=getWants(), h='', malls=shopMalls();
+  var wantTotal=0;
+  malls.forEach(function(m,mi){
+    wantTotal+=m.stores.filter(function(s){return wants['w_'+mi+'_'+s.floor+'_'+s.name];}).length;
+  });
+  h+='<div class="shop-filter">'+
+    '<button class="shop-filter-btn '+(shopPlaceFilter==='all'?'on':'')+'" onclick="setShopPlaceFilter(\'all\')">全部<small>'+malls.length+'</small></button>'+
+    '<button class="shop-filter-btn '+(shopPlaceFilter==='wants'?'on':'')+'" onclick="setShopPlaceFilter(\'wants\')">想逛<small>'+wantTotal+'</small></button>'+
+    malls.map(function(m){
+      var key=(m.place.placeId||m.place.name||'').toUpperCase();
+      var label=m.place.name||key;
+      return '<button class="shop-filter-btn '+(shopPlaceFilter===key?'on':'')+'" onclick="setShopPlaceFilter(\''+key.replace(/'/g,"\\'")+'\')">'+escapeHtml(label)+'<small>'+m.stores.length+'</small></button>';
+    }).join('')+
+    '</div>';
+  var rendered=0;
+  malls.forEach(function(m,mi){
     var p=m.place;
+    var pkey=(p.placeId||p.name||'').toUpperCase();
+    var wanted=m.stores.filter(function(s){return wants['w_'+mi+'_'+s.floor+'_'+s.name];});
+    if(shopPlaceFilter==='wants'&&!wanted.length) return;
+    if(shopPlaceFilter!=='all'&&shopPlaceFilter!=='wants'&&shopPlaceFilter!==pkey) return;
     if(_shopQ){
-      var hits=m.stores.filter(function(s){return (s.name||'').toLowerCase().indexOf(_shopQ)>=0;});
+      var searchBase=(shopPlaceFilter==='wants')?wanted:m.stores;
+      var hits=searchBase.filter(function(s){return (s.name||'').toLowerCase().indexOf(_shopQ)>=0;});
       h+='<div class="shop-mall"><div class="sm-name">🏬 '+escapeHtml(p.name)+'</div>'+
         (hits.length?hits.map(function(s){var id='w_'+mi+'_'+s.floor+'_'+s.name;return storeRow(s,id,!!wants[id]);}).join(''):'<div class="empty-state" style="padding:16px">找不到「'+escapeHtml(_shopQ)+'」</div>')+'</div>';
+      rendered++;
       return;
     }
-    var wanted=m.stores.filter(function(s){return wants['w_'+mi+'_'+s.floor+'_'+s.name];});
     h+='<div class="shop-mall"><div class="sm-name">🏬 '+escapeHtml(p.name)+'</div>'+
       (p.hours?'<div class="sm-hours">🕒 '+escapeHtml(p.hours)+'</div>':'')+
       '<div class="sm-actions">'+
         '<a class="qa-btn drv" href="https://www.google.com/maps/dir/?api=1&destination='+encodeURIComponent((p.navq||p.name)+' 日本')+'&travelmode=driving" target="_blank" rel="noopener">🚗 導航</a>'+
         (p.mapcode?'<button class="qa-btn pk" onclick="copyText(\''+p.mapcode+'\',\'MAP CODE \')">📋 MAP CODE</button>':'')+
-        (p.web?'<a class="qa-btn nf" href="'+escapeHtml(p.web)+'" target="_blank" rel="noopener">🌐 官方樓層圖</a>':'')+
+        (p.web?'<a class="qa-btn nf" href="'+escapeHtml(p.web)+'" target="_blank" rel="noopener">🌐 官方資訊</a>':'')+
       '</div>'+(p.note?'<div class="pc-tip">💡 '+escapeHtml(p.note)+'</div>':'');
     if(wanted.length){
       var wkey=shopWantKey(p,mi);
@@ -1797,7 +1850,13 @@ function renderShopResults(){
     }
     var floors={};
     m.stores.forEach(function(s){ (floors[s.floor||'其他']=floors[s.floor||'其他']||[]).push(s); });
-    h+='<div class="seg" style="margin-top:14px">樓層指南（點樓層展開）</div>';
+    if(!m.stores.length){
+      h+='<div class="empty-state" style="padding:16px">此購物地點尚未建立店家明細<br>可先用地點資訊、備註與導航操作</div>';
+      h+='</div>';
+      rendered++;
+      return;
+    }
+    h+='<div class="seg" style="margin-top:14px">區域 / 樓層（點選展開）</div>';
     Object.keys(floors).forEach(function(f){
       var fkey=(p.placeId||('M'+mi))+'::'+f;
       var domId='flbody_'+cssId(fkey);
@@ -1808,7 +1867,11 @@ function renderShopResults(){
         '<div class="floor-body'+(isOpen?' open':'')+'" id="'+domId+'">'+floors[f].map(function(s){var id='w_'+mi+'_'+s.floor+'_'+s.name;return storeRow(s,id,!!wants[id]);}).join('')+'</div></div>';
     });
     h+='</div>';
+    rendered++;
   });
+  if(!rendered){
+    h+='<div class="empty-state">'+(shopPlaceFilter==='wants'?'尚未標記想逛店家':'目前沒有符合條件的購物資料')+'</div>';
+  }
   box.innerHTML=h;
 }
 
