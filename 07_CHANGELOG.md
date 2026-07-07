@@ -2,6 +2,12 @@
 
 紀錄格式:日期 / 版本 / 重點。細節不展開,新變更往上加。
 
+## 2026-07-07 — 首頁下一站模式實作計畫
+- 新增 `docs/superpowers/plans/2026-07-07-home-next-stop-mode.md`
+- 將首頁下一站模式拆成狀態記憶、下一站判斷、票卡畫面與驗收任務
+- 本次僅新增實作計畫,尚未修改 App 功能
+- Breaking Change:無
+
 ## 2026-07-07 — 首頁下一站模式設計規格
 - 新增 `docs/superpowers/specs/2026-07-07-home-next-stop-design.md`
 - 定義首頁只突出下一站的旅途中 UX 方向
