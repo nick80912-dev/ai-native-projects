@@ -2,6 +2,12 @@
 
 紀錄格式:日期 / 版本 / 重點。細節不展開,新變更往上加。
 
+## 2026-07-07 — 專案規畫進度同步
+- 從 GitHub fast-forward 更新到最新 main,納入首頁下一站與天氣摘要相關提交
+- 新增 `13_PROJECT_STATUS.md`,彙整目前階段、已完成、等待事項、下一步與風險
+- 更新 `.ai-manifest.json` 與 `tasks/current.md` / `tasks/backlog.md` / `tasks/done.md`,讓規畫進度與 GitHub 最新狀態一致
+- Breaking Change:無
+
 ## 2026-07-07 — 首頁下一站完成/跳過復原
 - 完成或跳過下一站後,toast 新增「復原」操作
 - 復原會還原該站完成/跳過與打卡狀態,降低旅途中誤觸風險
