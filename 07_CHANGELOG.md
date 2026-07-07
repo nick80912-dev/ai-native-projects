@@ -2,6 +2,12 @@
 
 紀錄格式:日期 / 版本 / 重點。細節不展開,新變更往上加。
 
+## 2026-07-07 — 首頁天氣摘要設計規格
+- 新增 `docs/superpowers/specs/2026-07-07-home-weather-summary-design.md`
+- 定義日期卡右側顯示下一站所在地天氣摘要
+- 明確限制不使用 GPS、不改 schema、不改 Google Sheet、不回寫 CMS
+- Breaking Change:無
+
 ## 2026-07-07 — 首頁下一站模式 UX 實作
 - 首頁改為只突出下一站的票卡式旅途中視圖
 - 新增每個行程日獨立保存的完成 / 跳過狀態,僅存在 localStorage,不回寫 CMS
