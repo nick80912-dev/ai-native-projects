@@ -308,6 +308,25 @@ a{color:var(--sea)}
 .nx-navbtn{display:block;text-align:center;background:var(--sea);color:#fff;border-radius:12px;padding:14px;font-size:16px;font-weight:800;text-decoration:none;margin-top:12px}
 .nx-navbtn:active{transform:scale(.98)}
 .nx-done{display:block;width:100%;background:#fff;color:var(--green);border:1.5px solid var(--green);border-radius:12px;padding:11px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;margin-top:8px}
+.nx-ticket{position:relative;margin:12px;background:var(--card);border-radius:14px;box-shadow:var(--shadow);overflow:hidden;border:1px solid rgba(14,58,68,.08)}
+.nx-ticket::before{content:"";position:absolute;left:0;top:0;bottom:0;width:7px;background:linear-gradient(180deg,var(--coral),var(--gold))}
+.nx-ticket-main{padding:16px 16px 12px 20px}
+.nx-ticket-kicker{font-size:11px;letter-spacing:.14em;color:var(--ink-faint);font-weight:800;text-transform:uppercase;margin-bottom:8px}
+.nx-ticket-time{display:inline-block;font-size:13px;font-weight:800;color:var(--coral);background:var(--coral-bg);border-radius:7px;padding:3px 9px;margin-bottom:8px}
+.nx-ticket-title{font-size:24px;line-height:1.18;font-weight:900;color:var(--ink);margin-bottom:6px;word-break:break-word}
+.nx-ticket-act{font-size:14px;color:var(--ink-soft);font-weight:700;margin-bottom:10px}
+.nx-ticket-tags{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0 10px}
+.nx-ticket-tag{font-size:12px;border-radius:999px;padding:4px 8px;background:#f3efe6;color:var(--ink-soft);font-weight:700}
+.nx-ticket-lines{display:grid;gap:6px;margin-top:8px}
+.nx-ticket-line{font-size:13.5px;line-height:1.45;color:var(--ink-soft)}
+.nx-ticket-line b{color:var(--ink);font-weight:800}
+.nx-ticket-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.nx-ticket-actions .qa-btn{margin:0}
+.nx-ticket-low{display:flex;gap:14px;border-top:1px dashed var(--line);padding:10px 16px 12px 20px;background:#fffaf0}
+.nx-text-btn{border:0;background:transparent;color:var(--ink-soft);font-weight:800;font-size:13px;padding:4px 0;font-family:inherit;cursor:pointer}
+.nx-text-btn:active{transform:scale(.96)}
+.nx-remain{margin:0 12px 12px;color:var(--ink-faint);font-size:13px;text-align:center}
+.nx-empty-ticket{margin:12px;background:var(--card);border-radius:14px;box-shadow:var(--shadow);padding:18px;text-align:center;color:var(--ink-soft)}
 .mini-card{display:flex;gap:10px;align-items:flex-start;background:var(--card);border:1px solid var(--line);border-radius:11px;padding:10px 13px;margin-bottom:8px;cursor:pointer}
 .mini-card .mt{font-size:12px;font-weight:700;color:var(--coral);min-width:44px;padding-top:2px}
 .mini-card .mc{flex:1;font-size:14px;font-weight:600;line-height:1.4}
@@ -1029,6 +1048,47 @@ function tripName(){ return DB.cfg.tripname || ''; }
 /* ================= 打卡 / 想逛(個人狀態,存本機) ================= */
 function getChecks(){ return lsGet('trip_checks',{}); }
 function toggleCheck(id){ var c=getChecks(); if(c[id]) delete c[id]; else c[id]=true; lsSet('trip_checks',c); }
+function dayProgressKey(day,dayIndex){
+  var d=(day&&day.date)?day.date:('day'+(dayIndex+1));
+  return 'day_'+(dayIndex+1)+'_'+String(d).replace(/[^0-9A-Za-z]/g,'_');
+}
+function getNextStopProgress(){ return lsGet('trip_next_stop_progress',{}); }
+function saveNextStopProgress(progress){ lsSet('trip_next_stop_progress',progress); }
+function emptyDayProgress(){ return { done:{}, skip:{} }; }
+function normalizeDayProgress(progress){
+  progress=progress||{};
+  return { done:progress.done||{}, skip:progress.skip||{} };
+}
+function getDayProgress(day,dayIndex){
+  var all=getNextStopProgress();
+  return normalizeDayProgress(all[dayProgressKey(day,dayIndex)]);
+}
+function hasDayProgress(progress){
+  progress=normalizeDayProgress(progress);
+  return Object.keys(progress.done).length>0 || Object.keys(progress.skip).length>0;
+}
+function markNextStop(day,dayIndex,itemId,status){
+  var all=getNextStopProgress();
+  var key=dayProgressKey(day,dayIndex);
+  var progress=normalizeDayProgress(all[key]);
+  delete progress.done[itemId];
+  delete progress.skip[itemId];
+  if(status==='done') progress.done[itemId]=true;
+  if(status==='skip') progress.skip[itemId]=true;
+  all[key]=progress;
+  saveNextStopProgress(all);
+  if(status==='done'){
+    var checks=getChecks();
+    checks[itemId]=true;
+    lsSet('trip_checks',checks);
+  }
+}
+function isNextStopCleared(item,progress,checks){
+  if(!item||!item.id) return false;
+  progress=normalizeDayProgress(progress);
+  checks=checks||{};
+  return !!(progress.done[item.id]||progress.skip[item.id]||checks[item.id]);
+}
 function getWants(){ return lsGet('trip_shop_wants',{}); }
 
 /* ================= 導航 / 高亮 ================= */
@@ -1259,6 +1319,115 @@ function findToday(){
   var di=DB.trip.days.findIndex(function(d){return d.date===md;});
   return di>=0?di:null;
 }
+function parseStartMinutes(timeText){
+  var m=String(timeText||'').match(/(\d{1,2})\s*:\s*(\d{2})/);
+  if(!m) return null;
+  var h=parseInt(m[1],10), min=parseInt(m[2],10);
+  if(isNaN(h)||isNaN(min)||h<0||h>23||min<0||min>59) return null;
+  return h*60+min;
+}
+function currentMinutes(){
+  var d=new Date();
+  return d.getHours()*60+d.getMinutes();
+}
+function pickNextStop(items,progress,checks,nowMinutes){
+  items=(items||[]).filter(function(it){ return it&&it.act; });
+  progress=normalizeDayProgress(progress);
+  checks=checks||{};
+  var remaining=items.filter(function(it){ return !isNextStopCleared(it,progress,checks); });
+  if(!remaining.length) return { item:null, remaining:0, source:'complete' };
+  function resultFor(item,source){
+    var itemIndex=items.indexOf(item);
+    var after=remaining.filter(function(it){ return items.indexOf(it)>itemIndex; }).length;
+    return { item:item, remaining:after, source:source };
+  }
+  var latestCleared=-1;
+  items.forEach(function(it,i){
+    if(isNextStopCleared(it,progress,checks)) latestCleared=i;
+  });
+  if(latestCleared>=0){
+    var nextAfterCleared=remaining.find(function(it){ return items.indexOf(it)>latestCleared; });
+    return resultFor(nextAfterCleared||remaining[0],'progress');
+  }
+  var future=remaining.find(function(it){
+    var m=parseStartMinutes(it.time);
+    return m!==null && m>=nowMinutes;
+  });
+  return resultFor(future||remaining[0],future?'time':'order');
+}
+function nextStopMeta(item,res){
+  var p=res&&res.kind==='place'?res.p:null;
+  var r=res&&res.kind==='rest'?res.r:null;
+  var cat=typeTag(res);
+  var drive=extractDrive(item.move) || (p&&p.travel) || (r&&r.travel) || '';
+  return {
+    place:item.place||item.act||'',
+    act:item.act||'',
+    cat:cat,
+    drive:drive,
+    parking:(p&&p.pnote)||(r&&r.parking)||'',
+    hours:(p&&p.hours)||(r&&r.hours)||'',
+    web:p&&p.web?p.web:'',
+    ttl:p&&p.ttl?p.ttl:'',
+    note:item.note || (p&&p.note) || (r&&r.note) || ''
+  };
+}
+function renderTicketLine(label,value){
+  if(!value) return '';
+  return '<div class="nx-ticket-line"><b>'+escapeHtml(label)+'</b> '+highlightNote(value)+'</div>';
+}
+function renderNextStopCard(day,dayIndex,pick){
+  var it=pick.item;
+  if(!it){
+    return '<div class="nx-empty-ticket"><div class="nx-ticket-title" style="font-size:20px">今日行程完成</div><div class="nx-ticket-line">可以慢慢休息，或切到完整行程查看後續安排。</div></div>';
+  }
+  var res=resolveRef(it);
+  var meta=nextStopMeta(it,res);
+  var canNav=(it.place&&it.place.trim())||res;
+  var h='<div class="nx-ticket">'+
+    '<div class="nx-ticket-main">'+
+      '<div class="nx-ticket-kicker">NEXT STOP · DAY '+(dayIndex+1)+'</div>'+
+      (it.time?'<div class="nx-ticket-time">'+escapeHtml(it.time)+'</div>':'')+
+      '<div class="nx-ticket-title">'+escapeHtml(meta.place.replace(/\n/g,' '))+'</div>'+
+      (meta.act&&meta.act!==meta.place?'<div class="nx-ticket-act">'+escapeHtml(meta.act)+'</div>':'')+
+      '<div class="nx-ticket-tags">'+
+        (meta.cat?'<span class="nx-ticket-tag">'+escapeHtml(meta.cat.label)+'</span>':'')+
+        (pick.source==='time'?'<span class="nx-ticket-tag">依目前時間</span>':'')+
+      '</div>'+
+      '<div class="nx-ticket-lines">'+
+        renderTicketLine('交通',meta.drive)+
+        renderTicketLine('停車',meta.parking)+
+        renderTicketLine('營業',meta.hours)+
+        renderTicketLine('提醒',meta.note)+
+      '</div>'+
+      '<div class="nx-ticket-actions">'+
+        (canNav?'<a class="qa-btn drv" href="'+navUrl(it,res)+'" target="_blank" rel="noopener">'+(transport()==='drive'?'🚗 導航':'🚃 路線')+'</a>':'')+
+        (meta.web?'<a class="qa-btn nf" href="'+escapeHtml(meta.web)+'" target="_blank" rel="noopener">🌐 官網</a>':'')+
+        (meta.ttl?'<a class="qa-btn fr" href="'+escapeHtml(meta.ttl)+'" target="_blank" rel="noopener">⛴ 時刻表</a>':'')+
+      '</div>'+
+    '</div>'+
+    '<div class="nx-ticket-low">'+
+      '<button class="nx-text-btn" onclick="onNextStopDone('+dayIndex+',\''+it.id+'\')">完成</button>'+
+      '<button class="nx-text-btn" onclick="onNextStopSkip('+dayIndex+',\''+it.id+'\')">跳過</button>'+
+    '</div>'+
+  '</div>';
+  if(pick.remaining>0) h+='<div class="nx-remain">今日還有 '+pick.remaining+' 個行程</div>';
+  return h;
+}
+function onNextStopDone(dayIndex,itemId){
+  var day=DB.trip&&DB.trip.days?DB.trip.days[dayIndex]:null;
+  if(!day) return;
+  markNextStop(day,dayIndex,itemId,'done');
+  renderToday();
+  toast('已完成這站');
+}
+function onNextStopSkip(dayIndex,itemId){
+  var day=DB.trip&&DB.trip.days?DB.trip.days[dayIndex]:null;
+  if(!day) return;
+  markNextStop(day,dayIndex,itemId,'skip');
+  renderToday();
+  toast('已跳過這站');
+}
 function renderToday(){
   var view=document.getElementById('view-today');
   var ti=findToday();
@@ -1278,31 +1447,13 @@ function renderToday(){
   }
   var day=DB.trip.days[ti];
   var items=day.items.filter(function(it){return it.act;});
-  var doneN=items.filter(function(it){return checks[it.id];}).length;
-  var next=items.find(function(it){return !checks[it.id];});
+  var progress=getDayProgress(day,ti);
+  var pick=pickNextStop(items,progress,checks,currentMinutes());
+  var completed=items.length-(pick.remaining+(pick.item?1:0));
   var h='<div class="today-hero"><div class="lbl">TODAY · DAY '+(ti+1)+'</div>'+
     '<div class="date">'+day.date+(day.dow?' ('+day.dow+')':'')+'</div>'+
-    '<div class="loc">'+doneN+'/'+items.length+' 完成</div></div>';
-  if(next){
-    var res=resolveRef(next);
-    var pN=res&&res.kind==='place'?res.p:null;
-    var drive=extractDrive(next.move) || (pN&&pN.travel) || (res&&res.kind==='rest'&&res.r.travel) || '';
-    var canNav=(next.place&&next.place.trim())||res;
-    h+='<div class="nx-hero"><div class="nx-lbl">⬇ 下一站</div>'+
-      (next.time?'<div class="nx-time">'+escapeHtml(next.time)+'</div>':'')+
-      '<div class="nx-act">'+escapeHtml(next.act)+'</div>'+
-      (next.place?'<div class="nx-place">📍 '+escapeHtml(next.place.replace(/\n/g,' '))+(drive?'｜'+(/步行/.test(drive)?'🚶':'🚗')+' '+escapeHtml(drive):'')+'</div>':'')+
-      (canNav?'<a class="nx-navbtn" href="'+navUrl(next,res)+'" target="_blank" rel="noopener">'+(transport()==='drive'?'🚗 開始導航':'🚃 查路線')+'</a>':'')+
-      '<button class="nx-done" onclick="onCheck(\''+next.id+'\')">✓ 完成這站</button></div>';
-  }else{
-    h+='<div class="nx-hero all-done"><div class="nx-act">今天行程全部完成 🎉</div><div class="nx-place">好好休息，明天見！</div></div>';
-  }
-  var rest=items.filter(function(it){return !checks[it.id]&&it!==next;});
-  if(rest.length){
-    h+='<div class="seg">接下來還有 '+rest.length+' 站</div>'+rest.map(function(it){
-      return '<div class="mini-card" onclick="gotoDay('+ti+')"><span class="mt">'+escapeHtml(it.time||'·')+'</span><span class="mc">'+escapeHtml(it.act)+(it.place?'<small>'+escapeHtml(it.place.replace(/\n/g,' '))+'</small>':'')+'</span></div>';
-    }).join('');
-  }
+    '<div class="loc">'+completed+'/'+items.length+' 已處理</div></div>';
+  h+=renderNextStopCard(day,ti,pick);
   h+='<button class="today-jump dark" onclick="gotoDay('+ti+')">看今日完整細節 →</button>';
   view.innerHTML=h;
 }
