@@ -2,6 +2,12 @@
 
 紀錄格式:日期 / 版本 / 重點。細節不展開,新變更往上加。
 
+## 2026-07-07 — 首頁下一站模式設計規格
+- 新增 `docs/superpowers/specs/2026-07-07-home-next-stop-design.md`
+- 定義首頁只突出下一站的旅途中 UX 方向
+- 明確限制不新增分頁、不改 schema、不改 Google Sheet、不回寫 CMS
+- Breaking Change:無
+
 ## 2026-07-07 — 03/05 文件一致性修正
 - 修正 03_DATABASE.md 與現行 schema.js / 09_SCHEMA_MAPPING.md 不一致問題
 - 將 03_DATABASE.md 重新定位為 CMS 快速概覽,不再作為欄位權威來源
