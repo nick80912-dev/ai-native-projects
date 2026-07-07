@@ -136,6 +136,9 @@ a{color:var(--sea)}
 .day-head .num{font-size:12px;font-weight:800;color:#fff;background:var(--coral);border-radius:7px;padding:3px 9px;letter-spacing:.03em}
 .day-head .date{font-size:19px;font-weight:800;color:var(--sea-deep)}
 .day-head .prog{margin-left:auto;font-size:12px;color:var(--ink-faint);font-weight:600}
+.trip-filter{display:flex;gap:8px;margin:10px 0 12px}
+.trip-filter-btn{flex:1;border:1px solid var(--line);background:var(--card);color:var(--ink-soft);border-radius:999px;padding:9px 10px;font-size:13px;font-weight:800}
+.trip-filter-btn.on{background:var(--sea);border-color:var(--sea);color:#fff}
 
 /* 行程項目 */
 .item{background:var(--card);border-radius:13px;margin-bottom:10px;box-shadow:var(--shadow);border:1px solid var(--line);overflow:hidden;transition:.2s}
@@ -1238,6 +1241,11 @@ function infoPanel(res){
 
 /* ================= 渲染:行程頁 ================= */
 var curDay=0, curView='today';
+var tripHideDone=false;
+function setTripHideDone(v){
+  tripHideDone=!!v;
+  renderTrip();
+}
 function renderDaybar(){
   var bar=document.getElementById('daybar');
   if(curView==='split'||curView==='shop'){ bar.style.display='none'; return; }
@@ -1336,10 +1344,14 @@ function renderTrip(){
   var checks=getChecks();
   var acts=day.items.filter(function(it){return it.act;});
   var doneN=acts.filter(function(it){return checks[it.id];}).length;
+  var visibleItems=tripHideDone?day.items.filter(function(it){return !it.act || !checks[it.id];}):day.items;
+  var visibleActs=visibleItems.filter(function(it){return it.act;});
   view.innerHTML='<div class="day-head"><span class="num">DAY '+(curDay+1)+'</span>'+
     '<span class="date">'+day.date+(day.dow?' ('+day.dow+')':'')+'</span>'+
     '<span class="prog">'+doneN+'/'+acts.length+' ✓</span></div>'+
-    day.items.map(function(it){return renderItem(it,checks);}).join('');
+    '<div class="trip-filter"><button class="trip-filter-btn '+(!tripHideDone?'on':'')+'" onclick="setTripHideDone(false)">顯示全部</button>'+
+    '<button class="trip-filter-btn '+(tripHideDone?'on':'')+'" onclick="setTripHideDone(true)">隱藏已完成</button></div>'+
+    (visibleActs.length?visibleItems.map(function(it){return renderItem(it,checks);}).join(''):'<div class="empty-state">今天的行程都已完成 ✓</div>');
 }
 
 /* ================= 今天模式 ================= */
