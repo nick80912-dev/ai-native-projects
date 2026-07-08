@@ -2,6 +2,12 @@
 
 紀錄格式:日期 / 版本 / 重點。細節不展開,新變更往上加。
 
+## 2026-07-08 — 任務板狀態更新
+- 依 Bar 最新決策調整驗收順序:先補完 Day4-6 Google Sheet,再手機驗收、打包與 Netlify
+- Google Sheet 發布 CSV 已確認 R001 / R006 的 Tabelog 評分與營業時間已補齊
+- GitHub `origin/main` 已確認包含購物頁多地點切換與「區域 / 樓層」呈現,後續待手機試用後再微調
+- Breaking Change:無
+
 ## 2026-07-08 — 本機清理排程安全規範
 - 在 `PROJECT_CONSTITUTION.md` 新增本機開發環境清理安全規範:只清理已登記且過期的本地服務,以及超過 24 小時的低風險暫存
 - 在 `12_DEV_WORKFLOW.md` 新增建立本機清理排程的 DevOps 情境,要求 dry-run、log、自測、移除方式與每 6 小時執行一次

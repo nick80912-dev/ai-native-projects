@@ -39,8 +39,8 @@ gid:行程1169222358/Places1089684162/Rest1421821084/Shop1182059264/Hotels792115
 
 ## 待辦(依序)
 1. **Harness 文件已建置完成**:PROJECT_CONSTITUTION、10_FOLDER_STRUCTURE、11_CODING_CONVENTION、12_DEV_WORKFLOW、adr/0001-0004、tasks/current/backlog/done 已建立;後續任務只需維護一致性。
-2. Bar 手機驗收 V2 預覽版 → 說「打包」→ 部署包:index.html 改 `<script src>` 引 schema.js/validator.js 獨立檔、sw.js VERSION→v3、SHELL_ASSETS 加 schema.js/validator.js/.ai-manifest.json、Playwright 斷網回歸後出 ZIP
-3. Day3-6 行程/地點資料待 Bar 更新試算表(程式已支援自動生效);購物模式初版回饋待討論。
+2. Bar 先補完 Day4-6 Google Sheet 行程內容 → 手機驗收 V2 預覽版 → 說「打包」→ 部署包:index.html 改 `<script src>` 引 schema.js/validator.js 獨立檔、sw.js VERSION→v3、SHELL_ASSETS 加 schema.js/validator.js/.ai-manifest.json、Playwright 斷網回歸後出 ZIP
+3. R001/R006 餐廳欄位已由 Google Sheet 發布 CSV 確認補齊;購物頁多地點切換已確認在 GitHub `origin/main`,後續待 Bar 手機試用後再提微調。
 4. App 落地後執行 AI Native Framework 抽取(見 `FUTURE_PLAN_framework-extraction.md`)。
 5. 每次交付後:跑 healthCheck + 輸出健康報告 + 更新 07_CHANGELOG。
 
