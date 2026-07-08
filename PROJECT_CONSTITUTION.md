@@ -34,3 +34,10 @@ Schema First、Data Driven、Single Responsibility、High Cohesion、Low Couplin
 
 ## 7. 通用性
 本憲章與 AI Harness 為可攜框架,未來其他專案(如 AI 英文教練)沿用同一套流程,只需替換 docs 內容。
+
+## 8. 本機開發環境清理安全規範
+- 若要建立本機開發環境清理排程,必須採取保守白名單策略:只清理已登記且過期的本地服務,以及超過 24 小時的低風險暫存。
+- 清理排程不得亂殺所有 `node` / `python` / `chrome` 行程,不得以廣泛 process name 當成刪除或終止依據。
+- 建議排程頻率為每 6 小時執行一次;任何實作都必須附 dry-run、log、自測與移除方式。
+- 清理腳本必須先輸出將清理的目標與原因,再執行實際清理;若目標未登記、未過期或風險不明,一律跳過。
+- 此類排程屬於本機 DevOps 安全工具,不得影響專案資料、Google Sheet Schema、App runtime state 或使用者瀏覽器工作階段。
