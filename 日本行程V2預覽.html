@@ -308,6 +308,13 @@ a{color:var(--sea)}
 .pc-k{flex:0 0 auto;color:var(--ink-faint);font-weight:600;min-width:56px}
 .pc-v{flex:1;color:#3f4a50;word-break:break-word}
 .pc-tip{margin-top:9px;font-size:12.5px;line-height:1.65;color:#8a6416;background:#fdf6e0;border-radius:8px;padding:8px 11px}
+.note-rich{display:block}
+.note-p{margin:0 0 5px;line-height:1.65;word-break:break-word}
+.note-p:last-child{margin-bottom:0}
+.note-list{list-style:none;margin:5px 0 6px;padding:0;display:grid;gap:4px}
+.note-li,.note-alert{display:flex;align-items:flex-start;gap:6px;line-height:1.65;word-break:break-word}
+.note-marker{flex:0 0 auto;color:var(--coral);font-weight:800}
+.note-alert{margin:5px 0;color:#7b4e00;background:rgba(255,255,255,.45);border-radius:7px;padding:4px 7px}
 /* 下一站 */
 .nx-hero{background:var(--card);border:2px solid var(--coral);border-radius:16px;padding:16px;margin-bottom:14px;box-shadow:var(--shadow-lg)}
 .nx-hero.all-done{border-color:var(--green)}
@@ -1154,6 +1161,40 @@ function highlightNote(text){
   t=t.replace(/(¥[\d,]+)/g,'<span class="hl">$1</span>');
   return t;
 }
+function parseNoteLine(line){
+  var t=(line||'').trim();
+  var m=t.match(/^(•|-|\d+[.、]|[①②③④⑤⑥⑦⑧⑨⑩])\s*(.+)$/);
+  if(m) return {type:'list', marker:m[1], text:m[2]};
+  m=t.match(/^(※)\s*(.+)$/);
+  if(m) return {type:'alert', marker:m[1], text:m[2]};
+  return {type:'text', text:t};
+}
+function renderNote(text){
+  if(!text) return '';
+  var lines=String(text).split(/\r?\n/), out='', listOpen=false;
+  function closeList(){ if(listOpen){ out+='</ul>'; listOpen=false; } }
+  lines.forEach(function(line){
+    var raw=(line||'').trim();
+    if(!raw){ closeList(); return; }
+    var item=parseNoteLine(raw);
+    if(item.type==='list'){
+      if(!listOpen){ out+='<ul class="note-list">'; listOpen=true; }
+      out+='<li class="note-li"><span class="note-marker">'+escapeHtml(item.marker)+'</span><span>'+highlightNote(item.text)+'</span></li>';
+      return;
+    }
+    closeList();
+    if(item.type==='alert'){
+      out+='<div class="note-alert"><span class="note-marker">'+escapeHtml(item.marker)+'</span><span>'+highlightNote(item.text)+'</span></div>';
+    }else{
+      out+='<div class="note-p">'+highlightNote(item.text)+'</div>';
+    }
+  });
+  closeList();
+  return out?'<div class="note-rich">'+out+'</div>':'';
+}
+function renderNoteBlock(text, icon){
+  return text?'<div class="pc-tip">'+renderNote(text)+'</div>':'';
+}
 function extractDrive(moveText){
   if(!moveText) return '';
   var m=moveText.match(/開車約?\s*([\d.]+\s*(小時|分鐘)[\d.]*\s*(分鐘)?)/);
@@ -1174,7 +1215,7 @@ function typeTag(res){
 /* ================= 面板內容(卡片系統,型別由 Places.類型 明確決定) ================= */
 function kvRow(k,v){ return v?'<div class="pc-row"><span class="pc-k">'+k+'</span><span class="pc-v">'+escapeHtml(v)+'</span></div>':''; }
 function linkRow(k,url,label){ return url?'<div class="pc-row"><span class="pc-k">'+k+'</span><span class="pc-v"><a href="'+escapeHtml(url)+'" target="_blank" rel="noopener">'+(label||'開啟連結')+'</a></span></div>':''; }
-function tipBox(v){ return v?'<div class="pc-tip">💡 '+escapeHtml(v)+'</div>':''; }
+function tipBox(v){ return renderNoteBlock(v); }
 
 /* 停車資訊「引用其他 Place」解析
    規則:停車備註(或停車費)欄若寫「停車同P004」,
@@ -1214,7 +1255,7 @@ function restRows(list){
     return '<div class="pc-rest"><div class="pc-rest-n">🍜 '+escapeHtml(r.name)+
       (rate?' <span class="pc-rest-r">'+escapeHtml(rate)+'</span>':'')+'</div>'+
       '<div class="pc-rest-d">'+escapeHtml([r.cat,r.hours,r.pay].filter(Boolean).join('｜'))+'</div>'+
-      (r.note?'<div class="pc-rest-d">'+escapeHtml(r.note)+'</div>':'')+'</div>';
+      (r.note?'<div class="pc-rest-d">'+renderNote(r.note)+'</div>':'')+'</div>';
   }).join('');
 }
 function infoPanel(res){
@@ -1324,7 +1365,7 @@ function renderItem(it,checks){
   if(hasMore){
     panels+='<div class="panel" id="pn_mo_'+it.id+'">'+
       (it.move?'<div class="sec move"><div class="sec-lbl">🚗 交通</div>'+highlightNote(it.move)+'</div>':'')+
-      (it.note?'<div class="sec" style="margin-top:8px"><div class="sec-lbl">📝 備註</div>'+highlightNote(it.note)+'</div>':'')+
+      (it.note?'<div class="sec" style="margin-top:8px"><div class="sec-lbl">📝 備註</div>'+renderNote(it.note)+'</div>':'')+
       '</div>';
   }
   return '<div class="item '+(done?'checked':'')+'" id="it_'+it.id+'">'+
@@ -1839,7 +1880,7 @@ function renderShopResults(){
         '<a class="qa-btn drv" href="https://www.google.com/maps/dir/?api=1&destination='+encodeURIComponent((p.navq||p.name)+' 日本')+'&travelmode=driving" target="_blank" rel="noopener">🚗 導航</a>'+
         (p.mapcode?'<button class="qa-btn pk" onclick="copyText(\''+p.mapcode+'\',\'MAP CODE \')">📋 MAP CODE</button>':'')+
         (p.web?'<a class="qa-btn nf" href="'+escapeHtml(p.web)+'" target="_blank" rel="noopener">🌐 官方資訊</a>':'')+
-      '</div>'+(p.note?'<div class="pc-tip">💡 '+escapeHtml(p.note)+'</div>':'');
+      '</div>'+renderNoteBlock(p.note);
     if(wanted.length){
       var wkey=shopWantKey(p,mi);
       var wopen=!!shopWantListOpen[wkey];
