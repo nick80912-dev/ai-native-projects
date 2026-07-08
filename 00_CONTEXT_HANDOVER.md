@@ -6,7 +6,7 @@
 日本旅遊 PWA(10/18-23 岡山廣島宮島自駕,朋友團用)。Google Sheets=CMS,手機瀏覽器直接抓 7 張發布 CSV 渲染,Netlify 託管,無後端。Bar=產品負責人(不會程式,繁中溝通,要直接執行不要教學);AI=全職工程團隊。
 
 ## 鐵則工作流程
-需求→只改必要函式→Playwright QA(斷網/連網/旅行日 mock Date,零 pageerror)→**先交預覽版 HTML→Bar 說「打包」才出 ZIP**→更新 CHANGELOG。禁止:大重構、改 CMS 結構、猜地點型別、刪功能(未經 Bar 同意)。
+Pre-Work Git Sync Gate→需求→只改必要函式→Playwright QA(斷網/連網/旅行日 mock Date,零 pageerror)→**先交預覽版 HTML→Bar 說「打包」才出 ZIP**→更新 CHANGELOG。禁止:大重構、改 CMS 結構、猜地點型別、刪功能(未經 Bar 同意)。版本不一致或工作區不乾淨時,先盤點並經 Bar 確認,不得自動覆蓋本地改動。
 
 ## 架構(v2.2-harness)
 ```

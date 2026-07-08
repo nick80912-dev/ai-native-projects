@@ -11,10 +11,11 @@
 
   "governance": {
     "constitution": "PROJECT_CONSTITUTION.md",
-    "workflow_13steps": "讀manifest→讀handover→讀ADR→定位模組→先設計→最小修改→跑Validator→驗證資料流→更新文件→更新CHANGELOG→一致性檢查(healthCheck)→完成→產出開發摘要",
+    "workflow_13steps": "Pre-Work Git Sync Gate→讀manifest→讀handover→讀ADR→定位模組→先設計→最小修改→跑Validator→驗證資料流→更新文件→更新CHANGELOG→一致性檢查(healthCheck)→完成→產出開發摘要",
     "adr_dir": "adr/(0001-schema-first, 0002-data-driven-ui, 0003-google-sheet-cms, 0004-renderer-architecture);重構前必讀",
     "must_confirm_with_bar": ["換框架", "大重構", "破壞相容的資料模型變更", "刪功能", "改 Google Sheet Schema", "推翻既有 ADR"],
     "proposal_format": "問題分析→可行方案→優缺點比較→相容性影響→Migration Plan(五段,經 Bar 確認才做)",
+    "pre_work_git_sync_gate": "任何實作/打包/push/部署前先 git fetch origin --prune,確認 HEAD=origin/main 且 working tree 乾淨;若不一致先盤點並經 Bar 確認,不得自動覆蓋本地改動",
     "delivery_rule": "先交預覽版 HTML 給 Bar 手機驗收 → Bar 說「打包」才產出部署 ZIP",
     "deprecated_docs": "作廢檔為 -old-03_DATABASE_DEPRECATED.md、-old-05_CODING_RULES_DEPRECATED.md;現行 03_DATABASE.md 與 05_CODING_RULES.md 可用,09/11 提供更細規格"
   },

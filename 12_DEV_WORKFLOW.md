@@ -2,6 +2,23 @@
 
 > 常見任務的標準步驟鏈。所有任務都在 PROJECT_CONSTITUTION 的十三步流程框架下進行。
 
+## Pre-Work Git Sync Gate(每次開工前)
+```
+git fetch origin --prune
+        ↓
+確認 HEAD / origin/main / working tree 狀態
+        ↓
+若本地乾淨但落後 origin/main → fast-forward 同步
+        ↓
+若 working tree 不乾淨 → 先盤點差異,判斷是否已在 origin/main
+        ↓
+版本乾淨且與 origin/main 一致後,才開始實作 / 打包 / push / 部署
+```
+- 此 Gate 是檢查與同步流程,不是無條件覆蓋流程。
+- 只有在確認所有本地差異都已存在於 `origin/main`,或 Bar 明確同意後,才可使用 `reset --hard` / `clean` / `checkout`。
+- 若本地有 GitHub 沒有的內容,必須先列出檔案與差異,由 Bar 決定保留、提交、備份或丟棄。
+- 任何功能修改、部署包整理、Netlify 上傳或 push 前都必須先通過此 Gate。
+
 ## 情境 A:新增一個景點/餐廳/店家(純資料)
 ```
 Google Sheet 加一列(填對應欄位與 ID)

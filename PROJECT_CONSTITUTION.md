@@ -20,10 +20,18 @@ Schema First、Data Driven、Single Responsibility、High Cohesion、Low Couplin
 - 若確有改善必要,必先提出**五段提案**:①問題分析 ②可行方案 ③優缺點比較 ④相容性影響 ⑤Migration Plan;經 Bar 確認才實作。
 
 ## 4. 交付規範
+- **Pre-Work Git Sync Gate**:任何實作、打包、push、部署前,AI 必須先確認本地工作區與 GitHub `origin/main` 狀態。若版本不一致或工作區不乾淨,不得開始功能修改、打包或部署。
 - QA 三情境必過(斷網內建 / 連網同步 / 旅行日 mock Date),零 pageerror。
 - **先交預覽版 HTML 給 Bar 手機驗收 → Bar 說「打包」才產出部署 ZIP**。
 - 涉及架構變更 → 同步更新 ADR、README、AI_HANDOVER、CHANGELOG、.ai-manifest.json。
 - 新增資料欄位/Sheet/Component/Renderer/Service → Schema 與相關文件同步更新。
+
+### 4.1 Pre-Work Git Sync Gate
+- 開工前必跑 `git fetch origin --prune`,並檢查目前 branch、`HEAD`、`origin/main` 與 working tree 狀態。
+- 若本地 branch 落後 `origin/main` 且 working tree 乾淨,允許使用 fast-forward 同步到最新版。
+- 若 working tree 不乾淨,AI 必須先列出差異並判斷是否已存在於 `origin/main`;未經 Bar 確認,不得 `reset --hard`、`clean`、`checkout` 或覆蓋本地改動。
+- 若本地有 GitHub 尚未包含的內容,必須先詢問 Bar 要保留、提交、備份或丟棄;不得自行決定。
+- 版本狀態整理為「本地乾淨且與 `origin/main` 一致」前,禁止開始實作、打包、push 或部署。
 
 ## 5. Token Diet(節流與防幻覺)
 - 首讀只需 .ai-manifest.json(幾百字掌握全貌),其餘文件按需查閱。

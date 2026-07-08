@@ -2,6 +2,12 @@
 
 紀錄格式:日期 / 版本 / 重點。細節不展開,新變更往上加。
 
+## 2026-07-08 — Pre-Work Git Sync Gate 納入 Harness
+- 在 PROJECT_CONSTITUTION / DEV_WORKFLOW / manifest / handover 補上開工前 Git 版本同步 Gate
+- 明確要求實作、打包、push、部署前先確認本地與 `origin/main` 一致且 working tree 乾淨
+- 若版本不一致或本地有改動,必須先盤點並經 Bar 確認;不得自動覆蓋本地改動
+- Breaking Change:無
+
 ## 2026-07-08 — 任務板狀態更新
 - 依 Bar 最新決策調整驗收順序:先補完 Day4-6 Google Sheet,再手機驗收、打包與 Netlify
 - Google Sheet 發布 CSV 已確認 R001 / R006 的 Tabelog 評分與營業時間已補齊

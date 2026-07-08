@@ -9,6 +9,7 @@
 程式碼本體在部署包 index.html 內嵌 JS(區塊順序見 02)。
 
 ## 工作流程(必守)
+0. 開工前先通過 Pre-Work Git Sync Gate:`git fetch origin --prune`,確認本地與 `origin/main` 一致且 working tree 乾淨;若不一致先盤點,不得自動覆蓋本地改動。
 1. 收到需求先確認範圍;**只改必要函式,不重構整包**
 2. 修改 → Playwright QA(斷網內建/連網同步/旅行日 mock Date 三情境,零 pageerror)
 3. **先交「預覽版 HTML」給 Bar 驗收 → Bar 說「打包」才產 ZIP**
