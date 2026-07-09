@@ -21,6 +21,7 @@ const sandbox = {};
 vm.createContext(sandbox);
 vm.runInContext([
   extractFunction('escapeHtml'),
+  extractFunction('jsString'),
   extractFunction('highlightNote'),
   extractFunction('parseNoteLine'),
   extractFunction('renderNote'),
@@ -29,8 +30,13 @@ vm.runInContext([
   extractFunction('renderScheduleLinks'),
   extractFunction('isTripCheckableItem'),
   extractFunction('isTripItemCleared'),
+  extractFunction('getCurrentTripItemId'),
+  extractFunction('hasUnfinishedToday'),
+  extractFunction('shouldShowTomorrowPreview'),
+  extractFunction('renderTomorrowPreview'),
   extractFunction('renderTicketLine'),
   extractFunction('nextStopMeta'),
+  extractFunction('parkingPanel'),
   extractFunction('renderNextStopCard')
 ].join('\n'), sandbox);
 
@@ -107,5 +113,49 @@ const nextStopOut = sandbox.renderNextStopCard({}, 0, {
 });
 assert(nextStopOut.includes('<b>付款</b> 只能付現（點餐機）'));
 assert(nextStopOut.includes('onclick="openTripItem(0,\'10/18_4\')"'));
+assert(nextStopOut.includes('class="nx-drive-btn"'));
+assert(nextStopOut.includes('class="nx-decision-btn done"'));
+assert(nextStopOut.includes('class="nx-decision-btn skip"'));
+assert(nextStopOut.indexOf('class="nx-drive-btn"') < nextStopOut.indexOf('class="nx-decision-btn done"'));
+
+sandbox.resolveParking = function(){ return { mapcode:'22 220 851*75', pnote:'parking note' }; };
+sandbox.kvRow = function(k,v){ return v ? '<div>'+k+v+'</div>' : ''; };
+const parkingOut = sandbox.parkingPanel({});
+assert(parkingOut.includes('onclick="showMapcode(\'22 220 851*75\')"'));
+assert(parkingOut.includes('class="mapcode-box mapcode-open"'));
+
+sandbox.DB = { trip:{ days:[
+  { date:'10/20', dow:'二', items:[{ id:'d3_1', act:'Kamakura walk', place:'Enoshima' }] },
+  { date:'10/21', dow:'三', items:[{ id:'d4_1', time:'08:00', act:'Breakfast', place:'Shinjuku' }] }
+] } };
+sandbox.getDayProgress = function(){ return { done:{ d3_1:true }, skip:{} }; };
+sandbox.isNextStopCleared = function(item, progress, checks){
+  return !!(progress.done[item.id] || progress.skip[item.id] || checks[item.id]);
+};
+assert.strictEqual(sandbox.shouldShowTomorrowPreview(sandbox.DB.trip.days[0], 0, { item:null }, {}, 21*60+30), true);
+assert.strictEqual(sandbox.shouldShowTomorrowPreview(sandbox.DB.trip.days[0], 0, { item:{ id:'d3_1' } }, {}, 22*60+1), false);
+const tomorrowOut = sandbox.renderTomorrowPreview(0);
+assert(tomorrowOut.includes('class="tomorrow-card"'));
+assert(tomorrowOut.includes('DAY 2'));
+assert(tomorrowOut.includes('Breakfast'));
+
+const currentId = sandbox.getCurrentTripItemId(
+  { items:[{ id:'done', act:'done' }, { id:'next', act:'next main', place:'next place' }] },
+  0,
+  { done:true }
+);
+assert.strictEqual(currentId, 'next');
+
+sandbox.getDayProgress = function(){ return { done:{}, skip:{ parent:true } }; };
+const currentAfterSkip = sandbox.getCurrentTripItemId(
+  { items:[
+    { id:'parent', act:'Island walk', place:'Shrine' },
+    { id:'child', act:'', place:'Child scenic stop' },
+    { id:'next-main', act:'Next main stop', place:'Station' }
+  ] },
+  0,
+  {}
+);
+assert.strictEqual(currentAfterSkip, 'next-main');
 
 console.log('renderNote tests passed');

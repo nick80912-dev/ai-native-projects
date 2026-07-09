@@ -299,8 +299,15 @@ a{color:var(--sea)}
 .panel{display:none;margin:0 13px 12px 48px;padding:12px 13px;background:#faf8f2;border-radius:11px;border:1px solid var(--line)}
 .panel.open{display:block;animation:fade .25s ease}
 .mapcode-box{display:flex;justify-content:space-between;align-items:center;gap:10px;background:#0e3a44;color:#fff;border-radius:10px;padding:11px 13px;margin-bottom:9px}
+.mapcode-open{cursor:pointer}
+.mapcode-open:active{transform:scale(.99)}
 .mc-lbl{font-size:10px;opacity:.7;letter-spacing:.05em}
 .mc-val{font-size:18px;font-weight:800;letter-spacing:.04em;font-variant-numeric:tabular-nums}
+.mapcode-fullscreen{position:fixed;inset:0;z-index:120;background:rgba(6,32,38,.96);color:#fff;display:flex;align-items:center;justify-content:center;padding:24px;text-align:center}
+.mapcode-fullscreen .mapcode-dialog{width:100%;max-width:360px}
+.mapcode-fullscreen .mapcode-label{font-size:13px;font-weight:900;letter-spacing:.16em;opacity:.7;margin-bottom:14px}
+.mapcode-fullscreen .mapcode-value{font-size:clamp(38px,13vw,64px);font-weight:950;line-height:1.08;letter-spacing:.04em;font-variant-numeric:tabular-nums;word-break:break-word}
+.mapcode-fullscreen .mapcode-hint{margin-top:18px;font-size:13px;font-weight:700;opacity:.62}
 .copy-btn{background:var(--coral);color:#fff;border:none;border-radius:9px;padding:9px 13px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap}
 .copy-btn:active{transform:scale(.96)}
 .pc-row{display:flex;gap:10px;font-size:13px;line-height:1.6;padding:5px 0;border-top:1px dashed var(--line)}
@@ -340,11 +347,28 @@ a{color:var(--sea)}
 .nx-ticket-line b{color:var(--ink);font-weight:800}
 .nx-ticket-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
 .nx-ticket-actions .qa-btn{margin:0}
-.nx-ticket-low{display:flex;gap:14px;border-top:1px dashed var(--line);padding:10px 16px 12px 20px;background:#fffaf0}
-.nx-text-btn{border:0;background:transparent;color:var(--ink-soft);font-weight:800;font-size:13px;padding:4px 0;font-family:inherit;cursor:pointer}
-.nx-text-btn:active{transform:scale(.96)}
+.nx-primary-actions{padding:0 16px 10px 20px}
+.nx-drive-btn{display:flex;align-items:center;justify-content:center;width:100%;min-height:48px;background:var(--sea);color:#fff;border-radius:12px;font-size:16px;font-weight:900;text-decoration:none}
+.nx-drive-btn:active{transform:scale(.98)}
+.nx-secondary-actions{display:flex;gap:8px;flex-wrap:wrap;padding:0 16px 12px 20px}
+.nx-secondary-actions:empty{display:none}
+.nx-secondary-actions .qa-btn{margin:0}
+.nx-ticket-low{display:grid;grid-template-columns:1fr 1fr;gap:10px;border-top:1px dashed var(--line);padding:12px 16px 14px 20px;background:#fffaf0}
+.nx-decision-btn{min-height:46px;border-radius:12px;font-size:15px;font-weight:900;font-family:inherit;cursor:pointer}
+.nx-decision-btn.done{background:#fff;color:var(--green);border:1.5px solid var(--green)}
+.nx-decision-btn.skip{background:#f7f3ea;color:var(--ink-faint);border:1px solid var(--line)}
+.nx-decision-btn:active{transform:scale(.97)}
 .nx-remain{margin:0 12px 12px;color:var(--ink-faint);font-size:13px;text-align:center}
 .nx-empty-ticket{margin:12px;background:var(--card);border-radius:14px;box-shadow:var(--shadow);padding:18px;text-align:center;color:var(--ink-soft)}
+.pretrip-count{font-size:14px;font-weight:900;color:var(--gold);background:#fff7dc;border:1px solid #ead88e;border-radius:999px;display:inline-flex;padding:5px 10px;margin-top:8px}
+.tomorrow-card{margin:12px;background:linear-gradient(135deg,#fffaf0,#eef8f9);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:16px}
+.tomorrow-lbl{font-size:11px;font-weight:900;letter-spacing:.12em;color:var(--sea);margin-bottom:7px}
+.tomorrow-title{font-size:20px;font-weight:900;color:var(--ink);margin-bottom:9px}
+.tomorrow-list{display:grid;gap:7px;margin-top:10px}
+.tomorrow-item{font-size:13.5px;line-height:1.45;color:var(--ink-soft);background:rgba(255,255,255,.62);border-radius:9px;padding:8px 10px}
+.tomorrow-item b{color:var(--ink);font-weight:900}
+.item.now-item{border-color:rgba(232,111,79,.42);box-shadow:0 0 0 2px rgba(232,111,79,.12),var(--shadow)}
+.now-badge{display:inline-flex;align-items:center;margin-left:6px;background:var(--coral);color:#fff;border-radius:999px;padding:2px 7px;font-size:10px;font-weight:900;vertical-align:2px}
 .mini-card{display:flex;gap:10px;align-items:flex-start;background:var(--card);border:1px solid var(--line);border-radius:11px;padding:10px 13px;margin-bottom:8px;cursor:pointer}
 .mini-card .mt{font-size:12px;font-weight:700;color:var(--coral);min-width:44px;padding-top:2px}
 .mini-card .mc{flex:1;font-size:14px;font-weight:600;line-height:1.4}
@@ -783,6 +807,7 @@ var BUILTIN = {"itin": "2026.10.18-10.23岡山四國六天五夜,,,,,,\n飯店,G
 function lsGet(k,f){ try{ var v=localStorage.getItem(k); return v?JSON.parse(v):f; }catch(e){ AppLog.repo('讀取 '+k+' 失敗:'+(e.message||e)+' — 使用預設值'); return f; } }
 function lsSet(k,v){ try{ localStorage.setItem(k,JSON.stringify(v)); }catch(e){ AppLog.repo('寫入 '+k+' 失敗:'+(e.message||e)+' — 個人狀態可能未保存'); } }
 function escapeHtml(s){ return (s==null?'':String(s)).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function jsString(s){ return String(s==null?'':s).replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/\n/g,'\\n').replace(/\r/g,''); }
 function todayMD(){ var d=new Date(); return ('0'+(d.getMonth()+1)).slice(-2)+'/'+('0'+d.getDate()).slice(-2); }
 var toastTimer, toastAction=null;
 function clearToast(){
@@ -1264,13 +1289,23 @@ function parkingPanel(p){
   var park = resolveParking(p);
   var out = '';
   if(park.mapcode){
-    out += '<div class="mapcode-box"><div style="width:100%">' +
+    out += '<div class="mapcode-box mapcode-open" role="button" tabindex="0" onclick="showMapcode(\''+jsString(park.mapcode)+'\')"><div style="width:100%">' +
            '<div class="mc-lbl">MAP CODE（車用導航輸入）</div>' +
            '<div class="mc-val mc-big">' + escapeHtml(park.mapcode) + '</div>' +
            '</div></div>';
   }
   out += kvRow('停車場', park.pnote);
   return out;
+}
+function showMapcode(value){
+  var old=document.getElementById('mapcodeFullscreen');
+  if(old) old.remove();
+  var el=document.createElement('div');
+  el.id='mapcodeFullscreen';
+  el.className='mapcode-fullscreen';
+  el.onclick=function(){ el.remove(); };
+  el.innerHTML='<div class="mapcode-dialog"><div class="mapcode-label">MAPCODE</div><div class="mapcode-value">'+escapeHtml(value)+'</div><div class="mapcode-hint">點任意處關閉</div></div>';
+  document.body.appendChild(el);
 }
 function restRows(list){
   return list.map(function(r){
@@ -1324,6 +1359,13 @@ function isTripCheckableItem(it){
 function isTripItemCleared(it,day,dayIndex,checks){
   return isNextStopCleared(it,getDayProgress(day,dayIndex),checks);
 }
+function getCurrentTripItemId(day,dayIndex,checks){
+  if(!day) return null;
+  checks=checks||getChecks();
+  var items=(day.items||[]).filter(function(it){ return it&&it.id&&it.act; });
+  var next=items.find(function(it){ return !isTripItemCleared(it,day,dayIndex,checks); });
+  return next?next.id:null;
+}
 function openTripItem(dayIndex,itemId){
   curDay=dayIndex;
   curView='trip';
@@ -1371,8 +1413,9 @@ function onCheck(id){
   else if(curView==='today') renderToday();
   toast(getChecks()[id]?'已打卡 ✓':'取消打卡');
 }
-function renderItem(it,checks){
+function renderItem(it,checks,currentItemId){
   var done=checks[it.id];
+  var isNow=currentItemId&&it.id===currentItemId;
   var res=resolveRef(it);
   var cat=typeTag(res);
   if(!cat){
@@ -1415,13 +1458,13 @@ function renderItem(it,checks){
       (it.note?'<div class="sec" style="margin-top:8px"><div class="sec-lbl">📝 備註</div>'+renderNote(it.note)+'</div>':'')+
       '</div>';
   }
-  return '<div class="item '+(done?'checked':'')+'" id="it_'+it.id+'">'+
+  return '<div class="item '+(done?'checked':'')+' '+(isNow?'now-item':'')+'" id="it_'+it.id+'">'+
     '<div class="item-main">'+
       '<div class="chk '+(done?'on':'')+'" onclick="onCheck(\''+it.id+'\')">'+(done?'✓':'')+'</div>'+
       '<div class="time '+(it.time?'':'blank')+'">'+escapeHtml(it.time||'·')+'</div>'+
       '<div class="body">'+
-        (it.act?'<div class="act">'+escapeHtml(it.act)+'</div>':'')+
-        (hasPlaceTxt?'<div class="place-row"><span class="place">'+escapeHtml(it.place.replace(/\n/g,' '))+'</span></div>':'')+
+        (it.act?'<div class="act">'+escapeHtml(it.act)+(isNow?'<span class="now-badge">現在</span>':'')+'</div>':'')+
+        (hasPlaceTxt?'<div class="place-row"><span class="place">'+escapeHtml(it.place.replace(/\n/g,' '))+'</span>'+(isNow&&!it.act?'<span class="now-badge">現在</span>':'')+'</div>':'')+
         '<div class="chip-row">'+
           (cat?'<span class="tag '+cat.cls+'">'+cat.label+'</span>':'')+
           (drive?'<span class="drive-chip">'+driveIcon+' '+escapeHtml(drive)+'</span>':'')+
@@ -1438,6 +1481,7 @@ function renderTrip(){
   var day=t.days[curDay];
   if(!day){ curDay=0; day=t.days[0]; }
   var checks=getChecks();
+  var currentItemId=getCurrentTripItemId(day,curDay,checks);
   var acts=day.items.filter(isTripCheckableItem);
   var doneN=acts.filter(function(it){return isTripItemCleared(it,day,curDay,checks);}).length;
   var visibleItems=tripHideDone?day.items.filter(function(it){return !isTripCheckableItem(it) || !isTripItemCleared(it,day,curDay,checks);}):day.items;
@@ -1447,7 +1491,7 @@ function renderTrip(){
     '<span class="prog">'+doneN+'/'+acts.length+' ✓</span></div>'+
     '<div class="trip-filter"><button class="trip-filter-btn '+(!tripHideDone?'on':'')+'" onclick="setTripHideDone(false)">顯示全部</button>'+
     '<button class="trip-filter-btn '+(tripHideDone?'on':'')+'" onclick="setTripHideDone(true)">隱藏已完成</button></div>'+
-    (visibleActs.length?visibleItems.map(function(it){return renderItem(it,checks);}).join(''):'<div class="empty-state">今天的行程都已完成 ✓</div>');
+    (visibleActs.length?visibleItems.map(function(it){return renderItem(it,checks,currentItemId);}).join(''):'<div class="empty-state">今天的行程都已完成 ✓</div>');
 }
 
 /* ================= 今天模式 ================= */
@@ -1685,15 +1729,15 @@ function renderNextStopCard(day,dayIndex,pick){
         renderTicketLine('付款',meta.pay)+
         renderTicketLine('提醒',meta.note)+
       '</div>'+
-      '<div class="nx-ticket-actions">'+
-        (canNav?'<a class="qa-btn drv" href="'+navUrl(it,res)+'" target="_blank" rel="noopener">'+(transport()==='drive'?'🚗 導航':'🚃 路線')+'</a>':'')+
-        (meta.web?'<a class="qa-btn nf" href="'+escapeHtml(meta.web)+'" target="_blank" rel="noopener">🌐 官網</a>':'')+
-        renderScheduleLinks(meta.ttl,'qa-btn fr')+
-      '</div>'+
+    '</div>'+
+    (canNav?'<div class="nx-primary-actions"><a class="nx-drive-btn" href="'+navUrl(it,res)+'" target="_blank" rel="noopener">'+(transport()==='drive'?'🚗 導航':'🚃 路線')+'</a></div>':'')+
+    '<div class="nx-secondary-actions">'+
+      (meta.web?'<a class="qa-btn nf" href="'+escapeHtml(meta.web)+'" target="_blank" rel="noopener">🌐 官網</a>':'')+
+      renderScheduleLinks(meta.ttl,'qa-btn fr')+
     '</div>'+
     '<div class="nx-ticket-low">'+
-      '<button class="nx-text-btn" onclick="onNextStopDone('+dayIndex+',\''+it.id+'\')">完成</button>'+
-      '<button class="nx-text-btn" onclick="onNextStopSkip('+dayIndex+',\''+it.id+'\')">跳過</button>'+
+      '<button class="nx-decision-btn done" onclick="onNextStopDone('+dayIndex+',\''+it.id+'\')">完成</button>'+
+      '<button class="nx-decision-btn skip" onclick="onNextStopSkip('+dayIndex+',\''+it.id+'\')">跳過</button>'+
     '</div>'+
   '</div>';
   if(pick.remaining>0) h+='<div class="nx-remain">今日還有 '+pick.remaining+' 個行程</div>';
@@ -1780,6 +1824,50 @@ function homeWeatherFor(dayIndex,item){
   if(state&&state.loading) return null;
   return state||getCachedWeather(city);
 }
+function daysUntilStart(){
+  var start=DB&&DB.cfg&&DB.cfg.startdate?new Date(DB.cfg.startdate+'T00:00:00'):null;
+  if(!start||isNaN(start.getTime())) return null;
+  var now=new Date();
+  var today=new Date(now.getFullYear(),now.getMonth(),now.getDate());
+  var startDay=new Date(start.getFullYear(),start.getMonth(),start.getDate());
+  return Math.ceil((startDay-today)/86400000);
+}
+function renderPreTripBrief(){
+  var d=daysUntilStart();
+  var day=DB.trip&&DB.trip.days?DB.trip.days[0]:null;
+  var highlights=day?day.items.filter(function(it){return it&&it.act;}).slice(0,4):[];
+  return (d!==null&&d>0?'<div class="pretrip-count">D-'+d+'</div>':'')+
+    (highlights.length?'<div class="tomorrow-list">'+highlights.map(function(it){
+      return '<div class="tomorrow-item">'+(it.time?'<b>'+escapeHtml(it.time)+'</b> ':'')+escapeHtml([it.act,it.place].filter(Boolean).join(' · '))+'</div>';
+    }).join('')+'</div>':'');
+}
+function hasUnfinishedToday(day,dayIndex,checks){
+  var items=(day&&day.items?day.items:[]).filter(function(it){return it&&it.act;});
+  if(!items.length) return false;
+  return items.some(function(it){ return !isTripItemCleared(it,day,dayIndex,checks); });
+}
+function shouldShowTomorrowPreview(day,dayIndex,pick,checks,nowMinutes){
+  if(!DB.trip||!DB.trip.days||!DB.trip.days[dayIndex+1]) return false;
+  if(pick&&pick.item) return false;
+  var unfinished=hasUnfinishedToday(day,dayIndex,checks||{});
+  if(unfinished) return false;
+  var items=(day&&day.items?day.items:[]).filter(function(it){return it&&it.act;});
+  var cleared=items.length>0 && items.every(function(it){ return isTripItemCleared(it,day,dayIndex,checks||{}); });
+  return cleared || nowMinutes>=22*60;
+}
+function renderTomorrowPreview(dayIndex){
+  if(!DB.trip||!DB.trip.days) return '';
+  var day=DB.trip.days[dayIndex+1];
+  if(!day) return '';
+  var items=(day.items||[]).filter(function(it){return it&&it.act;}).slice(0,4);
+  return '<div class="tomorrow-card">'+
+    '<div class="tomorrow-lbl">明日預告</div>'+
+    '<div class="tomorrow-title">DAY '+(dayIndex+2)+' · '+day.date+(day.dow?' ('+day.dow+')':'')+'</div>'+
+    (items.length?'<div class="tomorrow-list">'+items.map(function(it){
+      return '<div class="tomorrow-item">'+(it.time?'<b>'+escapeHtml(it.time)+'</b> ':'')+escapeHtml([it.act,it.place].filter(Boolean).join(' · '))+'</div>';
+    }).join('')+'</div>':'')+
+  '</div>';
+}
 function renderToday(){
   var view=document.getElementById('view-today');
   var ti=findToday();
@@ -1789,6 +1877,7 @@ function renderToday(){
     view.innerHTML='<div class="today-hero"><div class="lbl">TODAY · '+todayMD()+'</div>'+
       '<div class="date">還沒到出發日</div>'+
       '<div class="empty">今天沒有排定行程 🗓️<br>出發當天這裡會自動顯示當日安排與下一站。</div>'+
+      renderPreTripBrief()+
       '<button class="today-jump" onclick="switchView(\'trip\')">查看完整行程 →</button></div>'+
       (days.length?'<div class="seg">行程重點</div>':'')+
       days.map(function(d,i){
@@ -1809,6 +1898,7 @@ function renderToday(){
     '<div class="loc">'+completed+'/'+items.length+' 已處理</div></div>'+
     renderWeatherChip(weather)+'</div>';
   h+=renderNextStopCard(day,ti,pick);
+  if(shouldShowTomorrowPreview(day,ti,pick,checks,currentMinutes())) h+=renderTomorrowPreview(ti);
   h+='<button class="today-jump dark" onclick="gotoDay('+ti+')">看今日完整細節 →</button>';
   view.innerHTML=h;
 }
