@@ -1,37 +1,55 @@
-# 08 AI 交接文件(給未來的 AI 模型)
+# 10 資料夾與檔案結構
 
-## 你是誰、專案是什麼
-你是 Bar 的 AI 工程團隊(CTO/工程師/設計/QA 合一)。Bar **不會程式**,用白話下需求;你負責全部技術決策與實作,不教學、不解釋程式概念(除非被問)。
-專案:日本旅遊 PWA。Google Sheets 是 CMS,單一 index.html(vanilla JS)在使用者手機端抓 7 張公開 CSV 渲染,Netlify 託管。
+> 原則:每個檔案責任單一,命名一致,AI 一眼知道去哪修改。不使用 common/misc/temp 這類模糊命名。
 
-## 閱讀順序(最省 token)
-1. `.ai-manifest.json` → 2. `PROJECT_CONSTITUTION.md` → 3. 本文件 → 4. 相關 `adr/` → 5. **必讀** `15_AI_EXECUTION_RULES.md`(決策權限/指令效力/任務分級)→ 6. 依任務讀 `03_DATABASE.md` / `09_SCHEMA_MAPPING.md` / `05_CODING_RULES.md` / `11_CODING_CONVENTION.md` / `12_DEV_WORKFLOW.md` / `14_FILE_TIERS_AND_GATE.md` / `16_OPS_PLAYBOOK.md`
-程式碼本體在部署包 index.html 內嵌 JS(區塊順序見 02)。
+## 部署包(Netlify 根目錄)
+```
+index.html              App 本體:UI殼 + CSS + 內嵌 JS(依區塊分層,見下)
+schema.js               唯一資料規格(SSoT):欄位/gid/型別值/發布URL
+validator.js            防錯防線:AppLog 六類 + buildHeaderMap + healthCheck
+sw.js                   Service Worker:離線快取(改版 bump VERSION)
+manifest.json           PWA 安裝資訊
+icon-192.png            PWA 圖示
+icon-512.png            PWA 圖示
+icon-maskable-512.png   PWA 圖示(maskable)
+apple-touch-icon.png    iOS 圖示
+.ai-manifest.json       AI 導航檔(接手第一步只讀這份)
+```
+> 目前為單檔部署決策(見 00_CONTEXT_HANDOVER 與待決事項);index.html 內嵌 JS 以「區塊註解」分層,等同模組但無多檔載入風險。
 
-## 工作流程(必守)
-0. 開工前先通過 Pre-Work Git Sync Gate:`git fetch origin --prune`,確認本地與 `origin/main` 一致且 working tree 乾淨;若不一致先盤點,不得自動覆蓋本地改動。
-1. 收到需求先確認範圍;**只改必要函式,不重構整包**
-2. 修改 → Playwright QA(斷網內建/連網同步/旅行日 mock Date 三情境,零 pageerror)
-3. **先交「預覽版 HTML」給 Bar 驗收 → Bar 說「打包」才產 ZIP**
-4. 更新 `07_CHANGELOG.md`(有架構變更標 ⭐),必要時更新 06/03
+## index.html 內部分層(區塊順序,即邏輯模組)
+```
+CONFIG        來自 schema.js(PUB base + SHEETS gid)
+BUILTIN       7 表內建快照(離線後備)
+UTILS         storage / toast / CSV parser / copyText / date
+VALIDATOR     來自 validator.js(表頭驗證 + 六類日誌)
+PARSER        parseTable / parseKeyValue / parseExpensesFree(Schema 驅動)
+DATABASE      buildDB → DB{ places, rest, shop, hotels, expCMS, cfg, trip }
+REPOSITORY    resolveRef / restaurantsOf / hotelOf / resolveParking(查詢)
+RENDER        renderToday / renderTrip / renderShop / renderSplit
+COMPONENTS    renderItem / parkingPanel / infoPanel / restRows / storeRow(卡片與面板)
+SERVICES      syncAll / fetchSheet(同步) / lsGet-lsSet(儲存)
+BOOT          init → bootLocal → syncInBackground
+```
 
-## 絕不可改變(除非 Bar 明確要求)
-- CMS 七表結構、欄位語意、既有 PlaceID/RestID 的意義
-- 三層防線(內建→快取→背景同步)與「絕不空白頁」原則
-- 卡片型別由 Places.類型 明確決定,**禁止 AI 猜測型別**
-- WebView 相容碼:console polyfill、fetch 相容模式(禁 AbortController)、單一吸頂容器
-- 停車 MAP CODE 純顯示(無複製鈕)、「停車同Pxxx」繼承機制
-- 渡輪不建班次資料庫(末班船欄+官方連結)
-- UI 配色變數與四分頁結構;個人狀態(打卡/想逛/記帳)存 localStorage 不進 CMS
-- 產品哲學:3 秒原則、不過度工程化(能給連結就不硬轉結構化資料)
+## 文件庫(權威:GitHub 本 repo)
+> **2026-07-09 核定**:程式與文件的唯一權威為 GitHub 本 repo;Google Drive「BHAIProject/日本旅遊App-docs」降級為**備份**,不再作為更新目標(Drive 工具只能建立不能更新的限制因此不再影響日常流程)。
+> 內容資料來源例外:Drive 試算表「261018-261023岡山四國六天五夜」仍是 CMS 內容的唯一來源(發布 CSV,見 03/schema.js),與文件權威分屬兩層。
 
-## 常見陷阱(前人踩過)
-- 同名 function 後者勝且提升 → 包裝舊函式必先改名,禁 `var old=fn`
-- 老 WebView 無 console.info、fetch 帶 options 會拋 clone 錯誤
-- Google 試算表 `/edit` 連結讀不到,必須用「發布到網路」CSV;web_fetch 可能被 robots 擋,改走 Drive 連接或由使用者瀏覽器端抓
-- item id 含「/」(如 10/19_2),CSS selector 需 escape,DOM 查找用 getElementById
-
-## 關鍵資源
-- 正式站:https://okayamatravelteam.netlify.app/
-- CMS fileId:`1B5g7KuVi2WaFVVSdhqRMeTQV_tBpgnzOAv6aMQdFZJw`(gid 與資料表概覽見 03;欄位細節見 09)
-- Bar 的溝通偏好:直接執行、精簡回報、表格化 QA 結果、繁體中文
+```
+(repo 根目錄)
+.ai-manifest.json          AI 導航檔(首讀)
+PROJECT_CONSTITUTION.md    專案憲章(最高規範)
+00_CONTEXT_HANDOVER.md     歷史交接快照(2026-07-06;衝突時以現行文件為準)
+01-13_*.md                 願景/架構/CMS/UI/規範/路線圖/CHANGELOG/交接/Schema/結構/慣例/流程/狀態
+14_FILE_TIERS_AND_GATE.md  檔案風險分級與 Gate 保護
+15_AI_EXECUTION_RULES.md   AI 決策權限/指令效力/不確定性協議/任務分級
+16_OPS_PLAYBOOK.md         回滾手冊 + DevOps 安全規範
+adr/                       架構決策紀錄(0001-0004 + README)
+tasks/                     即時狀態唯一權威(current/backlog/done)
+tests/                     測試資產(交付必附)
+docs/superpowers/          功能設計規格與實作計畫
+schema.js / validator.js   資料規格 SSoT / 防錯防線(Tier 1 原始碼)
+日本行程V2預覽.html          預覽版 App(可編輯工作檔)
+(規劃中)deploy/            部署包(Tier 2 高風險,見 14;backlog #2)
+```

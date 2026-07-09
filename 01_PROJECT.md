@@ -1,91 +1,23 @@
-{
-  "$comment": "AI 導航檔 — 任何 AI 接手第一步只讀這份即可掌握全貌。這是 13 步流程的第 1 步。",
-  "project": "japan-travel-pwa(日本旅遊行程 App)",
-  "owner": "Bar(產品負責人,非工程師,繁中溝通,要直接執行不要教學;AI=全職工程團隊)",
-  "version": "2.2-harness",
-  "framework": "ai-native-framework@pending(尚未抽取;見 FUTURE_PLAN_framework-extraction.md)",
-  "updated": "2026-07-09",
-  "live": "https://okayamatravelteam.netlify.app/",
-  "start_here": "先讀本檔 → PROJECT_CONSTITUTION.md(憲章/流程/禁令)→ 08_AI_HANDOVER.md → 15_AI_EXECUTION_RULES.md(決策權限/任務分級,必讀)→ 相關 adr/ → 依任務讀 03_DATABASE/09_SCHEMA_MAPPING(資料與欄位)、05_CODING_RULES/11_CODING_CONVENTION(程式)、12_DEV_WORKFLOW(步驟)",
-  "governance": {
-    "constitution": "PROJECT_CONSTITUTION.md",
-    "adr_dir": "adr/(0001-schema-first, 0002-data-driven-ui, 0003-google-sheet-cms, 0004-renderer-architecture);重構前必讀",
-    "must_confirm_with_bar": [
-      "換框架",
-      "大重構",
-      "破壞相容的資料模型變更",
-      "刪功能",
-      "改 Google Sheet Schema",
-      "推翻既有 ADR"
-    ],
-    "proposal_format": "問題分析→可行方案→優缺點比較→相容性影響→Migration Plan(五段,經 Bar 確認才做)",
-    "pre_work_git_sync_gate": "任何實作/打包/push/部署前先 git fetch origin --prune,確認 HEAD=origin/main 且 working tree 乾淨;若不一致先盤點並經 Bar 確認,不得自動覆蓋本地改動",
-    "delivery_rule": "先交預覽版 HTML 給 Bar 手機驗收 → Bar 說「打包」才產出部署 ZIP",
-    "deprecated_docs": "作廢檔為 -old-03_DATABASE_DEPRECATED.md、-old-05_CODING_RULES_DEPRECATED.md;現行 03_DATABASE.md 與 05_CODING_RULES.md 可用,09/11 提供更細規格",
-    "workflow": "Gate(第0步,見4.1)+ 十三步(讀manifest→讀handover→讀ADR→定位模組→先設計→最小修改→跑Validator→驗證資料流→更新文件→更新CHANGELOG→一致性檢查healthCheck→完成→開發摘要);A/B級任務走15§5簡化流程",
-    "file_tiers": "14_FILE_TIERS_AND_GATE.md:Tier1一般開發/Tier2高風險(改前過原因-影響-風險-回滾確認)/Tier3產生產物禁手改",
-    "ai_execution_rules": "15_AI_EXECUTION_RULES.md:指令預設非覆寫、不確定性三分法、檔案增刪權限、任務分級A/B/C、文件vs現實衝突協議",
-    "ops_playbook": "16_OPS_PLAYBOOK.md:Netlify回滾/SW快取災難/Sheet版本還原/清理排程安全",
-    "status_authority": "即時狀態唯一權威=tasks/(current/backlog/done);13_PROJECT_STATUS與本manifest.status為快照;00_CONTEXT_HANDOVER為歷史快照不參與"
-  },
-  "data_flow": "GoogleSheets(7表)→發布CSV→手機瀏覽器fetch→validator.js(防錯)→parser(Schema驅動)→DB→renderers→UI ;離線三層:BUILTIN內建→localStorage快取→背景同步(徽章:已是最新/部分更新/離線版/內建版)",
-  "files": {
-    "index.html": "App本體:UI殼+CSS+內嵌JS(11區塊分層,見 10_FOLDER_STRUCTURE)",
-    "schema.js": "唯一資料規格SSoT:欄位/gid/型別值/發布URL;schemaDoc()自動產09文件",
-    "validator.js": "防錯防線:AppLog六類([Schema/Parser/Data/Repository/Render/Sync Error])+buildHeaderMap+window.healthCheck()",
-    "sw.js": "Service Worker(改版bump VERSION)",
-    "manifest.json + icon-*.png": "PWA 安裝"
-  },
-  "cms": {
-    "driveFileId": "1B5g7KuVi2WaFVVSdhqRMeTQV_tBpgnzOAv6aMQdFZJw",
-    "pubBase_and_gid_authority": "schema.js(此處僅快查)",
-    "sheets": {
-      "itin": "1169222358",
-      "places": "1089684162",
-      "rest": "1421821084",
-      "shop": "1182059264",
-      "hotels": "792115203",
-      "exp": "1354339857",
-      "cfg": "1070234314"
-    },
-    "type_values": "購物→shopping / 美食區→restarea / 住宿→hotel / 景點→attraction / 渡船口·渡輪→ferry / 租車點→parking(禁 AI 猜測)"
-  },
-  "invariants_never_break": [
-    "三層防線與『絕不空白頁』",
-    "卡片型別由 Places.Type 明確決定,禁猜測",
-    "WebView 相容:console polyfill、禁 AbortController(clone錯)、fetch 相容退回、單一吸頂容器.hdr",
-    "停車 MAP CODE 純顯示無複製鈕、『停車同Pxxx』繼承",
-    "渡輪不建班次庫(末班資訊+官方時刻表連結)",
-    "個人狀態(打卡/想逛/成員/記帳)存 localStorage 不進 CMS",
-    "產品哲學:3秒原則、不過度工程化"
-  ],
-  "known_traps": [
-    "同名 function 後者勝且提升 → 包裝舊函式必先改名,禁 var old=fn(無限遞迴)【環境陷阱,一律適用】",
-    "Google 試算表 /edit 讀不到,須用發布 CSV【環境陷阱】;web_fetch 對此發布ID被 robots 擋 → 走 claude-in-chrome(導航 pubhtml 後頁內 fetch;回傳含 ?&= 被 DLP 擋需替換佔位符)【工具特定:Claude 生態,他模型可略過】",
-    "Drive read_file_content 只回第一張表;Drive 工具只能建立不能更新【工具特定:Claude 生態;文件權威已改 GitHub,影響降低】",
-    "item id 含「/」→ DOM 查找用 getElementById 勿用 CSS selector【環境陷阱,一律適用】"
-  ],
-  "status": {
-    "done": [
-      "V2 Schema驅動CMS",
-      "AI Harness治理層(憲章/10-16/ADR×4/健康檢查)",
-      "停車引用繼承",
-      "PWA離線",
-      "首頁下一站模式",
-      "首頁天氣摘要",
-      "R001/R006 餐廳欄位補齊",
-      "購物頁多地點切換",
-      "六天行程大方向資料補完(2026-07-09)",
-      "治理層v2:狀態收斂/檔案分級14/執行規範15/OpsPlaybook16/00定位為歷史快照"
-    ],
-    "pending_in_order": [
-      "1. Bar 手機驗收 GitHub 最新預覽版(首頁下一站、天氣摘要、7 表同步、主要分頁)",
-      "2. 驗收中的內容/UI 微調(最小修改,B級流程)",
-      "3. Bar 說打包 → 部署包(高風險流程見14;index.html 引 schema.js/validator.js 獨立檔、sw.js bump v3、SHELL_ASSETS 補新檔、離線回歸)→ Netlify(回滾程序見16)",
-      "4. 部署包與 Playwright 三情境 QA 腳本納入 repo 版控(tasks/backlog #2/#3)",
-      "5. App 穩定落地後執行框架抽取(FUTURE_PLAN_framework-extraction.md)"
-    ]
-  },
-  "after_every_delivery": "跑 window.healthCheck() + 輸出健康報告 + 更新 07_CHANGELOG(建新檔) + 必要時更新本 manifest",
-  "doc_authority": "GitHub 本 repo 為程式與文件唯一權威;Drive 為備份;內容資料來源=Drive 試算表「261018-261023岡山四國六天五夜」發布 CSV"
-}
+# 01 專案定位
+
+## 願景
+不是「行程檢視器」,是**旅途中的隨身旅行助理**。旅行當下唯一需要打開的 App。
+
+## 產品哲學(每個功能實作前必問)
+1. 旅途中真的會用到嗎?
+2. 有沒有減少點擊次數?
+3. 能在 3 秒內找到資訊嗎?
+答案是否 → 不做,移到下一版。Less, But Better。避免過度工程化:資訊該留在文件(PDF/官網)就給快速連結,不硬轉結構化資料。
+
+## 目標使用者
+Bar 與同行友人(一般旅客,iPhone 為主)。旅途中單手、走路、訊號差的使用情境。
+
+## 目前範圍(2026-07)
+- 行程:2026/10/18-23 岡山・廣島・宮島六天五夜,**自駕**
+- 四大分頁:今天(下一站)/ 行程(卡片時間軸)/ 購物(樓層+想逛清單)/ 分帳
+- 型別卡片:購物/餐廳/美食區/住宿/渡輪碼頭/停車租車/景點
+- 離線可用(PWA),Google Sheets 即時同步
+- 六天行程大方向資料已補完(2026-07-09),剩內容微調;修訂一律走 Google Sheets,即時生效免改程式
+
+## 已明確排除(V1 不做)
+AI 聊天/推薦、帳號系統、雲端多人協作(以 Google Sheets 共編替代)、推播通知、社群功能、GPS 距離、航班倒數
