@@ -328,6 +328,7 @@ a{color:var(--sea)}
 .nx-ticket{position:relative;margin:12px;background:var(--card);border-radius:14px;box-shadow:var(--shadow);overflow:hidden;border:1px solid rgba(14,58,68,.08)}
 .nx-ticket::before{content:"";position:absolute;left:0;top:0;bottom:0;width:7px;background:linear-gradient(180deg,var(--coral),var(--gold))}
 .nx-ticket-main{padding:16px 16px 12px 20px}
+.nx-ticket-main.openable{cursor:pointer}
 .nx-ticket-kicker{font-size:11px;letter-spacing:.14em;color:var(--ink-faint);font-weight:800;text-transform:uppercase;margin-bottom:8px}
 .nx-ticket-time{display:inline-block;font-size:13px;font-weight:800;color:var(--coral);background:var(--coral-bg);border-radius:7px;padding:3px 9px;margin-bottom:8px}
 .nx-ticket-title{font-size:24px;line-height:1.18;font-weight:900;color:var(--ink);margin-bottom:6px;word-break:break-word}
@@ -1323,6 +1324,24 @@ function isTripCheckableItem(it){
 function isTripItemCleared(it,day,dayIndex,checks){
   return isNextStopCleared(it,getDayProgress(day,dayIndex),checks);
 }
+function openTripItem(dayIndex,itemId){
+  curDay=dayIndex;
+  curView='trip';
+  document.querySelectorAll('.view').forEach(function(v){ v.classList.remove('active'); });
+  document.getElementById('view-trip').classList.add('active');
+  document.querySelectorAll('.tabbar-btn').forEach(function(b){ b.classList.remove('active'); });
+  var tripBtn=document.querySelector('.tabbar-btn[data-view="trip"]');
+  if(tripBtn) tripBtn.classList.add('active');
+  renderDaybar();
+  renderTrip();
+  setTimeout(function(){
+    var item=document.getElementById('it_'+itemId);
+    if(!item) return;
+    var info=document.getElementById('pn_nf_'+itemId);
+    if(info) info.classList.add('open');
+    item.scrollIntoView({behavior:'smooth',block:'center'});
+  },0);
+}
 function renderDaybar(){
   var bar=document.getElementById('daybar');
   if(curView==='split'||curView==='shop'){ bar.style.display='none'; return; }
@@ -1650,7 +1669,7 @@ function renderNextStopCard(day,dayIndex,pick){
   var meta=nextStopMeta(it,res);
   var canNav=(it.place&&it.place.trim())||res;
   var h='<div class="nx-ticket">'+
-    '<div class="nx-ticket-main">'+
+    '<div class="nx-ticket-main openable" onclick="openTripItem('+dayIndex+',\''+it.id+'\')">'+
       '<div class="nx-ticket-kicker">NEXT STOP · DAY '+(dayIndex+1)+'</div>'+
       (it.time?'<div class="nx-ticket-time">'+escapeHtml(it.time)+'</div>':'')+
       '<div class="nx-ticket-title">'+escapeHtml(meta.place.replace(/\n/g,' '))+'</div>'+

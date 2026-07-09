@@ -106,5 +106,6 @@ const nextStopOut = sandbox.renderNextStopCard({}, 0, {
   }
 });
 assert(nextStopOut.includes('<b>付款</b> 只能付現（點餐機）'));
+assert(nextStopOut.includes('onclick="openTripItem(0,\'10/18_4\')"'));
 
 console.log('renderNote tests passed');
