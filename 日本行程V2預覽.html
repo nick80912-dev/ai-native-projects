@@ -1216,6 +1216,28 @@ function typeTag(res){
 function kvRow(k,v){ return v?'<div class="pc-row"><span class="pc-k">'+k+'</span><span class="pc-v">'+escapeHtml(v)+'</span></div>':''; }
 function linkRow(k,url,label){ return url?'<div class="pc-row"><span class="pc-k">'+k+'</span><span class="pc-v"><a href="'+escapeHtml(url)+'" target="_blank" rel="noopener">'+(label||'開啟連結')+'</a></span></div>':''; }
 function tipBox(v){ return renderNoteBlock(v); }
+function parseScheduleLinks(text){
+  text=String(text||'');
+  var links=[], re=/https?:\/\/[^\s"'<>]+/g, m, last=0;
+  while((m=re.exec(text))){
+    var url=m[0].replace(/[、，。)）\]]+$/,'');
+    var chunk=text.slice(last,m.index).trim();
+    var q=chunk.match(/「([^」]+)」[^「」]*$/);
+    var label=(q&&q[1]?q[1]:chunk.replace(/\s+/g,' ').replace(/^[:：\-–—]+/,'').trim());
+    if(!label) label='官方';
+    if(label.indexOf('時刻表')<0) label+='時刻表';
+    links.push({ label:label, url:url });
+    last=re.lastIndex;
+  }
+  return links;
+}
+function renderScheduleLinks(text, className, styleText){
+  var links=parseScheduleLinks(text);
+  return links.map(function(link){
+    return '<a class="'+className+'" '+(styleText?'style="'+styleText+'" ':'')+
+      'href="'+escapeHtml(link.url)+'" target="_blank" rel="noopener">⛴ '+escapeHtml(link.label)+'</a>';
+  }).join('');
+}
 
 /* 停車資訊「引用其他 Place」解析
    規則:停車備註(或停車費)欄若寫「停車同P004」,
@@ -1275,8 +1297,8 @@ function infoPanel(res){
     return out;
   }
   if(t==='ferry'){
-    out+= kvRow('⛴ 航程/搭乘',p.travel)+kvRow('🎫 船票',p.ticket)+kvRow('🕒 營業',p.hours)+tipBox(p.note);
-    if(p.ttl) out+='<a class="nx-navbtn" style="margin-top:10px;background:var(--violet)" href="'+escapeHtml(p.ttl)+'" target="_blank" rel="noopener">⛴ 查看官方完整時刻表</a>';
+    out+= kvRow('🎫 船票',p.ticket)+kvRow('🕒 營業',p.hours)+tipBox(p.note);
+    out+=renderScheduleLinks(p.ttl,'nx-navbtn','margin-top:10px;background:var(--violet)');
     return out;
   }
   out+=kvRow('🕒 營業',p.hours)+kvRow('🎫 門票',p.ticket);
@@ -1294,6 +1316,12 @@ var tripHideDone=false;
 function setTripHideDone(v){
   tripHideDone=!!v;
   renderTrip();
+}
+function isTripCheckableItem(it){
+  return !!(it&&it.id&&(it.act||it.place||it.ref));
+}
+function isTripItemCleared(it,day,dayIndex,checks){
+  return isNextStopCleared(it,getDayProgress(day,dayIndex),checks);
 }
 function renderDaybar(){
   var bar=document.getElementById('daybar');
@@ -1391,10 +1419,10 @@ function renderTrip(){
   var day=t.days[curDay];
   if(!day){ curDay=0; day=t.days[0]; }
   var checks=getChecks();
-  var acts=day.items.filter(function(it){return it.act;});
-  var doneN=acts.filter(function(it){return checks[it.id];}).length;
-  var visibleItems=tripHideDone?day.items.filter(function(it){return !it.act || !checks[it.id];}):day.items;
-  var visibleActs=visibleItems.filter(function(it){return it.act;});
+  var acts=day.items.filter(isTripCheckableItem);
+  var doneN=acts.filter(function(it){return isTripItemCleared(it,day,curDay,checks);}).length;
+  var visibleItems=tripHideDone?day.items.filter(function(it){return !isTripCheckableItem(it) || !isTripItemCleared(it,day,curDay,checks);}):day.items;
+  var visibleActs=visibleItems.filter(isTripCheckableItem);
   view.innerHTML='<div class="day-head"><span class="num">DAY '+(curDay+1)+'</span>'+
     '<span class="date">'+day.date+(day.dow?' ('+day.dow+')':'')+'</span>'+
     '<span class="prog">'+doneN+'/'+acts.length+' ✓</span></div>'+
@@ -1603,6 +1631,7 @@ function nextStopMeta(item,res){
     drive:drive,
     parking:(p&&p.pnote)||(r&&r.parking)||'',
     hours:(p&&p.hours)||(r&&r.hours)||'',
+    pay:(r&&r.pay)||'',
     web:p&&p.web?p.web:'',
     ttl:p&&p.ttl?p.ttl:'',
     note:item.note || (p&&p.note) || (r&&r.note) || ''
@@ -1634,12 +1663,13 @@ function renderNextStopCard(day,dayIndex,pick){
         renderTicketLine('交通',meta.drive)+
         renderTicketLine('停車',meta.parking)+
         renderTicketLine('營業',meta.hours)+
+        renderTicketLine('付款',meta.pay)+
         renderTicketLine('提醒',meta.note)+
       '</div>'+
       '<div class="nx-ticket-actions">'+
         (canNav?'<a class="qa-btn drv" href="'+navUrl(it,res)+'" target="_blank" rel="noopener">'+(transport()==='drive'?'🚗 導航':'🚃 路線')+'</a>':'')+
         (meta.web?'<a class="qa-btn nf" href="'+escapeHtml(meta.web)+'" target="_blank" rel="noopener">🌐 官網</a>':'')+
-        (meta.ttl?'<a class="qa-btn fr" href="'+escapeHtml(meta.ttl)+'" target="_blank" rel="noopener">⛴ 時刻表</a>':'')+
+        renderScheduleLinks(meta.ttl,'qa-btn fr')+
       '</div>'+
     '</div>'+
     '<div class="nx-ticket-low">'+
