@@ -1,33 +1,20 @@
-# 日本旅遊 App — README
+# DONE(已完成)
 
-## 這是什麼
-六天五夜日本自駕旅遊的手機 PWA。Google Sheets 當 CMS,單一 HTML 檔 App,部署於 Netlify。
-- 正式站:https://okayamatravelteam.netlify.app/
-- 使用者:Bar(產品負責人,非工程師)與同行友人
+> 更新於 2026-07-08。完成事項來自 `.ai-manifest.json` status.done 與既有 CHANGELOG;細節仍以 07_CHANGELOG.md 為準。
 
-## 快速開始(給 AI / 開發者)
-第一閱讀順序:
-`.ai-manifest.json` → `PROJECT_CONSTITUTION.md` → `08_AI_HANDOVER.md` → 相關 `adr/` → 依任務讀 `03_DATABASE.md` / `09_SCHEMA_MAPPING.md` / `05_CODING_RULES.md` / `11_CODING_CONVENTION.md` / `12_DEV_WORKFLOW.md`。
+## 已完成
+- V2 Schema 驅動 CMS:7 張 Google Sheets、ID 引用、Restaurants/Shopping/Hotels/Expenses/TripConfig。
+- AI Harness 治理層:PROJECT_CONSTITUTION、10_FOLDER_STRUCTURE、11_CODING_CONVENTION、12_DEV_WORKFLOW、adr/0001-0004、健康檢查規範。
+- 停車引用繼承:「停車同Pxxx」完整繼承與 MAP CODE 純顯示。
+- PWA 離線基礎:三層防線、Service Worker、Netlify 託管。
+- 首頁下一站模式:首頁只突出下一站,完成 / 跳過 / 復原狀態存 localStorage,不回寫 CMS。
+- 首頁天氣摘要:依下一站資料推估地點,顯示簡短天氣 chip,失敗時不影響首頁。
+- Restaurants 補欄位:R001 麵酒一照庵與 R006 上野商店的 Tabelog 評分 / 營業時間已在 Google Sheet 發布 CSV 確認。
+- 購物頁多地點切換:GitHub `origin/main` 已確認包含 `Places.Type=購物` 來源、`全部 / 想逛 / 各購物地點` 切換與「區域 / 樓層」文案。
+- 框架抽取計畫已歸檔:`FUTURE_PLAN_framework-extraction.md`。
 
-- `.ai-manifest.json`:AI 導航檔,掌握專案全貌
-- `PROJECT_CONSTITUTION.md`:專案最高規範與 AI Harness 流程
-- `08_AI_HANDOVER.md`:交接重點、禁改事項、常見陷阱
-- `adr/`:架構決策,重構或推翻既有設計前必讀
-- `03_DATABASE.md`:CMS 資料表快速概覽
-- `09_SCHEMA_MAPPING.md`:Schema / CMS 欄位細節
-- `05_CODING_RULES.md`:程式規範快速概覽
-- `11_CODING_CONVENTION.md`:程式規範細節
-- `12_DEV_WORKFLOW.md`:常見任務步驟鏈
-
-## 開發工作流程(必守)
-1. Bar 用白話描述需求 → AI 以資深工程團隊身分執行
-2. 只做被要求的修改,不重構整個專案
-3. 交付順序:**先出「預覽版 HTML」給 Bar 手機驗收 → Bar 說「打包」才產出部署 ZIP**
-4. 每次修改需通過 QA(斷網/連網/旅行日情境),更新 `07_CHANGELOG.md`
-5. 資料內容改動走 Google Sheets,不改程式;程式只在功能/邏輯變動時修改
-
-## 專案檔案
-- `index.html` — 完整 App(CSS+JS 內嵌單檔)
-- `sw.js` — Service Worker(離線快取,改版時 bump VERSION)
-- `manifest.json` + icon-*.png — PWA 安裝
-- 部署方式:Netlify Deploys 頁面直接拖入資料夾
+## 文件治理
+- 2026-07-09:治理層 v2 修正交付(狀態收斂、文件權威=GitHub、00 定位歷史快照、新增 14/15/16、tests 交付必附規則、憲章與 manifest 同步)。細節見 07_CHANGELOG。
+- 2026-07-08:依 Bar 最新決策更新任務板:先等 Day4-6 Sheet 補完,再手機驗收、打包與 Netlify。
+- 2026-07-07:GitHub 最新資料同步後,新增 project status 並更新任務板規畫進度。
+- 2026-07-06:Codex Ready 文件一致性修正,對齊 README / handover / task board / changelog。

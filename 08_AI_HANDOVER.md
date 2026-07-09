@@ -1,37 +1,24 @@
-# 08 AI 交接文件(給未來的 AI 模型)
+# 06 路線圖
 
-## 你是誰、專案是什麼
-你是 Bar 的 AI 工程團隊(CTO/工程師/設計/QA 合一)。Bar **不會程式**,用白話下需求;你負責全部技術決策與實作,不教學、不解釋程式概念(除非被問)。
-專案:日本旅遊 PWA。Google Sheets 是 CMS,單一 index.html(vanilla JS)在使用者手機端抓 7 張公開 CSV 渲染,Netlify 託管。
+> **定位**:本檔是方向性文件(做什麼、順序為何),**不承載即時狀態**。
+> 即時狀態唯一權威:`tasks/`(current/backlog/done);快照見 `13_PROJECT_STATUS.md`。
 
-## 閱讀順序(最省 token)
-1. `.ai-manifest.json` → 2. `PROJECT_CONSTITUTION.md` → 3. 本文件 → 4. 相關 `adr/` → 5. 依任務讀 `03_DATABASE.md` / `09_SCHEMA_MAPPING.md` / `05_CODING_RULES.md` / `11_CODING_CONVENTION.md` / `12_DEV_WORKFLOW.md`
-程式碼本體在部署包 index.html 內嵌 JS(區塊順序見 02)。
+## ✅ 已完成(里程碑層級)
+- 基礎版:試算表→手機頁、離線內建、三層防線、WebView 相容修正
+- PWA:manifest+SW(SWR/網路優先)、Netlify 部署、可安裝
+- V1:今天模式、自駕化、型別卡片、停車卡MAPCODE、渡輪卡、購物模式、分帳儀表板
+- V2 CMS 化:7 張工作表資料庫、ID 引用(Pxxx/Rxxx)、Restaurants 掛 Place、Shopping 表驅動購物頁、行前團費卡、TripConfig
+- 停車強化:大字 MAPCODE 純顯示、「停車同Pxxx」完整繼承
+- 旅途中首頁 UX:下一站模式(完成/跳過/復原)、天氣摘要
+- 行程資料:六天大方向內容已補完(2026-07-09),剩內容微調
+- 治理層 v2:檔案風險分級(14)、AI 執行規範(15)、Ops Playbook(16)
 
-## 工作流程(必守)
-0. 開工前先通過 Pre-Work Git Sync Gate:`git fetch origin --prune`,確認本地與 `origin/main` 一致且 working tree 乾淨;若不一致先盤點,不得自動覆蓋本地改動。
-1. 收到需求先確認範圍;**只改必要函式,不重構整包**
-2. 修改 → Playwright QA(斷網內建/連網同步/旅行日 mock Date 三情境,零 pageerror)
-3. **先交「預覽版 HTML」給 Bar 驗收 → Bar 說「打包」才產 ZIP**
-4. 更新 `07_CHANGELOG.md`(有架構變更標 ⭐),必要時更新 06/03
+## 📋 下一階段(順序)
+1. Bar 手機驗收 GitHub 最新預覽版 → 內容/UI 微調(最小修改)
+2. Bar 說「打包」→ V2 正式部署(依 `14_FILE_TIERS_AND_GATE.md` 高風險流程)
+3. 部署包與 QA 腳本納入 repo 版控(見 tasks/backlog)
 
-## 絕不可改變(除非 Bar 明確要求)
-- CMS 七表結構、欄位語意、既有 PlaceID/RestID 的意義
-- 三層防線(內建→快取→背景同步)與「絕不空白頁」原則
-- 卡片型別由 Places.類型 明確決定,**禁止 AI 猜測型別**
-- WebView 相容碼:console polyfill、fetch 相容模式(禁 AbortController)、單一吸頂容器
-- 停車 MAP CODE 純顯示(無複製鈕)、「停車同Pxxx」繼承機制
-- 渡輪不建班次資料庫(末班船欄+官方連結)
-- UI 配色變數與四分頁結構;個人狀態(打卡/想逛/記帳)存 localStorage 不進 CMS
-- 產品哲學:3 秒原則、不過度工程化(能給連結就不硬轉結構化資料)
-
-## 常見陷阱(前人踩過)
-- 同名 function 後者勝且提升 → 包裝舊函式必先改名,禁 `var old=fn`
-- 老 WebView 無 console.info、fetch 帶 options 會拋 clone 錯誤
-- Google 試算表 `/edit` 連結讀不到,必須用「發布到網路」CSV;web_fetch 可能被 robots 擋,改走 Drive 連接或由使用者瀏覽器端抓
-- item id 含「/」(如 10/19_2),CSS selector 需 escape,DOM 查找用 getElementById
-
-## 關鍵資源
-- 正式站:https://okayamatravelteam.netlify.app/
-- CMS fileId:`1B5g7KuVi2WaFVVSdhqRMeTQV_tBpgnzOAv6aMQdFZJw`(gid 與資料表概覽見 03;欄位細節見 09)
-- Bar 的溝通偏好:直接執行、精簡回報、表格化 QA 結果、繁體中文
+## 🔮 未來(不急)
+- 12 月東京行程接入(新行程分頁+transport=transit)
+- 新版本上線提示立即刷新(SW updatefound UI)
+- AI Native Framework 抽取(見 `FUTURE_PLAN_framework-extraction.md`,App 落地後執行)

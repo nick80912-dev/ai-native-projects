@@ -1,41 +1,55 @@
-# 13 Project Status
+# 10 資料夾與檔案結構
 
-更新於 2026-07-08。此文件是目前專案規畫進度快照；細節以 `.ai-manifest.json`、`tasks/` 與 `07_CHANGELOG.md` 為準。
+> 原則:每個檔案責任單一,命名一致,AI 一眼知道去哪修改。不使用 common/misc/temp 這類模糊命名。
 
-## 目前階段
+## 部署包(Netlify 根目錄)
+```
+index.html              App 本體:UI殼 + CSS + 內嵌 JS(依區塊分層,見下)
+schema.js               唯一資料規格(SSoT):欄位/gid/型別值/發布URL
+validator.js            防錯防線:AppLog 六類 + buildHeaderMap + healthCheck
+sw.js                   Service Worker:離線快取(改版 bump VERSION)
+manifest.json           PWA 安裝資訊
+icon-192.png            PWA 圖示
+icon-512.png            PWA 圖示
+icon-maskable-512.png   PWA 圖示(maskable)
+apple-touch-icon.png    iOS 圖示
+.ai-manifest.json       AI 導航檔(接手第一步只讀這份)
+```
+> 目前為單檔部署決策(見 00_CONTEXT_HANDOVER 與待決事項);index.html 內嵌 JS 以「區塊註解」分層,等同模組但無多檔載入風險。
 
-專案已從 V2 CMS / PWA 基礎版，推進到「旅途中首頁 UX」階段。GitHub 最新版已包含首頁下一站模式、完成 / 跳過 / 復原狀態、首頁天氣摘要，以及對應的設計規格與實作計畫文件。
+## index.html 內部分層(區塊順序,即邏輯模組)
+```
+CONFIG        來自 schema.js(PUB base + SHEETS gid)
+BUILTIN       7 表內建快照(離線後備)
+UTILS         storage / toast / CSV parser / copyText / date
+VALIDATOR     來自 validator.js(表頭驗證 + 六類日誌)
+PARSER        parseTable / parseKeyValue / parseExpensesFree(Schema 驅動)
+DATABASE      buildDB → DB{ places, rest, shop, hotels, expCMS, cfg, trip }
+REPOSITORY    resolveRef / restaurantsOf / hotelOf / resolveParking(查詢)
+RENDER        renderToday / renderTrip / renderShop / renderSplit
+COMPONENTS    renderItem / parkingPanel / infoPanel / restRows / storeRow(卡片與面板)
+SERVICES      syncAll / fetchSheet(同步) / lsGet-lsSet(儲存)
+BOOT          init → bootLocal → syncInBackground
+```
 
-目前 Bar 決定先補完 Day4-6 Google Sheet 行程內容,再做手機驗收、打包與 Netlify 部署。
+## 文件庫(權威:GitHub 本 repo)
+> **2026-07-09 核定**:程式與文件的唯一權威為 GitHub 本 repo;Google Drive「BHAIProject/日本旅遊App-docs」降級為**備份**,不再作為更新目標(Drive 工具只能建立不能更新的限制因此不再影響日常流程)。
+> 內容資料來源例外:Drive 試算表「261018-261023岡山四國六天五夜」仍是 CMS 內容的唯一來源(發布 CSV,見 03/schema.js),與文件權威分屬兩層。
 
-## 已完成
-
-- V2 Schema 驅動 CMS：7 張 Google Sheets、ID 引用、表頭容錯與資料快取。
-- AI Harness 治理層：憲章、handover、ADR、工作流程、任務板與 changelog。
-- PWA 基礎：Service Worker、離線後備、Netlify 託管規畫。
-- 停車引用繼承：支援「停車同Pxxx」並保持 MAP CODE 純顯示。
-- 首頁下一站模式：首頁突出下一站，完成 / 跳過狀態存 localStorage，不回寫 CMS。
-- 首頁天氣摘要：依下一站推估地點，使用本地快取，不使用 GPS，不改 schema。
-- Restaurants 補欄位：R001 麵酒一照庵與 R006 上野商店的 Tabelog 評分 / 營業時間已在 Google Sheet 發布 CSV 確認。
-- 購物頁多地點切換：GitHub 最新版已確認包含 `全部 / 想逛 / 各購物地點` 與「區域 / 樓層」呈現。
-
-## 目前等待
-
-- Bar 補完 Day4-6 Google Sheet 行程內容。
-- 補完後再手機驗收 GitHub 最新預覽版。
-- 驗收通過後，由 Bar 明確說「打包」再進入部署包整理與 Netlify。
-
-## 下一步
-
-1. Bar 更新 Day4-6 Google Sheet 行程內容。
-2. 手機預覽驗收 `日本行程V2預覽.html`。
-3. 若有 UI/資料顯示問題，先修正最小範圍，不動 schema。
-4. 驗收通過後整理部署包：外掛 `schema.js` / `validator.js`、更新 `sw.js` 版本與 shell assets、跑離線回歸。
-5. 部署到 Netlify 並做線上驗證。
-
-## 風險與注意
-
-- Day4-6 內容仍依 Google Sheet 更新，自動生效；程式端不應硬改資料。
-- 天氣摘要是輔助資訊，失敗時應隱藏，不能阻塞首頁。
-- 個人狀態只存在 localStorage，不進 CMS。
-- 修改核心架構、schema、Google Sheet 欄位、既有 ADR 前，必須先取得 Bar 確認。
+```
+(repo 根目錄)
+.ai-manifest.json          AI 導航檔(首讀)
+PROJECT_CONSTITUTION.md    專案憲章(最高規範)
+00_CONTEXT_HANDOVER.md     歷史交接快照(2026-07-06;衝突時以現行文件為準)
+01-13_*.md                 願景/架構/CMS/UI/規範/路線圖/CHANGELOG/交接/Schema/結構/慣例/流程/狀態
+14_FILE_TIERS_AND_GATE.md  檔案風險分級與 Gate 保護
+15_AI_EXECUTION_RULES.md   AI 決策權限/指令效力/不確定性協議/任務分級
+16_OPS_PLAYBOOK.md         回滾手冊 + DevOps 安全規範
+adr/                       架構決策紀錄(0001-0004 + README)
+tasks/                     即時狀態唯一權威(current/backlog/done)
+tests/                     測試資產(交付必附)
+docs/superpowers/          功能設計規格與實作計畫
+schema.js / validator.js   資料規格 SSoT / 防錯防線(Tier 1 原始碼)
+日本行程V2預覽.html          預覽版 App(可編輯工作檔)
+(規劃中)deploy/            部署包(Tier 2 高風險,見 14;backlog #2)
+```

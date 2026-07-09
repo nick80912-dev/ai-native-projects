@@ -1,51 +1,47 @@
-# PROJECT CONSTITUTION(專案憲章)
+# 15 AI 執行規範(決策權限 · 指令效力 · 不確定性協議)
 
-> 本檔是專案最高規範。任何 AI 接手前必讀。啟動語:「請遵循本專案的 AI Constitution 與 AI Harness 開發。」
-> 衝突時優先級:**本憲章 > ADR > 其他 docs > 對話當下指令**(但 Bar 明確覆寫除外)。
+> 由 Bar 於 2026-07-09 核准。本檔補齊憲章未明說的執行層規則;與憲章衝突時以憲章為準,但本檔是憲章授權的細則。
 
-## 0. 角色
-- **Bar** = 產品負責人與決策者(不寫程式,繁體中文,要直接執行不要教學)。
-- **AI** = 全職工程團隊(CTO/工程師/UI/QA/DevOps 合一),擁有一切技術決策權,除非 Bar 另行指示。
+## 1. 對話指令效力(Bar 已裁定:採保守預設)
+- Bar 的對話指令**預設為「一般指令」**:AI 依規範執行,凡觸及憲章「未經確認不得為之」清單或 14 的 Tier 2/3,必須先確認,即使指令口氣看起來像授權。
+- 只有同時滿足以下兩點,才視為「明確覆寫」:①Bar 點名要覆寫的規範(文件或條目)②明確表示本次要偏離它。例:「我知道憲章禁改 schema,這次直接改」= 覆寫;「幫我加個欄位」= 一般指令,須先走確認。
+- 覆寫僅限當次任務,不延續、不入慣例;若 Bar 希望永久放寬,改文件而非累積口頭例外。
 
-## 1. 核心原則
-Schema First、Data Driven、Single Responsibility、High Cohesion、Low Coupling、Configuration First、Open-Closed、AI Friendly、Long-term Maintainable。產品面:3 秒原則、Less But Better、不過度工程化(能給連結就不硬轉結構化資料)。
+## 2. 不確定性協議(需求模糊時的三分法)
+| 情況 | AI 行為 |
+|---|---|
+| 影響範圍小、可逆、不觸及 Tier 2/3 與禁改清單 | **列出假設 → 直接做最小可行版本**,交付時明示假設 |
+| 觸及 schema / 架構 / 資料模型 / Tier 2 / 不可逆操作 | **停止,先問**;必要時附五段提案 |
+| 介於中間(方向不明但想驗證可行性) | 可做**拋棄式 spike**(不合入主線、不進交付物),以結果回報再問 |
 
-## 2. 十三步 AI 開發流程(每次任務必走)
-1 讀 .ai-manifest.json → 2 讀 08_AI_HANDOVER → 3 讀相關 ADR → 4 定位受影響模組 → 5 先設計再寫碼 → 6 最小必要修改 → 7 跑 Validator → 8 驗證資料流 → 9 更新文件 → 10 更新 CHANGELOG → 11 一致性檢查(Health Check)→ 12 完成 → 13 產出開發摘要(Development Summary)。
+**嚴禁**:以「應該是這個意思」自行擴大任務範圍;一次任務只解一個需求,發現鄰近問題→記入 tasks/backlog,不順手修。
 
-**鐵則**:AI 不得未讀專案結構就直接改碼;盡量只改受影響模組。
+## 3. 文件 vs 現實衝突協議
+- AI 發現文件描述與程式/資料實況不符:**以實況為準行動,但必須回報差異**,並提議修文件(文件修正本身屬 Tier 1 可直接做,於 CHANGELOG 記錄)。
+- 文件彼此衝突:依憲章優先級(憲章 > ADR > 其他 docs);**資料規格**類衝突以 `schema.js` 為權威;若 schema.js 與憲章/ADR 的「原則」相衝(罕見)→ 停止並回報 Bar。
+- `00_CONTEXT_HANDOVER.md` 為歷史快照,與任何現行文件衝突時一律以現行文件為準。
 
-## 3. 未經 Bar 確認,不得為之
-- 更換技術框架 · 大規模重構 · 破壞相容性的資料模型變更 · 刪除既有功能 · 修改 Google Sheet Schema · 推翻既有 ADR 決策。
-- 若確有改善必要,必先提出**五段提案**:①問題分析 ②可行方案 ③優缺點比較 ④相容性影響 ⑤Migration Plan;經 Bar 確認才實作。
+## 4. 檔案操作權限
+| 操作 | 規則 |
+|---|---|
+| 新增檔案 | Tier 1 範圍可自行新增(命名依 10/11 慣例;新增治理文件需在 README/manifest 掛上索引) |
+| 修改檔案 | 依 14 分級 |
+| 刪除/改名檔案 | **一律先確認**(含「作廢」處理:優先改名為 `-old-*_DEPRECATED.md` 而非刪除) |
+| 引入外部套件/相依 | 目前技術基線為零相依;任何引入=改變技術棧,走五段提案 |
+| 調整資料庫 schema(Google Sheet 欄位/schema.js SCHEMA) | 憲章禁改清單,先確認 |
 
-## 4. 交付規範
-- **Pre-Work Git Sync Gate**:任何實作、打包、push、部署前,AI 必須先確認本地工作區與 GitHub `origin/main` 狀態。若版本不一致或工作區不乾淨,不得開始功能修改、打包或部署。
-- QA 三情境必過(斷網內建 / 連網同步 / 旅行日 mock Date),零 pageerror。
-- **先交預覽版 HTML 給 Bar 手機驗收 → Bar 說「打包」才產出部署 ZIP**。
-- 涉及架構變更 → 同步更新 ADR、README、AI_HANDOVER、CHANGELOG、.ai-manifest.json。
-- 新增資料欄位/Sheet/Component/Renderer/Service → Schema 與相關文件同步更新。
+## 5. 任務分級(Bar 已裁定:採分級,取代「每案全走十三步」)
+| 級別 | 定義 | 必走流程 |
+|---|---|---|
+| **A 純資料** | 只動 Google Sheet 資料列(12 情境 A/B) | 免十三步;確認 ID/Type 正確即可,不改程式不改文件 |
+| **B 顯示層小改** | 只動渲染/文案/CSS,不動 schema、parser、資料流、Tier 2 | 簡化流程:Gate → 定位模組 → 最小修改 → QA 三情境 → CHANGELOG(五步) |
+| **C 架構/資料/部署** | 涉及 schema、parser、資料流、新型別、Tier 2 檔案、ADR 相關 | 完整十三步 + 14 的高風險確認 + 健康報告 |
+- 分級由 AI 判斷並**在動工前聲明級別**;拿不準時往上取一級。
 
-### 4.1 Pre-Work Git Sync Gate
-- 開工前必跑 `git fetch origin --prune`,並檢查目前 branch、`HEAD`、`origin/main` 與 working tree 狀態。
-- 若本地 branch 落後 `origin/main` 且 working tree 乾淨,允許使用 fast-forward 同步到最新版。
-- 若 working tree 不乾淨,AI 必須先列出差異並判斷是否已存在於 `origin/main`;未經 Bar 確認,不得 `reset --hard`、`clean`、`checkout` 或覆蓋本地改動。
-- 若本地有 GitHub 尚未包含的內容,必須先詢問 Bar 要保留、提交、備份或丟棄;不得自行決定。
-- 版本狀態整理為「本地乾淨且與 `origin/main` 一致」前,禁止開始實作、打包、push 或部署。
+## 6. 防過度自信機制
+- 交付摘要必須區分「已驗證」與「未驗證假設」兩欄,不得將推測寫成事實。
+- 引用文件內容時註明出處檔名;查無出處的「規則」不得執行。
+- 涉及外部行為(Sheet 發布 CSV、Netlify、SW 快取)的結論,必須以實測為準,不得憑記憶宣稱。
 
-## 5. Token Diet(節流與防幻覺)
-- 首讀只需 .ai-manifest.json(幾百字掌握全貌),其餘文件按需查閱。
-- 防錯靠 validator.js 六類日誌:`[Schema Error] [Parser Error] [Data Error] [Repository Error] [Render Error] [Sync Error]`;Debug 看 console 一眼定位,不貼整段程式碼問「為何不動」。
-
-## 6. Project Health Check(每次交付後必做)
-檢查並輸出健康報告:重複程式碼 · 未使用檔案 · 未更新文件 · Schema 與 UI 不一致 · Renderer 未註冊 · Parser 未使用 · Dead Code · 違反 Coding Convention · 違反 ADR。程式面資料一致性由 `window.healthCheck()` 自動檢測(重複ID/懸空引用/型別覆蓋/資料缺席)。
-
-## 7. 通用性
-本憲章與 AI Harness 為可攜框架,未來其他專案(如 AI 英文教練)沿用同一套流程,只需替換 docs 內容。
-
-## 8. 本機開發環境清理安全規範
-- 若要建立本機開發環境清理排程,必須採取保守白名單策略:只清理已登記且過期的本地服務,以及超過 24 小時的低風險暫存。
-- 清理排程不得亂殺所有 `node` / `python` / `chrome` 行程,不得以廣泛 process name 當成刪除或終止依據。
-- 建議排程頻率為每 6 小時執行一次;任何實作都必須附 dry-run、log、自測與移除方式。
-- 清理腳本必須先輸出將清理的目標與原因,再執行實際清理;若目標未登記、未過期或風險不明,一律跳過。
-- 此類排程屬於本機 DevOps 安全工具,不得影響專案資料、Google Sheet Schema、App runtime state 或使用者瀏覽器工作階段。
+## 7. 模型無關性
+- 本 Harness 不綁定特定 AI 模型。`.ai-manifest.json` known_traps 中屬特定工具生態(如 web_fetch robots、claude-in-chrome、Drive 連接器限制)的條目,標註為「工具特定」;其他模型接手時可略過工具特定項,**環境陷阱(WebView/同名函式/CSV)則一律適用**。
