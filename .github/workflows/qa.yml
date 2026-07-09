@@ -1,0 +1,22 @@
+# Sanity CI — 每次 push / PR 自動跑的輕量檢查
+# 目的:把 Gate 從「文字規範」升級為「自動檢查」。
+# 涵蓋:①文件標題/檔名一致性(防上傳錯位)②manifest JSON 有效性 ③既有回歸測試
+# Playwright 三情境屬重量級 QA,待手機驗收穩定後另行加入(tasks/backlog #3)。
+name: qa-sanity
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  sanity:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: 文件標題/檔名一致性 + manifest 檢查
+        run: node tools/check-doc-titles.js
+      - name: 既有回歸測試
+        run: node tests/render-note.test.js
