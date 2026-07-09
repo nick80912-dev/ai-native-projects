@@ -8,7 +8,7 @@
    - sw.js VERSION → v3;SHELL_ASSETS 補 schema.js / validator.js / .ai-manifest.json
    - 離線回歸測試 → 產出 ZIP → Bar 拖進 Netlify → 線上驗證(回滾程序見 16)
 2. **部署包納入 repo 版控**:建立 `deploy/` 目錄收納 index.html 正式版、sw.js、manifest.json、icons(依 14 的分級保護)。
-3. **QA 腳本入版控**:Playwright 三情境腳本(斷網內建/連網同步/旅行日 mock Date)寫入 `tests/`,之後每次程式交付必附可執行測試(Bar 已核准 2026-07-09)。
+3. **QA 腳本入版控**:Playwright 三情境腳本(斷網內建/連網同步/旅行日 mock Date)寫入 `tests/`,之後每次程式交付必附可執行測試(Bar 已核准 2026-07-09);完成後掛進 `.github/workflows/qa.yml`(Sanity CI 已於 07-09 先行上線)。
 
 ## 中優先
 4. **驗收後 UI/內容微調**(最小修改,不動 schema)。

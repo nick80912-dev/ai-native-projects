@@ -17,6 +17,7 @@
 | `日本行程V2預覽.html` | **預覽版 App 原始碼**(可編輯工作檔;交付仍走「預覽→核可」) |
 | `schema.js`、`validator.js` | 資料規格與防錯**原始碼**;但改 SCHEMA 欄位/型別值屬憲章「須先確認」事項 |
 | `tests/` | 測試資產(交付必附,見 tests/README.md) |
+| `tools/`、`.github/workflows/` | 檢查腳本與 Sanity CI(Gate 的自動化層;改壞只影響檢查不影響 App) |
 
 ## Tier 2 — 高風險保護範圍(修改前必過「原因/影響/風險/回滾」確認)
 | 檔案 | 說明 |

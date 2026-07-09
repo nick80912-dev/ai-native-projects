@@ -48,6 +48,8 @@ PROJECT_CONSTITUTION.md    專案憲章(最高規範)
 adr/                       架構決策紀錄(0001-0004 + README)
 tasks/                     即時狀態唯一權威(current/backlog/done)
 tests/                     測試資產(交付必附)
+tools/                     檢查腳本(check-doc-titles.js:標題/檔名一致性)
+.github/workflows/         Sanity CI(qa.yml,push/PR 自動檢查)
 docs/superpowers/          功能設計規格與實作計畫
 schema.js / validator.js   資料規格 SSoT / 防錯防線(Tier 1 原始碼)
 日本行程V2預覽.html          預覽版 App(可編輯工作檔)

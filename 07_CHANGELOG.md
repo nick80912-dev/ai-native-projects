@@ -2,6 +2,15 @@
 
 紀錄格式:日期 / 版本 / 重點。細節不展開,新變更往上加。
 
+## 2026-07-09 — Sanity CI 與文件小修
+- 新增 `.github/workflows/qa.yml`:push/PR 自動跑文件一致性檢查與既有回歸測試,Gate 首度自動化
+- 新增 `tools/check-doc-titles.js`:檢查編號/具名文件的標題與檔名一致、manifest JSON 有效、根目錄無上傳殘留雜檔;已反向測試可攔截「內容錯位」事故
+- README 第一閱讀順序補上 15(必讀)與 14/16(依任務讀),與 08/manifest 對齊
+- tasks/done.md 檔頭日期修正為 2026-07-09
+- 同步更新:14(Tier 1 納入 tools 與 workflows)、10(repo 結構)、tests/README(CI 說明)、backlog #3(Playwright 完成後掛入 CI)
+- Playwright 三情境維持原時程:待 Bar 手機驗收穩定後執行
+- Breaking Change:無
+
 ## 2026-07-09 — 治理層 v2:審查後修正 ⭐ 治理變更
 - 狀態文件收斂:即時狀態唯一權威定為 `tasks/`;06_ROADMAP 重定位為方向性文件;13_PROJECT_STATUS 定為快照;修正 Day3-6/Day4-6 矛盾(六天大方向資料已補完,剩微調);清除 06 過時項(R001/R006 已完成);Day2 P012→P002 修正狀態列入 backlog 查核
 - 文件權威核定:GitHub 本 repo 為程式與文件唯一權威,Drive 降級為備份;內容資料來源仍為 Drive 試算表發布 CSV(README/10/manifest 同步更新)

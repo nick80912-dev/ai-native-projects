@@ -8,7 +8,7 @@
 
 ## 快速開始(給 AI / 開發者)
 第一閱讀順序:
-`.ai-manifest.json` → `PROJECT_CONSTITUTION.md` → `08_AI_HANDOVER.md` → 相關 `adr/` → 依任務讀 `03_DATABASE.md` / `09_SCHEMA_MAPPING.md` / `05_CODING_RULES.md` / `11_CODING_CONVENTION.md` / `12_DEV_WORKFLOW.md`。
+`.ai-manifest.json` → `PROJECT_CONSTITUTION.md` → `08_AI_HANDOVER.md` → `15_AI_EXECUTION_RULES.md`(必讀)→ 相關 `adr/` → 依任務讀 `03_DATABASE.md` / `09_SCHEMA_MAPPING.md` / `05_CODING_RULES.md` / `11_CODING_CONVENTION.md` / `12_DEV_WORKFLOW.md` / `14_FILE_TIERS_AND_GATE.md` / `16_OPS_PLAYBOOK.md`。
 
 - `.ai-manifest.json`:AI 導航檔,掌握專案全貌
 - `PROJECT_CONSTITUTION.md`:專案最高規範與 AI Harness 流程
