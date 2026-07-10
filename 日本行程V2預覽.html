@@ -816,7 +816,18 @@ function lsGet(k,f){ try{ var v=localStorage.getItem(k); return v?JSON.parse(v):
 function lsSet(k,v){ try{ localStorage.setItem(k,JSON.stringify(v)); }catch(e){ AppLog.repo('寫入 '+k+' 失敗:'+(e.message||e)+' — 個人狀態可能未保存'); } }
 function escapeHtml(s){ return (s==null?'':String(s)).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 function jsString(s){ return String(s==null?'':s).replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/\n/g,'\\n').replace(/\r/g,''); }
-function todayMD(){ var d=new Date(); return ('0'+(d.getMonth()+1)).slice(-2)+'/'+('0'+d.getDate()).slice(-2); }
+function previewNow(){
+  try{
+    var q=new URLSearchParams(window.location.search||'');
+    var pd=q.get('previewDate');
+    if(pd&&/^\d{4}-\d{2}-\d{2}$/.test(pd)){
+      var d=new Date(pd+'T09:00:00');
+      if(!isNaN(d.getTime())) return d;
+    }
+  }catch(e){}
+  return new Date();
+}
+function todayMD(){ var d=previewNow(); return ('0'+(d.getMonth()+1)).slice(-2)+'/'+('0'+d.getDate()).slice(-2); }
 var toastTimer, toastAction=null;
 function clearToast(){
   var el=document.getElementById('toast');
@@ -1256,6 +1267,9 @@ function typeTag(res){
   if(!res) return null;
   if(res.kind==='rest') return {cls:'food',label:'🍜 '+(res.r.cat||'美食')};
   var t=res.p.tnorm;
+  var rawType=(res.p.type||'').trim();
+  if(rawType==='機場') return {cls:'move',label:'🛫 機場'};
+  if(rawType==='纜車') return {cls:'play',label:'🚡 纜車'};
   if(t==='shopping') return {cls:'shop',label:'🏬 購物'};
   if(t==='restarea') return {cls:'food',label:'🍜 美食區'};
   if(t==='hotel') return {cls:'stay',label:'🏨 住宿'};
@@ -1374,7 +1388,7 @@ function infoPanel(res){
 
 /* ================= 渲染:行程頁 ================= */
 var curDay=0, curView='today';
-var tripHideDone=false;
+var tripHideDone=true;
 function setTripHideDone(v){
   tripHideDone=!!v;
   renderTrip();
@@ -1549,7 +1563,7 @@ function parseStartMinutes(timeText){
   return h*60+min;
 }
 function currentMinutes(){
-  var d=new Date();
+  var d=previewNow();
   return d.getHours()*60+d.getMinutes();
 }
 var WEATHER_CITIES=[
@@ -1882,7 +1896,7 @@ function homeWeatherFor(dayIndex,item){
 function daysUntilStart(){
   var start=DB&&DB.cfg&&DB.cfg.startdate?new Date(DB.cfg.startdate+'T00:00:00'):null;
   if(!start||isNaN(start.getTime())) return null;
-  var now=new Date();
+  var now=previewNow();
   var today=new Date(now.getFullYear(),now.getMonth(),now.getDate());
   var startDay=new Date(start.getFullYear(),start.getMonth(),start.getDate());
   return Math.ceil((startDay-today)/86400000);
