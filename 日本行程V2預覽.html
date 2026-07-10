@@ -2069,11 +2069,8 @@ function renderShopResults(){
     }
     h+='<div class="shop-mall"><div class="sm-name">🏬 '+escapeHtml(p.name)+'</div>'+
       (p.hours?'<div class="sm-hours">🕒 '+escapeHtml(p.hours)+'</div>':'')+
-      '<div class="sm-actions">'+
-        '<a class="qa-btn drv" href="https://www.google.com/maps/dir/?api=1&destination='+encodeURIComponent((p.navq||p.name)+' 日本')+'&travelmode=driving" target="_blank" rel="noopener">🚗 導航</a>'+
-        (p.mapcode?'<button class="qa-btn pk" onclick="copyText(\''+p.mapcode+'\',\'MAP CODE \')">📋 MAP CODE</button>':'')+
-        (p.web?'<a class="qa-btn nf" href="'+escapeHtml(p.web)+'" target="_blank" rel="noopener">🌐 官方資訊</a>':'')+
-      '</div>'+renderNoteBlock(p.note);
+      (p.web?'<div class="sm-actions"><a class="qa-btn nf" href="'+escapeHtml(p.web)+'" target="_blank" rel="noopener">🌐 官方資訊</a></div>':'')+
+      renderNoteBlock(p.note);
     if(wanted.length){
       var wkey=shopWantKey(p,mi);
       var wopen=!!shopWantListOpen[wkey];
@@ -2085,7 +2082,7 @@ function renderShopResults(){
     var floors={};
     m.stores.forEach(function(s){ (floors[s.floor||'其他']=floors[s.floor||'其他']||[]).push(s); });
     if(!m.stores.length){
-      h+='<div class="empty-state" style="padding:16px">此購物地點尚未建立店家明細<br>可先用地點資訊、備註與導航操作</div>';
+      h+='<div class="empty-state" style="padding:16px">此購物地點尚未建立店家明細<br>可先查看官方資訊與備註</div>';
       h+='</div>';
       rendered++;
       return;

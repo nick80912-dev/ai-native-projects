@@ -2,6 +2,14 @@
 
 紀錄格式:日期 / 版本 / 重點。細節不展開,新變更往上加。
 
+## 2026-07-10 — MAP CODE UI 一致性修正
+- 購物頁移除導航按鈕與 MAP CODE / 停車資訊區塊,讓購物頁聚焦店家、樓層、搜尋與想逛清單。
+- MAP CODE 與停車資訊保留於今天 / 行程頁的停車面板,維持大字純顯示與點擊全螢幕查看。
+- 購物頁僅保留官方資訊入口,避免抵達前資訊干擾逛店流程。
+- 新增回歸測試,避免導航與 MAP CODE 區塊重新出現在購物頁。
+- 未修改 `schema.js` / `validator.js` / Google Sheet Schema / 資料流。
+- Breaking Change:無。
+
 ## 2026-07-10 — 文件與 Harness 現況一致性修正 ⭐ 治理變更
 - `02_ARCHITECTURE.md` / `10_FOLDER_STRUCTURE.md` 改用現行 `SCHEMA`、`parseTable`、`buildHeaderMap` 術語,並區分目前預覽版原始碼與規劃中的 `deploy/` 部署包
 - `03_DATABASE.md` / `11_CODING_CONVENTION.md` 修正 ID 規則:一般資料表使用 P/R/S/H,Expenses 為自由格式且沒有 E ID

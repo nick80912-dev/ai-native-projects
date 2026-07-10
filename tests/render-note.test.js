@@ -131,6 +131,11 @@ sandbox.kvRow = function(k,v){ return v ? '<div>'+k+v+'</div>' : ''; };
 const parkingOut = sandbox.parkingPanel({});
 assert(parkingOut.includes('onclick="showMapcode(\'22 220 851*75\')"'));
 assert(parkingOut.includes('class="mapcode-box mapcode-open"'));
+assert(!html.includes('📋 MAP CODE'));
+assert(!html.includes(`onclick="copyText(\\''+p.mapcode+`));
+assert(!html.includes('parkingPanel(p)+renderNoteBlock(p.note)'));
+assert(!html.includes('travelmode=driving" target="_blank" rel="noopener">🚗 導航</a>\'+'));
+assert(!html.includes('導航操作'));
 
 sandbox.DB = { trip:{ days:[
   { date:'10/20', dow:'二', items:[{ id:'d3_1', act:'Kamakura walk', place:'Enoshima' }] },
