@@ -56,7 +56,33 @@ try {
   errors.push('.ai-manifest.json 不是有效 JSON:' + e.message);
 }
 
-/* 規則 4:不該存在的根目錄雜檔(上傳事故常見產物) */
+/* 規則 4:核心檔案必須存在(2026-07-10 新增:主程式曾被誤刪,CI 要能立即察覺) */
+['日本行程V2預覽.html','schema.js','validator.js','PROJECT_CONSTITUTION.md','.ai-manifest.json'].forEach(function(f){
+  if(!fs.existsSync(f)) errors.push('核心檔案缺失:' + f + '(可能被誤刪,請立即依 16_OPS_PLAYBOOK §C 處理)');
+});
+
+/* 規則 5:測試模擬檔禁止進入 repo(2026-07-10 新增:僅供本機/手機驗收,含時間 mock 會污染正式行為) */
+for (const f of fs.readdirSync('.')) {
+  if (!fs.statSync(f).isFile()) continue; /* 只檢查檔案(tests/ 目錄是正規測試資產) */
+  if (/TEST/.test(f) || /測試/.test(f)) errors.push('測試模擬檔不得進入 repo:' + f + '(請於 GitHub 刪除;此類檔案僅供驗收,不入版控)');
+}
+
+/* 規則 6:HTML 內嵌的 schema.js / validator.js 必須與獨立檔一致(防雙份人工維護漂移) */
+(function(){
+  const app = '日本行程V2預覽.html';
+  if (!fs.existsSync(app)) return; // 規則 4 已報缺失
+  const norm = t => t.replace(/\s+/g, '');
+  const page = norm(fs.readFileSync(app, 'utf8'));
+  [['schema.js','內嵌 schema'], ['validator.js','內嵌 validator']].forEach(function(pair){
+    if (!fs.existsSync(pair[0])) return;
+    const src = norm(fs.readFileSync(pair[0], 'utf8'));
+    if (page.indexOf(src) === -1) {
+      errors.push(pair[1] + ' 與獨立檔 ' + pair[0] + ' 不一致 — 兩份拷貝已漂移,請以其中正確的一份同步另一份(規則見 14 Tier 3)');
+    }
+  });
+})();
+
+/* 規則 7:不該存在的根目錄雜檔(上傳事故常見產物) */
 for (const f of fs.readdirSync('.')) {
   if (/^README \(\d+\)\.md$/.test(f)) errors.push('根目錄有多餘檔案:' + f);
   if ((f === 'current.md' || f === 'done.md' || f === 'backlog.md')) errors.push('根目錄有多餘檔案:' + f + '(應在 tasks/ 內)');
