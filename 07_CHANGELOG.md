@@ -2,6 +2,13 @@
 
 紀錄格式:日期 / 版本 / 重點。細節不展開,新變更往上加。
 
+## 2026-07-10 — Places.Type 新增機場與纜車
+- `schema.js` 的 Places.Type values 新增「機場」與「纜車」,兩者正規化為既有 `attraction` 景點卡片
+- 同步更新單檔預覽內嵌 Schema、CMS 快速概覽、Schema 對照文件與 AI manifest;並修正 `schemaDoc()` 產生結果與 09 文件既有內容不一致
+- 新增回歸測試,避免獨立 Schema 與內嵌 Schema 再次遺漏這兩個資料值
+- 未修改 parser、資料流或 Google Sheet 欄位結構
+- Breaking Change:無
+
 ## 2026-07-09 — 首頁下一站卡可跳到行程詳情
 - 首頁「NEXT STOP」卡片主體可點擊,會切到行程頁並定位到同一行程
 - 若該行程有資訊面板,跳轉後會自動展開資訊內容;導航/完成/跳過按鈕維持原本獨立操作

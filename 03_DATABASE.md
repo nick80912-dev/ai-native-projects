@@ -63,11 +63,14 @@
 | 美食區 | restarea |
 | 住宿 | hotel |
 | 景點 | attraction |
+| 機場 | attraction |
+| 纜車 | attraction |
 | 渡船口 | ferry |
 | 渡輪 | ferry |
 | 租車點 | parking |
 
 - `渡船口` 與 `渡輪` 是兩個可輸入中文值,都會正規化為 `ferry`。
+- `景點`、`機場` 與 `纜車` 都是可輸入中文值,目前共用 `attraction` 景點卡片。
 - 若要新增 Type,必須修改 `schema.js` 並同步更新 `09_SCHEMA_MAPPING.md`、相關 renderer 註冊與 CHANGELOG。
 
 ## 停車資料規則

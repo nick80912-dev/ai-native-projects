@@ -14,7 +14,7 @@
    ============================================================ */
 
 var SCHEMA = {
-  version: '2.0 (2026-07-05)',
+  version: '2.1 (2026-07-10)',
 
   /* 發布來源(換試算表只改這裡) */
   pubBase: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRenmV8UxEzWbzSjKJKi4rSpYt63geBqhEkKsl1GemWVPmFKTcvv3Uk71Hjla3TGBpGIjC7bQDDdI00/pub?single=true&output=csv&gid=',
@@ -43,8 +43,8 @@ var SCHEMA = {
       columns: [
         { field:'placeId', header:'PID',           aliases:['placeid','地點id'], required:true, desc:'地點唯一ID(P001…),不得重複' },
         { field:'name',    header:'地點',           aliases:['名稱'],            required:true, desc:'地點名稱(同時作為導航關鍵字)' },
-        { field:'type',    header:'Type',           aliases:['類型'],            required:true, desc:'決定卡片型別,禁止程式猜測',
-          values:{ '購物':'shopping','美食區':'restarea','住宿':'hotel','景點':'attraction','渡船口':'ferry','渡輪':'ferry','租車點':'parking',
+        { field:'type',    header:'Type',           aliases:['類型'],            required:true, desc:'決定卡片型別,禁止程式猜測。值:購物/美食區/住宿/景點/機場/纜車/渡船口/渡輪/租車點',
+          values:{ '購物':'shopping','美食區':'restarea','住宿':'hotel','景點':'attraction','機場':'attraction','纜車':'attraction','渡船口':'ferry','渡輪':'ferry','租車點':'parking',
                    'shopping':'shopping','restaurantarea':'restarea','hotel':'hotel','attraction':'attraction','ferryterminal':'ferry','parking':'parking' } },
         { field:'mapcode', header:'MAPCODE',        desc:'車用導航輸入碼(大字純顯示)' },
         { field:'travel',  header:'交通/交通時間',  aliases:['交通時間'], desc:'開車X分鐘/步行X分鐘;行程交通欄空值時顯示' },
@@ -116,7 +116,7 @@ var SCHEMA = {
         noteCol: 6,                   // 備註
         totalMarks: ['小計','總計']   // 合計列
       },
-      desc: '行前團費。旅途記帳在 App 端(localStorage),兩者於分帳頁並列不重複計算'
+      desc: '行前團費。旅途記帳在 App 端(localStorage),兩者於分帳頁並列不重複計算。同行成員自動帶入分帳成員(首次)。'
     },
 
     /* ── TripConfig 設定表:Key/Value ── */
@@ -129,9 +129,9 @@ var SCHEMA = {
         { field:'travelmode', header:'Travel Mode', aliases:['transport','交通模式'],
           values:{ 'driving':'drive','drive':'drive','自駕':'drive','開車':'drive',
                    'transit':'transit','train':'transit','電車':'transit','大眾運輸':'transit' },
-          desc:'drive=🚗導航+停車卡;transit=🚃路線' },
+          desc:'Driving→drive(🚗導航+停車卡);Transit/Train→transit(🚃路線)' },
         { field:'currency',   header:'Currency' },
-        { field:'homepage',   header:'Home Page',   desc:'預設分頁(目前固定 Today)' }
+        { field:'homepage',   header:'Home Page',   desc:'預設分頁(⚠️ 目前**未啟用**,App 固定 Today;填寫無效果)' }
       ]
     }
   }
@@ -153,11 +153,14 @@ function schemaDoc(){
     if(s.keys){
       md += '| Key | App Property | 說明 |\n|---|---|---|\n';
       s.keys.forEach(function(c){
-        md += '| ' + c.header + ' | ' + c.field + ' | ' + (c.desc||'') + ' |\n';
+        var h = c.header + (c.aliases ? '(別名:' + c.aliases.join('/') + ')' : '');
+        md += '| ' + h + ' | ' + c.field + ' | ' + (c.desc||'') + ' |\n';
       });
     }
     if(s.layout){
-      md += '自由格式:成員列標記「' + s.layout.membersRowMark + '」;欄位 → 類別[' + s.layout.catCol + '] 明細[' + s.layout.nameCol + '] 台幣[' + s.layout.twdCol + '] 日幣[' + s.layout.jpyCol + '] 備註[' + s.layout.noteCol + ']\n';
+      md += '自由格式:成員列標記「' + s.layout.membersRowMark + '」;欄位位置 → 類別[' + s.layout.catCol + '] 明細[' + s.layout.nameCol + '] 台幣[' + s.layout.twdCol + '] 日幣[' + s.layout.jpyCol + '] 備註[' + s.layout.noteCol + ']';
+      if(s.layout.totalMarks) md += ';合計列標記「' + s.layout.totalMarks.join('/') + '」';
+      md += '\n';
     }
     if(s.desc) md += '> ' + s.desc + '\n';
   });
