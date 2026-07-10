@@ -48,7 +48,8 @@
 - 新增餐廳:新增 Restaurants 資料列;填 PID 後會掛到對應 Place 卡片。
 - 新增店家:新增 Shopping 資料列;PID 指向對應商場。
 - 新增欄位:先改 Google Sheet,再改 `schema.js`;Parser 不需修改。
-- ID 格式:P/R/S/H/E + 三位數;不需連號,但不得重複、不得改變既有 ID 意義。
+- 一般資料表 ID 格式:Places=`P###`、Restaurants=`R###`、Shopping=`S###`、Hotels=`H###`;不需連號,但不得重複、不得改變既有 ID 意義。
+- Expenses 是自由格式,沒有 `E###` ID;行程總表目前只使用 `P###` / `R###` 引用地點或餐廳。
 - 同一地點多次造訪使用同一 PID。
 - 個人狀態(打卡/想逛/成員/旅途中記帳)存 localStorage,不進 CMS。
 

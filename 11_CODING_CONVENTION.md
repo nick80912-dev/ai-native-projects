@@ -33,7 +33,8 @@
 - 型別值、設定鍵的正規化對應寫在 Schema 的 values,不散落程式。
 
 ## Google Sheet 命名規則
-- ID:P/R/S/H/E + 三位數;不需連號,但**不得重複、不得改變既有 ID 意義**。
+- 一般資料表 ID:Places=`P###`、Restaurants=`R###`、Shopping=`S###`、Hotels=`H###`;不需連號,但**不得重複、不得改變既有 ID 意義**。
+- Expenses 是自由格式,沒有 `E###` ID;行程總表引用限使用 Schema 支援的 `P###` / `R###`。
 - 同一地點多次造訪用同一 PID;Type 為必填(限 Schema 定義值)。
 - 欄位標題應與 Schema header 或 aliases 一致。
 

@@ -31,7 +31,12 @@
 5. 資料內容改動走 Google Sheets,不改程式;程式只在功能/邏輯變動時修改
 
 ## 專案檔案
-- `index.html` — 完整 App(CSS+JS 內嵌單檔)
-- `sw.js` — Service Worker(離線快取,改版時 bump VERSION)
-- `manifest.json` + icon-*.png — PWA 安裝
-- 部署方式:Netlify Deploys 頁面直接拖入資料夾
+- `日本行程V2預覽.html` — 目前可編輯的預覽版 App
+- `schema.js` / `validator.js` — 資料規格 SSoT / 防錯與健康檢查
+- `tests/` / `tools/` — 可重跑測試與文件一致性檢查
+- `tasks/` — 即時工作狀態唯一權威
+
+## 規劃中的部署包
+- Bar 明確說「打包」後,才建立 `deploy/` 與其中的 `index.html`、`schema.js`、`validator.js`、`sw.js`、`manifest.json`、icons。
+- 部署包尚未納入目前 repo;流程與風險分級見 `tasks/backlog.md`、`14_FILE_TIERS_AND_GATE.md`。
+- 部署方式:Netlify Deploys 頁面直接拖入 `deploy/` 內容。

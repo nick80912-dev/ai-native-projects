@@ -1,6 +1,6 @@
 # tests — 測試資產(交付必附)
 
-> Bar 於 2026-07-09 核准:自此之後,**每次程式交付必附可執行測試**,測試檔納入 repo 版控;「通過 QA」以 repo 內可重跑的腳本為準,不接受口頭宣稱。
+> Bar 於 2026-07-09 核准:自此之後,**每次程式交付必附與修改範圍相符的可執行測試**,測試檔納入 repo 版控;「通過自動測試」以 repo 內可重跑的腳本為準,不接受口頭宣稱。三情境完整 QA 仍須另行驗證。
 
 ## 現有測試
 - `schema-types.test.js`:驗證 Places.Type 必要中文輸入值的正規化結果,並確認單檔預覽內嵌 Schema 已同步。執行:`node tests/schema-types.test.js`。
@@ -10,6 +10,8 @@
 ## 待建(backlog #3,下次程式交付一併補齊)
 - Playwright 三情境 QA 腳本:①斷網內建 ②連網同步 ③旅行日 mock Date;通過標準=三情境零 pageerror。
 - 打包前離線回歸(SW 快取)腳本。
+
+> 在上述 Playwright 腳本納入 repo 前,三情境 QA 是人工/瀏覽器驗收要求;不得將既有 Node 測試寫成「Playwright 已通過」。
 
 ## Sanity CI(2026-07-09 起)
 - `.github/workflows/qa.yml` 於每次 push / PR 自動執行:①`tools/check-doc-titles.js`(文件標題/檔名一致性+manifest JSON 檢查,防上傳錯位)②`tests/` 內全部 `*.test.js`。

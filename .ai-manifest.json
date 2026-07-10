@@ -30,11 +30,15 @@
   },
   "data_flow": "GoogleSheets(7表)→發布CSV→手機瀏覽器fetch→validator.js(防錯)→parser(Schema驅動)→DB→renderers→UI ;離線三層:BUILTIN內建→localStorage快取→背景同步(徽章:已是最新/部分更新/離線版/內建版)",
   "files": {
-    "index.html": "App本體:UI殼+CSS+內嵌JS(11區塊分層,見 10_FOLDER_STRUCTURE)",
+    "日本行程V2預覽.html": "目前可編輯的預覽版App:UI殼+CSS+內嵌JS(區塊分層見10_FOLDER_STRUCTURE)",
     "schema.js": "唯一資料規格SSoT:欄位/gid/型別值/發布URL;schemaDoc()自動產09文件",
-    "validator.js": "防錯防線:AppLog六類([Schema/Parser/Data/Repository/Render/Sync Error])+buildHeaderMap+window.healthCheck()",
-    "sw.js": "Service Worker(改版bump VERSION)",
-    "manifest.json + icon-*.png": "PWA 安裝"
+    "validator.js": "防錯防線:AppLog六類([Schema/Parser/Data/Repository/Render/Sync Error])+buildHeaderMap+window.healthCheck()"
+  },
+  "planned_deploy_files": {
+    "deploy/index.html": "Bar說打包後才建立的正式App入口",
+    "deploy/schema.js + validator.js": "正式App外部載入的資料規格與防錯來源",
+    "deploy/sw.js": "Service Worker(改版bump VERSION)",
+    "deploy/manifest.json + icon-*.png": "PWA安裝資產"
   },
   "cms": {
     "driveFileId": "1B5g7KuVi2WaFVVSdhqRMeTQV_tBpgnzOAv6aMQdFZJw",

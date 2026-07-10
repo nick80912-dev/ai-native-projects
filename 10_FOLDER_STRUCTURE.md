@@ -2,7 +2,9 @@
 
 > 原則:每個檔案責任單一,命名一致,AI 一眼知道去哪修改。不使用 common/misc/temp 這類模糊命名。
 
-## 部署包(Netlify 根目錄)
+## 規劃中的部署包(Netlify 根目錄)
+> 尚未建立或納入 repo;只有 Bar 明確說「打包」後才依 `tasks/backlog.md` 建立於 `deploy/`。
+
 ```
 index.html              App 本體:UI殼 + CSS + 內嵌 JS(依區塊分層,見下)
 schema.js               唯一資料規格(SSoT):欄位/gid/型別值/發布URL
@@ -15,11 +17,11 @@ icon-maskable-512.png   PWA 圖示(maskable)
 apple-touch-icon.png    iOS 圖示
 .ai-manifest.json       AI 導航檔(接手第一步只讀這份)
 ```
-> 目前為單檔部署決策(見 00_CONTEXT_HANDOVER 與待決事項);index.html 內嵌 JS 以「區塊註解」分層,等同模組但無多檔載入風險。
+> App UI 與主要邏輯維持單一 HTML;打包時 `index.html` 依規劃外部載入 `schema.js` / `validator.js`,其餘 JS 仍以區塊註解分層。
 
-## index.html 內部分層(區塊順序,即邏輯模組)
+## App HTML 內部分層(區塊順序,即邏輯模組)
 ```
-CONFIG        來自 schema.js(PUB base + SHEETS gid)
+SCHEMA        來自 schema.js(pubBase + sheets.*.gid + 欄位/型別規格)
 BUILTIN       7 表內建快照(離線後備)
 UTILS         storage / toast / CSV parser / copyText / date
 VALIDATOR     來自 validator.js(表頭驗證 + 六類日誌)

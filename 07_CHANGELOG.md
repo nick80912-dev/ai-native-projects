@@ -2,11 +2,29 @@
 
 紀錄格式:日期 / 版本 / 重點。細節不展開,新變更往上加。
 
+## 2026-07-10 — 文件與 Harness 現況一致性修正 ⭐ 治理變更
+- `02_ARCHITECTURE.md` / `10_FOLDER_STRUCTURE.md` 改用現行 `SCHEMA`、`parseTable`、`buildHeaderMap` 術語,並區分目前預覽版原始碼與規劃中的 `deploy/` 部署包
+- `03_DATABASE.md` / `11_CODING_CONVENTION.md` 修正 ID 規則:一般資料表使用 P/R/S/H,Expenses 為自由格式且沒有 E ID
+- `README.md` / `.ai-manifest.json` / `08_AI_HANDOVER.md` 明確列出目前 repo 檔案與打包後才建立的部署檔;同步修正舊欄位術語
+- `08_AI_HANDOVER.md` / `tests/README.md` 區分現有 Node 回歸測試、人工三情境 QA 與尚在 backlog 的 Playwright 自動化腳本
+- `tasks/current.md` / `13_PROJECT_STATUS.md` 移除已完成的 repo 修復與「行程仍在補齊」舊狀態,MAP CODE UI 保留為獨立後續工作
+- 僅修改文件與 Harness;未修改 App、schema、parser、資料流或 Google Sheet
+- Breaking Change:無
+
 ## 2026-07-10 — Places.Type 新增機場與纜車
 - `schema.js` 的 Places.Type values 新增「機場」與「纜車」,兩者正規化為既有 `attraction` 景點卡片
 - 同步更新單檔預覽內嵌 Schema、CMS 快速概覽、Schema 對照文件與 AI manifest;並修正 `schemaDoc()` 產生結果與 09 文件既有內容不一致
 - 新增回歸測試,避免獨立 Schema 與內嵌 Schema 再次遺漏這兩個資料值
 - 未修改 parser、資料流或 Google Sheet 欄位結構
+- Breaking Change:無
+
+## 2026-07-10 — 修復批:交付通道防呆 + 事故處理規範 ⭐ 治理變更
+- **Incident 記錄**(依新 §C 規則補記):07-09~07-10 三起上傳事故——①19 檔內容錯位 ②.ai-manifest.json 隱藏檔漏傳 ③正式 HTML 誤刪+測試模擬檔誤入 repo(CI 紅燈兩輪未被注意)。根因:網頁拖曳上傳缺乏 diff 預覽。均已修復。
+- 16_OPS_PLAYBOOK 新增 §C 事故處理(**CI 紅燈=停止新工作**,修復優先,事後記錄)與 §D 雙通道交付 SOP(GitHub Desktop 為主 + 版本同步三規則,Bar 核准)
+- tools/check-doc-titles.js 新增三條規則(均通過反向測試):④核心檔案存在性 ⑤測試模擬檔擋入 ⑥HTML 內嵌 schema/validator 與獨立檔一致性
+- qa.yml 改為自動執行 tests/ 內全部 *.test.js(新增測試免改 CI)
+- 14 新增「禁入 repo 的產物」章(測試模擬檔規則 + localStorage 污染警示)
+- tasks 更新:品質批彙整(9 項,含 Bar 裁定的隱藏式重置功能)
 - Breaking Change:無
 
 ## 2026-07-09 — 首頁下一站卡可跳到行程詳情
@@ -25,15 +43,6 @@
 ## 2026-07-09 — 首頁下一站卡補付款資訊
 - 首頁「NEXT STOP」卡片若下一站為餐廳,會在營業時間下方顯示餐廳付款方式
 - 僅調整 `日本行程V2預覽.html` 顯示層與回歸測試,未修改 schema、parser、Google Sheet 或正式部署檔
-- Breaking Change:無
-
-## 2026-07-10 — 修復批:交付通道防呆 + 事故處理規範 ⭐ 治理變更
-- **Incident 記錄**(依新 §C 規則補記):07-09~07-10 三起上傳事故——①19 檔內容錯位 ②.ai-manifest.json 隱藏檔漏傳 ③正式 HTML 誤刪+測試模擬檔誤入 repo(CI 紅燈兩輪未被注意)。根因:網頁拖曳上傳缺乏 diff 預覽。均已修復。
-- 16_OPS_PLAYBOOK 新增 §C 事故處理(**CI 紅燈=停止新工作**,修復優先,事後記錄)與 §D 雙通道交付 SOP(GitHub Desktop 為主 + 版本同步三規則,Bar 核准)
-- tools/check-doc-titles.js 新增三條規則(均通過反向測試):④核心檔案存在性 ⑤測試模擬檔擋入 ⑥HTML 內嵌 schema/validator 與獨立檔一致性
-- qa.yml 改為自動執行 tests/ 內全部 *.test.js(新增測試免改 CI)
-- 14 新增「禁入 repo 的產物」章(測試模擬檔規則 + localStorage 污染警示)
-- tasks 更新:品質批彙整(9 項,含 Bar 裁定的隱藏式重置功能)
 - Breaking Change:無
 
 ## 2026-07-09 — 下一站邏輯統一為時間判斷 + 自動略過過期項目
