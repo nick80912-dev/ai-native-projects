@@ -3,7 +3,8 @@
 > Bar 於 2026-07-09 核准:自此之後,**每次程式交付必附可執行測試**,測試檔納入 repo 版控;「通過 QA」以 repo 內可重跑的腳本為準,不接受口頭宣稱。
 
 ## 現有測試
-- `render-note.test.js`:備註條列渲染回歸測試(Node 內建 assert,從預覽 HTML 抽函式驗證)。執行:`node tests/render-note.test.js`(於 repo 根目錄)。
+- `render-note.test.js`:備註條列渲染、下一站卡、MAPCODE、明日預告等元件渲染回歸測試(Node 內建 assert,從預覽 HTML 抽函式驗證)。執行:`node tests/render-note.test.js`(於 repo 根目錄)。
+- `pick-next-stop.test.js`:下一站時間判斷與自動略過過期項目的邏輯回歸測試(2026-07-09 新增,涵蓋「今天按過任一完成後就卡住不推進」的修復)。執行:`node tests/pick-next-stop.test.js`
 
 ## 待建(backlog #3,下次程式交付一併補齊)
 - Playwright 三情境 QA 腳本:①斷網內建 ②連網同步 ③旅行日 mock Date;通過標準=三情境零 pageerror。

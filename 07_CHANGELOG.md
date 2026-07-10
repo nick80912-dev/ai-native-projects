@@ -20,6 +20,16 @@
 - 僅調整 `日本行程V2預覽.html` 顯示層與回歸測試,未修改 schema、parser、Google Sheet 或正式部署檔
 - Breaking Change:無
 
+## 2026-07-09 — 下一站邏輯統一為時間判斷 + 自動略過過期項目
+- **修復核心 bug**：`pickNextStop` 舊版邏輯是「今天只要手動完成/跳過過任一項,就切換成『依順序找下一項』,不再依時間推進」——導致忘記按掉的舊項目卡住主卡一整天。修正後統一只看時間,不受手動動作歷史影響。
+- **新增「自動略過過期項目」**（Bar 確認,理由：時間不能重來、行程不會同天回訪）：已過時間且未手動處理的項目,除「最後一項」保留待確認外,其餘（含夾在中間的無時間項目）自動寫入 `progress.skip`,並記錄 `autoSkip` 標記。
+- **完成度判斷不受影響**：`isTripItemCleared`/`remaining` 只看手動 done/skip/checks + 自動略過(本身就是 skip 的一種),時間本身從不直接影響「完成度」,只影響「該不該自動略過」這個寫入動作本身。
+- Trip 頁自動略過項目顯示「⏱ 自動略過」標籤；點打卡可一鍵修正為「完成」(對應「有去但沒空點」的情境)，並清除 autoSkip 標記。
+- 明日預告拆成兩條規則(修掉舊版 22:00 分支永遠進不去的死碼)：全部手動清除 → 主卡整個換成明日預告；仍有未清項目 → 主卡保留,21:00 後(`TOMORROW_PREVIEW_HOUR`)下方加縮小版明日預告,兩者並存。
+- `shouldShowTomorrowPreview`/`hasUnfinishedToday` 拆為 `shouldReplaceWithTomorrowPreview`/`shouldShowCompactTomorrowPreview` 兩個更直接可測試的純函式。
+- 新增 `tests/pick-next-stop.test.js`(6 個情境,含原始 bug 的回歸測試)；`render-note.test.js` 同步更新函式名稱與明日預告斷言。
+- Breaking Change:無(个人狀態格式向下相容,新增的 `autoSkip` 欄位由 `normalizeDayProgress` 提供預設值)。
+
 ## 2026-07-09 — Sanity CI 與文件小修
 - 新增 `.github/workflows/qa.yml`:push/PR 自動跑文件一致性檢查與既有回歸測試,Gate 首度自動化
 - 新增 `tools/check-doc-titles.js`:檢查編號/具名文件的標題與檔名一致、manifest JSON 有效、根目錄無上傳殘留雜檔;已反向測試可攔截「內容錯位」事故

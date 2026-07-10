@@ -17,9 +17,17 @@ function extractFunction(name){
   throw new Error('Could not extract ' + name);
 }
 
+function extractConst(name){
+  const start = html.indexOf('var ' + name + '=');
+  assert.notStrictEqual(start, -1, name + ' exists');
+  const end = html.indexOf(';', start);
+  return html.slice(start, end + 1);
+}
+
 const sandbox = {};
 vm.createContext(sandbox);
 vm.runInContext([
+  extractConst('TOMORROW_PREVIEW_HOUR'),
   extractFunction('escapeHtml'),
   extractFunction('jsString'),
   extractFunction('highlightNote'),
@@ -31,8 +39,8 @@ vm.runInContext([
   extractFunction('isTripCheckableItem'),
   extractFunction('isTripItemCleared'),
   extractFunction('getCurrentTripItemId'),
-  extractFunction('hasUnfinishedToday'),
-  extractFunction('shouldShowTomorrowPreview'),
+  extractFunction('shouldReplaceWithTomorrowPreview'),
+  extractFunction('shouldShowCompactTomorrowPreview'),
   extractFunction('renderTomorrowPreview'),
   extractFunction('renderTicketLine'),
   extractFunction('nextStopMeta'),
@@ -128,16 +136,22 @@ sandbox.DB = { trip:{ days:[
   { date:'10/20', dow:'二', items:[{ id:'d3_1', act:'Kamakura walk', place:'Enoshima' }] },
   { date:'10/21', dow:'三', items:[{ id:'d4_1', time:'08:00', act:'Breakfast', place:'Shinjuku' }] }
 ] } };
-sandbox.getDayProgress = function(){ return { done:{ d3_1:true }, skip:{} }; };
-sandbox.isNextStopCleared = function(item, progress, checks){
-  return !!(progress.done[item.id] || progress.skip[item.id] || checks[item.id]);
-};
-assert.strictEqual(sandbox.shouldShowTomorrowPreview(sandbox.DB.trip.days[0], 0, { item:null }, {}, 21*60+30), true);
-assert.strictEqual(sandbox.shouldShowTomorrowPreview(sandbox.DB.trip.days[0], 0, { item:{ id:'d3_1' } }, {}, 22*60+1), false);
-const tomorrowOut = sandbox.renderTomorrowPreview(0);
+/* 規則(2026-07-09):pick.item 為 null = 今日全部手動完成/跳過 → 主卡整個換成明日預告(不看時間)。
+   pick.item 有值(即使時間已過、已被自動略過,只要沒手動處理)→ 主卡保留,21:00 後才附加縮小版明日預告。 */
+assert.strictEqual(sandbox.shouldReplaceWithTomorrowPreview({ item:null }), true);
+assert.strictEqual(sandbox.shouldReplaceWithTomorrowPreview({ item:{ id:'d3_1' } }), false);
+assert.strictEqual(sandbox.shouldShowCompactTomorrowPreview({ item:{ id:'d3_1' } }, 21*60), true);
+assert.strictEqual(sandbox.shouldShowCompactTomorrowPreview({ item:{ id:'d3_1' } }, 20*60+59), false);
+assert.strictEqual(sandbox.shouldShowCompactTomorrowPreview({ item:null }, 22*60), false);
+
+const tomorrowOut = sandbox.renderTomorrowPreview(0, false);
 assert(tomorrowOut.includes('class="tomorrow-card"'));
+assert(!tomorrowOut.includes('tomorrow-card compact'));
 assert(tomorrowOut.includes('DAY 2'));
 assert(tomorrowOut.includes('Breakfast'));
+
+const tomorrowCompactOut = sandbox.renderTomorrowPreview(0, true);
+assert(tomorrowCompactOut.includes('class="tomorrow-card compact"'));
 
 const currentId = sandbox.getCurrentTripItemId(
   { items:[{ id:'done', act:'done' }, { id:'next', act:'next main', place:'next place' }] },
