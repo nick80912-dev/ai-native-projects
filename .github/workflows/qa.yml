@@ -18,5 +18,10 @@ jobs:
           node-version: '20'
       - name: 文件標題/檔名一致性 + manifest 檢查
         run: node tools/check-doc-titles.js
-      - name: 既有回歸測試
-        run: node tests/render-note.test.js
+      - name: 全部回歸測試(自動涵蓋 tests/ 內所有 *.test.js,新增測試免改本檔)
+        run: |
+          set -e
+          for f in tests/*.test.js; do
+            echo "== $f =="
+            node "$f"
+          done
