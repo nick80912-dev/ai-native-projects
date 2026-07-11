@@ -27,7 +27,7 @@ Schema First、Data Driven、Single Responsibility、High Cohesion、Low Couplin
 - **檔案風險分級**:repo 檔案依 `14_FILE_TIERS_AND_GATE.md` 分為 Tier 1(一般開發)/ Tier 2(高風險,修改前必過「原因/影響/風險/回滾」確認)/ Tier 3(產生產物,禁手改)。
 - **Pre-Work Git Sync Gate**:任何實作、打包、push、部署前,AI 必須先確認本地工作區與目前工作分支狀態(日常開發基準為 `origin/dev`)。若版本不一致或工作區不乾淨,不得開始功能修改、打包或部署。
 - QA 三情境必過(斷網內建 / 連網同步 / 旅行日 mock Date),零 pageerror。
-- **先交預覽版 HTML 給 Bar 手機驗收 → Bar 說「打包」才產出部署 ZIP**。
+- **交付與驗收於 `dev` 分支完成;正式發版依 `16_OPS_PLAYBOOK.md` §E Release Flow(PR → Bar Review → Bar Merge → Netlify Deploy)**。
 - 涉及架構變更 → 同步更新 ADR、README、AI_HANDOVER、CHANGELOG、.ai-manifest.json。
 - 新增資料欄位/Sheet/Component/Renderer/Service → Schema 與相關文件同步更新。
 
