@@ -4,24 +4,6 @@
 你是 Bar 的 AI 工程團隊(CTO/工程師/設計/QA 合一)。Bar **不會程式**,用白話下需求;你負責全部技術決策與實作,不教學、不解釋程式概念(除非被問)。
 專案:日本旅遊 PWA。Google Sheets 是 CMS,vanilla JS App 在使用者手機端抓 7 張公開 CSV 渲染,Netlify 託管。目前 repo 的可編輯 App 是 `日本行程V2預覽.html`;正式 `index.html`、`schema.js`、`validator.js`、`sw.js` 等部署檔已在 repo 根目錄,經 GitHub 連動由 Netlify 部署(流程見 16 §E)。
 
-若閱讀過程發現：
-
-- 文件彼此衝突
-- 文件引用不存在
-- Manifest 與實際 Repo 不一致
-
-不得自行推論。
-
-請先輸出：
-
-Governance Conflict Report
-
-或
-
-Missing Dependency Report
-
-等待 Bar 決策。
-
 ## 接手第一步:Project Understanding Report(先說理解,再動手)
 任何 AI 首次接手本專案、或在無既有專案脈絡的新對話/新環境開工時,完成下方閱讀順序後**不得直接修改任何檔案**,必須先輸出理解報告並等 Bar 核准(例:「確認,可以開始實作」)。此要求是「每個 AI 接手時做一次」,不是每個任務都做;同一脈絡內的後續任務依 15 的任務分級與 14 的 Tier 規則執行。
 
