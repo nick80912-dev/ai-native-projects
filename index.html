@@ -52,8 +52,7 @@ a{color:var(--sea)}
 }
 .brand{display:flex;align-items:center;gap:8px;padding-bottom:8px;justify-content:center}
 .brand .logo{
-  width:26px;height:26px;border-radius:7px;background:var(--coral);
-  color:#fff;font-size:14px;font-weight:800;display:flex;align-items:center;justify-content:center;
+  width:26px;height:26px;border-radius:7px;object-fit:cover;display:block;flex:0 0 26px;
 }
 .brand .t{color:#fff;font-size:15px;font-weight:700;letter-spacing:.03em}
 .brand .sync{
@@ -468,7 +467,7 @@ a{color:var(--sea)}
 <div class="hdr">
 <div class="topbar">
   <div class="brand">
-    <span class="logo">日</span>
+    <img class="logo" src="okayama-peach-badge.png" alt="岡山桃子">
     <span class="t" id="brandTitle">日本行程</span>
     <button class="sync" id="syncBtn" onclick="manualSyncNew()">
       <span class="dot" id="syncDot"></span><span id="syncTxt">同步中</span>

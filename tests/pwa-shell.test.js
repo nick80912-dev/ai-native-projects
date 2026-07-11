@@ -7,11 +7,17 @@ const indexPath = path.join(root, 'index.html');
 const manifestPath = path.join(root, 'manifest.webmanifest');
 const serviceWorkerPath = path.join(root, 'sw.js');
 const netlifyPath = path.join(root, 'netlify.toml');
+const peachBadgePath = path.join(root, 'okayama-peach-badge.png');
 
 assert.ok(fs.existsSync(indexPath), 'PWA entrypoint index.html exists');
 assert.ok(fs.existsSync(manifestPath), 'web app manifest exists');
 assert.ok(fs.existsSync(serviceWorkerPath), 'service worker exists');
 assert.ok(fs.existsSync(netlifyPath), 'Netlify configuration exists');
+assert.ok(fs.existsSync(peachBadgePath), 'header peach badge exists');
+const peachBadge = fs.readFileSync(peachBadgePath);
+assert.strictEqual(peachBadge.readUInt32BE(16), 256, 'peach badge is 256px wide');
+assert.strictEqual(peachBadge.readUInt32BE(20), 256, 'peach badge is 256px high');
+assert.ok(!fs.existsSync(path.join(root, 'okayama-traveler-icon.png')), 'rejected traveler asset is absent');
 
 const index = fs.readFileSync(indexPath, 'utf8');
 assert.match(index, /<title>TripPilot<\/title>/, 'index uses the TripPilot browser title');
@@ -23,6 +29,14 @@ assert.match(index, /navigator\.serviceWorker\.register\('sw\.js'\)/, 'index reg
 const preview = fs.readFileSync(path.join(root, '日本行程V2預覽.html'), 'utf8');
 assert.match(preview, /<title>TripPilot<\/title>/, 'preview uses the TripPilot browser title');
 assert.match(preview, /<link rel="icon" type="image\/png" sizes="32x32" href="icon-32\.png">/, 'preview links the shared favicon');
+for (const html of [index, preview]) {
+  assert.match(
+    html,
+    /<img class="logo" src="okayama-peach-badge\.png" alt="岡山桃子">/,
+    'header uses the shared peach badge'
+  );
+  assert.match(html, /id="brandTitle"/, 'header keeps the dynamic itinerary title');
+}
 const shellOnlyIndex = index
   .replace(/<link rel="manifest" href="manifest\.webmanifest">\r?\n/, '')
   .replace(/<script>\r?\n\/\* SW 註冊:外殼離線防線\(策略見 sw\.js 檔頭\) \*\/\r?\nif \('serviceWorker' in navigator\) \{\r?\n  window\.addEventListener\('load', function\(\)\{\r?\n    navigator\.serviceWorker\.register\('sw\.js'\)\.catch\(function\(e\)\{\r?\n      if \(window\.AppLog\) AppLog\.sync\('SW 註冊失敗:' \+ \(e && e\.message \? e\.message : e\)\);\r?\n    \}\);\r?\n  \}\);\r?\n\}\r?\n<\/script>\r?\n/, '');
