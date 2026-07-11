@@ -61,6 +61,10 @@ const day = { date:'10/18' };
 const dayIndex = 0;
 const checks = {};
 
+assert.strictEqual(makeSandbox().parseStartMinutes('09:00-11:30'), 11*60+30, '時間區間使用結束時間');
+assert.strictEqual(makeSandbox().parseStartMinutes('09:00'), 9*60, '單點時間使用該時間');
+assert.strictEqual(makeSandbox().parseStartMinutes(''), null, '未填時間不視為過期');
+
 /* ---- 情境1:今天完全沒手動動作,現在 15:00,有項目時間已過、有未來項目 ---- */
 {
   const sb = makeSandbox();

@@ -16,6 +16,7 @@
 <link rel="apple-touch-icon" sizes="180x180" href="icon-180.png">
 <style>
 :root{
+  --tabbar-height:58px;
   --paper:#f5f1e8;
   --card:#fffdf8;
   --ink:#22303a;
@@ -40,7 +41,7 @@ body{
   font-family:"Hiragino Sans","Noto Sans TC","PingFang TC",system-ui,-apple-system,sans-serif;
   background:var(--paper);color:var(--ink);line-height:1.6;font-size:15px;
   overflow-x:hidden;-webkit-font-smoothing:antialiased;
-  padding-bottom:calc(64px + env(safe-area-inset-bottom));
+  padding-bottom:calc(var(--tabbar-height) + env(safe-area-inset-bottom));
 }
 a{color:var(--sea)}
 
@@ -258,10 +259,10 @@ a{color:var(--sea)}
 .tabbar{
   position:fixed;bottom:0;left:0;right:0;z-index:70;background:rgba(255,253,248,.96);
   backdrop-filter:blur(10px);border-top:1px solid var(--line);display:flex;
-  padding-bottom:env(safe-area-inset-bottom);
+  height:calc(var(--tabbar-height) + env(safe-area-inset-bottom));padding-bottom:env(safe-area-inset-bottom);
 }
 .tabbar-btn{
-  flex:1;background:none;border:none;cursor:pointer;padding:9px 0 8px;font-family:inherit;
+  flex:1;height:var(--tabbar-height);background:none;border:none;cursor:pointer;padding:8px 0 7px;font-family:inherit;
   display:flex;flex-direction:column;align-items:center;gap:2px;color:var(--ink-faint);font-size:11px;font-weight:600;
 }
 .tabbar-btn .ic{font-size:19px;line-height:1}
@@ -360,7 +361,7 @@ a{color:var(--sea)}
 .nx-secondary-actions:empty{display:none}
 .nx-secondary-actions .qa-btn{margin:0}
 .nx-ticket-low{display:grid;grid-template-columns:1fr 1fr;gap:10px;border-top:1px dashed var(--line);padding:12px 16px 14px 20px;background:#fffaf0}
-.nx-decision-btn{min-height:46px;border-radius:12px;font-size:15px;font-weight:900;font-family:inherit;cursor:pointer}
+.nx-decision-btn{min-height:46px;border-radius:12px;font-size:12px;font-weight:900;font-family:inherit;cursor:pointer}
 .nx-decision-btn.done{background:#fff;color:var(--green);border:1.5px solid var(--green)}
 .nx-decision-btn.skip{background:#f7f3ea;color:var(--ink-faint);border:1px solid var(--line)}
 .nx-decision-btn:active{transform:scale(.97)}
@@ -1478,10 +1479,20 @@ function onCheck(id){
       return;
     }
   }
+  var wasDone=!!getChecks()[id];
   toggleCheck(id);
+  var cancelledPast=false;
+  if(wasDone&&day){
+    var item=(day.items||[]).find(function(it){return it.id===id;});
+    var crossDay=findToday()!==curDay;
+    var timePick=item?pickNextStop([item],getDayProgress(day,curDay),{},currentMinutes(),null):null;
+    var timePast=!!(item&&parseStartMinutes(item.time)!==null&&timePick&&timePick.source==='time-stale');
+    cancelledPast=crossDay||timePast;
+    if(cancelledPast) autoSkipStaleItem(day,curDay,id);
+  }
+  renderToday();
   if(curView==='trip') renderTrip();
-  else if(curView==='today') renderToday();
-  toast(getChecks()[id]?'已打卡 ✓':'取消打卡');
+  toast(cancelledPast?'已取消,該行程時間已過,列於已略過':(getChecks()[id]?'已打卡 ✓':'取消打卡'));
 }
 function renderItem(it,checks,currentItemId,dayProgress){
   var done=checks[it.id];
@@ -1574,7 +1585,8 @@ function findToday(){
   return di>=0?di:null;
 }
 function parseStartMinutes(timeText){
-  var m=String(timeText||'').match(/(\d{1,2})\s*:\s*(\d{2})/);
+  var times=String(timeText||'').match(/\d{1,2}\s*:\s*\d{2}/g);
+  var m=times&&times.length?times[times.length-1].match(/(\d{1,2})\s*:\s*(\d{2})/):null;
   if(!m) return null;
   var h=parseInt(m[1],10), min=parseInt(m[2],10);
   if(isNaN(h)||isNaN(min)||h<0||h>23||min<0||min>59) return null;
@@ -1843,21 +1855,11 @@ function renderClusterStop(item,checks,progress){
   var res=resolveRef(item);
   var meta=nextStopMeta(item,res);
   var auto=isAutoSkipped(item.id,progress);
-  var canNav=(item.place&&item.place.trim())||res;
-  var p=res&&res.kind==='place'?res.p:null;
-  var pk=p&&(p.mapcode||p.pfee||p.pnote)?parkingPanel(p):'';
-  var info=infoPanel(res);
-  var actions=(canNav?'<a class="qa-btn drv" href="'+navUrl(item,res)+'" target="_blank" rel="noopener">'+(transport()==='drive'?'🚗 導航':'🚃 路線')+'</a>':'')+
-    (pk&&transport()==='drive'?'<button class="qa-btn pk" onclick="togglePanel(\''+item.id+'\',\'pk\',this)">🅿 停車</button>':'')+
-    (info?'<button class="qa-btn nf" onclick="togglePanel(\''+item.id+'\',\'nf\',this)">ℹ️ 資訊</button>':'');
   return '<div class="nx-cluster-stop '+(auto?'auto':'')+'">'+
     '<div class="nx-cluster-time">'+escapeHtml(item.time||'·')+'</div>'+
     '<div><div class="nx-cluster-name">'+escapeHtml(clusterItemName(item))+'</div>'+
       '<div class="nx-cluster-meta">'+(meta.cat?escapeHtml(meta.cat.label):'')+(meta.drive?' · '+escapeHtml(meta.drive):'')+'</div>'+
       (auto?'<span class="nx-cluster-status">⏱ 自動略過</span>':'')+
-      (actions?'<div class="nx-cluster-actions">'+actions+'</div>':'')+
-      (pk?'<div class="panel" id="pn_pk_'+item.id+'">'+pk+'</div>':'')+
-      (info?'<div class="panel" id="pn_nf_'+item.id+'">'+info+'</div>':'')+
     '</div></div>';
 }
 function renderClusterNextStopCard(day,dayIndex,pick,cluster,checks,progress,nowMinutes){
