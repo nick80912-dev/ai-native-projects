@@ -1576,6 +1576,7 @@ function renderItem(it,checks,currentItemId,dayProgress){
     (qa?'<div class="qa-row">'+qa+'</div>':'')+panels+
   '</div>';
 }
+function selectCurrentTripItem(day,dayIndex,checks){ var progress=getDayProgress(day,dayIndex); var pick=pickNextStop((day.items||[]).filter(isTripCheckableItem),progress,checks||getChecks(),currentMinutes(),{day:day,dayIndex:dayIndex}); return pick.item?pick.item.id:null; }
 function renderTrip(){
   var view=document.getElementById('view-trip');
   var t=DB.trip;
@@ -1584,7 +1585,7 @@ function renderTrip(){
   if(!day){ curDay=0; day=t.days[0]; }
   var checks=getChecks();
   var progress=getDayProgress(day,curDay);
-  var currentItemId=getCurrentTripItemId(day,curDay,checks);
+  var currentItemId=selectCurrentTripItem(day,curDay,checks);
   var acts=day.items.filter(isTripCheckableItem);
   var skipN=acts.filter(function(it){return !!progress.skip[it.id];}).length;
   var doneN=acts.filter(function(it){return !progress.skip[it.id]&&(!!checks[it.id]||!!progress.done[it.id]);}).length;
@@ -2417,15 +2418,16 @@ function updateSimulationMarker(){ var on=isTimeSimulationActive(),logo=document
 function snapshotSimulationState(){
   if(lsGet('trip_time_simulation_snapshot',null)) return;
   var data={};
-  for(var i=0;i<localStorage.length;i++){ var k=localStorage.key(i); if(k&&k.indexOf('trip_')===0&&k!=='trip_time_simulation'&&k!=='trip_time_simulation_snapshot'&&k.indexOf('trip_weather_')!==0&&k!=='trip_expenses'&&k!=='trip_people') data[k]=localStorage.getItem(k); }
+  for(var i=0;i<localStorage.length;i++){ var k=localStorage.key(i); if(isSimulationSnapshotKey(k)) data[k]=localStorage.getItem(k); }
   lsSet('trip_time_simulation_snapshot',data);
 }
+function isSimulationSnapshotKey(k){ return !!(k&&k.indexOf('trip_')===0&&k!=='trip_time_simulation'&&k!=='trip_time_simulation_snapshot'&&k.indexOf('trip_weather_')!==0&&k!=='trip_expenses'&&k!=='trip_people'); }
 function setTimeSimulation(){ var input=document.getElementById('diagTime'); if(!input||!input.value) return; var targetMs=Date.parse(input.value); if(isNaN(targetMs)) return; snapshotSimulationState(); lsSet('trip_time_simulation',{mode:'offset',offsetMs:targetMs-Date.now()}); updateSimulationMarker(); renderAll(); closeDiagnostics(); }
 function setTimeSimulationDay(dayIndex){ var day=DB.trip&&DB.trip.days&&DB.trip.days[dayIndex]; if(!day) return; var y=(DB.cfg&&DB.cfg.startdate||'').slice(0,4); var input=document.getElementById('diagTime'); if(input) input.value=y+'-'+day.date.replace('/','-')+'T08:00'; }
 function resetTripProgress(){ if(!confirm('確定重置所有打卡與略過進度？')) return; if(!confirm('再次確認：此動作無法復原。')) return; localStorage.removeItem('trip_checks'); localStorage.removeItem('trip_next_stop_progress'); renderAll(); closeDiagnostics(); toast('已重置行程進度'); }
 function endTimeSimulation(restore){
   var snap=lsGet('trip_time_simulation_snapshot',null);
-  if(restore&&snap){ Object.keys(snap).forEach(function(k){ localStorage.setItem(k,snap[k]); }); }
+  if(restore&&snap){ for(var i=localStorage.length-1;i>=0;i--){ var k=localStorage.key(i); if(isSimulationSnapshotKey(k)) localStorage.removeItem(k); } Object.keys(snap).forEach(function(k){ localStorage.setItem(k,snap[k]); }); }
   localStorage.removeItem('trip_time_simulation'); localStorage.removeItem('trip_time_simulation_snapshot'); updateSimulationMarker(); renderAll(); closeDiagnostics(); toast(restore?'已回復模擬前狀態':'已回復手機時間');
 }
 function closeDiagnostics(){ var el=document.getElementById('diagnosticOverlay'); if(el) el.remove(); }
