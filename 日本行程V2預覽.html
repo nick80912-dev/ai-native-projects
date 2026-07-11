@@ -35,6 +35,7 @@
 }
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html{scroll-behavior:smooth}
+html,body{touch-action:manipulation}
 body{
   font-family:"Hiragino Sans","Noto Sans TC","PingFang TC",system-ui,-apple-system,sans-serif;
   background:var(--paper);color:var(--ink);line-height:1.6;font-size:15px;
@@ -2049,7 +2050,7 @@ function renderToday(){
   var ti=findToday();
   var checks=getChecks();
   if(ti===null){
-    var days=DB.trip?DB.trip.days.slice(0,3):[];
+    var days=DB.trip?DB.trip.days:[];
     view.innerHTML='<div class="today-hero"><div class="lbl">TODAY · '+todayMD()+'</div>'+
       '<div class="date">還沒到出發日</div>'+
       '<div class="empty">今天沒有排定行程 🗓️<br>出發當天這裡會自動顯示當日安排與下一站。</div>'+
@@ -2263,7 +2264,7 @@ function addExpense(){
   var ex=getExpenses(); ex.push({desc:desc,amt:amt,payer:selectedPayer,split:split,d:todayMD()});
   lsSet('trip_expenses',ex); selectedPayer=null; renderSplit(); toast('已加入 ✓');
 }
-function removeExpense(i){ var e=getExpenses(); e.splice(i,1); lsSet('trip_expenses',e); renderSplit(); }
+function removeExpense(i){ if(!confirm('確定刪除這筆支出？')) return; var e=getExpenses(); e.splice(i,1); lsSet('trip_expenses',e); renderSplit(); }
 function calcSettle(people,expenses){
   var total=expenses.reduce(function(s,e){return s+Number(e.amt);},0);
   var paid={},owed={};
