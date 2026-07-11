@@ -48,7 +48,10 @@ function makeSandbox(){
     extractFunction('autoSkipStaleItem'),
     extractFunction('isAutoSkipped'),
     extractFunction('isNextStopCleared'),
-    extractFunction('pickNextStop')
+    extractFunction('pickNextStop'),
+    extractFunction('getChildStopCluster'),
+    extractFunction('pickClusterChild'),
+    extractFunction('completeClusterParent')
   ].join('\n'), sandbox);
   sandbox._store = store;
   return sandbox;
@@ -147,5 +150,34 @@ const checks = {};
   assert.strictEqual(!!progress.autoSkip['x'], false, 'markNextStop 應清除 autoSkip 標記');
   assert.strictEqual(!!progress.done['x'], true);
 }
+
+/* ---- 情境7:父行程的連續子站依下一站時間自動略過,全部清除後完成父行程 ---- */
+{
+  const sb = makeSandbox();
+  const items = [
+    { id:'parent', time:'10:00', act:'和平紀念公園串點' },
+    { id:'a', time:'10:00', act:'', place:'原爆圓頂館' },
+    { id:'b', time:'10:10', act:'', place:'廣島和平紀念資料館' },
+    { id:'c', time:'11:30', act:'', place:'廣島紙鶴塔' },
+    { id:'next', time:'12:30', act:'午餐時間' }
+  ];
+  const cluster = sb.getChildStopCluster(items, items[0]);
+  assert.strictEqual(cluster.items.length, 3, '父行程應收集連續子站');
+
+  let progress = sb.getDayProgress(day, dayIndex);
+  const childPick = sb.pickClusterChild(cluster, progress, checks, 10*60 + 10, { day, dayIndex });
+  assert.strictEqual(childPick.item.id, 'b', '下一個子站開始時,前一個未處理子站應自動略過');
+  progress = sb.getDayProgress(day, dayIndex);
+  assert.strictEqual(!!progress.autoSkip.a, true, '自動略過子站必須保留 autoSkip UI 狀態');
+
+  sb.markNextStop(day, dayIndex, 'b', 'done');
+  sb.markNextStop(day, dayIndex, 'c', 'done');
+  progress = sb.getDayProgress(day, dayIndex);
+  assert.strictEqual(sb.completeClusterParent(day, dayIndex, cluster, progress, checks), true, '所有子站清除後應完成父行程');
+  progress = sb.getDayProgress(day, dayIndex);
+  assert.strictEqual(!!progress.done.parent, true, '父行程完成後既有下一站流程才能往下推進');
+}
+
+assert(html.includes('展開該區串點'), 'cluster ticket exposes the approved expand label');
 
 console.log('pickNextStop / auto-skip tests passed');
