@@ -465,10 +465,11 @@ a{color:var(--sea)}
 .st-tax{display:inline-block;font-size:9.5px;font-weight:800;color:var(--green);border:1px solid var(--green);border-radius:4px;padding:0 4px;vertical-align:1px}
 
 .mc-val.mc-big{font-size:26px;letter-spacing:.06em;line-height:1.3}
-.diag-overlay{position:fixed;inset:0;z-index:110;background:rgba(6,32,38,.62);padding:24px 12px;overflow:auto}
-.diag-panel{max-width:520px;margin:0 auto;background:var(--card);border-radius:12px;padding:16px;box-shadow:var(--shadow-lg)}
+.diag-overlay{position:fixed;inset:0;z-index:110;background:rgba(6,32,38,.62);padding:24px 12px;overflow:auto;display:flex;align-items:center;justify-content:center}
+.diag-panel{width:100%;max-width:520px;max-height:85vh;overflow:auto;background:var(--card);border-radius:12px;padding:16px;box-shadow:var(--shadow-lg)}
 .diag-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}.diag-head h2{font-size:17px}.diag-close{border:0;background:none;font-size:24px;color:var(--ink-soft)}
 .diag-section{border-top:1px solid var(--line);padding:12px 0}.diag-section h3{font-size:13px;margin-bottom:6px}.diag-row{font-size:12px;color:var(--ink-soft);margin:3px 0}.diag-actions{display:flex;gap:8px;flex-wrap:wrap}.diag-actions button{min-height:40px;padding:7px 10px;border:1px solid var(--line);border-radius:8px;background:#fff;font:inherit;font-size:12px}.diag-actions .primary{background:var(--sea);color:#fff;border-color:var(--sea)}
+.diag-help{font-size:11px;color:var(--ink-faint);margin:4px 0 8px}.diag-shortcuts{display:flex;gap:5px;flex-wrap:wrap;margin:8px 0}
 .wrap.pinch-zooming{will-change:transform}
 </style>
 </head>
@@ -847,6 +848,7 @@ function escapeHtml(s){ return (s==null?'':String(s)).replace(/&/g,'&amp;').repl
 function jsString(s){ return String(s==null?'':s).replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/\n/g,'\\n').replace(/\r/g,''); }
 function appNow(){
   var sim=lsGet('trip_time_simulation',null);
+  if(sim&&sim.mode==='offset'&&typeof sim.offsetMs==='number') return new Date(Date.now()+sim.offsetMs);
   if(sim&&sim.mode==='custom'&&sim.value){
     var custom=new Date(sim.value);
     if(!isNaN(custom.getTime())) return custom;
@@ -1581,12 +1583,13 @@ function renderTrip(){
   var progress=getDayProgress(day,curDay);
   var currentItemId=getCurrentTripItemId(day,curDay,checks);
   var acts=day.items.filter(isTripCheckableItem);
-  var doneN=acts.filter(function(it){return isTripItemCleared(it,day,curDay,checks);}).length;
+  var skipN=acts.filter(function(it){return !!progress.skip[it.id];}).length;
+  var doneN=acts.filter(function(it){return !progress.skip[it.id]&&(!!checks[it.id]||!!progress.done[it.id]);}).length;
   var visibleItems=tripHideDone?day.items.filter(function(it){return !isTripCheckableItem(it) || !isTripItemCleared(it,day,curDay,checks);}):day.items;
   var visibleActs=visibleItems.filter(isTripCheckableItem);
   view.innerHTML='<div class="day-head"><span class="num">DAY '+(curDay+1)+'</span>'+
     '<span class="date">'+day.date+(day.dow?' ('+day.dow+')':'')+'</span>'+
-    '<span class="prog">'+doneN+'/'+acts.length+' ✓</span></div>'+
+    '<span class="prog">完成 '+doneN+' · 略過 '+skipN+' / 共 '+acts.length+'</span></div>'+
     '<div class="trip-filter"><button class="trip-filter-btn '+(!tripHideDone?'on':'')+'" onclick="setTripHideDone(false)">顯示全部</button>'+
     '<button class="trip-filter-btn '+(tripHideDone?'on':'')+'" onclick="setTripHideDone(true)">隱藏已完成</button></div>'+
     (visibleActs.length?visibleItems.map(function(it){return renderItem(it,checks,currentItemId,progress);}).join(''):'<div class="empty-state">今天的行程都已完成 ✓</div>');
@@ -2406,7 +2409,7 @@ function init(){
 window.addEventListener('scroll',function(){
   document.getElementById('totop').classList.toggle('show',window.scrollY>400);
 });
-function isTimeSimulationActive(){ var s=lsGet('trip_time_simulation',null); return !!(s&&s.mode==='custom'&&s.value); }
+function isTimeSimulationActive(){ var s=lsGet('trip_time_simulation',null); return !!(s&&((s.mode==='offset'&&typeof s.offsetMs==='number')||(s.mode==='custom'&&s.value))); }
 function updateSimulationMarker(){ var on=isTimeSimulationActive(),logo=document.getElementById('diagnosticBadge'),marker=document.getElementById('simMarker'); if(logo) logo.classList.toggle('simulating',on); if(marker) marker.classList.toggle('on',on); }
 function snapshotSimulationState(){
   if(lsGet('trip_time_simulation_snapshot',null)) return;
@@ -2414,7 +2417,9 @@ function snapshotSimulationState(){
   for(var i=0;i<localStorage.length;i++){ var k=localStorage.key(i); if(k&&k.indexOf('trip_')===0&&k!=='trip_time_simulation'&&k!=='trip_time_simulation_snapshot'&&k.indexOf('trip_weather_')!==0&&k!=='trip_expenses'&&k!=='trip_people') data[k]=localStorage.getItem(k); }
   lsSet('trip_time_simulation_snapshot',data);
 }
-function setTimeSimulation(){ var input=document.getElementById('diagTime'); if(!input||!input.value) return; snapshotSimulationState(); lsSet('trip_time_simulation',{mode:'custom',value:input.value}); updateSimulationMarker(); renderAll(); openDiagnostics(); }
+function setTimeSimulation(){ var input=document.getElementById('diagTime'); if(!input||!input.value) return; var targetMs=Date.parse(input.value); if(isNaN(targetMs)) return; snapshotSimulationState(); lsSet('trip_time_simulation',{mode:'offset',offsetMs:targetMs-Date.now()}); updateSimulationMarker(); renderAll(); openDiagnostics(); }
+function setTimeSimulationDay(dayIndex){ var day=DB.trip&&DB.trip.days&&DB.trip.days[dayIndex]; if(!day) return; var y=(DB.cfg&&DB.cfg.startdate||'').slice(0,4); var input=document.getElementById('diagTime'); if(input) input.value=y+'-'+day.date.replace('/','-')+'T08:00'; }
+function resetTripProgress(){ if(!confirm('確定重置所有打卡與略過進度？')) return; if(!confirm('再次確認：此動作無法復原。')) return; localStorage.removeItem('trip_checks'); localStorage.removeItem('trip_next_stop_progress'); renderAll(); closeDiagnostics(); toast('已重置行程進度'); }
 function endTimeSimulation(restore){
   var snap=lsGet('trip_time_simulation_snapshot',null);
   if(restore&&snap){ Object.keys(snap).forEach(function(k){ localStorage.setItem(k,snap[k]); }); }
@@ -2424,7 +2429,9 @@ function closeDiagnostics(){ var el=document.getElementById('diagnosticOverlay')
 function openDiagnostics(){
   closeDiagnostics(); var sim=lsGet('trip_time_simulation',null), findings=healthCheck()||[], el=document.createElement('div'); el.id='diagnosticOverlay'; el.className='diag-overlay';
   var sync=(typeof SHEETS!=='undefined'?SHEETS:[]).map(function(s){ var c=lsGet('v2_cache_'+s.key,null); return '<div class="diag-row">'+escapeHtml(s.key)+'：'+escapeHtml(SRC[s.key]||'未同步')+(c&&c.ts?' · '+new Date(c.ts).toLocaleString():'')+'</div>'; }).join('');
-  el.innerHTML='<div class="diag-panel"><div class="diag-head"><h2>診斷面板</h2><button class="diag-close" onclick="closeDiagnostics()">×</button></div><div class="diag-section"><h3>健康檢查</h3><div class="diag-row">'+(findings.length?escapeHtml(findings.join('；')):'正常')+'</div></div><div class="diag-section"><h3>同步狀態</h3>'+sync+'</div><div class="diag-section"><h3>版本</h3><div class="diag-row">SCHEMA '+escapeHtml(SCHEMA.version)+' · SW okayama-trip-v3</div></div><div class="diag-section"><h3>時間模擬</h3><input id="diagTime" type="datetime-local" value="'+escapeHtml(sim&&sim.value||'')+'"><div class="diag-actions"><button class="primary" onclick="setTimeSimulation()">套用自訂時間</button><button onclick="endTimeSimulation(true)">結束並還原</button><button onclick="endTimeSimulation(false)">回復手機時間</button></div></div></div>';
+  var simValue=sim&&sim.mode==='custom'?sim.value:'';
+  var days=(DB.trip&&DB.trip.days||[]).map(function(_,i){return '<button onclick="setTimeSimulationDay('+i+')">Day '+(i+1)+'</button>';}).join('');
+  el.innerHTML='<div class="diag-panel"><div class="diag-head"><h2>診斷面板</h2><button class="diag-close" onclick="closeDiagnostics()">×</button></div><div class="diag-section"><h3>健康檢查</h3><div class="diag-row">'+(findings.length?escapeHtml(findings.join('；')):'正常')+'</div></div><div class="diag-section"><h3>同步狀態</h3>'+sync+'</div><div class="diag-section"><h3>版本</h3><div class="diag-row">SCHEMA '+escapeHtml(SCHEMA.version)+' · SW okayama-trip-v3</div></div><div class="diag-section"><h3>時間模擬</h3><div class="diag-row">'+(isTimeSimulationActive()?'模擬中：目前模擬時間 '+appNow().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})+'（行走中）':'依手機時間')+'</div><input id="diagTime" type="datetime-local" value="'+escapeHtml(simValue||'')+'"><div class="diag-shortcuts">'+days+'</div><div class="diag-actions"><button class="primary" onclick="setTimeSimulation()">套用並開始模擬</button></div><button onclick="endTimeSimulation(true)">結束模擬——還原測試前狀態</button><div class="diag-help">還原進入模擬前的打卡與略過狀態。</div><button onclick="endTimeSimulation(false)">結束模擬——保留測試變更</button><div class="diag-help">保留模擬期間的打卡與略過狀態。</div></div><div class="diag-section"><h3>行程進度</h3><button onclick="resetTripProgress()">重置行程進度</button><div class="diag-help">僅清除打卡與略過，需雙重確認。</div></div></div>';
   document.body.appendChild(el);
 }
 function setupDiagnostics(){ var badge=document.getElementById('diagnosticBadge'),last=0; if(!badge) return; badge.addEventListener('touchend',function(e){ var now=Date.now(); if(now-last<300){ e.preventDefault(); openDiagnostics(); } last=now; },{passive:false}); updateSimulationMarker(); }
