@@ -46,11 +46,25 @@
 兩通道並行,防呆規則如下:
 | 情境 | 使用通道 |
 |---|---|
-| 多檔交付(2 檔以上、含資料夾、含隱藏檔) | **GitHub Desktop**:解壓 ZIP 覆蓋本機 repo 資料夾 → Desktop 檢視 diff(逐檔確認,特別留意「刪除」紅字)→ Commit → Push |
+| 多檔交付(2 檔以上、含資料夾、含隱藏檔) | **GitHub Desktop**:解壓 ZIP 覆蓋本機 repo 資料夾 → Desktop 檢視 diff(逐檔確認,特別留意「刪除」紅字)→ Commit → Push 至 `dev` |
 | 單檔小修(貼上內容、改一行) | 網頁編輯(鉛筆)可 |
 | 刪除檔案 | **一律 GitHub Desktop**(diff 會明確顯示刪除範圍);網頁刪除僅限 AI 點名的單一檔案 |
 **版本同步三規則(防止改到舊版)**:
 1. 任何本機修改前,先在 Desktop 按 **Fetch origin / Pull**,確保本機 = GitHub 最新。
 2. AI 每輪交付時會標註「基於 commit <hash>」;若你本機最新 commit 與其不符,先問 AI 再動作。
 3. 上傳/Push 後等 Actions 綠勾;AI 隨後做 clone 逐檔核對,雙保險。
+4. 雙通道日常交付的目標 Branch 一律為 `dev`;只有 Bar 核准的正式發版可進入 `main`。
 **自動防線**(tools/check-doc-titles.js,CI 每次執行):核心檔案存在性、測試模擬檔擋入、內嵌與獨立 schema/validator 一致性、標題/檔名一致性、上傳殘留雜檔。
+
+## E. Release Flow(發版流程)
+```
+dev → Pull Request → Bar Review → Bar Merge → Netlify Production Deploy → Production Verification
+```
+**Release Checklist**:
+- CI PASS
+- Claude Code Review 完成
+- CHANGELOG 更新完成
+- Documentation 已同步
+- ADR 已更新(若涉及架構)
+
+Push 至 `dev` 只代表開發版本已更新,不等於 Deploy。只有 Bar 核准並 Merge `dev → main` 的正式 Release 才觸發後續 Netlify Production Deploy。
