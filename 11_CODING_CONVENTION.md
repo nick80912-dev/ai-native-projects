@@ -27,6 +27,7 @@
 ## Storage 規則
 - 個人狀態(打卡/想逛/成員/記帳)存 localStorage,**不回寫 CMS**。
 - 存取一律經 `lsGet/lsSet`(內含 try/catch → Repository Error)。
+- 個人狀態的讀取、寫入與完成／略過等判定必須走單一入口;禁止在不同 Renderer、事件處理器或 Service 另建平行狀態邏輯。
 
 ## Schema 規則
 - schema.js 是唯一改欄位的地方;改完重新產生 09_SCHEMA_MAPPING(schemaDoc())。
