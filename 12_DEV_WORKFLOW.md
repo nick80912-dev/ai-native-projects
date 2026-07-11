@@ -6,16 +6,16 @@
 ```
 git fetch origin --prune
         ↓
-確認 HEAD / origin/main / working tree 狀態
+確認 HEAD / origin/dev / working tree 狀態
         ↓
-若本地乾淨但落後 origin/main → fast-forward 同步
+若本地乾淨但落後 origin/dev → fast-forward 同步
         ↓
-若 working tree 不乾淨 → 先盤點差異,判斷是否已在 origin/main
+若 working tree 不乾淨 → 先盤點差異,判斷是否已在 origin/dev
         ↓
-版本乾淨且與 origin/main 一致後,才開始實作 / 打包 / push / 部署
+版本乾淨且與 origin/dev 一致後,才開始實作 / 打包 / push
 ```
 - 此 Gate 是檢查與同步流程,不是無條件覆蓋流程。
-- 只有在確認所有本地差異都已存在於 `origin/main`,或 Bar 明確同意後,才可使用 `reset --hard` / `clean` / `checkout`。
+- 只有在確認所有本地差異都已存在於 `origin/dev`,或 Bar 明確同意後,才可使用 `reset --hard` / `clean` / `checkout`。
 - 若本地有 GitHub 沒有的內容,必須先列出檔案與差異,由 Bar 決定保留、提交、備份或丟棄。
 - 任何功能修改、部署包整理、Netlify 上傳或 push 前都必須先通過此 Gate。
 
@@ -86,13 +86,14 @@ healthCheck 確認無「未註冊型別」警告
 
 ## Release Flow(發布)
 ```
-本地 QA 三情境過 → 交預覽版 HTML → Bar 手機驗收 → Bar 說「打包」
+dev 完成開發 / QA / CHANGELOG / 文件同步 → Push origin/dev
         ↓
-組裝部署包(index.html 引 schema.js/validator.js;sw.js bump VERSION;
-SHELL_ASSETS 補新檔) → Playwright 斷網回歸 → 產 ZIP
+Pull Request(dev → main) → Bar Review → Bar Merge
         ↓
-Bar 拖進 Netlify Deploys → 驗證線上 → 更新 CHANGELOG
+main → Netlify Production Deploy → Production Verification
 ```
+- 日常 Push 只進入 `dev`,不代表部署。
+- 未經 Bar 核准,不得 Push 或 Merge 至 `main`。
 
 ## Debug Flow(除錯)
 ```

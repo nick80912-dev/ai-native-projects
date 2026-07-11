@@ -2,6 +2,13 @@
 
 紀錄格式:日期 / 版本 / 重點。細節不展開,新變更往上加。
 
+## 2026-07-11 — Dev/Main 分支治理策略
+- 新增 ADR-0005,正式定義 `dev → main` 雙分支策略。
+- 日常功能、文件與 UX 開發改於 `dev` 分支完成並 Push;`main` 保留為 Bar 核准後的正式發版。
+- Release Flow 改為 `dev → Pull Request → Bar Review → Bar Merge → main → Netlify Production Deploy`。
+- Push 不再等於 Deploy;治理規則於 Bar Merge 本批次至 `main` 後正式生效。
+- Breaking Change:無。
+
 ## 2026-07-11 — 手機導覽與首頁行程互動修正
 - 底部導覽列鎖定 58px 基準高度並同步預留 iPhone safe area，每個按鈕維持至少 44px 觸控熱區。
 - 行程頁取消打卡後立即重算首頁；未超時或無時間可回復候選，已超時或跨日則沿用自動略過狀態並顯示提示。
