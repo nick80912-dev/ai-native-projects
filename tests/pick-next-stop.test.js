@@ -45,6 +45,7 @@ function makeSandbox(){
     extractFunction('saveNextStopProgress'),
     extractFunction('getDayProgress'),
     extractFunction('markNextStop'),
+    extractFunction('setItemCompletion'),
     extractFunction('autoSkipStaleItem'),
     extractFunction('isAutoSkipped'),
     extractFunction('isNextStopCleared'),
@@ -60,6 +61,17 @@ function makeSandbox(){
 const day = { date:'10/18' };
 const dayIndex = 0;
 const checks = {};
+
+{
+  const sb = makeSandbox();
+  const item = { id:'roundtrip', time:'18:00', act:'晚餐' };
+  sb.setItemCompletion(day, dayIndex, item.id, 'done');
+  assert.strictEqual(!!sb.getChecks()[item.id], true, '首頁完成同步寫入打卡狀態');
+  assert.strictEqual(!!sb.getDayProgress(day, dayIndex).done[item.id], true, '首頁完成同步寫入下一站狀態');
+  sb.setItemCompletion(day, dayIndex, item.id, 'clear');
+  assert.strictEqual(!!sb.getChecks()[item.id], false, '行程頁取消會清除打卡狀態');
+  assert.strictEqual(!!sb.getDayProgress(day, dayIndex).done[item.id], false, '行程頁取消會清除下一站完成狀態');
+}
 
 assert.strictEqual(makeSandbox().parseStartMinutes('09:00-11:30'), 11*60+30, '時間區間使用結束時間');
 assert.strictEqual(makeSandbox().parseStartMinutes('09:00'), 9*60, '單點時間使用該時間');
