@@ -41,7 +41,7 @@
 ## Commit / 版本規則
 - 版本語意:主架構變更進位(V2→V3),功能微調用小數(V2.1)。
 - 每次交付更新 07_CHANGELOG(架構變更標 ⭐);sw.js 有改必 bump VERSION。
-- 交付順序:預覽版 HTML → Bar 核可 → 打包 ZIP。
+- 交付順序:開發 → commit → push `origin/dev` → Bar 驗收 → Pull Request → Bar Review / Merge → Netlify Deploy。
 
 ## 已知陷阱(必守)
 - 同名 function 後者勝且提升 → 包裝舊函式必先改名(如 renderSplitCore),禁 `var old=fn; function fn(){old()}`(無限遞迴)。
