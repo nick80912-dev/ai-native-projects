@@ -26,7 +26,7 @@ assert.match(index, /<link rel="icon" type="image\/png" sizes="32x32" href="icon
 assert.match(index, /<link rel="apple-touch-icon" sizes="180x180" href="icon-180\.png">/, 'index links the Apple touch icon');
 assert.match(index, /navigator\.serviceWorker\.register\('sw\.js'\)/, 'index registers the service worker');
 
-assert.match(index, /<img class="logo" src="okayama-peach-badge\.png" alt="岡山桃子">/, 'header uses the peach badge');
+assert.match(index, /<img class="logo" id="diagnosticBadge" src="okayama-peach-badge\.png" alt="岡山桃子">/, 'header uses the diagnostic peach badge');
 assert.match(index, /id="brandTitle"/, 'header keeps the dynamic itinerary title');
 
 const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));

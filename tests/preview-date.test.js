@@ -23,10 +23,13 @@ function runWithSearch(search) {
     window: { location: { search } },
     Date,
     URLSearchParams,
+    localStorage: { getItem() { return null; } },
+    AppLog: { repo() {} },
   };
   vm.createContext(sandbox);
   vm.runInContext([
-    extractFunction('previewNow'),
+    extractFunction('lsGet'),
+    extractFunction('appNow'),
     extractFunction('todayMD'),
   ].join('\n'), sandbox);
   return sandbox.todayMD();

@@ -2,6 +2,13 @@
 
 紀錄格式:日期 / 版本 / 重點。細節不展開,新變更往上加。
 
+## 2026-07-11 — 手機體驗：導覽、縮放與時間模擬
+- 底部導覽 icon 調整為 24px、文字為 12px，維持 fixed、safe-area 與每鈕至少 44px 觸控熱區。
+- 主內容加入雙指自製縮放（上限 2.5 倍），放手或第三指誤觸後 0.2 秒回彈；MAPCODE 全螢幕層維持在縮放容器外。
+- 桃子徽章雙擊開啟診斷面板，提供 healthCheck、各表同步狀態、版本資訊與日期時間模擬。
+- 新增 `appNow()` 作為行程時間來源；時間模擬以 localStorage 快照還原個人行程狀態，模擬期間禁止新增分帳支出。
+- 未修改 `schema.js` / `validator.js` / Google Sheet Schema；Breaking Change:無。
+
 ## 2026-07-11 — 單一 index.html App 遷移
 - `index.html` 收斂為唯一可編輯 App 與 Netlify 正式入口;移除已無邏輯差異的 `日本行程V2預覽.html`。
 - 全部回歸測試與文件一致性檢查改以 `index.html` 為目標,內嵌 schema / validator 一致性守門同步切換。
