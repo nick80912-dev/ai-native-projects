@@ -45,3 +45,10 @@
 
 ## 7. 模型無關性
 - 本 Harness 不綁定特定 AI 模型。`.ai-manifest.json` known_traps 中屬特定工具生態(如 web_fetch robots、claude-in-chrome、Drive 連接器限制)的條目,標註為「工具特定」;其他模型接手時可略過工具特定項,**環境陷阱(WebView/同名函式/CSV)則一律適用**。
+
+## 8. 動工前核准閘門(Approval Gate)
+- **首次接手 / 新脈絡**:依 `08_AI_HANDOVER.md`「接手第一步」輸出 Project Understanding Report,取得 Bar 核准後才可動工。
+- **Tier 2 任務**:動工前之確認依 14 既有「原因/影響範圍/風險/回滾」四項,**以書面形式輸出**並取得 Bar 核准;不另立其他模板。
+- **Tier 1 / 任務分級 A、B**:依本檔 §5 既有規則執行,免報告。
+- 核准取得前,一律:不得修改任何檔案、不得 commit / push、不得更新文件(含 CHANGELOG、tasks)、不得執行報告範圍以外的「順便修改」。
+- 核准效力僅及於該報告載明之範圍;範圍變動須更新報告重新確認(呼應 §1「覆寫僅限當次」)。

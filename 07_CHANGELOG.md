@@ -2,6 +2,13 @@
 
 紀錄格式:日期 / 版本 / 重點。細節不展開,新變更往上加。
 
+## 2026-07-11 — AI 接手理解報告與核准閘門
+- `08_AI_HANDOVER.md` 新增 AI 首次接手 Project Understanding Report,`15_AI_EXECUTION_RULES.md` 新增動工前核准閘門。
+- 憲章 §4 過時的「打包 ZIP」條款改為 `16_OPS_PLAYBOOK.md` §E Release Flow。
+- 修正 08 的部署現況、Gate 分支基準、正式發版流程與正式站網址。
+- README 第一閱讀順序改以 08 的「閱讀順序」為單一權威。
+- 本批次零新增檔案;Breaking Change:無。
+
 ## 2026-07-11 — Dev/Main 分支治理策略
 - 新增 ADR-0005,正式定義 `dev → main` 雙分支策略。
 - 日常功能、文件與 UX 開發改於 `dev` 分支完成並 Push;`main` 保留為 Bar 核准後的正式發版。

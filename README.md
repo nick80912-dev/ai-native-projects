@@ -7,8 +7,7 @@
 - **權威來源**:程式與文件以 **GitHub 本 repo 為唯一權威**;Google Drive 僅為備份。內容資料來源為 Drive 試算表「261018-261023岡山四國六天五夜」(發布 CSV,見 03/schema.js)。
 
 ## 快速開始(給 AI / 開發者)
-第一閱讀順序:
-`.ai-manifest.json` → `PROJECT_CONSTITUTION.md` → `08_AI_HANDOVER.md` → `15_AI_EXECUTION_RULES.md`(必讀)→ 相關 `adr/` → 依任務讀 `03_DATABASE.md` / `09_SCHEMA_MAPPING.md` / `05_CODING_RULES.md` / `11_CODING_CONVENTION.md` / `12_DEV_WORKFLOW.md` / `14_FILE_TIERS_AND_GATE.md` / `16_OPS_PLAYBOOK.md`。
+第一閱讀順序:以 `08_AI_HANDOVER.md` 的「閱讀順序」為唯一權威;首次接手依其「接手第一步」輸出理解報告。
 
 - `.ai-manifest.json`:AI 導航檔,掌握專案全貌
 - `PROJECT_CONSTITUTION.md`:專案最高規範與 AI Harness 流程
