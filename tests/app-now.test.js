@@ -49,5 +49,10 @@ const directNowCalls = (html.match(/new Date\(\)/g) || []).length;
 assert.strictEqual(directNowCalls, 1, '只有 appNow 可以直接取得目前時間');
 assert.ok(html.includes('function appNow()'), '行程時間源統一為 appNow');
 assert.ok(!html.includes('function previewNow()'), '舊 previewNow 已移除');
+const appNowStart = html.indexOf('function appNow()');
+const appNowEnd = html.indexOf('\nfunction todayMD()', appNowStart);
+const outsideAppNow = html.slice(0, appNowStart) + html.slice(appNowEnd);
+const outsideDateCalls = outsideAppNow.match(/new Date\(/g) || [];
+assert.strictEqual(outsideDateCalls.length, 1, 'appNow 以外僅保留同步時間戳的 Date 建構');
 
 console.log('appNow tests passed');

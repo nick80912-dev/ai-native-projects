@@ -2024,12 +2024,13 @@ function homeWeatherFor(dayIndex,item){
   return state||getCachedWeather(city);
 }
 function daysUntilStart(){
-  var start=DB&&DB.cfg&&DB.cfg.startdate?new Date(DB.cfg.startdate+'T00:00:00'):null;
-  if(!start||isNaN(start.getTime())) return null;
+  var raw=DB&&DB.cfg&&DB.cfg.startdate?String(DB.cfg.startdate):'';
+  var parts=raw.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if(!parts) return null;
+  var startStamp=Date.UTC(Number(parts[1]),Number(parts[2])-1,Number(parts[3]));
   var now=appNow();
-  var today=new Date(now.getFullYear(),now.getMonth(),now.getDate());
-  var startDay=new Date(start.getFullYear(),start.getMonth(),start.getDate());
-  return Math.ceil((startDay-today)/86400000);
+  var todayStamp=Date.UTC(now.getFullYear(),now.getMonth(),now.getDate());
+  return Math.ceil((startStamp-todayStamp)/86400000);
 }
 function renderPreTripBrief(){
   var d=daysUntilStart();
