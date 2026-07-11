@@ -3,9 +3,7 @@ const fs = require('fs');
 const path = require('path');
 const vm = require('vm');
 
-const htmlPath = fs.readdirSync('.').find((name) => name.startsWith('日本行程V2') && name.endsWith('.html'));
-assert.ok(htmlPath, 'preview HTML file exists');
-const html = fs.readFileSync(path.join('.', htmlPath), 'utf8');
+const html = fs.readFileSync(path.join('.', 'index.html'), 'utf8');
 
 function extractFunction(name) {
   const start = html.indexOf('function ' + name + '(');

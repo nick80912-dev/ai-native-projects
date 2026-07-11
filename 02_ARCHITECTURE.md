@@ -10,7 +10,7 @@ Netlify 靜態託管(HTTPS)+ Service Worker(PWA 離線)
 無後端、無資料庫伺服器、零月費。
 ```
 
-目前 repo 的可編輯 App 是 `日本行程V2預覽.html`;`index.html`、Service Worker、manifest 與 icons 是 Bar 說「打包」後才建立並納入 `deploy/` 的部署產物。
+`index.html` 是 repo 唯一可編輯 App 與 Netlify 正式部署入口;Service Worker、manifest 與 icons 均位於 repo 根目錄並由 GitHub 連動部署。
 
 ## 資料流:三層防線(絕不空白頁)
 1. **內建資料**(builtin,建置時寫入 HTML)→ 0.1 秒顯示
@@ -23,7 +23,7 @@ Netlify 靜態託管(HTTPS)+ Service Worker(PWA 離線)
 - CSV 資料:網路優先,離線回退快取(App 層另有 localStorage)
 - 改版:bump `VERSION` 字串 → 自動清舊快取,使用者開兩次生效
 
-## 應用結構(預覽版 HTML 內嵌 JS)
+## 應用結構(`index.html` 內嵌 JS)
 ```
 SCHEMA(pubBase + sheets.*.gid + 欄位/型別規格)→ 唯一資料設定點
 BUILTIN(7張表內建快照,建置時注入)
@@ -35,8 +35,8 @@ renderers(today/trip/shop/split + 型別卡片面板)
 sync engine(fetchWithTimeout 相容模式,無 AbortController)
 ```
 
-## 資料夾(規劃中的部署包)
-打包後預計收納於 `deploy/`:`index.html / schema.js / validator.js / sw.js / manifest.json / icon-192.png / icon-512.png / icon-maskable-512.png / apple-touch-icon.png`。目前尚未建立,以 `tasks/backlog.md` 的打包任務為準。
+## 部署檔案
+`index.html / schema.js / validator.js / sw.js / manifest.webmanifest / icon-*.png` 位於 repo 根目錄,由 `main` 的 Bar 核准 Merge 觸發 Netlify 正式部署。
 
 ## 已知環境限制(繞過方案已內建)
 - 部分 WebView 無 console.info → 已 polyfill

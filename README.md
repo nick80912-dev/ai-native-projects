@@ -2,7 +2,7 @@
 
 ## 這是什麼
 六天五夜日本自駕旅遊的手機 PWA。Google Sheets 當 CMS,單一 HTML 檔 App,部署於 Netlify。
-- 正式站:https://okayamatravelteam.netlify.app/
+- 正式站:https://trippilot-jp.netlify.app/
 - 使用者:Bar(產品負責人,非工程師)與同行友人
 - **權威來源**:程式與文件以 **GitHub 本 repo 為唯一權威**;Google Drive 僅為備份。內容資料來源為 Drive 試算表「261018-261023岡山四國六天五夜」(發布 CSV,見 03/schema.js)。
 
@@ -25,17 +25,16 @@
 ## 開發工作流程(必守)
 1. Bar 用白話描述需求 → AI 以資深工程團隊身分執行
 2. 只做被要求的修改,不重構整個專案
-3. 交付順序:**先出「預覽版 HTML」給 Bar 手機驗收 → Bar 說「打包」才產出部署 ZIP**
+3. 交付於 `dev` 分支驗收;正式發版依 `16_OPS_PLAYBOOK.md` §E Release Flow(PR → Bar Review → Bar Merge → Netlify Deploy)
 4. 每次修改需通過 QA(斷網/連網/旅行日情境),更新 `07_CHANGELOG.md`
 5. 資料內容改動走 Google Sheets,不改程式;程式只在功能/邏輯變動時修改
 
 ## 專案檔案
-- `日本行程V2預覽.html` — 目前可編輯的預覽版 App
+- `index.html` — 唯一可編輯 App 與 Netlify 正式入口
 - `schema.js` / `validator.js` — 資料規格 SSoT / 防錯與健康檢查
 - `tests/` / `tools/` — 可重跑測試與文件一致性檢查
 - `tasks/` — 即時工作狀態唯一權威
 
-## 規劃中的部署包
-- Bar 明確說「打包」後,才建立 `deploy/` 與其中的 `index.html`、`schema.js`、`validator.js`、`sw.js`、`manifest.json`、icons。
-- 部署包尚未納入目前 repo;流程與風險分級見 `tasks/backlog.md`、`14_FILE_TIERS_AND_GATE.md`。
-- 部署方式:Netlify Deploys 頁面直接拖入 `deploy/` 內容。
+## 正式部署
+- `main` 是正式 Production Branch;日常開發與驗收於 `dev` 分支完成。
+- Bar 核准 PR Merge(`dev → main`)後,Netlify 自動執行正式部署;流程與風險分級見 `16_OPS_PLAYBOOK.md`、`14_FILE_TIERS_AND_GATE.md`。

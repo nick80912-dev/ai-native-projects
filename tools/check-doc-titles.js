@@ -57,7 +57,7 @@ try {
 }
 
 /* 規則 4:核心檔案必須存在(2026-07-10 新增:主程式曾被誤刪,CI 要能立即察覺) */
-['日本行程V2預覽.html','schema.js','validator.js','PROJECT_CONSTITUTION.md','.ai-manifest.json'].forEach(function(f){
+['index.html','schema.js','validator.js','PROJECT_CONSTITUTION.md','.ai-manifest.json'].forEach(function(f){
   if(!fs.existsSync(f)) errors.push('核心檔案缺失:' + f + '(可能被誤刪,請立即依 16_OPS_PLAYBOOK §C 處理)');
 });
 
@@ -69,7 +69,7 @@ for (const f of fs.readdirSync('.')) {
 
 /* 規則 6:HTML 內嵌的 schema.js / validator.js 必須與獨立檔一致(防雙份人工維護漂移) */
 (function(){
-  const app = '日本行程V2預覽.html';
+  const app = 'index.html';
   if (!fs.existsSync(app)) return; // 規則 4 已報缺失
   const norm = t => t.replace(/\s+/g, '');
   const page = norm(fs.readFileSync(app, 'utf8'));

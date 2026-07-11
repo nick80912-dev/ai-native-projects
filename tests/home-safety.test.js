@@ -4,7 +4,7 @@ const path = require('path');
 const vm = require('vm');
 
 const root = path.resolve(__dirname, '..');
-const files = ['index.html', '日本行程V2預覽.html'];
+const files = ['index.html'];
 
 function extractFunction(html, name) {
   const start = html.indexOf(`function ${name}(`);

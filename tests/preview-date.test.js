@@ -3,9 +3,7 @@ const fs = require('fs');
 const path = require('path');
 const vm = require('vm');
 
-const htmlPath = fs.readdirSync('.').find((name) => name.endsWith('V2預覽.html'));
-assert.ok(htmlPath, 'preview HTML file exists');
-const html = fs.readFileSync(path.join('.', htmlPath), 'utf8');
+const html = fs.readFileSync(path.join('.', 'index.html'), 'utf8');
 
 function extractFunction(name) {
   const start = html.indexOf('function ' + name + '(');
@@ -25,10 +23,13 @@ function runWithSearch(search) {
     window: { location: { search } },
     Date,
     URLSearchParams,
+    localStorage: { getItem() { return null; } },
+    AppLog: { repo() {} },
   };
   vm.createContext(sandbox);
   vm.runInContext([
-    extractFunction('previewNow'),
+    extractFunction('lsGet'),
+    extractFunction('appNow'),
     extractFunction('todayMD'),
   ].join('\n'), sandbox);
   return sandbox.todayMD();

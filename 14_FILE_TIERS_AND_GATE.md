@@ -14,7 +14,7 @@
 |---|---|
 | 所有 `*.md` 文件、`adr/`、`tasks/`、`docs/superpowers/` | 文件/治理(文件同步義務見憲章) |
 | `.ai-manifest.json` | AI 導航檔(改後需與文件一致) |
-| `日本行程V2預覽.html` | **預覽版 App 原始碼**(可編輯工作檔;交付仍走「預覽→核可」) |
+| `index.html` | **唯一 App 原始碼與正式部署入口**;屬 Tier 2,修改前需通過四項確認 |
 | `schema.js`、`validator.js` | 資料規格與防錯**原始碼**;但改 SCHEMA 欄位/型別值屬憲章「須先確認」事項 |
 | `tests/` | 測試資產(交付必附,見 tests/README.md) |
 | `tools/`、`.github/workflows/` | 檢查腳本與 Sanity CI(Gate 的自動化層;改壞只影響檢查不影響 App) |
@@ -22,18 +22,15 @@
 ## Tier 2 — 高風險保護範圍(修改前必過「原因/影響/風險/回滾」確認)
 | 檔案 | 說明 |
 |---|---|
-| `index.html` 正式部署版 | 線上 App 本體 |
 | `sw.js` | Service Worker;改壞會造成使用者快取災難 |
-| `manifest.json`、`icon-*.png`、`apple-touch-icon.png` | PWA 安裝行為 |
+| `manifest.webmanifest`、`icon-*.png` | PWA 安裝行為 |
 | Netlify 部署設定 | 上線行為 |
-> 建議收納於 `deploy/` 目錄(backlog #2),與 Tier 1 實體隔離,一眼可辨。
 
 ## Tier 3 — 產生產物(禁止手改,只能重新產生)
 | 產物 | 來源 | 更新方式 |
 |---|---|---|
 | `09_SCHEMA_MAPPING.md` 表格區 | `schema.js` 的 `schemaDoc()` | 改 schema.js → 重跑 schemaDoc() 貼回(檔頭註解為手寫,可直接維護) |
 | 預覽/部署 HTML 內的 `BUILTIN` 快照 | Google Sheets 發布 CSV | 依 BUILTIN 更新 SOP 重抓注入(SOP 文件化見 backlog #6) |
-| 部署 ZIP | 打包流程 | 重新打包,不改 ZIP 內容 |
 
 ## Gate 分級規則(疊加於憲章 4.1 的 Pre-Work Git Sync Gate)
 - Tier 1:過 Gate 後即可依 `15_AI_EXECUTION_RULES.md` 的任務分級動工。

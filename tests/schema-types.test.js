@@ -19,7 +19,7 @@ assert(typeColumn, 'Places.Type schema exists');
 assert.strictEqual(typeColumn.values['機場'], 'attraction');
 assert.strictEqual(typeColumn.values['纜車'], 'attraction');
 
-const html = fs.readFileSync('日本行程V2預覽.html', 'utf8');
+const html = fs.readFileSync('index.html', 'utf8');
 assert(html.includes("'機場':'attraction'"), 'embedded schema includes 機場');
 assert(html.includes("'纜車':'attraction'"), 'embedded schema includes 纜車');
 
