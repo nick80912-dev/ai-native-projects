@@ -1220,6 +1220,7 @@ function markNextStop(day,dayIndex,itemId,status){
    其餘自動標記為略過(寫入 progress.skip,並記錄於 autoSkip 供 UI 顯示標籤與一鍵修正)。
    回傳 true 代表這次呼叫「新」標記了(用於決定是否要 toast),false 代表本來就已清除過,不重複動作。 */
 function autoSkipStaleItem(day,dayIndex,itemId){
+  if(typeof findToday==='function'&&findToday()!==dayIndex) return false;
   var all=getNextStopProgress();
   var key=dayProgressKey(day,dayIndex);
   var progress=normalizeDayProgress(all[key]);
@@ -1576,7 +1577,7 @@ function renderItem(it,checks,currentItemId,dayProgress){
     (qa?'<div class="qa-row">'+qa+'</div>':'')+panels+
   '</div>';
 }
-function selectCurrentTripItem(day,dayIndex,checks){ var progress=getDayProgress(day,dayIndex); var pick=pickNextStop((day.items||[]).filter(isTripCheckableItem),progress,checks||getChecks(),currentMinutes(),{day:day,dayIndex:dayIndex}); return pick.item?pick.item.id:null; }
+function selectCurrentTripItem(day,dayIndex,checks){ if(findToday()!==dayIndex) return null; var progress=getDayProgress(day,dayIndex); var pick=pickNextStop((day.items||[]).filter(isTripCheckableItem),progress,checks||getChecks(),currentMinutes(),{day:day,dayIndex:dayIndex}); return pick.item?pick.item.id:null; }
 function renderTrip(){
   var view=document.getElementById('view-trip');
   var t=DB.trip;
