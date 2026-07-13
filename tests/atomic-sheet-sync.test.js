@@ -93,6 +93,30 @@ assert(hasFinding(sb.validateSnapshotData(emptyDays,validRaw(),schema()),'DB_STR
 const malformedItems = validDb(); malformedItems.trip.days[0].items={};
 assert(hasFinding(sb.validateSnapshotData(malformedItems,validRaw(),schema()),'DB_STRUCTURE','itin'),'non-array day items are blocked');
 
+function validateWithoutThrow(db,message){
+  var result=null;
+  assert.doesNotThrow(function(){ result=sb.validateSnapshotData(db,validRaw(),schema()); },message);
+  return result;
+}
+
+const malformedRows = validDb();
+malformedRows.placeList=[null,7];
+malformedRows.rest=[null,'restaurant'];
+malformedRows.shop=[null,false];
+malformedRows.hotels=[null,'hotel'];
+const malformedRowResult = validateWithoutThrow(malformedRows,'malformed table rows do not throw');
+['places','rest','shop','hotels'].forEach(function(sheet){
+  assert(hasFinding(malformedRowResult,'DB_STRUCTURE',sheet),'malformed '+sheet+' rows are blocked');
+});
+
+const malformedDayRows = validDb(); malformedDayRows.trip.days=[null,'day'];
+const malformedDayResult = validateWithoutThrow(malformedDayRows,'malformed trip day entries do not throw');
+assert(hasFinding(malformedDayResult,'DB_STRUCTURE','itin'),'malformed trip day entries are blocked');
+
+const malformedItemRows = validDb(); malformedItemRows.trip.days[0].items=[null,11];
+const malformedItemResult = validateWithoutThrow(malformedItemRows,'malformed itinerary items do not throw');
+assert(hasFinding(malformedItemResult,'DB_STRUCTURE','itin'),'malformed itinerary items are blocked');
+
 const invalidDate = validDb(); invalidDate.cfg.startdate='2026-02-30';
 assert(hasFinding(sb.validateSnapshotData(invalidDate,validRaw(),schema()),'CFG_DATE','cfg'),'invalid calendar dates are blocked');
 

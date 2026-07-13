@@ -803,12 +803,23 @@ function validateSnapshotData(db,raw,schema){
     }
   });
   db=db&&typeof db==='object'&&!Array.isArray(db)?db:{};
+  function validObjects(list,sheet,label){
+    var valid=[];
+    list.forEach(function(row,index){
+      if(!row||typeof row!=='object'||Array.isArray(row)){
+        block('DB_STRUCTURE',sheet,label + ' 第 ' + (index+1) + ' 筆必須是物件');
+      }else{
+        valid.push(row);
+      }
+    });
+    return valid;
+  }
   function validList(field,sheet){
     if(!Array.isArray(db[field])){
       block('DB_STRUCTURE',sheet,field + ' 必須是陣列');
       return [];
     }
-    return db[field];
+    return validObjects(db[field],sheet,field);
   }
   var placeList=validList('placeList','places');
   var restList=validList('rest','rest');
@@ -820,7 +831,7 @@ function validateSnapshotData(db,raw,schema){
   }else if(!Array.isArray(db.trip.days)||!db.trip.days.length){
     block('DB_STRUCTURE','itin','trip.days 必須是非空陣列');
   }else{
-    tripDays=db.trip.days;
+    tripDays=validObjects(db.trip.days,'itin','trip.days');
   }
   var cfg=null;
   if(!db.cfg||typeof db.cfg!=='object'||Array.isArray(db.cfg)){
@@ -849,12 +860,12 @@ function validateSnapshotData(db,raw,schema){
     var pid=String(shop.placeId||'').toUpperCase().trim();
     if(pid&&!pids[pid]) block('BROKEN_REF','shop','懸空引用:Shopping ' + shop.shopId + ' → ' + pid + ' 不存在於 Places');
   });
-  tripDays.forEach(function(day){
-    if(!day||typeof day!=='object'||Array.isArray(day)||!Array.isArray(day.items)){
+  tripDays.forEach(function(day,dayIndex){
+    if(!Array.isArray(day.items)){
       block('DB_STRUCTURE','itin','trip.days 的每一天都必須包含 items 陣列');
       return;
     }
-    day.items.forEach(function(item){
+    validObjects(day.items,'itin','trip.days[' + dayIndex + '].items').forEach(function(item){
       var ref=String(item.ref||'').toUpperCase().trim(), linked=null;
       if(/^P\d+/.test(ref)&&!pids[ref]) block('BROKEN_REF','itin','懸空引用:行程 ' + day.date + '「' + item.act + '」→ ' + ref + ' 不存在於 Places');
       if(/^R\d+/.test(ref)){
