@@ -44,6 +44,10 @@ vm.runInContext([
   extractFunction('renderTomorrowPreview'),
   extractFunction('cssId'),
   extractFunction('openShopPlace'),
+  extractFunction('parkingLines'),
+  extractFunction('renderParkingValue'),
+  extractFunction('parkingKvRow'),
+  extractFunction('renderParkingTicketLine'),
   extractFunction('renderTicketLine'),
   extractFunction('nextStopMeta'),
   extractFunction('parkingPanel'),
@@ -101,6 +105,19 @@ const blockOut = sandbox.renderNoteBlock('• 必備證件');
 assert(blockOut.includes('class="pc-tip"'));
 assert(blockOut.includes('必備證件'));
 assert(!blockOut.includes('💡'));
+
+assert.strictEqual(
+  sandbox.renderParkingValue('附近有停車場'),
+  '附近有停車場',
+  'single-line parking stays inline'
+);
+
+const parkingListOut = sandbox.renderParkingValue('第一停車場，步行2分鐘\r\n\r\n第二停車場，步行3分鐘');
+assert(parkingListOut.includes('class="parking-list"'), 'multiline parking uses list markup');
+assert.strictEqual((parkingListOut.match(/<li>/g)||[]).length, 2, 'blank lines do not create bullets');
+assert(parkingListOut.indexOf('第一停車場') < parkingListOut.indexOf('第二停車場'), 'parking line order is preserved');
+assert(!sandbox.renderParkingValue('<script>alert(1)</script>\n安全停車').includes('<script>'), 'parking text is escaped');
+assert.strictEqual((sandbox.renderParkingValue('逗號前,逗號後').match(/<li>/g)||[]).length, 0, 'punctuation does not split parking text');
 
 const scheduleText = '「JR西日本」官方完整時刻表 https://jr-miyajimaferry.co.jp/timetable/ 「宮島松大」官方完整時刻表 https://miyajima-matsudai.co.jp/cn/schedule.html#std';
 const scheduleLinks = sandbox.parseScheduleLinks(scheduleText);
@@ -209,16 +226,34 @@ assert(shoppingNextStopOut.includes('onclick="openShopPlace(\'P001\')"'), 'Today
 assert(html.includes(`onclick="openShopPlace(\\''+jsString(p.placeId)+'\\')"`), 'Trip shopping action targets its PID');
 assert(html.includes(`id="shopmall_'+cssId(pkey)+'"`), 'shopping cards expose stable PID anchors');
 
-sandbox.resolveParking = function(){ return { mapcode:'22 220 851*75', pnote:'parking note' }; };
+sandbox.resolveParking = function(){
+  return { mapcode:'22 220 851*75', pnote:'第一停車場\n第二停車場' };
+};
 sandbox.kvRow = function(k,v){ return v ? '<div>'+k+v+'</div>' : ''; };
 const parkingOut = sandbox.parkingPanel({});
 assert(parkingOut.includes('onclick="showMapcode(\'22 220 851*75\')"'));
 assert(parkingOut.includes('class="mapcode-box mapcode-open"'));
+assert.strictEqual((parkingOut.match(/<li>/g)||[]).length, 2, 'inherited parking panel uses the shared list renderer');
 assert(!html.includes('📋 MAP CODE'));
 assert(!html.includes(`onclick="copyText(\\''+p.mapcode+`));
 assert(!html.includes('parkingPanel(p)+renderNoteBlock(p.note)'));
 assert(!html.includes('travelmode=driving" target="_blank" rel="noopener">🚗 導航</a>\'+'));
 assert(!html.includes('導航操作'));
+
+sandbox.resolveRef = function(){
+  return {
+    kind:'rest',
+    r:{ name:'一鶴', cat:'骨付鳥', hours:'', pay:'', travel:'', pnote:'第一停車場\n第二停車場', note:'' }
+  };
+};
+const restaurantParkingOut = sandbox.renderNextStopCard({}, 0, {
+  source:'order',
+  item:{ id:'10/19_9', time:'18:00', act:'晚餐時間', place:'一鶴', move:'', note:'' }
+});
+assert.strictEqual((restaurantParkingOut.match(/class="parking-list"/g)||[]).length, 1, 'Today reads restaurant pnote and renders parking bullets');
+assert.match(html, /parkingKvRow\('🅿 停車',r\.pnote\)/, 'restaurant info uses parking renderer');
+assert.match(html, /parkingKvRow\('🅿 停車',h\.pnote\)/, 'hotel info uses parking renderer');
+assert.match(html, /parkingKvRow\('🅿 停車',p\.pnote\)/, 'place info uses parking renderer');
 
 sandbox.DB = { trip:{ days:[
   { date:'10/20', dow:'二', items:[{ id:'d3_1', act:'Kamakura walk', place:'Enoshima' }] },

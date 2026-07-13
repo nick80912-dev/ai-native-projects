@@ -334,6 +334,8 @@ input,select,textarea{font-size:16px}
 .note-li,.note-alert{display:flex;align-items:flex-start;gap:6px;line-height:1.65;word-break:break-word}
 .note-marker{flex:0 0 auto;color:var(--coral);font-weight:800}
 .note-alert{margin:5px 0;color:#7b4e00;background:rgba(255,255,255,.45);border-radius:7px;padding:4px 7px}
+.parking-list{margin:0;padding-left:18px}
+.parking-list li+li{margin-top:4px}
 /* 下一站 */
 .nx-hero{background:var(--card);border:2px solid var(--coral);border-radius:16px;padding:16px;margin-bottom:14px;box-shadow:var(--shadow-lg)}
 .nx-hero.all-done{border-color:var(--green)}
@@ -1332,6 +1334,27 @@ function typeTag(res){
 
 /* ================= 面板內容(卡片系統,型別由 Places.類型 明確決定) ================= */
 function kvRow(k,v){ return v?'<div class="pc-row"><span class="pc-k">'+k+'</span><span class="pc-v">'+escapeHtml(v)+'</span></div>':''; }
+function parkingLines(value){
+  return String(value||'').split(/\r?\n/).map(function(line){
+    return line.trim();
+  }).filter(Boolean);
+}
+function renderParkingValue(value){
+  var lines=parkingLines(value);
+  if(!lines.length) return '';
+  if(lines.length===1) return highlightNote(lines[0]);
+  return '<ul class="parking-list">'+lines.map(function(line){
+    return '<li>'+highlightNote(line)+'</li>';
+  }).join('')+'</ul>';
+}
+function parkingKvRow(k,v){
+  var value=renderParkingValue(v);
+  return value?'<div class="pc-row"><span class="pc-k">'+k+'</span><div class="pc-v">'+value+'</div></div>':'';
+}
+function renderParkingTicketLine(label,value){
+  var rendered=renderParkingValue(value);
+  return rendered?'<div class="nx-ticket-line"><b>'+escapeHtml(label)+'</b> '+rendered+'</div>':'';
+}
 function linkRow(k,url,label){ return url?'<div class="pc-row"><span class="pc-k">'+k+'</span><span class="pc-v"><a href="'+escapeHtml(url)+'" target="_blank" rel="noopener">'+(label||'開啟連結')+'</a></span></div>':''; }
 function tipBox(v){ return renderNoteBlock(v); }
 function parseScheduleLinks(text){
@@ -1386,7 +1409,7 @@ function parkingPanel(p){
            '<div class="mc-val mc-big">' + escapeHtml(park.mapcode) + '</div>' +
            '</div></div>';
   }
-  out += kvRow('停車場', park.pnote);
+  out += parkingKvRow('停車場', park.pnote);
   return out;
 }
 function showMapcode(value){
@@ -1414,14 +1437,14 @@ function infoPanel(res){
     var r=res.r;
     var rate = r.rating ? (/^[\d.]+$/.test(r.rating) ? 'Tabelog '+r.rating : r.rating) : '';
     return kvRow('⭐ 評分',rate)+kvRow('🍽 類型',r.cat)+kvRow('🕒 營業',r.hours)+
-           kvRow('💳 付款',r.pay)+kvRow('🚗 交通',r.travel)+kvRow('🅿 停車',r.pnote)+tipBox(r.note);
+           kvRow('💳 付款',r.pay)+kvRow('🚗 交通',r.travel)+parkingKvRow('🅿 停車',r.pnote)+tipBox(r.note);
   }
   var p=res.p, t=p.tnorm, out='';
   if(t==='hotel'){
     var h=hotelOf(p);
     if(h) out+=kvRow('🏨 入住',h.checkin)+kvRow('🏨 退房',h.checkout)+kvRow('📍 地址',h.addr)+
-               kvRow('🅿 停車',h.pnote)+kvRow('📅 適用',h.dates)+tipBox(h.note||p.note);
-    else out+=kvRow('🅿 停車',p.pnote)+tipBox(p.note);
+               parkingKvRow('🅿 停車',h.pnote)+kvRow('📅 適用',h.dates)+tipBox(h.note||p.note);
+    else out+=parkingKvRow('🅿 停車',p.pnote)+tipBox(p.note);
     return out;
   }
   if(t==='ferry'){
@@ -1865,7 +1888,7 @@ function nextStopMeta(item,res){
     act:item.act||'',
     cat:cat,
     drive:drive,
-    parking:(p&&p.pnote)||(r&&r.parking)||'',
+    parking:(p&&p.pnote)||(r&&(r.pnote||r.parking))||'',
     hours:(p&&p.hours)||(r&&r.hours)||'',
     pay:(r&&r.pay)||'',
     web:p&&p.web?p.web:'',
@@ -1947,7 +1970,7 @@ function renderNextStopCard(day,dayIndex,pick){
       '</div>'+
       '<div class="nx-ticket-lines">'+
         renderTicketLine('交通',meta.drive)+
-        renderTicketLine('停車',meta.parking)+
+        renderParkingTicketLine('停車',meta.parking)+
         renderTicketLine('營業',meta.hours)+
         renderTicketLine('付款',meta.pay)+
         (meta.note?'<div class="nx-ticket-line nx-ticket-note"><b>提醒</b>'+renderNote(meta.note)+'</div>':'')+
