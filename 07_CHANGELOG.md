@@ -2,6 +2,14 @@
 
 紀錄格式:日期 / 版本 / 重點。細節不展開,新變更往上加。
 
+## 2026-07-13 — iOS Scroll-only 手勢政策（Dev）
+- 實機確認第二階段雙擊攔截仍無效，且原生 viewport 與 `.wrap` transform 同時縮放造成偶發偏移及右側留白。
+- 移除自製捏合回彈與 JavaScript 雙擊攔截，根層改為 `touch-action:pan-x pan-y`，只保留水平／垂直捲動。
+- 保留桃子診斷徽章、表單 16px 下限及 focus／blur viewport 還原。
+- 診斷面板更新為 `APP DEV · CODE 2363be3 · 2026-07-13`。
+- Service Worker App Shell cache 升至 `okayama-trip-v6`；Schema 維持 2.1。
+- 自動測試通過；最終手勢結果待 Bar 於 iPhone Dev PWA 驗證。
+
 ## 2026-07-13 — iOS 雙擊防放大第二階段（Dev）
 - 將非互動區雙擊防護提前至第二次單指 `touchstart`，加入 350ms、24px 及 10px 移動取消門檻。
 - 保留捏合回彈、桃子徽章、互動元件及輸入框 focus／blur 行為。

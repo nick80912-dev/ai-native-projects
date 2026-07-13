@@ -45,7 +45,7 @@
 - Consumes: WebKit CSS `touch-action` gesture arbitration.
 - Produces: root policy `html,body{touch-action:pan-x pan-y}` with no production JavaScript zoom state.
 
-- [ ] **Step 1: Replace old gesture tests with failing Scroll-only assertions**
+- [x] **Step 1: Replace old gesture tests with failing Scroll-only assertions**
 
 In `tests/ios-zoom-guard.test.js`, replace the old manipulation assertion and named double-tap assertion near the top with:
 
@@ -75,7 +75,7 @@ assert.match(extractFunction('isDoubleTapInteractive'), /#diagnosticBadge/, 'pea
 
 Keep all form-size, viewport-meta, APP/SW, and `restoreFocusZoom()` tests unchanged.
 
-- [ ] **Step 2: Run the focused test and verify RED**
+- [x] **Step 2: Run the focused test and verify RED**
 
 Run:
 
@@ -86,7 +86,7 @@ $node='C:\Users\Aaron Huang\.cache\codex-runtimes\codex-primary-runtime\dependen
 
 Expected: FAIL at `root policy allows panning without zoom` because production still uses `touch-action:manipulation`.
 
-- [ ] **Step 3: Apply the minimal Scroll-only production change**
+- [x] **Step 3: Apply the minimal Scroll-only production change**
 
 In `index.html`, replace:
 
@@ -151,7 +151,7 @@ setupPinchZoom();
 setupDoubleTapGuard();
 ```
 
-- [ ] **Step 4: Run the focused test and verify GREEN**
+- [x] **Step 4: Run the focused test and verify GREEN**
 
 Run:
 
@@ -161,7 +161,7 @@ Run:
 
 Expected: `iOS zoom guard tests passed`.
 
-- [ ] **Step 5: Review and commit the functional change**
+- [x] **Step 5: Review and commit the functional change**
 
 Run:
 
@@ -186,7 +186,7 @@ Expected: commit succeeds and the final command prints the exact seven-character
 - Consumes: Task 1 `$functionalCommit`.
 - Produces: `APP_BUILD.code` equal to Task 1 and Service Worker cache `okayama-trip-v6`.
 
-- [ ] **Step 1: Read and validate Task 1 CODE**
+- [x] **Step 1: Read and validate Task 1 CODE**
 
 Run:
 
@@ -198,11 +198,11 @@ $functionalCommit
 
 Expected: exactly seven hexadecimal characters.
 
-- [ ] **Step 2: Write failing v6 tests**
+- [x] **Step 2: Write failing v6 tests**
 
 In `tests/ios-zoom-guard.test.js`, replace both `okayama-trip-v5` expectations with `okayama-trip-v6`. Keep the existing APP metadata and diagnostic rendering assertions.
 
-- [ ] **Step 3: Run the focused test and verify RED**
+- [x] **Step 3: Run the focused test and verify RED**
 
 Run:
 
@@ -212,7 +212,7 @@ Run:
 
 Expected: FAIL at `service worker cache is bumped to v5` or its updated v6 message because source still contains v5.
 
-- [ ] **Step 4: Update APP metadata, diagnostics, and SW cache**
+- [x] **Step 4: Update APP metadata, diagnostics, and SW cache**
 
 Generate the exact APP line:
 
@@ -233,7 +233,7 @@ with:
 var CACHE_NAME = 'okayama-trip-v6';
 ```
 
-- [ ] **Step 5: Verify APP CODE and run GREEN**
+- [x] **Step 5: Verify APP CODE and run GREEN**
 
 Run:
 
@@ -245,7 +245,7 @@ if($sourceCode -ne $functionalCommit){ throw "APP CODE $sourceCode does not matc
 
 Expected: CODE check exits 0 and test prints `iOS zoom guard tests passed`.
 
-- [ ] **Step 6: Commit metadata and shell invalidation**
+- [x] **Step 6: Commit metadata and shell invalidation**
 
 Run:
 
@@ -269,7 +269,7 @@ Expected: metadata commit succeeds; diagnostics CODE remains Task 1 by design.
 - Consumes: Task 1 CODE and Task 2 metadata commit.
 - Produces: durable Scroll-only policy and auditable verification record.
 
-- [ ] **Step 1: Replace the old UI gesture policy**
+- [x] **Step 1: Replace the old UI gesture policy**
 
 In `04_UI_GUIDELINES.md`, replace the complete `## 行動手勢` bullet list with:
 
@@ -282,7 +282,7 @@ In `04_UI_GUIDELINES.md`, replace the complete `## 行動手勢` bullet list wit
 - 若 Dev 手機仍出現縮放或跑版，下一步只能發布事件／`visualViewport` 診斷 Build；不得自動疊加 viewport 硬鎖或恢復自製縮放。
 ```
 
-- [ ] **Step 2: Add the stage-three changelog entry**
+- [x] **Step 2: Add the stage-three changelog entry**
 
 At the top of `07_CHANGELOG.md` entries, insert:
 
@@ -302,7 +302,7 @@ $changelogBuildLine="- 診斷面板更新為 ``APP DEV · CODE $functionalCommit
 $changelogBuildLine
 ```
 
-- [ ] **Step 3: Run all repository checks**
+- [x] **Step 3: Run all repository checks**
 
 Run:
 
@@ -315,11 +315,11 @@ git status --short
 
 Expected: both test messages pass, diff check is silent, and status lists only the two governance files plus this plan.
 
-- [ ] **Step 4: Append the execution record**
+- [x] **Step 4: Append the execution record**
 
 Append `## Execution Record` to this plan with the exact Task 1 functional commit, Task 2 metadata commit, both passing test messages, `git diff --check: passed`, and `iPhone Dev PWA final verification: pending Bar`.
 
-- [ ] **Step 5: Commit governance documentation**
+- [x] **Step 5: Commit governance documentation**
 
 Run:
 
@@ -390,3 +390,12 @@ Phone checklist:
 6. Buttons, links, and check-in controls: normal.
 7. Input focus/blur: normal.
 8. Diagnostics show the new APP CODE, `SCHEMA 2.1`, `SW okayama-trip-v6`, and normal `healthCheck()`.
+
+## Execution Record
+
+- Task 1 functional commit: `2363be3`
+- Task 2 metadata and Service Worker commit: `b47cc63`
+- Focused verification: `iOS zoom guard tests passed`
+- Documentation verification: `✅ 文件標題/檔名一致性檢查通過`
+- `git diff --check`: passed
+- iPhone Dev PWA final verification: pending Bar
