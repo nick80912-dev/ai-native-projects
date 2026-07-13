@@ -23,7 +23,8 @@ for (const file of files) {
   const html = fs.readFileSync(path.join(root, file), 'utf8');
   assert.match(html, /var days=DB\.trip\?DB\.trip\.days:\[\];/, `${file} shows every pre-trip day`);
   assert.doesNotMatch(html, /DB\.trip\.days\.slice\(0,3\)/, `${file} does not cap pre-trip days`);
-  assert.match(html, /html,body\{touch-action:manipulation\}/, `${file} disables double-tap zoom without blocking pinch zoom`);
+  assert.match(html, /html,body\{touch-action:pan-x pan-y\}/, `${file} keeps the approved iOS Scroll-only gesture policy`);
+  assert.doesNotMatch(html, /touch-action:manipulation/, `${file} does not restore the superseded gesture policy`);
 
   const calls = { confirm: 0, saved: 0, rendered: 0 };
   const sandbox = {

@@ -27,8 +27,9 @@
 - App 採單一 Scroll-only 政策：`html,body { touch-action:pan-x pan-y; }`，只允許水平與垂直捲動，不提供雙擊或捏合縮放。
 - 禁止恢復 `.wrap` transform 縮放、回彈、`setupPinchZoom()` 或 JavaScript 雙擊攔截器，避免與 WebKit visual viewport 形成雙重縮放狀態。
 - 輸入框 focus 造成縮放殘留時，仍只允許 viewport「瞬鎖約 100ms → 原始字串還原」；`maximum-scale` 與 `user-scalable=no` 不得常駐。
+- iOS App 從背景回到前景或由 page cache 恢復時，必須還原原始 viewport 字串、清除舊 inline transform，並在兩個 animation frames 後恢復原捲動座標；禁止以 reload 或重繪清除使用者狀態。
 - 桃子診斷徽章、按鈕、連結、表單控制項、垂直頁面捲動及水平清單捲動必須保持正常。
-- 若 Dev 手機仍出現縮放或跑版，下一步只能發布事件／`visualViewport` 診斷 Build；不得自動疊加 viewport 硬鎖或恢復自製縮放。
+- 若完成 Scroll-only 與回前景修復後仍出現縮放或跑版，下一步只能發布事件／`visualViewport` 診斷 Build；不得自動疊加 viewport 硬鎖或恢復自製縮放。
 
 ## 互動
 打卡 `.chk` 勾選→卡片變灰+劃線;toast 回饋 2 秒;摺疊箭頭旋轉動畫 .25s;所有清單觸控列 ≥44px 高。

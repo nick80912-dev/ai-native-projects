@@ -2,6 +2,13 @@
 
 紀錄格式:日期 / 版本 / 重點。細節不展開,新變更往上加。
 
+## 2026-07-13 — iOS 回前景與資料／首頁一致性（Dev）
+- 線上行程總表已由 Bar 將 Musashi 的錯誤引用 `R013` 修正為 `R012`；health check 新增行程餐廳名稱與 RID 指向名稱不一致偵測。
+- iOS 從背景或 page cache 回到前景時，還原原始 viewport、清除舊 inline transform，並於兩個 animation frames 後恢復原捲動位置。
+- 首頁下一站將「依目前時間」改為與行程頁共用的「現在」徽章，提醒事項改用既有列點 renderer。
+- 診斷面板更新為 `APP DEV · CODE edfbfba · 2026-07-13`；Service Worker App Shell cache 升至 `okayama-trip-v7`。
+- 保留 Scroll-only、表單 focus／blur 還原與桃子診斷徽章；Schema 維持 2.1。
+
 ## 2026-07-13 — iOS Scroll-only 手勢政策（Dev）
 - 實機確認第二階段雙擊攔截仍無效，且原生 viewport 與 `.wrap` transform 同時縮放造成偶發偏移及右側留白。
 - 移除自製捏合回彈與 JavaScript 雙擊攔截，根層改為 `touch-action:pan-x pan-y`，只保留水平／垂直捲動。

@@ -36,9 +36,9 @@ assert.doesNotMatch(html, /function touchDistance\(/, 'double-tap distance helpe
 assert.match(html, /function setupDiagnostics\(/, 'peach diagnostic gesture remains available');
 assert.match(html, /function setupViewportReflow\(/, 'form focus recovery remains available');
 assert.doesNotMatch(html.match(/<meta name="viewport"[^>]+>/i)[0], /maximum-scale|user-scalable/i, 'viewport restrictions are not persistent');
-assert.match(sw, /okayama-trip-v6/, 'service worker cache is bumped to v6');
-assert.match(html, /SW okayama-trip-v6/, 'diagnostics display the current service worker cache version');
-assert.match(html, /var APP_BUILD=\{channel:'DEV',code:'[0-9a-f]{7}',date:'2026-07-13'\}/, 'APP build metadata is explicit');
+assert.match(sw, /okayama-trip-v7/, 'service worker cache is bumped to v7');
+assert.match(html, /SW okayama-trip-v7/, 'diagnostics display the current service worker cache version');
+assert.match(html, /var APP_BUILD=\{channel:'DEV',code:'edfbfba',date:'2026-07-13'\}/, 'APP build metadata identifies the functional commit');
 assert.match(html, /APP ['"]?\+?escapeHtml\(APP_BUILD\.channel\)/, 'diagnostics render the APP channel from metadata');
 assert.match(html, /CODE ['"]?\+?escapeHtml\(APP_BUILD\.code\)/, 'diagnostics render the functional code commit');
 assert.match(html, /escapeHtml\(APP_BUILD\.date\)/, 'diagnostics render the build date');

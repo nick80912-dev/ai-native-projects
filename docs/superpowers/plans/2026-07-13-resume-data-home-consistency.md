@@ -30,21 +30,21 @@
 - Consumes: `DB.trip.days[].items`, `DB.rest`, normalized display names.
 - Produces: a `healthCheck()` Data Error when an `R###` reference resolves to a restaurant whose normalized name conflicts with the itinerary place text.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Create a Node assertion that exercises a Musashi itinerary item referencing `R013`, expects a name-mismatch finding, then changes it to `R012` and expects no mismatch.
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `node tests/data-reference-consistency.test.js`
 
 Expected: FAIL because semantic RID/name validation is absent.
 
-- [ ] **Step 3: Write minimal implementation**
+- [x] **Step 3: Write minimal implementation**
 
 Add one reusable normalized-name comparison and one health-check branch. Continue rendering by explicit RID; do not silently replace source IDs.
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `node tests/data-reference-consistency.test.js`
 
@@ -61,21 +61,21 @@ Expected: `data reference consistency tests passed`.
 - Consumes: `VIEWPORT_META`, `VIEWPORT_ORIGINAL`, `.wrap`, `window.scrollX/Y`, `requestAnimationFrame`.
 - Produces: `recoverViewportAfterResume(...)` and lifecycle wiring for `visibilitychange` plus `pageshow`.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 Assert that recovery restores the exact original viewport string, clears legacy inline transform/transition plus `pinch-zooming`, preserves both scroll coordinates, schedules a two-frame reflow, and is wired only for foreground/pageshow events.
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `node tests/ios-viewport-resume.test.js`
 
 Expected: FAIL because resume recovery is absent.
 
-- [ ] **Step 3: Write minimal implementation**
+- [x] **Step 3: Write minimal implementation**
 
 Extend `setupViewportReflow()` with one idempotent recovery helper. Do not reload, rerender, hard-lock viewport, or restore custom zoom handlers.
 
-- [ ] **Step 4: Run focused tests to verify they pass**
+- [x] **Step 4: Run focused tests to verify they pass**
 
 Run: `node tests/ios-viewport-resume.test.js; node tests/ios-zoom-guard.test.js`
 
@@ -91,21 +91,21 @@ Expected: both scripts pass.
 - Consumes: existing `.now-badge`, `renderNote(text)`, `pick.source`, `meta.note`.
 - Produces: a home `現在` badge matching itinerary cards and a list-style reminder block preserving bullets, links, phone and order highlights.
 
-- [ ] **Step 1: Write the failing assertions**
+- [x] **Step 1: Write the failing assertions**
 
 Require the time-selected home card to contain `now-badge` with `現在`, exclude `依目前時間`, and render the P012 multiline note as `note-list`/`note-li` entries.
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `node tests/render-note.test.js`
 
 Expected: FAIL on the old home tag and inline reminder rendering.
 
-- [ ] **Step 3: Write minimal implementation**
+- [x] **Step 3: Write minimal implementation**
 
 Reuse `.now-badge` and `renderNote()` in `renderNextStopCard`; add only scoped `nx-` CSS needed for alignment.
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `node tests/render-note.test.js`
 
@@ -125,15 +125,15 @@ Expected: `renderNote tests passed`.
 - Consumes: the functional commit short hash and completed behavior.
 - Produces: explicit Dev APP CODE, `okayama-trip-v7`, updated operating rules, and reproducible delivery evidence.
 
-- [ ] **Step 1: Commit functional changes**
+- [x] **Step 1: Commit functional changes**
 
 Stage the three focused tests, `validator.js`, and `index.html`, then commit with a message describing the consistency and resume fixes.
 
-- [ ] **Step 2: Publish the functional code identity**
+- [x] **Step 2: Publish the functional code identity**
 
 Set `APP_BUILD.code` to the functional commit short hash, bump `sw.js` and diagnostics/tests to `okayama-trip-v7`, and update the dated changelog plus UI guideline.
 
-- [ ] **Step 3: Run repository-wide verification**
+- [x] **Step 3: Run repository-wide verification**
 
 Run every `tests/*.test.js`, `node tools/check-doc-titles.js`, syntax extraction/checks, embedded-vs-external schema/validator consistency checks, and a live published-CSV assertion for Musashi=`R012`.
 
