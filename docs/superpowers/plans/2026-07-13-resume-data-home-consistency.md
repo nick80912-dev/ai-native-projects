@@ -137,10 +137,12 @@ Set `APP_BUILD.code` to the functional commit short hash, bump `sw.js` and diagn
 
 Run every `tests/*.test.js`, `node tools/check-doc-titles.js`, syntax extraction/checks, embedded-vs-external schema/validator consistency checks, and a live published-CSV assertion for Musashi=`R012`.
 
-- [ ] **Step 4: Commit publication metadata and docs**
+- [x] **Step 4: Commit publication metadata and docs**
 
 Commit only after Step 3 exits cleanly.
 
-- [ ] **Step 5: Push and verify remote**
+- [x] **Step 5: Push and verify remote**
 
 Push `dev` to `origin/dev`, confirm local and remote hashes match, then inspect GitHub Actions. Do not touch `main` or create a release PR.
+
+Result: local and `origin/dev` matched after push. No Actions run was created because the current workflow listens to `main` pushes and pull requests, not `dev` pushes; workflow scope was not expanded in this task.
