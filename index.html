@@ -1158,6 +1158,40 @@ function fetchSheet(s){
 /* ================= 資料層:三層防線 ================= */
 var RAW={};      // key → csv text(目前生效)
 var SRC={};      // key → builtin|cache|online
+var SNAPSHOT_STATE_KEY='trip_data_snapshot_state';
+var SNAPSHOT_FAILURE_KEY='trip_sync_last_failure';
+var SNAPSHOT_FORMAT_VERSION=1;
+
+function createDataSnapshot(raw,source,createdAt,generationId,validation){
+  var sheets={};
+  SHEETS.forEach(function(sheet){ sheets[sheet.key]=String(raw[sheet.key]||''); });
+  return {formatVersion:1,generationId:generationId,createdAt:createdAt,source:source,sheets:sheets,sheetMeta:{},validation:{warnings:(validation&&validation.warnings)||[]}};
+}
+function validSnapshotShape(snapshot){
+  if(!snapshot||snapshot.formatVersion!==1||!snapshot.generationId||!snapshot.sheets) return false;
+  return SHEETS.every(function(sheet){return typeof snapshot.sheets[sheet.key]==='string'&&snapshot.sheets[sheet.key].trim().length>=5;});
+}
+function readSnapshotState(storage){
+  try{
+    var raw=storage.getItem(SNAPSHOT_STATE_KEY), state=raw?JSON.parse(raw):null;
+    return state&&state.formatVersion===1?state:null;
+  }catch(e){ return null; }
+}
+function nextSnapshotState(current,candidate,effectiveSnapshot){
+  var previous=validSnapshotShape(effectiveSnapshot)?effectiveSnapshot:null;
+  if(!previous&&current&&validSnapshotShape(current.active)) previous=current.active;
+  return {formatVersion:1,active:candidate,previous:previous};
+}
+function writeSnapshotState(storage,nextState){
+  var serialized=JSON.stringify(nextState);
+  var parsed=JSON.parse(serialized);
+  if(!parsed||parsed.formatVersion!==1||!validSnapshotShape(parsed.active)) throw new Error('Invalid snapshot state');
+  storage.setItem(SNAPSHOT_STATE_KEY,serialized);
+  var saved=readSnapshotState(storage);
+  if(!saved||!saved.active||saved.active.generationId!==nextState.active.generationId) throw new Error('Snapshot state verification failed');
+  return true;
+}
+
 function localBest(key){
   var b = BUILTIN[key]? { text:BUILTIN[key], src:'builtin', ts:BUILTIN_TS } : null;
   var c = lsGet('v2_cache_'+key,null);
@@ -1235,20 +1269,24 @@ function parseExpensesFree(rows){
   return { members:members, items:items };
 }
 
+function createDB(raw){
+  var db={trip:null,placeList:[],places:{},rest:[],shop:[],hotels:[],expCMS:[],expMembers:[],cfg:{}};
+  db.trip=buildItin(parseCSV(raw.itin||''));
+  db.placeList=parseTable(raw.places,'places');
+  db.placeList.forEach(function(place){ place.tnorm=normType(place.type); if(place.placeId) db.places[place.placeId.toUpperCase()]=place; });
+  db.rest=parseTable(raw.rest,'rest');
+  db.shop=parseTable(raw.shop,'shop');
+  db.hotels=parseTable(raw.hotels,'hotels');
+  var expense=parseExpensesFree(parseCSV(raw.exp||''));
+  db.expCMS=expense.items;
+  db.expMembers=expense.members;
+  db.cfg=parseKeyValue(raw.cfg,'cfg');
+  return db;
+}
+
 function buildDB(){
-  try{
-    DB.trip = buildItin(parseCSV(RAW.itin||''));
-  }catch(e){ AppLog.parser('行程總表解析失敗:'+(e.message||e)+' — 顯示空行程'); DB.trip={meta:{title:''},days:[]}; }
-  DB.placeList = parseTable(RAW.places, 'places');
-  DB.places={};
-  DB.placeList.forEach(function(p){ p.tnorm=normType(p.type); if(p.placeId) DB.places[p.placeId.toUpperCase()]=p; });
-  DB.rest   = parseTable(RAW.rest, 'rest');
-  DB.shop   = parseTable(RAW.shop, 'shop');
-  DB.hotels = parseTable(RAW.hotels, 'hotels');
-  var expParsed = parseExpensesFree(parseCSV(RAW.exp||''));
-  DB.expCMS = expParsed.items;
-  DB.expMembers = expParsed.members;
-  DB.cfg = parseKeyValue(RAW.cfg, 'cfg');
+  DB=createDB(RAW);
+  return DB;
 }
 var _refWarned = {};
 function resolveRef(it){

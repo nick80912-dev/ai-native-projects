@@ -145,4 +145,83 @@ assert(headerResult.blockers.some(function(f){return f.code==='HEADER_REQUIRED'&
 assert(headerResult.warnings.some(function(f){return f.code==='HEADER_UNKNOWN'&&f.sheet==='Places';}));
 assert(sb.buildHeaderMap([],headerDef).blockers.some(function(f){return f.code==='HEADER_MISSING';}));
 
+function extractFunction(name){
+  const start=htmlSource.indexOf('function '+name+'(');
+  assert.notStrictEqual(start,-1,name+' exists');
+  let index=htmlSource.indexOf('{',start), depth=0;
+  for(;index<htmlSource.length;index++){
+    if(htmlSource[index]==='{') depth++;
+    if(htmlSource[index]==='}') depth--;
+    if(depth===0) return htmlSource.slice(start,index+1);
+  }
+  throw new Error('Could not extract '+name);
+}
+
+const app={SHEETS:[{key:'itin'},{key:'places'},{key:'rest'},{key:'shop'},{key:'hotels'},{key:'exp'},{key:'cfg'}]};
+vm.createContext(app);
+vm.runInContext([
+  "var SNAPSHOT_STATE_KEY='trip_data_snapshot_state';var SNAPSHOT_FORMAT_VERSION=1;",
+  extractFunction('createDataSnapshot'),
+  extractFunction('validSnapshotShape'),
+  extractFunction('readSnapshotState'),
+  extractFunction('nextSnapshotState'),
+  extractFunction('writeSnapshotState')
+].join('\n'),app);
+
+const rawA={itin:'itin-a',places:'places-a',rest:'rest-a',shop:'shop-a',hotels:'hotels-a',exp:'exp-a',cfg:'cfg-a'};
+const rawB={itin:'itin-b',places:'places-b',rest:'rest-b',shop:'shop-b',hotels:'hotels-b',exp:'exp-b',cfg:'cfg-b'};
+const active={formatVersion:1,generationId:'g1',createdAt:1,source:'online',sheets:rawA,sheetMeta:{},validation:{warnings:[]}};
+const candidate={formatVersion:1,generationId:'g2',createdAt:2,source:'online',sheets:rawB,sheetMeta:{},validation:{warnings:[]}};
+
+const created=app.createDataSnapshot(rawA,'online',1,'g1',{warnings:[{code:'WARN'}]});
+assert.strictEqual(created.formatVersion,1);
+assert.strictEqual(created.generationId,'g1');
+assert.strictEqual(created.createdAt,1);
+assert.strictEqual(created.source,'online');
+assert.deepStrictEqual(Object.assign({},created.sheets),rawA);
+assert.deepStrictEqual(Array.from(created.validation.warnings),[{code:'WARN'}]);
+
+const next=app.nextSnapshotState({formatVersion:1,active:active,previous:null},candidate,active);
+assert.strictEqual(next.active.generationId,'g2');
+assert.strictEqual(next.previous.generationId,'g1');
+
+const memory={};
+const storage={
+  getItem:function(key){return Object.prototype.hasOwnProperty.call(memory,key)?memory[key]:null;},
+  setItem:function(key,value){memory[key]=String(value);}
+};
+assert.strictEqual(app.writeSnapshotState(storage,next),true);
+assert.strictEqual(app.readSnapshotState(storage).active.generationId,'g2');
+
+const old=JSON.stringify({formatVersion:1,active:active,previous:null});
+memory.trip_data_snapshot_state=old;
+const throwingStorage={getItem:storage.getItem,setItem:function(){throw new Error('quota');}};
+assert.throws(function(){app.writeSnapshotState(throwingStorage,next);},/quota/);
+assert.strictEqual(memory.trip_data_snapshot_state,old);
+
+const existingDB={sentinel:'db'};
+const existingRAW={sentinel:'raw'};
+const dbApp={
+  DB:existingDB,
+  RAW:existingRAW,
+  parseCSV:function(text){return [text];},
+  buildItin:function(rows){return {rows:rows};},
+  parseTable:function(text,key){return key==='places'?[{placeId:'p1',type:'museum'}]:[{text:text,key:key}];},
+  normType:function(type){return 'normalized-'+type;},
+  parseExpensesFree:function(rows){return {items:[rows[0]],members:['member']};},
+  parseKeyValue:function(text,key){return {text:text,key:key};}
+};
+vm.createContext(dbApp);
+vm.runInContext(extractFunction('createDB'),dbApp);
+const pureDB=dbApp.createDB(rawA);
+assert.notStrictEqual(pureDB,existingDB);
+assert.strictEqual(dbApp.DB,existingDB);
+assert.strictEqual(dbApp.RAW,existingRAW);
+assert.strictEqual(rawA.itin,'itin-a');
+assert.strictEqual(pureDB.trip.rows[0],'itin-a');
+assert.strictEqual(pureDB.places.P1,pureDB.placeList[0]);
+assert.strictEqual(pureDB.placeList[0].tnorm,'normalized-museum');
+assert.deepStrictEqual(Array.from(pureDB.expCMS),['exp-a']);
+assert.deepStrictEqual(Array.from(pureDB.expMembers),['member']);
+
 console.log('atomic sheet sync tests passed');
