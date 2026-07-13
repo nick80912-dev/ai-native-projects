@@ -18,6 +18,7 @@
 - 不恢復 `setupPinchZoom()`、`setupDoubleTapGuard()` 或 `.wrap` 回彈。
 - 不修改 Schema、Google Sheets、CSV parser、同步資料流、行程 renderer 或 localStorage 個人狀態。
 - 不將診斷資料傳送到伺服器，也不保存跨啟動紀錄。
+- 診斷程式一律使用 ES5 `function`／`var`；禁止箭頭函式、template literal、`const` 或 `let`。
 
 ## 診斷架構
 
@@ -34,6 +35,7 @@
 - `window.innerWidth/innerHeight`、`scrollX/scrollY`。
 - `document.documentElement.clientWidth/scrollWidth`。
 - `visualViewport.width/height/scale/offsetLeft/offsetTop`；不支援 visual viewport 時明確顯示 `n/a`。
+- `ta.html`、`ta.body`、`ta.target`：擷取當下分別讀取 `document.documentElement`、`document.body` 與事件目標元素的 computed `touch-action`。使用 `getComputedStyle(el).touchAction`；不支援、無元素或讀取失敗時回傳 `n/a`，禁止 throw。
 
 ### 2. 被動事件觀察
 
@@ -52,6 +54,7 @@
 - `navigator.userAgent`。
 - `display-mode: standalone` 是否成立。
 - `navigator.standalone`（存在時）。
+- `viewport meta`：於每次產生環境摘要時執行期讀取 `document.querySelector('meta[name="viewport"]').getAttribute('content')` 完整字串並原樣輸出；元素不存在或讀取失敗時顯示 `n/a`。不得沿用啟動時常數，確保能辨識 focus／blur 瞬鎖是否殘留。
 - 擷取當下的 viewport／document 尺寸。
 
 ## 診斷面板 UI
@@ -72,6 +75,7 @@
 - 先建立功能 commit，再把其七碼短 hash 寫入 `APP_BUILD.code`。
 - 診斷面板與 `sw.js` 同步升至 `okayama-trip-v8`，確保手機載入新 App Shell。
 - Schema 維持 2.1；不更新 BUILTIN 資料快照。
+- `tests/ios-gesture-diagnostics.test.js` 與所有 `tests/` 檔案不得加入 `sw.js` 的 `SHELL` App Shell 快取清單。
 
 ## 自動測試
 
@@ -85,6 +89,10 @@
 6. production listener 使用 passive 觀察，診斷函式不包含 `preventDefault`、`stopPropagation`、viewport meta 或 transform 寫入。
 7. Scroll-only、回前景恢復、表單 focus／blur、桃子徽章與既有全部測試持續通過。
 8. APP CODE 與 `okayama-trip-v8` 顯示一致。
+9. viewport meta 為擷取當下的完整 runtime 字串；找不到 meta 時為 `n/a`。
+10. html、body、target 的 computed touch-action 正確輸出；`getComputedStyle` 不支援或拋錯時三欄安全降級為 `n/a`。
+11. 診斷 production code 不含箭頭函式、template literal、`const` 或 `let`。
+12. `sw.js` `SHELL` 不包含 `tests/` 或 `ios-gesture-diagnostics.test.js`。
 
 ## 手機驗證流程
 
@@ -95,12 +103,23 @@
 5. 再開診斷面板，按「複製診斷內容」或截取完整診斷區。
 6. 將內容交回 Codex；此輪只收證據，不判定已修復。
 
+## 證據判讀
+
+證據回收後依下表對號入座，本輪不得自行下結論；任一下一階段方向均須經 Bar 核可後才可實作。
+
+| 證據型態 | 結論 | 下一階段方向 |
+|---|---|---|
+| 雙擊的第二次 `touchend` `cancelable=true` | JS 層可攔截 | 評估針對性 JS 抑制器（僅非互動區） |
+| `documentElement.scrollWidth > clientWidth` | 頁面橫向溢出誘發 smart zoom | 定位寬度來源修正；**優先檢查 16px 字級抬升後的分帳輸入列** |
+| computed touch-action 正確 + 無 cancelable 事件 + 僅 visualViewport resize 之 scale 跳變 | WebKit 容器層級行為，CSS/JS 均無解 | 提交 Bar 憲章裁決：是否於 standalone 模式限定開放 viewport 硬鎖例外 |
+
 ## 風險與控制
 
 - **事件觀察造成效能負擔**：24 筆上限，僅記錄五類手勢事件與 visual viewport resize，不監聽高頻 `touchmove` 或 viewport scroll。
 - **診斷本身改變手勢**：所有全域診斷 listener 被動且只讀；以靜態測試禁止副作用 API。
 - **診斷資訊過多**：UI 使用短行摘要，完整內容透過複製取得。
 - **隱私**：不記文字、輸入值、目的地、URL，不上傳、不進 localStorage。
+- **computed style API 差異**：每次讀取均以 try/catch 降級為 `n/a`，診斷本身不得因舊 WebView 中斷。
 - **iOS 原生行為無法由桌面測試證明**：自動測試只證明 instrumentation 不改行為；最終證據仍由 Bar 的 iPhone Dev PWA 取得。
 
 ## 回滾
@@ -114,6 +133,7 @@
 1. 診斷面板顯示新的 APP CODE、Schema 2.1 與 `SW okayama-trip-v8`。
 2. 清除、複製及最近 24 筆顯示正常。
 3. 一次雙擊後可看出 touch／gesture／dblclick／visual viewport resize 的實際順序，以及 scale 是否由 1 變大。
-4. 診斷 listener 不阻止事件，Scroll-only 與既有互動行為未改變。
-5. repo 全部自動測試、文件檢查、inline JavaScript 語法與 `git diff --check` 通過。
-6. Dev push 後由 Bar 執行手機診斷；本階段不得宣稱雙擊縮放已修復。
+4. 每筆事件同時顯示 html／body／target 的 computed touch-action，環境摘要顯示擷取當下的完整 viewport meta。
+5. 診斷 listener 不阻止事件，Scroll-only 與既有互動行為未改變。
+6. repo 全部自動測試、文件檢查、inline JavaScript 語法與 `git diff --check` 通過，且 SW SHELL 不含任何測試檔。
+7. Dev push 後由 Bar 執行手機診斷；本階段不得宣稱雙擊縮放已修復。

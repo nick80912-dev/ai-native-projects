@@ -18,7 +18,9 @@
 - Retain at most 24 records in memory; never record text content, form values, or URLs.
 - Do not change Schema 2.1, Google Sheets, CSV parsing, sync ownership, BUILTIN data, or localStorage state.
 - Create the functional commit before writing its seven-character hash to `APP_BUILD.code`.
-- Publish metadata through `okayama-trip-v8`, but do not push until Bar explicitly requests `push dev`.
+- Diagnostic production code must use ES5 `function`/`var`; do not use arrow functions, template literals, `const`, or `let`.
+- Keep every `tests/` file, including `tests/ios-gesture-diagnostics.test.js`, out of the `sw.js` `SHELL` list.
+- Publish metadata through `okayama-trip-v8` and push `dev` after full verification; Bar explicitly authorized `push dev` in the supplemental instruction.
 
 ---
 
@@ -30,7 +32,7 @@
 
 **Interfaces:**
 - Consumes: an event-like object, `window`, `document`, and a snapshot callback.
-- Produces: `gestureTargetSummary(target)`, `gestureViewportSnapshot(type,event,win,doc)`, and `createGestureDiagnostics(limit,snapshotter)`.
+- Produces: `gestureTargetSummary(target)`, `gestureComputedTouchAction(win,element)`, `gestureViewportSnapshot(type,event,win,doc)`, and `createGestureDiagnostics(limit,snapshotter)`.
 
 - [ ] **Step 1: Write failing core-model tests**
 
@@ -58,18 +60,23 @@ const sandbox = {};
 vm.createContext(sandbox);
 vm.runInContext([
   extractFunction('gestureTargetSummary'),
+  extractFunction('gestureComputedTouchAction'),
   extractFunction('gestureViewportSnapshot'),
   extractFunction('createGestureDiagnostics')
 ].join('\n'), sandbox);
 
-const target = { tagName:'DIV', className:'item secret extra', textContent:'private', value:'private', href:'https://private' };
+const target = { tagName:'DIV', className:'item secret extra', diagnosticTouchAction:'manipulation', textContent:'private', value:'private', href:'https://private' };
 assert.strictEqual(sandbox.gestureTargetSummary(target), 'div.item.secret');
 
 const fakeWindow = {
   innerWidth:390, innerHeight:844, scrollX:0, scrollY:210,
-  visualViewport:{ width:390, height:760, scale:1, offsetLeft:0, offsetTop:0 }
+  visualViewport:{ width:390, height:760, scale:1, offsetLeft:0, offsetTop:0 },
+  getComputedStyle:function(el){ return {touchAction:el.diagnosticTouchAction}; }
 };
-const fakeDocument = { documentElement:{ clientWidth:390, scrollWidth:390 } };
+const fakeDocument = {
+  documentElement:{ clientWidth:390, scrollWidth:390, diagnosticTouchAction:'pan-x pan-y' },
+  body:{ diagnosticTouchAction:'pan-x pan-y' }
+};
 const snap = sandbox.gestureViewportSnapshot('touchend', {
   timeStamp:123, touches:[], changedTouches:[{}], cancelable:true,
   defaultPrevented:false, target:target
@@ -78,12 +85,18 @@ assert.strictEqual(snap.type, 'touchend');
 assert.strictEqual(snap.target, 'div.item.secret');
 assert.strictEqual(snap.vvScale, 1);
 assert.strictEqual(snap.docScrollWidth, 390);
+assert.strictEqual(snap.taHtml, 'pan-x pan-y');
+assert.strictEqual(snap.taBody, 'pan-x pan-y');
+assert.strictEqual(snap.taTarget, 'manipulation');
 assert(!JSON.stringify(snap).includes('private'));
 
 const oldWebView = sandbox.gestureViewportSnapshot('dblclick', {}, {
   innerWidth:320, innerHeight:568, scrollX:0, scrollY:0
 }, fakeDocument);
 assert.strictEqual(oldWebView.vvScale, null);
+
+const throwingWindow = {getComputedStyle:function(){ throw new Error('unsupported'); }};
+assert.strictEqual(sandbox.gestureComputedTouchAction(throwingWindow,target), 'n/a');
 
 const ring = sandbox.createGestureDiagnostics(24, function(type){ return {type:type}; });
 for(let i=0;i<30;i++) ring.record('event-' + i, {});
@@ -116,6 +129,13 @@ function gestureTargetSummary(target){
   var cls=String(target.className||'').trim().split(/\s+/).filter(Boolean).slice(0,2);
   return tag+(cls.length?'.'+cls.join('.'):'');
 }
+function gestureComputedTouchAction(win,element){
+  try{
+    if(!win||!win.getComputedStyle||!element) return 'n/a';
+    var value=win.getComputedStyle(element).touchAction;
+    return value?String(value):'n/a';
+  }catch(e){ return 'n/a'; }
+}
 function gestureViewportSnapshot(type,event,win,doc){
   event=event||{}; win=win||{}; doc=doc||{};
   var root=doc.documentElement||{}, vv=win.visualViewport||null;
@@ -131,7 +151,10 @@ function gestureViewportSnapshot(type,event,win,doc){
     vvWidth:vv?Number(vv.width)||0:null, vvHeight:vv?Number(vv.height)||0:null,
     vvScale:vv?Number(vv.scale)||0:null,
     vvOffsetLeft:vv?Number(vv.offsetLeft)||0:null,
-    vvOffsetTop:vv?Number(vv.offsetTop)||0:null
+    vvOffsetTop:vv?Number(vv.offsetTop)||0:null,
+    taHtml:gestureComputedTouchAction(win,root),
+    taBody:gestureComputedTouchAction(win,doc.body),
+    taTarget:gestureComputedTouchAction(win,event.target)
   };
 }
 function createGestureDiagnostics(limit,snapshotter){
@@ -161,7 +184,7 @@ Expected: `iOS gesture diagnostic core tests passed`.
 
 **Interfaces:**
 - Consumes: Task 1 helpers, `APP_BUILD`, `SCHEMA.version`, `navigator`, `matchMedia`, and `window.visualViewport`.
-- Produces: `IOS_GESTURE_DIAGNOSTICS`, `setupGestureDiagnostics(doc,win,store)`, `gestureEnvironmentSnapshot(...)`, and `formatGestureDiagnostics(...)`.
+- Produces: `IOS_GESTURE_DIAGNOSTICS`, `setupGestureDiagnostics(doc,win,store)`, `runtimeViewportMeta(doc)`, `gestureEnvironmentSnapshot(...)`, and `formatGestureDiagnostics(...)`.
 
 - [ ] **Step 1: Add failing observer and export tests**
 
@@ -177,6 +200,7 @@ assert.match(setupSource, /\{passive:true\}/);
 assert(setupSource.includes("'resize'"), 'visual viewport resize is observed');
 
 vm.runInContext([
+  extractFunction('runtimeViewportMeta'),
   extractFunction('gestureEnvironmentSnapshot'),
   extractFunction('formatGestureDiagnostics')
 ].join('\n'), sandbox);
@@ -185,14 +209,22 @@ const env = sandbox.gestureEnvironmentSnapshot(
   {matches:true},
   {channel:'DEV',code:'abcdef0',date:'2026-07-13'},
   '2.1 (2026-07-10)',
-  'okayama-trip-v8'
+  'okayama-trip-v8',
+  {querySelector:function(){ return {getAttribute:function(){ return 'width=device-width, initial-scale=1.0, viewport-fit=cover'; }}; }}
 );
 const report = sandbox.formatGestureDiagnostics(env, snap, [snap]);
 assert(report.includes('APP DEV · CODE abcdef0 · 2026-07-13'));
 assert(report.includes('standalone=true'));
+assert(report.includes('viewport meta=width=device-width, initial-scale=1.0, viewport-fit=cover'));
 assert(report.includes('touchend'));
 assert(report.includes('scale=1'));
 assert(report.includes('doc=390/390'));
+assert(report.includes('ta.html=pan-x pan-y'));
+assert(report.includes('ta.body=pan-x pan-y'));
+assert(report.includes('ta.target=manipulation'));
+assert.strictEqual(sandbox.runtimeViewportMeta({querySelector:function(){ return null; }}), 'n/a');
+assert.strictEqual(sandbox.runtimeViewportMeta({querySelector:function(){ throw new Error('blocked'); }}), 'n/a');
+assert.strictEqual(sandbox.runtimeViewportMeta({querySelector:function(){ return {getAttribute:function(){ throw new Error('blocked'); }}; }}), 'n/a');
 console.log('iOS gesture diagnostic observer tests passed');
 ```
 
@@ -218,17 +250,25 @@ function setupGestureDiagnostics(doc,win,store){
   });
   if(win.visualViewport) win.visualViewport.addEventListener('resize',function(e){ store.record('visualViewport.resize',e); },{passive:true});
 }
-function gestureEnvironmentSnapshot(nav,standaloneQuery,build,schemaVersion,swVersion){
+function runtimeViewportMeta(doc){
+  try{
+    var meta=doc&&doc.querySelector?doc.querySelector('meta[name="viewport"]'):null;
+    var content=meta&&meta.getAttribute?meta.getAttribute('content'):'';
+    return content?String(content):'n/a';
+  }catch(e){ return 'n/a'; }
+}
+function gestureEnvironmentSnapshot(nav,standaloneQuery,build,schemaVersion,swVersion,doc){
   return {
     app:'APP '+build.channel+' · CODE '+build.code+' · '+build.date,
     schema:schemaVersion, sw:swVersion, userAgent:String(nav.userAgent||''),
     standalone:!!(standaloneQuery&&standaloneQuery.matches),
-    navigatorStandalone:typeof nav.standalone==='boolean'?nav.standalone:null
+    navigatorStandalone:typeof nav.standalone==='boolean'?nav.standalone:null,
+    viewportMeta:runtimeViewportMeta(doc)
   };
 }
 function formatGestureDiagnostics(env,current,records){
-  var lines=[env.app,'SCHEMA '+env.schema,'SW '+env.sw,'standalone='+env.standalone+' navigator.standalone='+(env.navigatorStandalone===null?'n/a':env.navigatorStandalone),'UA '+env.userAgent];
-  function metric(s){ return s.type+' t='+s.time+' target='+s.target+' touches='+(s.touches===null?'n/a':s.touches)+' changed='+(s.changedTouches===null?'n/a':s.changedTouches)+' cancelable='+s.cancelable+' prevented='+s.defaultPrevented+' scale='+(s.vvScale===null?'n/a':s.vvScale)+' vv='+(s.vvWidth===null?'n/a':s.vvWidth+'x'+s.vvHeight)+' offset='+(s.vvOffsetLeft===null?'n/a':s.vvOffsetLeft+','+s.vvOffsetTop)+' inner='+s.innerWidth+'x'+s.innerHeight+' doc='+s.docClientWidth+'/'+s.docScrollWidth+' scroll='+s.scrollX+','+s.scrollY; }
+  var lines=[env.app,'SCHEMA '+env.schema,'SW '+env.sw,'viewport meta='+env.viewportMeta,'standalone='+env.standalone+' navigator.standalone='+(env.navigatorStandalone===null?'n/a':env.navigatorStandalone),'UA '+env.userAgent];
+  function metric(s){ return s.type+' t='+s.time+' target='+s.target+' touches='+(s.touches===null?'n/a':s.touches)+' changed='+(s.changedTouches===null?'n/a':s.changedTouches)+' cancelable='+s.cancelable+' prevented='+s.defaultPrevented+' scale='+(s.vvScale===null?'n/a':s.vvScale)+' vv='+(s.vvWidth===null?'n/a':s.vvWidth+'x'+s.vvHeight)+' offset='+(s.vvOffsetLeft===null?'n/a':s.vvOffsetLeft+','+s.vvOffsetTop)+' inner='+s.innerWidth+'x'+s.innerHeight+' doc='+s.docClientWidth+'/'+s.docScrollWidth+' scroll='+s.scrollX+','+s.scrollY+' ta.html='+s.taHtml+' ta.body='+s.taBody+' ta.target='+s.taTarget; }
   lines.push('CURRENT '+metric(current));
   (records||[]).slice().reverse().forEach(function(s){ lines.push(metric(s)); });
   return lines.join('\n');
@@ -274,11 +314,13 @@ const copied = [];
 sandbox.window = {
   innerWidth:390, innerHeight:844, scrollX:0, scrollY:0,
   visualViewport:{width:390,height:760,scale:1,offsetLeft:0,offsetTop:0},
-  matchMedia:function(){ return {matches:true}; }
+  matchMedia:function(){ return {matches:true}; },
+  getComputedStyle:function(){ return {touchAction:'pan-x pan-y'}; }
 };
 sandbox.document = {
-  documentElement:{clientWidth:390,scrollWidth:390},
-  getElementById:function(id){ return id==='diagGestureBody'?body:null; }
+  documentElement:{clientWidth:390,scrollWidth:390}, body:{},
+  getElementById:function(id){ return id==='diagGestureBody'?body:null; },
+  querySelector:function(){ return {getAttribute:function(){ return 'width=device-width, initial-scale=1.0, viewport-fit=cover'; }}; }
 };
 sandbox.navigator = {userAgent:'Test iPhone',standalone:true};
 sandbox.APP_BUILD = {channel:'DEV',code:'abcdef0',date:'2026-07-13'};
@@ -329,7 +371,7 @@ Add helpers:
 function gestureDiagnosticReport(){
   var current=gestureViewportSnapshot('current',{},window,document);
   var query=window.matchMedia?window.matchMedia('(display-mode: standalone)'):null;
-  var env=gestureEnvironmentSnapshot(navigator,query,APP_BUILD,SCHEMA.version,'okayama-trip-v8');
+  var env=gestureEnvironmentSnapshot(navigator,query,APP_BUILD,SCHEMA.version,'okayama-trip-v8',document);
   return formatGestureDiagnostics(env,current,IOS_GESTURE_DIAGNOSTICS.list());
 }
 function renderGestureDiagnosticsBody(){
@@ -395,9 +437,21 @@ Change `tests/ios-zoom-guard.test.js` to require:
 const execFileSync = require('child_process').execFileSync;
 assert.match(sw, /okayama-trip-v8/, 'service worker cache is bumped to v8');
 assert.match(html, /SW okayama-trip-v8/, 'diagnostics display v8');
+assert.doesNotMatch(sw, /tests\//, 'test files are not part of the App Shell');
+assert.doesNotMatch(sw, /ios-gesture-diagnostics\.test\.js/, 'the diagnostic test is never cached');
 const buildMatch = html.match(/var APP_BUILD=\{channel:'DEV',code:'([0-9a-f]{7})',date:'2026-07-13'\}/);
 assert(buildMatch, 'APP identifies a seven-character functional commit');
 execFileSync('git', ['cat-file','-e',buildMatch[1]+'^{commit}']);
+
+const diagnosticFunctions = [
+  'gestureTargetSummary','gestureComputedTouchAction','gestureViewportSnapshot',
+  'createGestureDiagnostics','setupGestureDiagnostics','runtimeViewportMeta',
+  'gestureEnvironmentSnapshot','formatGestureDiagnostics','gestureDiagnosticReport',
+  'renderGestureDiagnosticsBody','refreshGestureDiagnostics',
+  'clearGestureDiagnostics','copyGestureDiagnostics'
+].map(extractFunction).join('\n');
+assert.doesNotMatch(diagnosticFunctions, /=>|\bconst\b|\blet\b/, 'diagnostic production functions remain ES5');
+assert.strictEqual(diagnosticFunctions.indexOf('`'), -1, 'diagnostic production functions use no template literals');
 ```
 
 - [ ] **Step 2: Run the version test and verify RED**
@@ -469,20 +523,20 @@ git status --short --branch
 
 Expected: clean `dev` working tree ahead of `origin/dev`; do not push yet.
 
-### Task 5: Bar-approved Dev push and phone evidence collection
+### Task 5: Authorized Dev push and phone evidence collection
 
 **Files:**
 - No source changes.
 
 **Interfaces:**
-- Consumes: Bar's explicit `push dev` instruction and the clean verified commit stack.
+- Consumes: the supplemental instruction's explicit `push dev` authorization and the clean verified commit stack.
 - Produces: matching local/remote `dev` hashes and one iPhone diagnostic report.
 
 - [ ] **Step 1: Re-run the full verification immediately before push**
 
 Repeat Task 4 Step 4. Stop if any command fails or the tree is dirty.
 
-- [ ] **Step 2: Push only after explicit approval**
+- [ ] **Step 2: Push the verified Dev stack**
 
 Run:
 
