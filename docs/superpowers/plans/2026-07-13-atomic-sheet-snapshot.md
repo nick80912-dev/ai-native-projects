@@ -80,7 +80,10 @@ function schema(){
 }
 
 function validRaw(){
-  return {itin:'x',places:'x',rest:'x',shop:'x',hotels:'x',exp:'x',cfg:'x'};
+  return {
+    itin:'itin-data', places:'places-data', rest:'rest-data', shop:'shop-data',
+    hotels:'hotels-data', exp:'expense-data', cfg:'config-data'
+  };
 }
 
 function validDb(){
