@@ -4,7 +4,7 @@ const vm = require('vm');
 
 const source = fs.readFileSync('validator.js', 'utf8');
 
-function runHealthCheck(ref){
+function runValidation(ref){
   const logs = [];
   const sandbox = {
     DB: {
@@ -26,11 +26,15 @@ function runHealthCheck(ref){
     console: { log:function(){}, warn:function(){} }
   };
   vm.createContext(sandbox);
-  vm.runInContext(source.slice(source.indexOf('function healthCheck()')), sandbox);
-  return sandbox.healthCheck();
+  vm.runInContext(source, sandbox);
+  return {
+    health: sandbox.healthCheck(),
+    structured: sandbox.validateSnapshotData(sandbox.DB, sandbox.RAW, sandbox.SCHEMA)
+  };
 }
 
-const mismatch = runHealthCheck('R013');
+const mismatchResult = runValidation('R013');
+const mismatch = mismatchResult.health;
 assert(
   mismatch.some(function(f){
     return f.indexOf('引用名稱不一致') >= 0 &&
@@ -40,8 +44,12 @@ assert(
   }),
   'an itinerary restaurant name that conflicts with its RID is reported'
 );
+assert(
+  mismatchResult.structured.blockers.some(function(f){ return f.code === 'REF_NAME_MISMATCH'; }),
+  'a restaurant name conflict is classified as REF_NAME_MISMATCH'
+);
 
-const consistent = runHealthCheck('R012');
+const consistent = runValidation('R012').health;
 assert.strictEqual(
   consistent.some(function(f){ return f.indexOf('引用名稱不一致') >= 0; }),
   false,
