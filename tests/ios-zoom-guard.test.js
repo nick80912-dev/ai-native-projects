@@ -44,6 +44,7 @@ assert.doesNotMatch(sw, /tests\//, 'test files are not part of the App Shell');
 assert.doesNotMatch(sw, /ios-gesture-diagnostics\.test\.js/, 'the diagnostic test is never cached');
 const buildMatch = html.match(/var APP_BUILD=\{channel:'DEV',code:'([0-9a-f]{7})',date:'2026-07-13'\}/);
 assert(buildMatch, 'APP identifies a seven-character functional commit');
+assert.strictEqual(buildMatch[1], 'fcb0487', 'APP identifies this UX batch functional commit');
 execFileSync('git', ['cat-file','-e',buildMatch[1]+'^{commit}']);
 assert.match(html, /APP ['"]?\+?escapeHtml\(APP_BUILD\.channel\)/, 'diagnostics render the APP channel from metadata');
 assert.match(html, /CODE ['"]?\+?escapeHtml\(APP_BUILD\.code\)/, 'diagnostics render the functional code commit');
