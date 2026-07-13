@@ -532,11 +532,11 @@ Expected: clean `dev` working tree ahead of `origin/dev`; do not push yet.
 - Consumes: the supplemental instruction's explicit `push dev` authorization and the clean verified commit stack.
 - Produces: matching local/remote `dev` hashes and one iPhone diagnostic report.
 
-- [ ] **Step 1: Re-run the full verification immediately before push**
+- [x] **Step 1: Re-run the full verification immediately before push**
 
 Repeat Task 4 Step 4. Stop if any command fails or the tree is dirty.
 
-- [ ] **Step 2: Push the verified Dev stack**
+- [x] **Step 2: Push the verified Dev stack**
 
 Run:
 
