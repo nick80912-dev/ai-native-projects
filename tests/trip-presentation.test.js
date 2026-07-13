@@ -40,4 +40,10 @@ assert.match(
   'the itinerary starts with completed items hidden'
 );
 
+assert.match(
+  html,
+  /isNow\?'<span class="now-badge">現在<\/span>'/,
+  'the Trip view keeps the now badge'
+);
+
 console.log('trip presentation tests passed');

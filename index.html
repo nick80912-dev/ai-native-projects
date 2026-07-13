@@ -1941,7 +1941,6 @@ function renderNextStopCard(day,dayIndex,pick){
       (meta.act&&meta.act!==meta.place?'<div class="nx-ticket-act">'+escapeHtml(meta.act)+'</div>':'')+
       '<div class="nx-ticket-tags">'+
         (meta.cat?'<span class="nx-ticket-tag">'+escapeHtml(meta.cat.label)+'</span>':'')+
-        (pick.source==='time'?'<span class="now-badge">現在</span>':'')+
       '</div>'+
       '<div class="nx-ticket-lines">'+
         renderTicketLine('交通',meta.drive)+

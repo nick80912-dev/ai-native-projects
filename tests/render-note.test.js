@@ -157,8 +157,8 @@ const currentNextStopOut = sandbox.renderNextStopCard({}, 0, {
     note:'•必備①台灣駕照正本\n•取車時記得錄影\n•訂單編號：133048833'
   }
 });
-assert(currentNextStopOut.includes('<span class="now-badge">現在</span>'), 'home uses the itinerary now badge');
-assert(!currentNextStopOut.includes('依目前時間'), 'the old home-only time label is removed');
+assert(!currentNextStopOut.includes('<span class="now-badge">現在</span>'), 'home next-stop ticket omits the now badge');
+assert(!currentNextStopOut.includes('依目前時間'), 'the old home-only time label remains absent');
 assert(currentNextStopOut.includes('<b>提醒</b>'), 'the reminder label remains visible');
 assert(currentNextStopOut.includes('class="note-list"'), 'home reminders use the shared rich-note renderer');
 assert.strictEqual((currentNextStopOut.match(/class="note-li"/g)||[]).length, 3, 'each Sheet bullet stays scannable');
