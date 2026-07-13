@@ -42,6 +42,8 @@ vm.runInContext([
   extractFunction('shouldReplaceWithTomorrowPreview'),
   extractFunction('shouldShowCompactTomorrowPreview'),
   extractFunction('renderTomorrowPreview'),
+  extractFunction('cssId'),
+  extractFunction('openShopPlace'),
   extractFunction('renderTicketLine'),
   extractFunction('nextStopMeta'),
   extractFunction('parkingPanel'),
@@ -50,6 +52,35 @@ vm.runInContext([
   extractFunction('renderClusterStop'),
   extractFunction('renderClusterNextStopCard')
 ].join('\n'), sandbox);
+
+let switchedView = '';
+let scrolled = false;
+sandbox._shopQ = 'uniqlo';
+sandbox.shopPlaceFilter = 'wants';
+sandbox.shopOpenFloors = { 'P001::1F':true };
+sandbox.shopMalls = function(){ return [{ place:{ placeId:'P001' }, stores:[] }]; };
+sandbox.switchView = function(view){ switchedView = view; };
+sandbox.requestAnimationFrame = function(fn){ fn(); };
+sandbox.document = {
+  getElementById:function(id){
+    if(id !== 'shopmall_P001') return null;
+    return { scrollIntoView:function(){ scrolled = true; } };
+  }
+};
+sandbox.openShopPlace('p001');
+assert.strictEqual(sandbox._shopQ, '', 'shopping deep link clears stale search');
+assert.strictEqual(sandbox.shopPlaceFilter, 'P001', 'shopping deep link selects the resolved place');
+assert.strictEqual(switchedView, 'shop', 'shopping deep link opens the Shopping view');
+assert.strictEqual(scrolled, true, 'shopping deep link scrolls to the place card after render');
+assert.strictEqual(sandbox.shopOpenFloors['P001::1F'], true, 'shopping deep link preserves floor state');
+
+sandbox._shopQ = 'daiso';
+sandbox.shopPlaceFilter = 'P001';
+scrolled = false;
+sandbox.openShopPlace('P999');
+assert.strictEqual(sandbox._shopQ, '', 'unknown place still clears stale search');
+assert.strictEqual(sandbox.shopPlaceFilter, 'all', 'unknown place safely falls back to all');
+assert.strictEqual(scrolled, false, 'unknown place does not attempt a target scroll');
 
 const htmlOut = sandbox.renderNote('建議路線：\n• 搭電梯\n1. 下樓\n① 投紙鶴\n※ 不可外食\nTEL：086-294-5543\nhttps://example.com');
 
@@ -162,6 +193,21 @@ assert(!currentNextStopOut.includes('依目前時間'), 'the old home-only time 
 assert(currentNextStopOut.includes('<b>提醒</b>'), 'the reminder label remains visible');
 assert(currentNextStopOut.includes('class="note-list"'), 'home reminders use the shared rich-note renderer');
 assert.strictEqual((currentNextStopOut.match(/class="note-li"/g)||[]).length, 3, 'each Sheet bullet stays scannable');
+
+sandbox.DB = { shop:[{ placeId:'P001' }] };
+sandbox.resolveRef = function(){
+  return {
+    kind:'place',
+    p:{ placeId:'P001', name:'永旺夢樂城岡山', tnorm:'shopping', type:'購物' }
+  };
+};
+const shoppingNextStopOut = sandbox.renderNextStopCard({}, 0, {
+  source:'order',
+  item:{ id:'10/18_5', time:'', act:'血拚時間', place:'永旺夢樂城岡山', move:'', note:'' }
+});
+assert(shoppingNextStopOut.includes('onclick="openShopPlace(\'P001\')"'), 'Today shopping ticket targets its PID');
+assert(html.includes(`onclick="openShopPlace(\\''+jsString(p.placeId)+'\\')"`), 'Trip shopping action targets its PID');
+assert(html.includes(`id="shopmall_'+cssId(pkey)+'"`), 'shopping cards expose stable PID anchors');
 
 sandbox.resolveParking = function(){ return { mapcode:'22 220 851*75', pnote:'parking note' }; };
 sandbox.kvRow = function(k,v){ return v ? '<div>'+k+v+'</div>' : ''; };

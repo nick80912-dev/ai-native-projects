@@ -419,7 +419,7 @@ input,select,textarea{font-size:16px}
 .ft-chip i{font-style:normal;opacity:.7}
 .ft-more{display:block;width:100%;margin-top:7px;background:none;border:1px dashed var(--line);border-radius:8px;padding:7px;font-size:12px;font-weight:600;color:var(--ink-faint);cursor:pointer;font-family:inherit}
 /* 購物 */
-.shop-mall{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:15px;box-shadow:var(--shadow);margin-bottom:14px}
+.shop-mall{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:15px;box-shadow:var(--shadow);margin-bottom:14px;scroll-margin-top:150px}
 .sm-name{font-size:17px;font-weight:800;color:var(--sea-deep)}
 .sm-hours{font-size:12px;color:var(--ink-soft);margin-top:4px;line-height:1.5}
 .sm-actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}
@@ -1561,7 +1561,7 @@ function renderItem(it,checks,currentItemId,dayProgress){
     qa+='<button class="qa-btn '+(p&&p.tnorm==='ferry'?'fr':'nf')+'" onclick="togglePanel(\''+it.id+'\',\'nf\',this)">'+lbl+'</button>';
   }
   if(p&&p.tnorm==='shopping'&&DB.shop.some(function(s){return (s.placeId||'').toUpperCase()===(p.placeId||'').toUpperCase();})){
-    qa+='<button class="qa-btn sp" onclick="switchView(\'shop\')">🏬 樓層</button>';
+    qa+='<button class="qa-btn sp" onclick="openShopPlace(\''+jsString(p.placeId)+'\')">🏬 樓層</button>';
   }
   var hasMore=it.move||it.note;
   if(hasMore) qa+='<button class="qa-btn mo" onclick="togglePanel(\''+it.id+'\',\'mo\',this)">📝 更多</button>';
@@ -1870,6 +1870,9 @@ function nextStopMeta(item,res){
     pay:(r&&r.pay)||'',
     web:p&&p.web?p.web:'',
     ttl:p&&p.ttl?p.ttl:'',
+    shopPlaceId:(p&&p.tnorm==='shopping'&&DB.shop.some(function(s){
+      return String(s.placeId||'').toUpperCase()===String(p.placeId||'').toUpperCase();
+    }))?p.placeId:'',
     note:item.note || (p&&p.note) || (r&&r.note) || ''
   };
 }
@@ -1953,6 +1956,7 @@ function renderNextStopCard(day,dayIndex,pick){
     (canNav?'<div class="nx-primary-actions"><a class="nx-drive-btn" href="'+navUrl(it,res)+'" target="_blank" rel="noopener">'+(transport()==='drive'?'🚗 導航':'🚃 路線')+'</a></div>':'')+
     '<div class="nx-secondary-actions">'+
       (meta.web?'<a class="qa-btn nf" href="'+escapeHtml(meta.web)+'" target="_blank" rel="noopener">🌐 官網</a>':'')+
+      (meta.shopPlaceId?'<button class="qa-btn sp" onclick="openShopPlace(\''+jsString(meta.shopPlaceId)+'\')">🏬 樓層</button>':'')+
       renderScheduleLinks(meta.ttl,'qa-btn fr')+
     '</div>'+
     '<div class="nx-ticket-low">'+
@@ -2148,6 +2152,20 @@ function setShopPlaceFilter(key){
   renderShopResults();
 }
 function shopQ(v){ _shopQ=v.trim().toLowerCase(); renderShopResults(); }
+function openShopPlace(placeId){
+  var key=String(placeId||'').trim().toUpperCase();
+  var exists=shopMalls().some(function(m){
+    return String(m.place&&m.place.placeId||'').toUpperCase()===key;
+  });
+  _shopQ='';
+  shopPlaceFilter=exists?key:'all';
+  switchView('shop');
+  if(!exists) return;
+  requestAnimationFrame(function(){
+    var target=document.getElementById('shopmall_'+cssId(key));
+    if(target) target.scrollIntoView({behavior:'smooth',block:'start'});
+  });
+}
 function toggleWant(id){
   var w=getWants(); if(w[id]) delete w[id]; else w[id]=true;
   lsSet('trip_shop_wants',w); renderShopResults();
@@ -2233,12 +2251,12 @@ function renderShopResults(){
     if(_shopQ){
       var searchBase=(shopPlaceFilter==='wants')?wanted:m.stores;
       var hits=searchBase.filter(function(s){return (s.name||'').toLowerCase().indexOf(_shopQ)>=0;});
-      h+='<div class="shop-mall"><div class="sm-name">🏬 '+escapeHtml(p.name)+'</div>'+
+      h+='<div class="shop-mall" id="shopmall_'+cssId(pkey)+'"><div class="sm-name">🏬 '+escapeHtml(p.name)+'</div>'+
         (hits.length?hits.map(function(s){var id='w_'+mi+'_'+s.floor+'_'+s.name;return storeRow(s,id,!!wants[id]);}).join(''):'<div class="empty-state" style="padding:16px">找不到「'+escapeHtml(_shopQ)+'」</div>')+'</div>';
       rendered++;
       return;
     }
-    h+='<div class="shop-mall"><div class="sm-name">🏬 '+escapeHtml(p.name)+'</div>'+
+    h+='<div class="shop-mall" id="shopmall_'+cssId(pkey)+'"><div class="sm-name">🏬 '+escapeHtml(p.name)+'</div>'+
       (p.hours?'<div class="sm-hours">🕒 '+escapeHtml(p.hours)+'</div>':'')+
       (p.web?'<div class="sm-actions"><a class="qa-btn nf" href="'+escapeHtml(p.web)+'" target="_blank" rel="noopener">🌐 官方資訊</a></div>':'')+
       renderNoteBlock(p.note);
