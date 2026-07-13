@@ -29,8 +29,12 @@ assert.match(html, /input\s*,\s*select\s*,\s*textarea\s*\{[^}]*font-size\s*:\s*1
 assert.match(html, /html\s*\{[^}]*touch-action\s*:\s*manipulation/i, 'CSS disables double-tap zoom');
 assert.match(html, /function setupDoubleTapGuard\(/, 'stage one retains the JS double-tap guard');
 assert.doesNotMatch(html.match(/<meta name="viewport"[^>]+>/i)[0], /maximum-scale|user-scalable/i, 'viewport restrictions are not persistent');
-assert.match(sw, /okayama-trip-v4/, 'service worker cache is bumped to v4');
-assert.match(html, /SW okayama-trip-v4/, 'diagnostics display the current service worker cache version');
+assert.match(sw, /okayama-trip-v5/, 'service worker cache is bumped to v5');
+assert.match(html, /SW okayama-trip-v5/, 'diagnostics display the current service worker cache version');
+assert.match(html, /var APP_BUILD=\{channel:'DEV',code:'[0-9a-f]{7}',date:'2026-07-13'\}/, 'APP build metadata is explicit');
+assert.match(html, /APP ['"]?\+?escapeHtml\(APP_BUILD\.channel\)/, 'diagnostics render the APP channel from metadata');
+assert.match(html, /CODE ['"]?\+?escapeHtml\(APP_BUILD\.code\)/, 'diagnostics render the functional code commit');
+assert.match(html, /escapeHtml\(APP_BUILD\.date\)/, 'diagnostics render the build date');
 
 const timers = [];
 const sandbox = {
