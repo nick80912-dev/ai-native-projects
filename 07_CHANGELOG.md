@@ -2,6 +2,12 @@
 
 紀錄格式:日期 / 版本 / 重點。細節不展開,新變更往上加。
 
+## 2026-07-13 — 首頁串點子卡詳細行程導向（Dev）
+- 首頁父子串點展開後，點擊任一子卡可切換至同日行程頁、捲到對應卡片，並在有資訊面板時自動展開。
+- 父卡仍只負責展開／收合；一般非父子卡、完成／跳過／自動略過與 localStorage 狀態均未改變。
+- APP 顯示功能提交 `710c85d`；Service Worker App Shell cache 更新為 `okayama-trip-v9`，Schema 維持 2.1。
+- Dev iOS 手勢診斷器繼續保留，本功能未增加手勢攔截或 viewport 修改。
+
 ## 2026-07-13 — iOS 雙擊縮放診斷 Build（Dev）
 - v7 Scroll-only 手機驗證後，雙擊縮放仍可重現；本版只收集證據，不宣稱或加入修復。
 - 診斷面板保存最近 24 筆 touch、gesture、dblclick 與 visual viewport resize 事件，可複製或清除報告；環境摘要包含即時 viewport meta，事件包含 html、body、target 的 computed touch-action。

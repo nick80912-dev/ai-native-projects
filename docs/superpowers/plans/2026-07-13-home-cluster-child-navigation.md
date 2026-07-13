@@ -44,7 +44,7 @@
 - Consumes: `openTripItem(dayIndex, itemId)`, `jsString(value)`, `clusterItemName(item)`, and existing cluster render state.
 - Produces: `renderClusterStop(item, checks, progress, dayIndex) -> string`, where the returned child row routes to the matching Trip card.
 
-- [ ] **Step 1: Add the focused functions to the rendering-test sandbox**
+- [x] **Step 1: Add the focused functions to the rendering-test sandbox**
 
 Add these entries to the existing `vm.runInContext([...])` function list in `tests/render-note.test.js` after `renderNextStopCard`:
 
@@ -54,7 +54,7 @@ Add these entries to the existing `vm.runInContext([...])` function list in `tes
   extractFunction('renderClusterNextStopCard')
 ```
 
-- [ ] **Step 2: Write failing child-route and parent-isolation assertions**
+- [x] **Step 2: Write failing child-route and parent-isolation assertions**
 
 Add after the existing ordinary `renderNextStopCard()` navigation assertions:
 
@@ -83,7 +83,7 @@ The existing assertion below must remain unchanged to protect ordinary cards:
 assert(nextStopOut.includes('onclick="openTripItem(0,\'10/18_4\')"'));
 ```
 
-- [ ] **Step 3: Run the rendering test and verify RED**
+- [x] **Step 3: Run the rendering test and verify RED**
 
 Run:
 
@@ -94,7 +94,7 @@ $node='C:\Users\Aaron Huang\.cache\codex-runtimes\codex-primary-runtime\dependen
 
 Expected: FAIL because `renderClusterStop()` does not yet accept `dayIndex` or emit `openTripItem()`.
 
-- [ ] **Step 4: Add minimal clickable styling**
+- [x] **Step 4: Add minimal clickable styling**
 
 Change the existing cluster-child CSS in `index.html` to:
 
@@ -105,7 +105,7 @@ Change the existing cluster-child CSS in `index.html` to:
 
 Do not alter `.nx-cluster-stop.auto` or the child content layout.
 
-- [ ] **Step 5: Route each expanded child row through the existing Trip navigator**
+- [x] **Step 5: Route each expanded child row through the existing Trip navigator**
 
 Change `renderClusterStop()` to accept `dayIndex` and add only the child-row handler:
 
@@ -131,7 +131,7 @@ Thread `dayIndex` through the expanded list call in `renderClusterNextStopCard()
 
 Do not add `openTripItem()` to `.nx-ticket-main`, the parent title, or `.nx-cluster-expand`.
 
-- [ ] **Step 6: Run focused tests and verify GREEN**
+- [x] **Step 6: Run focused tests and verify GREEN**
 
 Run:
 
@@ -152,7 +152,7 @@ pickNextStop / auto-skip tests passed
 home simplification tests passed
 ```
 
-- [ ] **Step 7: Commit the independently testable behavior**
+- [x] **Step 7: Commit the independently testable behavior**
 
 Run:
 
@@ -181,7 +181,7 @@ Record the returned seven-character functional commit as `<FUNCTIONAL_HASH>` for
 - Consumes: `<FUNCTIONAL_HASH>` from Task 1 and the existing `APP_BUILD` / SW diagnostic display.
 - Produces: a traceable Dev build that reports the exact functional commit and uses `okayama-trip-v9`.
 
-- [ ] **Step 1: Make publication assertions fail first**
+- [x] **Step 1: Make publication assertions fail first**
 
 In `tests/ios-zoom-guard.test.js`, update the App Shell expectations from v8 to v9:
 
@@ -198,7 +198,7 @@ assert.doesNotMatch(sw, /tests\//, 'test files are not part of the App Shell');
 assert.doesNotMatch(sw, /ios-gesture-diagnostics\.test\.js/, 'the diagnostic test is never cached');
 ```
 
-- [ ] **Step 2: Run the publication test and verify RED**
+- [x] **Step 2: Run the publication test and verify RED**
 
 Run:
 
@@ -209,7 +209,7 @@ $node='C:\Users\Aaron Huang\.cache\codex-runtimes\codex-primary-runtime\dependen
 
 Expected: FAIL because production still carries `okayama-trip-v8`.
 
-- [ ] **Step 3: Publish the functional identity and App Shell v9**
+- [x] **Step 3: Publish the functional identity and App Shell v9**
 
 Apply these exact version changes:
 
@@ -233,7 +233,7 @@ var CACHE_NAME = 'okayama-trip-v9';
 
 Do not modify the `SHELL` array.
 
-- [ ] **Step 4: Document the interaction rule and Dev publication**
+- [x] **Step 4: Document the interaction rule and Dev publication**
 
 Add this bullet immediately after the existing first sentence under `04_UI_GUIDELINES.md` `## 互動`:
 
@@ -251,7 +251,7 @@ Add the newest entry to `07_CHANGELOG.md`, replacing `<FUNCTIONAL_HASH>` with th
 - Dev iOS 手勢診斷器繼續保留，本功能未增加手勢攔截或 viewport 修改。
 ```
 
-- [ ] **Step 5: Run repository-wide verification**
+- [x] **Step 5: Run repository-wide verification**
 
 Run:
 
@@ -278,7 +278,7 @@ git status --short
 
 Expected: every test passes, document-title validation passes, all inline scripts compile, `git diff --check` is clean, and status lists only the intended Task 2 files.
 
-- [ ] **Step 6: Commit publication metadata and documents**
+- [x] **Step 6: Commit publication metadata and documents**
 
 Run:
 
