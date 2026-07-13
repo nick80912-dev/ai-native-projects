@@ -59,6 +59,52 @@ assert(sb.validateSnapshotData(unknown,validRaw(),schema()).blockers.some(functi
 const invalidCfg = validDb(); delete invalidCfg.cfg.startdate;
 assert(sb.validateSnapshotData(invalidCfg,validRaw(),schema()).blockers.some(function(f){return f.code==='CFG_REQUIRED';}));
 
+function hasFinding(result,code,sheet){
+  return result.blockers.some(function(f){ return f.code===code&&f.sheet===sheet; });
+}
+
+const missingStructures = validDb();
+delete missingStructures.placeList;
+delete missingStructures.rest;
+delete missingStructures.shop;
+delete missingStructures.hotels;
+delete missingStructures.trip;
+delete missingStructures.cfg;
+const missingStructureResult = sb.validateSnapshotData(missingStructures,validRaw(),schema());
+['places','rest','shop','hotels','itin','cfg'].forEach(function(sheet){
+  assert(hasFinding(missingStructureResult,'DB_STRUCTURE',sheet),'missing '+sheet+' structure is blocked');
+});
+
+const malformedStructures = validDb();
+malformedStructures.placeList={};
+malformedStructures.rest='restaurants';
+malformedStructures.shop={length:1};
+malformedStructures.hotels=true;
+malformedStructures.trip={days:{}};
+malformedStructures.cfg=[];
+const malformedStructureResult = sb.validateSnapshotData(malformedStructures,validRaw(),schema());
+['places','rest','shop','hotels','itin','cfg'].forEach(function(sheet){
+  assert(hasFinding(malformedStructureResult,'DB_STRUCTURE',sheet),'non-array/non-object '+sheet+' structure is blocked');
+});
+
+const emptyDays = validDb(); emptyDays.trip.days=[];
+assert(hasFinding(sb.validateSnapshotData(emptyDays,validRaw(),schema()),'DB_STRUCTURE','itin'),'empty trip days are blocked');
+
+const malformedItems = validDb(); malformedItems.trip.days[0].items={};
+assert(hasFinding(sb.validateSnapshotData(malformedItems,validRaw(),schema()),'DB_STRUCTURE','itin'),'non-array day items are blocked');
+
+const invalidDate = validDb(); invalidDate.cfg.startdate='2026-02-30';
+assert(hasFinding(sb.validateSnapshotData(invalidDate,validRaw(),schema()),'CFG_DATE','cfg'),'invalid calendar dates are blocked');
+
+const invalidDateFormat = validDb(); invalidDateFormat.cfg.enddate='10/23/2026';
+assert(hasFinding(sb.validateSnapshotData(invalidDateFormat,validRaw(),schema()),'CFG_DATE','cfg'),'non-ISO dates are blocked');
+
+const reversedDates = validDb(); reversedDates.cfg.startdate='2026-10-24'; reversedDates.cfg.enddate='2026-10-23';
+assert(hasFinding(sb.validateSnapshotData(reversedDates,validRaw(),schema()),'CFG_DATE','cfg'),'reversed date ranges are blocked');
+
+const unsupportedMode = validDb(); unsupportedMode.cfg.travelmode='bike';
+assert(hasFinding(sb.validateSnapshotData(unsupportedMode,validRaw(),schema()),'CFG_TRAVELMODE','cfg'),'unsupported travel modes are blocked');
+
 const finding = sb.makeValidationFinding('warning','CODE','sheet','message');
 assert.deepStrictEqual(Object.keys(finding).sort(), ['code','level','message','sheet']);
 
