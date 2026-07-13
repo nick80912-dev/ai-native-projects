@@ -479,6 +479,12 @@ input,select,textarea{font-size:16px}
 .diag-gesture-log{max-height:240px;overflow:auto;background:#f7f3ea;border-radius:8px;padding:8px;font-size:10px;line-height:1.45;white-space:pre-wrap;word-break:break-word}
 .diag-panel button[onclick^="endTimeSimulation"]{min-height:44px;font-size:15px;width:100%;margin-top:6px}.diag-panel button[onclick="resetTripProgress()"]{color:#c0392b;border-color:#c0392b}
 .diag-panel input{font-size:16px}
+.sync-status-overlay{position:fixed;inset:0;z-index:120;background:rgba(6,32,38,.62);padding:12px;display:flex;align-items:flex-end;justify-content:center}
+.sync-status-panel{width:100%;max-width:520px;max-height:86vh;overflow:auto;background:var(--card);border-radius:18px 18px 12px 12px;padding:16px;box-shadow:var(--shadow-lg)}
+.sync-status-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}.sync-status-head h2{font-size:18px}.sync-status-close{border:0;background:transparent;color:var(--ink-soft);font-size:26px;line-height:1;padding:5px}
+.sync-status-row{border-top:1px solid var(--line);padding:10px 0}.sync-status-key{font-size:11px;font-weight:800;color:var(--ink-faint);letter-spacing:.04em}.sync-status-value{font-size:13px;color:var(--ink);margin-top:2px;overflow-wrap:anywhere}.sync-status-failure{color:var(--coral);font-weight:700}.sync-status-warnings{margin:4px 0 0;padding-left:18px;font-size:12px;color:var(--ink-soft)}
+.sync-status-retry{width:100%;min-height:44px;border:0;border-radius:10px;background:var(--sea);color:#fff;font:inherit;font-weight:800;margin-top:12px}.sync-status-retry:disabled{opacity:.5}
+@media (min-width:620px){.sync-status-overlay{align-items:center}.sync-status-panel{border-radius:16px}}
 </style>
 </head>
 <body>
@@ -489,7 +495,7 @@ input,select,textarea{font-size:16px}
     <img class="logo" id="diagnosticBadge" src="okayama-peach-badge.png" alt="岡山桃子">
     <span class="t" id="brandTitle">日本行程</span>
     <span class="sim-marker" id="simMarker">模擬中</span>
-    <button class="sync" id="syncBtn" onclick="manualSyncNew()">
+    <button class="sync" id="syncBtn" onclick="openSyncStatus()">
       <span class="dot" id="syncDot"></span><span id="syncTxt">同步中</span>
     </button>
   </div>
@@ -958,6 +964,7 @@ function lsGet(k,f){ try{ var v=localStorage.getItem(k); return v?JSON.parse(v):
 function lsSet(k,v){ try{ localStorage.setItem(k,JSON.stringify(v)); }catch(e){ AppLog.repo('寫入 '+k+' 失敗:'+(e.message||e)+' — 個人狀態可能未保存'); } }
 function escapeHtml(s){ return (s==null?'':String(s)).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 function jsString(s){ return String(s==null?'':s).replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/\n/g,'\\n').replace(/\r/g,''); }
+function timestampDate(value){ return new Date(Number(value)); }
 function appNow(){
   var sim=lsGet('trip_time_simulation',null);
   if(sim&&sim.mode==='offset'&&typeof sim.offsetMs==='number') return new Date(Date.now()+sim.offsetMs);
@@ -1373,16 +1380,92 @@ function syncAll(showToast){
 }
 function manualSyncNew(){ toast('正在抓取最新行程…'); return syncAll(true); }
 function manualSync(){ return manualSyncNew(); }
+function syncStatusModel(){
+  function pad(value){ return String(value).length<2?'0'+value:String(value); }
+  function formatTime(value){
+    var date=timestampDate(value);
+    if(!value||isNaN(date.getTime())) return '尚無完整同步紀錄';
+    return date.getFullYear()+'/'+pad(date.getMonth()+1)+'/'+pad(date.getDate())+' '+pad(date.getHours())+':'+pad(date.getMinutes());
+  }
+  function bounded(value,limit){
+    var text=String(value==null?'':value).replace(/[\r\n\t]+/g,' ').replace(/\s+/g,' ').trim();
+    return text.length>limit?text.slice(0,limit)+'…':text;
+  }
+  var snapshot=CURRENT_SNAPSHOT||null, source=snapshot&&snapshot.source||'builtin', failureRecord=null, state, label;
+  try{
+    var stored=localStorage.getItem(SNAPSHOT_FAILURE_KEY);
+    failureRecord=stored?JSON.parse(stored):null;
+  }catch(ignore){ failureRecord=null; }
+  if(syncInFlight){ state='syncing'; label='同步中'; }
+  else if(source==='builtin'){ state='builtin'; label='內建版'; }
+  else if(failureRecord){ state='failed'; label='更新失敗'; }
+  else if(source==='online'){ state='online'; label='已是最新'; }
+  else{ state='offline'; label='離線版'; }
+  var sourceLabels={online:'Google 試算表', 'legacy-migrated':'舊版離線快取', builtin:'APP 內建資料'};
+  var lastComplete=formatTime(snapshot&&snapshot.createdAt);
+  var failure='';
+  if(failureRecord){
+    var failureTime=formatTime(failureRecord.activeCreatedAt||snapshot&&snapshot.createdAt);
+    var stageLabels={download:'下載失敗',structure:'資料結構檢查失敗',validation:'資料驗證失敗',storage:'本機儲存失敗',boot:'啟動資料驗證失敗'};
+    var detail=stageLabels[failureRecord.stage]||'同步作業失敗';
+    var sheet=bounded(failureRecord.sheet,40).replace(/[^0-9A-Za-z_-]/g,'');
+    var code=bounded(failureRecord.code,40).replace(/[^0-9A-Za-z_-]/g,'');
+    failure='更新失敗，正在沿用 '+failureTime+' 的完整版本。'+detail+(sheet?'（Sheet: '+sheet+'）':'')+(code?' ['+code+']':'');
+  }
+  var warningRecords=snapshot&&snapshot.validation&&snapshot.validation.warnings||[];
+  var warnings=warningRecords.slice(0,5).map(function(warning){
+    return bounded(warning&&warning.message||warning&&warning.code||warning,160);
+  });
+  return {state:state,label:label,source:sourceLabels[source]||bounded(source,40),lastComplete:lastComplete,failure:failure,warnings:warnings};
+}
+function closeSyncStatus(){
+  var overlay=document.getElementById('syncStatusOverlay');
+  if(overlay) overlay.remove();
+}
+function renderSyncStatusBody(){
+  var model=syncStatusModel(), body=document.getElementById('syncStatusBody');
+  var warningHtml=model.warnings.length?'<ul class="sync-status-warnings">'+model.warnings.map(function(warning){return '<li>'+escapeHtml(warning)+'</li>';}).join('')+'</ul>':'<div class="sync-status-value">無</div>';
+  var html='<div class="sync-status-row"><div class="sync-status-key">APP build</div><div class="sync-status-value">'+escapeHtml(APP_BUILD.channel)+' · '+escapeHtml(APP_BUILD.code)+' · '+escapeHtml(APP_BUILD.date)+'</div></div>'+
+    '<div class="sync-status-row"><div class="sync-status-key">資料版本</div><div class="sync-status-value">'+escapeHtml(CURRENT_SNAPSHOT&&CURRENT_SNAPSHOT.generationId||'內建資料')+'</div></div>'+
+    '<div class="sync-status-row"><div class="sync-status-key">資料來源</div><div class="sync-status-value">'+escapeHtml(model.source)+'</div></div>'+
+    '<div class="sync-status-row"><div class="sync-status-key">最後完整同步時間</div><div class="sync-status-value">'+escapeHtml(model.lastComplete)+'</div></div>'+
+    '<div class="sync-status-row"><div class="sync-status-key">最近失敗原因</div><div class="sync-status-value sync-status-failure">'+escapeHtml(model.failure||'無')+'</div></div>'+
+    '<div class="sync-status-row"><div class="sync-status-key">驗證警告</div>'+warningHtml+'</div>'+
+    '<button class="sync-status-retry" onclick="retrySyncFromPanel(this)"'+(syncInFlight?' disabled':'')+'>立即重新同步</button>';
+  if(body) body.innerHTML=html;
+  return html;
+}
+function openSyncStatus(){
+  closeSyncStatus();
+  var overlay=document.createElement('div');
+  overlay.id='syncStatusOverlay'; overlay.className='sync-status-overlay'; overlay.setAttribute('role','presentation');
+  overlay.setAttribute('onclick','if(event.target===this)closeSyncStatus()');
+  overlay.innerHTML='<section class="sync-status-panel" role="dialog" aria-modal="true" aria-labelledby="syncStatusTitle"><div class="sync-status-head"><h2 id="syncStatusTitle">資料同步狀態</h2><button class="sync-status-close" aria-label="關閉" onclick="closeSyncStatus()">×</button></div><div id="syncStatusBody"></div></section>';
+  document.body.appendChild(overlay);
+  renderSyncStatusBody();
+}
+function retrySyncFromPanel(button){
+  if(button) button.disabled=true;
+  return syncAll(true).then(function(result){
+    if(button) button.disabled=false;
+    renderSyncStatusBody();
+    return result;
+  },function(error){
+    if(button) button.disabled=false;
+    renderSyncStatusBody();
+    throw error;
+  });
+}
 function setSyncState(state){
   var dot=document.getElementById('syncDot'),txt=document.getElementById('syncTxt'),btn=document.getElementById('syncBtn');
   if(!dot) return;
   btn.classList.remove('spinning'); dot.className='dot';
   if(state==='syncing'){ btn.classList.add('spinning'); txt.textContent='同步中'; }
   else if(state==='online'){ txt.textContent='已是最新'; }
-  else if(state==='partial'){ dot.classList.add('stale'); txt.textContent='部分更新'; }
-  else if(state==='cache'){ dot.classList.add('stale'); txt.textContent='離線版'; }
+  else if(state==='legacy-migrated'||state==='cache'||state==='offline'){ dot.classList.add('stale'); txt.textContent='離線版'; }
   else if(state==='builtin'){ dot.classList.add('stale'); txt.textContent='內建版'; }
-  else { dot.classList.add('err'); txt.textContent='無法連線'; }
+  else { dot.classList.add('err'); txt.textContent='更新失敗'; }
+  renderSyncStatusBody();
 }
 
 /* ================= DB 組裝(CMS → 應用資料模型) ================= */
@@ -2893,7 +2976,7 @@ function copyGestureDiagnostics(){ copyText(gestureDiagnosticReport(),'手勢診
 function closeDiagnostics(){ var el=document.getElementById('diagnosticOverlay'); if(el) el.remove(); }
 function openDiagnostics(){
   closeDiagnostics(); var sim=lsGet('trip_time_simulation',null), findings=healthCheck()||[], el=document.createElement('div'); el.id='diagnosticOverlay'; el.className='diag-overlay';
-  var sync=(typeof SHEETS!=='undefined'?SHEETS:[]).map(function(s){ var c=lsGet('v2_cache_'+s.key,null); return '<div class="diag-row">'+escapeHtml(s.key)+'：'+escapeHtml(SRC[s.key]||'未同步')+(c&&c.ts?' · '+new Date(c.ts).toLocaleString():'')+'</div>'; }).join('');
+  var sync=(typeof SHEETS!=='undefined'?SHEETS:[]).map(function(s){ var c=lsGet('v2_cache_'+s.key,null); return '<div class="diag-row">'+escapeHtml(s.key)+'：'+escapeHtml(SRC[s.key]||'未同步')+(c&&c.ts?' · '+timestampDate(c.ts).toLocaleString():'')+'</div>'; }).join('');
   var simValue=sim&&sim.mode==='custom'?sim.value:'';
   var days=(DB.trip&&DB.trip.days||[]).map(function(_,i){return '<button onclick="setTimeSimulationDay('+i+')">Day '+(i+1)+'</button>';}).join('');
   el.innerHTML='<div class="diag-panel"><div class="diag-head"><h2>診斷面板</h2><button class="diag-close" onclick="closeDiagnostics()">×</button></div><div class="diag-section"><h3>健康檢查</h3><div class="diag-row">'+(findings.length?escapeHtml(findings.join('；')):'正常')+'</div></div><div class="diag-section"><h3>同步狀態</h3>'+sync+'</div><div class="diag-section"><h3>版本</h3>'+

@@ -157,6 +157,21 @@ function extractFunction(name){
   throw new Error('Could not extract '+name);
 }
 
+assert.notStrictEqual(htmlSource.indexOf('function syncStatusModel('),-1,'syncStatusModel exists');
+assert.notStrictEqual(htmlSource.indexOf('function openSyncStatus('),-1,'openSyncStatus exists');
+assert.notStrictEqual(htmlSource.indexOf('function closeSyncStatus('),-1,'closeSyncStatus exists');
+assert.notStrictEqual(htmlSource.indexOf('function renderSyncStatusBody('),-1,'renderSyncStatusBody exists');
+assert.notStrictEqual(htmlSource.indexOf('function retrySyncFromPanel('),-1,'retrySyncFromPanel exists');
+assert(/id="syncBtn" onclick="openSyncStatus\(\)"/.test(htmlSource),'header opens status panel');
+assert(!/id="syncBtn" onclick="manualSyncNew\(\)"/.test(htmlSource),'header no longer syncs directly');
+['同步中','已是最新','更新失敗','離線版','內建版'].forEach(function(label){
+  assert(htmlSource.indexOf(label)>=0,'status UI contains '+label);
+});
+assert.strictEqual((htmlSource.match(/onclick="retrySyncFromPanel\(this\)"/g)||[]).length,1,'panel has exactly one retry button');
+['APP build','資料來源','最後完整同步時間','最近失敗原因','驗證警告'].forEach(function(label){
+  assert(htmlSource.indexOf(label)>=0,'panel contains '+label);
+});
+
 const app={SHEETS:[{key:'itin'},{key:'places'},{key:'rest'},{key:'shop'},{key:'hotels'},{key:'exp'},{key:'cfg'}]};
 vm.createContext(app);
 vm.runInContext([
@@ -353,6 +368,83 @@ function loadCoordinator(){
   return runtime;
 }
 
+function loadSyncStatus(){
+  const storage=memoryStorage();
+  const runtime={
+    Promise:Promise,
+    APP_BUILD:{channel:'DEV',code:'abc1234',date:'2026-07-13'},
+    localStorage:storage,
+    CURRENT_SNAPSHOT:null,
+    syncInFlight:null,
+    syncAll:function(){return Promise.resolve({ok:true});},
+    escapeHtml:function(value){
+      return (value==null?'':String(value)).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    },
+    document:{getElementById:function(){return null;}}
+  };
+  vm.createContext(runtime);
+  vm.runInContext([
+    "var SNAPSHOT_FAILURE_KEY='trip_sync_last_failure';",
+    extractFunction('timestampDate'), extractFunction('syncStatusModel'), extractFunction('renderSyncStatusBody'), extractFunction('retrySyncFromPanel')
+  ].join('\n'),runtime);
+  return runtime;
+}
+
+async function testSyncStatus(){
+  const app=loadSyncStatus();
+  const completedAt=new Date(2026,6,13,21,30,0,0).getTime();
+
+  app.CURRENT_SNAPSHOT={source:'online',createdAt:completedAt,generationId:'sheet-online',validation:{warnings:[]}};
+  let model=app.syncStatusModel();
+  assert.strictEqual(model.state,'online');
+  assert.strictEqual(model.label,'已是最新');
+  assert.strictEqual(model.lastComplete,'2026/07/13 21:30');
+
+  app.CURRENT_SNAPSHOT={source:'legacy-migrated',createdAt:completedAt,generationId:'legacy-one',validation:{warnings:[]}};
+  model=app.syncStatusModel();
+  assert.strictEqual(model.state,'offline');
+  assert.strictEqual(model.label,'離線版');
+
+  app.CURRENT_SNAPSHOT={source:'builtin',createdAt:completedAt,generationId:'builtin-one',validation:{warnings:[]}};
+  model=app.syncStatusModel();
+  assert.strictEqual(model.state,'builtin');
+  assert.strictEqual(model.label,'內建版');
+  assert.notStrictEqual(model.label,'已是最新');
+
+  app.syncInFlight=Promise.resolve({ok:true});
+  model=app.syncStatusModel();
+  assert.strictEqual(model.state,'syncing');
+  assert.strictEqual(model.label,'同步中');
+
+  app.syncInFlight=null;
+  app.CURRENT_SNAPSHOT={source:'online',createdAt:completedAt,generationId:'sheet-prior',validation:{warnings:[{message:'欄位提示'}]}};
+  app.localStorage.memory.trip_sync_last_failure=JSON.stringify({
+    at:completedAt+1000,stage:'download',sheet:'shop',code:'HTTP_ERROR',
+    message:'PID,Place,Type\nP025,<script>raw CSV must stay private</script>',activeCreatedAt:completedAt
+  });
+  model=app.syncStatusModel();
+  assert.strictEqual(model.state,'failed');
+  assert.strictEqual(model.label,'更新失敗');
+  assert(model.failure.indexOf('更新失敗，正在沿用 2026/07/13 21:30 的完整版本。')>=0);
+  assert(model.failure.indexOf('shop')>=0,'failure identifies the failed sheet');
+  assert.strictEqual(model.failure.indexOf('P025'),-1,'failure excludes CSV content');
+  assert.strictEqual(model.failure.indexOf('<script>'),-1,'failure excludes exception content');
+  assert.deepStrictEqual(Array.from(model.warnings),['欄位提示']);
+
+  let rendered=0, syncCalls=0;
+  app.renderSyncStatusBody=function(){rendered++;};
+  app.syncAll=function(){syncCalls++; return app.syncInFlight;};
+  let resolveSync;
+  app.syncInFlight=new Promise(function(resolve){resolveSync=resolve;});
+  const button={disabled:false};
+  const retry=app.retrySyncFromPanel(button);
+  assert.strictEqual(button.disabled,true,'retry is disabled while sync is in flight');
+  assert.strictEqual(syncCalls,1,'retry awaits the shared in-flight sync');
+  resolveSync({ok:true});
+  await retry;
+  assert.strictEqual(rendered,1,'panel rerenders after retry finishes');
+}
+
 async function testBootSelection(){
   const app=loadCoordinator();
   const active=snapshotFor(app,orchestrationRaw('active'),'g-active');
@@ -451,7 +543,7 @@ async function testAtomicSync(){
   assert.strictEqual(app.renderCount,0);
 }
 
-Promise.resolve().then(testBootSelection).then(testAtomicSync).then(function(){
+Promise.resolve().then(testBootSelection).then(testAtomicSync).then(testSyncStatus).then(function(){
   console.log('atomic sheet sync tests passed');
 }).catch(function(error){
   console.error(error&&error.stack||error);
