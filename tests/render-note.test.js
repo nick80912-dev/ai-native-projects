@@ -44,6 +44,7 @@ vm.runInContext([
   extractFunction('renderTomorrowPreview'),
   extractFunction('cssId'),
   extractFunction('openShopPlace'),
+  extractFunction('centerShopFilterChip'),
   extractFunction('parkingLines'),
   extractFunction('renderParkingValue'),
   extractFunction('parkingKvRow'),
@@ -85,6 +86,57 @@ sandbox.openShopPlace('P999');
 assert.strictEqual(sandbox._shopQ, '', 'unknown place still clears stale search');
 assert.strictEqual(sandbox.shopPlaceFilter, 'all', 'unknown place safely falls back to all');
 assert.strictEqual(scrolled, false, 'unknown place does not attempt a target scroll');
+
+let horizontalScroll = null;
+let activeChip = { offsetLeft:530, offsetWidth:120 };
+let filterBar = {
+  clientWidth:300,
+  offsetLeft:30,
+  scrollLeft:0,
+  querySelector:function(selector){
+    assert.strictEqual(selector, '.shop-filter-btn.on');
+    return activeChip;
+  },
+  scrollTo:function(options){ horizontalScroll = options; }
+};
+sandbox.document = {
+  getElementById:function(id){ return id==='shopFilterBar'?filterBar:null; }
+};
+sandbox.centerShopFilterChip();
+assert.strictEqual(horizontalScroll.left, 410, 'active place chip is horizontally centered');
+assert.strictEqual(horizontalScroll.behavior, 'smooth', 'chip centering uses smooth horizontal movement');
+
+horizontalScroll = null;
+activeChip = { offsetLeft:50, offsetWidth:80 };
+sandbox.centerShopFilterChip();
+assert.strictEqual(horizontalScroll.left, 0, 'centering is clamped at the start of the bar');
+
+activeChip = { offsetLeft:450, offsetWidth:100 };
+filterBar = {
+  clientWidth:300,
+  offsetLeft:30,
+  scrollLeft:0,
+  querySelector:function(){ return activeChip; }
+};
+sandbox.centerShopFilterChip();
+assert.strictEqual(filterBar.scrollLeft, 320, 'scrollLeft fallback centers the chip when scrollTo is unavailable');
+
+sandbox.document = { getElementById:function(){ return null; } };
+assert.doesNotThrow(function(){ sandbox.centerShopFilterChip(); }, 'missing filter bar is a no-op');
+
+filterBar = { clientWidth:300, offsetLeft:30, querySelector:function(){ return null; } };
+sandbox.document = { getElementById:function(){ return filterBar; } };
+assert.doesNotThrow(function(){ sandbox.centerShopFilterChip(); }, 'missing active chip is a no-op');
+
+horizontalScroll = null;
+activeChip = { offsetLeft:330, offsetWidth:0 };
+filterBar = { clientWidth:300, offsetLeft:30, querySelector:function(){ return activeChip; }, scrollTo:function(options){ horizontalScroll=options; } };
+sandbox.document = { getElementById:function(){ return filterBar; } };
+sandbox.centerShopFilterChip();
+assert.strictEqual(horizontalScroll, null, 'zero layout measurements are a no-op');
+
+assert(html.includes('<div class="shop-filter" id="shopFilterBar">'), 'Shopping filter has a stable horizontal-scroll anchor');
+assert(html.includes('requestAnimationFrame(centerShopFilterChip);'), 'Shopping render schedules chip centering after markup replacement');
 
 const htmlOut = sandbox.renderNote('建議路線：\n• 搭電梯\n1. 下樓\n① 投紙鶴\n※ 不可外食\nTEL：086-294-5543\nhttps://example.com');
 

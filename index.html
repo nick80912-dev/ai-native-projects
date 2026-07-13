@@ -2189,6 +2189,16 @@ function openShopPlace(placeId){
     if(target) target.scrollIntoView({behavior:'smooth',block:'start'});
   });
 }
+function centerShopFilterChip(){
+  var bar=document.getElementById('shopFilterBar');
+  if(!bar) return;
+  var chip=bar.querySelector('.shop-filter-btn.on');
+  if(!chip||!bar.clientWidth||!chip.offsetWidth) return;
+  var relativeLeft=chip.offsetLeft-(bar.offsetLeft||0);
+  var left=Math.max(0,relativeLeft-(bar.clientWidth-chip.offsetWidth)/2);
+  if(typeof bar.scrollTo==='function') bar.scrollTo({left:left,behavior:'smooth'});
+  else bar.scrollLeft=left;
+}
 function toggleWant(id){
   var w=getWants(); if(w[id]) delete w[id]; else w[id]=true;
   lsSet('trip_shop_wants',w); renderShopResults();
@@ -2255,7 +2265,7 @@ function renderShopResults(){
   malls.forEach(function(m,mi){
     wantTotal+=m.stores.filter(function(s){return wants['w_'+mi+'_'+s.floor+'_'+s.name];}).length;
   });
-  h+='<div class="shop-filter">'+
+  h+='<div class="shop-filter" id="shopFilterBar">'+
     '<button class="shop-filter-btn '+(shopPlaceFilter==='all'?'on':'')+'" onclick="setShopPlaceFilter(\'all\')">全部<small>'+malls.length+'</small></button>'+
     '<button class="shop-filter-btn '+(shopPlaceFilter==='wants'?'on':'')+'" onclick="setShopPlaceFilter(\'wants\')">想逛<small>'+wantTotal+'</small></button>'+
     malls.map(function(m){
@@ -2316,6 +2326,7 @@ function renderShopResults(){
     h+='<div class="empty-state">'+(shopPlaceFilter==='wants'?'尚未標記想逛店家':'目前沒有符合條件的購物資料')+'</div>';
   }
   box.innerHTML=h;
+  requestAnimationFrame(centerShopFilterChip);
 }
 
 /* ================= 分帳(App 記帳 + CMS 行前團費) ================= */
