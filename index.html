@@ -473,6 +473,7 @@ input,select,textarea{font-size:16px}
 .diag-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}.diag-head h2{font-size:17px}.diag-close{border:0;background:none;font-size:24px;color:var(--ink-soft)}
 .diag-section{border-top:1px solid var(--line);padding:12px 0}.diag-section h3{font-size:13px;margin-bottom:6px}.diag-row{font-size:12px;color:var(--ink-soft);margin:3px 0}.diag-actions{display:flex;gap:8px;flex-wrap:wrap}.diag-actions button{min-height:40px;padding:7px 10px;border:1px solid var(--line);border-radius:8px;background:#fff;font:inherit;font-size:12px}.diag-actions .primary{background:var(--sea);color:#fff;border-color:var(--sea)}
 .diag-help{font-size:11px;color:var(--ink-faint);margin:4px 0 8px}.diag-shortcuts{display:flex;gap:5px;flex-wrap:wrap;margin:8px 0}
+.diag-gesture-log{max-height:240px;overflow:auto;background:#f7f3ea;border-radius:8px;padding:8px;font-size:10px;line-height:1.45;white-space:pre-wrap;word-break:break-word}
 .diag-panel button[onclick^="endTimeSimulation"]{min-height:44px;font-size:15px;width:100%;margin-top:6px}.diag-panel button[onclick="resetTripProgress()"]{color:#c0392b;border-color:#c0392b}
 .diag-panel input{font-size:16px}
 </style>
@@ -2443,6 +2444,124 @@ function endTimeSimulation(restore){
   if(restore&&snap){ for(var i=localStorage.length-1;i>=0;i--){ var k=localStorage.key(i); if(isSimulationSnapshotKey(k)) localStorage.removeItem(k); } Object.keys(snap).forEach(function(k){ localStorage.setItem(k,snap[k]); }); }
   localStorage.removeItem('trip_time_simulation'); localStorage.removeItem('trip_time_simulation_snapshot'); updateSimulationMarker(); renderAll(); closeDiagnostics(); toast(restore?'已回復模擬前狀態':'已回復手機時間');
 }
+function gestureTargetSummary(target){
+  if(!target) return 'unknown';
+  var tag=String(target.tagName||'unknown').toLowerCase();
+  var cls=String(target.className||'').trim().split(/\s+/).filter(Boolean).slice(0,2);
+  return tag+(cls.length?'.'+cls.join('.'):'');
+}
+function gestureComputedTouchAction(win,element){
+  try{
+    if(!win||!win.getComputedStyle||!element) return 'n/a';
+    var value=win.getComputedStyle(element).touchAction;
+    return value?String(value):'n/a';
+  }catch(e){ return 'n/a'; }
+}
+function gestureViewportSnapshot(type,event,win,doc){
+  event=event||{}; win=win||{}; doc=doc||{};
+  var root=doc.documentElement||{}, vv=win.visualViewport||null;
+  return {
+    time:Math.round(Number(event.timeStamp)||0), type:type,
+    touches:event.touches?event.touches.length:null,
+    changedTouches:event.changedTouches?event.changedTouches.length:null,
+    cancelable:!!event.cancelable, defaultPrevented:!!event.defaultPrevented,
+    target:gestureTargetSummary(event.target),
+    innerWidth:Number(win.innerWidth)||0, innerHeight:Number(win.innerHeight)||0,
+    scrollX:Number(win.scrollX)||0, scrollY:Number(win.scrollY)||0,
+    docClientWidth:Number(root.clientWidth)||0, docScrollWidth:Number(root.scrollWidth)||0,
+    vvWidth:vv?Number(vv.width)||0:null, vvHeight:vv?Number(vv.height)||0:null,
+    vvScale:vv?Number(vv.scale)||0:null,
+    vvOffsetLeft:vv?Number(vv.offsetLeft)||0:null,
+    vvOffsetTop:vv?Number(vv.offsetTop)||0:null,
+    taHtml:gestureComputedTouchAction(win,root),
+    taBody:gestureComputedTouchAction(win,doc.body),
+    taTarget:gestureComputedTouchAction(win,event.target)
+  };
+}
+function createGestureDiagnostics(limit,snapshotter){
+  var records=[], cap=Math.max(1,Number(limit)||24);
+  return {
+    record:function(type,event){
+      records.push(snapshotter(type,event));
+      if(records.length>cap) records.splice(0,records.length-cap);
+    },
+    list:function(){ return records.slice(); },
+    clear:function(){ records=[]; }
+  };
+}
+var IOS_GESTURE_DIAGNOSTICS=createGestureDiagnostics(24,function(type,event){
+  return gestureViewportSnapshot(type,event,window,document);
+});
+function setupGestureDiagnostics(doc,win,store){
+  ['touchstart','touchend','gesturestart','gestureend','dblclick'].forEach(function(type){
+    doc.addEventListener(type,function(event){ store.record(type,event); },{passive:true});
+  });
+  if(win.visualViewport){
+    win.visualViewport.addEventListener('resize',function(event){ store.record('visualViewport.resize',event); },{passive:true});
+  }
+}
+function runtimeViewportMeta(doc){
+  try{
+    var meta=doc&&doc.querySelector?doc.querySelector('meta[name="viewport"]'):null;
+    var content=meta&&meta.getAttribute?meta.getAttribute('content'):'';
+    return content?String(content):'n/a';
+  }catch(e){ return 'n/a'; }
+}
+function gestureEnvironmentSnapshot(nav,standaloneQuery,build,schemaVersion,swVersion,doc){
+  return {
+    app:'APP '+build.channel+' · CODE '+build.code+' · '+build.date,
+    schema:schemaVersion,
+    sw:swVersion,
+    userAgent:String(nav.userAgent||''),
+    standalone:!!(standaloneQuery&&standaloneQuery.matches),
+    navigatorStandalone:typeof nav.standalone==='boolean'?nav.standalone:null,
+    viewportMeta:runtimeViewportMeta(doc)
+  };
+}
+function formatGestureDiagnostics(env,current,records){
+  var lines=[
+    env.app,
+    'SCHEMA '+env.schema,
+    'SW '+env.sw,
+    'viewport meta='+env.viewportMeta,
+    'standalone='+env.standalone+' navigator.standalone='+(env.navigatorStandalone===null?'n/a':env.navigatorStandalone),
+    'UA '+env.userAgent
+  ];
+  function metric(snapshot){
+    return snapshot.type+
+      ' t='+snapshot.time+
+      ' target='+snapshot.target+
+      ' touches='+(snapshot.touches===null?'n/a':snapshot.touches)+
+      ' changed='+(snapshot.changedTouches===null?'n/a':snapshot.changedTouches)+
+      ' cancelable='+snapshot.cancelable+
+      ' prevented='+snapshot.defaultPrevented+
+      ' scale='+(snapshot.vvScale===null?'n/a':snapshot.vvScale)+
+      ' vv='+(snapshot.vvWidth===null?'n/a':snapshot.vvWidth+'x'+snapshot.vvHeight)+
+      ' offset='+(snapshot.vvOffsetLeft===null?'n/a':snapshot.vvOffsetLeft+','+snapshot.vvOffsetTop)+
+      ' inner='+snapshot.innerWidth+'x'+snapshot.innerHeight+
+      ' doc='+snapshot.docClientWidth+'/'+snapshot.docScrollWidth+
+      ' scroll='+snapshot.scrollX+','+snapshot.scrollY+
+      ' ta.html='+snapshot.taHtml+
+      ' ta.body='+snapshot.taBody+
+      ' ta.target='+snapshot.taTarget;
+  }
+  lines.push('CURRENT '+metric(current));
+  (records||[]).slice().reverse().forEach(function(snapshot){ lines.push(metric(snapshot)); });
+  return lines.join('\n');
+}
+function gestureDiagnosticReport(){
+  var current=gestureViewportSnapshot('current',{},window,document);
+  var query=window.matchMedia?window.matchMedia('(display-mode: standalone)'):null;
+  var env=gestureEnvironmentSnapshot(navigator,query,APP_BUILD,SCHEMA.version,'okayama-trip-v8',document);
+  return formatGestureDiagnostics(env,current,IOS_GESTURE_DIAGNOSTICS.list());
+}
+function renderGestureDiagnosticsBody(){
+  var records=IOS_GESTURE_DIAGNOSTICS.list();
+  return '<div class="diag-row">'+(records.length?'已記錄 '+records.length+' 筆事件':'尚無手勢事件')+'</div><pre class="diag-gesture-log">'+escapeHtml(gestureDiagnosticReport())+'</pre><div class="diag-actions"><button class="primary" onclick="copyGestureDiagnostics()">複製手勢診斷報告</button><button onclick="clearGestureDiagnostics()">清除手勢事件</button></div>';
+}
+function refreshGestureDiagnostics(){ var el=document.getElementById('diagGestureBody'); if(el) el.innerHTML=renderGestureDiagnosticsBody(); }
+function clearGestureDiagnostics(){ IOS_GESTURE_DIAGNOSTICS.clear(); refreshGestureDiagnostics(); }
+function copyGestureDiagnostics(){ copyText(gestureDiagnosticReport(),'手勢診斷報告'); }
 function closeDiagnostics(){ var el=document.getElementById('diagnosticOverlay'); if(el) el.remove(); }
 function openDiagnostics(){
   closeDiagnostics(); var sim=lsGet('trip_time_simulation',null), findings=healthCheck()||[], el=document.createElement('div'); el.id='diagnosticOverlay'; el.className='diag-overlay';
@@ -2452,7 +2571,7 @@ function openDiagnostics(){
   el.innerHTML='<div class="diag-panel"><div class="diag-head"><h2>診斷面板</h2><button class="diag-close" onclick="closeDiagnostics()">×</button></div><div class="diag-section"><h3>健康檢查</h3><div class="diag-row">'+(findings.length?escapeHtml(findings.join('；')):'正常')+'</div></div><div class="diag-section"><h3>同步狀態</h3>'+sync+'</div><div class="diag-section"><h3>版本</h3>'+
     '<div class="diag-row">APP '+escapeHtml(APP_BUILD.channel)+' · CODE '+escapeHtml(APP_BUILD.code)+' · '+escapeHtml(APP_BUILD.date)+'</div>'+
     '<div class="diag-row">SCHEMA '+escapeHtml(SCHEMA.version)+'</div>'+
-    '<div class="diag-row">SW okayama-trip-v7</div></div><div class="diag-section"><h3>時間模擬</h3><div class="diag-row">'+(isTimeSimulationActive()?'模擬中：目前模擬時間 '+appNow().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})+'（行走中）':'依手機時間')+'</div><input id="diagTime" type="datetime-local" value="'+escapeHtml(simValue||'')+'"><div class="diag-shortcuts">'+days+'</div><div class="diag-actions"><button class="primary" onclick="setTimeSimulation()">套用並開始模擬</button></div><button onclick="endTimeSimulation(true)">結束模擬——還原測試前狀態</button><div class="diag-help">還原進入模擬前的打卡與略過狀態。</div><button onclick="endTimeSimulation(false)">結束模擬——保留測試變更</button><div class="diag-help">保留模擬期間的打卡與略過狀態。</div></div><div class="diag-section"><h3>行程進度</h3><button onclick="resetTripProgress()">重置行程進度</button><div class="diag-help">僅清除打卡與略過，需雙重確認。</div></div></div>';
+    '<div class="diag-row">SW okayama-trip-v7</div></div><div class="diag-section"><h3>iOS 手勢診斷</h3><div id="diagGestureBody">'+renderGestureDiagnosticsBody()+'</div></div><div class="diag-section"><h3>時間模擬</h3><div class="diag-row">'+(isTimeSimulationActive()?'模擬中：目前模擬時間 '+appNow().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})+'（行走中）':'依手機時間')+'</div><input id="diagTime" type="datetime-local" value="'+escapeHtml(simValue||'')+'"><div class="diag-shortcuts">'+days+'</div><div class="diag-actions"><button class="primary" onclick="setTimeSimulation()">套用並開始模擬</button></div><button onclick="endTimeSimulation(true)">結束模擬——還原測試前狀態</button><div class="diag-help">還原進入模擬前的打卡與略過狀態。</div><button onclick="endTimeSimulation(false)">結束模擬——保留測試變更</button><div class="diag-help">保留模擬期間的打卡與略過狀態。</div></div><div class="diag-section"><h3>行程進度</h3><button onclick="resetTripProgress()">重置行程進度</button><div class="diag-help">僅清除打卡與略過，需雙重確認。</div></div></div>';
   document.body.appendChild(el);
 }
 function setupDiagnostics(){ var badge=document.getElementById('diagnosticBadge'),last=0; if(!badge) return; badge.addEventListener('touchend',function(e){ var now=Date.now(); if(now-last<300){ e.preventDefault(); openDiagnostics(); } last=now; },{passive:false}); updateSimulationMarker(); }
@@ -2489,6 +2608,7 @@ function setupViewportReflow(){
     if(e.target&&e.target.closest&&e.target.closest('#diagnosticOverlay')) forceViewportReflow();
   });
 }
+setupGestureDiagnostics(document,window,IOS_GESTURE_DIAGNOSTICS);
 setupDiagnostics();
 setupViewportReflow();
 init();
