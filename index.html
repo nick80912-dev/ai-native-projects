@@ -1161,6 +1161,7 @@ var SRC={};      // key → builtin|cache|online
 var SNAPSHOT_STATE_KEY='trip_data_snapshot_state';
 var SNAPSHOT_FAILURE_KEY='trip_sync_last_failure';
 var SNAPSHOT_FORMAT_VERSION=1;
+var CURRENT_SNAPSHOT=null;
 
 function createDataSnapshot(raw,source,createdAt,generationId,validation){
   var sheets={};
@@ -1205,40 +1206,170 @@ function writeSnapshotState(storage,nextState){
   return true;
 }
 
-function localBest(key){
-  var b = BUILTIN[key]? { text:BUILTIN[key], src:'builtin', ts:BUILTIN_TS } : null;
-  var c = lsGet('v2_cache_'+key,null);
-  if(c&&c.text&&c.ts>(b?b.ts:0)) b={ text:c.text, src:'cache', ts:c.ts };
-  return b;
+function validateCandidateStructure(raw){
+  var result={blockers:[],warnings:[]};
+  SHEETS.forEach(function(sheet){
+    var text=raw&&raw[sheet.key], def=SCHEMA.sheets[sheet.key], rows, mapped, strictDef;
+    if(!text||String(text).trim().length<5){
+      result.blockers.push(makeValidationFinding('blocker','SHEET_EMPTY',sheet.key,def.label+' 資料為空白'));
+      return;
+    }
+    rows=parseCSV(text);
+    if(!rows.length){
+      result.blockers.push(makeValidationFinding('blocker','CSV_PARSE',sheet.key,def.label+' 不是有效的 CSV'));
+      return;
+    }
+    if(def.kind==='table'){
+      mapped=buildHeaderMap(rows,def);
+      result.blockers=result.blockers.concat(mapped.blockers||[]);
+      result.warnings=result.warnings.concat(mapped.warnings||[]);
+    }
+    if(def.kind==='itinerary'){
+      strictDef={label:def.label,columns:def.columns.map(function(column){
+        return {field:column.field,header:column.header,aliases:column.aliases||[],required:true};
+      })};
+      mapped=buildHeaderMap(rows,strictDef);
+      result.blockers=result.blockers.concat(mapped.blockers||[]);
+      result.warnings=result.warnings.concat(mapped.warnings||[]);
+    }
+  });
+  return result;
+}
+function prepareSheetCandidate(raw,source,now,generationId){
+  var structure=validateCandidateStructure(raw), db, validation, error;
+  if(structure.blockers.length){
+    error=new Error(structure.blockers.map(function(f){return f.message;}).join('；'));
+    error.stage='structure'; error.findings=structure.blockers; throw error;
+  }
+  db=createDB(raw);
+  validation=validateSnapshotData(db,raw,SCHEMA);
+  validation.warnings=structure.warnings.concat(validation.warnings);
+  if(validation.blockers.length){
+    error=new Error(validation.blockers.map(function(f){return f.message;}).join('；'));
+    error.stage='validation'; error.findings=validation.blockers; throw error;
+  }
+  generationId=generationId||source+'-'+now;
+  return {db:db,validation:validation,snapshot:createDataSnapshot(raw,source,now,generationId,validation)};
+}
+function bootFailure(error){
+  var failure=new Error(error&&error.message||'啟動資料驗證失敗');
+  failure.stage='boot';
+  failure.code=error&&error.code;
+  failure.findings=error&&error.findings;
+  return failure;
+}
+function selectBootData(storage,builtin){
+  var state=readSnapshotState(storage), activeError=null, candidate, source, legacyRaw={}, legacyReady=true, legacyAt=0;
+  function selectSnapshot(snapshot){
+    if(!validSnapshotShape(snapshot)) throw new Error('Invalid snapshot shape');
+    candidate=prepareSheetCandidate(snapshot.sheets,snapshot.source,snapshot.createdAt,snapshot.generationId);
+    return {raw:snapshot.sheets,db:candidate.db,source:snapshot.source,snapshot:snapshot};
+  }
+  if(state&&state.active){
+    try{ return selectSnapshot(state.active); }
+    catch(error){ activeError=bootFailure(error); }
+  }
+  if(state&&state.previous){
+    try{
+      candidate=selectSnapshot(state.previous);
+      if(activeError) saveSyncFailure(activeError,storage,state.active);
+      return candidate;
+    }catch(previousError){
+      if(!activeError) activeError=bootFailure(previousError);
+    }
+  }
+  SHEETS.forEach(function(sheet){
+    var stored, parsed;
+    if(!legacyReady) return;
+    try{
+      stored=storage.getItem('v2_cache_'+sheet.key);
+      parsed=stored?JSON.parse(stored):null;
+    }catch(error){ parsed=null; }
+    if(!parsed||typeof parsed.text!=='string') legacyReady=false;
+    else{
+      legacyRaw[sheet.key]=parsed.text;
+      if(Number(parsed.ts)>legacyAt) legacyAt=Number(parsed.ts);
+    }
+  });
+  if(legacyReady){
+    try{
+      candidate=prepareSheetCandidate(legacyRaw,'legacy-migrated',legacyAt||Date.now(),'legacy-'+(legacyAt||Date.now()));
+      writeSnapshotState(storage,{formatVersion:1,active:candidate.snapshot,previous:null});
+      return {raw:candidate.snapshot.sheets,db:candidate.db,source:'legacy-migrated',snapshot:candidate.snapshot};
+    }catch(legacyError){
+      if(!activeError) activeError=bootFailure(legacyError);
+    }
+  }
+  candidate=prepareSheetCandidate(builtin,'builtin',BUILTIN_TS,'builtin-'+BUILTIN_TS);
+  if(activeError) saveSyncFailure(activeError,storage,state&&state.active);
+  source='builtin';
+  return {raw:candidate.snapshot.sheets,db:candidate.db,source:source,snapshot:candidate.snapshot};
 }
 function bootLocal(){
-  var ok=true;
-  SHEETS.forEach(function(s){
-    var b=localBest(s.key);
-    if(b){ RAW[s.key]=b.text; SRC[s.key]=b.src; }
-    else ok=false;
-  });
-  return ok;
+  var selected=selectBootData(localStorage,BUILTIN), nextSource={};
+  SHEETS.forEach(function(sheet){nextSource[sheet.key]=selected.source;});
+  RAW=selected.raw; DB=selected.db; SRC=nextSource; CURRENT_SNAPSHOT=selected.snapshot;
+  return true;
 }
-function syncAll(showToast){
-  setSyncState('syncing');
-  var jobs=SHEETS.map(function(s){
-    return fetchSheet(s).then(function(text){
-      RAW[s.key]=text; SRC[s.key]='online';
-      lsSet('v2_cache_'+s.key,{text:text,ts:Date.now()});
-      return true;
-    }).catch(function(e){
-      AppLog.sync(s.key+' 同步失敗,維持'+(SRC[s.key]||'無')+'版本:'+(e.message||e));
-      return false;
+function saveSyncFailure(error,storage,activeSnapshot){
+  var finding=error&&error.findings&&error.findings[0], target=storage||localStorage;
+  var failure={
+    at:Date.now(),
+    stage:error&&error.stage||'',
+    sheet:error&&error.sheet||finding&&finding.sheet||'',
+    code:error&&error.code||finding&&finding.code||'',
+    message:String(error&&error.message||error||''),
+    activeCreatedAt:activeSnapshot&&activeSnapshot.createdAt||CURRENT_SNAPSHOT&&CURRENT_SNAPSHOT.createdAt||null
+  };
+  try{ target.setItem(SNAPSHOT_FAILURE_KEY,JSON.stringify(failure)); }catch(ignore){}
+}
+function downloadAllSheets(){
+  var raw={}, meta={};
+  return Promise.all(SHEETS.map(function(sheet){
+    return fetchSheet(sheet).then(function(text){
+      raw[sheet.key]=text;
+      meta[sheet.key]={fetchedAt:Date.now()};
+    },function(error){
+      if(!error||typeof error!=='object') error=new Error(String(error||'下載失敗'));
+      error.stage='download'; error.sheet=sheet.key; throw error;
     });
+  })).then(function(){return {raw:raw,sheetMeta:meta};});
+}
+var syncInFlight=null;
+function syncAll(showToast){
+  if(syncInFlight) return syncInFlight;
+  setSyncState('syncing');
+  syncInFlight=downloadAllSheets().then(function(download){
+    var now=Date.now(), generation='sheet-'+now;
+    var candidate=prepareSheetCandidate(download.raw,'online',now,generation);
+    var current;
+    candidate.snapshot.sheetMeta=download.sheetMeta;
+    current=readSnapshotState(localStorage);
+    try{
+      writeSnapshotState(localStorage,nextSnapshotState(current,candidate.snapshot,CURRENT_SNAPSHOT));
+    }catch(storageError){
+      storageError.stage='storage';
+      throw storageError;
+    }
+    RAW=candidate.snapshot.sheets;
+    SRC={}; SHEETS.forEach(function(sheet){SRC[sheet.key]='online';});
+    DB=candidate.db;
+    CURRENT_SNAPSHOT=candidate.snapshot;
+    renderAll();
+    setSyncState('online');
+    try{localStorage.removeItem(SNAPSHOT_FAILURE_KEY);}catch(ignore){}
+    if(showToast) toast('已更新到最新版 ✓');
+    return {ok:true,generationId:generation,warnings:candidate.validation.warnings};
   });
-  return Promise.all(jobs).then(function(results){
-    var okN=results.filter(Boolean).length;
-    buildDB(); renderAll();
-    if(okN===SHEETS.length){ setSyncState('online'); if(showToast) toast('已更新到最新版 ✓'); }
-    else if(okN>0){ setSyncState('partial'); if(showToast) toast('部分更新('+okN+'/'+SHEETS.length+')'); }
-    else { setSyncState(SRC.itin||'error'); if(showToast) toast('無法連線，顯示'+(SRC.itin==='cache'?'上次同步版':'內建版')); }
+  syncInFlight=syncInFlight.then(function(result){
+    syncInFlight=null; return result;
+  },function(error){
+    saveSyncFailure(error); setSyncState('failed');
+    if(showToast) toast('同步失敗，繼續顯示目前版本');
+    syncInFlight=null;
+    return {ok:false,error:error};
   });
+  return syncInFlight;
 }
 function manualSyncNew(){ toast('正在抓取最新行程…'); return syncAll(true); }
 function manualSync(){ return manualSyncNew(); }
@@ -2608,7 +2739,6 @@ function renderAll(){ renderDaybar(); renderCurrent(); }
 function init(){
   var ok=bootLocal();
   if(ok){
-    buildDB();
     if(tripName()){ var bt=document.getElementById('brandTitle'); if(bt) bt.textContent=tripName(); }
     /* CMS 同行成員 → 首次使用時自動帶入分帳成員 */
     if(getPeople().length===0 && DB.expMembers && DB.expMembers.length){

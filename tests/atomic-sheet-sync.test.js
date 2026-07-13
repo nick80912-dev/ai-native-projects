@@ -268,4 +268,192 @@ assert.strictEqual(pureDB.placeList[0].tnorm,'normalized-museum');
 assert.deepStrictEqual(Array.from(pureDB.expCMS),['exp-a']);
 assert.deepStrictEqual(Array.from(pureDB.expMembers),['member']);
 
-console.log('atomic sheet sync tests passed');
+function orchestrationSchema(){
+  function table(label,idHeader,nameHeader){
+    return {label:label,kind:'table',columns:[
+      {field:'id',header:idHeader,required:true},
+      {field:'name',header:nameHeader,required:true}
+    ]};
+  }
+  return {sheets:{
+    itin:{label:'Itinerary',kind:'itinerary',columns:[
+      {field:'date',header:'Date'},{field:'time',header:'Time'},{field:'act',header:'Activity'},
+      {field:'place',header:'Place'},{field:'ref',header:'ID'},{field:'move',header:'Move'},
+      {field:'note',header:'Note'}
+    ]},
+    places:table('Places','PID','Place'), rest:table('Restaurants','RID','Restaurant'),
+    shop:table('Shopping','SID','Brand'), hotels:table('Hotels','HID','Hotel'),
+    exp:{label:'Expenses',kind:'freeform-expense'}, cfg:{label:'TripConfig',kind:'keyvalue'}
+  }};
+}
+
+function orchestrationRaw(suffix){
+  suffix=suffix||'old';
+  return {
+    itin:'Date,Time,Activity,Place,ID,Move,Note\n10/18,09:00,'+suffix+',Station,,,',
+    places:'PID,Place\nP001,'+suffix+'-place',
+    rest:'RID,Restaurant\nR001,'+suffix+'-rest',
+    shop:'SID,Brand\nS001,'+suffix+'-shop',
+    hotels:'HID,Hotel\nH001,'+suffix+'-hotel',
+    exp:'Expense content '+suffix,
+    cfg:'Key,Value\nTrip Name,'+(suffix==='blocked'?'BLOCK':suffix)+
+      '\nStart Date,2026-10-18\nEnd Date,2026-10-23\nTravel Mode,Driving'
+  };
+}
+
+function memoryStorage(initial){
+  const memory=Object.assign({},initial||{});
+  return {
+    memory:memory,
+    getItem:function(key){return Object.prototype.hasOwnProperty.call(memory,key)?memory[key]:null;},
+    setItem:function(key,value){memory[key]=String(value);},
+    removeItem:function(key){delete memory[key];}
+  };
+}
+
+function snapshotFor(app,raw,generation,source){
+  return app.createDataSnapshot(raw,source||'online',1,generation,{warnings:[]});
+}
+
+function loadCoordinator(){
+  const storage=memoryStorage();
+  const runtime={
+    console:{log:function(){},warn:function(){},error:function(){}},
+    Promise:Promise,
+    Date:{now:function(){return 100;}},
+    SHEETS:[{key:'itin'},{key:'places'},{key:'rest'},{key:'shop'},{key:'hotels'},{key:'exp'},{key:'cfg'}],
+    SCHEMA:orchestrationSchema(),
+    BUILTIN_TS:50,
+    BUILTIN:orchestrationRaw('builtin'),
+    localStorage:storage,
+    RAW:{sentinel:'raw'}, DB:{sentinel:'db'}, SRC:{sentinel:'src'}, CURRENT_SNAPSHOT:null,
+    renderCount:0, renderAll:function(){runtime.renderCount++;},
+    syncStates:[], setSyncState:function(state){runtime.syncStates.push(state);},
+    toast:function(){},
+    fetchSheet:function(){return Promise.reject(new Error('fetchSheet not configured'));},
+    createDB:function(raw){return {raw:raw,identity:{}};},
+    validateSnapshotData:function(db,raw){
+      return String(raw.cfg).indexOf('BLOCK')>=0
+        ? {blockers:[runtime.makeValidationFinding('blocker','CFG_REQUIRED','cfg','blocked config')],warnings:[]}
+        : {blockers:[],warnings:[]};
+    }
+  };
+  vm.createContext(runtime);
+  runtime.parseCSV=vm.runInContext('('+extractFunction('parseCSV')+')',runtime);
+  runtime.buildHeaderMap=sb.buildHeaderMap;
+  runtime.makeValidationFinding=sb.makeValidationFinding;
+  vm.runInContext([
+    "var SNAPSHOT_STATE_KEY='trip_data_snapshot_state';var SNAPSHOT_FAILURE_KEY='trip_sync_last_failure';var SNAPSHOT_FORMAT_VERSION=1;",
+    extractFunction('createDataSnapshot'), extractFunction('validSnapshotShape'),
+    extractFunction('readSnapshotState'), extractFunction('nextSnapshotState'), extractFunction('writeSnapshotState'),
+    extractFunction('validateCandidateStructure'), extractFunction('prepareSheetCandidate'),
+    extractFunction('bootFailure'), extractFunction('selectBootData'), extractFunction('bootLocal'), extractFunction('saveSyncFailure'),
+    extractFunction('downloadAllSheets'), 'var syncInFlight=null;', extractFunction('syncAll')
+  ].join('\n'),runtime);
+  return runtime;
+}
+
+async function testBootSelection(){
+  const app=loadCoordinator();
+  const active=snapshotFor(app,orchestrationRaw('active'),'g-active');
+  const previous=snapshotFor(app,orchestrationRaw('previous'),'g-previous');
+  let storage=memoryStorage({trip_data_snapshot_state:JSON.stringify({formatVersion:1,active:active,previous:previous})});
+  let selected=app.selectBootData(storage,orchestrationRaw('builtin'));
+  assert.strictEqual(selected.snapshot.generationId,'g-active','valid active wins');
+  assert.strictEqual(selected.raw.itin,active.sheets.itin);
+
+  const invalid=snapshotFor(app,orchestrationRaw('blocked'),'g-invalid');
+  const priorState=JSON.stringify({formatVersion:1,active:invalid,previous:previous});
+  storage=memoryStorage({trip_data_snapshot_state:priorState});
+  selected=app.selectBootData(storage,orchestrationRaw('builtin'));
+  assert.strictEqual(selected.snapshot.generationId,'g-previous','invalid active falls back to previous');
+  assert.strictEqual(storage.memory.trip_data_snapshot_state,priorState,'fallback leaves corrupt state intact for diagnosis');
+
+  app.localStorage=storage;
+  app.BUILTIN=orchestrationRaw('builtin');
+  assert.strictEqual(app.bootLocal(),true);
+  assert.strictEqual(app.CURRENT_SNAPSHOT.generationId,'g-previous');
+  app.fetchSheet=function(sheet){return Promise.resolve(orchestrationRaw('fresh')[sheet.key]);};
+  const committed=await app.syncAll(false);
+  assert.strictEqual(committed.ok,true);
+  assert.strictEqual(JSON.parse(storage.memory.trip_data_snapshot_state).previous.generationId,'g-previous','effective fallback is retained as previous');
+
+  storage=memoryStorage();
+  const legacy=orchestrationRaw('legacy');
+  app.SHEETS.forEach(function(sheet){storage.memory['v2_cache_'+sheet.key]=JSON.stringify({text:legacy[sheet.key],ts:80});});
+  selected=app.selectBootData(storage,orchestrationRaw('builtin'));
+  assert.strictEqual(selected.source,'legacy-migrated');
+  assert.strictEqual(selected.snapshot.source,'legacy-migrated');
+  assert.strictEqual(JSON.parse(storage.memory.trip_data_snapshot_state).active.source,'legacy-migrated');
+
+  storage=memoryStorage();
+  app.SHEETS.forEach(function(sheet){storage.memory['v2_cache_'+sheet.key]=JSON.stringify({text:legacy[sheet.key],ts:80});});
+  storage.memory.v2_cache_cfg=JSON.stringify({text:orchestrationRaw('blocked').cfg,ts:80});
+  selected=app.selectBootData(storage,orchestrationRaw('builtin'));
+  assert.strictEqual(selected.source,'builtin','invalid legacy cache falls back to BUILTIN');
+}
+
+async function testAtomicSync(){
+  const app=loadCoordinator();
+  const oldRaw=orchestrationRaw('old');
+  const oldSnapshot=snapshotFor(app,oldRaw,'g-old');
+  const oldState=JSON.stringify({formatVersion:1,active:oldSnapshot,previous:null});
+  app.localStorage.memory.trip_data_snapshot_state=oldState;
+  app.RAW=oldRaw; app.DB={sentinel:'old-db'}; app.CURRENT_SNAPSHOT=oldSnapshot;
+
+  let calls=0, resolves={};
+  app.fetchSheet=function(sheet){
+    calls++;
+    return new Promise(function(resolve){resolves[sheet.key]=resolve;});
+  };
+  const p1=app.syncAll(false), p2=app.syncAll(false);
+  assert.strictEqual(p1,p2,'concurrent sync calls share one in-flight Promise');
+  assert.strictEqual(calls,7,'all seven fetches start once');
+  const fresh=orchestrationRaw('fresh');
+  app.SHEETS.forEach(function(sheet){resolves[sheet.key](fresh[sheet.key]);});
+  const result=await p1;
+  assert.strictEqual(result.ok,true);
+  assert.strictEqual(result.generationId,'sheet-100');
+  assert.strictEqual(app.renderCount,1);
+  assert.strictEqual(app.RAW.itin,fresh.itin);
+  assert.strictEqual(JSON.parse(app.localStorage.memory.trip_data_snapshot_state).active.sheets.itin,fresh.itin);
+  app.SHEETS.forEach(function(sheet){assert.strictEqual(app.localStorage.memory['v2_cache_'+sheet.key],undefined,'online sync never writes legacy cache');});
+
+  const priorRaw=app.RAW, priorDB=app.DB;
+  const priorState=app.localStorage.memory.trip_data_snapshot_state;
+  app.renderCount=0;
+  app.fetchSheet=function(sheet){return sheet.key==='shop'?Promise.reject(new Error('offline')):Promise.resolve(orchestrationRaw('next')[sheet.key]);};
+  const failedDownload=await app.syncAll(false);
+  assert.strictEqual(failedDownload.ok,false);
+  assert.strictEqual(failedDownload.error.stage,'download');
+  assert.strictEqual(failedDownload.error.sheet,'shop');
+  assert.strictEqual(app.RAW,priorRaw); assert.strictEqual(app.DB,priorDB);
+  assert.strictEqual(app.localStorage.memory.trip_data_snapshot_state,priorState);
+  assert.strictEqual(app.renderCount,0);
+
+  app.fetchSheet=function(sheet){return Promise.resolve(orchestrationRaw('blocked')[sheet.key]);};
+  const failedValidation=await app.syncAll(false);
+  assert.strictEqual(failedValidation.ok,false);
+  assert.strictEqual(failedValidation.error.stage,'validation');
+  assert.strictEqual(app.RAW,priorRaw); assert.strictEqual(app.DB,priorDB);
+  assert.strictEqual(app.localStorage.memory.trip_data_snapshot_state,priorState);
+  assert.strictEqual(app.renderCount,0);
+
+  app.fetchSheet=function(sheet){return Promise.resolve(orchestrationRaw('next')[sheet.key]);};
+  app.localStorage.setItem=function(key,value){
+    if(key==='trip_data_snapshot_state') throw new Error('quota');
+    this.memory[key]=String(value);
+  };
+  const failedStorage=await app.syncAll(false);
+  assert.strictEqual(failedStorage.ok,false);
+  assert.strictEqual(app.RAW,priorRaw); assert.strictEqual(app.DB,priorDB);
+  assert.strictEqual(app.localStorage.memory.trip_data_snapshot_state,priorState);
+  assert.strictEqual(app.renderCount,0);
+}
+
+Promise.resolve().then(testBootSelection).then(testAtomicSync).then(function(){
+  console.log('atomic sheet sync tests passed');
+}).catch(function(error){
+  console.error(error&&error.stack||error);
+  process.exitCode=1;
+});
