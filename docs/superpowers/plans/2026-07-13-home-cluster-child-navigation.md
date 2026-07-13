@@ -302,11 +302,11 @@ Expected: clean working tree; local `dev` contains the approved design commit, f
 - Consumes: clean Task 2 commit stack and Bar's explicit `push dev` authorization.
 - Produces: matching local/remote `dev` hashes and a mobile acceptance report.
 
-- [ ] **Step 1: Re-run the full verification immediately before push**
+- [x] **Step 1: Re-run the full verification immediately before push**
 
 Repeat Task 2 Step 5 from the clean committed tree. Expected: all checks pass and `git status --porcelain` returns nothing.
 
-- [ ] **Step 2: Stop for the Dev push checkpoint if authorization is not already explicit**
+- [x] **Step 2: Stop for the Dev push checkpoint if authorization is not already explicit**
 
 Report the exact `APP DEV · CODE <FUNCTIONAL_HASH> · 2026-07-13`, `SW okayama-trip-v9`, test evidence, and commit list. Do not push until Bar replies with an explicit Dev push instruction.
 
