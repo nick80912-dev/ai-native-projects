@@ -58,6 +58,7 @@
     "三層防線與『絕不空白頁』",
     "卡片型別由 Places.Type 明確決定,禁猜測",
     "WebView 相容:console polyfill、禁 AbortController(clone錯)、fetch 相容退回、單一吸頂容器.hdr",
+    "viewport meta 不得常駐 maximum-scale 或 user-scalable=no;只允許輸入 focus 縮放殘留時瞬鎖約100ms,並原樣還原啟動時字串",
     "停車 MAP CODE 純顯示無複製鈕、『停車同Pxxx』繼承",
     "渡輪不建班次庫(末班資訊+官方時刻表連結)",
     "個人狀態(打卡/想逛/成員/記帳)存 localStorage 不進 CMS",

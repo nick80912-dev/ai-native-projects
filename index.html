@@ -36,7 +36,7 @@
   --shadow-lg:0 8px 28px rgba(24,44,52,.16);
 }
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
-html{scroll-behavior:smooth}
+html{scroll-behavior:smooth;touch-action:manipulation}
 html,body{touch-action:manipulation}
 body{
   font-family:"Hiragino Sans","Noto Sans TC","PingFang TC",system-ui,-apple-system,sans-serif;
@@ -45,6 +45,7 @@ body{
   padding-bottom:calc(var(--tabbar-height) + env(safe-area-inset-bottom));
 }
 a{color:var(--sea)}
+input,select,textarea{font-size:16px}
 
 /* ===== 頂部列 ===== */
 .hdr{position:sticky;top:0;z-index:60;box-shadow:0 2px 10px rgba(0,0,0,.18)}
@@ -217,7 +218,7 @@ a{color:var(--sea)}
 .pchip{background:var(--sea);color:#fff;border-radius:16px;padding:5px 11px;font-size:13px;font-weight:600;display:flex;align-items:center;gap:6px}
 .pchip .x{cursor:pointer;opacity:.7;font-weight:700}
 .inline-add{display:flex;gap:7px;margin-top:8px}
-.inline-add input{flex:1;border:1px solid var(--line);border-radius:9px;padding:9px 11px;font-size:14px;font-family:inherit;background:#fff}
+.inline-add input{flex:1;border:1px solid var(--line);border-radius:9px;padding:9px 11px;font-size:16px;font-family:inherit;background:#fff}
 .inline-add input:focus{outline:none;border-color:var(--sea)}
 .btn{background:var(--sea);color:#fff;border:none;border-radius:9px;padding:9px 15px;font-size:13.5px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap}
 .btn:active{transform:scale(.97)}
@@ -248,7 +249,7 @@ a{color:var(--sea)}
 
 .field{margin-bottom:11px}
 .field label{display:block;font-size:12px;font-weight:600;color:var(--ink-soft);margin-bottom:5px}
-.field input,.field select{width:100%;border:1px solid var(--line);border-radius:9px;padding:10px 11px;font-size:14px;font-family:inherit;background:#fff}
+.field input,.field select{width:100%;border:1px solid var(--line);border-radius:9px;padding:10px 11px;font-size:16px;font-family:inherit;background:#fff}
 .field input:focus,.field select:focus{outline:none;border-color:var(--sea)}
 .payer-grid{display:flex;flex-wrap:wrap;gap:6px}
 .payer-opt{border:1px solid var(--line);border-radius:8px;padding:7px 12px;font-size:13px;cursor:pointer;background:#fff;font-weight:600;color:var(--ink-soft)}
@@ -452,7 +453,7 @@ a{color:var(--sea)}
 
 
 .shop-search{margin-bottom:12px}
-.shop-search input{width:100%;border:1.5px solid var(--line);border-radius:12px;padding:12px 14px;font-size:15px;font-family:inherit;background:var(--card);box-shadow:var(--shadow)}
+.shop-search input{width:100%;border:1.5px solid var(--line);border-radius:12px;padding:12px 14px;font-size:16px;font-family:inherit;background:var(--card);box-shadow:var(--shadow)}
 .shop-search input:focus{outline:none;border-color:var(--sea)}
 
 
@@ -471,6 +472,7 @@ a{color:var(--sea)}
 .diag-section{border-top:1px solid var(--line);padding:12px 0}.diag-section h3{font-size:13px;margin-bottom:6px}.diag-row{font-size:12px;color:var(--ink-soft);margin:3px 0}.diag-actions{display:flex;gap:8px;flex-wrap:wrap}.diag-actions button{min-height:40px;padding:7px 10px;border:1px solid var(--line);border-radius:8px;background:#fff;font:inherit;font-size:12px}.diag-actions .primary{background:var(--sea);color:#fff;border-color:var(--sea)}
 .diag-help{font-size:11px;color:var(--ink-faint);margin:4px 0 8px}.diag-shortcuts{display:flex;gap:5px;flex-wrap:wrap;margin:8px 0}
 .diag-panel button[onclick^="endTimeSimulation"]{min-height:44px;font-size:15px;width:100%;margin-top:6px}.diag-panel button[onclick="resetTripProgress()"]{color:#c0392b;border-color:#c0392b}
+.diag-panel input{font-size:16px}
 .wrap.pinch-zooming{will-change:transform}
 </style>
 </head>
@@ -2437,12 +2439,32 @@ function openDiagnostics(){
   var sync=(typeof SHEETS!=='undefined'?SHEETS:[]).map(function(s){ var c=lsGet('v2_cache_'+s.key,null); return '<div class="diag-row">'+escapeHtml(s.key)+'：'+escapeHtml(SRC[s.key]||'未同步')+(c&&c.ts?' · '+new Date(c.ts).toLocaleString():'')+'</div>'; }).join('');
   var simValue=sim&&sim.mode==='custom'?sim.value:'';
   var days=(DB.trip&&DB.trip.days||[]).map(function(_,i){return '<button onclick="setTimeSimulationDay('+i+')">Day '+(i+1)+'</button>';}).join('');
-  el.innerHTML='<div class="diag-panel"><div class="diag-head"><h2>診斷面板</h2><button class="diag-close" onclick="closeDiagnostics()">×</button></div><div class="diag-section"><h3>健康檢查</h3><div class="diag-row">'+(findings.length?escapeHtml(findings.join('；')):'正常')+'</div></div><div class="diag-section"><h3>同步狀態</h3>'+sync+'</div><div class="diag-section"><h3>版本</h3><div class="diag-row">SCHEMA '+escapeHtml(SCHEMA.version)+' · SW okayama-trip-v3</div></div><div class="diag-section"><h3>時間模擬</h3><div class="diag-row">'+(isTimeSimulationActive()?'模擬中：目前模擬時間 '+appNow().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})+'（行走中）':'依手機時間')+'</div><input id="diagTime" type="datetime-local" value="'+escapeHtml(simValue||'')+'"><div class="diag-shortcuts">'+days+'</div><div class="diag-actions"><button class="primary" onclick="setTimeSimulation()">套用並開始模擬</button></div><button onclick="endTimeSimulation(true)">結束模擬——還原測試前狀態</button><div class="diag-help">還原進入模擬前的打卡與略過狀態。</div><button onclick="endTimeSimulation(false)">結束模擬——保留測試變更</button><div class="diag-help">保留模擬期間的打卡與略過狀態。</div></div><div class="diag-section"><h3>行程進度</h3><button onclick="resetTripProgress()">重置行程進度</button><div class="diag-help">僅清除打卡與略過，需雙重確認。</div></div></div>';
+  el.innerHTML='<div class="diag-panel"><div class="diag-head"><h2>診斷面板</h2><button class="diag-close" onclick="closeDiagnostics()">×</button></div><div class="diag-section"><h3>健康檢查</h3><div class="diag-row">'+(findings.length?escapeHtml(findings.join('；')):'正常')+'</div></div><div class="diag-section"><h3>同步狀態</h3>'+sync+'</div><div class="diag-section"><h3>版本</h3><div class="diag-row">SCHEMA '+escapeHtml(SCHEMA.version)+' · SW okayama-trip-v4</div></div><div class="diag-section"><h3>時間模擬</h3><div class="diag-row">'+(isTimeSimulationActive()?'模擬中：目前模擬時間 '+appNow().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})+'（行走中）':'依手機時間')+'</div><input id="diagTime" type="datetime-local" value="'+escapeHtml(simValue||'')+'"><div class="diag-shortcuts">'+days+'</div><div class="diag-actions"><button class="primary" onclick="setTimeSimulation()">套用並開始模擬</button></div><button onclick="endTimeSimulation(true)">結束模擬——還原測試前狀態</button><div class="diag-help">還原進入模擬前的打卡與略過狀態。</div><button onclick="endTimeSimulation(false)">結束模擬——保留測試變更</button><div class="diag-help">保留模擬期間的打卡與略過狀態。</div></div><div class="diag-section"><h3>行程進度</h3><button onclick="resetTripProgress()">重置行程進度</button><div class="diag-help">僅清除打卡與略過，需雙重確認。</div></div></div>';
   document.body.appendChild(el);
 }
 function setupDiagnostics(){ var badge=document.getElementById('diagnosticBadge'),last=0; if(!badge) return; badge.addEventListener('touchend',function(e){ var now=Date.now(); if(now-last<300){ e.preventDefault(); openDiagnostics(); } last=now; },{passive:false}); updateSimulationMarker(); }
+var VIEWPORT_META=document.querySelector('meta[name="viewport"]');
+var VIEWPORT_ORIGINAL=VIEWPORT_META?VIEWPORT_META.getAttribute('content'):'';
 function forceViewportReflow(){ window.scrollTo(0,window.scrollY); }
-function setupViewportReflow(){ if(window.visualViewport) window.visualViewport.addEventListener('resize',function(){ if(Math.abs(window.visualViewport.height-window.innerHeight)<2) forceViewportReflow(); }); document.addEventListener('focusout',function(e){ if(e.target&&e.target.closest&&e.target.closest('#diagnosticOverlay')) forceViewportReflow(); }); }
+function isFormControl(el){ return !!(el&&/^(INPUT|SELECT|TEXTAREA)$/.test(el.tagName||'')); }
+function restoreFocusZoom(meta,viewport,userGesture,pendingTimer){
+  if(!meta||!viewport||viewport.scale<=1||userGesture) return null;
+  if(pendingTimer) clearTimeout(pendingTimer);
+  meta.setAttribute?meta.setAttribute('content',VIEWPORT_ORIGINAL+', maximum-scale=1'):meta.content=VIEWPORT_ORIGINAL+', maximum-scale=1';
+  return setTimeout(function(){ if(meta.setAttribute) meta.setAttribute('content',VIEWPORT_ORIGINAL); else meta.content=VIEWPORT_ORIGINAL; },100);
+}
+function setupViewportReflow(){
+  var formFocused=false,userGesture=false,restoreTimer=null;
+  if(window.visualViewport) window.visualViewport.addEventListener('resize',function(){ if(Math.abs(window.visualViewport.height-window.innerHeight)<2) forceViewportReflow(); });
+  document.addEventListener('focusin',function(e){ if(isFormControl(e.target)){ formFocused=true; userGesture=false; } });
+  document.addEventListener('touchstart',function(e){ if(formFocused&&e.touches&&e.touches.length>1) userGesture=true; },{passive:true});
+  document.addEventListener('gesturestart',function(){ if(formFocused) userGesture=true; },{passive:true});
+  document.addEventListener('focusout',function(e){
+    if(formFocused&&isFormControl(e.target)) restoreTimer=restoreFocusZoom(VIEWPORT_META,window.visualViewport,userGesture,restoreTimer);
+    formFocused=false; userGesture=false;
+    if(e.target&&e.target.closest&&e.target.closest('#diagnosticOverlay')) forceViewportReflow();
+  });
+}
 function setupDoubleTapGuard(){ var last=0; document.addEventListener('touchend',function(e){ var target=e.target,interactive=target&&target.closest&&target.closest('button,a,input,select,textarea,[onclick],#diagnosticBadge'); var now=Date.now(); if(!interactive&&now-last<300) e.preventDefault(); last=now; },{passive:false}); }
 function setupPinchZoom(){ var wrap=document.querySelector('.wrap'),start=0,active=false; if(!wrap) return; function reset(){ if(!active) return; active=false; wrap.style.transition='transform .2s'; wrap.style.transform='scale(1)'; setTimeout(function(){wrap.style.transition='';wrap.classList.remove('pinch-zooming');},200); } document.addEventListener('touchstart',function(e){ if(e.touches.length===2){ start=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY); active=true; wrap.classList.add('pinch-zooming'); } else if(e.touches.length>2) reset(); },{passive:false}); document.addEventListener('touchmove',function(e){ if(!active||e.touches.length!==2) return; e.preventDefault(); var d=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY); wrap.style.transform='scale('+Math.min(2.5,Math.max(1,d/start))+')'; },{passive:false}); document.addEventListener('touchend',reset,{passive:false}); if(window.GestureEvent) document.addEventListener('gesturestart',function(e){e.preventDefault();},{passive:false}); }
 setupDiagnostics();

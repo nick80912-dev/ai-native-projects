@@ -2,6 +2,12 @@
 
 紀錄格式:日期 / 版本 / 重點。細節不展開,新變更往上加。
 
+## 2026-07-13 — iOS 防放大階段一
+- 所有表單控制項有效字級提升至至少 16px,避免 iOS focus 自動放大;390px 排版保留既有 class 體系。
+- 既有 viewport 重排 handler 加入表單 focus 來源、多指手勢排除與 100ms 瞬鎖瞬解,原樣還原啟動時 viewport 字串。
+- `touch-action: manipulation` 作為雙擊縮放第一防線;階段一保留既有 `setupDoubleTapGuard()`,待 Bar 真實 iPhone 驗證後再決定階段二移除。
+- Service Worker cache 升至 `okayama-trip-v4`;未修改 Schema、Validator、Google Sheet 或 Renderer 架構。Breaking Change:無。
+
 ## 2026-07-11 — 時間邏輯日期防護
 - 現在、時間 cutoff 與自動略過僅在 appNow 對應的當日行程啟用，避免瀏覽其他日期時污染進度。
 - 未修改 `schema.js` / `validator.js` / Google Sheet Schema；Breaking Change:無。

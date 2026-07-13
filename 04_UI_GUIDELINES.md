@@ -21,5 +21,12 @@
 ## 字體
 系統字("Hiragino Sans","Noto Sans TC")。內文 15px、標題 17-20px、輔助 11-13px。emoji 當 icon,不引入 icon 字型。
 
+表單控制項(`input` / `select` / `textarea`)最小字級為 16px,此規則優先於內文字級表,避免 iOS focus 時自動放大。
+
+## 行動手勢
+- `touch-action: manipulation` 是停用雙擊縮放的第一防線,但必須保留使用者主動捏合與既有自製回彈。
+- 輸入框 focus 造成縮放殘留時,只允許以 viewport「瞬鎖約 100ms → 原始字串還原」處理;`maximum-scale` 與 `user-scalable=no` 不得常駐。
+- 還原前必須確認縮放源自表單 focus;focus 期間若偵測到多指或 `gesturestart`,視為使用者主動捏合,不得強制還原。
+
 ## 互動
 打卡 `.chk` 勾選→卡片變灰+劃線;toast 回饋 2 秒;摺疊箭頭旋轉動畫 .25s;所有清單觸控列 ≥44px 高。
