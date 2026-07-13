@@ -47,5 +47,6 @@
 
 ## 關鍵資源
 - 正式站:https://trippilot-jp.netlify.app/
+- 測試站:https://dev-trippilot-jp.netlify.app/
 - CMS fileId:`1B5g7KuVi2WaFVVSdhqRMeTQV_tBpgnzOAv6aMQdFZJw`(gid 與資料表概覽見 03;欄位細節見 09)
 - Bar 的溝通偏好:直接執行、精簡回報、表格化 QA 結果、繁體中文

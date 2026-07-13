@@ -1,10 +1,10 @@
 # DONE(已完成)
 
-> 更新於 2026-07-09。完成事項來自 `.ai-manifest.json` status.done 與既有 CHANGELOG;細節仍以 07_CHANGELOG.md 為準。
+> 更新於 2026-07-13。完成事項來自 `.ai-manifest.json` status.done 與既有 CHANGELOG;細節仍以 07_CHANGELOG.md 為準。
 
 ## 已完成
 - V2 Schema 驅動 CMS:7 張 Google Sheets、ID 引用、Restaurants/Shopping/Hotels/Expenses/TripConfig。
-- AI Harness 治理層:PROJECT_CONSTITUTION、10_FOLDER_STRUCTURE、11_CODING_CONVENTION、12_DEV_WORKFLOW、adr/0001-0004、健康檢查規範。
+- AI Harness 治理層:PROJECT_CONSTITUTION、10_FOLDER_STRUCTURE、11_CODING_CONVENTION、12_DEV_WORKFLOW、adr/0001-0005、健康檢查規範。
 - 停車引用繼承:「停車同Pxxx」完整繼承與 MAP CODE 純顯示。
 - PWA 離線基礎:三層防線、Service Worker、Netlify 託管。
 - 首頁下一站模式:首頁只突出下一站,完成 / 跳過 / 復原狀態存 localStorage,不回寫 CMS。
@@ -14,6 +14,7 @@
 - 框架抽取計畫已歸檔:`FUTURE_PLAN_framework-extraction.md`。
 
 ## 文件治理
+- 2026-07-13:Netlify 雙站架構上線(`main`=正式站、`dev`=測試站)，兩站部署與瀏覽器狀態完全隔離。
 - 2026-07-10:修復批交付(事故處理規範 §C、雙通道 SOP §D、檢查器三新規則、CI 全測試涵蓋、測試檔治理)。
 - 2026-07-09:下一站邏輯統一為時間判斷 + 自動略過過期項目(修復卡住不推進的 bug)+ 明日預告規則修正 + 新增 pick-next-stop 測試。細節見 07_CHANGELOG。
 - 2026-07-09:Sanity CI 上線(qa.yml + check-doc-titles.js,防上傳錯位)+ README 閱讀順序補 15/14/16 + done.md 日期修正。

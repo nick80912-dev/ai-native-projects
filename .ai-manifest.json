@@ -4,12 +4,12 @@
   "owner": "Bar(產品負責人,非工程師,繁中溝通,要直接執行不要教學;AI=全職工程團隊)",
   "version": "2.2-harness",
   "framework": "ai-native-framework@pending(尚未抽取;見 FUTURE_PLAN_framework-extraction.md)",
-  "updated": "2026-07-11",
+  "updated": "2026-07-13",
   "live": "https://trippilot-jp.netlify.app/",
   "start_here": "先讀本檔 → PROJECT_CONSTITUTION.md(憲章/流程/禁令)→ 08_AI_HANDOVER.md → 15_AI_EXECUTION_RULES.md(決策權限/任務分級,必讀)→ 相關 adr/ → 依任務讀 03_DATABASE/09_SCHEMA_MAPPING(資料與欄位)、05_CODING_RULES/11_CODING_CONVENTION(程式)、12_DEV_WORKFLOW(步驟)",
   "governance": {
     "constitution": "PROJECT_CONSTITUTION.md",
-    "adr_dir": "adr/(0001-schema-first, 0002-data-driven-ui, 0003-google-sheet-cms, 0004-renderer-architecture);重構前必讀",
+    "adr_dir": "adr/(0001-schema-first, 0002-data-driven-ui, 0003-google-sheet-cms, 0004-renderer-architecture, 0005-branch-strategy);重構前必讀",
     "must_confirm_with_bar": [
       "換框架",
       "大重構",
@@ -20,7 +20,7 @@
     ],
     "proposal_format": "問題分析→可行方案→優缺點比較→相容性影響→Migration Plan(五段,經 Bar 確認才做)",
     "pre_work_git_sync_gate": "任何實作/push/部署前先 git fetch origin --prune,確認 HEAD 與目前工作分支一致(日常開發=origin/dev)且 working tree 乾淨;若不一致先盤點並經 Bar 確認,不得自動覆蓋本地改動",
-    "delivery_rule": "日常交付與驗收於 dev 分支完成;正式發版依 16_OPS_PLAYBOOK.md §E Release Flow(PR → Bar Review → Bar Merge → Netlify Deploy)",
+    "delivery_rule": "日常交付與驗收於 dev 分支完成;dev 推送自動部署至 dev-trippilot-jp.netlify.app 供驗收;正式發版依 16_OPS_PLAYBOOK.md §E Release Flow(PR → Bar Review → Bar Merge → Netlify Deploy)",
     "deprecated_docs": "作廢檔為 -old-03_DATABASE_DEPRECATED.md、-old-05_CODING_RULES_DEPRECATED.md;現行 03_DATABASE.md 與 05_CODING_RULES.md 可用,09/11 提供更細規格",
     "workflow": "Gate(第0步,見4.1)+ 十三步(讀manifest→讀handover→讀ADR→定位模組→先設計→最小修改→跑Validator→驗證資料流→更新文件→更新CHANGELOG→一致性檢查healthCheck→完成→開發摘要);A/B級任務走15§5簡化流程",
     "file_tiers": "14_FILE_TIERS_AND_GATE.md:Tier1一般開發/Tier2高風險(改前過原因-影響-風險-回滾確認)/Tier3產生產物禁手改",
@@ -73,7 +73,7 @@
   "status": {
     "done": [
       "V2 Schema驅動CMS",
-      "AI Harness治理層(憲章/10-16/ADR×4/健康檢查)",
+      "AI Harness治理層(憲章/10-16/ADR×5/健康檢查)",
       "停車引用繼承",
       "PWA離線",
       "首頁下一站模式",
@@ -81,13 +81,15 @@
       "R001/R006 餐廳欄位補齊",
       "購物頁多地點切換",
       "六天行程大方向資料補完(2026-07-09)",
-      "治理層v2:狀態收斂/檔案分級14/執行規範15/OpsPlaybook16/00定位為歷史快照"
+      "治理層v2:狀態收斂/檔案分級14/執行規範15/OpsPlaybook16/00定位為歷史快照",
+      "iOS 手勢政策收斂:Scroll-only(pan-x pan-y)+表單16px+focus瞬鎖還原+回前景恢復(v4→v9 歷程見 07)",
+      "Netlify 雙站架構(main=正式/dev=測試)"
     ],
     "pending_in_order": [
-      "1. Bar 手機驗收 GitHub 最新預覽版(首頁下一站、天氣摘要、7 表同步、主要分頁)",
-      "2. 驗收中的內容/UI 微調(最小修改,B級流程)",
-      "3. Bar 核准 PR Merge(dev → main) → Netlify Production Deploy(回滾程序見16)",
-      "4. Playwright 三情境 QA 腳本納入 repo 版控(tasks/backlog #3)",
+      "1. Bar 手機執行 v9 雙擊縮放診斷取證",
+      "2. 證據判讀(依診斷設計文件決策樹，任一方向須 Bar 核准)",
+      "3. 全面驗收 → Bar 核准 PR Merge(dev → main) → Netlify Production Deploy(回滾程序見16)",
+      "4. Playwright 三情境入版控(tasks/backlog)",
       "5. App 穩定落地後執行框架抽取(FUTURE_PLAN_framework-extraction.md)"
     ]
   },

@@ -11,10 +11,18 @@ schema.js               唯一資料規格(SSoT):欄位/gid/型別值/發布URL
 validator.js            防錯防線:AppLog 六類 + buildHeaderMap + healthCheck
 sw.js                   Service Worker:離線快取(改版 bump VERSION)
 manifest.webmanifest    PWA 安裝資訊
+icon-16.png             瀏覽器小圖示
+icon-32.png             瀏覽器小圖示
+icon-120.png            iOS PWA 圖示
+icon-152.png            iOS PWA 圖示
+icon-167.png            iOS PWA 圖示
+icon-180.png            iOS PWA 圖示
 icon-192.png            PWA 圖示
 icon-512.png            PWA 圖示
+icon-maskable-192.png   PWA 圖示(maskable)
 icon-maskable-512.png   PWA 圖示(maskable)
-apple-touch-icon.png    iOS 圖示
+okayama-peach-badge.png 診斷徽章圖
+netlify.toml            Netlify 快取 header 設定
 .ai-manifest.json       AI 導航檔(接手第一步只讀這份)
 ```
 > App UI 與主要邏輯維持單一 `index.html`;`schema.js` / `validator.js` 同時作為獨立權威來源,其餘 JS 仍以區塊註解分層。
@@ -47,11 +55,11 @@ PROJECT_CONSTITUTION.md    專案憲章(最高規範)
 14_FILE_TIERS_AND_GATE.md  檔案風險分級與 Gate 保護
 15_AI_EXECUTION_RULES.md   AI 決策權限/指令效力/不確定性協議/任務分級
 16_OPS_PLAYBOOK.md         回滾手冊 + DevOps 安全規範
-adr/                       架構決策紀錄(0001-0004 + README)
+adr/                       架構決策紀錄(0001-0005 + README)
 tasks/                     即時狀態唯一權威(current/backlog/done)
 tests/                     測試資產(交付必附)
 tools/                     檢查腳本(check-doc-titles.js:標題/檔名一致性)
-.github/workflows/         Sanity CI(qa.yml,push/PR 自動檢查)
+.github/workflows/         Sanity CI(qa.yml,main push/PR 自動檢查;dev 目前跑同等本機 CI)
 docs/superpowers/          功能設計規格與實作計畫
 schema.js / validator.js   資料規格 SSoT / 防錯防線(Tier 1 原始碼)
 index.html                 唯一可編輯 App 與 Netlify 正式入口

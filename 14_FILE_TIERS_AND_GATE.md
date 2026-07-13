@@ -14,7 +14,6 @@
 |---|---|
 | 所有 `*.md` 文件、`adr/`、`tasks/`、`docs/superpowers/` | 文件/治理(文件同步義務見憲章) |
 | `.ai-manifest.json` | AI 導航檔(改後需與文件一致) |
-| `index.html` | **唯一 App 原始碼與正式部署入口**;屬 Tier 2,修改前需通過四項確認 |
 | `schema.js`、`validator.js` | 資料規格與防錯**原始碼**;但改 SCHEMA 欄位/型別值屬憲章「須先確認」事項 |
 | `tests/` | 測試資產(交付必附,見 tests/README.md) |
 | `tools/`、`.github/workflows/` | 檢查腳本與 Sanity CI(Gate 的自動化層;改壞只影響檢查不影響 App) |
@@ -22,6 +21,7 @@
 ## Tier 2 — 高風險保護範圍(修改前必過「原因/影響/風險/回滾」確認)
 | 檔案 | 說明 |
 |---|---|
+| `index.html` | 唯一 App 原始碼與正式部署入口;改壞直接影響線上使用者，修改前需通過四項確認 |
 | `sw.js` | Service Worker;改壞會造成使用者快取災難 |
 | `manifest.webmanifest`、`icon-*.png` | PWA 安裝行為 |
 | Netlify 部署設定 | 上線行為 |

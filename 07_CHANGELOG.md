@@ -2,6 +2,21 @@
 
 紀錄格式:日期 / 版本 / 重點。細節不展開,新變更往上加。
 
+## 2026-07-13 — 治理一致性修正批（Dev，純文件）
+1. ADR 0005 補入 ADR 索引、manifest 導航與資料夾結構說明。
+2. tasks 移除 ZIP 打包／deploy 目錄作廢流程，刷新 current/done、連續編號，新增 SW SHELL、Netlify 額度與 dev CI 評估項。
+3. `index.html` 從 Tier 1 移入 Tier 2，消除檔案分級表矛盾。
+4. 正式 App 清單對齊實際 icons、桃子診斷徽章與 `netlify.toml`。
+5. Netlify 雙站架構寫入 Ops、ADR 0005、manifest 與 handover，並明確兩站獨立回滾及瀏覽器狀態隔離。
+6. manifest 日期、已完成與待辦順序刷新至 v9 診斷取證現況。
+7. 測試索引補齊 7 個檔案、Ops 版本同步標題修正，並補記本日 Netlify 額度 incident。
+- 本批未修改 App、Schema、Validator、Service Worker、測試程式或部署設定；`dev` 現行 workflow 不產生 Actions 綠勾，經 Bar 核准改跑同等本機 CI 並記入 backlog。
+
+## 2026-07-13 — Incident：Netlify 團隊額度耗盡
+- 影響:`df94600` / `a669c6f` 的 dev 部署顯示 Skipped，手機無法取得預期測試版。
+- 處置:改採正式／測試雙站架構並恢復部署；正式站追蹤 `main`，測試站追蹤 `dev`。
+- 預防:backlog 新增 Netlify 月額度監控與接近上限時評估 GitHub Pages 遷移。
+
 ## 2026-07-13 — 首頁串點子卡詳細行程導向（Dev）
 - 首頁父子串點展開後，點擊任一子卡可切換至同日行程頁、捲到對應卡片，並在有資訊面板時自動展開。
 - 父卡仍只負責展開／收合；一般非父子卡、完成／跳過／自動略過與 localStorage 狀態均未改變。
