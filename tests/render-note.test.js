@@ -45,7 +45,10 @@ vm.runInContext([
   extractFunction('renderTicketLine'),
   extractFunction('nextStopMeta'),
   extractFunction('parkingPanel'),
-  extractFunction('renderNextStopCard')
+  extractFunction('renderNextStopCard'),
+  extractFunction('clusterItemName'),
+  extractFunction('renderClusterStop'),
+  extractFunction('renderClusterNextStopCard')
 ].join('\n'), sandbox);
 
 const htmlOut = sandbox.renderNote('建議路線：\n• 搭電梯\n1. 下樓\n① 投紙鶴\n※ 不可外食\nTEL：086-294-5543\nhttps://example.com');
@@ -125,6 +128,23 @@ assert(nextStopOut.includes('class="nx-drive-btn"'));
 assert(nextStopOut.includes('class="nx-decision-btn done"'));
 assert(nextStopOut.includes('class="nx-decision-btn skip"'));
 assert(nextStopOut.indexOf('class="nx-drive-btn"') < nextStopOut.indexOf('class="nx-decision-btn done"'));
+
+sandbox.isAutoSkipped = function(){ return false; };
+const clusterChildOut = sandbox.renderClusterStop({
+  id:'10/19_2',
+  time:'10:10',
+  act:'',
+  place:'廣島和平紀念資料館',
+  move:'步行3分鐘',
+  note:''
+}, {}, {done:{},skip:{},autoSkip:{}}, 1);
+assert(clusterChildOut.includes('class="nx-cluster-stop'));
+assert(clusterChildOut.includes('onclick="openTripItem(1,\'10/19_2\')"'), 'expanded child opens the exact Trip item');
+
+const clusterCardSource = extractFunction('renderClusterNextStopCard');
+const parentMainSource = clusterCardSource.slice(0, clusterCardSource.indexOf('nx-cluster-expand'));
+assert(!parentMainSource.includes('openTripItem'), 'cluster parent remains non-navigable');
+assert(clusterCardSource.includes('renderClusterStop(item,checks,progress,dayIndex)'), 'child renderer receives the selected day');
 
 const currentNextStopOut = sandbox.renderNextStopCard({}, 0, {
   source:'time',

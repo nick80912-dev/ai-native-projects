@@ -377,7 +377,8 @@ input,select,textarea{font-size:16px}
 .nx-cluster-expand{width:100%;border:1px solid var(--line);background:#fff;border-radius:9px;color:var(--sea-deep);font:inherit;font-size:13px;font-weight:800;padding:10px;margin-top:10px;cursor:pointer}
 .nx-cluster-expand.on{background:#f1f8f8;border-color:var(--sea)}
 .nx-cluster-list{display:grid;gap:0;margin-top:10px;border-top:1px solid var(--line)}
-.nx-cluster-stop{display:grid;grid-template-columns:52px 1fr;gap:8px;padding:12px 0;border-bottom:1px solid var(--line)}
+.nx-cluster-stop{display:grid;grid-template-columns:52px 1fr;gap:8px;padding:12px 0;border-bottom:1px solid var(--line);cursor:pointer;transition:background .15s,transform .15s}
+.nx-cluster-stop:active{background:#f7f3ea;transform:scale(.99)}
 .nx-cluster-stop.auto{opacity:.58}
 .nx-cluster-time{color:var(--coral);font-size:12px;font-weight:900;padding-top:2px}
 .nx-cluster-name{font-size:14px;font-weight:900;color:var(--ink);line-height:1.4}
@@ -1887,11 +1888,11 @@ function clusterTimeRange(parent,items){
   var last=(items[items.length-1]&&items[items.length-1].time)||'';
   return first&&last&&first!==last?first+' - '+last:(first||last);
 }
-function renderClusterStop(item,checks,progress){
+function renderClusterStop(item,checks,progress,dayIndex){
   var res=resolveRef(item);
   var meta=nextStopMeta(item,res);
   var auto=isAutoSkipped(item.id,progress);
-  return '<div class="nx-cluster-stop '+(auto?'auto':'')+'">'+
+  return '<div class="nx-cluster-stop '+(auto?'auto':'')+'" onclick="openTripItem('+dayIndex+',\''+jsString(item.id)+'\')">'+
     '<div class="nx-cluster-time">'+escapeHtml(item.time||'·')+'</div>'+
     '<div><div class="nx-cluster-name">'+escapeHtml(clusterItemName(item))+'</div>'+
       '<div class="nx-cluster-meta">'+(meta.cat?escapeHtml(meta.cat.label):'')+(meta.drive?' · '+escapeHtml(meta.drive):'')+'</div>'+
@@ -1917,7 +1918,7 @@ function renderClusterNextStopCard(day,dayIndex,pick,cluster,checks,progress,now
       '<div class="nx-ticket-tags"><span class="nx-ticket-tag">'+cluster.items.length+' 站</span>'+(skipped?'<span class="nx-ticket-tag">'+skipped+' 站已自動略過</span>':'')+'</div>'+
       '<div class="nx-ticket-lines"><div class="nx-ticket-line"><b>目前</b> '+escapeHtml((current.time?current.time+' ':'')+clusterItemName(current))+'</div>'+renderTicketLine('交通',currentMeta.drive)+'</div>'+
       '<button class="nx-cluster-expand '+(open?'on':'')+'" onclick="toggleHomeCluster(\''+jsString(cluster.parent.id)+'\')">'+(open?'收合該區串點':'展開該區串點')+'</button>'+
-      (open?'<div class="nx-cluster-list">'+cluster.items.map(function(item){ return renderClusterStop(item,checks,progress); }).join('')+'</div>':'')+
+      (open?'<div class="nx-cluster-list">'+cluster.items.map(function(item){ return renderClusterStop(item,checks,progress,dayIndex); }).join('')+'</div>':'')+
     '</div>'+
     (canNav?'<div class="nx-primary-actions"><a class="nx-drive-btn" href="'+navUrl(current,res)+'" target="_blank" rel="noopener">'+(transport()==='drive'?'🚗 導航':'🚃 路線')+'</a></div>':'')+
     '<div class="nx-ticket-low"><button class="nx-decision-btn done" onclick="onNextStopDone('+dayIndex+',\''+current.id+'\')">完成：'+escapeHtml(clusterItemName(current))+'</button><button class="nx-decision-btn skip" onclick="onNextStopSkip('+dayIndex+',\''+current.id+'\')">跳過：'+escapeHtml(clusterItemName(current))+'</button></div></div>';
