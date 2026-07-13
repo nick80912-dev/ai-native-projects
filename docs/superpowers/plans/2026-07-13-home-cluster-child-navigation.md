@@ -310,7 +310,7 @@ Repeat Task 2 Step 5 from the clean committed tree. Expected: all checks pass an
 
 Report the exact `APP DEV · CODE <FUNCTIONAL_HASH> · 2026-07-13`, `SW okayama-trip-v9`, test evidence, and commit list. Do not push until Bar replies with an explicit Dev push instruction.
 
-- [ ] **Step 3: Push and verify the remote hash**
+- [x] **Step 3: Push and verify the remote hash**
 
 After authorization, run:
 
