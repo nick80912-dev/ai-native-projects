@@ -75,5 +75,5 @@
 - [x] Run `node tools/check-doc-titles.js`; expect PASS.
 - [x] Run every `tests/*.test.js`; expect all PASS.
 - [x] Run `git diff --check`; expect no errors.
-- [ ] Inspect the complete diff, confirm only approved files changed, commit intentionally, and push `dev` to `origin/dev`.
-- [ ] Report automated evidence separately from iPhone-only checks; do not claim the phone checklist passed.
+- [x] Inspect the complete diff, confirm only approved files changed, commit intentionally, and push `dev` to `origin/dev`.
+- [x] Report automated evidence separately from iPhone-only checks; do not claim the phone checklist passed.
