@@ -354,9 +354,11 @@ input,select,textarea{font-size:16px}
 .nx-ticket-act{font-size:14px;color:var(--ink-soft);font-weight:700;margin-bottom:10px}
 .nx-ticket-tags{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0 10px}
 .nx-ticket-tag{font-size:12px;border-radius:999px;padding:4px 8px;background:#f3efe6;color:var(--ink-soft);font-weight:700}
+.nx-ticket-tags .now-badge{margin-left:0;vertical-align:0;align-self:center}
 .nx-ticket-lines{display:grid;gap:6px;margin-top:8px}
 .nx-ticket-line{font-size:13.5px;line-height:1.45;color:var(--ink-soft)}
 .nx-ticket-line b{color:var(--ink);font-weight:800}
+.nx-ticket-note .note-rich{margin-top:4px}
 .nx-ticket-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
 .nx-ticket-actions .qa-btn{margin:0}
 .nx-primary-actions{padding:0 16px 10px 20px}
@@ -763,6 +765,10 @@ function buildHeaderMap(rows, def){
    回傳 findings 陣列並輸出報告;AI 每次交付前必跑 */
 function healthCheck(){
   var f = [];
+  function sameDisplayName(a,b){
+    var na=String(a||'').toLowerCase().replace(/\s+/g,''), nb=String(b||'').toLowerCase().replace(/\s+/g,'');
+    return !!(na&&nb&&(na.indexOf(nb)>=0||nb.indexOf(na)>=0));
+  }
   function dupCheck(list, idField, label){
     var seen = {};
     (list||[]).forEach(function(r){
@@ -787,8 +793,12 @@ function healthCheck(){
     d.items.forEach(function(it){
       var ref = (it.ref||'').toUpperCase().trim();
       if(/^P\d+/.test(ref) && !pids[ref]) f.push('懸空引用:行程 ' + d.date + '「' + it.act + '」→ ' + ref + ' 不存在於 Places');
-      if(/^R\d+/.test(ref) && !(DB.rest||[]).some(function(r){ return (r.restId||'').toUpperCase()===ref; }))
-        f.push('懸空引用:行程 ' + d.date + '「' + it.act + '」→ ' + ref + ' 不存在於 Restaurants');
+      if(/^R\d+/.test(ref)){
+        var linkedRest=(DB.rest||[]).find(function(r){ return (r.restId||'').toUpperCase()===ref; });
+        if(!linkedRest) f.push('懸空引用:行程 ' + d.date + '「' + it.act + '」→ ' + ref + ' 不存在於 Restaurants');
+        else if(it.place && linkedRest.name && !sameDisplayName(it.place,linkedRest.name))
+          f.push('引用名稱不一致:行程 ' + d.date + '「' + it.place + '」→ ' + ref + '「' + linkedRest.name + '」');
+      }
     });
   });
   /* 渲染型別覆蓋:資料中出現的型別必須都有對應卡片 */
@@ -1929,14 +1939,14 @@ function renderNextStopCard(day,dayIndex,pick){
       (meta.act&&meta.act!==meta.place?'<div class="nx-ticket-act">'+escapeHtml(meta.act)+'</div>':'')+
       '<div class="nx-ticket-tags">'+
         (meta.cat?'<span class="nx-ticket-tag">'+escapeHtml(meta.cat.label)+'</span>':'')+
-        (pick.source==='time'?'<span class="nx-ticket-tag">依目前時間</span>':'')+
+        (pick.source==='time'?'<span class="now-badge">現在</span>':'')+
       '</div>'+
       '<div class="nx-ticket-lines">'+
         renderTicketLine('交通',meta.drive)+
         renderTicketLine('停車',meta.parking)+
         renderTicketLine('營業',meta.hours)+
         renderTicketLine('付款',meta.pay)+
-        renderTicketLine('提醒',meta.note)+
+        (meta.note?'<div class="nx-ticket-line nx-ticket-note"><b>提醒</b>'+renderNote(meta.note)+'</div>':'')+
       '</div>'+
     '</div>'+
     (canNav?'<div class="nx-primary-actions"><a class="nx-drive-btn" href="'+navUrl(it,res)+'" target="_blank" rel="noopener">'+(transport()==='drive'?'🚗 導航':'🚃 路線')+'</a></div>':'')+
@@ -2450,6 +2460,14 @@ var VIEWPORT_META=document.querySelector('meta[name="viewport"]');
 var VIEWPORT_ORIGINAL=VIEWPORT_META?VIEWPORT_META.getAttribute('content'):'';
 function forceViewportReflow(){ window.scrollTo(0,window.scrollY); }
 function isFormControl(el){ return !!(el&&/^(INPUT|SELECT|TEXTAREA)$/.test(el.tagName||'')); }
+function recoverViewportAfterResume(meta,original,wrap,win,raf){
+  if(meta&&original){ if(meta.setAttribute) meta.setAttribute('content',original); else meta.content=original; }
+  if(wrap&&wrap.style){ wrap.style.transform=''; wrap.style.transition=''; }
+  var x=typeof win.scrollX==='number'?win.scrollX:(win.pageXOffset||0);
+  var y=typeof win.scrollY==='number'?win.scrollY:(win.pageYOffset||0);
+  var frame=raf||win.requestAnimationFrame||function(fn){ return setTimeout(fn,0); };
+  frame(function(){ frame(function(){ win.scrollTo(x,y); }); });
+}
 function restoreFocusZoom(meta,viewport,userGesture,pendingTimer){
   if(!meta||!viewport||viewport.scale<=1||userGesture) return null;
   if(pendingTimer) clearTimeout(pendingTimer);
@@ -2458,7 +2476,10 @@ function restoreFocusZoom(meta,viewport,userGesture,pendingTimer){
 }
 function setupViewportReflow(){
   var formFocused=false,userGesture=false,restoreTimer=null;
+  var wrap=document.querySelector('.wrap');
   if(window.visualViewport) window.visualViewport.addEventListener('resize',function(){ if(Math.abs(window.visualViewport.height-window.innerHeight)<2) forceViewportReflow(); });
+  document.addEventListener('visibilitychange',function(){ if(!document.hidden) recoverViewportAfterResume(VIEWPORT_META,VIEWPORT_ORIGINAL,wrap,window); });
+  window.addEventListener('pageshow',function(){ recoverViewportAfterResume(VIEWPORT_META,VIEWPORT_ORIGINAL,wrap,window); });
   document.addEventListener('focusin',function(e){ if(isFormControl(e.target)){ formFocused=true; userGesture=false; } });
   document.addEventListener('touchstart',function(e){ if(formFocused&&e.touches&&e.touches.length>1) userGesture=true; },{passive:true});
   document.addEventListener('gesturestart',function(){ if(formFocused) userGesture=true; },{passive:true});

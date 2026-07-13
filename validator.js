@@ -68,6 +68,10 @@ function buildHeaderMap(rows, def){
    回傳 findings 陣列並輸出報告;AI 每次交付前必跑 */
 function healthCheck(){
   var f = [];
+  function sameDisplayName(a,b){
+    var na=String(a||'').toLowerCase().replace(/\s+/g,''), nb=String(b||'').toLowerCase().replace(/\s+/g,'');
+    return !!(na&&nb&&(na.indexOf(nb)>=0||nb.indexOf(na)>=0));
+  }
   function dupCheck(list, idField, label){
     var seen = {};
     (list||[]).forEach(function(r){
@@ -92,8 +96,12 @@ function healthCheck(){
     d.items.forEach(function(it){
       var ref = (it.ref||'').toUpperCase().trim();
       if(/^P\d+/.test(ref) && !pids[ref]) f.push('懸空引用:行程 ' + d.date + '「' + it.act + '」→ ' + ref + ' 不存在於 Places');
-      if(/^R\d+/.test(ref) && !(DB.rest||[]).some(function(r){ return (r.restId||'').toUpperCase()===ref; }))
-        f.push('懸空引用:行程 ' + d.date + '「' + it.act + '」→ ' + ref + ' 不存在於 Restaurants');
+      if(/^R\d+/.test(ref)){
+        var linkedRest=(DB.rest||[]).find(function(r){ return (r.restId||'').toUpperCase()===ref; });
+        if(!linkedRest) f.push('懸空引用:行程 ' + d.date + '「' + it.act + '」→ ' + ref + ' 不存在於 Restaurants');
+        else if(it.place && linkedRest.name && !sameDisplayName(it.place,linkedRest.name))
+          f.push('引用名稱不一致:行程 ' + d.date + '「' + it.place + '」→ ' + ref + '「' + linkedRest.name + '」');
+      }
     });
   });
   /* 渲染型別覆蓋:資料中出現的型別必須都有對應卡片 */

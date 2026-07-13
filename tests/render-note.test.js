@@ -126,6 +126,23 @@ assert(nextStopOut.includes('class="nx-decision-btn done"'));
 assert(nextStopOut.includes('class="nx-decision-btn skip"'));
 assert(nextStopOut.indexOf('class="nx-drive-btn"') < nextStopOut.indexOf('class="nx-decision-btn done"'));
 
+const currentNextStopOut = sandbox.renderNextStopCard({}, 0, {
+  source:'time',
+  item:{
+    id:'10/18_3',
+    time:'15:05',
+    act:'抵達岡山機場 入境後前往取車',
+    place:'ORIX租車 岡山機場',
+    move:'',
+    note:'•必備①台灣駕照正本\n•取車時記得錄影\n•訂單編號：133048833'
+  }
+});
+assert(currentNextStopOut.includes('<span class="now-badge">現在</span>'), 'home uses the itinerary now badge');
+assert(!currentNextStopOut.includes('依目前時間'), 'the old home-only time label is removed');
+assert(currentNextStopOut.includes('<b>提醒</b>'), 'the reminder label remains visible');
+assert(currentNextStopOut.includes('class="note-list"'), 'home reminders use the shared rich-note renderer');
+assert.strictEqual((currentNextStopOut.match(/class="note-li"/g)||[]).length, 3, 'each Sheet bullet stays scannable');
+
 sandbox.resolveParking = function(){ return { mapcode:'22 220 851*75', pnote:'parking note' }; };
 sandbox.kvRow = function(k,v){ return v ? '<div>'+k+v+'</div>' : ''; };
 const parkingOut = sandbox.parkingPanel({});
