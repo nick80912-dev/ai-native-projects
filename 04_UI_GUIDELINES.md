@@ -27,6 +27,9 @@
 - `touch-action: manipulation` 是停用雙擊縮放的第一防線,但必須保留使用者主動捏合與既有自製回彈。
 - 輸入框 focus 造成縮放殘留時,只允許以 viewport「瞬鎖約 100ms → 原始字串還原」處理;`maximum-scale` 與 `user-scalable=no` 不得常駐。
 - 還原前必須確認縮放源自表單 focus;focus 期間若偵測到多指或 `gesturestart`,視為使用者主動捏合,不得強制還原。
+- 非互動文字或空白區的單指雙擊防護，必須在第二次 `touchstart` 以 350ms／24px 門檻判斷；移動超過 10px 即取消候選。
+- 兩指以上手勢、桃子診斷徽章、按鈕、連結及表單控制項不得由一般雙擊防護攔截。
+- 若 Dev 手機仍可重現雙擊放大，先重新蒐集 iOS／PWA 事件證據；不得自動改採永久 `maximum-scale` 或 `user-scalable=no`。方案 C 必須由 Bar 另案明確核准。
 
 ## 互動
 打卡 `.chk` 勾選→卡片變灰+劃線;toast 回饋 2 秒;摺疊箭頭旋轉動畫 .25s;所有清單觸控列 ≥44px 高。

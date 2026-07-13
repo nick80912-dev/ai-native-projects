@@ -43,7 +43,7 @@
 - Consumes: DOM `touchstart`, `touchmove`, and `touchcancel` events; existing interactive selector contract.
 - Produces: `isDoubleTapInteractive(target) -> boolean`, `touchDistance(a, b) -> number`, and `setupDoubleTapGuard() -> void`.
 
-- [ ] **Step 1: Extend the test harness and add failing gesture tests**
+- [x] **Step 1: Extend the test harness and add failing gesture tests**
 
 Add the following test block before the final `console.log` in `tests/ios-zoom-guard.test.js`:
 
@@ -114,7 +114,7 @@ assert.strictEqual(start(100,100,1,true),false, 'interactive targets are never b
 assert.match(extractFunction('isDoubleTapInteractive'), /#diagnosticBadge/, 'peach badge remains excluded');
 ```
 
-- [ ] **Step 2: Run the focused test and verify it fails for the missing helpers**
+- [x] **Step 2: Run the focused test and verify it fails for the missing helpers**
 
 Run:
 
@@ -125,7 +125,7 @@ $node='C:\Users\Aaron Huang\.cache\codex-runtimes\codex-primary-runtime\dependen
 
 Expected: FAIL at `interactive double-tap targets have a named classifier` because the old implementation has no named classifier or distance helper.
 
-- [ ] **Step 3: Replace the old double-tap guard with the minimal state machine**
+- [x] **Step 3: Replace the old double-tap guard with the minimal state machine**
 
 Replace the existing one-line `setupDoubleTapGuard()` in `index.html` with:
 
@@ -160,7 +160,7 @@ function setupDoubleTapGuard(){
 }
 ```
 
-- [ ] **Step 4: Run the focused test and verify it passes**
+- [x] **Step 4: Run the focused test and verify it passes**
 
 Run:
 
@@ -171,7 +171,7 @@ $node='C:\Users\Aaron Huang\.cache\codex-runtimes\codex-primary-runtime\dependen
 
 Expected: `iOS zoom guard tests passed`.
 
-- [ ] **Step 5: Review the Task 1 diff and commit the functional change**
+- [x] **Step 5: Review the Task 1 diff and commit the functional change**
 
 Run:
 
@@ -196,7 +196,7 @@ Expected: commit succeeds and the final command prints exactly seven hexadecimal
 - Consumes: Task 1's exact seven-character `$functionalCommit` value.
 - Produces: global `APP_BUILD = {channel:string, code:string, date:string}` and a diagnostic row containing the exact Task 1 short hash.
 
-- [ ] **Step 1: Read and validate the functional commit value**
+- [x] **Step 1: Read and validate the functional commit value**
 
 Run immediately after Task 1:
 
@@ -208,7 +208,7 @@ $functionalCommit
 
 Expected: the same seven-character value printed at the end of Task 1.
 
-- [ ] **Step 2: Add failing APP metadata and v5 assertions**
+- [x] **Step 2: Add failing APP metadata and v5 assertions**
 
 In `tests/ios-zoom-guard.test.js`, replace both `v4` assertions with `v5` and add these assertions directly after them:
 
@@ -219,7 +219,7 @@ assert.match(html, /CODE ['"]?\+?escapeHtml\(APP_BUILD\.code\)/, 'diagnostics re
 assert.match(html, /escapeHtml\(APP_BUILD\.date\)/, 'diagnostics render the build date');
 ```
 
-- [ ] **Step 3: Run the focused test and verify the version assertions fail**
+- [x] **Step 3: Run the focused test and verify the version assertions fail**
 
 Run:
 
@@ -229,7 +229,7 @@ Run:
 
 Expected: FAIL at `service worker cache is bumped to v5` because source still contains `okayama-trip-v4`.
 
-- [ ] **Step 4: Insert exact APP metadata and update diagnostics**
+- [x] **Step 4: Insert exact APP metadata and update diagnostics**
 
 Generate the exact production line from the validated Task 1 value:
 
@@ -253,7 +253,7 @@ Then change the diagnostic version section to render three separate rows:
 '<div class="diag-row">SW okayama-trip-v5</div></div>'+
 ```
 
-- [ ] **Step 5: Bump only the Service Worker cache name**
+- [x] **Step 5: Bump only the Service Worker cache name**
 
 In `sw.js`, change:
 
@@ -267,7 +267,7 @@ to:
 var CACHE_NAME = 'okayama-trip-v5';
 ```
 
-- [ ] **Step 6: Run the focused test and verify it passes**
+- [x] **Step 6: Run the focused test and verify it passes**
 
 Run:
 
@@ -277,7 +277,7 @@ Run:
 
 Expected: `iOS zoom guard tests passed`.
 
-- [ ] **Step 7: Verify CODE points to Task 1, not the pending Task 2 commit**
+- [x] **Step 7: Verify CODE points to Task 1, not the pending Task 2 commit**
 
 Run:
 
@@ -288,7 +288,7 @@ if($sourceCode -ne $functionalCommit){ throw "APP CODE $sourceCode does not matc
 
 Expected: no output and exit code 0.
 
-- [ ] **Step 8: Review and commit the version metadata and shell invalidation**
+- [x] **Step 8: Review and commit the version metadata and shell invalidation**
 
 Run:
 
@@ -312,7 +312,7 @@ Expected: commit succeeds. The diagnostic CODE remains the Task 1 functional com
 - Consumes: Task 1 gesture behavior and Task 2 APP/SW version values.
 - Produces: durable governance notes and an auditable verification record.
 
-- [ ] **Step 1: Update the UI guideline with exact gesture policy**
+- [x] **Step 1: Update the UI guideline with exact gesture policy**
 
 Append these requirements to the existing iOS touch/zoom section in `04_UI_GUIDELINES.md`:
 
@@ -322,7 +322,7 @@ Append these requirements to the existing iOS touch/zoom section in `04_UI_GUIDE
 - 若 Dev 手機仍可重現雙擊放大，先重新蒐集 iOS／PWA 事件證據；不得自動改採永久 `maximum-scale` 或 `user-scalable=no`。方案 C 必須由 Bar 另案明確核准。
 ```
 
-- [ ] **Step 2: Add the changelog entry**
+- [x] **Step 2: Add the changelog entry**
 
 At the top of `07_CHANGELOG.md`'s change entries, add:
 
@@ -344,7 +344,7 @@ $changelogBuildLine
 
 Expected: a complete markdown bullet containing the exact Task 1 functional commit. Insert that exact line with `apply_patch` between the second and Service Worker bullets.
 
-- [ ] **Step 3: Run all repository checks available in this project**
+- [x] **Step 3: Run all repository checks available in this project**
 
 Run:
 
@@ -362,11 +362,11 @@ Expected:
 - `git diff --check` prints nothing.
 - `git status --short` lists only `04_UI_GUIDELINES.md`, `07_CHANGELOG.md`, and this plan file.
 
-- [ ] **Step 4: Record completion evidence in this plan**
+- [x] **Step 4: Record completion evidence in this plan**
 
 After this task's verification commands pass, add a final `## Execution Record` section containing the exact Task 1 functional commit, Task 2 metadata commit, test outputs, and the statement `iPhone Dev PWA final verification: pending Bar`.
 
-- [ ] **Step 5: Commit the documentation and execution record**
+- [x] **Step 5: Commit the documentation and execution record**
 
 Run:
 
@@ -443,3 +443,12 @@ Phone checklist:
 6. Input focus/blur: normal.
 7. Diagnostics show `APP DEV`, `CODE`, the exact Task 1 seven-character hash, `2026-07-13`, `SCHEMA 2.1`, and `SW okayama-trip-v5`.
 8. `healthCheck()`: normal.
+
+## Execution Record
+
+- Task 1 functional commit: `10e87e1`
+- Task 2 metadata and Service Worker commit: `8c6ddcc`
+- Focused verification: `iOS zoom guard tests passed`
+- Documentation verification: `✅ 文件標題/檔名一致性檢查通過`
+- `git diff --check`: passed with no errors
+- iPhone Dev PWA final verification: pending Bar

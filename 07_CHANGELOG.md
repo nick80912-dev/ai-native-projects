@@ -2,6 +2,13 @@
 
 紀錄格式:日期 / 版本 / 重點。細節不展開,新變更往上加。
 
+## 2026-07-13 — iOS 雙擊防放大第二階段（Dev）
+- 將非互動區雙擊防護提前至第二次單指 `touchstart`，加入 350ms、24px 及 10px 移動取消門檻。
+- 保留捏合回彈、桃子徽章、互動元件及輸入框 focus／blur 行為。
+- 診斷面板新增 `APP DEV · CODE 10e87e1 · 2026-07-13`，Schema 獨立顯示。
+- Service Worker App Shell cache 升至 `okayama-trip-v5`。
+- 自動測試通過；最終雙擊行為待 Bar 於 iPhone Dev PWA 驗證。
+
 ## 2026-07-13 — iOS 防放大階段一
 - 所有表單控制項有效字級提升至至少 16px,避免 iOS focus 自動放大;390px 排版保留既有 class 體系。
 - 既有 viewport 重排 handler 加入表單 focus 來源、多指手勢排除與 100ms 瞬鎖瞬解,原樣還原啟動時 viewport 字串。
