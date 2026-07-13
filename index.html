@@ -2465,7 +2465,34 @@ function setupViewportReflow(){
     if(e.target&&e.target.closest&&e.target.closest('#diagnosticOverlay')) forceViewportReflow();
   });
 }
-function setupDoubleTapGuard(){ var last=0; document.addEventListener('touchend',function(e){ var target=e.target,interactive=target&&target.closest&&target.closest('button,a,input,select,textarea,[onclick],#diagnosticBadge'); var now=Date.now(); if(!interactive&&now-last<300) e.preventDefault(); last=now; },{passive:false}); }
+function isDoubleTapInteractive(target){
+  return !!(target&&target.closest&&target.closest('button,a,input,select,textarea,[onclick],#diagnosticBadge'));
+}
+function touchDistance(a,b){
+  var dx=a.x-b.x,dy=a.y-b.y;
+  return Math.hypot(dx,dy);
+}
+function setupDoubleTapGuard(){
+  var lastTap=null;
+  function clearCandidate(){ lastTap=null; }
+  document.addEventListener('touchstart',function(e){
+    if(!e.touches||e.touches.length!==1||isDoubleTapInteractive(e.target)){ clearCandidate(); return; }
+    var touch=e.touches[0];
+    var point={x:touch.clientX,y:touch.clientY,time:Date.now()};
+    if(lastTap&&point.time-lastTap.time<=350&&touchDistance(lastTap,point)<=24){
+      e.preventDefault();
+      clearCandidate();
+      return;
+    }
+    lastTap=point;
+  },{passive:false});
+  document.addEventListener('touchmove',function(e){
+    if(!lastTap) return;
+    if(!e.touches||e.touches.length!==1){ clearCandidate(); return; }
+    if(touchDistance(lastTap,{x:e.touches[0].clientX,y:e.touches[0].clientY})>10) clearCandidate();
+  },{passive:true});
+  document.addEventListener('touchcancel',clearCandidate,{passive:true});
+}
 function setupPinchZoom(){ var wrap=document.querySelector('.wrap'),start=0,active=false; if(!wrap) return; function reset(){ if(!active) return; active=false; wrap.style.transition='transform .2s'; wrap.style.transform='scale(1)'; setTimeout(function(){wrap.style.transition='';wrap.classList.remove('pinch-zooming');},200); } document.addEventListener('touchstart',function(e){ if(e.touches.length===2){ start=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY); active=true; wrap.classList.add('pinch-zooming'); } else if(e.touches.length>2) reset(); },{passive:false}); document.addEventListener('touchmove',function(e){ if(!active||e.touches.length!==2) return; e.preventDefault(); var d=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY); wrap.style.transform='scale('+Math.min(2.5,Math.max(1,d/start))+')'; },{passive:false}); document.addEventListener('touchend',reset,{passive:false}); if(window.GestureEvent) document.addEventListener('gesturestart',function(e){e.preventDefault();},{passive:false}); }
 setupDiagnostics();
 setupPinchZoom();
