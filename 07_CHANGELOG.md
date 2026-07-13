@@ -2,6 +2,13 @@
 
 紀錄格式:日期 / 版本 / 重點。細節不展開,新變更往上加。
 
+## 2026-07-13 — iOS 雙擊縮放診斷 Build（Dev）
+- v7 Scroll-only 手機驗證後，雙擊縮放仍可重現；本版只收集證據，不宣稱或加入修復。
+- 診斷面板保存最近 24 筆 touch、gesture、dblclick 與 visual viewport resize 事件，可複製或清除報告；環境摘要包含即時 viewport meta，事件包含 html、body、target 的 computed touch-action。
+- 所有 observer 均為 passive，不呼叫 `preventDefault()`、不修改 viewport、不寫入 storage，也不記錄輸入內容或完整 URL。
+- APP 顯示功能提交 `cd921b2`；Service Worker App Shell cache 更新為 `okayama-trip-v8`，Schema 維持 2.1。
+- 證據回收後僅依設計文件決策樹分類；任一實作方向均須另經 Bar 核准。
+
 ## 2026-07-13 — iOS 回前景與資料／首頁一致性（Dev）
 - 線上行程總表已由 Bar 將 Musashi 的錯誤引用 `R013` 修正為 `R012`；health check 新增行程餐廳名稱與 RID 指向名稱不一致偵測。
 - iOS 從背景或 page cache 回到前景時，還原原始 viewport、清除舊 inline transform，並於兩個 animation frames 後恢復原捲動位置。

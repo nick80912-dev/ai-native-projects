@@ -34,7 +34,7 @@
 - Consumes: an event-like object, `window`, `document`, and a snapshot callback.
 - Produces: `gestureTargetSummary(target)`, `gestureComputedTouchAction(win,element)`, `gestureViewportSnapshot(type,event,win,doc)`, and `createGestureDiagnostics(limit,snapshotter)`.
 
-- [ ] **Step 1: Write failing core-model tests**
+- [x] **Step 1: Write failing core-model tests**
 
 Create `tests/ios-gesture-diagnostics.test.js` with the existing `extractFunction()` pattern and these assertions:
 
@@ -108,7 +108,7 @@ assert.strictEqual(ring.list().length, 0);
 console.log('iOS gesture diagnostic core tests passed');
 ```
 
-- [ ] **Step 2: Run the new test and verify RED**
+- [x] **Step 2: Run the new test and verify RED**
 
 Run:
 
@@ -118,7 +118,7 @@ Run:
 
 Expected: FAIL with `gestureTargetSummary exists` because no diagnostic model exists.
 
-- [ ] **Step 3: Implement the minimal pure helpers**
+- [x] **Step 3: Implement the minimal pure helpers**
 
 Add these ES5 helpers before `openDiagnostics()`:
 
@@ -170,7 +170,7 @@ function createGestureDiagnostics(limit,snapshotter){
 }
 ```
 
-- [ ] **Step 4: Run the test and verify GREEN**
+- [x] **Step 4: Run the test and verify GREEN**
 
 Run the command from Step 2.
 
@@ -186,7 +186,7 @@ Expected: `iOS gesture diagnostic core tests passed`.
 - Consumes: Task 1 helpers, `APP_BUILD`, `SCHEMA.version`, `navigator`, `matchMedia`, and `window.visualViewport`.
 - Produces: `IOS_GESTURE_DIAGNOSTICS`, `setupGestureDiagnostics(doc,win,store)`, `runtimeViewportMeta(doc)`, `gestureEnvironmentSnapshot(...)`, and `formatGestureDiagnostics(...)`.
 
-- [ ] **Step 1: Add failing observer and export tests**
+- [x] **Step 1: Add failing observer and export tests**
 
 Append assertions that require:
 
@@ -230,13 +230,13 @@ console.log('iOS gesture diagnostic observer tests passed');
 
 Move the Task 1 `console.log` to the end of these new assertions so the script prints only after every Task 1–2 assertion passes.
 
-- [ ] **Step 2: Run the test and verify RED**
+- [x] **Step 2: Run the test and verify RED**
 
 Run the Task 1 test command.
 
 Expected: FAIL because `setupGestureDiagnostics`, environment snapshot, and formatter do not exist.
 
-- [ ] **Step 3: Implement passive setup and plain-text formatting**
+- [x] **Step 3: Implement passive setup and plain-text formatting**
 
 Add:
 
@@ -277,7 +277,7 @@ function formatGestureDiagnostics(env,current,records){
 
 Call `setupGestureDiagnostics(document,window,IOS_GESTURE_DIAGNOSTICS);` once in startup, before `setupDiagnostics()`.
 
-- [ ] **Step 4: Run the test and verify GREEN**
+- [x] **Step 4: Run the test and verify GREEN**
 
 Run the Task 1 command.
 
@@ -293,7 +293,7 @@ Expected: observer, environment, formatter, ring buffer, privacy, and no-side-ef
 - Consumes: Task 2 store/formatter, existing `escapeHtml()`, `copyText()`, and `.diag-*` styles.
 - Produces: `gestureDiagnosticReport()`, `renderGestureDiagnosticsBody()`, `refreshGestureDiagnostics()`, `clearGestureDiagnostics()`, and `copyGestureDiagnostics()`.
 
-- [ ] **Step 1: Add failing UI tests**
+- [x] **Step 1: Add failing UI tests**
 
 Extract the five UI helpers and assert:
 
@@ -351,13 +351,13 @@ console.log('iOS gesture diagnostic tests passed');
 
 Move the Task 2 `console.log` to the end of these UI assertions.
 
-- [ ] **Step 2: Run the test and verify RED**
+- [x] **Step 2: Run the test and verify RED**
 
 Run the Task 1 test command.
 
 Expected: FAIL because the panel section and UI helpers do not exist.
 
-- [ ] **Step 3: Implement the scoped diagnostic UI**
+- [x] **Step 3: Implement the scoped diagnostic UI**
 
 Add scoped CSS:
 
@@ -389,7 +389,7 @@ Insert before the time-simulation section in `openDiagnostics()`:
 '<div class="diag-section"><h3>iOS 手勢診斷</h3><div id="diagGestureBody">'+renderGestureDiagnosticsBody()+'</div></div>'+
 ```
 
-- [ ] **Step 4: Run focused tests and verify GREEN**
+- [x] **Step 4: Run focused tests and verify GREEN**
 
 Run:
 
@@ -402,7 +402,7 @@ $node='C:\Users\Aaron Huang\.cache\codex-runtimes\codex-primary-runtime\dependen
 
 Expected: all three scripts pass.
 
-- [ ] **Step 5: Commit the functional diagnostic build**
+- [x] **Step 5: Commit the functional diagnostic build**
 
 Run:
 
@@ -429,7 +429,7 @@ Record the returned seven-character hash for Task 4.
 - Consumes: Task 3 functional commit hash.
 - Produces: explicit APP CODE, `okayama-trip-v8`, documented operating/validation rules, and reproducible full-suite evidence.
 
-- [ ] **Step 1: Make version assertions fail first**
+- [x] **Step 1: Make version assertions fail first**
 
 Change `tests/ios-zoom-guard.test.js` to require:
 
@@ -454,13 +454,13 @@ assert.doesNotMatch(diagnosticFunctions, /=>|\bconst\b|\blet\b/, 'diagnostic pro
 assert.strictEqual(diagnosticFunctions.indexOf('`'), -1, 'diagnostic production functions use no template literals');
 ```
 
-- [ ] **Step 2: Run the version test and verify RED**
+- [x] **Step 2: Run the version test and verify RED**
 
 Run `node tests/ios-zoom-guard.test.js` with the bundled Node path.
 
 Expected: FAIL because production still reports the prior APP CODE and v7.
 
-- [ ] **Step 3: Publish the functional identity and v8**
+- [x] **Step 3: Publish the functional identity and v8**
 
 - Set `APP_BUILD.code` to the exact Task 3 hash.
 - Change the diagnostic SW row to `SW okayama-trip-v8`.
@@ -488,7 +488,7 @@ Expected: FAIL because production still reports the prior APP CODE and v7.
 - 自動測試通過；最終事件與 scale 證據待 Bar 於 iPhone Dev PWA 回傳。
 ```
 
-- [ ] **Step 4: Run repository-wide verification**
+- [x] **Step 4: Run repository-wide verification**
 
 Run:
 
@@ -511,7 +511,7 @@ git status --short
 
 Expected: all test files pass, document check passes, all inline scripts compile, `git diff --check` is clean, and status lists only intended publication/docs files.
 
-- [ ] **Step 5: Commit publication metadata and docs**
+- [x] **Step 5: Commit publication metadata and docs**
 
 Run:
 

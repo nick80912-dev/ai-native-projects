@@ -30,6 +30,7 @@
 - iOS App 從背景回到前景或由 page cache 恢復時，必須還原原始 viewport 字串、清除舊 inline transform，並在兩個 animation frames 後恢復原捲動座標；禁止以 reload 或重繪清除使用者狀態。
 - 桃子診斷徽章、按鈕、連結、表單控制項、垂直頁面捲動及水平清單捲動必須保持正常。
 - 若完成 Scroll-only 與回前景修復後仍出現縮放或跑版，下一步只能發布事件／`visualViewport` 診斷 Build；不得自動疊加 viewport 硬鎖或恢復自製縮放。
+- 診斷 Build 僅可用 passive listener 保存最多 24 筆手勢與 visual viewport 快照；禁止呼叫 `preventDefault()`、修改 viewport、寫入 storage、記錄輸入值或完整 URL。證據判讀後的任何修正仍須經 Bar 核准。
 
 ## 互動
 打卡 `.chk` 勾選→卡片變灰+劃線;toast 回饋 2 秒;摺疊箭頭旋轉動畫 .25s;所有清單觸控列 ≥44px 高。

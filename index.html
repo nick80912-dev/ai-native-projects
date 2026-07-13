@@ -849,7 +849,7 @@ var SHEETS = Object.keys(SCHEMA.sheets).map(function(k){
   return { key:k, gid:SCHEMA.sheets[k].gid };
 });
 var FETCH_TIMEOUT = SCHEMA.fetchTimeoutMs, FETCH_RETRIES = SCHEMA.fetchRetries;
-var APP_BUILD={channel:'DEV',code:'edfbfba',date:'2026-07-13'};
+var APP_BUILD={channel:'DEV',code:'cd921b2',date:'2026-07-13'};
 
 /* 內建後備資料(產生檔案時注入) */
 var BUILTIN_TS = 1783297150977;
@@ -2571,7 +2571,7 @@ function openDiagnostics(){
   el.innerHTML='<div class="diag-panel"><div class="diag-head"><h2>診斷面板</h2><button class="diag-close" onclick="closeDiagnostics()">×</button></div><div class="diag-section"><h3>健康檢查</h3><div class="diag-row">'+(findings.length?escapeHtml(findings.join('；')):'正常')+'</div></div><div class="diag-section"><h3>同步狀態</h3>'+sync+'</div><div class="diag-section"><h3>版本</h3>'+
     '<div class="diag-row">APP '+escapeHtml(APP_BUILD.channel)+' · CODE '+escapeHtml(APP_BUILD.code)+' · '+escapeHtml(APP_BUILD.date)+'</div>'+
     '<div class="diag-row">SCHEMA '+escapeHtml(SCHEMA.version)+'</div>'+
-    '<div class="diag-row">SW okayama-trip-v7</div></div><div class="diag-section"><h3>iOS 手勢診斷</h3><div id="diagGestureBody">'+renderGestureDiagnosticsBody()+'</div></div><div class="diag-section"><h3>時間模擬</h3><div class="diag-row">'+(isTimeSimulationActive()?'模擬中：目前模擬時間 '+appNow().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})+'（行走中）':'依手機時間')+'</div><input id="diagTime" type="datetime-local" value="'+escapeHtml(simValue||'')+'"><div class="diag-shortcuts">'+days+'</div><div class="diag-actions"><button class="primary" onclick="setTimeSimulation()">套用並開始模擬</button></div><button onclick="endTimeSimulation(true)">結束模擬——還原測試前狀態</button><div class="diag-help">還原進入模擬前的打卡與略過狀態。</div><button onclick="endTimeSimulation(false)">結束模擬——保留測試變更</button><div class="diag-help">保留模擬期間的打卡與略過狀態。</div></div><div class="diag-section"><h3>行程進度</h3><button onclick="resetTripProgress()">重置行程進度</button><div class="diag-help">僅清除打卡與略過，需雙重確認。</div></div></div>';
+    '<div class="diag-row">SW okayama-trip-v8</div></div><div class="diag-section"><h3>iOS 手勢診斷</h3><div id="diagGestureBody">'+renderGestureDiagnosticsBody()+'</div></div><div class="diag-section"><h3>時間模擬</h3><div class="diag-row">'+(isTimeSimulationActive()?'模擬中：目前模擬時間 '+appNow().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})+'（行走中）':'依手機時間')+'</div><input id="diagTime" type="datetime-local" value="'+escapeHtml(simValue||'')+'"><div class="diag-shortcuts">'+days+'</div><div class="diag-actions"><button class="primary" onclick="setTimeSimulation()">套用並開始模擬</button></div><button onclick="endTimeSimulation(true)">結束模擬——還原測試前狀態</button><div class="diag-help">還原進入模擬前的打卡與略過狀態。</div><button onclick="endTimeSimulation(false)">結束模擬——保留測試變更</button><div class="diag-help">保留模擬期間的打卡與略過狀態。</div></div><div class="diag-section"><h3>行程進度</h3><button onclick="resetTripProgress()">重置行程進度</button><div class="diag-help">僅清除打卡與略過，需雙重確認。</div></div></div>';
   document.body.appendChild(el);
 }
 function setupDiagnostics(){ var badge=document.getElementById('diagnosticBadge'),last=0; if(!badge) return; badge.addEventListener('touchend',function(e){ var now=Date.now(); if(now-last<300){ e.preventDefault(); openDiagnostics(); } last=now; },{passive:false}); updateSimulationMarker(); }
