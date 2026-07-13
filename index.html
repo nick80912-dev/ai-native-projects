@@ -1186,9 +1186,22 @@ function writeSnapshotState(storage,nextState){
   var serialized=JSON.stringify(nextState);
   var parsed=JSON.parse(serialized);
   if(!parsed||parsed.formatVersion!==1||!validSnapshotShape(parsed.active)) throw new Error('Invalid snapshot state');
+  var previousRaw=storage.getItem(SNAPSHOT_STATE_KEY);
   storage.setItem(SNAPSHOT_STATE_KEY,serialized);
   var saved=readSnapshotState(storage);
-  if(!saved||!saved.active||saved.active.generationId!==nextState.active.generationId) throw new Error('Snapshot state verification failed');
+  if(!saved||!saved.active||saved.active.generationId!==nextState.active.generationId){
+    var verificationError=new Error('Snapshot state verification failed');
+    try{
+      if(previousRaw===null) storage.removeItem(SNAPSHOT_STATE_KEY);
+      else storage.setItem(SNAPSHOT_STATE_KEY,previousRaw);
+    }catch(rollbackError){
+      var rollbackFailure=new Error('Snapshot state verification failed; rollback failed');
+      rollbackFailure.verificationError=verificationError;
+      rollbackFailure.rollbackError=rollbackError;
+      throw rollbackFailure;
+    }
+    throw verificationError;
+  }
   return true;
 }
 

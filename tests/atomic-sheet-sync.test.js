@@ -199,6 +199,50 @@ const throwingStorage={getItem:storage.getItem,setItem:function(){throw new Erro
 assert.throws(function(){app.writeSnapshotState(throwingStorage,next);},/quota/);
 assert.strictEqual(memory.trip_data_snapshot_state,old);
 
+function readbackFailureStorage(prior,readback){
+  const values={};
+  if(prior!==null) values.trip_data_snapshot_state=prior;
+  let reads=0;
+  return {
+    values:values,
+    getItem:function(key){
+      reads++;
+      if(reads===1) return Object.prototype.hasOwnProperty.call(values,key)?values[key]:null;
+      return readback;
+    },
+    setItem:function(key,value){values[key]=String(value);},
+    removeItem:function(key){delete values[key];}
+  };
+}
+
+const malformedReadback=readbackFailureStorage(old,'{malformed');
+assert.throws(function(){app.writeSnapshotState(malformedReadback,next);},/Snapshot state verification failed/);
+assert.strictEqual(malformedReadback.values.trip_data_snapshot_state,old,'malformed readback restores exact prior raw string');
+
+const wrongGeneration=JSON.stringify({formatVersion:1,active:active,previous:null});
+const wrongGenerationReadback=readbackFailureStorage(old,wrongGeneration);
+assert.throws(function(){app.writeSnapshotState(wrongGenerationReadback,next);},/Snapshot state verification failed/);
+assert.strictEqual(wrongGenerationReadback.values.trip_data_snapshot_state,old,'wrong generation restores exact prior raw string');
+
+const absentPrior=readbackFailureStorage(null,'{malformed');
+assert.throws(function(){app.writeSnapshotState(absentPrior,next);},/Snapshot state verification failed/);
+assert.strictEqual(Object.prototype.hasOwnProperty.call(absentPrior.values,'trip_data_snapshot_state'),false,'failed candidate is removed when no prior state existed');
+
+let rollbackWrites=0;
+const rollbackFailure={
+  value:old,
+  getItem:function(){return rollbackWrites===0?this.value:'{malformed';},
+  setItem:function(key,value){rollbackWrites++; if(rollbackWrites===2) throw new Error('rollback quota'); this.value=String(value);},
+  removeItem:function(){throw new Error('unexpected remove');}
+};
+let rollbackFailureError=null;
+assert.throws(function(){
+  try{ app.writeSnapshotState(rollbackFailure,next); }
+  catch(e){ rollbackFailureError=e; throw e; }
+},/Snapshot state verification failed; rollback failed/);
+assert.strictEqual(rollbackFailureError.verificationError.message,'Snapshot state verification failed');
+assert.strictEqual(rollbackFailureError.rollbackError.message,'rollback quota');
+
 const existingDB={sentinel:'db'};
 const existingRAW={sentinel:'raw'};
 const dbApp={
