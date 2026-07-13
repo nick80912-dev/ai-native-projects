@@ -2,6 +2,12 @@
 
 紀錄格式:日期 / 版本 / 重點。細節不展開,新變更往上加。
 
+## 2026-07-13 — 首頁／購物定位／停車資訊 UX 修正（Dev）
+- 首頁 NEXT STOP 移除「現在」標籤；行程頁「現在」及既有時間、完成、略過、自動略過判定不變。
+- 首頁與行程頁的購物樓層入口會清除舊搜尋／篩選、選中對應 PID 並捲到購物地點卡片，不自動改變樓層展開狀態。
+- 地點、餐廳與住宿的停車欄位如含多個非空白換行，於首頁與行程資訊中逐行列點；單行、MAP CODE 與停車繼承維持原樣。
+- Service Worker App Shell cache 更新為 `okayama-trip-v10`；未修改 Schema、Validator、Sheet、manifest 或 localStorage 結構。
+
 ## 2026-07-13 — 治理一致性修正批（Dev，純文件）
 1. ADR 0005 補入 ADR 索引、manifest 導航與資料夾結構說明。
 2. tasks 移除 ZIP 打包／deploy 目錄作廢流程，刷新 current/done、連續編號，新增 SW SHELL、Netlify 額度與 dev CI 評估項。
