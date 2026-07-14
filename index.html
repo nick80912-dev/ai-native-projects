@@ -1337,13 +1337,21 @@ function bootLocal(){
   return true;
 }
 function saveSyncFailure(error,storage,activeSnapshot){
+  function bounded(value,limit){
+    var text=String(value==null?'':value).replace(/[\r\n\t]+/g,' ').replace(/\s+/g,' ').trim();
+    return text.length>limit?text.slice(0,limit-1)+'…':text;
+  }
   var finding=error&&error.findings&&error.findings[0], target=storage||localStorage;
+  var stage=bounded(error&&error.stage,24), sheet=bounded(error&&error.sheet||finding&&finding.sheet,80);
+  var code=bounded(error&&error.code||finding&&finding.code,48).replace(/[^0-9A-Za-z_-]/g,'');
+  var allowedReasons={download:'無法下載工作表資料',storage:'無法儲存完整資料版本'};
+  var reason=finding?bounded(finding.message,160):allowedReasons[stage]||'';
   var failure={
     at:Date.now(),
-    stage:error&&error.stage||'',
-    sheet:error&&error.sheet||finding&&finding.sheet||'',
-    code:error&&error.code||finding&&finding.code||'',
-    message:String(error&&error.message||error||''),
+    stage:stage,
+    sheet:sheet,
+    code:code,
+    reason:reason,
     activeCreatedAt:activeSnapshot&&activeSnapshot.createdAt||CURRENT_SNAPSHOT&&CURRENT_SNAPSHOT.createdAt||null
   };
   try{ target.setItem(SNAPSHOT_FAILURE_KEY,JSON.stringify(failure)); }catch(ignore){}
@@ -1409,7 +1417,7 @@ function syncStatusModel(){
   }
   function bounded(value,limit){
     var text=String(value==null?'':value).replace(/[\r\n\t]+/g,' ').replace(/\s+/g,' ').trim();
-    return text.length>limit?text.slice(0,limit)+'…':text;
+    return text.length>limit?text.slice(0,limit-1)+'…':text;
   }
   var snapshot=CURRENT_SNAPSHOT||null, source=snapshot&&snapshot.source||'builtin', failureRecord=null, state, label;
   try{
@@ -1430,7 +1438,8 @@ function syncStatusModel(){
     var detail=stageLabels[failureRecord.stage]||'同步作業失敗';
     var sheet=bounded(failureRecord.sheet,40);
     var code=bounded(failureRecord.code,40).replace(/[^0-9A-Za-z_-]/g,'');
-    failure='更新失敗，正在沿用 '+failureTime+' 的完整版本。'+detail+(sheet?'（Sheet: '+sheet+'）':'')+(code?' ['+code+']':'');
+    var reason=bounded(failureRecord.reason,160);
+    failure='更新失敗，正在沿用 '+failureTime+' 的完整版本。'+detail+(sheet?'（Sheet: '+sheet+'）':'')+(code?' ['+code+']':'')+(reason?' 原因：'+reason:'');
   }
   var warningRecords=snapshot&&snapshot.validation&&snapshot.validation.warnings||[];
   var warnings=warningRecords.slice(0,5).map(function(warning){
