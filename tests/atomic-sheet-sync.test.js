@@ -481,8 +481,8 @@ async function testSyncStatus(){
   const structuredError=new Error('PID,Place,Type\nP025,<script>raw CSV must stay private</script>');
   structuredError.stage='structure';
   structuredError.findings=[{
-    code:'HEADER_REQUIRED',sheet:'銵?蝮質”',
-    message:'銵?蝮質” 缺少必要欄位「鈭日」\n<img src=x onerror=alert(1)> '+new Array(220).join('私')
+    code:'HEADER_REQUIRED',sheet:'行程總表',
+    message:'行程總表 缺少必要欄位「交通」\n<img src=x onerror=alert(1)> '+new Array(220).join('私')
   }];
   savingApp.saveSyncFailure(structuredError,savingApp.localStorage,{createdAt:completedAt});
   const structuredSerialized=savingApp.localStorage.memory.trip_sync_last_failure;
@@ -491,16 +491,16 @@ async function testSyncStatus(){
   assert.strictEqual(structuredSerialized.indexOf('P025'),-1,'serialized failure excludes raw CSV rows');
   assert.strictEqual(structuredSerialized.indexOf('raw CSV must stay private'),-1,'serialized failure excludes private exception markup');
   assert.strictEqual(structuredRecord.stage,'structure');
-  assert.strictEqual(structuredRecord.sheet,'銵?蝮質”');
+  assert.strictEqual(structuredRecord.sheet,'行程總表');
   assert.strictEqual(structuredRecord.code,'HEADER_REQUIRED');
-  assert(structuredRecord.reason.indexOf('鈭日')>=0,'structured reason identifies the missing field');
+  assert(structuredRecord.reason.indexOf('交通')>=0,'structured reason identifies the missing field');
   assert.strictEqual(/[\r\n\t]/.test(structuredRecord.reason),false,'structured reason is single-line');
   assert(structuredRecord.reason.length<=160,'structured reason is bounded');
 
   app.CURRENT_SNAPSHOT={source:'online',createdAt:completedAt,generationId:'sheet-prior',validation:{warnings:[]}};
   app.localStorage.memory.trip_sync_last_failure=structuredSerialized;
   let structuredModel=app.syncStatusModel();
-  assert(structuredModel.failure.indexOf('鈭日')>=0,'safe structured reason is visible in panel copy');
+  assert(structuredModel.failure.indexOf('交通')>=0,'safe structured reason is visible in panel copy');
   const structuredHtml=app.renderSyncStatusBody();
   assert(structuredHtml.indexOf('&lt;img src=x onerror=alert(1)&gt;')>=0,'unsafe finding text is escaped in rendered HTML');
   assert.strictEqual(structuredHtml.indexOf('<img src=x onerror=alert(1)>'),-1,'unsafe finding markup is never rendered raw');
