@@ -1193,11 +1193,12 @@ function nextSnapshotState(current,candidate,effectiveSnapshot){
 function writeSnapshotState(storage,nextState){
   var serialized=JSON.stringify(nextState);
   var parsed=JSON.parse(serialized);
-  if(!parsed||parsed.formatVersion!==1||!validSnapshotShape(parsed.active)) throw new Error('Invalid snapshot state');
+  if(!parsed||parsed.formatVersion!==1||!validSnapshotShape(parsed.active)||(parsed.previous!==null&&!validSnapshotShape(parsed.previous))) throw new Error('Invalid snapshot state');
   var previousRaw=storage.getItem(SNAPSHOT_STATE_KEY);
   storage.setItem(SNAPSHOT_STATE_KEY,serialized);
-  var saved=readSnapshotState(storage);
-  if(!saved||!saved.active||saved.active.generationId!==nextState.active.generationId){
+  var savedRaw=storage.getItem(SNAPSHOT_STATE_KEY), saved=null;
+  try{ if(savedRaw===serialized) saved=JSON.parse(savedRaw); }catch(e){}
+  if(!saved||saved.formatVersion!==1||!validSnapshotShape(saved.active)||(saved.previous!==null&&!validSnapshotShape(saved.previous))){
     var verificationError=new Error('Snapshot state verification failed');
     try{
       if(previousRaw===null) storage.removeItem(SNAPSHOT_STATE_KEY);

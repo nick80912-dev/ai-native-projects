@@ -239,6 +239,20 @@ const wrongGenerationReadback=readbackFailureStorage(old,wrongGeneration);
 assert.throws(function(){app.writeSnapshotState(wrongGenerationReadback,next);},/Snapshot state verification failed/);
 assert.strictEqual(wrongGenerationReadback.values.trip_data_snapshot_state,old,'wrong generation restores exact prior raw string');
 
+const missingSheetsReadback=JSON.stringify({
+  formatVersion:1,
+  active:{formatVersion:1,generationId:'g2',createdAt:2,source:'online',sheetMeta:{},validation:{warnings:[]}},
+  previous:active
+});
+const sameGenerationMissingSheets=readbackFailureStorage(old,missingSheetsReadback);
+assert.throws(function(){app.writeSnapshotState(sameGenerationMissingSheets,next);},/Snapshot state verification failed/);
+assert.strictEqual(sameGenerationMissingSheets.values.trip_data_snapshot_state,old,'same-generation readback missing active sheets restores exact prior raw string');
+
+const missingPreviousReadback=JSON.stringify({formatVersion:1,active:candidate,previous:null});
+const sameGenerationMissingPrevious=readbackFailureStorage(null,missingPreviousReadback);
+assert.throws(function(){app.writeSnapshotState(sameGenerationMissingPrevious,next);},/Snapshot state verification failed/);
+assert.strictEqual(Object.prototype.hasOwnProperty.call(sameGenerationMissingPrevious.values,'trip_data_snapshot_state'),false,'same-generation readback missing previous removes failed candidate when no prior state existed');
+
 const absentPrior=readbackFailureStorage(null,'{malformed');
 assert.throws(function(){app.writeSnapshotState(absentPrior,next);},/Snapshot state verification failed/);
 assert.strictEqual(Object.prototype.hasOwnProperty.call(absentPrior.values,'trip_data_snapshot_state'),false,'failed candidate is removed when no prior state existed');
