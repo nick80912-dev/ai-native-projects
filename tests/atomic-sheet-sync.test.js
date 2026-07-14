@@ -441,7 +441,7 @@ async function testSyncStatus(){
   app.CURRENT_SNAPSHOT={source:'online',createdAt:completedAt,generationId:'sheet-prior',validation:{warnings:[{message:'欄位提示'}]}};
   const rejectedActiveAt=new Date(2026,6,13,22,45,0,0).getTime();
   app.localStorage.memory.trip_sync_last_failure=JSON.stringify({
-    at:completedAt+1000,stage:'structure',sheet:'銵?蝮質”',code:'HEADER_REQUIRED',
+    at:completedAt+1000,stage:'structure',sheet:'行程總表',code:'HEADER_REQUIRED',
     message:'PID,Place,Type\nP025,<script>raw CSV must stay private</script>',activeCreatedAt:rejectedActiveAt
   });
   model=app.syncStatusModel();
@@ -450,18 +450,18 @@ async function testSyncStatus(){
   assert.strictEqual(model.lastComplete,'2026/07/13 21:30','last complete uses the effective previous snapshot');
   assert(model.failure.indexOf('更新失敗，正在沿用 2026/07/13 21:30 的完整版本。')>=0);
   assert.strictEqual(model.failure.indexOf('2026/07/13 22:45'),-1,'failure copy never uses the rejected active timestamp');
-  assert(model.failure.indexOf('Sheet: 銵?蝮質”')>=0,'failure identifies the failed Unicode sheet');
+  assert(model.failure.indexOf('Sheet: 行程總表')>=0,'failure identifies the failed Unicode sheet');
   assert(model.failure.indexOf('[HEADER_REQUIRED]')>=0,'failure identifies the structure finding');
   assert.strictEqual(model.failure.indexOf('P025'),-1,'failure excludes CSV content');
   assert.strictEqual(model.failure.indexOf('<script>'),-1,'failure excludes exception content');
   assert.deepStrictEqual(Array.from(model.warnings),['欄位提示']);
 
   app.localStorage.memory.trip_sync_last_failure=JSON.stringify({
-    at:completedAt+1000,stage:'structure',sheet:'銵?蝮質”<img src=x onerror=alert(1)>',code:'HEADER_REQUIRED',
+    at:completedAt+1000,stage:'structure',sheet:'行程總表<img src=x onerror=alert(1)>',code:'HEADER_REQUIRED',
     message:'private structure details',activeCreatedAt:rejectedActiveAt
   });
   const renderedFailure=app.renderSyncStatusBody();
-  assert(renderedFailure.indexOf('Sheet: 銵?蝮質”&lt;img src=x onerror=alert(1)&gt;')>=0,'rendered failure escapes unsafe Unicode sheet labels');
+  assert(renderedFailure.indexOf('Sheet: 行程總表&lt;img src=x onerror=alert(1)&gt;')>=0,'rendered failure escapes unsafe Unicode sheet labels');
   assert.strictEqual(renderedFailure.indexOf('<img src=x onerror=alert(1)>'),-1,'rendered failure contains no executable sheet markup');
 
   let rendered=0, syncCalls=0;
