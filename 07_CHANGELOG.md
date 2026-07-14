@@ -8,7 +8,7 @@
 - 診斷同步狀態面板顯示目前版本、前次完整成功時間、各 Sheet 狀態與失敗原因，且不洩漏原始 CSV。
 - 上線前公開 P025 Gate 已確認第三欄 Type 為 Schema 允許的「渡輪」，未知 Type 的嚴格驗證未放寬。
 - `atomic-sheet-sync.test.js` 覆蓋單一版本啟用、舊快取遷移、失敗候選保留與狀態面板；publication tests 驗證 APP／SW 識別。
-- 診斷面板顯示 `APP DEV · CODE 492b890 · 2026-07-13`；Service Worker App Shell cache 更新為 `okayama-trip-v12`，`SHELL` 內容不變。
+- 診斷面板顯示 `APP DEV · CODE 7070fb2 · 2026-07-13`；最終功能碼已包含完整快照 envelope 回讀、必填列值驗證，以及安全的失敗原因／Sheet 標籤等 review remediation；Service Worker App Shell cache 維持 `okayama-trip-v12`，`SHELL` 內容不變。
 
 ## 2026-07-13 — 購物地點標籤自動置中（Dev）
 - 購物頁每次重繪後，會將目前選中的「全部／想逛／購物地點」標籤水平置中。

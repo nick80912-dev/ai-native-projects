@@ -43,7 +43,7 @@ assert.match(serviceWorker, /'\.\/icon-maskable-512\.png'/, 'service worker cach
 
 const appBuild = index.match(/var APP_BUILD=\{channel:'([^']+)',code:'([^']+)',date:'([^']+)'\}/);
 assert(appBuild, 'APP build metadata exists');
-assert.strictEqual(`APP ${appBuild[1]} · CODE ${appBuild[2]} · ${appBuild[3]}`, 'APP DEV · CODE 492b890 · 2026-07-13', 'APP publication identity is exact');
+assert.strictEqual(`APP ${appBuild[1]} · CODE ${appBuild[2]} · ${appBuild[3]}`, 'APP DEV · CODE 7070fb2 · 2026-07-13', 'APP publication identity is exact');
 
 const netlify = fs.readFileSync(netlifyPath, 'utf8');
 assert.match(netlify, /for = "\/sw\.js"/, 'Netlify disables caching for the service worker');
