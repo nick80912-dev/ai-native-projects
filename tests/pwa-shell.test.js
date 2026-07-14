@@ -37,8 +37,13 @@ assert.ok(manifest.icons.some((icon) => icon.src === 'icon-maskable-192.png' && 
 assert.ok(manifest.icons.some((icon) => icon.src === 'icon-maskable-512.png' && icon.purpose === 'maskable'), 'manifest uses the maskable 512px icon');
 
 const serviceWorker = fs.readFileSync(serviceWorkerPath, 'utf8');
+assert.match(serviceWorker, /var CACHE_NAME = 'okayama-trip-v12';/, 'service worker cache is exactly v12');
 assert.match(serviceWorker, /'\.\/icon-maskable-192\.png'/, 'service worker caches the maskable 192px icon');
 assert.match(serviceWorker, /'\.\/icon-maskable-512\.png'/, 'service worker caches the maskable 512px icon');
+
+const appBuild = index.match(/var APP_BUILD=\{channel:'([^']+)',code:'([^']+)',date:'([^']+)'\}/);
+assert(appBuild, 'APP build metadata exists');
+assert.strictEqual(`APP ${appBuild[1]} · CODE ${appBuild[2]} · ${appBuild[3]}`, 'APP DEV · CODE 492b890 · 2026-07-13', 'APP publication identity is exact');
 
 const netlify = fs.readFileSync(netlifyPath, 'utf8');
 assert.match(netlify, /for = "\/sw\.js"/, 'Netlify disables caching for the service worker');
