@@ -12,8 +12,25 @@ function loadValidator(){
 function schema(){
   return { sheets:{
     itin:{label:'Itinerary'},
-    places:{label:'Places',columns:[{field:'type',values:{attraction:'attraction',ferry:'ferry'}}]},
-    rest:{label:'Restaurants'}, shop:{label:'Shopping'}, hotels:{label:'Hotels'},
+    places:{label:'Places',kind:'table',idField:'placeId',columns:[
+      {field:'placeId',header:'PID',required:true},
+      {field:'name',header:'Place Name',required:true},
+      {field:'type',header:'Type',required:true,values:{attraction:'attraction',ferry:'ferry'}}
+    ]},
+    rest:{label:'Restaurants',kind:'table',idField:'restId',columns:[
+      {field:'restId',header:'RID',required:true},
+      {field:'name',header:'Restaurant Name',required:true}
+    ]},
+    shop:{label:'Shopping',kind:'table',idField:'shopId',columns:[
+      {field:'shopId',header:'SID',required:true},
+      {field:'placeId',header:'PID',required:true},
+      {field:'name',header:'Shop Name',required:true},
+      {field:'floor',header:'Floor',required:true}
+    ]},
+    hotels:{label:'Hotels',kind:'table',idField:'hotelId',columns:[
+      {field:'hotelId',header:'HID',required:true},
+      {field:'name',header:'Hotel Name',required:true}
+    ]},
     exp:{label:'Expenses'}, cfg:{label:'TripConfig'}
   }};
 }
@@ -43,6 +60,37 @@ const embeddedEnd = htmlSource.indexOf('\n\n</script>',embeddedStart);
 assert.strictEqual(htmlSource.slice(embeddedStart,embeddedEnd).trim(),standaloneSource,'embedded validator stays in exact parity');
 
 assert.deepStrictEqual(Array.from(sb.validateSnapshotData(validDb(),validRaw(),schema()).blockers), []);
+
+[
+  {sheet:'places',list:'placeList',id:'placeId',field:'placeId',header:'PID',row:{placeId:'   ',name:'Place',type:'attraction'}},
+  {sheet:'places',list:'placeList',id:'placeId',field:'name',header:'Place Name',row:{placeId:'P101',name:' ',type:'attraction'}},
+  {sheet:'places',list:'placeList',id:'placeId',field:'type',header:'Type',row:{placeId:'P102',name:'Place',type:''}},
+  {sheet:'rest',list:'rest',id:'restId',field:'restId',header:'RID',row:{restId:'',name:'Restaurant'}},
+  {sheet:'rest',list:'rest',id:'restId',field:'name',header:'Restaurant Name',row:{restId:'R101',name:'\t'}},
+  {sheet:'shop',list:'shop',id:'shopId',field:'shopId',header:'SID',row:{shopId:' ',placeId:'P025',name:'Shop',floor:'1F'}},
+  {sheet:'shop',list:'shop',id:'shopId',field:'placeId',header:'PID',row:{shopId:'S101',placeId:'',name:'Shop',floor:'1F'}},
+  {sheet:'shop',list:'shop',id:'shopId',field:'name',header:'Shop Name',row:{shopId:'S102',placeId:'P025',name:'',floor:'1F'}},
+  {sheet:'shop',list:'shop',id:'shopId',field:'floor',header:'Floor',row:{shopId:'S103',placeId:'P025',name:'Shop',floor:'  '}},
+  {sheet:'hotels',list:'hotels',id:'hotelId',field:'hotelId',header:'HID',row:{hotelId:'',name:'Hotel'}},
+  {sheet:'hotels',list:'hotels',id:'hotelId',field:'name',header:'Hotel Name',row:{hotelId:'H101',name:''}}
+].forEach(function(testCase){
+  const candidate=validDb();
+  candidate[testCase.list]=[testCase.row];
+  const candidateResult=sb.validateSnapshotData(candidate,validRaw(),schema());
+  const required=candidateResult.blockers.filter(function(f){
+    return f.code==='REQUIRED_VALUE'&&f.sheet===testCase.sheet;
+  });
+  assert.strictEqual(required.length,1,testCase.sheet+' '+testCase.field+' has one required-value blocker');
+  assert(required[0].message.indexOf(schema().sheets[testCase.sheet].label)>=0,'message includes the schema Sheet label');
+  assert(required[0].message.indexOf(testCase.field)>=0,'message includes the schema field');
+  assert(required[0].message.indexOf(testCase.header)>=0,'message includes the schema header');
+  const identity=String(testCase.row[testCase.id]||'').trim()||'row 1';
+  assert(required[0].message.indexOf(identity)>=0,'message includes the row identity or index');
+  assert(required[0].message.length<=160,'required-value message stays bounded');
+  if(testCase.sheet==='places'&&testCase.field==='type'){
+    assert.strictEqual(hasFinding(candidateResult,'UNKNOWN_PLACE_TYPE','places'),false,'blank required type does not add unknown-type blocker noise');
+  }
+});
 
 const missing = validRaw(); delete missing.shop;
 assert(sb.validateSnapshotData(validDb(),missing,schema()).blockers.some(function(f){return f.code==='SHEET_MISSING'&&f.sheet==='shop';}));

@@ -124,6 +124,23 @@ function validateSnapshotData(db,raw,schema){
   var restList=validList('rest','rest');
   var shopList=validList('shop','shop');
   var hotelList=validList('hotels','hotels');
+  function boundedValue(value,maxLength){ return String(value||'').slice(0,maxLength); }
+  function requiredValues(list,key){
+    var def=sheets[key]||{}, columns=def.columns||[], idField=def.idField;
+    (list||[]).forEach(function(row,index){
+      var identity=String(idField&&row[idField]||'').trim()||('row ' + (index+1));
+      columns.forEach(function(column){
+        if(column.required&&!String(row[column.field]||'').trim()){
+          var message=boundedValue(def.label||key,30) + ' ' + boundedValue(identity,30) + ": missing required '" + boundedValue(column.header||column.field,30) + "' (" + boundedValue(column.field,24) + ')';
+          block('REQUIRED_VALUE',key,message);
+        }
+      });
+    });
+  }
+  requiredValues(placeList,'places');
+  requiredValues(restList,'rest');
+  requiredValues(shopList,'shop');
+  requiredValues(hotelList,'hotels');
   var tripDays=[];
   if(!db.trip||typeof db.trip!=='object'||Array.isArray(db.trip)){
     block('DB_STRUCTURE','itin','trip 必須是物件');
@@ -147,7 +164,7 @@ function validateSnapshotData(db,raw,schema){
   var typeValues=typeColumn&&typeColumn.values||{};
   placeList.forEach(function(place){
     var rawType=String(place.type||'').trim();
-    if(!typeValues[rawType]&&!typeValues[rawType.toLowerCase()]){
+    if(rawType&&!typeValues[rawType]&&!typeValues[rawType.toLowerCase()]){
       block('UNKNOWN_PLACE_TYPE','places','未註冊型別:' + place.placeId + ' 型別「' + rawType + '」無對應卡片渲染');
     }
   });
