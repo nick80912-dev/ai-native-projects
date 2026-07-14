@@ -1410,7 +1410,7 @@ function syncStatusModel(){
     var failureTime=formatTime(snapshot&&snapshot.createdAt||failureRecord.activeCreatedAt);
     var stageLabels={download:'下載失敗',structure:'資料結構檢查失敗',validation:'資料驗證失敗',storage:'本機儲存失敗',boot:'啟動資料驗證失敗'};
     var detail=stageLabels[failureRecord.stage]||'同步作業失敗';
-    var sheet=bounded(failureRecord.sheet,40).replace(/[^0-9A-Za-z_-]/g,'');
+    var sheet=bounded(failureRecord.sheet,40);
     var code=bounded(failureRecord.code,40).replace(/[^0-9A-Za-z_-]/g,'');
     failure='更新失敗，正在沿用 '+failureTime+' 的完整版本。'+detail+(sheet?'（Sheet: '+sheet+'）':'')+(code?' ['+code+']':'');
   }
