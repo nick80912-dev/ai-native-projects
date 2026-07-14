@@ -1369,13 +1369,15 @@ function syncAll(showToast){
     return {ok:true,generationId:generation,warnings:candidate.validation.warnings};
   });
   syncInFlight=syncInFlight.then(function(result){
-    syncInFlight=null; return result;
+    syncInFlight=null; renderSyncStatusBody(); return result;
   },function(error){
     saveSyncFailure(error); setSyncState('failed');
     if(showToast) toast('同步失敗，繼續顯示目前版本');
     syncInFlight=null;
+    renderSyncStatusBody();
     return {ok:false,error:error};
   });
+  renderSyncStatusBody();
   return syncInFlight;
 }
 function manualSyncNew(){ toast('正在抓取最新行程…'); return syncAll(true); }
@@ -1405,7 +1407,7 @@ function syncStatusModel(){
   var lastComplete=formatTime(snapshot&&snapshot.createdAt);
   var failure='';
   if(failureRecord){
-    var failureTime=formatTime(failureRecord.activeCreatedAt||snapshot&&snapshot.createdAt);
+    var failureTime=formatTime(snapshot&&snapshot.createdAt||failureRecord.activeCreatedAt);
     var stageLabels={download:'下載失敗',structure:'資料結構檢查失敗',validation:'資料驗證失敗',storage:'本機儲存失敗',boot:'啟動資料驗證失敗'};
     var detail=stageLabels[failureRecord.stage]||'同步作業失敗';
     var sheet=bounded(failureRecord.sheet,40).replace(/[^0-9A-Za-z_-]/g,'');

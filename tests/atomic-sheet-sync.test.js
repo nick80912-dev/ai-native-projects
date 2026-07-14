@@ -343,6 +343,7 @@ function loadCoordinator(){
     localStorage:storage,
     RAW:{sentinel:'raw'}, DB:{sentinel:'db'}, SRC:{sentinel:'src'}, CURRENT_SNAPSHOT:null,
     renderCount:0, renderAll:function(){runtime.renderCount++;},
+    renderSyncStatusBody:function(){},
     syncStates:[], setSyncState:function(state){runtime.syncStates.push(state);},
     toast:function(){},
     fetchSheet:function(){return Promise.reject(new Error('fetchSheet not configured'));},
@@ -390,6 +391,26 @@ function loadSyncStatus(){
   return runtime;
 }
 
+function attachSyncStatus(app){
+  const body={innerHTML:''};
+  const txt={textContent:''};
+  const dot={className:'dot',classList:{add:function(){}}};
+  const button={classList:{add:function(){},remove:function(){}}};
+  app.Date=Date;
+  app.APP_BUILD={channel:'DEV',code:'abc1234',date:'2026-07-13'};
+  app.escapeHtml=function(value){
+    return (value==null?'':String(value)).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  };
+  app.document={getElementById:function(id){
+    return {syncStatusBody:body,syncTxt:txt,syncDot:dot,syncBtn:button}[id]||null;
+  }};
+  vm.runInContext([
+    extractFunction('timestampDate'), extractFunction('syncStatusModel'), extractFunction('renderSyncStatusBody'),
+    extractFunction('setSyncState')
+  ].join('\n'),app);
+  return {body:body,txt:txt};
+}
+
 async function testSyncStatus(){
   const app=loadSyncStatus();
   const completedAt=new Date(2026,6,13,21,30,0,0).getTime();
@@ -418,14 +439,17 @@ async function testSyncStatus(){
 
   app.syncInFlight=null;
   app.CURRENT_SNAPSHOT={source:'online',createdAt:completedAt,generationId:'sheet-prior',validation:{warnings:[{message:'欄位提示'}]}};
+  const rejectedActiveAt=new Date(2026,6,13,22,45,0,0).getTime();
   app.localStorage.memory.trip_sync_last_failure=JSON.stringify({
     at:completedAt+1000,stage:'download',sheet:'shop',code:'HTTP_ERROR',
-    message:'PID,Place,Type\nP025,<script>raw CSV must stay private</script>',activeCreatedAt:completedAt
+    message:'PID,Place,Type\nP025,<script>raw CSV must stay private</script>',activeCreatedAt:rejectedActiveAt
   });
   model=app.syncStatusModel();
   assert.strictEqual(model.state,'failed');
   assert.strictEqual(model.label,'更新失敗');
+  assert.strictEqual(model.lastComplete,'2026/07/13 21:30','last complete uses the effective previous snapshot');
   assert(model.failure.indexOf('更新失敗，正在沿用 2026/07/13 21:30 的完整版本。')>=0);
+  assert.strictEqual(model.failure.indexOf('2026/07/13 22:45'),-1,'failure copy never uses the rejected active timestamp');
   assert(model.failure.indexOf('shop')>=0,'failure identifies the failed sheet');
   assert.strictEqual(model.failure.indexOf('P025'),-1,'failure excludes CSV content');
   assert.strictEqual(model.failure.indexOf('<script>'),-1,'failure excludes exception content');
@@ -443,6 +467,55 @@ async function testSyncStatus(){
   resolveSync({ok:true});
   await retry;
   assert.strictEqual(rendered,1,'panel rerenders after retry finishes');
+}
+
+async function testBackgroundSyncStatusSettles(){
+  const completedAt=new Date(2026,6,13,21,30,0,0).getTime();
+  let app=loadCoordinator(), panel=attachSyncStatus(app);
+  const oldRaw=orchestrationRaw('old');
+  const oldSnapshot=snapshotFor(app,oldRaw,'g-old');
+  oldSnapshot.createdAt=completedAt;
+  app.RAW=oldRaw; app.DB={sentinel:'old-db'}; app.CURRENT_SNAPSHOT=oldSnapshot;
+  app.localStorage.memory.trip_data_snapshot_state=JSON.stringify({formatVersion:1,active:oldSnapshot,previous:null});
+  app.localStorage.memory.trip_sync_last_failure=JSON.stringify({stage:'download',sheet:'shop',activeCreatedAt:completedAt});
+  let successResolves={};
+  app.fetchSheet=function(sheet){return new Promise(function(resolve){successResolves[sheet.key]=resolve;});};
+  app.renderSyncStatusBody();
+  const successPending=app.syncAll(false);
+  assert(/sync-status-retry[^>]*\sdisabled/.test(panel.body.innerHTML),'open panel disables retry during background success sync');
+  app.SHEETS.forEach(function(sheet){successResolves[sheet.key](orchestrationRaw('fresh')[sheet.key]);});
+  const success=await successPending;
+  assert.strictEqual(success.ok,true);
+  assert.strictEqual(app.syncStatusModel().state,'online','successful background sync settles as online');
+  assert.strictEqual(app.syncStatusModel().failure,'','successful background sync clears failure');
+  assert.strictEqual(panel.txt.textContent,'已是最新');
+  assert(!/sync-status-retry[^>]*\sdisabled/.test(panel.body.innerHTML),'background success reenables panel retry');
+  assert(panel.body.innerHTML.indexOf('更新失敗，正在沿用')<0,'background success rerenders away the old failure');
+
+  app=loadCoordinator(); panel=attachSyncStatus(app);
+  const retainedRaw=orchestrationRaw('retained');
+  const retainedSnapshot=snapshotFor(app,retainedRaw,'g-retained');
+  retainedSnapshot.createdAt=completedAt;
+  app.RAW=retainedRaw; app.DB={sentinel:'retained-db'}; app.CURRENT_SNAPSHOT=retainedSnapshot;
+  app.localStorage.memory.trip_data_snapshot_state=JSON.stringify({formatVersion:1,active:retainedSnapshot,previous:null});
+  let failureResolves={}, rejectShop;
+  app.fetchSheet=function(sheet){
+    return new Promise(function(resolve,reject){
+      failureResolves[sheet.key]=resolve;
+      if(sheet.key==='shop') rejectShop=reject;
+    });
+  };
+  app.renderSyncStatusBody();
+  const failurePending=app.syncAll(false);
+  assert(/sync-status-retry[^>]*\sdisabled/.test(panel.body.innerHTML),'open panel disables retry during background failed sync');
+  rejectShop(new Error('offline'));
+  app.SHEETS.forEach(function(sheet){if(sheet.key!=='shop') failureResolves[sheet.key](orchestrationRaw('next')[sheet.key]);});
+  const failed=await failurePending;
+  assert.strictEqual(failed.ok,false);
+  assert.strictEqual(app.syncStatusModel().state,'failed','failed background sync settles as failed');
+  assert.strictEqual(panel.txt.textContent,'更新失敗');
+  assert(!/sync-status-retry[^>]*\sdisabled/.test(panel.body.innerHTML),'background failure reenables panel retry');
+  assert(panel.body.innerHTML.indexOf('更新失敗，正在沿用 2026/07/13 21:30 的完整版本。')>=0,'background failure rerenders retained snapshot details');
 }
 
 async function testBootSelection(){
@@ -543,7 +616,7 @@ async function testAtomicSync(){
   assert.strictEqual(app.renderCount,0);
 }
 
-Promise.resolve().then(testBootSelection).then(testAtomicSync).then(testSyncStatus).then(function(){
+Promise.resolve().then(testBootSelection).then(testAtomicSync).then(testSyncStatus).then(testBackgroundSyncStatusSettles).then(function(){
   console.log('atomic sheet sync tests passed');
 }).catch(function(error){
   console.error(error&&error.stack||error);
