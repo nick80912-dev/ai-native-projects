@@ -54,6 +54,7 @@ vm.runInContext([
   extractFunction('parkingPanel'),
   extractFunction('renderNextStopCard'),
   extractFunction('clusterItemName'),
+  extractFunction('clusterTimeRange'),
   extractFunction('renderClusterStop'),
   extractFunction('renderClusterNextStopCard')
 ].join('\n'), sandbox);
@@ -230,6 +231,26 @@ assert(nextStopOut.includes('class="nx-decision-btn skip"'));
 assert(nextStopOut.indexOf('class="nx-drive-btn"') < nextStopOut.indexOf('class="nx-decision-btn done"'));
 
 sandbox.isAutoSkipped = function(){ return false; };
+assert.strictEqual(
+  sandbox.clusterTimeRange({time:'17:30'}, [{time:'17:30'},{time:'19:30'}]),
+  '17:30 - 19:30'
+);
+assert.strictEqual(
+  sandbox.clusterTimeRange({time:'17:30'}, [{time:'17:30'},{time:''}]),
+  '17:30'
+);
+
+const firstClusterStopOut = sandbox.renderClusterStop({
+  id:'10/18_4',
+  time:'17:30',
+  act:'機場與取車',
+  place:'岡山桃太郎機場',
+  move:'開車',
+  note:''
+}, {}, {done:{},skip:{},autoSkip:{}}, 0);
+assert(firstClusterStopOut.includes('17:30'));
+assert(firstClusterStopOut.includes('onclick="openTripItem(0,\'10/18_4\')"'));
+
 const clusterChildOut = sandbox.renderClusterStop({
   id:'10/19_2',
   time:'10:10',
