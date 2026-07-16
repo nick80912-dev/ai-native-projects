@@ -14,7 +14,7 @@
    ============================================================ */
 
 var SCHEMA = {
-  version: '2.2 (2026-07-16)',
+  version: '2.3 (2026-07-16)',
 
   /* 發布來源(換試算表只改這裡) */
   pubBase: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRenmV8UxEzWbzSjKJKi4rSpYt63geBqhEkKsl1GemWVPmFKTcvv3Uk71Hjla3TGBpGIjC7bQDDdI00/pub?single=true&output=csv&gid=',
@@ -43,9 +43,9 @@ var SCHEMA = {
       columns: [
         { field:'placeId', header:'PID',           aliases:['placeid','地點id'], required:true, desc:'地點唯一ID(P001…),不得重複' },
         { field:'name',    header:'地點',           aliases:['名稱'],            required:true, desc:'地點名稱(同時作為導航關鍵字)' },
-        { field:'type',    header:'Type',           aliases:['類型'],            required:true, desc:'決定卡片型別,禁止程式猜測。值:購物/美食區/住宿/景點/機場/纜車/渡船口/渡輪/租車點',
-          values:{ '購物':'shopping','美食區':'restarea','住宿':'hotel','景點':'attraction','機場':'attraction','纜車':'attraction','渡船口':'ferry','渡輪':'ferry','租車點':'parking',
-                   'shopping':'shopping','restaurantarea':'restarea','hotel':'hotel','attraction':'attraction','ferryterminal':'ferry','parking':'parking' } },
+        { field:'type',    header:'Type',           aliases:['類型'],            required:true, desc:'決定卡片型別,禁止程式猜測。值:購物/美食區/住宿/景點/機場/纜車/渡船口/渡輪/租車點/加油站',
+          values:{ '購物':'shopping','美食區':'restarea','住宿':'hotel','景點':'attraction','機場':'attraction','纜車':'attraction','渡船口':'ferry','渡輪':'ferry','租車點':'parking','加油站':'fuel',
+                   'shopping':'shopping','restaurantarea':'restarea','hotel':'hotel','attraction':'attraction','ferryterminal':'ferry','parking':'parking','fuel':'fuel' } },
         { field:'mapcode', header:'MAPCODE',        desc:'車用導航輸入碼(大字純顯示)' },
         { field:'travel',  header:'交通/交通時間',  aliases:['交通時間'], desc:'開車X分鐘/步行X分鐘;行程交通欄空值時顯示' },
         { field:'pnote',   header:'停車',           aliases:['停車備註','停車場'], desc:'停車資訊單欄;「停車同Pxxx」可繼承' },
