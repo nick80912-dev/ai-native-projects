@@ -1,7 +1,6 @@
 const assert = require('assert');
 const fs = require('fs');
 const vm = require('vm');
-const execFileSync = require('child_process').execFileSync;
 
 const html = fs.readFileSync('index.html', 'utf8');
 const sw = fs.readFileSync('sw.js', 'utf8');
@@ -38,27 +37,10 @@ assert.match(html, /function setupDiagnostics\(/, 'peach diagnostic gesture rema
 assert.match(html, /function setupViewportReflow\(/, 'form focus recovery remains available');
 assert.doesNotMatch(html.match(/<meta name="viewport"[^>]+>/i)[0], /maximum-scale|user-scalable/i, 'viewport restrictions are not persistent');
 assert.match(sw, /okayama-trip-v13/, 'service worker cache is bumped to v13');
-assert.match(html, /SW okayama-trip-v13/, 'diagnostics display v13');
-assert.match(html, /gestureEnvironmentSnapshot\(navigator,query,APP_BUILD,SCHEMA\.version,'okayama-trip-v13',document\)/, 'gesture report displays v13');
 assert.doesNotMatch(sw, /tests\//, 'test files are not part of the App Shell');
 assert.doesNotMatch(sw, /ios-gesture-diagnostics\.test\.js/, 'the diagnostic test is never cached');
-const buildMatch = html.match(/var APP_BUILD=\{channel:'DEV',code:'([0-9a-f]{7})',date:'2026-07-13'\}/);
-assert(buildMatch, 'APP identifies a seven-character functional commit');
-assert.strictEqual('APP DEV · CODE ' + buildMatch[1] + ' · 2026-07-13', 'APP DEV · CODE 7070fb2 · 2026-07-13', 'APP publication identity is exact');
-execFileSync('git', ['cat-file','-e',buildMatch[1]+'^{commit}']);
-assert.match(html, /APP ['"]?\+?escapeHtml\(APP_BUILD\.channel\)/, 'diagnostics render the APP channel from metadata');
-assert.match(html, /CODE ['"]?\+?escapeHtml\(APP_BUILD\.code\)/, 'diagnostics render the functional code commit');
-assert.match(html, /escapeHtml\(APP_BUILD\.date\)/, 'diagnostics render the build date');
-
-const diagnosticFunctions = [
-  'gestureTargetSummary','gestureComputedTouchAction','gestureViewportSnapshot',
-  'createGestureDiagnostics','setupGestureDiagnostics','runtimeViewportMeta',
-  'gestureEnvironmentSnapshot','formatGestureDiagnostics','gestureDiagnosticReport',
-  'renderGestureDiagnosticsBody','refreshGestureDiagnostics',
-  'clearGestureDiagnostics','copyGestureDiagnostics'
-].map(extractFunction).join('\n');
-assert.doesNotMatch(diagnosticFunctions, /=>|\bconst\b|\blet\b/, 'diagnostic production functions remain ES5');
-assert.strictEqual(diagnosticFunctions.indexOf('`'), -1, 'diagnostic production functions use no template literals');
+assert.doesNotMatch(html,/var APP_BUILD=/,'unused diagnostic build metadata is retired');
+assert.doesNotMatch(html,/setupGestureDiagnostics|IOS_GESTURE_DIAGNOSTICS/,'gesture event collection is retired');
 
 const timers = [];
 const sandbox = {
