@@ -14,7 +14,7 @@
    ============================================================ */
 
 var SCHEMA = {
-  version: '2.1 (2026-07-10)',
+  version: '2.2 (2026-07-16)',
 
   /* 發布來源(換試算表只改這裡) */
   pubBase: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRenmV8UxEzWbzSjKJKi4rSpYt63geBqhEkKsl1GemWVPmFKTcvv3Uk71Hjla3TGBpGIjC7bQDDdI00/pub?single=true&output=csv&gid=',
@@ -29,7 +29,7 @@ var SCHEMA = {
       columns: [
         { field:'date',  header:'日期',     desc:'僅換日標記列使用(第N天MM/DD)' },
         { field:'time',  header:'時間',     desc:'HH:MM 或「16:00後」等自由文字' },
-        { field:'act',   header:'詳細行程', desc:'活動名稱' },
+        { field:'act',   header:'行程',     desc:'活動名稱' },
         { field:'place', header:'地點',     desc:'地點顯示名稱(給人看)' },
         { field:'ref',   header:'ID',       desc:'Pxxx=地點 / Rxxx=餐廳(給程式讀)' },
         { field:'move',  header:'交通',     desc:'交通說明;空值時卡片退回資料庫交通時間' },

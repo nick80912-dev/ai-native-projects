@@ -7,6 +7,7 @@ Adopt `行程` as the only supported itinerary activity header throughout the De
 ## Immediate Scope: Header Contract
 
 - Change the itinerary `act` field header from `詳細行程` to `行程`.
+- Bump the Schema version to `2.2 (2026-07-16)` in both Schema copies and the generated mapping document.
 - Do not retain `詳細行程` as an alias; the Sheet contract has formally replaced it.
 - Update both Schema copies used by the app: `schema.js` and the inline fallback Schema in `index.html`.
 - Update the BUILTIN itinerary CSV header in `index.html` so offline fallback data satisfies the same contract.
@@ -47,4 +48,3 @@ Record the following as one backlog item, separate from the Header implementatio
 ## Verification and Rollback
 
 Verification must prove the new header is accepted, the obsolete header is rejected, BUILTIN remains structurally valid, and unrelated tests remain green. Roll back by reverting this batch; no user state or data migration is involved.
-

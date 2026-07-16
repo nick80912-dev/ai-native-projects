@@ -54,6 +54,16 @@ function validDb(){
 const sb = loadValidator();
 const standaloneSource = fs.readFileSync('validator.js','utf8').replace(/\r\n/g,'\n').trim();
 const htmlSource = fs.readFileSync('index.html','utf8').replace(/\r\n/g,'\n');
+const schemaSandbox = {};
+vm.createContext(schemaSandbox);
+vm.runInContext(fs.readFileSync('schema.js','utf8'),schemaSandbox);
+assert.strictEqual(schemaSandbox.SCHEMA.version,'2.2 (2026-07-16)','production Schema version identifies the Header contract change');
+const itineraryActColumn = schemaSandbox.SCHEMA.sheets.itin.columns.find(function(column){ return column.field==='act'; });
+assert.strictEqual(itineraryActColumn.header,'行程','production Schema uses the confirmed itinerary Header');
+assert.strictEqual((itineraryActColumn.aliases||[]).indexOf('詳細行程'),-1,'obsolete Header is not retained as an alias');
+assert.match(htmlSource,/version:\s*'2\.2 \(2026-07-16\)'/,'inline fallback Schema version identifies the Header contract change');
+assert.match(htmlSource,/field:'act',\s*header:'行程'/,'inline fallback Schema uses the confirmed itinerary Header');
+assert(htmlSource.includes('日期,時間,行程,地點,ID,交通,備註'),'BUILTIN itinerary CSV uses the confirmed Header');
 const validatorMarker = htmlSource.indexOf('/* ===== validator.js');
 const embeddedStart = htmlSource.indexOf('/* ============================================================',validatorMarker+20);
 const embeddedEnd = htmlSource.indexOf('\n\n</script>',embeddedStart);
@@ -192,6 +202,19 @@ assert.deepStrictEqual(Object.keys(headerResult).sort(), ['blockers','headerIdx'
 assert(headerResult.blockers.some(function(f){return f.code==='HEADER_REQUIRED'&&f.sheet==='Places';}));
 assert(headerResult.warnings.some(function(f){return f.code==='HEADER_UNKNOWN'&&f.sheet==='Places';}));
 assert(sb.buildHeaderMap([],headerDef).blockers.some(function(f){return f.code==='HEADER_MISSING';}));
+
+const itineraryHeaderDef = {
+  label:'行程總表',
+  columns:[{field:'act',header:'行程',required:true}]
+};
+const acceptedItineraryHeader = sb.buildHeaderMap([['行程']],itineraryHeaderDef);
+assert.strictEqual(acceptedItineraryHeader.map.act,0,'行程 maps to act');
+assert.strictEqual(acceptedItineraryHeader.blockers.length,0,'行程 satisfies the required Header');
+const obsoleteItineraryHeader = sb.buildHeaderMap([['詳細行程']],itineraryHeaderDef);
+assert.strictEqual(Object.prototype.hasOwnProperty.call(obsoleteItineraryHeader.map,'act'),false,'詳細行程 no longer maps to act');
+assert(obsoleteItineraryHeader.blockers.some(function(f){
+  return f.code==='HEADER_MISSING'||f.code==='HEADER_REQUIRED';
+}),'詳細行程 is blocked by the new contract');
 
 function extractFunction(name){
   const start=htmlSource.indexOf('function '+name+'(');
