@@ -18,10 +18,14 @@ const typeColumn = schema.sheets.places.columns.find(function(column) {
 assert(typeColumn, 'Places.Type schema exists');
 assert.strictEqual(typeColumn.values['機場'], 'attraction');
 assert.strictEqual(typeColumn.values['纜車'], 'attraction');
+assert.strictEqual(typeColumn.values['加油站'], 'fuel');
+assert.strictEqual(typeColumn.values.fuel, 'fuel');
 
 const html = fs.readFileSync('index.html', 'utf8');
 assert(html.includes("'機場':'attraction'"), 'embedded schema includes 機場');
 assert(html.includes("'纜車':'attraction'"), 'embedded schema includes 纜車');
+assert(html.includes("'加油站':'fuel'"), 'embedded schema includes 加油站');
+assert(html.includes("'fuel':'fuel'"), 'embedded schema includes normalized fuel');
 
 const mapping = fs.readFileSync('09_SCHEMA_MAPPING.md', 'utf8').replace(/\r/g, '');
 const mappingLines = mapping.split('\n');
