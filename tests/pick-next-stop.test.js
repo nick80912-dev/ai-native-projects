@@ -190,6 +190,9 @@ assert.strictEqual(makeSandbox().parseStartMinutes(''), null, '未填時間不�
   assert.deepStrictEqual(Array.from(homeItems).map(function(item){ return item.id; }), ['parent__cluster','next']);
   assert.strictEqual(homeItems[0].sourceId, 'parent');
   assert.strictEqual(sb.clusterParentForPick(items, homeItems[0]).id, 'parent');
+  const lateMainPick = sb.pickNextStop(homeItems, sb.getDayProgress(day, dayIndex), sb.getChecks(), 23*60, {day:day,dayIndex:dayIndex});
+  assert.strictEqual(lateMainPick.item.id, 'parent__cluster', '未清除的 controller 不會因後續行程時間已過而消失');
+  assert.strictEqual(!!sb.getDayProgress(day, dayIndex).skip['parent__cluster'], false, 'controller 不可被主佇列自動略過');
 
   sb.markNextStop(day, dayIndex, 'parent', 'done');
   let progress = sb.getDayProgress(day, dayIndex);

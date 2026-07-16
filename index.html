@@ -2217,6 +2217,10 @@ function pickNextStop(items,progress,checks,nowMinutes,dayRef){
     if(m!==null && m<=nowMinutes) cutoffIdx=i;
   });
   if(cutoffIdx>=0){
+    var blockingClusterIdx=remaining.findIndex(function(it,i){
+      return i<=cutoffIdx&&it.clusterController;
+    });
+    if(blockingClusterIdx>=0) cutoffIdx=blockingClusterIdx;
     var stale=remaining.slice(0,cutoffIdx);
     if(stale.length && dayRef&&dayRef.day){
       var newlySkipped=[];
@@ -2236,16 +2240,47 @@ function pickNextStop(items,progress,checks,nowMinutes,dayRef){
   });
   return resultFor(future||remaining[0],future?'time':'order');
 }
+function clusterControllerId(parent){
+  return parent&&parent.id?parent.id+'__cluster':'';
+}
+function clusterController(parent){
+  if(!parent||!parent.id) return null;
+  return {
+    id:clusterControllerId(parent),
+    sourceId:parent.id,
+    clusterController:true,
+    time:parent.time,
+    act:parent.act,
+    place:'',
+    ref:'',
+    move:'',
+    note:''
+  };
+}
+function clusterParentForPick(items,picked){
+  if(!picked||!picked.sourceId) return picked||null;
+  return (items||[]).find(function(item){ return item&&item.id===picked.sourceId; })||null;
+}
 function getChildStopCluster(items,parent){
   var start=(items||[]).indexOf(parent);
   if(start<0||!parent||!parent.act) return null;
-  var children=[];
+  var stops=[];
+  if(parent.id&&(parent.place||parent.ref)) stops.push(parent);
   for(var i=start+1;i<items.length;i++){
     var item=items[i];
     if(item&&item.act) break;
-    if(item&&item.id&&(item.place||item.ref)) children.push(item);
+    if(item&&item.id&&(item.place||item.ref)) stops.push(item);
   }
-  return children.length>=2?{ parent:parent, items:children }:null;
+  return stops.length>=2?{
+    parent:parent,
+    controllerId:clusterControllerId(parent),
+    items:stops
+  }:null;
+}
+function homeNextStopItems(items){
+  return (items||[]).filter(function(item){ return item&&item.act; }).map(function(parent){
+    return getChildStopCluster(items,parent)?clusterController(parent):parent;
+  });
 }
 function pickClusterChild(cluster,progress,checks,nowMinutes,dayRef){
   if(!cluster||!cluster.items||!cluster.items.length) return { item:null, remaining:0, source:'complete' };
@@ -2256,12 +2291,25 @@ function pickClusterChild(cluster,progress,checks,nowMinutes,dayRef){
   if(pick.item) pick.item=cluster.items.find(function(item){ return item.id===pick.item.id; })||null;
   return pick;
 }
-function completeClusterParent(day,dayIndex,cluster,progress,checks){
-  if(!cluster||!cluster.parent||isNextStopCleared(cluster.parent,progress,checks)) return false;
+function reconcileClusterController(day,dayIndex,cluster,progress,checks){
+  if(!cluster||!cluster.controllerId) return false;
+  progress=normalizeDayProgress(progress);
+  checks=checks||{};
   var cleared=cluster.items.every(function(item){ return isNextStopCleared(item,progress,checks); });
-  if(!cleared) return false;
-  markNextStop(day,dayIndex,cluster.parent.id,'done');
-  return true;
+  var controller={id:cluster.controllerId};
+  var controllerCleared=isNextStopCleared(controller,progress,checks);
+  if(cleared&&!controllerCleared){
+    markNextStop(day,dayIndex,cluster.controllerId,'done');
+    return true;
+  }
+  if(!cleared&&controllerCleared){
+    setItemCompletion(day,dayIndex,cluster.controllerId,'clear');
+    return true;
+  }
+  return false;
+}
+function completeClusterParent(day,dayIndex,cluster,progress,checks){
+  return reconcileClusterController(day,dayIndex,cluster,progress,checks);
 }
 function syncCompletedClusterParents(day,dayIndex){
   var changed=false;
@@ -2269,7 +2317,7 @@ function syncCompletedClusterParents(day,dayIndex){
     if(!parent.act) return;
     var cluster=getChildStopCluster(day.items,parent);
     if(!cluster) return;
-    if(completeClusterParent(day,dayIndex,cluster,getDayProgress(day,dayIndex),getChecks())) changed=true;
+    if(reconcileClusterController(day,dayIndex,cluster,getDayProgress(day,dayIndex),getChecks())) changed=true;
   });
   return changed;
 }
@@ -2305,8 +2353,9 @@ function toggleHomeCluster(parentId){
 }
 function clusterItemName(item){ return (item.place||item.act||item.ref||'子站').replace(/\n/g,' '); }
 function clusterTimeRange(parent,items){
-  var first=(items[0]&&items[0].time)||parent.time||'';
-  var last=(items[items.length-1]&&items[items.length-1].time)||'';
+  var timed=(items||[]).filter(function(item){ return item&&item.time; });
+  var first=timed.length?timed[0].time:(parent&&parent.time||'');
+  var last=timed.length?timed[timed.length-1].time:'';
   return first&&last&&first!==last?first+' - '+last:(first||last);
 }
 function renderClusterStop(item,checks,progress,dayIndex){
@@ -2525,14 +2574,15 @@ function renderToday(){
     return;
   }
   var day=DB.trip.days[ti];
-  var items=day.items.filter(function(it){return it.act;});
+  var items=homeNextStopItems(day.items);
   var progress=getDayProgress(day,ti);
   if(syncCompletedClusterParents(day,ti)) progress=getDayProgress(day,ti);
   checks=getChecks();
   var nowMinutes=currentMinutes();
   var pick=pickNextStop(items,progress,checks,nowMinutes,{day:day,dayIndex:ti});
   var completed=items.length-(pick.remaining+(pick.item?1:0));
-  var cluster=getChildStopCluster(day.items,pick.item);
+  var clusterParent=clusterParentForPick(day.items,pick.item);
+  var cluster=getChildStopCluster(day.items,clusterParent);
   var clusterPick=cluster?pickClusterChild(cluster,progress,checks,nowMinutes,{day:day,dayIndex:ti}):null;
   var weatherItem=clusterPick&&clusterPick.item?clusterPick.item:pick.item;
   requestHomeWeather(ti,weatherItem);
