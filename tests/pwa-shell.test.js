@@ -1,8 +1,20 @@
 const assert = require('assert');
+const crypto = require('crypto');
 const fs = require('fs');
 const path = require('path');
 
 const root = path.resolve(__dirname, '..');
+
+function sha256(filePath) {
+  return crypto.createHash('sha256').update(fs.readFileSync(filePath)).digest('hex').toUpperCase();
+}
+
+function assertPngSize(filePath, expectedSize) {
+  const png = fs.readFileSync(filePath);
+  assert.strictEqual(png.readUInt32BE(16), expectedSize, `${path.basename(filePath)} width is ${expectedSize}px`);
+  assert.strictEqual(png.readUInt32BE(20), expectedSize, `${path.basename(filePath)} height is ${expectedSize}px`);
+}
+
 const indexPath = path.join(root, 'index.html');
 const manifestPath = path.join(root, 'manifest.webmanifest');
 const serviceWorkerPath = path.join(root, 'sw.js');
@@ -17,6 +29,11 @@ assert.ok(fs.existsSync(peachBadgePath), 'header peach badge exists');
 const peachBadge = fs.readFileSync(peachBadgePath);
 assert.strictEqual(peachBadge.readUInt32BE(16), 256, 'peach badge is 256px wide');
 assert.strictEqual(peachBadge.readUInt32BE(20), 256, 'peach badge is 256px high');
+assert.strictEqual(
+  sha256(peachBadgePath),
+  '0B048181F89CA9D602CC6DCDE07C9242AA0D7CDB87BE47FB82DD72EB2B449D2C',
+  'header peach badge remains byte-for-byte unchanged',
+);
 assert.ok(!fs.existsSync(path.join(root, 'okayama-traveler-icon.png')), 'rejected traveler asset is absent');
 
 const index = fs.readFileSync(indexPath, 'utf8');
@@ -37,7 +54,7 @@ assert.ok(manifest.icons.some((icon) => icon.src === 'icon-maskable-192.png' && 
 assert.ok(manifest.icons.some((icon) => icon.src === 'icon-maskable-512.png' && icon.purpose === 'maskable'), 'manifest uses the maskable 512px icon');
 
 const serviceWorker = fs.readFileSync(serviceWorkerPath, 'utf8');
-assert.match(serviceWorker, /var CACHE_NAME = 'okayama-trip-v12';/, 'service worker cache is exactly v12');
+assert.match(serviceWorker, /var CACHE_NAME = 'okayama-trip-v13';/, 'service worker cache is exactly v13');
 assert.match(serviceWorker, /'\.\/icon-maskable-192\.png'/, 'service worker caches the maskable 192px icon');
 assert.match(serviceWorker, /'\.\/icon-maskable-512\.png'/, 'service worker caches the maskable 512px icon');
 
@@ -49,11 +66,20 @@ const netlify = fs.readFileSync(netlifyPath, 'utf8');
 assert.match(netlify, /for = "\/sw\.js"/, 'Netlify disables caching for the service worker');
 assert.match(netlify, /for = "\/index\.html"/, 'Netlify disables stale entrypoint caching');
 
-for (const size of [16, 32, 152, 167, 180, 192, 512]) {
-  assert.ok(fs.existsSync(path.join(root, `icon-${size}.png`)), `icon-${size}.png exists`);
+for (const size of [16, 32, 120, 152, 167, 180, 192, 512]) {
+  const iconPath = path.join(root, `icon-${size}.png`);
+  assert.ok(fs.existsSync(iconPath), `icon-${size}.png exists`);
+  assertPngSize(iconPath, size);
 }
 for (const size of [192, 512]) {
-  assert.ok(fs.existsSync(path.join(root, `icon-maskable-${size}.png`)), `icon-maskable-${size}.png exists`);
+  const iconPath = path.join(root, `icon-maskable-${size}.png`);
+  assert.ok(fs.existsSync(iconPath), `icon-maskable-${size}.png exists`);
+  assertPngSize(iconPath, size);
 }
+assert.notStrictEqual(
+  sha256(path.join(root, 'icon-512.png')),
+  '2879A46287F38D9B9AF7DC2E296B54530A41ACA0861B4D2F639C86BDDB061BB6',
+  'the legacy 512px PWA icon has been replaced',
+);
 
 console.log('PWA shell tests passed');

@@ -37,9 +37,9 @@ assert.doesNotMatch(html, /function touchDistance\(/, 'double-tap distance helpe
 assert.match(html, /function setupDiagnostics\(/, 'peach diagnostic gesture remains available');
 assert.match(html, /function setupViewportReflow\(/, 'form focus recovery remains available');
 assert.doesNotMatch(html.match(/<meta name="viewport"[^>]+>/i)[0], /maximum-scale|user-scalable/i, 'viewport restrictions are not persistent');
-assert.match(sw, /okayama-trip-v12/, 'service worker cache is bumped to v12');
-assert.match(html, /SW okayama-trip-v12/, 'diagnostics display v12');
-assert.match(html, /gestureEnvironmentSnapshot\(navigator,query,APP_BUILD,SCHEMA\.version,'okayama-trip-v12',document\)/, 'gesture report displays v12');
+assert.match(sw, /okayama-trip-v13/, 'service worker cache is bumped to v13');
+assert.match(html, /SW okayama-trip-v13/, 'diagnostics display v13');
+assert.match(html, /gestureEnvironmentSnapshot\(navigator,query,APP_BUILD,SCHEMA\.version,'okayama-trip-v13',document\)/, 'gesture report displays v13');
 assert.doesNotMatch(sw, /tests\//, 'test files are not part of the App Shell');
 assert.doesNotMatch(sw, /ios-gesture-diagnostics\.test\.js/, 'the diagnostic test is never cached');
 const buildMatch = html.match(/var APP_BUILD=\{channel:'DEV',code:'([0-9a-f]{7})',date:'2026-07-13'\}/);

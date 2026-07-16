@@ -9,7 +9,7 @@ Replace the Dev branch PWA and browser icon set with the user-provided travel ic
 - Source image: `C:\Users\AARONH~1\AppData\Local\Temp\codex-clipboard-040ca792-da7f-4cfd-ab2b-68dd59305ffc.png`.
 - Regenerate `icon-16.png`, `icon-32.png`, `icon-120.png`, `icon-152.png`, `icon-167.png`, `icon-180.png`, `icon-192.png`, and `icon-512.png`.
 - Regenerate `icon-maskable-192.png` and `icon-maskable-512.png`.
-- Update the Service Worker cache version so installed Dev PWAs can retrieve the refreshed icon assets.
+- Update the Service Worker cache version and its diagnostic labels so installed Dev PWAs can retrieve the refreshed icon assets and report the active cache accurately.
 - Do not edit `okayama-peach-badge.png` or its `index.html` reference.
 - Do not change application behavior, content, theme colors, manifest icon paths, or production branch state.
 
@@ -34,11 +34,10 @@ Tiny 16 px and 32 px icons will use the same source and composition rather than 
 - Assert every generated PNG has the filename-specific square dimensions.
 - Confirm the standard and maskable icons decode successfully as PNG files.
 - Render or inspect representative 16, 192, standard 512, and maskable 512 variants.
-- Record the SHA-256 of `okayama-peach-badge.png` before work and assert it remains `0B048181F89CA9A6593BAEBFA6B966D5D8851D75B3688DBB8CDA45D41EDB63E91` afterward.
+- Record the SHA-256 of `okayama-peach-badge.png` before work and assert it remains `0B048181F89CA9D602CC6DCDE07C9242AA0D7CDB87BE47FB82DD72EB2B449D2C` afterward.
 - Assert the `index.html` peach reference remains `okayama-peach-badge.png`.
 - Run the repository's relevant test and sanity checks after the asset and cache update.
 
 ## Failure Handling
 
 If cropping removes any meaningful object, or mask previews show clipping, increase the safe-area padding and regenerate before accepting the assets. If the peach hash or reference changes, stop and restore that file/reference before continuing.
-
