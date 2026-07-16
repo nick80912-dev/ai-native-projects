@@ -71,6 +71,15 @@ assert.strictEqual(htmlSource.slice(embeddedStart,embeddedEnd).trim(),standalone
 
 assert.deepStrictEqual(Array.from(sb.validateSnapshotData(validDb(),validRaw(),schema()).blockers), []);
 
+const optionalWebsite = validDb();
+optionalWebsite.placeList[0].web = '';
+const optionalWebsiteResult = sb.validateSnapshotData(optionalWebsite,validRaw(),schema());
+assert.strictEqual(
+  optionalWebsiteResult.warnings.some(function(f){ return f.code==='OPTIONAL_EMPTY'; }),
+  false,
+  'blank optional website does not create a validation warning'
+);
+
 [
   {sheet:'places',list:'placeList',id:'placeId',field:'placeId',header:'PID',row:{placeId:'   ',name:'Place',type:'attraction'}},
   {sheet:'places',list:'placeList',id:'placeId',field:'name',header:'Place Name',row:{placeId:'P101',name:' ',type:'attraction'}},
@@ -235,13 +244,22 @@ assert.notStrictEqual(htmlSource.indexOf('function renderSyncStatusBody('),-1,'r
 assert.notStrictEqual(htmlSource.indexOf('function retrySyncFromPanel('),-1,'retrySyncFromPanel exists');
 assert(/id="syncBtn" onclick="openSyncStatus\(\)"/.test(htmlSource),'header opens status panel');
 assert(!/id="syncBtn" onclick="manualSyncNew\(\)"/.test(htmlSource),'header no longer syncs directly');
-['同步中','已是最新','更新失敗','離線版','內建版'].forEach(function(label){
+const syncStatusBodySource=extractFunction('renderSyncStatusBody');
+['同步中','同步正常','更新失敗','離線資料','內建資料'].forEach(function(label){
   assert(htmlSource.indexOf(label)>=0,'status UI contains '+label);
 });
 assert.strictEqual((htmlSource.match(/onclick="retrySyncFromPanel\(this\)"/g)||[]).length,1,'panel has exactly one retry button');
-['APP build','資料來源','最後完整同步時間','最近失敗原因','驗證警告'].forEach(function(label){
-  assert(htmlSource.indexOf(label)>=0,'panel contains '+label);
+['同步正常','最後完整同步','Schema','資料版本'].forEach(function(label){
+  assert(syncStatusBodySource.indexOf(label)>=0,'simple status UI contains '+label);
 });
+['APP build','資料來源','最近失敗原因','驗證警告'].forEach(function(label){
+  assert.strictEqual(syncStatusBodySource.indexOf(label),-1,'simple status UI omits '+label);
+});
+assert.match(
+  htmlSource,
+  /\.sync-status-overlay\{[^}]*align-items:center[^}]*justify-content:center/,
+  'sync status overlay is centered at every viewport width'
+);
 
 const app={SHEETS:[{key:'itin'},{key:'places'},{key:'rest'},{key:'shop'},{key:'hotels'},{key:'exp'},{key:'cfg'}]};
 vm.createContext(app);
@@ -458,7 +476,7 @@ function loadSyncStatus(){
   const storage=memoryStorage();
   const runtime={
     Promise:Promise,
-    APP_BUILD:{channel:'DEV',code:'abc1234',date:'2026-07-13'},
+    SCHEMA:{version:'2.3 (2026-07-16)'},
     localStorage:storage,
     CURRENT_SNAPSHOT:null,
     syncInFlight:null,
@@ -482,7 +500,7 @@ function attachSyncStatus(app){
   const dot={className:'dot',classList:{add:function(){}}};
   const button={classList:{add:function(){},remove:function(){}}};
   app.Date=Date;
-  app.APP_BUILD={channel:'DEV',code:'abc1234',date:'2026-07-13'};
+  app.SCHEMA={version:'2.3 (2026-07-16)'};
   app.escapeHtml=function(value){
     return (value==null?'':String(value)).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
   };
@@ -552,19 +570,32 @@ async function testSyncStatus(){
   app.CURRENT_SNAPSHOT={source:'online',createdAt:completedAt,generationId:'sheet-online',validation:{warnings:[]}};
   let model=app.syncStatusModel();
   assert.strictEqual(model.state,'online');
-  assert.strictEqual(model.label,'已是最新');
+  assert.strictEqual(model.label,'同步正常');
   assert.strictEqual(model.lastComplete,'2026/07/13 21:30');
+  assert.strictEqual(model.schemaVersion,'2.3 (2026-07-16)');
+  assert.strictEqual(model.generationId,'sheet-online');
+  assert.strictEqual(Object.prototype.hasOwnProperty.call(model,'warnings'),false);
+
+  const healthyHtml=app.renderSyncStatusBody();
+  assert(healthyHtml.includes('sync-status-icon'));
+  assert(healthyHtml.includes('✓'));
+  assert(healthyHtml.includes('同步正常'));
+  assert(healthyHtml.includes('最後完整同步'));
+  assert(healthyHtml.includes('Schema 2.3 (2026-07-16)'));
+  assert(healthyHtml.includes('資料版本 sheet-online'));
+  assert.strictEqual(healthyHtml.indexOf('APP build'),-1);
+  assert.strictEqual(healthyHtml.indexOf('驗證警告'),-1);
 
   app.CURRENT_SNAPSHOT={source:'legacy-migrated',createdAt:completedAt,generationId:'legacy-one',validation:{warnings:[]}};
   model=app.syncStatusModel();
   assert.strictEqual(model.state,'offline');
-  assert.strictEqual(model.label,'離線版');
+  assert.strictEqual(model.label,'離線資料');
 
   app.CURRENT_SNAPSHOT={source:'builtin',createdAt:completedAt,generationId:'builtin-one',validation:{warnings:[]}};
   model=app.syncStatusModel();
   assert.strictEqual(model.state,'builtin');
-  assert.strictEqual(model.label,'內建版');
-  assert.notStrictEqual(model.label,'已是最新');
+  assert.strictEqual(model.label,'內建資料');
+  assert.notStrictEqual(model.label,'同步正常');
 
   app.syncInFlight=Promise.resolve({ok:true});
   model=app.syncStatusModel();
@@ -582,20 +613,21 @@ async function testSyncStatus(){
   assert.strictEqual(model.state,'failed');
   assert.strictEqual(model.label,'更新失敗');
   assert.strictEqual(model.lastComplete,'2026/07/13 21:30','last complete uses the effective previous snapshot');
-  assert(model.failure.indexOf('更新失敗，正在沿用 2026/07/13 21:30 的完整版本。')>=0);
   assert.strictEqual(model.failure.indexOf('2026/07/13 22:45'),-1,'failure copy never uses the rejected active timestamp');
-  assert(model.failure.indexOf('Sheet: 行程總表')>=0,'failure identifies the failed Unicode sheet');
   assert(model.failure.indexOf('[HEADER_REQUIRED]')>=0,'failure identifies the structure finding');
   assert.strictEqual(model.failure.indexOf('P025'),-1,'failure excludes CSV content');
   assert.strictEqual(model.failure.indexOf('<script>'),-1,'failure excludes exception content');
-  assert.deepStrictEqual(Array.from(model.warnings),['欄位提示']);
+  assert.strictEqual(model.failedSheet,'行程總表');
+  assert.strictEqual(Object.prototype.hasOwnProperty.call(model,'warnings'),false);
 
   app.localStorage.memory.trip_sync_last_failure=JSON.stringify({
     at:completedAt+1000,stage:'structure',sheet:'行程總表<img src=x onerror=alert(1)>',code:'HEADER_REQUIRED',
     message:'private structure details',activeCreatedAt:rejectedActiveAt
   });
   const renderedFailure=app.renderSyncStatusBody();
-  assert(renderedFailure.indexOf('Sheet: 行程總表&lt;img src=x onerror=alert(1)&gt;')>=0,'rendered failure escapes unsafe Unicode sheet labels');
+  assert(renderedFailure.includes('未同步 Sheet'));
+  assert(renderedFailure.includes('行程總表&lt;img src=x onerror=alert(1)&gt;'));
+  assert(renderedFailure.includes('HEADER_REQUIRED'));
   assert.strictEqual(renderedFailure.indexOf('<img src=x onerror=alert(1)>'),-1,'rendered failure contains no executable sheet markup');
 
   let rendered=0, syncCalls=0;
@@ -631,9 +663,9 @@ async function testBackgroundSyncStatusSettles(){
   assert.strictEqual(success.ok,true);
   assert.strictEqual(app.syncStatusModel().state,'online','successful background sync settles as online');
   assert.strictEqual(app.syncStatusModel().failure,'','successful background sync clears failure');
-  assert.strictEqual(panel.txt.textContent,'已是最新');
+  assert.strictEqual(panel.txt.textContent,'✓ 已同步');
   assert(!/sync-status-retry[^>]*\sdisabled/.test(panel.body.innerHTML),'background success reenables panel retry');
-  assert(panel.body.innerHTML.indexOf('更新失敗，正在沿用')<0,'background success rerenders away the old failure');
+  assert(panel.body.innerHTML.indexOf('未同步 Sheet')<0,'background success rerenders away the old failure');
 
   app=loadCoordinator(); panel=attachSyncStatus(app);
   const retainedRaw=orchestrationRaw('retained');
@@ -658,7 +690,9 @@ async function testBackgroundSyncStatusSettles(){
   assert.strictEqual(app.syncStatusModel().state,'failed','failed background sync settles as failed');
   assert.strictEqual(panel.txt.textContent,'更新失敗');
   assert(!/sync-status-retry[^>]*\sdisabled/.test(panel.body.innerHTML),'background failure reenables panel retry');
-  assert(panel.body.innerHTML.indexOf('更新失敗，正在沿用 2026/07/13 21:30 的完整版本。')>=0,'background failure rerenders retained snapshot details');
+  assert(panel.body.innerHTML.indexOf('最後完整同步 2026/07/13 21:30')>=0,'background failure renders retained snapshot time');
+  assert(panel.body.innerHTML.indexOf('未同步 Sheet')>=0,'background failure renders the failed Sheet');
+  assert(panel.body.innerHTML.indexOf('shop')>=0,'background failure identifies the failed Sheet');
 }
 
 async function testBootSelection(){
