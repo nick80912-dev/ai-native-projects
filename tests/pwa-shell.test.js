@@ -58,9 +58,8 @@ assert.match(serviceWorker, /var CACHE_NAME = 'okayama-trip-v13';/, 'service wor
 assert.match(serviceWorker, /'\.\/icon-maskable-192\.png'/, 'service worker caches the maskable 192px icon');
 assert.match(serviceWorker, /'\.\/icon-maskable-512\.png'/, 'service worker caches the maskable 512px icon');
 
-const appBuild = index.match(/var APP_BUILD=\{channel:'([^']+)',code:'([^']+)',date:'([^']+)'\}/);
-assert(appBuild, 'APP build metadata exists');
-assert.strictEqual(`APP ${appBuild[1]} · CODE ${appBuild[2]} · ${appBuild[3]}`, 'APP DEV · CODE 7070fb2 · 2026-07-13', 'APP publication identity is exact');
+const appBuild = index.match(/var APP_BUILD=/);
+assert.strictEqual(appBuild, null, 'retired diagnostic build metadata stays absent');
 
 const netlify = fs.readFileSync(netlifyPath, 'utf8');
 assert.match(netlify, /for = "\/sw\.js"/, 'Netlify disables caching for the service worker');
