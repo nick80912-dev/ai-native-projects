@@ -1,6 +1,6 @@
 # DONE(已完成)
 
-> 更新於 2026-07-13。完成事項來自 `.ai-manifest.json` status.done 與既有 CHANGELOG;細節仍以 07_CHANGELOG.md 為準。
+> 更新於 2026-07-16。完成事項來自 `.ai-manifest.json` status.done 與既有 CHANGELOG;細節仍以 07_CHANGELOG.md 為準。
 
 ## 已完成
 - V2 Schema 驅動 CMS:7 張 Google Sheets、ID 引用、Restaurants/Shopping/Hotels/Expenses/TripConfig。
@@ -12,6 +12,7 @@
 - Restaurants 補欄位:R001 麵酒一照庵與 R006 上野商店的 Tabelog 評分 / 營業時間已在 Google Sheet 發布 CSV 確認。
 - 購物頁多地點切換:GitHub `origin/main` 已確認包含 `Places.Type=購物` 來源、`全部 / 想逛 / 各購物地點` 切換與「區域 / 樓層」文案。
 - 框架抽取計畫已歸檔:`FUTURE_PLAN_framework-extraction.md`。
+- 2026-07-16:父列具有地點或 ID 時納入父子行程卡第一站，兩站即可成卡；synthetic controller 保持整組進度，Day 1–6 共 12 組稽核案例通過。
 
 ## 文件治理
 - 2026-07-13:Netlify 雙站架構上線(`main`=正式站、`dev`=測試站)，兩站部署與瀏覽器狀態完全隔離。
