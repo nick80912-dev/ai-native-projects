@@ -255,11 +255,23 @@ assert.strictEqual((htmlSource.match(/onclick="retrySyncFromPanel\(this\)"/g)||[
 ['APP build','資料來源','最近失敗原因','驗證警告'].forEach(function(label){
   assert.strictEqual(syncStatusBodySource.indexOf(label),-1,'simple status UI omits '+label);
 });
+const syncStatusOverlayRules=Array.from(htmlSource.matchAll(/\.sync-status-overlay\s*\{([^}]*)\}/g),function(match){
+  return match[1];
+});
+assert(syncStatusOverlayRules.length>=1,'sync status overlay has a CSS rule');
 assert.match(
-  htmlSource,
-  /\.sync-status-overlay\{[^}]*align-items:center[^}]*justify-content:center/,
-  'sync status overlay is centered at every viewport width'
+  syncStatusOverlayRules[0],
+  /align-items\s*:\s*center[^;]*;[^}]*justify-content\s*:\s*center/,
+  'main sync status overlay rule is horizontally and vertically centered'
 );
+syncStatusOverlayRules.forEach(function(rule,index){
+  Array.from(rule.matchAll(/align-items\s*:\s*([^;}]+)/g)).forEach(function(declaration){
+    assert.strictEqual(declaration[1].trim(),'center','sync status overlay rule '+(index+1)+' does not override vertical centering');
+  });
+  Array.from(rule.matchAll(/justify-content\s*:\s*([^;}]+)/g)).forEach(function(declaration){
+    assert.strictEqual(declaration[1].trim(),'center','sync status overlay rule '+(index+1)+' does not override horizontal centering');
+  });
+});
 
 const app={SHEETS:[{key:'itin'},{key:'places'},{key:'rest'},{key:'shop'},{key:'hotels'},{key:'exp'},{key:'cfg'}]};
 vm.createContext(app);
@@ -574,6 +586,7 @@ async function testSyncStatus(){
   assert.strictEqual(model.lastComplete,'2026/07/13 21:30');
   assert.strictEqual(model.schemaVersion,'2.3 (2026-07-16)');
   assert.strictEqual(model.generationId,'sheet-online');
+  assert.strictEqual(Object.prototype.hasOwnProperty.call(model,'source'),false);
   assert.strictEqual(Object.prototype.hasOwnProperty.call(model,'warnings'),false);
 
   const healthyHtml=app.renderSyncStatusBody();
@@ -585,6 +598,9 @@ async function testSyncStatus(){
   assert(healthyHtml.includes('資料版本 sheet-online'));
   assert.strictEqual(healthyHtml.indexOf('APP build'),-1);
   assert.strictEqual(healthyHtml.indexOf('驗證警告'),-1);
+  assert.strictEqual(healthyHtml.indexOf('未同步 Sheet'),-1);
+  assert.strictEqual(healthyHtml.indexOf('最近失敗原因'),-1);
+  assert.strictEqual(/sync-status-(?:alert|failure)/.test(healthyHtml),false,'healthy markup has no failure alert or empty failure row');
 
   app.CURRENT_SNAPSHOT={source:'legacy-migrated',createdAt:completedAt,generationId:'legacy-one',validation:{warnings:[]}};
   model=app.syncStatusModel();
@@ -620,15 +636,26 @@ async function testSyncStatus(){
   assert.strictEqual(model.failedSheet,'行程總表');
   assert.strictEqual(Object.prototype.hasOwnProperty.call(model,'warnings'),false);
 
+  const persistedUnsafeReason='<svg onload=alert(2)>\n'+new Array(220).join('危')+'SHOULD_NOT_SURVIVE';
+  const normalizedUnsafeReason=persistedUnsafeReason.replace(/[\r\n\t]+/g,' ').replace(/\s+/g,' ').trim();
+  const boundedUnsafeReason=normalizedUnsafeReason.slice(0,159)+'…';
   app.localStorage.memory.trip_sync_last_failure=JSON.stringify({
     at:completedAt+1000,stage:'structure',sheet:'行程總表<img src=x onerror=alert(1)>',code:'HEADER_REQUIRED',
-    message:'private structure details',activeCreatedAt:rejectedActiveAt
+    reason:persistedUnsafeReason,activeCreatedAt:rejectedActiveAt
   });
+  model=app.syncStatusModel();
+  const modelReason=model.failure.slice(model.failure.lastIndexOf('：')+1);
+  assert.strictEqual(modelReason,boundedUnsafeReason,'persisted failure reason is bounded to 160 characters by syncStatusModel');
+  assert.strictEqual(modelReason.length,160,'bounded failure reason has the expected maximum length');
+  assert.strictEqual(/[\r\n\t]/.test(model.failure),false,'persisted failure reason is normalized to one line by syncStatusModel');
+  assert.strictEqual(model.failure.indexOf('SHOULD_NOT_SURVIVE'),-1,'persisted failure reason drops content beyond the safe bound');
   const renderedFailure=app.renderSyncStatusBody();
   assert(renderedFailure.includes('未同步 Sheet'));
   assert(renderedFailure.includes('行程總表&lt;img src=x onerror=alert(1)&gt;'));
   assert(renderedFailure.includes('HEADER_REQUIRED'));
+  assert(renderedFailure.includes('&lt;svg onload=alert(2)&gt;'));
   assert.strictEqual(renderedFailure.indexOf('<img src=x onerror=alert(1)>'),-1,'rendered failure contains no executable sheet markup');
+  assert.strictEqual(renderedFailure.indexOf('<svg onload=alert(2)>'),-1,'rendered failure contains no executable reason markup');
 
   let rendered=0, syncCalls=0;
   app.renderSyncStatusBody=function(){rendered++;};
