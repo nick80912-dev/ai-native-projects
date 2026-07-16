@@ -16,7 +16,7 @@
    - **隱藏「重置今日進度」**(Bar 裁定:隱藏式,避免旅伴誤觸;入口併除錯面板,連點標題 5 下)
    - 行程頁面板展開狀態跨重繪保留(仿 shopOpenFloors 模式)
    - 個人狀態匯出/還原(部署前必做;含 iOS PWA 與 Safari storage 隔離特性文件化)
-   - 隱藏除錯面板(AppLog 環形緩衝 + healthCheck + 複製全部)
+   - 隱藏除錯面板後續評估(AppLog 環形緩衝 + healthCheck);現行診斷面板已精簡並移除常駐 iOS 手勢事件框,待有問題時再評估啟用 AppLog
    - 同步徽章相對時間(「離線版 · 昨天 21:03」)
    - partial 同步時 toast 列出失敗表名(混版本資料可感知)
    - 天氣雨%改取「現在之後」最大值;fetchSheet 重試加 800ms 退避;toast() null guard

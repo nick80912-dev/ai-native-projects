@@ -7,7 +7,7 @@
 - `app-now.test.js`:驗證正式時間、offset/custom 時間模擬與共用 `appNow()` 時鐘。執行:`node tests/app-now.test.js`。
 - `home-safety.test.js`:驗證首頁行程日完整顯示、Scroll-only 政策與高風險清除操作的確認防線。執行:`node tests/home-safety.test.js`。
 - `home-simplification.test.js`:驗證首頁版面高度、下一站取消邏輯、串點子卡簡化與購物清單保留。執行:`node tests/home-simplification.test.js`。
-- `ios-zoom-guard.test.js`:驗證 iOS 16px 字級、Scroll-only／viewport 還原、APP/SW 版次與診斷程式 ES5 約束。執行:`node tests/ios-zoom-guard.test.js`。
+- `ios-zoom-guard.test.js`:驗證 iOS 16px 字級、Scroll-only／viewport 還原、SW 版次，以及已退役的手勢診斷與 APP build metadata 不會重新出現。執行:`node tests/ios-zoom-guard.test.js`。
 - `preview-date.test.js`:驗證預覽日期參數與 `todayMD()` 使用同一模擬時間來源。執行:`node tests/preview-date.test.js`。
 - `pwa-shell.test.js`:驗證 PWA 入口、manifest、Service Worker、Netlify 設定與圖示資產完整性。執行:`node tests/pwa-shell.test.js`。
 - `trip-presentation.test.js`:驗證行程類型標籤與行程頁呈現規則。執行:`node tests/trip-presentation.test.js`。
@@ -16,7 +16,7 @@
 - `pick-next-stop.test.js`:下一站時間判斷與自動略過過期項目的邏輯回歸測試(2026-07-09 新增,涵蓋「今天按過任一完成後就卡住不推進」的修復)。執行:`node tests/pick-next-stop.test.js`
 - `data-reference-consistency.test.js`:驗證行程餐廳顯示名稱與 RID 指向餐廳不一致時 health check 會告警。執行:`node tests/data-reference-consistency.test.js`。
 - `ios-viewport-resume.test.js`:驗證 iOS 回前景時還原 viewport、清除舊 transform 並保留捲動位置。執行:`node tests/ios-viewport-resume.test.js`。
-- `ios-gesture-diagnostics.test.js`:驗證 iOS 手勢診斷的 24 筆環形事件、viewport 即時快照、computed touch-action、passive observer、報告複製與清除。執行:`node tests/ios-gesture-diagnostics.test.js`。
+- `ios-gesture-diagnostics.test.js`:驗證 iOS 手勢事件收集、環形緩衝、報告與事件框已退役，同時保留桃子診斷入口、viewport recovery 與重置行程進度。執行:`node tests/ios-gesture-diagnostics.test.js`。
 
 ## 待建(backlog #1,下次程式交付一併補齊)
 - Playwright 三情境 QA 腳本:①斷網內建 ②連網同步 ③旅行日 mock Date;通過標準=三情境零 pageerror。
