@@ -512,7 +512,7 @@ function attachSyncStatus(app){
   const dot={className:'dot',classList:{add:function(){}}};
   const button={classList:{add:function(){},remove:function(){}}};
   app.Date=Date;
-  app.SCHEMA={version:'2.3 (2026-07-16)'};
+  app.SCHEMA.version='2.3 (2026-07-16)';
   app.escapeHtml=function(value){
     return (value==null?'':String(value)).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
   };
