@@ -214,9 +214,6 @@ function validateSnapshotData(db,raw,schema){
     var mode=String(cfg.travelmode||'').trim().toLowerCase();
     if(mode&&mode!=='drive'&&mode!=='transit') block('CFG_TRAVELMODE','cfg','TripConfig travelmode 必須是 drive 或 transit');
   }
-  placeList.forEach(function(place){
-    if(!place.web) warn('OPTIONAL_EMPTY','places',place.placeId + ' 未填寫網站');
-  });
   return result;
 }
 

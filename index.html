@@ -479,12 +479,13 @@ input,select,textarea{font-size:16px}
 .diag-gesture-log{max-height:240px;overflow:auto;background:#f7f3ea;border-radius:8px;padding:8px;font-size:10px;line-height:1.45;white-space:pre-wrap;word-break:break-word}
 .diag-panel button[onclick^="endTimeSimulation"]{min-height:44px;font-size:15px;width:100%;margin-top:6px}.diag-panel button[onclick="resetTripProgress()"]{color:#c0392b;border-color:#c0392b}
 .diag-panel input{font-size:16px}
-.sync-status-overlay{position:fixed;inset:0;z-index:120;background:rgba(6,32,38,.62);padding:12px;display:flex;align-items:flex-end;justify-content:center}
-.sync-status-panel{width:100%;max-width:520px;max-height:86vh;overflow:auto;background:var(--card);border-radius:18px 18px 12px 12px;padding:16px;box-shadow:var(--shadow-lg)}
+.sync-status-overlay{position:fixed;inset:0;z-index:120;background:rgba(6,32,38,.62);padding:12px;display:flex;align-items:center;justify-content:center}
+.sync-status-panel{width:100%;max-width:480px;max-height:86vh;overflow:auto;background:var(--card);border-radius:16px;padding:16px;box-shadow:var(--shadow-lg)}
 .sync-status-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}.sync-status-head h2{font-size:18px}.sync-status-close{border:0;background:transparent;color:var(--ink-soft);font-size:26px;line-height:1;padding:5px}
-.sync-status-row{border-top:1px solid var(--line);padding:10px 0}.sync-status-key{font-size:11px;font-weight:800;color:var(--ink-faint);letter-spacing:.04em}.sync-status-value{font-size:13px;color:var(--ink);margin-top:2px;overflow-wrap:anywhere}.sync-status-failure{color:var(--coral);font-weight:700}.sync-status-warnings{margin:4px 0 0;padding-left:18px;font-size:12px;color:var(--ink-soft)}
+.sync-status-summary{text-align:center;padding:10px 4px 14px}.sync-status-icon{width:58px;height:58px;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 10px;background:var(--coral-bg);color:var(--coral);font-size:34px;font-weight:900}.sync-status-summary.state-online .sync-status-icon{background:#e8f4ed;color:var(--green)}.sync-status-summary.state-syncing .sync-status-icon{animation:spin 1s linear infinite}
+.sync-status-title{font-size:20px;font-weight:900;color:var(--ink)}.sync-status-time{font-size:13px;color:var(--ink-soft);margin-top:6px}.sync-status-version{font-size:11px;color:var(--ink-faint);margin-top:4px;overflow-wrap:anywhere}
+.sync-status-alert{display:grid;gap:3px;border-top:1px solid var(--line);padding:10px 0;font-size:13px}.sync-status-alert b{color:var(--coral)}.sync-status-alert span{color:var(--ink);overflow-wrap:anywhere}
 .sync-status-retry{width:100%;min-height:44px;border:0;border-radius:10px;background:var(--sea);color:#fff;font:inherit;font-weight:800;margin-top:12px}.sync-status-retry:disabled{opacity:.5}
-@media (min-width:620px){.sync-status-overlay{align-items:center}.sync-status-panel{border-radius:16px}}
 </style>
 </head>
 <body>
@@ -921,9 +922,6 @@ function validateSnapshotData(db,raw,schema){
     var mode=String(cfg.travelmode||'').trim().toLowerCase();
     if(mode&&mode!=='drive'&&mode!=='transit') block('CFG_TRAVELMODE','cfg','TripConfig travelmode 必須是 drive 或 transit');
   }
-  placeList.forEach(function(place){
-    if(!place.web) warn('OPTIONAL_EMPTY','places',place.placeId + ' 未填寫網站');
-  });
   return result;
 }
 
@@ -1425,27 +1423,28 @@ function syncStatusModel(){
     failureRecord=stored?JSON.parse(stored):null;
   }catch(ignore){ failureRecord=null; }
   if(syncInFlight){ state='syncing'; label='同步中'; }
-  else if(source==='builtin'){ state='builtin'; label='內建版'; }
+  else if(source==='builtin'){ state='builtin'; label='內建資料'; }
   else if(failureRecord){ state='failed'; label='更新失敗'; }
-  else if(source==='online'){ state='online'; label='已是最新'; }
-  else{ state='offline'; label='離線版'; }
-  var sourceLabels={online:'Google 試算表', 'legacy-migrated':'舊版離線快取', builtin:'APP 內建資料'};
-  var lastComplete=formatTime(snapshot&&snapshot.createdAt);
-  var failure='';
+  else if(source==='online'){ state='online'; label='同步正常'; }
+  else{ state='offline'; label='離線資料'; }
+  var failedSheet='', failure='';
   if(failureRecord){
-    var failureTime=formatTime(snapshot&&snapshot.createdAt||failureRecord.activeCreatedAt);
     var stageLabels={download:'下載失敗',structure:'資料結構檢查失敗',validation:'資料驗證失敗',storage:'本機儲存失敗',boot:'啟動資料驗證失敗'};
     var detail=stageLabels[failureRecord.stage]||'同步作業失敗';
-    var sheet=bounded(failureRecord.sheet,40);
+    failedSheet=bounded(failureRecord.sheet,40);
     var code=bounded(failureRecord.code,40).replace(/[^0-9A-Za-z_-]/g,'');
     var reason=bounded(failureRecord.reason,160);
-    failure='更新失敗，正在沿用 '+failureTime+' 的完整版本。'+detail+(sheet?'（Sheet: '+sheet+'）':'')+(code?' ['+code+']':'')+(reason?' 原因：'+reason:'');
+    failure=detail+(code?' ['+code+']':'')+(reason?'：'+reason:'');
   }
-  var warningRecords=snapshot&&snapshot.validation&&snapshot.validation.warnings||[];
-  var warnings=warningRecords.slice(0,5).map(function(warning){
-    return bounded(warning&&warning.message||warning&&warning.code||warning,160);
-  });
-  return {state:state,label:label,source:sourceLabels[source]||bounded(source,40),lastComplete:lastComplete,failure:failure,warnings:warnings};
+  return {
+    state:state,
+    label:label,
+    lastComplete:formatTime(snapshot&&snapshot.createdAt),
+    schemaVersion:SCHEMA.version,
+    generationId:snapshot&&snapshot.generationId||'內建資料',
+    failure:failure,
+    failedSheet:failedSheet
+  };
 }
 function closeSyncStatus(){
   var overlay=document.getElementById('syncStatusOverlay');
@@ -1453,14 +1452,22 @@ function closeSyncStatus(){
 }
 function renderSyncStatusBody(){
   var model=syncStatusModel(), body=document.getElementById('syncStatusBody');
-  var warningHtml=model.warnings.length?'<ul class="sync-status-warnings">'+model.warnings.map(function(warning){return '<li>'+escapeHtml(warning)+'</li>';}).join('')+'</ul>':'<div class="sync-status-value">無</div>';
-  var html='<div class="sync-status-row"><div class="sync-status-key">APP build</div><div class="sync-status-value">'+escapeHtml(APP_BUILD.channel)+' · '+escapeHtml(APP_BUILD.code)+' · '+escapeHtml(APP_BUILD.date)+'</div></div>'+
-    '<div class="sync-status-row"><div class="sync-status-key">資料版本</div><div class="sync-status-value">'+escapeHtml(CURRENT_SNAPSHOT&&CURRENT_SNAPSHOT.generationId||'內建資料')+'</div></div>'+
-    '<div class="sync-status-row"><div class="sync-status-key">資料來源</div><div class="sync-status-value">'+escapeHtml(model.source)+'</div></div>'+
-    '<div class="sync-status-row"><div class="sync-status-key">最後完整同步時間</div><div class="sync-status-value">'+escapeHtml(model.lastComplete)+'</div></div>'+
-    '<div class="sync-status-row"><div class="sync-status-key">最近失敗原因</div><div class="sync-status-value sync-status-failure">'+escapeHtml(model.failure||'無')+'</div></div>'+
-    '<div class="sync-status-row"><div class="sync-status-key">驗證警告</div>'+warningHtml+'</div>'+
-    '<button class="sync-status-retry" onclick="retrySyncFromPanel(this)"'+(syncInFlight?' disabled':'')+'>立即重新同步</button>';
+  var stateLabels={syncing:'同步中',online:'同步正常',failed:'更新失敗',offline:'離線資料',builtin:'內建資料'};
+  var label=model.label||stateLabels[model.state]||'更新失敗';
+  var icon=model.state==='online'?'✓':model.state==='syncing'?'↻':'!';
+  var html='<div class="sync-status-summary state-'+escapeHtml(model.state)+'">'+
+    '<div class="sync-status-icon" aria-hidden="true">'+escapeHtml(icon)+'</div>'+
+    '<div class="sync-status-title">'+escapeHtml(label)+'</div>'+
+    '<div class="sync-status-time">最後完整同步 '+escapeHtml(model.lastComplete)+'</div>'+
+    '<div class="sync-status-version">Schema '+escapeHtml(model.schemaVersion)+'／資料版本 '+escapeHtml(model.generationId)+'</div>'+
+    '</div>';
+  if(model.failedSheet){
+    html+='<div class="sync-status-alert"><b>未同步 Sheet</b><span>'+escapeHtml(model.failedSheet)+'</span></div>';
+  }
+  if(model.failure){
+    html+='<div class="sync-status-alert"><b>原因</b><span>'+escapeHtml(model.failure)+'</span></div>';
+  }
+  html+='<button class="sync-status-retry" onclick="retrySyncFromPanel(this)"'+(syncInFlight?' disabled':'')+'>立即重新同步</button>';
   if(body) body.innerHTML=html;
   return html;
 }
@@ -1490,7 +1497,7 @@ function setSyncState(state){
   if(!dot) return;
   btn.classList.remove('spinning'); dot.className='dot';
   if(state==='syncing'){ btn.classList.add('spinning'); txt.textContent='同步中'; }
-  else if(state==='online'){ txt.textContent='已是最新'; }
+  else if(state==='online'){ txt.textContent='✓ 已同步'; }
   else if(state==='legacy-migrated'||state==='cache'||state==='offline'){ dot.classList.add('stale'); txt.textContent='離線版'; }
   else if(state==='builtin'){ dot.classList.add('stale'); txt.textContent='內建版'; }
   else { dot.classList.add('err'); txt.textContent='更新失敗'; }
