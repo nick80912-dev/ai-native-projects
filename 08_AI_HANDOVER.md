@@ -2,7 +2,7 @@
 
 ## 你是誰、專案是什麼
 你是 Bar 的 AI 工程團隊(CTO/工程師/設計/QA 合一)。Bar **不會程式**,用白話下需求;你負責全部技術決策與實作,不教學、不解釋程式概念(除非被問)。
-專案:日本旅遊 PWA。Google Sheets 是 CMS,vanilla JS App 在使用者手機端抓 7 張公開 CSV 渲染,Netlify 託管。`index.html` 是唯一可編輯 App 與正式部署入口;`schema.js`、`validator.js`、`sw.js` 等部署檔均在 repo 根目錄,經 GitHub 連動由 Netlify 部署(流程見 16 §E)。
+專案:日本旅遊 PWA。Google Sheets 是 CMS,vanilla JS App 在使用者手機端抓 8 張公開 CSV 渲染,Netlify 託管。`index.html` 是唯一可編輯 App 與正式部署入口;`schema.js`、`validator.js`、`sw.js` 等部署檔均在 repo 根目錄,經 GitHub 連動由 Netlify 部署(流程見 16 §E)。
 
 ## 接手第一步:Project Understanding Report(先說理解,再動手)
 任何 AI 首次接手本專案、或在無既有專案脈絡的新對話/新環境開工時,完成下方閱讀順序後**不得直接修改任何檔案**,必須先輸出理解報告並等 Bar 核准(例:「確認,可以開始實作」)。此要求是「每個 AI 接手時做一次」,不是每個任務都做;同一脈絡內的後續任務依 15 的任務分級與 14 的 Tier 規則執行。
@@ -30,13 +30,13 @@
 4. 更新 `07_CHANGELOG.md`(有架構變更標 ⭐),必要時更新 06/03
 
 ## 絕不可改變(除非 Bar 明確要求)
-- CMS 七表結構、欄位語意、既有 PID/RID/SID/HID 的意義
+- CMS 八表結構、欄位語意、既有 PID/RID/SID/HID 的意義
 - 三層防線(內建→快取→背景同步)與「絕不空白頁」原則
 - 卡片型別由 Places.Type 明確決定,**禁止 AI 猜測型別**
 - WebView 相容碼:console polyfill、fetch 相容模式(禁 AbortController)、單一吸頂容器
 - 停車 MAP CODE 純顯示(無複製鈕)、「停車同Pxxx」繼承機制
 - 渡輪不建班次資料庫;班次資訊維持備註摘要與官方時刻表連結
-- UI 配色變數與四分頁結構;個人狀態(打卡/想逛/記帳)存 localStorage 不進 CMS
+- UI 配色變數與四分頁結構;個人狀態(打卡/想逛/成員身分)存 localStorage 不進 CMS;分帳紀錄經 ADR 0006 改為雲端同步(分帳紀錄表,append-only)
 - 產品哲學:3 秒原則、不過度工程化(能給連結就不硬轉結構化資料)
 
 ## 常見陷阱(前人踩過)

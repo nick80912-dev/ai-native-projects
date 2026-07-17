@@ -2,14 +2,14 @@
   "$comment": "AI 導航檔 — 任何 AI 接手第一步只讀這份即可掌握全貌。這是 13 步流程的第 1 步。",
   "project": "japan-travel-pwa(日本旅遊行程 App)",
   "owner": "Bar(產品負責人,非工程師,繁中溝通,要直接執行不要教學;AI=全職工程團隊)",
-  "version": "2.2-harness",
+  "version": "2.4-ledger-sync",
   "framework": "ai-native-framework@pending(尚未抽取;見 FUTURE_PLAN_framework-extraction.md)",
   "updated": "2026-07-17",
   "live": "https://trippilot-jp.netlify.app/",
   "start_here": "先讀本檔 → PROJECT_CONSTITUTION.md(憲章/流程/禁令)→ 08_AI_HANDOVER.md → 15_AI_EXECUTION_RULES.md(決策權限/任務分級,必讀)→ 相關 adr/ → 依任務讀 03_DATABASE/09_SCHEMA_MAPPING(資料與欄位)、05_CODING_RULES/11_CODING_CONVENTION(程式)、12_DEV_WORKFLOW(步驟)",
   "governance": {
     "constitution": "PROJECT_CONSTITUTION.md",
-    "adr_dir": "adr/(0001-schema-first, 0002-data-driven-ui, 0003-google-sheet-cms, 0004-renderer-architecture, 0005-branch-strategy);重構前必讀",
+    "adr_dir": "adr/(0001-schema-first, 0002-data-driven-ui, 0003-google-sheet-cms, 0004-renderer-architecture, 0005-branch-strategy, 0006-ledger-sync-apps-script);重構前必讀",
     "must_confirm_with_bar": [
       "換框架",
       "大重構",
@@ -28,7 +28,7 @@
     "ops_playbook": "16_OPS_PLAYBOOK.md:Netlify回滾/SW快取災難/Sheet版本還原/清理排程安全",
     "status_authority": "即時狀態唯一權威=tasks/(current/backlog/done);13_PROJECT_STATUS與本manifest.status為快照;00_CONTEXT_HANDOVER為歷史快照不參與"
   },
-  "data_flow": "GoogleSheets(7表)→發布CSV→手機瀏覽器fetch→validator.js(防錯)→parser(Schema驅動)→DB→renderers→UI ;離線三層:BUILTIN內建→localStorage快取→背景同步(徽章:已是最新/部分更新/離線版/內建版)",
+  "data_flow": "GoogleSheets(8表)→發布CSV→手機瀏覽器fetch→validator.js(防錯)→parser(Schema驅動)→DB→renderers→UI；分帳寫入:localStorage佇列→ledgerRepository→Apps Script→分帳紀錄表(append-only)；離線三層:BUILTIN內建→localStorage快取→背景同步",
   "files": {
     "index.html": "唯一可編輯 App 與正式部署入口:UI殼+CSS+內嵌JS(區塊分層見10_FOLDER_STRUCTURE)",
     "schema.js": "唯一資料規格SSoT:欄位/gid/型別值/發布URL;schemaDoc()自動產09文件",
@@ -50,7 +50,8 @@
       "shop": "1182059264",
       "hotels": "792115203",
       "exp": "1354339857",
-      "cfg": "1070234314"
+      "cfg": "1070234314",
+      "ledger": "896856089"
     },
     "type_values": "購物→shopping / 美食區→restarea / 住宿→hotel / 景點·機場·纜車→attraction / 渡船口·渡輪→ferry / 租車點→parking(禁 AI 猜測)"
   },
@@ -61,7 +62,7 @@
     "viewport meta 不得常駐 maximum-scale 或 user-scalable=no;只允許輸入 focus 縮放殘留時瞬鎖約100ms,並原樣還原啟動時字串",
     "停車 MAP CODE 純顯示無複製鈕、『停車同Pxxx』繼承",
     "渡輪不建班次庫(末班資訊+官方時刻表連結)",
-    "個人狀態(打卡/想逛/成員/記帳)存 localStorage 不進 CMS",
+    "個人狀態(打卡/想逛/成員身分)存 localStorage 不進 CMS;分帳紀錄經 ADR 0006 改為雲端同步(分帳紀錄表,append-only)",
     "產品哲學:3秒原則、不過度工程化"
   ],
   "known_traps": [
@@ -88,7 +89,8 @@
       "父子行程卡(synthetic controller,12 組稽核)",
       "7 表原子快照同步",
       "診斷面板與同步狀態精簡(iOS 手勢診斷退役)",
-      "Dev PWA 圖示更新(SW cache v13)"
+      "Dev PWA 圖示更新(SW cache v13)",
+      "分帳跨裝置同步(Schema 2.4/ADR 0006/Apps Script repository/SW v14)"
     ],
     "pending_in_order": [
       "Bar 手機全面驗收 dev",

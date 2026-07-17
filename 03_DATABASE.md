@@ -11,7 +11,7 @@
 - Drive fileId:`1B5g7KuVi2WaFVVSdhqRMeTQV_tBpgnzOAv6aMQdFZJw`
 - Published CSV base URL:`https://docs.google.com/spreadsheets/d/e/2PACX-1vRenmV8UxEzWbzSjKJKi4rSpYt63geBqhEkKsl1GemWVPmFKTcvv3Uk71Hjla3TGBpGIjC7bQDDdI00/pub?single=true&output=csv&gid=`
 
-## 七張工作表與 gid
+## 八張工作表與 gid
 | Sheet | gid | kind | 用途 |
 |---|---:|---|---|
 | 行程總表 | 1169222358 | itinerary | 行程骨架(天/時間/活動),使用 ID 引用 Places 或 Restaurants |
@@ -19,7 +19,8 @@
 | Restaurants | 1421821084 | table | 餐廳資料,可用 PID 掛到 Place 卡片 |
 | Shopping | 1182059264 | table | 商場店家資料,驅動購物頁樓層/必逛/免稅顯示 |
 | Hotels | 792115203 | table | 住宿細節,以名稱比對 Places 住宿型地點 |
-| Expenses | 1354339857 | freeform-expense | 行前團費自由格式;旅途中記帳在 App 端 |
+| Expenses | 1354339857 | freeform-expense | 行前團費自由格式;同行成員名單來源 |
+| 分帳紀錄 | 896856089 | table | 跨裝置旅途記帳;Apps Script append-only 回寫 |
 | TripConfig | 1070234314 | keyvalue | 旅程名稱、起訖、交通模式、幣別等設定 |
 
 ## 欄位權威來源
@@ -41,6 +42,7 @@
 | Shopping | 維護店家、樓層、必逛、免稅等資料 | 新店家只新增資料列;PID 指向商場 Place |
 | Hotels | 維護住宿細節 | 新住宿只新增資料列;住宿地點仍需在 Places 有對應資料 |
 | Expenses | 維護行前團費 | 依 `schema.js` 的 freeform layout 維護,不是一般資料列表 |
+| 分帳紀錄 | 保存旅途記帳 | 只由 Apps Script append;刪帳新增負向沖銷列,不得修改原列 |
 | TripConfig | 維護 key/value 設定 | 只使用 `schema.js` 支援的 keys 與 values |
 
 ## 重要資料規則
@@ -51,7 +53,7 @@
 - 一般資料表 ID 格式:Places=`P###`、Restaurants=`R###`、Shopping=`S###`、Hotels=`H###`;不需連號,但不得重複、不得改變既有 ID 意義。
 - Expenses 是自由格式,沒有 `E###` ID;行程總表目前只使用 `P###` / `R###` 引用地點或餐廳。
 - 同一地點多次造訪使用同一 PID。
-- 個人狀態(打卡/想逛/成員/旅途中記帳)存 localStorage,不進 CMS。
+- 個人狀態(打卡/想逛/成員身分)存 localStorage,不進 CMS；分帳紀錄依 ADR 0006 同步到「分帳紀錄」表。
 
 ## Places.Type 規則
 - Places.Type 決定卡片型別,禁止 AI 依名稱或文字自行猜測。
@@ -90,11 +92,19 @@
   - 備註欄:第 6 欄
   - 合計列標記:`小計` / `總計`
 - 行前團費來自 Google Sheet。
-- 旅途中記帳存在 App localStorage,不回寫 CMS。
+- Expenses 只負責行前團費與同行成員來源；旅途中記帳改走「分帳紀錄」表,不寫入 Expenses。
+
+## 分帳紀錄特別規則
+- 位置式 8 欄:`紀錄ID | 時間 | 成員 | 類別 | 明細 | 日幣 | 台幣 | 備註`。
+- `紀錄ID`、`成員`、`日幣` 為 required；台幣單幣紀錄仍以日幣 `0` 寫入。
+- Apps Script 契約:`POST {id,time,member,category,detail,amountJpy,amountTwd,note}`。
+- 回覆 `ok:true` 與 `ok:true,dup:true` 均視為送達；其他回覆保留在本機佇列。
+- 資料 append-only；刪帳以金額取負且備註指向原始 ID 的沖銷紀錄表示。
+- 公開 CSV 可能延遲 1–5 分鐘；ledger 下載失敗時沿用目前 ledger 快照,不得阻塞其他 7 表。
 
 ## 禁止事項
 - 不要把完整欄位清單手寫在本文件作為權威。
 - 不要繞過 `schema.js` 新增或改名欄位。
 - 不要讓 AI 猜測 Type。
-- 不要把個人狀態寫回 CMS。
+- 不要把打卡、想逛或成員身分寫回 CMS；分帳紀錄僅依 ADR 0006 寫入專用表。
 - 不要把 Expenses 當成一般資料列表設計。

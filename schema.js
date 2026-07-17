@@ -14,7 +14,7 @@
    ============================================================ */
 
 var SCHEMA = {
-  version: '2.3 (2026-07-16)',
+  version: '2.4 (2026-07-17)',
 
   /* 發布來源(換試算表只改這裡) */
   pubBase: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRenmV8UxEzWbzSjKJKi4rSpYt63geBqhEkKsl1GemWVPmFKTcvv3Uk71Hjla3TGBpGIjC7bQDDdI00/pub?single=true&output=csv&gid=',
@@ -117,6 +117,21 @@ var SCHEMA = {
         totalMarks: ['小計','總計']   // 合計列
       },
       desc: '行前團費。旅途記帳在 App 端(localStorage),兩者於分帳頁並列不重複計算。同行成員自動帶入分帳成員(首次)。'
+    },
+
+    /* ── Ledger 分帳紀錄 ── */
+    ledger: {
+      gid: '896856089', label: '分帳紀錄', kind: 'table', idField: 'id',
+      columns: [
+        { field:'id',        header:'紀錄ID', required:true, desc:'時間戳-4位隨機;append-only 去重鍵' },
+        { field:'time',      header:'時間',                 desc:'ISO 8601 寫入時間' },
+        { field:'member',    header:'成員',   required:true, desc:'寫入當下的成員身分' },
+        { field:'category',  header:'類別' },
+        { field:'detail',    header:'明細' },
+        { field:'amountJpy', header:'日幣',   required:true, desc:'日幣金額;沖銷紀錄為負數' },
+        { field:'amountTwd', header:'台幣',                 desc:'台幣金額;沖銷紀錄為負數' },
+        { field:'note',      header:'備註' }
+      ]
     },
 
     /* ── TripConfig 設定表:Key/Value ── */

@@ -1,6 +1,6 @@
 # BACKLOG(待辦,依優先序)
 
-> 更新於 2026-07-16。做完的移到 done.md,正在做的移到 current.md。
+> 更新於 2026-07-17。做完的移到 done.md,正在做的移到 current.md。
 
 ## 高優先(驗收後立即)
 1. **QA 腳本入版控**:Playwright 三情境腳本(斷網內建/連網同步/旅行日 mock Date)寫入 `tests/`,之後每次程式交付必附可執行測試(Bar 已核准 2026-07-09);完成後掛進 `.github/workflows/qa.yml`(Sanity CI 已於 07-09 先行上線)。
@@ -10,7 +10,6 @@
    - reconcileDayProgress 重構:把自動略過的寫入從 pickNextStop 抽出,恢復純函式(消除渲染副作用)
    - **隱藏「重置今日進度」**(Bar 裁定:隱藏式,避免旅伴誤觸;入口併除錯面板,連點標題 5 下)
    - 行程頁面板展開狀態跨重繪保留(仿 shopOpenFloors 模式)
-   - 個人狀態匯出/還原(部署前必做;含 iOS PWA 與 Safari storage 隔離特性文件化)
    - 隱藏除錯面板後續評估(AppLog 環形緩衝 + healthCheck);現行診斷面板已精簡並移除常駐 iOS 手勢事件框,待有問題時再評估啟用 AppLog
    - 同步徽章相對時間(「離線版 · 昨天 21:03」)
    - partial 同步時 toast 列出失敗表名(混版本資料可感知)
@@ -29,4 +28,7 @@
 11. **AI Native Framework 抽取**:App 穩定落地後執行,見 `FUTURE_PLAN_framework-extraction.md`。
 
 ## 想法池(未承諾)
+- 主題系統延後至 merge 後:保留現行海洋色為預設,另新增兩個主題,共三選項。
+- 設定頁已建立骨架與主題區預留註解,待主題批掛入。
+- 08「UI 配色變數不可變」條文覆寫已由 Bar 核准(2026-07-17),待主題批執行。
 - 社群內容抓取(Facebook 等)——需 Firecrawl/Playwright MCP,尚未配置
