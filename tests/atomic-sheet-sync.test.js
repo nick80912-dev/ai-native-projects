@@ -703,7 +703,7 @@ async function testBackgroundSyncStatusSettles(){
   assert.strictEqual(success.ok,true);
   assert.strictEqual(app.syncStatusModel().state,'online','successful background sync settles as online');
   assert.strictEqual(app.syncStatusModel().failure,'','successful background sync clears failure');
-  assert.strictEqual(panel.txt.textContent,'✓ 已同步');
+  assert.strictEqual(panel.txt.textContent,'已同步');
   assert(!/sync-status-retry[^>]*\sdisabled/.test(panel.body.innerHTML),'background success reenables panel retry');
   assert(panel.body.innerHTML.indexOf('未同步 Sheet')<0,'background success rerenders away the old failure');
 

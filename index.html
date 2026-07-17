@@ -495,6 +495,7 @@ input,select,textarea{font-size:16px}
 .state-box{width:100%;min-height:112px;border:1px solid var(--line);border-radius:10px;padding:10px;font:inherit;font-size:13px;resize:vertical;background:#fff}.settings-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:9px}.settings-actions .btn{flex:1;min-height:44px}
 .toggle-row{display:flex;align-items:center;justify-content:space-between;gap:12px}.toggle-row input{width:22px;height:22px}.settings-help{font-size:12px;color:var(--ink-faint);margin-top:6px}
 .ledger-pending{display:inline-flex;margin:0 0 10px;background:#fff3cf;color:#80600d;border:1px solid #ecd58d;border-radius:999px;padding:5px 10px;font-size:12px;font-weight:900}.ledger-record.pending{background:#fffaf0}.ledger-tag{display:inline-flex;border-radius:999px;background:var(--line-soft);color:var(--ink-faint);padding:2px 6px;font-size:10px;font-weight:800;margin-left:5px}.ledger-summary{display:grid;gap:7px}.ledger-summary-row{display:grid;grid-template-columns:1fr auto;gap:10px;border-top:1px solid rgba(255,255,255,.22);padding-top:7px}.ledger-summary-row:first-child{border-top:0;padding-top:0}.ledger-summary-row span:last-child{font-variant-numeric:tabular-nums;font-weight:900}.legacy-ledger{background:#fff7dc;border:1px solid #ead88e;border-radius:12px;padding:12px;margin-bottom:12px;font-size:13px;color:#73580f}.legacy-ledger .btn{margin-top:8px}
+.ledger-choice-grid{display:flex;flex-wrap:wrap;gap:7px}.ledger-choice{min-height:40px;border:1px solid var(--line);border-radius:999px;background:#fff;color:var(--ink-soft);padding:7px 13px;font:inherit;font-size:13px;font-weight:800}.ledger-choice.on{background:var(--sea);border-color:var(--sea);color:#fff}.ledger-currency-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}.ledger-rate{font-size:12px;color:var(--ink-soft);margin-top:7px}.ledger-preview{min-height:42px;border:1px solid var(--line);border-radius:9px;background:var(--line-soft);padding:10px 11px;font-size:15px;font-weight:800;color:var(--sea-deep);display:block}.settings-rate-row{display:grid;grid-template-columns:minmax(0,1fr);gap:8px}.settings-rate-row input{width:100%;border:1px solid var(--line);border-radius:9px;padding:10px 11px;font:inherit;font-size:16px;background:#fff}.settings-rate-row input:focus{outline:none;border-color:var(--sea)}
 </style>
 </head>
 <body>
@@ -1561,7 +1562,7 @@ function setSyncState(state){
   if(!dot) return;
   btn.classList.remove('spinning'); dot.className='dot';
   if(state==='syncing'){ btn.classList.add('spinning'); txt.textContent='同步中'; }
-  else if(state==='online'){ txt.textContent='✓ 已同步'; }
+  else if(state==='online'){ txt.textContent='已同步'; }
   else if(state==='partial'){ dot.classList.add('stale'); txt.textContent='部分同步'; }
   else if(state==='legacy-migrated'||state==='cache'||state==='offline'){ dot.classList.add('stale'); txt.textContent='離線版'; }
   else if(state==='builtin'){ dot.classList.add('stale'); txt.textContent='內建版'; }
@@ -3078,6 +3079,10 @@ var ledgerRepository=createLedgerRepository({
 
 /* ================= 分帳(雲端 Ledger + CMS 行前團費) ================= */
 var legacyExpenseNoticeVisible=false;
+var LEDGER_CATEGORIES=['餐飲','交通','票卷','購物','其他','代墊'];
+var ledgerDraftCategory='';
+var ledgerDraftCurrency='';
+var ledgerSettingsDraftCurrency='';
 function getCurrentMember(){ return String(localStorage.getItem('trip_member')||'').trim(); }
 function memberIsAllowed(member){ return !!(member&&DB.expMembers&&DB.expMembers.indexOf(member)>=0); }
 function chooseMember(member){
@@ -3112,11 +3117,37 @@ function restorePersonalState(){
   closeSettings(); renderAll(); updateLedgerPendingStatus(); ledgerRepository.flushQueue(); toast('個人狀態已還原');
 }
 function setLedgerTestMode(input){ lsSet('trip_ledger_test_mode',!!input.checked); toast(input.checked?'測試模式已開啟':'測試模式已關閉'); }
+function selectLedgerDefaultCurrency(value){
+  value=String(value||'').toUpperCase();
+  if(value!=='JPY'&&value!=='TWD')return;
+  ledgerSettingsDraftCurrency=value;
+  document.querySelectorAll('.settings-currency-option').forEach(function(button){
+    var on=button.getAttribute('data-currency')===value;
+    button.classList.toggle('on',on); button.setAttribute('aria-pressed',on?'true':'false');
+  });
+}
+function saveLedgerSettingsFromForm(button){
+  if(typeof navigator!=='undefined'&&navigator.onLine===false){toast('請連網後再儲存共用設定');return;}
+  var input=document.getElementById('ledgerExchangeRate');
+  var source={exchangeRate:input&&input.value,defaultCurrency:ledgerSettingsDraftCurrency};
+  try{normalizeLedgerSettings(source);}catch(error){toast(error.message);return;}
+  if(button)button.disabled=true;
+  return saveLedgerSettings(source).then(function(result){toast('分帳設定已同步');return result;},function(error){
+    if(button)button.disabled=false;
+    toast(error.message||'分帳設定儲存失敗');
+    throw error;
+  });
+}
 function openSettings(){
   closeSettings();
+  var ledgerSettings, settingsError='';
+  try{ledgerSettings=currentLedgerSettings();}
+  catch(error){ledgerSettings={exchangeRate:'',defaultCurrency:'JPY'};settingsError=error.message||'分帳設定無效';}
+  ledgerSettingsDraftCurrency=ledgerSettings.defaultCurrency;
   var overlay=document.createElement('div'); overlay.id='settingsOverlay'; overlay.className='settings-overlay';
   overlay.innerHTML='<section class="settings-panel" role="dialog" aria-modal="true" aria-labelledby="settingsTitle"><div class="settings-head"><h2 id="settingsTitle">設定</h2><button class="settings-close" aria-label="關閉" onclick="closeSettings()">×</button></div>'+
     '<div class="settings-section"><h3>成員身分</h3><div class="settings-current">目前身分：<b id="settingsCurrentMember">'+escapeHtml(getCurrentMember()||'尚未選擇')+'</b></div><button class="btn ghost block" onclick="openMemberSelector(false)">切換身分</button></div>'+
+    '<div class="settings-section"><h3>分帳匯率與幣別</h3><div class="settings-current">目前匯率：<b>1 JPY = NT$'+escapeHtml(ledgerSettings.exchangeRate||'未設定')+'</b></div><div class="settings-rate-row"><label class="settings-help" for="ledgerExchangeRate">Exchange Rate（1 JPY 對應多少 TWD）</label><input id="ledgerExchangeRate" type="number" inputmode="decimal" min="0.000001" step="any" value="'+escapeHtml(ledgerSettings.exchangeRate)+'"></div><div class="settings-help">Ledger Default Currency（新增分帳的預設輸入幣別）</div><div class="ledger-currency-grid" style="margin-top:8px"><button class="ledger-choice settings-currency-option '+(ledgerSettings.defaultCurrency==='JPY'?'on':'')+'" data-currency="JPY" aria-pressed="'+(ledgerSettings.defaultCurrency==='JPY'?'true':'false')+'" onclick="selectLedgerDefaultCurrency(\'JPY\')">JPY 日幣</button><button class="ledger-choice settings-currency-option '+(ledgerSettings.defaultCurrency==='TWD'?'on':'')+'" data-currency="TWD" aria-pressed="'+(ledgerSettings.defaultCurrency==='TWD'?'true':'false')+'" onclick="selectLedgerDefaultCurrency(\'TWD\')">TWD 台幣</button></div>'+(settingsError?'<div class="settings-help" style="color:var(--coral)">'+escapeHtml(settingsError)+'</div>':'')+'<div class="settings-help">儲存後跨裝置共用；CSV 發布可能延遲 1–5 分鐘。</div><button class="btn block" style="margin-top:10px" onclick="saveLedgerSettingsFromForm(this)">儲存共用設定</button></div>'+
     '<div class="settings-section"><h3>個人狀態匯出 / 還原</h3><div class="settings-help">包含打卡、想逛、成員身分與本機分帳佇列。</div><textarea class="state-box" id="personalStateBox" placeholder="按匯出產生 JSON,或貼上 JSON 後還原"></textarea><div class="settings-actions"><button class="btn ghost" onclick="exportPersonalState()">匯出 JSON</button><button class="btn" onclick="restorePersonalState()">貼上還原</button></div></div>'+
     '<div class="settings-section"><div class="toggle-row"><div><h3>測試模式</h3><div class="settings-help">寫入明細加上 [TEST],且不納入彙算。</div></div><input type="checkbox" '+(lsGet('trip_ledger_test_mode',false)?'checked':'')+' onchange="setLedgerTestMode(this)"></div></div>'+
     '<!-- 主題區塊預留：merge 後另批實作,本批不掛入任何主題功能。 -->'+
@@ -3133,17 +3164,64 @@ function updateLedgerPendingStatus(){
   var node=document.getElementById('ledgerPendingStatus'), count=ledgerRepository.pendingCount();
   if(node){node.textContent=count?count+' 筆待同步':'';node.style.display=count?'inline-flex':'none';}
 }
+function selectLedgerCategory(value){
+  if(LEDGER_CATEGORIES.indexOf(value)<0)return;
+  ledgerDraftCategory=value;
+  document.querySelectorAll('.ledger-category-option').forEach(function(button){
+    var on=button.getAttribute('data-category')===value;
+    button.classList.toggle('on',on); button.setAttribute('aria-pressed',on?'true':'false');
+  });
+}
+function selectLedgerCurrency(value){
+  value=String(value||'').toUpperCase();
+  if(value!=='JPY'&&value!=='TWD')return;
+  var input=document.getElementById('ledgerAmount'), oldCurrency=ledgerDraftCurrency;
+  if(input&&input.value&&oldCurrency&&oldCurrency!==value){
+    try{
+      var settings=currentLedgerSettings();
+      var converted=convertLedgerAmounts(oldCurrency,input.value,settings.exchangeRate);
+      input.value=value==='JPY'?converted.amountJpy:converted.amountTwd;
+    }catch(ignore){}
+  }
+  ledgerDraftCurrency=value;
+  document.querySelectorAll('.ledger-currency-option').forEach(function(button){
+    var on=button.getAttribute('data-currency')===value;
+    button.classList.toggle('on',on); button.setAttribute('aria-pressed',on?'true':'false');
+  });
+  var label=document.getElementById('ledgerAmountLabel');
+  if(label)label.textContent=value==='JPY'?'日幣 ¥':'台幣 NT$';
+  updateLedgerConversionPreview();
+}
+function updateLedgerConversionPreview(){
+  var preview=document.getElementById('ledgerConvertedPreview'), input=document.getElementById('ledgerAmount'), rateNode=document.getElementById('ledgerCurrentRate');
+  if(!preview)return;
+  try{
+    var settings=currentLedgerSettings(), currency=ledgerDraftCurrency||settings.defaultCurrency, raw=input&&input.value;
+    if(rateNode)rateNode.textContent='目前匯率：1 JPY = NT$'+settings.exchangeRate;
+    if(raw===''){preview.textContent=currency==='JPY'?'換算台幣：—':'換算日幣：—';return;}
+    var amounts=convertLedgerAmounts(currency,raw,settings.exchangeRate);
+    preview.textContent=currency==='JPY'?'換算台幣：NT$'+amounts.amountTwd.toLocaleString():'換算日幣：¥'+amounts.amountJpy.toLocaleString();
+  }catch(error){
+    if(rateNode)rateNode.textContent='目前匯率：未設定';
+    preview.textContent=error.message||'無法換算';
+  }
+}
 function addLedgerExpense(){
   if(isTimeSimulationActive()){ toast('時間模擬中不可新增支出'); return; }
-  var member=getCurrentMember(), category=(document.getElementById('ledgerCategory').value||'').trim(), detail=(document.getElementById('ledgerDetail').value||'').trim(), note=(document.getElementById('ledgerNote').value||'').trim();
-  var jpy=Number(document.getElementById('ledgerJpy').value||0), twd=Number(document.getElementById('ledgerTwd').value||0), button=document.getElementById('ledgerAddButton');
+  var member=getCurrentMember(), category=ledgerDraftCategory, detail=(document.getElementById('ledgerDetail').value||'').trim(), note=(document.getElementById('ledgerNote').value||'').trim();
+  var amount=document.getElementById('ledgerAmount').value, button=document.getElementById('ledgerAddButton'), settings, converted;
   if(!memberIsAllowed(member)){ openMemberSelector(true); return; }
+  if(LEDGER_CATEGORIES.indexOf(category)<0){toast('請選擇類別');return;}
   if(!detail){ toast('請輸入明細'); return; }
-  if(!isFinite(jpy)||!isFinite(twd)||jpy<0||twd<0||(jpy===0&&twd===0)){ toast('請輸入日幣或台幣金額'); return; }
+  try{
+    settings=currentLedgerSettings();
+    converted=convertLedgerAmounts(ledgerDraftCurrency||settings.defaultCurrency,amount,settings.exchangeRate);
+    if(converted.amountJpy===0&&converted.amountTwd===0)throw new Error('請輸入金額');
+  }catch(error){toast(error.message||'金額格式錯誤');return;}
   if(button) button.disabled=true;
-  var promise=ledgerRepository.add({member:member,category:category,detail:detail,amountJpy:jpy,amountTwd:twd,note:note});
+  var promise=ledgerRepository.add({member:member,category:category,detail:detail,amountJpy:converted.amountJpy,amountTwd:converted.amountTwd,note:note});
   renderSplit();
-  return promise.then(function(result){renderSplit();toast(result.ok?'已同步 ✓':'已記錄,待連網同步');return result;},function(error){renderSplit();toast(error.message||'記帳失敗');throw error;});
+  return promise.then(function(result){ledgerDraftCategory='';ledgerDraftCurrency='';renderSplit();toast(result.ok?'已同步':'已記錄,待連網同步');return result;},function(error){renderSplit();toast(error.message||'記帳失敗');throw error;});
 }
 function reverseLedgerRecord(id){
   var original=mergedLedgerRecords().filter(function(record){return record.id===id;})[0];
@@ -3157,13 +3235,19 @@ function formatLedgerAmounts(record){ return '¥'+Math.round(Number(record.amoun
 function renderSplit(){
   var view=document.getElementById('view-split'); if(!view) return;
   var records=mergedLedgerRecords(), summary=summarizeLedgerRecords(records), pending=ledgerRepository.pendingCount(), member=getCurrentMember();
+  var ledgerSettings=null, ledgerSettingsError='';
+  try{ledgerSettings=currentLedgerSettings();}catch(error){ledgerSettingsError=error.message||'匯率未設定';}
+  if(!ledgerDraftCurrency&&ledgerSettings)ledgerDraftCurrency=ledgerSettings.defaultCurrency;
+  var categoryButtons=LEDGER_CATEGORIES.map(function(category){var on=category===ledgerDraftCategory;return '<button class="ledger-choice ledger-category-option '+(on?'on':'')+'" data-category="'+escapeHtml(category)+'" aria-pressed="'+(on?'true':'false')+'" onclick="selectLedgerCategory(\''+jsString(category)+'\')">'+escapeHtml(category)+'</button>';}).join('');
+  var currency=ledgerDraftCurrency||(ledgerSettings&&ledgerSettings.defaultCurrency)||'JPY';
+  var rateText=ledgerSettings?'目前匯率：1 JPY = NT$'+ledgerSettings.exchangeRate:'目前匯率：未設定';
   var cms=DB.expCMS.length?'<div class="card"><h3>🧳 行前團費（來自試算表）</h3>'+(DB.expMembers&&DB.expMembers.length?'<div class="er2" style="margin-bottom:8px">👥 同行成員：'+DB.expMembers.map(escapeHtml).join('、')+'</div>':'')+DB.expCMS.map(function(e){var amts=[];if(e.twd)amts.push('NT$'+e.twd.replace(/\s/g,''));if(e.jpy)amts.push('¥'+e.jpy.replace(/\s/g,''));var amt=amts.join(' / ');if(e.total)return '<div class="exp-item" style="border-top:2px solid var(--line)"><div class="er1"><span class="edesc" style="color:var(--sea-deep)">'+escapeHtml(e.cat)+'</span><span class="eamt">'+amt+'</span></div>'+(e.note?'<div class="er2">'+escapeHtml(e.note)+'</div>':'')+'</div>';return '<div class="exp-item"><div class="er1"><span class="edesc">'+escapeHtml(e.name)+'</span><span class="eamt">'+(amt||'')+'</span></div><div class="er2">'+escapeHtml([e.cat,e.note].filter(Boolean).join(' · '))+'</div></div>';}).join('')+'</div>':'';
   var legacy=legacyExpenseNoticeVisible?'<div class="legacy-ledger">偵測到舊版 `trip_expenses` 本機測試資料,不會遷移至雲端。<div class="settings-actions"><button class="btn coral" onclick="clearLegacyExpenses()">清除舊本機紀錄</button><button class="btn ghost" onclick="dismissLegacyExpenses()">保留並關閉</button></div></div>':'';
   var rows=records.length?records.map(function(record){return '<div class="exp-item ledger-record '+(record.pending?'pending':'')+'"><div class="er1"><span class="edesc">'+escapeHtml(record.detail||'未命名')+(record.pending?'<span class="ledger-tag">待同步</span>':'')+(isTestLedgerRecord(record)?'<span class="ledger-tag">TEST</span>':'')+'</span><span class="eamt">'+escapeHtml(formatLedgerAmounts(record))+'</span></div><div class="er2">'+escapeHtml([record.member,record.category,record.time&&record.time.slice(0,16).replace('T',' '),record.note].filter(Boolean).join(' · '))+'</div><span class="edel" onclick="reverseLedgerRecord(\''+jsString(record.id)+'\')">🗑 沖銷</span></div>';}).join(''):'<div class="empty-state">還沒有任何分帳紀錄</div>';
   var memberTotals=summary.members.map(function(item){return '<div class="ledger-summary-row"><span>'+escapeHtml(item.member)+'</span><span>¥'+Math.round(item.amountJpy).toLocaleString()+' / NT$'+Math.round(item.amountTwd).toLocaleString()+'</span></div>';}).join('');
   view.innerHTML=legacy+'<div class="split-intro">分帳紀錄會跨裝置同步。刪帳會新增負向沖銷紀錄,不修改原資料；行前團費維持另列 💴</div>'+
     '<div id="ledgerPendingStatus" class="ledger-pending" style="display:'+(pending?'inline-flex':'none')+'">'+(pending?pending+' 筆待同步':'')+'</div>'+
-    '<div class="card"><h3>➕ 新增分帳紀錄</h3><div class="settings-current">記帳身分：<b>'+escapeHtml(member||'尚未選擇')+'</b> <button class="btn ghost sm" onclick="openMemberSelector(false)">切換</button></div><div class="field"><label>類別</label><input id="ledgerCategory" placeholder="如：餐飲、交通"></div><div class="field"><label>明細</label><input id="ledgerDetail" placeholder="如：晚餐拉麵、渡輪票"></div><div class="field"><label>日幣 ¥</label><input id="ledgerJpy" type="number" inputmode="numeric" min="0" placeholder="0"></div><div class="field"><label>台幣 NT$</label><input id="ledgerTwd" type="number" inputmode="numeric" min="0" placeholder="0"></div><div class="field"><label>備註</label><input id="ledgerNote" placeholder="選填"></div><button class="btn coral block" id="ledgerAddButton" onclick="addLedgerExpense()">加入這筆支出</button></div>'+
+    '<div class="card"><h3>➕ 新增分帳紀錄</h3><div class="settings-current">記帳身分：<b>'+escapeHtml(member||'尚未選擇')+'</b></div><div class="field"><label>類別</label><div class="ledger-choice-grid">'+categoryButtons+'</div></div><div class="field"><label>明細</label><input id="ledgerDetail" placeholder="如：晚餐拉麵、渡輪票"></div><div class="field"><label>輸入幣別</label><div class="ledger-currency-grid"><button class="ledger-choice ledger-currency-option '+(currency==='JPY'?'on':'')+'" data-currency="JPY" aria-pressed="'+(currency==='JPY'?'true':'false')+'" onclick="selectLedgerCurrency(\'JPY\')">JPY 日幣</button><button class="ledger-choice ledger-currency-option '+(currency==='TWD'?'on':'')+'" data-currency="TWD" aria-pressed="'+(currency==='TWD'?'true':'false')+'" onclick="selectLedgerCurrency(\'TWD\')">TWD 台幣</button></div><div class="ledger-rate" id="ledgerCurrentRate">'+escapeHtml(rateText)+'</div></div><div class="field"><label id="ledgerAmountLabel">'+(currency==='JPY'?'日幣 ¥':'台幣 NT$')+'</label><input id="ledgerAmount" type="number" inputmode="decimal" min="0" placeholder="0" oninput="updateLedgerConversionPreview()"></div><div class="field"><label>換算結果</label><output class="ledger-preview" id="ledgerConvertedPreview">'+(currency==='JPY'?'換算台幣：—':'換算日幣：—')+'</output>'+(ledgerSettingsError?'<div class="settings-help" style="color:var(--coral)">'+escapeHtml(ledgerSettingsError)+'</div>':'')+'</div><div class="field"><label>備註</label><input id="ledgerNote" placeholder="選填"></div><button class="btn coral block" id="ledgerAddButton" onclick="addLedgerExpense()"'+(ledgerSettings?'':' disabled')+'>加入這筆支出</button></div>'+
     '<div class="card"><h3>🧾 支出明細 '+(records.length?'('+records.length+'筆)':'')+'</h3>'+rows+'</div>'+
     (summary.members.length?'<div class="card result-card"><h3>💰 成員小計</h3><div class="ledger-summary">'+memberTotals+'<div class="ledger-summary-row"><span>全團總計</span><span>¥'+Math.round(summary.total.amountJpy).toLocaleString()+' / NT$'+Math.round(summary.total.amountTwd).toLocaleString()+'</span></div></div></div>':'')+cms;
 }

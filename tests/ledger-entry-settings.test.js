@@ -48,6 +48,7 @@ function loadModule(fetchImpl){
   };
   vm.createContext(sandbox);
   vm.runInContext(source.slice(start,end),sandbox);
+  sandbox.__htmlSource = source;
   return sandbox;
 }
 
@@ -93,6 +94,25 @@ function response(payload){
   assert.strictEqual(failed.lsGet('trip_ledger_settings_bridge',null),null,'failed save does not create a bridge');
   assert.strictEqual(failed.settingsRenders,0,'failed save does not rerender Settings');
   assert.strictEqual(failed.splitRenders,0,'failed save does not rerender Split');
+
+  const html = mod.__htmlSource;
+  const settingsSource = html.slice(html.indexOf('function openSettings()'),html.indexOf('function mergedLedgerRecords()'));
+  const entrySource = html.slice(html.indexOf('function selectLedgerCategory('),html.indexOf('function reverseLedgerRecord('));
+  const splitSource = html.slice(html.indexOf('function renderSplit()'),html.indexOf('/* ================= 導覽 / 啟動'));
+  assert(settingsSource.includes('openMemberSelector(false)'),'Settings remains the only non-forced identity switch entry');
+  assert(!splitSource.includes('openMemberSelector(false)'),'Split page does not offer identity switching');
+  assert(html.includes("var LEDGER_CATEGORIES=['餐飲','交通','票卷','購物','其他','代墊']"),'Split page defines the six fixed categories');
+  assert(splitSource.includes('id="ledgerAmount"'),'Split page has one editable amount input');
+  assert(splitSource.includes('id="ledgerConvertedPreview"'),'Split page has a converted amount preview');
+  assert(!splitSource.includes('id="ledgerJpy"')&&!splitSource.includes('id="ledgerTwd"'),'legacy dual amount inputs are removed');
+  assert(entrySource.includes('convertLedgerAmounts'),'Split entry converts the selected currency into both stored amounts');
+  assert(settingsSource.includes('id="ledgerExchangeRate"'),'Settings exposes the current exchange rate');
+  assert(settingsSource.includes('Ledger Default Currency')||settingsSource.includes('ledgerDefaultCurrency'),'Settings exposes the default ledger currency');
+  assert(settingsSource.includes('saveLedgerSettings'),'Settings saves through the confirmed cloud settings helper');
+
+  const syncSource = html.slice(html.indexOf('function setSyncState('),html.indexOf('/* ================= DB 組裝'));
+  assert(syncSource.includes("txt.textContent='已同步'"),'healthy sync label is 已同步');
+  assert(!syncSource.includes("txt.textContent='✓ 已同步'"),'healthy sync label has no leading check');
 
   console.log('ledger entry settings tests passed');
 })().catch(function(error){
