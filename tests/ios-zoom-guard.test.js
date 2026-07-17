@@ -40,7 +40,9 @@ assert.match(sw, /okayama-trip-v14/, 'service worker cache is bumped to v14');
 assert.doesNotMatch(sw, /tests\//, 'test files are not part of the App Shell');
 assert.doesNotMatch(sw, /ios-gesture-diagnostics\.test\.js/, 'the diagnostic test is never cached');
 assert.doesNotMatch(html,/var APP_BUILD=/,'unused diagnostic build metadata is retired');
-assert.doesNotMatch(html,/setupGestureDiagnostics|IOS_GESTURE_DIAGNOSTICS/,'gesture event collection is retired');
+assert.match(html,/function setupGestureDiagnostics\(/,'passive gesture evidence collection is available');
+assert.match(html,/IOS_GESTURE_DIAGNOSTICS/,'gesture evidence uses an in-memory store');
+assert.doesNotMatch(extractFunction('setupGestureDiagnostics'),/preventDefault/,'diagnostics do not block gestures');
 
 const timers = [];
 const sandbox = {
