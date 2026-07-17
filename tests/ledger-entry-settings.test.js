@@ -96,7 +96,7 @@ function response(payload){
   assert.strictEqual(failed.splitRenders,0,'failed save does not rerender Split');
 
   const html = mod.__htmlSource;
-  const settingsSource = html.slice(html.indexOf('function openSettings()'),html.indexOf('function mergedLedgerRecords()'));
+  const settingsSource = html.slice(html.indexOf('function openSettings('),html.indexOf('function mergedLedgerRecords()'));
   const entrySource = html.slice(html.indexOf('function selectLedgerCategory('),html.indexOf('function reverseLedgerRecord('));
   const splitSource = html.slice(html.indexOf('function renderSplit()'),html.indexOf('/* ================= 導覽 / 啟動'));
   assert(settingsSource.includes('openMemberSelector(false)'),'Settings remains the only non-forced identity switch entry');
@@ -107,8 +107,26 @@ function response(payload){
   assert(!splitSource.includes('id="ledgerJpy"')&&!splitSource.includes('id="ledgerTwd"'),'legacy dual amount inputs are removed');
   assert(entrySource.includes('convertLedgerAmounts'),'Split entry converts the selected currency into both stored amounts');
   assert(settingsSource.includes('id="ledgerExchangeRate"'),'Settings exposes the current exchange rate');
-  assert(settingsSource.includes('Ledger Default Currency')||settingsSource.includes('ledgerDefaultCurrency'),'Settings exposes the default ledger currency');
+  assert(settingsSource.includes('預設輸入幣別'),'Settings exposes the localized default ledger currency');
+  assert(html.includes("header:'Ledger Default Currency'"),'internal Ledger Default Currency contract remains unchanged');
   assert(settingsSource.includes('saveLedgerSettings'),'Settings saves through the confirmed cloud settings helper');
+  assert(settingsSource.includes('>匯率<'),'Settings shows the localized exchange-rate label');
+  assert(settingsSource.includes('1 日幣可換算多少台幣'),'Settings explains the exchange-rate direction');
+  assert(settingsSource.includes('>預設輸入幣別<'),'Settings shows the localized default-currency label');
+  assert(settingsSource.includes('新增記帳時預先選擇的幣別'),'Settings explains the default input currency');
+  assert(!settingsSource.includes('Exchange Rate（'),'Settings does not expose the internal Exchange Rate key as a label');
+  assert(!settingsSource.includes('Ledger Default Currency（'),'Settings does not expose the internal default-currency key as a label');
+  assert(settingsSource.includes('settings-member-row'),'member identity and switch use the compact row');
+  assert(settingsSource.includes('ledgerTestModeSection'),'test mode has a stable Settings target');
+  assert(settingsSource.includes('僅分帳用'),'Settings labels test mode as ledger-only');
+  assert(splitSource.includes('⚠ 測試模式中'),'Split renders the test-mode warning');
+  assert(splitSource.includes('此頁新增的記帳不會列入彙算'),'Split explains that test entries are excluded');
+  assert(splitSource.includes('openSettings')&&splitSource.includes('ledgerTestModeSection'),'warning opens Settings at test mode');
+  assert(html.includes("var ledgerDraftCategory=LEDGER_CATEGORIES[0]"),'fresh App sessions default category to 餐飲');
+  assert(!entrySource.includes("ledgerDraftCategory=''"),'successful entry retains the current category');
+
+  const testModeSource = html.slice(html.indexOf('function setLedgerTestMode('),html.indexOf('function selectLedgerDefaultCurrency('));
+  assert(testModeSource.includes('renderSplit()'),'test-mode changes immediately rerender Split');
 
   const syncSource = html.slice(html.indexOf('function setSyncState('),html.indexOf('/* ================= DB 組裝'));
   assert(syncSource.includes("txt.textContent='已同步'"),'healthy sync label is 已同步');
