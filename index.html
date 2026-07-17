@@ -494,6 +494,7 @@ input,select,textarea{font-size:16px}
 .member-options{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.member-option{min-height:48px;border:1px solid var(--line);border-radius:11px;background:#fff;color:var(--ink);font:inherit;font-weight:800}.member-option.on{background:var(--sea);border-color:var(--sea);color:#fff}
 .member-panel{min-height:calc(100vh - 48px);min-height:calc(100dvh - 48px);display:flex;flex-direction:column;justify-content:center}.member-copy{color:var(--ink-soft);font-size:14px;margin-bottom:15px}
 .state-box{width:100%;min-height:112px;border:1px solid var(--line);border-radius:10px;padding:10px;font:inherit;font-size:13px;resize:vertical;background:#fff}.settings-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:9px}.settings-actions .btn{flex:1;min-height:44px}
+.state-dialog-overlay{z-index:140;background:rgba(247,245,238,.98)}.state-dialog-panel{padding-top:18px}.state-dialog-copy{width:100%;min-height:180px;border:1px solid var(--line);border-radius:10px;padding:10px;font:inherit;font-size:13px;resize:vertical;background:#fff}
 .toggle-row{display:flex;align-items:center;justify-content:space-between;gap:12px}.toggle-row input{width:22px;height:22px}.settings-help{font-size:12px;color:var(--ink-faint);margin-top:6px}
 .ledger-pending{display:inline-flex;margin:0 0 10px;background:#fff3cf;color:#80600d;border:1px solid #ecd58d;border-radius:999px;padding:5px 10px;font-size:12px;font-weight:900}.ledger-record.pending{background:#fffaf0}.ledger-tag{display:inline-flex;border-radius:999px;background:var(--line-soft);color:var(--ink-faint);padding:2px 6px;font-size:10px;font-weight:800;margin-left:5px}.ledger-summary{display:grid;gap:7px}.ledger-summary-row{display:grid;grid-template-columns:1fr auto;gap:10px;border-top:1px solid rgba(255,255,255,.22);padding-top:7px}.ledger-summary-row:first-child{border-top:0;padding-top:0}.ledger-summary-row span:last-child{font-variant-numeric:tabular-nums;font-weight:900}.legacy-ledger{background:#fff7dc;border:1px solid #ead88e;border-radius:12px;padding:12px;margin-bottom:12px;font-size:13px;color:#73580f}.legacy-ledger .btn{margin-top:8px}
 .ledger-test-warning{background:#fff3e8;color:#793b20;border:1px solid #efb28e;border-radius:12px;padding:12px;margin-bottom:12px}.ledger-test-warning strong{display:block;color:var(--coral);margin-bottom:3px}.ledger-test-warning .btn{margin-top:9px}
@@ -3105,9 +3106,58 @@ function openMemberSelector(forced){
   document.body.appendChild(overlay);
 }
 function closeSettings(){ var overlay=document.getElementById('settingsOverlay'); if(overlay) overlay.remove(); }
-function exportPersonalState(){
+function personalStateJson(){
   var payload={format:'trip-personal-state',version:1,exportedAt:timestampDate(Date.now()).toISOString(),checks:lsGet('trip_checks',{}),wants:lsGet('trip_shop_wants',{}),member:getCurrentMember(),ledgerQueue:ledgerRepository.queuedRecords()};
-  var box=document.getElementById('personalStateBox'); if(box) box.value=JSON.stringify(payload,null,2);
+  return JSON.stringify(payload,null,2);
+}
+function copyPersonalStateText(text){
+  if(typeof navigator!=='undefined'&&navigator.clipboard&&typeof navigator.clipboard.writeText==='function')return navigator.clipboard.writeText(text);
+  return Promise.reject(new Error('clipboard unavailable'));
+}
+function exportPersonalState(){
+  var text=personalStateJson();
+  return copyPersonalStateText(text).then(function(){toast('備份 JSON 已複製，請保存到安全位置');},function(){openPersonalStateCopyFallback(text);});
+}
+function closePersonalStateDialog(){ var overlay=document.getElementById('personalStateDialog'); if(overlay) overlay.remove(); }
+function openPersonalStateCopyFallback(text){
+  closePersonalStateDialog();
+  var overlay=document.createElement('div');
+  overlay.id='personalStateDialog'; overlay.className='settings-overlay state-dialog-overlay'; overlay.setAttribute('data-dialog-kind','copy-fallback');
+  overlay.innerHTML='<section class="settings-panel state-dialog-panel" role="dialog" aria-modal="true" aria-labelledby="personalStateDialogTitle"><div class="settings-head"><h2 id="personalStateDialogTitle">手動複製備份</h2><button class="settings-close" aria-label="關閉" onclick="closePersonalStateDialog()">×</button></div><p class="settings-help">無法自動存取剪貼簿，請複製下方完整 JSON。</p><textarea class="state-dialog-copy" id="personalStateBox" readonly>'+escapeHtml(text)+'</textarea><div class="settings-actions"><button class="btn ghost" onclick="closePersonalStateDialog()">關閉</button><button class="btn" onclick="retryPersonalStateCopy()">再次複製</button></div></section>';
+  document.body.appendChild(overlay);
+  var box=document.getElementById('personalStateBox'); if(box){box.focus();box.select();}
+}
+function retryPersonalStateCopy(){
+  var box=document.getElementById('personalStateBox'), text=box?box.value:'';
+  return copyPersonalStateText(text).then(function(){
+    closePersonalStateDialog(); toast('備份 JSON 已複製，請保存到安全位置');
+  },function(){
+    if(box){box.focus();box.select();} toast('仍無法存取剪貼簿，請手動複製');
+  });
+}
+function openPersonalStateRestore(){
+  closePersonalStateDialog();
+  var overlay=document.createElement('div');
+  overlay.id='personalStateDialog'; overlay.className='settings-overlay state-dialog-overlay'; overlay.setAttribute('data-dialog-kind','restore');
+  overlay.innerHTML='<section class="settings-panel state-dialog-panel" role="dialog" aria-modal="true" aria-labelledby="personalStateDialogTitle"><div class="settings-head"><h2 id="personalStateDialogTitle">從 JSON 還原</h2><button class="settings-close" aria-label="關閉" onclick="closePersonalStateDialog()">×</button></div><p class="settings-help">還原會覆蓋目前裝置上的打卡、想逛、身分及待同步記帳。</p><textarea class="state-dialog-copy" id="personalStateBox" placeholder="貼上備份 JSON"></textarea><div class="settings-actions"><button class="btn ghost" onclick="closePersonalStateDialog()">取消</button><button class="btn" onclick="restorePersonalState()">驗證並還原</button></div></section>';
+  document.body.appendChild(overlay);
+  var box=document.getElementById('personalStateBox'); if(box)box.focus();
+}
+function applyPersonalStatePayload(payload){
+  var keys=['trip_checks','trip_shop_wants','trip_member',LEDGER_QUEUE_KEY];
+  var before=keys.map(function(key){return {key:key,value:localStorage.getItem(key)};});
+  try{
+    lsSet('trip_checks',payload.checks);
+    lsSet('trip_shop_wants',payload.wants);
+    localStorage.setItem('trip_member',String(payload.member));
+    localStorage.setItem(LEDGER_QUEUE_KEY,JSON.stringify(payload.ledgerQueue));
+  }catch(error){
+    before.forEach(function(item){
+      if(item.value===null)localStorage.removeItem(item.key);
+      else localStorage.setItem(item.key,item.value);
+    });
+    throw error;
+  }
 }
 function restorePersonalState(){
   var box=document.getElementById('personalStateBox'), payload;
@@ -3115,8 +3165,8 @@ function restorePersonalState(){
   if(!payload||payload.format!=='trip-personal-state'||payload.version!==1||!payload.checks||Array.isArray(payload.checks)||typeof payload.checks!=='object'||!payload.wants||Array.isArray(payload.wants)||typeof payload.wants!=='object'||!Array.isArray(payload.ledgerQueue)||!memberIsAllowed(String(payload.member||''))){ toast('個人狀態格式驗證失敗'); return; }
   try{ payload.ledgerQueue.forEach(function(record){if(!record||!String(record.id||'').trim()||!String(record.time||'').trim())throw new Error('佇列缺少 ID 或時間');validateLedgerRecord(normalizeLedgerRecord(record,Date.now(),Math.random,false));}); }
   catch(error){ toast('佇列紀錄格式驗證失敗'); return; }
-  lsSet('trip_checks',payload.checks); lsSet('trip_shop_wants',payload.wants); localStorage.setItem('trip_member',String(payload.member)); localStorage.setItem(LEDGER_QUEUE_KEY,JSON.stringify(payload.ledgerQueue));
-  closeSettings(); renderAll(); updateLedgerPendingStatus(); ledgerRepository.flushQueue(); toast('個人狀態已還原');
+  try{applyPersonalStatePayload(payload);}catch(error){toast('本機資料還原失敗');return;}
+  closePersonalStateDialog(); closeSettings(); renderAll(); updateLedgerPendingStatus(); ledgerRepository.flushQueue(); toast('個人狀態已還原');
 }
 function setLedgerTestMode(input){ lsSet('trip_ledger_test_mode',!!input.checked); renderSplit(); toast(input.checked?'測試模式已開啟':'測試模式已關閉'); }
 function selectLedgerDefaultCurrency(value){
@@ -3150,7 +3200,7 @@ function openSettings(targetId){
   overlay.innerHTML='<section class="settings-panel" role="dialog" aria-modal="true" aria-labelledby="settingsTitle"><div class="settings-head"><h2 id="settingsTitle">設定</h2><button class="settings-close" aria-label="關閉" onclick="closeSettings()">×</button></div>'+
     '<div class="settings-section"><h3>成員身分</h3><div class="settings-member-row"><div class="settings-current">目前身分：<b id="settingsCurrentMember">'+escapeHtml(getCurrentMember()||'尚未選擇')+'</b></div><button class="btn ghost settings-member-switch" onclick="openMemberSelector(false)">切換</button></div></div>'+
     '<div class="settings-section"><h3>分帳匯率與幣別</h3><div class="settings-current">目前匯率：<b>1 JPY = NT$'+escapeHtml(ledgerSettings.exchangeRate||'未設定')+'</b></div><div class="settings-rate-row"><label class="settings-help" for="ledgerExchangeRate"><b>匯率</b><br>1 日幣可換算多少台幣</label><input id="ledgerExchangeRate" type="number" inputmode="decimal" min="0.000001" step="any" value="'+escapeHtml(ledgerSettings.exchangeRate)+'"></div><div class="settings-help"><b>預設輸入幣別</b><br>新增記帳時預先選擇的幣別</div><div class="ledger-currency-grid" style="margin-top:8px"><button class="ledger-choice settings-currency-option '+(ledgerSettings.defaultCurrency==='JPY'?'on':'')+'" data-currency="JPY" aria-pressed="'+(ledgerSettings.defaultCurrency==='JPY'?'true':'false')+'" onclick="selectLedgerDefaultCurrency(\'JPY\')">JPY 日幣</button><button class="ledger-choice settings-currency-option '+(ledgerSettings.defaultCurrency==='TWD'?'on':'')+'" data-currency="TWD" aria-pressed="'+(ledgerSettings.defaultCurrency==='TWD'?'true':'false')+'" onclick="selectLedgerDefaultCurrency(\'TWD\')">TWD 台幣</button></div>'+(settingsError?'<div class="settings-help" style="color:var(--coral)">'+escapeHtml(settingsError)+'</div>':'')+'<div class="settings-help">儲存後跨裝置共用；CSV 發布可能延遲 1–5 分鐘。</div><button class="btn block" style="margin-top:10px" onclick="saveLedgerSettingsFromForm(this)">儲存共用設定</button></div>'+
-    '<div class="settings-section"><h3>個人狀態匯出 / 還原</h3><div class="settings-help">包含打卡、想逛、成員身分與本機分帳佇列。</div><textarea class="state-box" id="personalStateBox" placeholder="按匯出產生 JSON,或貼上 JSON 後還原"></textarea><div class="settings-actions"><button class="btn ghost" onclick="exportPersonalState()">匯出 JSON</button><button class="btn" onclick="restorePersonalState()">貼上還原</button></div></div>'+
+    '<div class="settings-section"><h3>本機資料備份／還原</h3><div class="settings-help">換手機、重裝 App 或清除瀏覽器資料前使用。還原會覆蓋目前裝置上的打卡、想逛、身分及待同步記帳。</div><div class="settings-actions"><button class="btn ghost" onclick="exportPersonalState()">複製備份 JSON</button><button class="btn" onclick="openPersonalStateRestore()">從 JSON 還原</button></div></div>'+
     '<div class="settings-section" id="ledgerTestModeSection"><div class="toggle-row"><div><h3>測試模式<span class="settings-warning-tag">僅分帳用</span></h3><div class="settings-help">寫入明細加上 [TEST],且不納入彙算。</div></div><input type="checkbox" '+(lsGet('trip_ledger_test_mode',false)?'checked':'')+' onchange="setLedgerTestMode(this)"></div></div>'+
     '<!-- 主題區塊預留：merge 後另批實作,本批不掛入任何主題功能。 -->'+
     '</section>';
