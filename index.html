@@ -1445,6 +1445,7 @@ function syncAll(showToast){
     SRC={}; SHEETS.forEach(function(sheet){SRC[sheet.key]=download.partialSheets.indexOf(sheet.key)>=0?'cache':'online';});
     DB=candidate.db;
     CURRENT_SNAPSHOT=candidate.snapshot;
+    if(typeof reconcileLedgerSettingsBridge==='function')reconcileLedgerSettingsBridge();
     renderAll();
     setSyncState(download.partialSheets.length?'partial':'online');
     try{localStorage.removeItem(SNAPSHOT_FAILURE_KEY);}catch(ignore){}
@@ -2848,6 +2849,7 @@ function renderShopResults(){
 /* ================= ledgerRepository(Apps Script append-only 寫入) ================= */
 var LEDGER_POST_URL='https://script.google.com/macros/s/AKfycbwtC9G5GYZYmvZU2sl81Q2YDYDoeNf-FaZgeZa2GptfQ0znKA-h9Du1GuoSv0waeuSPhA/exec';
 var LEDGER_QUEUE_KEY='trip_ledger_queue';
+var LEDGER_SETTINGS_BRIDGE_KEY='trip_ledger_settings_bridge';
 var ledgerIdSeen={};
 
 function createLedgerId(now,randomFn){
@@ -2982,6 +2984,88 @@ function postLedgerRecord(record){
     }).then(resolve).catch(reject);
   });
   return Promise.race([request,timeout]);
+}
+
+function normalizeLedgerSettings(source){
+  var rate=Number(source&&source.exchangeRate);
+  var currency=String(source&&source.ledgerDefaultCurrency||source&&source.defaultCurrency||'').toUpperCase();
+  if(!isFinite(rate)||rate<=0) throw new Error('匯率未設定');
+  if(currency!=='JPY'&&currency!=='TWD') throw new Error('預設幣別未設定');
+  return {exchangeRate:rate,defaultCurrency:currency};
+}
+
+function currentLedgerSettings(){
+  var bridge=lsGet(LEDGER_SETTINGS_BRIDGE_KEY,null);
+  try{if(bridge)return normalizeLedgerSettings(bridge);}catch(ignore){}
+  return normalizeLedgerSettings(DB.cfg||{});
+}
+
+function convertLedgerAmounts(currency,amount,rate){
+  currency=String(currency||'').toUpperCase(); amount=Number(amount); rate=Number(rate);
+  if(!isFinite(rate)||rate<=0) throw new Error('匯率未設定');
+  if(!isFinite(amount)||amount<0) throw new Error('金額格式錯誤');
+  if(currency==='JPY') return {amountJpy:Math.round(amount),amountTwd:Math.round(amount*rate)};
+  if(currency==='TWD') return {amountJpy:Math.round(amount/rate),amountTwd:Math.round(amount)};
+  throw new Error('幣別格式錯誤');
+}
+
+function postLedgerSettings(settings){
+  return new Promise(function(resolve,reject){
+    var settled=false;
+    var timer=setTimeout(function(){
+      if(settled)return;
+      settled=true;
+      reject(new Error('分帳設定寫入逾時'));
+    },FETCH_TIMEOUT);
+    var promise, body=JSON.stringify({
+      action:'updateSettings',
+      exchangeRate:settings.exchangeRate,
+      defaultCurrency:settings.defaultCurrency
+    });
+    function finish(handler,value){
+      if(settled)return;
+      settled=true;
+      clearTimeout(timer);
+      handler(value);
+    }
+    try{
+      promise=fetch(LEDGER_POST_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:body});
+    }catch(error){finish(reject,error);return;}
+    promise=promise.catch(function(error){
+      if(!/clone|DataCloneError/i.test(String(error)))throw error;
+      return fetch(LEDGER_POST_URL,{method:'POST',body:body});
+    });
+    promise.then(function(response){
+      if(!response.ok)throw new Error('HTTP '+response.status);
+      return response.json();
+    }).then(function(result){finish(resolve,result);},function(error){finish(reject,error);});
+  });
+}
+
+function saveLedgerSettings(source){
+  var settings=normalizeLedgerSettings(source);
+  return postLedgerSettings(settings).then(function(result){
+    if(!result||result.ok!==true)throw new Error(result&&result.error||'伺服器未確認設定');
+    if(!DB.cfg)DB.cfg={};
+    DB.cfg.exchangeRate=settings.exchangeRate;
+    DB.cfg.ledgerDefaultCurrency=settings.defaultCurrency;
+    lsSet(LEDGER_SETTINGS_BRIDGE_KEY,{exchangeRate:settings.exchangeRate,defaultCurrency:settings.defaultCurrency});
+    if(typeof openSettings==='function')openSettings();
+    if(typeof renderSplit==='function')renderSplit();
+    return result;
+  });
+}
+
+function reconcileLedgerSettingsBridge(){
+  var bridge=lsGet(LEDGER_SETTINGS_BRIDGE_KEY,null), published, confirmed;
+  if(!bridge)return false;
+  try{
+    published=normalizeLedgerSettings(DB.cfg||{});
+    confirmed=normalizeLedgerSettings(bridge);
+  }catch(ignore){return false;}
+  if(published.exchangeRate!==confirmed.exchangeRate||published.defaultCurrency!==confirmed.defaultCurrency)return false;
+  localStorage.removeItem(LEDGER_SETTINGS_BRIDGE_KEY);
+  return true;
 }
 
 var ledgerRepository=createLedgerRepository({
