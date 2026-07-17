@@ -36,7 +36,7 @@
 - WebView 相容碼:console polyfill、fetch 相容模式(禁 AbortController)、單一吸頂容器
 - 停車 MAP CODE 純顯示(無複製鈕)、「停車同Pxxx」繼承機制
 - 渡輪不建班次資料庫;班次資訊維持備註摘要與官方時刻表連結
-- UI 配色變數與四分頁結構;個人狀態(打卡/想逛/成員身分)存 localStorage 不進 CMS;分帳紀錄經 ADR 0006 改為雲端同步(分帳紀錄表,append-only)
+- UI 配色變數與四分頁結構;個人狀態(打卡/想逛/成員身分)存 localStorage 不進 CMS;依 ADR 0006,App 只可 append「分帳紀錄」並更新 TripConfig 的 `Exchange Rate` / `Ledger Default Currency`,其餘 CMS 欄位維持 Bar 手動管理且 App 唯讀
 - 產品哲學:3 秒原則、不過度工程化(能給連結就不硬轉結構化資料)
 
 ## 常見陷阱(前人踩過)

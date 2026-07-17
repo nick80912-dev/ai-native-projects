@@ -6,7 +6,7 @@ Google Sheets(CMS,8張工作表)
   └─ 每張「發布到網路」→ 公開 CSV(pub?gid=xxx&output=csv)
        └─ 手機瀏覽器直接 fetch(App 端,非伺服器)
             └─ vanilla JS App 解析 → 渲染
-Apps Script(分帳 append-only 寫入通道)→ Google Sheet 分帳紀錄
+Apps Script(分帳 append-only + 兩項設定白名單寫入)→ Google Sheet 分帳紀錄 / TripConfig
 Netlify 靜態託管(HTTPS)+ Service Worker(PWA 離線)
 無自架後端、無額外資料庫伺服器、零前端相依套件。
 ```
@@ -20,6 +20,8 @@ Netlify 靜態託管(HTTPS)+ Service Worker(PWA 離線)
 同步狀態徽章:已是最新 / 部分更新 / 離線版 / 內建版。
 
 分帳寫入先進 `trip_ledger_queue`,再由 `ledgerRepository` POST Apps Script；只有伺服器回覆 `ok:true` 或 `ok:true,dup:true` 才移出佇列。開 App 與恢復連網時自動補送。
+
+共用分帳設定以 TripConfig 的 `Exchange Rate` 與 `Ledger Default Currency` 為 SSoT。設定頁只在連網時 POST `updateSettings`；伺服器確認後寫入 `trip_ledger_settings_bridge`,讓目前裝置在公開 CSV 的 1–5 分鐘延遲期間立即使用新值。後續同步讀到相同兩值才移除 bridge。Apps Script 原始碼權威為 `apps-script/ledger-sync.gs`。
 
 ## 快取(sw.js)
 - App Shell(HTML/圖示):Cache First + 背景更新(SWR)
@@ -37,6 +39,7 @@ resolveRef(行程ID欄 Pxxx/Rxxx → 地點/餐廳;名稱備援)
 renderers(today/trip/shop/split + 型別卡片面板)
 sync engine(fetchWithTimeout 相容模式,無 AbortController)
 ledgerRepository(add/flushQueue/pendingCount → Apps Script;離線佇列與 ID 去重)
+ledger settings(normalize/convert/post/save → TripConfig兩鍵;確認bridge涵蓋CSV延遲)
 ```
 
 ## 部署檔案

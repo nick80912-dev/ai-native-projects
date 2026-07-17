@@ -2,7 +2,7 @@
   "$comment": "AI 導航檔 — 任何 AI 接手第一步只讀這份即可掌握全貌。這是 13 步流程的第 1 步。",
   "project": "japan-travel-pwa(日本旅遊行程 App)",
   "owner": "Bar(產品負責人,非工程師,繁中溝通,要直接執行不要教學;AI=全職工程團隊)",
-  "version": "2.4-ledger-sync",
+  "version": "2.5-ledger-settings",
   "framework": "ai-native-framework@pending(尚未抽取;見 FUTURE_PLAN_framework-extraction.md)",
   "updated": "2026-07-17",
   "live": "https://trippilot-jp.netlify.app/",
@@ -28,11 +28,12 @@
     "ops_playbook": "16_OPS_PLAYBOOK.md:Netlify回滾/SW快取災難/Sheet版本還原/清理排程安全",
     "status_authority": "即時狀態唯一權威=tasks/(current/backlog/done);13_PROJECT_STATUS與本manifest.status為快照;00_CONTEXT_HANDOVER為歷史快照不參與"
   },
-  "data_flow": "GoogleSheets(8表)→發布CSV→手機瀏覽器fetch→validator.js(防錯)→parser(Schema驅動)→DB→renderers→UI；分帳寫入:localStorage佇列→ledgerRepository→Apps Script→分帳紀錄表(append-only)；離線三層:BUILTIN內建→localStorage快取→背景同步",
+  "data_flow": "GoogleSheets(8表)→發布CSV→手機瀏覽器fetch→validator.js(防錯)→parser(Schema驅動)→DB→renderers→UI；分帳寫入:localStorage佇列→ledgerRepository→Apps Script→分帳紀錄表(append-only)；共用分帳設定:Settings→Apps Script→TripConfig兩個固定鍵→發布CSV,確認後以本機bridge涵蓋1–5分鐘延遲；離線三層:BUILTIN內建→localStorage快取→背景同步",
   "files": {
     "index.html": "唯一可編輯 App 與正式部署入口:UI殼+CSS+內嵌JS(區塊分層見10_FOLDER_STRUCTURE)",
     "schema.js": "唯一資料規格SSoT:欄位/gid/型別值/發布URL;schemaDoc()自動產09文件",
-    "validator.js": "防錯防線:AppLog六類([Schema/Parser/Data/Repository/Render/Sync Error])+buildHeaderMap+window.healthCheck()"
+    "validator.js": "防錯防線:AppLog六類([Schema/Parser/Data/Repository/Render/Sync Error])+buildHeaderMap+window.healthCheck()",
+    "apps-script/ledger-sync.gs": "Apps Script部署唯一維護來源:分帳append-only與TripConfig兩鍵白名單更新"
   },
   "deploy_files": {
     "index.html": "唯一正式 App 入口",
@@ -62,7 +63,7 @@
     "viewport meta 不得常駐 maximum-scale 或 user-scalable=no;只允許輸入 focus 縮放殘留時瞬鎖約100ms,並原樣還原啟動時字串",
     "停車 MAP CODE 純顯示無複製鈕、『停車同Pxxx』繼承",
     "渡輪不建班次庫(末班資訊+官方時刻表連結)",
-    "個人狀態(打卡/想逛/成員身分)存 localStorage 不進 CMS;分帳紀錄經 ADR 0006 改為雲端同步(分帳紀錄表,append-only)",
+    "個人狀態(打卡/想逛/成員身分)存 localStorage 不進 CMS;依ADR 0006,App僅可append分帳紀錄並更新TripConfig的Exchange Rate / Ledger Default Currency兩鍵,其餘CMS欄位維持Bar手動管理且App唯讀",
     "產品哲學:3秒原則、不過度工程化"
   ],
   "known_traps": [
@@ -88,11 +89,13 @@
       "行程表頭契約 行程(Schema 2.3)與 fuel 型別",
       "父子行程卡(synthetic controller,12 組稽核)",
       "7 表原子快照同步",
-      "診斷面板與同步狀態精簡(iOS 手勢診斷退役)",
+      "診斷面板與同步狀態精簡;因雙擊放大再現,恢復純觀測iOS手勢診斷(24筆/passive/不攔截)",
       "Dev PWA 圖示更新(SW cache v13)",
-      "分帳跨裝置同步(Schema 2.4/ADR 0006/Apps Script repository/SW v14)"
+      "分帳跨裝置同步(Schema 2.4/ADR 0006/Apps Script repository/SW v14)",
+      "分帳單幣輸入換算與共用設定(Schema 2.5/Apps Script版本控管/SW v15;新版端點待部署驗證)"
     ],
     "pending_in_order": [
+      "部署apps-script/ledger-sync.gs並完成updateSettings/TripConfig CSV發佈閘門",
       "Bar 手機全面驗收 dev",
       "Bar 核准 PR merge(dev → main)→ Netlify 正式部署",
       "Playwright 三情境入版控(backlog #1)",

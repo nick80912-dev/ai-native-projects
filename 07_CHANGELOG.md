@@ -1,5 +1,12 @@
 # 07 版本紀錄
 
+## 2026-07-17 — 分帳換算、共用設定與手勢蒐證 ⭐ 架構變更
+- Schema 升至 `2.5 (2026-07-17)`,TripConfig 新增精確鍵 `Exchange Rate` / `Ledger Default Currency`；JPY/TWD 改為單幣輸入,依匯率四捨五入換算另一幣別並同時保存。
+- 分帳類別改為餐飲、交通、票卷、購物、其他、代墊六個單選按鈕；分帳頁移除身分切換,設定頁成為唯一切換入口；右上健康同步文字改為無勾勾的「已同步」。
+- 新增 `apps-script/ledger-sync.gs` 與部署 README。App 可 append「分帳紀錄」並更新 TripConfig 兩個固定鍵,其他 CMS 欄位仍由 Bar 管理且 App 唯讀；設定確認 bridge 涵蓋公開 CSV 1–5 分鐘延遲。
+- 因雙擊放大再現,恢復被動 iOS 手勢診斷（24 筆環形緩衝、報告／複製／清除）；未加入 `preventDefault`、雙擊 guard 或永久 viewport 限制。Service Worker cache 升至 `okayama-trip-v15`。
+- 新版 Apps Script `updateSettings` 尚待部署與 TripConfig CSV 真實驗證；本節不宣稱線上設定寫入已通過。
+
 ## 2026-07-17 — 分帳跨裝置同步 ⭐ 架構變更
 - Schema 升至 `2.4 (2026-07-17)`,新增第 8 張 `ledger` 分帳紀錄表(gid `896856089`)與 Apps Script append-only 寫入通道；ADR 0006 記錄 repository 抽象、離線佇列、ID 去重與負向沖銷決策。
 - 首次啟動強制選擇 Expenses 同行成員身分；新增設定 overlay,提供身分切換、打卡／想逛／身分／佇列 JSON 匯出還原與 `[TEST]` 模式。
