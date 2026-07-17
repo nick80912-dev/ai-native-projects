@@ -4,7 +4,7 @@
   "owner": "Bar(產品負責人,非工程師,繁中溝通,要直接執行不要教學;AI=全職工程團隊)",
   "version": "2.2-harness",
   "framework": "ai-native-framework@pending(尚未抽取;見 FUTURE_PLAN_framework-extraction.md)",
-  "updated": "2026-07-13",
+  "updated": "2026-07-17",
   "live": "https://trippilot-jp.netlify.app/",
   "start_here": "先讀本檔 → PROJECT_CONSTITUTION.md(憲章/流程/禁令)→ 08_AI_HANDOVER.md → 15_AI_EXECUTION_RULES.md(決策權限/任務分級,必讀)→ 相關 adr/ → 依任務讀 03_DATABASE/09_SCHEMA_MAPPING(資料與欄位)、05_CODING_RULES/11_CODING_CONVENTION(程式)、12_DEV_WORKFLOW(步驟)",
   "governance": {
@@ -83,14 +83,18 @@
       "六天行程大方向資料補完(2026-07-09)",
       "治理層v2:狀態收斂/檔案分級14/執行規範15/OpsPlaybook16/00定位為歷史快照",
       "iOS 手勢政策收斂:Scroll-only(pan-x pan-y)+表單16px+focus瞬鎖還原+回前景恢復(v4→v9 歷程見 07)",
-      "Netlify 雙站架構(main=正式/dev=測試)"
+      "Netlify 雙站架構(main=正式/dev=測試)",
+      "行程表頭契約 行程(Schema 2.3)與 fuel 型別",
+      "父子行程卡(synthetic controller,12 組稽核)",
+      "7 表原子快照同步",
+      "診斷面板與同步狀態精簡(iOS 手勢診斷退役)",
+      "Dev PWA 圖示更新(SW cache v13)"
     ],
     "pending_in_order": [
-      "1. Bar 手機執行 v9 雙擊縮放診斷取證",
-      "2. 證據判讀(依診斷設計文件決策樹，任一方向須 Bar 核准)",
-      "3. 全面驗收 → Bar 核准 PR Merge(dev → main) → Netlify Production Deploy(回滾程序見16)",
-      "4. Playwright 三情境入版控(tasks/backlog)",
-      "5. App 穩定落地後執行框架抽取(FUTURE_PLAN_framework-extraction.md)"
+      "Bar 手機全面驗收 dev",
+      "Bar 核准 PR merge(dev → main)→ Netlify 正式部署",
+      "Playwright 三情境入版控(backlog #1)",
+      "框架抽取(FUTURE_PLAN)"
     ]
   },
   "after_every_delivery": "跑 window.healthCheck() + 輸出健康報告 + 更新 07_CHANGELOG(建新檔) + 必要時更新本 manifest",
