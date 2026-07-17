@@ -18,6 +18,7 @@
 - `Exchange Rate` means TWD per one JPY and must be finite and greater than zero.
 - `Ledger Default Currency` is exactly `JPY` or `TWD`.
 - Apps Script repository source is authoritative; deployed code must match `apps-script/ledger-sync.gs`.
+- App writes are whitelisted to append-only `分帳紀錄` rows plus only the TripConfig keys `Exchange Rate` and `Ledger Default Currency`; all other CMS data remains Bar-managed and App-read-only.
 - Gesture diagnostics is passive evidence collection only; do not restore the retired double-tap blocker or permanent viewport restrictions.
 - Only `CACHE_NAME` changes in `sw.js`, to `okayama-trip-v15`.
 
@@ -140,6 +141,7 @@ assert.strictEqual(ledger.rowsForId(ledgerPayload.id),1);
 ```
 
 Also assert invalid rate/currency and missing ledger amounts return `{ok:false}` without sheet mutation.
+Send an extra payload containing arbitrary properties such as `key:'Trip Name'` and assert it cannot update any TripConfig row; `updateSettings` must always write only the two fixed keys.
 
 - [ ] **Step 2: Run RED**
 
@@ -440,6 +442,7 @@ git commit -m "feat: restore passive iOS gesture diagnostics"
 - Modify: `03_DATABASE.md`
 - Modify: `07_CHANGELOG.md`
 - Modify: `08_AI_HANDOVER.md`
+- Modify: `adr/0006-ledger-sync-apps-script.md`
 - Modify: `tasks/current.md`
 - Modify: `tasks/backlog.md` only if an existing item is resolved or superseded
 
@@ -459,7 +462,7 @@ Expected: failure while `sw.js` remains v14.
 
 - [ ] **Step 3: Bump cache and synchronize documents**
 
-Change only `CACHE_NAME` in `sw.js`. Update documents with Schema 2.5, TripConfig cloud settings, repository Apps Script source, conversion semantics, restored evidence-only diagnostics, known 1–5 minute settings propagation delay, and deployment order. Do not claim live settings validation before Task 7.
+Change only `CACHE_NAME` in `sw.js`. Update documents with Schema 2.5, TripConfig cloud settings, repository Apps Script source, conversion semantics, restored evidence-only diagnostics, known 1–5 minute settings propagation delay, and deployment order. ADR 0006, `08_AI_HANDOVER.md`, and `.ai-manifest.json` must state the exact write whitelist: the App may append `分帳紀錄` and update only `Exchange Rate` / `Ledger Default Currency`; every other CMS field remains Bar-managed and App-read-only. Do not claim live settings validation before Task 7.
 
 - [ ] **Step 4: Run GREEN and document checks**
 
@@ -478,7 +481,7 @@ Expected: all exit 0.
 - [ ] **Step 5: Commit**
 
 ```powershell
-git add sw.js tests/pwa-shell.test.js tests/ios-zoom-guard.test.js .ai-manifest.json 02_ARCHITECTURE.md 03_DATABASE.md 07_CHANGELOG.md 08_AI_HANDOVER.md tasks/current.md tasks/backlog.md
+git add sw.js tests/pwa-shell.test.js tests/ios-zoom-guard.test.js .ai-manifest.json 02_ARCHITECTURE.md 03_DATABASE.md 07_CHANGELOG.md 08_AI_HANDOVER.md adr/0006-ledger-sync-apps-script.md tasks/current.md tasks/backlog.md
 git commit -m "docs: record ledger settings and diagnostics rollout"
 ```
 
@@ -514,7 +517,7 @@ Copy the exact committed `apps-script/ledger-sync.gs` into Apps Script, save, ed
 
 - [ ] **Step 4: Perform live settings and ledger acceptance**
 
-POST settings `{action:'updateSettings',exchangeRate:0.2,defaultCurrency:'JPY'}` and require the documented success JSON. Wait for TripConfig CSV to expose both values. Then post one unique `[TEST]` ledger record twice and require first `{ok:true}`, second `{ok:true,dup:true}`, and exactly one CSV row.
+POST settings `{action:'updateSettings',exchangeRate:0.2,defaultCurrency:'JPY'}` and require the documented success JSON. This real POST is the normal seed/upsert path; manual Sheet row creation is recovery-only. Wait for TripConfig CSV to expose the exact `Exchange Rate,0.2` and `Ledger Default Currency,JPY` rows before any Schema 2.5 frontend publication. Then post one unique `[TEST]` ledger record twice and require first `{ok:true}`, second `{ok:true,dup:true}`, and exactly one CSV row.
 
 - [ ] **Step 5: Run browser QA**
 

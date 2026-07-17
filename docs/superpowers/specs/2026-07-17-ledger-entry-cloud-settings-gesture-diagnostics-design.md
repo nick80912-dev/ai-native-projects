@@ -27,6 +27,14 @@ The existing `Currency` TripConfig key remains unchanged because it describes th
 
 The built-in TripConfig fallback includes `Exchange Rate,0.2` and `Ledger Default Currency,JPY`. `schemaDoc()` regenerates the TripConfig section in `09_SCHEMA_MAPPING.md`.
 
+The production TripConfig rows are positionally exact key/value rows:
+
+```csv
+Key,Value
+Exchange Rate,0.2
+Ledger Default Currency,JPY
+```
+
 ## Apps Script Source of Truth
 
 The repository will contain:
@@ -68,11 +76,19 @@ The server validates a finite positive rate and a currency of `JPY` or `TWD`, lo
 
 Concurrent updates are serialized by `LockService`; the last completed write wins. The endpoint remains unauthenticated as documented in ADR 0006. Settings writes require connectivity and are not queued. On failure, the app keeps the last confirmed settings and shows an error.
 
+The Apps Script settings operation is a fixed two-key whitelist, not a generic key/value update API. It may write only `Exchange Rate` and `Ledger Default Currency`. All other TripConfig keys remain Bar-managed and are never accepted from an App payload.
+
+## CMS Write Invariant
+
+Google Sheets remains a Bar-managed CMS. The App has exactly two write capabilities through Apps Script: append-only rows in `分帳紀錄`, and updates to the TripConfig keys `Exchange Rate` and `Ledger Default Currency`. Every other TripConfig key and every other Sheet remains read-only to the App. ADR 0006, `08_AI_HANDOVER.md`, `.ai-manifest.json`, and the Apps Script README must carry this same whitelist.
+
 ## Settings Synchronization
 
 TripConfig CSV remains the cross-device read channel, so another device may observe a change after the accepted 1–5 minute publication delay. On a successful settings POST, the writing device immediately updates its in-memory `DB.cfg` values and stores a confirmed local bridge copy. The bridge prevents an immediate reload from reverting to an older published CSV value. It is discarded once a later TripConfig CSV contains the same settings.
 
 The bridge is cloud-derived application state, not personal state, and is not added to the personal JSON export/restore contract.
+
+Before publishing the Schema 2.5 frontend, deploy the Apps Script settings contract and POST the initial settings through the real endpoint. The endpoint must upsert both rows, and the published TripConfig CSV must show the exact keys and values before frontend publication. Manual Sheet row creation is a recovery fallback only, not the normal initialization path.
 
 ## Ledger Entry UI
 
