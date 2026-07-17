@@ -70,7 +70,8 @@
     "同名 function 後者勝且提升 → 包裝舊函式必先改名,禁 var old=fn(無限遞迴)【環境陷阱,一律適用】",
     "Google 試算表 /edit 讀不到,須用發布 CSV【環境陷阱】;web_fetch 對此發布ID被 robots 擋 → 走 claude-in-chrome(導航 pubhtml 後頁內 fetch;回傳含 ?&= 被 DLP 擋需替換佔位符)【工具特定:Claude 生態,他模型可略過】",
     "Drive read_file_content 只回第一張表;Drive 工具只能建立不能更新【工具特定:Claude 生態;文件權威已改 GitHub,影響降低】",
-    "item id 含「/」→ DOM 查找用 getElementById 勿用 CSS selector【環境陷阱,一律適用】"
+    "item id 含「/」→ DOM 查找用 getElementById 勿用 CSS selector【環境陷阱,一律適用】",
+    "iOS WebKit 雙擊縮放仲裁會受 document dblclick listener 存在性影響(目標機三次開關對照的觀測者效應);勿移除 passive no-op iosDoubleTapZoomSuppressor,大版本再現時優先複驗【環境陷阱】"
   ],
   "status": {
     "done": [
@@ -89,14 +90,13 @@
       "行程表頭契約 行程(Schema 2.3)與 fuel 型別",
       "父子行程卡(synthetic controller,12 組稽核)",
       "7 表原子快照同步",
-      "診斷面板與同步狀態精簡;因雙擊放大再現,恢復純觀測iOS手勢診斷(24筆/passive/不攔截)",
+      "診斷面板與同步狀態精簡;iOS手勢診斷退役,保留單一passive no-op dblclick相容性監聽器(不攔截)",
       "Dev PWA 圖示更新(SW cache v13)",
       "分帳跨裝置同步(Schema 2.4/ADR 0006/Apps Script repository/SW v14)",
-      "分帳單幣輸入換算與共用設定(Schema 2.5/Apps Script版本控管/SW v15;新版端點/TripConfig CSV/ledger dup已驗證)"
+      "分帳單幣輸入換算與共用設定(Schema 2.5/Apps Script版本控管/SW v16;新版端點/TripConfig CSV/ledger dup已驗證)"
     ],
     "pending_in_order": [
-      "Bar 核准 push dev",
-      "Bar 手機全面驗收 dev(含離線補送與iOS手勢報告)",
+      "Bar 手機全面驗收 dev(含離線補送、雙擊不縮放與快速控制項點擊)",
       "Bar 核准 PR merge(dev → main)→ Netlify 正式部署",
       "Playwright 三情境入版控(backlog #1)",
       "框架抽取(FUTURE_PLAN)"

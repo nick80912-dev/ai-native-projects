@@ -1,5 +1,12 @@
 # 07 版本紀錄
 
+## 2026-07-17 — 雙擊放大相容性定案
+- 三次開關對照顯示：document 手勢觀測 listener 集合存在時雙擊縮放消失，診斷退役時再現；此結果支持觀測者效應，但不宣稱為 WebKit 跨版本保證。
+- 移除 24 筆手勢環形緩衝、事件快照、報告／複製／清除 UI 與相關 CSS；桃子入口、健康檢查、時間模擬、Day 快捷鍵、行程重置及 viewport/focus recovery 均保留。
+- 只留下單一 passive no-op `dblclick` listener 作為目標 iPhone 的未文件化相容性 workaround，不呼叫 `preventDefault()`；Service Worker cache 升至 `okayama-trip-v16`。
+- 實機驗收需同時確認雙擊不縮放及快速依序點擊類別、JPY/TWD、設定控制項不誤送事件；若有副作用，移除 listener 並以 SW v17 回滾。
+- 本批未修改 Schema、validator、資料流、Apps Script、Scroll-only、`touch-action`、viewport meta 或其他功能。
+
 ## 2026-07-17 — 分帳換算、共用設定與手勢蒐證 ⭐ 架構變更
 - Schema 升至 `2.5 (2026-07-17)`,TripConfig 新增精確鍵 `Exchange Rate` / `Ledger Default Currency`；JPY/TWD 改為單幣輸入,依匯率四捨五入換算另一幣別並同時保存。
 - 分帳類別改為餐飲、交通、票卷、購物、其他、代墊六個單選按鈕；分帳頁移除身分切換,設定頁成為唯一切換入口；右上健康同步文字改為無勾勾的「已同步」。

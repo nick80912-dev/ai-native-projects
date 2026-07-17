@@ -36,14 +36,13 @@ assert.doesNotMatch(html, /function touchDistance\(/, 'double-tap distance helpe
 assert.match(html, /function setupDiagnostics\(/, 'peach diagnostic gesture remains available');
 assert.match(html, /function setupViewportReflow\(/, 'form focus recovery remains available');
 assert.doesNotMatch(html.match(/<meta name="viewport"[^>]+>/i)[0], /maximum-scale|user-scalable/i, 'viewport restrictions are not persistent');
-assert.match(sw, /okayama-trip-v15/, 'service worker cache is bumped to v15');
-assert.doesNotMatch(sw, /okayama-trip-v14/, 'retired v14 cache is not retained');
+assert.match(sw, /okayama-trip-v16/, 'service worker cache is bumped to v16');
+assert.doesNotMatch(sw, /okayama-trip-v15/, 'retired v15 cache is not retained');
 assert.doesNotMatch(sw, /tests\//, 'test files are not part of the App Shell');
 assert.doesNotMatch(sw, /ios-gesture-diagnostics\.test\.js/, 'the diagnostic test is never cached');
 assert.doesNotMatch(html,/var APP_BUILD=/,'unused diagnostic build metadata is retired');
-assert.match(html,/function setupGestureDiagnostics\(/,'passive gesture evidence collection is available');
-assert.match(html,/IOS_GESTURE_DIAGNOSTICS/,'gesture evidence uses an in-memory store');
-assert.doesNotMatch(extractFunction('setupGestureDiagnostics'),/preventDefault/,'diagnostics do not block gestures');
+assert.match(html,/function iosDoubleTapZoomSuppressor\(\)\{\}/,'the minimal no-op double-tap compatibility listener is present');
+assert.doesNotMatch(html,/IOS_GESTURE_DIAGNOSTICS|function setupGestureDiagnostics\(/,'gesture evidence collection is retired');
 
 const timers = [];
 const sandbox = {
