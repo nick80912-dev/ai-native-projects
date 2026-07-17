@@ -5,7 +5,8 @@
 - 分帳類別改為餐飲、交通、票卷、購物、其他、代墊六個單選按鈕；分帳頁移除身分切換,設定頁成為唯一切換入口；右上健康同步文字改為無勾勾的「已同步」。
 - 新增 `apps-script/ledger-sync.gs` 與部署 README。App 可 append「分帳紀錄」並更新 TripConfig 兩個固定鍵,其他 CMS 欄位仍由 Bar 管理且 App 唯讀；設定確認 bridge 涵蓋公開 CSV 1–5 分鐘延遲。
 - 因雙擊放大再現,恢復被動 iOS 手勢診斷（24 筆環形緩衝、報告／複製／清除）；未加入 `preventDefault`、雙擊 guard 或永久 viewport 限制。Service Worker cache 升至 `okayama-trip-v15`。
-- 新版 Apps Script `updateSettings` 尚待部署與 TripConfig CSV 真實驗證；本節不宣稱線上設定寫入已通過。
+- 新版 Apps Script 已部署並完成真實閘門：`updateSettings` 以 0.2／JPY 回傳成功，TripConfig CSV 發布精確兩列；測試 ID `1784292475781-9115` 首送回 `ok`、重送回 `dup`，ledger CSV 僅一列。
+- 390px 瀏覽器 QA 通過頂欄不重疊、單幣換算預覽、設定保存、無勾勾「已同步」與旅行日 mock Date，頁面錯誤為 0；實機離線補送與 iOS 手勢報告留待 Bar 手機驗收。
 
 ## 2026-07-17 — 分帳跨裝置同步 ⭐ 架構變更
 - Schema 升至 `2.4 (2026-07-17)`,新增第 8 張 `ledger` 分帳紀錄表(gid `896856089`)與 Apps Script append-only 寫入通道；ADR 0006 記錄 repository 抽象、離線佇列、ID 去重與負向沖銷決策。

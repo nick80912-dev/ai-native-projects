@@ -92,11 +92,11 @@
       "診斷面板與同步狀態精簡;因雙擊放大再現,恢復純觀測iOS手勢診斷(24筆/passive/不攔截)",
       "Dev PWA 圖示更新(SW cache v13)",
       "分帳跨裝置同步(Schema 2.4/ADR 0006/Apps Script repository/SW v14)",
-      "分帳單幣輸入換算與共用設定(Schema 2.5/Apps Script版本控管/SW v15;新版端點待部署驗證)"
+      "分帳單幣輸入換算與共用設定(Schema 2.5/Apps Script版本控管/SW v15;新版端點/TripConfig CSV/ledger dup已驗證)"
     ],
     "pending_in_order": [
-      "部署apps-script/ledger-sync.gs並完成updateSettings/TripConfig CSV發佈閘門",
-      "Bar 手機全面驗收 dev",
+      "Bar 核准 push dev",
+      "Bar 手機全面驗收 dev(含離線補送與iOS手勢報告)",
       "Bar 核准 PR merge(dev → main)→ Netlify 正式部署",
       "Playwright 三情境入版控(backlog #1)",
       "框架抽取(FUTURE_PLAN)"
