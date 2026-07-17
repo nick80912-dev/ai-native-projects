@@ -81,6 +81,13 @@ function createStorage(initial){
   await sandbox.exportPersonalState();
   assert.strictEqual(JSON.parse(fallbackText).format,'trip-personal-state','clipboard failure preserves the generated JSON');
 
+  sandbox.navigator.clipboard.writeText=function(){return new Promise(function(){});};
+  const hangingClipboardOutcome=await Promise.race([
+    sandbox.copyPersonalStateText('backup',20).then(function(){return 'resolved';},function(error){return error.message;}),
+    new Promise(function(resolve){setTimeout(function(){resolve('test-hung');},100);})
+  ]);
+  assert.strictEqual(hangingClipboardOutcome,'剪貼簿逾時','unsettled clipboard operations time out into the fallback path');
+
   assert(!settingsSource.includes('id="personalStateBox"'),'normal Settings has no persistent JSON textarea');
   assert(settingsSource.includes('openPersonalStateRestore()'),'restore button opens the on-demand dialog');
   assert(helperSource.includes('>取消</button>'),'restore dialog exposes a cancel action');

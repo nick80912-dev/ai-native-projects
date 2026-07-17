@@ -3110,9 +3110,17 @@ function personalStateJson(){
   var payload={format:'trip-personal-state',version:1,exportedAt:timestampDate(Date.now()).toISOString(),checks:lsGet('trip_checks',{}),wants:lsGet('trip_shop_wants',{}),member:getCurrentMember(),ledgerQueue:ledgerRepository.queuedRecords()};
   return JSON.stringify(payload,null,2);
 }
-function copyPersonalStateText(text){
-  if(typeof navigator!=='undefined'&&navigator.clipboard&&typeof navigator.clipboard.writeText==='function')return navigator.clipboard.writeText(text);
-  return Promise.reject(new Error('clipboard unavailable'));
+function copyPersonalStateText(text,timeoutMs){
+  if(typeof navigator==='undefined'||!navigator.clipboard||typeof navigator.clipboard.writeText!=='function')return Promise.reject(new Error('clipboard unavailable'));
+  timeoutMs=Number(timeoutMs)||1500;
+  return new Promise(function(resolve,reject){
+    var settled=false;
+    var timer=setTimeout(function(){if(settled)return;settled=true;reject(new Error('剪貼簿逾時'));},timeoutMs);
+    var finish=function(fn,value){if(settled)return;settled=true;clearTimeout(timer);fn(value);};
+    var promise;
+    try{promise=navigator.clipboard.writeText(text);}catch(error){finish(reject,error);return;}
+    Promise.resolve(promise).then(function(){finish(resolve);},function(error){finish(reject,error);});
+  });
 }
 function exportPersonalState(){
   var text=personalStateJson();
