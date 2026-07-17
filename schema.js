@@ -14,7 +14,7 @@
    ============================================================ */
 
 var SCHEMA = {
-  version: '2.4 (2026-07-17)',
+  version: '2.5 (2026-07-17)',
 
   /* 發布來源(換試算表只改這裡) */
   pubBase: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRenmV8UxEzWbzSjKJKi4rSpYt63geBqhEkKsl1GemWVPmFKTcvv3Uk71Hjla3TGBpGIjC7bQDDdI00/pub?single=true&output=csv&gid=',
@@ -146,6 +146,10 @@ var SCHEMA = {
                    'transit':'transit','train':'transit','電車':'transit','大眾運輸':'transit' },
           desc:'Driving→drive(🚗導航+停車卡);Transit/Train→transit(🚃路線)' },
         { field:'currency',   header:'Currency' },
+        { field:'exchangeRate', header:'Exchange Rate', desc:'1 JPY 對應的 TWD 金額;必須大於 0' },
+        { field:'ledgerDefaultCurrency', header:'Ledger Default Currency',
+          values:{'JPY':'JPY','jpy':'JPY','TWD':'TWD','twd':'TWD'},
+          desc:'分帳預設輸入幣別;只允許 JPY/TWD' },
         { field:'homepage',   header:'Home Page',   desc:'預設分頁(⚠️ 目前**未啟用**,App 固定 Today;填寫無效果)' }
       ]
     }

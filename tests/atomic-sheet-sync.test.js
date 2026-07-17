@@ -46,7 +46,7 @@ function validDb(){
   return {
     placeList:[{placeId:'P025',name:'Ferry Terminal',type:'ferry',tnorm:'ferry',web:'https://example.com'}],
     rest:[{restId:'R012',name:'Musashi',placeId:''}],
-    shop:[], hotels:[], cfg:{tripname:'Trip',startdate:'2026-10-18',enddate:'2026-10-23',travelmode:'drive'},
+    shop:[], hotels:[], cfg:{tripname:'Trip',startdate:'2026-10-18',enddate:'2026-10-23',travelmode:'drive',exchangeRate:'0.2',ledgerDefaultCurrency:'JPY'},
     trip:{days:[{date:'10/18',items:[{act:'Dinner',place:'Musashi',ref:'R012'}]}]}
   };
 }
@@ -57,11 +57,16 @@ const htmlSource = fs.readFileSync('index.html','utf8').replace(/\r\n/g,'\n');
 const schemaSandbox = {};
 vm.createContext(schemaSandbox);
 vm.runInContext(fs.readFileSync('schema.js','utf8'),schemaSandbox);
-assert.strictEqual(schemaSandbox.SCHEMA.version,'2.4 (2026-07-17)','production Schema version identifies the ledger sync contract');
+assert.strictEqual(schemaSandbox.SCHEMA.version,'2.5 (2026-07-17)','production Schema version identifies the shared ledger settings contract');
+const cfgKeys=schemaSandbox.SCHEMA.sheets.cfg.keys;
+assert(cfgKeys.some(function(key){return key.field==='exchangeRate'&&key.header==='Exchange Rate';}),'production Schema defines Exchange Rate');
+assert(cfgKeys.some(function(key){return key.field==='ledgerDefaultCurrency'&&key.header==='Ledger Default Currency';}),'production Schema defines Ledger Default Currency');
 const itineraryActColumn = schemaSandbox.SCHEMA.sheets.itin.columns.find(function(column){ return column.field==='act'; });
 assert.strictEqual(itineraryActColumn.header,'行程','production Schema uses the confirmed itinerary Header');
 assert.strictEqual((itineraryActColumn.aliases||[]).indexOf('詳細行程'),-1,'obsolete Header is not retained as an alias');
-assert.match(htmlSource,/version:\s*'2\.4 \(2026-07-17\)'/,'inline fallback Schema version identifies the ledger sync contract');
+assert.match(htmlSource,/version:\s*'2\.5 \(2026-07-17\)'/,'inline fallback Schema version identifies the shared ledger settings contract');
+assert(htmlSource.includes('Exchange Rate,0.2'),'BUILTIN TripConfig contains the initial exchange rate');
+assert(htmlSource.includes('Ledger Default Currency,JPY'),'BUILTIN TripConfig contains the initial ledger currency');
 assert.match(htmlSource,/field:'act',\s*header:'行程'/,'inline fallback Schema uses the confirmed itinerary Header');
 assert(htmlSource.includes('日期,時間,行程,地點,ID,交通,備註'),'BUILTIN itinerary CSV uses the confirmed Header');
 const validatorMarker = htmlSource.indexOf('/* ===== validator.js');
@@ -195,6 +200,14 @@ assert(hasFinding(sb.validateSnapshotData(reversedDates,validRaw(),schema()),'CF
 
 const unsupportedMode = validDb(); unsupportedMode.cfg.travelmode='bike';
 assert(hasFinding(sb.validateSnapshotData(unsupportedMode,validRaw(),schema()),'CFG_TRAVELMODE','cfg'),'unsupported travel modes are blocked');
+
+[0,-1,'not-a-number'].forEach(function(value){
+  const invalidRate=validDb(); invalidRate.cfg.exchangeRate=value;
+  assert(hasFinding(sb.validateSnapshotData(invalidRate,validRaw(),schema()),'CFG_EXCHANGE_RATE','cfg'),'invalid exchange rate is blocked: '+value);
+});
+
+const invalidLedgerCurrency=validDb(); invalidLedgerCurrency.cfg.ledgerDefaultCurrency='USD';
+assert(hasFinding(sb.validateSnapshotData(invalidLedgerCurrency,validRaw(),schema()),'CFG_LEDGER_CURRENCY','cfg'),'unsupported ledger currency is blocked');
 
 const finding = sb.makeValidationFinding('warning','CODE','sheet','message');
 assert.deepStrictEqual(Object.keys(finding).sort(), ['code','level','message','sheet']);

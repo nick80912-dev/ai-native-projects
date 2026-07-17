@@ -213,6 +213,14 @@ function validateSnapshotData(db,raw,schema){
     if(startValue!==null&&endValue!==null&&endValue<startValue) block('CFG_DATE','cfg','TripConfig enddate 不得早於 startdate');
     var mode=String(cfg.travelmode||'').trim().toLowerCase();
     if(mode&&mode!=='drive'&&mode!=='transit') block('CFG_TRAVELMODE','cfg','TripConfig travelmode 必須是 drive 或 transit');
+    var exchangeRate=Number(cfg.exchangeRate);
+    if(!String(cfg.exchangeRate||'').trim()||!isFinite(exchangeRate)||exchangeRate<=0){
+      block('CFG_EXCHANGE_RATE','cfg','TripConfig exchangeRate 必須是大於 0 的數字');
+    }
+    var ledgerCurrency=String(cfg.ledgerDefaultCurrency||'').trim().toUpperCase();
+    if(ledgerCurrency!=='JPY'&&ledgerCurrency!=='TWD'){
+      block('CFG_LEDGER_CURRENCY','cfg','TripConfig ledgerDefaultCurrency 必須是 JPY 或 TWD');
+    }
   }
   return result;
 }
