@@ -97,7 +97,7 @@ function response(payload){
 
   const html = mod.__htmlSource;
   const settingsSource = html.slice(html.indexOf('function openSettings('),html.indexOf('function mergedLedgerRecords()'));
-  const entrySource = html.slice(html.indexOf('function selectLedgerCategory('),html.indexOf('function reverseLedgerRecord('));
+  const entrySource = html.slice(html.indexOf('function selectLedgerCategory('),html.indexOf('function deletePersonalLedgerRecord('));
   const splitSource = html.slice(html.indexOf('function renderSplit()'),html.indexOf('/* ================= 導覽 / 啟動'));
   assert(settingsSource.includes('openMemberSelector(false,false)'),'Settings exposes the existing-identity switch entry');
   assert(settingsSource.includes('openMemberSelector(false,true)'),'Settings exposes the new-identity registration entry');

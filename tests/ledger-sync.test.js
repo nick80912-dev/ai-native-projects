@@ -72,15 +72,29 @@ function loadLedgerModule(){
   assert.strictEqual(duplicate.dup,true,'duplicate acknowledgement is surfaced');
   assert.strictEqual(dupRepo.pendingCount(),0,'duplicate acknowledgement removes the record from queue');
 
-  const original = {id:'1784250000000-abcd',time:'2026-07-17T10:00:00.000Z',member:'阿祺',category:'門票',detail:'美術館',amountJpy:3000,amountTwd:600,note:''};
-  const reversal = mod.createLedgerReversal(original,1784250100000);
-  assert.strictEqual(reversal.amountJpy,-3000,'reversal negates JPY');
-  assert.strictEqual(reversal.amountTwd,-600,'reversal negates TWD');
-  assert(reversal.note.includes(original.id),'reversal note identifies the original record');
-  const reversedSummary = mod.summarizeLedgerRecords([original,reversal]);
-  assert.strictEqual(reversedSummary.total.amountJpy,0,'reversal cancels group JPY total');
-  assert.strictEqual(reversedSummary.total.amountTwd,0,'reversal cancels group TWD total');
-  assert.strictEqual(reversedSummary.members[0].amountJpy,0,'reversal cancels member subtotal');
+  const original = {id:'1784250000000-abcd',time:'2026-07-17T10:00:00.000Z',member:'阿祺',category:'門票',detail:'美術館',amountJpy:3000,amountTwd:600,note:'',recordType:'expense',batchId:'batch-1'};
+  const deletion = mod.createLedgerDeletion(original,'Bar','重複記帳',1784250100000);
+  assert.strictEqual(deletion.recordType,'deletion','deletion uses the authoritative record type');
+  assert.strictEqual(deletion.targetRecordId,original.id,'deletion points to the original record');
+  assert.strictEqual(deletion.deleteReason,'重複記帳','deletion preserves the trimmed reason');
+  assert.strictEqual(deletion.member,'Bar','deletion records the current operator');
+  assert.strictEqual(deletion.time,'2026-07-17T01:01:40.000Z','deletion records the supplied current time');
+  assert.strictEqual(deletion.amountJpy,0,'deletion never creates a negative JPY amount');
+  assert.strictEqual(deletion.amountTwd,0,'deletion never creates a negative TWD amount');
+  assert.strictEqual(deletion.participants,'','deletion has no participant snapshot');
+  assert.strictEqual(deletion.payMethod,'','deletion has no payment method');
+  assert.strictEqual(deletion.batchId,'batch-1','deletion retains the original batch ID');
+  assert.strictEqual(deletion.detail,'[刪除]','deletion detail remains human-readable only');
+  assert.deepStrictEqual(mod.spendLedgerRecords([original,deletion]),[],'the tombstone and its target are hidden');
+  const deletedSummary = mod.summarizeLedgerRecords([original,deletion]);
+  assert.strictEqual(deletedSummary.records.length,0,'deleted records do not count as expenses');
+  assert.strictEqual(deletedSummary.total.amountJpy,0,'deleted records do not affect JPY totals');
+  assert.strictEqual(deletedSummary.total.amountTwd,0,'deleted records do not affect TWD totals');
+
+  const legacyNegative = {id:'legacy-negative',time:'2026-07-17T10:02:00.000Z',member:'阿祺',category:'門票',detail:'沖銷：舊資料',amountJpy:-3000,amountTwd:-600,note:'歷史沖銷'};
+  const legacySummary = mod.summarizeLedgerRecords([original,legacyNegative]);
+  assert.strictEqual(legacySummary.total.amountJpy,0,'historical negative records remain readable');
+  assert.strictEqual(legacySummary.total.amountTwd,0,'historical negative TWD remains compatible');
 
   const testSummary = mod.summarizeLedgerRecords([
     original,

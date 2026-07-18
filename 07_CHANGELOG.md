@@ -1,5 +1,12 @@
 # 07 版本紀錄
 
+## 2026-07-18 — 分帳 2.0 個人真刪與團體墓碑刪除（Dev）⭐ 架構變更
+- 個人帳刪除使用不可復原的二次確認，確認後直接從 `trip_personal_ledger` 移除，不建立墓碑且不影響團體帳。
+- 團體帳刪除改為必填原因的協作式對話框，透過既有 Ledger Repository append `recordType=deletion` 墓碑；保存目標 ID、操作者、時間、原因與原始 batchId，金額固定為零。
+- 新增單一有效紀錄解析器：墓碑及其目標不顯示、不計入筆數與總額；重複墓碑保持冪等，非法或不存在目標安全忽略並輸出警告，身分註冊與墓碑不可刪除。
+- 移除建立負數沖銷的 UI 與程式入口；既有負數歷史紀錄維持讀取及原有金額效果。離線墓碑沿用現有 queue、retry、flush 與伺服器 ID 去重；送達後由本機 bridge 保留至公開 CSV 確認，避免延遲期間原紀錄復活。
+- ADR 0006 追加墓碑決策。本批未修改 Schema、Validator、Apps Script、Google Sheet、BUILTIN、SW、Netlify、結算或完整儀表板。
+
 ## 2026-07-18 — 分帳 2.0 個人／團體雙軌資料層（Dev）
 - 分帳頁新增 `個人 / 團體` session 模式，預設個人；個人帳只寫入 `trip_personal_ledger`，不呼叫團體 Ledger Repository、不進 Queue、不寫 Sheet，團體帳維持既有跨裝置同步。
 - 個人與團體的列表、筆數與總額完全隔離；TEST 模式僅作用於團體帳。團體一般支出開始保存 `recordType=expense`、支付方式與記帳當下的註冊成員 JSON 快照，身分註冊保存 `recordType=identity_registration`。

@@ -235,7 +235,7 @@ input,select,textarea{font-size:16px}
 .exp-item .edesc{font-weight:600;font-size:14px}
 .exp-item .eamt{font-weight:700;color:var(--coral);white-space:nowrap;font-size:14px}
 .exp-item .er2{font-size:11.5px;color:var(--ink-faint);margin-top:3px}
-.exp-item .edel{font-size:11px;color:var(--ink-faint);cursor:pointer;margin-top:5px;display:inline-block}
+.exp-item .edel{min-height:44px;border:0;background:transparent;color:var(--ink-faint);cursor:pointer;margin-top:3px;padding:8px 0;font:inherit;font-size:12px;font-weight:700}
 
 .result-card{background:linear-gradient(140deg,var(--sea-deep),var(--sea));color:#fff}
 .result-card h3{color:#fff}
@@ -497,6 +497,7 @@ input,select,textarea{font-size:16px}
 .member-entry{margin-top:12px}.member-entry input{width:100%;min-height:48px;border:1px solid var(--line);border-radius:10px;background:#fff;padding:10px 12px;font:inherit}.member-actions{display:flex;gap:9px;margin-top:12px}.member-actions .btn{flex:1;min-height:44px}.member-error{margin-top:10px;color:var(--coral);font-size:13px;font-weight:700}.member-confirm{padding:16px;border:1px solid var(--line);border-radius:10px;background:#fff;text-align:center;font-weight:800}
 .state-box{width:100%;min-height:112px;border:1px solid var(--line);border-radius:10px;padding:10px;font:inherit;font-size:13px;resize:vertical;background:#fff}.settings-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:9px}.settings-actions .btn{flex:1;min-height:44px}
 .state-dialog-overlay{z-index:140;background:rgba(247,245,238,.98)}.state-dialog-panel{padding-top:18px}.state-dialog-copy{width:100%;min-height:180px;border:1px solid var(--line);border-radius:10px;padding:10px;font:inherit;font-size:13px;resize:vertical;background:#fff}
+.ledger-delete-copy{font-size:14px;color:var(--ink);margin:8px 0 14px}.ledger-delete-label{display:block;font-size:13px;font-weight:800;color:var(--ink);margin-bottom:6px}.ledger-delete-reason{width:100%;min-height:48px;border:1px solid var(--line);border-radius:10px;padding:10px 12px;font:inherit;font-size:16px;background:#fff}.ledger-delete-error{min-height:18px;color:var(--coral);font-size:12px;font-weight:800;margin-top:6px}
 .toggle-row{display:flex;align-items:center;justify-content:space-between;gap:12px}.toggle-row input{width:22px;height:22px}.settings-help{font-size:12px;color:var(--ink-faint);margin-top:6px}
 .ledger-pending{display:inline-flex;margin:0 0 10px;background:#fff3cf;color:#80600d;border:1px solid #ecd58d;border-radius:999px;padding:5px 10px;font-size:12px;font-weight:900}.ledger-record.pending{background:#fffaf0}.ledger-tag{display:inline-flex;border-radius:999px;background:var(--line-soft);color:var(--ink-faint);padding:2px 6px;font-size:10px;font-weight:800;margin-left:5px}.ledger-summary{display:grid;gap:7px}.ledger-summary-row{display:grid;grid-template-columns:1fr auto;gap:10px;border-top:1px solid rgba(255,255,255,.22);padding-top:7px}.ledger-summary-row:first-child{border-top:0;padding-top:0}.ledger-summary-row span:last-child{font-variant-numeric:tabular-nums;font-weight:900}.legacy-ledger{background:#fff7dc;border:1px solid #ead88e;border-radius:12px;padding:12px;margin-bottom:12px;font-size:13px;color:#73580f}.legacy-ledger .btn{margin-top:8px}
 .ledger-test-warning{background:#fff3e8;color:#793b20;border:1px solid #efb28e;border-radius:12px;padding:12px;margin-bottom:12px}.ledger-test-warning strong{display:block;color:var(--coral);margin-bottom:3px}.ledger-test-warning .btn{margin-top:9px}
@@ -2865,6 +2866,7 @@ function renderShopResults(){
 var LEDGER_POST_URL='https://script.google.com/macros/s/AKfycbwtC9G5GYZYmvZU2sl81Q2YDYDoeNf-FaZgeZa2GptfQ0znKA-h9Du1GuoSv0waeuSPhA/exec';
 var LEDGER_QUEUE_KEY='trip_ledger_queue';
 var LEDGER_SETTINGS_BRIDGE_KEY='trip_ledger_settings_bridge';
+var LEDGER_DELETION_BRIDGE_KEY='trip_ledger_deletion_bridge';
 var PERSONAL_LEDGER_KEY='trip_personal_ledger';
 var LEDGER_CATEGORY_OPTIONS_KEY='trip_ledger_categories';
 var LEDGER_PAY_METHOD_OPTIONS_KEY='trip_ledger_pay_methods';
@@ -2891,7 +2893,7 @@ function createLedgerId(now,randomFn){
 
 function normalizeLedgerRecord(record,now,randomFn,isTestMode){
   var source=record||{}, at=now==null?Date.now():now, detail=String(source.detail||'').trim();
-  if(isTestMode&&detail.indexOf('[TEST]')!==0) detail='[TEST] '+detail;
+  if(isTestMode&&source.recordType!=='deletion'&&detail.indexOf('[TEST]')!==0) detail='[TEST] '+detail;
   return {
     id:String(source.id||createLedgerId(at,randomFn)).trim(),
     time:String(source.time||timestampDate(at).toISOString()).trim(),
@@ -2915,6 +2917,8 @@ function validateLedgerRecord(record){
   if(!record.id) throw new Error('紀錄ID必填');
   if(record.amountJpy===null||!isFinite(record.amountJpy)) throw new Error('日幣必填');
   if(!isFinite(record.amountTwd)) throw new Error('台幣格式錯誤');
+  var deletionIssue=deletionRecordIssue(record);
+  if(deletionIssue)throw new Error(deletionIssue);
   return true;
 }
 
@@ -2944,7 +2948,12 @@ function createPersonalLedgerRepository(options){
     records.push(normalized);write(records);
     return normalized;
   }
-  return {all:all,add:add};
+  function remove(id){
+    var records=all(), next=records.filter(function(record){return record.id!==id;});
+    if(next.length===records.length)return false;
+    write(next);return true;
+  }
+  return {all:all,add:add,remove:remove};
 }
 
 function normalizeLedgerOption(value){
@@ -2980,18 +2989,6 @@ function createLedgerOptionStore(options){
   return {all:all,add:add,remove:remove,move:move};
 }
 
-function createLedgerReversal(original,now,randomFn){
-  var source=original||{}, at=now==null?Date.now():now;
-  return normalizeLedgerRecord({
-    member:source.member,
-    category:source.category,
-    detail:'沖銷：'+String(source.detail||''),
-    amountJpy:-Number(source.amountJpy||0),
-    amountTwd:-Number(source.amountTwd||0),
-    note:'沖銷對象 '+String(source.id||'')+(source.note?'；原備註：'+source.note:'')
-  },at,randomFn,false);
-}
-
 function isTestLedgerRecord(record){ return /^\[TEST\]/.test(String(record&&record.detail||'')); }
 function canonicalMemberName(name){ return String(name==null?'':name).replace(/\u3000/g,' ').replace(/\s+/g,' ').trim(); }
 function buildParticipantSnapshot(entries,currentMember){
@@ -3002,7 +2999,47 @@ function buildParticipantSnapshot(entries,currentMember){
   return JSON.stringify(names);
 }
 function ledgerDetailWithoutTestPrefix(record){ return String(record&&record.detail||'').replace(/^\[TEST\]\s*/,'').trim(); }
-function isIdentityRegistrationRecord(record){ return ledgerDetailWithoutTestPrefix(record)==='[身分註冊]'; }
+function isIdentityRegistrationRecord(record){ return !!record&&(record.recordType==='identity_registration'||ledgerDetailWithoutTestPrefix(record)==='[身分註冊]'); }
+function isDeletionRecord(record){ return !!record&&record.recordType==='deletion'; }
+function deletionRecordIssue(record){
+  if(!isDeletionRecord(record))return '';
+  var reason=String(record.deleteReason||'').trim();
+  if(!String(record.targetRecordId||'').trim())return '刪除紀錄缺少目標';
+  if(!String(record.member||'').trim())return '刪除紀錄缺少操作者';
+  if(!reason)return '刪除原因必填';
+  if(reason.length>50)return '刪除原因最多 50 個字';
+  if(!String(record.time||'').trim()||!isFinite(Date.parse(record.time)))return '刪除紀錄時間格式錯誤';
+  if(Number(record.amountJpy)!==0||Number(record.amountTwd)!==0)return '刪除紀錄金額必須為零';
+  if(String(record.participants||'').trim()||String(record.payMethod||'').trim())return '刪除紀錄不可包含分攤或支付方式';
+  return '';
+}
+function canDeleteLedgerRecord(record){ return !!(record&&record.id)&&!isDeletionRecord(record)&&!isIdentityRegistrationRecord(record); }
+function createLedgerDeletion(original,member,reason,now,randomFn){
+  var source=original||{}, cleanReason=String(reason||'').trim(), at=now==null?Date.now():now;
+  if(!canDeleteLedgerRecord(source))throw new Error('此紀錄不可刪除');
+  if(!cleanReason)throw new Error('刪除原因必填');
+  if(cleanReason.length>50)throw new Error('刪除原因最多 50 個字');
+  return normalizeLedgerRecord({
+    member:String(member||'').trim(),category:source.category,detail:'[刪除]',amountJpy:0,amountTwd:0,note:'',
+    participants:'',payMethod:'',recordType:'deletion',targetRecordId:source.id,deleteReason:cleanReason,batchId:source.batchId||''
+  },at,randomFn,false);
+}
+function effectiveLedgerRecords(records,warnFn){
+  var source=records||[], byId={}, deleted={};
+  var warn=typeof warnFn==='function'?warnFn:function(message){if(typeof console!=='undefined'&&console.warn)console.warn(message);};
+  source.forEach(function(record){if(record&&record.id&&!byId[record.id])byId[record.id]=record;});
+  source.forEach(function(record){
+    if(!isDeletionRecord(record))return;
+    var issue=deletionRecordIssue(record);
+    if(issue){warn('忽略刪除紀錄 '+String(record.id||'')+':'+issue);return;}
+    var target=byId[String(record.targetRecordId||'')];
+    if(!target){warn('忽略刪除紀錄 '+String(record.id||'')+':找不到目標 '+String(record.targetRecordId||''));return;}
+    if(isDeletionRecord(target)){warn('忽略刪除紀錄 '+String(record.id||'')+':目標是刪除紀錄');return;}
+    if(isIdentityRegistrationRecord(target)){warn('忽略刪除紀錄 '+String(record.id||'')+':不可刪除身分註冊');return;}
+    deleted[target.id]=true;
+  });
+  return source.filter(function(record){return !isDeletionRecord(record)&&!deleted[record&&record.id];});
+}
 function registeredMemberEntries(records,testMode){
   var ordered=(records||[]).map(function(record,index){return {record:record,index:index};}).sort(function(a,b){
     var time=String(a.record.time||'').localeCompare(String(b.record.time||''));
@@ -3029,11 +3066,11 @@ function findRegisteredMember(name,records,testMode){
   for(var i=0;i<entries.length;i++)if(entries[i].key===key)return entries[i];
   return null;
 }
-function spendLedgerRecords(records){ return (records||[]).filter(function(record){return !isIdentityRegistrationRecord(record);}); }
+function spendLedgerRecords(records){ return effectiveLedgerRecords(records).filter(function(record){return !isIdentityRegistrationRecord(record);}); }
 
 function summarizeLedgerRecords(records,includeTest){
   var byMember={}, order=[], total={amountJpy:0,amountTwd:0}, included=[];
-  (records||[]).forEach(function(record){
+  effectiveLedgerRecords(records).forEach(function(record){
     if((!includeTest&&isTestLedgerRecord(record))||isIdentityRegistrationRecord(record)) return;
     var member=String(record.member||'').trim();
     if(!member) return;
@@ -3045,6 +3082,33 @@ function summarizeLedgerRecords(records,includeTest){
   return {members:order.map(function(member){return byMember[member];}),total:total,records:included};
 }
 function summarizePersonalLedgerRecords(records){return summarizeLedgerRecords(records,true);}
+
+function ledgerDeletionBridgeRecords(){
+  try{var records=JSON.parse(localStorage.getItem(LEDGER_DELETION_BRIDGE_KEY)||'[]');return Array.isArray(records)?records:[];}
+  catch(error){AppLog.repo('刪除同步橋接讀取失敗:'+(error.message||error));return [];}
+}
+function writeLedgerDeletionBridge(records){
+  if(records.length)localStorage.setItem(LEDGER_DELETION_BRIDGE_KEY,JSON.stringify(records));
+  else localStorage.removeItem(LEDGER_DELETION_BRIDGE_KEY);
+}
+function rememberLedgerDeletionBridge(record){
+  if(!isDeletionRecord(record)||deletionRecordIssue(record))return false;
+  var records=ledgerDeletionBridgeRecords();
+  if(!records.some(function(item){return item.id===record.id;})){records.push(record);writeLedgerDeletionBridge(records);}
+  return true;
+}
+function reconcileLedgerDeletionBridge(cloudRecords){
+  var confirmed={};
+  (cloudRecords||[]).forEach(function(record){if(record&&record.id&&isDeletionRecord(record)&&!deletionRecordIssue(record))confirmed[record.id]=true;});
+  var records=ledgerDeletionBridgeRecords(), next=records.filter(function(record){return !confirmed[record.id];});
+  if(next.length!==records.length)writeLedgerDeletionBridge(next);
+  return next;
+}
+function mergeLedgerRecordSets(cloudRecords,queuedRecords,bridgeRecords){
+  var byId={}, merged=[];
+  [cloudRecords||[],queuedRecords||[],bridgeRecords||[]].forEach(function(records){records.forEach(function(record){if(record&&record.id&&!byId[record.id]){byId[record.id]=true;merged.push(record);}});});
+  return merged.sort(function(a,b){return String(b.time||'').localeCompare(String(a.time||''));});
+}
 
 function createLedgerRepository(options){
   var opts=options||{}, storage=opts.storage, post=opts.post, now=opts.now||Date.now, random=opts.random||Math.random, flushInFlight=null;
@@ -3068,6 +3132,7 @@ function createLedgerRepository(options){
       var current=queue[0];
       return Promise.resolve().then(function(){ return post(current); }).then(function(response){
         if(!response||response.ok!==true) throw new Error(response&&response.error||'伺服器未確認寫入');
+        if(typeof opts.onDelivered==='function')opts.onDelivered(current,response);
         var latest=readQueue().filter(function(item){return item.id!==current.id;});
         writeQueue(latest); sent++; if(response.dup) sawDup=true;
         return sendNext();
@@ -3198,6 +3263,7 @@ var ledgerRepository=createLedgerRepository({
   storage:localStorage,
   post:postLedgerRecord,
   isTestMode:function(){return !!lsGet('trip_ledger_test_mode',false);},
+  onDelivered:function(record){if(isDeletionRecord(record))rememberLedgerDeletionBridge(record);},
   onChange:function(){if(typeof updateLedgerPendingStatus==='function') updateLedgerPendingStatus();}
 });
 var personalLedgerRepository=createPersonalLedgerRepository({storage:localStorage});
@@ -3455,10 +3521,9 @@ function openSettings(targetId){
   }
 }
 function mergedLedgerRecords(){
-  var byId={}, merged=[];
-  (DB.ledger||[]).forEach(function(record){ if(!byId[record.id]){byId[record.id]=true;merged.push(record);} });
-  ledgerRepository.queuedRecords().forEach(function(record){ if(!byId[record.id]){var pending={};Object.keys(record).forEach(function(key){pending[key]=record[key];});pending.pending=true;byId[record.id]=true;merged.push(pending);} });
-  return merged.sort(function(a,b){return String(b.time||'').localeCompare(String(a.time||''));});
+  var cloud=DB.ledger||[], pending=ledgerRepository.queuedRecords().map(function(record){var copy={};Object.keys(record).forEach(function(key){copy[key]=record[key];});copy.pending=true;return copy;});
+  reconcileLedgerDeletionBridge(cloud);
+  return mergeLedgerRecordSets(cloud,pending,ledgerDeletionBridgeRecords());
 }
 function updateLedgerPendingStatus(){
   var node=document.getElementById('ledgerPendingStatus'), count=ledgerRepository.pendingCount();
@@ -3545,11 +3610,36 @@ function addLedgerExpense(){
   renderSplit();
   return promise.then(function(result){ledgerDraftCurrency='';renderSplit();toast(result.ok?'已同步':'已記錄,待連網同步');return result;},function(error){renderSplit();toast(error.message||'記帳失敗');throw error;});
 }
-function reverseLedgerRecord(id){
-  var original=spendLedgerRecords(mergedLedgerRecords()).filter(function(record){return record.id===id;})[0];
-  if(!original||!confirm('將新增一筆負向沖銷紀錄以抵銷此筆，原紀錄保留。確定？')) return;
-  var reversal=createLedgerReversal(original,Date.now());
-  ledgerRepository.add(reversal).then(function(result){renderSplit();toast(result.ok?'沖銷已同步':'沖銷已記錄,待同步');});
+function deletePersonalLedgerRecord(id){
+  var original=personalLedgerRepository.all().filter(function(record){return record.id===id;})[0];
+  if(!original||!confirm('確定刪除這筆個人紀錄？\n此操作無法復原。'))return;
+  if(personalLedgerRepository.remove(id)){renderSplit();toast('個人紀錄已刪除');}
+}
+function closeSharedLedgerDelete(){var overlay=document.getElementById('ledgerDeleteDialog');if(overlay)overlay.remove();}
+function openSharedLedgerDelete(id){
+  var original=effectiveLedgerRecords(mergedLedgerRecords()).filter(function(record){return record.id===id;})[0];
+  if(!canDeleteLedgerRecord(original)){toast('此紀錄不可刪除');return;}
+  closeSharedLedgerDelete();
+  var overlay=document.createElement('div');
+  overlay.id='ledgerDeleteDialog';overlay.className='settings-overlay state-dialog-overlay';overlay.setAttribute('data-target-id',id);
+  overlay.innerHTML='<section class="settings-panel state-dialog-panel" role="dialog" aria-modal="true" aria-labelledby="ledgerDeleteTitle"><div class="settings-head"><h2 id="ledgerDeleteTitle">確定刪除這筆團體紀錄？</h2><button class="settings-close" aria-label="關閉" onclick="closeSharedLedgerDelete()">×</button></div><p class="ledger-delete-copy">此操作會同步對所有裝置生效，原始紀錄仍會保留。</p><label class="ledger-delete-label" for="ledgerDeleteReason">刪除原因（必填）：</label><input id="ledgerDeleteReason" class="ledger-delete-reason" maxlength="50" autocomplete="off"><div id="ledgerDeleteError" class="ledger-delete-error" role="alert"></div><div class="settings-actions"><button class="btn ghost" onclick="closeSharedLedgerDelete()">取消</button><button id="ledgerDeleteConfirm" class="btn coral" onclick="submitSharedLedgerDeletion()">確認刪除</button></div></section>';
+  document.body.appendChild(overlay);
+  var input=document.getElementById('ledgerDeleteReason');if(input)input.focus();
+}
+function submitSharedLedgerDeletion(){
+  var overlay=document.getElementById('ledgerDeleteDialog'), input=document.getElementById('ledgerDeleteReason'), errorNode=document.getElementById('ledgerDeleteError');
+  if(!overlay)return Promise.resolve({ok:false});
+  var reason=String(input&&input.value||'').trim(), id=overlay.getAttribute('data-target-id');
+  if(!reason){if(errorNode)errorNode.textContent='請輸入刪除原因';if(input)input.focus();return Promise.resolve({ok:false});}
+  if(reason.length>50){if(errorNode)errorNode.textContent='刪除原因最多 50 個字';if(input)input.focus();return Promise.resolve({ok:false});}
+  var original=effectiveLedgerRecords(mergedLedgerRecords()).filter(function(record){return record.id===id;})[0], deletion;
+  if(!canDeleteLedgerRecord(original)){closeSharedLedgerDelete();renderSplit();toast('此紀錄已刪除或不可刪除');return Promise.resolve({ok:false});}
+  try{deletion=createLedgerDeletion(original,getCurrentMember(),reason,Date.now());}
+  catch(error){if(errorNode)errorNode.textContent=error.message||'無法刪除';return Promise.resolve({ok:false});}
+  var button=document.getElementById('ledgerDeleteConfirm');if(button)button.disabled=true;
+  var promise=ledgerRepository.add(deletion);
+  closeSharedLedgerDelete();renderSplit();
+  return promise.then(function(result){renderSplit();toast(result.ok?'刪除已同步':'刪除已記錄,待同步');return result;},function(error){renderSplit();toast(error.message||'刪除失敗');throw error;});
 }
 function clearLegacyExpenses(){ localStorage.removeItem('trip_expenses'); legacyExpenseNoticeVisible=false; renderSplit(); toast('舊本機紀錄已清除'); }
 function dismissLegacyExpenses(){ legacyExpenseNoticeVisible=false; renderSplit(); }
@@ -3569,7 +3659,7 @@ function renderSplit(){
   var currency=ledgerDraftCurrency||(ledgerSettings&&ledgerSettings.defaultCurrency)||'JPY';
   var rateText=ledgerSettings?'目前匯率：1 JPY = NT$'+ledgerSettings.exchangeRate:'目前匯率：未設定';
   var legacy=legacyExpenseNoticeVisible?'<div class="legacy-ledger">偵測到舊版 `trip_expenses` 本機測試資料,不會遷移至雲端。<div class="settings-actions"><button class="btn coral" onclick="clearLegacyExpenses()">清除舊本機紀錄</button><button class="btn ghost" onclick="dismissLegacyExpenses()">保留並關閉</button></div></div>':'';
-  var rows=records.length?records.map(function(record){var action=shared?'<span class="edel" onclick="reverseLedgerRecord(\''+jsString(record.id)+'\')">🗑 沖銷</span>':'';return '<div class="exp-item ledger-record '+(record.pending?'pending':'')+'"><div class="er1"><span class="edesc">'+escapeHtml(record.detail||'未命名')+(record.pending?'<span class="ledger-tag">待同步</span>':'')+(shared&&isTestLedgerRecord(record)?'<span class="ledger-tag">TEST</span>':'')+'</span><span class="eamt">'+escapeHtml(formatLedgerAmounts(record))+'</span></div><div class="er2">'+escapeHtml([record.member,record.category,record.payMethod,record.time&&record.time.slice(0,16).replace('T',' '),record.note].filter(Boolean).join(' · '))+'</div>'+action+'</div>';}).join(''):'<div class="empty-state">還沒有任何'+(shared?'團體':'個人')+'紀錄</div>';
+  var rows=records.length?records.map(function(record){var action=shared?'<button class="edel" onclick="openSharedLedgerDelete(\''+jsString(record.id)+'\')">🗑 刪除</button>':'<button class="edel" onclick="deletePersonalLedgerRecord(\''+jsString(record.id)+'\')">🗑 刪除</button>';return '<div class="exp-item ledger-record '+(record.pending?'pending':'')+'"><div class="er1"><span class="edesc">'+escapeHtml(record.detail||'未命名')+(record.pending?'<span class="ledger-tag">待同步</span>':'')+(shared&&isTestLedgerRecord(record)?'<span class="ledger-tag">TEST</span>':'')+'</span><span class="eamt">'+escapeHtml(formatLedgerAmounts(record))+'</span></div><div class="er2">'+escapeHtml([record.member,record.category,record.payMethod,record.time&&record.time.slice(0,16).replace('T',' '),record.note].filter(Boolean).join(' · '))+'</div>'+action+'</div>';}).join(''):'<div class="empty-state">還沒有任何'+(shared?'團體':'個人')+'紀錄</div>';
   var memberTotals=summary.members.map(function(item){return '<div class="ledger-summary-row"><span>'+escapeHtml(item.member)+'</span><span>¥'+Math.round(item.amountJpy).toLocaleString()+' / NT$'+Math.round(item.amountTwd).toLocaleString()+'</span></div>';}).join('');
   var testWarning=shared&&lsGet('trip_ledger_test_mode',false)?'<div class="ledger-test-warning"><strong>⚠ 測試模式中</strong><div>團體帳新增的記帳不會列入彙算</div><button class="btn coral" onclick="openSettings(\'ledgerTestModeSection\')">前往設定關閉</button></div>':'';
   view.innerHTML=testWarning+legacy+'<div class="split-intro">個人帳留在本機；團體帳跨裝置同步。</div>'+

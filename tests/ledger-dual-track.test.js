@@ -48,6 +48,9 @@ assert.strictEqual(personal.proxyTarget,'');
 assert.strictEqual(personal.batchId,'');
 assert.strictEqual(personalRepo.all().length,1,'personal record persists locally');
 assert.strictEqual(storage.getItem(mod.LEDGER_QUEUE_KEY),null,'personal record never enters the shared queue');
+assert.strictEqual(personalRepo.remove(personal.id),true,'personal records can be truly removed');
+assert.strictEqual(personalRepo.all().length,0,'personal removal leaves no tombstone');
+assert.strictEqual(personalRepo.remove('missing'),false,'removing a missing personal record is a safe no-op');
 
 const brokenStorage=createStorage({trip_personal_ledger:'{'});
 const brokenRepo=mod.createPersonalLedgerRepository({storage:brokenStorage,now(){return 1784428800100;},random(){return 0.5;}});

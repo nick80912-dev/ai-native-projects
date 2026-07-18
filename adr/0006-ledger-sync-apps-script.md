@@ -21,3 +21,15 @@
 **Context**:分帳 2.0 後續需要保存記帳當下的分攤成員快照、支付方式、刪除目標與原因，以及多品項帳單關聯。先擴充可向後相容的傳輸與 Sheet 契約，再由後續獨立 PR 導入雙軌資料、墓碑與結算行為，可避免 UI 與資料遷移同批交付。
 
 **Compatibility**:六欄不是全域必填，現行八欄 payload、零金額身分註冊與歷史 CSV 仍可使用。未知欄位由既有 Schema Parser 忽略；本次只建立資料契約，不啟用墓碑刪除、分攤計算或新版分帳 UI。
+
+## 2026-07-18 Ledger 2.0 墓碑刪除決策
+
+**Decision**:本節取代本 ADR 原先以負向沖銷表示刪帳的決策。團體帳刪除改為 append `recordType=deletion` 的墓碑紀錄，以 `targetRecordId` 指向保留不動的原始紀錄，並保存目前操作者、刪除原因與原始 `batchId`；墓碑金額固定為零。有效紀錄解析器隱藏墓碑及其目標，同一目標有多筆墓碑時仍只刪除一次。個人帳不進共享稽核軌跡，確認後直接從 `trip_personal_ledger` 真正刪除。
+
+**Context**:負向沖銷會把刪除語意混入金額計算，且重複操作可能重複扣減。Ledger 2.0 已具備 `recordType`、`targetRecordId` 與 `deleteReason` 契約，可將刪除意圖與金額分離，同時保留團體帳的 append-only 稽核軌跡。
+
+**Why This Decision**:墓碑以紀錄 ID 表達刪除集合，天然支援冪等解析；原始紀錄不改寫，仍可追查誰在何時因何原因刪除。`detail='[刪除]'` 僅供人閱讀，程式判定只信任 `recordType=deletion`，避免文字相似造成誤判。
+
+**Collaboration and Authorization**:所有已選擇成員身分的裝置都可提出團體刪除，操作者寫入墓碑的 `member`。這是協作式 UI 行為，不代表伺服器端身分驗證或存取控制；Apps Script URL 的既有安全取捨不變。
+
+**Compatibility and Trade-offs**:既有負數沖銷紀錄不改寫，仍按歷史金額正常讀取與彙算；新版 UI 不再建立負數沖銷。格式不完整或指向不存在目標、身分註冊、另一墓碑的刪除紀錄會被忽略並警告。公開 CSV 延遲期間，本機待同步墓碑由既有 queue 立即參與有效紀錄解析；收到寫入確認後轉入本機 bridge，直到雲端快照出現同一墓碑 ID 才清除，避免原紀錄短暫復活。
