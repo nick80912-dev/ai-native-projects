@@ -28,7 +28,7 @@ Google Sheets 7表 →發布CSV→ 瀏覽器fetch → validator.js(防錯) → p
 ## CMS(fileId `1B5g7KuVi2WaFVVSdhqRMeTQV_tBpgnzOAv6aMQdFZJw`)
 pubBase=`https://docs.google.com/spreadsheets/d/e/2PACX-1vRenmV8UxEzWbzSjKJKi4rSpYt63geBqhEkKsl1GemWVPmFKTcvv3Uk71Hjla3TGBpGIjC7bQDDdI00/pub?single=true&output=csv&gid=`
 gid:行程1169222358/Places1089684162/Rest1421821084/Shop1182059264/Hotels792115203/Exp1354339857/Cfg1070234314
-- 行程:7欄位置式 `日期|時間|詳細行程|地點|ID(Pxxx/Rxxx)|交通|備註`;「第N天MM/DD(週)」=換日列
+- 行程:7欄位置式 `日期|時間|行程|地點|ID(Pxxx/Rxxx)|交通|備註`;「第N天MM/DD(週)」=換日列
 - Places:`PID|地點|Type|MAPCODE|交通/交通時間|停車|營業時間|門票|官網|時刻表連結|備註`;Type中文值→型別:購物/美食區/住宿/景點/渡船口・渡輪/租車點(禁猜);「停車同Pxxx」完整繼承(深度3,懸空→warn顯示原文)
 - Rest:`RID|PID(可空白)|餐廳名稱|Tabelog|餐廳類型|營業時間|付款方式|交通時間|停車|備註`;掛PID→該地點卡自動列出
 - Shop:`SID|PID|品牌名稱|樓層|分類|必逛|免稅|備註`;Hotels:`HID|名稱|入住|退房|地址|停車|適用日期|備註`(名稱比對Places)

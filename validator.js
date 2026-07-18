@@ -25,7 +25,7 @@ function normHBase(h){ return normH(h).replace(/[（(].*?[)）]/g,''); }
 
 /* ---- 表頭驗證與對照(Schema 驅動) ---- */
 function buildHeaderMap(rows, def){
-  var result = { map:{}, headerIdx:-1 };
+  var result = { map:{}, headerIdx:-1, blockers:[], warnings:[] };
   var best = { idx:-1, hits:0 };
   for(var i=0;i<Math.min(rows.length,10);i++){
     var hits = 0;
@@ -40,7 +40,9 @@ function buildHeaderMap(rows, def){
     if(hits > best.hits){ best = { idx:i, hits:hits }; }
   }
   if(best.idx < 0 || best.hits === 0){
-    AppLog.schema(def.label + ':找不到表頭列 — 請確認工作表第一列為欄位名稱');
+    var missingHeaderMessage = def.label + ':找不到表頭列 — 請確認工作表第一列為欄位名稱';
+    AppLog.schema(missingHeaderMessage);
+    result.blockers.push(makeValidationFinding('blocker','HEADER_MISSING',def.label,missingHeaderMessage));
     return result;
   }
   result.headerIdx = best.idx;
@@ -54,64 +56,187 @@ function buildHeaderMap(rows, def){
       if(cand.indexOf(h)>=0) matched = c.field;
     });
     if(matched){ if(!(matched in result.map)) result.map[matched] = idx; }
-    else AppLog.schema(def.label + ':未知欄位「' + cell + '」(第' + (idx+1) + '欄) — 已忽略;若為新欄位請更新 schema.js');
+    else{
+      var unknownMessage = def.label + ':未知欄位「' + cell + '」(第' + (idx+1) + '欄) — 已忽略;若為新欄位請更新 schema.js';
+      AppLog.schema(unknownMessage);
+      result.warnings.push(makeValidationFinding('warning','HEADER_UNKNOWN',def.label,unknownMessage));
+    }
   });
   def.columns.forEach(function(c){
     if(c.required && !(c.field in result.map)){
-      AppLog.schema(def.label + ":Missing required field '" + c.header + "'(" + c.field + ") — 相關卡片可能無法顯示");
+      var requiredMessage = def.label + ":Missing required field '" + c.header + "'(" + c.field + ") — 相關卡片可能無法顯示";
+      AppLog.schema(requiredMessage);
+      result.blockers.push(makeValidationFinding('blocker','HEADER_REQUIRED',def.label,requiredMessage));
     }
   });
+  return result;
+}
+
+function makeValidationFinding(level,code,sheet,message){
+  return { level:level, code:code, sheet:sheet||'', message:String(message||'') };
+}
+
+function sameDisplayName(a,b){
+  var left=String(a||'').toLowerCase().replace(/\s+/g,'');
+  var right=String(b||'').toLowerCase().replace(/\s+/g,'');
+  return !!(left&&right&&(left.indexOf(right)>=0||right.indexOf(left)>=0));
+}
+
+function validateSnapshotData(db,raw,schema){
+  var result={blockers:[],warnings:[]}, sheets=(schema&&schema.sheets)||{};
+  function block(code,sheet,message){ result.blockers.push(makeValidationFinding('blocker',code,sheet,message)); }
+  function warn(code,sheet,message){ result.warnings.push(makeValidationFinding('warning',code,sheet,message)); }
+  function ids(list,field,sheet){
+    var seen={};
+    (list||[]).forEach(function(row){
+      var id=String(row&&row[field]||'').toUpperCase().trim();
+      if(!id) return;
+      if(seen[id]) block('DUPLICATE_ID',sheet,'重複ID:' + sheet + ' ' + id);
+      seen[id]=true;
+    });
+    return seen;
+  }
+  Object.keys(sheets).forEach(function(key){
+    if(!raw||!raw[key]||String(raw[key]).trim().length<5){
+      block('SHEET_MISSING',key,'資料缺席:工作表 ' + sheets[key].label + ' 無任何資料來源(內建/快取/線上皆空)');
+    }
+  });
+  db=db&&typeof db==='object'&&!Array.isArray(db)?db:{};
+  function validObjects(list,sheet,label){
+    var valid=[];
+    list.forEach(function(row,index){
+      if(!row||typeof row!=='object'||Array.isArray(row)){
+        block('DB_STRUCTURE',sheet,label + ' 第 ' + (index+1) + ' 筆必須是物件');
+      }else{
+        valid.push(row);
+      }
+    });
+    return valid;
+  }
+  function validList(field,sheet){
+    if(!Array.isArray(db[field])){
+      block('DB_STRUCTURE',sheet,field + ' 必須是陣列');
+      return [];
+    }
+    return validObjects(db[field],sheet,field);
+  }
+  var placeList=validList('placeList','places');
+  var restList=validList('rest','rest');
+  var shopList=validList('shop','shop');
+  var hotelList=validList('hotels','hotels');
+  function boundedValue(value,maxLength){ return String(value||'').slice(0,maxLength); }
+  function requiredValues(list,key){
+    var def=sheets[key]||{}, columns=def.columns||[], idField=def.idField;
+    (list||[]).forEach(function(row,index){
+      var identity=String(idField&&row[idField]||'').trim()||('row ' + (index+1));
+      columns.forEach(function(column){
+        if(column.required&&!String(row[column.field]||'').trim()){
+          var message=boundedValue(def.label||key,30) + ' ' + boundedValue(identity,30) + ": missing required '" + boundedValue(column.header||column.field,30) + "' (" + boundedValue(column.field,24) + ')';
+          block('REQUIRED_VALUE',key,message);
+        }
+      });
+    });
+  }
+  requiredValues(placeList,'places');
+  requiredValues(restList,'rest');
+  requiredValues(shopList,'shop');
+  requiredValues(hotelList,'hotels');
+  var tripDays=[];
+  if(!db.trip||typeof db.trip!=='object'||Array.isArray(db.trip)){
+    block('DB_STRUCTURE','itin','trip 必須是物件');
+  }else if(!Array.isArray(db.trip.days)||!db.trip.days.length){
+    block('DB_STRUCTURE','itin','trip.days 必須是非空陣列');
+  }else{
+    tripDays=validObjects(db.trip.days,'itin','trip.days');
+  }
+  var cfg=null;
+  if(!db.cfg||typeof db.cfg!=='object'||Array.isArray(db.cfg)){
+    block('DB_STRUCTURE','cfg','cfg 必須是物件');
+  }else{
+    cfg=db.cfg;
+  }
+  var pids=ids(placeList,'placeId','places');
+  var rids=ids(restList,'restId','rest');
+  ids(shopList,'shopId','shop');
+  ids(hotelList,'hotelId','hotels');
+  var typeColumn=null;
+  ((sheets.places&&sheets.places.columns)||[]).forEach(function(column){ if(column.field==='type') typeColumn=column; });
+  var typeValues=typeColumn&&typeColumn.values||{};
+  placeList.forEach(function(place){
+    var rawType=String(place.type||'').trim();
+    if(rawType&&!typeValues[rawType]&&!typeValues[rawType.toLowerCase()]){
+      block('UNKNOWN_PLACE_TYPE','places','未註冊型別:' + place.placeId + ' 型別「' + rawType + '」無對應卡片渲染');
+    }
+  });
+  restList.forEach(function(rest){
+    var pid=String(rest.placeId||'').toUpperCase().trim();
+    if(pid&&!pids[pid]) block('BROKEN_REF','rest','懸空引用:Restaurants ' + rest.restId + ' → ' + pid + ' 不存在於 Places');
+  });
+  shopList.forEach(function(shop){
+    var pid=String(shop.placeId||'').toUpperCase().trim();
+    if(pid&&!pids[pid]) block('BROKEN_REF','shop','懸空引用:Shopping ' + shop.shopId + ' → ' + pid + ' 不存在於 Places');
+  });
+  tripDays.forEach(function(day,dayIndex){
+    if(!Array.isArray(day.items)){
+      block('DB_STRUCTURE','itin','trip.days 的每一天都必須包含 items 陣列');
+      return;
+    }
+    validObjects(day.items,'itin','trip.days[' + dayIndex + '].items').forEach(function(item){
+      var ref=String(item.ref||'').toUpperCase().trim(), linked=null;
+      if(/^P\d+/.test(ref)&&!pids[ref]) block('BROKEN_REF','itin','懸空引用:行程 ' + day.date + '「' + item.act + '」→ ' + ref + ' 不存在於 Places');
+      if(/^R\d+/.test(ref)){
+        if(!rids[ref]) block('BROKEN_REF','itin','懸空引用:行程 ' + day.date + '「' + item.act + '」→ ' + ref + ' 不存在於 Restaurants');
+        linked=restList.filter(function(rest){return String(rest.restId||'').toUpperCase()===ref;})[0]||null;
+        if(linked&&item.place&&linked.name&&!sameDisplayName(item.place,linked.name)){
+          block('REF_NAME_MISMATCH','itin','引用名稱不一致:行程 ' + day.date + '「' + item.place + '」→ ' + ref + '「' + linked.name + '」');
+        }
+      }
+    });
+  });
+  if(cfg){
+    ['tripname','startdate','enddate','travelmode'].forEach(function(field){
+      if(!String(cfg[field]||'').trim()) block('CFG_REQUIRED','cfg','TripConfig 缺少 ' + field);
+    });
+    function isoDateValue(value){
+      var match=/^(\d{4})-(\d{2})-(\d{2})$/.exec(String(value||'').trim());
+      if(!match) return null;
+      var year=Number(match[1]), month=Number(match[2]), day=Number(match[3]);
+      var leap=year%4===0&&(year%100!==0||year%400===0);
+      var monthDays=[31,leap?29:28,31,30,31,30,31,31,30,31,30,31];
+      if(year<1||month<1||month>12||day<1||day>monthDays[month-1]) return null;
+      return year*10000+month*100+day;
+    }
+    var startText=String(cfg.startdate||'').trim(), endText=String(cfg.enddate||'').trim();
+    var startValue=startText?isoDateValue(startText):null, endValue=endText?isoDateValue(endText):null;
+    if(startText&&startValue===null) block('CFG_DATE','cfg','TripConfig startdate 必須是有效的 YYYY-MM-DD 日期');
+    if(endText&&endValue===null) block('CFG_DATE','cfg','TripConfig enddate 必須是有效的 YYYY-MM-DD 日期');
+    if(startValue!==null&&endValue!==null&&endValue<startValue) block('CFG_DATE','cfg','TripConfig enddate 不得早於 startdate');
+    var mode=String(cfg.travelmode||'').trim().toLowerCase();
+    if(mode&&mode!=='drive'&&mode!=='transit') block('CFG_TRAVELMODE','cfg','TripConfig travelmode 必須是 drive 或 transit');
+    var exchangeRate=Number(cfg.exchangeRate);
+    if(!String(cfg.exchangeRate||'').trim()||!isFinite(exchangeRate)||exchangeRate<=0){
+      block('CFG_EXCHANGE_RATE','cfg','TripConfig exchangeRate 必須是大於 0 的數字');
+    }
+    var ledgerCurrency=String(cfg.ledgerDefaultCurrency||'').trim().toUpperCase();
+    if(ledgerCurrency!=='JPY'&&ledgerCurrency!=='TWD'){
+      block('CFG_LEDGER_CURRENCY','cfg','TripConfig ledgerDefaultCurrency 必須是 JPY 或 TWD');
+    }
+  }
   return result;
 }
 
 /* ---- 專案健康檢查(資料一致性) ----
    回傳 findings 陣列並輸出報告;AI 每次交付前必跑 */
 function healthCheck(){
-  var f = [];
-  function dupCheck(list, idField, label){
-    var seen = {};
-    (list||[]).forEach(function(r){
-      var id = (r[idField]||'').toUpperCase();
-      if(!id) return;
-      if(seen[id]) f.push('重複ID:' + label + ' ' + id);
-      seen[id] = true;
-    });
-    return seen;
-  }
-  var pids = dupCheck(DB.placeList, 'placeId', 'Places');
-  dupCheck(DB.rest, 'restId', 'Restaurants');
-  dupCheck(DB.shop, 'shopId', 'Shopping');
-  /* 懸空引用 */
-  (DB.rest||[]).forEach(function(r){
-    if(r.placeId && !pids[r.placeId.toUpperCase()]) f.push('懸空引用:Restaurants ' + r.restId + ' → ' + r.placeId + ' 不存在於 Places');
-  });
-  (DB.shop||[]).forEach(function(s){
-    if(s.placeId && !pids[s.placeId.toUpperCase()]) f.push('懸空引用:Shopping ' + s.shopId + ' → ' + s.placeId + ' 不存在於 Places');
-  });
-  if(DB.trip) DB.trip.days.forEach(function(d){
-    d.items.forEach(function(it){
-      var ref = (it.ref||'').toUpperCase().trim();
-      if(/^P\d+/.test(ref) && !pids[ref]) f.push('懸空引用:行程 ' + d.date + '「' + it.act + '」→ ' + ref + ' 不存在於 Places');
-      if(/^R\d+/.test(ref) && !(DB.rest||[]).some(function(r){ return (r.restId||'').toUpperCase()===ref; }))
-        f.push('懸空引用:行程 ' + d.date + '「' + it.act + '」→ ' + ref + ' 不存在於 Restaurants');
-    });
-  });
-  /* 渲染型別覆蓋:資料中出現的型別必須都有對應卡片 */
-  var covered = ['shopping','restarea','hotel','ferry','parking','attraction'];
-  (DB.placeList||[]).forEach(function(p){
-    if(covered.indexOf(p.tnorm)<0) f.push('未註冊型別:' + p.placeId + ' 型別「' + p.type + '」無對應卡片渲染');
-  });
-  /* Sheet 資料到位 */
-  Object.keys(SCHEMA.sheets).forEach(function(k){
-    if(!RAW[k]) f.push('資料缺席:工作表 ' + SCHEMA.sheets[k].label + ' 無任何資料來源(內建/快取/線上皆空)');
-  });
+  var validation = validateSnapshotData(DB,RAW,SCHEMA);
+  var findings = validation.blockers.concat(validation.warnings);
   /* 輸出報告 */
-  if(f.length){
-    console.warn('━━ Project Health Check:發現 ' + f.length + ' 項 ━━');
-    f.forEach(function(x){ AppLog.data(x); });
+  if(findings.length){
+    console.warn('━━ Project Health Check:發現 ' + findings.length + ' 項 ━━');
+    findings.forEach(function(f){ AppLog.data(f.message); });
   }else{
     console.log('━━ Project Health Check:PASS(資料一致性無異常)━━');
   }
-  return f;
+  return findings.map(function(f){ return f.message; });
 }
 if(typeof window !== 'undefined') window.healthCheck = healthCheck;

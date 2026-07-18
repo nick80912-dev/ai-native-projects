@@ -21,5 +21,18 @@
 ## 字體
 系統字("Hiragino Sans","Noto Sans TC")。內文 15px、標題 17-20px、輔助 11-13px。emoji 當 icon,不引入 icon 字型。
 
+表單控制項(`input` / `select` / `textarea`)最小字級為 16px,此規則優先於內文字級表,避免 iOS focus 時自動放大。
+
+## 行動手勢
+- App 採單一 Scroll-only 政策：`html,body { touch-action:pan-x pan-y; }`，只允許水平與垂直捲動，不提供雙擊或捏合縮放。
+- 禁止恢復 `.wrap` transform 縮放、回彈、`setupPinchZoom()` 或 JavaScript 雙擊攔截器，避免與 WebKit visual viewport 形成雙重縮放狀態。
+- 輸入框 focus 造成縮放殘留時，仍只允許 viewport「瞬鎖約 100ms → 原始字串還原」；`maximum-scale` 與 `user-scalable=no` 不得常駐。
+- iOS App 從背景回到前景或由 page cache 恢復時，必須還原原始 viewport 字串、清除舊 inline transform，並在兩個 animation frames 後恢復原捲動座標；禁止以 reload 或重繪清除使用者狀態。
+- 桃子診斷徽章、按鈕、連結、表單控制項、垂直頁面捲動及水平清單捲動必須保持正常。
+- 正常 Dev 不長期收集 `touch`、`gesture`、`dblclick` 或 `visualViewport` 手勢事件；若問題重現，須經 Bar 核准才可啟用短期證據 Build。
+- 短期證據 Build 只能使用 passive listener，禁止呼叫 `preventDefault()`、修改 viewport、寫入 storage、記錄輸入值或完整 URL；證據判讀後的任何修正仍須另行核准。
+
 ## 互動
 打卡 `.chk` 勾選→卡片變灰+劃線;toast 回饋 2 秒;摺疊箭頭旋轉動畫 .25s;所有清單觸控列 ≥44px 高。
+- 首頁父子串點卡展開後，子卡整列可導向同日行程頁的對應卡片並展開既有資訊；父卡只負責展開／收合，非父子卡維持既有導向。
+- 父列本身具有地點或 ID 時，該父列即為展開清單的第一站，保留原始時間與行程 ID；父卡維持不可導向，第一站及後續子站皆使用各自原始 ID 精確開啟行程卡。

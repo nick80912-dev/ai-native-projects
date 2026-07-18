@@ -1,6 +1,165 @@
 # 07 版本紀錄
 
+## 2026-07-18 — 分帳共享身分、購物分類與團費區塊修正（Dev）
+- 分帳成員來源收斂為 Ledger 精確 `[身分註冊]` 紀錄；一般模式排除 TEST 註冊，測試模式可選正式與 TEST 註冊，Exp、一般支出、沖銷、BUILTIN 與 localStorage 均不再推導共享成員名單。
+- 首次進入與設定頁共用成員選擇器；既有／新增身分皆需二次確認，名稱統一處理全形空白、連續空白與前後空白，新增身分透過既有 repository 寫入零金額註冊並支援離線佇列。
+- 設定頁顯示目前身分並提供切換／新增入口；切換只更新目前身分，不改寫歷史支出。身分註冊紀錄不顯示於支出明細、不可沖銷且不納入筆數、小計或全團總計。
+- 分帳頁說明精簡為「記帳會跨裝置同步 💴」，沖銷確認改為負向紀錄語意；2.5「行前團費並列」經 Bar 裁定移除，資料僅保留於試算表，App 分帳頁不再渲染。
+- 購物店家列新增取自 `cat` 的低彩度分類標籤，不改動 Schema、BUILTIN 或既有樓層／免稅／想逛操作；Service Worker cache 更新為 `okayama-trip-v18`。
+- 390px 本機驗收涵蓋首次身分、二次確認、設定切換、離線排隊、四分頁、分類標籤與分帳簡化，頁面錯誤為 0；真實端點僅寫入一筆 `[TEST] [身分註冊]`（ID `1784337999516-9qnm`），公開 CSV 已回讀且一般模式未列為候選。
+
+## 2026-07-17 — 分帳安全提示與設定備份 UX
+- 設定頁改用「匯率」「預設輸入幣別」中文標籤；內部 TripConfig 契約鍵不變。
+- 測試模式在設定頁標示「僅分帳用」，開啟時分帳頁頂部顯示橘紅警示，可直達設定關閉並立即更新畫面。
+- 成員身分切換改為設定頁內行內小按鈕；首筆分帳類別預設餐飲，同次開啟期間沿用上一筆類別且不寫入 localStorage。
+- 本機資料備份改為自動複製完整 JSON；剪貼簿拒絕或 1.5 秒未完成時提供手動複製 overlay，還原欄位僅在需要時開啟。
+- Service Worker cache 更新為 `okayama-trip-v17`；本批未修改 Schema、validator、Apps Script、CMS 或個人狀態 JSON 契約。
+
+## 2026-07-17 — 雙擊放大相容性定案
+- 三次開關對照顯示：document 手勢觀測 listener 集合存在時雙擊縮放消失，診斷退役時再現；此結果支持觀測者效應，但不宣稱為 WebKit 跨版本保證。
+- 移除 24 筆手勢環形緩衝、事件快照、報告／複製／清除 UI 與相關 CSS；桃子入口、健康檢查、時間模擬、Day 快捷鍵、行程重置及 viewport/focus recovery 均保留。
+- 只留下單一 passive no-op `dblclick` listener 作為目標 iPhone 的未文件化相容性 workaround，不呼叫 `preventDefault()`；Service Worker cache 升至 `okayama-trip-v16`。
+- 實機驗收需同時確認雙擊不縮放及快速依序點擊類別、JPY/TWD、設定控制項不誤送事件；若有副作用，移除 listener 並以 SW v17 回滾。
+- 本批未修改 Schema、validator、資料流、Apps Script、Scroll-only、`touch-action`、viewport meta 或其他功能。
+
+## 2026-07-17 — 分帳換算、共用設定與手勢蒐證 ⭐ 架構變更
+- Schema 升至 `2.5 (2026-07-17)`,TripConfig 新增精確鍵 `Exchange Rate` / `Ledger Default Currency`；JPY/TWD 改為單幣輸入,依匯率四捨五入換算另一幣別並同時保存。
+- 分帳類別改為餐飲、交通、票卷、購物、其他、代墊六個單選按鈕；分帳頁移除身分切換,設定頁成為唯一切換入口；右上健康同步文字改為無勾勾的「已同步」。
+- 新增 `apps-script/ledger-sync.gs` 與部署 README。App 可 append「分帳紀錄」並更新 TripConfig 兩個固定鍵,其他 CMS 欄位仍由 Bar 管理且 App 唯讀；設定確認 bridge 涵蓋公開 CSV 1–5 分鐘延遲。
+- 因雙擊放大再現,恢復被動 iOS 手勢診斷（24 筆環形緩衝、報告／複製／清除）；未加入 `preventDefault`、雙擊 guard 或永久 viewport 限制。Service Worker cache 升至 `okayama-trip-v15`。
+- 新版 Apps Script 已部署並完成真實閘門：`updateSettings` 以 0.2／JPY 回傳成功，TripConfig CSV 發布精確兩列；測試 ID `1784292475781-9115` 首送回 `ok`、重送回 `dup`，ledger CSV 僅一列。
+- 390px 瀏覽器 QA 通過頂欄不重疊、單幣換算預覽、設定保存、無勾勾「已同步」與旅行日 mock Date，頁面錯誤為 0；實機離線補送與 iOS 手勢報告留待 Bar 手機驗收。
+
+## 2026-07-17 — 分帳跨裝置同步 ⭐ 架構變更
+- Schema 升至 `2.4 (2026-07-17)`,新增第 8 張 `ledger` 分帳紀錄表(gid `896856089`)與 Apps Script append-only 寫入通道；ADR 0006 記錄 repository 抽象、離線佇列、ID 去重與負向沖銷決策。
+- 首次啟動強制選擇 Expenses 同行成員身分；新增設定 overlay,提供身分切換、打卡／想逛／身分／佇列 JSON 匯出還原與 `[TEST]` 模式。
+- 分帳頁合併雲端紀錄與本機待同步佇列,按成員與全團顯示日幣／台幣小計；`[TEST]` 排除彙算,行前團費區塊維持並列。
+- 原有 7 表維持原子快照 Gate；ledger 下載失敗時沿用目前 ledger 快照且不阻塞其他表。Service Worker cache 僅升至 `okayama-trip-v14`。
+- 真實端點驗收通過:測試 ID `1784274603804-y3g6` 首次 POST 回 `{ok:true}`,同 ID 再送回 `{ok:true,dup:true}`；公開 ledger CSV 僅出現 1 筆,確認寫入與伺服器端去重契約。
+
 紀錄格式:日期 / 版本 / 重點。細節不展開,新變更往上加。
+
+## 2026-07-17 — 文件一致性修正(Dev,純文件)
+- `tasks/current.md` 與 `.ai-manifest.json` 已同步至 2026-07-16 全部交付後現況,涵蓋行程表頭契約、fuel 型別、父子行程卡、7 表原子快照同步、診斷與同步狀態精簡及新 PWA 圖示 / SW v13。
+- 移除 v9 雙擊縮放診斷待辦:iOS 手勢診斷已退役,診斷路線關閉;Scroll-only 政策維持;問題若再現另立新任務。
+- 後續狀態收斂為 Bar 手機全面驗收 `dev`,驗收通過後核准 PR merge `dev → main`,再由 Netlify 正式部署與線上驗證。
+- 本批未修改 App、Schema、Validator、SW、測試或部署設定。
+
+## 2026-07-16 — 父列第一站父子行程卡（Dev）
+- 父列本身具有地點或 ID 時會成為父子卡第一站，父列第一站加一個後續空白「行程」列即可成卡，不依 Day、PID、RID 或地點名稱硬編碼。
+- Day 1「岡山桃太郎機場 P001 → ORIX租車 P048」時間範圍顯示 `17:30 - 19:30`，第一站與後續站皆可精確開啟原始行程卡；父卡本身仍只負責展開／收合。
+- 首頁主佇列使用 synthetic controller 管理整組進度；完成第一站不會結束整組，全部實際站點清除後才完成，取消任一站完成會重新開啟整組。
+- Day 1–6 共 12 組已知父子行程以通用測試稽核，並保留下一站、自動略過、復原、行程打卡與既有 localStorage container keys。
+
+## 2026-07-16 — 診斷面板與同步狀態精簡（Dev）
+- Places 網站欄位維持選填，空白不再產生 `OPTIONAL_EMPTY` 驗證警告；健康檢查與阻擋規則不變。
+- 同步狀態改為置中的狀態摘要：健康時顯示勾勾、最後完整同步時間、Schema 與資料版本；失敗時才顯示未同步 Sheet、安全原因與沿用快照時間。
+- 移除診斷面板的版本、逐 Sheet 同步區與 iOS 手勢事件收集／環形緩衝／報告 UI；保留桃子入口、健康檢查、時間模擬、Day 快捷鍵、Scroll-only 與 viewport/focus recovery。
+- 「重置行程進度」改為全寬圓角紅底白字，原有雙重確認與清除範圍不變。
+
+## 2026-07-16 — Fuel 地點類型與 Day 6 稽核（Dev）
+- Places Type 新增獨立 `fuel` 映射,`加油站`於行程頁與首頁顯示「⛽ 加油站」,行程資訊按鈕顯示「⛽ 加油資訊」。
+- Schema 更新至 `2.3 (2026-07-16)`;P045 岡山機場加油站可通過未知 Type Gate,P046 ORIX租車仍維持 `租車點 → parking`。
+- Day 6 父子卡稽核新增「岡山城 P041 → 岡山後樂園 P042」與「吉備津彥神社 P043 → 吉備津神社 P044」兩組回歸案例;本批未修改父子卡 runtime。
+- Day 2「回住宿休息」確認 P013 為正確引用,取消原 P002 修正待辦。
+
+## 2026-07-16 — 行程 Header 契約更新與父子卡待辦（Dev）
+- 行程總表第三欄正式由 `詳細行程` 改為 `行程`;獨立 Schema、內嵌 Schema、BUILTIN 與對照文件同步更新至 Schema `2.2 (2026-07-16)`,不保留舊表頭 alias。
+- 原子同步 Gate 測試確認 `行程` 映射至 `act`,舊 `詳細行程` 不再符合必要表頭契約。
+- 高優先 backlog 新增父列地點成為第一子站、總計兩站即可成卡、Day 2–5 十處回歸與 Day 6 未完成資料排除規則。
+- 本批未修改父子卡分組、導航、完成/略過或 localStorage 執行邏輯。
+
+## 2026-07-13 — Google Sheets 原子快照同步（Dev）
+- 七張 Sheet 候選資料只有在全部下載並通過 Schema 驗證後才一次啟用同一版本，避免新舊資料混用。
+- 舊版逐表快取會遷移成完整快照；候選同步失敗時保留目前已啟用版本與畫面，不覆寫可用資料。
+- 診斷同步狀態面板顯示目前版本、前次完整成功時間、各 Sheet 狀態與失敗原因，且不洩漏原始 CSV。
+- 上線前公開 P025 Gate 已確認第三欄 Type 為 Schema 允許的「渡輪」，未知 Type 的嚴格驗證未放寬。
+- `atomic-sheet-sync.test.js` 覆蓋單一版本啟用、舊快取遷移、失敗候選保留與狀態面板；publication tests 驗證 APP／SW 識別。
+- 診斷面板顯示 `APP DEV · CODE 7070fb2 · 2026-07-13`；最終功能碼已包含完整快照 envelope 回讀、必填列值驗證，以及安全的失敗原因／Sheet 標籤等 review remediation；Service Worker App Shell cache 維持 `okayama-trip-v12`，`SHELL` 內容不變。
+
+## 2026-07-13 — 購物地點標籤自動置中（Dev）
+- 購物頁每次重繪後，會將目前選中的「全部／想逛／購物地點」標籤水平置中。
+- 水平標籤移動與既有地點卡片垂直定位分離，不使用 `scrollIntoView()`，不改變樓層展開、搜尋、篩選或想逛資料。
+- 診斷面板顯示 `APP DEV · CODE d0c17c0 · 2026-07-13`；Service Worker App Shell cache 更新為 `okayama-trip-v11`。
+- 未修改 Schema、Validator、Sheet、manifest 或 localStorage 結構。
+
+## 2026-07-13 — 首頁／購物定位／停車資訊 UX 修正（Dev）
+- 首頁 NEXT STOP 移除「現在」標籤；行程頁「現在」及既有時間、完成、略過、自動略過判定不變。
+- 首頁與行程頁的購物樓層入口會清除舊搜尋／篩選、選中對應 PID 並捲到購物地點卡片，不自動改變樓層展開狀態。
+- 地點、餐廳與住宿的停車欄位如含多個非空白換行，於首頁與行程資訊中逐行列點；單行、MAP CODE 與停車繼承維持原樣。
+- 診斷面板顯示 `APP DEV · CODE fcb0487 · 2026-07-13`；Service Worker App Shell cache 更新為 `okayama-trip-v10`。
+- 未修改 Schema、Validator、Sheet、manifest 或 localStorage 結構。
+
+## 2026-07-13 — 治理一致性修正批（Dev，純文件）
+1. ADR 0005 補入 ADR 索引、manifest 導航與資料夾結構說明。
+2. tasks 移除 ZIP 打包／deploy 目錄作廢流程，刷新 current/done、連續編號，新增 SW SHELL、Netlify 額度與 dev CI 評估項。
+3. `index.html` 從 Tier 1 移入 Tier 2，消除檔案分級表矛盾。
+4. 正式 App 清單對齊實際 icons、桃子診斷徽章與 `netlify.toml`。
+5. Netlify 雙站架構寫入 Ops、ADR 0005、manifest 與 handover，並明確兩站獨立回滾及瀏覽器狀態隔離。
+6. manifest 日期、已完成與待辦順序刷新至 v9 診斷取證現況。
+7. 測試索引補齊 7 個檔案、Ops 版本同步標題修正，並補記本日 Netlify 額度 incident。
+- 本批未修改 App、Schema、Validator、Service Worker、測試程式或部署設定；`dev` 現行 workflow 不產生 Actions 綠勾，經 Bar 核准改跑同等本機 CI 並記入 backlog。
+
+## 2026-07-13 — Incident：Netlify 團隊額度耗盡
+- 影響:`df94600` / `a669c6f` 的 dev 部署顯示 Skipped，手機無法取得預期測試版。
+- 處置:改採正式／測試雙站架構並恢復部署；正式站追蹤 `main`，測試站追蹤 `dev`。
+- 預防:backlog 新增 Netlify 月額度監控與接近上限時評估 GitHub Pages 遷移。
+
+## 2026-07-13 — 首頁串點子卡詳細行程導向（Dev）
+- 首頁父子串點展開後，點擊任一子卡可切換至同日行程頁、捲到對應卡片，並在有資訊面板時自動展開。
+- 父卡仍只負責展開／收合；一般非父子卡、完成／跳過／自動略過與 localStorage 狀態均未改變。
+- APP 顯示功能提交 `710c85d`；Service Worker App Shell cache 更新為 `okayama-trip-v9`，Schema 維持 2.1。
+- Dev iOS 手勢診斷器繼續保留，本功能未增加手勢攔截或 viewport 修改。
+
+## 2026-07-13 — iOS 雙擊縮放診斷 Build（Dev）
+- v7 Scroll-only 手機驗證後，雙擊縮放仍可重現；本版只收集證據，不宣稱或加入修復。
+- 診斷面板保存最近 24 筆 touch、gesture、dblclick 與 visual viewport resize 事件，可複製或清除報告；環境摘要包含即時 viewport meta，事件包含 html、body、target 的 computed touch-action。
+- 所有 observer 均為 passive，不呼叫 `preventDefault()`、不修改 viewport、不寫入 storage，也不記錄輸入內容或完整 URL。
+- APP 顯示功能提交 `cd921b2`；Service Worker App Shell cache 更新為 `okayama-trip-v8`，Schema 維持 2.1。
+- 證據回收後僅依設計文件決策樹分類；任一實作方向均須另經 Bar 核准。
+
+## 2026-07-13 — iOS 回前景與資料／首頁一致性（Dev）
+- 線上行程總表已由 Bar 將 Musashi 的錯誤引用 `R013` 修正為 `R012`；health check 新增行程餐廳名稱與 RID 指向名稱不一致偵測。
+- iOS 從背景或 page cache 回到前景時，還原原始 viewport、清除舊 inline transform，並於兩個 animation frames 後恢復原捲動位置。
+- 首頁下一站將「依目前時間」改為與行程頁共用的「現在」徽章，提醒事項改用既有列點 renderer。
+- 診斷面板更新為 `APP DEV · CODE edfbfba · 2026-07-13`；Service Worker App Shell cache 升至 `okayama-trip-v7`。
+- 保留 Scroll-only、表單 focus／blur 還原與桃子診斷徽章；Schema 維持 2.1。
+
+## 2026-07-13 — iOS Scroll-only 手勢政策（Dev）
+- 實機確認第二階段雙擊攔截仍無效，且原生 viewport 與 `.wrap` transform 同時縮放造成偶發偏移及右側留白。
+- 移除自製捏合回彈與 JavaScript 雙擊攔截，根層改為 `touch-action:pan-x pan-y`，只保留水平／垂直捲動。
+- 保留桃子診斷徽章、表單 16px 下限及 focus／blur viewport 還原。
+- 診斷面板更新為 `APP DEV · CODE 2363be3 · 2026-07-13`。
+- Service Worker App Shell cache 升至 `okayama-trip-v6`；Schema 維持 2.1。
+- 自動測試通過；最終手勢結果待 Bar 於 iPhone Dev PWA 驗證。
+
+## 2026-07-13 — iOS 雙擊防放大第二階段（Dev）
+- 將非互動區雙擊防護提前至第二次單指 `touchstart`，加入 350ms、24px 及 10px 移動取消門檻。
+- 保留捏合回彈、桃子徽章、互動元件及輸入框 focus／blur 行為。
+- 診斷面板新增 `APP DEV · CODE 10e87e1 · 2026-07-13`，Schema 獨立顯示。
+- Service Worker App Shell cache 升至 `okayama-trip-v5`。
+- 自動測試通過；最終雙擊行為待 Bar 於 iPhone Dev PWA 驗證。
+
+## 2026-07-13 — iOS 防放大階段一
+- 所有表單控制項有效字級提升至至少 16px,避免 iOS focus 自動放大;390px 排版保留既有 class 體系。
+- 既有 viewport 重排 handler 加入表單 focus 來源、多指手勢排除與 100ms 瞬鎖瞬解,原樣還原啟動時 viewport 字串。
+- `touch-action: manipulation` 作為雙擊縮放第一防線;階段一保留既有 `setupDoubleTapGuard()`,待 Bar 真實 iPhone 驗證後再決定階段二移除。
+- Service Worker cache 升至 `okayama-trip-v4`;未修改 Schema、Validator、Google Sheet 或 Renderer 架構。Breaking Change:無。
+
+## 2026-07-11 — 時間邏輯日期防護
+- 現在、時間 cutoff 與自動略過僅在 appNow 對應的當日行程啟用，避免瀏覽其他日期時污染進度。
+- 未修改 `schema.js` / `validator.js` / Google Sheet Schema；Breaking Change:無。
+
+## 2026-07-11 — 現在定義統一與還原對稱
+- 行程頁「現在」改用與首頁共用的時間感知下一站選擇器。
+- 模擬還原以同一白名單函式清除現存個人狀態後再回寫快照，避免模擬中新建狀態殘留。
+- 未修改 `schema.js` / `validator.js` / Google Sheet Schema；Breaking Change:無。
+
+## 2026-07-11 — 診斷面板收尾與狀態統一
+- 模擬套用與兩種結束操作會直接關閉診斷面板；結束按鈕放大，重置行程進度改為紅色警示。
+- 新增 `setItemCompletion()` 統一完成、跳過與自動略過對 `trip_checks`、`trip_next_stop_progress` 的寫入；取消打卡改同時檢查兩份狀態。
+- 行程內容增加 iOS viewport 重排防護，並全域防止非互動元素的雙擊縮放；桃子徽章與既有控制項不受影響。
+- 未修改 `schema.js` / `validator.js` / Google Sheet Schema；Breaking Change:無。
 
 ## 2026-07-11 — 診斷面板與時間模擬修正
 - 時間模擬改為 offset 模式，`appNow()` 以真實時間加偏移持續行走，並相容既有 `mode:"custom"` 設定。

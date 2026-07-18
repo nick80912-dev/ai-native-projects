@@ -34,10 +34,29 @@ assert.strictEqual(
   'cable-car places use the cable-car label'
 );
 
+const fuelTag = sandbox.typeTag({
+  kind: 'place',
+  p: { tnorm: 'fuel', type: '加油站' }
+});
+assert.strictEqual(fuelTag.label, '⛽ 加油站', 'fuel places use the fuel label');
+assert.strictEqual(fuelTag.cls, 'move', 'fuel places reuse the move visual class');
+
+assert.match(
+  html,
+  /fuel:'⛽ 加油資訊'/,
+  'fuel places use the dedicated itinerary information label'
+);
+
 assert.match(
   html,
   /var tripHideDone=true;/,
   'the itinerary starts with completed items hidden'
+);
+
+assert.match(
+  html,
+  /isNow\?'<span class="now-badge">現在<\/span>'/,
+  'the Trip view keeps the now badge'
 );
 
 console.log('trip presentation tests passed');

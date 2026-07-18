@@ -17,5 +17,7 @@ Decision · Context · Alternatives Considered · Why This Decision · Expected 
 | 0002 | Data-Driven UI(卡片由資料型別驅動,禁猜測) | Accepted |
 | 0003 | Google Sheet 作為 CMS | Accepted |
 | 0004 | Renderer 架構(型別 → 卡片 → 面板) | Accepted |
+| 0005 | Dev/Main Branch Strategy | Accepted |
+| 0006 | Ledger Sync via Apps Script | Accepted |
 
 新增 ADR:複製格式、編號遞增、更新本索引。

@@ -9,6 +9,7 @@
 2. 找到上一個正常的 deploy → 點入 → **Publish deploy**(即時切回舊版,無需重新上傳)。
 3. 回滾後在 07_CHANGELOG 記錄:回滾時間、原因、退回的版本。
 > Netlify 每次部署皆保留快照,拖放部署也一樣可回滾;這是本專案的第一逃生門。
+> 正式站與測試站為兩個獨立 Netlify site，部署快照與回滾操作各自獨立。
 
 ### A2. Service Worker 快取災難
 - 症狀:回滾後使用者仍看到壞版(SW 快取住舊 Shell)。
@@ -38,9 +39,9 @@
 **標準動作**:
 1. 停止新工作,確認事故範圍(哪個 commit、哪些檔案)。
 2. 修復(依 §A 回滾或重新上傳正確檔案)。
-3. 驗證:Actions 轉綠 + AI 端 clone 核對通過,才算修復完成。
+3. 驗證:`dev` 執行同等本機 CI；Pull Request / `main` 需 Actions 轉綠；再由 AI 核對遠端 commit，才算修復完成。
 4. 事後在 07_CHANGELOG 記一筆 incident:時間、原因、影響、修復方式(不追究、只留痕,供未來防範)。
-**通知**:GitHub 預設會將 Actions 失敗通知寄到 commit 者信箱;Bar 每次上傳後應等待並確認 Actions 綠勾(約 1 分鐘),綠了才離開。
+**通知**:GitHub 預設會將 Actions 失敗通知寄到 commit 者信箱;Pull Request 或 `main` push 觸發 workflow 後，Bar 應等待並確認 Actions 綠勾(約 1 分鐘),綠了才離開。`dev` push 目前以同等本機 CI 驗證，是否加入 workflow 另見 backlog。
 
 ## D. 雙通道交付 SOP(GitHub Desktop 為主、網頁上傳為輔)(2026-07-10 由 Bar 核准)
 兩通道並行,防呆規則如下:
@@ -49,10 +50,10 @@
 | 多檔交付(2 檔以上、含資料夾、含隱藏檔) | **GitHub Desktop**:解壓 ZIP 覆蓋本機 repo 資料夾 → Desktop 檢視 diff(逐檔確認,特別留意「刪除」紅字)→ Commit → Push 至 `dev` |
 | 單檔小修(貼上內容、改一行) | 網頁編輯(鉛筆)可 |
 | 刪除檔案 | **一律 GitHub Desktop**(diff 會明確顯示刪除範圍);網頁刪除僅限 AI 點名的單一檔案 |
-**版本同步三規則(防止改到舊版)**:
+**版本同步規則(防止改到舊版)**:
 1. 任何本機修改前,先在 Desktop 按 **Fetch origin / Pull**,確保本機 = GitHub 最新。
 2. AI 每輪交付時會標註「基於 commit <hash>」;若你本機最新 commit 與其不符,先問 AI 再動作。
-3. 上傳/Push 後等 Actions 綠勾;AI 隨後做 clone 逐檔核對,雙保險。
+3. `dev` Push 前執行與 Actions 相同的本機 CI；Pull Request / `main` Push 後等 Actions 綠勾，AI 再核對遠端 commit。
 4. 雙通道日常交付的目標 Branch 一律為 `dev`;只有 Bar 核准的正式發版可進入 `main`。
 **自動防線**(tools/check-doc-titles.js,CI 每次執行):核心檔案存在性、測試模擬檔擋入、內嵌與獨立 schema/validator 一致性、標題/檔名一致性、上傳殘留雜檔。
 
@@ -60,6 +61,11 @@
 ```
 dev → Pull Request → Bar Review → Bar Merge → Netlify Production Deploy → Production Verification
 ```
+**Netlify 雙站對應**:
+- 正式站 `https://trippilot-jp.netlify.app/` ← 追蹤 `main`，Bar 核准 PR merge 後自動部署。
+- 測試站 `https://dev-trippilot-jp.netlify.app/` ← 追蹤 `dev`，每次推送自動部署，供 Bar 手機驗收。
+- 兩站為獨立站點:網域、Service Worker 快取、localStorage 與 PWA 安裝完全隔離，測試狀態不污染正式站。
+
 **Release Checklist**:
 - CI PASS
 - Claude Code Review 完成
@@ -67,4 +73,4 @@ dev → Pull Request → Bar Review → Bar Merge → Netlify Production Deploy 
 - Documentation 已同步
 - ADR 已更新(若涉及架構)
 
-Push 至 `dev` 只代表開發版本已更新,不等於 Deploy。只有 Bar 核准並 Merge `dev → main` 的正式 Release 才觸發後續 Netlify Production Deploy。
+Push 至 `dev` 會自動部署至測試站，但不等於正式 Release。只有 Bar 核准並 Merge `dev → main` 才會觸發正式站部署。

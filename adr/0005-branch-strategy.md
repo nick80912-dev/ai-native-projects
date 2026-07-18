@@ -12,4 +12,4 @@
 
 **Trade-offs**:日常開發多一個長期分支與 Pull Request 步驟;`dev` 與 `main` 需持續維持可追蹤的差異;緊急修正若需直接進入 `main`,仍必須取得 Bar 明確核准。
 
-**Future Impact**:治理生效後,所有 AI 預設以 `origin/dev` 作為日常同步與交付基準;正式 Release 固定遵循 `dev → Pull Request → Bar Review → Bar Merge → main → Netlify Deploy`,未經 Bar 核准不得 Push 或 Merge 至 `main`。
+**Future Impact**:治理生效後,所有 AI 預設以 `origin/dev` 作為日常同步與交付基準;正式 Release 固定遵循 `dev → Pull Request → Bar Review → Bar Merge → main → Netlify Deploy`,未經 Bar 核准不得 Push 或 Merge 至 `main`。正式站 `https://trippilot-jp.netlify.app/` 追蹤 `main`;測試站 `https://dev-trippilot-jp.netlify.app/` 追蹤 `dev`。

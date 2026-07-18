@@ -14,7 +14,7 @@
    ============================================================ */
 
 var SCHEMA = {
-  version: '2.1 (2026-07-10)',
+  version: '2.5 (2026-07-17)',
 
   /* 發布來源(換試算表只改這裡) */
   pubBase: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRenmV8UxEzWbzSjKJKi4rSpYt63geBqhEkKsl1GemWVPmFKTcvv3Uk71Hjla3TGBpGIjC7bQDDdI00/pub?single=true&output=csv&gid=',
@@ -29,7 +29,7 @@ var SCHEMA = {
       columns: [
         { field:'date',  header:'日期',     desc:'僅換日標記列使用(第N天MM/DD)' },
         { field:'time',  header:'時間',     desc:'HH:MM 或「16:00後」等自由文字' },
-        { field:'act',   header:'詳細行程', desc:'活動名稱' },
+        { field:'act',   header:'行程',     desc:'活動名稱' },
         { field:'place', header:'地點',     desc:'地點顯示名稱(給人看)' },
         { field:'ref',   header:'ID',       desc:'Pxxx=地點 / Rxxx=餐廳(給程式讀)' },
         { field:'move',  header:'交通',     desc:'交通說明;空值時卡片退回資料庫交通時間' },
@@ -43,9 +43,9 @@ var SCHEMA = {
       columns: [
         { field:'placeId', header:'PID',           aliases:['placeid','地點id'], required:true, desc:'地點唯一ID(P001…),不得重複' },
         { field:'name',    header:'地點',           aliases:['名稱'],            required:true, desc:'地點名稱(同時作為導航關鍵字)' },
-        { field:'type',    header:'Type',           aliases:['類型'],            required:true, desc:'決定卡片型別,禁止程式猜測。值:購物/美食區/住宿/景點/機場/纜車/渡船口/渡輪/租車點',
-          values:{ '購物':'shopping','美食區':'restarea','住宿':'hotel','景點':'attraction','機場':'attraction','纜車':'attraction','渡船口':'ferry','渡輪':'ferry','租車點':'parking',
-                   'shopping':'shopping','restaurantarea':'restarea','hotel':'hotel','attraction':'attraction','ferryterminal':'ferry','parking':'parking' } },
+        { field:'type',    header:'Type',           aliases:['類型'],            required:true, desc:'決定卡片型別,禁止程式猜測。值:購物/美食區/住宿/景點/機場/纜車/渡船口/渡輪/租車點/加油站',
+          values:{ '購物':'shopping','美食區':'restarea','住宿':'hotel','景點':'attraction','機場':'attraction','纜車':'attraction','渡船口':'ferry','渡輪':'ferry','租車點':'parking','加油站':'fuel',
+                   'shopping':'shopping','restaurantarea':'restarea','hotel':'hotel','attraction':'attraction','ferryterminal':'ferry','parking':'parking','fuel':'fuel' } },
         { field:'mapcode', header:'MAPCODE',        desc:'車用導航輸入碼(大字純顯示)' },
         { field:'travel',  header:'交通/交通時間',  aliases:['交通時間'], desc:'開車X分鐘/步行X分鐘;行程交通欄空值時顯示' },
         { field:'pnote',   header:'停車',           aliases:['停車備註','停車場'], desc:'停車資訊單欄;「停車同Pxxx」可繼承' },
@@ -119,6 +119,21 @@ var SCHEMA = {
       desc: '行前團費。旅途記帳在 App 端(localStorage),兩者於分帳頁並列不重複計算。同行成員自動帶入分帳成員(首次)。'
     },
 
+    /* ── Ledger 分帳紀錄 ── */
+    ledger: {
+      gid: '896856089', label: '分帳紀錄', kind: 'table', idField: 'id',
+      columns: [
+        { field:'id',        header:'紀錄ID', required:true, desc:'時間戳-4位隨機;append-only 去重鍵' },
+        { field:'time',      header:'時間',                 desc:'ISO 8601 寫入時間' },
+        { field:'member',    header:'成員',   required:true, desc:'寫入當下的成員身分' },
+        { field:'category',  header:'類別' },
+        { field:'detail',    header:'明細' },
+        { field:'amountJpy', header:'日幣',   required:true, desc:'日幣金額;沖銷紀錄為負數' },
+        { field:'amountTwd', header:'台幣',                 desc:'台幣金額;沖銷紀錄為負數' },
+        { field:'note',      header:'備註' }
+      ]
+    },
+
     /* ── TripConfig 設定表:Key/Value ── */
     cfg: {
       gid: '1070234314', label: 'TripConfig', kind: 'keyvalue',
@@ -131,6 +146,10 @@ var SCHEMA = {
                    'transit':'transit','train':'transit','電車':'transit','大眾運輸':'transit' },
           desc:'Driving→drive(🚗導航+停車卡);Transit/Train→transit(🚃路線)' },
         { field:'currency',   header:'Currency' },
+        { field:'exchangeRate', header:'Exchange Rate', desc:'1 JPY 對應的 TWD 金額;必須大於 0' },
+        { field:'ledgerDefaultCurrency', header:'Ledger Default Currency',
+          values:{'JPY':'JPY','jpy':'JPY','TWD':'TWD','twd':'TWD'},
+          desc:'分帳預設輸入幣別;只允許 JPY/TWD' },
         { field:'homepage',   header:'Home Page',   desc:'預設分頁(⚠️ 目前**未啟用**,App 固定 Today;填寫無效果)' }
       ]
     }
