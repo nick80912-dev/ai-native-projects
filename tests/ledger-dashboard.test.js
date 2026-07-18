@@ -63,6 +63,10 @@ assert.strictEqual(summary.today.amountTwd,records.slice(2).reduce((sum,record)=
 
 assert.strictEqual(mod.ledgerLocalDateKey('not-a-date'),'','invalid dates do not create a misleading group key');
 assert.deepStrictEqual(Array.from(mod.selectRecentLedgerExpenses(records,0)),[],'zero limit returns no rows');
+const personalHistory=[{id:'a',isProxy:false},{id:'b',isProxy:true},{id:'c',isProxy:true}];
+assert.deepStrictEqual(Array.from(mod.filterLedgerHistoryRecords(personalHistory,'personal','proxy'),item=>item.id),['b','c'],'personal proxy history contains proxy records only');
+assert.deepStrictEqual(Array.from(mod.filterLedgerHistoryRecords(personalHistory,'personal','all'),item=>item.id),['a','b','c'],'personal all history keeps every visible record');
+assert.deepStrictEqual(Array.from(mod.filterLedgerHistoryRecords(personalHistory,'shared','proxy'),item=>item.id),['a','b','c'],'shared history never applies the personal proxy filter');
 
 const html=mod.__htmlSource;
 const splitSource=html.slice(html.indexOf('function renderSplit()'),html.indexOf('/* ================= 導覽 / 啟動'));
@@ -78,5 +82,14 @@ assert(splitSource.includes('openLedgerEntrySheet'),'dashboard FAB opens quick e
 assert(!splitSource.includes('id="ledgerAmount"'),'amount input no longer lives in the dashboard renderer');
 assert(splitSource.includes('selectRecentLedgerExpenses(records,15)'),'dashboard limits records through the tested selector');
 assert(ledgerUiSource.includes('groupLedgerExpensesByDate'),'dashboard uses the tested date grouping');
+assert(ledgerUiSource.includes("spendLedgerRecords(mergedLedgerRecords())"),'shared history consumes effective visible expenses');
+assert(ledgerUiSource.includes("ledgerUiState.page='all'"),'View all switches the single ledger state into history mode');
+assert(ledgerUiSource.includes("setLedgerHistoryFilter(\\'proxy\\')"),'personal history exposes the proxy-only filter');
+const detailSource=html.slice(html.indexOf('function ledgerRecordDetailRows('),html.indexOf('function renderSplit()'));
+assert(detailSource.includes('ledgerTrackRecords().filter'),'detail lookup searches the currently visible track only');
+assert(detailSource.includes('deletePersonalLedgerRecord('),'personal detail reuses the confirmed local deletion path');
+assert(detailSource.includes('openSharedLedgerDelete('),'shared detail reuses the tombstone deletion path');
+assert(detailSource.includes("['批次 ID',record.batchId]"),'detail includes batch ID when present');
+assert(detailSource.includes("['同步狀態',record.pending?'待同步':'已同步']"),'detail exposes pending status');
 
 console.log('ledger dashboard tests passed');

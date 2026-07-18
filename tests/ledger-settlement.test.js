@@ -34,6 +34,12 @@ function plain(value){return JSON.parse(JSON.stringify(value));}
 
 const mod=loadModule();
 
+const positive=plain(mod.ledgerSettlementStatus({netJpy:100,netTwd:0}));
+assert.deepStrictEqual(positive,{kind:'receivable',label:'應收',amountJpy:100,amountTwd:0});
+assert.strictEqual(mod.ledgerSettlementStatus({netJpy:-50,netTwd:-10}).label,'應付');
+assert.strictEqual(mod.ledgerSettlementStatus({netJpy:0,netTwd:0}).label,'已結清');
+assert.strictEqual(mod.ledgerSettlementStatus({netJpy:50,netTwd:-10}).label,'雙幣待結算');
+
 assert.deepStrictEqual(Array.from(mod.parseParticipants({id:'p1',participants:'["Bar","Amy"]'})),['Bar','Amy'],'participants parse from the stored JSON string');
 assert.strictEqual(mod.parseParticipants({id:'missing',participants:''}),null,'missing participants are invalid');
 assert.strictEqual(mod.parseParticipants({id:'not-array',participants:'{"Bar":true}'}),null,'participants must be a JSON array');
@@ -147,5 +153,14 @@ assert.deepStrictEqual(Array.from(overflowBalances.invalidRecords,item=>item.id)
 assert.strictEqual(overflowBalances.members[0].paidJpy,maxSafe,'the valid maximum-safe payment remains exact');
 assert.strictEqual(overflowBalances.members[1].owedJpy,maxSafe,'the rejected overflow record leaves no partial owed update');
 assert.deepStrictEqual(Array.from(overflowBalances.memberOrder),['A','B'],'an overflowed record does not leave a zero-balance phantom participant');
+
+const html=fs.readFileSync('index.html','utf8');
+const settlementSource=html.slice(html.indexOf('function ledgerCurrentMemberSettlement('),html.indexOf('function showLedgerFullList('));
+assert(settlementSource.includes('buildMemberBalances(records)'),'settlement UI consumes the PR4 balance engine');
+assert(settlementSource.includes("buildTransferSuggestions(balances,'JPY')"),'settlement UI consumes PR4 JPY transfer suggestions');
+assert(settlementSource.includes("buildTransferSuggestions(balances,'TWD')"),'settlement UI consumes PR4 TWD transfer suggestions');
+assert(!settlementSource.includes('owedJpy+='),'UI does not reimplement owed balances');
+assert(!settlementSource.includes('paidJpy+='),'UI does not reimplement paid balances');
+assert(settlementSource.includes('balances.invalidRecords'),'expanded settlement surfaces invalid records');
 
 console.log('ledger settlement tests passed');

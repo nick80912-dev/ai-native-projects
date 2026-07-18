@@ -122,6 +122,16 @@ function loadHelpers(){
   assert(mod.__html.includes('id="ledgerDeleteReason"')&&mod.__html.includes('maxlength="50"'),'shared deletion limits the reason to 50 characters');
   assert(extractFunction(mod.__html,'submitSharedLedgerDeletion').includes('if(!reason)'),'an empty reason cannot be submitted');
 
+  const detailLookupSource=extractFunction(mod.__html,'openLedgerRecordDetail');
+  assert(detailLookupSource.includes('ledgerTrackRecords().filter'),'record detail lookup uses visible ledger records');
+  assert(!detailLookupSource.includes('mergedLedgerRecords'),'record detail lookup never reads raw tombstones or deleted targets');
+  let missingDetailNotices=0;
+  const detailSandbox={ledgerTrackRecords(){return mod.spendLedgerRecords([expense,deletion]);},toast(){missingDetailNotices++;}};
+  vm.createContext(detailSandbox);
+  vm.runInContext(detailLookupSource,detailSandbox);
+  detailSandbox.openLedgerRecordDetail(expense.id);
+  assert.strictEqual(missingDetailNotices,1,'a tombstoned target has no detail or delete action');
+
   const personalCalls={confirmText:'',removed:0,rendered:0};
   const personalSandbox={
     personalLedgerRepository:{all(){return [expense];},remove(id){personalCalls.removed++;return id===expense.id;}},
