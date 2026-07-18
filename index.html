@@ -3185,6 +3185,110 @@ function settlementAmount(value){
   return isSafeLedgerInteger(amount)&&amount>=0?amount:null;
 }
 function isSafeLedgerInteger(value){return typeof value==='number'&&isFinite(value)&&Math.floor(value)===value&&Math.abs(value)<=9007199254740991;}
+function allocateWeightedLargestRemainder(total,weights){
+  total=Number(total);weights=(weights||[]).map(Number);
+  if(!isSafeLedgerInteger(total)||total<0)throw new Error('分配總額必須是非負安全整數');
+  if(!weights.length||weights.some(function(value){return !isSafeLedgerInteger(value)||value<0;}))throw new Error('分配權重格式錯誤');
+  var weightTotal=weights.reduce(function(sum,value){
+    var next=sum+value;
+    if(!isSafeLedgerInteger(next))throw new Error('分配權重超出安全整數');
+    return next;
+  },0);
+  if(weightTotal<=0)throw new Error('分配權重總和必須大於零');
+  var used=0,rows=weights.map(function(weight,index){
+    var product=total*weight;
+    if(!isSafeLedgerInteger(product))throw new Error('分配乘積超出安全整數');
+    var amount=Math.floor(product/weightTotal),remainder=product%weightTotal;
+    used+=amount;
+    return {index:index,amount:amount,remainder:remainder};
+  });
+  rows.slice().sort(function(a,b){return b.remainder-a.remainder||a.index-b.index;}).slice(0,total-used).forEach(function(row){rows[row.index].amount++;});
+  return rows.map(function(row){return row.amount;});
+}
+function validateProxyDraft(isProxy,target){
+  target=String(target||'').trim();
+  if(!isProxy)return '';
+  if(!target)throw new Error('請輸入代購對象');
+  if(target.length>12)throw new Error('代購對象最多 12 個字');
+  return target;
+}
+function normalizeLedgerParticipantSelection(names,entries){
+  var allowed={},seen={},result=[];
+  (entries||[]).forEach(function(entry){
+    var name=String(entry&&entry.name||'').trim(),key=canonicalMemberName(name);
+    if(key&&!allowed[key])allowed[key]=name;
+  });
+  (names||[]).forEach(function(name){
+    var key=canonicalMemberName(name);
+    if(!key||!allowed[key])throw new Error('分攤成員不是目前正式成員');
+    if(!seen[key]){seen[key]=true;result.push(allowed[key]);}
+  });
+  if(!result.length)throw new Error('請選擇至少一位分攤成員');
+  return result;
+}
+function multiItemTaxMultiplier(draft){
+  if(draft.taxMode==='included'||draft.taxMode==='free')return 100;
+  if(draft.taxMode!=='excluded'||(Number(draft.taxRate)!==8&&Number(draft.taxRate)!==10))throw new Error('稅制設定錯誤');
+  return 100+Number(draft.taxRate);
+}
+function calculateMultiItemAmounts(draft,settings){
+  var items=(draft.items||[]).slice();
+  if(!items.length)throw new Error('請新增至少一個品項');
+  var multiplier=multiItemTaxMultiplier(draft),weights=items.map(function(item){
+    var amount=Number(item.amount);
+    if(!isSafeLedgerInteger(amount)||amount<=0)throw new Error('品項金額必須是正安全整數');
+    var weight=amount*multiplier;
+    if(!isSafeLedgerInteger(weight))throw new Error('含稅品項金額超出安全整數');
+    return weight;
+  });
+  var weightTotal=weights.reduce(function(sum,value){
+    var next=sum+value;
+    if(!isSafeLedgerInteger(next))throw new Error('含稅總額超出安全整數');
+    return next;
+  },0);
+  var postTaxTotal=Math.round(weightTotal/100),discount=Number(draft.discount||0);
+  if(!isSafeLedgerInteger(discount)||discount<0)throw new Error('折扣必須是非負整數');
+  if(discount>postTaxTotal)throw new Error('折扣不可大於含稅總額');
+  var totalPrimary=postTaxTotal-discount;
+  if(totalPrimary<=0)throw new Error('實付總額必須大於零');
+  var converted=convertLedgerAmounts(draft.currency,totalPrimary,settings.exchangeRate);
+  var totalSecondary=draft.currency==='JPY'?converted.amountTwd:converted.amountJpy;
+  var primary=allocateWeightedLargestRemainder(totalPrimary,weights),secondary=allocateWeightedLargestRemainder(totalSecondary,weights);
+  return {currency:draft.currency,totalPrimary:totalPrimary,totalSecondary:totalSecondary,items:items.map(function(item,index){
+    return {source:item,amountJpy:draft.currency==='JPY'?primary[index]:secondary[index],amountTwd:draft.currency==='TWD'?primary[index]:secondary[index]};
+  })};
+}
+function buildLedgerExpenseRecords(draft,context){
+  var now=Number(context.now),random=context.random||Math.random,member=String(context.member||'').trim();
+  if(!member)throw new Error('請先選擇記帳身分');
+  if(draft.track!=='personal'&&draft.track!=='shared')throw new Error('記帳軌別錯誤');
+  if(ledgerPayMethodStore.all().indexOf(String(draft.payMethod||''))<0)throw new Error('請選擇有效支付方式');
+  var sourceItems=draft.multi?(draft.items||[]):[{key:'single',name:draft.detail,amount:draft.amount,category:draft.category,proxyMode:'inherit',participantMode:'inherit'}];
+  var working={};
+  Object.keys(draft).forEach(function(key){working[key]=draft[key];});
+  working.items=sourceItems;
+  var calculated=calculateMultiItemAmounts(working,context.settings),batchId=draft.multi?'batch-'+createLedgerId(now,random):'';
+  return calculated.items.map(function(calculatedItem,index){
+    var item=calculatedItem.source,name=String(item.name||'').trim(),category=String(item.category||'').trim();
+    if(!name)throw new Error('請輸入品項名稱');
+    if(ledgerCategoryStore.all().indexOf(category)<0)throw new Error('請選擇有效類別');
+    var record={
+      id:createLedgerId(now+index+1,random),time:timestampDate(now).toISOString(),member:member,
+      category:category,detail:name,amountJpy:calculatedItem.amountJpy,amountTwd:calculatedItem.amountTwd,
+      note:String(draft.note||'').trim(),payMethod:String(draft.payMethod||'').trim(),batchId:batchId
+    };
+    if(draft.track==='personal'){
+      record.isProxy=item.proxyMode==='custom'?!!item.isProxy:!!draft.isProxy;
+      record.proxyTarget=validateProxyDraft(record.isProxy,item.proxyMode==='custom'?item.proxyTarget:draft.proxyTarget);
+    }else{
+      var selected=item.participantMode==='custom'?item.participants:draft.participants;
+      record.participants=JSON.stringify(normalizeLedgerParticipantSelection(selected,context.memberEntries));
+      record.recordType='expense';record.targetRecordId='';record.deleteReason='';
+    }
+    validateLedgerRecord(record);
+    return record;
+  });
+}
 function buildMemberBalances(records,memberOrder,warnFn){
   var order=settlementMemberOrder(records,memberOrder), orderInfo=settlementOrderInfo(order), states=Object.create(null), invalidRecords=[];
   function stateFor(name){
