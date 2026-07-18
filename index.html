@@ -509,6 +509,7 @@ input,select,textarea{font-size:16px}
 .ledger-compact-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px}.ledger-compact-card{min-width:0;min-height:112px;border:1px solid var(--line);border-radius:8px;background:var(--card);padding:12px;box-shadow:var(--shadow)}.ledger-compact-card h3{font-size:12px;color:var(--ink-soft);margin-bottom:7px}.ledger-compact-card strong{display:block;font-size:18px;color:var(--sea-deep);line-height:1.3;overflow-wrap:anywhere}.ledger-compact-card p{font-size:11px;color:var(--ink-faint);margin-top:5px;line-height:1.45}.ledger-section-head{display:flex;align-items:center;justify-content:space-between;gap:10px}.ledger-section-head h3{font-size:15px;color:var(--sea-deep)}.ledger-view-all{min-height:44px;border:0;background:transparent;color:var(--sea);font:inherit;font-size:13px;font-weight:900;padding:5px 0 5px 12px}
 .ledger-recent-list{display:grid;gap:12px}.ledger-date-group{display:grid;gap:7px}.ledger-date-label{font-size:11px;font-weight:900;color:var(--ink-faint);letter-spacing:.04em}.ledger-recent-row{width:100%;min-height:66px;border:1px solid var(--line);border-radius:8px;background:var(--card);padding:10px 11px;text-align:left;font:inherit;color:var(--ink);display:grid;grid-template-columns:minmax(0,1fr) auto;gap:5px 10px}.ledger-recent-main{min-width:0}.ledger-recent-main strong{display:block;font-size:14px;overflow-wrap:anywhere}.ledger-recent-meta{font-size:11px;color:var(--ink-soft);margin-top:3px;overflow-wrap:anywhere}.ledger-recent-amount{font-size:14px;font-weight:900;color:var(--sea-deep);white-space:nowrap}.ledger-recent-badges{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:5px}.ledger-recent-badge{display:inline-flex;border-radius:999px;background:var(--line-soft);color:var(--ink-soft);padding:2px 6px;font-size:10px;font-weight:800}.ledger-recent-badge.pending{background:#fff3cf;color:#80600d}.ledger-fab{position:fixed;right:16px;bottom:calc(var(--tabbar-height) + env(safe-area-inset-bottom) + 14px);z-index:90;width:52px;height:52px;border-radius:50%;border:0;background:var(--coral);color:#fff;font:inherit;font-size:28px;line-height:1;box-shadow:var(--shadow-lg)}
 body.ledger-sheet-open{overflow:hidden}.ledger-sheet-overlay{position:fixed;inset:0;z-index:135;background:rgba(10,45,50,.38);display:flex;align-items:flex-end}.ledger-sheet{width:100%;max-width:620px;max-height:calc(100dvh - env(safe-area-inset-top) - 12px);margin:0 auto;background:var(--paper);border-radius:8px 8px 0 0;overflow-y:auto;overscroll-behavior:contain;touch-action:pan-y;padding:14px 12px calc(16px + env(safe-area-inset-bottom));box-shadow:var(--shadow-lg)}.ledger-sheet button,.ledger-sheet input,.ledger-sheet select,.ledger-sheet textarea{touch-action:manipulation}.ledger-sheet input,.ledger-sheet textarea{font-size:16px}.ledger-sheet-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}.ledger-sheet-head h2{font-size:19px}.ledger-sheet-field{margin-top:13px}.ledger-sheet-field>label,.ledger-sheet-label{display:block;font-size:12px;font-weight:900;color:var(--ink-soft);margin-bottom:6px}.ledger-sheet-input{width:100%;min-height:46px;border:1px solid var(--line);border-radius:8px;background:#fff;padding:9px 11px;font:inherit}.ledger-sheet textarea.ledger-sheet-input{min-height:76px;resize:vertical}.ledger-sheet-choice-grid{display:flex;flex-wrap:wrap;gap:7px}.ledger-sheet-choice{min-height:44px;border:1px solid var(--line);border-radius:999px;background:#fff;color:var(--ink-soft);padding:7px 13px;font:inherit;font-size:13px;font-weight:800}.ledger-sheet-choice.on{background:var(--sea);border-color:var(--sea);color:#fff}.ledger-sheet-track{display:grid;grid-template-columns:1fr 1fr;gap:6px}.ledger-sheet-member{font-size:13px;color:var(--ink-soft);padding:9px 0}.ledger-sheet-member b{color:var(--ink)}.ledger-sheet-retained{font-size:11px;color:var(--gold);font-weight:800;margin-top:6px}.ledger-sheet-actions{position:sticky;bottom:calc(-16px - env(safe-area-inset-bottom));background:var(--paper);padding:12px 0 calc(12px + env(safe-area-inset-bottom));display:grid;gap:8px}.ledger-sheet-actions .btn{min-height:44px}.ledger-sheet-actions .btn:disabled{opacity:.5}.ledger-sheet-toggle{min-height:44px;border-bottom:1px solid var(--line);padding:6px 0}.ledger-sheet-error{color:var(--coral);font-size:12px;font-weight:800;margin-top:6px}
+.ledger-item-editor{border:1px solid var(--line);border-radius:8px;background:#fff;padding:11px;margin-top:10px}.ledger-item-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:9px}.ledger-item-head b{font-size:14px}.ledger-item-remove{width:44px;height:44px;border:0;background:transparent;color:var(--coral);font-size:22px}.ledger-item-grid{display:grid;grid-template-columns:minmax(0,1fr) 112px;gap:8px}.ledger-item-grid .ledger-sheet-field{margin-top:0}.ledger-item-categories{margin-top:9px}.ledger-item-categories .ledger-sheet-choice{min-height:40px;padding:6px 10px;font-size:12px}.ledger-item-override{margin-top:10px;border-top:1px solid var(--line);padding-top:9px}.ledger-item-override-toggle{width:100%;min-height:44px;border:0;background:var(--mint);color:var(--ink);border-radius:8px;padding:8px 10px;text-align:left;font:inherit;font-size:12px;font-weight:800}.ledger-item-override-body{margin-top:8px}.ledger-item-override-body .ledger-sheet-toggle{border-bottom:0}.ledger-multi-add{width:100%;min-height:44px;margin-top:10px;border:1px dashed var(--sea);border-radius:8px;background:#fff;color:var(--sea);font:inherit;font-weight:900}.ledger-bill-controls{border-top:1px solid var(--line);margin-top:14px;padding-top:12px}.ledger-bill-preview{display:flex;justify-content:space-between;gap:10px;margin-top:10px;padding:10px;border-radius:8px;background:var(--mint);font-size:13px;font-weight:900}.ledger-bill-preview.error{color:var(--coral);background:#fff0ed}.ledger-tax-rate{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:8px}
 </style>
 </head>
 <body>
@@ -3838,21 +3839,62 @@ function closeLedgerEntrySheet(){
   document.body.classList.remove('ledger-sheet-open');ledgerUiState.sheet=null;ledgerUiState.draft=null;
 }
 function updateLedgerDraftField(field,value){if(ledgerUiState.draft)ledgerUiState.draft[field]=value;}
+function createLedgerDraftItem(draft,seed){
+  seed=seed||{};
+  return {key:'item-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,7),name:String(seed.name||seed.detail||''),amount:String(seed.amount||''),category:String(seed.category||draft.category||ledgerCategoryStore.all()[0]||''),proxyMode:'inherit',isProxy:!!draft.isProxy,proxyTarget:String(draft.proxyTarget||''),participantMode:'inherit',participants:(draft.participants||[]).slice(),overrideOpen:false};
+}
+function ledgerDraftItem(key){var draft=ledgerUiState.draft;return draft&&(draft.items||[]).filter(function(item){return item.key===key;})[0];}
+function addLedgerDraftItem(){
+  var draft=ledgerUiState.draft;if(!draft)return;
+  draft.items.push(createLedgerDraftItem(draft));renderLedgerEntrySheet();
+}
+function removeLedgerDraftItem(key){
+  var draft=ledgerUiState.draft;if(!draft||draft.items.length<=1){toast('至少保留一個品項');return;}
+  draft.items=draft.items.filter(function(item){return item.key!==key;});renderLedgerEntrySheet();
+}
+function updateLedgerDraftItem(key,patch,rerender){
+  var draft=ledgerUiState.draft;if(!draft)return;
+  draft.items=(draft.items||[]).map(function(item){
+    if(item.key!==key)return item;
+    var next={};Object.keys(item).forEach(function(name){next[name]=item[name];});
+    Object.keys(patch||{}).forEach(function(name){next[name]=patch[name];});return next;
+  });
+  if(rerender===false)updateLedgerMultiPreview();else renderLedgerEntrySheet();
+}
+function selectLedgerItemCategory(key,value){var item=ledgerDraftItem(key);if(item&&ledgerCategoryStore.all().indexOf(value)>=0)updateLedgerDraftItem(key,{category:value});}
+function toggleLedgerItemOverridePanel(key){var item=ledgerDraftItem(key);if(item)updateLedgerDraftItem(key,{overrideOpen:!item.overrideOpen});}
+function setLedgerItemOverrideMode(key,mode){
+  var item=ledgerDraftItem(key),draft=ledgerUiState.draft;if(!item||!draft||!/^(inherit|custom)$/.test(mode))return;
+  updateLedgerDraftItem(key,draft.track==='personal'?{proxyMode:mode,overrideOpen:true}:{participantMode:mode,overrideOpen:true});
+}
+function setLedgerItemProxy(key,enabled){var item=ledgerDraftItem(key);if(item)updateLedgerDraftItem(key,{isProxy:!!enabled,proxyTarget:enabled?item.proxyTarget:''});}
+function toggleLedgerItemParticipant(key,name){
+  var item=ledgerDraftItem(key);if(!item)return;
+  var memberKey=canonicalMemberName(name),has=(item.participants||[]).some(function(value){return canonicalMemberName(value)===memberKey;});
+  updateLedgerDraftItem(key,{participants:has?item.participants.filter(function(value){return canonicalMemberName(value)!==memberKey;}):item.participants.concat([name])});
+}
 function setLedgerDraftMulti(enabled){
-  if(enabled){toast('多品項將於本批下一階段啟用');var input=document.getElementById('ledgerMulti');if(input)input.checked=false;}
-  if(ledgerUiState.draft)ledgerUiState.draft.multi=false;
+  var draft=ledgerUiState.draft;if(!draft)return;
+  if(enabled){draft.multi=true;if(!draft.items.length)draft.items=[createLedgerDraftItem(draft,{name:draft.detail,amount:draft.amount,category:draft.category})];}
+  else{
+    if(draft.items.length>1&&!confirm('切回單品會只保留第一個品項，確定繼續？')){renderLedgerEntrySheet();return;}
+    var first=draft.items[0];if(first){draft.detail=first.name;draft.amount=first.amount;draft.category=first.category;}draft.multi=false;
+  }
+  renderLedgerEntrySheet();
 }
 function setLedgerDraftTrack(track){
   if(!ledgerUiState.draft||track===ledgerUiState.draft.track||!/^(personal|shared)$/.test(track))return;
   var old=ledgerUiState.draft,next=createLedgerEntryDraft(track);
-  next.currency=old.currency;next.category=old.category;next.payMethod=old.payMethod;
+  next.currency=old.currency;next.category=old.category;next.payMethod=old.payMethod;next.note=old.note;next.multi=old.multi;next.amount=old.amount;next.detail=old.detail;
+  if(old.multi)next.items=(old.items||[]).map(function(item){return createLedgerDraftItem(next,{name:item.name,amount:item.amount,category:item.category});});
   ledgerUiState.draft=next;renderLedgerEntrySheet();
 }
 function selectLedgerCategory(value){if(ledgerUiState.draft&&ledgerCategoryStore.all().indexOf(value)>=0){ledgerUiState.draft.category=value;renderLedgerEntrySheet();}}
 function selectLedgerPayMethod(value){if(ledgerUiState.draft&&ledgerPayMethodStore.all().indexOf(value)>=0){ledgerUiState.draft.payMethod=value;renderLedgerEntrySheet();}}
 function selectLedgerCurrency(value){
   var draft=ledgerUiState.draft;if(!draft||!/^(JPY|TWD)$/.test(value)||value===draft.currency)return;
-  if(draft.amount!=='')try{var converted=convertLedgerAmounts(draft.currency,draft.amount,currentLedgerSettings().exchangeRate);draft.amount=String(value==='JPY'?converted.amountJpy:converted.amountTwd);}catch(ignore){}
+  if(draft.multi)(draft.items||[]).forEach(function(item){if(item.amount!=='')try{var amounts=convertLedgerAmounts(draft.currency,item.amount,currentLedgerSettings().exchangeRate);item.amount=String(value==='JPY'?amounts.amountJpy:amounts.amountTwd);}catch(ignore){}});
+  else if(draft.amount!=='')try{var converted=convertLedgerAmounts(draft.currency,draft.amount,currentLedgerSettings().exchangeRate);draft.amount=String(value==='JPY'?converted.amountJpy:converted.amountTwd);}catch(ignore){}
   draft.currency=value;renderLedgerEntrySheet();
 }
 function setLedgerProxy(enabled){if(ledgerUiState.draft){ledgerUiState.draft.isProxy=!!enabled;if(!enabled)ledgerUiState.draft.proxyTarget='';renderLedgerEntrySheet();}}
@@ -3870,6 +3912,15 @@ function updateLedgerConversionPreview(){
     preview.textContent=draft.currency==='JPY'?'換算台幣：NT$'+amounts.amountTwd.toLocaleString():'換算日幣：¥'+amounts.amountJpy.toLocaleString();
   }catch(error){preview.textContent=error.message||'無法換算';}
 }
+function setLedgerTaxMode(value){var draft=ledgerUiState.draft;if(draft&&['included','excluded','free'].indexOf(value)>=0){draft.taxMode=value;renderLedgerEntrySheet();}}
+function setLedgerTaxRate(value){var draft=ledgerUiState.draft;if(draft&&(Number(value)===8||Number(value)===10)){draft.taxRate=Number(value);renderLedgerEntrySheet();}}
+function updateLedgerMultiPreview(){
+  var preview=document.getElementById('ledgerBillPreview'),draft=ledgerUiState.draft;if(!preview||!draft)return;
+  try{
+    var calculated=calculateMultiItemAmounts(draft,currentLedgerSettings()),secondary=draft.currency==='JPY'?'TWD':'JPY';
+    preview.classList.remove('error');preview.innerHTML='<span>整單實付</span><strong>'+escapeHtml(draft.currency)+' '+calculated.totalPrimary.toLocaleString()+' · '+secondary+' '+calculated.totalSecondary.toLocaleString()+'</strong>';
+  }catch(error){preview.classList.add('error');preview.textContent=error.message||'請檢查品項金額';}
+}
 function ledgerSheetChoiceButtons(values,selected,handler,className){
   return (values||[]).map(function(value){var on=value===selected;return '<button class="ledger-sheet-choice '+(className||'')+' '+(on?'on':'')+'" aria-pressed="'+(on?'true':'false')+'" onclick="'+handler+'(\''+jsString(value)+'\')">'+escapeHtml(value)+'</button>';}).join('');
 }
@@ -3878,6 +3929,31 @@ function renderLedgerDraftCurrency(draft){return '<div class="ledger-sheet-field
 function renderLedgerSingleItemFields(draft){
   var categories=ledgerCategoryStore.all();
   return '<div class="ledger-sheet-field"><label for="ledgerAmount">金額</label><input class="ledger-sheet-input" id="ledgerAmount" type="number" inputmode="numeric" min="1" value="'+escapeHtml(draft.amount)+'" oninput="updateLedgerDraftField(\'amount\',this.value);updateLedgerConversionPreview()"><output class="ledger-preview" id="ledgerConvertedPreview">'+(draft.currency==='JPY'?'換算台幣：—':'換算日幣：—')+'</output></div><div class="ledger-sheet-field"><label for="ledgerDetail">明細</label><input class="ledger-sheet-input" id="ledgerDetail" value="'+escapeHtml(draft.detail)+'" placeholder="如：晚餐拉麵、渡輪票" oninput="updateLedgerDraftField(\'detail\',this.value)"></div><div class="ledger-sheet-field"><span class="ledger-sheet-label">類別</span><div class="ledger-sheet-choice-grid">'+ledgerSheetChoiceButtons(categories,draft.category,'selectLedgerCategory','ledger-category-option')+'</div></div>';
+}
+function ledgerItemOverrideSummary(draft,item){
+  if(draft.track==='personal')return item.proxyMode!=='custom'?'沿用整單':(item.isProxy?'代購：'+String(item.proxyTarget||'未指定'):'非代購');
+  return item.participantMode!=='custom'?'沿用整單':'分攤 '+(item.participants||[]).length+' 人';
+}
+function renderLedgerItemCategories(item){
+  return ledgerCategoryStore.all().map(function(value){var on=item.category===value;return '<button class="ledger-sheet-choice '+(on?'on':'')+'" aria-pressed="'+(on?'true':'false')+'" onclick="selectLedgerItemCategory(\''+jsString(item.key)+'\',\''+jsString(value)+'\')">'+escapeHtml(value)+'</button>';}).join('');
+}
+function renderLedgerItemOverride(draft,item){
+  var mode=draft.track==='personal'?item.proxyMode:item.participantMode;
+  var modeButtons='<div class="ledger-sheet-track"><button class="ledger-sheet-choice '+(mode!=='custom'?'on':'')+'" onclick="setLedgerItemOverrideMode(\''+jsString(item.key)+'\',\'inherit\')">沿用整單</button><button class="ledger-sheet-choice '+(mode==='custom'?'on':'')+'" onclick="setLedgerItemOverrideMode(\''+jsString(item.key)+'\',\'custom\')">單項設定</button></div>';
+  if(mode!=='custom')return modeButtons;
+  if(draft.track==='personal')return modeButtons+'<label class="toggle-row ledger-sheet-toggle"><span>此品項為代購</span><input type="checkbox" '+(item.isProxy?'checked':'')+' onchange="setLedgerItemProxy(\''+jsString(item.key)+'\',this.checked)"></label>'+(item.isProxy?'<label class="ledger-sheet-label">代購對象</label><input class="ledger-sheet-input" maxlength="12" value="'+escapeHtml(item.proxyTarget)+'" oninput="updateLedgerDraftItem(\''+jsString(item.key)+'\',{proxyTarget:this.value},false)">':'');
+  var chips=registeredMembersForCurrentMode().map(function(entry){var on=(item.participants||[]).some(function(name){return canonicalMemberName(name)===entry.key;});return '<button class="ledger-sheet-choice '+(on?'on':'')+'" aria-pressed="'+(on?'true':'false')+'" onclick="toggleLedgerItemParticipant(\''+jsString(item.key)+'\',\''+jsString(entry.name)+'\')">'+escapeHtml(entry.name)+'</button>';}).join('');
+  return modeButtons+'<div class="ledger-sheet-field"><span class="ledger-sheet-label">單項分攤成員</span><div class="ledger-sheet-choice-grid">'+chips+'</div></div>';
+}
+function renderLedgerDraftItem(draft,item,index){
+  var remove=draft.items.length>1?'<button class="ledger-item-remove" aria-label="刪除品項" onclick="removeLedgerDraftItem(\''+jsString(item.key)+'\')">×</button>':'';
+  return '<article class="ledger-item-editor" data-item-key="'+escapeHtml(item.key)+'"><div class="ledger-item-head"><b>品項 '+(index+1)+'</b>'+remove+'</div><div class="ledger-item-grid"><div class="ledger-sheet-field"><label>品項名稱</label><input class="ledger-sheet-input" value="'+escapeHtml(item.name)+'" placeholder="如：拉麵" oninput="updateLedgerDraftItem(\''+jsString(item.key)+'\',{name:this.value},false)"></div><div class="ledger-sheet-field"><label>金額</label><input class="ledger-sheet-input" type="number" inputmode="numeric" min="1" value="'+escapeHtml(item.amount)+'" oninput="updateLedgerDraftItem(\''+jsString(item.key)+'\',{amount:this.value},false)"></div></div><div class="ledger-item-categories"><span class="ledger-sheet-label">類別</span><div class="ledger-sheet-choice-grid">'+renderLedgerItemCategories(item)+'</div></div><div class="ledger-item-override"><button class="ledger-item-override-toggle" aria-expanded="'+(item.overrideOpen?'true':'false')+'" onclick="toggleLedgerItemOverridePanel(\''+jsString(item.key)+'\')">單項設定 · '+escapeHtml(ledgerItemOverrideSummary(draft,item))+'</button>'+(item.overrideOpen?'<div class="ledger-item-override-body">'+renderLedgerItemOverride(draft,item)+'</div>':'')+'</div></article>';
+}
+function renderLedgerMultiItemFields(draft){
+  var items=(draft.items||[]).map(function(item,index){return renderLedgerDraftItem(draft,item,index);}).join('');
+  var taxModes=[['included','税込'],['excluded','税抜'],['free','免稅']].map(function(option){var on=draft.taxMode===option[0];return '<button class="ledger-sheet-choice '+(on?'on':'')+'" aria-pressed="'+(on?'true':'false')+'" onclick="setLedgerTaxMode(\''+option[0]+'\')">'+option[1]+'</button>';}).join('');
+  var rates=draft.taxMode==='excluded'?'<div class="ledger-tax-rate"><button class="ledger-sheet-choice '+(Number(draft.taxRate)===8?'on':'')+'" onclick="setLedgerTaxRate(8)">8%</button><button class="ledger-sheet-choice '+(Number(draft.taxRate)===10?'on':'')+'" onclick="setLedgerTaxRate(10)">10%</button></div>':'';
+  return '<div class="ledger-sheet-field"><span class="ledger-sheet-label">品項</span>'+items+'<button class="ledger-multi-add" onclick="addLedgerDraftItem()">＋ 新增品項</button></div><div class="ledger-bill-controls"><span class="ledger-sheet-label">整單稅制</span><div class="ledger-sheet-choice-grid">'+taxModes+'</div>'+rates+'<div class="ledger-sheet-field"><label for="ledgerDiscount">固定折扣</label><input class="ledger-sheet-input" id="ledgerDiscount" type="number" inputmode="numeric" min="0" value="'+escapeHtml(draft.discount)+'" oninput="updateLedgerDraftField(\'discount\',this.value);updateLedgerMultiPreview()"></div><output class="ledger-bill-preview" id="ledgerBillPreview"></output></div>';
 }
 function renderLedgerPaymentFields(draft){return '<div class="ledger-sheet-field"><span class="ledger-sheet-label">支付方式</span><div class="ledger-sheet-choice-grid">'+ledgerSheetChoiceButtons(ledgerPayMethodStore.all(),draft.payMethod,'selectLedgerPayMethod','ledger-pay-option')+'</div></div>';}
 function renderLedgerTrackSpecificFields(draft){
@@ -3888,8 +3964,9 @@ function renderLedgerTrackSpecificFields(draft){
 function renderLedgerNoteField(draft){return '<div class="ledger-sheet-field"><label for="ledgerNote">備註</label><textarea class="ledger-sheet-input" id="ledgerNote" placeholder="選填" oninput="updateLedgerDraftField(\'note\',this.value)">'+escapeHtml(draft.note)+'</textarea></div>';}
 function renderLedgerEntrySheet(){
   var overlay=document.getElementById('ledgerEntrySheet'),draft=ledgerUiState.draft;if(!overlay||!draft)return;
-  overlay.innerHTML='<section class="ledger-sheet" role="dialog" aria-modal="true" aria-labelledby="ledgerEntryTitle"><div class="ledger-sheet-head"><h2 id="ledgerEntryTitle">新增消費</h2><button class="settings-close" aria-label="關閉" onclick="closeLedgerEntrySheet()">×</button></div><label class="toggle-row ledger-sheet-toggle" for="ledgerMulti"><span>多品項</span><input id="ledgerMulti" type="checkbox" '+(draft.multi?'checked':'')+' onchange="setLedgerDraftMulti(this.checked)"></label><div class="ledger-sheet-member">目前記帳身分：<b>'+escapeHtml(getCurrentMember())+'</b></div>'+renderLedgerDraftTrack(draft)+renderLedgerDraftCurrency(draft)+renderLedgerSingleItemFields(draft)+renderLedgerPaymentFields(draft)+renderLedgerTrackSpecificFields(draft)+renderLedgerNoteField(draft)+'<div class="ledger-sheet-actions"><button id="ledgerSave" class="btn coral" onclick="saveLedgerEntry(false)">儲存</button><button id="ledgerSaveAnother" class="btn" onclick="saveLedgerEntry(true)">儲存並再記一筆</button></div></section>';
-  updateLedgerConversionPreview();
+  var fields=draft.multi?renderLedgerPaymentFields(draft)+renderLedgerTrackSpecificFields(draft)+renderLedgerMultiItemFields(draft):renderLedgerSingleItemFields(draft)+renderLedgerPaymentFields(draft)+renderLedgerTrackSpecificFields(draft);
+  overlay.innerHTML='<section class="ledger-sheet" role="dialog" aria-modal="true" aria-labelledby="ledgerEntryTitle"><div class="ledger-sheet-head"><h2 id="ledgerEntryTitle">新增消費</h2><button class="settings-close" aria-label="關閉" onclick="closeLedgerEntrySheet()">×</button></div><label class="toggle-row ledger-sheet-toggle" for="ledgerMulti"><span>多品項</span><input id="ledgerMulti" type="checkbox" '+(draft.multi?'checked':'')+' onchange="setLedgerDraftMulti(this.checked)"></label><div class="ledger-sheet-member">目前記帳身分：<b>'+escapeHtml(getCurrentMember())+'</b></div>'+renderLedgerDraftTrack(draft)+renderLedgerDraftCurrency(draft)+fields+renderLedgerNoteField(draft)+'<div class="ledger-sheet-actions"><button id="ledgerSave" class="btn coral" onclick="saveLedgerEntry(false)">儲存</button><button id="ledgerSaveAnother" class="btn" onclick="saveLedgerEntry(true)">儲存並再記一筆</button></div></section>';
+  if(draft.multi)updateLedgerMultiPreview();else updateLedgerConversionPreview();
 }
 function persistLedgerExpenseRecords(records,track){
   if(track==='personal'){

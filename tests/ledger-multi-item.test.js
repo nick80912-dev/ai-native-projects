@@ -126,4 +126,12 @@ assert.strictEqual(single.length,1);
 assert.strictEqual(single[0].batchId,'','single-item records do not create a batch');
 assert.strictEqual(single[0].detail,'車票');
 
+const uiSource=fs.readFileSync('index.html','utf8');
+assert(uiSource.includes("proxyMode:'inherit'"),'new multi-item rows explicitly inherit the bill proxy default');
+assert(uiSource.includes("participantMode:'inherit'"),'new multi-item rows explicitly inherit the bill participant default');
+assert(uiSource.includes("item.proxyMode!=='custom'?'沿用整單'"),'personal item summary exposes inherited semantics');
+assert(uiSource.includes("item.participantMode!=='custom'?'沿用整單'"),'shared item summary exposes inherited semantics');
+assert(!/ledger-item-editor[\s\S]{0,1200}ledger-currency-option/.test(uiSource),'item cards do not render per-item currency controls');
+assert(!/ledger-item-editor[\s\S]{0,1200}ledger-pay-option/.test(uiSource),'item cards do not render per-item payment controls');
+
 console.log('ledger multi-item tests passed');

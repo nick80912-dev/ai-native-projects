@@ -56,13 +56,41 @@ const resetPersonal=plain(draftSandbox.resetLedgerDraftAfterSave({
 assert.strictEqual(resetPersonal.isProxy,false,'save-and-add-another uses the safe non-proxy default');
 assert.strictEqual(resetPersonal.proxyTarget,'','proxy target never carries into the next personal record');
 
+const stateSource=extract('function createLedgerEntryDraft(','function formatLedgerCurrencyAmount(');
+const stateSandbox={
+  ledgerUiState:{draft:null},
+  currentLedgerSettings(){return {exchangeRate:0.2,defaultCurrency:'JPY'};},
+  registeredMembersForCurrentMode(){return [{name:'Bar',key:'bar'},{name:'Amy',key:'amy'}];},
+  ledgerCategoryStore:{all(){return ['餐飲','交通'];}},
+  ledgerPayMethodStore:{all(){return ['現金','Suica'];}},
+  document:{getElementById(){return null;},body:{classList:{add(){},remove(){}}}},
+  confirm(){return true;},toast(){},canonicalMemberName(value){return String(value).trim().toLowerCase();},
+  escapeHtml(value){return String(value);},jsString(value){return String(value);},getCurrentMember(){return 'Bar';},
+  Date,Math,Promise,JSON,String,Number,isFinite
+};
+vm.createContext(stateSandbox);
+vm.runInContext(stateSource,stateSandbox);
+stateSandbox.ledgerUiState.draft=stateSandbox.createLedgerEntryDraft('personal');
+stateSandbox.setLedgerDraftMulti(true);
+assert.strictEqual(stateSandbox.ledgerUiState.draft.items.length,1);
+const firstKey=stateSandbox.ledgerUiState.draft.items[0].key;
+const firstBefore=stateSandbox.ledgerUiState.draft.items[0];
+stateSandbox.addLedgerDraftItem();
+assert.strictEqual(stateSandbox.ledgerUiState.draft.items.length,2);
+stateSandbox.updateLedgerDraftItem(firstKey,{category:'交通',proxyMode:'custom',isProxy:true,proxyTarget:'小明'});
+assert.strictEqual(stateSandbox.ledgerUiState.draft.items[0].category,'交通');
+assert.strictEqual(stateSandbox.ledgerUiState.draft.items[0].proxyTarget,'小明');
+assert.notStrictEqual(stateSandbox.ledgerUiState.draft.items[0],firstBefore,'item updates replace the row instead of mutating it in place');
+assert.notStrictEqual(stateSandbox.ledgerUiState.draft.items[0],stateSandbox.ledgerUiState.draft.items[1]);
+
 const persistSource=extract('function persistLedgerExpenseRecords(','function saveLedgerEntry(');
-let personalAdds=0,sharedAdds=0;
+let personalAdds=0,sharedAdds=0,releaseShared;
+const sharedGate=new Promise(resolve=>{releaseShared=resolve;});
 const persistSandbox={
   normalizePersonalLedgerRecord(record){return Object.assign({},record);},
   validateLedgerRecord(){return true;},validateProxyDraft(flag,target){return flag?target:'';},
   personalLedgerRepository:{add(record){personalAdds++;return record;}},
-  ledgerRepository:{add(record){sharedAdds++;return Promise.resolve({ok:true,record});},pendingCount(){return 0;}},
+  ledgerRepository:{add(record){sharedAdds++;return sharedGate.then(()=>({ok:true,record}));},pendingCount(){return 0;}},
   Date,Math,Promise,JSON,String,Number,isFinite
 };
 vm.createContext(persistSandbox);
@@ -74,7 +102,10 @@ vm.runInContext(persistSource,persistSandbox);
   assert.strictEqual(personalAdds,1);
   assert.strictEqual(sharedAdds,0,'personal saves never call the shared repository');
 
-  const sharedResult=await persistSandbox.persistLedgerExpenseRecords([{id:'s1'},{id:'s2'}],'shared');
+  const sharedPromise=persistSandbox.persistLedgerExpenseRecords([{id:'s1'},{id:'s2'}],'shared');
+  assert.strictEqual(sharedAdds,2,'all shared items enter the repository before awaiting network delivery');
+  releaseShared();
+  const sharedResult=await sharedPromise;
   assert.strictEqual(sharedResult.records.length,2);
   assert.strictEqual(sharedAdds,2);
   assert.strictEqual(personalAdds,1,'shared saves never call the personal repository');
@@ -89,6 +120,16 @@ vm.runInContext(persistSource,persistSandbox);
   assert(sheetSource.includes('id="ledgerSave"'));
   assert(sheetSource.includes('id="ledgerSaveAnother"'));
   assert(sheetSource.includes('沿用上一筆：'));
+  assert(sheetSource.includes('function addLedgerDraftItem('));
+  assert(sheetSource.includes('function updateLedgerDraftItem('));
+  assert(sheetSource.includes('function renderLedgerMultiItemFields('));
+  assert(sheetSource.includes('單項設定'));
+  assert(sheetSource.includes('沿用整單'));
+  assert(sheetSource.includes('税込'));
+  assert(sheetSource.includes('税抜'));
+  assert(sheetSource.includes('免稅'));
+  assert(sheetSource.includes('固定折扣'));
+  assert(!sheetSource.includes('多品項將於本批下一階段啟用'),'multi-item toggle is fully functional');
   assert(!/addEventListener\(['"](?:touchstart|touchmove|gesturestart)/.test(sheetSource),'sheet adds no JavaScript gesture interceptor');
   assert(!sheetSource.includes('preventDefault()'),'sheet adds no preventDefault gesture path');
 
