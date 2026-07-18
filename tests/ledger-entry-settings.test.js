@@ -106,9 +106,9 @@ function response(payload){
   assert(html.includes("var ledgerUiState={track:'personal'"),'fresh App sessions default to the personal track');
   assert(splitSource.includes('個人帳留在本機；團體帳跨裝置同步。'),'Split uses the fixed dual-track explanation');
   assert(splitSource.includes("setLedgerTrack(\\'personal\\')")&&splitSource.includes("setLedgerTrack(\\'shared\\')"),'Split exposes personal/shared segmented controls');
-  assert(entrySource.includes("ledgerUiState.track==='personal'")&&entrySource.includes('personalLedgerRepository.add'),'personal entries use only the personal repository');
+  assert(entrySource.includes("if(track==='personal')")&&entrySource.includes('personalLedgerRepository.add'),'personal entries use only the personal repository');
   assert(entrySource.includes('ledgerRepository.add'),'shared entries retain the shared repository');
-  assert(entrySource.includes("base.recordType='expense'")&&entrySource.includes('base.participants=sharedParticipantSnapshot'),'shared expenses save the Ledger 2.0 contract fields');
+  assert(html.includes("record.recordType='expense'")&&html.includes('normalizeLedgerParticipantSelection'),'shared expenses save the Ledger 2.0 contract fields');
   assert(ledgerUiSource.includes('record.payMethod'),'historical payment methods remain visible even when custom options change');
   assert(ledgerUiSource.includes('shared&&isTestLedgerRecord(record)'),'TEST badges are restricted to the shared track');
   assert(html.includes("var DEFAULT_LEDGER_CATEGORIES=['餐飲','交通','票券','購物','衣服','美妝','其他']"),'Split page defines the confirmed default categories');
@@ -138,8 +138,8 @@ function response(payload){
   assert(splitSource.includes('⚠ 測試模式中'),'Split renders the test-mode warning');
   assert(splitSource.includes('團體帳新增的記帳不會列入彙算'),'Split explains that only shared test entries are excluded');
   assert(splitSource.includes('openSettings')&&splitSource.includes('ledgerTestModeSection'),'warning opens Settings at test mode');
-  assert(html.includes("var ledgerDraftCategory=''"),'fresh App sessions resolve the first available category without persisting it');
-  assert(!entrySource.includes("ledgerDraftCategory=''"),'successful entry retains the current category');
+  assert(html.includes("category:ledgerCategoryStore.all()[0]||''"),'fresh entry drafts resolve the first available category without persisting it');
+  assert(html.includes('next.category=draft.category'),'save-and-add-another retains the current category');
 
   const testModeSource = html.slice(html.indexOf('function setLedgerTestMode('),html.indexOf('function selectLedgerDefaultCurrency('));
   assert(testModeSource.includes('renderSplit()'),'test-mode changes immediately rerender Split');

@@ -27,7 +27,9 @@ assert.match(html, /input\s*,\s*select\s*,\s*textarea\s*\{[^}]*font-size\s*:\s*1
 ].forEach(function(rule){ assert.match(html, rule); });
 
 assert.match(html, /html\s*,\s*body\s*\{[^}]*touch-action\s*:\s*pan-x\s+pan-y/i, 'root policy allows panning without zoom');
-assert.doesNotMatch(html, /touch-action\s*:\s*manipulation/i, 'manipulation no longer permits continuous zoom');
+assert.doesNotMatch(html, /(?:\*|html|body)\s*(?:,\s*(?:html|body))?\s*\{[^}]*touch-action\s*:\s*manipulation/i, 'manipulation is never applied globally');
+assert.match(html, /\.ledger-sheet\{[^}]*touch-action\s*:\s*pan-y/i, 'Bottom Sheet remains a Scroll-only ancestor');
+assert.match(html, /\.ledger-sheet button[^}]*touch-action\s*:\s*manipulation/i, 'only Bottom Sheet controls use scoped manipulation');
 assert.doesNotMatch(html, /function setupPinchZoom\(/, 'custom pinch transform is removed');
 assert.doesNotMatch(html, /pinch-zooming/, 'custom pinch CSS state is removed');
 assert.doesNotMatch(html, /function setupDoubleTapGuard\(/, 'failed double-tap JavaScript guard is removed');
