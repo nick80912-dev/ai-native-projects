@@ -3083,6 +3083,57 @@ function summarizeLedgerRecords(records,includeTest){
 }
 function summarizePersonalLedgerRecords(records){return summarizeLedgerRecords(records,true);}
 
+function ledgerLocalDateKey(value){
+  if(value==null||value==='')return '';
+  var date=new Date(value);
+  if(!isFinite(date.getTime()))return '';
+  return [date.getFullYear(),('0'+(date.getMonth()+1)).slice(-2),('0'+date.getDate()).slice(-2)].join('-');
+}
+function sortLedgerExpenses(records){
+  return (records||[]).slice().sort(function(a,b){
+    var byTime=String(b&&b.time||'').localeCompare(String(a&&a.time||''));
+    return byTime||String(a&&a.id||'').localeCompare(String(b&&b.id||''));
+  });
+}
+function selectRecentLedgerExpenses(records,limit){return sortLedgerExpenses(records).slice(0,Math.max(0,Number(limit)||0));}
+function groupLedgerExpensesByDate(records){
+  var groups=[],byDate={};
+  sortLedgerExpenses(records).forEach(function(record){
+    var key=ledgerLocalDateKey(record&&record.time)||'日期不明';
+    if(!byDate[key]){byDate[key]={date:key,records:[]};groups.push(byDate[key]);}
+    byDate[key].records.push(record);
+  });
+  return groups;
+}
+function ledgerAmountValue(value){value=Number(value||0);return isFinite(value)?value:0;}
+function addLedgerAmounts(target,record){
+  target.amountJpy+=ledgerAmountValue(record&&record.amountJpy);
+  target.amountTwd+=ledgerAmountValue(record&&record.amountTwd);
+  return target;
+}
+function buildLedgerPeriodSummary(records,now){
+  var source=records||[],total={amountJpy:0,amountTwd:0},today={count:0,amountJpy:0,amountTwd:0};
+  var todayKey=ledgerLocalDateKey(new Date(now==null?Date.now():now));
+  source.forEach(function(record){
+    addLedgerAmounts(total,record);
+    if(ledgerLocalDateKey(record&&record.time)===todayKey){today.count++;addLedgerAmounts(today,record);}
+  });
+  return {count:source.length,total:total,today:today};
+}
+function buildProxySummary(records,currentMember){
+  var member=canonicalMemberName(currentMember),proxyTotal={amountJpy:0,amountTwd:0};
+  var actualSpend={amountJpy:0,amountTwd:0},targets=[],byTarget={};
+  (records||[]).forEach(function(record){
+    if(canonicalMemberName(record&&record.member)===member&&!record.isProxy)addLedgerAmounts(actualSpend,record);
+    if(!record||!record.isProxy)return;
+    addLedgerAmounts(proxyTotal,record);
+    var target=String(record.proxyTarget||'').trim()||'未指定',key=canonicalMemberName(target);
+    if(!byTarget[key]){byTarget[key]={target:target,count:0,amountJpy:0,amountTwd:0};targets.push(byTarget[key]);}
+    byTarget[key].count++;addLedgerAmounts(byTarget[key],record);
+  });
+  return {proxyCount:targets.reduce(function(sum,item){return sum+item.count;},0),proxyTotal:proxyTotal,actualSpend:actualSpend,targets:targets};
+}
+
 function settlementWarning(warnFn,message){
   if(typeof warnFn==='function')warnFn(message);
   else if(typeof console!=='undefined'&&console.warn)console.warn(message);

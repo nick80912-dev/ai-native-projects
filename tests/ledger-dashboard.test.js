@@ -1,0 +1,66 @@
+const assert=require('assert');
+const fs=require('fs');
+const vm=require('vm');
+
+function createStorage(){
+  const values={};
+  return {
+    getItem(key){return Object.prototype.hasOwnProperty.call(values,key)?values[key]:null;},
+    setItem(key,value){values[key]=String(value);},
+    removeItem(key){delete values[key];}
+  };
+}
+
+function loadModule(){
+  const source=fs.readFileSync('index.html','utf8');
+  const start=source.indexOf('/* ================= ledgerRepository');
+  const end=source.indexOf('/* ================= 分帳',start);
+  assert(start>=0&&end>start,'ledger helper section exists');
+  const sandbox={
+    console:{log(){},warn(){},error(){}},localStorage:createStorage(),
+    fetch(){return Promise.reject(new Error('network disabled'));},setTimeout,clearTimeout,
+    Date,Math,Promise,JSON,String,Number,isFinite,
+    timestampDate(value){return new Date(Number(value));},AppLog:{repo(){},sync(){}},
+    renderSplit(){},updateLedgerPendingStatus(){}
+  };
+  vm.createContext(sandbox);
+  vm.runInContext(source.slice(start,end),sandbox);
+  return sandbox;
+}
+
+function plain(value){return JSON.parse(JSON.stringify(value));}
+
+const mod=loadModule();
+const records=Array.from({length:17},(_,index)=>({
+  id:'r'+index,
+  time:new Date(2026,6,index<2?17:18,12,index).toISOString(),
+  member:index%2?'Bar':'Amy',
+  amountJpy:100+index,
+  amountTwd:20+index
+}));
+
+const originalIds=records.map(record=>record.id);
+const recent=Array.from(mod.selectRecentLedgerExpenses(records,15));
+assert.strictEqual(recent.length,15,'dashboard limits recent expenses to 15');
+assert.strictEqual(recent[0].id,'r16','recent expenses are newest first');
+assert.deepStrictEqual(records.map(record=>record.id),originalIds,'recent selector does not mutate its input');
+
+const grouped=plain(mod.groupLedgerExpensesByDate(recent));
+assert.deepStrictEqual(grouped.map(group=>group.date),['2026-07-18'],'recent records are grouped by device-local date');
+assert.strictEqual(grouped[0].records.length,15,'all recent records stay in their date group');
+
+const allGrouped=plain(mod.groupLedgerExpensesByDate(records));
+assert.deepStrictEqual(allGrouped.map(group=>group.date),['2026-07-18','2026-07-17'],'date groups are newest first');
+assert.strictEqual(allGrouped[1].records.length,2,'older local-date records use their own group');
+
+const now=new Date(2026,6,18,20,0,0).getTime();
+const summary=plain(mod.buildLedgerPeriodSummary(records,now));
+assert.strictEqual(summary.count,17,'period summary counts the selected track only');
+assert.strictEqual(summary.today.count,15,'Today card uses the device-local date');
+assert.strictEqual(summary.total.amountJpy,records.reduce((sum,record)=>sum+record.amountJpy,0));
+assert.strictEqual(summary.today.amountTwd,records.slice(2).reduce((sum,record)=>sum+record.amountTwd,0));
+
+assert.strictEqual(mod.ledgerLocalDateKey('not-a-date'),'','invalid dates do not create a misleading group key');
+assert.deepStrictEqual(Array.from(mod.selectRecentLedgerExpenses(records,0)),[],'zero limit returns no rows');
+
+console.log('ledger dashboard tests passed');
