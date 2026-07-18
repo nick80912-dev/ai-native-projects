@@ -24,7 +24,8 @@ for (const file of files) {
   assert.match(html, /var days=DB\.trip\?DB\.trip\.days:\[\];/, `${file} shows every pre-trip day`);
   assert.doesNotMatch(html, /DB\.trip\.days\.slice\(0,3\)/, `${file} does not cap pre-trip days`);
   assert.match(html, /html,body\{touch-action:pan-x pan-y\}/, `${file} keeps the approved iOS Scroll-only gesture policy`);
-  assert.doesNotMatch(html, /touch-action:manipulation/, `${file} does not restore the superseded gesture policy`);
+  assert.doesNotMatch(html, /(?:\*|html|body)\s*(?:,\s*(?:html|body))?\s*\{[^}]*touch-action\s*:\s*manipulation/i, `${file} does not restore manipulation globally`);
+  assert.match(html, /\.ledger-sheet button[^}]*touch-action\s*:\s*manipulation/i, `${file} keeps the approved Bottom Sheet control exception`);
 
   const calls = { confirm: 0, confirmText: '', removed: 0, rendered: 0 };
   const sandbox = {

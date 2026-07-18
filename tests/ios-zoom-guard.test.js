@@ -38,8 +38,8 @@ assert.doesNotMatch(html, /function touchDistance\(/, 'double-tap distance helpe
 assert.match(html, /function setupDiagnostics\(/, 'peach diagnostic gesture remains available');
 assert.match(html, /function setupViewportReflow\(/, 'form focus recovery remains available');
 assert.doesNotMatch(html.match(/<meta name="viewport"[^>]+>/i)[0], /maximum-scale|user-scalable/i, 'viewport restrictions are not persistent');
-assert.match(sw, /okayama-trip-v19/, 'service worker cache is bumped to v19');
-assert.doesNotMatch(sw, /okayama-trip-v18/, 'retired v18 cache is not retained');
+assert.match(sw, /okayama-trip-v20/, 'service worker cache is bumped to v20');
+assert.doesNotMatch(sw, /okayama-trip-v19/, 'retired v19 cache is not retained');
 assert.doesNotMatch(sw, /tests\//, 'test files are not part of the App Shell');
 assert.doesNotMatch(sw, /ios-gesture-diagnostics\.test\.js/, 'the diagnostic test is never cached');
 assert.doesNotMatch(html,/var APP_BUILD=/,'unused diagnostic build metadata is retired');

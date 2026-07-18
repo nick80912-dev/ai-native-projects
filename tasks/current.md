@@ -3,25 +3,20 @@
 > 更新於 2026-07-18。細任務層;里程碑看 06_ROADMAP,快照看 13_PROJECT_STATUS。
 
 ## 📌 現況
-- 分帳 2.0 PR 4 已完成純函式結算核心：participants JSON 快照解析、最大餘數整數分配、每人雙幣已付／應付／淨額與確定性貪婪轉帳建議；不依賴 DOM 或目前成員名單。
-- JPY／TWD 分開計算，分配總和與淨額總和維持守恆；同額 tie-break 使用正式註冊順序，其次正規化名稱。同一輸入產生相同結果，不宣稱全域最少轉帳次數。
-- 缺失或無效 participants、負數、非整數及超出安全整數範圍的金額會 `console.warn`、列為資料異常並原子排除；墓碑、被刪除紀錄、身分註冊、TEST、個人帳與舊版非 expense 紀錄不參與結算。
-- 分帳 2.0 PR 3 已完成個人真刪與團體墓碑刪除：個人帳確認後直接移除本機紀錄；團體帳以必填原因的 `recordType=deletion` 墓碑保留共享稽核軌跡。
-- 墓碑與目標紀錄由單一有效紀錄解析器排除於列表、筆數及總額；重複墓碑冪等，非法目標安全忽略並警告。身分註冊、墓碑及已刪除紀錄均無刪除入口。
-- 舊負數沖銷 UI 與建立邏輯已移除，既有負數歷史紀錄仍可讀取並維持原有金額效果；離線墓碑沿用 Ledger Repository、Queue、Retry，送達後以本機 bridge 銜接至公開 CSV 更新。
-- TEST 模式只影響團體帳。團體一般支出保存支付方式、`recordType=expense` 與註冊成員 JSON 快照；身分註冊保存 `recordType=identity_registration`。個人明細即使以 `[TEST]` 開頭仍正常計入個人總額。
-- 設定頁可管理預設／自訂類別與支付方式，支援 trim、非空、最長 6 字、去重、刪除與上下排序；歷史未知值維持顯示。
-- 備份升至 version 2，加入個人帳與兩份自訂清單；version 1 安全相容，無效 JSON 或 localStorage 寫入失敗不覆蓋現有資料。SW cache 已升至 v19。
-- 390px 本機 QA 已通過個人刪除入口、團體墓碑對話框、原因必填阻擋與取消流程；無水平溢出，browser error 為 0，未送出團體墓碑。
-- 公開 Ledger CSV 另有四筆先前移動欄位留下的錯位身分註冊資料：`1784340861362-ps5u`、`1784341033589-0zh3`、`1784341935496-1mn8`、`1784342199638-6m9j`。本批未自動修改 Sheet；Bar 可於驗收時人工刪除或修正。
-- 本批未修改 Schema、Validator、Apps Script、Google Sheet、BUILTIN、SW、Netlify、結算或完整儀表板。
+- 分帳 2.0 PR 5 已完成個人／團體雙軌手機儀表板：總額可切換 JPY／TWD、今日摘要、個人代購摘要、團體結算摘要，以及依裝置日期分組的最近 15 筆消費。
+- 快速記帳改為 Bottom Sheet，支援單品與多品項；Sheet 遵循 Scroll-only 裁定，捲動區 `touch-action:pan-y`、控制項 `touch-action:manipulation`，開啟時鎖定背景，未加入 JavaScript 手勢攔截。
+- 多品項支援各自名稱、正整數金額、類別與單項代購／分攤覆寫；幣別、支付方式、稅制、固定折扣及備註維持整單層級。税込、税抜 8%／10%、免稅與折扣均透過已測試的最大餘數分配，雙幣品項總和精確等於整單實付。
+- 個人代購可依對象查看小計；團體結算 UI 只格式化 PR 4 的 participants 快照、雙幣淨額與確定性轉帳建議，不重寫結算數學。
+- 完整歷史支援個人全部／代購篩選、日期分組與紀錄明細。明細只從目前可見紀錄查找；個人沿用真刪確認，團體沿用墓碑刪除，已刪目標與墓碑沒有明細或刪除入口。
+- 團體多品項會先將整批獨立 Record ID 同步加入既有 Queue，再等待網路結果；共同 `batchId` 可於明細追查。個人多品項維持本機原子驗證後寫入。
+- Service Worker cache 已升至 v20。Schema 仍為 2.6；本批未修改 Schema、Validator、Apps Script、Google Sheet、BUILTIN、manifest、icon 或 Netlify 設定。
 
 ## 🔨 進行中
-- 無；PR 4 純函式實作與自動測試已完成，等待 Bar 驗收。
+- 無；PR 5 實作、聚焦回歸與 390px 本機 QA 已完成，等待 Bar 手機驗收 `dev` 最新版。
 
 ## ⏸ 等 Bar 動作
-1. Review PR 4 的 participants 異常排除、雙幣守恆、tie-break 與轉帳建議測試。
-2. 驗收通過後核准開始 PR 5 UI 批次；不得回頭重寫 PR 4 計算邏輯。
+1. 手機全面驗收 `dev`：個人／團體儀表板、快速單品、多品項稅折、代購覆寫、團體分攤、完整歷史、紀錄明細與結算面板。
+2. 驗收通過後核准 PR merge `dev → main`，再由 Netlify Production 自動部署。
 
 ## 下一棒
-→ PR 4 通過 Bar 驗收後，依固定順序開始 PR 5。
+→ Merge 後執行 Netlify 正式站驗證；回滾依 `16_OPS_PLAYBOOK.md` §A。

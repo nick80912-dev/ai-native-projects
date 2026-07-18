@@ -98,11 +98,12 @@
       "Ledger 2.0契約完成(Schema 2.6/Apps Script 14欄/舊payload相容/真實端點與CSV回讀驗證)",
       "分帳2.0雙軌資料層(個人localStorage/團體Repository/自訂類別與支付方式/備份v2/SW v19)",
       "分帳2.0刪除語意(個人真刪/團體墓碑/有效紀錄冪等解析/舊負數相容)",
-      "分帳2.0結算核心(participants快照/最大餘數整數分配/雙幣餘額/確定性貪婪轉帳)"
+      "分帳2.0結算核心(participants快照/最大餘數整數分配/雙幣餘額/確定性貪婪轉帳)",
+      "分帳2.0手機UI(PR5:雙軌儀表板/Bottom Sheet快速記帳/多品項稅折與覆寫/代購彙總/團體結算/完整歷史與明細/SW v20)"
     ],
     "pending_in_order": [
-      "PR 4 commit/push origin/dev→Bar驗收",
-      "執行分帳2.0 PR 5 UI批次並獨立驗收",
+      "Bar手機全面驗收dev最新PR5",
+      "Bar核准PR merge(dev→main)→Netlify正式部署與線上驗證",
       "Playwright 三情境入版控(backlog)",
       "框架抽取(FUTURE_PLAN)"
     ]

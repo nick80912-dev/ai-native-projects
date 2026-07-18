@@ -1,5 +1,13 @@
 # 07 版本紀錄
 
+## 2026-07-18 — 分帳 2.0 手機儀表板與快速記帳（Dev）
+- 分帳首頁改為個人／團體雙軌儀表板，提供雙幣總額切換、今日摘要、個人代購摘要、團體結算摘要及依本機日期分組的最近 15 筆消費。
+- 新增 Scroll-only Bottom Sheet 快速記帳：單品支援即時換算；多品項支援獨立類別、整單税込／税抜 8% 或 10%／免稅、固定折扣，以及個人代購或團體分攤的單項覆寫。Sheet 只用 CSS `touch-action` 宣告並維持背景鎖捲動，未加入 JavaScript 手勢攔截。
+- 多品項實付金額以確定性最大餘數法分配，JPY／TWD 各品項總和精確守恆；每筆具獨立 Record ID、團體批次共用 batchId，且所有團體品項會先進既有 Queue 再等待網路結果。
+- 個人代購可依對象查看小計；團體結算卡與面板直接使用 PR 4 的 balances／transfer suggestions。新增完整歷史、個人代購篩選與紀錄明細，並沿用個人真刪、團體墓碑刪除及已刪目標隔離規則。
+- 新增 dashboard、proxy、multi-item、quick-entry、settlement、history 與 tombstone 聚焦回歸；390px 本機 QA 通過主要導覽、Bottom Sheet、多品項、完整歷史、明細及空結算狀態，browser error 為 0。Service Worker cache 升至 `okayama-trip-v20`。
+- 本批未修改 Schema、Validator、Apps Script、Google Sheet、BUILTIN、manifest、icon 或 Netlify 設定。
+
 ## 2026-07-18 — Modal／Bottom Sheet Scroll-only 手勢裁定（Dev，純文件）
 - Modal／Bottom Sheet 類表面一律視為 Scroll-only 區，不開放捏合例外；可捲動區使用 `touch-action:pan-y`，互動控制項使用 `touch-action:manipulation`，祖先手勢交集仍禁止 pinch zoom。
 - 開啟 Bottom Sheet 時維持背景鎖捲動，Sheet 內只提供垂直捲動；禁止新增 JavaScript `touchstart`、`touchmove`、`gesturestart` 或 `preventDefault()` 手勢攔截。

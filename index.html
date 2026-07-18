@@ -3092,7 +3092,7 @@ function summarizePersonalLedgerRecords(records){return summarizeLedgerRecords(r
 
 function ledgerLocalDateKey(value){
   if(value==null||value==='')return '';
-  var date=new Date(value);
+  var date=value instanceof Date?value:timestampDate(typeof value==='number'?value:Date.parse(value));
   if(!isFinite(date.getTime()))return '';
   return [date.getFullYear(),('0'+(date.getMonth()+1)).slice(-2),('0'+date.getDate()).slice(-2)].join('-');
 }
@@ -3120,7 +3120,7 @@ function addLedgerAmounts(target,record){
 }
 function buildLedgerPeriodSummary(records,now){
   var source=records||[],total={amountJpy:0,amountTwd:0},today={count:0,amountJpy:0,amountTwd:0};
-  var todayKey=ledgerLocalDateKey(new Date(now==null?Date.now():now));
+  var todayKey=ledgerLocalDateKey(timestampDate(now==null?Date.now():now));
   source.forEach(function(record){
     addLedgerAmounts(total,record);
     if(ledgerLocalDateKey(record&&record.time)===todayKey){today.count++;addLedgerAmounts(today,record);}
@@ -3854,7 +3854,7 @@ function closeLedgerEntrySheet(){
 function updateLedgerDraftField(field,value){if(ledgerUiState.draft)ledgerUiState.draft[field]=value;}
 function createLedgerDraftItem(draft,seed){
   seed=seed||{};
-  return {key:'item-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,7),name:String(seed.name||seed.detail||''),amount:String(seed.amount||''),category:String(seed.category||draft.category||ledgerCategoryStore.all()[0]||''),proxyMode:'inherit',isProxy:!!draft.isProxy,proxyTarget:String(draft.proxyTarget||''),participantMode:'inherit',participants:(draft.participants||[]).slice(),overrideOpen:false};
+  return {key:'item-'+Math.random().toString(36).slice(2,10)+'-'+Math.random().toString(36).slice(2,7),name:String(seed.name||seed.detail||''),amount:String(seed.amount||''),category:String(seed.category||draft.category||ledgerCategoryStore.all()[0]||''),proxyMode:'inherit',isProxy:!!draft.isProxy,proxyTarget:String(draft.proxyTarget||''),participantMode:'inherit',participants:(draft.participants||[]).slice(),overrideOpen:false};
 }
 function ledgerDraftItem(key){var draft=ledgerUiState.draft;return draft&&(draft.items||[]).filter(function(item){return item.key===key;})[0];}
 function addLedgerDraftItem(){
@@ -4049,7 +4049,7 @@ function renderLedgerRecentRecord(record,shared,currency){
   return '<button class="ledger-recent-row" onclick="openLedgerRecordDetail(\''+jsString(record.id)+'\')"><span class="ledger-recent-main"><strong>'+escapeHtml(record.detail||'未命名')+'</strong><span class="ledger-recent-meta">'+escapeHtml([record.category,record.payMethod,record.member].filter(Boolean).join(' · '))+'</span></span><span class="ledger-recent-amount">'+escapeHtml(formatLedgerCurrencyAmount(currency,amount))+'</span>'+(badges.length?'<span class="ledger-recent-badges">'+badges.join('')+'</span>':'')+'</button>';
 }
 function renderLedgerRecentGroups(records,shared,currency){
-  var todayKey=ledgerLocalDateKey(new Date());
+  var todayKey=ledgerLocalDateKey(timestampDate(Date.now()));
   return groupLedgerExpensesByDate(records).map(function(group){
     var label=group.date===todayKey?'今天':group.date;
     return '<section class="ledger-date-group"><div class="ledger-date-label">'+escapeHtml(label)+'</div>'+group.records.map(function(record){return renderLedgerRecentRecord(record,shared,currency);}).join('')+'</section>';
@@ -4130,7 +4130,7 @@ function renderSplit(){
   var secondCard=shared?renderLedgerSettlementCard(mergedLedgerRecords(),member,currency):'<button class="ledger-compact-card ledger-compact-action" onclick="openLedgerProxyPanel()"><h3>代購</h3><strong>'+proxy.proxyCount+' 筆 · '+escapeHtml(formatLedgerCurrencyAmount(currency,currency==='JPY'?proxy.proxyTotal.amountJpy:proxy.proxyTotal.amountTwd))+'</strong><p>我的實際花費 '+escapeHtml(formatLedgerCurrencyAmount(currency,currency==='JPY'?proxy.actualSpend.amountJpy:proxy.actualSpend.amountTwd))+'</p></button>';
   view.innerHTML=testWarning+legacy+'<div class="ledger-dashboard"><div class="split-intro">個人帳留在本機；團體帳跨裝置同步。</div><div id="ledgerPendingStatus" class="ledger-status-pill '+(pending?'pending':'')+'">'+escapeHtml(status)+'</div>'+
     '<section class="ledger-summary-card"><div class="ledger-track-grid" role="group" aria-label="記帳模式"><button class="ledger-track-btn '+(!shared?'on':'')+'" aria-pressed="'+(!shared?'true':'false')+'" onclick="setLedgerTrack(\'personal\')">個人</button><button class="ledger-track-btn '+(shared?'on':'')+'" aria-pressed="'+(shared?'true':'false')+'" onclick="setLedgerTrack(\'shared\')">團體</button></div><div class="ledger-summary-count">'+period.count+' 筆'+(shared?'團體':'個人')+'紀錄</div><button class="ledger-summary-amount" onclick="toggleLedgerDisplayCurrency()" aria-label="切換總額顯示幣別"><strong>'+escapeHtml(formatLedgerCurrencyAmount(currency,primaryTotal))+'</strong><span>'+escapeHtml(formatLedgerCurrencyAmount(secondary,secondaryTotal))+'</span></button></section>'+
-    '<div class="ledger-compact-grid"><article class="ledger-compact-card ledger-today-card"><h3>今日</h3><strong>'+period.today.count+' 筆 · '+escapeHtml(formatLedgerCurrencyAmount(currency,todayPrimary))+'</strong><p>'+escapeHtml(ledgerLocalDateKey(new Date())||'裝置日期')+'</p></article>'+secondCard+'</div>'+
+    '<div class="ledger-compact-grid"><article class="ledger-compact-card ledger-today-card"><h3>今日</h3><strong>'+period.today.count+' 筆 · '+escapeHtml(formatLedgerCurrencyAmount(currency,todayPrimary))+'</strong><p>'+escapeHtml(ledgerLocalDateKey(timestampDate(Date.now()))||'裝置日期')+'</p></article>'+secondCard+'</div>'+
     '<section><div class="ledger-section-head"><h3>最近消費</h3><button class="ledger-view-all" onclick="showLedgerFullList()">查看全部</button></div><div class="ledger-recent-list">'+recentMarkup+'</div></section></div><button class="ledger-fab" aria-label="新增消費" onclick="openLedgerEntrySheet()">＋</button>';
 }
 
