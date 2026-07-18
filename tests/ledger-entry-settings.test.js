@@ -99,8 +99,9 @@ function response(payload){
   const settingsSource = html.slice(html.indexOf('function openSettings('),html.indexOf('function mergedLedgerRecords()'));
   const entrySource = html.slice(html.indexOf('function selectLedgerCategory('),html.indexOf('function reverseLedgerRecord('));
   const splitSource = html.slice(html.indexOf('function renderSplit()'),html.indexOf('/* ================= 導覽 / 啟動'));
-  assert(settingsSource.includes('openMemberSelector(false)'),'Settings remains the only non-forced identity switch entry');
-  assert(!splitSource.includes('openMemberSelector(false)'),'Split page does not offer identity switching');
+  assert(settingsSource.includes('openMemberSelector(false,false)'),'Settings exposes the existing-identity switch entry');
+  assert(settingsSource.includes('openMemberSelector(false,true)'),'Settings exposes the new-identity registration entry');
+  assert(!splitSource.includes('openMemberSelector(false'),'Split page does not offer identity switching or registration');
   assert(html.includes("var LEDGER_CATEGORIES=['餐飲','交通','票卷','購物','其他','代墊']"),'Split page defines the six fixed categories');
   assert(splitSource.includes('id="ledgerAmount"'),'Split page has one editable amount input');
   assert(splitSource.includes('id="ledgerConvertedPreview"'),'Split page has a converted amount preview');
@@ -116,7 +117,8 @@ function response(payload){
   assert(settingsSource.includes('新增記帳時預先選擇的幣別'),'Settings explains the default input currency');
   assert(!settingsSource.includes('Exchange Rate（'),'Settings does not expose the internal Exchange Rate key as a label');
   assert(!settingsSource.includes('Ledger Default Currency（'),'Settings does not expose the internal default-currency key as a label');
-  assert(settingsSource.includes('settings-member-row'),'member identity and switch use the compact row');
+  assert(settingsSource.includes('目前身分'),'Settings displays the current member identity');
+  assert(settingsSource.includes('切換身分')&&settingsSource.includes('新增身分'),'Settings keeps both identity management actions');
   assert(settingsSource.includes('ledgerTestModeSection'),'test mode has a stable Settings target');
   assert(settingsSource.includes('僅分帳用'),'Settings labels test mode as ledger-only');
   assert(splitSource.includes('⚠ 測試模式中'),'Split renders the test-mode warning');

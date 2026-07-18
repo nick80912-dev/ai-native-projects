@@ -452,6 +452,7 @@ input,select,textarea{font-size:16px}
 .st-chk.on{background:var(--gold);border-color:var(--gold)}
 .st-n{flex:1;font-size:14px;font-weight:600}
 .st-f{font-size:11px;color:var(--ink-faint);font-weight:600}
+.store-cat{display:inline-block;margin-left:5px;padding:1px 5px;border-radius:4px;background:var(--line-soft);color:var(--ink-soft);font-size:10px;font-weight:700;vertical-align:1px}
 /* 分帳儀表板 */
 .dash{display:flex;gap:8px;margin-bottom:13px}
 .stat{flex:1;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:11px 8px;text-align:center;box-shadow:var(--shadow)}
@@ -493,6 +494,7 @@ input,select,textarea{font-size:16px}
 .settings-member-row{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}.settings-member-row .settings-current{margin-bottom:0;min-width:0}.settings-member-switch{min-height:36px;padding:6px 11px;flex:0 0 auto}.settings-warning-tag{display:inline-flex;margin-left:6px;border-radius:999px;padding:2px 7px;background:#fff0e8;color:var(--coral);font-size:11px;font-weight:900;vertical-align:middle}
 .member-options{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.member-option{min-height:48px;border:1px solid var(--line);border-radius:11px;background:#fff;color:var(--ink);font:inherit;font-weight:800}.member-option.on{background:var(--sea);border-color:var(--sea);color:#fff}
 .member-panel{min-height:calc(100vh - 48px);min-height:calc(100dvh - 48px);display:flex;flex-direction:column;justify-content:center}.member-copy{color:var(--ink-soft);font-size:14px;margin-bottom:15px}
+.member-entry{margin-top:12px}.member-entry input{width:100%;min-height:48px;border:1px solid var(--line);border-radius:10px;background:#fff;padding:10px 12px;font:inherit}.member-actions{display:flex;gap:9px;margin-top:12px}.member-actions .btn{flex:1;min-height:44px}.member-error{margin-top:10px;color:var(--coral);font-size:13px;font-weight:700}.member-confirm{padding:16px;border:1px solid var(--line);border-radius:10px;background:#fff;text-align:center;font-weight:800}
 .state-box{width:100%;min-height:112px;border:1px solid var(--line);border-radius:10px;padding:10px;font:inherit;font-size:13px;resize:vertical;background:#fff}.settings-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:9px}.settings-actions .btn{flex:1;min-height:44px}
 .state-dialog-overlay{z-index:140;background:rgba(247,245,238,.98)}.state-dialog-panel{padding-top:18px}.state-dialog-copy{width:100%;min-height:180px;border:1px solid var(--line);border-radius:10px;padding:10px;font:inherit;font-size:13px;resize:vertical;background:#fff}
 .toggle-row{display:flex;align-items:center;justify-content:space-between;gap:12px}.toggle-row input{width:22px;height:22px}.settings-help{font-size:12px;color:var(--ink-faint);margin-top:6px}
@@ -1451,6 +1453,7 @@ function syncAll(showToast){
     CURRENT_SNAPSHOT=candidate.snapshot;
     if(typeof reconcileLedgerSettingsBridge==='function')reconcileLedgerSettingsBridge();
     renderAll();
+    if(typeof refreshMemberSelector==='function')refreshMemberSelector();
     setSyncState(download.partialSheets.length?'partial':'online');
     try{localStorage.removeItem(SNAPSHOT_FAILURE_KEY);}catch(ignore){}
     if(showToast) toast(download.partialSheets.length?'其他資料已更新,分帳沿用目前版本':'已更新到最新版 ✓');
@@ -2770,7 +2773,7 @@ function storeRow(s,id,on){
   var tax=/是|y|✓|v/i.test(s.taxfree||'');
   return '<div class="store-row" onclick="toggleWant(\''+id.replace(/'/g,"\\'")+'\')">'+
     '<span class="st-chk'+(on?' on':'')+'">'+(on?'✓':'')+'</span>'+
-    '<span class="st-n">'+escapeHtml(s.name)+(must?' <span class="st-must">必逛</span>':'')+(tax?' <span class="st-tax">免稅</span>':'')+'</span>'+
+    '<span class="st-n">'+escapeHtml(s.name)+(s.cat?' <span class="store-cat">'+escapeHtml(s.cat)+'</span>':'')+(must?' <span class="st-must">必逛</span>':'')+(tax?' <span class="st-tax">免稅</span>':'')+'</span>'+
     '<span class="st-f">'+escapeHtml([s.floor,s.note?s.note.replace('櫃位 ',''):''].filter(Boolean).join('·'))+'</span></div>';
 }
 function renderShop(){
@@ -2908,12 +2911,42 @@ function createLedgerReversal(original,now,randomFn){
   },at,randomFn,false);
 }
 
-function isTestLedgerRecord(record){ return /^\[TEST\](?:\s|$)/.test(String(record&&record.detail||'')); }
+function isTestLedgerRecord(record){ return /^\[TEST\]/.test(String(record&&record.detail||'')); }
+function canonicalMemberName(name){ return String(name==null?'':name).replace(/\u3000/g,' ').replace(/\s+/g,' ').trim(); }
+function ledgerDetailWithoutTestPrefix(record){ return String(record&&record.detail||'').replace(/^\[TEST\]\s*/,'').trim(); }
+function isIdentityRegistrationRecord(record){ return ledgerDetailWithoutTestPrefix(record)==='[身分註冊]'; }
+function registeredMemberEntries(records,testMode){
+  var ordered=(records||[]).map(function(record,index){return {record:record,index:index};}).sort(function(a,b){
+    var time=String(a.record.time||'').localeCompare(String(b.record.time||''));
+    return time||a.index-b.index;
+  });
+  var formal=[], testing=[], formalSeen={}, testSeen={};
+  ordered.forEach(function(item){
+    var record=item.record;
+    if(!isIdentityRegistrationRecord(record))return;
+    var name=String(record.member||'').trim(), key=canonicalMemberName(name), test=isTestLedgerRecord(record);
+    if(!key)return;
+    var target=test?testing:formal, seen=test?testSeen:formalSeen;
+    if(seen[key])return;
+    seen[key]=true; target.push({name:name,key:key,test:test});
+  });
+  if(!testMode)return formal;
+  var combined=formal.slice(), combinedSeen={};
+  combined.forEach(function(entry){combinedSeen[entry.key]=true;});
+  testing.forEach(function(entry){if(!combinedSeen[entry.key]){combinedSeen[entry.key]=true;combined.push(entry);}});
+  return combined;
+}
+function findRegisteredMember(name,records,testMode){
+  var key=canonicalMemberName(name), entries=registeredMemberEntries(records,testMode);
+  for(var i=0;i<entries.length;i++)if(entries[i].key===key)return entries[i];
+  return null;
+}
+function spendLedgerRecords(records){ return (records||[]).filter(function(record){return !isIdentityRegistrationRecord(record);}); }
 
 function summarizeLedgerRecords(records){
   var byMember={}, order=[], total={amountJpy:0,amountTwd:0}, included=[];
   (records||[]).forEach(function(record){
-    if(isTestLedgerRecord(record)) return;
+    if(isTestLedgerRecord(record)||isIdentityRegistrationRecord(record)) return;
     var member=String(record.member||'').trim();
     if(!member) return;
     if(!byMember[member]){ byMember[member]={member:member,amountJpy:0,amountTwd:0,count:0}; order.push(member); }
@@ -3080,30 +3113,104 @@ var ledgerRepository=createLedgerRepository({
 });
 
 
-/* ================= 分帳(雲端 Ledger + CMS 行前團費) ================= */
+/* ================= 分帳(雲端 Ledger) ================= */
 var legacyExpenseNoticeVisible=false;
 var LEDGER_CATEGORIES=['餐飲','交通','票卷','購物','其他','代墊'];
 var ledgerDraftCategory=LEDGER_CATEGORIES[0];
 var ledgerDraftCurrency='';
 var ledgerSettingsDraftCurrency='';
+var memberRegistrationBridge=[];
+var memberSelectorState={forced:false,stage:'choose',showNew:false,input:'',candidate:null,error:'',busy:false};
 function getCurrentMember(){ return String(localStorage.getItem('trip_member')||'').trim(); }
-function memberIsAllowed(member){ return !!(member&&DB.expMembers&&DB.expMembers.indexOf(member)>=0); }
+function memberIdentityRecords(){
+  var records=(typeof mergedLedgerRecords==='function'?mergedLedgerRecords():[]).slice(), seen={};
+  records.forEach(function(record){if(record&&record.id)seen[record.id]=true;});
+  memberRegistrationBridge.forEach(function(record){if(record&&(!record.id||!seen[record.id]))records.push(record);});
+  return records;
+}
+function registeredMembersForCurrentMode(){ return registeredMemberEntries(memberIdentityRecords(),!!lsGet('trip_ledger_test_mode',false)); }
+function memberIsAllowed(member){ return !!findRegisteredMember(member,memberIdentityRecords(),!!lsGet('trip_ledger_test_mode',false)); }
+function resolveMemberCandidate(name,records,testMode){
+  var display=String(name==null?'':name).trim(), key=canonicalMemberName(display);
+  if(!key)throw new Error('請輸入身分名稱');
+  if(display.length>12)throw new Error('身分名稱最多 12 個字元');
+  var existing=findRegisteredMember(display,records||[],!!testMode);
+  return existing?{name:existing.name,key:existing.key,isNew:false,test:existing.test}:{name:display,key:key,isNew:true,test:!!testMode};
+}
+function rememberMemberRegistration(record){
+  if(!record||!isIdentityRegistrationRecord(record))return;
+  if(!memberRegistrationBridge.some(function(item){return item.id&&item.id===record.id;}))memberRegistrationBridge.push(record);
+}
+function commitMemberCandidate(candidate){
+  if(!candidate||!candidate.name)return Promise.reject(new Error('尚未選擇身分'));
+  if(!candidate.isNew){localStorage.setItem('trip_member',candidate.name);return Promise.resolve({ok:true,existing:true});}
+  return Promise.resolve().then(function(){
+    return ledgerRepository.add({member:candidate.name,category:'其他',detail:'[身分註冊]',amountJpy:0,amountTwd:0,note:''});
+  }).then(function(result){
+    if(!result||(!result.ok&&!(result.pending>0)))throw result&&result.error||new Error('身分註冊未能同步或加入佇列');
+    if(result.record)rememberMemberRegistration(result.record);
+    localStorage.setItem('trip_member',candidate.name);
+    return result;
+  });
+}
+function closeMemberSelector(){var overlay=document.getElementById('memberOverlay');if(overlay)overlay.remove();}
 function chooseMember(member){
-  if(!memberIsAllowed(member)){ toast('請從同行成員中選擇'); return; }
-  localStorage.setItem('trip_member',member);
-  var overlay=document.getElementById('memberOverlay'); if(overlay) overlay.remove();
-  renderSplit();
-  var current=document.getElementById('settingsCurrentMember'); if(current) current.textContent=member;
+  try{memberSelectorState.candidate=resolveMemberCandidate(member,memberIdentityRecords(),!!lsGet('trip_ledger_test_mode',false));}
+  catch(error){memberSelectorState.error=error.message;renderMemberSelector();return;}
+  memberSelectorState.stage='confirm';memberSelectorState.error='';renderMemberSelector();
 }
-function memberButtons(){
+function memberButtons(entries){
   var current=getCurrentMember();
-  return (DB.expMembers||[]).map(function(member){return '<button class="member-option '+(member===current?'on':'')+'" onclick="chooseMember(\''+jsString(member)+'\')">'+escapeHtml(member)+'</button>';}).join('');
+  return (entries||[]).map(function(entry){return '<button class="member-option '+(canonicalMemberName(entry.name)===canonicalMemberName(current)?'on':'')+'" data-member-name="'+escapeHtml(entry.name)+'" onclick="chooseMember(\''+jsString(entry.name)+'\')">'+escapeHtml(entry.name)+(entry.test?' <span class="ledger-tag">TEST</span>':'')+'</button>';}).join('');
 }
-function openMemberSelector(forced){
+function renderMemberSelector(existingOverlay){
+  var overlay=existingOverlay||document.getElementById('memberOverlay');if(!overlay)return;
+  var entries=registeredMembersForCurrentMode(), forced=memberSelectorState.forced;
+  var close=forced?'':'<button class="settings-close" aria-label="關閉" onclick="closeMemberSelector()">×</button>';
+  var body='';
+  if(memberSelectorState.stage==='confirm'&&memberSelectorState.candidate){
+    body='<div class="member-confirm">將以「'+escapeHtml(memberSelectorState.candidate.name)+'」身分記帳</div>'+
+      (memberSelectorState.error?'<div class="member-error">'+escapeHtml(memberSelectorState.error)+'</div>':'')+
+      '<div class="member-actions"><button class="btn ghost" onclick="reselectMember()">重選</button><button class="btn" onclick="confirmMemberSelection(this)"'+(memberSelectorState.busy?' disabled':'')+'>確認</button></div>';
+  }else{
+    var options=entries.length?'<div class="member-options">'+memberButtons(entries)+'</div>':'';
+    var newEntry=memberSelectorState.showNew||!entries.length?'<div class="member-entry"><label for="memberNameInput">新增身分</label><input id="memberNameInput" maxlength="12" value="'+escapeHtml(memberSelectorState.input)+'" placeholder="輸入你的名稱"><div class="member-actions"><button class="btn" onclick="prepareNewMemberCandidate()">下一步</button></div></div>':'<div class="member-actions"><button class="btn ghost" onclick="startNewMember()">➕ 新成員</button></div>';
+    body=options+newEntry+(memberSelectorState.error?'<div class="member-error">'+escapeHtml(memberSelectorState.error)+'</div>':'');
+  }
+  overlay.innerHTML='<section class="member-panel" role="dialog" aria-modal="true" aria-labelledby="memberTitle"><div class="member-head"><h2 id="memberTitle">選擇你的成員身分</h2>'+close+'</div><p class="member-copy">正式成員由共享身分註冊紀錄建立。切換身分不會修改既有支出。</p>'+body+'</section>';
+  if(memberSelectorState.showNew){var input=document.getElementById('memberNameInput');if(input)input.focus();}
+}
+function openMemberSelector(forced,startNew){
   var old=document.getElementById('memberOverlay'); if(old) old.remove();
+  var entries=registeredMembersForCurrentMode();
+  memberSelectorState={forced:!!forced,stage:'choose',showNew:!!startNew||!entries.length,input:'',candidate:null,error:'',busy:false};
   var overlay=document.createElement('div'); overlay.id='memberOverlay'; overlay.className='member-overlay';
-  overlay.innerHTML='<section class="member-panel" role="dialog" aria-modal="true" aria-labelledby="memberTitle"><div class="member-head"><h2 id="memberTitle">選擇你的成員身分</h2>'+(forced?'':'<button class="settings-close" aria-label="關閉" onclick="document.getElementById(\'memberOverlay\').remove()">×</button>')+'</div><p class="member-copy">記帳會以寫入當下的身分保存。之後可以在設定中切換,既有紀錄不會改動。</p><div class="member-options">'+memberButtons()+'</div></section>';
   document.body.appendChild(overlay);
+  renderMemberSelector(overlay);
+}
+function startNewMember(){memberSelectorState.showNew=true;memberSelectorState.error='';renderMemberSelector();}
+function prepareNewMemberCandidate(){
+  var input=document.getElementById('memberNameInput');memberSelectorState.input=input?input.value:memberSelectorState.input;
+  try{memberSelectorState.candidate=resolveMemberCandidate(memberSelectorState.input,memberIdentityRecords(),!!lsGet('trip_ledger_test_mode',false));}
+  catch(error){memberSelectorState.error=error.message;renderMemberSelector();return;}
+  memberSelectorState.stage='confirm';memberSelectorState.error='';renderMemberSelector();
+}
+function reselectMember(){
+  memberSelectorState.stage='choose';memberSelectorState.busy=false;memberSelectorState.error='';memberSelectorState.showNew=!!(memberSelectorState.candidate&&memberSelectorState.candidate.isNew)||memberSelectorState.showNew;renderMemberSelector();
+}
+function confirmMemberSelection(button){
+  if(memberSelectorState.busy||!memberSelectorState.candidate)return;
+  memberSelectorState.busy=true;memberSelectorState.error='';if(button)button.disabled=true;
+  var candidate=memberSelectorState.candidate;
+  return commitMemberCandidate(candidate).then(function(result){
+    closeMemberSelector();renderSplit();var current=document.getElementById('settingsCurrentMember');if(current)current.textContent=candidate.name;
+    toast(candidate.isNew?(result.ok?'身分已同步':'身分已建立,待連網同步'):'已切換身分');return result;
+  },function(error){memberSelectorState.busy=false;memberSelectorState.error=error.message||'身分建立失敗,請重試';renderMemberSelector();return {ok:false,error:error};});
+}
+function refreshMemberSelector(){
+  var overlay=document.getElementById('memberOverlay');
+  if(overlay)renderMemberSelector(overlay);
+  else if(!memberIsAllowed(getCurrentMember()))openMemberSelector(true);
 }
 function closeSettings(){ var overlay=document.getElementById('settingsOverlay'); if(overlay) overlay.remove(); }
 function personalStateJson(){
@@ -3176,7 +3283,7 @@ function restorePersonalState(){
   try{applyPersonalStatePayload(payload);}catch(error){toast('本機資料還原失敗');return;}
   closePersonalStateDialog(); closeSettings(); renderAll(); updateLedgerPendingStatus(); ledgerRepository.flushQueue(); toast('個人狀態已還原');
 }
-function setLedgerTestMode(input){ lsSet('trip_ledger_test_mode',!!input.checked); renderSplit(); toast(input.checked?'測試模式已開啟':'測試模式已關閉'); }
+function setLedgerTestMode(input){ lsSet('trip_ledger_test_mode',!!input.checked); renderSplit(); if(!memberIsAllowed(getCurrentMember()))openMemberSelector(true);else refreshMemberSelector(); toast(input.checked?'測試模式已開啟':'測試模式已關閉'); }
 function selectLedgerDefaultCurrency(value){
   value=String(value||'').toUpperCase();
   if(value!=='JPY'&&value!=='TWD')return;
@@ -3206,7 +3313,7 @@ function openSettings(targetId){
   ledgerSettingsDraftCurrency=ledgerSettings.defaultCurrency;
   var overlay=document.createElement('div'); overlay.id='settingsOverlay'; overlay.className='settings-overlay';
   overlay.innerHTML='<section class="settings-panel" role="dialog" aria-modal="true" aria-labelledby="settingsTitle"><div class="settings-head"><h2 id="settingsTitle">設定</h2><button class="settings-close" aria-label="關閉" onclick="closeSettings()">×</button></div>'+
-    '<div class="settings-section"><h3>成員身分</h3><div class="settings-member-row"><div class="settings-current">目前身分：<b id="settingsCurrentMember">'+escapeHtml(getCurrentMember()||'尚未選擇')+'</b></div><button class="btn ghost settings-member-switch" onclick="openMemberSelector(false)">切換</button></div></div>'+
+    '<div class="settings-section"><h3>成員身分</h3><div class="settings-current">目前身分：<b id="settingsCurrentMember">'+escapeHtml(getCurrentMember()||'尚未選擇')+'</b></div><div class="settings-actions"><button class="btn ghost settings-member-switch" onclick="openMemberSelector(false,false)">切換身分</button><button class="btn settings-member-switch" onclick="openMemberSelector(false,true)">新增身分</button></div></div>'+
     '<div class="settings-section"><h3>分帳匯率與幣別</h3><div class="settings-current">目前匯率：<b>1 JPY = NT$'+escapeHtml(ledgerSettings.exchangeRate||'未設定')+'</b></div><div class="settings-rate-row"><label class="settings-help" for="ledgerExchangeRate"><b>匯率</b><br>1 日幣可換算多少台幣</label><input id="ledgerExchangeRate" type="number" inputmode="decimal" min="0.000001" step="any" value="'+escapeHtml(ledgerSettings.exchangeRate)+'"></div><div class="settings-help"><b>預設輸入幣別</b><br>新增記帳時預先選擇的幣別</div><div class="ledger-currency-grid" style="margin-top:8px"><button class="ledger-choice settings-currency-option '+(ledgerSettings.defaultCurrency==='JPY'?'on':'')+'" data-currency="JPY" aria-pressed="'+(ledgerSettings.defaultCurrency==='JPY'?'true':'false')+'" onclick="selectLedgerDefaultCurrency(\'JPY\')">JPY 日幣</button><button class="ledger-choice settings-currency-option '+(ledgerSettings.defaultCurrency==='TWD'?'on':'')+'" data-currency="TWD" aria-pressed="'+(ledgerSettings.defaultCurrency==='TWD'?'true':'false')+'" onclick="selectLedgerDefaultCurrency(\'TWD\')">TWD 台幣</button></div>'+(settingsError?'<div class="settings-help" style="color:var(--coral)">'+escapeHtml(settingsError)+'</div>':'')+'<div class="settings-help">儲存後跨裝置共用；CSV 發布可能延遲 1–5 分鐘。</div><button class="btn block" style="margin-top:10px" onclick="saveLedgerSettingsFromForm(this)">儲存共用設定</button></div>'+
     '<div class="settings-section"><h3>本機資料備份／還原</h3><div class="settings-help">換手機、重裝 App 或清除瀏覽器資料前使用。還原會覆蓋目前裝置上的打卡、想逛、身分及待同步記帳。</div><div class="settings-actions"><button class="btn ghost" onclick="exportPersonalState()">複製備份 JSON</button><button class="btn" onclick="openPersonalStateRestore()">從 JSON 還原</button></div></div>'+
     '<div class="settings-section" id="ledgerTestModeSection"><div class="toggle-row"><div><h3>測試模式<span class="settings-warning-tag">僅分帳用</span></h3><div class="settings-help">寫入明細加上 [TEST],且不納入彙算。</div></div><input type="checkbox" '+(lsGet('trip_ledger_test_mode',false)?'checked':'')+' onchange="setLedgerTestMode(this)"></div></div>'+
@@ -3293,8 +3400,8 @@ function addLedgerExpense(){
   return promise.then(function(result){ledgerDraftCurrency='';renderSplit();toast(result.ok?'已同步':'已記錄,待連網同步');return result;},function(error){renderSplit();toast(error.message||'記帳失敗');throw error;});
 }
 function reverseLedgerRecord(id){
-  var original=mergedLedgerRecords().filter(function(record){return record.id===id;})[0];
-  if(!original||!confirm('確定以負向紀錄沖銷這筆支出？原紀錄會保留。')) return;
+  var original=spendLedgerRecords(mergedLedgerRecords()).filter(function(record){return record.id===id;})[0];
+  if(!original||!confirm('將新增一筆負向沖銷紀錄以抵銷此筆，原紀錄保留。確定？')) return;
   var reversal=createLedgerReversal(original,Date.now());
   ledgerRepository.add(reversal).then(function(result){renderSplit();toast(result.ok?'沖銷已同步':'沖銷已記錄,待同步');});
 }
@@ -3303,23 +3410,22 @@ function dismissLegacyExpenses(){ legacyExpenseNoticeVisible=false; renderSplit(
 function formatLedgerAmounts(record){ return '¥'+Math.round(Number(record.amountJpy||0)).toLocaleString()+' / NT$'+Math.round(Number(record.amountTwd||0)).toLocaleString(); }
 function renderSplit(){
   var view=document.getElementById('view-split'); if(!view) return;
-  var records=mergedLedgerRecords(), summary=summarizeLedgerRecords(records), pending=ledgerRepository.pendingCount(), member=getCurrentMember();
+  var records=spendLedgerRecords(mergedLedgerRecords()), summary=summarizeLedgerRecords(records), pending=ledgerRepository.pendingCount(), member=getCurrentMember();
   var ledgerSettings=null, ledgerSettingsError='';
   try{ledgerSettings=currentLedgerSettings();}catch(error){ledgerSettingsError=error.message||'匯率未設定';}
   if(!ledgerDraftCurrency&&ledgerSettings)ledgerDraftCurrency=ledgerSettings.defaultCurrency;
   var categoryButtons=LEDGER_CATEGORIES.map(function(category){var on=category===ledgerDraftCategory;return '<button class="ledger-choice ledger-category-option '+(on?'on':'')+'" data-category="'+escapeHtml(category)+'" aria-pressed="'+(on?'true':'false')+'" onclick="selectLedgerCategory(\''+jsString(category)+'\')">'+escapeHtml(category)+'</button>';}).join('');
   var currency=ledgerDraftCurrency||(ledgerSettings&&ledgerSettings.defaultCurrency)||'JPY';
   var rateText=ledgerSettings?'目前匯率：1 JPY = NT$'+ledgerSettings.exchangeRate:'目前匯率：未設定';
-  var cms=DB.expCMS.length?'<div class="card"><h3>🧳 行前團費（來自試算表）</h3>'+(DB.expMembers&&DB.expMembers.length?'<div class="er2" style="margin-bottom:8px">👥 同行成員：'+DB.expMembers.map(escapeHtml).join('、')+'</div>':'')+DB.expCMS.map(function(e){var amts=[];if(e.twd)amts.push('NT$'+e.twd.replace(/\s/g,''));if(e.jpy)amts.push('¥'+e.jpy.replace(/\s/g,''));var amt=amts.join(' / ');if(e.total)return '<div class="exp-item" style="border-top:2px solid var(--line)"><div class="er1"><span class="edesc" style="color:var(--sea-deep)">'+escapeHtml(e.cat)+'</span><span class="eamt">'+amt+'</span></div>'+(e.note?'<div class="er2">'+escapeHtml(e.note)+'</div>':'')+'</div>';return '<div class="exp-item"><div class="er1"><span class="edesc">'+escapeHtml(e.name)+'</span><span class="eamt">'+(amt||'')+'</span></div><div class="er2">'+escapeHtml([e.cat,e.note].filter(Boolean).join(' · '))+'</div></div>';}).join('')+'</div>':'';
   var legacy=legacyExpenseNoticeVisible?'<div class="legacy-ledger">偵測到舊版 `trip_expenses` 本機測試資料,不會遷移至雲端。<div class="settings-actions"><button class="btn coral" onclick="clearLegacyExpenses()">清除舊本機紀錄</button><button class="btn ghost" onclick="dismissLegacyExpenses()">保留並關閉</button></div></div>':'';
   var rows=records.length?records.map(function(record){return '<div class="exp-item ledger-record '+(record.pending?'pending':'')+'"><div class="er1"><span class="edesc">'+escapeHtml(record.detail||'未命名')+(record.pending?'<span class="ledger-tag">待同步</span>':'')+(isTestLedgerRecord(record)?'<span class="ledger-tag">TEST</span>':'')+'</span><span class="eamt">'+escapeHtml(formatLedgerAmounts(record))+'</span></div><div class="er2">'+escapeHtml([record.member,record.category,record.time&&record.time.slice(0,16).replace('T',' '),record.note].filter(Boolean).join(' · '))+'</div><span class="edel" onclick="reverseLedgerRecord(\''+jsString(record.id)+'\')">🗑 沖銷</span></div>';}).join(''):'<div class="empty-state">還沒有任何分帳紀錄</div>';
   var memberTotals=summary.members.map(function(item){return '<div class="ledger-summary-row"><span>'+escapeHtml(item.member)+'</span><span>¥'+Math.round(item.amountJpy).toLocaleString()+' / NT$'+Math.round(item.amountTwd).toLocaleString()+'</span></div>';}).join('');
   var testWarning=lsGet('trip_ledger_test_mode',false)?'<div class="ledger-test-warning"><strong>⚠ 測試模式中</strong><div>此頁新增的記帳不會列入彙算</div><button class="btn coral" onclick="openSettings(\'ledgerTestModeSection\')">前往設定關閉</button></div>':'';
-  view.innerHTML=testWarning+legacy+'<div class="split-intro">分帳紀錄會跨裝置同步。刪帳會新增負向沖銷紀錄,不修改原資料；行前團費維持另列 💴</div>'+
+  view.innerHTML=testWarning+legacy+'<div class="split-intro">記帳會跨裝置同步 💴</div>'+
     '<div id="ledgerPendingStatus" class="ledger-pending" style="display:'+(pending?'inline-flex':'none')+'">'+(pending?pending+' 筆待同步':'')+'</div>'+
     '<div class="card"><h3>➕ 新增分帳紀錄</h3><div class="settings-current">記帳身分：<b>'+escapeHtml(member||'尚未選擇')+'</b></div><div class="field"><label>類別</label><div class="ledger-choice-grid">'+categoryButtons+'</div></div><div class="field"><label>明細</label><input id="ledgerDetail" placeholder="如：晚餐拉麵、渡輪票"></div><div class="field"><label>輸入幣別</label><div class="ledger-currency-grid"><button class="ledger-choice ledger-currency-option '+(currency==='JPY'?'on':'')+'" data-currency="JPY" aria-pressed="'+(currency==='JPY'?'true':'false')+'" onclick="selectLedgerCurrency(\'JPY\')">JPY 日幣</button><button class="ledger-choice ledger-currency-option '+(currency==='TWD'?'on':'')+'" data-currency="TWD" aria-pressed="'+(currency==='TWD'?'true':'false')+'" onclick="selectLedgerCurrency(\'TWD\')">TWD 台幣</button></div><div class="ledger-rate" id="ledgerCurrentRate">'+escapeHtml(rateText)+'</div></div><div class="field"><label id="ledgerAmountLabel">'+(currency==='JPY'?'日幣 ¥':'台幣 NT$')+'</label><input id="ledgerAmount" type="number" inputmode="decimal" min="0" placeholder="0" oninput="updateLedgerConversionPreview()"></div><div class="field"><label>換算結果</label><output class="ledger-preview" id="ledgerConvertedPreview">'+(currency==='JPY'?'換算台幣：—':'換算日幣：—')+'</output>'+(ledgerSettingsError?'<div class="settings-help" style="color:var(--coral)">'+escapeHtml(ledgerSettingsError)+'</div>':'')+'</div><div class="field"><label>備註</label><input id="ledgerNote" placeholder="選填"></div><button class="btn coral block" id="ledgerAddButton" onclick="addLedgerExpense()"'+(ledgerSettings?'':' disabled')+'>加入這筆支出</button></div>'+
     '<div class="card"><h3>🧾 支出明細 '+(records.length?'('+records.length+'筆)':'')+'</h3>'+rows+'</div>'+
-    (summary.members.length?'<div class="card result-card"><h3>💰 成員小計</h3><div class="ledger-summary">'+memberTotals+'<div class="ledger-summary-row"><span>全團總計</span><span>¥'+Math.round(summary.total.amountJpy).toLocaleString()+' / NT$'+Math.round(summary.total.amountTwd).toLocaleString()+'</span></div></div></div>':'')+cms;
+    (summary.members.length?'<div class="card result-card"><h3>💰 成員小計</h3><div class="ledger-summary">'+memberTotals+'<div class="ledger-summary-row"><span>全團總計</span><span>¥'+Math.round(summary.total.amountJpy).toLocaleString()+' / NT$'+Math.round(summary.total.amountTwd).toLocaleString()+'</span></div></div></div>':'');
 }
 
 /* ================= 導覽 / 啟動 ================= */
@@ -3356,7 +3462,7 @@ function init(){
     setSyncState(SRC.itin||'builtin');
     renderAll();
     if(!memberIsAllowed(getCurrentMember())) openMemberSelector(true);
-    ledgerRepository.flushQueue().then(function(){renderSplit();});
+    ledgerRepository.flushQueue().then(function(){renderSplit();refreshMemberSelector();});
   }else{
     document.getElementById('view-today').innerHTML='<div class="empty-state">😕 資料載入異常，請重新下載檔案。</div>';
   }
@@ -3365,7 +3471,7 @@ function init(){
 window.addEventListener('scroll',function(){
   document.getElementById('totop').classList.toggle('show',window.scrollY>400);
 });
-window.addEventListener('online',function(){ ledgerRepository.flushQueue().then(function(){renderSplit();}); });
+window.addEventListener('online',function(){ ledgerRepository.flushQueue().then(function(){renderSplit();refreshMemberSelector();}); });
 function isTimeSimulationActive(){ var s=lsGet('trip_time_simulation',null); return !!(s&&((s.mode==='offset'&&typeof s.offsetMs==='number')||(s.mode==='custom'&&s.value))); }
 function updateSimulationMarker(){ var on=isTimeSimulationActive(),logo=document.getElementById('diagnosticBadge'),marker=document.getElementById('simMarker'); if(logo) logo.classList.toggle('simulating',on); if(marker) marker.classList.toggle('on',on); }
 function snapshotSimulationState(){
