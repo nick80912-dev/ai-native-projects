@@ -77,7 +77,7 @@ function loadIdentityModule(){
   mod.ledgerRepository={add(record){writes.push(record);return Promise.resolve({ok:true,pending:0,record});}};
   await mod.commitMemberCandidate(fresh);
   assert.strictEqual(mod.localStorage.getItem('trip_member'),'新 成員','remote success stores the current identity');
-  assert.deepStrictEqual(JSON.parse(JSON.stringify(writes[0])),{member:'新 成員',category:'其他',detail:'[身分註冊]',amountJpy:0,amountTwd:0,note:''},'new identities write the zero-amount registration contract through ledgerRepository');
+  assert.deepStrictEqual(JSON.parse(JSON.stringify(writes[0])),{member:'新 成員',category:'其他',detail:'[身分註冊]',amountJpy:0,amountTwd:0,note:'',participants:'',payMethod:'',recordType:'identity_registration',targetRecordId:'',deleteReason:'',batchId:''},'new identities write the zero-amount registration contract through ledgerRepository');
 
   mod.localStorage.removeItem('trip_member');
   mod.ledgerRepository={add(){return Promise.resolve({ok:false,pending:1});}};

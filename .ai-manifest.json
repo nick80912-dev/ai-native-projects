@@ -2,7 +2,7 @@
   "$comment": "AI 導航檔 — 任何 AI 接手第一步只讀這份即可掌握全貌。這是 13 步流程的第 1 步。",
   "project": "japan-travel-pwa(日本旅遊行程 App)",
   "owner": "Bar(產品負責人,非工程師,繁中溝通,要直接執行不要教學;AI=全職工程團隊)",
-  "version": "2.6-ledger-contract",
+  "version": "2.6-ledger-dual-track",
   "framework": "ai-native-framework@pending(尚未抽取;見 FUTURE_PLAN_framework-extraction.md)",
   "updated": "2026-07-18",
   "live": "https://trippilot-jp.netlify.app/",
@@ -28,7 +28,7 @@
     "ops_playbook": "16_OPS_PLAYBOOK.md:Netlify回滾/SW快取災難/Sheet版本還原/清理排程安全",
     "status_authority": "即時狀態唯一權威=tasks/(current/backlog/done);13_PROJECT_STATUS與本manifest.status為快照;00_CONTEXT_HANDOVER為歷史快照不參與"
   },
-  "data_flow": "GoogleSheets(8表)→發布CSV→手機瀏覽器fetch→validator.js(防錯)→parser(Schema驅動)→DB→renderers→UI；分帳寫入:localStorage佇列→ledgerRepository→Apps Script→分帳紀錄表(append-only,Schema 2.6 固定14欄)；共用分帳設定:Settings→Apps Script→TripConfig兩個固定鍵→發布CSV,確認後以本機bridge涵蓋1–5分鐘延遲；離線三層:BUILTIN內建→localStorage快取→背景同步",
+  "data_flow": "GoogleSheets(8表)→發布CSV→手機瀏覽器fetch→validator.js(防錯)→parser(Schema驅動)→DB→renderers→UI；個人帳→trip_personal_ledger(localStorage only,不進Queue)；團體帳→localStorage佇列→ledgerRepository→Apps Script→分帳紀錄表(append-only,Schema 2.6固定14欄)；共用分帳設定:Settings→Apps Script→TripConfig兩個固定鍵→發布CSV,確認後以本機bridge涵蓋1–5分鐘延遲；離線三層:BUILTIN內建→localStorage快取→背景同步",
   "files": {
     "index.html": "唯一可編輯 App 與正式部署入口:UI殼+CSS+內嵌JS(區塊分層見10_FOLDER_STRUCTURE)",
     "schema.js": "唯一資料規格SSoT:欄位/gid/型別值/發布URL;schemaDoc()自動產09文件",
@@ -63,7 +63,7 @@
     "viewport meta 不得常駐 maximum-scale 或 user-scalable=no;只允許輸入 focus 縮放殘留時瞬鎖約100ms,並原樣還原啟動時字串",
     "停車 MAP CODE 純顯示無複製鈕、『停車同Pxxx』繼承",
     "渡輪不建班次庫(末班資訊+官方時刻表連結)",
-    "個人狀態(打卡/想逛/成員身分)存 localStorage 不進 CMS;依ADR 0006,App僅可append分帳紀錄並更新TripConfig的Exchange Rate / Ledger Default Currency兩鍵,其餘CMS欄位維持Bar手動管理且App唯讀",
+    "個人狀態(打卡/想逛/成員身分)與個人帳存localStorage且不進Queue/CMS;團體帳只走Ledger Repository,兩軌資料與統計禁止混用;依ADR 0006,App僅可append分帳紀錄並更新TripConfig的Exchange Rate / Ledger Default Currency兩鍵,其餘CMS欄位維持Bar手動管理且App唯讀",
     "產品哲學:3秒原則、不過度工程化"
   ],
   "known_traps": [
@@ -95,11 +95,12 @@
       "分帳跨裝置同步(Schema 2.4/ADR 0006/Apps Script repository/SW v14)",
       "分帳單幣輸入換算與共用設定(Schema 2.5/Apps Script版本控管/SW v16;新版端點/TripConfig CSV/ledger dup已驗證)",
       "分帳安全與設定備份UX(中文標籤/TEST頂部警示/行內身分切換/類別session沿用/JSON剪貼簿與按需還原/SW v17)",
-      "Ledger 2.0契約完成(Schema 2.6/Apps Script 14欄/舊payload相容/真實端點與CSV回讀驗證)"
+      "Ledger 2.0契約完成(Schema 2.6/Apps Script 14欄/舊payload相容/真實端點與CSV回讀驗證)",
+      "分帳2.0雙軌資料層(個人localStorage/團體Repository/自訂類別與支付方式/備份v2/SW v19)"
     ],
     "pending_in_order": [
-      "PR 1 commit/push origin/dev→Bar驗收",
-      "依序執行分帳2.0 PR 2–PR 5,每階段獨立驗收",
+      "PR 2 commit/push origin/dev→Bar驗收",
+      "依序執行分帳2.0 PR 3–PR 5,每階段獨立驗收",
       "Playwright 三情境入版控(backlog)",
       "框架抽取(FUTURE_PLAN)"
     ]

@@ -1,5 +1,13 @@
 # 07 版本紀錄
 
+## 2026-07-18 — 分帳 2.0 個人／團體雙軌資料層（Dev）
+- 分帳頁新增 `個人 / 團體` session 模式，預設個人；個人帳只寫入 `trip_personal_ledger`，不呼叫團體 Ledger Repository、不進 Queue、不寫 Sheet，團體帳維持既有跨裝置同步。
+- 個人與團體的列表、筆數與總額完全隔離；TEST 模式僅作用於團體帳。團體一般支出開始保存 `recordType=expense`、支付方式與記帳當下的註冊成員 JSON 快照，身分註冊保存 `recordType=identity_registration`。
+- 預設類別改為餐飲、交通、票券、購物、衣服、美妝、其他；預設支付方式為現金、信用卡、行動支付、Suica、其他。設定頁可新增、刪除及排序，刪除選項不影響既有紀錄顯示。
+- 本機備份升至 version 2，加入個人帳、自訂類別與支付方式；version 1 備份仍可還原，缺少的新欄位使用安全預設，無效 JSON 與寫入失敗維持原子回滾。
+- Service Worker cache 升至 `okayama-trip-v19`。本批未修改 Schema、Validator、Apps Script、Google Sheet、BUILTIN、Netlify、墓碑刪除、結算或完整儀表板。
+- 390px 本機 QA 通過四分頁、雙軌切換、個人本機保存、團體資料隔離、自訂類別新增／刪除與 Settings；無水平溢出，browser error 為 0。另發現四筆既有 Sheet 身分註冊資料因先前欄位移動而錯位，本批未自動修復或刪除共享資料。
+
 ## 2026-07-18 — Ledger 2.0 Schema 與 Apps Script 契約擴充（Dev）⭐ 架構變更
 - Schema 升至 `2.6 (2026-07-18)`；Ledger 在既有八欄末端追加分攤成員、支付方式、紀錄類型、目標紀錄 ID、刪除原因與批次 ID，六欄均為選填，`participants` 契約為 JSON Array 字串。
 - Apps Script append 契約擴充為固定 14 欄；舊 payload 缺少新欄時補空字串，既有 Record ID 去重、零金額身分註冊、驗證語意與 `updateSettings` 不變。

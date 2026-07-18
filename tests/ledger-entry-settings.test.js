@@ -102,7 +102,16 @@ function response(payload){
   assert(settingsSource.includes('openMemberSelector(false,false)'),'Settings exposes the existing-identity switch entry');
   assert(settingsSource.includes('openMemberSelector(false,true)'),'Settings exposes the new-identity registration entry');
   assert(!splitSource.includes('openMemberSelector(false'),'Split page does not offer identity switching or registration');
-  assert(html.includes("var LEDGER_CATEGORIES=['餐飲','交通','票卷','購物','其他','代墊']"),'Split page defines the six fixed categories');
+  assert(html.includes("var ledgerTrack='personal'"),'fresh App sessions default to the personal track');
+  assert(splitSource.includes('個人帳留在本機；團體帳跨裝置同步。'),'Split uses the fixed dual-track explanation');
+  assert(splitSource.includes("setLedgerTrack(\\'personal\\')")&&splitSource.includes("setLedgerTrack(\\'shared\\')"),'Split exposes personal/shared segmented controls');
+  assert(entrySource.includes("ledgerTrack==='personal'")&&entrySource.includes('personalLedgerRepository.add'),'personal entries use only the personal repository');
+  assert(entrySource.includes('ledgerRepository.add'),'shared entries retain the shared repository');
+  assert(entrySource.includes("base.recordType='expense'")&&entrySource.includes('base.participants=sharedParticipantSnapshot'),'shared expenses save the Ledger 2.0 contract fields');
+  assert(splitSource.includes('record.payMethod'),'historical payment methods remain visible even when custom options change');
+  assert(splitSource.includes('shared&&isTestLedgerRecord(record)'),'TEST badges are restricted to the shared track');
+  assert(html.includes("var DEFAULT_LEDGER_CATEGORIES=['餐飲','交通','票券','購物','衣服','美妝','其他']"),'Split page defines the confirmed default categories');
+  assert(html.includes("var DEFAULT_LEDGER_PAY_METHODS=['現金','信用卡','行動支付','Suica','其他']"),'Split page defines the confirmed default payment methods');
   assert(splitSource.includes('id="ledgerAmount"'),'Split page has one editable amount input');
   assert(splitSource.includes('id="ledgerConvertedPreview"'),'Split page has a converted amount preview');
   assert(!splitSource.includes('id="ledgerJpy"')&&!splitSource.includes('id="ledgerTwd"'),'legacy dual amount inputs are removed');
@@ -120,11 +129,15 @@ function response(payload){
   assert(settingsSource.includes('目前身分'),'Settings displays the current member identity');
   assert(settingsSource.includes('切換身分')&&settingsSource.includes('新增身分'),'Settings keeps both identity management actions');
   assert(settingsSource.includes('ledgerTestModeSection'),'test mode has a stable Settings target');
-  assert(settingsSource.includes('僅分帳用'),'Settings labels test mode as ledger-only');
+  assert(settingsSource.includes('僅團體帳'),'Settings labels test mode as shared-ledger-only');
+  assert(settingsSource.includes('自訂類別與支付方式'),'Settings exposes custom ledger option management');
+  assert(html.includes('addLedgerOptionFromSettings'),'Settings can add custom options');
+  assert(html.includes('moveLedgerOptionFromSettings'),'Settings can reorder custom options');
+  assert(html.includes('removeLedgerOptionFromSettings'),'Settings can remove default or custom options');
   assert(splitSource.includes('⚠ 測試模式中'),'Split renders the test-mode warning');
-  assert(splitSource.includes('此頁新增的記帳不會列入彙算'),'Split explains that test entries are excluded');
+  assert(splitSource.includes('團體帳新增的記帳不會列入彙算'),'Split explains that only shared test entries are excluded');
   assert(splitSource.includes('openSettings')&&splitSource.includes('ledgerTestModeSection'),'warning opens Settings at test mode');
-  assert(html.includes("var ledgerDraftCategory=LEDGER_CATEGORIES[0]"),'fresh App sessions default category to 餐飲');
+  assert(html.includes("var ledgerDraftCategory=''"),'fresh App sessions resolve the first available category without persisting it');
   assert(!entrySource.includes("ledgerDraftCategory=''"),'successful entry retains the current category');
 
   const testModeSource = html.slice(html.indexOf('function setLedgerTestMode('),html.indexOf('function selectLedgerDefaultCurrency('));
