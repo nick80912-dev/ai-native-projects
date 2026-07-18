@@ -1,5 +1,10 @@
 # 07 版本紀錄
 
+## 2026-07-18 — Modal／Bottom Sheet Scroll-only 手勢裁定（Dev，純文件）
+- Modal／Bottom Sheet 類表面一律視為 Scroll-only 區，不開放捏合例外；可捲動區使用 `touch-action:pan-y`，互動控制項使用 `touch-action:manipulation`，祖先手勢交集仍禁止 pinch zoom。
+- 開啟 Bottom Sheet 時維持背景鎖捲動，Sheet 內只提供垂直捲動；禁止新增 JavaScript `touchstart`、`touchmove`、`gesturestart` 或 `preventDefault()` 手勢攔截。
+- PR 5 分帳儀表板／快速記帳設計與實作計畫已同步此裁定。本批未修改 App、Schema、Validator、SW、測試、資料或部署設定。
+
 ## 2026-07-18 — 分帳 2.0 精確分配與確定性團體結算引擎（Dev）
 - 新增無 DOM 相依的 participants JSON 解析、最大餘數整數分配、每人已付／應付／淨額與確定性貪婪轉帳建議純函式。
 - 團體結算只使用有效 `recordType=expense` 紀錄保存的 participants 快照；不依目前成員名單重算。缺失、空白、重複或格式錯誤的 participants，以及負數、非整數或超出安全整數範圍的金額會警告並原子排除。

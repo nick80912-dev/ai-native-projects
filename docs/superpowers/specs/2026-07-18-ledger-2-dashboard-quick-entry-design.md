@@ -81,7 +81,7 @@ The FAB opens a bottom sheet in this order:
 11. Note.
 12. Save and `儲存並再記一筆` actions.
 
-The sheet locks background scrolling while allowing internal scrolling and pinch gestures. Its scrollable content includes bottom safe-area padding so the software keyboard cannot permanently cover the save actions.
+The sheet locks background scrolling and follows the approved 2026-07-13 Scroll-only policy. Its scrolling surface uses `touch-action: pan-y`; interactive controls use `touch-action: manipulation`; pinch zoom is not available. Gesture behavior is CSS-only, with no new JavaScript touch or gesture interception. Its scrollable content includes bottom safe-area padding so the software keyboard cannot permanently cover the save actions.
 
 When shared entry opens without a retained draft, its participant chips default to all currently formal registered members. TEST-only identities are included only when the existing shared TEST mode allows them.
 
@@ -180,7 +180,7 @@ Focused tests cover:
 - shared queue behavior, tombstone visibility, and PR 4 settlement integration;
 - full-list filters and details.
 
-Run `node tools/check-doc-titles.js` and every `tests/*.test.js`. Browser QA uses a 390px viewport and verifies all four tabs with `pageerror=0`, keyboard-safe save actions, bottom safe area, internal sheet scrolling and pinch behavior, FAB placement, personal/shared isolation, offline personal save, and offline shared queueing.
+Run `node tools/check-doc-titles.js` and every `tests/*.test.js`. Browser QA uses a 390px viewport and verifies all four tabs with `pageerror=0`, keyboard-safe save actions, bottom safe area, internal sheet scrolling, Scroll-only pinch suppression without JavaScript gesture interception, FAB placement, personal/shared isolation, offline personal save, and offline shared queueing.
 
 ## Service Worker and Rollback
 

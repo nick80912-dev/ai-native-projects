@@ -55,6 +55,7 @@
 - 移除全域 `touch-action: manipulation`。
 - 根層 `html, body` 使用 `touch-action: pan-x pan-y`。
 - 不在一般子元素重新啟用 `pinch-zoom` 或 `manipulation`。
+- Modal/Bottom Sheet 類表面一律視為 Scroll-only 區,不開捏合例外。可捲動區使用 `touch-action: pan-y`,互動控制項可使用 `touch-action: manipulation`;祖先手勢交集仍由 `pan-y` 限制,不得重新開放 pinch zoom。
 - 保留既有 `overflow-x:auto` 水平容器；`pan-x pan-y` 允許瀏覽器依可捲動方向處理。
 - 移除只供自製縮放使用的 `.wrap.pinch-zooming` 樣式。
 
@@ -89,7 +90,7 @@
 更新 `tests/ios-zoom-guard.test.js`，至少驗證：
 
 1. `html, body` 使用 `touch-action: pan-x pan-y`。
-2. production source 不再含 `touch-action: manipulation`。
+2. production source 不得全域使用 `touch-action: manipulation`；唯一例外為 Modal／Bottom Sheet 內的互動控制項，且其可捲動祖先必須維持 `touch-action: pan-y`。
 3. production source 不再含 `setupPinchZoom`、`pinch-zooming`、`setupDoubleTapGuard`、`isDoubleTapInteractive` 或 `touchDistance`。
 4. viewport meta 不永久包含 `maximum-scale` 或 `user-scalable=no`。
 5. 表單控制項仍維持至少 16px。
