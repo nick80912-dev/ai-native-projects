@@ -1,5 +1,12 @@
 # 07 版本紀錄
 
+## 2026-07-18 — 分帳 2.0 精確分配與確定性團體結算引擎（Dev）
+- 新增無 DOM 相依的 participants JSON 解析、最大餘數整數分配、每人已付／應付／淨額與確定性貪婪轉帳建議純函式。
+- 團體結算只使用有效 `recordType=expense` 紀錄保存的 participants 快照；不依目前成員名單重算。缺失、空白、重複或格式錯誤的 participants，以及負數、非整數或超出安全整數範圍的金額會警告並原子排除。
+- JPY 與 TWD 完全獨立結算；不可整除的最小貨幣單位依 participants 原始順序分配，分配總和與淨額守恆均由回歸測試鎖定。
+- 轉帳建議每輪配對最大應付者與最大應收者，同額時優先正式身分註冊順序、其次正規化名稱；結果正確且筆數精簡，不宣稱全域最少。
+- 墓碑、被刪除紀錄、身分註冊、TEST、個人帳及舊版無 `recordType=expense` 的紀錄不參與結算。本批未修改 UI、Schema、Validator、Apps Script、SW、Netlify 或共享資料。
+
 ## 2026-07-18 — 分帳 2.0 個人真刪與團體墓碑刪除（Dev）⭐ 架構變更
 - 個人帳刪除使用不可復原的二次確認，確認後直接從 `trip_personal_ledger` 移除，不建立墓碑且不影響團體帳。
 - 團體帳刪除改為必填原因的協作式對話框，透過既有 Ledger Repository append `recordType=deletion` 墓碑；保存目標 ID、操作者、時間、原因與原始 batchId，金額固定為零。

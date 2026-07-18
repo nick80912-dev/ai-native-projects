@@ -2,7 +2,7 @@
   "$comment": "AI 導航檔 — 任何 AI 接手第一步只讀這份即可掌握全貌。這是 13 步流程的第 1 步。",
   "project": "japan-travel-pwa(日本旅遊行程 App)",
   "owner": "Bar(產品負責人,非工程師,繁中溝通,要直接執行不要教學;AI=全職工程團隊)",
-  "version": "2.6-ledger-tombstone-deletion",
+  "version": "2.6-ledger-settlement-engine",
   "framework": "ai-native-framework@pending(尚未抽取;見 FUTURE_PLAN_framework-extraction.md)",
   "updated": "2026-07-18",
   "live": "https://trippilot-jp.netlify.app/",
@@ -97,11 +97,12 @@
       "分帳安全與設定備份UX(中文標籤/TEST頂部警示/行內身分切換/類別session沿用/JSON剪貼簿與按需還原/SW v17)",
       "Ledger 2.0契約完成(Schema 2.6/Apps Script 14欄/舊payload相容/真實端點與CSV回讀驗證)",
       "分帳2.0雙軌資料層(個人localStorage/團體Repository/自訂類別與支付方式/備份v2/SW v19)",
-      "分帳2.0刪除語意(個人真刪/團體墓碑/有效紀錄冪等解析/舊負數相容)"
+      "分帳2.0刪除語意(個人真刪/團體墓碑/有效紀錄冪等解析/舊負數相容)",
+      "分帳2.0結算核心(participants快照/最大餘數整數分配/雙幣餘額/確定性貪婪轉帳)"
     ],
     "pending_in_order": [
-      "PR 3 commit/push origin/dev→Bar驗收",
-      "依序執行分帳2.0 PR 4–PR 5,每階段獨立驗收",
+      "PR 4 commit/push origin/dev→Bar驗收",
+      "執行分帳2.0 PR 5 UI批次並獨立驗收",
       "Playwright 三情境入版控(backlog)",
       "框架抽取(FUTURE_PLAN)"
     ]

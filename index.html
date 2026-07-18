@@ -3083,6 +3083,122 @@ function summarizeLedgerRecords(records,includeTest){
 }
 function summarizePersonalLedgerRecords(records){return summarizeLedgerRecords(records,true);}
 
+function settlementWarning(warnFn,message){
+  if(typeof warnFn==='function')warnFn(message);
+  else if(typeof console!=='undefined'&&console.warn)console.warn(message);
+}
+function parseParticipants(record,warnFn){
+  var source=record&&typeof record==='object'?record:{participants:record}, raw=source.participants, parsed, names=[], seen=Object.create(null);
+  function invalid(reason){settlementWarning(warnFn,'結算排除紀錄 '+String(source.id||'')+':'+reason);return null;}
+  if(typeof raw!=='string'||!raw.trim())return invalid('缺少 participants 快照');
+  try{parsed=JSON.parse(raw);}catch(error){return invalid('participants 不是有效 JSON');}
+  if(!Array.isArray(parsed))return invalid('participants 必須是 JSON Array');
+  if(!parsed.length)return invalid('participants 至少需要一人');
+  for(var i=0;i<parsed.length;i++){
+    if(typeof parsed[i]!=='string')return invalid('participants 成員必須是字串');
+    var name=parsed[i].trim(), key=canonicalMemberName(name);
+    if(!key)return invalid('participants 不可包含空白成員');
+    if(seen[key])return invalid('participants 不可包含重複成員');
+    seen[key]=true;names.push(name);
+  }
+  return names;
+}
+function allocateAmountByLargestRemainder(amount,participants){
+  amount=Number(amount);
+  if(!isSafeLedgerInteger(amount)||amount<0)throw new Error('分攤金額必須是非負整數且在安全範圍內');
+  if(!Array.isArray(participants)||!participants.length)throw new Error('分攤成員至少一人');
+  var base=Math.floor(amount/participants.length), remainder=amount-base*participants.length;
+  return participants.map(function(member,index){return {member:member,amount:base+(index<remainder?1:0)};});
+}
+function settlementMemberOrder(records,memberOrder){
+  if(Array.isArray(memberOrder))return memberOrder.slice();
+  return registeredMemberEntries(records||[],false).map(function(entry){return entry.name;});
+}
+function settlementOrderInfo(memberOrder){
+  var rank=Object.create(null), display=Object.create(null);
+  (memberOrder||[]).forEach(function(name,index){var key=canonicalMemberName(name);if(key&&rank[key]===undefined){rank[key]=index;display[key]=String(name).trim();}});
+  return {rank:rank,display:display};
+}
+function compareSettlementMembers(left,right,orderInfo){
+  var leftKey=canonicalMemberName(left),rightKey=canonicalMemberName(right),leftRank=orderInfo.rank[leftKey],rightRank=orderInfo.rank[rightKey];
+  if(leftRank!==undefined||rightRank!==undefined){
+    if(leftRank===undefined)return 1;
+    if(rightRank===undefined)return -1;
+    if(leftRank!==rightRank)return leftRank-rightRank;
+  }
+  return leftKey<rightKey?-1:(leftKey>rightKey?1:0);
+}
+function settlementAmount(value){
+  if(value===null||value===''||value===undefined)return null;
+  var amount=Number(value);
+  return isSafeLedgerInteger(amount)&&amount>=0?amount:null;
+}
+function isSafeLedgerInteger(value){return typeof value==='number'&&isFinite(value)&&Math.floor(value)===value&&Math.abs(value)<=9007199254740991;}
+function buildMemberBalances(records,memberOrder,warnFn){
+  var order=settlementMemberOrder(records,memberOrder), orderInfo=settlementOrderInfo(order), states=Object.create(null), invalidRecords=[];
+  function stateFor(name){
+    var key=canonicalMemberName(name);
+    if(!key)return null;
+    if(!states[key])states[key]={member:orderInfo.display[key]||String(name).trim(),paidJpy:0,owedJpy:0,netJpy:0,paidTwd:0,owedTwd:0,netTwd:0};
+    return states[key];
+  }
+  function reject(record,reason){
+    invalidRecords.push({id:String(record&&record.id||''),reason:reason});
+    settlementWarning(warnFn,'結算排除紀錄 '+String(record&&record.id||'')+':'+reason);
+  }
+  order.forEach(stateFor);
+  effectiveLedgerRecords(records,warnFn).forEach(function(record){
+    if(!record||record.recordType!=='expense'||isTestLedgerRecord(record))return;
+    var participants=parseParticipants(record,warnFn);
+    if(!participants){invalidRecords.push({id:String(record.id||''),reason:'participants 無效'});return;}
+    var payerName=String(record.member||'').trim(), amountJpy=settlementAmount(record.amountJpy), amountTwd=settlementAmount(record.amountTwd);
+    if(!canonicalMemberName(payerName)){reject(record,'缺少付款人');return;}
+    if(amountJpy===null||amountTwd===null){reject(record,'金額必須是非負整數');return;}
+    var jpyShares=allocateAmountByLargestRemainder(amountJpy,participants),twdShares=allocateAmountByLargestRemainder(amountTwd,participants);
+    var emptyState={paidJpy:0,owedJpy:0,paidTwd:0,owedTwd:0},payerCurrent=states[canonicalMemberName(payerName)]||emptyState;
+    var participantCurrents=participants.map(function(name){return states[canonicalMemberName(name)]||emptyState;});
+    var safe=isSafeLedgerInteger(payerCurrent.paidJpy+amountJpy)&&isSafeLedgerInteger(payerCurrent.paidTwd+amountTwd);
+    participantCurrents.forEach(function(state,index){
+      if(!isSafeLedgerInteger(state.owedJpy+jpyShares[index].amount)||!isSafeLedgerInteger(state.owedTwd+twdShares[index].amount))safe=false;
+    });
+    if(!safe){reject(record,'累計金額超過安全整數範圍');return;}
+    var payer=stateFor(payerName),participantStates=participants.map(stateFor);
+    payer.paidJpy+=amountJpy;payer.paidTwd+=amountTwd;
+    participantStates.forEach(function(state,index){state.owedJpy+=jpyShares[index].amount;state.owedTwd+=twdShares[index].amount;});
+  });
+  var members=Object.keys(states).map(function(key){
+    var state=states[key];state.netJpy=state.paidJpy-state.owedJpy;state.netTwd=state.paidTwd-state.owedTwd;return state;
+  }).sort(function(a,b){return compareSettlementMembers(a.member,b.member,orderInfo);});
+  return {members:members,memberOrder:members.map(function(item){return item.member;}),invalidRecords:invalidRecords};
+}
+function buildTransferSuggestions(memberBalances,currency,memberOrder){
+  currency=String(currency||'').toUpperCase();
+  if(currency!=='JPY'&&currency!=='TWD')throw new Error('結算幣別必須是 JPY 或 TWD');
+  if(memberBalances&&!Array.isArray(memberBalances)&&Array.isArray(memberBalances.members)){
+    if(!Array.isArray(memberOrder)&&Array.isArray(memberBalances.memberOrder))memberOrder=memberBalances.memberOrder;
+    memberBalances=memberBalances.members;
+  }
+  var field=currency==='JPY'?'netJpy':'netTwd',orderInfo=settlementOrderInfo(memberOrder||[]),debtors=[],creditors=[],totalDebt=0,totalCredit=0;
+  (memberBalances||[]).forEach(function(item){
+    var amount=Number(item&&item[field]);
+    if(!isSafeLedgerInteger(amount))throw new Error('結算淨額必須是安全整數');
+    if(amount<0){totalDebt+=-amount;if(!isSafeLedgerInteger(totalDebt))throw new Error('結算應付總額超過安全整數範圍');debtors.push({member:item.member,amount:-amount});}
+    else if(amount>0){totalCredit+=amount;if(!isSafeLedgerInteger(totalCredit))throw new Error('結算應收總額超過安全整數範圍');creditors.push({member:item.member,amount:amount});}
+  });
+  if(totalDebt!==totalCredit)throw new Error('結算淨額總和必須為零');
+  function byAmountThenMember(left,right){return right.amount-left.amount||compareSettlementMembers(left.member,right.member,orderInfo);}
+  var suggestions=[];
+  while(debtors.length&&creditors.length){
+    debtors.sort(byAmountThenMember);creditors.sort(byAmountThenMember);
+    var debtor=debtors[0],creditor=creditors[0],amount=Math.min(debtor.amount,creditor.amount);
+    suggestions.push({from:debtor.member,to:creditor.member,amount:amount,currency:currency});
+    debtor.amount-=amount;creditor.amount-=amount;
+    if(!debtor.amount)debtors.shift();
+    if(!creditor.amount)creditors.shift();
+  }
+  return suggestions;
+}
+
 function ledgerDeletionBridgeRecords(){
   try{var records=JSON.parse(localStorage.getItem(LEDGER_DELETION_BRIDGE_KEY)||'[]');return Array.isArray(records)?records:[];}
   catch(error){AppLog.repo('刪除同步橋接讀取失敗:'+(error.message||error));return [];}
