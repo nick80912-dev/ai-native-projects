@@ -3,19 +3,17 @@
 > 更新於 2026-07-18。細任務層;里程碑看 06_ROADMAP,快照看 13_PROJECT_STATUS。
 
 ## 📌 現況
-- 分帳共享身分批已完成於 `dev`：共享名單只取 Ledger 精確 `[身分註冊]`，不再由 Exp、一般支出、沖銷、BUILTIN 或 localStorage 推導；一般模式與 TEST 註冊隔離，測試模式可選正式與 TEST 身分。
-- 首次進入會要求選擇或新增身分；既有／新增皆有二次確認，名稱經全形空白、連續空白與 trim 正規化。新增身分以零金額紀錄走既有 `ledgerRepository`、離線佇列、唯一 ID 與去重流程；設定頁顯示目前身分並提供切換／新增，歷史紀錄不改寫。
-- `[身分註冊]` 不顯示於支出、不提供沖銷，也不納入筆數、小計或總計。分帳頁已移除行前團費 CMS 並精簡說明及沖銷確認；Shopping 以既有 `cat` 顯示低彩度分類標籤；SW cache 已升至 v18。
-- 390px 本機瀏覽器 QA 已驗證首次身分、名稱正規化、二次確認、設定切換、離線排隊提示、今天／行程／購物／分帳四分頁、購物分類與分帳簡化；無水平溢出，固定導覽列正常，pageerror 為 0。
-- 真實端點依授權僅送出一筆 `[TEST] [身分註冊]`：成員 `驗收身份0718A`、ID `1784337999516-9qnm`、寫入時間 `2026-07-18T01:26:39.5165741+00:00`，端點回覆 `ok: true`；公開 CSV 已回讀同一 ID 與零金額，一般模式未列出此 TEST 身分候選。
-- 本批不改 Schema 2.5、Validator、Apps Script、Google Sheet 欄位、BUILTIN、治理文件、PWA 資產或 main；BUILTIN Day 3 offline seed 過時問題維持獨立 P3 待辦。
+- 分帳 2.0 PR 1 本地契約已完成：Schema 升至 `2.6 (2026-07-18)`，Ledger 由八欄向後相容擴充為 14 欄；新增 `participants`、`payMethod`、`recordType`、`targetRecordId`、`deleteReason`、`batchId` 六個選填欄位。
+- `participants` 固定使用 JSON Array 字串；Apps Script 依 14 欄固定順序 append，舊 payload 缺欄時補空字串。Record ID 去重、零金額身分註冊、既有驗證與 `updateSettings` 語意維持不變。
+- Exp 說明已同步為行前團費僅存於試算表，App 不渲染也不從 Exp 推導同行成員；`09_SCHEMA_MAPPING.md` 已由 `schemaDoc()` 重建。
+- Sheet 六欄表頭與 Apps Script 新版本已部署於既有 Web App URL；真實端點測試 ID `1784359857550-eva1` 回 `{ok:true}`，公開 CSV 已回讀正確 14 欄與 `participants='["Bar","Amy"]'`。本批未修改分帳 UI、Repository、Queue、Parser 行為、BUILTIN、Validator 核心、SW、Netlify 或 `main`。
 
 ## 🔨 進行中
-- 無；等待 Bar review 與手機實機驗收。
+- 無；PR 1 契約、雲端部署與真實端點往返均完成，等待 Bar 驗收。
 
 ## ⏸ 等 Bar 動作
-1. 以手機驗收正式／TEST 身分隔離、首次與設定頁切換、離線補送、分帳頁無行前團費區塊、購物分類標籤及 SW v18。
-2. 驗收通過後決定 PR 與 `dev → main` 發版時機。
+1. Review PR 1 diff 與測試結果；測試資料 `1784359857550-eva1` 可於驗收後人工清除。
+2. 驗收通過後，核准開始 PR 2「個人／團體雙軌資料層」。
 
 ## 下一棒
-→ 本批 push `origin/dev` 後等待 Bar review；核准 merge 後由 Netlify 正式部署並進行線上驗證(回滾見 16 §A)。
+→ PR 1 通過 Bar 驗收後，依固定順序開始 PR 2「個人／團體雙軌資料層」；不得與後續墓碑、結算或 UI 批合併。

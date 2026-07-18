@@ -567,7 +567,7 @@ input,select,textarea{font-size:16px}
    ============================================================ */
 
 var SCHEMA = {
-  version: '2.5 (2026-07-17)',
+  version: '2.6 (2026-07-18)',
 
   /* 發布來源(換試算表只改這裡) */
   pubBase: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRenmV8UxEzWbzSjKJKi4rSpYt63geBqhEkKsl1GemWVPmFKTcvv3Uk71Hjla3TGBpGIjC7bQDDdI00/pub?single=true&output=csv&gid=',
@@ -669,7 +669,7 @@ var SCHEMA = {
         noteCol: 6,                   // 備註
         totalMarks: ['小計','總計']   // 合計列
       },
-      desc: '行前團費。旅途記帳在 App 端(localStorage),兩者於分帳頁並列不重複計算。同行成員自動帶入分帳成員(首次)。'
+      desc: '行前團費僅存於試算表；App 不渲染，也不從 Exp 推導同行成員。'
     },
 
     /* ── Ledger 分帳紀錄 ── */
@@ -683,7 +683,13 @@ var SCHEMA = {
         { field:'detail',    header:'明細' },
         { field:'amountJpy', header:'日幣',   required:true, desc:'日幣金額;沖銷紀錄為負數' },
         { field:'amountTwd', header:'台幣',                 desc:'台幣金額;沖銷紀錄為負數' },
-        { field:'note',      header:'備註' }
+        { field:'note',      header:'備註' },
+        { field:'participants',   header:'分攤成員', desc:'JSON array 字串' },
+        { field:'payMethod',      header:'支付方式' },
+        { field:'recordType',     header:'紀錄類型', values:{ 'expense':'expense','identity_registration':'identity_registration','deletion':'deletion' } },
+        { field:'targetRecordId', header:'目標紀錄ID' },
+        { field:'deleteReason',   header:'刪除原因' },
+        { field:'batchId',        header:'批次ID' }
       ]
     },
 

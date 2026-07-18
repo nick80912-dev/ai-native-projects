@@ -13,3 +13,11 @@
 **Trade-offs**:公開 CSV 可能延遲 1–5 分鐘,寫入成功後不一定立即出現在雲端清單；設定寫入確認後以目前裝置的 bridge 暫時銜接,其他裝置仍需等待 CSV 更新。Apps Script URL 本身沒有使用者驗證,取得 URL 的人可送出資料；目前以固定兩鍵白名單、不可猜測 URL、伺服器 LockService 與 ID 去重降低操作風險,不等同存取控制。
 
 **Future Impact**:若未來改用 Firebase、Supabase 或其他後端,維持 `add(record)`、`flushQueue()`、`pendingCount()` 與設定 helper 邊界,只替換 repository / 設定寫入實作與讀取 adapter；分帳頁、設定頁與彙算呼叫端不需重寫。
+
+## 2026-07-18 Ledger 2.0 契約擴充
+
+**Decision**:Ledger Schema 2.6 在既有八欄末端追加 `participants`、`payMethod`、`recordType`、`targetRecordId`、`deleteReason`、`batchId` 六個選填欄位。`participants` 固定保存 JSON Array 字串；`recordType` 契約值為 `expense`、`identity_registration`、`deletion`。Apps Script 依固定 14 欄順序 append，舊 payload 缺少新欄位時寫入空字串，既有 ID 去重、驗證與 `updateSettings` 行為不變。
+
+**Context**:分帳 2.0 後續需要保存記帳當下的分攤成員快照、支付方式、刪除目標與原因，以及多品項帳單關聯。先擴充可向後相容的傳輸與 Sheet 契約，再由後續獨立 PR 導入雙軌資料、墓碑與結算行為，可避免 UI 與資料遷移同批交付。
+
+**Compatibility**:六欄不是全域必填，現行八欄 payload、零金額身分註冊與歷史 CSV 仍可使用。未知欄位由既有 Schema Parser 忽略；本次只建立資料契約，不啟用墓碑刪除、分攤計算或新版分帳 UI。

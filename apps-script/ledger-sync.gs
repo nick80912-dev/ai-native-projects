@@ -33,7 +33,11 @@ function appendLedger(d) {
     if (String(ids[i][0]) === String(d.id)) return out({ok:true,dup:true});
   }
 
-  sh.appendRow([d.id, d.time, d.member, d.category, d.detail, jpy, twd, d.note || '']);
+  sh.appendRow([
+    d.id, d.time, d.member, d.category, d.detail, jpy, twd, d.note || '',
+    d.participants || '', d.payMethod || '', d.recordType || '',
+    d.targetRecordId || '', d.deleteReason || '', d.batchId || ''
+  ]);
   return out({ok:true});
 }
 

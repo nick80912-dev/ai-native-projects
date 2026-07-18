@@ -33,6 +33,7 @@ function createSheet(name, rows) {
       const row = data.find(function(values){ return String(values[0]).trim() === key; });
       return row && row[1];
     },
+    rowForId(id){ return data.find(function(values, index){ return index > 0 && String(values[0]) === String(id); }); },
     rowsForId(id){ return data.filter(function(values, index){ return index > 0 && String(values[0]) === String(id); }).length; }
   };
 }
@@ -44,7 +45,10 @@ function loadAppScript(){
     waitLock(ms){ this.waited = ms === 10000; },
     releaseLock(){ this.released = true; }
   };
-  const ledger = createSheet('分帳紀錄', [['紀錄ID','時間','成員','類別','明細','日幣','台幣','備註']]);
+  const ledger = createSheet('分帳紀錄', [[
+    '紀錄ID','時間','成員','類別','明細','日幣','台幣','備註',
+    '分攤成員','支付方式','紀錄類型','目標紀錄ID','刪除原因','批次ID'
+  ]]);
   const cfg = createSheet('TripConfig', [
     ['Key','Value'],
     ['Trip Name','岡山四國六天五夜'],
@@ -120,6 +124,63 @@ const ledgerPayload = {
 assert.deepStrictEqual(app.call(ledgerPayload),{ok:true},'legacy ledger append still succeeds');
 assert.deepStrictEqual(app.call(ledgerPayload),{ok:true,dup:true},'duplicate ledger ID is acknowledged');
 assert.strictEqual(app.ledger.rowsForId(ledgerPayload.id),1,'duplicate ledger ID is stored once');
+assert.deepStrictEqual(
+  Array.from(app.ledger.rowForId(ledgerPayload.id)),
+  [
+    ledgerPayload.id, ledgerPayload.time, ledgerPayload.member, ledgerPayload.category,
+    ledgerPayload.detail, 500, 105, '', '', '', '', '', '', ''
+  ],
+  'legacy ledger payload fills the six optional fields with empty strings'
+);
+
+const ledger20Payload = {
+  id:'1784274603805-ledger20',
+  time:'2026-07-18T08:00:00.000Z',
+  member:'Bar',
+  category:'交通',
+  detail:'[TEST] Ledger 2.0 contract',
+  amountJpy:1200,
+  amountTwd:252,
+  note:'roundtrip',
+  participants:'["Bar","Amy"]',
+  payMethod:'現金',
+  recordType:'expense',
+  targetRecordId:'',
+  deleteReason:'',
+  batchId:'batch-20260718-001',
+  unknownField:'must not be serialized'
+};
+assert.deepStrictEqual(app.call(ledger20Payload),{ok:true},'Ledger 2.0 payload append succeeds');
+assert.deepStrictEqual(
+  Array.from(app.ledger.rowForId(ledger20Payload.id)),
+  [
+    ledger20Payload.id, ledger20Payload.time, ledger20Payload.member, ledger20Payload.category,
+    ledger20Payload.detail, 1200, 252, 'roundtrip', '["Bar","Amy"]', '現金',
+    'expense', '', '', 'batch-20260718-001'
+  ],
+  'Ledger 2.0 fields serialize in the exact Sheet contract order'
+);
+assert.strictEqual(app.ledger.rowForId(ledger20Payload.id).length,14,'unknown payload fields are ignored');
+
+const identityPayload = {
+  id:'1784274603806-identity',
+  time:'2026-07-18T08:01:00.000Z',
+  member:'Amy',
+  category:'系統',
+  detail:'身分登記',
+  amountJpy:0,
+  amountTwd:0,
+  note:'',
+  participants:'["Amy"]',
+  payMethod:'',
+  recordType:'identity_registration',
+  targetRecordId:'',
+  deleteReason:'',
+  batchId:'batch-20260718-identity'
+};
+assert.deepStrictEqual(app.call(identityPayload),{ok:true},'zero-amount identity registration succeeds');
+assert.strictEqual(app.ledger.rowForId(identityPayload.id)[5],0,'zero JPY remains numeric zero');
+assert.strictEqual(app.ledger.rowForId(identityPayload.id)[6],0,'zero TWD remains numeric zero');
 
 const ledgerBeforeInvalid = JSON.stringify(app.ledger.data);
 assert.strictEqual(app.call(Object.assign({},ledgerPayload,{id:'missing-jpy',amountJpy:undefined})).ok,false,'missing JPY amount is rejected');

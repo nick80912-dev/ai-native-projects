@@ -6,7 +6,7 @@
 > 同步時 Validator 會在 console 以 `[Schema Error]` 前綴警告(六類日誌定義見 `validator.js`):缺少必要欄位/未知欄位/未知型別值/未知設定鍵,一律不崩潰。
 > 檔頭註解為手寫維護;下方表格區由 `schemaDoc()` 產生,**禁止手改表格**(見 14 的 Tier 3 規則)。
 
-版本:2.5 (2026-07-17)
+版本:2.6 (2026-07-18)
 
 ## 行程總表(gid=1169222358,kind=itinerary)
 | Google Sheet 欄位 | App Property | 必填 | 說明 |
@@ -74,7 +74,7 @@
 
 ## Expenses(gid=1354339857,kind=freeform-expense)
 自由格式:成員列標記「同行成員」;欄位位置 → 類別[0] 明細[1] 台幣[4] 日幣[5] 備註[6];合計列標記「小計/總計」
-> 行前團費。旅途記帳在 App 端(localStorage),兩者於分帳頁並列不重複計算。同行成員自動帶入分帳成員(首次)。
+> 行前團費僅存於試算表；App 不渲染，也不從 Exp 推導同行成員。
 
 ## 分帳紀錄(gid=896856089,kind=table)
 | Google Sheet 欄位 | App Property | 必填 | 說明 |
@@ -87,6 +87,12 @@
 | 日幣 | amountJpy | ✅ | 日幣金額;沖銷紀錄為負數 |
 | 台幣 | amountTwd |  | 台幣金額;沖銷紀錄為負數 |
 | 備註 | note |  |  |
+| 分攤成員 | participants |  | JSON array 字串 |
+| 支付方式 | payMethod |  |  |
+| 紀錄類型 | recordType |  |  |
+| 目標紀錄ID | targetRecordId |  |  |
+| 刪除原因 | deleteReason |  |  |
+| 批次ID | batchId |  |  |
 
 ## TripConfig(gid=1070234314,kind=keyvalue)
 | Key | App Property | 說明 |

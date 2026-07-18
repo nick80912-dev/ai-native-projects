@@ -1,5 +1,11 @@
 # 07 版本紀錄
 
+## 2026-07-18 — Ledger 2.0 Schema 與 Apps Script 契約擴充（Dev）⭐ 架構變更
+- Schema 升至 `2.6 (2026-07-18)`；Ledger 在既有八欄末端追加分攤成員、支付方式、紀錄類型、目標紀錄 ID、刪除原因與批次 ID，六欄均為選填，`participants` 契約為 JSON Array 字串。
+- Apps Script append 契約擴充為固定 14 欄；舊 payload 缺少新欄時補空字串，既有 Record ID 去重、零金額身分註冊、驗證語意與 `updateSettings` 不變。
+- Exp 說明修正為行前團費僅存於試算表，App 不渲染也不從 Exp 推導同行成員；`09_SCHEMA_MAPPING.md` 已由 `schemaDoc()` 重建。
+- Sheet 六欄表頭與 Apps Script 新版本已部署於既有 Web App URL；真實端點測試 ID `1784359857550-eva1` 回 `{ok:true}`，公開 CSV 已確認固定 14 欄正確落位，`participants='["Bar","Amy"]'`、非空支付方式、`recordType=expense`、空目標／原因與 batchId 均完整回讀。本批未修改分帳 UI、Repository、Queue、Parser 行為、BUILTIN、Validator 核心、SW 或 Netlify。
+
 ## 2026-07-18 — 分帳共享身分、購物分類與團費區塊修正（Dev）
 - 分帳成員來源收斂為 Ledger 精確 `[身分註冊]` 紀錄；一般模式排除 TEST 註冊，測試模式可選正式與 TEST 註冊，Exp、一般支出、沖銷、BUILTIN 與 localStorage 均不再推導共享成員名單。
 - 首次進入與設定頁共用成員選擇器；既有／新增身分皆需二次確認，名稱統一處理全形空白、連續空白與前後空白，新增身分透過既有 repository 寫入零金額註冊並支援離線佇列。
