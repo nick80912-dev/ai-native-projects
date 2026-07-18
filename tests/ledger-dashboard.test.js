@@ -25,6 +25,7 @@ function loadModule(){
   };
   vm.createContext(sandbox);
   vm.runInContext(source.slice(start,end),sandbox);
+  sandbox.__htmlSource=source;
   return sandbox;
 }
 
@@ -62,5 +63,20 @@ assert.strictEqual(summary.today.amountTwd,records.slice(2).reduce((sum,record)=
 
 assert.strictEqual(mod.ledgerLocalDateKey('not-a-date'),'','invalid dates do not create a misleading group key');
 assert.deepStrictEqual(Array.from(mod.selectRecentLedgerExpenses(records,0)),[],'zero limit returns no rows');
+
+const html=mod.__htmlSource;
+const splitSource=html.slice(html.indexOf('function renderSplit()'),html.indexOf('/* ================= 導覽 / 啟動'));
+const ledgerUiSource=html.slice(html.indexOf('function ledgerTrackRecords()'),html.indexOf('/* ================= 導覽 / 啟動'));
+assert(html.includes("var ledgerUiState={track:'personal'"),'one ledger UI state defaults to personal');
+assert(!html.includes("var ledgerTrack='personal'"),'parallel ledgerTrack state is removed');
+assert(splitSource.includes('ledger-status-pill'),'dashboard renders the sync/rate status pill');
+assert(splitSource.includes('ledger-summary-card'),'dashboard renders the primary summary card');
+assert(splitSource.includes('ledger-today-card'),'dashboard renders the Today card');
+assert(splitSource.includes('ledger-recent-list'),'dashboard renders recent expenses');
+assert(splitSource.includes('查看全部'),'dashboard links to the complete list');
+assert(splitSource.includes('openLedgerEntrySheet'),'dashboard FAB opens quick entry');
+assert(!splitSource.includes('id="ledgerAmount"'),'amount input no longer lives in the dashboard renderer');
+assert(splitSource.includes('selectRecentLedgerExpenses(records,15)'),'dashboard limits records through the tested selector');
+assert(ledgerUiSource.includes('groupLedgerExpensesByDate'),'dashboard uses the tested date grouping');
 
 console.log('ledger dashboard tests passed');
