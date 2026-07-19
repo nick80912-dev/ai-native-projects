@@ -2880,6 +2880,7 @@ var LEDGER_DELETION_BRIDGE_KEY='trip_ledger_deletion_bridge';
 var PERSONAL_LEDGER_KEY='trip_personal_ledger';
 var LEDGER_CATEGORY_OPTIONS_KEY='trip_ledger_categories';
 var LEDGER_PAY_METHOD_OPTIONS_KEY='trip_ledger_pay_methods';
+var LEDGER_PROXY_TARGETS_KEY='trip_ledger_proxy_targets';
 var DEFAULT_LEDGER_CATEGORIES=['餐飲','交通','票券','購物','衣服','美妝','其他'];
 var DEFAULT_LEDGER_PAY_METHODS=['現金','信用卡','行動支付','Suica','其他'];
 var ledgerIdSeen={};
@@ -3011,6 +3012,34 @@ function createLedgerOptionStore(options){
     var item=values.splice(from,1)[0];values.splice(to,0,item);return write(values);
   }
   return {all:all,add:add,remove:remove,move:move};
+}
+
+function normalizeLedgerProxyTarget(value){
+  value=String(value==null?'':value).replace(/\u3000/g,' ').replace(/\s+/g,' ').trim();
+  if(!value)throw new Error('代購對象不可空白');
+  if(value.length>12)throw new Error('代購對象最多 12 個字');
+  return value;
+}
+function createLedgerProxyTargetStore(options){
+  var opts=options||{},storage=opts.storage,key=opts.key;
+  function normalize(values){
+    if(!Array.isArray(values))throw new Error('代購對象清單格式錯誤');
+    var seen={},result=[];
+    values.forEach(function(value){
+      value=normalizeLedgerProxyTarget(value);
+      var canonical=canonicalMemberName(value).toLowerCase();
+      if(!seen[canonical]){seen[canonical]=true;result.push(value);}
+    });
+    return result;
+  }
+  function all(){
+    try{return normalize(JSON.parse(storage.getItem(key)||'[]'));}
+    catch(error){AppLog.repo('代購對象讀取失敗：'+(error.message||error));return [];}
+  }
+  function write(values){values=normalize(values);storage.setItem(key,JSON.stringify(values));return values.slice();}
+  function add(value){value=normalizeLedgerProxyTarget(value);return write(all().concat([value]));}
+  function remove(value){var canonical=canonicalMemberName(value).toLowerCase();return write(all().filter(function(item){return canonicalMemberName(item).toLowerCase()!==canonical;}));}
+  return {all:all,add:add,remove:remove,normalize:normalize};
 }
 
 function isTestLedgerRecord(record){ return /^\[TEST\]/.test(String(record&&record.detail||'')); }
@@ -3620,6 +3649,7 @@ var ledgerRepository=createLedgerRepository({
 var personalLedgerRepository=createPersonalLedgerRepository({storage:localStorage});
 var ledgerCategoryStore=createLedgerOptionStore({storage:localStorage,key:LEDGER_CATEGORY_OPTIONS_KEY,defaults:DEFAULT_LEDGER_CATEGORIES});
 var ledgerPayMethodStore=createLedgerOptionStore({storage:localStorage,key:LEDGER_PAY_METHOD_OPTIONS_KEY,defaults:DEFAULT_LEDGER_PAY_METHODS});
+var ledgerProxyTargetStore=createLedgerProxyTargetStore({storage:localStorage,key:LEDGER_PROXY_TARGETS_KEY});
 
 
 /* ================= 分帳(雲端 Ledger) ================= */
@@ -3721,7 +3751,7 @@ function refreshMemberSelector(){
 }
 function closeSettings(){ var overlay=document.getElementById('settingsOverlay'); if(overlay) overlay.remove(); }
 function personalStateJson(){
-  var payload={format:'trip-personal-state',version:2,exportedAt:timestampDate(Date.now()).toISOString(),checks:lsGet('trip_checks',{}),wants:lsGet('trip_shop_wants',{}),member:getCurrentMember(),ledgerQueue:ledgerRepository.queuedRecords(),personalLedger:personalLedgerRepository.all(),ledgerCategories:ledgerCategoryStore.all(),ledgerPayMethods:ledgerPayMethodStore.all()};
+  var payload={format:'trip-personal-state',version:3,exportedAt:timestampDate(Date.now()).toISOString(),checks:lsGet('trip_checks',{}),wants:lsGet('trip_shop_wants',{}),member:getCurrentMember(),ledgerQueue:ledgerRepository.queuedRecords(),personalLedger:personalLedgerRepository.all(),ledgerCategories:ledgerCategoryStore.all(),ledgerPayMethods:ledgerPayMethodStore.all(),proxyTargets:ledgerProxyTargetStore.all()};
   return JSON.stringify(payload,null,2);
 }
 function copyPersonalStateText(text,timeoutMs){
@@ -3765,8 +3795,15 @@ function openPersonalStateRestore(){
   document.body.appendChild(overlay);
   var box=document.getElementById('personalStateBox'); if(box)box.focus();
 }
+function validatePersonalStatePayload(payload){
+  if(!payload||payload.format!=='trip-personal-state'||[1,2,3].indexOf(payload.version)<0)throw new Error('個人狀態格式錯誤');
+  if(payload.version<3&&payload.proxyTargets===undefined)payload.proxyTargets=[];
+  if(!Array.isArray(payload.proxyTargets))throw new Error('代購對象清單格式錯誤');
+  payload.proxyTargets=ledgerProxyTargetStore.normalize(payload.proxyTargets);
+  return payload;
+}
 function applyPersonalStatePayload(payload){
-  var keys=['trip_checks','trip_shop_wants','trip_member',LEDGER_QUEUE_KEY,PERSONAL_LEDGER_KEY,LEDGER_CATEGORY_OPTIONS_KEY,LEDGER_PAY_METHOD_OPTIONS_KEY];
+  var keys=['trip_checks','trip_shop_wants','trip_member',LEDGER_QUEUE_KEY,PERSONAL_LEDGER_KEY,LEDGER_CATEGORY_OPTIONS_KEY,LEDGER_PAY_METHOD_OPTIONS_KEY,LEDGER_PROXY_TARGETS_KEY];
   var before=keys.map(function(key){return {key:key,value:localStorage.getItem(key)};});
   try{
     lsSet('trip_checks',payload.checks);
@@ -3776,6 +3813,7 @@ function applyPersonalStatePayload(payload){
     localStorage.setItem(PERSONAL_LEDGER_KEY,JSON.stringify(payload.personalLedger));
     localStorage.setItem(LEDGER_CATEGORY_OPTIONS_KEY,JSON.stringify(payload.ledgerCategories));
     localStorage.setItem(LEDGER_PAY_METHOD_OPTIONS_KEY,JSON.stringify(payload.ledgerPayMethods));
+    localStorage.setItem(LEDGER_PROXY_TARGETS_KEY,JSON.stringify(payload.proxyTargets));
   }catch(error){
     before.forEach(function(item){
       if(item.value===null)localStorage.removeItem(item.key);
@@ -3787,8 +3825,9 @@ function applyPersonalStatePayload(payload){
 function restorePersonalState(){
   var box=document.getElementById('personalStateBox'), payload;
   try{ payload=JSON.parse(box&&box.value||''); }catch(error){ toast('JSON 格式錯誤'); return; }
-  if(!payload||payload.format!=='trip-personal-state'||(payload.version!==1&&payload.version!==2)||!payload.checks||Array.isArray(payload.checks)||typeof payload.checks!=='object'||!payload.wants||Array.isArray(payload.wants)||typeof payload.wants!=='object'||!Array.isArray(payload.ledgerQueue)||!memberIsAllowed(String(payload.member||''))){ toast('個人狀態格式驗證失敗'); return; }
+  if(!payload||payload.format!=='trip-personal-state'||[1,2,3].indexOf(payload.version)<0||!payload.checks||Array.isArray(payload.checks)||typeof payload.checks!=='object'||!payload.wants||Array.isArray(payload.wants)||typeof payload.wants!=='object'||!Array.isArray(payload.ledgerQueue)||!memberIsAllowed(String(payload.member||''))){ toast('個人狀態格式驗證失敗'); return; }
   if(payload.version===1){payload.personalLedger=[];payload.ledgerCategories=DEFAULT_LEDGER_CATEGORIES.slice();payload.ledgerPayMethods=DEFAULT_LEDGER_PAY_METHODS.slice();}
+  try{validatePersonalStatePayload(payload);}catch(error){toast(error.message||'代購對象清單格式錯誤');return;}
   if(!Array.isArray(payload.personalLedger)||!Array.isArray(payload.ledgerCategories)||!Array.isArray(payload.ledgerPayMethods)){toast('個人狀態格式驗證失敗');return;}
   try{ payload.ledgerQueue.forEach(function(record){if(!record||!String(record.id||'').trim()||!String(record.time||'').trim())throw new Error('佇列缺少 ID 或時間');validateLedgerRecord(normalizeLedgerRecord(record,Date.now(),Math.random,false));}); }
   catch(error){ toast('佇列紀錄格式驗證失敗'); return; }
@@ -3842,6 +3881,16 @@ function removeLedgerOptionFromSettings(kind,value){
   openSettings('ledgerOptionSettingsSection');toast('選項已刪除');
 }
 function moveLedgerOptionFromSettings(kind,value,direction){ledgerOptionStoreForKind(kind).move(value,direction);openSettings('ledgerOptionSettingsSection');}
+function renderLedgerProxyTargetManager(){
+  var rows=ledgerProxyTargetStore.all().map(function(value){return '<div class="ledger-option-row"><span>'+escapeHtml(value)+'</span><button class="remove" aria-label="刪除 '+escapeHtml(value)+'" onclick="removeLedgerProxyTargetFromSettings(\''+jsString(value)+'\')">×</button></div>';}).join('');
+  return (rows||'<div class="settings-help">尚未建立代購對象</div>')+'<div class="ledger-option-add"><input id="ledgerProxyTargetInput" maxlength="12" placeholder="姓名或稱呼"><button class="btn" onclick="addLedgerProxyTargetFromSettings()">新增</button></div>';
+}
+function addLedgerProxyTargetFromSettings(){
+  var input=document.getElementById('ledgerProxyTargetInput');
+  try{ledgerProxyTargetStore.add(input&&input.value);openSettings('ledgerProxyTargetSettingsSection');toast('代購對象已新增');}
+  catch(error){toast(error.message||'無法新增代購對象');if(input)input.focus();}
+}
+function removeLedgerProxyTargetFromSettings(value){ledgerProxyTargetStore.remove(value);openSettings('ledgerProxyTargetSettingsSection');toast('代購對象已刪除');}
 function openSettings(targetId){
   closeSettings();
   var ledgerSettings, settingsError='';
@@ -3853,6 +3902,7 @@ function openSettings(targetId){
     '<div class="settings-section"><h3>成員身分</h3><div class="settings-current">目前身分：<b id="settingsCurrentMember">'+escapeHtml(getCurrentMember()||'尚未選擇')+'</b></div><div class="settings-actions"><button class="btn ghost settings-member-switch" onclick="openMemberSelector(false,false)">切換身分</button><button class="btn settings-member-switch" onclick="openMemberSelector(false,true)">新增身分</button></div></div>'+
     '<div class="settings-section"><h3>分帳匯率與幣別</h3><div class="settings-current">目前匯率：<b>1 JPY = NT$'+escapeHtml(ledgerSettings.exchangeRate||'未設定')+'</b></div><div class="settings-rate-row"><label class="settings-help" for="ledgerExchangeRate"><b>匯率</b><br>1 日幣可換算多少台幣</label><input id="ledgerExchangeRate" type="number" inputmode="decimal" min="0.000001" step="any" value="'+escapeHtml(ledgerSettings.exchangeRate)+'"></div><div class="settings-help"><b>預設輸入幣別</b><br>新增記帳時預先選擇的幣別</div><div class="ledger-currency-grid" style="margin-top:8px"><button class="ledger-choice settings-currency-option '+(ledgerSettings.defaultCurrency==='JPY'?'on':'')+'" data-currency="JPY" aria-pressed="'+(ledgerSettings.defaultCurrency==='JPY'?'true':'false')+'" onclick="selectLedgerDefaultCurrency(\'JPY\')">JPY 日幣</button><button class="ledger-choice settings-currency-option '+(ledgerSettings.defaultCurrency==='TWD'?'on':'')+'" data-currency="TWD" aria-pressed="'+(ledgerSettings.defaultCurrency==='TWD'?'true':'false')+'" onclick="selectLedgerDefaultCurrency(\'TWD\')">TWD 台幣</button></div>'+(settingsError?'<div class="settings-help" style="color:var(--coral)">'+escapeHtml(settingsError)+'</div>':'')+'<div class="settings-help">儲存後跨裝置共用；CSV 發布可能延遲 1–5 分鐘。</div><button class="btn block" style="margin-top:10px" onclick="saveLedgerSettingsFromForm(this)">儲存共用設定</button></div>'+
     '<div class="settings-section" id="ledgerOptionSettingsSection"><h3>自訂類別與支付方式</h3><div class="settings-help">可新增、刪除或排序；刪除選項不影響既有紀錄。</div>'+renderLedgerOptionManager('category','類別')+renderLedgerOptionManager('payMethod','支付方式')+'</div>'+
+    '<div class="settings-section" id="ledgerProxyTargetSettingsSection"><h3>代購對象</h3><div class="settings-help">常用對象會顯示在個人記帳表單；刪除不影響既有紀錄。</div>'+renderLedgerProxyTargetManager()+'</div>'+
     '<div class="settings-section"><h3>本機資料備份／還原</h3><div class="settings-help">換手機、重裝 App 或清除瀏覽器資料前使用。還原會覆蓋目前裝置上的打卡、想逛、身分、個人帳、自訂選項及待同步記帳。</div><div class="settings-actions"><button class="btn ghost" onclick="exportPersonalState()">複製備份 JSON</button><button class="btn" onclick="openPersonalStateRestore()">從 JSON 還原</button></div></div>'+
     '<div class="settings-section" id="ledgerTestModeSection"><div class="toggle-row"><div><h3>測試模式<span class="settings-warning-tag">僅團體帳</span></h3><div class="settings-help">團體帳寫入明細加上 [TEST],且不納入彙算；個人帳不受影響。</div></div><input type="checkbox" '+(lsGet('trip_ledger_test_mode',false)?'checked':'')+' onchange="setLedgerTestMode(this)"></div></div>'+
     '<!-- 主題區塊預留：merge 後另批實作,本批不掛入任何主題功能。 -->'+
@@ -4002,6 +4052,27 @@ function selectLedgerCurrency(value){
   draft.currency=value;withLedgerSheetPosition(renderLedgerEntrySheet);
 }
 function setLedgerProxy(enabled){if(ledgerUiState.draft){ledgerUiState.draft.isProxy=!!enabled;if(!enabled)ledgerUiState.draft.proxyTarget='';withLedgerSheetPosition(renderLedgerEntrySheet);}}
+function renderLedgerProxyTargetChoices(selected,itemKey){
+  selected=String(selected||'');
+  var choices=[''].concat(ledgerProxyTargetStore.all()).map(function(value){var on=value===selected,label=value||'未指定';return '<button class="ledger-sheet-choice '+(on?'on':'')+'" aria-pressed="'+(on?'true':'false')+'" onclick="selectLedgerProxyTarget(\''+jsString(value)+'\','+(itemKey?'\''+jsString(itemKey)+'\'':'null')+')">'+escapeHtml(label)+'</button>';}).join('');
+  return choices+'<button class="ledger-sheet-choice" onclick="addLedgerProxyTarget('+(itemKey?'\''+jsString(itemKey)+'\'':'null')+')">＋新增對象</button>';
+}
+function refreshLedgerProxyTargetChoices(itemKey){
+  var draft=ledgerUiState.draft,item=itemKey?ledgerDraftItem(itemKey):draft,node=document.getElementById(itemKey?'ledgerProxyTargets_'+itemKey:'ledgerProxyTargets');
+  if(node&&item)node.innerHTML=renderLedgerProxyTargetChoices(item.isProxy?item.proxyTarget:'',itemKey);
+}
+function selectLedgerProxyTarget(value,itemKey){
+  var draft=ledgerUiState.draft;if(!draft)return;
+  value=String(value||'');
+  if(itemKey)updateLedgerDraftItem(itemKey,{isProxy:!!value,proxyTarget:value},false);
+  else{draft.isProxy=!!value;draft.proxyTarget=value;}
+  refreshLedgerProxyTargetChoices(itemKey);
+}
+function addLedgerProxyTarget(itemKey){
+  var value=prompt('新增代購對象（最多 12 個字）');if(value===null)return;
+  try{value=normalizeLedgerProxyTarget(value);ledgerProxyTargetStore.add(value);selectLedgerProxyTarget(value,itemKey);toast('代購對象已新增');}
+  catch(error){toast(error.message||'無法新增代購對象');}
+}
 function toggleLedgerParticipant(name){
   var draft=ledgerUiState.draft;if(!draft||draft.track!=='shared')return;
   var key=canonicalMemberName(name),has=draft.participants.some(function(item){return canonicalMemberName(item)===key;});
@@ -4055,7 +4126,7 @@ function renderLedgerItemOverride(draft,item){
   var mode=draft.track==='personal'?item.proxyMode:item.participantMode;
   var modeButtons='<div class="ledger-sheet-track"><button class="ledger-sheet-choice '+(mode!=='custom'?'on':'')+'" onclick="setLedgerItemOverrideMode(\''+jsString(item.key)+'\',\'inherit\')">沿用整單</button><button class="ledger-sheet-choice '+(mode==='custom'?'on':'')+'" onclick="setLedgerItemOverrideMode(\''+jsString(item.key)+'\',\'custom\')">單項設定</button></div>';
   if(mode!=='custom')return modeButtons;
-  if(draft.track==='personal')return modeButtons+'<label class="toggle-row ledger-sheet-toggle"><span>此品項為代購</span><input type="checkbox" '+(item.isProxy?'checked':'')+' onchange="setLedgerItemProxy(\''+jsString(item.key)+'\',this.checked)"></label>'+(item.isProxy?'<label class="ledger-sheet-label">代購對象</label><input class="ledger-sheet-input" maxlength="12" value="'+escapeHtml(item.proxyTarget)+'" oninput="updateLedgerDraftItem(\''+jsString(item.key)+'\',{proxyTarget:this.value},false)">':'');
+  if(draft.track==='personal')return modeButtons+'<div class="ledger-sheet-field"><span class="ledger-sheet-label">代購對象</span><div class="ledger-sheet-choice-grid" id="ledgerProxyTargets_'+escapeHtml(item.key)+'">'+renderLedgerProxyTargetChoices(item.isProxy?item.proxyTarget:'',item.key)+'</div></div>';
   var chips=registeredMembersForCurrentMode().map(function(entry){var on=(item.participants||[]).some(function(name){return canonicalMemberName(name)===entry.key;});return '<button class="ledger-sheet-choice '+(on?'on':'')+'" aria-pressed="'+(on?'true':'false')+'" onclick="toggleLedgerItemParticipant(\''+jsString(item.key)+'\',\''+jsString(entry.name)+'\')">'+escapeHtml(entry.name)+'</button>';}).join('');
   return modeButtons+'<div class="ledger-sheet-field"><span class="ledger-sheet-label">單項分攤成員</span><div class="ledger-sheet-choice-grid">'+chips+'</div></div>';
 }
@@ -4074,7 +4145,7 @@ function renderLedgerMultiItemFields(draft){
 }
 function renderLedgerPaymentFields(draft){return '<div class="ledger-sheet-field"><span class="ledger-sheet-label">支付方式</span><div class="ledger-sheet-choice-grid">'+ledgerSheetChoiceButtons(ledgerPayMethodStore.all(),draft.payMethod,'selectLedgerPayMethod','ledger-pay-option')+'</div></div>';}
 function renderLedgerTrackSpecificFields(draft){
-  if(draft.track==='personal')return '<div class="ledger-sheet-field"><label class="toggle-row ledger-sheet-toggle" for="ledgerProxy"><span>代購</span><input id="ledgerProxy" type="checkbox" '+(draft.isProxy?'checked':'')+' onchange="setLedgerProxy(this.checked)"></label>'+(draft.isProxy?'<label class="ledger-sheet-label" for="ledgerProxyTarget">代購對象</label><input class="ledger-sheet-input" id="ledgerProxyTarget" maxlength="12" value="'+escapeHtml(draft.proxyTarget)+'" oninput="updateLedgerDraftField(\'proxyTarget\',this.value)">':'')+'</div>';
+  if(draft.track==='personal')return '<div class="ledger-sheet-field"><span class="ledger-sheet-label">代購對象</span><div class="ledger-sheet-choice-grid" id="ledgerProxyTargets">'+renderLedgerProxyTargetChoices(draft.isProxy?draft.proxyTarget:'',null)+'</div></div>';
   var entries=registeredMembersForCurrentMode(),chips=entries.map(function(entry){var on=draft.participants.some(function(name){return canonicalMemberName(name)===entry.key;});return '<button class="ledger-sheet-choice '+(on?'on':'')+'" aria-pressed="'+(on?'true':'false')+'" onclick="toggleLedgerParticipant(\''+jsString(entry.name)+'\')">'+escapeHtml(entry.name)+'</button>';}).join('');
   return '<div class="ledger-sheet-field" id="ledgerParticipants"><span class="ledger-sheet-label">分攤成員</span><div class="ledger-sheet-choice-grid">'+chips+'</div>'+(draft.participantsRetained?'<div class="ledger-sheet-retained">沿用上一筆：'+draft.participants.length+' 人</div>':'')+'</div>';
 }

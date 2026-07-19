@@ -31,6 +31,15 @@ function loadModule(){
 function plain(value){return JSON.parse(JSON.stringify(value));}
 
 const mod=loadModule();
+const proxyTargets=mod.createLedgerProxyTargetStore({storage:mod.localStorage,key:'trip_ledger_proxy_targets'});
+proxyTargets.add('  阿芬 ');
+proxyTargets.add('阿芬');
+proxyTargets.add('阿蓁');
+assert.deepStrictEqual(plain(proxyTargets.all()),['阿芬','阿蓁'],'proxy targets trim and de-duplicate while preserving insertion order');
+proxyTargets.remove('阿芬');
+assert.deepStrictEqual(plain(proxyTargets.all()),['阿蓁']);
+assert.throws(()=>proxyTargets.add(''),/代購對象/);
+assert.throws(()=>proxyTargets.add('這是一個超過十二個字的代購對象'),/12/);
 const records=[
   {id:'1',member:'Bar',amountJpy:1000,amountTwd:200,isProxy:false,proxyTarget:''},
   {id:'2',member:'Bar',amountJpy:600,amountTwd:120,isProxy:true,proxyTarget:'小明'},
@@ -52,5 +61,10 @@ assert.deepStrictEqual(proxy.targets,[
 const amy=plain(mod.buildProxySummary(records,'Amy'));
 assert.deepStrictEqual(amy.actualSpend,{amountJpy:500,amountTwd:100},'historical ownership follows each saved member');
 assert.deepStrictEqual(plain(mod.buildProxySummary([], 'Bar')).actualSpend,{amountJpy:0,amountTwd:0});
+
+const uiSource=fs.readFileSync('index.html','utf8');
+assert(uiSource.includes('未指定')&&uiSource.includes('＋新增對象'),'proxy targets render as reusable pill choices');
+assert(uiSource.includes('ledgerProxyTargetSettingsSection'),'Settings exposes reusable proxy target management');
+assert(uiSource.includes('renderLedgerProxyTargetChoices'),'single and per-item proxy controls share the target chooser');
 
 console.log('ledger proxy tests passed');
