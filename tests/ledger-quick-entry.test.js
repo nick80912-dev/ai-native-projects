@@ -12,7 +12,7 @@ function extract(startText,endText){
 
 function plain(value){return JSON.parse(JSON.stringify(value));}
 
-const draftSource=extract('function createLedgerEntryDraft(','function openLedgerEntrySheet(');
+const draftSource=extract('function ledgerDateTimeLocalValue(','function openLedgerEntrySheet(');
 const draftSandbox={
   currentLedgerSettings(){return {exchangeRate:0.2,defaultCurrency:'JPY'};},
   registeredMembersForCurrentMode(){return [{name:'Bar'},{name:'Amy'}];},
@@ -30,6 +30,13 @@ assert.strictEqual(personal.multi,false);
 assert.strictEqual(personal.currency,'JPY');
 assert.strictEqual(personal.category,'餐飲');
 assert.strictEqual(personal.payMethod,'現金');
+assert.strictEqual(personal.storeName,'','store name defaults empty');
+assert(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(personal.occurredAt),'occurrence time defaults to a datetime-local value');
+
+const localTime=draftSandbox.ledgerDateTimeLocalValue(new Date(2026,9,18,12,34,0));
+assert.strictEqual(localTime,'2026-10-18T12:34','Date converts to a minute-precision local input value');
+assert.strictEqual(new Date(draftSandbox.ledgerOccurrenceIso(localTime)).getTime(),new Date(2026,9,18,12,34,0).getTime(),'local input round-trips through ISO');
+assert.throws(function(){draftSandbox.ledgerOccurrenceIso('not-a-date');},/日期時間/,'invalid occurrence time is rejected');
 
 const shared=plain(draftSandbox.createLedgerEntryDraft('shared'));
 assert.deepStrictEqual(shared.participants,['Bar','Amy'],'shared entry defaults to all currently allowed registered members');
@@ -59,11 +66,15 @@ assert.strictEqual(resetPersonal.proxyTarget,'','proxy target never carries into
 const stateSource=extract('function createLedgerEntryDraft(','function formatLedgerCurrencyAmount(');
 const stateSandbox={
   ledgerUiState:{draft:null},
+  ledgerDefaultCategory(){return '餐飲';},
+  ledgerDateTimeLocalValue(){return '2026-07-19T12:00';},
+  withLedgerSheetPosition(renderFn){return renderFn();},
   currentLedgerSettings(){return {exchangeRate:0.2,defaultCurrency:'JPY'};},
   registeredMembersForCurrentMode(){return [{name:'Bar',key:'bar'},{name:'Amy',key:'amy'}];},
   ledgerCategoryStore:{all(){return ['餐飲','交通'];}},
   ledgerPayMethodStore:{all(){return ['現金','Suica'];}},
-  document:{getElementById(){return null;},body:{classList:{add(){},remove(){}}}},
+  document:{getElementById(){return null;},querySelector(){return null;},activeElement:null,body:{classList:{add(){},remove(){}}}},
+  requestAnimationFrame(callback){callback();},
   confirm(){return true;},toast(){},canonicalMemberName(value){return String(value).trim().toLowerCase();},
   escapeHtml(value){return String(value);},jsString(value){return String(value);},getCurrentMember(){return 'Bar';},
   Date,Math,Promise,JSON,String,Number,isFinite
@@ -107,13 +118,20 @@ vm.runInContext(persistSource,persistSandbox);
   assert.strictEqual(sharedResult.queued,true,'shared persistence resolves from local queue acknowledgement');
   assert.strictEqual(personalAdds,1,'shared saves never call the personal repository');
 
-  const sheetSource=extract('function openLedgerEntrySheet(','function formatLedgerCurrencyAmount(');
+  const sheetSource=extract('var ledgerBackgroundScrollY=0;','function formatLedgerCurrencyAmount(');
+  const builderSource=extract('function buildLedgerExpenseRecords(','function buildMemberBalances(');
   assert(sheetSource.includes("document.body.classList.add('ledger-sheet-open')"),'opening sheet locks background scrolling');
   assert(sheetSource.includes("document.body.classList.remove('ledger-sheet-open')"),'closing sheet restores background scrolling');
   assert(sheetSource.includes('id="ledgerEntryTitle"'));
   assert(sheetSource.includes('id="ledgerMulti"'));
   assert(sheetSource.includes('id="ledgerAmount"'));
   assert(sheetSource.includes('id="ledgerConvertedPreview"'));
+  assert(sheetSource.includes('ledger-amount-wrap'),'amount and conversion share one compact wrapper');
+  assert(sheetSource.includes('id="ledgerStoreName"'),'entry sheet includes structured store name');
+  assert(sheetSource.includes('id="ledgerOccurredAt"'),'entry sheet includes editable occurrence time');
+  assert(sheetSource.indexOf('ledger-sheet-member')<sheetSource.indexOf('id="ledgerMulti"'),'identity appears immediately below the sheet heading');
+  assert(builderSource.includes('ledgerOccurrenceIso(draft.occurredAt)'),'record time comes from the occurrence-time field');
+  assert(builderSource.includes("storeName:String(draft.storeName||'').trim()"),'record builder writes structured storeName');
   assert(sheetSource.includes('id="ledgerSave"'));
   assert(sheetSource.includes('id="ledgerSaveAnother"'));
   assert(sheetSource.includes('沿用上一筆：'));
@@ -130,6 +148,10 @@ vm.runInContext(persistSource,persistSandbox);
   assert(!/addEventListener\(['"](?:touchstart|touchmove|gesturestart)/.test(sheetSource),'sheet adds no JavaScript gesture interceptor');
   assert(!sheetSource.includes('preventDefault()'),'sheet adds no preventDefault gesture path');
   assert(sheetSource.includes("toast(result.queued?'已儲存，待同步':'已儲存')"),'shared optimistic save reports pending background delivery');
+  assert(sheetSource.includes('ledgerBackgroundScrollY=window.scrollY'),'opening captures the background scroll position');
+  assert(sheetSource.includes('sheet.scrollTop=0'),'new sheets start at the top');
+  assert(sheetSource.includes('window.scrollTo({top:ledgerBackgroundScrollY'),'closing restores the background scroll position');
+  assert(sheetSource.includes('function withLedgerSheetPosition('),'structural rerenders preserve internal sheet position');
 
   assert(/\.ledger-sheet\{[^}]*overflow-y:auto[^}]*touch-action:pan-y/.test(html),'sheet scroll surface is pan-y only');
   assert(/\.ledger-sheet button[^}]*touch-action:manipulation/.test(html),'sheet controls use scoped manipulation');

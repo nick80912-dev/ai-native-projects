@@ -20,6 +20,7 @@ function loadModule(){
     console:{log(){},warn(){},error(){}},localStorage:createStorage(),
     fetch(){return Promise.reject(new Error('network disabled'));},setTimeout,clearTimeout,
     Date,Math,Promise,JSON,String,Number,isFinite,
+    ledgerOccurrenceIso(value){return new Date(value||1784428800000).toISOString();},
     timestampDate(value){return new Date(Number(value));},AppLog:{repo(){},sync(){}},
     renderSplit(){},updateLedgerPendingStatus(){}
   };

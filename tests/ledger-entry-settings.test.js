@@ -107,7 +107,7 @@ function response(payload){
   assert(splitSource.includes('個人帳留在本機；團體帳跨裝置同步。'),'Split uses the fixed dual-track explanation');
   assert(splitSource.includes("setLedgerTrack(\\'personal\\')")&&splitSource.includes("setLedgerTrack(\\'shared\\')"),'Split exposes personal/shared segmented controls');
   assert(entrySource.includes("if(track==='personal')")&&entrySource.includes('personalLedgerRepository.add'),'personal entries use only the personal repository');
-  assert(entrySource.includes('ledgerRepository.add'),'shared entries retain the shared repository');
+  assert(entrySource.includes('ledgerRepository.enqueueBatch'),'shared entries retain the atomic shared repository queue');
   assert(html.includes("record.recordType='expense'")&&html.includes('normalizeLedgerParticipantSelection'),'shared expenses save the Ledger 2.0 contract fields');
   assert(ledgerUiSource.includes('record.payMethod'),'historical payment methods remain visible even when custom options change');
   assert(ledgerUiSource.includes('shared&&isTestLedgerRecord(record)'),'TEST badges are restricted to the shared track');
@@ -135,10 +135,14 @@ function response(payload){
   assert(html.includes('addLedgerOptionFromSettings'),'Settings can add custom options');
   assert(html.includes('moveLedgerOptionFromSettings'),'Settings can reorder custom options');
   assert(html.includes('removeLedgerOptionFromSettings'),'Settings can remove default or custom options');
+  assert(splitSource.includes('⚠ 目前顯示測試帳本'),'Split renders the test-universe warning');
+  assert(splitSource.includes('不影響正式分帳'),'Split explains that the active test universe is isolated');
+  /* Retired pre-universe warning copy assertions:
   assert(splitSource.includes('⚠ 測試模式中'),'Split renders the test-mode warning');
   assert(splitSource.includes('團體帳新增的記帳不會列入彙算'),'Split explains that only shared test entries are excluded');
+  */
   assert(splitSource.includes('openSettings')&&splitSource.includes('ledgerTestModeSection'),'warning opens Settings at test mode');
-  assert(html.includes("category:ledgerCategoryStore.all()[0]||''"),'fresh entry drafts resolve the first available category without persisting it');
+  assert(html.includes('category:ledgerDefaultCategory()'),'fresh entry drafts remember the last category with a Dining fallback');
   assert(html.includes('next.category=draft.category'),'save-and-add-another retains the current category');
 
   const testModeSource = html.slice(html.indexOf('function setLedgerTestMode('),html.indexOf('function selectLedgerDefaultCurrency('));
