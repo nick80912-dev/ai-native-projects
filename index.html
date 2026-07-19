@@ -2978,7 +2978,14 @@ function createPersonalLedgerRepository(options){
     var next=all().filter(function(record){return record.batchId!==clean;}).concat(normalized);
     write(next);return normalized;
   }
-  return {all:all,add:add,remove:remove,replaceBatch:replaceBatch};
+  function replaceSelection(ids,replacements){
+    var selected={};(ids||[]).forEach(function(id){selected[String(id||'')]=true;});
+    if(!Object.keys(selected).length)throw new Error('編輯紀錄 ID 不可空白');
+    var normalized=(replacements||[]).map(function(record){var item=normalizePersonalLedgerRecord(record,Date.parse(record.time),random);validateLedgerRecord(item);return item;});
+    if(!normalized.length)throw new Error('編輯結果不可空白');
+    var next=all().filter(function(record){return !selected[record.id];}).concat(normalized);write(next);return normalized;
+  }
+  return {all:all,add:add,remove:remove,replaceBatch:replaceBatch,replaceSelection:replaceSelection};
 }
 
 function normalizeLedgerOption(value){
@@ -3076,6 +3083,27 @@ function createLedgerDeletion(original,member,reason,now,randomFn){
     member:String(member||'').trim(),category:source.category,detail:'[刪除]',amountJpy:0,amountTwd:0,note:'',
     participants:'',payMethod:'',recordType:'deletion',targetRecordId:source.id,deleteReason:cleanReason,batchId:source.batchId||''
   },at,randomFn,false);
+}
+function ledgerEditSelection(records,id){
+  var visible=effectiveLedgerRecords(records||[]),selected=visible.filter(function(record){return record.id===id;})[0];
+  if(!selected)return [];
+  var batchId=String(selected.batchId||'').trim(),result=batchId?visible.filter(function(record){return record.batchId===batchId;}):[selected];
+  return result.slice().sort(function(a,b){return String(a.time||'').localeCompare(String(b.time||''))||String(a.id||'').localeCompare(String(b.id||''));});
+}
+function buildSharedLedgerEditBatch(originals,replacements,context){
+  var old=(originals||[]).slice().sort(function(a,b){return String(a.time||'').localeCompare(String(b.time||''))||String(a.id||'').localeCompare(String(b.id||''));});
+  if(!old.length||!(replacements||[]).length)throw new Error('編輯紀錄不可空白');
+  var ctx=context||{},at=Number(ctx.now==null?Date.now():ctx.now),random=ctx.random||Math.random,member=String(ctx.member||'').trim();
+  if(!member)throw new Error('成員必填');
+  var canonicalId=old[0].id,test=old.some(isTestLedgerRecord),batchId=replacements.length>1?'batch-'+createLedgerId(at+old.length,random):'';
+  var deletions=old.map(function(record,index){return createLedgerDeletion(record,member,'編輯修改',at+index,random);});
+  var expenses=replacements.map(function(source,index){
+    var detail=String(source&&source.detail||'').replace(/^\[TEST\]\s*/,'').trim();
+    if(test)detail='[TEST] '+detail;
+    var record=normalizeLedgerRecord(Object.assign({},source,{id:createLedgerId(at+old.length+index+1,random),detail:detail,recordType:'expense',targetRecordId:'',deleteReason:'',batchId:batchId,replacesRecordId:canonicalId}),at+old.length+index+1,random,false);
+    validateLedgerRecord(record);return record;
+  });
+  return deletions.concat(expenses);
 }
 function effectiveLedgerRecords(records,warnFn){
   var source=records||[], byId={}, deleted={};
@@ -3654,7 +3682,7 @@ var ledgerProxyTargetStore=createLedgerProxyTargetStore({storage:localStorage,ke
 
 /* ================= 分帳(雲端 Ledger) ================= */
 var legacyExpenseNoticeVisible=false;
-var ledgerUiState={track:'personal',displayCurrency:'',page:'dashboard',filter:'all',sheet:null,selectedRecordId:'',draft:null,retainedParticipants:null};
+var ledgerUiState={track:'personal',displayCurrency:'',page:'dashboard',filter:'all',sheet:null,selectedRecordId:'',draft:null,editing:null,retainedParticipants:null};
 var ledgerSettingsDraftCurrency='';
 var memberRegistrationBridge=[];
 var memberSelectorState={forced:false,stage:'choose',showNew:false,input:'',candidate:null,error:'',busy:false};
@@ -3958,6 +3986,20 @@ function createLedgerEntryDraft(track){
   var settings=currentLedgerSettings(),participants=track==='shared'?registeredMembersForCurrentMode().map(function(entry){return entry.name;}):[];
   return {track:track,currency:settings.defaultCurrency,multi:false,amount:'',detail:'',category:ledgerDefaultCategory(),payMethod:ledgerPayMethodStore.all()[0]||'',note:'',storeName:'',occurredAt:ledgerDateTimeLocalValue(new Date()),replacesRecordId:'',isProxy:false,proxyTarget:'',participants:participants,participantsRetained:false,priceMode:'included',taxPreset:'10',customTaxRate:'',taxPanelOpen:false,discount:'',items:[]};
 }
+function ledgerDraftFromRecords(records,track){
+  var selected=(records||[]).slice(),first=selected[0];if(!first)throw new Error('找不到可編輯紀錄');
+  var draft=createLedgerEntryDraft(track),currency=draft.currency,amountFor=function(record){return currency==='TWD'?record.amountTwd:record.amountJpy;};
+  draft.multi=selected.length>1;draft.amount=String(amountFor(first));draft.detail=ledgerDetailWithoutTestPrefix(first);draft.category=first.category;draft.payMethod=first.payMethod;draft.note=first.note||'';draft.storeName=first.storeName||'';draft.occurredAt=ledgerDateTimeLocalValue(first.time);draft.replacesRecordId=first.id;
+  if(track==='personal'){draft.isProxy=!!first.isProxy;draft.proxyTarget=first.proxyTarget||'';}
+  else{draft.participants=parseParticipants(first,function(){})||[];draft.participantsRetained=true;}
+  if(draft.multi)draft.items=selected.map(function(record){
+    var item=createLedgerDraftItem(draft,{name:ledgerDetailWithoutTestPrefix(record),amount:amountFor(record),category:record.category});
+    if(track==='personal'){item.proxyMode='custom';item.isProxy=!!record.isProxy;item.proxyTarget=record.proxyTarget||'';}
+    else{item.participantMode='custom';item.participants=parseParticipants(record,function(){})||[];}
+    return item;
+  });
+  return draft;
+}
 function resetLedgerDraftAfterSave(draft){
   var next=createLedgerEntryDraft(draft.track);
   next.currency=draft.currency;next.category=draft.category;next.payMethod=draft.payMethod;
@@ -3976,14 +4018,23 @@ function openLedgerEntrySheet(){
   if(!memberIsAllowed(getCurrentMember())){openMemberSelector(true);return;}
   ledgerBackgroundScrollY=window.scrollY||window.pageYOffset||0;
   closeLedgerEntrySheet(false);
-  ledgerUiState.draft=createLedgerEntryDraft(ledgerUiState.track);ledgerUiState.sheet='entry';
+  ledgerUiState.draft=createLedgerEntryDraft(ledgerUiState.track);ledgerUiState.editing=null;ledgerUiState.sheet='entry';
   var overlay=document.createElement('div');overlay.id='ledgerEntrySheet';overlay.className='ledger-sheet-overlay';
   document.body.appendChild(overlay);document.body.classList.add('ledger-sheet-open');renderLedgerEntrySheet();
   requestAnimationFrame(function(){var sheet=overlay.querySelector('.ledger-sheet');if(sheet)sheet.scrollTop=0;});
 }
+function editLedgerRecord(id){
+  if(isTimeSimulationActive()){toast('時間模擬中不可編輯支出');return;}
+  var track=ledgerUiState.track,source=track==='personal'?personalLedgerRepository.all():mergedLedgerRecords(),records=ledgerEditSelection(source,id);
+  if(!records.length){toast('找不到可編輯紀錄');return;}
+  ledgerBackgroundScrollY=window.scrollY||window.pageYOffset||0;closeLedgerRecordDetail();closeLedgerEntrySheet(false);
+  ledgerUiState.track=track;ledgerUiState.draft=ledgerDraftFromRecords(records,track);ledgerUiState.editing={track:track,originals:records};ledgerUiState.sheet='entry';
+  var overlay=document.createElement('div');overlay.id='ledgerEntrySheet';overlay.className='ledger-sheet-overlay';document.body.appendChild(overlay);document.body.classList.add('ledger-sheet-open');renderLedgerEntrySheet();
+  requestAnimationFrame(function(){var sheet=overlay.querySelector('.ledger-sheet');if(sheet)sheet.scrollTop=0;});
+}
 function closeLedgerEntrySheet(restoreBackground){
   var overlay=document.getElementById('ledgerEntrySheet');if(overlay)overlay.remove();
-  document.body.classList.remove('ledger-sheet-open');ledgerUiState.sheet=null;ledgerUiState.draft=null;
+  document.body.classList.remove('ledger-sheet-open');ledgerUiState.sheet=null;ledgerUiState.draft=null;ledgerUiState.editing=null;
   if(restoreBackground!==false)requestAnimationFrame(function(){window.scrollTo({top:ledgerBackgroundScrollY,left:0,behavior:'auto'});});
 }
 function updateLedgerDraftField(field,value){if(ledgerUiState.draft)ledgerUiState.draft[field]=value;}
@@ -4108,7 +4159,7 @@ function updateLedgerMultiPreview(){
 function ledgerSheetChoiceButtons(values,selected,handler,className){
   return (values||[]).map(function(value){var on=value===selected;return '<button class="ledger-sheet-choice '+(className||'')+' '+(on?'on':'')+'" data-choice-value="'+escapeHtml(value)+'" aria-pressed="'+(on?'true':'false')+'" onclick="'+handler+'(\''+jsString(value)+'\')">'+escapeHtml(value)+'</button>';}).join('');
 }
-function renderLedgerDraftTrack(draft){return '<div class="ledger-sheet-field"><span class="ledger-sheet-label">帳本</span><div class="ledger-sheet-track"><button class="ledger-sheet-choice '+(draft.track==='personal'?'on':'')+'" aria-pressed="'+(draft.track==='personal'?'true':'false')+'" onclick="setLedgerDraftTrack(\'personal\')">個人</button><button class="ledger-sheet-choice '+(draft.track==='shared'?'on':'')+'" aria-pressed="'+(draft.track==='shared'?'true':'false')+'" onclick="setLedgerDraftTrack(\'shared\')">團體</button></div></div>';}
+function renderLedgerDraftTrack(draft){if(ledgerUiState.editing)return '<div class="ledger-sheet-field"><span class="ledger-sheet-label">帳本</span><div class="ledger-rate">'+(draft.track==='personal'?'個人帳本':'團體帳本')+'（編輯時不可切換）</div></div>';return '<div class="ledger-sheet-field"><span class="ledger-sheet-label">帳本</span><div class="ledger-sheet-track"><button class="ledger-sheet-choice '+(draft.track==='personal'?'on':'')+'" aria-pressed="'+(draft.track==='personal'?'true':'false')+'" onclick="setLedgerDraftTrack(\'personal\')">個人</button><button class="ledger-sheet-choice '+(draft.track==='shared'?'on':'')+'" aria-pressed="'+(draft.track==='shared'?'true':'false')+'" onclick="setLedgerDraftTrack(\'shared\')">團體</button></div></div>';}
 function renderLedgerDraftCurrency(draft){return '<div class="ledger-sheet-field"><span class="ledger-sheet-label">幣別</span><div class="ledger-sheet-track">'+ledgerSheetChoiceButtons(['JPY','TWD'],draft.currency,'selectLedgerCurrency','ledger-currency-option')+'</div><div class="ledger-rate">目前匯率：1 JPY = NT$'+escapeHtml(currentLedgerSettings().exchangeRate)+'</div></div>';}
 function renderLedgerSingleItemFields(draft){
   var categories=ledgerCategoryStore.all();
@@ -4154,7 +4205,8 @@ function renderLedgerStoreTimeFields(draft){return '<div class="ledger-datetime-
 function renderLedgerEntrySheet(){
   var overlay=document.getElementById('ledgerEntrySheet'),draft=ledgerUiState.draft;if(!overlay||!draft)return;
   var fields=draft.multi?renderLedgerPaymentFields(draft)+renderLedgerTrackSpecificFields(draft)+renderLedgerMultiItemFields(draft):renderLedgerSingleItemFields(draft)+renderLedgerPaymentFields(draft)+renderLedgerTrackSpecificFields(draft);
-  overlay.innerHTML='<section class="ledger-sheet" role="dialog" aria-modal="true" aria-labelledby="ledgerEntryTitle"><div class="ledger-sheet-head"><h2 id="ledgerEntryTitle">新增消費</h2><button class="settings-close" aria-label="關閉" onclick="closeLedgerEntrySheet()">×</button></div><div class="ledger-sheet-member">目前記帳身分：<b>'+escapeHtml(getCurrentMember())+'</b></div><label class="toggle-row ledger-sheet-toggle" for="ledgerMulti"><span>多品項</span><input id="ledgerMulti" type="checkbox" '+(draft.multi?'checked':'')+' onchange="setLedgerDraftMulti(this.checked)"></label>'+renderLedgerDraftTrack(draft)+renderLedgerDraftCurrency(draft)+fields+renderLedgerStoreTimeFields(draft)+renderLedgerNoteField(draft)+'<div class="ledger-sheet-actions"><button id="ledgerSave" class="btn coral" onclick="saveLedgerEntry(false)">儲存</button><button id="ledgerSaveAnother" class="btn" onclick="saveLedgerEntry(true)">儲存並再記一筆</button></div></section>';
+  var editing=!!ledgerUiState.editing,title=editing?'編輯消費':'新增消費',saveAnother=editing?'':'<button id="ledgerSaveAnother" class="btn" onclick="saveLedgerEntry(true)">儲存並再記一筆</button>';
+  overlay.innerHTML='<section class="ledger-sheet" role="dialog" aria-modal="true" aria-labelledby="ledgerEntryTitle"><div class="ledger-sheet-head"><h2 id="ledgerEntryTitle">'+title+'</h2><button class="settings-close" aria-label="關閉" onclick="closeLedgerEntrySheet()">×</button></div><div class="ledger-sheet-member">目前記帳身分：<b>'+escapeHtml(getCurrentMember())+'</b></div><label class="toggle-row ledger-sheet-toggle" for="ledgerMulti"><span>多品項</span><input id="ledgerMulti" type="checkbox" '+(draft.multi?'checked':'')+' onchange="setLedgerDraftMulti(this.checked)"></label>'+renderLedgerDraftTrack(draft)+renderLedgerDraftCurrency(draft)+fields+renderLedgerStoreTimeFields(draft)+renderLedgerNoteField(draft)+'<div class="ledger-sheet-actions"><button id="ledgerSave" class="btn coral" onclick="saveLedgerEntry(false)">'+(editing?'儲存修改':'儲存')+'</button>'+saveAnother+'</div></section>';
   if(draft.multi)updateLedgerMultiPreview();else updateLedgerConversionPreview();
 }
 function persistLedgerExpenseRecords(records,track){
@@ -4164,19 +4216,36 @@ function persistLedgerExpenseRecords(records,track){
   }
   return Promise.resolve(ledgerRepository.enqueueBatch(records));
 }
+function persistLedgerEditedRecords(records,editing){
+  var originals=(editing&&editing.originals||[]).slice(),track=editing&&editing.track;
+  if(!originals.length)throw new Error('找不到原始編輯紀錄');
+  if(track==='personal'){
+    var oldBatch=String(originals[0].batchId||''),batchId=records.length>1?(oldBatch||'batch-'+createLedgerId(Date.now(),Math.random)):'';
+    var replacements=records.map(function(record,index){
+      var next=Object.assign({},record,{id:originals[index]?originals[index].id:createLedgerId(Date.now()+index+1,Math.random),batchId:batchId,replacesRecordId:originals[0].id});
+      next=normalizePersonalLedgerRecord(next,Date.parse(next.time),Math.random);validateLedgerRecord(next);next.proxyTarget=validateProxyDraft(next.isProxy,next.proxyTarget);return next;
+    });
+    return Promise.resolve({ok:true,personal:true,edited:true,records:personalLedgerRepository.replaceSelection(originals.map(function(record){return record.id;}),replacements)});
+  }
+  var batch=buildSharedLedgerEditBatch(originals,records,{member:getCurrentMember(),now:Date.now(),random:Math.random});
+  var result=ledgerRepository.enqueueBatch(batch);result.edited=true;return Promise.resolve(result);
+}
 function saveLedgerEntry(addAnother){
   if(isTimeSimulationActive()){toast('時間模擬中不可新增支出');return Promise.resolve({ok:false});}
-  var draft=ledgerUiState.draft,member=getCurrentMember();if(!draft)return Promise.resolve({ok:false});
+  var draft=ledgerUiState.draft,editing=ledgerUiState.editing,member=getCurrentMember();if(!draft)return Promise.resolve({ok:false});
   if(!memberIsAllowed(member)){openMemberSelector(true);return Promise.resolve({ok:false});}
   var records;
   try{records=buildLedgerExpenseRecords(draft,{member:member,settings:currentLedgerSettings(),now:Date.now(),random:Math.random,memberEntries:registeredMembersForCurrentMode()});}
   catch(error){toast(error.message||'記帳資料格式錯誤');return Promise.resolve({ok:false,error:error});}
   var buttons=[document.getElementById('ledgerSave'),document.getElementById('ledgerSaveAnother')];buttons.forEach(function(button){if(button)button.disabled=true;});
-  return persistLedgerExpenseRecords(records,draft.track).then(function(result){
+  var operation;
+  try{operation=editing?persistLedgerEditedRecords(records,editing):persistLedgerExpenseRecords(records,draft.track);}
+  catch(error){buttons.forEach(function(button){if(button)button.disabled=false;});toast(error.message||'編輯失敗');return Promise.resolve({ok:false,error:error});}
+  return operation.then(function(result){
     ledgerUiState.track=draft.track;renderSplit();
-    if(addAnother){ledgerUiState.draft=resetLedgerDraftAfterSave(draft);renderLedgerEntrySheet();}
+    if(addAnother&&!editing){ledgerUiState.draft=resetLedgerDraftAfterSave(draft);renderLedgerEntrySheet();}
     else closeLedgerEntrySheet();
-    toast(result.queued?'已儲存，待同步':'已儲存');return result;
+    toast(editing?(result.queued?'修改已儲存，待同步':'修改已儲存'):(result.queued?'已儲存，待同步':'已儲存'));return result;
   },function(error){buttons.forEach(function(button){if(button)button.disabled=false;});toast(error.message||'記帳失敗');return {ok:false,error:error};});
 }
 function deletePersonalLedgerRecord(id){
@@ -4280,8 +4349,9 @@ function ledgerRecordDetailRows(record,track){
 function closeLedgerRecordDetail(){var overlay=document.getElementById('ledgerRecordDetail');if(overlay)overlay.remove();document.body.classList.remove('ledger-sheet-open');ledgerUiState.selectedRecordId='';}
 function renderLedgerRecordDetail(record){
   var track=ledgerUiState.track,rows=ledgerRecordDetailRows(record,track).map(function(row){return '<div class="ledger-detail-row"><dt>'+escapeHtml(row[0])+'</dt><dd>'+escapeHtml(row[1])+'</dd></div>';}).join('');
-  var action=track==='personal'?'<button class="btn coral" onclick="closeLedgerRecordDetail();deletePersonalLedgerRecord(\''+jsString(record.id)+'\')">刪除個人紀錄</button>':'<button class="btn coral" onclick="closeLedgerRecordDetail();openSharedLedgerDelete(\''+jsString(record.id)+'\')">刪除團體紀錄</button>';
-  return '<dl class="ledger-detail-rows">'+rows+'</dl><div class="ledger-detail-actions">'+action+'</div>';
+  var remove=track==='personal'?'<button class="btn coral" onclick="closeLedgerRecordDetail();deletePersonalLedgerRecord(\''+jsString(record.id)+'\')">刪除</button>':'<button class="btn coral" onclick="closeLedgerRecordDetail();openSharedLedgerDelete(\''+jsString(record.id)+'\')">刪除</button>';
+  var action='<details class="ledger-record-actions"><summary class="btn">⋯</summary><div class="ledger-detail-actions"><button class="btn" onclick="editLedgerRecord(\''+jsString(record.id)+'\')">編輯</button>'+remove+'</div></details>';
+  return '<dl class="ledger-detail-rows">'+rows+'</dl>'+action;
 }
 function openLedgerRecordDetail(id){
   var record=ledgerTrackRecords().filter(function(item){return item.id===id;})[0];if(!record){toast('紀錄已不存在');return;}

@@ -47,3 +47,11 @@
 **Decision**:`ledgerRepository.add(record)` 保留「嘗試送達後完成」語意，供身分註冊及需要送達結果的呼叫端使用；新增 `enqueueBatch(records)` 作為團體記帳 UI 的本機耐久完成邊界。`enqueueBatch` 先正規化及驗證整批紀錄，再以一次 localStorage 寫入加入 Queue，立即回覆 queued acknowledgment，最後由背景 `flushQueue()` 送達。UI 不得直接讀寫 Queue key 或等待背景 POST 才關閉表單。
 
 **Failure Semantics**:整批任一紀錄無效或 localStorage 寫入失敗時不得留下半批資料，也不得關閉表單。背景 POST 失敗不撤銷已入列紀錄；既有 pending 狀態、online/open 補送、`ok:true`／`dup:true` 移出 Queue 規則不變。
+
+## 2026-07-19 Ledger 2.1 編輯語意
+
+**Decision**：個人帳保留可變的本機紀錄語意，編輯時以單次 localStorage 寫入原地替換所選紀錄，既有位置可對應者保留原紀錄 ID。團體帳維持 append-only：每次編輯先為所有舊筆建立 `recordType=deletion` 的墓碑，`deleteReason` 固定為「編輯修改」，再加入修改後的新支出；新支出的 `replacesRecordId` 指向原批次排序後的第一筆 ID。整組墓碑與替代筆以同一次 `enqueueBatch` 進入佇列。
+
+**Why This Decision**：個人帳不需跨裝置稽核，原地修改可避免產生無意義的歷史噪音；團體帳會影響所有成員結算，因此保留舊值、修改動作與替代鏈，才能維持可追蹤性並符合既有 append-only 契約。
+
+**Compatibility and Trade-offs**：讀取與彙算仍先套用既有墓碑過濾，因此 UI 只顯示修改後紀錄。團體編輯會增加 Sheet 列數，且跨裝置仍受 CSV 發布延遲影響；同一裝置則由本機佇列立即顯示修改結果。
