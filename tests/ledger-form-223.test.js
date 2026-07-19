@@ -1,0 +1,114 @@
+const assert=require('assert');
+const fs=require('fs');
+const vm=require('vm');
+
+const html=fs.readFileSync('index.html','utf8');
+
+function extract(startText,endText){
+  const start=html.indexOf(startText),end=html.indexOf(endText,start);
+  assert(start>=0&&end>start,startText+' source exists');
+  return html.slice(start,end);
+}
+
+function plain(value){return JSON.parse(JSON.stringify(value));}
+
+const source=extract('function ledgerLocalDateFromParts(','function openLedgerEntrySheet(');
+const sandbox={
+  appNow(){return new Date(2026,6,19,22,15);},
+  timestampDate(value){return new Date(Number(value));},
+  currentLedgerSettings(){return {exchangeRate:0.2,defaultCurrency:'JPY'};},
+  registeredMembersForCurrentMode(){return [{name:'Bar'},{name:'Amy'}];},
+  ledgerCategoryStore:{all(){return ['餐飲','交通','購物'];}},
+  ledgerPayMethodStore:{all(){return ['現金','信用卡'];}},
+  createLedgerDraftItem(draft,seed){return {key:'new-'+String(seed.name||''),name:String(seed.name||''),amount:String(seed.amount||''),category:seed.category,categoryManuallyAdjusted:!!seed.categoryManuallyAdjusted,taxExempt:false,isProxy:false,proxyTarget:''};},
+  ledgerRecordMetadata(){return {inputCurrency:'JPY',couponAmount:0,priceMode:'included',taxRate:10,isTaxFree:false,isProxy:false,proxyTarget:''};},
+  ledgerDetailWithoutTestPrefix(record){return record.detail;},
+  normalizeLedgerCategoryName(value){return value;},
+  ledgerVisibleNote(){return '';},parseParticipants(){return ['Bar'];},
+  JSON,String,Number,Math,Date
+};
+vm.createContext(sandbox);
+vm.runInContext(source,sandbox);
+
+const draft=plain(sandbox.createLedgerEntryDraft('personal'));
+draft.multi=true;
+draft.storeName='';
+draft.categoryApply='餐飲';
+draft.items=[
+  {key:'blank',name:' ',amount:'',category:'餐飲',categoryManuallyAdjusted:false},
+  {key:'partial',name:'拉麵',amount:'',category:'餐飲',categoryManuallyAdjusted:false},
+  {key:'valid',name:'車票',amount:'500',category:'交通',categoryManuallyAdjusted:true}
+];
+
+assert.strictEqual(sandbox.ledgerItemIsCompletelyBlank(draft.items[0]),true,'fully blank rows are recognized');
+assert.strictEqual(sandbox.ledgerItemIsCompletelyBlank(draft.items[1]),false,'partially entered rows are not blank');
+assert.strictEqual(sandbox.ledgerValidItemCount(draft),1,'only fully valid rows count toward the save label');
+
+let validation=plain(sandbox.validateLedgerEntryDraft(draft));
+assert.strictEqual(validation.valid,false,'required store and partial rows block submission');
+assert.strictEqual(validation.firstField,'storeName','store is the first multi-item validation error');
+assert.strictEqual(validation.errors.storeName,'請輸入店家名稱');
+assert.strictEqual(validation.errors.items.partial.amount,'請輸入有效金額');
+
+draft.storeName='岡山拉麵';
+validation=plain(sandbox.validateLedgerEntryDraft(draft));
+assert.strictEqual(validation.valid,false,'a partial row still blocks after store is supplied');
+assert.strictEqual(validation.firstItemKey,'partial');
+assert.strictEqual(validation.firstItemField,'amount');
+
+draft.items[1].amount='800';
+validation=plain(sandbox.validateLedgerEntryDraft(draft));
+assert.strictEqual(validation.valid,true);
+assert.deepStrictEqual(validation.submissionItems.map(item=>item.key),['partial','valid'],'fully blank rows are excluded from submission');
+
+const applyDraft={categoryApply:'餐飲',items:[
+  {key:'a',category:'餐飲',categoryManuallyAdjusted:false},
+  {key:'b',category:'交通',categoryManuallyAdjusted:true},
+  {key:'c',category:'餐飲',categoryManuallyAdjusted:false}
+]};
+sandbox.updateLedgerCategoryApply(applyDraft,'購物');
+assert.deepStrictEqual(plain(applyDraft.items.map(item=>item.category)),['購物','交通','購物'],'normal apply preserves manually adjusted rows');
+sandbox.applyLedgerCategoryToAll(applyDraft,'餐飲');
+assert.deepStrictEqual(plain(applyDraft.items.map(item=>item.category)),['餐飲','餐飲','餐飲'],'apply-all overwrites every row');
+assert(applyDraft.items.every(item=>item.categoryManuallyAdjusted===false),'apply-all establishes the new inherited default');
+
+const reset=plain(sandbox.resetLedgerDraftAfterSave({
+  track:'shared',currency:'TWD',multi:true,payMethod:'信用卡',category:'交通',categoryApply:'購物',
+  occurredDate:'2026/07/20',occurredTime:'22:15',storeName:'百貨公司',participants:['Bar','Amy'],
+  items:[{key:'x',name:'外套',amount:'3000',category:'衣物',taxExempt:true,isProxy:true,proxyTarget:'Amy'}],
+  priceMode:'excluded',taxPreset:'8',customTaxRate:'',discount:'100',note:'折扣'
+}));
+assert.strictEqual(reset.multi,true);
+assert.strictEqual(reset.currency,'TWD');
+assert.strictEqual(reset.payMethod,'信用卡');
+assert.strictEqual(reset.categoryApply,'購物');
+assert.strictEqual(reset.occurredDate,'2026/07/20');
+assert.strictEqual(reset.occurredTime,'22:15');
+assert.strictEqual(reset.storeName,'百貨公司');
+assert.deepStrictEqual(reset.participants,['Bar','Amy']);
+assert.strictEqual(reset.items.length,1);
+assert.strictEqual(reset.items[0].name,'');
+assert.strictEqual(reset.items[0].amount,'');
+assert.strictEqual(reset.items[0].category,'購物');
+assert.strictEqual(reset.items[0].taxExempt,false);
+assert.strictEqual(reset.items[0].isProxy,false);
+assert.strictEqual(reset.items[0].proxyTarget,'');
+assert.strictEqual(reset.discount,'');
+assert.strictEqual(reset.note,'');
+
+const edited=plain(sandbox.ledgerDraftFromRecords([
+  {id:'a',time:'2026-07-19T10:00:00+08:00',detail:'早餐',category:'餐飲',payMethod:'現金',storeName:'店',amountJpy:100,amountTwd:20},
+  {id:'b',time:'2026-07-19T10:00:00+08:00',detail:'車票',category:'交通',payMethod:'現金',storeName:'店',amountJpy:200,amountTwd:40}
+],'shared'));
+assert.strictEqual(edited.categoryApply,'餐飲','editing uses the first item category as the apply value');
+assert(edited.items.every(item=>item.categoryManuallyAdjusted===true),'existing edited rows are protected from normal apply changes');
+
+assert(/\.ledger-datetime-grid\{[^}]*grid-template-columns:minmax\(0,1fr\) 116px[^}]*gap:10px/.test(html),'date and time use the approved resilient two-column grid');
+assert(/\.ledger-item-primary-row\{[^}]*grid-template-columns:32px minmax\(0,1fr\) minmax\(112px,120px\) 36px/.test(html),'multi-item rows use the approved compact four-column layout');
+assert(html.includes('請輸入店家名稱'),'inline store validation copy is present');
+assert(html.includes('確認儲存（')&&html.includes('筆）'),'multi-item primary action displays the valid record count');
+assert(html.includes('套用類別'),'multi-item bill card exposes the batch category apply control');
+assert(html.includes('ledger-single-basic-info'),'single-entry essentials share one white information card');
+assert(/\.ledger-item-proxy\{[^}]*background:/.test(html),'proxy details use a contained low-saturation panel');
+
+console.log('ledger form 2.2.3 tests passed');

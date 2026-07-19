@@ -143,7 +143,7 @@ function response(payload){
   assert(splitSource.includes('團體帳新增的記帳不會列入彙算'),'Split explains that only shared test entries are excluded');
   */
   assert(splitSource.includes('openSettings')&&splitSource.includes('ledgerTestModeSection'),'warning opens Settings at test mode');
-  assert(html.includes('category:ledgerDefaultCategory()'),'fresh entry drafts remember the last category with a Dining fallback');
+  assert(html.includes('var category=ledgerDefaultCategory()')&&html.includes('category:category,categoryApply:category'),'fresh entry drafts remember the last category with a Dining fallback and initialize the multi-item apply value');
   assert(html.includes('next.category=draft.category'),'save-and-add-another retains the current category');
 
   const testModeSource = html.slice(html.indexOf('function setLedgerTestMode('),html.indexOf('function selectLedgerDefaultCurrency('));

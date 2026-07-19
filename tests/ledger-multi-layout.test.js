@@ -19,13 +19,13 @@ assert(!source.includes('class="ledger-item-head"'),
   'retired visible item headings are absent');
 assert(source.includes('ledger-item-primary-row')&&source.includes('ledger-item-primary-row no-remove'),
   'item primary rows support delete and one-item no-delete layouts');
-assert(source.includes('grid-template-columns:40px minmax(0,1fr) minmax(88px,96px) 40px'),
-  'item rows use the approved 40px sequence, flexible name, compact amount, and 40px delete columns');
+assert(source.includes('grid-template-columns:32px minmax(0,1fr) minmax(112px,120px) 36px'),
+  'item rows use the 2.2.3 sequence, flexible name, seven-digit amount, and delete columns');
 
 assert(source.includes('ledger-item-category-face'),
   'the compact category control separates its visual face from its touch target');
-assert(/\.ledger-item-category-face\{[^}]*max-width:120px/.test(source),
-  'the compact category visual is capped at 120px');
+assert(/\.ledger-item-category-face\{[^}]*max-width:120px[^}]*height:32px/.test(source),
+  'the compact category visual is capped at 120px and aligned to 32px');
 assert(/\.ledger-item-category-toggle\{[^}]*min-height:44px/.test(source),
   'the category touch target remains at least 44px');
 
