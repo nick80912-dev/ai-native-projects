@@ -3275,12 +3275,29 @@ function multiItemTaxMultiplier(draft){
   if(draft.taxMode!=='excluded'||(Number(draft.taxRate)!==8&&Number(draft.taxRate)!==10))throw new Error('稅制設定錯誤');
   return 100+Number(draft.taxRate);
 }
+function ledgerTaxRateBps(draft){
+  var preset=draft.taxPreset;
+  if(preset===undefined){
+    if(draft.taxMode==='free')preset='none';
+    else preset=String(draft.taxRate===undefined?10:draft.taxRate);
+  }
+  if(preset==='none')return 0;
+  if(preset==='8')return 800;
+  if(preset==='10')return 1000;
+  if(preset!=='custom')throw new Error('稅制設定錯誤');
+  var raw=String(draft.customTaxRate===undefined?'':draft.customTaxRate).trim(),rate=Number(raw);
+  if(!/^\d+(?:\.\d)?$/.test(raw)||!isFinite(rate)||rate<=0||rate>100)throw new Error('自訂稅率須大於 0、至多 100，且最多一位小數');
+  return Math.round(rate*100);
+}
 function calculateMultiItemAmounts(draft,settings){
   var items=(draft.items||[]).slice();
   if(!items.length)throw new Error('請新增至少一個品項');
-  var multiplier=multiItemTaxMultiplier(draft),weights=items.map(function(item){
+  var priceMode=draft.priceMode||(draft.taxMode==='excluded'?'excluded':'included');
+  if(priceMode!=='included'&&priceMode!=='excluded')throw new Error('價格方式設定錯誤');
+  var taxRateBps=ledgerTaxRateBps(draft),weights=items.map(function(item){
     var amount=Number(item.amount);
     if(!isSafeLedgerInteger(amount)||amount<=0)throw new Error('品項金額必須是正安全整數');
+    var multiplier=priceMode==='excluded'&&!item.taxExempt?10000+taxRateBps:10000;
     var weight=amount*multiplier;
     if(!isSafeLedgerInteger(weight))throw new Error('含稅品項金額超出安全整數');
     return weight;
@@ -3290,7 +3307,7 @@ function calculateMultiItemAmounts(draft,settings){
     if(!isSafeLedgerInteger(next))throw new Error('含稅總額超出安全整數');
     return next;
   },0);
-  var postTaxTotal=Math.round(weightTotal/100),discount=Number(draft.discount||0);
+  var postTaxTotal=Math.round(weightTotal/10000),discount=Number(draft.discount||0);
   if(!isSafeLedgerInteger(discount)||discount<0)throw new Error('折扣必須是非負整數');
   if(discount>postTaxTotal)throw new Error('折扣不可大於含稅總額');
   var totalPrimary=postTaxTotal-discount;
@@ -3889,7 +3906,7 @@ function ledgerDefaultCategory(){
 }
 function createLedgerEntryDraft(track){
   var settings=currentLedgerSettings(),participants=track==='shared'?registeredMembersForCurrentMode().map(function(entry){return entry.name;}):[];
-  return {track:track,currency:settings.defaultCurrency,multi:false,amount:'',detail:'',category:ledgerDefaultCategory(),payMethod:ledgerPayMethodStore.all()[0]||'',note:'',storeName:'',occurredAt:ledgerDateTimeLocalValue(new Date()),replacesRecordId:'',isProxy:false,proxyTarget:'',participants:participants,participantsRetained:false,taxMode:'included',taxRate:10,discount:'',items:[]};
+  return {track:track,currency:settings.defaultCurrency,multi:false,amount:'',detail:'',category:ledgerDefaultCategory(),payMethod:ledgerPayMethodStore.all()[0]||'',note:'',storeName:'',occurredAt:ledgerDateTimeLocalValue(new Date()),replacesRecordId:'',isProxy:false,proxyTarget:'',participants:participants,participantsRetained:false,priceMode:'included',taxPreset:'10',customTaxRate:'',taxPanelOpen:false,discount:'',items:[]};
 }
 function resetLedgerDraftAfterSave(draft){
   var next=createLedgerEntryDraft(draft.track);
@@ -3928,7 +3945,7 @@ function updateLedgerChoiceState(selector,value){
 }
 function createLedgerDraftItem(draft,seed){
   seed=seed||{};
-  return {key:'item-'+Math.random().toString(36).slice(2,10)+'-'+Math.random().toString(36).slice(2,7),name:String(seed.name||seed.detail||''),amount:String(seed.amount||''),category:String(seed.category||draft.category||ledgerCategoryStore.all()[0]||''),proxyMode:'inherit',isProxy:!!draft.isProxy,proxyTarget:String(draft.proxyTarget||''),participantMode:'inherit',participants:(draft.participants||[]).slice(),overrideOpen:false};
+  return {key:'item-'+Math.random().toString(36).slice(2,10)+'-'+Math.random().toString(36).slice(2,7),name:String(seed.name||seed.detail||''),amount:String(seed.amount||''),category:String(seed.category||draft.category||ledgerCategoryStore.all()[0]||''),taxExempt:!!seed.taxExempt,proxyMode:'inherit',isProxy:!!draft.isProxy,proxyTarget:String(draft.proxyTarget||''),participantMode:'inherit',participants:(draft.participants||[]).slice(),overrideOpen:false};
 }
 function ledgerDraftItem(key){var draft=ledgerUiState.draft;return draft&&(draft.items||[]).filter(function(item){return item.key===key;})[0];}
 function addLedgerDraftItem(){
@@ -3972,8 +3989,8 @@ function setLedgerDraftMulti(enabled){
 function setLedgerDraftTrack(track){
   if(!ledgerUiState.draft||track===ledgerUiState.draft.track||!/^(personal|shared)$/.test(track))return;
   var old=ledgerUiState.draft,next=createLedgerEntryDraft(track);
-  next.currency=old.currency;next.category=old.category;next.payMethod=old.payMethod;next.note=old.note;next.multi=old.multi;next.amount=old.amount;next.detail=old.detail;
-  if(old.multi)next.items=(old.items||[]).map(function(item){return createLedgerDraftItem(next,{name:item.name,amount:item.amount,category:item.category});});
+  next.currency=old.currency;next.category=old.category;next.payMethod=old.payMethod;next.note=old.note;next.multi=old.multi;next.amount=old.amount;next.detail=old.detail;next.storeName=old.storeName;next.occurredAt=old.occurredAt;next.priceMode=old.priceMode;next.taxPreset=old.taxPreset;next.customTaxRate=old.customTaxRate;next.discount=old.discount;
+  if(old.multi)next.items=(old.items||[]).map(function(item){return createLedgerDraftItem(next,{name:item.name,amount:item.amount,category:item.category,taxExempt:item.taxExempt});});
   ledgerUiState.draft=next;withLedgerSheetPosition(renderLedgerEntrySheet);
 }
 function selectLedgerCategory(value){if(ledgerUiState.draft&&ledgerCategoryStore.all().indexOf(value)>=0){ledgerUiState.draft.category=value;updateLedgerChoiceState('.ledger-category-option',value);}}
@@ -3999,8 +4016,17 @@ function updateLedgerConversionPreview(){
     preview.textContent=draft.currency==='JPY'?'≈ NT$'+amounts.amountTwd.toLocaleString():'≈ ¥'+amounts.amountJpy.toLocaleString();
   }catch(error){preview.textContent=error.message||'無法換算';}
 }
-function setLedgerTaxMode(value){var draft=ledgerUiState.draft;if(draft&&['included','excluded','free'].indexOf(value)>=0){draft.taxMode=value;withLedgerSheetPosition(renderLedgerEntrySheet);}}
-function setLedgerTaxRate(value){var draft=ledgerUiState.draft;if(draft&&(Number(value)===8||Number(value)===10)){draft.taxRate=Number(value);withLedgerSheetPosition(renderLedgerEntrySheet);}}
+function setLedgerPriceMode(value){var draft=ledgerUiState.draft;if(draft&&['included','excluded'].indexOf(value)>=0){draft.priceMode=value;withLedgerSheetPosition(renderLedgerEntrySheet);}}
+function setLedgerTaxPreset(value){var draft=ledgerUiState.draft;if(draft&&['none','8','10','custom'].indexOf(value)>=0){draft.taxPreset=value;withLedgerSheetPosition(renderLedgerEntrySheet);}}
+function setLedgerCustomTaxRate(value){var draft=ledgerUiState.draft;if(draft){draft.customTaxRate=value;updateLedgerMultiPreview();}}
+function toggleLedgerTaxPanel(){var draft=ledgerUiState.draft;if(draft){draft.taxPanelOpen=!draft.taxPanelOpen;withLedgerSheetPosition(renderLedgerEntrySheet);}}
+function setLedgerItemTaxExempt(key,enabled){var item=ledgerDraftItem(key);if(item)updateLedgerDraftItem(key,{taxExempt:!!enabled});}
+function setAllLedgerItemsTaxExempt(){
+  var draft=ledgerUiState.draft;if(!draft||!draft.items.length)return;
+  if(!confirm('確定將全部品項標記為免稅品？'))return;
+  draft.items=draft.items.map(function(item){var next={};Object.keys(item).forEach(function(name){next[name]=item[name];});next.taxExempt=true;return next;});
+  withLedgerSheetPosition(renderLedgerEntrySheet);
+}
 function updateLedgerMultiPreview(){
   var preview=document.getElementById('ledgerBillPreview'),draft=ledgerUiState.draft;if(!preview||!draft)return;
   try{
@@ -4035,13 +4061,16 @@ function renderLedgerItemOverride(draft,item){
 }
 function renderLedgerDraftItem(draft,item,index){
   var remove=draft.items.length>1?'<button class="ledger-item-remove" aria-label="刪除品項" onclick="removeLedgerDraftItem(\''+jsString(item.key)+'\')">×</button>':'';
-  return '<article class="ledger-item-editor" data-item-key="'+escapeHtml(item.key)+'"><div class="ledger-item-head"><b>品項 '+(index+1)+'</b>'+remove+'</div><div class="ledger-item-grid"><div class="ledger-sheet-field"><label>品項名稱</label><input class="ledger-sheet-input" value="'+escapeHtml(item.name)+'" placeholder="如：拉麵" oninput="updateLedgerDraftItem(\''+jsString(item.key)+'\',{name:this.value},false)"></div><div class="ledger-sheet-field"><label>金額</label><input class="ledger-sheet-input" type="number" inputmode="numeric" min="1" value="'+escapeHtml(item.amount)+'" oninput="updateLedgerDraftItem(\''+jsString(item.key)+'\',{amount:this.value},false)"></div></div><div class="ledger-item-categories"><span class="ledger-sheet-label">類別</span><div class="ledger-sheet-choice-grid">'+renderLedgerItemCategories(item)+'</div></div><div class="ledger-item-override"><button class="ledger-item-override-toggle" aria-expanded="'+(item.overrideOpen?'true':'false')+'" onclick="toggleLedgerItemOverridePanel(\''+jsString(item.key)+'\')">單項設定 · '+escapeHtml(ledgerItemOverrideSummary(draft,item))+'</button>'+(item.overrideOpen?'<div class="ledger-item-override-body">'+renderLedgerItemOverride(draft,item)+'</div>':'')+'</div></article>';
+  var exemption='<label class="toggle-row ledger-sheet-toggle"><span>免稅品</span><input type="checkbox" '+(item.taxExempt?'checked':'')+' onchange="setLedgerItemTaxExempt(\''+jsString(item.key)+'\',this.checked)"></label>';
+  return '<article class="ledger-item-editor" data-item-key="'+escapeHtml(item.key)+'"><div class="ledger-item-head"><b>品項 '+(index+1)+'</b>'+remove+'</div><div class="ledger-item-grid"><div class="ledger-sheet-field"><label>品項名稱</label><input class="ledger-sheet-input" value="'+escapeHtml(item.name)+'" placeholder="如：拉麵" oninput="updateLedgerDraftItem(\''+jsString(item.key)+'\',{name:this.value},false)"></div><div class="ledger-sheet-field"><label>金額</label><input class="ledger-sheet-input" type="number" inputmode="numeric" min="1" value="'+escapeHtml(item.amount)+'" oninput="updateLedgerDraftItem(\''+jsString(item.key)+'\',{amount:this.value},false)"></div></div><div class="ledger-item-categories"><span class="ledger-sheet-label">類別</span><div class="ledger-sheet-choice-grid">'+renderLedgerItemCategories(item)+'</div></div>'+exemption+'<div class="ledger-item-override"><button class="ledger-item-override-toggle" aria-expanded="'+(item.overrideOpen?'true':'false')+'" onclick="toggleLedgerItemOverridePanel(\''+jsString(item.key)+'\')">單項設定 · '+escapeHtml(ledgerItemOverrideSummary(draft,item))+'</button>'+(item.overrideOpen?'<div class="ledger-item-override-body">'+renderLedgerItemOverride(draft,item)+'</div>':'')+'</div></article>';
 }
 function renderLedgerMultiItemFields(draft){
   var items=(draft.items||[]).map(function(item,index){return renderLedgerDraftItem(draft,item,index);}).join('');
-  var taxModes=[['included','税込'],['excluded','税抜'],['free','免稅']].map(function(option){var on=draft.taxMode===option[0];return '<button class="ledger-sheet-choice '+(on?'on':'')+'" aria-pressed="'+(on?'true':'false')+'" onclick="setLedgerTaxMode(\''+option[0]+'\')">'+option[1]+'</button>';}).join('');
-  var rates=draft.taxMode==='excluded'?'<div class="ledger-tax-rate"><button class="ledger-sheet-choice '+(Number(draft.taxRate)===8?'on':'')+'" onclick="setLedgerTaxRate(8)">8%</button><button class="ledger-sheet-choice '+(Number(draft.taxRate)===10?'on':'')+'" onclick="setLedgerTaxRate(10)">10%</button></div>':'';
-  return '<div class="ledger-sheet-field"><span class="ledger-sheet-label">品項</span>'+items+'<button class="ledger-multi-add" onclick="addLedgerDraftItem()">＋ 新增品項</button></div><div class="ledger-bill-controls"><span class="ledger-sheet-label">整單稅制</span><div class="ledger-sheet-choice-grid">'+taxModes+'</div>'+rates+'<div class="ledger-sheet-field"><label for="ledgerDiscount">固定折扣</label><input class="ledger-sheet-input" id="ledgerDiscount" type="number" inputmode="numeric" min="0" value="'+escapeHtml(draft.discount)+'" oninput="updateLedgerDraftField(\'discount\',this.value);updateLedgerMultiPreview()"></div><output class="ledger-bill-preview" id="ledgerBillPreview"></output></div>';
+  var priceModes=[['included','税込（含稅）'],['excluded','税抜（未稅）']].map(function(option){var on=draft.priceMode===option[0];return '<button class="ledger-sheet-choice '+(on?'on':'')+'" aria-pressed="'+(on?'true':'false')+'" onclick="setLedgerPriceMode(\''+option[0]+'\')">'+option[1]+'</button>';}).join('');
+  var taxPresets=[['none','無稅'],['8','8%'],['10','10%'],['custom','自訂']].map(function(option){var on=draft.taxPreset===option[0];return '<button class="ledger-sheet-choice '+(on?'on':'')+'" aria-pressed="'+(on?'true':'false')+'" onclick="setLedgerTaxPreset(\''+option[0]+'\')">'+option[1]+'</button>';}).join('');
+  var customRate=draft.taxPreset==='custom'?'<div class="ledger-sheet-field"><label for="ledgerCustomTaxRate">自訂稅率（%）</label><input class="ledger-sheet-input" id="ledgerCustomTaxRate" type="number" inputmode="decimal" min="0.1" max="100" step="0.1" value="'+escapeHtml(draft.customTaxRate)+'" oninput="setLedgerCustomTaxRate(this.value)"></div>':'';
+  var taxBody=draft.taxPanelOpen?'<div class="ledger-tax-panel"><span class="ledger-sheet-label">價格方式</span><div class="ledger-sheet-choice-grid">'+priceModes+'</div><span class="ledger-sheet-label">稅率</span><div class="ledger-sheet-choice-grid">'+taxPresets+'</div>'+customRate+'<button class="ledger-multi-add" onclick="setAllLedgerItemsTaxExempt()">全部免稅品</button><div class="ledger-sheet-field"><label for="ledgerDiscount">折扣金額</label><input class="ledger-sheet-input" id="ledgerDiscount" type="number" inputmode="numeric" min="0" value="'+escapeHtml(draft.discount)+'" oninput="updateLedgerDraftField(\'discount\',this.value);updateLedgerMultiPreview()"></div></div>':'';
+  return '<div class="ledger-sheet-field"><span class="ledger-sheet-label">品項</span>'+items+'<button class="ledger-multi-add" onclick="addLedgerDraftItem()">＋ 新增品項</button></div><div class="ledger-bill-controls"><button class="ledger-item-override-toggle" aria-expanded="'+(draft.taxPanelOpen?'true':'false')+'" onclick="toggleLedgerTaxPanel()">稅與優惠（選填）</button>'+taxBody+'<output class="ledger-bill-preview" id="ledgerBillPreview"></output></div>';
 }
 function renderLedgerPaymentFields(draft){return '<div class="ledger-sheet-field"><span class="ledger-sheet-label">支付方式</span><div class="ledger-sheet-choice-grid">'+ledgerSheetChoiceButtons(ledgerPayMethodStore.all(),draft.payMethod,'selectLedgerPayMethod','ledger-pay-option')+'</div></div>';}
 function renderLedgerTrackSpecificFields(draft){

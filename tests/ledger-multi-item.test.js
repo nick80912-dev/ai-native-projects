@@ -62,6 +62,24 @@ assert.strictEqual(excluded8.totalPrimary,217,'8% bill tax rounds once at total 
 const taxFree=amounts('free',10,1);
 assert.strictEqual(taxFree.totalPrimary,200,'tax-free adds no tax and still applies discount');
 
+function modernAmounts(priceMode,taxPreset,customTaxRate,discount,items){
+  return plain(mod.calculateMultiItemAmounts({
+    currency:'JPY',priceMode,taxPreset,customTaxRate,discount:discount||0,
+    items:items||[{key:'a',amount:1000,taxExempt:false}]
+  },settings));
+}
+assert.strictEqual(modernAmounts('included','10','',0).totalPrimary,1000,'tax-included prices remain final');
+assert.strictEqual(modernAmounts('excluded','10','',0).totalPrimary,1100,'10% excluded tax is added');
+assert.strictEqual(modernAmounts('excluded','8','',0).totalPrimary,1080,'8% excluded tax is added');
+assert.strictEqual(modernAmounts('excluded','custom','7.5',0).totalPrimary,1075,'custom decimal rates use integer basis points');
+assert.strictEqual(modernAmounts('excluded','10','',0,[{amount:1000,taxExempt:true}]).totalPrimary,1000,'tax-exempt items ignore the bill tax rate');
+const mixedTax=modernAmounts('excluded','10','',100,[{amount:1000,taxExempt:false},{amount:500,taxExempt:true}]);
+assert.strictEqual(mixedTax.totalPrimary,1500,'mixed tax exemption and a fixed discount share one deterministic total');
+assert.strictEqual(mixedTax.items.reduce((sum,item)=>sum+item.amountJpy,0),1500,'item allocation preserves the mixed-tax discounted total');
+assert.throws(()=>modernAmounts('excluded','custom','0',0),/自訂稅率/);
+assert.throws(()=>modernAmounts('excluded','custom','100.1',0),/自訂稅率/);
+assert.throws(()=>modernAmounts('excluded','custom','7.55',0),/自訂稅率/);
+
 const twd=amounts('included',10,1,'TWD');
 assert.strictEqual(twd.totalPrimary,200);
 assert.strictEqual(twd.items.reduce((sum,item)=>sum+item.amountTwd,0),200);
@@ -134,5 +152,9 @@ assert(uiSource.includes("item.proxyMode!=='custom'?'沿用整單'"),'personal i
 assert(uiSource.includes("item.participantMode!=='custom'?'沿用整單'"),'shared item summary exposes inherited semantics');
 assert(!/ledger-item-editor[\s\S]{0,1200}ledger-currency-option/.test(uiSource),'item cards do not render per-item currency controls');
 assert(!/ledger-item-editor[\s\S]{0,1200}ledger-pay-option/.test(uiSource),'item cards do not render per-item payment controls');
+assert(uiSource.includes('税込（含稅）')&&uiSource.includes('税抜（未稅）'),'price mode uses the confirmed bilingual pill labels');
+assert(uiSource.includes("['none','無稅']")&&uiSource.includes("['custom','自訂']"),'tax rate uses fixed pill choices including custom');
+assert(uiSource.includes('全部免稅品'),'multi-item tax controls expose the bulk tax-exempt action');
+assert(uiSource.includes('taxExempt'),'each item preserves an independent tax-exempt flag');
 
 console.log('ledger multi-item tests passed');
