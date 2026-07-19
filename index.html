@@ -295,6 +295,7 @@ input,select,textarea{font-size:16px}
 
 .loading{text-align:center;padding:50px 20px;color:var(--ink-faint)}
 .spinner{width:34px;height:34px;border:3px solid var(--line);border-top-color:var(--sea);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 14px}
+.button-spinner{display:inline-block;width:14px;height:14px;margin-right:7px;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;animation:spin .7s linear infinite;vertical-align:-2px}
 @keyframes spin{to{transform:rotate(360deg)}}
 
 /* ===== V1 元件 ===== */
@@ -508,6 +509,7 @@ input,select,textarea{font-size:16px}
 .ledger-summary-card .ledger-track-grid{margin-bottom:13px;border-color:rgba(255,255,255,.2);background:rgba(255,255,255,.1)}.ledger-summary-card .ledger-track-btn{color:rgba(255,255,255,.72)}.ledger-summary-card .ledger-track-btn.on{background:#fff;color:var(--sea-deep);box-shadow:none}.ledger-summary-count{font-size:12px;color:rgba(255,255,255,.72);font-weight:800}.ledger-summary-amount{width:100%;min-height:74px;border:0;background:transparent;color:inherit;text-align:left;font:inherit;padding:7px 0}.ledger-summary-amount strong{display:block;font-size:30px;line-height:1.15;overflow-wrap:anywhere}.ledger-summary-amount span{display:block;font-size:13px;color:rgba(255,255,255,.7);margin-top:4px}
 .ledger-compact-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px}.ledger-compact-card{min-width:0;min-height:112px;border:1px solid var(--line);border-radius:8px;background:var(--card);padding:12px;box-shadow:var(--shadow)}.ledger-compact-card h3{font-size:12px;color:var(--ink-soft);margin-bottom:7px}.ledger-compact-card strong{display:block;font-size:18px;color:var(--sea-deep);line-height:1.3;overflow-wrap:anywhere}.ledger-compact-card p{font-size:11px;color:var(--ink-faint);margin-top:5px;line-height:1.45}.ledger-section-head{display:flex;align-items:center;justify-content:space-between;gap:10px}.ledger-section-head h3{font-size:15px;color:var(--sea-deep)}.ledger-view-all{min-height:44px;border:0;background:transparent;color:var(--sea);font:inherit;font-size:13px;font-weight:900;padding:5px 0 5px 12px}
 .ledger-recent-list{display:grid;gap:12px}.ledger-date-group{display:grid;gap:7px}.ledger-date-label{font-size:11px;font-weight:900;color:var(--ink-faint);letter-spacing:.04em}.ledger-recent-row{width:100%;min-height:66px;border:1px solid var(--line);border-radius:8px;background:var(--card);padding:10px 11px;text-align:left;font:inherit;color:var(--ink);display:grid;grid-template-columns:minmax(0,1fr) auto;gap:5px 10px}.ledger-recent-main{min-width:0}.ledger-recent-main strong{display:block;font-size:14px;overflow-wrap:anywhere}.ledger-recent-meta{font-size:11px;color:var(--ink-soft);margin-top:3px;overflow-wrap:anywhere}.ledger-recent-amount{font-size:14px;font-weight:900;color:var(--sea-deep);white-space:nowrap}.ledger-recent-badges{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:5px}.ledger-recent-badge{display:inline-flex;border-radius:999px;background:var(--line-soft);color:var(--ink-soft);padding:2px 6px;font-size:10px;font-weight:800}.ledger-recent-badge.pending{background:#fff3cf;color:#80600d}.ledger-fab{position:fixed;right:16px;bottom:calc(var(--tabbar-height) + env(safe-area-inset-bottom) + 14px);z-index:90;width:52px;height:52px;border-radius:50%;border:0;background:var(--coral);color:#fff;font:inherit;font-size:28px;line-height:1;box-shadow:var(--shadow-lg)}
+.ledger-history-controls{display:grid;gap:8px;margin:10px 0 14px}.ledger-record-actions{margin-top:14px}.ledger-record-actions>summary{list-style:none;display:inline-flex;align-items:center;justify-content:center;min-width:48px}.ledger-record-actions>summary::-webkit-details-marker{display:none}
 .ledger-compact-action{width:100%;text-align:left;font:inherit;color:inherit}.ledger-compact-action:active{transform:translateY(1px)}.ledger-history{display:grid;gap:12px}.ledger-history-head{display:flex;align-items:center;gap:8px}.ledger-history-head h2{font-size:19px;color:var(--sea-deep)}.ledger-history-back{width:44px;height:44px;border:0;background:transparent;color:var(--sea-deep);font-size:22px}.ledger-history-filter{display:grid;grid-template-columns:1fr 1fr;gap:7px}.ledger-history-filter button{min-height:44px;border:1px solid var(--line);border-radius:8px;background:#fff;color:var(--ink-soft);font:inherit;font-weight:900}.ledger-history-filter button.on{background:var(--sea);border-color:var(--sea);color:#fff}.ledger-detail-sheet{max-height:85dvh}.ledger-detail-rows{display:grid;gap:0}.ledger-detail-row{display:grid;grid-template-columns:92px minmax(0,1fr);gap:10px;padding:9px 0;border-bottom:1px solid var(--line);font-size:13px}.ledger-detail-row dt{color:var(--ink-faint);font-weight:800}.ledger-detail-row dd{margin:0;color:var(--ink);overflow-wrap:anywhere}.ledger-detail-actions{margin-top:14px}.ledger-detail-actions .btn{width:100%;min-height:44px}.ledger-settlement-status{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 0;border-bottom:1px solid var(--line)}.ledger-settlement-status strong{font-size:16px;color:var(--sea-deep)}.ledger-settlement-section{margin-top:14px}.ledger-settlement-section h3{font-size:13px;color:var(--ink-soft);margin-bottom:7px}.ledger-settlement-list{display:grid;gap:6px}.ledger-settlement-line{display:flex;justify-content:space-between;gap:10px;padding:8px 0;border-bottom:1px solid var(--line-soft);font-size:12px}.ledger-settlement-line span:last-child{text-align:right;font-weight:900}.ledger-settlement-warning{margin-top:12px;color:var(--coral);font-size:12px;font-weight:800}
 body.ledger-sheet-open{overflow:hidden}.ledger-sheet-overlay{position:fixed;inset:0;z-index:135;background:rgba(10,45,50,.38);display:flex;align-items:flex-end}.ledger-sheet{width:100%;max-width:620px;max-height:calc(100dvh - env(safe-area-inset-top) - 12px);margin:0 auto;background:var(--paper);border-radius:8px 8px 0 0;overflow-y:auto;overscroll-behavior:contain;touch-action:pan-y;padding:14px 12px calc(16px + env(safe-area-inset-bottom));box-shadow:var(--shadow-lg)}.ledger-sheet button,.ledger-sheet input,.ledger-sheet select,.ledger-sheet textarea{touch-action:manipulation}.ledger-sheet input,.ledger-sheet textarea{font-size:16px}.ledger-sheet-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}.ledger-sheet-head h2{font-size:19px}.ledger-sheet-field{margin-top:13px}.ledger-sheet-field>label,.ledger-sheet-label{display:block;font-size:12px;font-weight:900;color:var(--ink-soft);margin-bottom:6px}.ledger-sheet-input{width:100%;min-height:46px;border:1px solid var(--line);border-radius:8px;background:#fff;padding:9px 11px;font:inherit}.ledger-sheet textarea.ledger-sheet-input{min-height:76px;resize:vertical}.ledger-sheet-choice-grid{display:flex;flex-wrap:wrap;gap:7px}.ledger-sheet-choice{min-height:44px;border:1px solid var(--line);border-radius:999px;background:#fff;color:var(--ink-soft);padding:7px 13px;font:inherit;font-size:13px;font-weight:800}.ledger-sheet-choice.on{background:var(--sea);border-color:var(--sea);color:#fff}.ledger-sheet-track{display:grid;grid-template-columns:1fr 1fr;gap:6px}.ledger-sheet-member{font-size:13px;color:var(--ink-soft);padding:9px 0}.ledger-sheet-member b{color:var(--ink)}.ledger-sheet-retained{font-size:11px;color:var(--gold);font-weight:800;margin-top:6px}.ledger-sheet-actions{position:sticky;bottom:calc(-16px - env(safe-area-inset-bottom));background:var(--paper);padding:12px 0 calc(12px + env(safe-area-inset-bottom));display:grid;gap:8px}.ledger-sheet-actions .btn{min-height:44px}.ledger-sheet-actions .btn:disabled{opacity:.5}.ledger-sheet-toggle{min-height:44px;border-bottom:1px solid var(--line);padding:6px 0}.ledger-sheet-error{color:var(--coral);font-size:12px;font-weight:800;margin-top:6px}
 .ledger-item-editor{border:1px solid var(--line);border-radius:8px;background:#fff;padding:11px;margin-top:10px}.ledger-item-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:9px}.ledger-item-head b{font-size:14px}.ledger-item-remove{width:44px;height:44px;border:0;background:transparent;color:var(--coral);font-size:22px}.ledger-item-grid{display:grid;grid-template-columns:minmax(0,1fr) 112px;gap:8px}.ledger-item-grid .ledger-sheet-field{margin-top:0}.ledger-item-categories{margin-top:9px}.ledger-item-categories .ledger-sheet-choice{min-height:40px;padding:6px 10px;font-size:12px}.ledger-item-override{margin-top:10px;border-top:1px solid var(--line);padding-top:9px}.ledger-item-override-toggle{width:100%;min-height:44px;border:0;background:var(--mint);color:var(--ink);border-radius:8px;padding:8px 10px;text-align:left;font:inherit;font-size:12px;font-weight:800}.ledger-item-override-body{margin-top:8px}.ledger-item-override-body .ledger-sheet-toggle{border-bottom:0}.ledger-multi-add{width:100%;min-height:44px;margin-top:10px;border:1px dashed var(--sea);border-radius:8px;background:#fff;color:var(--sea);font:inherit;font-weight:900}.ledger-bill-controls{border-top:1px solid var(--line);margin-top:14px;padding-top:12px}.ledger-bill-preview{display:flex;justify-content:space-between;gap:10px;margin-top:10px;padding:10px;border-radius:8px;background:var(--mint);font-size:13px;font-weight:900}.ledger-bill-preview.error{color:var(--coral);background:#fff0ed}.ledger-tax-rate{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:8px}
@@ -1570,14 +1572,25 @@ function openSyncStatus(){
   document.body.appendChild(overlay);
   renderSyncStatusBody();
 }
+function setButtonBusy(button,busy,label){
+  if(!button)return;
+  if(busy){
+    if(button.getAttribute('aria-busy')==='true')return;
+    button.setAttribute('data-busy-label',button.textContent);button.setAttribute('aria-busy','true');button.disabled=true;
+    button.innerHTML='<span class="button-spinner" aria-hidden="true"></span>'+escapeHtml(label||'處理中');
+  }else{
+    var original=button.getAttribute('data-busy-label');if(original!==null)button.textContent=original;
+    button.removeAttribute('data-busy-label');button.removeAttribute('aria-busy');button.disabled=false;
+  }
+}
 function retrySyncFromPanel(button){
-  if(button) button.disabled=true;
+  setButtonBusy(button,true,'同步中');
   return syncAll(true).then(function(result){
-    if(button) button.disabled=false;
+    setButtonBusy(button,false);
     renderSyncStatusBody();
     return result;
   },function(error){
-    if(button) button.disabled=false;
+    setButtonBusy(button,false);
     renderSyncStatusBody();
     throw error;
   });
@@ -3226,6 +3239,26 @@ function filterLedgerHistoryRecords(records,track,filter){
   var source=(records||[]).slice();
   return track==='personal'&&filter==='proxy'?source.filter(function(record){return record&&record.isProxy===true;}):source;
 }
+function normalizeLedgerHistoryText(value){return String(value==null?'':value).replace(/\u3000/g,' ').replace(/\s+/g,' ').trim().toLowerCase();}
+function filterLedgerHistory(records,query,filters){
+  var needle=normalizeLedgerHistoryText(query),options=filters||{};
+  return (records||[]).filter(function(record){
+    if(needle&&[record.detail,record.storeName,record.note].map(normalizeLedgerHistoryText).join(' ').indexOf(needle)<0)return false;
+    if(options.category&&options.category!=='all'&&record.category!==options.category)return false;
+    if(options.payMethod&&options.payMethod!=='all'&&record.payMethod!==options.payMethod)return false;
+    if(options.proxy==='proxy'&&!record.isProxy)return false;
+    if(options.proxy==='non-proxy'&&record.isProxy)return false;
+    return true;
+  });
+}
+function groupLedgerHistory(records,mode){
+  var groups={};
+  (records||[]).forEach(function(record){
+    var key=mode==='category'?(String(record&&record.category||'').trim()||'未分類'):(ledgerLocalDateKey(record&&record.time)||'日期不明');
+    if(!groups[key])groups[key]=[];groups[key].push(record);
+  });
+  return groups;
+}
 function ledgerSettlementStatus(current){
   var jpy=Number(current&&current.netJpy||0),twd=Number(current&&current.netTwd||0),kind,label;
   if(jpy===0&&twd===0){kind='settled';label='已結清';}
@@ -3682,7 +3715,7 @@ var ledgerProxyTargetStore=createLedgerProxyTargetStore({storage:localStorage,ke
 
 /* ================= 分帳(雲端 Ledger) ================= */
 var legacyExpenseNoticeVisible=false;
-var ledgerUiState={track:'personal',displayCurrency:'',page:'dashboard',filter:'all',sheet:null,selectedRecordId:'',draft:null,editing:null,retainedParticipants:null};
+var ledgerUiState={track:'personal',displayCurrency:'',page:'dashboard',filter:'all',sheet:null,selectedRecordId:'',draft:null,editing:null,retainedParticipants:null,historyQuery:'',historyCategory:'all',historyPayMethod:'all',historyProxy:'all',historyGrouping:'date'};
 var ledgerSettingsDraftCurrency='';
 var memberRegistrationBridge=[];
 var memberSelectorState={forced:false,stage:'choose',showNew:false,input:'',candidate:null,error:'',busy:false};
@@ -3882,9 +3915,9 @@ function saveLedgerSettingsFromForm(button){
   var input=document.getElementById('ledgerExchangeRate');
   var source={exchangeRate:input&&input.value,defaultCurrency:ledgerSettingsDraftCurrency};
   try{normalizeLedgerSettings(source);}catch(error){toast(error.message);return;}
-  if(button)button.disabled=true;
-  return saveLedgerSettings(source).then(function(result){toast('分帳設定已同步');return result;},function(error){
-    if(button)button.disabled=false;
+  setButtonBusy(button,true,'儲存中');
+  return saveLedgerSettings(source).then(function(result){setButtonBusy(button,false);toast('分帳設定已同步');return result;},function(error){
+    setButtonBusy(button,false);
     toast(error.message||'分帳設定儲存失敗');
     throw error;
   });
@@ -4333,15 +4366,33 @@ function openLedgerProxyPanel(){
   openLedgerInfoSheet('代購對象彙總','<div class="ledger-settlement-list">'+rows+'</div>');
 }
 function showLedgerFullList(){ledgerUiState.page='all';ledgerUiState.selectedRecordId='';renderSplit();window.scrollTo({top:0});}
-function closeLedgerFullList(){ledgerUiState.page='dashboard';ledgerUiState.filter='all';renderSplit();window.scrollTo({top:0});}
+function closeLedgerFullList(){ledgerUiState.page='dashboard';ledgerUiState.filter='all';ledgerUiState.historyQuery='';ledgerUiState.historyCategory='all';ledgerUiState.historyPayMethod='all';ledgerUiState.historyProxy='all';ledgerUiState.historyGrouping='date';renderSplit();window.scrollTo({top:0});}
 function setLedgerHistoryFilter(value){if(value!=='all'&&value!=='proxy')return;ledgerUiState.filter=value;renderSplit();}
+function ledgerHistoryFilteredRecords(records){return filterLedgerHistory(records,ledgerUiState.historyQuery,{category:ledgerUiState.historyCategory,payMethod:ledgerUiState.historyPayMethod,proxy:ledgerUiState.track==='personal'?ledgerUiState.historyProxy:'all'});}
+function renderLedgerHistoryGrouped(records,shared,currency){
+  if(!records.length)return '<div class="empty-state">沒有符合條件的紀錄</div>';
+  if(ledgerUiState.historyGrouping==='date')return renderLedgerRecentGroups(records,shared,currency);
+  var groups=groupLedgerHistory(records,'category');return Object.keys(groups).map(function(key){return '<section class="ledger-date-group"><div class="ledger-date-label">'+escapeHtml(key)+'</div>'+groups[key].map(function(record){return renderLedgerRecentRecord(record,shared,currency);}).join('')+'</section>';}).join('');
+}
+function renderLedgerHistoryResults(){
+  var node=document.getElementById('ledgerHistoryResults');if(!node)return;
+  var shared=ledgerUiState.track==='shared',settings;try{settings=currentLedgerSettings();}catch(ignore){settings={defaultCurrency:'JPY'};}
+  var currency=ledgerUiState.displayCurrency||settings.defaultCurrency||'JPY';node.innerHTML=renderLedgerHistoryGrouped(ledgerHistoryFilteredRecords(ledgerTrackRecords()),shared,currency);
+}
+function setLedgerHistorySearch(value){ledgerUiState.historyQuery=value;renderLedgerHistoryResults();}
+function updateLedgerHistoryPillState(handler,value){document.querySelectorAll('[data-history-filter="'+handler+'"]').forEach(function(button){button.classList.toggle('on',button.getAttribute('data-history-value')===value);});}
+function setLedgerHistoryCategory(value){ledgerUiState.historyCategory=value;updateLedgerHistoryPillState('setLedgerHistoryCategory',value);renderLedgerHistoryResults();}
+function setLedgerHistoryPayMethod(value){ledgerUiState.historyPayMethod=value;updateLedgerHistoryPillState('setLedgerHistoryPayMethod',value);renderLedgerHistoryResults();}
+function setLedgerHistoryProxy(value){if(['all','proxy','non-proxy'].indexOf(value)<0)return;ledgerUiState.historyProxy=value;updateLedgerHistoryPillState('setLedgerHistoryProxy',value);renderLedgerHistoryResults();}
+function setLedgerHistoryGrouping(value){if(value!=='date'&&value!=='category')return;ledgerUiState.historyGrouping=value;document.querySelectorAll('[data-history-group]').forEach(function(button){button.classList.toggle('on',button.getAttribute('data-history-group')===value);});renderLedgerHistoryResults();}
+function ledgerHistoryPills(values,selected,handler){return values.map(function(value){var key=typeof value==='string'?value:value[0],label=typeof value==='string'?(value==='all'?'全部':value):value[1];return '<button class="ledger-sheet-choice '+(selected===key?'on':'')+'" data-history-filter="'+handler+'" data-history-value="'+escapeHtml(key)+'" onclick="'+handler+'(\''+jsString(key)+'\')">'+escapeHtml(label)+'</button>';}).join('');}
 function renderLedgerFullHistory(records,shared,currency){
-  var visible=filterLedgerHistoryRecords(records,shared?'shared':'personal',ledgerUiState.filter),groups=visible.length?renderLedgerRecentGroups(visible,shared,currency):'<div class="empty-state">沒有符合條件的紀錄</div>';
-  var filters=shared?'':'<div class="ledger-history-filter"><button class="'+(ledgerUiState.filter==='all'?'on':'')+'" onclick="setLedgerHistoryFilter(\'all\')">全部</button><button class="'+(ledgerUiState.filter==='proxy'?'on':'')+'" onclick="setLedgerHistoryFilter(\'proxy\')">代購</button></div>';
-  return '<div class="ledger-history"><div class="ledger-history-head"><button class="ledger-history-back" aria-label="返回分帳首頁" onclick="closeLedgerFullList()">←</button><h2>'+(shared?'團體':'個人')+'完整紀錄</h2></div>'+filters+'<div class="ledger-recent-list">'+groups+'</div></div>';
+  var visible=ledgerHistoryFilteredRecords(records),categories=['all'].concat(ledgerCategoryStore.all()),payments=['all'].concat(ledgerPayMethodStore.all());
+  var controls='<div class="ledger-history-controls"><input class="ledger-sheet-input" id="ledgerHistorySearch" type="search" value="'+escapeHtml(ledgerUiState.historyQuery)+'" placeholder="搜尋品名、店名或備註" oninput="setLedgerHistorySearch(this.value)"><span class="ledger-sheet-label">類別</span><div class="ledger-sheet-choice-grid">'+ledgerHistoryPills(categories,ledgerUiState.historyCategory,'setLedgerHistoryCategory')+'</div><span class="ledger-sheet-label">支付方式</span><div class="ledger-sheet-choice-grid">'+ledgerHistoryPills(payments,ledgerUiState.historyPayMethod,'setLedgerHistoryPayMethod')+'</div>'+(shared?'':'<span class="ledger-sheet-label">代購</span><div class="ledger-sheet-choice-grid">'+ledgerHistoryPills([['all','全部'],['proxy','代購'],['non-proxy','非代購']],ledgerUiState.historyProxy,'setLedgerHistoryProxy')+'</div>')+'<span class="ledger-sheet-label">分組</span><div class="ledger-sheet-choice-grid"><button class="ledger-sheet-choice '+(ledgerUiState.historyGrouping==='date'?'on':'')+'" data-history-group="date" onclick="setLedgerHistoryGrouping(\'date\')">按日期</button><button class="ledger-sheet-choice '+(ledgerUiState.historyGrouping==='category'?'on':'')+'" data-history-group="category" onclick="setLedgerHistoryGrouping(\'category\')">按類別</button></div></div>';
+  return '<div class="ledger-history"><div class="ledger-history-head"><button class="ledger-history-back" aria-label="返回分帳首頁" onclick="closeLedgerFullList()">←</button><h2>'+(shared?'團體':'個人')+'完整紀錄</h2></div>'+controls+'<div class="ledger-recent-list" id="ledgerHistoryResults">'+renderLedgerHistoryGrouped(visible,shared,currency)+'</div></div>';
 }
 function ledgerRecordDetailRows(record,track){
-  var rows=[['紀錄 ID',record.id],['時間',record.time],['成員',record.member],['類別',record.category],['明細',record.detail],['JPY','¥'+Number(record.amountJpy||0).toLocaleString()],['TWD','NT$'+Number(record.amountTwd||0).toLocaleString()],['支付方式',record.payMethod],['備註',record.note],['批次 ID',record.batchId],['同步狀態',record.pending?'待同步':'已同步']];
+  var rows=[['紀錄 ID',record.id],['消費時間',record.time],['成員',record.member],['類別',record.category],['明細',record.detail],['店名',record.storeName],['JPY','¥'+Number(record.amountJpy||0).toLocaleString()],['TWD','NT$'+Number(record.amountTwd||0).toLocaleString()],['支付方式',record.payMethod],['備註',record.note],['批次 ID',record.batchId],['同步狀態',record.pending?'待同步':'已同步']];
   if(track==='personal'&&record.isProxy)rows.push(['代購對象',record.proxyTarget]);
   if(track==='shared'){var participants=parseParticipants(record,function(){})||[];rows.push(['分攤成員',participants.join('、')]);}
   return rows.filter(function(row){return String(row[1]==null?'':row[1]).trim()!=='';});

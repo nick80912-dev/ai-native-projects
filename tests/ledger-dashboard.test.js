@@ -86,7 +86,7 @@ assert(ledgerUiSource.includes('groupLedgerExpensesByDate'),'dashboard uses the 
 assert(ledgerUiSource.includes("spendLedgerRecords(mergedLedgerRecords())"),'shared history consumes effective visible expenses');
 assert(ledgerUiSource.includes('ledgerUniverseRecords'),'shared dashboard selects one formal/TEST universe');
 assert(ledgerUiSource.includes("ledgerUiState.page='all'"),'View all switches the single ledger state into history mode');
-assert(ledgerUiSource.includes("setLedgerHistoryFilter(\\'proxy\\')"),'personal history exposes the proxy-only filter');
+assert(ledgerUiSource.includes("['proxy','代購']")&&ledgerUiSource.includes("['non-proxy','非代購']")&&ledgerUiSource.includes("'setLedgerHistoryProxy'"),'personal history exposes proxy and non-proxy filters');
 const detailSource=html.slice(html.indexOf('function ledgerRecordDetailRows('),html.indexOf('function renderSplit()'));
 assert(detailSource.includes('ledgerTrackRecords().filter'),'detail lookup searches the currently visible track only');
 assert(detailSource.includes('deletePersonalLedgerRecord('),'personal detail reuses the confirmed local deletion path');
