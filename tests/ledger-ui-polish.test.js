@@ -24,10 +24,7 @@ vm.runInContext(
 );
 
 assert.strictEqual(dateSandbox.parseLedgerDateInput('2026/07/19'),'2026/07/19');
-assert.strictEqual(dateSandbox.parseLedgerDateInput('2026-7-9'),'2026/07/09');
-assert.strictEqual(dateSandbox.parseLedgerDateInput('2026.02.28'),'2026/02/28');
-assert.strictEqual(dateSandbox.parseLedgerDateInput('2024/2/29'),'2024/02/29');
-['2026/2/29','2026/02/30','2026/0/10','2026/13/1','2026/1/0','2026/1/32','7/19/2026','26/7/19','1999/12/31','2100/1/1'].forEach(function(value){
+['2026-7-9','2026.02.28','2024/2/29','2026/2/29','2026/02/30','2026/0/10','2026/13/1','2026/1/0','2026/1/32','7/19/2026','26/7/19','1999/12/31','2100/1/1'].forEach(function(value){
   assert.throws(()=>dateSandbox.parseLedgerDateInput(value),/日期格式/,'rejects '+value);
 });
 assert.throws(()=>dateSandbox.parseLedgerDateInput('not-a-date'),/日期格式/);
@@ -80,6 +77,6 @@ assert(html.includes('稅與優惠券（選填）'),'tax disclosure uses the app
 assert(html.includes('更多細節（店家、備註，皆為選填）'),'optional details share the disclosure pattern without inventing a location field');
 
 const sw=fs.readFileSync('sw.js','utf8');
-assert.match(sw,/okayama-trip-v22/,'service worker cache is v22');
+assert.match(sw,/okayama-trip-v23/,'service worker cache is v23');
 
 console.log('ledger 2.2 UI polish tests passed');

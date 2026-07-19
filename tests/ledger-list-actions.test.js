@@ -13,8 +13,9 @@ const recent=html.slice(recentStart,recentEnd),detail=html.slice(detailStart,det
 assert(recent.includes('record.storeName'),'recent rows show store name when it exists');
 assert(recent.includes('ledger-record-menu-button'),'each recent row has a separate ellipsis action button');
 assert(recent.includes('openLedgerRecordActions'),'ellipsis opens the record action menu');
-assert(recent.includes('openLedgerRecordDetail'),'the card body still opens record detail');
-assert(html.includes('function openLedgerRecordActions('),'record actions use a dedicated menu entry point');
+assert(recent.includes('handleLedgerRecordCardClick'),'the card body routes normal clicks to record detail and selection clicks to selection');
+assert(html.includes('function handleLedgerRecordCardClick(')&&html.includes('else openLedgerRecordDetail(id)'),'normal card clicks still open record detail');
+assert(html.includes('function openLedgerRecordActions(')&&html.includes("className='ledger-action-popover'"),'record actions use a dedicated anchored menu entry point');
 assert(html.includes('editLedgerRecord('),'record menu retains editing');
 assert(html.includes('deletePersonalLedgerRecord('),'personal record menu retains local deletion');
 assert(html.includes('openSharedLedgerDelete('),'shared record menu retains tombstone deletion with reason');

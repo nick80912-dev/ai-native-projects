@@ -116,9 +116,9 @@ function loadHelpers(){
   assert(!mod.__html.includes('createLedgerReversal'),'new negative reversal creation is removed');
   assert(!mod.__html.includes('reverseLedgerRecord'),'the old reversal action is removed');
   assert(!mod.__html.includes('🗑 沖銷'),'the old reversal label is removed');
-  assert(mod.__html.includes('確定刪除這筆團體紀錄？'),'shared deletion shows the confirmed title');
-  assert(mod.__html.includes('此操作會同步對所有裝置生效，原始紀錄仍會保留。'),'shared deletion explains cross-device impact');
-  assert(mod.__html.includes('刪除原因（必填）：'),'shared deletion labels the required reason');
+  assert(mod.__html.includes("確定刪除 '+originals.length+' 筆團體紀錄？"),'shared deletion shows the selected record count');
+  assert(mod.__html.includes('此操作會同步對所有裝置生效，並為每筆原始紀錄建立刪除紀錄。'),'shared deletion explains cross-device tombstones');
+  assert(mod.__html.includes('共用刪除原因（必填）：'),'shared deletion labels the shared required reason');
   assert(mod.__html.includes('id="ledgerDeleteReason"')&&mod.__html.includes('maxlength="50"'),'shared deletion limits the reason to 50 characters');
   assert(extractFunction(mod.__html,'submitSharedLedgerDeletion').includes('if(!reason)'),'an empty reason cannot be submitted');
 
