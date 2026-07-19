@@ -10,7 +10,7 @@
 - Service Worker cache 已升至 v22；Validator 六類日誌、結算、墓碑、BUILTIN、四分頁、icons、manifest、Netlify、viewport recovery 均未改動。
 
 ## 🔨 進行中
-- Ledger 2.2 全部自動測試、文件檢查與 390px 瀏覽器 QA 已通過；`healthCheck` 正常、browser error 為 0，待 commit 並 push `dev`。
+- Ledger 2.2 全部自動測試、文件檢查與 390px 瀏覽器 QA 已通過；`healthCheck` 正常、browser error 為 0。實作 commit `7a85d3f` 已 push `dev`，等待 Apps Script 21 欄部署與測試站手機驗收。
 
 ## ⏸ 等 Bar 動作
 1. 在 Sheet「分帳紀錄」第 16 欄後依序新增五個 Schema 2.8 表頭，並以 `apps-script/ledger-sync.gs` 建立 Apps Script 新版本、維持原 `/exec` URL。
