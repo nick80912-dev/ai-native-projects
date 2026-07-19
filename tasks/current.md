@@ -10,12 +10,11 @@
 - Service Worker cache 已升至 v22；Validator 六類日誌、結算、墓碑、BUILTIN、四分頁、icons、manifest、Netlify、viewport recovery 均未改動。
 
 ## 🔨 進行中
-- Ledger 2.2 全部自動測試、文件檢查與 390px 瀏覽器 QA 已通過；`healthCheck` 正常、browser error 為 0。實作 commit `7a85d3f` 已 push `dev`，等待 Apps Script 21 欄部署與測試站手機驗收。
+- Ledger 2.2 全部自動測試、文件檢查與 390px 瀏覽器 QA 已通過；`healthCheck` 正常、browser error 為 0。實作 commit `7a85d3f` 已 push `dev`；Apps Script 21 欄部署與公開 CSV 落位亦已完成真實驗收，等待測試站手機驗收。
 
 ## ⏸ 等 Bar 動作
-1. 在 Sheet「分帳紀錄」第 16 欄後依序新增五個 Schema 2.8 表頭，並以 `apps-script/ledger-sync.gs` 建立 Apps Script 新版本、維持原 `/exec` URL。
-2. 依 `apps-script/README.md` 驗收新 ID、dup 與 CSV 21 欄落位後，再驗收 dev 的 iOS Bottom Sheet／月曆／篩選／編輯、TEST 帳本、離線補送及跨裝置延遲。
-3. 驗收通過後核准 PR merge `dev → main`，再由 Netlify Production 自動部署。
+1. 驗收 dev 的 iOS Bottom Sheet／月曆／篩選／編輯、TEST 帳本、離線補送及跨裝置延遲。
+2. 驗收通過後核准 PR merge `dev → main`，再由 Netlify Production 自動部署。
 
 ## 下一棒
-→ 先完成 Apps Script 21 欄部署，再於 dev 測試站驗收；通過後走 merge 與正式站驗證。回滾依 `16_OPS_PLAYBOOK.md` §A。
+→ 於 dev 測試站完成手機驗收；通過後走 merge 與正式站驗證。回滾依 `16_OPS_PLAYBOOK.md` §A。

@@ -101,10 +101,9 @@
       "分帳2.0結算核心(participants快照/最大餘數整數分配/雙幣餘額/確定性貪婪轉帳)",
       "分帳2.0手機UI(PR5:雙軌儀表板/Bottom Sheet快速記帳/多品項稅折與覆寫/代購彙總/團體結算/完整歷史與明細/SW v20)",
       "分帳2.1(Schema 2.7固定16欄/time消費時間/queue-first樂觀儲存/TEST平行帳本/店名與搜尋/代購對象v3備份/個人原地編輯/團體墓碑替代編輯/SW v21)",
-      "分帳2.2(Schema 2.8固定21欄/日期時間拆欄與月曆/篩選面板與元件一致性/結構化稅券資料/近期明細操作入口/SW v22)"
+      "分帳2.2(Schema 2.8固定21欄/Apps Script真實端點與CSV落位驗證/日期時間拆欄與月曆/篩選面板與元件一致性/結構化稅券資料/近期明細操作入口/SW v22)"
     ],
     "pending_in_order": [
-      "Bar建立Ledger五個末端表頭並部署Schema 2.8 Apps Script",
       "Bar手機全面驗收dev最新Ledger 2.2",
       "Bar核准PR merge(dev→main)→Netlify正式部署與線上驗證",
       "Playwright 三情境入版控(backlog)",
