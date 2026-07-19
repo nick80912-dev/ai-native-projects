@@ -89,7 +89,9 @@ assert.throws(()=>amounts('included',10,202),/折扣不可大於/);
 assert.throws(()=>amounts('included',10,201),/實付總額/);
 assert.throws(()=>mod.calculateMultiItemAmounts({currency:'JPY',taxMode:'included',taxRate:10,discount:0,items:[]},settings),/至少一個品項/);
 assert.throws(()=>mod.calculateMultiItemAmounts({currency:'JPY',taxMode:'excluded',taxRate:5,discount:0,items:[{amount:100}]},settings),/稅制設定/);
-assert.throws(()=>mod.calculateMultiItemAmounts({currency:'JPY',taxMode:'included',taxRate:10,discount:0,items:[{amount:1.5}]},settings),/正安全整數/);
+assert.throws(()=>mod.calculateMultiItemAmounts({currency:'JPY',taxMode:'included',taxRate:10,discount:0,items:[{amount:1.5}]},settings),/請輸入有效金額/);
+assert.throws(()=>mod.calculateMultiItemAmounts({currency:'JPY',taxMode:'included',taxRate:10,discount:0,items:[{amount:12345678}]},settings),/請輸入有效金額/,'allocation overflow uses the short user-facing amount error');
+['not-a-number',0,-1].forEach(value=>assert.throws(()=>mod.calculateMultiItemAmounts({currency:'JPY',taxMode:'included',taxRate:10,discount:0,items:[{amount:value}]},settings),/請輸入有效金額/));
 
 assert.strictEqual(mod.validateProxyDraft(false,'任意'),'');
 assert.strictEqual(mod.validateProxyDraft(true,' 小明 '),'小明');
@@ -102,7 +104,7 @@ assert.throws(()=>mod.normalizeLedgerParticipantSelection([],members),/至少一
 assert.throws(()=>mod.normalizeLedgerParticipantSelection(['Outsider'],members),/正式成員/);
 
 const sharedDraft={
-  track:'shared',currency:'JPY',payMethod:'現金',note:'整單',multi:true,
+  track:'shared',currency:'JPY',payMethod:'現金',note:'整單',multi:true,storeName:'測試食堂',
   occurredDate:'2026/07/19',occurredTime:'12:00',priceMode:'excluded',taxPreset:'10',customTaxRate:'',discount:30,participants:['Bar','Amy'],
   items:[
     {key:'i1',name:'票 A',amount:100,category:'票券',taxExempt:true,participantMode:'inherit',participants:[]},
@@ -126,7 +128,7 @@ assert(sharedRecords.every(record=>record.inputCurrency==='JPY'&&record.priceMod
 assert(sharedRecords.every(record=>!Object.prototype.hasOwnProperty.call(record,'isProxy')),'shared records never gain proxy semantics');
 
 const personalDraft={
-  track:'personal',currency:'JPY',payMethod:'信用卡',note:'',multi:true,
+  track:'personal',currency:'JPY',payMethod:'信用卡',note:'',multi:true,storeName:'測試商店',
   occurredDate:'2026/07/19',occurredTime:'12:00',priceMode:'included',taxPreset:'10',customTaxRate:'',discount:0,isProxy:false,proxyTarget:'',
   items:[
     {key:'p1',name:'商品 A',amount:500,category:'購物',proxyMode:'custom',isProxy:true,proxyTarget:'朋友'},
@@ -142,6 +144,10 @@ assert.strictEqual(personalRecords[0].isTaxFree,false);
 assert.strictEqual(personalRecords[1].isProxy,false);
 assert.strictEqual(personalRecords[1].proxyTarget,'');
 assert.strictEqual(personalRecords[0].recordType,undefined,'personal records do not gain shared contract fields');
+
+assert.throws(()=>mod.buildLedgerExpenseRecords(Object.assign({},sharedDraft,{storeName:'  '}),{
+  member:'Bar',settings,now:1784428800000,random(){return 0.25;},memberEntries:members
+}),/請輸入店家名稱/,'multi-item entries require a store name');
 
 const single=plain(mod.buildLedgerExpenseRecords({
   track:'personal',currency:'JPY',payMethod:'Suica',note:'',multi:false,

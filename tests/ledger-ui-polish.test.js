@@ -77,6 +77,6 @@ assert(html.includes('稅與優惠券（選填）'),'tax disclosure uses the app
 assert(html.includes('更多細節（備註選填）'),'optional details disclosure is note-only');
 
 const sw=fs.readFileSync('sw.js','utf8');
-assert.match(sw,/okayama-trip-v24/,'service worker cache is v24');
+assert.match(sw,/okayama-trip-v25/,'service worker cache is v25');
 
 console.log('ledger 2.2 UI polish tests passed');
