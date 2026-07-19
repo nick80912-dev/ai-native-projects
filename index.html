@@ -2917,7 +2917,9 @@ function normalizeLedgerRecord(record,now,randomFn,isTestMode){
     recordType:String(source.recordType||'').trim(),
     targetRecordId:String(source.targetRecordId||'').trim(),
     deleteReason:String(source.deleteReason||'').trim(),
-    batchId:String(source.batchId||'').trim()
+    batchId:String(source.batchId||'').trim(),
+    storeName:String(source.storeName||'').trim(),
+    replacesRecordId:String(source.replacesRecordId||'').trim()
   };
 }
 
@@ -2937,7 +2939,8 @@ function normalizePersonalLedgerRecord(record,now,randomFn){
     id:normalized.id,time:normalized.time,member:normalized.member,category:normalized.category,
     detail:normalized.detail,amountJpy:normalized.amountJpy,amountTwd:normalized.amountTwd,
     note:normalized.note,payMethod:normalized.payMethod,isProxy:!!(record&&record.isProxy),
-    proxyTarget:String(record&&record.proxyTarget||'').trim(),batchId:normalized.batchId
+    proxyTarget:String(record&&record.proxyTarget||'').trim(),batchId:normalized.batchId,
+    storeName:normalized.storeName,replacesRecordId:normalized.replacesRecordId
   };
 }
 
@@ -2962,7 +2965,18 @@ function createPersonalLedgerRepository(options){
     if(next.length===records.length)return false;
     write(next);return true;
   }
-  return {all:all,add:add,remove:remove};
+  function replaceBatch(batchId,replacements){
+    var clean=String(batchId||'').trim();
+    if(!clean)throw new Error('缺少批次 ID');
+    var normalized=(replacements||[]).map(function(record){
+      var item=normalizePersonalLedgerRecord(record,Date.parse(record.time),random);
+      validateLedgerRecord(item);return item;
+    });
+    if(!normalized.length)throw new Error('替換批次不可為空');
+    var next=all().filter(function(record){return record.batchId!==clean;}).concat(normalized);
+    write(next);return normalized;
+  }
+  return {all:all,add:add,remove:remove,replaceBatch:replaceBatch};
 }
 
 function normalizeLedgerOption(value){

@@ -4,10 +4,12 @@ const vm = require('vm');
 
 function createStorage(initial){
   const values = Object.assign({}, initial || {});
+  let writeCount = 0;
   return {
     getItem(key){ return Object.prototype.hasOwnProperty.call(values,key) ? values[key] : null; },
-    setItem(key,value){ values[key]=String(value); },
-    removeItem(key){ delete values[key]; }
+    setItem(key,value){ writeCount++; values[key]=String(value); },
+    removeItem(key){ delete values[key]; },
+    get writeCount(){ return writeCount; }
   };
 }
 
@@ -38,6 +40,29 @@ function loadLedgerModule(){
 
 (async function(){
   const mod = loadLedgerModule();
+
+  const schema27 = mod.normalizeLedgerRecord({
+    member:'黃柏',amountJpy:100,amountTwd:20,storeName:'  松屋  ',replacesRecordId:' old-1 '
+  },1000,function(){return 0;},false);
+  assert.strictEqual(schema27.storeName,'松屋','shared records trim and preserve storeName');
+  assert.strictEqual(schema27.replacesRecordId,'old-1','shared records trim and preserve replacesRecordId');
+  const personal27 = mod.normalizePersonalLedgerRecord(schema27,1000,function(){return 0;});
+  assert.strictEqual(personal27.storeName,'松屋','personal records preserve storeName');
+  assert.strictEqual(personal27.replacesRecordId,'old-1','personal records preserve replacesRecordId');
+
+  const personalStorage=createStorage({
+    trip_personal_ledger:JSON.stringify([
+      {id:'old-a',time:'2026-07-19T01:00:00.000Z',member:'黃柏',category:'餐飲',detail:'A',amountJpy:100,amountTwd:20,note:'',payMethod:'現金',batchId:'batch-1'},
+      {id:'old-b',time:'2026-07-19T01:00:00.000Z',member:'黃柏',category:'餐飲',detail:'B',amountJpy:200,amountTwd:40,note:'',payMethod:'現金',batchId:'batch-1'}
+    ])
+  });
+  const personalRepo=mod.createPersonalLedgerRepository({storage:personalStorage,now:function(){return 2000;},random:function(){return 0;}});
+  personalRepo.replaceBatch('batch-1',[
+    {id:'new-a',time:'2026-07-19T02:00:00.000Z',member:'黃柏',category:'餐飲',detail:'A2',amountJpy:150,amountTwd:30,note:'',payMethod:'現金',batchId:'batch-1'},
+    {id:'new-b',time:'2026-07-19T02:00:00.000Z',member:'黃柏',category:'餐飲',detail:'B2',amountJpy:250,amountTwd:50,note:'',payMethod:'現金',batchId:'batch-1'}
+  ]);
+  assert.deepStrictEqual(Array.from(personalRepo.all(),function(record){return record.id;}),['new-a','new-b'],'personal batch replacement removes every old batch record');
+  assert.strictEqual(personalStorage.writeCount,1,'personal batch replacement uses one atomic localStorage write');
 
   const ids = new Set();
   for(let i=0;i<500;i++) ids.add(mod.createLedgerId(1784250000000));
