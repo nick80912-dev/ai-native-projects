@@ -131,6 +131,7 @@ function response(payload){
   assert(settingsSource.includes('切換身分')&&settingsSource.includes('新增身分'),'Settings keeps both identity management actions');
   assert(settingsSource.includes('ledgerTestModeSection'),'test mode has a stable Settings target');
   assert(settingsSource.includes('僅團體帳'),'Settings labels test mode as shared-ledger-only');
+  assert(settingsSource.includes('只顯示測試紀錄')&&settingsSource.includes('關閉即回正式帳本'),'Settings explains the parallel TEST universe');
   assert(settingsSource.includes('自訂類別與支付方式'),'Settings exposes custom ledger option management');
   assert(html.includes('addLedgerOptionFromSettings'),'Settings can add custom options');
   assert(html.includes('moveLedgerOptionFromSettings'),'Settings can reorder custom options');

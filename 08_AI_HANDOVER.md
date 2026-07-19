@@ -30,14 +30,19 @@
 4. 更新 `07_CHANGELOG.md`(有架構變更標 ⭐),必要時更新 06/03
 
 ## 絕不可改變(除非 Bar 明確要求)
-- CMS 八表結構、欄位語意、既有 PID/RID/SID/HID 的意義
+- CMS 八表結構、Schema 2.7 欄位語意、既有 PID/RID/SID/HID 的意義；Ledger 固定 16 欄，`time` 為消費發生時間，末兩欄為店名與取代紀錄 ID
 - 三層防線(內建→快取→背景同步)與「絕不空白頁」原則
 - 卡片型別由 Places.Type 明確決定,**禁止 AI 猜測型別**
 - WebView 相容碼:console polyfill、fetch 相容模式(禁 AbortController)、單一吸頂容器
 - 停車 MAP CODE 純顯示(無複製鈕)、「停車同Pxxx」繼承機制
 - 渡輪不建班次資料庫;班次資訊維持備註摘要與官方時刻表連結
-- UI 配色變數與四分頁結構;個人狀態(打卡/想逛/成員身分)與個人帳只存 localStorage、不進 Queue 或 CMS;團體帳一律走 Ledger Repository 跨裝置同步,兩軌資料與統計不得混用。依 ADR 0006,App 只可 append「分帳紀錄」並更新 TripConfig 的 `Exchange Rate` / `Ledger Default Currency`,其餘 CMS 欄位維持 Bar 手動管理且 App 唯讀
+- UI 配色變數與四分頁結構;個人狀態(打卡/想逛/成員身分)、個人帳與代購對象清單只存 localStorage、不進 Queue 或 CMS;團體帳一律走 Ledger Repository 跨裝置同步,兩軌資料與統計不得混用。依 ADR 0006,App 只可 append「分帳紀錄」並更新 TripConfig 的 `Exchange Rate` / `Ledger Default Currency`,其餘 CMS 欄位維持 Bar 手動管理且 App 唯讀
 - 產品哲學:3 秒原則、不過度工程化(能給連結就不硬轉結構化資料)
+
+## Ledger 2.1 現行契約
+- 團體新增與編輯都先透過 `enqueueBatch(records)` 一次耐久寫入本機 Queue，入列成功即完成 UI 儲存並背景送達；不可改回等待 Apps Script POST 才關閉表單。公開 CSV 跨裝置可見延遲 1–5 分鐘是已接受取捨。
+- TEST 模式是獨立平行帳本：開啟時團體儀表板、今日、結算與明細只計算 `[TEST]`，關閉時只計算正式資料；個人帳不受 TEST 模式影響。
+- 個人編輯可原地替換本機紀錄；團體編輯必須 append 舊筆墓碑（原因固定「編輯修改」）與新替代筆，新筆以 `replacesRecordId` 指向原紀錄。詳細理由見 ADR 0006。
 
 ## 常見陷阱(前人踩過)
 - 同名 function 後者勝且提升 → 包裝舊函式必先改名,禁 `var old=fn`

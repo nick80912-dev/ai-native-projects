@@ -1,22 +1,21 @@
 # CURRENT(現在正在做的)
 
-> 更新於 2026-07-18。細任務層;里程碑看 06_ROADMAP,快照看 13_PROJECT_STATUS。
+> 更新於 2026-07-19。細任務層;里程碑看 06_ROADMAP,快照看 13_PROJECT_STATUS。
 
 ## 📌 現況
-- 分帳 2.0 PR 5 已完成個人／團體雙軌手機儀表板：總額可切換 JPY／TWD、今日摘要、個人代購摘要、團體結算摘要，以及依裝置日期分組的最近 15 筆消費。
-- 快速記帳改為 Bottom Sheet，支援單品與多品項；Sheet 遵循 Scroll-only 裁定，捲動區 `touch-action:pan-y`、控制項 `touch-action:manipulation`，開啟時鎖定背景，未加入 JavaScript 手勢攔截。
-- 多品項支援各自名稱、正整數金額、類別與單項代購／分攤覆寫；幣別、支付方式、稅制、固定折扣及備註維持整單層級。税込、税抜 8%／10%、免稅與折扣均透過已測試的最大餘數分配，雙幣品項總和精確等於整單實付。
-- 個人代購可依對象查看小計；團體結算 UI 只格式化 PR 4 的 participants 快照、雙幣淨額與確定性轉帳建議，不重寫結算數學。
-- 完整歷史支援個人全部／代購篩選、日期分組與紀錄明細。明細只從目前可見紀錄查找；個人沿用真刪確認，團體沿用墓碑刪除，已刪目標與墓碑沒有明細或刪除入口。
-- 團體多品項會先將整批獨立 Record ID 同步加入既有 Queue，再等待網路結果；共同 `batchId` 可於明細追查。個人多品項維持本機原子驗證後寫入。
-- Service Worker cache 已升至 v20。Schema 仍為 2.6；本批未修改 Schema、Validator、Apps Script、Google Sheet、BUILTIN、manifest、icon 或 Netlify 設定。
+- 分帳 2.1 已完成：Schema `2.7 (2026-07-19)`，Ledger 固定 16 欄，`time` 為消費發生時間，新增店名與取代紀錄 ID。新版 Apps Script 已由 Bar 部署，真實端點新增／dup 契約通過。
+- 團體帳使用 `enqueueBatch` 一次寫入 Queue 後立即關閉表單，背景 POST 失敗保留待同步；TEST 模式為獨立平行帳本。個人帳與代購對象清單維持 localStorage only，備份格式為 v3 且相容 v1／v2。
+- 快速記帳支援店名、可改日期時間、單幣換算、多品項、含稅／未稅、無稅／8%／10%／自訂、折扣、單品／全部免稅與可管理的代購對象。Bottom Sheet 維持 Scroll-only，並保存內部與背景捲動位置。
+- 完整紀錄支援品名／店名／備註搜尋、類別／支付／代購篩選、日期／類別分組。個人編輯原地替換；團體編輯以「編輯修改」墓碑加替代筆維持 append-only。
+- Service Worker cache 已升至 v21；Validator 六類日誌、BUILTIN、四分頁、icons、manifest、Netlify、viewport recovery 均未改動。
 
 ## 🔨 進行中
-- 無；PR 5 實作、聚焦回歸與 390px 本機 QA 已完成，等待 Bar 手機驗收 `dev` 最新版。
+- Ledger 2.1 全部自動測試、文件檢查與 390px 瀏覽器 QA 已完成，Development Summary 待交付；觸控手勢開啟的 healthCheck 面板留待 Bar 手機驗收，等待核准 push `dev`。
 
 ## ⏸ 等 Bar 動作
-1. 手機全面驗收 `dev`：個人／團體儀表板、快速單品、多品項稅折、代購覆寫、團體分攤、完整歷史、紀錄明細與結算面板。
-2. 驗收通過後核准 PR merge `dev → main`，再由 Netlify Production 自動部署。
+1. 核准 Ledger 2.1 實作 push `dev`。
+2. 手機驗收：iOS Bottom Sheet 鍵盤／捲動、個人與團體編輯、TEST 平行帳本、離線補送及跨裝置 1–5 分鐘 CSV 延遲。
+3. 驗收通過後核准 PR merge `dev → main`，再由 Netlify Production 自動部署。
 
 ## 下一棒
-→ Merge 後執行 Netlify 正式站驗證；回滾依 `16_OPS_PLAYBOOK.md` §A。
+→ Bar 核准後 push `dev` 觸發測試站部署；手機驗收通過後再走 merge 與正式站驗證。回滾依 `16_OPS_PLAYBOOK.md` §A。

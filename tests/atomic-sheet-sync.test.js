@@ -57,14 +57,17 @@ const htmlSource = fs.readFileSync('index.html','utf8').replace(/\r\n/g,'\n');
 const schemaSandbox = {};
 vm.createContext(schemaSandbox);
 vm.runInContext(fs.readFileSync('schema.js','utf8'),schemaSandbox);
-assert.strictEqual(schemaSandbox.SCHEMA.version,'2.6 (2026-07-18)','production Schema version identifies the Ledger 2.0 contract');
+assert.strictEqual(schemaSandbox.SCHEMA.version,'2.7 (2026-07-19)','production Schema version identifies the Ledger 2.1 contract');
+assert.strictEqual(schemaSandbox.SCHEMA.sheets.ledger.columns.length,16,'Ledger 2.1 keeps the fixed 16-column append contract');
+assert.strictEqual(schemaSandbox.SCHEMA.sheets.ledger.columns[14].field,'storeName');
+assert.strictEqual(schemaSandbox.SCHEMA.sheets.ledger.columns[15].field,'replacesRecordId');
 const cfgKeys=schemaSandbox.SCHEMA.sheets.cfg.keys;
 assert(cfgKeys.some(function(key){return key.field==='exchangeRate'&&key.header==='Exchange Rate';}),'production Schema defines Exchange Rate');
 assert(cfgKeys.some(function(key){return key.field==='ledgerDefaultCurrency'&&key.header==='Ledger Default Currency';}),'production Schema defines Ledger Default Currency');
 const itineraryActColumn = schemaSandbox.SCHEMA.sheets.itin.columns.find(function(column){ return column.field==='act'; });
 assert.strictEqual(itineraryActColumn.header,'行程','production Schema uses the confirmed itinerary Header');
 assert.strictEqual((itineraryActColumn.aliases||[]).indexOf('詳細行程'),-1,'obsolete Header is not retained as an alias');
-assert.match(htmlSource,/version:\s*'2\.6 \(2026-07-18\)'/,'inline fallback Schema version identifies the Ledger 2.0 contract');
+assert.match(htmlSource,/version:\s*'2\.7 \(2026-07-19\)'/,'inline fallback Schema version identifies the Ledger 2.1 contract');
 assert(htmlSource.includes('Exchange Rate,0.2'),'BUILTIN TripConfig contains the initial exchange rate');
 assert(htmlSource.includes('Ledger Default Currency,JPY'),'BUILTIN TripConfig contains the initial ledger currency');
 assert.match(htmlSource,/field:'act',\s*header:'行程'/,'inline fallback Schema uses the confirmed itinerary Header');
@@ -514,7 +517,7 @@ function loadSyncStatus(){
   vm.createContext(runtime);
   vm.runInContext([
     "var SNAPSHOT_FAILURE_KEY='trip_sync_last_failure';",
-    extractFunction('timestampDate'), extractFunction('syncStatusModel'), extractFunction('renderSyncStatusBody'), extractFunction('retrySyncFromPanel')
+    extractFunction('timestampDate'), extractFunction('syncStatusModel'), extractFunction('renderSyncStatusBody'), extractFunction('setButtonBusy'), extractFunction('retrySyncFromPanel')
   ].join('\n'),runtime);
   return runtime;
 }
@@ -675,7 +678,8 @@ async function testSyncStatus(){
   app.syncAll=function(){syncCalls++; return app.syncInFlight;};
   let resolveSync;
   app.syncInFlight=new Promise(function(resolve){resolveSync=resolve;});
-  const button={disabled:false};
+  const attrs={};
+  const button={disabled:false,textContent:'立即重新同步',innerHTML:'',setAttribute(name,value){attrs[name]=String(value);},getAttribute(name){return Object.prototype.hasOwnProperty.call(attrs,name)?attrs[name]:null;},removeAttribute(name){delete attrs[name];}};
   const retry=app.retrySyncFromPanel(button);
   assert.strictEqual(button.disabled,true,'retry is disabled while sync is in flight');
   assert.strictEqual(syncCalls,1,'retry awaits the shared in-flight sync');

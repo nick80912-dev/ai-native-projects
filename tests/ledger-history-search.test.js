@@ -30,6 +30,7 @@ assert(html.includes("setLedgerHistoryGrouping(\\'date\\')")&&html.includes("set
 assert(!html.includes('historyTest'),'history does not add a redundant TEST filter');
 assert(html.includes('function setButtonBusy('),'async controls share a scoped busy helper');
 assert(html.includes("setButtonBusy(button,true,'同步中')"),'manual sync shows a spinner and busy label');
+assert(html.includes("retryBusy?' disabled aria-busy=\"true\"'"),'sync panel rerenders its busy state without losing aria-busy');
 assert(html.includes("setButtonBusy(button,true,'儲存中')"),'settings save shows a spinner and busy label');
 
 const busyStart=html.indexOf('function setButtonBusy('),busyEnd=html.indexOf('function retrySyncFromPanel(',busyStart);

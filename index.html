@@ -1559,7 +1559,8 @@ function renderSyncStatusBody(){
   if(model.failure){
     html+='<div class="sync-status-alert"><b>原因</b><span>'+escapeHtml(model.failure)+'</span></div>';
   }
-  html+='<button class="sync-status-retry" onclick="retrySyncFromPanel(this)"'+(syncInFlight?' disabled':'')+'>立即重新同步</button>';
+  var retryBusy=!!syncInFlight,retryLabel=retryBusy?'<span class="button-spinner" aria-hidden="true"></span>同步中':'立即重新同步';
+  html+='<button class="sync-status-retry" onclick="retrySyncFromPanel(this)"'+(retryBusy?' disabled aria-busy="true"':'')+'>'+retryLabel+'</button>';
   if(body) body.innerHTML=html;
   return html;
 }
@@ -3852,7 +3853,7 @@ function openPersonalStateRestore(){
   closePersonalStateDialog();
   var overlay=document.createElement('div');
   overlay.id='personalStateDialog'; overlay.className='settings-overlay state-dialog-overlay'; overlay.setAttribute('data-dialog-kind','restore');
-  overlay.innerHTML='<section class="settings-panel state-dialog-panel" role="dialog" aria-modal="true" aria-labelledby="personalStateDialogTitle"><div class="settings-head"><h2 id="personalStateDialogTitle">從 JSON 還原</h2><button class="settings-close" aria-label="關閉" onclick="closePersonalStateDialog()">×</button></div><p class="settings-help">還原會覆蓋目前裝置上的打卡、想逛、身分、個人帳、自訂選項及待同步記帳。</p><textarea class="state-dialog-copy" id="personalStateBox" placeholder="貼上備份 JSON"></textarea><div class="settings-actions"><button class="btn ghost" onclick="closePersonalStateDialog()">取消</button><button class="btn" onclick="restorePersonalState()">驗證並還原</button></div></section>';
+  overlay.innerHTML='<section class="settings-panel state-dialog-panel" role="dialog" aria-modal="true" aria-labelledby="personalStateDialogTitle"><div class="settings-head"><h2 id="personalStateDialogTitle">從 JSON 還原</h2><button class="settings-close" aria-label="關閉" onclick="closePersonalStateDialog()">×</button></div><p class="settings-help">還原會覆蓋目前裝置上的打卡、想逛、身分、個人帳、代購對象、自訂選項及待同步記帳。</p><textarea class="state-dialog-copy" id="personalStateBox" placeholder="貼上備份 JSON"></textarea><div class="settings-actions"><button class="btn ghost" onclick="closePersonalStateDialog()">取消</button><button class="btn" onclick="restorePersonalState()">驗證並還原</button></div></section>';
   document.body.appendChild(overlay);
   var box=document.getElementById('personalStateBox'); if(box)box.focus();
 }
@@ -3964,8 +3965,8 @@ function openSettings(targetId){
     '<div class="settings-section"><h3>分帳匯率與幣別</h3><div class="settings-current">目前匯率：<b>1 JPY = NT$'+escapeHtml(ledgerSettings.exchangeRate||'未設定')+'</b></div><div class="settings-rate-row"><label class="settings-help" for="ledgerExchangeRate"><b>匯率</b><br>1 日幣可換算多少台幣</label><input id="ledgerExchangeRate" type="number" inputmode="decimal" min="0.000001" step="any" value="'+escapeHtml(ledgerSettings.exchangeRate)+'"></div><div class="settings-help"><b>預設輸入幣別</b><br>新增記帳時預先選擇的幣別</div><div class="ledger-currency-grid" style="margin-top:8px"><button class="ledger-choice settings-currency-option '+(ledgerSettings.defaultCurrency==='JPY'?'on':'')+'" data-currency="JPY" aria-pressed="'+(ledgerSettings.defaultCurrency==='JPY'?'true':'false')+'" onclick="selectLedgerDefaultCurrency(\'JPY\')">JPY 日幣</button><button class="ledger-choice settings-currency-option '+(ledgerSettings.defaultCurrency==='TWD'?'on':'')+'" data-currency="TWD" aria-pressed="'+(ledgerSettings.defaultCurrency==='TWD'?'true':'false')+'" onclick="selectLedgerDefaultCurrency(\'TWD\')">TWD 台幣</button></div>'+(settingsError?'<div class="settings-help" style="color:var(--coral)">'+escapeHtml(settingsError)+'</div>':'')+'<div class="settings-help">儲存後跨裝置共用；CSV 發布可能延遲 1–5 分鐘。</div><button class="btn block" style="margin-top:10px" onclick="saveLedgerSettingsFromForm(this)">儲存共用設定</button></div>'+
     '<div class="settings-section" id="ledgerOptionSettingsSection"><h3>自訂類別與支付方式</h3><div class="settings-help">可新增、刪除或排序；刪除選項不影響既有紀錄。</div>'+renderLedgerOptionManager('category','類別')+renderLedgerOptionManager('payMethod','支付方式')+'</div>'+
     '<div class="settings-section" id="ledgerProxyTargetSettingsSection"><h3>代購對象</h3><div class="settings-help">常用對象會顯示在個人記帳表單；刪除不影響既有紀錄。</div>'+renderLedgerProxyTargetManager()+'</div>'+
-    '<div class="settings-section"><h3>本機資料備份／還原</h3><div class="settings-help">換手機、重裝 App 或清除瀏覽器資料前使用。還原會覆蓋目前裝置上的打卡、想逛、身分、個人帳、自訂選項及待同步記帳。</div><div class="settings-actions"><button class="btn ghost" onclick="exportPersonalState()">複製備份 JSON</button><button class="btn" onclick="openPersonalStateRestore()">從 JSON 還原</button></div></div>'+
-    '<div class="settings-section" id="ledgerTestModeSection"><div class="toggle-row"><div><h3>測試模式<span class="settings-warning-tag">僅團體帳</span></h3><div class="settings-help">團體帳寫入明細加上 [TEST],且不納入彙算；個人帳不受影響。</div></div><input type="checkbox" '+(lsGet('trip_ledger_test_mode',false)?'checked':'')+' onchange="setLedgerTestMode(this)"></div></div>'+
+    '<div class="settings-section"><h3>本機資料備份／還原</h3><div class="settings-help">換手機、重裝 App 或清除瀏覽器資料前使用。還原會覆蓋目前裝置上的打卡、想逛、身分、個人帳、代購對象、自訂選項及待同步記帳。</div><div class="settings-actions"><button class="btn ghost" onclick="exportPersonalState()">複製備份 JSON</button><button class="btn" onclick="openPersonalStateRestore()">從 JSON 還原</button></div></div>'+
+    '<div class="settings-section" id="ledgerTestModeSection"><div class="toggle-row"><div><h3>測試模式<span class="settings-warning-tag">僅團體帳</span></h3><div class="settings-help">團體帳切換為獨立 [TEST] 帳本；儀表板、結算與明細只顯示測試紀錄，關閉即回正式帳本。個人帳不受影響。</div></div><input type="checkbox" '+(lsGet('trip_ledger_test_mode',false)?'checked':'')+' onchange="setLedgerTestMode(this)"></div></div>'+
     '<!-- 主題區塊預留：merge 後另批實作,本批不掛入任何主題功能。 -->'+
     '</section>';
   document.body.appendChild(overlay);
@@ -4002,12 +4003,12 @@ function toggleLedgerDisplayCurrency(){
   ledgerUiState.displayCurrency=current==='JPY'?'TWD':'JPY';renderSplit();
 }
 function ledgerDateTimeLocalValue(value){
-  var date=value instanceof Date?value:new Date(value),pad=function(number){return ('0'+number).slice(-2);};
+  var date=value instanceof Date?value:timestampDate(typeof value==='string'?Date.parse(value):value),pad=function(number){return ('0'+number).slice(-2);};
   if(!isFinite(date.getTime()))throw new Error('消費日期時間格式錯誤');
   return date.getFullYear()+'-'+pad(date.getMonth()+1)+'-'+pad(date.getDate())+'T'+pad(date.getHours())+':'+pad(date.getMinutes());
 }
 function ledgerOccurrenceIso(value){
-  var date=new Date(String(value||''));
+  var date=timestampDate(Date.parse(String(value||'')));
   if(!isFinite(date.getTime()))throw new Error('消費日期時間格式錯誤');
   return date.toISOString();
 }
@@ -4017,7 +4018,7 @@ function ledgerDefaultCategory(){
 }
 function createLedgerEntryDraft(track){
   var settings=currentLedgerSettings(),participants=track==='shared'?registeredMembersForCurrentMode().map(function(entry){return entry.name;}):[];
-  return {track:track,currency:settings.defaultCurrency,multi:false,amount:'',detail:'',category:ledgerDefaultCategory(),payMethod:ledgerPayMethodStore.all()[0]||'',note:'',storeName:'',occurredAt:ledgerDateTimeLocalValue(new Date()),replacesRecordId:'',isProxy:false,proxyTarget:'',participants:participants,participantsRetained:false,priceMode:'included',taxPreset:'10',customTaxRate:'',taxPanelOpen:false,discount:'',items:[]};
+  return {track:track,currency:settings.defaultCurrency,multi:false,amount:'',detail:'',category:ledgerDefaultCategory(),payMethod:ledgerPayMethodStore.all()[0]||'',note:'',storeName:'',occurredAt:ledgerDateTimeLocalValue(appNow()),replacesRecordId:'',isProxy:false,proxyTarget:'',participants:participants,participantsRetained:false,priceMode:'included',taxPreset:'10',customTaxRate:'',taxPanelOpen:false,discount:'',items:[]};
 }
 function ledgerDraftFromRecords(records,track){
   var selected=(records||[]).slice(),first=selected[0];if(!first)throw new Error('找不到可編輯紀錄');

@@ -1,5 +1,14 @@
 # 07 版本紀錄
 
+## 2026-07-19 — 分帳 2.1 快速記帳、編輯與 TEST 平行帳本（Dev）⭐ 架構變更
+- Schema 升至 `2.7 (2026-07-19)`；Ledger 固定契約由 14 欄擴為 16 欄，末端新增 `storeName`／店名與 `replacesRecordId`／取代紀錄 ID，`time` 正式定義為使用者可修改的消費發生時間。Apps Script 維護來源、Schema Mapping、資料文件及真實部署端點同步更新。
+- 團體記帳改以 `enqueueBatch(records)` 將整批資料一次寫入本機 Queue，入列成功即關閉表單並背景 POST；離線或送達失敗保留待同步狀態，CSV 跨裝置可見仍有 1–5 分鐘發布延遲。個人帳與代購對象清單維持 localStorage only，備份格式升至 v3 並相容 v1／v2。
+- TEST 模式改為平行帳本：開啟時儀表板、今日、結算、代購與明細只計算 `[TEST]` 團體紀錄；關閉時只顯示正式紀錄，兩邊互不混算。頂部警示明確標示目前測試帳本且不影響正式分帳。
+- 快速記帳 Bottom Sheet 新增店名、可改消費時間、行內幣別換算、捲動位置保護與背景位置還原；稅與優惠改為可收合的 `税込（含稅）`／`税抜（未稅）`、無稅／8%／10%／自訂、折扣及單品／全部免稅，計算使用整數 basis points 與最大餘數分配。
+- 代購對象改為可管理的本機膠囊清單。完整紀錄支援品名／店名／備註搜尋、類別／支付／代購篩選與日期／類別分組；設定儲存及手動同步新增 spinner、disabled 與 `aria-busy`。
+- 個人編輯以一次 localStorage 寫入原地替換並盡量保留 ID；團體編輯固定建立原因「編輯修改」的舊筆墓碑，再 append 新支出並以 `replacesRecordId` 串接，整批原子入列。ADR 0006 已補記雙軌編輯語意。
+- Service Worker cache 升至 `okayama-trip-v21`。本批未修改 validator 六類日誌機制、BUILTIN、四分頁、icons、manifest、Netlify、Scroll-only、viewport recovery 或其他 CMS 表。
+
 ## 2026-07-18 — 分帳 2.0 手機儀表板與快速記帳（Dev）
 - 分帳首頁改為個人／團體雙軌儀表板，提供雙幣總額切換、今日摘要、個人代購摘要、團體結算摘要及依本機日期分組的最近 15 筆消費。
 - 新增 Scroll-only Bottom Sheet 快速記帳：單品支援即時換算；多品項支援獨立類別、整單税込／税抜 8% 或 10%／免稅、固定折扣，以及個人代購或團體分攤的單項覆寫。Sheet 只用 CSS `touch-action` 宣告並維持背景鎖捲動，未加入 JavaScript 手勢攔截。

@@ -14,6 +14,8 @@ function plain(value){return JSON.parse(JSON.stringify(value));}
 
 const draftSource=extract('function ledgerDateTimeLocalValue(','function openLedgerEntrySheet(');
 const draftSandbox={
+  appNow(){return new Date();},
+  timestampDate(value){return new Date(Number(value));},
   currentLedgerSettings(){return {exchangeRate:0.2,defaultCurrency:'JPY'};},
   registeredMembersForCurrentMode(){return [{name:'Bar'},{name:'Amy'}];},
   ledgerCategoryStore:{all(){return ['餐飲','交通'];}},
@@ -66,6 +68,8 @@ assert.strictEqual(resetPersonal.proxyTarget,'','proxy target never carries into
 const stateSource=extract('function createLedgerEntryDraft(','function formatLedgerCurrencyAmount(');
 const stateSandbox={
   ledgerUiState:{draft:null},
+  appNow(){return new Date();},
+  timestampDate(value){return new Date(Number(value));},
   ledgerDefaultCategory(){return '餐飲';},
   ledgerDateTimeLocalValue(){return '2026-07-19T12:00';},
   withLedgerSheetPosition(renderFn){return renderFn();},
