@@ -3090,6 +3090,14 @@ function findRegisteredMember(name,records,testMode){
   return null;
 }
 function spendLedgerRecords(records){ return effectiveLedgerRecords(records).filter(function(record){return !isIdentityRegistrationRecord(record);}); }
+function ledgerUniverseMode(){return lsGet('trip_ledger_test_mode',false)?'test':'formal';}
+function ledgerUniverseRecords(records,mode){
+  mode=mode==='test'?'test':'formal';
+  return (records||[]).filter(function(record){
+    if(isIdentityRegistrationRecord(record))return false;
+    return mode==='test'?isTestLedgerRecord(record):!isTestLedgerRecord(record);
+  });
+}
 
 function summarizeLedgerRecords(records,includeTest){
   var byMember={}, order=[], total={amountJpy:0,amountTwd:0}, included=[];
@@ -3196,9 +3204,9 @@ function allocateAmountByLargestRemainder(amount,participants){
   var base=Math.floor(amount/participants.length), remainder=amount-base*participants.length;
   return participants.map(function(member,index){return {member:member,amount:base+(index<remainder?1:0)};});
 }
-function settlementMemberOrder(records,memberOrder){
+function settlementMemberOrder(records,memberOrder,universe){
   if(Array.isArray(memberOrder))return memberOrder.slice();
-  return registeredMemberEntries(records||[],false).map(function(entry){return entry.name;});
+  return registeredMemberEntries(records||[],universe==='test').map(function(entry){return entry.name;});
 }
 function settlementOrderInfo(memberOrder){
   var rank=Object.create(null), display=Object.create(null);
@@ -3324,8 +3332,9 @@ function buildLedgerExpenseRecords(draft,context){
     return record;
   });
 }
-function buildMemberBalances(records,memberOrder,warnFn){
-  var order=settlementMemberOrder(records,memberOrder), orderInfo=settlementOrderInfo(order), states=Object.create(null), invalidRecords=[];
+function buildMemberBalances(records,memberOrder,warnFn,universe){
+  universe=universe==='test'?'test':'formal';
+  var order=settlementMemberOrder(records,memberOrder,universe), orderInfo=settlementOrderInfo(order), states=Object.create(null), invalidRecords=[];
   function stateFor(name){
     var key=canonicalMemberName(name);
     if(!key)return null;
@@ -3338,7 +3347,8 @@ function buildMemberBalances(records,memberOrder,warnFn){
   }
   order.forEach(stateFor);
   effectiveLedgerRecords(records,warnFn).forEach(function(record){
-    if(!record||record.recordType!=='expense'||isTestLedgerRecord(record))return;
+    if(!record||record.recordType!=='expense')return;
+    if(universe==='test'?!isTestLedgerRecord(record):isTestLedgerRecord(record))return;
     var participants=parseParticipants(record,warnFn);
     if(!participants){invalidRecords.push({id:String(record.id||''),reason:'participants 無效'});return;}
     var payerName=String(record.member||'').trim(), amountJpy=settlementAmount(record.amountJpy), amountTwd=settlementAmount(record.amountTwd);
@@ -3835,7 +3845,7 @@ function updateLedgerPendingStatus(){
   try{node.textContent='● JPY 1 ≈ TWD '+currentLedgerSettings().exchangeRate;node.classList.remove('pending');}
   catch(error){node.textContent='● 匯率未設定';node.classList.remove('pending');}
 }
-function ledgerTrackRecords(){return ledgerUiState.track==='shared'?sortLedgerExpenses(spendLedgerRecords(mergedLedgerRecords())):sortLedgerExpenses(personalLedgerRepository.all());}
+function ledgerTrackRecords(){return ledgerUiState.track==='shared'?sortLedgerExpenses(ledgerUniverseRecords(spendLedgerRecords(mergedLedgerRecords()),ledgerUniverseMode())):sortLedgerExpenses(personalLedgerRepository.all());}
 function setLedgerTrack(value){
   if(value!=='personal'&&value!=='shared')return;
   ledgerUiState.track=value;ledgerUiState.page='dashboard';ledgerUiState.filter='all';ledgerUiState.displayCurrency='';renderSplit();
@@ -4071,13 +4081,14 @@ function renderLedgerRecentGroups(records,shared,currency){
     return '<section class="ledger-date-group"><div class="ledger-date-label">'+escapeHtml(label)+'</div>'+group.records.map(function(record){return renderLedgerRecentRecord(record,shared,currency);}).join('')+'</section>';
   }).join('');
 }
-function ledgerCurrentMemberSettlement(records,member){
-  var balances=buildMemberBalances(records),key=canonicalMemberName(member),current=null;
+function ledgerCurrentMemberSettlement(records,member,universe){
+  universe=universe==='test'?'test':'formal';
+  var balances=buildMemberBalances(records,null,null,universe),key=canonicalMemberName(member),current=null;
   balances.members.forEach(function(item){if(canonicalMemberName(item.member)===key)current=item;});
   return {balances:balances,current:current||{member:member,paidJpy:0,owedJpy:0,netJpy:0,paidTwd:0,owedTwd:0,netTwd:0},jpy:buildTransferSuggestions(balances,'JPY'),twd:buildTransferSuggestions(balances,'TWD')};
 }
 function renderLedgerSettlementCard(records,member,currency){
-  var settlement=ledgerCurrentMemberSettlement(records,member),status=ledgerSettlementStatus(settlement.current),amount=currency==='TWD'?status.amountTwd:status.amountJpy;
+  var settlement=ledgerCurrentMemberSettlement(records,member,ledgerUniverseMode()),status=ledgerSettlementStatus(settlement.current),amount=currency==='TWD'?status.amountTwd:status.amountJpy;
   return '<button class="ledger-compact-card ledger-compact-action" onclick="openLedgerSettlementPanel()"><h3>結算</h3><strong>'+escapeHtml(status.label)+' · '+escapeHtml(formatLedgerCurrencyAmount(currency,amount))+'</strong><p>查看成員淨額與轉帳建議</p></button>';
 }
 function ledgerSettlementLines(items){
@@ -4094,7 +4105,7 @@ function openLedgerInfoSheet(title,body){
   document.body.appendChild(overlay);document.body.classList.add('ledger-sheet-open');
 }
 function openLedgerSettlementPanel(){
-  var settlement=ledgerCurrentMemberSettlement(mergedLedgerRecords(),getCurrentMember()),status=ledgerSettlementStatus(settlement.current);
+  var settlement=ledgerCurrentMemberSettlement(mergedLedgerRecords(),getCurrentMember(),ledgerUniverseMode()),status=ledgerSettlementStatus(settlement.current);
   var body='<div class="ledger-settlement-status"><strong>'+escapeHtml(status.label)+'</strong><span>¥'+status.amountJpy.toLocaleString()+' · NT$'+status.amountTwd.toLocaleString()+'</span></div><section class="ledger-settlement-section"><h3>成員淨額</h3><div class="ledger-settlement-list">'+ledgerSettlementLines(settlement.balances.members)+'</div></section><section class="ledger-settlement-section"><h3>JPY 轉帳建議</h3><div class="ledger-settlement-list">'+ledgerTransferLines(settlement.jpy)+'</div></section><section class="ledger-settlement-section"><h3>TWD 轉帳建議</h3><div class="ledger-settlement-list">'+ledgerTransferLines(settlement.twd)+'</div></section>'+(settlement.balances.invalidRecords.length?'<div class="ledger-settlement-warning">已排除 '+settlement.balances.invalidRecords.length+' 筆異常紀錄，請檢查資料。</div>':'');
   openLedgerInfoSheet('團體結算',body);
 }
@@ -4132,7 +4143,7 @@ function openLedgerRecordDetail(id){
 }
 function renderSplit(){
   var view=document.getElementById('view-split');if(!view)return;
-  var shared=ledgerUiState.track==='shared',records=ledgerTrackRecords(),summary=shared?summarizeLedgerRecords(records):summarizePersonalLedgerRecords(records);
+  var shared=ledgerUiState.track==='shared',records=ledgerTrackRecords(),summary=shared?summarizeLedgerRecords(records,ledgerUniverseMode()==='test'):summarizePersonalLedgerRecords(records);
   var counted=summary.records||[],period=buildLedgerPeriodSummary(counted,Date.now()),pending=shared?ledgerRepository.pendingCount():0,member=getCurrentMember();
   var settings=null,settingsError='';try{settings=currentLedgerSettings();}catch(error){settingsError=error.message||'匯率未設定';}
   var currency=ledgerUiState.displayCurrency||(settings&&settings.defaultCurrency)||'JPY';if(currency!=='JPY'&&currency!=='TWD')currency='JPY';
@@ -4142,7 +4153,7 @@ function renderSplit(){
   var status=pending?'● '+pending+' 筆待同步':settings?'● JPY 1 ≈ TWD '+settings.exchangeRate:'● '+(settingsError||'匯率未設定');
   var recent=selectRecentLedgerExpenses(records,15),recentMarkup=recent.length?renderLedgerRecentGroups(recent,shared,currency):'<div class="empty-state">還沒有任何'+(shared?'團體':'個人')+'紀錄</div>';
   var legacy=legacyExpenseNoticeVisible?'<div class="legacy-ledger">偵測到舊版 `trip_expenses` 本機測試資料,不會遷移至雲端。<div class="settings-actions"><button class="btn coral" onclick="clearLegacyExpenses()">清除舊本機紀錄</button><button class="btn ghost" onclick="dismissLegacyExpenses()">保留並關閉</button></div></div>':'';
-  var testWarning=shared&&lsGet('trip_ledger_test_mode',false)?'<div class="ledger-test-warning"><strong>⚠ 測試模式中</strong><div>團體帳新增的記帳不會列入彙算</div><button class="btn coral" onclick="openSettings(\'ledgerTestModeSection\')">前往設定關閉</button></div>':'';
+  var testWarning=shared&&lsGet('trip_ledger_test_mode',false)?'<div class="ledger-test-warning"><strong>⚠ 目前顯示測試帳本</strong><div>不影響正式分帳</div><button class="btn coral" onclick="openSettings(\'ledgerTestModeSection\')">前往設定關閉</button></div>':'';
   var secondCard=shared?renderLedgerSettlementCard(mergedLedgerRecords(),member,currency):'<button class="ledger-compact-card ledger-compact-action" onclick="openLedgerProxyPanel()"><h3>代購</h3><strong>'+proxy.proxyCount+' 筆 · '+escapeHtml(formatLedgerCurrencyAmount(currency,currency==='JPY'?proxy.proxyTotal.amountJpy:proxy.proxyTotal.amountTwd))+'</strong><p>我的實際花費 '+escapeHtml(formatLedgerCurrencyAmount(currency,currency==='JPY'?proxy.actualSpend.amountJpy:proxy.actualSpend.amountTwd))+'</p></button>';
   view.innerHTML=testWarning+legacy+'<div class="ledger-dashboard"><div class="split-intro">個人帳留在本機；團體帳跨裝置同步。</div><div id="ledgerPendingStatus" class="ledger-status-pill '+(pending?'pending':'')+'">'+escapeHtml(status)+'</div>'+
     '<section class="ledger-summary-card"><div class="ledger-track-grid" role="group" aria-label="記帳模式"><button class="ledger-track-btn '+(!shared?'on':'')+'" aria-pressed="'+(!shared?'true':'false')+'" onclick="setLedgerTrack(\'personal\')">個人</button><button class="ledger-track-btn '+(shared?'on':'')+'" aria-pressed="'+(shared?'true':'false')+'" onclick="setLedgerTrack(\'shared\')">團體</button></div><div class="ledger-summary-count">'+period.count+' 筆'+(shared?'團體':'個人')+'紀錄</div><button class="ledger-summary-amount" onclick="toggleLedgerDisplayCurrency()" aria-label="切換總額顯示幣別"><strong>'+escapeHtml(formatLedgerCurrencyAmount(currency,primaryTotal))+'</strong><span>'+escapeHtml(formatLedgerCurrencyAmount(secondary,secondaryTotal))+'</span></button></section>'+

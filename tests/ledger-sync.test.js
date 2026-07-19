@@ -41,6 +41,11 @@ function loadLedgerModule(){
 (async function(){
   const mod = loadLedgerModule();
 
+  const universeFormal={id:'universe-formal',time:'2026-07-19T00:00:00.000Z',member:'黃柏',recordType:'expense',detail:'晚餐',amountJpy:100,amountTwd:20};
+  const universeTest={id:'universe-test',time:'2026-07-19T00:01:00.000Z',member:'黃柏',recordType:'expense',detail:'[TEST] 晚餐',amountJpy:900,amountTwd:180};
+  assert.deepStrictEqual(Array.from(mod.ledgerUniverseRecords([universeFormal,universeTest],'formal'),function(record){return record.id;}),['universe-formal'],'formal universe contains only formal expenses');
+  assert.deepStrictEqual(Array.from(mod.ledgerUniverseRecords([universeFormal,universeTest],'test'),function(record){return record.id;}),['universe-test'],'TEST universe contains only TEST expenses');
+
   const schema27 = mod.normalizeLedgerRecord({
     member:'黃柏',amountJpy:100,amountTwd:20,storeName:'  松屋  ',replacesRecordId:' old-1 '
   },1000,function(){return 0;},false);

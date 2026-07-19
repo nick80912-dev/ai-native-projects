@@ -81,8 +81,10 @@ assert(splitSource.includes('查看全部'),'dashboard links to the complete lis
 assert(splitSource.includes('openLedgerEntrySheet'),'dashboard FAB opens quick entry');
 assert(!splitSource.includes('id="ledgerAmount"'),'amount input no longer lives in the dashboard renderer');
 assert(splitSource.includes('selectRecentLedgerExpenses(records,15)'),'dashboard limits records through the tested selector');
+assert(splitSource.includes("summarizeLedgerRecords(records,ledgerUniverseMode()==='test')"),'TEST dashboard includes only its already-selected universe in totals');
 assert(ledgerUiSource.includes('groupLedgerExpensesByDate'),'dashboard uses the tested date grouping');
 assert(ledgerUiSource.includes("spendLedgerRecords(mergedLedgerRecords())"),'shared history consumes effective visible expenses');
+assert(ledgerUiSource.includes('ledgerUniverseRecords'),'shared dashboard selects one formal/TEST universe');
 assert(ledgerUiSource.includes("ledgerUiState.page='all'"),'View all switches the single ledger state into history mode');
 assert(ledgerUiSource.includes("setLedgerHistoryFilter(\\'proxy\\')"),'personal history exposes the proxy-only filter');
 const detailSource=html.slice(html.indexOf('function ledgerRecordDetailRows('),html.indexOf('function renderSplit()'));
@@ -91,5 +93,7 @@ assert(detailSource.includes('deletePersonalLedgerRecord('),'personal detail reu
 assert(detailSource.includes('openSharedLedgerDelete('),'shared detail reuses the tombstone deletion path');
 assert(detailSource.includes("['批次 ID',record.batchId]"),'detail includes batch ID when present');
 assert(detailSource.includes("['同步狀態',record.pending?'待同步':'已同步']"),'detail exposes pending status');
+assert(splitSource.includes('目前顯示測試帳本'),'TEST banner explains which universe is visible');
+assert(splitSource.includes('不影響正式分帳'),'TEST banner confirms formal data is isolated');
 
 console.log('ledger dashboard tests passed');

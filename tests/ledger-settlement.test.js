@@ -66,6 +66,18 @@ function expense(id,member,jpy,twd,participants,time){
   return {id,time:time||'2026-07-18T01:00:00.000Z',member,category:'餐飲',detail:id,amountJpy:jpy,amountTwd:twd,note:'',participants:JSON.stringify(participants),payMethod:'現金',recordType:'expense',targetRecordId:'',deleteReason:'',batchId:''};
 }
 
+const formalUniverseExpense=expense('formal-universe','Bar',100,20,['Bar','Amy']);
+const testUniverseExpense=expense('test-universe','Bar',900,180,['Bar','Amy']);
+testUniverseExpense.detail='[TEST] test-universe';
+const universeRegistrations=[
+  {id:'universe-member-bar',time:'2026-07-18T00:00:00.000Z',member:'Bar',detail:'[身分註冊]',amountJpy:0,amountTwd:0,recordType:'identity_registration'},
+  {id:'universe-member-amy',time:'2026-07-18T00:01:00.000Z',member:'Amy',detail:'[身分註冊]',amountJpy:0,amountTwd:0,recordType:'identity_registration'}
+];
+const formalUniverseBalances=mod.buildMemberBalances(universeRegistrations.concat([formalUniverseExpense,testUniverseExpense]),null,null,'formal');
+const testUniverseBalances=mod.buildMemberBalances(universeRegistrations.concat([formalUniverseExpense,testUniverseExpense]),null,null,'test');
+assert.strictEqual(formalUniverseBalances.members[0].paidJpy,100,'formal settlement uses only formal expenses');
+assert.strictEqual(testUniverseBalances.members[0].paidJpy,900,'TEST settlement uses only TEST expenses');
+
 const records=[
   {id:'member-bar',time:'2026-07-18T00:00:00.000Z',member:'Bar',detail:'[身分註冊]',amountJpy:0,amountTwd:0,recordType:'identity_registration'},
   {id:'member-amy',time:'2026-07-18T00:01:00.000Z',member:'Amy',detail:'[身分註冊]',amountJpy:0,amountTwd:0,recordType:'identity_registration'},
@@ -156,7 +168,7 @@ assert.deepStrictEqual(Array.from(overflowBalances.memberOrder),['A','B'],'an ov
 
 const html=fs.readFileSync('index.html','utf8');
 const settlementSource=html.slice(html.indexOf('function ledgerCurrentMemberSettlement('),html.indexOf('function showLedgerFullList('));
-assert(settlementSource.includes('buildMemberBalances(records)'),'settlement UI consumes the PR4 balance engine');
+assert(settlementSource.includes('buildMemberBalances(records,null,null,universe)'),'settlement UI consumes the universe-aware PR4 balance engine');
 assert(settlementSource.includes("buildTransferSuggestions(balances,'JPY')"),'settlement UI consumes PR4 JPY transfer suggestions');
 assert(settlementSource.includes("buildTransferSuggestions(balances,'TWD')"),'settlement UI consumes PR4 TWD transfer suggestions');
 assert(!settlementSource.includes('owedJpy+='),'UI does not reimplement owed balances');
