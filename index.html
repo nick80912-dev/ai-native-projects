@@ -3471,7 +3471,23 @@ function createLedgerRepository(options){
       return {ok:delivered,dup:!!result.dup,pending:pendingCount(),record:normalized,error:result.error};
     });
   }
-  return {add:add,flushQueue:flushQueue,pendingCount:pendingCount,queuedRecords:readQueue};
+  function enqueueBatch(records){
+    var testMode=typeof opts.isTestMode==='function'&&opts.isTestMode();
+    var normalized=(records||[]).map(function(record){
+      var item=normalizeLedgerRecord(record,now(),random,testMode);
+      validateLedgerRecord(item);return item;
+    });
+    if(!normalized.length)throw new Error('記帳批次不可為空');
+    var next=readQueue().slice(),seen={};
+    next.forEach(function(item){seen[item.id]=true;});
+    normalized.forEach(function(item){if(!seen[item.id]){seen[item.id]=true;next.push(item);}});
+    writeQueue(next);
+    Promise.resolve().then(function(){return flushQueue();}).then(function(){
+      if(typeof opts.onBackgroundFlush==='function')opts.onBackgroundFlush();
+    },function(error){AppLog.repo('背景同步失敗：'+(error.message||error));});
+    return {ok:true,queued:true,records:normalized,pending:next.length};
+  }
+  return {add:add,enqueueBatch:enqueueBatch,flushQueue:flushQueue,pendingCount:pendingCount,queuedRecords:readQueue};
 }
 
 function postLedgerRecord(record){
@@ -4012,8 +4028,7 @@ function persistLedgerExpenseRecords(records,track){
     var normalized=records.map(function(record){var item=normalizePersonalLedgerRecord(record,Date.parse(record.time),Math.random);validateLedgerRecord(item);item.proxyTarget=validateProxyDraft(item.isProxy,item.proxyTarget);return item;});
     return Promise.resolve({ok:true,personal:true,records:normalized.map(function(record){return personalLedgerRepository.add(record);})});
   }
-  var promises=records.map(function(record){return ledgerRepository.add(record);});
-  return Promise.all(promises).then(function(results){return {ok:results.every(function(result){return result.ok;}),records:results.map(function(result){return result.record;}),pending:ledgerRepository.pendingCount()};});
+  return Promise.resolve(ledgerRepository.enqueueBatch(records));
 }
 function saveLedgerEntry(addAnother){
   if(isTimeSimulationActive()){toast('時間模擬中不可新增支出');return Promise.resolve({ok:false});}
@@ -4027,7 +4042,7 @@ function saveLedgerEntry(addAnother){
     ledgerUiState.track=draft.track;renderSplit();
     if(addAnother){ledgerUiState.draft=resetLedgerDraftAfterSave(draft);renderLedgerEntrySheet();}
     else closeLedgerEntrySheet();
-    toast(result.ok?'已儲存':result.pending+' 筆待同步');return result;
+    toast(result.queued?'已儲存，待同步':'已儲存');return result;
   },function(error){buttons.forEach(function(button){if(button)button.disabled=false;});toast(error.message||'記帳失敗');return {ok:false,error:error};});
 }
 function deletePersonalLedgerRecord(id){

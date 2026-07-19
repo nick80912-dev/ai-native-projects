@@ -41,3 +41,9 @@
 **Context**:分帳 2.1 需要可靠搜尋與還原店名，並讓團體 append-only 編輯的新筆可指向被取代紀錄。把資料藏在備註會造成搜尋、解析與跨裝置編輯歧義，因此以末端選填欄位維持位置式契約的向後相容。
 
 **Compatibility**:部署順序固定為先部署可接受 16 欄且相容舊 payload 的 Apps Script，再發布會送出新欄位的前端。舊 Parser 會忽略未知末端欄位；回滾舊前端時新欄可保留。Apps Script 原始碼仍以 `apps-script/ledger-sync.gs` 為權威。
+
+## 2026-07-19 Ledger 2.1 Queue-first 完成語意
+
+**Decision**:`ledgerRepository.add(record)` 保留「嘗試送達後完成」語意，供身分註冊及需要送達結果的呼叫端使用；新增 `enqueueBatch(records)` 作為團體記帳 UI 的本機耐久完成邊界。`enqueueBatch` 先正規化及驗證整批紀錄，再以一次 localStorage 寫入加入 Queue，立即回覆 queued acknowledgment，最後由背景 `flushQueue()` 送達。UI 不得直接讀寫 Queue key 或等待背景 POST 才關閉表單。
+
+**Failure Semantics**:整批任一紀錄無效或 localStorage 寫入失敗時不得留下半批資料，也不得關閉表單。背景 POST 失敗不撤銷已入列紀錄；既有 pending 狀態、online/open 補送、`ok:true`／`dup:true` 移出 Queue 規則不變。

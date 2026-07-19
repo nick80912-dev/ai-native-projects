@@ -84,13 +84,12 @@ assert.notStrictEqual(stateSandbox.ledgerUiState.draft.items[0],firstBefore,'ite
 assert.notStrictEqual(stateSandbox.ledgerUiState.draft.items[0],stateSandbox.ledgerUiState.draft.items[1]);
 
 const persistSource=extract('function persistLedgerExpenseRecords(','function saveLedgerEntry(');
-let personalAdds=0,sharedAdds=0,releaseShared;
-const sharedGate=new Promise(resolve=>{releaseShared=resolve;});
+let personalAdds=0,sharedEnqueues=0;
 const persistSandbox={
   normalizePersonalLedgerRecord(record){return Object.assign({},record);},
   validateLedgerRecord(){return true;},validateProxyDraft(flag,target){return flag?target:'';},
   personalLedgerRepository:{add(record){personalAdds++;return record;}},
-  ledgerRepository:{add(record){sharedAdds++;return sharedGate.then(()=>({ok:true,record}));},pendingCount(){return 0;}},
+  ledgerRepository:{enqueueBatch(records){sharedEnqueues++;return {ok:true,queued:true,records,pending:records.length};},pendingCount(){return 0;}},
   Date,Math,Promise,JSON,String,Number,isFinite
 };
 vm.createContext(persistSandbox);
@@ -100,14 +99,12 @@ vm.runInContext(persistSource,persistSandbox);
   const personalResult=await persistSandbox.persistLedgerExpenseRecords([{id:'p1',time:'2026-07-18T08:00:00.000Z',isProxy:false,proxyTarget:''}],'personal');
   assert.strictEqual(personalResult.personal,true);
   assert.strictEqual(personalAdds,1);
-  assert.strictEqual(sharedAdds,0,'personal saves never call the shared repository');
+  assert.strictEqual(sharedEnqueues,0,'personal saves never call the shared repository');
 
-  const sharedPromise=persistSandbox.persistLedgerExpenseRecords([{id:'s1'},{id:'s2'}],'shared');
-  assert.strictEqual(sharedAdds,2,'all shared items enter the repository before awaiting network delivery');
-  releaseShared();
-  const sharedResult=await sharedPromise;
+  const sharedResult=await persistSandbox.persistLedgerExpenseRecords([{id:'s1'},{id:'s2'}],'shared');
+  assert.strictEqual(sharedEnqueues,1,'all shared items use one atomic queue operation');
   assert.strictEqual(sharedResult.records.length,2);
-  assert.strictEqual(sharedAdds,2);
+  assert.strictEqual(sharedResult.queued,true,'shared persistence resolves from local queue acknowledgement');
   assert.strictEqual(personalAdds,1,'shared saves never call the personal repository');
 
   const sheetSource=extract('function openLedgerEntrySheet(','function formatLedgerCurrencyAmount(');
@@ -132,6 +129,7 @@ vm.runInContext(persistSource,persistSandbox);
   assert(!sheetSource.includes('多品項將於本批下一階段啟用'),'multi-item toggle is fully functional');
   assert(!/addEventListener\(['"](?:touchstart|touchmove|gesturestart)/.test(sheetSource),'sheet adds no JavaScript gesture interceptor');
   assert(!sheetSource.includes('preventDefault()'),'sheet adds no preventDefault gesture path');
+  assert(sheetSource.includes("toast(result.queued?'已儲存，待同步':'已儲存')"),'shared optimistic save reports pending background delivery');
 
   assert(/\.ledger-sheet\{[^}]*overflow-y:auto[^}]*touch-action:pan-y/.test(html),'sheet scroll surface is pan-y only');
   assert(/\.ledger-sheet button[^}]*touch-action:manipulation/.test(html),'sheet controls use scoped manipulation');

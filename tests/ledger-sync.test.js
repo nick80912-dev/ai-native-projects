@@ -74,6 +74,37 @@ function loadLedgerModule(){
   assert.strictEqual(ids.size,500,'timestamp-random ledger IDs stay unique');
   assert([...ids].every(id => /^1784250000000-[0-9a-z]{4}$/.test(id)),'ledger ID uses timestamp-4 random format');
 
+  let backgroundPostStarted=0;
+  const optimisticStorage=createStorage();
+  const optimisticRepo=mod.createLedgerRepository({
+    storage:optimisticStorage,
+    post(){backgroundPostStarted++;return new Promise(function(){});},
+    now(){return 1784250000000;},
+    random(){return 0.1;}
+  });
+  const optimisticAck=optimisticRepo.enqueueBatch([
+    {id:'first',member:'黃柏',category:'餐飲',detail:'早餐',amountJpy:100,amountTwd:20,note:''},
+    {id:'second',member:'黃柏',category:'交通',detail:'車票',amountJpy:200,amountTwd:40,note:''}
+  ]);
+  assert.strictEqual(optimisticAck.ok,true,'batch acknowledges local durability immediately');
+  assert.strictEqual(optimisticAck.queued,true,'batch acknowledgement identifies queue-first completion');
+  assert.strictEqual(optimisticAck.pending,2,'batch acknowledgement reports the complete pending count');
+  assert.deepStrictEqual(Array.from(optimisticRepo.queuedRecords(),function(record){return record.id;}),['first','second'],'all batch records enter the queue in order');
+  assert.strictEqual(optimisticStorage.writeCount,1,'the complete batch uses one atomic queue write');
+  await new Promise(function(resolve){setTimeout(resolve,0);});
+  assert.strictEqual(backgroundPostStarted,1,'delivery starts in the background after local acknowledgement');
+
+  const invalidBatchStorage=createStorage();
+  const invalidBatchRepo=mod.createLedgerRepository({storage:invalidBatchStorage,post(){return Promise.resolve({ok:true});}});
+  assert.throws(function(){
+    invalidBatchRepo.enqueueBatch([
+      {id:'valid',member:'黃柏',amountJpy:100,amountTwd:20},
+      {id:'invalid',member:' ',amountJpy:200,amountTwd:40}
+    ]);
+  },/成員必填/,'one invalid record rejects the complete batch');
+  assert.strictEqual(invalidBatchRepo.pendingCount(),0,'invalid batches leave no partial queue records');
+  assert.strictEqual(invalidBatchStorage.writeCount,0,'invalid batches never write localStorage');
+
   let online = false;
   const queueStorage = createStorage();
   const repo = mod.createLedgerRepository({
