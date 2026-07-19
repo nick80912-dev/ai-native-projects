@@ -10,6 +10,16 @@ vm.createContext(sandbox);
 vm.runInContext(fs.readFileSync('schema.js','utf8'), sandbox);
 vm.runInContext(fs.readFileSync('validator.js','utf8'), sandbox);
 
+assert.strictEqual(sandbox.SCHEMA.version,'2.7 (2026-07-19)','Ledger Schema version is 2.7');
+assert.deepStrictEqual(
+  Array.from(sandbox.SCHEMA.sheets.ledger.columns,function(column){return column.field;}),
+  ['id','time','member','category','detail','amountJpy','amountTwd','note','participants','payMethod','recordType','targetRecordId','deleteReason','batchId','storeName','replacesRecordId'],
+  'Ledger Schema keeps the 14 existing fields and appends the two 2.7 fields'
+);
+assert(/消費發生時間/.test(sandbox.SCHEMA.sheets.ledger.columns[1].desc),'time means expense occurrence time');
+assert.strictEqual(sandbox.SCHEMA.sheets.ledger.columns[14].header,'店名');
+assert.strictEqual(sandbox.SCHEMA.sheets.ledger.columns[15].header,'取代紀錄ID');
+
 const html = fs.readFileSync('index.html','utf8');
 const parserStart = html.indexOf('function parseCSV(text)');
 const parserEnd = html.indexOf('function parseKeyValue(csvText, sheetKey)');
@@ -32,4 +42,4 @@ assert.strictEqual(rows[0].deleteReason,'');
 assert.strictEqual(rows[0].batchId,'batch-001');
 assert.strictEqual(Object.prototype.hasOwnProperty.call(rows[0],'未知欄位'),false,'unknown Sheet fields are ignored');
 
-console.log('Ledger Schema 2.0 contract tests passed');
+console.log('Ledger Schema 2.7 contract tests passed');

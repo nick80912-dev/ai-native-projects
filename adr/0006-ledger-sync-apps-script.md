@@ -33,3 +33,11 @@
 **Collaboration and Authorization**:所有已選擇成員身分的裝置都可提出團體刪除，操作者寫入墓碑的 `member`。這是協作式 UI 行為，不代表伺服器端身分驗證或存取控制；Apps Script URL 的既有安全取捨不變。
 
 **Compatibility and Trade-offs**:既有負數沖銷紀錄不改寫，仍按歷史金額正常讀取與彙算；新版 UI 不再建立負數沖銷。格式不完整或指向不存在目標、身分註冊、另一墓碑的刪除紀錄會被忽略並警告。公開 CSV 延遲期間，本機待同步墓碑由既有 queue 立即參與有效紀錄解析；收到寫入確認後轉入本機 bridge，直到雲端快照出現同一墓碑 ID 才清除，避免原紀錄短暫復活。
+
+## 2026-07-19 Ledger 2.1 Schema 2.7 契約擴充
+
+**Decision**:Ledger Schema 2.7 在既有 14 欄末端追加選填的 `storeName`（店名）與 `replacesRecordId`（取代紀錄ID），Apps Script 依固定 16 欄順序 append。舊 payload 缺少兩欄時寫入空字串，既有 ID 去重、LockService、驗證及 `updateSettings` 行為不變。`time` 欄的正式語意由寫入時間改為 ISO 8601 消費發生時間；既有資料不遷移，直接依新語意讀取。
+
+**Context**:分帳 2.1 需要可靠搜尋與還原店名，並讓團體 append-only 編輯的新筆可指向被取代紀錄。把資料藏在備註會造成搜尋、解析與跨裝置編輯歧義，因此以末端選填欄位維持位置式契約的向後相容。
+
+**Compatibility**:部署順序固定為先部署可接受 16 欄且相容舊 payload 的 Apps Script，再發布會送出新欄位的前端。舊 Parser 會忽略未知末端欄位；回滾舊前端時新欄可保留。Apps Script 原始碼仍以 `apps-script/ledger-sync.gs` 為權威。

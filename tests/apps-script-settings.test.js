@@ -128,9 +128,9 @@ assert.deepStrictEqual(
   Array.from(app.ledger.rowForId(ledgerPayload.id)),
   [
     ledgerPayload.id, ledgerPayload.time, ledgerPayload.member, ledgerPayload.category,
-    ledgerPayload.detail, 500, 105, '', '', '', '', '', '', ''
+    ledgerPayload.detail, 500, 105, '', '', '', '', '', '', '', '', ''
   ],
-  'legacy ledger payload fills the six optional fields with empty strings'
+  'legacy ledger payload fills all optional fields with empty strings'
 );
 
 const ledger20Payload = {
@@ -148,19 +148,21 @@ const ledger20Payload = {
   targetRecordId:'',
   deleteReason:'',
   batchId:'batch-20260718-001',
+  storeName:'松屋 岡山站前店',
+  replacesRecordId:'ledger-original-001',
   unknownField:'must not be serialized'
 };
-assert.deepStrictEqual(app.call(ledger20Payload),{ok:true},'Ledger 2.0 payload append succeeds');
+assert.deepStrictEqual(app.call(ledger20Payload),{ok:true},'Ledger 2.7 payload append succeeds');
 assert.deepStrictEqual(
   Array.from(app.ledger.rowForId(ledger20Payload.id)),
   [
     ledger20Payload.id, ledger20Payload.time, ledger20Payload.member, ledger20Payload.category,
     ledger20Payload.detail, 1200, 252, 'roundtrip', '["Bar","Amy"]', '現金',
-    'expense', '', '', 'batch-20260718-001'
+    'expense', '', '', 'batch-20260718-001', '松屋 岡山站前店', 'ledger-original-001'
   ],
-  'Ledger 2.0 fields serialize in the exact Sheet contract order'
+  'Ledger 2.7 fields serialize in the exact Sheet contract order'
 );
-assert.strictEqual(app.ledger.rowForId(ledger20Payload.id).length,14,'unknown payload fields are ignored');
+assert.strictEqual(app.ledger.rowForId(ledger20Payload.id).length,16,'unknown payload fields are ignored');
 
 const identityPayload = {
   id:'1784274603806-identity',

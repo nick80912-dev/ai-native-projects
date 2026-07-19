@@ -36,7 +36,8 @@ function appendLedger(d) {
   sh.appendRow([
     d.id, d.time, d.member, d.category, d.detail, jpy, twd, d.note || '',
     d.participants || '', d.payMethod || '', d.recordType || '',
-    d.targetRecordId || '', d.deleteReason || '', d.batchId || ''
+    d.targetRecordId || '', d.deleteReason || '', d.batchId || '',
+    d.storeName || '', d.replacesRecordId || ''
   ]);
   return out({ok:true});
 }

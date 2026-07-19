@@ -6,7 +6,7 @@
 > 同步時 Validator 會在 console 以 `[Schema Error]` 前綴警告(六類日誌定義見 `validator.js`):缺少必要欄位/未知欄位/未知型別值/未知設定鍵,一律不崩潰。
 > 檔頭註解為手寫維護;下方表格區由 `schemaDoc()` 產生,**禁止手改表格**(見 14 的 Tier 3 規則)。
 
-版本:2.6 (2026-07-18)
+版本:2.7 (2026-07-19)
 
 ## 行程總表(gid=1169222358,kind=itinerary)
 | Google Sheet 欄位 | App Property | 必填 | 說明 |
@@ -80,7 +80,7 @@
 | Google Sheet 欄位 | App Property | 必填 | 說明 |
 |---|---|---|---|
 | 紀錄ID | id | ✅ | 時間戳-4位隨機;append-only 去重鍵 |
-| 時間 | time |  | ISO 8601 寫入時間 |
+| 時間 | time |  | ISO 8601 消費發生時間 |
 | 成員 | member | ✅ | 寫入當下的成員身分 |
 | 類別 | category |  |  |
 | 明細 | detail |  |  |
@@ -93,6 +93,8 @@
 | 目標紀錄ID | targetRecordId |  |  |
 | 刪除原因 | deleteReason |  |  |
 | 批次ID | batchId |  |  |
+| 店名 | storeName |  | 選填;消費店家名稱,供搜尋與顯示 |
+| 取代紀錄ID | replacesRecordId |  | 選填;團體編輯新筆指向被取代紀錄或 batch 根紀錄 |
 
 ## TripConfig(gid=1070234314,kind=keyvalue)
 | Key | App Property | 說明 |
