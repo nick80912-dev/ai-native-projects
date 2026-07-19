@@ -71,12 +71,12 @@ assert(html.includes('historyTaxExempt'),'history state includes the tax-exempt 
 assert(html.includes('找到 ')&&html.includes('ledgerHistorySummary'),'history keeps the result count and dual-currency totals');
 assert(html.includes('封閉集合給軌道，開放集合放散'),'the segmented/chips design law is documented in code');
 assert(!html.includes('單項設定 ·'),'retired item override copy is absent');
-assert(html.includes('ledger-item-flags'),'tax-exempt and proxy toggles share a compact row');
+assert(html.includes('ledger-item-control-row'),'category, tax-exempt and proxy controls share a compact row');
 assert(html.includes('新增對象')&&html.includes('ledgerProxyTargetInput'),'proxy target entry is inline rather than prompt-only');
 assert(html.includes('稅與優惠券（選填）'),'tax disclosure uses the approved title');
-assert(html.includes('更多細節（店家、備註，皆為選填）'),'optional details share the disclosure pattern without inventing a location field');
+assert(html.includes('更多細節（備註選填）'),'optional details disclosure is note-only');
 
 const sw=fs.readFileSync('sw.js','utf8');
-assert.match(sw,/okayama-trip-v23/,'service worker cache is v23');
+assert.match(sw,/okayama-trip-v24/,'service worker cache is v24');
 
 console.log('ledger 2.2 UI polish tests passed');

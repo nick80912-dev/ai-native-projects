@@ -1,0 +1,36 @@
+const assert=require('assert');
+const fs=require('fs');
+
+const html=fs.readFileSync('index.html','utf8');
+const sw=fs.readFileSync('sw.js','utf8');
+
+assert(
+  html.includes('grid-template-columns:minmax(0,1fr) 44px')&&
+  html.includes('grid-template-columns:44px minmax(0,1fr)'),
+  'normal and selection cards use mirrored two-column grids'
+);
+assert(
+  html.includes("ledgerUiState.selectionMode?'ledger-selection-card '")&&
+  html.includes("ledgerUiState.selectionMode?'':'<button class=\"ledger-record-menu-button\""),
+  'selection mode swaps in the checkbox and omits the action-menu DOM'
+);
+assert(!html.includes('grid-template-columns:auto minmax(0,1fr) 44px'),'the retired three-column card grid is absent');
+
+assert(html.includes('.ledger-entry-divider{border-bottom:1px solid var(--line);padding-bottom:8px}'),'identity and occurrence rows share one divider token');
+assert(html.includes('ledger-datetime-grid ledger-entry-divider'),'the occurrence row reuses the shared divider');
+assert(html.includes('grid-template-columns:minmax(0,1fr) 112px'),'date and compact time stay on one responsive row');
+assert(html.includes('aria-label="開啟日期選擇器"')&&html.includes('<svg aria-hidden="true"'),'calendar control uses the approved accessible inline SVG');
+
+assert(html.includes('function renderLedgerStoreField('),'store is a shared form field rather than disclosure-only content');
+assert(html.includes("renderLedgerStoreField(draft)+renderLedgerPaymentFields(draft)"),'store appears immediately above payment');
+assert(html.includes('更多細節（備註選填）'),'details disclosure is note-only');
+assert(!html.includes('更多細節（店家、備註，皆為選填）'),'store is removed from the details disclosure');
+
+assert(html.includes('.ledger-item-control-row{display:grid;grid-template-columns:minmax(0,1fr) auto auto'),'multi-item category, tax-free and proxy controls share one row');
+assert(html.includes("'衣物':'👕'")&&html.includes("'美妝':'💄'"),'clothing and cosmetics use specific emoji');
+assert(html.includes("var DEFAULT_LEDGER_CATEGORIES=['餐飲','交通','票券','購物','衣物','美妝','其他']"),'new entries use the renamed clothing category');
+assert(html.includes('.ledger-dual-amounts span{font-size:10px'),'secondary TWD amount is compact but remains at the 10px floor');
+
+assert.match(sw,/okayama-trip-v24/,'service worker cache is v24');
+
+console.log('ledger mobile hotfix tests passed');

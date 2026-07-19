@@ -90,7 +90,7 @@ assert(hostileSelectionMarkup.includes('e&amp;f'),'ampersands are HTML-attribute
 assert(hostileSelectionMarkup.includes('x\\\\y'),'backslashes are JavaScript encoded');
 assert(hostileSelectionMarkup.includes('n\\nx'),'line breaks are JavaScript encoded');
 
-assert(html.includes('class="ledger-entry-heading-row"'),'identity and multi-item toggle share the heading row');
+assert(html.includes('class="ledger-entry-heading-row ledger-entry-divider"'),'identity and multi-item toggle share the heading row and divider token');
 assert(html.includes('oninput="formatLedgerDateField(this)"'),'date field formats as the user types');
 assert(html.includes('class="ledger-batch-card'),'batch summary card is rendered');
 assert(html.includes('groupLedgerDisplayUnitsByCategory'),'category-grouped history keeps batches collapsed');
@@ -105,6 +105,6 @@ assert(html.includes('formatLedgerDualAmounts'),'cards always render JPY and TWD
 assert(!/overflow-x\s*:\s*hidden/.test(html.slice(html.indexOf('.ledger-sheet{'),html.indexOf('.ledger-sheet-head{'))),'sheet overflow is not hidden as a workaround');
 
 const sw=fs.readFileSync('sw.js','utf8');
-assert.match(sw,/okayama-trip-v23/,'service worker cache is v23');
+assert.match(sw,/okayama-trip-v24/,'service worker cache is v24');
 
 console.log('ledger 2.2.1 UI tests passed');

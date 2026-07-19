@@ -111,7 +111,7 @@ function response(payload){
   assert(html.includes("record.recordType='expense'")&&html.includes('normalizeLedgerParticipantSelection'),'shared expenses save the Ledger 2.0 contract fields');
   assert(ledgerUiSource.includes('record.payMethod'),'historical payment methods remain visible even when custom options change');
   assert(ledgerUiSource.includes('shared&&isTestLedgerRecord(record)'),'TEST badges are restricted to the shared track');
-  assert(html.includes("var DEFAULT_LEDGER_CATEGORIES=['餐飲','交通','票券','購物','衣服','美妝','其他']"),'Split page defines the confirmed default categories');
+  assert(html.includes("var DEFAULT_LEDGER_CATEGORIES=['餐飲','交通','票券','購物','衣物','美妝','其他']"),'Split page defines the confirmed default categories');
   assert(html.includes("var DEFAULT_LEDGER_PAY_METHODS=['現金','信用卡','行動支付','Suica','其他']"),'Split page defines the confirmed default payment methods');
   assert(!splitSource.includes('id="ledgerAmount"'),'Split dashboard does not embed the editable amount input');
   assert(splitSource.includes('openLedgerEntrySheet'),'Split dashboard exposes the quick-entry FAB');

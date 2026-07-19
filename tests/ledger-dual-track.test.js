@@ -33,7 +33,7 @@ const mod=loadModule(storage);
 assert.strictEqual(mod.PERSONAL_LEDGER_KEY,'trip_personal_ledger');
 assert.strictEqual(mod.LEDGER_CATEGORY_OPTIONS_KEY,'trip_ledger_categories');
 assert.strictEqual(mod.LEDGER_PAY_METHOD_OPTIONS_KEY,'trip_ledger_pay_methods');
-assert.deepStrictEqual(Array.from(mod.DEFAULT_LEDGER_CATEGORIES),['餐飲','交通','票券','購物','衣服','美妝','其他']);
+assert.deepStrictEqual(Array.from(mod.DEFAULT_LEDGER_CATEGORIES),['餐飲','交通','票券','購物','衣物','美妝','其他']);
 assert.deepStrictEqual(Array.from(mod.DEFAULT_LEDGER_PAY_METHODS),['現金','信用卡','行動支付','Suica','其他']);
 
 const personalRepo=mod.createPersonalLedgerRepository({storage,now(){return 1784428800000;},random(){return 0;}});
@@ -85,7 +85,7 @@ const personalSummary=mod.summarizePersonalLedgerRecords([
 assert.strictEqual(personalSummary.total.amountJpy,300,'TEST-like text never excludes a personal record from totals');
 
 const categoryStore=mod.createLedgerOptionStore({storage,key:mod.LEDGER_CATEGORY_OPTIONS_KEY,defaults:mod.DEFAULT_LEDGER_CATEGORIES});
-assert.deepStrictEqual(Array.from(categoryStore.all()),['餐飲','交通','票券','購物','衣服','美妝','其他']);
+assert.deepStrictEqual(Array.from(categoryStore.all()),['餐飲','交通','票券','購物','衣物','美妝','其他']);
 categoryStore.remove('餐飲');
 assert.strictEqual(categoryStore.all().includes('餐飲'),false,'default options can be deleted');
 categoryStore.add('咖啡');
@@ -94,5 +94,12 @@ assert.throws(function(){categoryStore.add('咖啡');},/重複/);
 assert.throws(function(){categoryStore.add('超過六個字選項');},/最多 6 個字/);
 categoryStore.move('咖啡',-1);
 assert(categoryStore.all().indexOf('咖啡')<categoryStore.all().length-1,'custom options can move upward');
+
+const legacyCategoryModule=loadModule(createStorage({trip_ledger_categories:JSON.stringify(['購物','衣服','衣物','美妝'])}));
+assert.deepStrictEqual(
+  Array.from(legacyCategoryModule.ledgerCategoryStore.all()),
+  ['購物','衣物','美妝'],
+  'legacy clothing options normalize to 衣物 without duplicates'
+);
 
 console.log('ledger dual-track tests passed');
