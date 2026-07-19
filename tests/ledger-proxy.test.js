@@ -63,7 +63,7 @@ assert.deepStrictEqual(amy.actualSpend,{amountJpy:500,amountTwd:100},'historical
 assert.deepStrictEqual(plain(mod.buildProxySummary([], 'Bar')).actualSpend,{amountJpy:0,amountTwd:0});
 
 const uiSource=fs.readFileSync('index.html','utf8');
-assert(uiSource.includes('未指定')&&uiSource.includes('＋新增對象'),'proxy targets render as reusable pill choices');
+assert(uiSource.includes('未指定')&&uiSource.includes('新增對象'),'proxy targets render as reusable pill choices with inline creation');
 assert(uiSource.includes('ledgerProxyTargetSettingsSection'),'Settings exposes reusable proxy target management');
 assert(uiSource.includes('renderLedgerProxyTargetChoices'),'single and per-item proxy controls share the target chooser');
 

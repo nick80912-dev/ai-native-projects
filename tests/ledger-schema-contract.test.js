@@ -10,17 +10,25 @@ vm.createContext(sandbox);
 vm.runInContext(fs.readFileSync('schema.js','utf8'), sandbox);
 vm.runInContext(fs.readFileSync('validator.js','utf8'), sandbox);
 
-assert.strictEqual(sandbox.SCHEMA.version,'2.7 (2026-07-19)','Ledger Schema version is 2.7');
+assert.strictEqual(sandbox.SCHEMA.version,'2.8 (2026-07-19)','Ledger Schema version is 2.8');
 assert.deepStrictEqual(
   Array.from(sandbox.SCHEMA.sheets.ledger.columns,function(column){return column.field;}),
-  ['id','time','member','category','detail','amountJpy','amountTwd','note','participants','payMethod','recordType','targetRecordId','deleteReason','batchId','storeName','replacesRecordId'],
-  'Ledger Schema keeps the 14 existing fields and appends the two 2.7 fields'
+  ['id','time','member','category','detail','amountJpy','amountTwd','note','participants','payMethod','recordType','targetRecordId','deleteReason','batchId','storeName','replacesRecordId','inputCurrency','isTaxFree','priceMode','taxRate','couponAmount'],
+  'Ledger Schema appends the five structured 2.8 tax and coupon fields'
 );
 assert(/消費發生時間/.test(sandbox.SCHEMA.sheets.ledger.columns[1].desc),'time means expense occurrence time');
 assert.strictEqual(sandbox.SCHEMA.sheets.ledger.columns[14].header,'店名');
 assert.strictEqual(sandbox.SCHEMA.sheets.ledger.columns[15].header,'取代紀錄ID');
+assert.deepStrictEqual(
+  Array.from(sandbox.SCHEMA.sheets.ledger.columns.slice(16),function(column){return column.header;}),
+  ['輸入幣別','免稅品','價格方式','稅率','優惠券金額']
+);
 
 const html = fs.readFileSync('index.html','utf8');
+assert.match(html,/version:\s*'2\.8 \(2026-07-19\)'/,'inline fallback Schema version is 2.8');
+['inputCurrency','isTaxFree','priceMode','taxRate','couponAmount'].forEach(function(field){
+  assert.match(html,new RegExp("field:'"+field+"'"),'inline fallback contains '+field);
+});
 const parserStart = html.indexOf('function parseCSV(text)');
 const parserEnd = html.indexOf('function parseKeyValue(csvText, sheetKey)');
 assert.notStrictEqual(parserStart,-1,'parseCSV source exists');
@@ -42,4 +50,4 @@ assert.strictEqual(rows[0].deleteReason,'');
 assert.strictEqual(rows[0].batchId,'batch-001');
 assert.strictEqual(Object.prototype.hasOwnProperty.call(rows[0],'未知欄位'),false,'unknown Sheet fields are ignored');
 
-console.log('Ledger Schema 2.7 contract tests passed');
+console.log('Ledger Schema 2.8 contract tests passed');

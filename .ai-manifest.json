@@ -2,7 +2,7 @@
   "$comment": "AI 導航檔 — 任何 AI 接手第一步只讀這份即可掌握全貌。這是 13 步流程的第 1 步。",
   "project": "japan-travel-pwa(日本旅遊行程 App)",
   "owner": "Bar(產品負責人,非工程師,繁中溝通,要直接執行不要教學;AI=全職工程團隊)",
-  "version": "2.7-ledger-2.1",
+  "version": "2.8-ledger-2.2",
   "framework": "ai-native-framework@pending(尚未抽取;見 FUTURE_PLAN_framework-extraction.md)",
   "updated": "2026-07-19",
   "live": "https://trippilot-jp.netlify.app/",
@@ -28,7 +28,7 @@
     "ops_playbook": "16_OPS_PLAYBOOK.md:Netlify回滾/SW快取災難/Sheet版本還原/清理排程安全",
     "status_authority": "即時狀態唯一權威=tasks/(current/backlog/done);13_PROJECT_STATUS與本manifest.status為快照;00_CONTEXT_HANDOVER為歷史快照不參與"
   },
-  "data_flow": "GoogleSheets(8表)→發布CSV→手機瀏覽器fetch→validator.js(防錯)→parser(Schema驅動)→DB→renderers→UI；個人帳與代購對象→localStorage only(不進Queue/CMS)；團體帳→enqueueBatch一次寫入localStorage佇列→立即UI完成→ledgerRepository背景送達Apps Script→分帳紀錄表(append-only,Schema 2.7固定16欄,time=消費發生時間)；團體編輯=舊筆墓碑+replacesRecordId替代筆；共用分帳設定:Settings→Apps Script→TripConfig兩個固定鍵→發布CSV,確認後以本機bridge涵蓋1–5分鐘延遲；離線三層:BUILTIN內建→localStorage快取→背景同步",
+  "data_flow": "GoogleSheets(8表)→發布CSV→手機瀏覽器fetch→validator.js(防錯)→parser(Schema驅動)→DB→renderers→UI；個人帳與代購對象→localStorage only(不進Queue/CMS)；團體帳→enqueueBatch一次寫入localStorage佇列→立即UI完成→ledgerRepository背景送達Apps Script→分帳紀錄表(append-only,Schema 2.8固定21欄,time=消費發生時間,末五欄=輸入幣別/免稅/價格方式/稅率/優惠券)；團體編輯=舊筆墓碑+replacesRecordId替代筆；共用分帳設定:Settings→Apps Script→TripConfig兩個固定鍵→發布CSV,確認後以本機bridge涵蓋1–5分鐘延遲；離線三層:BUILTIN內建→localStorage快取→背景同步",
   "files": {
     "index.html": "唯一可編輯 App 與正式部署入口:UI殼+CSS+內嵌JS(區塊分層見10_FOLDER_STRUCTURE)",
     "schema.js": "唯一資料規格SSoT:欄位/gid/型別值/發布URL;schemaDoc()自動產09文件",
@@ -100,10 +100,12 @@
       "分帳2.0刪除語意(個人真刪/團體墓碑/有效紀錄冪等解析/舊負數相容)",
       "分帳2.0結算核心(participants快照/最大餘數整數分配/雙幣餘額/確定性貪婪轉帳)",
       "分帳2.0手機UI(PR5:雙軌儀表板/Bottom Sheet快速記帳/多品項稅折與覆寫/代購彙總/團體結算/完整歷史與明細/SW v20)",
-      "分帳2.1(Schema 2.7固定16欄/time消費時間/queue-first樂觀儲存/TEST平行帳本/店名與搜尋/代購對象v3備份/個人原地編輯/團體墓碑替代編輯/SW v21)"
+      "分帳2.1(Schema 2.7固定16欄/time消費時間/queue-first樂觀儲存/TEST平行帳本/店名與搜尋/代購對象v3備份/個人原地編輯/團體墓碑替代編輯/SW v21)",
+      "分帳2.2(Schema 2.8固定21欄/日期時間拆欄與月曆/篩選面板與元件一致性/結構化稅券資料/近期明細操作入口/SW v22)"
     ],
     "pending_in_order": [
-      "Bar手機全面驗收dev最新Ledger 2.1",
+      "Bar建立Ledger五個末端表頭並部署Schema 2.8 Apps Script",
+      "Bar手機全面驗收dev最新Ledger 2.2",
       "Bar核准PR merge(dev→main)→Netlify正式部署與線上驗證",
       "Playwright 三情境入版控(backlog)",
       "框架抽取(FUTURE_PLAN)"

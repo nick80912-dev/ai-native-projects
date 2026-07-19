@@ -12,7 +12,7 @@ function extract(startText,endText){
 
 function plain(value){return JSON.parse(JSON.stringify(value));}
 
-const draftSource=extract('function ledgerDateTimeLocalValue(','function openLedgerEntrySheet(');
+const draftSource=extract('function ledgerLocalDateFromParts(','function openLedgerEntrySheet(');
 const draftSandbox={
   appNow(){return new Date();},
   timestampDate(value){return new Date(Number(value));},
@@ -33,12 +33,15 @@ assert.strictEqual(personal.currency,'JPY');
 assert.strictEqual(personal.category,'餐飲');
 assert.strictEqual(personal.payMethod,'現金');
 assert.strictEqual(personal.storeName,'','store name defaults empty');
-assert(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(personal.occurredAt),'occurrence time defaults to a datetime-local value');
+assert(/^\d{4}\/\d{2}\/\d{2}$/.test(personal.occurredDate),'occurrence date defaults to a local date');
+assert(/^\d{2}:\d{2}$/.test(personal.occurredTime),'occurrence time defaults to the current local time');
 
-const localTime=draftSandbox.ledgerDateTimeLocalValue(new Date(2026,9,18,12,34,0));
-assert.strictEqual(localTime,'2026-10-18T12:34','Date converts to a minute-precision local input value');
-assert.strictEqual(new Date(draftSandbox.ledgerOccurrenceIso(localTime)).getTime(),new Date(2026,9,18,12,34,0).getTime(),'local input round-trips through ISO');
-assert.throws(function(){draftSandbox.ledgerOccurrenceIso('not-a-date');},/日期時間/,'invalid occurrence time is rejected');
+const localDate=draftSandbox.ledgerDateInputValue(new Date(2026,9,18,12,34,0));
+const localTime=draftSandbox.ledgerTimeInputValue(new Date(2026,9,18,12,34,0));
+assert.strictEqual(localDate,'2026/10/18');
+assert.strictEqual(localTime,'12:34');
+assert.strictEqual(new Date(draftSandbox.ledgerOccurrenceIso(localDate,localTime)).getTime(),new Date(2026,9,18,12,34,0).getTime(),'separate local inputs round-trip through ISO');
+assert.throws(function(){draftSandbox.ledgerOccurrenceIso('not-a-date','12:00');},/日期格式/,'invalid occurrence date is rejected');
 
 const shared=plain(draftSandbox.createLedgerEntryDraft('shared'));
 assert.deepStrictEqual(shared.participants,['Bar','Amy'],'shared entry defaults to all currently allowed registered members');
@@ -71,13 +74,13 @@ const stateSandbox={
   appNow(){return new Date();},
   timestampDate(value){return new Date(Number(value));},
   ledgerDefaultCategory(){return '餐飲';},
-  ledgerDateTimeLocalValue(){return '2026-07-19T12:00';},
+  ledgerDateInputValue(){return '2026/07/19';},ledgerTimeInputValue(){return '12:00';},
   withLedgerSheetPosition(renderFn){return renderFn();},
   currentLedgerSettings(){return {exchangeRate:0.2,defaultCurrency:'JPY'};},
   registeredMembersForCurrentMode(){return [{name:'Bar',key:'bar'},{name:'Amy',key:'amy'}];},
   ledgerCategoryStore:{all(){return ['餐飲','交通'];}},
   ledgerPayMethodStore:{all(){return ['現金','Suica'];}},
-  document:{getElementById(){return null;},querySelector(){return null;},activeElement:null,body:{classList:{add(){},remove(){}}}},
+  document:{getElementById(){return null;},querySelector(){return null;},addEventListener(){},activeElement:null,body:{classList:{add(){},remove(){}}}},
   requestAnimationFrame(callback){callback();},
   confirm(){return true;},toast(){},canonicalMemberName(value){return String(value).trim().toLowerCase();},
   escapeHtml(value){return String(value);},jsString(value){return String(value);},getCurrentMember(){return 'Bar';},
@@ -132,9 +135,9 @@ vm.runInContext(persistSource,persistSandbox);
   assert(sheetSource.includes('id="ledgerConvertedPreview"'));
   assert(sheetSource.includes('ledger-amount-wrap'),'amount and conversion share one compact wrapper');
   assert(sheetSource.includes('id="ledgerStoreName"'),'entry sheet includes structured store name');
-  assert(sheetSource.includes('id="ledgerOccurredAt"'),'entry sheet includes editable occurrence time');
+  assert(sheetSource.includes('id="ledgerOccurredDate"')&&sheetSource.includes('id="ledgerOccurredTime"'),'entry sheet includes separate editable occurrence date and time');
   assert(sheetSource.indexOf('ledger-sheet-member')<sheetSource.indexOf('id="ledgerMulti"'),'identity appears immediately below the sheet heading');
-  assert(builderSource.includes('ledgerOccurrenceIso(draft.occurredAt)'),'record time comes from the occurrence-time field');
+  assert(builderSource.includes('ledgerOccurrenceIso(draft.occurredDate,draft.occurredTime)'),'record time comes from the separate occurrence fields');
   assert(builderSource.includes("storeName:String(draft.storeName||'').trim()"),'record builder writes structured storeName');
   assert(sheetSource.includes('id="ledgerSave"'));
   assert(sheetSource.includes('id="ledgerSaveAnother"'));
@@ -142,12 +145,12 @@ vm.runInContext(persistSource,persistSandbox);
   assert(sheetSource.includes('function addLedgerDraftItem('));
   assert(sheetSource.includes('function updateLedgerDraftItem('));
   assert(sheetSource.includes('function renderLedgerMultiItemFields('));
-  assert(sheetSource.includes('單項設定'));
-  assert(sheetSource.includes('沿用整單'));
+  assert(!sheetSource.includes('單項設定 ·'),'retired per-item override hint is absent');
+  assert(!sheetSource.includes('沿用整單'),'retired inheritance hint is absent');
   assert(sheetSource.includes('税込（含稅）'));
   assert(sheetSource.includes('税抜（未稅）'));
   assert(sheetSource.includes('全部免稅品'));
-  assert(sheetSource.includes('折扣金額'));
+  assert(sheetSource.includes('固定折扣金額')&&sheetSource.includes('優惠券金額'));
   assert(!sheetSource.includes('多品項將於本批下一階段啟用'),'multi-item toggle is fully functional');
   assert(!/addEventListener\(['"](?:touchstart|touchmove|gesturestart)/.test(sheetSource),'sheet adds no JavaScript gesture interceptor');
   assert(!sheetSource.includes('preventDefault()'),'sheet adds no preventDefault gesture path');

@@ -20,12 +20,13 @@ assert.deepStrictEqual(plain(sandbox.filterLedgerHistory(records,'松屋',{}).ma
 assert.deepStrictEqual(plain(sandbox.filterLedgerHistory(records,'伴手禮',{}).map(record=>record.id)),['note-hit']);
 assert.deepStrictEqual(plain(sandbox.filterLedgerHistory(records,' ramen ',{}).map(record=>record.id)),['meal-cash'],'search is trimmed and case-insensitive');
 assert.deepStrictEqual(plain(sandbox.filterLedgerHistory(records,'',{category:'餐飲',payMethod:'現金'}).map(record=>record.id)),['store-hit','meal-cash']);
+assert.deepStrictEqual(plain(sandbox.filterLedgerHistory(records,'',{categories:['餐飲','交通'],payMethods:['現金']}).map(record=>record.id)),['store-hit','meal-cash'],'open-set chips support combined multi-selection');
 assert.deepStrictEqual(plain(sandbox.filterLedgerHistory(records,'',{proxy:'proxy'}).map(record=>record.id)),['note-hit']);
 assert.deepStrictEqual(Object.keys(plain(sandbox.groupLedgerHistory([records[3],records[0]],'category'))),['交通','餐飲']);
 assert.deepStrictEqual(Object.keys(plain(sandbox.groupLedgerHistory([records[0],records[1]],'date'))),['2026-07-19','2026-07-18']);
 
 assert(html.includes('id="ledgerHistorySearch"'),'full history exposes a search input');
-assert(html.includes('historyCategory')&&html.includes('historyPayMethod')&&html.includes('historyProxy'),'history state includes category, payment, and proxy filters');
+assert(html.includes('historyCategories')&&html.includes('historyPayMethods')&&html.includes('historyProxy'),'history state includes multi-select category/payment and proxy filters');
 assert(html.includes("setLedgerHistoryGrouping(\\'date\\')")&&html.includes("setLedgerHistoryGrouping(\\'category\\')"),'history exposes date/category grouping pills');
 assert(!html.includes('historyTest'),'history does not add a redundant TEST filter');
 assert(html.includes('function setButtonBusy('),'async controls share a scoped busy helper');

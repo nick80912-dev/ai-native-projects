@@ -89,10 +89,10 @@ assert(ledgerUiSource.includes("ledgerUiState.page='all'"),'View all switches th
 assert(ledgerUiSource.includes("['proxy','代購']")&&ledgerUiSource.includes("['non-proxy','非代購']")&&ledgerUiSource.includes("'setLedgerHistoryProxy'"),'personal history exposes proxy and non-proxy filters');
 const detailSource=html.slice(html.indexOf('function ledgerRecordDetailRows('),html.indexOf('function renderSplit()'));
 assert(detailSource.includes('ledgerTrackRecords().filter'),'detail lookup searches the currently visible track only');
-assert(detailSource.includes('deletePersonalLedgerRecord('),'personal detail reuses the confirmed local deletion path');
-assert(detailSource.includes('openSharedLedgerDelete('),'shared detail reuses the tombstone deletion path');
-assert(detailSource.includes("['批次 ID',record.batchId]"),'detail includes batch ID when present');
-assert(detailSource.includes("['同步狀態',record.pending?'待同步':'已同步']"),'detail exposes pending status');
+assert(ledgerUiSource.includes('deletePersonalLedgerRecord('),'record action menu reuses the confirmed local deletion path');
+assert(ledgerUiSource.includes('openSharedLedgerDelete('),'record action menu reuses the tombstone deletion path');
+assert(!detailSource.includes("['批次 ID',record.batchId]"),'consumer detail hides batch ID');
+assert(!detailSource.includes("['同步狀態',record.pending?'待同步':'已同步']"),'consumer detail hides queue internals');
 assert(splitSource.includes('目前顯示測試帳本'),'TEST banner explains which universe is visible');
 assert(splitSource.includes('不影響正式分帳'),'TEST banner confirms formal data is isolated');
 

@@ -47,7 +47,8 @@ function loadAppScript(){
   };
   const ledger = createSheet('分帳紀錄', [[
     '紀錄ID','時間','成員','類別','明細','日幣','台幣','備註',
-    '分攤成員','支付方式','紀錄類型','目標紀錄ID','刪除原因','批次ID'
+    '分攤成員','支付方式','紀錄類型','目標紀錄ID','刪除原因','批次ID',
+    '店名','取代紀錄ID','輸入幣別','免稅品','價格方式','稅率','優惠券金額'
   ]]);
   const cfg = createSheet('TripConfig', [
     ['Key','Value'],
@@ -128,7 +129,7 @@ assert.deepStrictEqual(
   Array.from(app.ledger.rowForId(ledgerPayload.id)),
   [
     ledgerPayload.id, ledgerPayload.time, ledgerPayload.member, ledgerPayload.category,
-    ledgerPayload.detail, 500, 105, '', '', '', '', '', '', '', '', ''
+    ledgerPayload.detail, 500, 105, '', '', '', '', '', '', '', '', '', '', '', '', '', ''
   ],
   'legacy ledger payload fills all optional fields with empty strings'
 );
@@ -150,19 +151,27 @@ const ledger20Payload = {
   batchId:'batch-20260718-001',
   storeName:'松屋 岡山站前店',
   replacesRecordId:'ledger-original-001',
+  inputCurrency:'JPY',
+  isTaxFree:true,
+  priceMode:'excluded',
+  taxRate:8,
+  couponAmount:100,
   unknownField:'must not be serialized'
 };
-assert.deepStrictEqual(app.call(ledger20Payload),{ok:true},'Ledger 2.7 payload append succeeds');
+assert.deepStrictEqual(app.call(ledger20Payload),{ok:true},'Ledger 2.8 payload append succeeds');
 assert.deepStrictEqual(
   Array.from(app.ledger.rowForId(ledger20Payload.id)),
   [
     ledger20Payload.id, ledger20Payload.time, ledger20Payload.member, ledger20Payload.category,
     ledger20Payload.detail, 1200, 252, 'roundtrip', '["Bar","Amy"]', '現金',
-    'expense', '', '', 'batch-20260718-001', '松屋 岡山站前店', 'ledger-original-001'
+    'expense', '', '', 'batch-20260718-001', '松屋 岡山站前店', 'ledger-original-001',
+    'JPY', true, 'excluded', 8, 100
   ],
-  'Ledger 2.7 fields serialize in the exact Sheet contract order'
+  'Ledger 2.8 fields serialize in the exact Sheet contract order'
 );
-assert.strictEqual(app.ledger.rowForId(ledger20Payload.id).length,16,'unknown payload fields are ignored');
+assert.strictEqual(app.ledger.rowForId(ledger20Payload.id).length,21,'unknown payload fields are ignored');
+assert.strictEqual(app.call(Object.assign({},ledger20Payload,{id:'bad-currency',inputCurrency:'USD'})).ok,false,'unsupported input currency is rejected');
+assert.strictEqual(app.call(Object.assign({},ledger20Payload,{id:'bad-price-mode',priceMode:'net'})).ok,false,'unsupported price mode is rejected');
 
 const identityPayload = {
   id:'1784274603806-identity',

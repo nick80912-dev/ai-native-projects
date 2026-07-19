@@ -95,11 +95,11 @@
 - Expenses 只負責行前團費與同行成員來源；旅途中記帳改走「分帳紀錄」表,不寫入 Expenses。
 
 ## 分帳紀錄特別規則
-- Schema 2.7 位置式 16 欄:`紀錄ID | 時間 | 成員 | 類別 | 明細 | 日幣 | 台幣 | 備註 | 分攤成員 | 支付方式 | 紀錄類型 | 目標紀錄ID | 刪除原因 | 批次ID | 店名 | 取代紀錄ID`。
+- Schema 2.8 位置式 21 欄:`紀錄ID | 時間 | 成員 | 類別 | 明細 | 日幣 | 台幣 | 備註 | 分攤成員 | 支付方式 | 紀錄類型 | 目標紀錄ID | 刪除原因 | 批次ID | 店名 | 取代紀錄ID | 輸入幣別 | 免稅品 | 價格方式 | 稅率 | 優惠券金額`。
 - `時間` 為 ISO 8601 消費發生時間；既有紀錄不遷移，直接依此語意讀取。
-- `店名`（`storeName`）與 `取代紀錄ID`（`replacesRecordId`）為末端選填欄；舊 14 欄 payload 由 Apps Script 補空字串。
+- 末端 5 個 Schema 2.8 欄位保存原始輸入幣別、品項免稅、税込／税抜、稅率與優惠券記錄；均為選填，舊 16 欄 payload 由 Apps Script 補空字串。個人帳另以 localStorage 保存代購旗標與對象，團體帳不寫入代購資料。
 - `紀錄ID`、`成員`、`日幣` 為 required；使用者只輸入 JPY 或 TWD 其中一種,App 依當前匯率四捨五入換算並同時保存兩個金額。
-- Apps Script 契約:`POST {id,time,member,category,detail,amountJpy,amountTwd,note,participants,payMethod,recordType,targetRecordId,deleteReason,batchId,storeName,replacesRecordId}`。
+- Apps Script 契約:`POST {id,time,member,category,detail,amountJpy,amountTwd,note,participants,payMethod,recordType,targetRecordId,deleteReason,batchId,storeName,replacesRecordId,inputCurrency,isTaxFree,priceMode,taxRate,couponAmount}`。
 - 回覆 `ok:true` 與 `ok:true,dup:true` 均視為送達；其他回覆保留在本機佇列。
 - 資料 append-only；團體刪帳新增 `recordType=deletion` 墓碑並以 `targetRecordId` 指向原紀錄，不修改原列。
 - 公開 CSV 可能延遲 1–5 分鐘；ledger 下載失敗時沿用目前 ledger 快照,不得阻塞其他 7 表。

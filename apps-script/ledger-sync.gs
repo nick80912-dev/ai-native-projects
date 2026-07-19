@@ -23,6 +23,16 @@ function appendLedger(d) {
       !isFinite(jpy) || !isFinite(twd)) {
     return out({ok:false,error:'missing or invalid ledger fields'});
   }
+  var inputCurrency = d.inputCurrency === undefined ? '' : String(d.inputCurrency || '').toUpperCase();
+  var priceMode = d.priceMode === undefined ? '' : String(d.priceMode || '');
+  var taxRate = d.taxRate === undefined || d.taxRate === '' ? '' : Number(d.taxRate);
+  var couponAmount = d.couponAmount === undefined || d.couponAmount === '' ? '' : Number(d.couponAmount);
+  var isTaxFree = d.isTaxFree === undefined || d.isTaxFree === '' ? '' : d.isTaxFree;
+  if (inputCurrency && inputCurrency !== 'JPY' && inputCurrency !== 'TWD') return out({ok:false,error:'invalid inputCurrency'});
+  if (priceMode && priceMode !== 'included' && priceMode !== 'excluded') return out({ok:false,error:'invalid priceMode'});
+  if (isTaxFree !== '' && typeof isTaxFree !== 'boolean') return out({ok:false,error:'invalid isTaxFree'});
+  if (taxRate !== '' && (!isFinite(taxRate) || taxRate < 0 || taxRate > 100)) return out({ok:false,error:'invalid taxRate'});
+  if (couponAmount !== '' && (!isFinite(couponAmount) || couponAmount < 0)) return out({ok:false,error:'invalid couponAmount'});
 
   var sh = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('分帳紀錄');
   if (!sh) return out({ok:false,error:'missing sheet: 分帳紀錄'});
@@ -37,7 +47,8 @@ function appendLedger(d) {
     d.id, d.time, d.member, d.category, d.detail, jpy, twd, d.note || '',
     d.participants || '', d.payMethod || '', d.recordType || '',
     d.targetRecordId || '', d.deleteReason || '', d.batchId || '',
-    d.storeName || '', d.replacesRecordId || ''
+    d.storeName || '', d.replacesRecordId || '', inputCurrency, isTaxFree,
+    priceMode, taxRate, couponAmount
   ]);
   return out({ok:true});
 }

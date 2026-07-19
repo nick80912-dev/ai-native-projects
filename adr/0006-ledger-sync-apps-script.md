@@ -55,3 +55,13 @@
 **Why This Decision**：個人帳不需跨裝置稽核，原地修改可避免產生無意義的歷史噪音；團體帳會影響所有成員結算，因此保留舊值、修改動作與替代鏈，才能維持可追蹤性並符合既有 append-only 契約。
 
 **Compatibility and Trade-offs**：讀取與彙算仍先套用既有墓碑過濾，因此 UI 只顯示修改後紀錄。團體編輯會增加 Sheet 列數，且跨裝置仍受 CSV 發布延遲影響；同一裝置則由本機佇列立即顯示修改結果。
+
+## 2026-07-19 Ledger 2.2 Schema 2.8 結構化輸入語意
+
+**Decision**：Ledger Schema 2.8 在既有 16 欄末端追加五個選填欄位：`inputCurrency`、`isTaxFree`、`priceMode`、`taxRate`、`couponAmount`，形成固定 21 欄位置式契約。Apps Script 依固定順序 append 並驗證有限集合／數值範圍；舊 payload 缺少新欄位時補空字串。快速記帳、Queue 與 CSV Parser 均使用同名結構欄位，不把機器資料藏入備註。
+
+**Context**：分帳 2.2 需要跨裝置還原税込／税抜、免稅、稅率、優惠券與原始輸入幣別，並以這些欄位進行完整紀錄篩選。只改 UI 或將 metadata 編碼進備註會造成搜尋污染、舊資料歧義及跨裝置編輯遺失。
+
+**Scope**：五欄只描述消費與稅券輸入。個人代購旗標及對象仍只存 localStorage；團體帳不啟用代購，也不擴張共享權限。單筆優惠券欄僅記錄，主金額必須是最終實付；多品項固定折扣仍由既有最大餘數算法分配並維持總額守恆。
+
+**Compatibility**：新欄皆非 required；歷史 16 欄 CSV、舊 Queue 與舊 payload 以安全預設讀取。部署順序固定為先在 Sheet 末端建立五個表頭並部署可接受 21 欄的 Apps Script，再發布 Schema 2.8 前端。回滾舊前端時末端欄位可保留，Parser 依既有未知欄位策略處理。

@@ -20,7 +20,7 @@ function loadModule(){
     console:{log(){},warn(){},error(){}},localStorage:createStorage(),
     fetch(){return Promise.reject(new Error('network disabled'));},setTimeout,clearTimeout,
     Date,Math,Promise,JSON,String,Number,isFinite,
-    ledgerOccurrenceIso(value){return new Date(value||1784428800000).toISOString();},
+    ledgerOccurrenceIso(dateValue,timeValue){return dateValue?new Date(String(dateValue).replace(/\//g,'-')+'T'+(timeValue||'00:00')+':00').toISOString():new Date(1784428800000).toISOString();},
     timestampDate(value){return new Date(Number(value));},AppLog:{repo(){},sync(){}},
     renderSplit(){},updateLedgerPendingStatus(){}
   };
@@ -93,7 +93,7 @@ assert.throws(()=>mod.calculateMultiItemAmounts({currency:'JPY',taxMode:'include
 
 assert.strictEqual(mod.validateProxyDraft(false,'任意'),'');
 assert.strictEqual(mod.validateProxyDraft(true,' 小明 '),'小明');
-assert.throws(()=>mod.validateProxyDraft(true,''),/請輸入代購對象/);
+assert.strictEqual(mod.validateProxyDraft(true,''),'','未指定 is a valid non-persisted proxy target');
 assert.throws(()=>mod.validateProxyDraft(true,'超過十二個字的代購對象名稱'),/最多 12 個字/);
 
 const members=[{name:'Bar'},{name:'Amy'},{name:'Cara'}];
@@ -103,10 +103,10 @@ assert.throws(()=>mod.normalizeLedgerParticipantSelection(['Outsider'],members),
 
 const sharedDraft={
   track:'shared',currency:'JPY',payMethod:'現金',note:'整單',multi:true,
-  taxMode:'free',taxRate:10,discount:0,participants:['Bar','Amy'],
+  occurredDate:'2026/07/19',occurredTime:'12:00',priceMode:'excluded',taxPreset:'10',customTaxRate:'',discount:30,participants:['Bar','Amy'],
   items:[
-    {key:'i1',name:'票 A',amount:100,category:'票券',participantMode:'inherit',participants:[]},
-    {key:'i2',name:'票 B',amount:200,category:'票券',participantMode:'custom',participants:['Amy']}
+    {key:'i1',name:'票 A',amount:100,category:'票券',taxExempt:true,participantMode:'inherit',participants:[]},
+    {key:'i2',name:'票 B',amount:200,category:'票券',taxExempt:false,participantMode:'custom',participants:['Amy']}
   ]
 };
 const sharedRecords=plain(mod.buildLedgerExpenseRecords(sharedDraft,{
@@ -118,11 +118,16 @@ assert(sharedRecords[0].batchId&&sharedRecords[0].batchId===sharedRecords[1].bat
 assert.strictEqual(sharedRecords[0].participants,'["Bar","Amy"]');
 assert.strictEqual(sharedRecords[1].participants,'["Amy"]','custom participants override the bill snapshot');
 assert(sharedRecords.every(record=>record.recordType==='expense'));
-assert.strictEqual(sharedRecords.reduce((sum,record)=>sum+record.amountJpy,0),300);
+assert.strictEqual(sharedRecords.reduce((sum,record)=>sum+record.amountJpy,0),290);
+assert.strictEqual(sharedRecords.reduce((sum,record)=>sum+record.couponAmount,0),30,'per-item coupon allocation preserves the bill coupon total');
+assert.strictEqual(sharedRecords[0].isTaxFree,true);
+assert.strictEqual(sharedRecords[1].isTaxFree,false);
+assert(sharedRecords.every(record=>record.inputCurrency==='JPY'&&record.priceMode==='excluded'&&record.taxRate===10));
+assert(sharedRecords.every(record=>!Object.prototype.hasOwnProperty.call(record,'isProxy')),'shared records never gain proxy semantics');
 
 const personalDraft={
   track:'personal',currency:'JPY',payMethod:'信用卡',note:'',multi:true,
-  taxMode:'included',taxRate:10,discount:0,isProxy:false,proxyTarget:'',
+  occurredDate:'2026/07/19',occurredTime:'12:00',priceMode:'included',taxPreset:'10',customTaxRate:'',discount:0,isProxy:false,proxyTarget:'',
   items:[
     {key:'p1',name:'商品 A',amount:500,category:'購物',proxyMode:'custom',isProxy:true,proxyTarget:'朋友'},
     {key:'p2',name:'商品 B',amount:300,category:'購物',proxyMode:'inherit',isProxy:false,proxyTarget:''}
@@ -133,23 +138,27 @@ const personalRecords=plain(mod.buildLedgerExpenseRecords(personalDraft,{
 }));
 assert.strictEqual(personalRecords[0].isProxy,true);
 assert.strictEqual(personalRecords[0].proxyTarget,'朋友');
+assert.strictEqual(personalRecords[0].isTaxFree,false);
 assert.strictEqual(personalRecords[1].isProxy,false);
 assert.strictEqual(personalRecords[1].proxyTarget,'');
 assert.strictEqual(personalRecords[0].recordType,undefined,'personal records do not gain shared contract fields');
 
 const single=plain(mod.buildLedgerExpenseRecords({
   track:'personal',currency:'JPY',payMethod:'Suica',note:'',multi:false,
-  amount:700,detail:'車票',category:'交通',isProxy:false,proxyTarget:'',taxMode:'included',taxRate:10,discount:0
+  occurredDate:'2026/07/19',occurredTime:'',amount:700,detail:'車票',category:'交通',isProxy:false,proxyTarget:'',priceMode:'excluded',taxPreset:'10',customTaxRate:'',discount:100
 },{member:'Amy',settings,now:1784428802000,random(){return 0.75;},memberEntries:members}));
 assert.strictEqual(single.length,1);
 assert.strictEqual(single[0].batchId,'','single-item records do not create a batch');
 assert.strictEqual(single[0].detail,'車票');
+assert.strictEqual(single[0].amountJpy,700,'single-entry tax metadata never recalculates the paid amount');
+assert.strictEqual(single[0].couponAmount,100,'single-entry coupon is recorded without subtraction');
+assert.strictEqual(single[0].taxRate,10);
 
 const uiSource=fs.readFileSync('index.html','utf8');
-assert(uiSource.includes("proxyMode:'inherit'"),'new multi-item rows explicitly inherit the bill proxy default');
+assert(uiSource.includes("proxyMode:'custom'"),'personal multi-item proxy state is always item-local');
 assert(uiSource.includes("participantMode:'inherit'"),'new multi-item rows explicitly inherit the bill participant default');
-assert(uiSource.includes("item.proxyMode!=='custom'?'沿用整單'"),'personal item summary exposes inherited semantics');
-assert(uiSource.includes("item.participantMode!=='custom'?'沿用整單'"),'shared item summary exposes inherited semantics');
+assert(!uiSource.includes('單項設定 ·')&&!uiSource.includes('沿用整單'),'retired item override presentation is absent');
+assert(uiSource.includes("draft.track==='personal'?proxyFlag:''"),'shared item rows do not render proxy controls');
 assert(!/ledger-item-editor[\s\S]{0,1200}ledger-currency-option/.test(uiSource),'item cards do not render per-item currency controls');
 assert(!/ledger-item-editor[\s\S]{0,1200}ledger-pay-option/.test(uiSource),'item cards do not render per-item payment controls');
 assert(uiSource.includes('税込（含稅）')&&uiSource.includes('税抜（未稅）'),'price mode uses the confirmed bilingual pill labels');

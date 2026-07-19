@@ -14,7 +14,7 @@
    ============================================================ */
 
 var SCHEMA = {
-  version: '2.7 (2026-07-19)',
+  version: '2.8 (2026-07-19)',
 
   /* 發布來源(換試算表只改這裡) */
   pubBase: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRenmV8UxEzWbzSjKJKi4rSpYt63geBqhEkKsl1GemWVPmFKTcvv3Uk71Hjla3TGBpGIjC7bQDDdI00/pub?single=true&output=csv&gid=',
@@ -138,7 +138,12 @@ var SCHEMA = {
         { field:'deleteReason',   header:'刪除原因' },
         { field:'batchId',        header:'批次ID' },
         { field:'storeName',      header:'店名',       desc:'選填;消費店家名稱,供搜尋與顯示' },
-        { field:'replacesRecordId', header:'取代紀錄ID', desc:'選填;團體編輯新筆指向被取代紀錄或 batch 根紀錄' }
+        { field:'replacesRecordId', header:'取代紀錄ID', desc:'選填;團體編輯新筆指向被取代紀錄或 batch 根紀錄' },
+        { field:'inputCurrency',    header:'輸入幣別',   desc:'選填;JPY 或 TWD,記錄原始輸入與優惠券單位' },
+        { field:'isTaxFree',        header:'免稅品',     desc:'選填;TRUE/FALSE,每筆品項獨立狀態' },
+        { field:'priceMode',        header:'價格方式',   desc:'選填;included=税込、excluded=税抜' },
+        { field:'taxRate',          header:'稅率',       desc:'選填;0–100,最多一位小數' },
+        { field:'couponAmount',     header:'優惠券金額', desc:'選填;依輸入幣別記錄;多品項逐筆分配後合計守恆' }
       ]
     },
 

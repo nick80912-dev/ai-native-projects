@@ -16,18 +16,18 @@ const typeColumn = schema.sheets.places.columns.find(function(column) {
   return column.field === 'type';
 });
 
-assert.strictEqual(schema.version, '2.7 (2026-07-19)');
+assert.strictEqual(schema.version, '2.8 (2026-07-19)');
 assert.strictEqual(
   schema.sheets.exp.desc,
   '行前團費僅存於試算表；App 不渲染，也不從 Exp 推導同行成員。'
 );
 assert.deepStrictEqual(
   Array.from(ledgerColumns, function(column){ return column.field; }),
-  ['id','time','member','category','detail','amountJpy','amountTwd','note','participants','payMethod','recordType','targetRecordId','deleteReason','batchId','storeName','replacesRecordId']
+  ['id','time','member','category','detail','amountJpy','amountTwd','note','participants','payMethod','recordType','targetRecordId','deleteReason','batchId','storeName','replacesRecordId','inputCurrency','isTaxFree','priceMode','taxRate','couponAmount']
 );
 assert.deepStrictEqual(
   Array.from(ledgerColumns, function(column){ return column.header; }),
-  ['紀錄ID','時間','成員','類別','明細','日幣','台幣','備註','分攤成員','支付方式','紀錄類型','目標紀錄ID','刪除原因','批次ID','店名','取代紀錄ID']
+  ['紀錄ID','時間','成員','類別','明細','日幣','台幣','備註','分攤成員','支付方式','紀錄類型','目標紀錄ID','刪除原因','批次ID','店名','取代紀錄ID','輸入幣別','免稅品','價格方式','稅率','優惠券金額']
 );
 ledgerColumns.slice(8).forEach(function(column){
   assert.notStrictEqual(column.required, true, column.field + ' remains optional');
