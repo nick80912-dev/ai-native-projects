@@ -64,3 +64,348 @@
 - 完整紀錄按日期的每日加總只計搜尋／篩選結果；按類別不顯示日加總。
 - `找到 N 筆 · ¥JPY ≈ NT$TWD` 為 11px 次要摘要。
 - 375px／390px 無截斷、無水平溢出，個人／團體與正式／TEST 隔離正確。
+
+# Ledger Card Alignment and Daily Totals Implementation Plan
+
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+
+**Goal:** 將消費卡右側金額與 `⋯` 垂直置中，並在首頁最新日與完整紀錄日期列加入固定 `JPY ≈ TWD` 的即時加總。
+
+**Architecture:** 在 `index.html` 增加純函式 `ledgerAmountTotals(records)` 與 `formatLedgerInlineTotals(totals)`，所有首頁、日期分組及完整紀錄摘要共用，避免三處各自計算。日期摘要由共用 renderer 產生，輸入永遠是目前 renderer 已隔離及篩選後的有效實體紀錄；不建立持久 state，也不改資料契約。
+
+**Tech Stack:** Vanilla HTML／CSS／JavaScript、Node `assert` tests、既有靜態單檔 renderer、Service Worker app shell。
+
+## Global Constraints
+
+- 僅修改 `index.html`、`sw.js`、必要既有 tests、`07_CHANGELOG.md` 與 `tasks/current.md`。
+- 不修改 Schema、Apps Script、Repository、Queue／Retry／Flush、結算、墓碑契約、localStorage key、資料欄位、治理文件或非分帳頁。
+- 雙幣格式固定為 `¥3,500 ≈ NT$770`，不隨首頁 display currency 切換順序。
+- 完整紀錄日期加總與結果摘要只計目前搜尋／篩選後結果；按類別分組不顯示日加總。
+- 375px／390px 不得截斷右側雙幣金額或產生水平捲動。
+- 若修改 app shell，`CACHE_NAME` 只從 v31 順延至 v32；不得修改 SHELL、install、activate 或 fetch。
+
+---
+
+### Task 1: 共用雙幣加總與格式函式
+
+**Files:**
+- Modify: `tests/ledger-225.test.js`
+- Modify: `index.html:4563-4565`
+
+**Interfaces:**
+- Consumes: `{amountJpy:number|string, amountTwd:number|string}[]`。
+- Produces: `ledgerAmountTotals(records) -> {amountJpy:number, amountTwd:number}`。
+- Produces: `formatLedgerInlineTotals(totals) -> string`，固定回傳 `¥JPY ≈ NT$TWD`。
+
+- [ ] **Step 1: 先寫失敗測試**
+
+在 `tests/ledger-225.test.js` 的 renderer sandbox 載入兩個新函式，加入：
+
+```js
+const totals=plain(rendererSandbox.ledgerAmountTotals([
+  {amountJpy:1200,amountTwd:264},
+  {amountJpy:'2300',amountTwd:'506'}
+]));
+assert.deepStrictEqual(totals,{amountJpy:3500,amountTwd:770});
+assert.strictEqual(rendererSandbox.formatLedgerInlineTotals(totals),'¥3,500 ≈ NT$770');
+```
+
+- [ ] **Step 2: 執行測試並確認因函式不存在而失敗**
+
+Run: `node tests/ledger-225.test.js`
+
+Expected: FAIL，訊息包含 `ledgerAmountTotals is not a function` 或 sandbox 尚未定義該函式。
+
+- [ ] **Step 3: 加入最小純函式實作**
+
+在 `formatLedgerCurrencyAmount` 附近加入：
+
+```js
+function ledgerAmountTotals(records){
+  return (records||[]).reduce(function(sum,record){
+    sum.amountJpy+=Number(record&&record.amountJpy||0);
+    sum.amountTwd+=Number(record&&record.amountTwd||0);
+    return sum;
+  },{amountJpy:0,amountTwd:0});
+}
+function formatLedgerInlineTotals(totals){
+  totals=totals||{};
+  return '¥'+Math.round(Number(totals.amountJpy||0)).toLocaleString()+' ≈ NT$'+Math.round(Number(totals.amountTwd||0)).toLocaleString();
+}
+```
+
+- [ ] **Step 4: 執行單一測試確認通過**
+
+Run: `node tests/ledger-225.test.js`
+
+Expected: `ledger 2.2.5 tests passed`，exit 0。
+
+- [ ] **Step 5: 提交此獨立變更**
+
+```powershell
+git add -- index.html tests/ledger-225.test.js
+git commit -m "refactor: share ledger dual-currency totals"
+```
+
+### Task 2: 日期摘要、首頁最新日與完整紀錄範圍
+
+**Files:**
+- Modify: `tests/ledger-225.test.js`
+- Modify: `tests/ledger-history-search.test.js`
+- Modify: `index.html:4648-4653`
+- Modify: `index.html:4723-4755`
+- Modify: `index.html:4791-4799`
+
+**Interfaces:**
+- Consumes: Task 1 的 `ledgerAmountTotals` 與 `formatLedgerInlineTotals`。
+- Produces: `renderLedgerDateSummary(label,records,showCount) -> escaped HTML string`。
+- Updates: `ledgerHistorySummary(records)` 固定輸出 `找到 N 筆 · ¥JPY ≈ NT$TWD`。
+
+- [ ] **Step 1: 寫首頁、日期分組及篩選範圍失敗測試**
+
+在 `tests/ledger-225.test.js` 加入 renderer assertions：
+
+```js
+const summaryHtml=rendererSandbox.renderLedgerDateSummary('2026/07/20',[
+  {amountJpy:1200,amountTwd:264},
+  {amountJpy:2300,amountTwd:506}
+],true);
+assert(summaryHtml.includes('2026/07/20 · 2 筆紀錄'));
+assert(summaryHtml.includes('¥3,500 ≈ NT$770'));
+```
+
+並斷言：
+
+```js
+const recentGroupsSource=extractFunction(html,'renderLedgerRecentGroups');
+const historyGroupedSource=extractFunction(html,'renderLedgerHistoryGrouped');
+const renderSplitSource=extractFunction(html,'renderSplit');
+assert(renderSplitSource.includes('renderLedgerDateSummary(recentDate,recent,true)'));
+assert(recentGroupsSource.includes('renderLedgerDateSummary(label,group.records,false)'));
+assert(historyGroupedSource.includes("historyGrouping==='date'")&&historyGroupedSource.includes('ledger-date-label'));
+assert(!historyGroupedSource.includes('renderLedgerDateSummary(key'));
+```
+
+在 `tests/ledger-history-search.test.js` 以已篩選的兩筆紀錄呼叫 `ledgerHistorySummary`，斷言：
+
+```js
+assert.strictEqual(summary,'找到 2 筆 · ¥3,500 ≈ NT$770');
+```
+
+- [ ] **Step 2: 執行兩個測試並確認新摘要尚未存在**
+
+Run: `node tests/ledger-225.test.js; node tests/ledger-history-search.test.js`
+
+Expected: FAIL，原因是 `renderLedgerDateSummary` 未定義或舊摘要格式不符。
+
+- [ ] **Step 3: 實作共用日期摘要 renderer**
+
+在 `renderLedgerRecentGroups` 前加入：
+
+```js
+function renderLedgerDateSummary(label,records,showCount){
+  var countText=showCount?' · '+(records||[]).length+' 筆紀錄':'';
+  return '<div class="ledger-date-summary"><span>'+escapeHtml(String(label||'')+countText)+'</span><span class="ledger-date-total">'+escapeHtml(formatLedgerInlineTotals(ledgerAmountTotals(records)))+'</span></div>';
+}
+```
+
+將日期分組 renderer 改為只在 `hideDateLabel===false` 時呼叫：
+
+```js
+(hideDateLabel?'':renderLedgerDateSummary(label,group.records,false))
+```
+
+- [ ] **Step 4: 將首頁摘要移到完整寬度的獨立列**
+
+首頁 section header 維持「最近消費／選取／查看全部」主列，日期摘要放在該主列下方、卡片清單上方：
+
+```js
+var recentSummary=recent.length?renderLedgerDateSummary(recentDate,recent,true):'';
+```
+
+輸出結構：
+
+```html
+<div class="ledger-section-head">...</div>
+${recentSummary}
+<div class="ledger-recent-list">...</div>
+```
+
+不得再把日期摘要塞在 `.ledger-recent-heading` 與右側操作按鈕競爭寬度。
+
+- [ ] **Step 5: 重用共用 helpers 改寫完整紀錄結果摘要**
+
+```js
+function ledgerHistorySummary(records){
+  records=records||[];
+  return '找到 '+records.length+' 筆 · '+formatLedgerInlineTotals(ledgerAmountTotals(records));
+}
+```
+
+`renderLedgerHistoryResults()` 與 `renderLedgerFullHistory()` 均繼續傳入 `visible`，確保摘要及日期 groups 只計搜尋／篩選結果。按類別分支維持純類別 label，不呼叫日期摘要 renderer。
+
+- [ ] **Step 6: 執行目標測試確認通過**
+
+Run: `node tests/ledger-225.test.js; node tests/ledger-history-search.test.js`
+
+Expected: 兩者 exit 0。
+
+- [ ] **Step 7: 提交功能變更**
+
+```powershell
+git add -- index.html tests/ledger-225.test.js tests/ledger-history-search.test.js
+git commit -m "feat: add ledger daily dual-currency totals"
+```
+
+### Task 3: 卡片垂直置中與 375px／390px 日期列版面
+
+**Files:**
+- Modify: `tests/ledger-mobile-hotfix.test.js`
+- Modify: `tests/ledger-list-actions.test.js`
+- Modify: `index.html:511-512`
+
+**Interfaces:**
+- Consumes: Task 2 產生的 `.ledger-date-summary` 與 `.ledger-date-total`。
+- Produces: 共用 CSS；不改 renderer 互動介面。
+
+- [ ] **Step 1: 寫 CSS 契約失敗測試**
+
+在 `tests/ledger-mobile-hotfix.test.js` 加入：
+
+```js
+assert(/\.ledger-dual-amounts\{[^}]*align-content:center/.test(html));
+assert(/\.ledger-record-menu-button\{[^}]*align-self:center/.test(html));
+assert(/\.ledger-date-summary\{[^}]*grid-template-columns:minmax\(0,1fr\) auto[^}]*font-size:11px/.test(html));
+assert(/\.ledger-date-total\{[^}]*white-space:nowrap/.test(html));
+assert(/\.ledger-history-summary\{[^}]*font-size:11px/.test(html));
+```
+
+在 `tests/ledger-list-actions.test.js` 保留並補強：選取模式不產生 `ledger-record-menu-button`，一般模式仍能呼叫 `openLedgerRecordActions`。
+
+- [ ] **Step 2: 執行目標測試確認 CSS 尚未符合**
+
+Run: `node tests/ledger-mobile-hotfix.test.js; node tests/ledger-list-actions.test.js`
+
+Expected: FAIL 於 `align-content:center`、`align-self:center` 或新日期摘要 class。
+
+- [ ] **Step 3: 實作最小 CSS**
+
+調整既有規則並新增：
+
+```css
+.ledger-dual-amounts{align-content:center}
+.ledger-record-menu-button{align-self:center}
+.ledger-date-summary{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:6px;min-width:0;margin-top:2px;color:var(--ink-faint);font-size:11px;font-weight:900;letter-spacing:.04em}
+.ledger-date-summary>span:first-child{min-width:0}
+.ledger-date-total{white-space:nowrap;text-align:right;font-variant-numeric:tabular-nums}
+.ledger-history-summary{font-size:11px;font-weight:800}
+```
+
+不要增加 top／transform／負 margin，也不要用全域 `overflow-x:hidden`。
+
+- [ ] **Step 4: 執行目標測試確認通過**
+
+Run: `node tests/ledger-mobile-hotfix.test.js; node tests/ledger-list-actions.test.js`
+
+Expected: 兩者 exit 0。
+
+- [ ] **Step 5: 進行 Browser QA**
+
+以 375px／390px 各驗證個人與團體：
+
+```text
+- 單筆卡右側金額與 ⋯ 垂直置中
+- batch 摘要卡右側金額與 ⋯ 垂直置中
+- 選取模式不 render ⋯
+- 首頁最新日摘要固定顯示 JPY ≈ TWD
+- 完整紀錄按日期每組顯示當日加總
+- 搜尋／篩選後日期加總與找到 N 筆摘要同步更新
+- 按類別不顯示日加總
+- scrollWidth <= clientWidth
+- pageerror=0
+```
+
+- [ ] **Step 6: 提交版面變更**
+
+```powershell
+git add -- index.html tests/ledger-mobile-hotfix.test.js tests/ledger-list-actions.test.js
+git commit -m "style: center ledger card actions and totals"
+```
+
+### Task 4: Service Worker、文件與完整驗證
+
+**Files:**
+- Modify: `sw.js:9`
+- Modify: `tests/pwa-shell.test.js`
+- Modify: 其他既有 SW 版本斷言 tests
+- Modify: `07_CHANGELOG.md`
+- Modify: `tasks/current.md`
+
+**Interfaces:**
+- Consumes: Tasks 1–3 完成的 app shell。
+- Produces: `CACHE_NAME = 'okayama-trip-v32'`；不改其他 SW 行為。
+
+- [ ] **Step 1: 先將所有 SW 版本測試由 v31 改為 v32**
+
+至少更新：
+
+```text
+tests/ios-zoom-guard.test.js
+tests/ledger-221-ui.test.js
+tests/ledger-225.test.js
+tests/ledger-mobile-hotfix.test.js
+tests/ledger-ui-polish.test.js
+tests/pwa-shell.test.js
+```
+
+- [ ] **Step 2: 執行 PWA 測試確認 v31 會失敗**
+
+Run: `node tests/pwa-shell.test.js`
+
+Expected: FAIL，實際 `okayama-trip-v31`、預期 `okayama-trip-v32`。
+
+- [ ] **Step 3: 僅修改 CACHE_NAME**
+
+```js
+var CACHE_NAME = 'okayama-trip-v32';
+```
+
+不得修改 `SHELL`、install、activate 或 fetch。
+
+- [ ] **Step 4: 更新文件狀態**
+
+`07_CHANGELOG.md` 只新增本批：卡片右側置中、首頁最新日固定雙幣加總、完整紀錄篩選後日加總、11px 結果摘要及 SW v32。
+
+`tasks/current.md` 將本設計標示為已實作但等待 Bar 375px／390px 與 iOS 真機驗收；未經驗收不得標示完成。
+
+- [ ] **Step 5: 執行完整驗證**
+
+```powershell
+$failed=@()
+$tests=Get-ChildItem tests -Filter *.test.js | Sort-Object Name
+foreach($test in $tests){ node $test.FullName; if($LASTEXITCODE -ne 0){$failed+=$test.Name} }
+if($failed.Count){ throw ('FAILED: '+($failed -join ', ')) }
+node tools/check-doc-titles.js
+git diff --check
+git status --short
+```
+
+Expected: 38 個 tests 全部 exit 0；文件檢查 exit 0；status 僅列允許檔案。
+
+- [ ] **Step 6: 稽核禁止範圍**
+
+```powershell
+git diff -- schema.js validator.js apps-script .ai-manifest.json PROJECT_CONSTITUTION.md netlify.toml manifest.webmanifest
+```
+
+Expected: 無輸出。另確認 `git diff -- sw.js` 只有 `CACHE_NAME` 一行。
+
+- [ ] **Step 7: 提交並推送 dev**
+
+```powershell
+git add -- index.html sw.js 07_CHANGELOG.md tasks/current.md tests
+git commit -m "feat: add ledger daily totals and align card actions"
+git push origin dev
+```
+
+禁止 push／merge `main`，禁止部署 Netlify。
