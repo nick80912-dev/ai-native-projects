@@ -1,5 +1,10 @@
 # 07 版本紀錄
 
+## 2026-07-20 — Ledger 2.2.5 iOS 時間控制寬度修正（Dev）
+- 依 iOS App 實機截圖修正原生 `input[type=time]` 仍吃掉群組右側 padding 的問題；新增專用 `ledger-time-input-wrap`，由 wrapper 管理內容區寬度，time input 改以 `flex:1 1 0`／`width:0` 收斂原生 intrinsic width。
+- 單品項與多品項沿用同一個 occurrence renderer；日期欄、時間值、字級、picker、儲存語意及群組 padding 均不變。
+- Service Worker cache 由 `okayama-trip-v30` 順延至 `okayama-trip-v31`；未修改 SHELL、install／activate／fetch、Schema、Apps Script、Repository／Queue、結算、墓碑契約、localStorage key 或資料欄位。
+
 ## 2026-07-20 — Ledger 2.2.5 時間欄位右側對齊補正（Dev）
 - 單品項與多品項共用的日期／時間直列補齊 `minmax(0,1fr)`、`min-width:0`、`max-width:100%` 與 `box-sizing:border-box`；日期／時間 wrapper 及 input 均限制在白底群組既有內容區，不使用負 margin、transform 或全域 overflow 掩蓋。
 - 時間欄位維持 `width:100%` 填滿群組內容區，右側與日期欄位完全對齊並保留群組既有 11px 內距；原有字級、月曆 SVG、日期 Popover 與資料行為不變。

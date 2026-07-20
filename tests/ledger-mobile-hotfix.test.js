@@ -20,6 +20,7 @@ assert(html.includes('.ledger-entry-divider{border-bottom:1px solid var(--line);
 assert(html.includes("ledger-datetime-grid '+(inBillCard?'':'ledger-entry-divider')"),'single-item occurrence rows retain the shared divider while the multi-item card avoids a nested divider');
 assert(html.includes('.ledger-datetime-grid{display:grid;grid-template-columns:minmax(0,1fr);gap:9px')&&html.includes('.ledger-datetime-grid .ledger-sheet-field{margin-top:0;width:100%'),'date and time stack consistently without increasing their font sizes');
 assert(html.includes('grid-template-columns:minmax(0,1fr)')&&html.includes('.ledger-datetime-grid .ledger-sheet-input{width:100%;min-width:0;max-width:100%;box-sizing:border-box}'),'stacked date and time controls share the bounded group content width');
+assert(html.includes('.ledger-time-input-wrap{display:flex;width:100%;min-width:0;max-width:100%;box-sizing:border-box}')&&html.includes('.ledger-datetime-grid .ledger-time-input-wrap input[type="time"]{flex:1 1 0;width:0;min-width:0;max-width:100%;box-sizing:border-box}'),'iOS time control is sized by its wrapper rather than width 100%');
 assert(html.includes('aria-label="開啟日期選擇器"')&&html.includes('<svg aria-hidden="true"'),'calendar control uses the approved accessible inline SVG');
 
 assert(html.includes('function renderLedgerStoreField('),'store is a shared form field rather than disclosure-only content');
@@ -32,6 +33,6 @@ assert(html.includes("'衣物':'👕'")&&html.includes("'美妝':'💄'"),'cloth
 assert(html.includes("var DEFAULT_LEDGER_CATEGORIES=['餐飲','交通','票券','購物','衣物','美妝','其他']"),'new entries use the renamed clothing category');
 assert(html.includes('.ledger-dual-amounts span{font-size:10px'),'secondary TWD amount is compact but remains at the 10px floor');
 
-assert.match(sw,/okayama-trip-v30/,'service worker cache is v30');
+assert.match(sw,/okayama-trip-v31/,'service worker cache is v31');
 
 console.log('ledger mobile hotfix tests passed');

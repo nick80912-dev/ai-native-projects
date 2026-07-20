@@ -108,7 +108,9 @@ assert(/\.ledger-datetime-grid \.ledger-sheet-field\{[^}]*margin-top:0/.test(htm
 assert(/\.ledger-datetime-grid\{[^}]*grid-template-columns:minmax\(0,1fr\)[^}]*min-width:0[^}]*max-width:100%[^}]*box-sizing:border-box/.test(html),'date and time grid is constrained to the shared content box');
 assert(/\.ledger-datetime-grid \.ledger-sheet-field\{[^}]*width:100%[^}]*min-width:0[^}]*max-width:100%[^}]*box-sizing:border-box/.test(html),'both stacked field wrappers use the same bounded width');
 assert(/\.ledger-datetime-grid \.ledger-sheet-input\{[^}]*width:100%[^}]*min-width:0[^}]*max-width:100%[^}]*box-sizing:border-box/.test(html),'date and time inputs cannot exceed their field wrappers');
-assert(/\.ledger-datetime-grid input\[type="time"\]\{[^}]*width:100%[^}]*min-width:0[^}]*max-width:100%[^}]*box-sizing:border-box/.test(html),'native time input is explicitly bounded for iOS');
+assert(html.includes('<div class="ledger-time-input-wrap"><input class="ledger-sheet-input" id="ledgerOccurredTime" type="time"'),'native time input has a dedicated sizing wrapper');
+assert(/\.ledger-time-input-wrap\{[^}]*display:flex[^}]*width:100%[^}]*min-width:0[^}]*max-width:100%[^}]*box-sizing:border-box/.test(html),'time wrapper owns the full content width');
+assert(/\.ledger-datetime-grid \.ledger-time-input-wrap input\[type="time"\]\{[^}]*flex:1 1 0[^}]*width:0[^}]*min-width:0[^}]*max-width:100%[^}]*box-sizing:border-box/.test(html),'iOS native time input grows from a zero flex basis instead of overflowing with width 100%');
 assert(/\.ledger-calendar-popover\{[^}]*width:min\(316px,calc\(100vw - 48px\)\)[^}]*max-width:100%/.test(html),'date grid inset leaves the custom calendar popover sizing unchanged');
 assert(html.includes('class="ledger-calendar-trigger"')&&html.includes('<svg aria-hidden="true"'),'stacked date field retains the existing calendar line SVG');
 assert(/\.ledger-item-primary-row\{[^}]*grid-template-columns:32px minmax\(0,1fr\) minmax\(112px,120px\) 36px/.test(html),'multi-item rows use the approved compact four-column layout');
