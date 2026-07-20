@@ -31,6 +31,8 @@ vm.createContext(sandbox);
 vm.runInContext(source,sandbox);
 
 const draft=plain(sandbox.createLedgerEntryDraft('personal'));
+const sharedDraft=plain(sandbox.createLedgerEntryDraft('shared'));
+assert.deepStrictEqual(sharedDraft.participants,['Bar','Amy'],'new shared draft selects all registered members');
 draft.multi=true;
 draft.storeName='';
 draft.categoryApply='餐飲';
@@ -133,5 +135,9 @@ assert(/\.ledger-item-proxy \.ledger-sheet-choice-grid\{[^}]*align-items:center/
 assert(/\.ledger-proxy-add-row\{[^}]*grid-template-columns:minmax\(0,1fr\) 30px[^}]*gap:5px[^}]*margin-top:6px/.test(html)&&/\.ledger-proxy-add-row\{[^}]*flex:1 0 100%[^}]*width:100%/.test(html),'proxy add-target input and plus button move to their own full-width row');
 assert(/\.ledger-proxy-add-row \.ledger-sheet-input\{[^}]*min-height:30px/.test(html),'proxy add-target input is reduced to 30px');
 assert(/\.ledger-proxy-add-row button\{[^}]*min-height:30px[^}]*border-radius:7px[^}]*font-size:14px/.test(html),'proxy add button is reduced to a 30px rounded rectangle');
+assert(html.includes('function renderLedgerParticipantGroup('),'bill and item participant controls share one renderer');
+assert(html.includes('ledger-participant-group')&&html.includes('ledger-participant-choice'),'shared participant controls use scoped group classes');
+assert(/\.ledger-participant-group\{[^}]*padding:7px[^}]*border-radius:9px/.test(html),'participant group matches the compact proxy container geometry');
+assert(/\.ledger-participant-choice\{[^}]*min-height:28px[^}]*border-radius:7px[^}]*font-size:10px/.test(html),'participant choices match the compact proxy choice size');
 
 console.log('ledger form 2.2.3 tests passed');
