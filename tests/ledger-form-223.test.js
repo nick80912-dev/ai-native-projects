@@ -103,8 +103,10 @@ const edited=plain(sandbox.ledgerDraftFromRecords([
 assert.strictEqual(edited.categoryApply,'餐飲','editing uses the first item category as the apply value');
 assert(edited.items.every(item=>item.categoryManuallyAdjusted===true),'existing edited rows are protected from normal apply changes');
 
-assert(/\.ledger-datetime-grid\{[^}]*grid-template-columns:minmax\(0,1fr\) 110px[^}]*gap:8px[^}]*width:100%[^}]*padding-right:6px/.test(html),'date and time use the approved inset two-column grid');
+assert(/\.ledger-datetime-grid\{[^}]*grid-template-columns:1fr[^}]*gap:9px[^}]*width:100%/.test(html),'date and time use the approved stacked grid in every form mode');
+assert(/\.ledger-datetime-grid \.ledger-sheet-field\{[^}]*margin-top:0/.test(html),'stacked date and time fields avoid duplicate vertical margins');
 assert(/\.ledger-calendar-popover\{[^}]*width:min\(316px,calc\(100vw - 48px\)\)[^}]*max-width:100%/.test(html),'date grid inset leaves the custom calendar popover sizing unchanged');
+assert(html.includes('class="ledger-calendar-trigger"')&&html.includes('<svg aria-hidden="true"'),'stacked date field retains the existing calendar line SVG');
 assert(/\.ledger-item-primary-row\{[^}]*grid-template-columns:32px minmax\(0,1fr\) minmax\(112px,120px\) 36px/.test(html),'multi-item rows use the approved compact four-column layout');
 assert(html.includes('請輸入店家名稱'),'inline store validation copy is present');
 assert(html.includes('確認儲存（')&&html.includes('筆）'),'multi-item primary action displays the valid record count');
@@ -114,11 +116,15 @@ assert(html.includes('ledger-single-basic-info'),'single-entry essentials share 
 assert(/\.ledger-item-proxy\{[^}]*background:/.test(html),'proxy details use a contained low-saturation panel');
 assert(html.includes('ledger-item-flag-check'),'multi-item proxy uses the refined compact checked control');
 assert(html.includes('ledger-proxy-switch')&&html.includes('ledger-proxy-switch-track'),'single-item proxy uses the approved text row and switch');
+const proxyTrackSource=extract('function renderLedgerTrackSpecificFields(','function renderLedgerTaxDisclosure(');
+assert(!proxyTrackSource.includes('ledger-sheet-label">代購'),'single-item proxy does not add a redundant heading above the grouped row');
+const proxySwitchCss=(html.match(/\.ledger-sheet-field>label\.ledger-proxy-switch\{([^}]*)\}/)||[])[1]||'';
+assert(proxySwitchCss.includes('display:flex')&&proxySwitchCss.includes('justify-content:space-between')&&proxySwitchCss.includes('background:#f4e9e6')&&proxySwitchCss.includes('border:1px solid #c99c94')&&proxySwitchCss.includes('border-radius:9px'),'single-item proxy uses the approved pale warm-red grouped row with the toggle on the right');
 assert(html.includes('ledger-proxy-heading'),'proxy title and helper copy share one compact heading row');
 assert(/\.ledger-proxy-help\{[^}]*font-size:9px/.test(html),'proxy helper copy is reduced by one size');
 assert(/\.ledger-item-proxy \.ledger-sheet-choice\{[^}]*min-height:28px[^}]*border-radius:7px[^}]*font-size:10px/.test(html),'proxy target choices use the refined compact size');
-assert(/\.ledger-item-proxy \.ledger-sheet-choice-grid\{[^}]*align-items:flex-start/.test(html),'proxy choices do not stretch to the taller add-target row');
-assert(/\.ledger-proxy-add-row\{[^}]*grid-template-columns:minmax\(0,1fr\) 30px[^}]*gap:5px[^}]*margin-top:6px/.test(html),'proxy add-target row and plus button use the refined compact layout');
+assert(/\.ledger-item-proxy \.ledger-sheet-choice-grid\{[^}]*align-items:center/.test(html),'proxy target choices are vertically centered');
+assert(/\.ledger-proxy-add-row\{[^}]*grid-template-columns:minmax\(0,1fr\) 30px[^}]*gap:5px[^}]*margin-top:6px/.test(html)&&/\.ledger-proxy-add-row\{[^}]*flex:1 0 100%[^}]*width:100%/.test(html),'proxy add-target input and plus button move to their own full-width row');
 assert(/\.ledger-proxy-add-row \.ledger-sheet-input\{[^}]*min-height:30px/.test(html),'proxy add-target input is reduced to 30px');
 assert(/\.ledger-proxy-add-row button\{[^}]*min-height:30px[^}]*border-radius:7px[^}]*font-size:14px/.test(html),'proxy add button is reduced to a 30px rounded rectangle');
 

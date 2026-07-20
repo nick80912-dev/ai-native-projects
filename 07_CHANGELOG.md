@@ -1,5 +1,11 @@
 # 07 版本紀錄
 
+## 2026-07-20 — Ledger 2.2.5 表單直列與代購群組精修（Dev）
+- 單品項「這筆是代購」改為淡暖紅低飽和群組列，文字維持原字級、Toggle 固定靠右，且不新增重複的「代購」欄位標題。
+- 單品項與多品項的日期／時間皆改為日期在上、時間（選填）在下的直列版型；欄位與標籤維持既有字級，並保留現有月曆線條 SVG 與自訂日期 Popover 行為。
+- 代購對象按鈕改為垂直置中；新增對象欄與 30px 加號強制移至下一個完整列，單品項與多品項共用相同 renderer、state 及儲存語意。
+- Service Worker cache 由 `okayama-trip-v28` 順延至 `okayama-trip-v29`；未修改 SHELL、install／activate／fetch、Schema、Apps Script、Repository／Queue、結算、墓碑契約、localStorage key 或資料欄位。
+
 ## 2026-07-20 — Ledger 2.2.5 手機回饋精修（Dev）
 - 完整紀錄進入選取模式時，多品項摘要卡預設維持收合；點擊摘要卡才展開／收合逐筆紀錄，摘要 checkbox 仍沿用既有整批全選／取消及半選三態。
 - 日期與時間採同列內縮方案：時間欄縮為 110px、欄距縮為 8px，右側保留 6px 安全距離；自訂日期 Popover 的尺寸、定位與資料行為不變。
