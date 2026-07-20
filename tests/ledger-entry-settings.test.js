@@ -114,7 +114,7 @@ function response(payload){
   assert(html.includes("var DEFAULT_LEDGER_CATEGORIES=['餐飲','交通','票券','購物','衣物','美妝','其他']"),'Split page defines the confirmed default categories');
   assert(html.includes("var DEFAULT_LEDGER_PAY_METHODS=['現金','信用卡','行動支付','Suica','其他']"),'Split page defines the confirmed default payment methods');
   assert(!splitSource.includes('id="ledgerAmount"'),'Split dashboard does not embed the editable amount input');
-  assert(splitSource.includes('openLedgerEntrySheet'),'Split dashboard exposes the quick-entry FAB');
+  assert(splitSource.includes('openLedgerQuickEntryFromFab'),'Split dashboard exposes the dedicated quick-entry FAB path');
   assert(!splitSource.includes('id="ledgerJpy"')&&!splitSource.includes('id="ledgerTwd"'),'legacy dual amount inputs are removed');
   assert(entrySource.includes('convertLedgerAmounts'),'Split entry converts the selected currency into both stored amounts');
   assert(settingsSource.includes('id="ledgerExchangeRate"'),'Settings exposes the current exchange rate');

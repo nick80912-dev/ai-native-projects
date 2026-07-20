@@ -56,7 +56,21 @@ vm.runInContext(quickEntrySource+'\n'+openEntrySource,sandbox);
 sandbox.openLedgerQuickEntryFromFab();
 assert.deepStrictEqual(events,['close','mount','render','focus','animation scheduled'],'the FAB mounts, renders, focuses, then schedules animation in one synchronous event chain');
 
-assert.match(html,/input\s*,\s*select\s*,\s*textarea\s*\{[^}]*font-size\s*:\s*(?:1[6-9]|[2-9]\d)px/i,'focusable form controls keep a 16px minimum font size');
+const compactControlOverrides=[
+  '.member-entry input',
+  '.state-box',
+  '.state-dialog-copy',
+  '.ledger-proxy-add-row .ledger-sheet-input'
+];
+compactControlOverrides.forEach(function(selector){
+  assert(html.includes(selector),'the font-size guard covers the known '+selector+' control override');
+});
+const fontGuard='input:not([type="hidden"]),select,textarea{font-size:16px!important}';
+const fontGuardPosition=html.lastIndexOf(fontGuard);
+assert(fontGuardPosition>=0,'a final important 16px font-size guard protects every visible input, select, and textarea');
+compactControlOverrides.forEach(function(selector){
+  assert(fontGuardPosition>html.lastIndexOf(selector),'the final font-size guard wins after the '+selector+' override');
+});
 const viewport=html.match(/<meta\s+name="viewport"[^>]*>/i);
 assert(viewport,'viewport meta tag exists');
 assert.doesNotMatch(viewport[0],/user-scalable\s*=\s*no|maximum-scale\s*=\s*1/i,'viewport keeps user zoom available');
