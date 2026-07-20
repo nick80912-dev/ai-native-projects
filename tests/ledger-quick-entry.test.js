@@ -166,3 +166,37 @@ vm.runInContext(persistSource,persistSandbox);
 
   console.log('ledger quick-entry tests passed');
 })().catch(error=>{console.error(error);process.exitCode=1;});
+
+const helperSource=extract('function ledgerClientCreatedAt(','function buildMemberBalances(');
+const helperRecords=[
+  {id:'1784428800000-abcd',member:'Amy',category:'Food',inputCurrency:'JPY',amountJpy:500,amountTwd:105},
+  {id:'1784428889000-efgh',member:' Amy ',category:'Food',inputCurrency:'JPY',amountJpy:500,amountTwd:105}
+];
+const helperSandbox={
+  personalLedgerRepository:{all(){return helperRecords.slice();},remove(id){const index=helperRecords.findIndex(record=>record.id===id);if(index<0)return false;helperRecords.splice(index,1);return true;}},
+  canonicalMemberName(value){return String(value==null?'':value).replace(/\u3000/g,' ').replace(/\s+/g,' ').trim();},
+  isDeletionRecord(record){return !!record&&record.recordType==='deletion';},
+  isIdentityRegistrationRecord(record){return !!record&&record.recordType==='identity_registration';},
+  formatLedgerCurrencyAmount(currency,amount){return currency==='TWD'?'NT$'+Math.round(Number(amount||0)).toLocaleString():'¥'+Math.round(Number(amount||0)).toLocaleString();},
+  JSON,String,Number,Math,Date,isFinite
+};
+vm.createContext(helperSandbox);
+vm.runInContext(helperSource,helperSandbox);
+assert.strictEqual(helperSandbox.ledgerClientCreatedAt({id:'1784428800000-abcd'}),1784428800000,'client-created IDs expose their millisecond timestamp');
+assert.strictEqual(helperSandbox.ledgerClientCreatedAt({id:'not-a-client-id'}),null,'non-client IDs do not fabricate a timestamp');
+const duplicateCandidate={id:'1784428890000-ijkl',member:'Amy',category:'Food',inputCurrency:'JPY',amountJpy:500,amountTwd:105};
+assert.strictEqual(helperSandbox.ledgerPotentialDuplicate(duplicateCandidate,helperRecords,{track:'personal'}).id,helperRecords[0].id,'same personal identity, currency, amount, category, and timestamp window is a possible duplicate');
+assert.strictEqual(helperSandbox.ledgerPotentialDuplicate(Object.assign({},duplicateCandidate,{batchId:'batch-1'}),helperRecords,{track:'personal'}),null,'batches are excluded from duplicate hints');
+assert.strictEqual(helperSandbox.ledgerPotentialDuplicate(duplicateCandidate,helperRecords,{track:'personal',editing:true}),null,'edit saves are excluded from duplicate hints');
+assert.strictEqual(helperSandbox.ledgerPotentialDuplicate(duplicateCandidate,helperRecords,{track:'personal',addAnother:true}),null,'explicit add-another saves are excluded from duplicate hints');
+assert.strictEqual(helperSandbox.ledgerPotentialDuplicate(Object.assign({},duplicateCandidate,{amountJpy:501}),helperRecords,{track:'personal'}),null,'different primary amounts are not duplicates');
+assert.strictEqual(helperSandbox.ledgerPotentialDuplicate(Object.assign({},duplicateCandidate,{id:'1784428891001-ijkl'}),[{id:'1784428800000-abcd',member:'Amy',category:'Food',inputCurrency:'JPY',amountJpy:500,amountTwd:105,recordType:'deletion'}],{track:'personal'}),null,'deletions are excluded from duplicate hints');
+assert.strictEqual(helperSandbox.ledgerPotentialDuplicate(Object.assign({},duplicateCandidate,{id:'1784428891001-ijkl'}),[{id:'1784428800000-abcd',member:'Amy',category:'Food',inputCurrency:'JPY',amountJpy:500,amountTwd:105,recordType:'identity_registration'}],{track:'personal'}),null,'identity records are excluded from duplicate hints');
+assert.strictEqual(helperSandbox.formatLedgerPrimaryTotal('JPY',[{amountJpy:1234},{amountJpy:66}]),'¥1,300','JPY totals format the JPY primary amount');
+assert.strictEqual(helperSandbox.formatLedgerPrimaryTotal('TWD',[{amountTwd:1234},{amountTwd:66}]),'NT$1,300','TWD totals format the TWD primary amount');
+const savedSnapshots=helperRecords.map(record=>JSON.parse(JSON.stringify(record)));
+assert.strictEqual(helperSandbox.undoPersonalLedgerSave(savedSnapshots),true,'unchanged personal save snapshots are truly removed');
+assert.strictEqual(helperRecords.length,0,'successful undo removes the current local records');
+helperRecords.push(Object.assign({},savedSnapshots[0],{detail:'edited'}));
+assert.strictEqual(helperSandbox.undoPersonalLedgerSave([savedSnapshots[0]]),false,'edited snapshots refuse undo');
+assert.strictEqual(helperRecords.length,1,'a refused undo keeps the edited personal record');

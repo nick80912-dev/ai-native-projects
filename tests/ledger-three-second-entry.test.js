@@ -56,6 +56,34 @@ vm.runInContext(quickEntrySource+'\n'+openEntrySource,sandbox);
 sandbox.openLedgerQuickEntryFromFab();
 assert.deepStrictEqual(events,['close','mount','render','focus','animation scheduled'],'the FAB mounts, renders, focuses, then schedules animation in one synchronous event chain');
 
+const toastSource=extractFunction('toast');
+const clearToastSource=extractFunction('clearToast');
+const runToastActionSource=extractFunction('runToastAction');
+const toastEvents=[];
+const toastElement={
+  innerHTML:'',textContent:'',
+  classList:{add(name){toastEvents.push('add:'+name);},remove(name){toastEvents.push('remove:'+name);}}
+};
+const toastSandbox={
+  document:{getElementById(){return toastElement;}},
+  escapeHtml(value){return String(value);},
+  setTimeout(fn,ms){toastEvents.push('timer:'+ms);return toastEvents.length;},
+  clearTimeout(id){toastEvents.push('clear:'+id);},
+  String,Number,isFinite
+};
+vm.createContext(toastSandbox);
+vm.runInContext('var toastTimer,toastAction=null;'+clearToastSource+'\n'+runToastActionSource+'\n'+toastSource,toastSandbox);
+let undone=0;
+toastSandbox.toast('saved','Undo',function(){undone++;},5000);
+assert.match(toastElement.innerHTML,/Undo/,'a save toast renders its sole Undo action');
+assert(toastEvents.includes('timer:5000'),'a caller can keep an Undo toast visible for five seconds');
+toastSandbox.toast('next');
+toastSandbox.runToastAction();
+assert.strictEqual(undone,0,'replacing a toast invalidates its previous undo action');
+assert(toastEvents.includes('timer:2000'),'three-argument-free notifications retain the default duration');
+toastSandbox.toast('legacy','Action',function(){});
+assert(toastEvents.includes('timer:3500'),'existing three-argument action toasts retain their duration');
+
 const compactControlOverrides=[
   '.member-entry input',
   '.state-box',

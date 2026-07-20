@@ -1114,7 +1114,7 @@ function runToastAction(){
   clearToast();
   fn();
 }
-function toast(msg,actionText,actionFn){
+function toast(msg,actionText,actionFn,durationMs){
   var el=document.getElementById('toast');
   toastAction=typeof actionFn==='function'?actionFn:null;
   if(toastAction){
@@ -1125,7 +1125,10 @@ function toast(msg,actionText,actionFn){
     el.classList.remove('has-action');
   }
   el.classList.add('show');
-  clearTimeout(toastTimer); toastTimer=setTimeout(clearToast,toastAction?3500:2000);
+  clearTimeout(toastTimer);
+  var duration=Number(durationMs);
+  if(!isFinite(duration)||duration<0)duration=toastAction?3500:2000;
+  toastTimer=setTimeout(clearToast,duration);
 }
 function copyText(text,label){
   var done=function(){ toast((label||'')+'已複製 ✓'); };
@@ -3521,6 +3524,46 @@ function buildLedgerExpenseRecords(draft,context){
     return record;
   });
 }
+function ledgerClientCreatedAt(record){
+  var match=String(record&&record.id||'').match(/^(\d{10,})-[0-9a-z]{4}$/i),createdAt=match?Number(match[1]):NaN;
+  return isFinite(createdAt)&&createdAt>0?createdAt:null;
+}
+function ledgerPrimaryAmount(record,currency){
+  var amount=Number(record&&record[currency==='TWD'?'amountTwd':'amountJpy']);
+  return isFinite(amount)?amount:null;
+}
+function ledgerPotentialDuplicate(candidate,records,options){
+  var opts=options||{},currency=String(candidate&&candidate.inputCurrency||'').trim().toUpperCase(),candidateCreatedAt=ledgerClientCreatedAt(candidate),candidateMember=canonicalMemberName(candidate&&candidate.member),candidateAmount=ledgerPrimaryAmount(candidate,currency),candidateCategory=String(candidate&&candidate.category||'').trim();
+  if(opts.track&&opts.track!=='personal'||opts.editing||opts.addAnother||!candidate||candidate.batchId||candidate.replacesRecordId||isDeletionRecord(candidate)||isIdentityRegistrationRecord(candidate)||!candidateMember||!candidateCategory||(currency!=='JPY'&&currency!=='TWD')||candidateAmount===null||candidateCreatedAt===null)return null;
+  return (records||[]).filter(function(record){
+    var createdAt=ledgerClientCreatedAt(record);
+    return record&&record.id!==candidate.id&&!record.batchId&&!record.replacesRecordId&&!isDeletionRecord(record)&&!isIdentityRegistrationRecord(record)&&
+      canonicalMemberName(record.member)===candidateMember&&String(record.inputCurrency||'').trim().toUpperCase()===currency&&
+      ledgerPrimaryAmount(record,currency)===candidateAmount&&String(record.category||'').trim()===candidateCategory&&createdAt!==null&&Math.abs(createdAt-candidateCreatedAt)<=90000;
+  })[0]||null;
+}
+function formatLedgerPrimaryTotal(currency,records){
+  currency=String(currency||'').trim().toUpperCase();
+  var total=(records||[]).reduce(function(sum,record){var amount=ledgerPrimaryAmount(record,currency);return sum+(amount===null?0:amount);},0);
+  return formatLedgerCurrencyAmount(currency,total);
+}
+function ledgerSnapshotValueEqual(left,right){
+  if(left===right)return true;
+  if(!left||!right||typeof left!==typeof right||typeof left!=='object')return false;
+  var leftKeys=Object.keys(left),rightKeys=Object.keys(right);
+  return leftKeys.length===rightKeys.length&&leftKeys.every(function(key){return Object.prototype.hasOwnProperty.call(right,key)&&ledgerSnapshotValueEqual(left[key],right[key]);});
+}
+function undoPersonalLedgerSave(snapshots){
+  var saved=Array.isArray(snapshots)?snapshots:[],current=personalLedgerRepository.all(),seen={};
+  if(!saved.length||saved.some(function(snapshot){
+    var id=String(snapshot&&snapshot.id||'');
+    if(!id||seen[id])return true;
+    seen[id]=true;
+    var record=current.filter(function(item){return item.id===id;})[0];
+    return !record||!ledgerSnapshotValueEqual(snapshot,record);
+  }))return false;
+  return saved.every(function(snapshot){return personalLedgerRepository.remove(snapshot.id);});
+}
 function buildMemberBalances(records,memberOrder,warnFn,universe){
   universe=universe==='test'?'test':'formal';
   var order=settlementMemberOrder(records,memberOrder,universe), orderInfo=settlementOrderInfo(order), states=Object.create(null), invalidRecords=[];
@@ -4539,6 +4582,7 @@ function saveLedgerEntry(addAnother){
   var records;
   try{records=buildLedgerExpenseRecords(submissionDraft,{member:member,settings:currentLedgerSettings(),now:Date.now(),random:Math.random,memberEntries:registeredMembersForCurrentMode()});}
   catch(error){toast(error.message||'記帳資料格式錯誤');return Promise.resolve({ok:false,error:error});}
+  var possibleDuplicate=!editing&&draft.track==='personal'?ledgerPotentialDuplicate(records[0],personalLedgerRepository.all(),{track:draft.track,addAnother:!!addAnother}):null;
   var buttons=[document.getElementById('ledgerSave'),document.getElementById('ledgerSaveAnother')];buttons.forEach(function(button){if(button)button.disabled=true;});
   var operation;
   try{operation=editing?persistLedgerEditedRecords(records,editing):persistLedgerExpenseRecords(records,draft.track);}
@@ -4547,6 +4591,14 @@ function saveLedgerEntry(addAnother){
     ledgerUiState.track=draft.track;renderSplit();
     if(addAnother&&!editing){ledgerUiState.draft=resetLedgerDraftAfterSave(draft);renderLedgerEntrySheet();}
     else closeLedgerEntrySheet();
+    if(!editing&&result.personal){
+      var savedMessage=result.queued?'已儲存，待同步':'已儲存';
+      toast(savedMessage+(possibleDuplicate?' · 可能重複':''),'復原',function(){
+        if(undoPersonalLedgerSave(result.records)){renderSplit();toast('已復原');}
+        else toast('紀錄已被修改，無法復原');
+      },5000);
+      return result;
+    }
     toast(editing?(result.queued?'修改已儲存，待同步':'修改已儲存'):(result.queued?'已儲存，待同步':'已儲存'));return result;
   },function(error){buttons.forEach(function(button){if(button)button.disabled=false;});toast(error.message||'記帳失敗');return {ok:false,error:error};});
 }
