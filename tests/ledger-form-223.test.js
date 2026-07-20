@@ -103,7 +103,8 @@ const edited=plain(sandbox.ledgerDraftFromRecords([
 assert.strictEqual(edited.categoryApply,'餐飲','editing uses the first item category as the apply value');
 assert(edited.items.every(item=>item.categoryManuallyAdjusted===true),'existing edited rows are protected from normal apply changes');
 
-assert(/\.ledger-datetime-grid\{[^}]*grid-template-columns:minmax\(0,1fr\) 116px[^}]*gap:10px/.test(html),'date and time use the approved resilient two-column grid');
+assert(/\.ledger-datetime-grid\{[^}]*grid-template-columns:minmax\(0,1fr\) 110px[^}]*gap:8px[^}]*width:100%[^}]*padding-right:6px/.test(html),'date and time use the approved inset two-column grid');
+assert(/\.ledger-calendar-popover\{[^}]*width:min\(316px,calc\(100vw - 48px\)\)[^}]*max-width:100%/.test(html),'date grid inset leaves the custom calendar popover sizing unchanged');
 assert(/\.ledger-item-primary-row\{[^}]*grid-template-columns:32px minmax\(0,1fr\) minmax\(112px,120px\) 36px/.test(html),'multi-item rows use the approved compact four-column layout');
 assert(html.includes('請輸入店家名稱'),'inline store validation copy is present');
 assert(html.includes('確認儲存（')&&html.includes('筆）'),'multi-item primary action displays the valid record count');
@@ -111,5 +112,14 @@ assert(html.includes('>預設類別<'),'multi-item bill card exposes the renamed
 assert(html.includes('新品項自動帶入，可逐筆調整'),'multi-item bill card explains default inheritance without adding state');
 assert(html.includes('ledger-single-basic-info'),'single-entry essentials share one white information card');
 assert(/\.ledger-item-proxy\{[^}]*background:/.test(html),'proxy details use a contained low-saturation panel');
+assert(html.includes('ledger-item-flag-check'),'multi-item proxy uses the refined compact checked control');
+assert(html.includes('ledger-proxy-switch')&&html.includes('ledger-proxy-switch-track'),'single-item proxy uses the approved text row and switch');
+assert(html.includes('ledger-proxy-heading'),'proxy title and helper copy share one compact heading row');
+assert(/\.ledger-proxy-help\{[^}]*font-size:9px/.test(html),'proxy helper copy is reduced by one size');
+assert(/\.ledger-item-proxy \.ledger-sheet-choice\{[^}]*min-height:28px[^}]*border-radius:7px[^}]*font-size:10px/.test(html),'proxy target choices use the refined compact size');
+assert(/\.ledger-item-proxy \.ledger-sheet-choice-grid\{[^}]*align-items:flex-start/.test(html),'proxy choices do not stretch to the taller add-target row');
+assert(/\.ledger-proxy-add-row\{[^}]*grid-template-columns:minmax\(0,1fr\) 30px[^}]*gap:5px[^}]*margin-top:6px/.test(html),'proxy add-target row and plus button use the refined compact layout');
+assert(/\.ledger-proxy-add-row \.ledger-sheet-input\{[^}]*min-height:30px/.test(html),'proxy add-target input is reduced to 30px');
+assert(/\.ledger-proxy-add-row button\{[^}]*min-height:30px[^}]*border-radius:7px[^}]*font-size:14px/.test(html),'proxy add button is reduced to a 30px rounded rectangle');
 
 console.log('ledger form 2.2.3 tests passed');

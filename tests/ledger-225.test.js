@@ -106,8 +106,28 @@ const renderedBatch=rendererSandbox.renderLedgerBatchCard([
   {id:'b',batchId:'batch-a',detail:'B',category:'交通',payMethod:'現金',amountJpy:2,amountTwd:2}
 ],false,'JPY');
 assert(renderedBatch.includes('partial'),'one selected child renders the batch partial state');
-assert(!renderedBatch.includes('ledger-batch-children" hidden'),'selection mode expands batch children for per-record cancellation');
+assert(renderedBatch.includes('ledger-batch-children" hidden'),'selection mode keeps batch children collapsed until requested');
+assert(/class="ledger-batch-body" onclick="toggleLedgerBatchExpanded\('batch-a',event\)"/.test(renderedBatch),'selection-mode batch body expands instead of selecting the whole batch');
 assert(!renderedBatch.includes('ledger-record-menu-button'),'selection-mode batch renderer omits the ellipsis DOM');
+rendererSandbox.ledgerUiState.expandedBatches['batch-a']=true;
+const expandedBatch=rendererSandbox.renderLedgerBatchCard([
+  {id:'a',batchId:'batch-a',detail:'A',category:'food',payMethod:'cash',amountJpy:1,amountTwd:1},
+  {id:'b',batchId:'batch-a',detail:'B',category:'travel',payMethod:'cash',amountJpy:2,amountTwd:2}
+],false,'JPY');
+assert(!expandedBatch.includes('ledger-batch-children" hidden'),'tapping a batch reveals children for per-record selection');
+
+let selectionRenders=0;
+const batchInteractionSandbox={
+  ledgerUiState:{selectionMode:false,selectedRecordIds:{stale:true},expandedBatches:{'batch-a':true}},
+  closeLedgerRecordActions(){},renderSplit(){selectionRenders++;}
+};
+vm.createContext(batchInteractionSandbox);
+vm.runInContext(extractFunction(html,'enterLedgerSelectionMode')+'\n'+extractFunction(html,'toggleLedgerBatchExpanded'),batchInteractionSandbox);
+batchInteractionSandbox.enterLedgerSelectionMode();
+assert.deepStrictEqual(plain(batchInteractionSandbox.ledgerUiState.expandedBatches),{},'entering selection mode collapses previously expanded batches');
+batchInteractionSandbox.toggleLedgerBatchExpanded('batch-a');
+assert.strictEqual(batchInteractionSandbox.ledgerUiState.expandedBatches['batch-a'],true,'batch cards can expand while selection mode is active');
+assert.strictEqual(selectionRenders,2,'selection entry and batch expansion each refresh the ledger');
 
 assert(html.includes('新品項自動帶入，可逐筆調整'),'default category helper copy is present');
 assert(html.includes('>預設類別<'),'multi-item category label is renamed');
@@ -181,7 +201,7 @@ assert(switchSource.includes("behavior:'smooth'"),'re-tapping the dashboard scro
 assert(extractFunction(html,'returnLedgerDashboard').includes("classList.contains('ledger-sheet-open')"),'hidden-nav sheets protect unsaved form state');
 assert(html.includes('aria-label="返回分帳首頁"'),'the history back button remains available');
 
-assert.match(sw,/okayama-trip-v27/,'service worker cache advances exactly one version');
+assert.match(sw,/okayama-trip-v28/,'service worker cache advances exactly one version');
 
 (async function(){
   const originals=[{id:'s1'},{id:'s2'}],overlay={getAttribute(){return JSON.stringify(['s1','s2']);}},input={value:'共同原因'},button={disabled:false};

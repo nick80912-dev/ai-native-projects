@@ -18,7 +18,7 @@ assert(!html.includes('grid-template-columns:auto minmax(0,1fr) 44px'),'the reti
 
 assert(html.includes('.ledger-entry-divider{border-bottom:1px solid var(--line);padding-bottom:8px}'),'identity and occurrence rows share one divider token');
 assert(html.includes("ledger-datetime-grid '+(inBillCard?'':'ledger-entry-divider')"),'single-item occurrence rows retain the shared divider while the multi-item card avoids a nested divider');
-assert(html.includes('grid-template-columns:minmax(0,1fr) 116px'),'date and compact time stay on one resilient responsive row');
+assert(html.includes('grid-template-columns:minmax(0,1fr) 110px')&&html.includes('width:100%;padding-right:6px'),'date and compact time stay on one resilient inset row');
 assert(html.includes('aria-label="開啟日期選擇器"')&&html.includes('<svg aria-hidden="true"'),'calendar control uses the approved accessible inline SVG');
 
 assert(html.includes('function renderLedgerStoreField('),'store is a shared form field rather than disclosure-only content');
@@ -31,6 +31,6 @@ assert(html.includes("'衣物':'👕'")&&html.includes("'美妝':'💄'"),'cloth
 assert(html.includes("var DEFAULT_LEDGER_CATEGORIES=['餐飲','交通','票券','購物','衣物','美妝','其他']"),'new entries use the renamed clothing category');
 assert(html.includes('.ledger-dual-amounts span{font-size:10px'),'secondary TWD amount is compact but remains at the 10px floor');
 
-assert.match(sw,/okayama-trip-v27/,'service worker cache is v27');
+assert.match(sw,/okayama-trip-v28/,'service worker cache is v28');
 
 console.log('ledger mobile hotfix tests passed');
