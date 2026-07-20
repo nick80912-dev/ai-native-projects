@@ -441,3 +441,346 @@ git push origin dev
 - 單筆及 batch 卡的 `⋯` 可開啟、同一按鈕二次點擊可收合、切換另一張卡正確，選單尺寸及兩個圖示符合規格。
 - 團體單品項／多品項的帳單分攤與單項分攤群組樣式一致；新建預設全選、編輯與儲存語意不變。
 - 個人帳不顯示分攤群組，非分帳頁面不受影響，`pageerror=0`。
+
+# Ledger Popover and Participant Refinements Implementation Plan
+
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+
+**Goal:** 將日期右側雙幣金額縮為 9px、精簡並支援二次點擊收合的紀錄操作 Popover，以及統一團體帳單／單項分攤成員群組。
+
+**Architecture:** 日期金額只調整 `.ledger-date-total` 的 scoped CSS。Popover 以 DOM `data-action-key` 判斷同一 record／batch 的再次點擊，不建立永久 UI state；分攤成員由共用 `renderLedgerParticipantGroup`／`renderLedgerParticipantChoices` renderer 產生兩層群組，資料仍使用既有 draft participants。
+
+**Tech Stack:** Vanilla HTML／CSS／JavaScript、Node `assert`／`vm` tests、既有單檔 renderer、Service Worker app shell。
+
+## Global Constraints
+
+- 僅修改 `index.html`、`sw.js`、必要既有 tests、`07_CHANGELOG.md` 與 `tasks/current.md`。
+- 日期右側雙幣金額為 9px；日期／筆數維持 11px，完整紀錄結果摘要維持 11px。
+- Popover 顯示 `編輯 ✏️`、`刪除 🗑️`，約 118px 寬、4px 內距、36px 列高及 12px 字級。
+- 團體新建表單正式成員預設全選；編輯、單項 custom、至少一人及儲存並再記一筆語意不變。
+- 不修改 Schema、participants JSON、Apps Script、Repository、Queue／Retry／Flush、結算、墓碑契約、localStorage key、資料欄位、治理文件或非分帳頁。
+- 若修改 app shell，`CACHE_NAME` 只從 v32 順延至 v33；不得修改 SHELL、install、activate 或 fetch。
+
+---
+
+### Task 1: 日期右側金額縮為 9px
+
+**Files:**
+- Modify: `tests/ledger-mobile-hotfix.test.js`
+- Modify: `index.html:535-540`
+
+**Interfaces:**
+- Consumes: 現有 `.ledger-date-summary`／`.ledger-date-total`。
+- Produces: 只對右側加總生效的 9px CSS，不改 renderer。
+
+- [ ] **Step 1: 寫失敗測試**
+
+在 `tests/ledger-mobile-hotfix.test.js` 加入：
+
+```js
+assert(/\.ledger-date-total\{[^}]*font-size:9px[^}]*white-space:nowrap/.test(html),'daily total alone is reduced to 9px');
+assert(/\.ledger-history-summary\{[^}]*font-size:11px/.test(html),'history result summary stays 11px');
+```
+
+- [ ] **Step 2: 執行並確認目前缺少 9px**
+
+Run: `node tests/ledger-mobile-hotfix.test.js`
+
+Expected: FAIL 於 `daily total alone is reduced to 9px`。
+
+- [ ] **Step 3: 修改 scoped CSS**
+
+```css
+.ledger-date-total{font-size:9px;white-space:nowrap;text-align:right;font-variant-numeric:tabular-nums}
+```
+
+不得縮小 `.ledger-date-summary` 或 `.ledger-history-summary`。
+
+- [ ] **Step 4: 執行目標測試**
+
+Run: `node tests/ledger-mobile-hotfix.test.js`
+
+Expected: exit 0。
+
+- [ ] **Step 5: 提交**
+
+```powershell
+git add -- index.html tests/ledger-mobile-hotfix.test.js
+git commit -m "style: reduce ledger daily total size"
+```
+
+### Task 2: 精簡並切換 `⋯` 操作 Popover
+
+**Files:**
+- Modify: `tests/ledger-list-actions.test.js`
+- Modify: `index.html:511-512`
+- Modify: `index.html:4695-4718`
+
+**Interfaces:**
+- Consumes: `openLedgerRecordActions(id,event,isBatch)` 既有呼叫介面。
+- Produces: Popover DOM `dataset.actionKey`，格式為 `record:<id>` 或 `batch:<id>`。
+- Preserves: `closeLedgerRecordActions()`、編輯及個人／團體／batch 刪除 handlers。
+
+- [ ] **Step 1: 寫互動與文案失敗測試**
+
+在 `tests/ledger-list-actions.test.js` 加入 `vm` sandbox，抽出 `openLedgerRecordActions`／`closeLedgerRecordActions`，以可追蹤的 fake document 驗證：
+
+```js
+const vm=require('vm');
+function extractFunction(source,name){
+  const start=source.indexOf('function '+name+'(');assert(start>=0,name+' exists');
+  let cursor=source.indexOf('{',start),depth=0;
+  for(;cursor<source.length;cursor++){if(source[cursor]==='{')depth++;if(source[cursor]==='}')depth--;if(depth===0)return source.slice(start,cursor+1);}
+  throw new Error('could not extract '+name);
+}
+const actionHost={current:null};
+const fakeDocument={
+  getElementById(){return actionHost.current;},
+  createElement(){
+    return {dataset:{},style:{},offsetWidth:118,offsetHeight:80,setAttribute(){},remove(){if(actionHost.current===this)actionHost.current=null;}};
+  },
+  body:{appendChild(node){actionHost.current=node;}}
+};
+const actionsSandbox={
+  document:fakeDocument,window:{innerWidth:390,innerHeight:844},ledgerUiState:{track:'personal'},
+  ledgerTrackRecords(){return [{id:'a'},{id:'b'}];},toast(){},jsHtmlAttrString(value){return String(value);}
+};
+vm.createContext(actionsSandbox);
+vm.runInContext(extractFunction(html,'closeLedgerRecordActions')+'\n'+extractFunction(html,'openLedgerRecordActions'),actionsSandbox);
+const trigger={getBoundingClientRect(){return {left:300,right:344,top:100,bottom:144};}};
+actionsSandbox.openLedgerRecordActions('a',{stopPropagation(){},currentTarget:trigger},false);
+assert.strictEqual(actionHost.current.dataset.actionKey,'record:a');
+assert(actionHost.current.innerHTML.includes('編輯 ✏️'));
+assert(actionHost.current.innerHTML.includes('刪除 🗑️'));
+actionsSandbox.openLedgerRecordActions('a',{stopPropagation(){},currentTarget:trigger},false);
+assert.strictEqual(actionHost.current,null,'same ellipsis closes the popover');
+actionsSandbox.openLedgerRecordActions('a',{stopPropagation(){},currentTarget:trigger},false);
+actionsSandbox.openLedgerRecordActions('b',{stopPropagation(){},currentTarget:trigger},false);
+assert.strictEqual(actionHost.current.dataset.actionKey,'record:b','different ellipsis switches the popover');
+```
+
+另加入 CSS assertions：
+
+```js
+assert(/\.ledger-action-popover\{[^}]*width:118px[^}]*padding:4px/.test(html));
+assert(/\.ledger-action-popover button\{[^}]*min-height:36px[^}]*font-size:12px/.test(html));
+```
+
+- [ ] **Step 2: 執行並確認舊 Popover 不會 toggle**
+
+Run: `node tests/ledger-list-actions.test.js`
+
+Expected: FAIL，第二次點擊後 Popover 仍存在或缺少 `data-action-key`。
+
+- [ ] **Step 3: 實作 DOM key toggle**
+
+在 `openLedgerRecordActions` 開頭、查找 record 前加入：
+
+```js
+var actionKey=(isBatch?'batch:':'record:')+String(id||'');
+var existing=document.getElementById('ledgerRecordActionPopover');
+if(existing&&existing.dataset.actionKey===actionKey){closeLedgerRecordActions();return;}
+```
+
+建立新 Popover 後設定：
+
+```js
+popover.dataset.actionKey=actionKey;
+popover.innerHTML='<button role="menuitem" onclick="closeLedgerRecordActions();editLedgerRecord(\''+safeId+'\')">編輯 ✏️</button><button role="menuitem" class="danger" onclick="closeLedgerRecordActions();'+remove+'">刪除 🗑️</button>';
+```
+
+不同 key 仍執行既有 `closeLedgerRecordActions()` 後建立新選單。
+
+- [ ] **Step 4: 縮小 Popover CSS**
+
+將既有規則調整為：
+
+```css
+.ledger-action-popover{width:118px;padding:4px;gap:2px}
+.ledger-action-popover button{min-height:36px;font-size:12px;padding:6px 8px}
+```
+
+保留現有 border、背景、陰影、定位與 danger 顏色。
+
+- [ ] **Step 5: 執行目標測試**
+
+Run: `node tests/ledger-list-actions.test.js`
+
+Expected: exit 0，涵蓋開啟、同 key 收合、不同 key 切換與既有 handlers。
+
+- [ ] **Step 6: 提交**
+
+```powershell
+git add -- index.html tests/ledger-list-actions.test.js
+git commit -m "feat: refine and toggle ledger action popover"
+```
+
+### Task 3: 共用團體分攤成員群組
+
+**Files:**
+- Modify: `tests/ledger-form-223.test.js`
+- Modify: `tests/ledger-multi-item.test.js`
+- Modify: `index.html:515-516`
+- Modify: `index.html:4117-4120`
+- Modify: `index.html:4415-4442`
+
+**Interfaces:**
+- Produces: `renderLedgerParticipantChoices(selected,itemKey) -> HTML string`。
+- Produces: `renderLedgerParticipantGroup(label,selected,itemKey,retainedText) -> HTML string`。
+- Consumes: `registeredMembersForCurrentMode()`、`toggleLedgerParticipant(name)`、`toggleLedgerItemParticipant(key,name)`。
+
+- [ ] **Step 1: 寫預設全選與 renderer 失敗測試**
+
+在 `tests/ledger-form-223.test.js` 加入：
+
+```js
+const sharedDraft=plain(sandbox.createLedgerEntryDraft('shared'));
+assert.deepStrictEqual(sharedDraft.participants,['Bar','Amy'],'new shared draft selects all registered members');
+assert(html.includes('function renderLedgerParticipantGroup('));
+assert(html.includes('ledger-participant-group'));
+assert(html.includes('ledger-participant-choice'));
+assert(/\.ledger-participant-group\{[^}]*border-radius:9px[^}]*padding:7px/.test(html));
+assert(/\.ledger-participant-choice\{[^}]*min-height:28px[^}]*border-radius:7px[^}]*font-size:10px/.test(html));
+```
+
+在 `tests/ledger-multi-item.test.js` 保留既有 participants JSON assertions，並新增靜態斷言「分攤成員」及「單項分攤成員」都呼叫共用 group renderer。
+
+```js
+const uiHtml=fs.readFileSync('index.html','utf8');
+assert(uiHtml.includes("renderLedgerParticipantGroup('單項分攤成員',item.participants,item.key,''"));
+assert(uiHtml.includes("renderLedgerParticipantGroup('分攤成員',draft.participants,null"));
+```
+
+- [ ] **Step 2: 執行並確認共用 renderer／CSS 尚不存在**
+
+Run: `node tests/ledger-form-223.test.js; node tests/ledger-multi-item.test.js`
+
+Expected: FAIL 於 `renderLedgerParticipantGroup` 或 scoped CSS；既有預設全選及 JSON tests 應維持 PASS。
+
+- [ ] **Step 3: 實作共用選項 renderer**
+
+```js
+function renderLedgerParticipantChoices(selected,itemKey){
+  return registeredMembersForCurrentMode().map(function(entry){
+    var on=(selected||[]).some(function(name){return canonicalMemberName(name)===entry.key;});
+    var action=itemKey?"toggleLedgerItemParticipant('"+jsString(itemKey)+"','"+jsString(entry.name)+"')":"toggleLedgerParticipant('"+jsString(entry.name)+"')";
+    return '<button class="ledger-participant-choice '+(on?'on':'')+'" aria-pressed="'+(on?'true':'false')+'" onclick="'+action+'">'+(on?'✓ ':'')+escapeHtml(entry.name)+'</button>';
+  }).join('');
+}
+```
+
+- [ ] **Step 4: 實作共用群組 renderer 並替換兩層 UI**
+
+```js
+function renderLedgerParticipantGroup(label,selected,itemKey,retainedText){
+  var id=itemKey?'':' id="ledgerParticipants"';
+  return '<div class="ledger-sheet-field ledger-participant-group"'+id+'><span class="ledger-sheet-label">'+escapeHtml(label)+'</span><div class="ledger-sheet-choice-grid">'+renderLedgerParticipantChoices(selected,itemKey||null)+'</div>'+(retainedText?'<div class="ledger-sheet-retained">'+escapeHtml(retainedText)+'</div>':'')+'</div>';
+}
+```
+
+`renderLedgerItemParticipants(item)` 回傳：
+
+```js
+return renderLedgerParticipantGroup('單項分攤成員',item.participants,item.key,'');
+```
+
+`renderLedgerTrackSpecificFields(draft)` 的 shared 分支回傳：
+
+```js
+return renderLedgerParticipantGroup('分攤成員',draft.participants,null,draft.participantsRetained?'沿用上一筆：'+draft.participants.length+' 人':'');
+```
+
+- [ ] **Step 5: 加入 scoped CSS**
+
+```css
+.ledger-participant-group{padding:7px;border:1px solid #cfe0dd;border-radius:9px;background:#f3f8f6}
+.ledger-participant-group>.ledger-sheet-label{margin-bottom:6px}
+.ledger-participant-choice{min-height:28px;border:1px solid var(--line);border-radius:7px;background:#fff;color:var(--ink-soft);padding:4px 7px;font:inherit;font-size:10px;font-weight:800}
+.ledger-participant-choice.on{border-color:var(--sea-deep);background:var(--mint);color:var(--sea-deep)}
+```
+
+只作用於團體分攤，不修改全域 `.ledger-sheet-choice`。
+
+- [ ] **Step 6: 執行分攤與資料契約測試**
+
+Run: `node tests/ledger-form-223.test.js; node tests/ledger-multi-item.test.js; node tests/ledger-settlement.test.js`
+
+Expected: 三者 exit 0；新建預設全選、既有 JSON 及結算結果不變。
+
+- [ ] **Step 7: 提交**
+
+```powershell
+git add -- index.html tests/ledger-form-223.test.js tests/ledger-multi-item.test.js
+git commit -m "style: group shared ledger participants"
+```
+
+### Task 4: SW、文件與完整驗證
+
+**Files:**
+- Modify: `sw.js:9`
+- Modify: 所有既有 SW 版本 assertions tests
+- Modify: `07_CHANGELOG.md`
+- Modify: `tasks/current.md`
+
+**Interfaces:**
+- Produces: `CACHE_NAME = 'okayama-trip-v33'`；其他 SW 內容不變。
+
+- [ ] **Step 1: 先將 SW tests 由 v32 改為 v33**
+
+更新：`tests/ios-zoom-guard.test.js`、`tests/ledger-221-ui.test.js`、`tests/ledger-225.test.js`、`tests/ledger-mobile-hotfix.test.js`、`tests/ledger-ui-polish.test.js`、`tests/pwa-shell.test.js`。
+
+- [ ] **Step 2: 執行 PWA 測試確認紅燈**
+
+Run: `node tests/pwa-shell.test.js`
+
+Expected: FAIL，實際 v32、預期 v33。
+
+- [ ] **Step 3: 僅修改 CACHE_NAME**
+
+```js
+var CACHE_NAME = 'okayama-trip-v33';
+```
+
+- [ ] **Step 4: 更新文件**
+
+`07_CHANGELOG.md` 新增本批 9px 日期金額、Popover 尺寸／圖示／toggle、兩層分攤群組、預設全選保護及 SW v33。
+
+`tasks/current.md` 標示已實作、375px／390px Browser QA 結果及等待 Bar 手機驗收，未經驗收不得標示完成。
+
+- [ ] **Step 5: Browser QA**
+
+375px／390px 驗證：
+
+```text
+- 日期右側雙幣金額 computed font-size = 9px
+- 日期／筆數及找到 N 筆摘要 computed font-size = 11px
+- Popover 寬約 118px、列高約 36px，文字與圖示完整
+- 同一 ⋯ 第二次點擊收合；不同 ⋯ 正確切換
+- 團體單品／多品帳單分攤及單項分攤為淡綠群組
+- 成員預設全選，按鈕 28px／7px／10px 並可換行
+- 個人帳不顯示分攤群組
+- scrollWidth <= clientWidth；pageerror=0
+```
+
+- [ ] **Step 6: 完整自動驗證與禁止範圍稽核**
+
+```powershell
+$failed=@(); $tests=Get-ChildItem tests -Filter *.test.js | Sort-Object Name
+foreach($test in $tests){node $test.FullName;if($LASTEXITCODE -ne 0){$failed+=$test.Name}}
+if($failed.Count){throw ('FAILED: '+($failed -join ', '))}
+node tools/check-doc-titles.js
+git diff --check
+git diff -- schema.js validator.js apps-script .ai-manifest.json PROJECT_CONSTITUTION.md netlify.toml manifest.webmanifest
+```
+
+Expected: 38 個 tests 全部 exit 0；文件檢查 exit 0；禁止範圍 diff 無輸出；`git diff -- sw.js` 只有 CACHE_NAME。
+
+- [ ] **Step 7: 提交並推送 dev**
+
+```powershell
+git add -- index.html sw.js 07_CHANGELOG.md tasks/current.md tests
+git commit -m "feat: refine ledger popover and participant groups"
+git push origin dev
+```
+
+禁止 push／merge `main`，禁止部署 Netlify。
