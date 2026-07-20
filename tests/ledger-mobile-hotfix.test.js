@@ -38,6 +38,6 @@ assert(/\.ledger-date-summary\{[^}]*grid-template-columns:minmax\(0,1fr\) auto[^
 assert(/\.ledger-date-total\{[^}]*white-space:nowrap/.test(html),'daily JPY to TWD total stays on one line');
 assert(/\.ledger-history-summary\{[^}]*font-size:11px/.test(html),'history result summary is reduced to the approved 11px');
 
-assert.match(sw,/okayama-trip-v31/,'service worker cache is v31');
+assert.match(sw,/okayama-trip-v32/,'service worker cache is v32');
 
 console.log('ledger mobile hotfix tests passed');

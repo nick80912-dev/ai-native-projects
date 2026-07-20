@@ -1,5 +1,11 @@
 # 07 版本紀錄
 
+## 2026-07-20 — Ledger 2.2.5 消費卡置中與日期雙幣加總（Dev）
+- 首頁最近消費與完整紀錄的單筆／多品項摘要卡，右側 JPY／TWD 金額及 `⋯` 功能鈕改以 Grid 原生方式垂直置中；選取模式仍不產生 `⋯` DOM，卡片互動不變。
+- 首頁最新有效日期摘要新增固定 `¥JPY ≈ NT$TWD` 加總；完整紀錄按日期分組時，每日右側顯示目前搜尋／篩選結果的日加總，按類別分組維持純類別標題。
+- 完整紀錄結果摘要改為 11px 次要樣式，格式統一為 `找到 N 筆 · ¥JPY ≈ NT$TWD`；所有金額由 renderer 目前收到的有效實體紀錄即時計算，不新增 state 或資料欄位。
+- Service Worker cache 由 `okayama-trip-v31` 順延至 `okayama-trip-v32`；未修改 SHELL、install／activate／fetch、Schema、Apps Script、Repository／Queue、結算、墓碑契約或 localStorage key。
+
 ## 2026-07-20 — Ledger 2.2.5 iOS 時間控制寬度修正（Dev）
 - 依 iOS App 實機截圖修正原生 `input[type=time]` 仍吃掉群組右側 padding 的問題；新增專用 `ledger-time-input-wrap`，由 wrapper 管理內容區寬度，time input 改以 `flex:1 1 0`／`width:0` 收斂原生 intrinsic width。
 - 單品項與多品項沿用同一個 occurrence renderer；日期欄、時間值、字級、picker、儲存語意及群組 padding 均不變。
