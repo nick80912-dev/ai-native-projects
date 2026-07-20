@@ -4192,7 +4192,8 @@ function withLedgerSheetPosition(renderFn){
   var after=document.querySelector('.ledger-sheet');if(after)after.scrollTop=top;
   if(active){var focus=document.getElementById(active);if(focus)try{focus.focus({preventScroll:true});}catch(ignore){focus.focus();}}
 }
-function openLedgerEntrySheet(){
+function openLedgerQuickEntryFromFab(){openLedgerEntrySheet(true);}
+function openLedgerEntrySheet(focusAmount){
   if(isTimeSimulationActive()){toast('時間模擬中不可新增支出');return;}
   if(!memberIsAllowed(getCurrentMember())){openMemberSelector(true);return;}
   ledgerBackgroundScrollY=window.scrollY||window.pageYOffset||0;
@@ -4200,6 +4201,7 @@ function openLedgerEntrySheet(){
   ledgerUiState.draft=createLedgerEntryDraft(ledgerUiState.track);ledgerUiState.editing=null;ledgerUiState.sheet='entry';
   var overlay=document.createElement('div');overlay.id='ledgerEntrySheet';overlay.className='ledger-sheet-overlay';
   document.body.appendChild(overlay);document.body.classList.add('ledger-sheet-open');renderLedgerEntrySheet();
+  if(focusAmount){var amount=document.getElementById('ledgerAmount');if(amount)try{amount.focus({preventScroll:true});}catch(ignoreFocus){amount.focus();}}
   requestAnimationFrame(function(){var sheet=overlay.querySelector('.ledger-sheet');if(sheet)sheet.scrollTop=0;});
 }
 function editLedgerRecord(id){
@@ -4857,7 +4859,7 @@ function renderSplit(){
   view.innerHTML=testWarning+legacy+'<div class="ledger-dashboard"><div id="ledgerPendingStatus" class="ledger-status-pill '+(pending?'pending':'')+'">'+escapeHtml(status)+'</div>'+
     '<section class="ledger-summary-card"><div class="ledger-track-grid" role="group" aria-label="記帳模式"><button class="ledger-track-btn '+(!shared?'on':'')+'" aria-pressed="'+(!shared?'true':'false')+'" onclick="setLedgerTrack(\'personal\')">個人</button><button class="ledger-track-btn '+(shared?'on':'')+'" aria-pressed="'+(shared?'true':'false')+'" onclick="setLedgerTrack(\'shared\')">團體</button></div><div class="ledger-summary-count">'+period.count+' 筆'+(shared?'團體':'個人')+'紀錄</div><button class="ledger-summary-amount" onclick="toggleLedgerDisplayCurrency()" aria-label="切換總額顯示幣別"><strong>'+escapeHtml(formatLedgerCurrencyAmount(currency,primaryTotal))+'</strong><span>'+escapeHtml(formatLedgerCurrencyAmount(secondary,secondaryTotal))+'</span></button></section>'+
     '<div class="ledger-compact-grid"><article class="ledger-compact-card ledger-today-card"><h3>今日</h3><strong>'+period.today.count+' 筆 · '+escapeHtml(formatLedgerCurrencyAmount(currency,todayPrimary))+'</strong><p>'+escapeHtml(ledgerLocalDateKey(timestampDate(Date.now()))||'裝置日期')+'</p></article>'+secondCard+'</div>'+
-    '<div class="split-intro">個人帳留在本機；團體帳跨裝置同步。</div><section><div class="ledger-section-head"><h3>最近消費</h3><div>'+selectionButton+'<button class="ledger-view-all" onclick="showLedgerFullList()">查看全部</button></div></div>'+recentSummary+'<div class="ledger-recent-list">'+recentMarkup+'</div></section></div>'+renderLedgerSelectionToolbar()+'<button class="ledger-fab" aria-label="新增消費" onclick="openLedgerEntrySheet()">＋</button>';
+    '<div class="split-intro">個人帳留在本機；團體帳跨裝置同步。</div><section><div class="ledger-section-head"><h3>最近消費</h3><div>'+selectionButton+'<button class="ledger-view-all" onclick="showLedgerFullList()">查看全部</button></div></div>'+recentSummary+'<div class="ledger-recent-list">'+recentMarkup+'</div></section></div>'+renderLedgerSelectionToolbar()+'<button class="ledger-fab" aria-label="新增消費" onclick="openLedgerQuickEntryFromFab()">＋</button>';
 }
 
 /* ================= 導覽 / 啟動 ================= */

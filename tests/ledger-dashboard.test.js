@@ -78,7 +78,7 @@ assert(splitSource.includes('ledger-summary-card'),'dashboard renders the primar
 assert(splitSource.includes('ledger-today-card'),'dashboard renders the Today card');
 assert(splitSource.includes('ledger-recent-list'),'dashboard renders recent expenses');
 assert(splitSource.includes('查看全部'),'dashboard links to the complete list');
-assert(splitSource.includes('openLedgerEntrySheet'),'dashboard FAB opens quick entry');
+assert(splitSource.includes('openLedgerQuickEntryFromFab'),'dashboard FAB opens quick entry through the dedicated focus path');
 assert(!splitSource.includes('id="ledgerAmount"'),'amount input no longer lives in the dashboard renderer');
 assert(splitSource.includes('selectLatestLedgerDateExpenses(records)'),'dashboard selects the newest effective local date through the tested selector');
 assert(splitSource.includes("summarizeLedgerRecords(records,ledgerUniverseMode()==='test')"),'TEST dashboard includes only its already-selected universe in totals');
