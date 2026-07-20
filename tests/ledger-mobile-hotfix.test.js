@@ -35,7 +35,7 @@ assert(html.includes('.ledger-dual-amounts span{font-size:10px'),'secondary TWD 
 assert(/\.ledger-dual-amounts\{[^}]*align-content:center/.test(html),'dual-currency amounts are vertically centered in every record card');
 assert(/\.ledger-record-menu-button\{[^}]*align-self:center/.test(html),'ellipsis action is vertically centered beside the card amount');
 assert(/\.ledger-date-summary\{[^}]*grid-template-columns:minmax\(0,1fr\) auto[^}]*font-size:11px/.test(html),'date summary uses a compact two-column mobile layout');
-assert(/\.ledger-date-total\{[^}]*white-space:nowrap/.test(html),'daily JPY to TWD total stays on one line');
+assert(/\.ledger-date-total\{[^}]*font-size:9px[^}]*white-space:nowrap/.test(html),'daily total alone is reduced to 9px and stays on one line');
 assert(/\.ledger-history-summary\{[^}]*font-size:11px/.test(html),'history result summary is reduced to the approved 11px');
 
 assert.match(sw,/okayama-trip-v32/,'service worker cache is v32');
