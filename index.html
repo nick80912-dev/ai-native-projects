@@ -4611,6 +4611,10 @@ function commitLedgerEntrySave(draft,editing,records,addAnother,possibleDuplicat
     toast(editing?(result.queued?'編輯已儲存，待同步':'編輯已儲存'):(result.queued?'已儲存，待同步':'已儲存'));return result;
   },function(error){buttons.forEach(function(button){if(button)button.disabled=false;});toast(error.message||'記帳失敗');return {ok:false,error:error};});
 }
+function ledgerDuplicateCandidateRecords(track){
+  if(track==='personal')return personalLedgerRepository.all();
+  return sortLedgerExpenses(ledgerUniverseRecords(spendLedgerRecords(mergedLedgerRecords()),ledgerUniverseMode()));
+}
 function saveLedgerEntry(addAnother){
   if(isTimeSimulationActive()){toast('時間模擬中不可新增支出');return Promise.resolve({ok:false});}
   var draft=ledgerUiState.draft,editing=ledgerUiState.editing,member=getCurrentMember();if(!draft)return Promise.resolve({ok:false});
@@ -4622,7 +4626,7 @@ function saveLedgerEntry(addAnother){
   var records;
   try{records=buildLedgerExpenseRecords(submissionDraft,{member:member,settings:currentLedgerSettings(),now:Date.now(),random:Math.random,memberEntries:registeredMembersForCurrentMode()});}
   catch(error){toast(error.message||'記帳資料格式錯誤');return Promise.resolve({ok:false,error:error});}
-  var existing=draft.track==='personal'?personalLedgerRepository.all():ledgerTrackRecords();
+  var existing=ledgerDuplicateCandidateRecords(draft.track);
   var possibleDuplicate=records.length===1?ledgerPotentialDuplicate(records[0],existing,{track:draft.track,editing:!!editing,addAnother:!!addAnother,testMode:draft.track==='shared'&&ledgerUniverseMode()==='test'}):null;
   if(draft.track==='shared'&&possibleDuplicate){
     return confirmSharedLedgerDuplicate(records[0]).then(function(approved){

@@ -209,18 +209,21 @@ assert.strictEqual(helperRecords.length,1,'a refused undo keeps the edited perso
 
 const saveFlowSource=extract('function commitLedgerEntrySave(','function deletePersonalLedgerRecord(');
 const saveButtons={ledgerSave:{disabled:false},ledgerSaveAnother:{disabled:false}};
-const saveMessages=[],preparedIds=[],submittedIds=[];
+const saveMessages=[],preparedIds=[],submittedIds=[],duplicateLookupIds=[];
 let buildCalls=0,enqueueCalls=0,closeCalls=0,renderCalls=0,confirmationResolve=null;
 const preparedSharedRecord={id:'1784512809000-new1',member:'Bar',category:'餐飲',detail:'Dinner',inputCurrency:'JPY',amountJpy:500,amountTwd:110,batchId:''};
 const saveSandbox={
-  ledgerUiState:{draft:{track:'shared',currency:'JPY',multi:false},editing:null},
+  ledgerUiState:{track:'personal',draft:{track:'shared',currency:'JPY',multi:false},editing:null},
   isTimeSimulationActive(){return false;},memberIsAllowed(){return true;},getCurrentMember(){return 'Bar';},openMemberSelector(){throw new Error('shared member is available');},
   validateLedgerEntryDraft(){return {valid:true,errors:{}};},
   buildLedgerExpenseRecords(){buildCalls++;preparedIds.push(preparedSharedRecord.id);return [preparedSharedRecord];},
   currentLedgerSettings(){return {};},registeredMembersForCurrentMode(){return [];},
-  ledgerTrackRecords(){return [{id:'1784512800000-old1',member:'Bar',category:'餐飲',detail:'Dinner',inputCurrency:'JPY',amountJpy:500,amountTwd:110,batchId:''}];},ledgerUniverseMode(){return 'formal';},
-  personalLedgerRepository:{all(){return [];},add(){throw new Error('personal persistence must not run for shared records');}},
-  ledgerPotentialDuplicate(){return {id:'1784512800000-old1'};},
+  ledgerUniverseMode(){return 'test';},
+  mergedLedgerRecords(){return [
+    {id:'1784512800000-shared',member:'Bar',category:'餐飲',detail:'[TEST] Dinner',inputCurrency:'JPY',amountJpy:500,amountTwd:110,batchId:''}
+  ];},spendLedgerRecords(records){return records;},ledgerUniverseRecords(records,mode){return mode==='test'?records.filter(function(record){return /^\[TEST\]/.test(record.detail);}):[];},sortLedgerExpenses(records){return records;},
+  personalLedgerRepository:{all(){return [{id:'1784512800000-personal',member:'Bar',category:'餐飲',detail:'Dinner',inputCurrency:'JPY',amountJpy:500,amountTwd:110,batchId:''}];},add(){throw new Error('personal persistence must not run for shared records');}},
+  ledgerPotentialDuplicate(candidate,records){duplicateLookupIds.push(records.map(function(record){return record.id;}));return records[0]||null;},
   confirmSharedLedgerDuplicate(){return new Promise(function(resolve){confirmationResolve=resolve;});},
   persistLedgerExpenseRecords(records,track){enqueueCalls++;submittedIds.push(records.map(function(record){return record.id;}));return Promise.resolve({ok:true,queued:true,records:records,pending:1});},
   persistLedgerEditedRecords(){throw new Error('editing path is not under test');},
@@ -235,6 +238,7 @@ vm.runInContext(saveFlowSource,saveSandbox);
 (async function(){
   const cancelledSave=saveSandbox.saveLedgerEntry(false);
   assert.strictEqual(buildCalls,1,'the shared candidate is prepared exactly once before confirmation');
+  assert.deepStrictEqual(duplicateLookupIds[0],['1784512800000-shared'],'a shared draft opened from the personal page inspects only the current TEST shared universe');
   assert.strictEqual(enqueueCalls,0,'shared duplicate confirmation makes zero enqueue calls before approval');
   confirmationResolve(false);
   const cancelledResult=await cancelledSave;
