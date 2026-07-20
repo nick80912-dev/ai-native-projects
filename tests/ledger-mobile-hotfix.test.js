@@ -31,6 +31,6 @@ assert(html.includes("'衣物':'👕'")&&html.includes("'美妝':'💄'"),'cloth
 assert(html.includes("var DEFAULT_LEDGER_CATEGORIES=['餐飲','交通','票券','購物','衣物','美妝','其他']"),'new entries use the renamed clothing category');
 assert(html.includes('.ledger-dual-amounts span{font-size:10px'),'secondary TWD amount is compact but remains at the 10px floor');
 
-assert.match(sw,/okayama-trip-v26/,'service worker cache is v26');
+assert.match(sw,/okayama-trip-v27/,'service worker cache is v27');
 
 console.log('ledger mobile hotfix tests passed');

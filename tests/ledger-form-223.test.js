@@ -107,7 +107,8 @@ assert(/\.ledger-datetime-grid\{[^}]*grid-template-columns:minmax\(0,1fr\) 116px
 assert(/\.ledger-item-primary-row\{[^}]*grid-template-columns:32px minmax\(0,1fr\) minmax\(112px,120px\) 36px/.test(html),'multi-item rows use the approved compact four-column layout');
 assert(html.includes('請輸入店家名稱'),'inline store validation copy is present');
 assert(html.includes('確認儲存（')&&html.includes('筆）'),'multi-item primary action displays the valid record count');
-assert(html.includes('套用類別'),'multi-item bill card exposes the batch category apply control');
+assert(html.includes('>預設類別<'),'multi-item bill card exposes the renamed default category control');
+assert(html.includes('新品項自動帶入，可逐筆調整'),'multi-item bill card explains default inheritance without adding state');
 assert(html.includes('ledger-single-basic-info'),'single-entry essentials share one white information card');
 assert(/\.ledger-item-proxy\{[^}]*background:/.test(html),'proxy details use a contained low-saturation panel');
 

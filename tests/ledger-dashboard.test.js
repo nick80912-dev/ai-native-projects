@@ -41,8 +41,8 @@ const records=Array.from({length:17},(_,index)=>({
 }));
 
 const originalIds=records.map(record=>record.id);
-const recent=Array.from(mod.selectRecentLedgerExpenses(records,15));
-assert.strictEqual(recent.length,15,'dashboard limits recent expenses to 15');
+const recent=Array.from(mod.selectLatestLedgerDateExpenses(records));
+assert.strictEqual(recent.length,15,'dashboard keeps every expense from the newest effective date');
 assert.strictEqual(recent[0].id,'r16','recent expenses are newest first');
 assert.deepStrictEqual(records.map(record=>record.id),originalIds,'recent selector does not mutate its input');
 
@@ -62,7 +62,7 @@ assert.strictEqual(summary.total.amountJpy,records.reduce((sum,record)=>sum+reco
 assert.strictEqual(summary.today.amountTwd,records.slice(2).reduce((sum,record)=>sum+record.amountTwd,0));
 
 assert.strictEqual(mod.ledgerLocalDateKey('not-a-date'),'','invalid dates do not create a misleading group key');
-assert.deepStrictEqual(Array.from(mod.selectRecentLedgerExpenses(records,0)),[],'zero limit returns no rows');
+assert.deepStrictEqual(Array.from(mod.selectLatestLedgerDateExpenses([])),[],'an empty track has no recent date');
 const personalHistory=[{id:'a',isProxy:false},{id:'b',isProxy:true},{id:'c',isProxy:true}];
 assert.deepStrictEqual(Array.from(mod.filterLedgerHistoryRecords(personalHistory,'personal','proxy'),item=>item.id),['b','c'],'personal proxy history contains proxy records only');
 assert.deepStrictEqual(Array.from(mod.filterLedgerHistoryRecords(personalHistory,'personal','all'),item=>item.id),['a','b','c'],'personal all history keeps every visible record');
@@ -80,7 +80,7 @@ assert(splitSource.includes('ledger-recent-list'),'dashboard renders recent expe
 assert(splitSource.includes('查看全部'),'dashboard links to the complete list');
 assert(splitSource.includes('openLedgerEntrySheet'),'dashboard FAB opens quick entry');
 assert(!splitSource.includes('id="ledgerAmount"'),'amount input no longer lives in the dashboard renderer');
-assert(splitSource.includes('selectRecentLedgerExpenses(records,15)'),'dashboard limits records through the tested selector');
+assert(splitSource.includes('selectLatestLedgerDateExpenses(records)'),'dashboard selects the newest effective local date through the tested selector');
 assert(splitSource.includes("summarizeLedgerRecords(records,ledgerUniverseMode()==='test')"),'TEST dashboard includes only its already-selected universe in totals');
 assert(ledgerUiSource.includes('groupLedgerExpensesByDate'),'dashboard uses the tested date grouping');
 assert(ledgerUiSource.includes("spendLedgerRecords(mergedLedgerRecords())"),'shared history consumes effective visible expenses');
