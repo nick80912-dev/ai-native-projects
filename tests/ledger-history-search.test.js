@@ -31,6 +31,27 @@ assert.deepStrictEqual(plain(sandbox.filterLedgerHistory(records,'',{proxy:'prox
 assert.deepStrictEqual(Object.keys(plain(sandbox.groupLedgerHistory([records[3],records[0]],'category'))),['交通','餐飲']);
 assert.deepStrictEqual(Object.keys(plain(sandbox.groupLedgerHistory([records[0],records[1]],'date'))),['2026-07-19','2026-07-18']);
 
+sandbox.ledgerUiState={historyGrouping:'category'};
+sandbox.escapeHtml=function(value){return String(value);};
+sandbox.ledgerAmountTotals=function(items){return (items||[]).reduce(function(totals,item){totals.amountJpy+=Number(item.amountJpy||0);totals.amountTwd+=Number(item.amountTwd||0);return totals;},{amountJpy:0,amountTwd:0});};
+sandbox.formatLedgerInlineTotals=function(totals){return '¥'+totals.amountJpy+' ≈ NT$'+totals.amountTwd;};
+sandbox.renderLedgerBatchCard=function(){return '<batch>';};
+sandbox.renderLedgerRecentRecord=function(){return '<record>';};
+vm.runInContext(extractFunction(html,'groupLedgerDisplayUnits')+'\n'+extractFunction(html,'groupLedgerDisplayUnitsByCategory')+'\n'+extractFunction(html,'ledgerRecordsForDisplayUnits')+'\n'+extractFunction(html,'renderLedgerDateSummary')+'\n'+extractFunction(html,'renderLedgerHistoryGrouped'),sandbox);
+const categoryUnits=[
+  {type:'record',records:[{amountJpy:500,amountTwd:110}]},
+  {type:'batch',records:[{amountJpy:300,amountTwd:66},{amountJpy:200,amountTwd:44}]}
+];
+assert.deepStrictEqual(
+  JSON.parse(JSON.stringify(sandbox.ledgerRecordsForDisplayUnits(categoryUnits))).map(record=>record.amountJpy),
+  [500,300,200]
+);
+const categoryHtml=sandbox.renderLedgerHistoryGrouped([
+  {id:'food',category:'餐飲',amountJpy:500,amountTwd:110,batchId:''}
+],false,'JPY');
+assert(categoryHtml.includes('餐飲'));
+assert(categoryHtml.includes('¥500 ≈ NT$110'));
+
 const summarySandbox={Math,Number};vm.createContext(summarySandbox);
 vm.runInContext(extractFunction(html,'ledgerAmountTotals')+'\n'+extractFunction(html,'formatLedgerInlineTotals')+'\n'+extractFunction(html,'ledgerHistorySummary'),summarySandbox);
 const filteredSummary=summarySandbox.ledgerHistorySummary([
