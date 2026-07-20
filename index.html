@@ -4761,11 +4761,10 @@ function ledgerHistoryFilteredRecords(records){return filterLedgerHistory(record
 function renderLedgerHistoryGrouped(records,shared,currency){
   if(!records.length)return '<div class="empty-state">沒有符合條件的紀錄</div>';
   if(ledgerUiState.historyGrouping==='date')return renderLedgerRecentGroups(records,shared,currency);
-  // The shared summary replaces the category ledger-date-label with dual-currency totals.
-  var groups=groupLedgerDisplayUnitsByCategory(records),renderGroupSummary=renderLedgerDateSummary;
+  var groups=groupLedgerDisplayUnitsByCategory(records);
   return Object.keys(groups).map(function(key){
     var units=groups[key],groupRecords=ledgerRecordsForDisplayUnits(units);
-    return '<section class="ledger-date-group">'+renderGroupSummary(key,groupRecords,false)+units.map(function(unit){
+    return '<section class="ledger-date-group">'+renderLedgerDateSummary(key,groupRecords,false)+units.map(function(unit){
       return unit.type==='batch'?renderLedgerBatchCard(unit.records,shared,currency):renderLedgerRecentRecord(unit.records[0],shared,currency);
     }).join('')+'</section>';
   }).join('');

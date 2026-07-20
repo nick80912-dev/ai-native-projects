@@ -164,8 +164,8 @@ const renderSplitSource=extractFunction(html,'renderSplit'),recentGroupsSource=e
 assert(renderSplitSource.includes("formatLedgerDateKey(ledgerLocalDateKey(recent[0].time))"),'recent heading shows the absolute newest date');
 assert(renderSplitSource.includes('renderLedgerDateSummary(recentDate,recent,true)'),'dashboard uses the shared latest-day summary');
 assert(recentGroupsSource.includes('renderLedgerDateSummary(label,group.records,false)'),'date grouping uses the shared daily total summary');
-assert(historyGroupedSource.includes("historyGrouping==='date'")&&historyGroupedSource.includes('ledger-date-label'),'category grouping retains plain labels');
-assert(!historyGroupedSource.includes('renderLedgerDateSummary(key'),'category grouping does not mislabel category totals as daily totals');
+assert(historyGroupedSource.includes("historyGrouping==='date'")&&historyGroupedSource.includes('renderLedgerDateSummary(key,groupRecords,false)'),'category grouping uses the shared dual-currency summary');
+assert(!historyGroupedSource.includes('ledger-date-label'),'category grouping no longer renders the obsolete plain label');
 
 const clearSandbox={
   ledgerUiState:{

@@ -35,8 +35,8 @@ sandbox.ledgerUiState={historyGrouping:'category'};
 sandbox.escapeHtml=function(value){return String(value);};
 sandbox.ledgerAmountTotals=function(items){return (items||[]).reduce(function(totals,item){totals.amountJpy+=Number(item.amountJpy||0);totals.amountTwd+=Number(item.amountTwd||0);return totals;},{amountJpy:0,amountTwd:0});};
 sandbox.formatLedgerInlineTotals=function(totals){return '¥'+totals.amountJpy+' ≈ NT$'+totals.amountTwd;};
-sandbox.renderLedgerBatchCard=function(){return '<batch>';};
-sandbox.renderLedgerRecentRecord=function(){return '<record>';};
+sandbox.renderLedgerBatchCard=function(batchRecords){return '<batch:'+batchRecords.map(function(record){return record.id;}).join(',')+'>';};
+sandbox.renderLedgerRecentRecord=function(record){return '<record:'+record.id+'>';};
 vm.runInContext(extractFunction(html,'groupLedgerDisplayUnits')+'\n'+extractFunction(html,'groupLedgerDisplayUnitsByCategory')+'\n'+extractFunction(html,'ledgerRecordsForDisplayUnits')+'\n'+extractFunction(html,'renderLedgerDateSummary')+'\n'+extractFunction(html,'renderLedgerHistoryGrouped'),sandbox);
 const categoryUnits=[
   {type:'record',records:[{amountJpy:500,amountTwd:110}]},
@@ -51,6 +51,14 @@ const categoryHtml=sandbox.renderLedgerHistoryGrouped([
 ],false,'JPY');
 assert(categoryHtml.includes('餐飲'));
 assert(categoryHtml.includes('¥500 ≈ NT$110'));
+const categoryBatchHtml=sandbox.renderLedgerHistoryGrouped([
+  {id:'food',category:'餐飲',amountJpy:500,amountTwd:110,batchId:''},
+  {id:'batch-1',category:'餐飲',amountJpy:300,amountTwd:66,batchId:'receipt-1'},
+  {id:'batch-2',category:'交通',amountJpy:200,amountTwd:44,batchId:'receipt-1'}
+],false,'JPY');
+assert(categoryBatchHtml.includes('多品項'));
+assert(categoryBatchHtml.includes('¥500 ≈ NT$110'));
+assert.strictEqual((categoryBatchHtml.match(/<batch:batch-1,batch-2>/g)||[]).length,1,'a category group preserves one multi-item batch card');
 
 const summarySandbox={Math,Number};vm.createContext(summarySandbox);
 vm.runInContext(extractFunction(html,'ledgerAmountTotals')+'\n'+extractFunction(html,'formatLedgerInlineTotals')+'\n'+extractFunction(html,'ledgerHistorySummary'),summarySandbox);

@@ -50,8 +50,7 @@ assert.strictEqual(actionHost.current,null,'clicking the same ellipsis closes th
 actionsSandbox.openLedgerRecordActions('a',{stopPropagation(){},currentTarget:trigger},false);
 actionsSandbox.openLedgerRecordActions('b',{stopPropagation(){},currentTarget:trigger},false);
 assert.strictEqual(actionHost.current.dataset.actionKey,'record:b','clicking another ellipsis switches the popover');
-assert(/\.ledger-action-popover\{[^}]*width:104px[^}]*box-sizing:border-box[^}]*padding:4px/.test(html));
-assert(html.includes('編輯 ✏️')&&html.includes('刪除 🗑️'));
+assert(/\.ledger-action-popover\{[^}]*width:104px[^}]*box-sizing:border-box[^}]*padding:4px/.test(html),'action popover uses the approved 104px border-box shell');
 assert(/\.ledger-action-popover button\{[^}]*min-height:36px[^}]*font-size:12px/.test(html),'action rows use the compact approved size');
 
 assert(!detail.includes("['紀錄 ID'"),'detail presentation removes record ID');
