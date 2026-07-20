@@ -26,7 +26,7 @@ const sandbox={
   normalizeLedgerCategoryName(value){return value;},
   ledgerVisibleNote(){return '';},parseParticipants(record){return record.participants||['Bar'];},
   canonicalMemberName(name){return String(name==null?'':name).replace(/\u3000/g,' ').replace(/\s+/g,' ').trim();},
-  document:{addEventListener(){}},
+  document:{addEventListener(){},querySelector(){return null;},getElementById(){return null;},activeElement:null},
   JSON,String,Number,Math,Date
 };
 vm.createContext(sandbox);
@@ -34,6 +34,7 @@ vm.runInContext(source,sandbox);
 
 const draft=plain(sandbox.createLedgerEntryDraft('personal'));
 const sharedDraft=plain(sandbox.createLedgerEntryDraft('shared'));
+assert.strictEqual(draft.categoryApplyOpen,false,'new drafts keep the default category picker collapsed');
 assert.deepStrictEqual(sharedDraft.participants,['Bar','Amy'],'new shared draft selects all registered members');
 draft.multi=true;
 draft.storeName='';
@@ -75,6 +76,17 @@ assert.deepStrictEqual(plain(applyDraft.items.map(item=>item.category)),['購物
 sandbox.applyLedgerCategoryToAll(applyDraft,'餐飲');
 assert.deepStrictEqual(plain(applyDraft.items.map(item=>item.category)),['餐飲','餐飲','餐飲'],'apply-all overwrites every row');
 assert(applyDraft.items.every(item=>item.categoryManuallyAdjusted===false),'apply-all establishes the new inherited default');
+
+const categoryPickerDraft={categoryApply:'\u9910\u98f2',categoryApplyOpen:true,items:[
+  {key:'inherited',category:'\u9910\u98f2',categoryManuallyAdjusted:false},
+  {key:'custom',category:'\u4ea4\u901a',categoryManuallyAdjusted:true}
+]};
+sandbox.ledgerUiState={draft:categoryPickerDraft};
+sandbox.renderLedgerEntrySheet=function(){};
+assert.strictEqual(typeof sandbox.toggleLedgerCategoryApply,'function','category picker exposes a toggle helper');
+sandbox.selectLedgerCategoryApply('\u8cfc\u7269');
+assert.strictEqual(categoryPickerDraft.categoryApply,'\u8cfc\u7269','selecting a category updates the default');
+assert.strictEqual(categoryPickerDraft.categoryApplyOpen,false,'selecting a category collapses the picker');
 
 const reset=plain(sandbox.resetLedgerDraftAfterSave({
   track:'shared',currency:'TWD',multi:true,payMethod:'信用卡',category:'交通',categoryApply:'購物',
@@ -130,6 +142,12 @@ assert(html.includes('請輸入店家名稱'),'inline store validation copy is p
 assert(html.includes('確認儲存（')&&html.includes('筆）'),'multi-item primary action displays the valid record count');
 assert(html.includes('>預設類別<'),'multi-item bill card exposes the renamed default category control');
 assert(html.includes('新品項自動帶入，可逐筆調整'),'multi-item bill card explains default inheritance without adding state');
+assert(html.includes('function toggleLedgerCategoryApply()'),'multi-item bill card exposes a category picker toggle helper');
+assert(html.includes('ledger-category-apply-main'),'multi-item bill card renders a compact default category row');
+assert(html.includes('ledger-category-apply-options')&&html.includes("draft.categoryApplyOpen?'':'hidden'"),'category choices follow the transient picker open state');
+assert(html.includes('onclick="applyLedgerCategoryApplyToAll()"'),'apply-all remains visible beside the compact category control');
+assert(/\.ledger-category-apply-main\{[^}]*min-width:0[^}]*max-width:100%/.test(html),'the compact category row is bounded for narrow screens');
+assert(/\.ledger-category-apply-options \.ledger-sheet-choice-grid\{[^}]*max-width:100%/.test(html),'category options stay scoped and constrained on narrow screens');
 assert(html.includes('ledger-single-basic-info'),'single-entry essentials share one white information card');
 assert(/\.ledger-item-proxy\{[^}]*background:/.test(html),'proxy details use a contained low-saturation panel');
 assert(html.includes('ledger-item-flag-check'),'multi-item proxy uses the refined compact checked control');

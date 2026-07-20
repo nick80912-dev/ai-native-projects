@@ -153,6 +153,7 @@ assert.strictEqual(sharedRecords.reduce((sum,record)=>sum+record.couponAmount,0)
 assert.strictEqual(sharedRecords[0].isTaxFree,true);
 assert.strictEqual(sharedRecords[1].isTaxFree,false);
 assert(sharedRecords.every(record=>record.inputCurrency==='JPY'&&record.priceMode==='excluded'&&record.taxRate===10));
+assert(sharedRecords.every(record=>!Object.prototype.hasOwnProperty.call(record,'categoryApplyOpen')),'category picker state remains transient and never reaches stored records');
 assert(sharedRecords.every(record=>!Object.prototype.hasOwnProperty.call(record,'isProxy')),'shared records never gain proxy semantics');
 
 const personalDraft={
