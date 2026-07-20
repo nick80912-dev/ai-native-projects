@@ -1,6 +1,14 @@
 const assert=require('assert');
 const fs=require('fs');
+const vm=require('vm');
 const html=fs.readFileSync('index.html','utf8');
+
+function extractFunction(source,name){
+  const start=source.indexOf('function '+name+'(');assert(start>=0,name+' exists');
+  let cursor=source.indexOf('{',start),depth=0;
+  for(;cursor<source.length;cursor++){if(source[cursor]==='{')depth++;if(source[cursor]==='}')depth--;if(depth===0)return source.slice(start,cursor+1);}
+  throw new Error('could not extract '+name);
+}
 
 const recentStart=html.indexOf('function renderLedgerRecentRecord(');
 const recentEnd=html.indexOf('function renderLedgerRecentGroups(',recentStart);
@@ -20,6 +28,30 @@ assert(html.includes('function openLedgerRecordActions(')&&html.includes("classN
 assert(html.includes('editLedgerRecord('),'record menu retains editing');
 assert(html.includes('deletePersonalLedgerRecord('),'personal record menu retains local deletion');
 assert(html.includes('openSharedLedgerDelete('),'shared record menu retains tombstone deletion with reason');
+
+const actionHost={current:null};
+const fakeDocument={
+  getElementById(id){return actionHost.current&&actionHost.current.id===id?actionHost.current:null;},
+  createElement(){return {id:'',className:'',dataset:{},style:{},innerHTML:'',offsetWidth:118,offsetHeight:80,setAttribute(){},remove(){if(actionHost.current===this)actionHost.current=null;}};},
+  body:{appendChild(node){actionHost.current=node;}}
+};
+const actionsSandbox={
+  document:fakeDocument,window:{innerWidth:390,innerHeight:844},ledgerUiState:{track:'personal'},
+  ledgerTrackRecords(){return [{id:'a'},{id:'b'}];},toast(){},jsHtmlAttrString(value){return String(value);}
+};
+vm.createContext(actionsSandbox);
+vm.runInContext(extractFunction(html,'closeLedgerRecordActions')+'\n'+extractFunction(html,'openLedgerRecordActions'),actionsSandbox);
+const trigger={getBoundingClientRect(){return {left:300,right:344,top:100,bottom:144};}};
+actionsSandbox.openLedgerRecordActions('a',{stopPropagation(){},currentTarget:trigger},false);
+assert.strictEqual(actionHost.current.dataset.actionKey,'record:a','popover identifies its source record');
+assert(actionHost.current.innerHTML.includes('編輯 ✏️')&&actionHost.current.innerHTML.includes('刪除 🗑️'),'popover appends the approved action icons');
+actionsSandbox.openLedgerRecordActions('a',{stopPropagation(){},currentTarget:trigger},false);
+assert.strictEqual(actionHost.current,null,'clicking the same ellipsis closes the popover');
+actionsSandbox.openLedgerRecordActions('a',{stopPropagation(){},currentTarget:trigger},false);
+actionsSandbox.openLedgerRecordActions('b',{stopPropagation(){},currentTarget:trigger},false);
+assert.strictEqual(actionHost.current.dataset.actionKey,'record:b','clicking another ellipsis switches the popover');
+assert(/\.ledger-action-popover\{[^}]*width:118px[^}]*padding:4px/.test(html),'action popover uses the compact approved shell');
+assert(/\.ledger-action-popover button\{[^}]*min-height:36px[^}]*font-size:12px/.test(html),'action rows use the compact approved size');
 
 assert(!detail.includes("['紀錄 ID'"),'detail presentation removes record ID');
 assert(!detail.includes("['批次 ID'"),'detail presentation removes batch ID');
