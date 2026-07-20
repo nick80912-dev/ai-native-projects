@@ -429,6 +429,45 @@ git push origin dev
 - 單項分攤沿用既有 `participantMode: 'inherit' | 'custom'`；只新增控制此既有語意的 UI，不新增儲存欄位。
 - 預設類別展開狀態只存在目前表單 draft，關閉表單即消失，不寫入 localStorage 或資料紀錄。
 
+### 「3 秒記帳」產品原則
+- 快速記帳主路徑為：點擊 FAB → Sheet 與單品項金額欄同步掛載 → 金額欄立即取得 focus → 輸入金額 → 儲存；動畫不得阻斷首次 focus。
+- 系統可以提醒可能重複，但除非會影響共享資料，不得在個人軌儲存前增加確認步驟。
+- 本批不修改也不評估替換金額 input type、`inputmode`、整數解析、貼上清洗、千分位或幣別小數位；維持既有正安全整數資料契約。
+- 所有可取得 focus 的 `input`、`textarea`、`select`，computed font-size 不得低於 16px；不得以禁止 viewport 縮放規避 iOS 自動縮放。
+
+### FAB 直達金額輸入（P0）
+- 只套用分帳首頁的新增消費 FAB，不強制套用編輯、會員選擇、表單驗證錯誤或其他程式化開啟入口。
+- FAB 點擊的同步事件鏈內，先建立 draft、掛載 Sheet、render 出可互動的 `#ledgerAmount`，隨即呼叫 `focus()`。
+- 首次 focus 不得放在 Promise、動畫完成 callback、`requestAnimationFrame` 或非必要 `setTimeout` 後；Sheet 視覺動畫可在 focus 後繼續。
+- 若時間模擬阻擋新增、身分尚未建立或金額欄未成功掛載，維持既有替代流程，不對隱藏或不存在的 input 呼叫 focus。
+
+### 儲存 Toast 雙軌分流（P0）
+- 個人單品項成功顯示 `已儲存 {主幣格式金額} · 類別`（例如 `¥500` 或 `NT$100`）；多品項顯示整批主幣總額及品項數，並提供唯一操作 `復原`。
+- 個人復原期限固定 5 秒；同一時間只顯示最新 Toast，新 Toast 出現時前一筆復原立即失效，不保留不可見的背景復原入口。
+- 個人復原捕捉本次新增的完整 record ID 陣列及內容快照；執行前確認所有目標仍存在且未被後續編輯。符合時從個人本機正式紀錄真刪並顯示 `已復原`；若內容已變更則不刪除並顯示 `紀錄已修改，無法復原`。
+- 個人帳不進入團體同步 Queue，因此復原不得新增 Queue 取消、雲端刪除或墓碑流程。
+- 個人可能重複時，Toast 文案追加 `· 可能重複`，唯一操作仍為 `復原`，不另設「查看」。
+- 團體成功入列顯示 `已儲存 {主幣格式金額} · 類別，將自動同步`，不提供 Toast 復原；多品項顯示整批主幣總額及品項數。
+- 儲存當下已知離線時，團體 Toast 改為 `尚未同步，連線恢復後將自動重試`；其他延遲或失敗沿用現有首頁 pending 狀態及紀錄卡徽章，不擴充 Repository／Queue callback 契約。
+- 團體誤記仍可由最近消費或完整紀錄立即進入既有編輯／墓碑刪除流程。
+- 5 秒時限只套用本批個人記帳復原 Toast，不改動其他頁面既有 Toast 時限。
+
+### 柔性重複提示（P1）
+- 個人軌一律先完成儲存，再以非阻斷 Toast 提示；不得顯示儲存前確認 Dialog。
+- 個人軌可能重複條件為：同記帳身分、同個人軌、同輸入幣別、同主幣金額、同類別、client 建立時間差不超過 90 秒、單品項、非編輯、非「儲存並再記一筆」；候選只取個人本機正式有效紀錄。
+- 團體軌只有候選同時符合下列條件才在 enqueue 前顯示確認：同建立者、同團體軌、同輸入幣別、同主幣金額、同類別、建立時間差不超過 90 秒、單品項、非編輯、非「儲存並再記一筆」。
+- 候選集合包含目前有效團體紀錄及待同步 Queue；墓碑、身分註冊、已被刪除目標、batch 及無法可靠取得 client 建立時間的舊紀錄均排除，寧可不提示也不製造誤報。
+- 建立時間只接受現有 client-generated ID 的毫秒時間前綴；不新增 `createdAt` 欄位，也不將使用者可編輯的消費發生時間誤當建立時間。
+- 團體確認文案為 `90 秒內已有一筆相同的 {主幣格式金額}「類別」。`，操作為左側 `取消`、右側主操作 `仍要儲存`。
+- 確認 Dialog 開啟前只建立本次待提交 records，不得先寫入 Queue；使用者選擇「仍要儲存」後，必須提交同一批 prepared records 及原 client-generated IDs，不得重新產生第二批 ID。
+- 因原生 `confirm()` 無法保證核准文案與按鈕主次，團體重複確認使用既有視覺 token 的小型對話框；不得影響未命中重複條件的 3 秒主路徑。
+
+### Idempotency 與併發邊界（P0 回歸）
+- client-generated ID 必須在首次 enqueue 前建立；同一 Queue 項目的所有 retry 沿用同一 ID。
+- server 回傳既有 `duplicate／dup` acknowledgement 時維持視為成功，移除對應 Queue 項目且 UI 不建立第二份資料。
+- 本批只增加既有 idempotency 回歸測試，不修改 Repository、Queue／Retry／Flush 或 Apps Script 回應契約。
+- 「伺服器已有同 ID 但內容不同」目前缺少 server payload 可供比對，明確排除本批；若未來需要衝突處理，必須另案取得修改 Apps Script／資料契約的授權。
+
 ### 完整紀錄按類別加總
 - 按日期與按類別均使用兩欄標題列：左側為日期／類別，右側為 `¥JPY ≈ NT$TWD`。
 - 類別右側金額使用與日期右側完全相同的 9px 字級、顏色、字重、單行及 tabular number 規則。
@@ -475,6 +514,12 @@ git push origin dev
 - Popover：104px 實際外框、文案／圖示／高度／字級不變、同鍵收合、切換其他卡及既有關閉事件。
 - 團體多品項：整單分攤位於品項前、新增品項預設 inherit、開啟 custom 時複製整單、關閉恢復 inherit、整單變更只影響 inherit、編輯時依成員集合推導模式。
 - 預設類別：初始收合、目前類別及套用按鈕常駐、展開選項、選取後收合、只更新未手動品項、套用全部確認流程不變。
+- FAB：同一 click stack 完成 Sheet／金額欄掛載及 focus；不得以 RAF／Promise／timer 首次 focus；阻擋新增時不得錯誤 focus。
+- Focus 字級：所有可聚焦 input／textarea／select computed font-size 均至少 16px，viewport 仍允許縮放。
+- 個人 Toast：5 秒、最新 Toast 取代舊復原、單筆／batch 真刪、成功回饋、編輯後快照不符時拒絕復原、可能重複仍只有「復原」。
+- 團體 Toast：一般入列顯示「將自動同步」、已知離線顯示自動重試、無復原、既有 pending UI 與編輯／墓碑入口不變。
+- 重複提示：個人永不阻擋；團體完整條件、Queue 候選、排除 batch／編輯／再記一筆／舊 ID、取消不入列、仍要儲存沿用 prepared IDs。
+- Idempotency：retry ID 穩定、dup 視為成功、Queue 不殘留且 UI 不重複；不新增 server 衝突契約。
 - 375px／390px 驗證 Dynamic Type 115%、控制列不溢出、成員群組換行、無水平捲動及 `pageerror=0`。
 - 全部 `tests/*.test.js` 逐一 Node exit 0、文件標題檢查通過、允許範圍與禁止檔案 diff 稽核通過。
 
