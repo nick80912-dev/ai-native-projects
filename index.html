@@ -3534,12 +3534,12 @@ function ledgerPrimaryAmount(record,currency){
   return isFinite(amount)?amount:null;
 }
 function ledgerPotentialDuplicate(candidate,records,options){
-  var opts=options||{},currency=String(candidate&&candidate.inputCurrency||'').trim().toUpperCase(),candidateCreatedAt=ledgerClientCreatedAt(candidate),candidateMember=canonicalMemberName(candidate&&candidate.member),candidateAmount=ledgerPrimaryAmount(candidate,currency),candidateCategory=String(candidate&&candidate.category||'').trim(),candidateIsTest=isTestLedgerRecord(candidate);
-  if((opts.track!=='personal'&&opts.track!=='shared')||opts.editing||opts.addAnother||!candidate||candidate.batchId||candidate.replacesRecordId||isDeletionRecord(candidate)||isIdentityRegistrationRecord(candidate)||!candidateMember||!candidateCategory||(currency!=='JPY'&&currency!=='TWD')||candidateAmount===null||candidateCreatedAt===null||(opts.track==='shared'&&typeof opts.testMode==='boolean'&&candidateIsTest!==opts.testMode))return null;
+  var opts=options||{},currency=String(candidate&&candidate.inputCurrency||'').trim().toUpperCase(),candidateCreatedAt=ledgerClientCreatedAt(candidate),candidateMember=canonicalMemberName(candidate&&candidate.member),candidateAmount=ledgerPrimaryAmount(candidate,currency),candidateCategory=String(candidate&&candidate.category||'').trim(),candidateIsTest=isTestLedgerRecord(candidate),duplicateTestScope=opts.track==='shared'&&typeof opts.testMode==='boolean'?opts.testMode:candidateIsTest;
+  if((opts.track!=='personal'&&opts.track!=='shared')||opts.editing||opts.addAnother||!candidate||candidate.batchId||candidate.replacesRecordId||isDeletionRecord(candidate)||isIdentityRegistrationRecord(candidate)||!candidateMember||!candidateCategory||(currency!=='JPY'&&currency!=='TWD')||candidateAmount===null||candidateCreatedAt===null)return null;
   return (records||[]).filter(function(record){
     var createdAt=ledgerClientCreatedAt(record);
     return record&&record.id!==candidate.id&&!record.batchId&&!record.replacesRecordId&&!isDeletionRecord(record)&&!isIdentityRegistrationRecord(record)&&
-      (opts.track!=='shared'||isTestLedgerRecord(record)===candidateIsTest)&&
+      (opts.track!=='shared'||isTestLedgerRecord(record)===duplicateTestScope)&&
       canonicalMemberName(record.member)===candidateMember&&String(record.inputCurrency||'').trim().toUpperCase()===currency&&
       ledgerPrimaryAmount(record,currency)===candidateAmount&&String(record.category||'').trim()===candidateCategory&&createdAt!==null&&Math.abs(createdAt-candidateCreatedAt)<=90000;
   })[0]||null;
