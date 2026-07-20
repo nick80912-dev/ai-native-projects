@@ -498,6 +498,7 @@ input,select,textarea{font-size:16px}
 .member-entry{margin-top:12px}.member-entry input{width:100%;min-height:48px;border:1px solid var(--line);border-radius:10px;background:#fff;padding:10px 12px;font:inherit}.member-actions{display:flex;gap:9px;margin-top:12px}.member-actions .btn{flex:1;min-height:44px}.member-error{margin-top:10px;color:var(--coral);font-size:13px;font-weight:700}.member-confirm{padding:16px;border:1px solid var(--line);border-radius:10px;background:#fff;text-align:center;font-weight:800}
 .state-box{width:100%;min-height:112px;border:1px solid var(--line);border-radius:10px;padding:10px;font:inherit;font-size:13px;resize:vertical;background:#fff}.settings-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:9px}.settings-actions .btn{flex:1;min-height:44px}
 .state-dialog-overlay{z-index:140;background:rgba(247,245,238,.98)}.state-dialog-panel{padding-top:18px}.state-dialog-copy{width:100%;min-height:180px;border:1px solid var(--line);border-radius:10px;padding:10px;font:inherit;font-size:13px;resize:vertical;background:#fff}
+.ledger-duplicate-overlay{display:grid;place-items:center;padding:16px;background:rgba(10,45,50,.38)}.ledger-duplicate-panel{width:min(100%,320px);padding:16px;border-radius:10px;background:var(--paper);box-shadow:var(--shadow-lg)}
 .ledger-delete-copy{font-size:14px;color:var(--ink);margin:8px 0 14px}.ledger-delete-label{display:block;font-size:13px;font-weight:800;color:var(--ink);margin-bottom:6px}.ledger-delete-reason{width:100%;min-height:48px;border:1px solid var(--line);border-radius:10px;padding:10px 12px;font:inherit;font-size:16px;background:#fff}.ledger-delete-error{min-height:18px;color:var(--coral);font-size:12px;font-weight:800;margin-top:6px}
 .toggle-row{display:flex;align-items:center;justify-content:space-between;gap:12px}.toggle-row input{width:22px;height:22px}.settings-help{font-size:12px;color:var(--ink-faint);margin-top:6px}
 .ledger-pending{display:inline-flex;margin:0 0 10px;background:#fff3cf;color:#80600d;border:1px solid #ecd58d;border-radius:999px;padding:5px 10px;font-size:12px;font-weight:900}.ledger-record.pending{background:#fffaf0}.ledger-tag{display:inline-flex;border-radius:999px;background:var(--line-soft);color:var(--ink-faint);padding:2px 6px;font-size:10px;font-weight:800;margin-left:5px}.ledger-summary{display:grid;gap:7px}.ledger-summary-row{display:grid;grid-template-columns:1fr auto;gap:10px;border-top:1px solid rgba(255,255,255,.22);padding-top:7px}.ledger-summary-row:first-child{border-top:0;padding-top:0}.ledger-summary-row span:last-child{font-variant-numeric:tabular-nums;font-weight:900}.legacy-ledger{background:#fff7dc;border:1px solid #ead88e;border-radius:12px;padding:12px;margin-bottom:12px;font-size:13px;color:#73580f}.legacy-ledger .btn{margin-top:8px}
@@ -3533,11 +3534,12 @@ function ledgerPrimaryAmount(record,currency){
   return isFinite(amount)?amount:null;
 }
 function ledgerPotentialDuplicate(candidate,records,options){
-  var opts=options||{},currency=String(candidate&&candidate.inputCurrency||'').trim().toUpperCase(),candidateCreatedAt=ledgerClientCreatedAt(candidate),candidateMember=canonicalMemberName(candidate&&candidate.member),candidateAmount=ledgerPrimaryAmount(candidate,currency),candidateCategory=String(candidate&&candidate.category||'').trim();
-  if(opts.track&&opts.track!=='personal'||opts.editing||opts.addAnother||!candidate||candidate.batchId||candidate.replacesRecordId||isDeletionRecord(candidate)||isIdentityRegistrationRecord(candidate)||!candidateMember||!candidateCategory||(currency!=='JPY'&&currency!=='TWD')||candidateAmount===null||candidateCreatedAt===null)return null;
+  var opts=options||{},currency=String(candidate&&candidate.inputCurrency||'').trim().toUpperCase(),candidateCreatedAt=ledgerClientCreatedAt(candidate),candidateMember=canonicalMemberName(candidate&&candidate.member),candidateAmount=ledgerPrimaryAmount(candidate,currency),candidateCategory=String(candidate&&candidate.category||'').trim(),candidateIsTest=isTestLedgerRecord(candidate);
+  if((opts.track!=='personal'&&opts.track!=='shared')||opts.editing||opts.addAnother||!candidate||candidate.batchId||candidate.replacesRecordId||isDeletionRecord(candidate)||isIdentityRegistrationRecord(candidate)||!candidateMember||!candidateCategory||(currency!=='JPY'&&currency!=='TWD')||candidateAmount===null||candidateCreatedAt===null||(opts.track==='shared'&&typeof opts.testMode==='boolean'&&candidateIsTest!==opts.testMode))return null;
   return (records||[]).filter(function(record){
     var createdAt=ledgerClientCreatedAt(record);
     return record&&record.id!==candidate.id&&!record.batchId&&!record.replacesRecordId&&!isDeletionRecord(record)&&!isIdentityRegistrationRecord(record)&&
+      (opts.track!=='shared'||isTestLedgerRecord(record)===candidateIsTest)&&
       canonicalMemberName(record.member)===candidateMember&&String(record.inputCurrency||'').trim().toUpperCase()===currency&&
       ledgerPrimaryAmount(record,currency)===candidateAmount&&String(record.category||'').trim()===candidateCategory&&createdAt!==null&&Math.abs(createdAt-candidateCreatedAt)<=90000;
   })[0]||null;
@@ -4542,6 +4544,19 @@ function renderLedgerEntrySheet(){
   overlay.innerHTML='<section class="ledger-sheet '+(draft.multi?'ledger-multi-entry':'')+'" role="dialog" aria-modal="true" aria-labelledby="ledgerEntryTitle"><div class="ledger-sheet-head"><h2 id="ledgerEntryTitle">'+title+'</h2><button class="settings-close" aria-label="關閉" onclick="closeLedgerEntrySheet()">×</button></div><div class="ledger-entry-heading-row ledger-entry-divider"><div class="ledger-sheet-member">目前記帳身分：<b>'+escapeHtml(getCurrentMember())+'</b></div><label class="toggle-row ledger-sheet-toggle" for="ledgerMulti"><span>多品項</span><input id="ledgerMulti" type="checkbox" '+(draft.multi?'checked':'')+' onchange="setLedgerDraftMulti(this.checked)"></label></div>'+renderLedgerDraftTrack(draft)+renderLedgerDraftCurrency(draft)+fields+renderLedgerTaxDisclosure(draft)+renderLedgerDetailsDisclosure(draft)+'<div class="ledger-sheet-actions"><button id="ledgerSave" class="btn coral" onclick="saveLedgerEntry(false)">'+saveLabel+'</button>'+saveAnother+cancel+'</div></section>';
   if(draft.multi)updateLedgerMultiPreview();else updateLedgerConversionPreview();
 }
+var ledgerDuplicateResolve=null;
+function confirmSharedLedgerDuplicate(record){
+  return new Promise(function(resolve){
+    ledgerDuplicateResolve=resolve;
+    var overlay=document.createElement('div');overlay.id='ledgerDuplicateDialog';overlay.className='settings-overlay state-dialog-overlay ledger-duplicate-overlay';
+    overlay.innerHTML='<section class="settings-panel state-dialog-panel ledger-duplicate-panel" role="dialog" aria-modal="true" aria-labelledby="ledgerDuplicateTitle"><div class="settings-head"><h2 id="ledgerDuplicateTitle">可能重複</h2></div><p class="settings-help">90 秒內已有一筆相同的 '+escapeHtml(formatLedgerPrimaryTotal(String(record.inputCurrency||'JPY').toUpperCase(),[record]))+'「'+escapeHtml(record.category)+'」。</p><div class="settings-actions"><button class="btn ghost" onclick="closeLedgerDuplicateConfirm(false)">取消</button><button class="btn" onclick="closeLedgerDuplicateConfirm(true)">仍要儲存</button></div></section>';
+    document.body.appendChild(overlay);
+  });
+}
+function closeLedgerDuplicateConfirm(approved){
+  var overlay=document.getElementById('ledgerDuplicateDialog');if(overlay)overlay.remove();
+  var resolve=ledgerDuplicateResolve;ledgerDuplicateResolve=null;if(resolve)resolve(!!approved);
+}
 function persistLedgerExpenseRecords(records,track){
   if(track==='personal'){
     var normalized=records.map(function(record){var item=normalizePersonalLedgerRecord(record,Date.parse(record.time),Math.random);validateLedgerRecord(item);item.proxyTarget=validateProxyDraft(item.isProxy,item.proxyTarget);return item;});
@@ -4571,18 +4586,7 @@ function focusLedgerValidationError(validation){
     if(!target)return;try{target.scrollIntoView({block:'center',behavior:'smooth'});}catch(ignore){target.scrollIntoView();}try{target.focus({preventScroll:true});}catch(ignoreFocus){target.focus();}
   });
 }
-function saveLedgerEntry(addAnother){
-  if(isTimeSimulationActive()){toast('時間模擬中不可新增支出');return Promise.resolve({ok:false});}
-  var draft=ledgerUiState.draft,editing=ledgerUiState.editing,member=getCurrentMember();if(!draft)return Promise.resolve({ok:false});
-  if(!memberIsAllowed(member)){openMemberSelector(true);return Promise.resolve({ok:false});}
-  var validation=validateLedgerEntryDraft(draft);draft.formErrors=validation.errors;
-  if(!validation.valid){withLedgerSheetPosition(renderLedgerEntrySheet);focusLedgerValidationError(validation);return Promise.resolve({ok:false,validation:true});}
-  var submissionDraft=draft;
-  if(draft.multi){submissionDraft=Object.assign({},draft,{items:validation.submissionItems});}
-  var records;
-  try{records=buildLedgerExpenseRecords(submissionDraft,{member:member,settings:currentLedgerSettings(),now:Date.now(),random:Math.random,memberEntries:registeredMembersForCurrentMode()});}
-  catch(error){toast(error.message||'記帳資料格式錯誤');return Promise.resolve({ok:false,error:error});}
-  var possibleDuplicate=!editing&&draft.track==='personal'?ledgerPotentialDuplicate(records[0],personalLedgerRepository.all(),{track:draft.track,addAnother:!!addAnother}):null;
+function commitLedgerEntrySave(draft,editing,records,addAnother,possibleDuplicate){
   var buttons=[document.getElementById('ledgerSave'),document.getElementById('ledgerSaveAnother')];buttons.forEach(function(button){if(button)button.disabled=true;});
   var operation;
   try{operation=editing?persistLedgerEditedRecords(records,editing):persistLedgerExpenseRecords(records,draft.track);}
@@ -4595,12 +4599,38 @@ function saveLedgerEntry(addAnother){
       var savedMessage=result.queued?'已儲存，待同步':'已儲存';
       toast(savedMessage+(possibleDuplicate?' · 可能重複':''),'復原',function(){
         if(undoPersonalLedgerSave(result.records)){renderSplit();toast('已復原');}
-        else toast('紀錄已被修改，無法復原');
+        else toast('紀錄已修改，無法復原');
       },5000);
       return result;
     }
-    toast(editing?(result.queued?'修改已儲存，待同步':'修改已儲存'):(result.queued?'已儲存，待同步':'已儲存'));return result;
+    if(!result.personal&&draft.track==='shared'){
+      var detail=draft.multi?records.length+' 筆':String(records[0]&&records[0].category||'');
+      var message=(typeof navigator!=='undefined'&&navigator.onLine===false)?'尚未同步，連線恢復後將自動重試':'已儲存 '+formatLedgerPrimaryTotal(draft.currency,records)+' · '+detail+'，將自動同步';
+      toast(message);return result;
+    }
+    toast(editing?(result.queued?'編輯已儲存，待同步':'編輯已儲存'):(result.queued?'已儲存，待同步':'已儲存'));return result;
   },function(error){buttons.forEach(function(button){if(button)button.disabled=false;});toast(error.message||'記帳失敗');return {ok:false,error:error};});
+}
+function saveLedgerEntry(addAnother){
+  if(isTimeSimulationActive()){toast('時間模擬中不可新增支出');return Promise.resolve({ok:false});}
+  var draft=ledgerUiState.draft,editing=ledgerUiState.editing,member=getCurrentMember();if(!draft)return Promise.resolve({ok:false});
+  if(!memberIsAllowed(member)){openMemberSelector(true);return Promise.resolve({ok:false});}
+  var validation=validateLedgerEntryDraft(draft);draft.formErrors=validation.errors;
+  if(!validation.valid){withLedgerSheetPosition(renderLedgerEntrySheet);focusLedgerValidationError(validation);return Promise.resolve({ok:false,validation:true});}
+  var submissionDraft=draft;
+  if(draft.multi){submissionDraft=Object.assign({},draft,{items:validation.submissionItems});}
+  var records;
+  try{records=buildLedgerExpenseRecords(submissionDraft,{member:member,settings:currentLedgerSettings(),now:Date.now(),random:Math.random,memberEntries:registeredMembersForCurrentMode()});}
+  catch(error){toast(error.message||'記帳資料格式錯誤');return Promise.resolve({ok:false,error:error});}
+  var existing=draft.track==='personal'?personalLedgerRepository.all():ledgerTrackRecords();
+  var possibleDuplicate=records.length===1?ledgerPotentialDuplicate(records[0],existing,{track:draft.track,editing:!!editing,addAnother:!!addAnother,testMode:draft.track==='shared'&&ledgerUniverseMode()==='test'}):null;
+  if(draft.track==='shared'&&possibleDuplicate){
+    return confirmSharedLedgerDuplicate(records[0]).then(function(approved){
+      if(!approved)return {ok:false,cancelled:true};
+      return commitLedgerEntrySave(draft,editing,records,addAnother,possibleDuplicate);
+    });
+  }
+  return commitLedgerEntrySave(draft,editing,records,addAnother,possibleDuplicate);
 }
 function deletePersonalLedgerRecord(id){
   var original=personalLedgerRepository.all().filter(function(record){return record.id===id;})[0];

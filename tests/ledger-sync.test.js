@@ -133,6 +133,28 @@ function loadLedgerModule(){
   assert.strictEqual(duplicate.dup,true,'duplicate acknowledgement is surfaced');
   assert.strictEqual(dupRepo.pendingCount(),0,'duplicate acknowledgement removes the record from queue');
 
+  const retryStorage = createStorage();
+  const retryIds=[];
+  let returnDuplicate=false;
+  const retryRepo = mod.createLedgerRepository({
+    storage:retryStorage,
+    post(record){
+      retryIds.push(record.id);
+      return returnDuplicate ? Promise.resolve({ok:true,dup:true}) : Promise.reject(new Error('offline'));
+    },
+    now(){ return 1784250000150; }
+  });
+  const retryRecord={id:'1784250000150-retry',member:'Bar',category:'Food',detail:'Dinner',amountJpy:500,amountTwd:110,note:''};
+  const pendingRetry=await retryRepo.add(retryRecord);
+  assert.strictEqual(pendingRetry.ok,false,'the first failed delivery remains pending for retry');
+  assert.strictEqual(retryRepo.pendingCount(),1,'the initial failed delivery creates exactly one local record');
+  returnDuplicate=true;
+  const retried=await retryRepo.flushQueue();
+  assert.strictEqual(retried.sent,1,'the duplicate acknowledgement completes the retry');
+  assert.deepStrictEqual(retryIds,['1784250000150-retry','1784250000150-retry'],'every delivery attempt uses the original client-generated ID');
+  assert.strictEqual(retryRepo.pendingCount(),0,'dup:true drains the original pending record');
+  assert.deepStrictEqual(Array.from(retryRepo.queuedRecords()),[],'dup:true does not create a second local record');
+
   const original = {id:'1784250000000-abcd',time:'2026-07-17T10:00:00.000Z',member:'阿祺',category:'門票',detail:'美術館',amountJpy:3000,amountTwd:600,note:'',recordType:'expense',batchId:'batch-1'};
   const deletion = mod.createLedgerDeletion(original,'Bar','重複記帳',1784250100000);
   assert.strictEqual(deletion.recordType,'deletion','deletion uses the authoritative record type');

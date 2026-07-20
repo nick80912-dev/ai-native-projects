@@ -84,6 +84,33 @@ assert(toastEvents.includes('timer:2000'),'three-argument-free notifications ret
 toastSandbox.toast('legacy','Action',function(){});
 assert(toastEvents.includes('timer:3500'),'existing three-argument action toasts retain their duration');
 
+const duplicateConfirmSource=extractFunction('confirmSharedLedgerDuplicate');
+const closeDuplicateConfirmSource=extractFunction('closeLedgerDuplicateConfirm');
+let duplicateDialog=null;
+const duplicateConfirmSandbox={
+  document:{
+    createElement(){return {id:'',className:'',innerHTML:'',remove(){duplicateDialog=null;}};},
+    getElementById(id){return id==='ledgerDuplicateDialog'?duplicateDialog:null;},
+    body:{appendChild(node){duplicateDialog=node;}}
+  },
+  escapeHtml(value){return String(value);},
+  formatLedgerPrimaryTotal(currency,records){return currency==='TWD'?'NT$'+records[0].amountTwd:'¥'+records[0].amountJpy;},
+  Promise,String,Number,Math,JSON
+};
+vm.createContext(duplicateConfirmSandbox);
+vm.runInContext('var ledgerDuplicateResolve=null;'+duplicateConfirmSource+'\n'+closeDuplicateConfirmSource,duplicateConfirmSandbox);
+const prepared=[{id:'1784512809000-new1',member:'Bar',category:'餐飲',inputCurrency:'JPY',amountJpy:500,amountTwd:110,batchId:''}];
+const confirmation=duplicateConfirmSandbox.confirmSharedLedgerDuplicate(prepared[0]);
+assert(duplicateDialog,'a possible shared duplicate opens a small confirmation dialog');
+assert.match(duplicateDialog.innerHTML,/90 秒內已有一筆相同的 ¥500「餐飲」。/,'the dialog explains the scoped 90-second duplicate with the record currency');
+assert.match(duplicateDialog.innerHTML,/取消/,'the dialog has a cancel action');
+assert.match(duplicateDialog.innerHTML,/仍要儲存/,'the right-side primary action allows the user to save intentionally');
+duplicateConfirmSandbox.closeLedgerDuplicateConfirm(true);
+confirmation.then(function(approved){
+  assert.strictEqual(approved,true,'approval resolves the controllable confirmation Promise');
+  assert.deepStrictEqual(prepared.map(function(record){return record.id;}),['1784512809000-new1'],'confirmation never rebuilds prepared record IDs');
+});
+
 const compactControlOverrides=[
   '.member-entry input',
   '.state-box',

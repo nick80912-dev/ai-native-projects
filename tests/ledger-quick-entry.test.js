@@ -177,6 +177,7 @@ const helperSandbox={
   canonicalMemberName(value){return String(value==null?'':value).replace(/\u3000/g,' ').replace(/\s+/g,' ').trim();},
   isDeletionRecord(record){return !!record&&record.recordType==='deletion';},
   isIdentityRegistrationRecord(record){return !!record&&record.recordType==='identity_registration';},
+  isTestLedgerRecord(record){return /^\[TEST\]/.test(String(record&&record.detail||''));},
   formatLedgerCurrencyAmount(currency,amount){return currency==='TWD'?'NT$'+Math.round(Number(amount||0)).toLocaleString():'¥'+Math.round(Number(amount||0)).toLocaleString();},
   JSON,String,Number,Math,Date,isFinite
 };
@@ -192,6 +193,9 @@ assert.strictEqual(helperSandbox.ledgerPotentialDuplicate(duplicateCandidate,hel
 assert.strictEqual(helperSandbox.ledgerPotentialDuplicate(Object.assign({},duplicateCandidate,{amountJpy:501}),helperRecords,{track:'personal'}),null,'different primary amounts are not duplicates');
 assert.strictEqual(helperSandbox.ledgerPotentialDuplicate(Object.assign({},duplicateCandidate,{id:'1784428891001-ijkl'}),[{id:'1784428800000-abcd',member:'Amy',category:'Food',inputCurrency:'JPY',amountJpy:500,amountTwd:105,recordType:'deletion'}],{track:'personal'}),null,'deletions are excluded from duplicate hints');
 assert.strictEqual(helperSandbox.ledgerPotentialDuplicate(Object.assign({},duplicateCandidate,{id:'1784428891001-ijkl'}),[{id:'1784428800000-abcd',member:'Amy',category:'Food',inputCurrency:'JPY',amountJpy:500,amountTwd:105,recordType:'identity_registration'}],{track:'personal'}),null,'identity records are excluded from duplicate hints');
+assert.strictEqual(helperSandbox.ledgerPotentialDuplicate(duplicateCandidate,helperRecords,{track:'shared',testMode:false}).id,helperRecords[0].id,'the same creator identity, category, primary amount, currency, and 90-second window are also strict shared duplicates');
+assert.strictEqual(helperSandbox.ledgerPotentialDuplicate(duplicateCandidate,[Object.assign({},helperRecords[0],{detail:'[TEST] Food'})],{track:'shared',testMode:false}),null,'a TEST record is outside the formal shared duplicate scope');
+assert.strictEqual(helperSandbox.ledgerPotentialDuplicate(Object.assign({},duplicateCandidate,{member:'amy'}),helperRecords,{track:'shared',testMode:false}),null,'shared duplicate identity keeps the existing case-sensitive member semantics');
 assert.strictEqual(helperSandbox.formatLedgerPrimaryTotal('JPY',[{amountJpy:1234},{amountJpy:66}]),'¥1,300','JPY totals format the JPY primary amount');
 assert.strictEqual(helperSandbox.formatLedgerPrimaryTotal('TWD',[{amountTwd:1234},{amountTwd:66}]),'NT$1,300','TWD totals format the TWD primary amount');
 const savedSnapshots=helperRecords.map(record=>JSON.parse(JSON.stringify(record)));
@@ -200,3 +204,56 @@ assert.strictEqual(helperRecords.length,0,'successful undo removes the current l
 helperRecords.push(Object.assign({},savedSnapshots[0],{detail:'edited'}));
 assert.strictEqual(helperSandbox.undoPersonalLedgerSave([savedSnapshots[0]]),false,'edited snapshots refuse undo');
 assert.strictEqual(helperRecords.length,1,'a refused undo keeps the edited personal record');
+
+const saveFlowSource=extract('function commitLedgerEntrySave(','function deletePersonalLedgerRecord(');
+const saveButtons={ledgerSave:{disabled:false},ledgerSaveAnother:{disabled:false}};
+const saveMessages=[],preparedIds=[],submittedIds=[];
+let buildCalls=0,enqueueCalls=0,closeCalls=0,renderCalls=0,confirmationResolve=null;
+const preparedSharedRecord={id:'1784512809000-new1',member:'Bar',category:'餐飲',detail:'Dinner',inputCurrency:'JPY',amountJpy:500,amountTwd:110,batchId:''};
+const saveSandbox={
+  ledgerUiState:{draft:{track:'shared',currency:'JPY',multi:false},editing:null},
+  isTimeSimulationActive(){return false;},memberIsAllowed(){return true;},getCurrentMember(){return 'Bar';},openMemberSelector(){throw new Error('shared member is available');},
+  validateLedgerEntryDraft(){return {valid:true,errors:{}};},
+  buildLedgerExpenseRecords(){buildCalls++;preparedIds.push(preparedSharedRecord.id);return [preparedSharedRecord];},
+  currentLedgerSettings(){return {};},registeredMembersForCurrentMode(){return [];},
+  ledgerTrackRecords(){return [{id:'1784512800000-old1',member:'Bar',category:'餐飲',detail:'Dinner',inputCurrency:'JPY',amountJpy:500,amountTwd:110,batchId:''}];},ledgerUniverseMode(){return 'formal';},
+  personalLedgerRepository:{all(){return [];},add(){throw new Error('personal persistence must not run for shared records');}},
+  ledgerPotentialDuplicate(){return {id:'1784512800000-old1'};},
+  confirmSharedLedgerDuplicate(){return new Promise(function(resolve){confirmationResolve=resolve;});},
+  persistLedgerExpenseRecords(records,track){enqueueCalls++;submittedIds.push(records.map(function(record){return record.id;}));return Promise.resolve({ok:true,queued:true,records:records,pending:1});},
+  persistLedgerEditedRecords(){throw new Error('editing path is not under test');},
+  formatLedgerPrimaryTotal(currency,records){return currency==='TWD'?'NT$'+records[0].amountTwd:'¥'+records[0].amountJpy;},
+  renderSplit(){renderCalls++;},closeLedgerEntrySheet(){closeCalls++;},resetLedgerDraftAfterSave(){throw new Error('add another is not under test');},
+  undoPersonalLedgerSave(){throw new Error('personal undo must remain nonblocking and untouched');},toast(message){saveMessages.push(message);},
+  document:{getElementById(id){return saveButtons[id]||null;}},navigator:{onLine:true},
+  Date,Math,Promise,JSON,String,Number,isFinite
+};
+vm.createContext(saveSandbox);
+vm.runInContext(saveFlowSource,saveSandbox);
+(async function(){
+  const cancelledSave=saveSandbox.saveLedgerEntry(false);
+  assert.strictEqual(buildCalls,1,'the shared candidate is prepared exactly once before confirmation');
+  assert.strictEqual(enqueueCalls,0,'shared duplicate confirmation makes zero enqueue calls before approval');
+  confirmationResolve(false);
+  const cancelledResult=await cancelledSave;
+  assert.strictEqual(cancelledResult.ok,false,'cancel reports no save success');
+  assert.strictEqual(cancelledResult.cancelled,true,'cancel reports cancellation instead of a false success');
+  assert.strictEqual(enqueueCalls,0,'cancel leaves the prepared record out of the queue');
+  assert.strictEqual(closeCalls,0,'cancel keeps the entry sheet and its data available');
+  assert.strictEqual(renderCalls,0,'cancel does not render a success state');
+  assert.deepStrictEqual(saveMessages,[],'cancel does not display a saved Toast');
+
+  const approvedSave=saveSandbox.saveLedgerEntry(false);
+  assert.strictEqual(buildCalls,2,'a new submit prepares one new record set');
+  assert.strictEqual(enqueueCalls,0,'the second confirmation also waits before enqueueing');
+  confirmationResolve(true);
+  await approvedSave;
+  assert.strictEqual(buildCalls,2,'approval commits the prepared records without rebuilding their IDs');
+  assert.strictEqual(enqueueCalls,1,'approval performs exactly one shared enqueue');
+  assert.deepStrictEqual(submittedIds[0],preparedIds.slice(1),'the approved enqueue uses the exact prepared IDs');
+  assert.match(saveMessages.pop(),/^已儲存 ¥500 · 餐飲，將自動同步$/,'online shared save uses the automatic-sync Toast copy');
+
+  saveSandbox.navigator.onLine=false;
+  await saveSandbox.commitLedgerEntrySave(saveSandbox.ledgerUiState.draft,null,[preparedSharedRecord],false,null);
+  assert.match(saveMessages.pop(),/^尚未同步，連線恢復後將自動重試$/,'known offline shared save uses the retry Toast copy');
+})().catch(function(error){console.error(error);process.exitCode=1;});
