@@ -105,6 +105,12 @@ const dailyTotals=plain(rendererSandbox.ledgerAmountTotals([
 ]));
 assert.deepStrictEqual(dailyTotals,{amountJpy:3500,amountTwd:770},'daily totals add each physical record exactly once');
 assert.strictEqual(rendererSandbox.formatLedgerInlineTotals(dailyTotals),'¥3,500 ≈ NT$770','inline totals use the fixed JPY to TWD format');
+vm.runInContext(extractFunction(html,'renderLedgerDateSummary'),rendererSandbox);
+const dateSummary=rendererSandbox.renderLedgerDateSummary('2026/07/20',[
+  {amountJpy:1200,amountTwd:264},{amountJpy:2300,amountTwd:506}
+],true);
+assert(dateSummary.includes('2026/07/20 · 2 筆紀錄'),'latest-day summary includes the physical record count');
+assert(dateSummary.includes('¥3,500 ≈ NT$770'),'latest-day summary includes fixed dual-currency totals');
 vm.runInContext(extractFunction(html,'ledgerBatchSelectionState')+'\n'+extractFunction(html,'renderLedgerRecentRecord')+'\n'+extractFunction(html,'renderLedgerBatchCard'),rendererSandbox);
 const renderedRecord=rendererSandbox.renderLedgerRecentRecord({id:'a',detail:'A',category:'餐飲',payMethod:'現金'},false,'JPY');
 assert(!renderedRecord.includes('ledger-record-menu-button'),'selection-mode record renderer omits the ellipsis DOM');
@@ -154,8 +160,12 @@ assert(fullHistorySource.includes('toggleLedgerSelectAll()'),'full history selec
 assert(fullHistorySource.includes('cancelLedgerSelectionMode()'),'full history selection header can cancel and clear selection');
 assert(fullHistorySource.includes('renderLedgerSelectionToolbar()')||extractFunction(html,'renderSplit').includes('renderLedgerSelectionToolbar()'),'full history renders the shared deletion toolbar');
 assert(extractFunction(html,'setLedgerTestMode').includes('selectedRecordIds={}'),'TEST/formal switching clears selection');
-assert(extractFunction(html,'renderSplit').includes("formatLedgerDateKey(ledgerLocalDateKey(recent[0].time))"),'recent heading shows the absolute newest date');
-assert(html.includes("recent.length+' 筆紀錄</span>'"),'recent heading shows the newest-date physical record count');
+const renderSplitSource=extractFunction(html,'renderSplit'),recentGroupsSource=extractFunction(html,'renderLedgerRecentGroups'),historyGroupedSource=extractFunction(html,'renderLedgerHistoryGrouped');
+assert(renderSplitSource.includes("formatLedgerDateKey(ledgerLocalDateKey(recent[0].time))"),'recent heading shows the absolute newest date');
+assert(renderSplitSource.includes('renderLedgerDateSummary(recentDate,recent,true)'),'dashboard uses the shared latest-day summary');
+assert(recentGroupsSource.includes('renderLedgerDateSummary(label,group.records,false)'),'date grouping uses the shared daily total summary');
+assert(historyGroupedSource.includes("historyGrouping==='date'")&&historyGroupedSource.includes('ledger-date-label'),'category grouping retains plain labels');
+assert(!historyGroupedSource.includes('renderLedgerDateSummary(key'),'category grouping does not mislabel category totals as daily totals');
 
 const clearSandbox={
   ledgerUiState:{

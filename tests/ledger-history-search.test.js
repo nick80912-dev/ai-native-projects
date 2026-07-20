@@ -3,6 +3,12 @@ const fs=require('fs');
 const vm=require('vm');
 
 const html=fs.readFileSync('index.html','utf8');
+function extractFunction(source,name){
+  const start=source.indexOf('function '+name+'(');assert(start>=0,name+' exists');
+  let cursor=source.indexOf('{',start),depth=0;
+  for(;cursor<source.length;cursor++){if(source[cursor]==='{')depth++;if(source[cursor]==='}')depth--;if(depth===0)return source.slice(start,cursor+1);}
+  throw new Error('could not extract '+name);
+}
 const start=html.indexOf('/* ================= ledgerRepository');
 const end=html.indexOf('/* ================= 分帳(雲端 Ledger)',start);
 assert(start>=0&&end>start,'ledger helper section exists');
@@ -24,6 +30,13 @@ assert.deepStrictEqual(plain(sandbox.filterLedgerHistory(records,'',{categories:
 assert.deepStrictEqual(plain(sandbox.filterLedgerHistory(records,'',{proxy:'proxy'}).map(record=>record.id)),['note-hit']);
 assert.deepStrictEqual(Object.keys(plain(sandbox.groupLedgerHistory([records[3],records[0]],'category'))),['交通','餐飲']);
 assert.deepStrictEqual(Object.keys(plain(sandbox.groupLedgerHistory([records[0],records[1]],'date'))),['2026-07-19','2026-07-18']);
+
+const summarySandbox={Math,Number};vm.createContext(summarySandbox);
+vm.runInContext(extractFunction(html,'ledgerAmountTotals')+'\n'+extractFunction(html,'formatLedgerInlineTotals')+'\n'+extractFunction(html,'ledgerHistorySummary'),summarySandbox);
+const filteredSummary=summarySandbox.ledgerHistorySummary([
+  {amountJpy:1200,amountTwd:264},{amountJpy:2300,amountTwd:506}
+]);
+assert.strictEqual(filteredSummary,'找到 2 筆 · ¥3,500 ≈ NT$770','history summary totals only the supplied filtered result set');
 
 assert(html.includes('id="ledgerHistorySearch"'),'full history exposes a search input');
 assert(html.includes('historyCategories')&&html.includes('historyPayMethods')&&html.includes('historyProxy'),'history state includes multi-select category/payment and proxy filters');
