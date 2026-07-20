@@ -4562,6 +4562,12 @@ function clearLegacyExpenses(){ localStorage.removeItem('trip_expenses'); legacy
 function dismissLegacyExpenses(){ legacyExpenseNoticeVisible=false; renderSplit(); }
 function formatLedgerAmounts(record){ return '¥'+Math.round(Number(record.amountJpy||0)).toLocaleString()+' / NT$'+Math.round(Number(record.amountTwd||0)).toLocaleString(); }
 function formatLedgerCurrencyAmount(currency,amount){return currency==='TWD'?'NT$'+Math.round(Number(amount||0)).toLocaleString():'¥'+Math.round(Number(amount||0)).toLocaleString();}
+function ledgerAmountTotals(records){
+  return (records||[]).reduce(function(sum,record){sum.amountJpy+=Number(record&&record.amountJpy||0);sum.amountTwd+=Number(record&&record.amountTwd||0);return sum;},{amountJpy:0,amountTwd:0});
+}
+function formatLedgerInlineTotals(totals){
+  totals=totals||{};return '¥'+Math.round(Number(totals.amountJpy||0)).toLocaleString()+' ≈ NT$'+Math.round(Number(totals.amountTwd||0)).toLocaleString();
+}
 function formatLedgerLocalOccurrence(value){
   var date=timestampDate(Date.parse(value)),pad=function(number){return ('0'+number).slice(-2);};
   if(!isFinite(date.getTime()))return String(value||'');

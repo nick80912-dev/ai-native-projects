@@ -98,6 +98,13 @@ const rendererSandbox={
   renderLedgerRecentRecord(record){return '<article data-child="'+record.id+'"></article>';}
 };
 vm.createContext(rendererSandbox);
+vm.runInContext(extractFunction(html,'ledgerAmountTotals')+'\n'+extractFunction(html,'formatLedgerInlineTotals'),rendererSandbox);
+const dailyTotals=plain(rendererSandbox.ledgerAmountTotals([
+  {amountJpy:1200,amountTwd:264},
+  {amountJpy:'2300',amountTwd:'506'}
+]));
+assert.deepStrictEqual(dailyTotals,{amountJpy:3500,amountTwd:770},'daily totals add each physical record exactly once');
+assert.strictEqual(rendererSandbox.formatLedgerInlineTotals(dailyTotals),'¥3,500 ≈ NT$770','inline totals use the fixed JPY to TWD format');
 vm.runInContext(extractFunction(html,'ledgerBatchSelectionState')+'\n'+extractFunction(html,'renderLedgerRecentRecord')+'\n'+extractFunction(html,'renderLedgerBatchCard'),rendererSandbox);
 const renderedRecord=rendererSandbox.renderLedgerRecentRecord({id:'a',detail:'A',category:'餐飲',payMethod:'現金'},false,'JPY');
 assert(!renderedRecord.includes('ledger-record-menu-button'),'selection-mode record renderer omits the ellipsis DOM');
