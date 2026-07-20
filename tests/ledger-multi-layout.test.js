@@ -6,8 +6,8 @@ const source=fs.readFileSync('index.html','utf8');
 
 assert(source.includes('function renderLedgerMultiBillInfo(draft)'),
   'multi-item mode has a dedicated shared bill information renderer');
-assert(/renderLedgerMultiBillInfo\(draft\)\+renderLedgerMultiItemFields\(draft\)/.test(source),
-  'shared bill information renders immediately before the item list');
+assert(/renderLedgerMultiBillInfo\(draft\)\+renderLedgerTrackSpecificFields\(draft\)\+renderLedgerMultiItemFields\(draft\)/.test(source),
+  'shared bill information and participant controls render immediately before the item list');
 assert(/ledger-multi-bill-info[\s\S]{0,600}renderLedgerStoreField\(draft,true\)/.test(source)&&source.includes("required?'店家名稱':'店家（選填）'"),
   'the multi-item shared information card labels store name as required');
 assert(source.includes("throw new Error('請輸入店家名稱')"),

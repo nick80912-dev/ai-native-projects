@@ -3,7 +3,8 @@
 > 更新於 2026-07-20。細任務層;里程碑看 06_ROADMAP,快照看 13_PROJECT_STATUS。
 
 ## 📌 現況
-- Ledger 2.2.5 日期金額、操作 Popover 與團體分攤精修已實作：日期右側雙幣加總為 9px；Popover 為 118px 並支援同鍵收合；帳單與單項分攤共用淡綠群組，新建團體草稿維持全員預選。SW cache 順延至 v33，等待 Bar 手機驗收。
+- Ledger 三秒記帳整合批次已實作：類別群組雙幣合計與 batch 不拆分、104px 同鍵收合 Popover、團體帳單／品項分攤繼承、預設類別收合、FAB 同手勢金額 focus、個人 5 秒復原，以及個人／團體分流 Toast、重複確認與 idempotency 回歸。SW cache 已由 v33 順延至 v34。
+- 自動化 QA 已通過：39 個 `tests/*.test.js` 逐一 Node 執行、文件標題檢查與 diff check 均為 0 failures；375px／390px Browser QA 及 iOS 鍵盤／行動裝置驗收仍待 Bar，整合批次不得標記為完成或推送。
 - Ledger 2.2.5 消費卡與日期加總已實作：卡片右側雙幣金額／`⋯` 垂直置中；首頁最新日及完整紀錄日期列新增固定 `¥JPY ≈ NT$TWD` 加總；完整紀錄結果摘要縮為 11px。SW cache 順延至 v32，等待 Bar 手機驗收。
 - Ledger 2.2.5 已依 iOS App 實機截圖再修正時間欄：專用 flex wrapper 接管寬度，原生 time input 改由零 flex basis 填滿，避免 `width:100%` 在 iOS 吃掉右側群組 padding；SW cache 順延至 v31，等待 Bar 真機複驗。
 - Ledger 2.2.5 時間欄位右側對齊補正已實作：單／多品項共用 datetime grid、field wrapper 與 input 的 bounded content-box 規則，時間右側與日期欄一致且保留白底群組內距；Service Worker cache 由 v29 順延至 v30。
