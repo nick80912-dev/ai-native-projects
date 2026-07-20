@@ -47,7 +47,7 @@ const modeSandbox={
 };
 vm.createContext(modeSandbox);
 vm.runInContext(uiSource.slice(participantHelperStart,participantHelperEnd)+uiSource.slice(itemModeStart,itemModeEnd),modeSandbox);
-assert.strictEqual(modeSandbox.sameLedgerParticipantSelection(['Amy','Bar'],['bar',' Amy ']),true);
+assert.strictEqual(modeSandbox.sameLedgerParticipantSelection(['Amy','Bar'],['bar',' Amy ']),false,'participant identity remains case-sensitive');
 assert.strictEqual(modeSandbox.sameLedgerParticipantSelection(['Amy'],['Amy','Bar']),false);
 
 const modeDraft={track:'shared',participants:['Bar','Amy'],items:[{

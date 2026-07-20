@@ -24,7 +24,7 @@ const sandbox={
   ledgerRecordMetadata(){return {inputCurrency:'JPY',couponAmount:0,priceMode:'included',taxRate:10,isTaxFree:false,isProxy:false,proxyTarget:''};},
   ledgerDetailWithoutTestPrefix(record){return record.detail;},
   normalizeLedgerCategoryName(value){return value;},
-  ledgerVisibleNote(){return '';},parseParticipants(){return ['Bar'];},
+  ledgerVisibleNote(){return '';},parseParticipants(record){return record.participants||['Bar'];},
   canonicalMemberName(name){return String(name==null?'':name).replace(/\u3000/g,' ').replace(/\s+/g,' ').trim();},
   document:{addEventListener(){}},
   JSON,String,Number,Math,Date
@@ -107,6 +107,13 @@ const edited=plain(sandbox.ledgerDraftFromRecords([
 assert.strictEqual(edited.categoryApply,'餐飲','editing uses the first item category as the apply value');
 assert(edited.items.every(item=>item.categoryManuallyAdjusted===true),'existing edited rows are protected from normal apply changes');
 assert(edited.items.every(item=>item.participantMode==='inherit'&&item.participants.length===0),'edited shared items inherit an unchanged bill participant selection');
+
+const caseDistinctEdited=plain(sandbox.ledgerDraftFromRecords([
+  {id:'case-a',time:'2026-07-19T10:00:00+08:00',detail:'項目 A',category:'餐飲',payMethod:'現金',storeName:'店',amountJpy:100,amountTwd:20,participants:['amy']},
+  {id:'case-b',time:'2026-07-19T10:00:00+08:00',detail:'項目 B',category:'交通',payMethod:'現金',storeName:'店',amountJpy:200,amountTwd:40,participants:['Amy']}
+],'shared'));
+assert.strictEqual(caseDistinctEdited.items[1].participantMode,'custom','case-distinct participant identities do not inherit');
+assert.deepStrictEqual(caseDistinctEdited.items[1].participants,['Amy'],'case-distinct custom participants are preserved');
 
 assert(/\.ledger-datetime-grid\{[^}]*grid-template-columns:minmax\(0,1fr\)[^}]*gap:9px[^}]*width:100%/.test(html),'date and time use the approved stacked grid in every form mode');
 assert(/\.ledger-datetime-grid \.ledger-sheet-field\{[^}]*margin-top:0/.test(html),'stacked date and time fields avoid duplicate vertical margins');

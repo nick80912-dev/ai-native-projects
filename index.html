@@ -4303,7 +4303,7 @@ function selectLedgerItemCategory(key,value){var item=ledgerDraftItem(key);if(it
 function toggleLedgerItemCategory(key){var item=ledgerDraftItem(key);if(item)updateLedgerDraftItem(key,{categoryOpen:!item.categoryOpen});}
 function setLedgerItemProxy(key,enabled){var item=ledgerDraftItem(key);if(item)updateLedgerDraftItem(key,{isProxy:!!enabled,proxyTarget:enabled?item.proxyTarget:''});}
 function sameLedgerParticipantSelection(left,right){
-  var normalize=function(values){return (values||[]).map(canonicalMemberName).filter(Boolean).map(function(value){return value.toLowerCase();}).sort();};
+  var normalize=function(values){return (values||[]).map(canonicalMemberName).filter(Boolean).sort();};
   var a=normalize(left),b=normalize(right);
   return a.length===b.length&&a.every(function(value,index){return value===b[index];});
 }
