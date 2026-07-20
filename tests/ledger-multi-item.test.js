@@ -32,6 +32,34 @@ function loadModule(){
 function plain(value){return JSON.parse(JSON.stringify(value));}
 
 const mod=loadModule();
+const uiSource=fs.readFileSync('index.html','utf8');
+const participantHelperStart=uiSource.indexOf('function canonicalMemberName(');
+const participantHelperEnd=uiSource.indexOf('function buildParticipantSnapshot(',participantHelperStart);
+const itemModeStart=uiSource.indexOf('function ledgerDraftItem(');
+const itemModeEnd=uiSource.indexOf('function toggleLedgerItemParticipant(',itemModeStart);
+assert(participantHelperStart>=0&&participantHelperEnd>participantHelperStart,'participant canonicalizer source exists');
+assert(itemModeStart>=0&&itemModeEnd>itemModeStart,'item participant mode source exists');
+const modeSandbox={
+  ledgerUiState:{draft:null},
+  document:{getElementById(){return null;},querySelector(){return null;},activeElement:null},
+  updateLedgerMultiPreview(){},updateLedgerSaveCount(){},withLedgerSheetPosition(){},renderLedgerEntrySheet(){},
+  JSON,String,Object,Array
+};
+vm.createContext(modeSandbox);
+vm.runInContext(uiSource.slice(participantHelperStart,participantHelperEnd)+uiSource.slice(itemModeStart,itemModeEnd),modeSandbox);
+assert.strictEqual(modeSandbox.sameLedgerParticipantSelection(['Amy','Bar'],['bar',' Amy ']),true);
+assert.strictEqual(modeSandbox.sameLedgerParticipantSelection(['Amy'],['Amy','Bar']),false);
+
+const modeDraft={track:'shared',participants:['Bar','Amy'],items:[{
+  key:'i1',participantMode:'inherit',participants:[]
+}]};
+modeSandbox.ledgerUiState={draft:modeDraft};
+modeSandbox.setLedgerItemParticipantMode('i1',true);
+assert.strictEqual(modeDraft.items[0].participantMode,'custom');
+assert.deepStrictEqual(plain(modeDraft.items[0].participants),['Bar','Amy']);
+modeSandbox.setLedgerItemParticipantMode('i1',false);
+assert.strictEqual(modeDraft.items[0].participantMode,'inherit');
+assert.deepStrictEqual(plain(modeDraft.items[0].participants),[]);
 assert.deepStrictEqual(Array.from(mod.allocateWeightedLargestRemainder(10,[1,1,1])),[4,3,3],'equal remainders use item input order');
 assert.deepStrictEqual(Array.from(mod.allocateWeightedLargestRemainder(7,[1,2,1])),[2,3,2],'weighted remainder allocation preserves the total');
 assert.deepStrictEqual(Array.from(mod.allocateWeightedLargestRemainder(0,[1,2])),[0,0],'zero secondary totals allocate safely');
@@ -160,11 +188,12 @@ assert.strictEqual(single[0].amountJpy,700,'single-entry tax metadata never reca
 assert.strictEqual(single[0].couponAmount,100,'single-entry coupon is recorded without subtraction');
 assert.strictEqual(single[0].taxRate,10);
 
-const uiSource=fs.readFileSync('index.html','utf8');
 assert(uiSource.includes("proxyMode:'custom'"),'personal multi-item proxy state is always item-local');
 assert(uiSource.includes("participantMode:'inherit'"),'new multi-item rows explicitly inherit the bill participant default');
 assert(!uiSource.includes('單項設定 ·')&&!uiSource.includes('沿用整單'),'retired item override presentation is absent');
-assert(uiSource.includes("draft.track==='personal'?proxyFlag:''"),'shared item rows do not render proxy controls');
+assert(uiSource.includes("item.participantMode==='custom'?renderLedgerItemParticipants(item):''"),'shared item rows render participants only for custom allocations');
+assert(uiSource.includes('<span>單項分攤</span>'),'shared item rows expose the item allocation toggle');
+assert(uiSource.includes("renderLedgerMultiBillInfo(draft)+renderLedgerTrackSpecificFields(draft)+renderLedgerMultiItemFields(draft)"),'multi-item forms show bill participant selection before item editors');
 assert(!/ledger-item-editor[\s\S]{0,1200}ledger-currency-option/.test(uiSource),'item cards do not render per-item currency controls');
 assert(!/ledger-item-editor[\s\S]{0,1200}ledger-pay-option/.test(uiSource),'item cards do not render per-item payment controls');
 assert(uiSource.includes('税込（含稅）')&&uiSource.includes('税抜（未稅）'),'price mode uses the confirmed bilingual pill labels');

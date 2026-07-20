@@ -12,7 +12,7 @@ function extract(startText,endText){
 
 function plain(value){return JSON.parse(JSON.stringify(value));}
 
-const source=extract('function ledgerLocalDateFromParts(','function openLedgerEntrySheet(');
+const source=extract('function ledgerLocalDateFromParts(','function renderLedgerProxyTargetChoices(');
 const sandbox={
   appNow(){return new Date(2026,6,19,22,15);},
   timestampDate(value){return new Date(Number(value));},
@@ -25,6 +25,8 @@ const sandbox={
   ledgerDetailWithoutTestPrefix(record){return record.detail;},
   normalizeLedgerCategoryName(value){return value;},
   ledgerVisibleNote(){return '';},parseParticipants(){return ['Bar'];},
+  canonicalMemberName(name){return String(name==null?'':name).replace(/\u3000/g,' ').replace(/\s+/g,' ').trim();},
+  document:{addEventListener(){}},
   JSON,String,Number,Math,Date
 };
 vm.createContext(sandbox);
@@ -104,6 +106,7 @@ const edited=plain(sandbox.ledgerDraftFromRecords([
 ],'shared'));
 assert.strictEqual(edited.categoryApply,'餐飲','editing uses the first item category as the apply value');
 assert(edited.items.every(item=>item.categoryManuallyAdjusted===true),'existing edited rows are protected from normal apply changes');
+assert(edited.items.every(item=>item.participantMode==='inherit'&&item.participants.length===0),'edited shared items inherit an unchanged bill participant selection');
 
 assert(/\.ledger-datetime-grid\{[^}]*grid-template-columns:minmax\(0,1fr\)[^}]*gap:9px[^}]*width:100%/.test(html),'date and time use the approved stacked grid in every form mode');
 assert(/\.ledger-datetime-grid \.ledger-sheet-field\{[^}]*margin-top:0/.test(html),'stacked date and time fields avoid duplicate vertical margins');

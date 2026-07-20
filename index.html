@@ -4138,7 +4138,7 @@ function ledgerDraftFromRecords(records,track){
     var item=createLedgerDraftItem(draft,{name:ledgerDetailWithoutTestPrefix(record),amount:amountFor(record),category:normalizeLedgerCategoryName(record.category),categoryManuallyAdjusted:true});
     var meta=ledgerRecordMetadata(record);item.taxExempt=meta.isTaxFree;
     if(track==='personal'){item.proxyMode='custom';item.isProxy=meta.isProxy;item.proxyTarget=meta.proxyTarget||'';}
-    else{item.participantMode='custom';item.participants=parseParticipants(record,function(){})||[];}
+    else{item.participants=parseParticipants(record,function(){})||[];item.participantMode=sameLedgerParticipantSelection(item.participants,draft.participants)?'inherit':'custom';if(item.participantMode==='inherit')item.participants=[];}
     return item;
     });
   }
@@ -4302,6 +4302,18 @@ function updateLedgerSaveCount(){var draft=ledgerUiState.draft,button=document.g
 function selectLedgerItemCategory(key,value){var item=ledgerDraftItem(key);if(item&&ledgerCategoryStore.all().indexOf(value)>=0)updateLedgerDraftItem(key,{category:value,categoryManuallyAdjusted:true,categoryOpen:false});}
 function toggleLedgerItemCategory(key){var item=ledgerDraftItem(key);if(item)updateLedgerDraftItem(key,{categoryOpen:!item.categoryOpen});}
 function setLedgerItemProxy(key,enabled){var item=ledgerDraftItem(key);if(item)updateLedgerDraftItem(key,{isProxy:!!enabled,proxyTarget:enabled?item.proxyTarget:''});}
+function sameLedgerParticipantSelection(left,right){
+  var normalize=function(values){return (values||[]).map(canonicalMemberName).filter(Boolean).map(function(value){return value.toLowerCase();}).sort();};
+  var a=normalize(left),b=normalize(right);
+  return a.length===b.length&&a.every(function(value,index){return value===b[index];});
+}
+function setLedgerItemParticipantMode(key,enabled){
+  var draft=ledgerUiState.draft,item=ledgerDraftItem(key);
+  if(!draft||draft.track!=='shared'||!item)return;
+  updateLedgerDraftItem(key,enabled?{
+    participantMode:'custom',participants:(draft.participants||[]).slice()
+  }:{participantMode:'inherit',participants:[]});
+}
 function toggleLedgerItemParticipant(key,name){
   var item=ledgerDraftItem(key);if(!item)return;
   var memberKey=canonicalMemberName(name),has=(item.participants||[]).some(function(value){return canonicalMemberName(value)===memberKey;});
@@ -4436,8 +4448,10 @@ function renderLedgerDraftItem(draft,item,index){
   var errors=draft.formErrors&&draft.formErrors.items&&draft.formErrors.items[item.key]||{},safeKey=String(item.key).replace(/[^a-zA-Z0-9_-]/g,'_');
   var proxyFlag='<label class="ledger-compact-check ledger-item-flag '+(item.isProxy?'on':'')+'"><input type="checkbox" '+(item.isProxy?'checked':'')+' onchange="setLedgerItemProxy(\''+jsString(item.key)+'\',this.checked)"><span class="ledger-item-flag-check" aria-hidden="true">✓</span><span>代購</span></label>';
   var taxFlag='<label class="ledger-compact-check ledger-item-flag '+(item.taxExempt?'on':'')+'"><input type="checkbox" '+(item.taxExempt?'checked':'')+' onchange="setLedgerItemTaxExempt(\''+jsString(item.key)+'\',this.checked)"><span>免稅品</span></label>';
-  var controls='<div class="ledger-item-control-row '+(draft.track==='personal'?'':'no-proxy')+'"><button type="button" class="ledger-item-category-toggle" aria-expanded="'+(item.categoryOpen?'true':'false')+'" onclick="toggleLedgerItemCategory(\''+jsString(item.key)+'\')"><span class="ledger-item-category-face"><span>'+escapeHtml(ledgerCategoryEmoji(item.category)+' '+item.category)+'</span><span>⌄</span></span></button>'+taxFlag+(draft.track==='personal'?proxyFlag:'')+'</div>';
-  var proxy=draft.track==='personal'&&item.isProxy?renderLedgerProxySection(item.proxyTarget,item.key):'',participants=draft.track==='shared'?renderLedgerItemParticipants(item):'';
+  var participantFlag='<label class="ledger-compact-check ledger-item-flag '+(item.participantMode==='custom'?'on':'')+'"><input type="checkbox" '+(item.participantMode==='custom'?'checked':'')+' onchange="setLedgerItemParticipantMode(\''+jsString(item.key)+'\',this.checked)"><span class="ledger-item-flag-check" aria-hidden="true">✓</span><span>單項分攤</span></label>';
+  var thirdFlag=draft.track==='personal'?proxyFlag:participantFlag;
+  var controls='<div class="ledger-item-control-row"><button type="button" class="ledger-item-category-toggle" aria-expanded="'+(item.categoryOpen?'true':'false')+'" onclick="toggleLedgerItemCategory(\''+jsString(item.key)+'\')"><span class="ledger-item-category-face"><span>'+escapeHtml(ledgerCategoryEmoji(item.category)+' '+item.category)+'</span><span>⌄</span></span></button>'+taxFlag+thirdFlag+'</div>';
+  var proxy=draft.track==='personal'&&item.isProxy?renderLedgerProxySection(item.proxyTarget,item.key):'',participants=draft.track==='shared'&&item.participantMode==='custom'?renderLedgerItemParticipants(item):'';
   return '<article class="ledger-item-editor" data-item-key="'+escapeHtml(item.key)+'"><div class="'+primaryClass+'"><span class="ledger-item-sequence" aria-hidden="true">'+(index+1)+'.</span><div class="ledger-sheet-field"><input class="ledger-sheet-input '+(errors.name?'ledger-field-invalid':'')+'" id="ledgerItemName_'+escapeHtml(safeKey)+'" aria-invalid="'+(errors.name?'true':'false')+'" aria-label="第 '+(index+1)+' 項品項名稱" value="'+escapeHtml(item.name)+'" placeholder="品項名稱" oninput="updateLedgerDraftItem(\''+jsString(item.key)+'\',{name:this.value},false)">'+(errors.name?'<div class="ledger-inline-error">'+escapeHtml(errors.name)+'</div>':'')+'</div><div class="ledger-sheet-field"><input class="ledger-sheet-input '+(errors.amount?'ledger-field-invalid':'')+'" id="ledgerItemAmount_'+escapeHtml(safeKey)+'" aria-invalid="'+(errors.amount?'true':'false')+'" aria-label="第 '+(index+1)+' 項金額" type="number" inputmode="numeric" min="1" value="'+escapeHtml(item.amount)+'" placeholder="金額" oninput="updateLedgerDraftItem(\''+jsString(item.key)+'\',{amount:this.value},false)">'+(errors.amount?'<div class="ledger-inline-error">'+escapeHtml(errors.amount)+'</div>':'')+'</div>'+remove+'</div>'+controls+'<div class="ledger-item-categories" '+(item.categoryOpen?'':'hidden')+'><div class="ledger-sheet-choice-grid">'+renderLedgerItemCategories(item)+'</div></div>'+proxy+participants+'</article>';
 }
 function renderLedgerMultiItemFields(draft){
@@ -4473,7 +4487,9 @@ function renderLedgerOccurrenceFields(draft,inBillCard){
 }
 function renderLedgerEntrySheet(){
   var overlay=document.getElementById('ledgerEntrySheet'),draft=ledgerUiState.draft;if(!overlay||!draft)return;
-  var fields=draft.multi?renderLedgerMultiBillInfo(draft)+renderLedgerMultiItemFields(draft)+renderLedgerTrackSpecificFields(draft):renderLedgerSingleBasicInfo(draft)+renderLedgerStoreField(draft)+renderLedgerSingleItemCategory(draft)+renderLedgerPaymentFields(draft,false)+renderLedgerTrackSpecificFields(draft);
+  var fields=draft.multi?
+    renderLedgerMultiBillInfo(draft)+renderLedgerTrackSpecificFields(draft)+renderLedgerMultiItemFields(draft):
+    renderLedgerSingleBasicInfo(draft)+renderLedgerStoreField(draft)+renderLedgerSingleItemCategory(draft)+renderLedgerPaymentFields(draft,false)+renderLedgerTrackSpecificFields(draft);
   var editing=!!ledgerUiState.editing,title=editing?'編輯消費':'新增消費',count=ledgerValidItemCount(draft),saveLabel=editing?'儲存修改':(draft.multi?'確認儲存（'+count+' 筆）':'儲存');
   var saveAnother=editing?'':'<button id="ledgerSaveAnother" class="btn" onclick="saveLedgerEntry(true)">儲存並再記一筆</button>',cancel=draft.multi?'<button type="button" class="btn" onclick="closeLedgerEntrySheet()">取消</button>':'';
   overlay.innerHTML='<section class="ledger-sheet '+(draft.multi?'ledger-multi-entry':'')+'" role="dialog" aria-modal="true" aria-labelledby="ledgerEntryTitle"><div class="ledger-sheet-head"><h2 id="ledgerEntryTitle">'+title+'</h2><button class="settings-close" aria-label="關閉" onclick="closeLedgerEntrySheet()">×</button></div><div class="ledger-entry-heading-row ledger-entry-divider"><div class="ledger-sheet-member">目前記帳身分：<b>'+escapeHtml(getCurrentMember())+'</b></div><label class="toggle-row ledger-sheet-toggle" for="ledgerMulti"><span>多品項</span><input id="ledgerMulti" type="checkbox" '+(draft.multi?'checked':'')+' onchange="setLedgerDraftMulti(this.checked)"></label></div>'+renderLedgerDraftTrack(draft)+renderLedgerDraftCurrency(draft)+fields+renderLedgerTaxDisclosure(draft)+renderLedgerDetailsDisclosure(draft)+'<div class="ledger-sheet-actions"><button id="ledgerSave" class="btn coral" onclick="saveLedgerEntry(false)">'+saveLabel+'</button>'+saveAnother+cancel+'</div></section>';
