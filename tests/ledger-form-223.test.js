@@ -103,8 +103,12 @@ const edited=plain(sandbox.ledgerDraftFromRecords([
 assert.strictEqual(edited.categoryApply,'餐飲','editing uses the first item category as the apply value');
 assert(edited.items.every(item=>item.categoryManuallyAdjusted===true),'existing edited rows are protected from normal apply changes');
 
-assert(/\.ledger-datetime-grid\{[^}]*grid-template-columns:1fr[^}]*gap:9px[^}]*width:100%/.test(html),'date and time use the approved stacked grid in every form mode');
+assert(/\.ledger-datetime-grid\{[^}]*grid-template-columns:minmax\(0,1fr\)[^}]*gap:9px[^}]*width:100%/.test(html),'date and time use the approved stacked grid in every form mode');
 assert(/\.ledger-datetime-grid \.ledger-sheet-field\{[^}]*margin-top:0/.test(html),'stacked date and time fields avoid duplicate vertical margins');
+assert(/\.ledger-datetime-grid\{[^}]*grid-template-columns:minmax\(0,1fr\)[^}]*min-width:0[^}]*max-width:100%[^}]*box-sizing:border-box/.test(html),'date and time grid is constrained to the shared content box');
+assert(/\.ledger-datetime-grid \.ledger-sheet-field\{[^}]*width:100%[^}]*min-width:0[^}]*max-width:100%[^}]*box-sizing:border-box/.test(html),'both stacked field wrappers use the same bounded width');
+assert(/\.ledger-datetime-grid \.ledger-sheet-input\{[^}]*width:100%[^}]*min-width:0[^}]*max-width:100%[^}]*box-sizing:border-box/.test(html),'date and time inputs cannot exceed their field wrappers');
+assert(/\.ledger-datetime-grid input\[type="time"\]\{[^}]*width:100%[^}]*min-width:0[^}]*max-width:100%[^}]*box-sizing:border-box/.test(html),'native time input is explicitly bounded for iOS');
 assert(/\.ledger-calendar-popover\{[^}]*width:min\(316px,calc\(100vw - 48px\)\)[^}]*max-width:100%/.test(html),'date grid inset leaves the custom calendar popover sizing unchanged');
 assert(html.includes('class="ledger-calendar-trigger"')&&html.includes('<svg aria-hidden="true"'),'stacked date field retains the existing calendar line SVG');
 assert(/\.ledger-item-primary-row\{[^}]*grid-template-columns:32px minmax\(0,1fr\) minmax\(112px,120px\) 36px/.test(html),'multi-item rows use the approved compact four-column layout');

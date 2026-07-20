@@ -520,9 +520,11 @@ body.ledger-sheet-open{overflow:hidden}.ledger-sheet-overlay{position:fixed;inse
 .ledger-history-head h2{min-width:0;flex:1}.ledger-history-head-actions{display:flex;align-items:center;gap:2px}
 .ledger-category-apply-heading{display:flex;align-items:baseline;gap:6px;min-width:0;flex-wrap:wrap;margin-bottom:6px}.ledger-category-apply-heading .ledger-sheet-label{margin-bottom:0}.ledger-category-apply-help{min-width:0;color:var(--ink-faint);font-size:10px;font-weight:400;line-height:1.35}
 .ledger-recent-heading{min-width:0}.ledger-recent-heading span{display:block;margin-top:2px;color:var(--ink-faint);font-size:11px;font-weight:800}
-.ledger-datetime-grid{display:grid;grid-template-columns:1fr;gap:9px;min-width:0;width:100%;padding-right:0}
+.ledger-datetime-grid{display:grid;grid-template-columns:minmax(0,1fr);gap:9px;width:100%;min-width:0;max-width:100%;box-sizing:border-box;padding-right:0}
 .ledger-multi-bill-info .ledger-datetime-grid,.ledger-single-basic-info .ledger-datetime-grid{margin-top:10px}
-.ledger-datetime-grid .ledger-sheet-field{margin-top:0}
+.ledger-datetime-grid .ledger-sheet-field{margin-top:0;width:100%;min-width:0;max-width:100%;box-sizing:border-box}
+.ledger-datetime-grid .ledger-sheet-input{width:100%;min-width:0;max-width:100%;box-sizing:border-box}
+.ledger-datetime-grid input[type="time"]{width:100%;min-width:0;max-width:100%;box-sizing:border-box}
 .ledger-sheet-field>label.ledger-proxy-switch{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:42px;margin-bottom:0;padding:7px 10px;border:1px solid #c99c94;border-radius:9px;background:#f4e9e6;color:#6e4540}
 .ledger-item-proxy .ledger-sheet-choice-grid{align-items:center}
 .ledger-proxy-add-row{flex:1 0 100%;width:100%;box-sizing:border-box}

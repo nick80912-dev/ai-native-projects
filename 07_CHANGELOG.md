@@ -1,5 +1,10 @@
 # 07 版本紀錄
 
+## 2026-07-20 — Ledger 2.2.5 時間欄位右側對齊補正（Dev）
+- 單品項與多品項共用的日期／時間直列補齊 `minmax(0,1fr)`、`min-width:0`、`max-width:100%` 與 `box-sizing:border-box`；日期／時間 wrapper 及 input 均限制在白底群組既有內容區，不使用負 margin、transform 或全域 overflow 掩蓋。
+- 時間欄位維持 `width:100%` 填滿群組內容區，右側與日期欄位完全對齊並保留群組既有 11px 內距；原有字級、月曆 SVG、日期 Popover 與資料行為不變。
+- Service Worker cache 由 `okayama-trip-v29` 順延至 `okayama-trip-v30`；未修改 SHELL、install／activate／fetch、Schema、Apps Script、Repository／Queue、結算、墓碑契約、localStorage key 或資料欄位。
+
 ## 2026-07-20 — Ledger 2.2.5 表單直列與代購群組精修（Dev）
 - 單品項「這筆是代購」改為淡暖紅低飽和群組列，文字維持原字級、Toggle 固定靠右，且不新增重複的「代購」欄位標題。
 - 單品項與多品項的日期／時間皆改為日期在上、時間（選填）在下的直列版型；欄位與標籤維持既有字級，並保留現有月曆線條 SVG 與自訂日期 Popover 行為。
