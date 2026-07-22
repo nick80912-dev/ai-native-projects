@@ -216,6 +216,12 @@ const otherCurrencyOnly=plain(mod.ledgerSettlementStatusCardModel(settlementFixt
 assert.strictEqual(otherCurrencyOnly.currency,'TWD','a zero preferred-currency balance falls back to the confirmed non-zero currency');
 assert.strictEqual(otherCurrencyOnly.label,'應付','the fallback still reports the correct direction');
 
+assert.strictEqual(typeof mod.ledgerSettlementCardProgress,'function','settlement card exposes one progress-copy rule');
+assert.strictEqual(mod.ledgerSettlementCardProgress(multipleReceivable),'尚待 2 人','receivable card reports counterpart count without payment inference');
+assert.strictEqual(mod.ledgerSettlementCardProgress(payable),'尚待 1 人','payable card reports counterpart count without payment inference');
+assert.strictEqual(mod.ledgerSettlementCardProgress(selfSettled),'團體尚待 2 人','self-settled card reports remaining group participants');
+assert.strictEqual(mod.ledgerSettlementCardProgress(allSettled),'目前沒有待處理款項','all-settled card uses the approved empty progress copy');
+
 const html=fs.readFileSync('index.html','utf8');
 const settlementSource=html.slice(html.indexOf('function ledgerCurrentMemberSettlement('),html.indexOf('function showLedgerFullList('));
 assert(settlementSource.includes('buildMemberBalances(records,null,null,universe)'),'settlement UI consumes the universe-aware PR4 balance engine');
@@ -225,5 +231,11 @@ assert(!settlementSource.includes('owedJpy+='),'UI does not reimplement owed bal
 assert(!settlementSource.includes('paidJpy+='),'UI does not reimplement paid balances');
 assert(settlementSource.includes('balances.invalidRecords'),'expanded settlement surfaces invalid records');
 assert(!settlementSource.includes('人已結清'),'dashboard does not invent repayment progress absent from the existing engine');
+const settlementCardSource=html.slice(html.indexOf('function renderLedgerSettlementCard('),html.indexOf('function ledgerSettlementLines('));
+assert(settlementCardSource.includes('<h3>我的結算狀態</h3>'),'settlement card title occupies its own row');
+assert(settlementCardSource.includes('ledger-shared-settlement-amount'),'settlement amount occupies its own primary row');
+assert(settlementCardSource.includes('ledger-shared-settlement-footer'),'settlement progress and action share one footer row');
+assert(settlementCardSource.includes('查看結算 〉')&&settlementCardSource.includes('openLedgerSettlementPanel()'),'lightweight settlement action keeps the existing Sheet entry point');
+assert(!settlementCardSource.includes('model.details'),'dashboard omits member-level transfer details');
 
 console.log('ledger settlement tests passed');

@@ -165,7 +165,7 @@ assert(fullHistorySource.includes('cancelLedgerSelectionMode()'),'full history s
 assert(fullHistorySource.includes('renderLedgerSelectionToolbar()')||extractFunction(html,'renderSplit').includes('renderLedgerSelectionToolbar()'),'full history renders the shared deletion toolbar');
 assert(extractFunction(html,'setLedgerTestMode').includes('selectedRecordIds={}'),'TEST/formal switching clears selection');
 const renderSplitSource=extractFunction(html,'renderSplit'),recentGroupsSource=extractFunction(html,'renderLedgerRecentGroups'),historyGroupedSource=extractFunction(html,'renderLedgerHistoryGrouped');
-assert(renderSplitSource.includes("formatLedgerDateKey(ledgerLocalDateKey(recent[0].time))"),'recent heading shows the absolute newest date');
+assert(renderSplitSource.includes('ledgerRecentDateLabel(recent,Date.now())'),'recent heading labels the absolute newest date and uses Today when appropriate');
 assert(renderSplitSource.includes('renderLedgerDateSummary(recentDate,recent,true)'),'dashboard uses the shared latest-day summary');
 assert(recentGroupsSource.includes('renderLedgerDateSummary(label,group.records,false)'),'date grouping uses the shared daily total summary');
 assert(historyGroupedSource.includes("historyGrouping==='date'")&&historyGroupedSource.includes('renderLedgerDateSummary(key,groupRecords,false)'),'category grouping uses the shared dual-currency summary');
@@ -222,7 +222,7 @@ assert(switchSource.includes("behavior:'smooth'"),'re-tapping the dashboard scro
 assert(extractFunction(html,'returnLedgerDashboard').includes("classList.contains('ledger-sheet-open')"),'hidden-nav sheets protect unsaved form state');
 assert(html.includes('aria-label="返回分帳首頁"'),'the history back button remains available');
 
-assert.match(sw,/okayama-trip-v41/,'service worker cache advances exactly one version');
+assert.match(sw,/okayama-trip-v42/,'service worker cache advances exactly one version');
 
 (async function(){
   const originals=[{id:'s1'},{id:'s2'}],overlay={getAttribute(){return JSON.stringify(['s1','s2']);}},input={value:'共同原因'},button={disabled:false};
