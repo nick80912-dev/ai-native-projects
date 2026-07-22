@@ -420,6 +420,187 @@ git push origin dev
 
 禁止 push／merge `main`，禁止部署 Netlify。
 
+# Ledger 單品項金額／明細同群組 Implementation Plan
+
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+
+**Goal:** 將單品項金額與明細上下收進同一張白底圓角群組，讓兩個輸入欄位左右完全對齊，同時保持明細既有高度、16px 字級及所有互動行為。
+
+**Architecture:** 僅調整單品項 renderer 的 DOM 歸屬與既有 `.ledger-single-primary` CSS；`renderLedgerSingleItemDetail(draft)` 本身不改，藉此保留 placeholder、Done、驗證與 state 綁定。多品項 renderer、資料模型與儲存流程完全不動。
+
+**Tech Stack:** Vanilla HTML／CSS／JavaScript、Node `assert` tests、in-app Browser QA、Service Worker app shell。
+
+## Global Constraints
+
+- 僅修改 `index.html`、`sw.js`、必要 tests、`07_CHANGELOG.md` 與 `tasks/current.md`。
+- 明細 input 高度與 computed `font-size:16px` 不變；只改群組歸屬與寬度對齊。
+- 金額 Next、明細 Done、驗證、儲存、Schema、Apps Script、Repository／Queue、結算、墓碑契約、localStorage key 與資料欄位不變。
+- `index.html` 為 app shell；SW cache 僅由 `okayama-trip-v35` 順延至 `okayama-trip-v36`，不得修改 SHELL、install／activate／fetch。
+- 禁止 push／merge `main`，禁止部署 Netlify。
+
+---
+
+### Task 1: 以失敗測試鎖定同群組與尺寸契約
+
+**Files:**
+- Modify: `tests/ledger-entry-p0.test.js`
+
+**Interfaces:**
+- Consumes: `renderLedgerSingleItemPrimary(draft)`、`renderLedgerSingleItemDetail(draft)`、`renderLedgerSingleBasicInfo(draft)`。
+- Produces: 單一 primary group、明細不重複 render、僅金額維持 62px、兩欄全寬對齊的回歸契約。
+
+- [ ] **Step 1: 新增失敗測試**
+
+```js
+const primarySource=extractFunction('renderLedgerSingleItemPrimary');
+assert.match(primarySource,/renderLedgerSingleItemDetail\(draft\)/,'amount and detail share the primary group');
+assert.doesNotMatch(basicInfoSource,/renderLedgerSingleItemDetail\(draft\)/,'detail is not rendered again outside the primary group');
+assert.match(html,/\.ledger-single-primary \.ledger-sheet-input\{[^}]*width:100%[^}]*max-width:100%[^}]*box-sizing:border-box/,'required inputs share full content width');
+assert.match(html,/\.ledger-single-primary \.ledger-amount-wrap \.ledger-sheet-input\{[^}]*min-height:62px/,'only amount retains the tall amount height');
+assert.doesNotMatch(html,/\.ledger-single-primary \.ledger-sheet-input\{[^}]*min-height:62px/,'detail does not inherit the amount height');
+assert.match(html,/\.ledger-single-primary \.ledger-sheet-field\+\.ledger-sheet-field\{[^}]*margin-top:10px/,'required fields use the approved gap without a divider');
+```
+
+- [ ] **Step 2: 執行測試並確認為預期失敗**
+
+```powershell
+node tests/ledger-entry-p0.test.js
+```
+
+Expected: FAIL，原因為明細尚未位於 `renderLedgerSingleItemPrimary`，且既有 62px selector 仍會套用整個群組內 input。
+
+- [ ] **Step 3: Commit 測試契約**
+
+```powershell
+git add tests/ledger-entry-p0.test.js
+git commit -m "test: define single entry required field group"
+```
+
+### Task 2: 最小化調整單品項 DOM 與 CSS
+
+**Files:**
+- Modify: `index.html:518`
+- Modify: `index.html:4500-4510`
+
+**Interfaces:**
+- Consumes: Task 1 測試契約與既有 `renderLedgerSingleItemDetail(draft)`。
+- Produces: `renderLedgerSingleItemPrimary(draft)` 回傳含金額及明細的單一 `<section class="ledger-single-primary">`。
+
+- [ ] **Step 1: 將明細納入 primary section，並移除外部重複呼叫**
+
+```js
+function renderLedgerSingleItemPrimary(draft){
+  var symbol=draft.currency==='JPY'?'¥':'NT$',error=draft.formErrors&&draft.formErrors.amount||'';
+  return '<section class="ledger-single-primary"><div class="ledger-sheet-field"><label for="ledgerAmount">金額 ('+symbol+')</label><div class="ledger-amount-wrap"><input class="ledger-sheet-input '+(error?'ledger-field-invalid':'')+'" id="ledgerAmount" type="number" inputmode="numeric" enterkeyhint="next" min="1" aria-invalid="'+(error?'true':'false')+'" value="'+escapeHtml(draft.amount)+'" oninput="updateLedgerDraftField(\'amount\',this.value);updateLedgerConversionPreview()" onkeydown="handleLedgerAmountNext(event)"><output class="ledger-amount-inline" id="ledgerConvertedPreview">—</output></div>'+(error?'<div class="ledger-inline-error">'+escapeHtml(error)+'</div>':'')+'</div>'+renderLedgerSingleItemDetail(draft)+'</section>';
+}
+function renderLedgerSingleBasicInfo(draft){
+  return '<div class="ledger-single-basic-info">'+renderLedgerSingleItemPrimary(draft)+renderLedgerSingleSecondaryFields(draft)+'</div>';
+}
+```
+
+`renderLedgerSingleItemDetail(draft)` 的 HTML、事件、placeholder 與錯誤呈現不得修改。
+
+- [ ] **Step 2: 將 62px 高度限定在金額，並建立共同寬度契約**
+
+```css
+.ledger-single-primary .ledger-sheet-field{margin-top:0}
+.ledger-single-primary .ledger-sheet-field+.ledger-sheet-field{margin-top:10px}
+.ledger-single-primary .ledger-sheet-input{width:100%;max-width:100%;box-sizing:border-box}
+.ledger-single-primary .ledger-amount-wrap .ledger-sheet-input{min-height:62px;font-variant-numeric:tabular-nums}
+```
+
+不得新增 divider、負 margin、transform 或 `overflow-x:hidden`；明細繼續沿用 `.ledger-sheet-input` 的既有 46px 最小高度與 16px 字級。
+
+- [ ] **Step 3: 執行聚焦測試**
+
+```powershell
+node tests/ledger-entry-p0.test.js
+node tests/ledger-three-second-entry.test.js
+node tests/ledger-quick-entry.test.js
+```
+
+Expected: 三個 tests 全部 exit 0；金額 Next、明細 Done 與草稿保留回歸通過。
+
+- [ ] **Step 4: Commit DOM／CSS 實作**
+
+```powershell
+git add index.html tests/ledger-entry-p0.test.js
+git commit -m "fix: group single entry amount and detail"
+```
+
+### Task 3: SW、文件、完整驗證與 Browser QA
+
+**Files:**
+- Modify: `sw.js:9`
+- Modify: `tests/pwa-shell.test.js`
+- Modify: `tests/ios-zoom-guard.test.js`
+- Modify: `tests/ledger-221-ui.test.js`
+- Modify: `tests/ledger-225.test.js`
+- Modify: `tests/ledger-mobile-hotfix.test.js`
+- Modify: `tests/ledger-ui-polish.test.js`
+- Modify: `07_CHANGELOG.md`
+- Modify: `tasks/current.md`
+
+**Interfaces:**
+- Consumes: Task 2 的最終 app shell。
+- Produces: v36 cache 契約、375px／390px 對齊證據與最終交付紀錄。
+
+- [ ] **Step 1: SW cache 僅順延一版並同步測試**
+
+```js
+var CACHE_NAME = 'okayama-trip-v36';
+```
+
+使用 `rg -n "okayama-trip-v35" tests sw.js` 找出並只更新 cache 版本斷言；不得修改 SHELL、install／activate／fetch。
+
+- [ ] **Step 2: 更新增量文件**
+
+`07_CHANGELOG.md` 記錄金額／明細同群組、左右對齊、明細尺寸與行為不變、SW v36；`tasks/current.md` 將本方案標為已實作但仍等待 Bar iPhone Safari／PWA 驗收。
+
+- [ ] **Step 3: 逐一執行完整 tests 與文件檢查**
+
+```powershell
+$failed=@(); $tests=Get-ChildItem tests -Filter *.test.js | Sort-Object Name
+foreach($test in $tests){node $test.FullName;if($LASTEXITCODE -ne 0){$failed+=$test.Name}}
+if($failed.Count){throw ('FAILED: '+($failed -join ', '))}
+node tools/check-doc-titles.js
+git diff --check
+```
+
+Expected: 所有 tests exit 0、文件檢查 exit 0、diff check 無錯誤。
+
+- [ ] **Step 4: 375px／390px Browser QA**
+
+在兩個 viewport 分別開啟單品項新增 Sheet，量測：
+
+```js
+const amount=document.querySelector('#ledgerAmount').getBoundingClientRect();
+const detail=document.querySelector('#ledgerDetail').getBoundingClientRect();
+({
+  leftDelta:Math.abs(amount.left-detail.left),
+  rightDelta:Math.abs(amount.right-detail.right),
+  detailHeight:detail.height,
+  detailFont:getComputedStyle(document.querySelector('#ledgerDetail')).fontSize,
+  overflow:document.documentElement.scrollWidth-document.documentElement.clientWidth
+});
+```
+
+Expected: `leftDelta <= 1`、`rightDelta <= 1`、明細高度維持既有 46px、`detailFont === '16px'`、`overflow <= 0`、browser error 為 0；另回歸金額 Enter 聚焦明細、明細 Enter 只儲存一次。
+
+- [ ] **Step 5: 禁止範圍稽核、commit 與 push dev**
+
+```powershell
+git diff --name-only origin/dev...HEAD
+git diff -- schema.js validator.js apps-script .ai-manifest.json manifest.webmanifest netlify.toml tools
+git diff -- sw.js
+git status --short
+git add index.html sw.js 07_CHANGELOG.md tasks/current.md tests
+git commit -m "test: verify single entry required field group"
+git push origin dev
+```
+
+Expected: 最終 diff 僅含允許清單；禁止範圍無輸出；SW diff 只有 `CACHE_NAME`；push 目標僅為 `origin/dev`。
+
 # Ledger Category, Inheritance, and Three-Second Entry Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
