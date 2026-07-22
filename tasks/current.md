@@ -1,5 +1,14 @@
 # CURRENT(現在正在做的)
 
+## 2026-07-22｜Ledger 摘要卡尺寸與箭頭補正（dev）
+- [x] 個人代購標題移除 Emoji，維持既有 `.ledger-compact-card h3` 字級、粗細與垂直位置。
+- [x] 個人代購與團體結算共用 `ledger-home-summary-card`：同寬、106px min-height、10px／12px padding、8px 圓角、陰影、三層 Grid 與相同 gap；兩個個別 class 不覆寫尺寸。
+- [x] 兩卡箭頭共用完全相同的 `span.ledger-card-chevron` 與 `〉`；個人「N 人」透過 `ledger-card-head-action` 保留 10px 間距，箭頭右邊界與團體卡一致。
+- [x] 375px／390px Browser QA：兩卡高度均為 106px，寬度、三層相對位置與箭頭 18×18px／700 字重／右邊界一致；無水平溢出，代購與結算整卡均能開啟既有 Sheet，browser error 0。
+- [x] 未修改代購彙總、結算演算法、待同步、最近消費或 Apps Script API；Service Worker cache 僅由 v43 順延至 v44，其他 SW 策略不變。
+- [x] 首頁、代購、結算、同步、行動版與 PWA 共 11 個目標測試通過；提交前完整 `tests/*.test.js` 僅執行一次，40／40 通過。
+- [ ] 等待 Bar iPhone Safari／PWA 真機驗收：375px／390px 肉眼箭頭粗細、Dynamic Type、長金額、12 人以上與長姓名換行、整卡觸控及 SW v44 更新。
+
 ## 2026-07-22｜Ledger 代購／結算摘要卡資訊補強（dev）
 - [x] 個人代購卡維持整卡 `openLedgerProxyPanel()`，以既有 `proxyTotal` 顯示雙幣總額，並新增對象人數、代購筆數與最多 2 位對象名稱；超過加「等」，零筆顯示「尚無代購紀錄」。
 - [x] 團體結算卡改為整卡 `openLedgerSettlementPanel()`，右上僅保留箭頭；應收／應付摘要顯示待處理人數與最多 2 位既有 counterpart 名稱，首頁不渲染每人金額明細。

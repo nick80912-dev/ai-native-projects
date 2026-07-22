@@ -236,10 +236,10 @@ assert(!settlementSource.includes('paidJpy+='),'UI does not reimplement paid bal
 assert(settlementSource.includes('balances.invalidRecords'),'expanded settlement surfaces invalid records');
 assert(!settlementSource.includes('人已結清'),'dashboard does not invent repayment progress absent from the existing engine');
 const settlementCardSource=html.slice(html.indexOf('function renderLedgerSettlementCard('),html.indexOf('function ledgerSettlementLines('));
-assert.match(settlementCardSource,/<button class="ledger-compact-card ledger-compact-action ledger-shared-settlement-card[^>]+onclick="openLedgerSettlementPanel\(\)"/,'the entire settlement card keeps the existing Sheet entry point');
+assert.match(settlementCardSource,/<button class="ledger-compact-card ledger-compact-action ledger-home-summary-card ledger-shared-settlement-card[^>]+onclick="openLedgerSettlementPanel\(\)"/,'the entire settlement card keeps the existing Sheet entry point and shared dimensions');
 assert(settlementCardSource.includes('<h3>我的結算狀態</h3>'),'settlement card title occupies its own row');
 assert(settlementCardSource.includes('ledger-shared-settlement-amount'),'settlement amount occupies its own primary row');
-assert(settlementCardSource.includes('ledger-shared-settlement-chevron'),'the top-right corner contains only the chevron affordance');
+assert(settlementCardSource.includes('<span class="ledger-card-chevron" aria-hidden="true">〉</span>'),'the top-right corner uses the shared chevron affordance');
 assert(!settlementCardSource.includes('查看結算'),'the independent settlement action is removed');
 assert(!settlementCardSource.includes('model.details'),'dashboard omits member-level transfer details');
 

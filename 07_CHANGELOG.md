@@ -1,4 +1,9 @@
 # 07 版本紀錄
+## 2026-07-22｜Ledger 摘要卡尺寸與箭頭補正（dev，待 iPhone Safari／PWA 真機驗收）
+- 個人代購卡移除標題 Emoji，「代購」恢復沿用既有 12px 標題字級與粗細；對象人數與箭頭以 10px 間距排列，整卡仍開啟既有代購彙總 Sheet。
+- 個人代購與團體結算改用同一個 `ledger-home-summary-card` 三層 Grid 尺寸契約，以及完全相同的 `ledger-card-chevron` span／`〉` 字元／18px／700 字重／line-height／顏色與對齊規則；個別卡不再覆寫 padding、min-height 或 gap。
+- 375px／390px Browser QA 量測兩卡均為 106px 高且同寬，標題、主要資訊、底部摘要及箭頭右邊界一致，`scrollWidth == clientWidth`、兩個既有 Sheet 入口正常且 browser error 0；11 個目標測試及完整 40／40 Node tests 通過。Service Worker cache 僅由 `okayama-trip-v43` 順延至 `okayama-trip-v44`，其他策略不變。
+
 ## 2026-07-22｜Ledger 首頁摘要卡資訊補強（dev，待 iPhone Safari／PWA 真機驗收）
 - 個人「🛍 代購」改為整卡可點的三層摘要：右上顯示既有代購對象數，主區沿用 `buildProxySummary()` 的雙幣總額，底部顯示筆數及最多 2 位對象名稱（超過加「等」）；零筆只顯示「尚無代購紀錄」，既有代購彙總 Sheet 與計算不變。
 - 團體「我的結算狀態」移除獨立「查看結算」按鈕，改為整卡開啟既有結算 Sheet；右上僅保留箭頭，應收／應付底部顯示既有待處理人數及最多 2 位對象名稱，「我已結清」、「全員已結清」與無資料狀態使用對應摘要，不在首頁顯示個別金額明細。
