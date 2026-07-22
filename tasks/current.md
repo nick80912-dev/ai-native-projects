@@ -1,5 +1,13 @@
 # CURRENT(現在正在做的)
 
+## 2026-07-22｜Ledger 團體卡金額跨列置中更正（dev）
+- [x] 依 Bar 實機截圖重新確認：上一版金額只在第一個 Grid row 置中，分攤 Badge 形成第二列後仍向上偏移。
+- [x] TDD 鎖定三項結構契約：Badge 卡使用共用 `has-badges` 狀態、金額跨第 1–2 列、Badge 留在左欄第 2 列；修正前測試失敗、修正後通過。
+- [x] 個人／團體仍共用 `renderLedgerRecentRecord()` 與 `.ledger-dual-amounts`；無團體專用 CSS，無資料邏輯變更。
+- [x] Service Worker cache 僅由 v38 順延至 v39；SHELL、install／activate／fetch 不變。
+- [x] 40 個 `tests/*.test.js` 全部 exit 0；375px／390px 以實際團體「拉麵／¥6,500／NT$1,300／1 人分攤」卡量測，金額相對 body 與 `⋯` 的中心差均為 0px，`scrollWidth == clientWidth`、console error 0。
+- [ ] 等待 Bar iPhone Safari／PWA 手機驗收；未經 Bar 驗收不得標示完成。
+
 ## 2026-07-22｜Ledger 團體消費紀錄卡金額置中（dev）
 - [x] 確認個人／團體單筆卡共用 `renderLedgerRecentRecord()`、`formatLedgerDualAmounts()` 與 `.ledger-dual-amounts`，未建立團體專用 renderer 或 CSS。
 - [x] Browser 根因量測：團體卡修正前金額中心較 body 中心向上偏 12.5px，computed `align-self:auto`。

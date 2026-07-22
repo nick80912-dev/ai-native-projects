@@ -1,4 +1,7 @@
 # 07 版本紀錄
+## 2026-07-22｜Ledger 團體消費紀錄卡金額跨列置中修正（dev，待 Bar 手機驗收）
+- 修正上一版僅加入 `align-self:center`、仍只在第一個 Grid row 內置中的不足：共用單筆 renderer 會在存在 Badge 時加入 `has-badges` 內容狀態，金額欄跨越主內容與 Badge 兩列，Badge 固定留在左下列，使 JPY／TWD 金額相對整張內容區置中。
+- 此規則不是團體專用；個人待同步／代購 Badge 同樣沿用，無 Badge 的個人卡與 batch 卡不受影響。375px／390px Browser QA 以實際團體「拉麵／¥6,500／NT$1,300／1 人分攤」卡量測，金額與整個內容區及 `⋯` 的中心差均為 0px，無水平溢出、console error 0。未修改金額、分帳、同步或資料契約；Service Worker cache 僅由 `okayama-trip-v38` 順延至 `okayama-trip-v39`。
 ## 2026-07-22｜Ledger 團體消費紀錄卡金額置中（dev，待 Bar 手機驗收）
 - 個人帳與團體帳的消費紀錄卡沿用同一個 `renderLedgerRecentRecord()`、`formatLedgerDualAmounts()` 與 `.ledger-dual-amounts`；共用金額容器新增 `align-self:center`，修正團體卡因成員／分攤資訊增高時金額向上偏移，不新增團體專用樣式，也不修改金額、分帳或同步邏輯。
 - 新增共用對齊回歸測試；Service Worker cache 僅由 `okayama-trip-v37` 順延至 `okayama-trip-v38`，SHELL、install／activate／fetch 不變。375px／390px Browser QA 與完整測試結果記錄於 `tasks/current.md`，仍等待 Bar 手機驗收。
