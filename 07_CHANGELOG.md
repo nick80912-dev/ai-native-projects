@@ -1,5 +1,11 @@
 # 07 版本紀錄
 
+## 2026-07-22 — Ledger 首頁卡片對齊與單品項必填流程修正（Dev；Bar 驗收前）
+- 分帳首頁「今日」與個人「代購」／團體「結算」卡片統一使用同一套左對齊 flex、內容寬度、margin 與原生 button reset；卡片 padding、高度節奏及既有整卡點擊行為不變。
+- 單品項明細移至金額下方固定顯示，次要摘要仍只涵蓋類別、支付方式與日期，展開後只提供店家、日期時間、完整類別及支付方式控制。
+- 金額鍵盤改為 Next：有效金額直接聚焦明細且不重繪、不儲存；無效金額留在原欄並顯示既有 inline error。明細鍵盤改為 Done 並沿用 `saveLedgerEntry(false)`、pending guard、spinner、disabled 與 idempotency 流程；驗證失敗不再為明細展開次要區塊。
+- 多品項、Schema、Apps Script、Repository／Queue、結算、墓碑契約、localStorage key 與既有資料欄位均未修改。Service Worker cache 僅由 `okayama-trip-v34` 順延至 `okayama-trip-v35`，SHELL、install／activate／fetch 不變。
+
 ## 2026-07-22 — Ledger P0 三秒記帳輸入流程（Dev；Bar 驗收前）
 - 新增消費頂部將帳本與幣別整理為兩組精簡控制；390px 同列、375px 仍安全排列，視覺面約 32px、觸控區至少 40px，且未更動金額 input 的 `type`、`inputmode`、解析或換算。
 - 單品項以金額作為第一焦點與主要輸入，金額完成鍵沿用既有儲存流程；必要欄位不足時展開「類別・支付方式・日期」摘要下的次要欄位並聚焦明細。編輯既有紀錄時預設展開，切換帳本、幣別、類別或支付方式不會遺失 disclosure state。

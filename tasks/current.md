@@ -3,6 +3,8 @@
 > 更新於 2026-07-22。細任務層;里程碑看 06_ROADMAP,快照看 13_PROJECT_STATUS。
 
 ## 📌 現況
+- Ledger 首頁卡片與單品項流程修正已實作：今日／代購／結算卡片共用左對齊內容契約；單品項明細固定顯示於金額下方，金額 Enter 只前往明細，明細 Enter 才進入既有單次儲存流程；無效金額原地顯示錯誤且不重繪 Sheet。
+- 本批優先測試已通過，375px／390px Browser QA 尚待執行；Service Worker cache 僅由 v34 順延至 v35。仍等待 Bar iPhone Safari／PWA 手機驗收，未經 Bar 驗收不得標示完成。
 - Ledger P0 三秒記帳輸入流程已實作：帳本／幣別精簡控制、FAB 同手勢聚焦單品項金額、單品項摘要 disclosure、多品項店家優先與鍵盤焦點鏈、有效筆數／雙幣整單實付，以及共用儲存 pending guard。金額 input 契約、個人復原、團體重複確認、Queue 與資料契約均未變更。
 - 自動化與 Browser QA 已通過：40 個 `tests/*.test.js` 逐一以 Node 執行、文件標題檢查及 diff check 為 0 failures；375px／390px 無水平溢出，單／多品項焦點順序正確，所有可聚焦 input／textarea／select 至少 16px，console error 為 0。Service Worker 維持 v34，仍等待 Bar iOS／Android 手機驗收，未經驗收不得標示完成。
 - Ledger 三秒記帳整合批次已實作：類別群組雙幣合計與 batch 不拆分、104px 同鍵收合 Popover、團體帳單／品項分攤繼承、預設類別收合、FAB 同手勢金額 focus、個人 5 秒復原，以及個人／團體分流 Toast、重複確認與 idempotency 回歸。SW cache 已由 v33 順延至 v34。
@@ -16,10 +18,10 @@
 - 最近消費改為依目前個人／團體及正式／TEST 軌別，只顯示最新一個仍有有效消費的日期及該日全部實體紀錄；最新日全刪後回退下一個有效日期，batchId 摘要維持既有行為。
 - 完整紀錄延用同一套 `selectionMode`／`selectedRecordIds`、卡片 renderer、batch 三態與刪除流程；全選限定目前搜尋／篩選結果，個人維持本機真刪，團體維持逐筆墓碑並以既有 `enqueueBatch` 一次入列。
 - 篩選面板已加入保留搜尋字的「清除篩選」；類別與支付方式改為 34px／8px 圓角矩形，支援換行及截斷，兩區重用 `ledger-entry-divider`。現行產品沒有日期範圍 filter state，日期／類別仍是分組控制。
-- 底部分帳按鈕可從導航實際可點擊的完整紀錄返回分帳首頁，首頁再次點擊捲頂；Bottom Sheet、明細、資訊面板與對話框仍覆蓋導航，不強制顯示且不會丟失未儲存表單。Service Worker cache 最新為 v34。
+- 底部分帳按鈕可從導航實際可點擊的完整紀錄返回分帳首頁，首頁再次點擊捲頂；Bottom Sheet、明細、資訊面板與對話框仍覆蓋導航，不強制顯示且不會丟失未儲存表單。Service Worker cache 最新為 v35。
 
 ## 🔨 進行中
-- 本輪日期金額／Popover／團體分攤已通過 TDD 與 375px／390px Browser QA：日期 9px、結果摘要 11px、Popover 118px／12px／同鍵收合、帳單與單項分攤共用群組、新建團體草稿全員預選、無水平溢出且 `pageerror=0`；仍等待 Bar 手機驗收。
+- 本輪日期金額／Popover／團體分攤已通過 TDD 與 375px／390px Browser QA：日期 9px、結果摘要 11px、Popover 104px／12px／同鍵收合、帳單與單項分攤共用群組、新建團體草稿全員預選、無水平溢出且 `pageerror=0`；仍等待 Bar 手機驗收。
 - 消費卡／日期加總已依 TDD 通過 helper、首頁最新日、完整紀錄搜尋／篩選範圍、按類別排除、卡片右側置中與 11px 摘要測試；375px／390px Browser QA 通過固定雙幣加總、垂直中心、無水平溢出及 `pageerror=0`。
 - iOS 時間欄位第三輪修正已依 TDD 加入專用 wrapper 與零 flex basis 回歸斷言；桌面瀏覽器檢查僅作一般回歸，不再視為 iOS Safari 實機驗收，最終寬度結果等待 Bar 複驗。
 - 時間欄位補正已通過 375px／390px Browser QA：單／多品項的日期與時間 input 右邊界誤差均不超過 1px，群組右側保留至少 10px 內距；模擬 Dynamic Type 115% 時 `12:05`／`22:15` 完整，無水平溢出且 `pageerror=0`。仍待 Bar iOS Safari 真機驗收。
