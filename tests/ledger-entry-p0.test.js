@@ -29,35 +29,74 @@ assert.match(summaryTextSource,/draft\.occurredDate/,'the compact summary includ
 assert.match(summarySource,/toggleLedgerEntryDetails\(\)/,'clicking the summary opens the secondary fields');
 assert.match(extractFunction('selectLedgerCategory'),/updateLedgerEntrySummary\(\)/,'category changes refresh the visible compact summary without collapsing it');
 assert.match(extractFunction('selectLedgerPayMethod'),/updateLedgerEntrySummary\(\)/,'payment changes refresh the visible compact summary without collapsing it');
+assert.match(extractFunction('setLedgerDraftTrack'),/next\.detail=old\.detail/,'track switches preserve the current single-item detail');
+assert.doesNotMatch(extractFunction('selectLedgerCurrency'),/draft\.detail\s*=/,'currency switches never replace the current detail');
+assert.doesNotMatch(extractFunction('selectLedgerCategory'),/draft\.detail\s*=/,'category switches never replace the current detail');
+assert.doesNotMatch(extractFunction('selectLedgerPayMethod'),/draft\.detail\s*=/,'payment switches never replace the current detail');
 
 const secondarySource=extractFunction('renderLedgerSingleSecondaryFields');
-['renderLedgerSingleItemDetail','renderLedgerStoreField','renderLedgerOccurrenceFields','renderLedgerSingleItemCategory','renderLedgerPaymentFields'].forEach(function(name){
+assert.doesNotMatch(secondarySource,/renderLedgerSingleItemDetail/,'required detail no longer lives in the collapsed secondary disclosure');
+['renderLedgerStoreField','renderLedgerOccurrenceFields','renderLedgerSingleItemCategory','renderLedgerPaymentFields'].forEach(function(name){
   assert.match(secondarySource,new RegExp(name+'\\(draft'),'the secondary disclosure contains '+name);
 });
 assert.match(secondarySource,/draft\.entryDetailsOpen/,'secondary fields render only when their disclosure is open');
+const basicInfoSource=extractFunction('renderLedgerSingleBasicInfo');
+assert(basicInfoSource.indexOf('renderLedgerSingleItemPrimary(draft)')<basicInfoSource.indexOf('renderLedgerSingleItemDetail(draft)'),'single detail is always rendered directly after the amount group');
+assert(basicInfoSource.indexOf('renderLedgerSingleItemDetail(draft)')<basicInfoSource.indexOf('renderLedgerSingleSecondaryFields(draft)'),'always-visible detail precedes optional secondary controls');
 
 assert.match(html,/id="ledgerAmount"[^>]*type="number"[^>]*inputmode="numeric"/,'the approved amount input type and inputmode remain unchanged');
-assert.match(html,/id="ledgerAmount"[^>]*enterkeyhint="done"[^>]*onkeydown="handleLedgerAmountDone\(event\)"/,'the amount keyboard exposes Done through one shared handler');
+assert.match(html,/id="ledgerAmount"[^>]*enterkeyhint="next"[^>]*onkeydown="handleLedgerAmountNext\(event\)"/,'the amount keyboard advances through one shared Next handler');
+assert.match(html,/id="ledgerDetail"[^>]*enterkeyhint="done"[^>]*onkeydown="handleLedgerDetailDone\(event\)"/,'the detail keyboard exposes Done through the exact save handler');
 assert.match(html,/\.ledger-sheet #ledgerAmount\{[^}]*font-size:30px!important/,'the primary amount is visually prominent without weakening the global 16px floor');
 
-const doneSource=extractFunction('handleLedgerAmountDone');
-let saves=0,prevented=0;
-const doneSandbox={saveLedgerEntry(addAnother){assert.strictEqual(addAnother,false);saves++;},Promise};
+const amountNextSource=extractFunction('handleLedgerAmountNext');
+const detailDoneSource=extractFunction('handleLedgerDetailDone');
+const inlineErrorSource=extractFunction('showLedgerInlineFieldError');
+assert.doesNotMatch(amountNextSource,/saveLedgerEntry/,'amount Next never submits the entry');
+assert.match(detailDoneSource,/saveLedgerEntry\(false\)/,'detail Done uses the exact primary save path');
+let saves=0,prevented=0,detailFocuses=0,amountFocuses=0;
+let inlineError=null;
+const amountField={querySelector(){return inlineError;},appendChild(node){inlineError=node;}};
+const amountWrap={classList:{contains(name){return name==='ledger-amount-wrap';}},parentNode:amountField};
+const amountInput={value:'3500',classList:{add(name){amountInput.invalidClass=name;}},setAttribute(name,value){amountInput[name]=value;},parentNode:amountWrap,focus(){amountFocuses++;}};
+const detailInput={focus(){detailFocuses++;}};
+const doneSandbox={
+  ledgerUiState:{draft:{amount:'3500',formErrors:{}}},
+  ledgerItemAmountIsValid(item){return /^\d+$/.test(String(item.amount))&&Number(item.amount)>0;},
+  document:{getElementById(id){return id==='ledgerAmount'?amountInput:(id==='ledgerDetail'?detailInput:null);},createElement(){return {className:'',textContent:''};}},
+  saveLedgerEntry(addAnother){assert.strictEqual(addAnother,false);saves++;},
+  Object,String,Number,Promise
+};
 vm.createContext(doneSandbox);
-vm.runInContext(doneSource,doneSandbox);
-doneSandbox.handleLedgerAmountDone({key:'Enter',isComposing:false,preventDefault(){prevented++;}});
-doneSandbox.handleLedgerAmountDone({key:'Tab',isComposing:false,preventDefault(){prevented++;}});
-assert.strictEqual(saves,1,'Done invokes the exact primary save path once');
-assert.strictEqual(prevented,1,'only the handled Done key suppresses native form behavior');
+vm.runInContext(inlineErrorSource+'\n'+amountNextSource+'\n'+detailDoneSource,doneSandbox);
+doneSandbox.handleLedgerAmountNext({key:'Enter',isComposing:false,currentTarget:amountInput,preventDefault(){prevented++;}});
+doneSandbox.handleLedgerAmountNext({key:'Tab',isComposing:false,currentTarget:amountInput,preventDefault(){prevented++;}});
+doneSandbox.handleLedgerAmountNext({key:'Enter',isComposing:true,currentTarget:amountInput,preventDefault(){prevented++;}});
+doneSandbox.handleLedgerDetailDone({key:'Enter',isComposing:false,preventDefault(){prevented++;}});
+doneSandbox.handleLedgerDetailDone({key:'Tab',isComposing:false,preventDefault(){prevented++;}});
+doneSandbox.handleLedgerDetailDone({key:'Enter',isComposing:true,preventDefault(){prevented++;}});
+assert.strictEqual(detailFocuses,1,'valid amount Enter focuses detail exactly once');
+assert.strictEqual(amountFocuses,0,'valid amount Enter does not return to amount');
+assert.strictEqual(saves,1,'detail Done invokes the exact primary save path once');
+assert.strictEqual(prevented,2,'only handled non-composing Enter keys suppress native form behavior');
+amountInput.value='0';
+doneSandbox.handleLedgerAmountNext({key:'Enter',isComposing:false,currentTarget:amountInput,preventDefault(){prevented++;}});
+assert.strictEqual(amountFocuses,1,'invalid amount Enter preserves focus on the amount input');
+assert.strictEqual(detailFocuses,1,'invalid amount Enter never advances to detail');
+assert.strictEqual(doneSandbox.ledgerUiState.draft.formErrors.amount,'請輸入有效金額','invalid amount uses the existing inline validation message');
+assert.strictEqual(amountInput.invalidClass,'ledger-field-invalid','invalid amount marks the mounted input without rerendering the sheet');
+assert.strictEqual(amountInput['aria-invalid'],'true','invalid amount exposes its state to assistive technology');
+assert.strictEqual(inlineError.textContent,'請輸入有效金額','invalid amount inserts the existing inline error beside the mounted field');
+assert.doesNotMatch(amountNextSource,/renderLedgerEntrySheet/,'invalid amount keeps the mounted input and numeric keyboard intact');
 
 const validationSource=extractFunction('validateLedgerEntryDraft');
 assert.match(validationSource,/!draft\.multi[\s\S]*errors\.amount/,'single-entry validation reports an invalid amount before persistence');
 assert.match(validationSource,/!draft\.multi[\s\S]*errors\.detail/,'single-entry validation reports a missing detail before persistence');
 const saveSource=extractFunction('saveLedgerEntry');
-assert.match(saveSource,/validation\.firstField==='detail'[\s\S]*draft\.entryDetailsOpen=true/,'validation opens hidden secondary fields before focusing them');
+assert.doesNotMatch(saveSource,/validation\.firstField==='detail'[\s\S]{0,120}draft\.entryDetailsOpen=true/,'detail validation never opens optional secondary fields');
 const focusSource=extractFunction('focusLedgerValidationError');
 assert.match(focusSource,/ledgerAmount/,'invalid amount returns focus to the amount input');
-assert.match(focusSource,/ledgerDetail/,'invalid hidden detail returns focus after disclosure expansion');
+assert.match(focusSource,/ledgerDetail/,'invalid detail returns focus to the always-visible detail input');
 
 assert.match(html,/\.ledger-single-primary/,'single entry has a dedicated primary amount surface');
 assert.match(html,/\.ledger-entry-summary/,'single entry has a compact summary disclosure');

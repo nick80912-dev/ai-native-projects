@@ -69,6 +69,9 @@ assert.deepStrictEqual(Array.from(mod.filterLedgerHistoryRecords(personalHistory
 assert.deepStrictEqual(Array.from(mod.filterLedgerHistoryRecords(personalHistory,'shared','proxy'),item=>item.id),['a','b','c'],'shared history never applies the personal proxy filter');
 
 const html=mod.__htmlSource;
+assert.match(html,/\.ledger-compact-card\{[^}]*display:flex[^}]*flex-direction:column[^}]*align-items:stretch[^}]*text-align:left/,'dashboard cards share one left-aligned flex contract');
+assert.match(html,/\.ledger-compact-card h3,\.ledger-compact-card strong,\.ledger-compact-card p\{[^}]*width:100%[^}]*margin-left:0[^}]*margin-right:0/,'dashboard card copy shares the same content width and margins');
+assert.match(html,/\.ledger-compact-action\{[^}]*appearance:none[^}]*-webkit-appearance:none[^}]*font:inherit[^}]*color:inherit/,'clickable compact cards reset native button typography and appearance');
 const splitSource=html.slice(html.indexOf('function renderSplit()'),html.indexOf('/* ================= 導覽 / 啟動'));
 const ledgerUiSource=html.slice(html.indexOf('function ledgerTrackRecords()'),html.indexOf('/* ================= 導覽 / 啟動'));
 assert(html.includes("var ledgerUiState={track:'personal'"),'one ledger UI state defaults to personal');
@@ -76,6 +79,8 @@ assert(!html.includes("var ledgerTrack='personal'"),'parallel ledgerTrack state 
 assert(splitSource.includes('ledger-status-pill'),'dashboard renders the sync/rate status pill');
 assert(splitSource.includes('ledger-summary-card'),'dashboard renders the primary summary card');
 assert(splitSource.includes('ledger-today-card'),'dashboard renders the Today card');
+assert.match(splitSource,/<article class="ledger-compact-card ledger-today-card">/,'Today remains a non-clickable article');
+assert.match(splitSource,/<button class="ledger-compact-card ledger-compact-action" onclick="openLedgerProxyPanel\(\)">/,'personal proxy remains a whole-card button');
 assert(splitSource.includes('ledger-recent-list'),'dashboard renders recent expenses');
 assert(splitSource.includes('查看全部'),'dashboard links to the complete list');
 assert(splitSource.includes('openLedgerQuickEntryFromFab'),'dashboard FAB opens quick entry through the dedicated focus path');
