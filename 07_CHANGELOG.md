@@ -5,6 +5,7 @@
 - 單品項明細移至金額下方固定顯示，次要摘要仍只涵蓋類別、支付方式與日期，展開後只提供店家、日期時間、完整類別及支付方式控制。
 - 金額鍵盤改為 Next：有效金額直接聚焦明細且不重繪、不儲存；無效金額留在原欄並顯示既有 inline error。明細鍵盤改為 Done 並沿用 `saveLedgerEntry(false)`、pending guard、spinner、disabled 與 idempotency 流程；驗證失敗不再為明細展開次要區塊。
 - 多品項、Schema、Apps Script、Repository／Queue、結算、墓碑契約、localStorage key 與既有資料欄位均未修改。Service Worker cache 僅由 `okayama-trip-v34` 順延至 `okayama-trip-v35`，SHELL、install／activate／fetch 不變。
+- 40 個 `tests/*.test.js`、文件標題檢查及 375px／390px Browser QA 通過；卡片等寬等高且內容左對齊，FAB 開啟即聚焦金額，鍵盤 Next／Done 與無效金額原地錯誤符合規格，無水平溢出且 browser error 為 0。仍等待 Bar iPhone Safari／PWA 手機驗收。
 
 ## 2026-07-22 — Ledger P0 三秒記帳輸入流程（Dev；Bar 驗收前）
 - 新增消費頂部將帳本與幣別整理為兩組精簡控制；390px 同列、375px 仍安全排列，視覺面約 32px、觸控區至少 40px，且未更動金額 input 的 `type`、`inputmode`、解析或換算。

@@ -4,7 +4,7 @@
 
 ## 📌 現況
 - Ledger 首頁卡片與單品項流程修正已實作：今日／代購／結算卡片共用左對齊內容契約；單品項明細固定顯示於金額下方，金額 Enter 只前往明細，明細 Enter 才進入既有單次儲存流程；無效金額原地顯示錯誤且不重繪 Sheet。
-- 本批優先測試已通過，375px／390px Browser QA 尚待執行；Service Worker cache 僅由 v34 順延至 v35。仍等待 Bar iPhone Safari／PWA 手機驗收，未經 Bar 驗收不得標示完成。
+- 本批 40 個 Node tests、文件標題檢查與 375px／390px Browser QA 已通過：卡片等寬等高且內容左對齊、代購整卡可點、FAB 同步聚焦金額、無效金額原地顯示錯誤、有效金額 Enter 前往明細、明細 Enter 僅儲存一次，無水平溢出且 browser error 為 0；Service Worker cache 僅由 v34 順延至 v35。仍等待 Bar iPhone Safari／PWA 手機驗收，未經 Bar 驗收不得標示完成。
 - Ledger P0 三秒記帳輸入流程已實作：帳本／幣別精簡控制、FAB 同手勢聚焦單品項金額、單品項摘要 disclosure、多品項店家優先與鍵盤焦點鏈、有效筆數／雙幣整單實付，以及共用儲存 pending guard。金額 input 契約、個人復原、團體重複確認、Queue 與資料契約均未變更。
 - 自動化與 Browser QA 已通過：40 個 `tests/*.test.js` 逐一以 Node 執行、文件標題檢查及 diff check 為 0 failures；375px／390px 無水平溢出，單／多品項焦點順序正確，所有可聚焦 input／textarea／select 至少 16px，console error 為 0。Service Worker 維持 v34，仍等待 Bar iOS／Android 手機驗收，未經驗收不得標示完成。
 - Ledger 三秒記帳整合批次已實作：類別群組雙幣合計與 batch 不拆分、104px 同鍵收合 Popover、團體帳單／品項分攤繼承、預設類別收合、FAB 同手勢金額 focus、個人 5 秒復原，以及個人／團體分流 Toast、重複確認與 idempotency 回歸。SW cache 已由 v33 順延至 v34。
