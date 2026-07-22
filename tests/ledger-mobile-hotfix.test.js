@@ -24,7 +24,7 @@ assert(html.includes('.ledger-time-input-wrap{display:flex;width:100%;min-width:
 assert(html.includes('aria-label="開啟日期選擇器"')&&html.includes('<svg aria-hidden="true"'),'calendar control uses the approved accessible inline SVG');
 
 assert(html.includes('function renderLedgerStoreField('),'store is a shared form field rather than disclosure-only content');
-assert(html.includes("renderLedgerStoreField(draft,true)+renderLedgerPaymentFields(draft,true)")&&html.includes("renderLedgerStoreField(draft)+renderLedgerSingleItemCategory(draft)+renderLedgerPaymentFields(draft,false)"),'multi store precedes payment while single store stays directly below the basic information card');
+assert(html.includes("renderLedgerStoreField(draft,true)+renderLedgerMultiSummary(draft)")&&html.includes("renderLedgerStoreField(draft)+renderLedgerOccurrenceFields(draft,true)+renderLedgerSingleItemCategory(draft)+renderLedgerPaymentFields(draft,false)"),'multi store remains first while the single optional store, occurrence, category, and payment fields share the approved secondary disclosure');
 assert(html.includes('更多細節（備註選填）'),'details disclosure is note-only');
 assert(!html.includes('更多細節（店家、備註，皆為選填）'),'store is removed from the details disclosure');
 
