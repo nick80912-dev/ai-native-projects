@@ -1,4 +1,10 @@
 # 07 版本紀錄
+## 2026-07-22｜Ledger 團體首頁緊湊化與待同步操作改善（dev，待 iPhone Safari／PWA 真機驗收）
+- 團體首頁移除獨立「今日」卡，順序調整為團體總支出、我的結算狀態、最近消費（內含既有 `period.today` 筆數／目前 JPY 或 TWD 金額）、最近消費紀錄；今日零筆顯示「今日尚無消費」。個人帳的今日／代購雙卡、最近消費卡、付款者與分攤人數均維持不變。
+- 待同步狀態改為可開啟的同步面板，直接以既有 `pendingCount()`、`queuedRecords()` 呈現待同步筆數、最近錯誤、明細、目前顯示幣別金額與建立時間；「重新同步」只呼叫既有 `flushQueue()`，同步中停用按鈕，成功／部分成功／失敗依實際剩餘佇列顯示結果，未直接清除或跳過紀錄。
+- 新增單次同步 coordinator，與 repository 原有 `flushInFlight` 雙層防止啟動、回前景、網路恢復及手動點擊同時觸發重複 flush；client-generated ID、逐筆成功後才移出佇列及 Apps Script API 格式均未修改。Service Worker cache 僅由 `okayama-trip-v40` 順延至 `okayama-trip-v41`，SHELL、install／activate／fetch 不變。
+- 首頁／同步／結算與既有行動版 SW 目標測試已通過；375px／390px 以 scoped flex-wrap、`min-width:0` 與不換行操作區保護，實際 iPhone Safari／PWA 的前景恢復、離線補送、部分成功及無水平捲動仍待 Bar 真機驗收。
+
 ## 2026-07-22｜Ledger 團體「我的結算狀態」全寬卡（dev，待 Bar 手機驗收）
 - 團體總支出下方新增唯一的全寬「我的結算狀態」卡，直接沿用 `buildMemberBalances()`、`buildTransferSuggestions()` 與 `ledgerCurrentMemberSettlement()`，呈現目前成員的應收／應付、我已結清或全員已結清；待處理明細最多列 2 筆，資料不足時不推測付款進度。
 - 原本與「今日」並排的結算卡移除，團體「今日」改為全寬；個人帳仍維持「今日／代購」雙卡。團體最近消費補上「付款者 · N 人分攤」，目前成員付款且涵蓋全員時顯示「我付款 · 全員分攤」。

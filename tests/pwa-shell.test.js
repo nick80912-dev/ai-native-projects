@@ -54,7 +54,7 @@ assert.ok(manifest.icons.some((icon) => icon.src === 'icon-maskable-192.png' && 
 assert.ok(manifest.icons.some((icon) => icon.src === 'icon-maskable-512.png' && icon.purpose === 'maskable'), 'manifest uses the maskable 512px icon');
 
 const serviceWorker = fs.readFileSync(serviceWorkerPath, 'utf8');
-assert.match(serviceWorker, /var CACHE_NAME = 'okayama-trip-v40';/, 'service worker cache is exactly v40');
+assert.match(serviceWorker, /var CACHE_NAME = 'okayama-trip-v41';/, 'service worker cache is exactly v41');
 assert.doesNotMatch(serviceWorker, /okayama-trip-v18/, 'retired v18 cache is not retained');
 assert.match(serviceWorker, /'\.\/icon-maskable-192\.png'/, 'service worker caches the maskable 192px icon');
 assert.match(serviceWorker, /'\.\/icon-maskable-512\.png'/, 'service worker caches the maskable 512px icon');

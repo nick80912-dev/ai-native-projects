@@ -21,6 +21,8 @@ function loadModule(){
     fetch(){return Promise.reject(new Error('network disabled'));},setTimeout,clearTimeout,
     Date,Math,Promise,JSON,String,Number,isFinite,
     timestampDate(value){return new Date(Number(value));},AppLog:{repo(){},sync(){}},
+    formatLedgerCurrencyAmount(currency,amount){return (currency==='TWD'?'NT$':'¥')+Math.round(Number(amount||0)).toLocaleString();},
+    escapeHtml(value){return String(value);},
     renderSplit(){},updateLedgerPendingStatus(){}
   };
   vm.createContext(sandbox);
@@ -61,6 +63,17 @@ assert.strictEqual(summary.today.count,15,'Today card uses the device-local date
 assert.strictEqual(summary.total.amountJpy,records.reduce((sum,record)=>sum+record.amountJpy,0));
 assert.strictEqual(summary.today.amountTwd,records.slice(2).reduce((sum,record)=>sum+record.amountTwd,0));
 
+assert.strictEqual(typeof mod.renderLedgerRecentHeading,'function','dashboard exposes one recent heading renderer');
+const sharedRecentHeading=mod.renderLedgerRecentHeading(true,summary,'JPY',summary.today.amountJpy,'<button>選取</button>');
+assert(sharedRecentHeading.includes('最近消費'),'shared recent heading keeps the section title');
+assert(sharedRecentHeading.includes('今日 15 筆 · ¥'),'shared recent heading integrates the existing Today period summary');
+assert(sharedRecentHeading.includes('查看全部'),'shared recent heading keeps the complete history entry');
+assert(!sharedRecentHeading.includes('ledger-today-card'),'shared recent heading does not recreate a standalone Today card');
+const emptyTodayHeading=mod.renderLedgerRecentHeading(true,{today:{count:0}},'TWD',0,'');
+assert(emptyTodayHeading.includes('今日尚無消費'),'shared recent heading has an explicit zero-record state');
+const personalRecentHeading=mod.renderLedgerRecentHeading(false,summary,'JPY',summary.today.amountJpy,'');
+assert(!personalRecentHeading.includes('今日 15 筆'),'personal recent heading does not absorb the personal Today card');
+
 assert.strictEqual(mod.ledgerLocalDateKey('not-a-date'),'','invalid dates do not create a misleading group key');
 assert.deepStrictEqual(Array.from(mod.selectLatestLedgerDateExpenses([])),[],'an empty track has no recent date');
 assert.strictEqual(mod.ledgerSharedRecordParticipantLabel({member:'Bar',participants:'["Bar","Amy"]'},'Bar',['Bar','Amy']),'我付款 · 全員分攤','the current payer and full registered group use the compact shared label');
@@ -82,20 +95,24 @@ assert(html.includes("var ledgerUiState={track:'personal'"),'one ledger UI state
 assert(!html.includes("var ledgerTrack='personal'"),'parallel ledgerTrack state is removed');
 assert(splitSource.includes('ledger-status-pill'),'dashboard renders the sync/rate status pill');
 assert(splitSource.includes('ledger-summary-card'),'dashboard renders the primary summary card');
+assert(splitSource.includes("shared?'團體總支出 · '+period.count+' 筆紀錄'"),'shared primary card explicitly labels the total-spend section');
 assert(splitSource.includes('ledger-today-card'),'dashboard renders the Today card');
 assert.match(splitSource,/<article class="ledger-compact-card ledger-today-card">/,'Today remains a non-clickable article');
+assert(splitSource.includes("var todayCard=shared?'':"),'standalone Today card is personal-only');
 assert.match(splitSource,/<button class="ledger-compact-card ledger-compact-action" onclick="openLedgerProxyPanel\(\)">/,'personal proxy remains a whole-card button');
 assert(settlementCardSource.includes('ledger-shared-settlement-card'),'shared dashboard renders the full-width settlement status card');
 assert(settlementCardSource.includes('我的結算狀態'),'shared settlement card uses the approved title');
-assert(splitSource.includes('ledger-shared-summary-grid'),'shared Today card uses its own full-width summary layout');
+assert(!splitSource.includes('ledger-shared-summary-grid'),'shared dashboard no longer reserves a standalone Today-card grid');
 assert.strictEqual((settlementCardSource.match(/onclick="openLedgerSettlementPanel\(\)"/g)||[]).length,1,'shared dashboard keeps exactly one settlement entry');
-assert(splitSource.indexOf('renderLedgerSettlementCard')<splitSource.indexOf('ledger-shared-summary-grid'),'shared settlement card appears before the Today summary');
+assert(splitSource.indexOf('renderLedgerSettlementCard')<splitSource.indexOf('renderLedgerRecentHeading'),'shared settlement card appears before recent spending with integrated Today summary');
 assert(splitSource.includes('ledger-recent-list'),'dashboard renders recent expenses');
-assert(splitSource.includes('查看全部'),'dashboard links to the complete list');
+assert(html.includes('查看全部 〉'),'dashboard links to the complete list');
 assert(splitSource.includes('openLedgerQuickEntryFromFab'),'dashboard FAB opens quick entry through the dedicated focus path');
 assert(!splitSource.includes('id="ledgerAmount"'),'amount input no longer lives in the dashboard renderer');
 assert(splitSource.includes('selectLatestLedgerDateExpenses(records)'),'dashboard selects the newest effective local date through the tested selector');
 assert(splitSource.includes("summarizeLedgerRecords(records,ledgerUniverseMode()==='test')"),'TEST dashboard includes only its already-selected universe in totals');
+assert(splitSource.includes("pending=shared?ledgerRepository.pendingCount():0"),'sync pending count comes only from the repository queue');
+assert(settlementCardSource.includes('model.pendingCount'),'settlement people count remains a separate settlement-card value');
 assert(ledgerUiSource.includes('groupLedgerExpensesByDate'),'dashboard uses the tested date grouping');
 assert(ledgerUiSource.includes("spendLedgerRecords(mergedLedgerRecords())"),'shared history consumes effective visible expenses');
 assert(ledgerUiSource.includes('ledgerUniverseRecords'),'shared dashboard selects one formal/TEST universe');
@@ -109,5 +126,8 @@ assert(!detailSource.includes("['批次 ID',record.batchId]"),'consumer detail h
 assert(!detailSource.includes("['同步狀態',record.pending?'待同步':'已同步']"),'consumer detail hides queue internals');
 assert(splitSource.includes('目前顯示測試帳本'),'TEST banner explains which universe is visible');
 assert(splitSource.includes('不影響正式分帳'),'TEST banner confirms formal data is isolated');
+assert.match(html,/\.ledger-shared-dashboard \.ledger-recent-section\{[^}]*margin-top:-?\d+px/,'shared dashboard uses a scoped compact vertical rhythm');
+assert.match(html,/\.ledger-section-head\{[^}]*min-width:0[^}]*flex-wrap:wrap/,'recent heading can wrap safely at 375px and 390px');
+assert.match(html,/\.ledger-section-head-actions\{[^}]*flex:0 0 auto[^}]*white-space:nowrap/,'recent actions stay readable without horizontal overflow');
 
 console.log('ledger dashboard tests passed');

@@ -1,5 +1,15 @@
 # CURRENT(現在正在做的)
 
+## 2026-07-22｜Ledger 團體首頁緊湊化與待同步改善（dev）
+- [x] 團體首頁移除獨立今日卡，使用既有 `buildLedgerPeriodSummary(...).today` 將今日筆數／目前顯示幣別金額併入最近消費；零筆顯示「今日尚無消費」。個人今日／代購雙卡不變。
+- [x] 團體排列為總支出 → 我的結算狀態 → 最近消費（今日摘要）→ 消費紀錄；標題與操作區支援換行，375px／390px 不以固定寬度擠壓內容。
+- [x] 頁首待同步筆數只取 `ledgerRepository.pendingCount()`；結算待處理人數只取 settlement model，兩者沒有共用 state 或文案。
+- [x] 同步面板以 `queuedRecords()` 顯示明細、目前幣別金額、建立時間與最近錯誤；重新同步沿用 `flushQueue()`，同步中 disabled，成功、部分成功及失敗保留實際佇列語意。
+- [x] 啟動、回前景、pageshow 與網路恢復共用 single-flight coordinator；repository 原有 `flushInFlight`、穩定 ID 與成功後逐筆移除規則不變，未修改 Apps Script API 或部署後端。
+- [x] Service Worker cache 僅由 v40 順延至 v41；SHELL、install／activate／fetch 不變。首頁、同步、結算與既有行動版 SW 目標測試全部 exit 0。
+- [x] 提交前完整 `tests/*.test.js` 僅執行一次：39／40 通過，唯一失敗為 `ledger-list-actions.test.js` 仍以全檔 source index 檢查已抽出的最近消費 renderer；更新該既有斷言後單獨重跑通過，依限制未再執行第二次完整套件。文件標題與 diff check 於提交前另行驗證。
+- [ ] 等待 Bar iPhone Safari／PWA 真機驗收：375px／390px、前景／網路恢復、逾時錯誤、部分成功、PWA 舊 cache 更新、無重複寫入與無水平捲動。
+
 ## 2026-07-22｜Ledger 團體「我的結算狀態」全寬卡（dev）
 - [x] 團體總支出下方改為唯一全寬結算狀態卡；應收／應付、我已結清與全員已結清均直接使用既有餘額及轉帳建議結果，不另寫結算演算法。
 - [x] 待處理對象最多顯示 2 位；現有資料無法證明還款完成時只顯示「尚待結算／待處理」，不推測已付款人數。

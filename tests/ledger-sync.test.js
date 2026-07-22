@@ -40,6 +40,16 @@ function loadLedgerModule(){
 
 (async function(){
   const mod = loadLedgerModule();
+  const html=fs.readFileSync('index.html','utf8');
+
+  assert.strictEqual(typeof mod.formatLedgerSyncRecordTime,'function','sync panel time formatter is testable with the queue helpers');
+  assert.notStrictEqual(mod.formatLedgerSyncRecordTime('2026-07-22T08:30:00.000Z'),'建立時間不明','ISO queue timestamps remain readable in the sync panel');
+  assert(html.includes('待同步 '+"'+count+'"+' 筆紀錄'),'sync panel renders the live pending count');
+  assert(html.includes('record.detail||\'未命名明細\'')&&html.includes('formatLedgerCurrencyAmount(currency'),'sync panel renders queued detail and amount');
+  assert(html.includes('formatLedgerSyncRecordTime(record.time)'),'sync panel renders each queued creation time');
+  assert(html.includes('onclick="retryLedgerQueueSync()"'),'sync panel exposes the manual retry action');
+  assert(html.includes("autoRetryLedgerQueue('startup')")&&html.includes("autoRetryLedgerQueue('online')")&&html.includes("autoRetryLedgerQueue('foreground')"),'startup, network recovery, and foreground reuse the same sync coordinator');
+  assert(html.includes("if(outcome.ok){if(document.getElementById('ledgerSyncPanelBody'))closeLedgerInfoSheet();toast('同步完成')"),'successful manual sync restores the normal header render and reports completion');
 
   const universeFormal={id:'universe-formal',time:'2026-07-19T00:00:00.000Z',member:'黃柏',recordType:'expense',detail:'晚餐',amountJpy:100,amountTwd:20};
   const universeTest={id:'universe-test',time:'2026-07-19T00:01:00.000Z',member:'黃柏',recordType:'expense',detail:'[TEST] 晚餐',amountJpy:900,amountTwd:180};
@@ -121,6 +131,48 @@ function loadLedgerModule(){
   const flushed = await repo.flushQueue();
   assert.strictEqual(flushed.sent,1,'flush sends the queued record');
   assert.strictEqual(repo.pendingCount(),0,'delivered record leaves the local queue');
+
+  let releaseConcurrentPost;
+  let concurrentPosts=0;
+  const concurrentRepo=mod.createLedgerRepository({
+    storage:createStorage(),
+    post(){concurrentPosts++;return new Promise(function(resolve){releaseConcurrentPost=resolve;});}
+  });
+  concurrentRepo.enqueueBatch([{id:'single-flight',member:'Bar',category:'餐飲',detail:'晚餐',amountJpy:600,amountTwd:120,note:''}]);
+  await new Promise(function(resolve){setTimeout(resolve,0);});
+  const concurrentFirst=concurrentRepo.flushQueue();
+  const concurrentSecond=concurrentRepo.flushQueue();
+  assert.strictEqual(concurrentFirst,concurrentSecond,'repository returns the same in-flight flush promise');
+  assert.strictEqual(concurrentPosts,1,'concurrent flush requests never start a second write');
+  releaseConcurrentPost({ok:true});
+  await concurrentFirst;
+
+  assert.strictEqual(typeof mod.createLedgerQueueSyncCoordinator,'function','sync UI reuses a testable single-flight coordinator');
+  let coordinatorFlushes=0;
+  let releaseCoordinator;
+  const coordinatorEvents=[];
+  const coordinatorRepo={
+    remaining:3,
+    pendingCount(){return this.remaining;},
+    flushQueue(){coordinatorFlushes++;return new Promise(function(resolve){releaseCoordinator=resolve;});},
+    queuedRecords(){return [];}
+  };
+  const coordinator=mod.createLedgerQueueSyncCoordinator(coordinatorRepo,{
+    onStart(count,trigger){coordinatorEvents.push(['start',count,trigger]);},
+    onFinish(outcome){coordinatorEvents.push(['finish',outcome.sent,outcome.pending,outcome.trigger]);}
+  });
+  const manualFirst=coordinator.flush('manual');
+  const manualSecond=coordinator.flush('manual');
+  assert.strictEqual(manualFirst,manualSecond,'sync coordinator disables duplicate retries while syncing');
+  assert.strictEqual(coordinatorFlushes,1,'manual retry calls the existing flushQueue exactly once');
+  assert.strictEqual(coordinator.isSyncing(),true,'sync coordinator exposes the disabled/syncing state');
+  coordinatorRepo.remaining=1;
+  releaseCoordinator({ok:false,sent:2,pending:1,error:new Error('連線逾時')});
+  const partialOutcome=await manualFirst;
+  assert.deepStrictEqual(JSON.parse(JSON.stringify(partialOutcome)),{ok:false,sent:2,pending:1,error:'連線逾時',trigger:'manual'},'partial sync reports sent and remaining records independently');
+  assert.strictEqual(coordinator.lastError(),'連線逾時','latest understandable sync error remains available to the panel');
+  assert.strictEqual(coordinator.isSyncing(),false,'retry is enabled again after the existing flush settles');
+  assert.deepStrictEqual(coordinatorEvents,[['start',3,'manual'],['finish',2,1,'manual']],'coordinator emits one start and one finish update');
 
   const dupStorage = createStorage();
   const dupRepo = mod.createLedgerRepository({

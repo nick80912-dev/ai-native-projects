@@ -60,8 +60,9 @@ assert(detail.includes('formatLedgerLocalOccurrence'),'detail uses a local-reada
 assert(html.includes('function formatLedgerLocalOccurrence('),'local occurrence formatting is shared');
 assert(html.includes('尚無消費紀錄')&&html.includes('點右下角 ＋ 開始記帳'),'recent empty state explains the next action');
 
-const copyIndex=html.indexOf('個人帳留在本機；團體帳跨裝置同步。');
-const recentIndex=html.indexOf('<h3>最近消費</h3>');
-assert(copyIndex>0&&copyIndex<recentIndex,'dual-track explanation sits immediately before the recent section');
+const splitSource=html.slice(html.indexOf('function renderSplit()'),html.indexOf('/* ================= 導覽 / 啟動'));
+const copyIndex=splitSource.indexOf('個人帳留在本機；團體帳跨裝置同步。');
+const recentIndex=splitSource.indexOf('renderLedgerRecentHeading');
+assert(copyIndex>0&&copyIndex<recentIndex,'dual-track explanation remains in the summary before the recent heading renderer');
 
 console.log('ledger list action tests passed');
