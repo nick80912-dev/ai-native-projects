@@ -3,6 +3,7 @@
 > 更新於 2026-07-22。細任務層;里程碑看 06_ROADMAP,快照看 13_PROJECT_STATUS。
 
 ## 📌 現況
+- Ledger 頁面說明列緊湊化已實作並通過 375px／390px Browser QA：匯率與「個人帳留在本機；團體帳跨裝置同步。」已移至個人／團體切換列下方同一 flex row，分別靠左／靠右且垂直中心差 0px；匯率與說明為 10px，原中段說明移除，最近消費上方有效間距由 12px 收為 8px。個人／團體均無重疊或水平溢出、browser error 為 0，SW cache 僅由 v36 順延至 v37；仍等待 Bar 手機驗收，未經驗收不得標示完成。
 - Ledger 首頁卡片與單品項流程修正已實作：今日／代購／結算卡片共用左對齊內容契約；單品項明細固定顯示於金額下方，金額 Enter 只前往明細，明細 Enter 才進入既有單次儲存流程；無效金額原地顯示錯誤且不重繪 Sheet。
 - Ledger 單品項必填群組 A 方案已實作並通過 QA：金額在上、明細在下，共用同一張 `.ledger-single-primary` 白底圓角群組與完全相同的左右 content padding；375px／390px 的左右邊界誤差均為 0px。明細維持既有 46px 高度、16px 字級、placeholder、Enter Done、驗證及儲存行為，欄位間距 10px且無分隔線；無水平溢出、browser error 為 0，SW cache 僅由 v35 順延至 v36。仍等待 Bar iPhone Safari／PWA 手機驗收，未經 Bar 驗收不得標示完成。
 - 本批 40 個 Node tests、文件標題檢查與 375px／390px Browser QA 已通過：卡片等寬等高且內容左對齊、代購整卡可點、FAB 同步聚焦金額、無效金額原地顯示錯誤、有效金額 Enter 前往明細、明細 Enter 僅儲存一次，無水平溢出且 browser error 為 0；Service Worker cache 僅由 v34 順延至 v35。仍等待 Bar iPhone Safari／PWA 手機驗收，未經 Bar 驗收不得標示完成。

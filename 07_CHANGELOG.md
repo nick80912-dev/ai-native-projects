@@ -1,5 +1,10 @@
 # 07 版本紀錄
 
+## 2026-07-22 — Ledger 頁面說明列緊湊化（Dev；Bar 驗收前）
+- 將「個人帳留在本機；團體帳跨裝置同步。」由卡片區下方移至個人／團體切換列正下方，與既有 `JPY 1 ≈ TWD 匯率` 共用單一 flex meta row；匯率靠左、保存說明靠右且垂直置中，原中段重複說明已移除。
+- 匯率字級由 12px 收為 10px，右側說明使用更淡的 10px 次要文字；最近消費 section 的有效上方間距由 12px 收為 8px。未修改匯率數值、帳本切換、同步方式或資料邏輯。
+- 375px／390px Browser QA 的個人／團體軌均只有一份保存說明，左右內容至少保留 55px 間距、垂直中心差 0px、最近消費上方間距為 8px，無水平溢出且 browser error 為 0。Service Worker cache 僅由 `okayama-trip-v36` 順延至 `okayama-trip-v37`，SHELL、install／activate／fetch 不變；仍等待 Bar iPhone Safari／PWA 手機驗收。
+
 ## 2026-07-22 — Ledger 單品項金額／明細同群組（Dev；Bar 驗收前）
 - 單品項新增／編輯頁將金額與明細上下收進同一張 `.ledger-single-primary` 白底圓角群組，兩個 input 共用相同 content padding 並完全對齊左右邊界；欄位間距為 10px且不新增分隔線。
 - 明細沿用既有 46px 高度、16px 字級、placeholder、Enter Done、inline validation 與儲存流程；62px 最小高度只套用金額 input。多品項、Schema、Apps Script、Repository／Queue、結算、墓碑契約、localStorage key 與資料欄位均未修改。
