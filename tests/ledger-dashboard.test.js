@@ -103,11 +103,16 @@ assert(splitSource.includes(":'累計支出 · '+period.count+' 筆紀錄'"),'pe
 assert(!splitSource.includes('ledger-today-card'),'neither ledger track renders a standalone Today card');
 assert.match(splitSource,/<button class="ledger-compact-card ledger-compact-action ledger-proxy-summary-card" onclick="openLedgerProxyPanel\(\)">/,'personal proxy remains a whole-card button');
 assert(splitSource.includes('ledger-proxy-summary-head'),'personal proxy keeps its title and right chevron');
+assert(splitSource.includes('ledgerProxyCardSummary(proxy)'),'personal proxy uses a presentation-only summary without changing proxy calculations');
+assert(splitSource.includes('🛍 代購'),'personal proxy card renders the enriched title');
+assert(splitSource.includes('var proxyAmounts=proxy&&proxy.proxyCount?'),'shared mode never reads proxy fields after intentionally selecting a null proxy summary');
 assert(splitSource.includes("proxy.proxyTotal.amountJpy")&&splitSource.includes("proxy.proxyTotal.amountTwd"),'personal proxy renders its existing dual-currency total');
 assert(settlementCardSource.includes('ledger-shared-settlement-card'),'shared dashboard renders the full-width settlement status card');
 assert(settlementCardSource.includes('我的結算狀態'),'shared settlement card uses the approved title');
 assert(!splitSource.includes('ledger-shared-summary-grid'),'shared dashboard no longer reserves a standalone Today-card grid');
 assert.strictEqual((settlementCardSource.match(/onclick="openLedgerSettlementPanel\(\)"/g)||[]).length,1,'shared dashboard keeps exactly one settlement entry');
+assert.match(settlementCardSource,/<button class="ledger-compact-card ledger-compact-action ledger-shared-settlement-card/,'shared settlement entry is the whole card');
+assert(!settlementCardSource.includes('查看結算'),'shared settlement card has no independent action button');
 assert(splitSource.indexOf('renderLedgerSettlementCard')<splitSource.indexOf('renderLedgerRecentHeading'),'shared settlement card appears before recent spending');
 assert(splitSource.includes('ledger-recent-list'),'dashboard renders recent expenses');
 assert(html.includes('查看全部 〉'),'dashboard links to the complete list');
@@ -140,6 +145,7 @@ assert(!/(^|;)height:\s*\d/.test(proxyCardCss),'personal proxy card has no clipp
 const settlementCardCss=(html.match(/\.ledger-shared-settlement-card\{([^}]*)\}/)||[])[1]||'';
 assert(settlementCardCss.includes('min-height:0')&&settlementCardCss.includes('padding:10px 12px'),'settlement card uses compact natural height and padding');
 assert(!/(^|;)height:\s*\d/.test(settlementCardCss),'settlement card has no clipping fixed height');
-assert.match(html,/\.ledger-shared-settlement-footer\{[^}]*display:flex[^}]*flex-wrap:nowrap/,'375px and 390px keep settlement progress and action in one row');
+assert.match(html,/\.ledger-proxy-summary-head,\.ledger-shared-settlement-head\{[^}]*display:flex[^}]*min-width:0/,'375px and 390px keep compact card headings overflow-safe');
+assert.match(html,/\.ledger-shared-settlement-progress\{[^}]*overflow-wrap:anywhere/,'long settlement summaries wrap without horizontal overflow');
 
 console.log('ledger dashboard tests passed');

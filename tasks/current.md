@@ -1,5 +1,15 @@
 # CURRENT(現在正在做的)
 
+## 2026-07-22｜Ledger 代購／結算摘要卡資訊補強（dev）
+- [x] 個人代購卡維持整卡 `openLedgerProxyPanel()`，以既有 `proxyTotal` 顯示雙幣總額，並新增對象人數、代購筆數與最多 2 位對象名稱；超過加「等」，零筆顯示「尚無代購紀錄」。
+- [x] 團體結算卡改為整卡 `openLedgerSettlementPanel()`，右上僅保留箭頭；應收／應付摘要顯示待處理人數與最多 2 位既有 counterpart 名稱，首頁不渲染每人金額明細。
+- [x] 我已結清顯示「團體尚待 N 人」、全員已結清顯示「所有款項都已處理」、尚無支出時顯示「尚無結算資料／新增團體支出後會自動計算」，不推測付款完成狀態。
+- [x] 兩卡移除不必要固定最小高度，以 scoped `min-height:0`、10px／12px padding、gap、`min-width:0` 與 `overflow-wrap` 保護 375px／390px 自然高度、長金額及無水平溢出。
+- [x] 未修改待同步面板與 coordinator、最近消費、Apps Script API、`buildProxySummary()`、`buildMemberBalances()`、`buildTransferSuggestions()` 或新增／編輯／刪除流程。
+- [x] Service Worker cache 僅由 v42 順延至 v43；SHELL、install／activate／fetch 不變。
+- [x] 首頁、代購、結算、同步、行動版與 PWA 共 11 個目標測試通過；提交前完整 `tests/*.test.js` 僅執行一次，40／40 通過。375px／390px Browser QA 確認兩卡自然高度、整卡 Sheet 入口及 `scrollWidth == clientWidth`。
+- [ ] 等待 Bar iPhone Safari／PWA 真機驗收：375px／390px 自然高度、長 JPY／TWD 金額、兩卡整卡點擊、Dynamic Type、無文字裁切／重疊／水平捲動及 SW v43 更新。
+
 ## 2026-07-22｜Ledger 首頁資訊去重與結算卡版面補正（dev）
 - [x] 個人首頁移除獨立今日卡，排列改為累計支出 → 代購 → 最近消費 → 日期與紀錄；代購卡維持整卡 `openLedgerProxyPanel()`、既有筆數／總額資料與雙幣顯示。
 - [x] 團體最近消費標題移除固定今日筆數／金額，排列維持團體總支出 → 我的結算狀態 → 最近消費 → 日期與紀錄。

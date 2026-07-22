@@ -177,6 +177,7 @@ const multipleReceivable=plain(mod.ledgerSettlementStatusCardModel(settlementFix
 assert.strictEqual(multipleReceivable.label,'應收','multiple debtors keep the current member receivable status');
 assert.strictEqual(multipleReceivable.amount,4500,'the status amount comes from the existing current-member balance');
 assert.strictEqual(multipleReceivable.pendingCount,2,'the status counts confirmed counterpart members');
+assert.deepStrictEqual(multipleReceivable.pendingNames,['小美','小華'],'the status model exposes the already-derived counterpart names for the compact card');
 assert.deepStrictEqual(multipleReceivable.details,['小美待付 ¥2,000','小華待付 ¥2,500'],'at most two confirmed incoming transfers are summarized');
 
 const oneReceivable=plain(mod.ledgerSettlementStatusCardModel(settlementFixture(
@@ -217,10 +218,13 @@ assert.strictEqual(otherCurrencyOnly.currency,'TWD','a zero preferred-currency b
 assert.strictEqual(otherCurrencyOnly.label,'應付','the fallback still reports the correct direction');
 
 assert.strictEqual(typeof mod.ledgerSettlementCardProgress,'function','settlement card exposes one progress-copy rule');
-assert.strictEqual(mod.ledgerSettlementCardProgress(multipleReceivable),'尚待 2 人','receivable card reports counterpart count without payment inference');
-assert.strictEqual(mod.ledgerSettlementCardProgress(payable),'尚待 1 人','payable card reports counterpart count without payment inference');
+assert.strictEqual(mod.ledgerSettlementCardProgress(multipleReceivable,true),'尚待 2 人 · 小美、小華','receivable card reports counterpart count and at most two names without payment inference');
+assert.strictEqual(mod.ledgerSettlementCardProgress(payable,true),'尚待 1 人 · 小明','payable card names the confirmed recipient');
 assert.strictEqual(mod.ledgerSettlementCardProgress(selfSettled),'團體尚待 2 人','self-settled card reports remaining group participants');
-assert.strictEqual(mod.ledgerSettlementCardProgress(allSettled),'目前沒有待處理款項','all-settled card uses the approved empty progress copy');
+assert.strictEqual(mod.ledgerSettlementCardProgress(allSettled,true),'所有款項都已處理','all-settled card uses the approved completed copy');
+assert.strictEqual(mod.ledgerSettlementCardProgress(allSettled,false),'新增團體支出後會自動計算','a ledger without settlement data uses the approved guidance copy');
+const threePending=Object.assign({},multipleReceivable,{pendingCount:3,pendingNames:['小明','小華','媽媽']});
+assert.strictEqual(mod.ledgerSettlementCardProgress(threePending,true),'尚待 3 人 · 小明、小華等','settlement card caps names at two and adds the overflow suffix');
 
 const html=fs.readFileSync('index.html','utf8');
 const settlementSource=html.slice(html.indexOf('function ledgerCurrentMemberSettlement('),html.indexOf('function showLedgerFullList('));
@@ -232,10 +236,11 @@ assert(!settlementSource.includes('paidJpy+='),'UI does not reimplement paid bal
 assert(settlementSource.includes('balances.invalidRecords'),'expanded settlement surfaces invalid records');
 assert(!settlementSource.includes('人已結清'),'dashboard does not invent repayment progress absent from the existing engine');
 const settlementCardSource=html.slice(html.indexOf('function renderLedgerSettlementCard('),html.indexOf('function ledgerSettlementLines('));
+assert.match(settlementCardSource,/<button class="ledger-compact-card ledger-compact-action ledger-shared-settlement-card[^>]+onclick="openLedgerSettlementPanel\(\)"/,'the entire settlement card keeps the existing Sheet entry point');
 assert(settlementCardSource.includes('<h3>我的結算狀態</h3>'),'settlement card title occupies its own row');
 assert(settlementCardSource.includes('ledger-shared-settlement-amount'),'settlement amount occupies its own primary row');
-assert(settlementCardSource.includes('ledger-shared-settlement-footer'),'settlement progress and action share one footer row');
-assert(settlementCardSource.includes('查看結算 〉')&&settlementCardSource.includes('openLedgerSettlementPanel()'),'lightweight settlement action keeps the existing Sheet entry point');
+assert(settlementCardSource.includes('ledger-shared-settlement-chevron'),'the top-right corner contains only the chevron affordance');
+assert(!settlementCardSource.includes('查看結算'),'the independent settlement action is removed');
 assert(!settlementCardSource.includes('model.details'),'dashboard omits member-level transfer details');
 
 console.log('ledger settlement tests passed');
