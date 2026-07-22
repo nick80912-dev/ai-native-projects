@@ -1,5 +1,13 @@
 # CURRENT(現在正在做的)
 
+## 2026-07-22｜Ledger 團體消費紀錄卡金額置中（dev）
+- [x] 確認個人／團體單筆卡共用 `renderLedgerRecentRecord()`、`formatLedgerDualAmounts()` 與 `.ledger-dual-amounts`，未建立團體專用 renderer 或 CSS。
+- [x] Browser 根因量測：團體卡修正前金額中心較 body 中心向上偏 12.5px，computed `align-self:auto`。
+- [x] 以 TDD 新增共用 `align-self:center` 回歸測試，確認修正前失敗、最小 CSS 修正後通過；金額、幣別、TWD 次要換算與長金額既有 nowrap 策略不變。
+- [x] Service Worker cache 僅由 v37 順延至 v38；SHELL、install／activate／fetch 不變。
+- [x] 375px／390px Browser QA：新版 CSS 均載入共用 `align-self:center`，`scrollWidth == clientWidth`、console error 0；未為 QA 新增共享身分或資料。40 個 `tests/*.test.js` 全部 exit 0，`node tools/check-doc-titles.js` exit 0。
+- [ ] 等待 Bar iPhone Safari／PWA 手機驗收；未經 Bar 驗收不得標示本批完成。
+
 > 更新於 2026-07-22。細任務層;里程碑看 06_ROADMAP,快照看 13_PROJECT_STATUS。
 
 ## 📌 現況

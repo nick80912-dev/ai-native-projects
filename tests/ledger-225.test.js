@@ -218,7 +218,7 @@ assert(switchSource.includes("behavior:'smooth'"),'re-tapping the dashboard scro
 assert(extractFunction(html,'returnLedgerDashboard').includes("classList.contains('ledger-sheet-open')"),'hidden-nav sheets protect unsaved form state');
 assert(html.includes('aria-label="返回分帳首頁"'),'the history back button remains available');
 
-assert.match(sw,/okayama-trip-v37/,'service worker cache advances exactly one version');
+assert.match(sw,/okayama-trip-v38/,'service worker cache advances exactly one version');
 
 (async function(){
   const originals=[{id:'s1'},{id:'s2'}],overlay={getAttribute(){return JSON.stringify(['s1','s2']);}},input={value:'共同原因'},button={disabled:false};

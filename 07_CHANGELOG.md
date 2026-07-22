@@ -1,4 +1,7 @@
 # 07 版本紀錄
+## 2026-07-22｜Ledger 團體消費紀錄卡金額置中（dev，待 Bar 手機驗收）
+- 個人帳與團體帳的消費紀錄卡沿用同一個 `renderLedgerRecentRecord()`、`formatLedgerDualAmounts()` 與 `.ledger-dual-amounts`；共用金額容器新增 `align-self:center`，修正團體卡因成員／分攤資訊增高時金額向上偏移，不新增團體專用樣式，也不修改金額、分帳或同步邏輯。
+- 新增共用對齊回歸測試；Service Worker cache 僅由 `okayama-trip-v37` 順延至 `okayama-trip-v38`，SHELL、install／activate／fetch 不變。375px／390px Browser QA 與完整測試結果記錄於 `tasks/current.md`，仍等待 Bar 手機驗收。
 
 ## 2026-07-22 — Ledger 頁面說明列緊湊化（Dev；Bar 驗收前）
 - 將「個人帳留在本機；團體帳跨裝置同步。」由卡片區下方移至個人／團體切換列正下方，與既有 `JPY 1 ≈ TWD 匯率` 共用單一 flex meta row；匯率靠左、保存說明靠右且垂直置中，原中段重複說明已移除。
