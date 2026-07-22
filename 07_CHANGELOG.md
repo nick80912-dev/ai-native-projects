@@ -1,5 +1,10 @@
 # 07 版本紀錄
 
+## 2026-07-22 — Ledger 單品項金額／明細同群組（Dev；Bar 驗收前）
+- 單品項新增／編輯頁將金額與明細上下收進同一張 `.ledger-single-primary` 白底圓角群組，兩個 input 共用相同 content padding 並完全對齊左右邊界；欄位間距為 10px且不新增分隔線。
+- 明細沿用既有 46px 高度、16px 字級、placeholder、Enter Done、inline validation 與儲存流程；62px 最小高度只套用金額 input。多品項、Schema、Apps Script、Repository／Queue、結算、墓碑契約、localStorage key 與資料欄位均未修改。
+- 375px／390px Browser QA 的左右邊界誤差均為 0px，明細維持 46px／16px，金額 Next 聚焦明細、明細 Done 單次儲存、無水平溢出且 browser error 為 0。Service Worker cache 僅由 `okayama-trip-v35` 順延至 `okayama-trip-v36`，SHELL、install／activate／fetch 不變；仍等待 Bar iPhone Safari／PWA 手機驗收。
+
 ## 2026-07-22 — Ledger 首頁卡片對齊與單品項必填流程修正（Dev；Bar 驗收前）
 - 分帳首頁「今日」與個人「代購」／團體「結算」卡片統一使用同一套左對齊 flex、內容寬度、margin 與原生 button reset；卡片 padding、高度節奏及既有整卡點擊行為不變。
 - 單品項明細移至金額下方固定顯示，次要摘要仍只涵蓋類別、支付方式與日期，展開後只提供店家、日期時間、完整類別及支付方式控制。

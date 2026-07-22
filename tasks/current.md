@@ -4,7 +4,7 @@
 
 ## 📌 現況
 - Ledger 首頁卡片與單品項流程修正已實作：今日／代購／結算卡片共用左對齊內容契約；單品項明細固定顯示於金額下方，金額 Enter 只前往明細，明細 Enter 才進入既有單次儲存流程；無效金額原地顯示錯誤且不重繪 Sheet。
-- Ledger 單品項必填群組 A 方案已核准、待實作：金額在上、明細在下，共用同一張 `.ledger-single-primary` 白底圓角群組與完全相同的左右 content padding；兩個 input 均填滿群組內容區且左右邊界對齊。明細既有高度、16px 字級、placeholder、Enter Done、驗證及儲存行為保持不變，欄位間距約 10px且不新增分隔線；摘要與選填欄位仍位於群組下方。驗收涵蓋 375px／390px 等寬對齊、無水平溢出及既有金額 Next／明細 Done 回歸。
+- Ledger 單品項必填群組 A 方案已實作並通過 QA：金額在上、明細在下，共用同一張 `.ledger-single-primary` 白底圓角群組與完全相同的左右 content padding；375px／390px 的左右邊界誤差均為 0px。明細維持既有 46px 高度、16px 字級、placeholder、Enter Done、驗證及儲存行為，欄位間距 10px且無分隔線；無水平溢出、browser error 為 0，SW cache 僅由 v35 順延至 v36。仍等待 Bar iPhone Safari／PWA 手機驗收，未經 Bar 驗收不得標示完成。
 - 本批 40 個 Node tests、文件標題檢查與 375px／390px Browser QA 已通過：卡片等寬等高且內容左對齊、代購整卡可點、FAB 同步聚焦金額、無效金額原地顯示錯誤、有效金額 Enter 前往明細、明細 Enter 僅儲存一次，無水平溢出且 browser error 為 0；Service Worker cache 僅由 v34 順延至 v35。仍等待 Bar iPhone Safari／PWA 手機驗收，未經 Bar 驗收不得標示完成。
 - Ledger P0 三秒記帳輸入流程已實作：帳本／幣別精簡控制、FAB 同手勢聚焦單品項金額、單品項摘要 disclosure、多品項店家優先與鍵盤焦點鏈、有效筆數／雙幣整單實付，以及共用儲存 pending guard。金額 input 契約、個人復原、團體重複確認、Queue 與資料契約均未變更。
 - 自動化與 Browser QA 已通過：40 個 `tests/*.test.js` 逐一以 Node 執行、文件標題檢查及 diff check 為 0 failures；375px／390px 無水平溢出，單／多品項焦點順序正確，所有可聚焦 input／textarea／select 至少 16px，console error 為 0。Service Worker 維持 v34，仍等待 Bar iOS／Android 手機驗收，未經驗收不得標示完成。
