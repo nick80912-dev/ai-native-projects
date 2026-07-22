@@ -41,8 +41,14 @@ assert.doesNotMatch(secondarySource,/renderLedgerSingleItemDetail/,'required det
 });
 assert.match(secondarySource,/draft\.entryDetailsOpen/,'secondary fields render only when their disclosure is open');
 const basicInfoSource=extractFunction('renderLedgerSingleBasicInfo');
-assert(basicInfoSource.indexOf('renderLedgerSingleItemPrimary(draft)')<basicInfoSource.indexOf('renderLedgerSingleItemDetail(draft)'),'single detail is always rendered directly after the amount group');
-assert(basicInfoSource.indexOf('renderLedgerSingleItemDetail(draft)')<basicInfoSource.indexOf('renderLedgerSingleSecondaryFields(draft)'),'always-visible detail precedes optional secondary controls');
+const primarySource=extractFunction('renderLedgerSingleItemPrimary');
+assert.match(primarySource,/renderLedgerSingleItemDetail\(draft\)/,'amount and detail share the primary group');
+assert.doesNotMatch(basicInfoSource,/renderLedgerSingleItemDetail\(draft\)/,'detail is not rendered again outside the primary group');
+assert(basicInfoSource.indexOf('renderLedgerSingleItemPrimary(draft)')<basicInfoSource.indexOf('renderLedgerSingleSecondaryFields(draft)'),'required field group precedes optional secondary controls');
+assert.match(html,/\.ledger-single-primary \.ledger-sheet-input\{[^}]*width:100%[^}]*max-width:100%[^}]*box-sizing:border-box/,'required inputs share full content width');
+assert.match(html,/\.ledger-single-primary \.ledger-amount-wrap \.ledger-sheet-input\{[^}]*min-height:62px/,'only amount retains the tall amount height');
+assert.doesNotMatch(html,/\.ledger-single-primary \.ledger-sheet-input\{[^}]*min-height:62px/,'detail does not inherit the amount height');
+assert.match(html,/\.ledger-single-primary \.ledger-sheet-field\+\.ledger-sheet-field\{[^}]*margin-top:10px/,'required fields use the approved gap without a divider');
 
 assert.match(html,/id="ledgerAmount"[^>]*type="number"[^>]*inputmode="numeric"/,'the approved amount input type and inputmode remain unchanged');
 assert.match(html,/id="ledgerAmount"[^>]*enterkeyhint="next"[^>]*onkeydown="handleLedgerAmountNext\(event\)"/,'the amount keyboard advances through one shared Next handler');
