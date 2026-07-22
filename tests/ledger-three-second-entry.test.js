@@ -130,4 +130,14 @@ const viewport=html.match(/<meta\s+name="viewport"[^>]*>/i);
 assert(viewport,'viewport meta tag exists');
 assert.doesNotMatch(viewport[0],/user-scalable\s*=\s*no|maximum-scale\s*=\s*1/i,'viewport keeps user zoom available');
 
+const topSegmentsSource=extractFunction('renderLedgerEntrySegments');
+assert.match(topSegmentsSource,/ledger-entry-segments/,'account and currency controls share one compact top row');
+assert.match(topSegmentsSource,/renderLedgerDraftTrack\(draft\).*renderLedgerDraftCurrency\(draft\)/s,'the compact row retains both existing state renderers');
+assert.match(html,/\.ledger-entry-segments\{[^}]*grid-template-columns:repeat\(auto-fit,minmax\(150px,1fr\)\)[^}]*gap:8px[^}]*min-width:0/,'the compact row uses two safe half-width columns and can wrap when space is insufficient');
+assert.match(html,/\.ledger-entry-segment\{[^}]*min-width:0/,'each compact segment may shrink without horizontal overflow');
+assert.match(html,/\.ledger-entry-segment \.ledger-sheet-track\{[^}]*min-height:40px/,'the segmented control keeps at least a 40px touch target');
+assert.match(html,/\.ledger-entry-segment \.ledger-segment-face\{[^}]*height:32px/,'the segmented control keeps its visible track within the approved 30–34px range');
+assert.match(html,/\.ledger-entry-segment \.ledger-sheet-choice\{[^}]*min-height:40px[^}]*font-size:12px/,'compact choices remain readable and touchable');
+assert.doesNotMatch(topSegmentsSource,/text-overflow|nowrap/,'account and currency labels are not truncated');
+
 console.log('ledger three-second entry tests passed');
