@@ -63,6 +63,9 @@ assert.strictEqual(summary.today.amountTwd,records.slice(2).reduce((sum,record)=
 
 assert.strictEqual(mod.ledgerLocalDateKey('not-a-date'),'','invalid dates do not create a misleading group key');
 assert.deepStrictEqual(Array.from(mod.selectLatestLedgerDateExpenses([])),[],'an empty track has no recent date');
+assert.strictEqual(mod.ledgerSharedRecordParticipantLabel({member:'Bar',participants:'["Bar","Amy"]'},'Bar',['Bar','Amy']),'我付款 · 全員分攤','the current payer and full registered group use the compact shared label');
+assert.strictEqual(mod.ledgerSharedRecordParticipantLabel({member:'Amy',participants:'["Bar","Amy"]'},'Bar',['Bar','Amy','Cara','Dana']),'Amy付款 · 2 人分攤','another payer reports the physical participant count');
+assert.strictEqual(mod.ledgerSharedRecordParticipantLabel({member:'Amy',participants:''},'Bar',['Bar','Amy']),'Amy付款 · 分攤資料異常','invalid participant snapshots are not guessed');
 const personalHistory=[{id:'a',isProxy:false},{id:'b',isProxy:true},{id:'c',isProxy:true}];
 assert.deepStrictEqual(Array.from(mod.filterLedgerHistoryRecords(personalHistory,'personal','proxy'),item=>item.id),['b','c'],'personal proxy history contains proxy records only');
 assert.deepStrictEqual(Array.from(mod.filterLedgerHistoryRecords(personalHistory,'personal','all'),item=>item.id),['a','b','c'],'personal all history keeps every visible record');
@@ -74,6 +77,7 @@ assert.match(html,/\.ledger-compact-card h3,\.ledger-compact-card strong,\.ledge
 assert.match(html,/\.ledger-compact-action\{[^}]*appearance:none[^}]*-webkit-appearance:none[^}]*font:inherit[^}]*color:inherit/,'clickable compact cards reset native button typography and appearance');
 const splitSource=html.slice(html.indexOf('function renderSplit()'),html.indexOf('/* ================= 導覽 / 啟動'));
 const ledgerUiSource=html.slice(html.indexOf('function ledgerTrackRecords()'),html.indexOf('/* ================= 導覽 / 啟動'));
+const settlementCardSource=html.slice(html.indexOf('function renderLedgerSettlementCard('),html.indexOf('function ledgerSettlementLines('));
 assert(html.includes("var ledgerUiState={track:'personal'"),'one ledger UI state defaults to personal');
 assert(!html.includes("var ledgerTrack='personal'"),'parallel ledgerTrack state is removed');
 assert(splitSource.includes('ledger-status-pill'),'dashboard renders the sync/rate status pill');
@@ -81,6 +85,11 @@ assert(splitSource.includes('ledger-summary-card'),'dashboard renders the primar
 assert(splitSource.includes('ledger-today-card'),'dashboard renders the Today card');
 assert.match(splitSource,/<article class="ledger-compact-card ledger-today-card">/,'Today remains a non-clickable article');
 assert.match(splitSource,/<button class="ledger-compact-card ledger-compact-action" onclick="openLedgerProxyPanel\(\)">/,'personal proxy remains a whole-card button');
+assert(settlementCardSource.includes('ledger-shared-settlement-card'),'shared dashboard renders the full-width settlement status card');
+assert(settlementCardSource.includes('我的結算狀態'),'shared settlement card uses the approved title');
+assert(splitSource.includes('ledger-shared-summary-grid'),'shared Today card uses its own full-width summary layout');
+assert.strictEqual((settlementCardSource.match(/onclick="openLedgerSettlementPanel\(\)"/g)||[]).length,1,'shared dashboard keeps exactly one settlement entry');
+assert(splitSource.indexOf('renderLedgerSettlementCard')<splitSource.indexOf('ledger-shared-summary-grid'),'shared settlement card appears before the Today summary');
 assert(splitSource.includes('ledger-recent-list'),'dashboard renders recent expenses');
 assert(splitSource.includes('查看全部'),'dashboard links to the complete list');
 assert(splitSource.includes('openLedgerQuickEntryFromFab'),'dashboard FAB opens quick entry through the dedicated focus path');

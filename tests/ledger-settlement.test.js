@@ -166,6 +166,56 @@ assert.strictEqual(overflowBalances.members[0].paidJpy,maxSafe,'the valid maximu
 assert.strictEqual(overflowBalances.members[1].owedJpy,maxSafe,'the rejected overflow record leaves no partial owed update');
 assert.deepStrictEqual(Array.from(overflowBalances.memberOrder),['A','B'],'an overflowed record does not leave a zero-balance phantom participant');
 
+function settlementFixture(current,jpy,twd){
+  return {current,jpy:jpy||[],twd:twd||[],balances:{members:[]}};
+}
+const multipleReceivable=plain(mod.ledgerSettlementStatusCardModel(settlementFixture(
+  {member:'Me',netJpy:4500,netTwd:900},
+  [{from:'小美',to:'Me',amount:2000,currency:'JPY'},{from:'小華',to:'Me',amount:2500,currency:'JPY'}],
+  [{from:'小美',to:'Me',amount:400,currency:'TWD'},{from:'小華',to:'Me',amount:500,currency:'TWD'}]
+),'Me','JPY'));
+assert.strictEqual(multipleReceivable.label,'應收','multiple debtors keep the current member receivable status');
+assert.strictEqual(multipleReceivable.amount,4500,'the status amount comes from the existing current-member balance');
+assert.strictEqual(multipleReceivable.pendingCount,2,'the status counts confirmed counterpart members');
+assert.deepStrictEqual(multipleReceivable.details,['小美待付 ¥2,000','小華待付 ¥2,500'],'at most two confirmed incoming transfers are summarized');
+
+const oneReceivable=plain(mod.ledgerSettlementStatusCardModel(settlementFixture(
+  {member:'Me',netJpy:1200,netTwd:240},
+  [{from:'小美',to:'Me',amount:1200,currency:'JPY'}],
+  [{from:'小美',to:'Me',amount:240,currency:'TWD'}]
+),'Me','JPY'));
+assert.strictEqual(oneReceivable.pendingCount,1,'one remaining counterpart is reported exactly');
+assert.deepStrictEqual(oneReceivable.details,['小美待付 ¥1,200'],'one remaining transfer stays concise');
+
+const payable=plain(mod.ledgerSettlementStatusCardModel(settlementFixture(
+  {member:'Me',netJpy:-6500,netTwd:-1300},
+  [{from:'Me',to:'小明',amount:6500,currency:'JPY'}],
+  [{from:'Me',to:'小明',amount:1300,currency:'TWD'}]
+),'Me','JPY'));
+assert.strictEqual(payable.label,'應付','a negative current-member balance renders payable');
+assert.deepStrictEqual(payable.details,['小明待收 ¥6,500'],'outgoing suggestions name the confirmed recipient');
+
+const selfSettled=plain(mod.ledgerSettlementStatusCardModel(settlementFixture(
+  {member:'Me',netJpy:0,netTwd:0},
+  [{from:'小美',to:'小華',amount:500,currency:'JPY'}],[]
+),'Me','JPY'));
+assert.strictEqual(selfSettled.label,'我已結清','a zero current balance does not claim the whole group is settled');
+assert.strictEqual(selfSettled.pendingCount,2,'group participants still pending are counted from transfer suggestions');
+assert.deepStrictEqual(selfSettled.details,['小美待付小華 ¥500'],'self-settled members see a concise confirmed group transfer');
+
+const allSettled=plain(mod.ledgerSettlementStatusCardModel(settlementFixture(
+  {member:'Me',netJpy:0,netTwd:0},[],[]
+),'Me','JPY'));
+assert.strictEqual(allSettled.label,'全員已結清','no suggestions in either currency confirms the group is settled');
+assert.strictEqual(allSettled.pendingCount,0,'a settled group has no pending members');
+assert.deepStrictEqual(allSettled.details,[],'a settled group does not invent pending transfers');
+
+const otherCurrencyOnly=plain(mod.ledgerSettlementStatusCardModel(settlementFixture(
+  {member:'Me',netJpy:0,netTwd:-80},[],[{from:'Me',to:'Amy',amount:80,currency:'TWD'}]
+),'Me','JPY'));
+assert.strictEqual(otherCurrencyOnly.currency,'TWD','a zero preferred-currency balance falls back to the confirmed non-zero currency');
+assert.strictEqual(otherCurrencyOnly.label,'應付','the fallback still reports the correct direction');
+
 const html=fs.readFileSync('index.html','utf8');
 const settlementSource=html.slice(html.indexOf('function ledgerCurrentMemberSettlement('),html.indexOf('function showLedgerFullList('));
 assert(settlementSource.includes('buildMemberBalances(records,null,null,universe)'),'settlement UI consumes the universe-aware PR4 balance engine');
@@ -174,5 +224,6 @@ assert(settlementSource.includes("buildTransferSuggestions(balances,'TWD')"),'se
 assert(!settlementSource.includes('owedJpy+='),'UI does not reimplement owed balances');
 assert(!settlementSource.includes('paidJpy+='),'UI does not reimplement paid balances');
 assert(settlementSource.includes('balances.invalidRecords'),'expanded settlement surfaces invalid records');
+assert(!settlementSource.includes('人已結清'),'dashboard does not invent repayment progress absent from the existing engine');
 
 console.log('ledger settlement tests passed');

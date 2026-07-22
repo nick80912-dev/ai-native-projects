@@ -1,4 +1,10 @@
 # 07 版本紀錄
+## 2026-07-22｜Ledger 團體「我的結算狀態」全寬卡（dev，待 Bar 手機驗收）
+- 團體總支出下方新增唯一的全寬「我的結算狀態」卡，直接沿用 `buildMemberBalances()`、`buildTransferSuggestions()` 與 `ledgerCurrentMemberSettlement()`，呈現目前成員的應收／應付、我已結清或全員已結清；待處理明細最多列 2 筆，資料不足時不推測付款進度。
+- 原本與「今日」並排的結算卡移除，團體「今日」改為全寬；個人帳仍維持「今日／代購」雙卡。團體最近消費補上「付款者 · N 人分攤」，目前成員付款且涵蓋全員時顯示「我付款 · 全員分攤」。
+- 結算入口仍只有「查看結算」且開啟既有結算功能；未修改新增消費、Schema、Repository／Queue、同步或分帳計算。Service Worker cache 僅由 `okayama-trip-v39` 順延至 `okayama-trip-v40`，其他 SW 邏輯不變。
+- 40 個 `tests/*.test.js` 與文件標題檢查通過；375px／390px Browser QA 確認團體結算／今日卡全寬、個人雙卡不變、無水平溢出且 browser error 為 0，仍等待 Bar iPhone Safari／PWA 真機驗收。
+
 ## 2026-07-22｜Ledger 團體消費紀錄卡金額跨列置中修正（dev，待 Bar 手機驗收）
 - 修正上一版僅加入 `align-self:center`、仍只在第一個 Grid row 內置中的不足：共用單筆 renderer 會在存在 Badge 時加入 `has-badges` 內容狀態，金額欄跨越主內容與 Badge 兩列，Badge 固定留在左下列，使 JPY／TWD 金額相對整張內容區置中。
 - 此規則不是團體專用；個人待同步／代購 Badge 同樣沿用，無 Badge 的個人卡與 batch 卡不受影響。375px／390px Browser QA 以實際團體「拉麵／¥6,500／NT$1,300／1 人分攤」卡量測，金額與整個內容區及 `⋯` 的中心差均為 0px，無水平溢出、console error 0。未修改金額、分帳、同步或資料契約；Service Worker cache 僅由 `okayama-trip-v38` 順延至 `okayama-trip-v39`。

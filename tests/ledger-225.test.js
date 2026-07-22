@@ -93,6 +93,7 @@ assert.deepStrictEqual(plain(openedDetails),['record-b'],'normal card clicks sti
 const rendererSandbox={
   ledgerUiState:{selectionMode:true,selectedRecordIds:{a:true},expandedBatches:{}},
   ledgerRecordMetadata(){return {isProxy:false,isTaxFree:false};},isTestLedgerRecord(){return false;},ledgerRecordParticipantLabel(){return '1 人分攤';},
+  ledgerSharedRecordParticipantLabel(){return '我付款 · 全員分攤';},getCurrentMember(){return 'Bar';},registeredMembersForCurrentMode(){return [{name:'Bar'}];},
   ledgerCategoryEmoji(){return '🍜';},escapeHtml(value){return String(value||'');},jsHtmlAttrString(value){return String(value||'');},
   formatLedgerDualAmounts(){return '<span>amount</span>';},renderLedgerSelectionControl(){return '<input type="checkbox">';},
   renderLedgerRecentRecord(record){return '<article data-child="'+record.id+'"></article>';}
@@ -114,6 +115,9 @@ assert(dateSummary.includes('¥3,500 ≈ NT$770'),'latest-day summary includes f
 vm.runInContext(extractFunction(html,'ledgerBatchSelectionState')+'\n'+extractFunction(html,'renderLedgerRecentRecord')+'\n'+extractFunction(html,'renderLedgerBatchCard'),rendererSandbox);
 const renderedRecord=rendererSandbox.renderLedgerRecentRecord({id:'a',detail:'A',category:'餐飲',payMethod:'現金'},false,'JPY');
 assert(!renderedRecord.includes('ledger-record-menu-button'),'selection-mode record renderer omits the ellipsis DOM');
+const renderedSharedRecord=rendererSandbox.renderLedgerRecentRecord({id:'shared-a',member:'Bar',detail:'A',category:'餐飲',payMethod:'現金'},true,'JPY');
+assert(renderedSharedRecord.includes('我付款 · 全員分攤'),'shared record cards render payer and split context together');
+assert(!renderedSharedRecord.includes('現金 · Bar'),'shared payer is not duplicated in the metadata row');
 const renderedBatch=rendererSandbox.renderLedgerBatchCard([
   {id:'a',batchId:'batch-a',detail:'A',category:'餐飲',payMethod:'現金',amountJpy:1,amountTwd:1},
   {id:'b',batchId:'batch-a',detail:'B',category:'交通',payMethod:'現金',amountJpy:2,amountTwd:2}
@@ -218,7 +222,7 @@ assert(switchSource.includes("behavior:'smooth'"),'re-tapping the dashboard scro
 assert(extractFunction(html,'returnLedgerDashboard').includes("classList.contains('ledger-sheet-open')"),'hidden-nav sheets protect unsaved form state');
 assert(html.includes('aria-label="返回分帳首頁"'),'the history back button remains available');
 
-assert.match(sw,/okayama-trip-v39/,'service worker cache advances exactly one version');
+assert.match(sw,/okayama-trip-v40/,'service worker cache advances exactly one version');
 
 (async function(){
   const originals=[{id:'s1'},{id:'s2'}],overlay={getAttribute(){return JSON.stringify(['s1','s2']);}},input={value:'共同原因'},button={disabled:false};
