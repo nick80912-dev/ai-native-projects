@@ -35,7 +35,7 @@ ledgerColumns.slice(8).forEach(function(column){
 const recordTypeColumn = ledgerColumns.find(function(column){ return column.field === 'recordType'; });
 assert.deepStrictEqual(
   Object.assign({}, recordTypeColumn.values),
-  {expense:'expense',identity_registration:'identity_registration',deletion:'deletion'}
+  {expense:'expense',identity_registration:'identity_registration',deletion:'deletion',settlement_claim:'settlement_claim',settlement_confirm:'settlement_confirm',settlement_reject:'settlement_reject'}
 );
 
 assert(typeColumn, 'Places.Type schema exists');

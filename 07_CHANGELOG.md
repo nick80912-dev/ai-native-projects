@@ -1,4 +1,11 @@
 # 07 版本紀錄
+## 2026-07-23｜團體結算握手：已付款／待確認／已收款（dev，ADR 0007，待 Bar 真機驗收）
+- 依 ADR 0007 將團體結算由純推導升級為「推導＋事實」：新增 `settlement_claim`（付款方標記已付款）、`settlement_confirm`（收款方確認，淨額在此刻歸零）、`settlement_reject`（收款方退回，帶選填原因，淨額維持掛帳）三個 `recordType`，全部沿用既有 21 欄契約、離線佇列、ID 去重與墓碑機制；Apps Script 與 TripConfig 白名單零改動。
+- 結算 Sheet 依共享 `Ledger Default Currency` 分為主結算幣別（建議行含「我已付款」按鈕，僅付款方可見）與參考幣別；新增「待處理結清」（⏳ 待確認／❌ 已退回＋原因）與「結清歷史」（✅ 已收款，收款方可撤銷）區塊。收款方確認前餘額誠實維持應收／應付；退回提供未收到／金額不對／重複一鍵原因；付款方可撤回待確認結清，重試一律開新紀錄。
+- `buildMemberBalances` 與 `buildTransferSuggestions` 本體零改動；新增純函式 `deriveSettlements`（含收款人權威驗證、最早回覆優先、宇宙隔離）與 `applyConfirmedSettlements`（不可變套用已確認結清），轉帳建議跑在扣除結清後的殘餘淨額。`spendLedgerRecords` 排除結算紀錄，消費清單與總支出不受污染。已結清配對之後的新消費誠實重新掛帳，舊結清留存歷史。
+- Schema `recordType` values 同步補上三個新值（`schema.js`＋內嵌 SCHEMA；`schemaDoc()` 不輸出 values，`09_SCHEMA_MAPPING.md` 無需重生）。測試模式結清紀錄帶 `[TEST]` 前綴且僅影響測試帳本。
+- 新增 `tests/ledger-settlement-handshake.test.js`（builders 驗證、三態推導、多裝置競態、墓碑撤回／撤銷、宇宙隔離、餘額整合、誠實重開、消費清單隔離、UI 接線）；完整 42／42 Node tests 逐一執行及 `tools/check-doc-titles.js` 均 exit 0。Service Worker cache 由 `okayama-trip-v45` 順延至 `okayama-trip-v46`，其他策略不變。
+
 ## 2026-07-23｜採買清單、Today 站點提醒與 Buy-to-Ledger 閉環（dev，待 Bar 真機驗收）
 - 新增純 `localStorage` 採買清單，支援品名、固定五類、數量、共用代購對象、Day 1–6 行程站點綁定、待買／已買、編輯、刪除及取消勾選；地點未知項目列於「隨時可買」，孤兒 `stopRef` 保留且不進入 Today 提醒。
 - Today 只在當日有效站點有未完成項目時顯示「今天有 N 項待買」與站名／品名摘要；依 Bar 追加裁定，無提醒或非旅程日改顯示輕量「採買清單 →」入口，避免空清單無法建立第一筆，且不與提醒卡重複。

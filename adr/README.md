@@ -19,5 +19,6 @@ Decision · Context · Alternatives Considered · Why This Decision · Expected 
 | 0004 | Renderer 架構(型別 → 卡片 → 面板) | Accepted |
 | 0005 | Dev/Main Branch Strategy | Accepted |
 | 0006 | Ledger Sync via Apps Script | Accepted |
+| 0007 | 團體結算:握手式結清事實(Settlement Handshake) | Accepted |
 
 新增 ADR:複製格式、編號遞增、更新本索引。

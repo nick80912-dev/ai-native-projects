@@ -133,7 +133,7 @@ var SCHEMA = {
         { field:'note',      header:'備註' },
         { field:'participants',   header:'分攤成員', desc:'JSON array 字串' },
         { field:'payMethod',      header:'支付方式' },
-        { field:'recordType',     header:'紀錄類型', values:{ 'expense':'expense','identity_registration':'identity_registration','deletion':'deletion' } },
+        { field:'recordType',     header:'紀錄類型', values:{ 'expense':'expense','identity_registration':'identity_registration','deletion':'deletion','settlement_claim':'settlement_claim','settlement_confirm':'settlement_confirm','settlement_reject':'settlement_reject' } },
         { field:'targetRecordId', header:'目標紀錄ID' },
         { field:'deleteReason',   header:'刪除原因' },
         { field:'batchId',        header:'批次ID' },

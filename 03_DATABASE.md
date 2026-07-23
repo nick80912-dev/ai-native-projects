@@ -102,6 +102,7 @@
 - Apps Script 契約:`POST {id,time,member,category,detail,amountJpy,amountTwd,note,participants,payMethod,recordType,targetRecordId,deleteReason,batchId,storeName,replacesRecordId,inputCurrency,isTaxFree,priceMode,taxRate,couponAmount}`。
 - 回覆 `ok:true` 與 `ok:true,dup:true` 均視為送達；其他回覆保留在本機佇列。
 - 資料 append-only；團體刪帳新增 `recordType=deletion` 墓碑並以 `targetRecordId` 指向原紀錄，不修改原列。
+- 結算握手（ADR 0007）：`settlement_claim`（付款方標記已付款，金額為結算幣別當下淨額，`participants` 快照收款人）→ `settlement_confirm`（收款方確認，淨額歸零）或 `settlement_reject`（收款方退回，選填原因存備註）；confirm／reject 金額為零並以 `targetRecordId` 指向 claim。撤回／撤銷沿用墓碑。結算幣別取自 `Ledger Default Currency`。
 - 公開 CSV 可能延遲 1–5 分鐘；ledger 下載失敗時沿用目前 ledger 快照,不得阻塞其他 7 表。
 
 ## TripConfig 分帳設定特別規則
