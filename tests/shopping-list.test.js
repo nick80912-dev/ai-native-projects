@@ -129,6 +129,29 @@ assert(ui.includes('function renderShoppingTodayEntry(day)'),'Today uses one ent
 assert(ui.includes('採買清單 →'),'empty, non-trip, and no-reminder Today states keep a lightweight list entry');
 assert(ui.includes('直接完成')&&ui.includes('同時記帳'),'single completion offers the approved loop choices');
 assert(ui.includes('建立多品項消費'),'pending list exposes the approved batch loop action');
+assert.match(ui,/completeSelectedShopping\(false\)">已購買<\/button>/,'batch completion uses the approved 已購買 label');
+assert.match(ui,/<h3 id="shoppingChoiceTitle">已購買<\/h3>/,'single completion dialog uses the approved 已購買 title');
+assert.match(ui,/onclick="undoShoppingCompleteChoice[\s\S]{0,100}">返回<\/button>/,'single completion dialog offers a return action');
+const undoStart=ui.indexOf('function undoShoppingCompleteChoice(id)');
+const undoEnd=ui.indexOf('\nfunction openShoppingLedgerEntry',undoStart);
+assert(undoStart>=0&&undoEnd>undoStart,'return action has a dedicated undo handler');
+const undoSource=ui.slice(undoStart,undoEnd);
+const undoCalls=[];
+vm.runInNewContext(
+  undoSource+';undoShoppingCompleteChoice("shopping-undo");',
+  {
+    shoppingListStore:{update(id,changes){undoCalls.push(['update',id,changes]);}},
+    closeShoppingCompleteChoice(){undoCalls.push(['close']);},
+    renderToday(){undoCalls.push(['today']);},
+    renderShoppingListOverlay(){undoCalls.push(['list']);}
+  }
+);
+assert.deepStrictEqual(plain(undoCalls),[
+  ['update','shopping-undo',{done:false}],
+  ['close'],
+  ['today'],
+  ['list']
+],'return action restores the item to pending and refreshes both views');
 assert.match(ui,/\.shopping-list-panel\{[^}]*overflow-y:auto[^}]*touch-action:pan-y/,'shopping overlay follows Scroll-only with CSS touch-action');
 
 console.log('shopping list tests passed');

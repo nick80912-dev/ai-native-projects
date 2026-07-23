@@ -35,7 +35,18 @@ for (const file of ['index.html']) {
   assert.match(html, /\.today-hero \.date\{font-size:24px/, `${file} preserves the Today date size`);
   assert.match(html, /\.today-hero \.loc\{font-size:13px/, `${file} preserves the progress size`);
   assert.match(html, /\.weather-chip\{[^}]*font-size:13px/, `${file} preserves the weather size`);
-  assert.match(html, /\.today-hero \.today-shopping-launcher\{[^}]*width:auto[^}]*color:#fff/, `${file} keeps the non-trip launcher compact inside the dark Today card`);
+  assert.match(html, /\.today-hero-action\{[^}]*width:auto[^}]*color:#fff/, `${file} keeps the non-trip launcher compact inside the dark Today card`);
+  assert.match(
+    html,
+    /\.today-hero-action\{[^}]*display:inline-flex[^}]*min-height:44px[^}]*background:rgba\(255,255,255,\.16\)[^}]*border:none[^}]*border-radius:10px/,
+    `${file} gives shopping and itinerary actions one shared visual treatment`
+  );
+  assert.match(
+    nonTripToday,
+    /class="today-jump today-hero-action"/,
+    `${file} uses the shared action class for full itinerary`
+  );
+  assert.match(html, /class="today-shopping-launcher'\+\(day\?'':' today-hero-action'\)/, `${file} uses the shared action class for non-trip shopping`);
   assert.match(html, /\.today-pretrip-title-row\{[^}]*display:flex[^}]*justify-content:space-between/, `${file} keeps the non-trip title and countdown on one row`);
   assert.match(html, /想逛<small>/, `${file} preserves the shop wishlist`);
   assert.match(html, /\.nx-decision-btn\{[^}]*font-size:12px/, `${file} uses compact home decision buttons`);
