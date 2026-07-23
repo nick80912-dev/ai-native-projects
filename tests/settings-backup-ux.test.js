@@ -27,6 +27,7 @@ function createStorage(initial){
     trip_member:'黃柏'
   });
   storage.setItem('trip_ledger_proxy_targets',JSON.stringify(['阿芬','阿蓁']));
+  storage.setItem('trip_shopping_list',JSON.stringify([{id:'shopping-1',name:'白桃',category:'伴手禮',qty:'2',buyFor:'媽媽',stopRef:'10/18_3',done:false,createdAt:'2026-07-23T08:00:00.000Z'}]));
   const box={value:'',focus(){},select(){}};
   const copied=[];
   let lastToast='';
@@ -49,11 +50,13 @@ function createStorage(initial){
     LEDGER_CATEGORY_OPTIONS_KEY:'trip_ledger_categories',
     LEDGER_PAY_METHOD_OPTIONS_KEY:'trip_ledger_pay_methods',
     LEDGER_PROXY_TARGETS_KEY:'trip_ledger_proxy_targets',
+    SHOPPING_LIST_KEY:'trip_shopping_list',
     DEFAULT_LEDGER_CATEGORIES:['餐飲','交通','票券','購物','衣服','美妝','其他'],
     DEFAULT_LEDGER_PAY_METHODS:['現金','信用卡','行動支付','Suica','其他'],
     ledgerCategoryStore:{all(){return ['餐飲','咖啡'];}},
     ledgerPayMethodStore:{all(){return ['現金','Suica'];}},
     ledgerProxyTargetStore:{all(){return JSON.parse(storage.getItem('trip_ledger_proxy_targets')||'[]');},normalize(values){if(!Array.isArray(values))throw new Error('代購對象格式錯誤');return values.map(value=>String(value).trim()).filter(Boolean);}},
+    shoppingListStore:{all(){return JSON.parse(storage.getItem('trip_shopping_list')||'[]');},normalize(values){if(!Array.isArray(values))throw new Error('採買清單格式錯誤');return values.map(value=>Object.assign({},value));}},
     timestampDate(value){return new Date(value);},
     getCurrentMember(){return storage.getItem('trip_member')||'';},
     lsGet(key,fallback){const value=storage.getItem(key);return value===null?fallback:JSON.parse(value);},
@@ -86,12 +89,13 @@ function createStorage(initial){
   await sandbox.exportPersonalState();
   const exported=JSON.parse(copied[0]);
   assert.strictEqual(exported.format,'trip-personal-state');
-  assert.strictEqual(exported.version,3);
-  assert.deepStrictEqual(Object.keys(exported).sort(),['checks','exportedAt','format','ledgerCategories','ledgerPayMethods','ledgerQueue','member','personalLedger','proxyTargets','version','wants'].sort());
+  assert.strictEqual(exported.version,4);
+  assert.deepStrictEqual(Object.keys(exported).sort(),['checks','exportedAt','format','ledgerCategories','ledgerPayMethods','ledgerQueue','member','personalLedger','proxyTargets','shoppingItems','version','wants'].sort());
   assert.strictEqual(exported.personalLedger[0].id,'personal-1');
   assert.deepStrictEqual(exported.ledgerCategories,['餐飲','咖啡']);
   assert.deepStrictEqual(exported.ledgerPayMethods,['現金','Suica']);
   assert.deepStrictEqual(exported.proxyTargets,['阿芬','阿蓁']);
+  assert.strictEqual(exported.shoppingItems[0].name,'白桃');
   assert.throws(function(){sandbox.validatePersonalStatePayload(Object.assign({},exported,{proxyTargets:'阿芬'}));},/代購對象/);
   assert.strictEqual(lastToast,'備份 JSON 已複製，請保存到安全位置');
 
@@ -133,6 +137,7 @@ function createStorage(initial){
   assert.deepStrictEqual(JSON.parse(storage.getItem('trip_ledger_categories')),['交通']);
   assert.deepStrictEqual(JSON.parse(storage.getItem('trip_ledger_pay_methods')),['Suica']);
   assert.deepStrictEqual(JSON.parse(storage.getItem('trip_ledger_proxy_targets')),[],'version 2 backup restores a safe empty target list');
+  assert.deepStrictEqual(JSON.parse(storage.getItem('trip_shopping_list')),[],'older backups restore a safe empty shopping list');
   assert.strictEqual(dialogCloses,1);
   assert.strictEqual(settingsCloses,1);
   assert.strictEqual(renders,1);
@@ -144,6 +149,10 @@ function createStorage(initial){
   assert.deepStrictEqual(JSON.parse(storage.getItem('trip_personal_ledger')),[],'version 1 backup restores with a safe empty personal ledger');
   assert.deepStrictEqual(JSON.parse(storage.getItem('trip_ledger_categories')),sandbox.DEFAULT_LEDGER_CATEGORIES,'version 1 backup restores default categories');
   assert.deepStrictEqual(JSON.parse(storage.getItem('trip_ledger_pay_methods')),sandbox.DEFAULT_LEDGER_PAY_METHODS,'version 1 backup restores default payment methods');
+
+  box.value=JSON.stringify({format:'trip-personal-state',version:4,checks:{},wants:{},member:'黃柏',ledgerQueue:[],personalLedger:[],ledgerCategories:['購物'],ledgerPayMethods:['現金'],proxyTargets:['媽媽'],shoppingItems:[{id:'shopping-2',name:'藥妝',category:'代購',qty:'1',buyFor:'媽媽',stopRef:'10/18_3',done:true,createdAt:'2026-07-23T09:00:00.000Z'}]});
+  sandbox.restorePersonalState();
+  assert.strictEqual(JSON.parse(storage.getItem('trip_shopping_list'))[0].id,'shopping-2','version 4 restores shopping items');
 
   console.log('settings backup UX tests passed');
 })().catch(function(error){

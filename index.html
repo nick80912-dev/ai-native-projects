@@ -532,6 +532,12 @@ body.ledger-sheet-open{overflow:hidden}.ledger-sheet-overlay{position:fixed;inse
 .ledger-sheet-field>label.ledger-proxy-switch{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:42px;margin-bottom:0;padding:7px 10px;border:1px solid #c99c94;border-radius:9px;background:#f4e9e6;color:#6e4540}
 .ledger-item-proxy .ledger-sheet-choice-grid{align-items:center}
 .ledger-proxy-add-row{flex:1 0 100%;width:100%;box-sizing:border-box}
+.today-shopping-card{width:100%;margin:10px 0 0;border:1px solid #cfe0dd;border-radius:10px;background:var(--mint);padding:12px;color:var(--ink);text-align:left;font:inherit;box-shadow:var(--shadow);touch-action:manipulation}.today-shopping-card-head{display:flex;align-items:center;justify-content:space-between;gap:12px}.today-shopping-card-head strong{font-size:15px;color:var(--sea-deep)}.today-shopping-card-head span{flex:0 0 auto;color:var(--sea);font-size:13px;font-weight:900}.today-shopping-summary{display:grid;gap:3px;margin-top:7px;color:var(--ink-soft);font-size:12px;line-height:1.45}.today-shopping-summary div{min-width:0;overflow-wrap:anywhere}
+.today-shopping-launcher{width:100%;min-height:44px;margin:9px 0 0;border:0;border-bottom:1px solid var(--line);background:transparent;color:var(--sea);padding:8px 2px;text-align:right;font:inherit;font-size:13px;font-weight:900;touch-action:manipulation}
+body.shopping-list-open{overflow:hidden}.shopping-list-overlay{position:fixed;inset:0;z-index:145;background:var(--paper)}.shopping-list-panel{width:min(100%,620px);height:100dvh;margin:0 auto;overflow-y:auto;touch-action:pan-y;overscroll-behavior:contain;background:var(--paper);padding:0 12px calc(92px + env(safe-area-inset-bottom));box-sizing:border-box}.shopping-list-head{position:sticky;z-index:4;top:0;display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:58px;margin:0 -12px;padding:calc(7px + env(safe-area-inset-top)) 12px 7px;background:rgba(249,247,241,.97);border-bottom:1px solid var(--line);backdrop-filter:blur(10px)}.shopping-list-head h2{min-width:0;font-size:19px;color:var(--sea-deep)}.shopping-list-head-actions{display:flex;align-items:center;gap:4px}.shopping-icon-button{min-width:44px;min-height:44px;border:0;border-radius:9px;background:transparent;color:var(--sea-deep);font:inherit;font-size:22px;font-weight:900}.shopping-add-button{width:44px;height:44px;border:0;border-radius:50%;background:var(--coral);color:#fff;font:inherit;font-size:25px;line-height:1}.shopping-list-segment{position:sticky;z-index:3;top:calc(59px + env(safe-area-inset-top));display:flex;gap:4px;margin:0 -12px 12px;padding:9px 12px;background:var(--paper)}.shopping-list-segment-track{display:flex;width:100%;gap:4px;padding:4px;border:1px solid var(--line);border-radius:999px;background:var(--line-soft)}.shopping-list-segment button{flex:1;min-width:0;min-height:40px;border:0;border-radius:999px;background:transparent;color:var(--ink-soft);font:inherit;font-size:13px;font-weight:900}.shopping-list-segment button.on{background:var(--sea);color:#fff;box-shadow:var(--shadow)}
+.shopping-form{margin:0 0 14px;padding:12px;border:1px solid var(--line);border-radius:10px;background:#fff;box-shadow:var(--shadow)}.shopping-form-head{display:flex;align-items:center;justify-content:space-between;gap:10px}.shopping-form-head h3{font-size:15px;color:var(--sea-deep)}.shopping-field{display:grid;gap:6px;margin-top:11px;min-width:0}.shopping-field label,.shopping-field-label{font-size:12px;font-weight:900;color:var(--ink-soft)}.shopping-input,.shopping-select{width:100%;min-width:0;min-height:46px;border:1px solid var(--line);border-radius:8px;background:#fff;padding:9px 11px;font:inherit;box-sizing:border-box}.shopping-chip-grid{display:flex;flex-wrap:wrap;gap:7px}.shopping-chip{min-height:40px;border:1px solid var(--line);border-radius:999px;background:#fff;color:var(--ink-soft);padding:7px 12px;font:inherit;font-size:12px;font-weight:800}.shopping-chip.on{border-color:var(--sea);background:var(--mint);color:var(--sea-deep)}.shopping-target-add{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:7px}.shopping-target-add button{min-width:44px;min-height:44px;border:1px dashed var(--sea);border-radius:8px;background:#fff;color:var(--sea);font:inherit;font-weight:900}.shopping-form-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:13px}.shopping-form-actions .btn{min-height:44px}
+.shopping-list-tools{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px}.shopping-list-tools strong{font-size:13px;color:var(--ink-soft)}.shopping-list-tools button{min-height:40px;border:0;background:transparent;color:var(--sea);padding:4px 0 4px 12px;font:inherit;font-size:12px;font-weight:900}.shopping-group{display:grid;gap:7px;margin-top:13px}.shopping-group-title{font-size:12px;color:var(--ink-faint);font-weight:900}.shopping-item{display:grid;grid-template-columns:44px minmax(0,1fr) auto;align-items:center;gap:6px;min-width:0;border:1px solid var(--line);border-radius:9px;background:#fff;padding:8px 7px}.shopping-item-check{display:grid;place-items:center;width:44px;min-height:44px}.shopping-item-check input{width:20px;height:20px;margin:0}.shopping-item-body{min-width:0}.shopping-item-body strong{display:block;font-size:14px;overflow-wrap:anywhere}.shopping-item-meta{display:flex;flex-wrap:wrap;gap:3px 7px;margin-top:4px;color:var(--ink-faint);font-size:11px;line-height:1.35}.shopping-item-actions{display:flex;align-items:center}.shopping-item-actions button{min-width:40px;min-height:40px;border:0;background:transparent;color:var(--sea);font:inherit;font-size:12px;font-weight:900}.shopping-item-actions button.danger{color:var(--coral)}.shopping-empty{padding:36px 12px;text-align:center;color:var(--ink-faint);font-size:13px}.shopping-selection-toolbar{position:fixed;z-index:148;left:12px;right:12px;bottom:calc(10px + env(safe-area-inset-bottom));width:min(calc(100% - 24px),596px);margin:0 auto;display:grid;grid-template-columns:auto minmax(0,1fr) minmax(0,1.35fr);align-items:center;gap:7px;padding:9px;border-radius:12px;background:var(--sea-deep);box-shadow:var(--shadow-lg);box-sizing:border-box}.shopping-selection-toolbar span{color:#fff;font-size:12px;font-weight:900}.shopping-selection-toolbar button{min-width:0;min-height:42px;border:0;border-radius:999px;background:#fff;color:var(--sea-deep);padding:7px 9px;font:inherit;font-size:11px;font-weight:900}.shopping-selection-toolbar button:last-child{background:var(--coral);color:#fff}.shopping-selection-toolbar button:disabled{opacity:.45}
+.shopping-choice-overlay{position:fixed;z-index:160;inset:0;display:grid;place-items:center;padding:16px;background:rgba(10,45,50,.42)}.shopping-choice-panel{width:min(100%,330px);border-radius:12px;background:var(--paper);padding:16px;box-shadow:var(--shadow-lg)}.shopping-choice-panel h3{font-size:17px;color:var(--sea-deep)}.shopping-choice-panel p{margin:7px 0 14px;color:var(--ink-soft);font-size:13px;line-height:1.5}.shopping-choice-actions{display:grid;gap:8px}.shopping-choice-actions .btn{min-height:44px}
 .ledger-dual-amounts{align-content:center}
 .ledger-record-menu-button{align-self:center}
 .ledger-date-summary{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:6px;min-width:0;color:var(--ink-faint);font-size:11px;font-weight:900;letter-spacing:.04em}
@@ -2718,6 +2724,7 @@ function renderToday(){
       '<div class="empty">今天沒有排定行程 🗓️<br>出發當天這裡會自動顯示當日安排與下一站。</div>'+
       renderPreTripBrief()+
       '<button class="today-jump" onclick="switchView(\'trip\')">查看完整行程 →</button></div>'+
+      renderShoppingTodayEntry(null)+
       (days.length?'<div class="seg">行程重點</div>':'')+
       days.map(function(d,i){
         var hl=d.items.filter(function(it){return it.act;}).slice(0,3).map(function(it){return it.act;}).join('、');
@@ -2744,12 +2751,181 @@ function renderToday(){
     '<div class="loc">'+completed+'/'+items.length+' 已處理</div></div>'+
     renderWeatherChip(weather)+'</div>';
   h+=cluster&&clusterPick&&clusterPick.item?renderClusterNextStopCard(day,ti,pick,cluster,checks,progress,nowMinutes):renderNextStopCard(day,ti,pick);
+  h+=renderShoppingTodayEntry(day);
   if(DB.trip.days[ti+1]){
     if(shouldReplaceWithTomorrowPreview(pick)) h+=renderTomorrowPreview(ti,false);
     else if(shouldShowCompactTomorrowPreview(pick,nowMinutes)) h+=renderTomorrowPreview(ti,true);
   }
   h+='<button class="today-jump dark" onclick="gotoDay('+ti+')">看今日完整細節 →</button>';
   view.innerHTML=h;
+}
+
+/* ================= 採買清單(純 localStorage) ================= */
+var shoppingUiState={tab:'pending',form:null,selectionMode:false,selected:{}};
+function shoppingItineraryStops(){
+  var result=[];
+  ((DB.trip&&DB.trip.days)||[]).forEach(function(day,dayIndex){
+    (day.items||[]).forEach(function(item){
+      if(!item||!item.id||(!item.act&&!item.place))return;
+      result.push({id:item.id,dayIndex:dayIndex,date:day.date,name:shoppingStopName(item)});
+    });
+  });
+  return result;
+}
+function shoppingStopById(id){return shoppingItineraryStops().filter(function(stop){return stop.id===String(id||'');})[0]||null;}
+function renderShoppingTodayCard(day){
+  var model=buildShoppingTodayReminder(shoppingListStore.all(),day);
+  if(!model)return '';
+  var summary=model.groups.slice(0,3).map(function(group){
+    return '<div><b>'+escapeHtml(group.stopName)+'</b> · '+escapeHtml(group.items.slice(0,2).join('、')+(group.items.length>2?'等':''))+'</div>';
+  }).join('');
+  return '<button type="button" class="today-shopping-card" onclick="openShoppingList()"><span class="today-shopping-card-head"><strong>今天有 '+model.count+' 項待買</strong><span>全部 →</span></span><span class="today-shopping-summary">'+summary+'</span></button>';
+}
+function renderShoppingTodayEntry(day){
+  return renderShoppingTodayCard(day)||'<button type="button" class="today-shopping-launcher" onclick="openShoppingList()">採買清單 →</button>';
+}
+function newShoppingForm(){return {id:'',name:'',category:'',qty:'',buyFor:'',stopRef:'',done:false,createdAt:''};}
+function openShoppingList(){
+  closeShoppingList();
+  shoppingUiState.tab='pending';shoppingUiState.form=null;shoppingUiState.selectionMode=false;shoppingUiState.selected={};
+  var overlay=document.createElement('div');overlay.id='shoppingListOverlay';overlay.className='shopping-list-overlay';
+  overlay.innerHTML='<section class="shopping-list-panel" role="dialog" aria-modal="true" aria-labelledby="shoppingListTitle"></section>';
+  document.body.appendChild(overlay);document.body.classList.add('shopping-list-open');renderShoppingListOverlay();
+}
+function closeShoppingList(){
+  var overlay=document.getElementById('shoppingListOverlay');if(overlay)overlay.remove();
+  document.body.classList.remove('shopping-list-open');
+}
+function setShoppingTab(tab){shoppingUiState.tab=tab==='done'?'done':'pending';shoppingUiState.selectionMode=false;shoppingUiState.selected={};renderShoppingListOverlay();}
+function startShoppingAdd(){
+  shoppingUiState.form=newShoppingForm();renderShoppingListOverlay();
+  requestAnimationFrame(function(){var input=document.getElementById('shoppingName');if(input)input.focus();});
+}
+function startShoppingEdit(id){
+  var item=shoppingListStore.all().filter(function(value){return value.id===String(id);})[0];if(!item)return;
+  shoppingUiState.form=Object.assign({},item);renderShoppingListOverlay();
+  requestAnimationFrame(function(){var input=document.getElementById('shoppingName');if(input)input.focus();});
+}
+function cancelShoppingForm(){shoppingUiState.form=null;renderShoppingListOverlay();}
+function updateShoppingFormField(field,value,rerender){if(!shoppingUiState.form)return;shoppingUiState.form[field]=value;if(rerender)renderShoppingListOverlay();}
+function addShoppingBuyFor(){
+  var input=document.getElementById('shoppingBuyForNew'),value=input&&input.value;
+  try{value=normalizeLedgerProxyTarget(value);ledgerProxyTargetStore.add(value);shoppingUiState.form.buyFor=value;renderShoppingListOverlay();toast('代購對象已新增');}
+  catch(error){toast(error.message||'代購對象新增失敗');}
+}
+function saveShoppingForm(){
+  var form=shoppingUiState.form;if(!form)return;
+  try{
+    if(form.id)shoppingListStore.update(form.id,form);else shoppingListStore.add(form);
+    shoppingUiState.form=null;renderToday();renderShoppingListOverlay();toast(form.id?'採買項目已更新':'採買項目已新增');
+  }catch(error){toast(error.message||'採買項目儲存失敗');var input=document.getElementById('shoppingName');if(input)input.focus();}
+}
+function deleteShoppingItem(id){
+  var item=shoppingListStore.all().filter(function(value){return value.id===String(id);})[0];
+  if(!item||!confirm('刪除「'+item.name+'」？'))return;
+  shoppingListStore.remove(id);delete shoppingUiState.selected[id];renderToday();renderShoppingListOverlay();toast('採買項目已刪除');
+}
+function renderShoppingForm(){
+  var form=shoppingUiState.form;if(!form)return '';
+  var categories=SHOPPING_CATEGORIES.map(function(value){
+    return '<button type="button" class="shopping-chip '+(form.category===value?'on':'')+'" aria-pressed="'+(form.category===value?'true':'false')+'" onclick="updateShoppingFormField(\'category\',\''+jsString(form.category===value?'':value)+'\',true)">'+escapeHtml(value)+'</button>';
+  }).join('');
+  var targets=ledgerProxyTargetStore.all().map(function(value){
+    return '<button type="button" class="shopping-chip '+(form.buyFor===value?'on':'')+'" aria-pressed="'+(form.buyFor===value?'true':'false')+'" onclick="updateShoppingFormField(\'buyFor\',\''+jsString(form.buyFor===value?'':value)+'\',true)">'+escapeHtml(value)+'</button>';
+  }).join('');
+  var stops=shoppingItineraryStops(),options='<option value="">不綁定（隨時可買）</option>',lastDay=-1;
+  stops.forEach(function(stop){
+    if(stop.dayIndex!==lastDay){if(lastDay>=0)options+='</optgroup>';options+='<optgroup label="DAY '+(stop.dayIndex+1)+' · '+escapeHtml(stop.date)+'">';lastDay=stop.dayIndex;}
+    options+='<option value="'+escapeHtml(stop.id)+'" '+(form.stopRef===stop.id?'selected':'')+'>'+escapeHtml(stop.name)+'</option>';
+  });
+  if(lastDay>=0)options+='</optgroup>';
+  return '<form class="shopping-form" onsubmit="event.preventDefault();saveShoppingForm()"><div class="shopping-form-head"><h3>'+(form.id?'編輯採買項目':'新增採買項目')+'</h3><button type="button" class="shopping-icon-button" aria-label="關閉表單" onclick="cancelShoppingForm()">×</button></div>'+
+    '<div class="shopping-field"><label for="shoppingName">品名（必填）</label><input class="shopping-input" id="shoppingName" maxlength="80" value="'+escapeHtml(form.name)+'" oninput="updateShoppingFormField(\'name\',this.value,false)"></div>'+
+    '<div class="shopping-field"><span class="shopping-field-label">分類（選填）</span><div class="shopping-chip-grid">'+categories+'</div></div>'+
+    '<div class="shopping-field"><label for="shoppingQty">數量（選填）</label><input class="shopping-input" id="shoppingQty" maxlength="30" value="'+escapeHtml(form.qty)+'" oninput="updateShoppingFormField(\'qty\',this.value,false)"></div>'+
+    '<div class="shopping-field"><span class="shopping-field-label">幫誰買（選填）</span><div class="shopping-chip-grid">'+(targets||'<span class="settings-help">尚未建立代購對象</span>')+'</div><div class="shopping-target-add"><input class="shopping-input" id="shoppingBuyForNew" maxlength="12" placeholder="新增對象"><button type="button" onclick="addShoppingBuyFor()">新增</button></div></div>'+
+    '<div class="shopping-field"><label for="shoppingStopRef">選擇行程站點（選填）</label><select class="shopping-select" id="shoppingStopRef" onchange="updateShoppingFormField(\'stopRef\',this.value,false)">'+options+'</select></div>'+
+    '<div class="shopping-form-actions"><button type="button" class="btn ghost" onclick="cancelShoppingForm()">取消</button><button type="submit" class="btn">儲存</button></div></form>';
+}
+function shoppingItemMeta(item,stop){
+  var values=[];
+  if(item.category)values.push(item.category);
+  if(item.qty)values.push('數量 '+item.qty);
+  if(item.buyFor)values.push('幫 '+item.buyFor+' 買');
+  if(stop)values.push('DAY '+(stop.dayIndex+1)+' · '+stop.name);else if(item.stopRef)values.push('行程站點');
+  return values;
+}
+function renderShoppingItem(item){
+  var stop=shoppingStopById(item.stopRef),selected=!!shoppingUiState.selected[item.id],selection=shoppingUiState.selectionMode&&!item.done;
+  var check=selection?
+    '<label class="shopping-item-check" aria-label="選取 '+escapeHtml(item.name)+'"><input type="checkbox" '+(selected?'checked':'')+' onchange="toggleShoppingSelection(\''+jsString(item.id)+'\',this.checked)"></label>':
+    '<label class="shopping-item-check" aria-label="'+(item.done?'退回待買 ':'標記已買 ')+escapeHtml(item.name)+'"><input type="checkbox" '+(item.done?'checked':'')+' onchange="toggleShoppingItemDone(\''+jsString(item.id)+'\',this.checked)"></label>';
+  return '<article class="shopping-item">'+check+'<div class="shopping-item-body"><strong>'+escapeHtml(item.name)+'</strong><div class="shopping-item-meta">'+shoppingItemMeta(item,stop).map(function(value){return '<span>'+escapeHtml(value)+'</span>';}).join('')+'</div></div><div class="shopping-item-actions"><button type="button" onclick="startShoppingEdit(\''+jsString(item.id)+'\')">編輯</button><button type="button" class="danger" onclick="deleteShoppingItem(\''+jsString(item.id)+'\')">刪除</button></div></article>';
+}
+function renderShoppingGroups(items){
+  if(!items.length)return '<div class="shopping-empty">'+(shoppingUiState.tab==='done'?'尚無已買項目':'尚無待買項目')+'</div>';
+  if(shoppingUiState.tab==='done')return '<section class="shopping-group"><div class="shopping-group-title">已買</div>'+items.map(renderShoppingItem).join('')+'</section>';
+  var stops={},order=[],unknown=[],orphans=[];
+  items.forEach(function(item){
+    if(!item.stopRef){unknown.push(item);return;}
+    var stop=shoppingStopById(item.stopRef);
+    if(!stop){orphans.push(item);return;}
+    if(!stops[stop.id]){stops[stop.id]={stop:stop,items:[]};order.push(stop.id);}
+    stops[stop.id].items.push(item);
+  });
+  var html=order.map(function(id){var group=stops[id];return '<section class="shopping-group"><div class="shopping-group-title">DAY '+(group.stop.dayIndex+1)+' · '+escapeHtml(group.stop.name)+'</div>'+group.items.map(renderShoppingItem).join('')+'</section>';}).join('');
+  if(orphans.length)html+='<section class="shopping-group"><div class="shopping-group-title">已綁定行程</div>'+orphans.map(renderShoppingItem).join('')+'</section>';
+  if(unknown.length)html+='<section class="shopping-group"><div class="shopping-group-title">隨時可買</div>'+unknown.map(renderShoppingItem).join('')+'</section>';
+  return html;
+}
+function renderShoppingSelectionToolbar(){
+  if(!shoppingUiState.selectionMode)return '';
+  var count=Object.keys(shoppingUiState.selected).filter(function(id){return shoppingUiState.selected[id];}).length;
+  return '<div class="shopping-selection-toolbar"><span>'+count+' 項</span><button type="button" '+(count?'':'disabled')+' onclick="completeSelectedShopping(false)">標記已買</button><button type="button" '+(count?'':'disabled')+' onclick="completeSelectedShopping(true)">建立多品項消費</button></div>';
+}
+function renderShoppingListOverlay(){
+  var panel=document.querySelector('#shoppingListOverlay .shopping-list-panel');if(!panel)return;
+  var items=shoppingListStore.all().filter(function(item){return shoppingUiState.tab==='done'?item.done:!item.done;});
+  panel.innerHTML='<header class="shopping-list-head"><h2 id="shoppingListTitle">採買清單</h2><div class="shopping-list-head-actions"><button type="button" class="shopping-add-button" aria-label="新增採買項目" onclick="startShoppingAdd()">＋</button><button type="button" class="shopping-icon-button" aria-label="關閉採買清單" onclick="closeShoppingList()">×</button></div></header>'+
+    '<nav class="shopping-list-segment" aria-label="採買狀態"><div class="shopping-list-segment-track"><button type="button" class="'+(shoppingUiState.tab==='pending'?'on':'')+'" aria-pressed="'+(shoppingUiState.tab==='pending'?'true':'false')+'" onclick="setShoppingTab(\'pending\')">待買</button><button type="button" class="'+(shoppingUiState.tab==='done'?'on':'')+'" aria-pressed="'+(shoppingUiState.tab==='done'?'true':'false')+'" onclick="setShoppingTab(\'done\')">已買</button></div></nav>'+
+    renderShoppingForm()+
+    '<div class="shopping-list-tools"><strong>'+items.length+' 項</strong>'+(shoppingUiState.tab==='pending'&&items.length?'<button type="button" onclick="toggleShoppingSelectionMode()">'+(shoppingUiState.selectionMode?'取消多選':'多選')+'</button>':'')+'</div>'+
+    renderShoppingGroups(items)+renderShoppingSelectionToolbar();
+}
+function toggleShoppingSelectionMode(){shoppingUiState.selectionMode=!shoppingUiState.selectionMode;shoppingUiState.selected={};renderShoppingListOverlay();}
+function toggleShoppingSelection(id,selected){shoppingUiState.selected[id]=!!selected;renderShoppingListOverlay();}
+function toggleShoppingItemDone(id,done){
+  var item=shoppingListStore.update(id,{done:!!done});renderToday();renderShoppingListOverlay();
+  if(done)openShoppingCompleteChoice(item);
+}
+function openShoppingCompleteChoice(item){
+  closeShoppingCompleteChoice();
+  var overlay=document.createElement('div');overlay.id='shoppingCompleteChoice';overlay.className='shopping-choice-overlay';
+  overlay.innerHTML='<section class="shopping-choice-panel" role="dialog" aria-modal="true" aria-labelledby="shoppingChoiceTitle"><h3 id="shoppingChoiceTitle">已標記買到</h3><p>'+escapeHtml(item.name)+' 要直接完成，還是同時建立消費紀錄？</p><div class="shopping-choice-actions"><button type="button" class="btn ghost" onclick="closeShoppingCompleteChoice()">直接完成</button><button type="button" class="btn" onclick="openShoppingLedgerEntry(\''+jsString(item.id)+'\')">同時記帳</button></div></section>';
+  document.body.appendChild(overlay);
+}
+function closeShoppingCompleteChoice(){var overlay=document.getElementById('shoppingCompleteChoice');if(overlay)overlay.remove();}
+function openShoppingLedgerEntry(id){
+  var item=shoppingListStore.all().filter(function(value){return value.id===String(id);})[0];if(!item)return;
+  var seed=shoppingLedgerSinglePrefill(item);closeShoppingCompleteChoice();closeShoppingList();ledgerUiState.track='personal';openLedgerEntrySheet(false);
+  if(!document.getElementById('ledgerEntrySheet')||!ledgerUiState.draft)return;
+  Object.keys(seed).forEach(function(key){ledgerUiState.draft[key]=seed[key];});
+  ledgerUiState.draft.detailsPanelOpen=!!seed.note;renderLedgerEntrySheet();
+  requestAnimationFrame(function(){var amount=document.getElementById('ledgerAmount');if(amount)try{amount.focus({preventScroll:true});}catch(ignore){amount.focus();}});
+}
+function completeSelectedShopping(openLedger){
+  var selected=shoppingListStore.all().filter(function(item){return !item.done&&shoppingUiState.selected[item.id];});
+  if(!selected.length)return;
+  selected.forEach(function(item){shoppingListStore.update(item.id,{done:true});});
+  shoppingUiState.selectionMode=false;shoppingUiState.selected={};renderToday();
+  if(!openLedger){renderShoppingListOverlay();toast('已標記 '+selected.length+' 項為已買');return;}
+  openShoppingMultiLedgerEntry(selected);
+}
+function openShoppingMultiLedgerEntry(items){
+  var seeds=shoppingLedgerMultiPrefill(items);closeShoppingList();ledgerUiState.track='personal';openLedgerEntrySheet(false);
+  var draft=ledgerUiState.draft;if(!document.getElementById('ledgerEntrySheet')||!draft)return;
+  draft.multi=true;draft.category='購物';draft.categoryApply='購物';draft.items=seeds.map(function(seed){return createLedgerDraftItem(draft,seed);});renderLedgerEntrySheet();
+  requestAnimationFrame(function(){var store=document.getElementById('ledgerStoreName');if(store)try{store.focus({preventScroll:true});}catch(ignore){store.focus();}});
 }
 
 /* ================= 購物模式(資料來自 Shopping 表) ================= */
@@ -2935,9 +3111,98 @@ var PERSONAL_LEDGER_KEY='trip_personal_ledger';
 var LEDGER_CATEGORY_OPTIONS_KEY='trip_ledger_categories';
 var LEDGER_PAY_METHOD_OPTIONS_KEY='trip_ledger_pay_methods';
 var LEDGER_PROXY_TARGETS_KEY='trip_ledger_proxy_targets';
+var SHOPPING_LIST_KEY='trip_shopping_list';
 var DEFAULT_LEDGER_CATEGORIES=['餐飲','交通','票券','購物','衣物','美妝','其他'];
 var DEFAULT_LEDGER_PAY_METHODS=['現金','信用卡','行動支付','Suica','其他'];
+var SHOPPING_CATEGORIES=['必買','伴手禮','代購','生活用品','其他'];
 var ledgerIdSeen={};
+
+function normalizeShoppingItem(source,options){
+  source=source&&typeof source==='object'?source:{};
+  options=options||{};
+  var name=String(source.name||'').replace(/\u3000/g,' ').replace(/\s+/g,' ').trim();
+  var category=String(source.category||'').trim();
+  if(!name)throw new Error('採買品名不可空白');
+  if(category&&SHOPPING_CATEGORIES.indexOf(category)<0)throw new Error('採買分類不在允許範圍');
+  var createdAt=String(source.createdAt||'').trim();
+  if(!createdAt)createdAt=timestampDate(options.now==null?Date.now():options.now).toISOString();
+  if(!isFinite(Date.parse(createdAt)))throw new Error('採買建立時間格式錯誤');
+  return {
+    id:String(source.id||options.id||'').trim(),
+    name:name,
+    category:category,
+    qty:String(source.qty==null?'':source.qty).trim(),
+    buyFor:String(source.buyFor==null?'':source.buyFor).replace(/\u3000/g,' ').replace(/\s+/g,' ').trim(),
+    stopRef:String(source.stopRef==null?'':source.stopRef).trim(),
+    done:source.done===true,
+    createdAt:createdAt
+  };
+}
+function createShoppingListStore(options){
+  var opts=options||{},storage=opts.storage,key=opts.key||SHOPPING_LIST_KEY,now=opts.now||Date.now,idFactory=opts.idFactory||function(){return 'shopping-'+Date.now()+'-'+Math.random().toString(36).slice(2,8);};
+  function normalize(values){
+    if(!Array.isArray(values))throw new Error('採買清單格式錯誤');
+    var seen={};
+    return values.map(function(value){
+      var item=normalizeShoppingItem(value,{now:now()});
+      if(!item.id)throw new Error('採買項目缺少 ID');
+      if(seen[item.id])throw new Error('採買項目 ID 重複');
+      seen[item.id]=true;return item;
+    });
+  }
+  function all(){
+    try{return normalize(JSON.parse(storage.getItem(key)||'[]'));}
+    catch(error){AppLog.repo('採買清單讀取失敗：'+(error.message||error));return [];}
+  }
+  function write(values){values=normalize(values);storage.setItem(key,JSON.stringify(values));return values.slice();}
+  function add(value){
+    var stamp=now(),item=normalizeShoppingItem(value,{id:idFactory(),now:stamp});
+    if(!item.id)throw new Error('採買項目缺少 ID');
+    write(all().concat([item]));return item;
+  }
+  function update(id,patch){
+    var found=null,next=all().map(function(item){
+      if(item.id!==String(id))return item;
+      found=normalizeShoppingItem(Object.assign({},item,patch,{id:item.id,createdAt:item.createdAt}),{now:now()});
+      return found;
+    });
+    if(!found)throw new Error('找不到採買項目');
+    write(next);return found;
+  }
+  function remove(id){return write(all().filter(function(item){return item.id!==String(id);}));}
+  function replace(values){return write(values);}
+  return {all:all,add:add,update:update,remove:remove,replace:replace,normalize:normalize};
+}
+function shoppingStopName(item){return String(item&&item.place||item&&item.act||'行程站點').trim()||'行程站點';}
+function buildShoppingTodayReminder(items,day){
+  if(!day||!Array.isArray(day.items))return null;
+  var stops={},groups=[],groupMap={};
+  day.items.forEach(function(item){if(item&&item.id)stops[item.id]=item;});
+  (items||[]).forEach(function(item){
+    var ref=String(item&&item.stopRef||''),stop=stops[ref];
+    if(!item||item.done||!ref||!stop)return;
+    if(!groupMap[ref]){groupMap[ref]={stopRef:ref,stopName:shoppingStopName(stop),items:[]};groups.push(groupMap[ref]);}
+    groupMap[ref].items.push(String(item.name||'').trim());
+  });
+  var count=groups.reduce(function(sum,group){return sum+group.items.length;},0);
+  return count?{count:count,groups:groups}:null;
+}
+function shoppingLedgerNote(item){
+  var parts=[];
+  if(String(item&&item.qty||'').trim())parts.push('數量：'+String(item.qty).trim());
+  if(String(item&&item.buyFor||'').trim())parts.push('幫誰買：'+String(item.buyFor).trim());
+  return parts.join(' · ');
+}
+function shoppingLedgerSinglePrefill(item){
+  var proxy=String(item&&item.category||'')==='代購'&&!!String(item&&item.buyFor||'').trim();
+  return {detail:String(item&&item.name||'').trim(),amount:'',category:'購物',note:shoppingLedgerNote(item),isProxy:proxy,proxyTarget:proxy?String(item.buyFor).trim():''};
+}
+function shoppingLedgerMultiPrefill(items){
+  return (items||[]).map(function(item){
+    var single=shoppingLedgerSinglePrefill(item);
+    return {name:single.detail,amount:'',category:single.category,isProxy:single.isProxy,proxyTarget:single.proxyTarget};
+  });
+}
 
 function ledgerBooleanValue(value){return value===true||value===1||String(value||'').trim().toLowerCase()==='true'||String(value||'').trim()==='1';}
 function ledgerRecordMetadata(record){
@@ -3902,6 +4167,7 @@ var personalLedgerRepository=createPersonalLedgerRepository({storage:localStorag
 var ledgerCategoryStore=createLedgerOptionStore({storage:localStorage,key:LEDGER_CATEGORY_OPTIONS_KEY,defaults:DEFAULT_LEDGER_CATEGORIES,normalizeList:normalizeLedgerCategoryOptions});
 var ledgerPayMethodStore=createLedgerOptionStore({storage:localStorage,key:LEDGER_PAY_METHOD_OPTIONS_KEY,defaults:DEFAULT_LEDGER_PAY_METHODS});
 var ledgerProxyTargetStore=createLedgerProxyTargetStore({storage:localStorage,key:LEDGER_PROXY_TARGETS_KEY});
+var shoppingListStore=createShoppingListStore({storage:localStorage,key:SHOPPING_LIST_KEY});
 
 function ledgerSharedRecordParticipantLabel(record,currentMember,members){
   var participants=parseParticipants(record,function(){}),payer=canonicalMemberName(record&&record.member),currentKey=canonicalMemberName(currentMember);
@@ -4041,7 +4307,7 @@ function refreshMemberSelector(){
 }
 function closeSettings(){ var overlay=document.getElementById('settingsOverlay'); if(overlay) overlay.remove(); }
 function personalStateJson(){
-  var payload={format:'trip-personal-state',version:3,exportedAt:timestampDate(Date.now()).toISOString(),checks:lsGet('trip_checks',{}),wants:lsGet('trip_shop_wants',{}),member:getCurrentMember(),ledgerQueue:ledgerRepository.queuedRecords(),personalLedger:personalLedgerRepository.all(),ledgerCategories:ledgerCategoryStore.all(),ledgerPayMethods:ledgerPayMethodStore.all(),proxyTargets:ledgerProxyTargetStore.all()};
+  var payload={format:'trip-personal-state',version:4,exportedAt:timestampDate(Date.now()).toISOString(),checks:lsGet('trip_checks',{}),wants:lsGet('trip_shop_wants',{}),member:getCurrentMember(),ledgerQueue:ledgerRepository.queuedRecords(),personalLedger:personalLedgerRepository.all(),ledgerCategories:ledgerCategoryStore.all(),ledgerPayMethods:ledgerPayMethodStore.all(),proxyTargets:ledgerProxyTargetStore.all(),shoppingItems:shoppingListStore.all()};
   return JSON.stringify(payload,null,2);
 }
 function copyPersonalStateText(text,timeoutMs){
@@ -4081,19 +4347,22 @@ function openPersonalStateRestore(){
   closePersonalStateDialog();
   var overlay=document.createElement('div');
   overlay.id='personalStateDialog'; overlay.className='settings-overlay state-dialog-overlay'; overlay.setAttribute('data-dialog-kind','restore');
-  overlay.innerHTML='<section class="settings-panel state-dialog-panel" role="dialog" aria-modal="true" aria-labelledby="personalStateDialogTitle"><div class="settings-head"><h2 id="personalStateDialogTitle">從 JSON 還原</h2><button class="settings-close" aria-label="關閉" onclick="closePersonalStateDialog()">×</button></div><p class="settings-help">還原會覆蓋目前裝置上的打卡、想逛、身分、個人帳、代購對象、自訂選項及待同步記帳。</p><textarea class="state-dialog-copy" id="personalStateBox" placeholder="貼上備份 JSON"></textarea><div class="settings-actions"><button class="btn ghost" onclick="closePersonalStateDialog()">取消</button><button class="btn" onclick="restorePersonalState()">驗證並還原</button></div></section>';
+  overlay.innerHTML='<section class="settings-panel state-dialog-panel" role="dialog" aria-modal="true" aria-labelledby="personalStateDialogTitle"><div class="settings-head"><h2 id="personalStateDialogTitle">從 JSON 還原</h2><button class="settings-close" aria-label="關閉" onclick="closePersonalStateDialog()">×</button></div><p class="settings-help">還原會覆蓋目前裝置上的打卡、想逛、採買清單、身分、個人帳、代購對象、自訂選項及待同步記帳。</p><textarea class="state-dialog-copy" id="personalStateBox" placeholder="貼上備份 JSON"></textarea><div class="settings-actions"><button class="btn ghost" onclick="closePersonalStateDialog()">取消</button><button class="btn" onclick="restorePersonalState()">驗證並還原</button></div></section>';
   document.body.appendChild(overlay);
   var box=document.getElementById('personalStateBox'); if(box)box.focus();
 }
 function validatePersonalStatePayload(payload){
-  if(!payload||payload.format!=='trip-personal-state'||[1,2,3].indexOf(payload.version)<0)throw new Error('個人狀態格式錯誤');
+  if(!payload||payload.format!=='trip-personal-state'||[1,2,3,4].indexOf(payload.version)<0)throw new Error('個人狀態格式錯誤');
   if(payload.version<3&&payload.proxyTargets===undefined)payload.proxyTargets=[];
+  if(payload.version<4&&payload.shoppingItems===undefined)payload.shoppingItems=[];
   if(!Array.isArray(payload.proxyTargets))throw new Error('代購對象清單格式錯誤');
+  if(!Array.isArray(payload.shoppingItems))throw new Error('採買清單格式錯誤');
   payload.proxyTargets=ledgerProxyTargetStore.normalize(payload.proxyTargets);
+  payload.shoppingItems=shoppingListStore.normalize(payload.shoppingItems);
   return payload;
 }
 function applyPersonalStatePayload(payload){
-  var keys=['trip_checks','trip_shop_wants','trip_member',LEDGER_QUEUE_KEY,PERSONAL_LEDGER_KEY,LEDGER_CATEGORY_OPTIONS_KEY,LEDGER_PAY_METHOD_OPTIONS_KEY,LEDGER_PROXY_TARGETS_KEY];
+  var keys=['trip_checks','trip_shop_wants','trip_member',LEDGER_QUEUE_KEY,PERSONAL_LEDGER_KEY,LEDGER_CATEGORY_OPTIONS_KEY,LEDGER_PAY_METHOD_OPTIONS_KEY,LEDGER_PROXY_TARGETS_KEY,SHOPPING_LIST_KEY];
   var before=keys.map(function(key){return {key:key,value:localStorage.getItem(key)};});
   try{
     lsSet('trip_checks',payload.checks);
@@ -4104,6 +4373,7 @@ function applyPersonalStatePayload(payload){
     localStorage.setItem(LEDGER_CATEGORY_OPTIONS_KEY,JSON.stringify(payload.ledgerCategories));
     localStorage.setItem(LEDGER_PAY_METHOD_OPTIONS_KEY,JSON.stringify(payload.ledgerPayMethods));
     localStorage.setItem(LEDGER_PROXY_TARGETS_KEY,JSON.stringify(payload.proxyTargets));
+    localStorage.setItem(SHOPPING_LIST_KEY,JSON.stringify(payload.shoppingItems));
   }catch(error){
     before.forEach(function(item){
       if(item.value===null)localStorage.removeItem(item.key);
@@ -4115,7 +4385,7 @@ function applyPersonalStatePayload(payload){
 function restorePersonalState(){
   var box=document.getElementById('personalStateBox'), payload;
   try{ payload=JSON.parse(box&&box.value||''); }catch(error){ toast('JSON 格式錯誤'); return; }
-  if(!payload||payload.format!=='trip-personal-state'||[1,2,3].indexOf(payload.version)<0||!payload.checks||Array.isArray(payload.checks)||typeof payload.checks!=='object'||!payload.wants||Array.isArray(payload.wants)||typeof payload.wants!=='object'||!Array.isArray(payload.ledgerQueue)||!memberIsAllowed(String(payload.member||''))){ toast('個人狀態格式驗證失敗'); return; }
+  if(!payload||payload.format!=='trip-personal-state'||[1,2,3,4].indexOf(payload.version)<0||!payload.checks||Array.isArray(payload.checks)||typeof payload.checks!=='object'||!payload.wants||Array.isArray(payload.wants)||typeof payload.wants!=='object'||!Array.isArray(payload.ledgerQueue)||!memberIsAllowed(String(payload.member||''))){ toast('個人狀態格式驗證失敗'); return; }
   if(payload.version===1){payload.personalLedger=[];payload.ledgerCategories=DEFAULT_LEDGER_CATEGORIES.slice();payload.ledgerPayMethods=DEFAULT_LEDGER_PAY_METHODS.slice();}
   try{validatePersonalStatePayload(payload);}catch(error){toast(error.message||'代購對象清單格式錯誤');return;}
   if(!Array.isArray(payload.personalLedger)||!Array.isArray(payload.ledgerCategories)||!Array.isArray(payload.ledgerPayMethods)){toast('個人狀態格式驗證失敗');return;}
@@ -4193,7 +4463,7 @@ function openSettings(targetId){
     '<div class="settings-section"><h3>分帳匯率與幣別</h3><div class="settings-current">目前匯率：<b>1 JPY = NT$'+escapeHtml(ledgerSettings.exchangeRate||'未設定')+'</b></div><div class="settings-rate-row"><label class="settings-help" for="ledgerExchangeRate"><b>匯率</b><br>1 日幣可換算多少台幣</label><input id="ledgerExchangeRate" type="number" inputmode="decimal" min="0.000001" step="any" value="'+escapeHtml(ledgerSettings.exchangeRate)+'"></div><div class="settings-help"><b>預設輸入幣別</b><br>新增記帳時預先選擇的幣別</div><div class="ledger-currency-grid" style="margin-top:8px"><button class="ledger-choice settings-currency-option '+(ledgerSettings.defaultCurrency==='JPY'?'on':'')+'" data-currency="JPY" aria-pressed="'+(ledgerSettings.defaultCurrency==='JPY'?'true':'false')+'" onclick="selectLedgerDefaultCurrency(\'JPY\')">JPY 日幣</button><button class="ledger-choice settings-currency-option '+(ledgerSettings.defaultCurrency==='TWD'?'on':'')+'" data-currency="TWD" aria-pressed="'+(ledgerSettings.defaultCurrency==='TWD'?'true':'false')+'" onclick="selectLedgerDefaultCurrency(\'TWD\')">TWD 台幣</button></div>'+(settingsError?'<div class="settings-help" style="color:var(--coral)">'+escapeHtml(settingsError)+'</div>':'')+'<div class="settings-help">儲存後跨裝置共用；CSV 發布可能延遲 1–5 分鐘。</div><button class="btn block" style="margin-top:10px" onclick="saveLedgerSettingsFromForm(this)">儲存共用設定</button></div>'+
     '<div class="settings-section" id="ledgerOptionSettingsSection"><h3>自訂類別與支付方式</h3><div class="settings-help">可新增、刪除或排序；刪除選項不影響既有紀錄。</div>'+renderLedgerOptionManager('category','類別')+renderLedgerOptionManager('payMethod','支付方式')+'</div>'+
     '<div class="settings-section" id="ledgerProxyTargetSettingsSection"><h3>代購對象</h3><div class="settings-help">常用對象會顯示在個人記帳表單；刪除不影響既有紀錄。</div>'+renderLedgerProxyTargetManager()+'</div>'+
-    '<div class="settings-section"><h3>本機資料備份／還原</h3><div class="settings-help">換手機、重裝 App 或清除瀏覽器資料前使用。還原會覆蓋目前裝置上的打卡、想逛、身分、個人帳、代購對象、自訂選項及待同步記帳。</div><div class="settings-actions"><button class="btn ghost" onclick="exportPersonalState()">複製備份 JSON</button><button class="btn" onclick="openPersonalStateRestore()">從 JSON 還原</button></div></div>'+
+    '<div class="settings-section"><h3>本機資料備份／還原</h3><div class="settings-help">換手機、重裝 App 或清除瀏覽器資料前使用。還原會覆蓋目前裝置上的打卡、想逛、採買清單、身分、個人帳、代購對象、自訂選項及待同步記帳。</div><div class="settings-actions"><button class="btn ghost" onclick="exportPersonalState()">複製備份 JSON</button><button class="btn" onclick="openPersonalStateRestore()">從 JSON 還原</button></div></div>'+
     '<div class="settings-section" id="ledgerTestModeSection"><div class="toggle-row"><div><h3>測試模式<span class="settings-warning-tag">僅團體帳</span></h3><div class="settings-help">團體帳切換為獨立 [TEST] 帳本；儀表板、結算與明細只顯示測試紀錄，關閉即回正式帳本。個人帳不受影響。</div></div><input type="checkbox" '+(lsGet('trip_ledger_test_mode',false)?'checked':'')+' onchange="setLedgerTestMode(this)"></div></div>'+
     '<!-- 主題區塊預留：merge 後另批實作,本批不掛入任何主題功能。 -->'+
     '</section>';

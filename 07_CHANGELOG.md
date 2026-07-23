@@ -1,4 +1,12 @@
 # 07 版本紀錄
+## 2026-07-23｜採買清單、Today 站點提醒與 Buy-to-Ledger 閉環（dev，待 Bar 真機驗收）
+- 新增純 `localStorage` 採買清單，支援品名、固定五類、數量、共用代購對象、Day 1–6 行程站點綁定、待買／已買、編輯、刪除及取消勾選；地點未知項目列於「隨時可買」，孤兒 `stopRef` 保留且不進入 Today 提醒。
+- Today 只在當日有效站點有未完成項目時顯示「今天有 N 項待買」與站名／品名摘要；依 Bar 追加裁定，無提醒或非旅程日改顯示輕量「採買清單 →」入口，避免空清單無法建立第一筆，且不與提醒卡重複。
+- 單筆標記已買提供「直接完成／同時記帳」，後者沿用既有快速記帳 Sheet 並預填品名、購物類別、數量／對象備註及代購對象，金額保持空白；多選可直接標記已買或帶入既有多品項表單。取消記帳不回滾已買狀態。
+- 採買表單與 Ledger 共用 `trip_ledger_proxy_targets` 並沿用既有去重；個人狀態備份升為 v4 並納入採買清單，v1–v3 還原時安全補空清單。新增根目錄 `CONTEXT.md` 詞彙表。
+- 375px／390px Browser QA 已驗證 Today、完整清單及單筆／多品項閉環無水平溢出，Scroll-only panel 為 `touch-action: pan-y`，browser error 0。Service Worker cache 僅由 `okayama-trip-v44` 順延至 `okayama-trip-v45`，SHELL、install／activate／fetch 不變；未修改 Schema、Validator、Apps Script、Google Sheet、BUILTIN、購物頁或部署設定。
+- 採買清單與備份／Ledger／Today／PWA 目標測試通過；完整 41／41 Node tests 逐一執行及 `tools/check-doc-titles.js` 均 exit 0。
+
 ## 2026-07-23｜治理決策追認與規則增訂
 - 分帳 2.1／2.2 於禁改清單外擴充 Schema（2.6→2.8，Ledger 契約 14→21 欄）並修改 `apps-script/`，屬未授權契約擴充，經 Bar 追認保留；同步增訂 §4 禁改清單硬停規則以防再次發生。
 - PR1 六欄擴充、PR1–PR5 分段交付、「票券」正名（修正原「票卷」錯字）、團體帳刪除原因必填（A 案）、2026-07-18 成員名單來源收斂為僅 `[身分註冊]` 紀錄——均經 Bar 追認核准。
