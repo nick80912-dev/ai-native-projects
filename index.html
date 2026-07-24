@@ -3959,28 +3959,82 @@ function createSettlementResponse(type,claim,member,reason,testMode,now,randomFn
   },at,randomFn,!!testMode);
 }
 function deriveSettlements(records,warnFn,universe){
+  // ADR 0007 — settlement handshake as an append-only event stream of claim generations.
+  // Per settlement key (universe, from, to, currency): canonical = earliest claim by the
+  // stable total order (normalized record.time ASC -> record.id ASC). Claims raised while a
+  // generation is open are suppressed duplicates (permanently inert, warned). A generation is
+  // terminated by a valid confirm/reject/withdraw of the canonical; only an explicit new claim
+  // after that terminal event opens the next generation. This guarantees deterministic
+  // convergence across every input ordering (optimistic and remote) — not server-arrival order.
   universe=universe==='test'?'test':'formal';
-  var visible=effectiveLedgerRecords(records||[],warnFn),entries=[],byId=Object.create(null);
+  var raw=records||[],SEP=' ';
   function inUniverse(record){return universe==='test'?isTestLedgerRecord(record):!isTestLedgerRecord(record);}
-  visible.forEach(function(record){
+  function cmpStable(aTime,aId,bTime,bId){return String(aTime||'').localeCompare(String(bTime||''))||String(aId||'').localeCompare(String(bId||''));}
+  function laterTime(a,b){a=String(a||'');b=String(b||'');return a>=b?a:b;}
+  var byId=Object.create(null);
+  raw.forEach(function(record){if(record&&record.id&&!byId[record.id])byId[record.id]=record;});
+  // 1) valid claims in this universe, keyed by (from, to, currency)
+  var claims=[],claimById=Object.create(null);
+  raw.forEach(function(record){
     if(!isSettlementClaimRecord(record)||!inUniverse(record))return;
     var from=String(record.member||'').trim(),receivers=parseParticipants(record,warnFn),currency=settlementClaimCurrency(record),amount=settlementClaimAmount(record);
     if(!canonicalMemberName(from)){settlementWarning(warnFn,'結算排除結清 '+String(record.id||'')+':缺少付款人');return;}
     if(!receivers||receivers.length!==1){settlementWarning(warnFn,'結算排除結清 '+String(record.id||'')+':收款人快照無效');return;}
     if(canonicalMemberName(from)===canonicalMemberName(receivers[0])){settlementWarning(warnFn,'結算排除結清 '+String(record.id||'')+':付款人與收款人相同');return;}
     if(!currency||amount===null){settlementWarning(warnFn,'結算排除結清 '+String(record.id||'')+':金額或幣別無效');return;}
-    var entry={claim:record,from:from,to:receivers[0],currency:currency,amount:amount,status:'pending',response:null};
-    entries.push(entry);byId[String(record.id)]=entry;
+    var info={rec:record,id:String(record.id),time:String(record.time||''),from:from,to:receivers[0],currency:currency,amount:amount,
+      key:canonicalMemberName(from)+SEP+canonicalMemberName(receivers[0])+SEP+currency};
+    claims.push(info);claimById[info.id]=info;
   });
-  visible.filter(function(record){return isSettlementResponseRecord(record)&&inUniverse(record);})
-    .sort(function(a,b){return String(a.time||'').localeCompare(String(b.time||''))||String(a.id||'').localeCompare(String(b.id||''));})
-    .forEach(function(record){
-      var entry=byId[String(record.targetRecordId||'')];
-      if(!entry){settlementWarning(warnFn,'忽略結算回覆 '+String(record.id||'')+':找不到目標結清');return;}
-      if(entry.response)return;
-      if(canonicalMemberName(record.member)!==canonicalMemberName(entry.to)){settlementWarning(warnFn,'忽略結算回覆 '+String(record.id||'')+':只有收款人可以回覆');return;}
-      entry.response=record;entry.status=record.recordType==='settlement_confirm'?'confirmed':'rejected';
+  // 2) order-independent tombstones: withdrawn claims + revoked responses
+  var withdrawnAt=Object.create(null),revoked=Object.create(null);
+  raw.forEach(function(record){
+    if(!isDeletionRecord(record)||deletionRecordIssue(record))return;
+    var target=byId[String(record.targetRecordId||'')];
+    if(!target)return;
+    if(isSettlementClaimRecord(target)){var cid=String(target.id);if(!(cid in withdrawnAt)||String(record.time||'')<withdrawnAt[cid])withdrawnAt[cid]=String(record.time||'');}
+    else if(isSettlementResponseRecord(target)){revoked[String(target.id)]=true;}
+  });
+  // 3) surviving valid responses grouped by target claim (earliest wins); responder must be the receiver
+  var responsesByClaim=Object.create(null);
+  raw.forEach(function(record){
+    if(!isSettlementResponseRecord(record)||!inUniverse(record)||revoked[String(record.id)])return;
+    var targetId=String(record.targetRecordId||''),target=claimById[targetId];
+    if(!target){settlementWarning(warnFn,'忽略結算回覆 '+String(record.id||'')+':找不到目標結清');return;}
+    if(canonicalMemberName(record.member)!==canonicalMemberName(target.to)){settlementWarning(warnFn,'忽略結算回覆 '+String(record.id||'')+':只有收款人可以回覆');return;}
+    (responsesByClaim[targetId]||(responsesByClaim[targetId]=[])).push(record);
+  });
+  Object.keys(responsesByClaim).forEach(function(cid){responsesByClaim[cid].sort(function(a,b){return cmpStable(a.time,a.id,b.time,b.id);});});
+  // 4) per-claim terminal fact (withdraw dominates; else earliest surviving response; else pending)
+  function terminalOf(info){
+    if(info.id in withdrawnAt)return {status:'withdrawn',closesAt:laterTime(info.time,withdrawnAt[info.id]),response:null};
+    var list=responsesByClaim[info.id];
+    if(list&&list.length){var r=list[0];return {status:r.recordType==='settlement_confirm'?'confirmed':'rejected',closesAt:laterTime(info.time,String(r.time||'')),response:r};}
+    return {status:'pending',closesAt:null,response:null};
+  }
+  // 5) generation walk per key (stable claim order) -> canonical entries + suppressed set
+  var byKey=Object.create(null);
+  claims.forEach(function(info){(byKey[info.key]||(byKey[info.key]=[])).push(info);});
+  var entries=[],suppressed=Object.create(null);
+  Object.keys(byKey).forEach(function(key){
+    var group=byKey[key].slice().sort(function(a,b){return cmpStable(a.time,a.id,b.time,b.id);});
+    var genOpen=false,genClosesAt=null;
+    group.forEach(function(info){
+      if(genOpen&&(genClosesAt===null||String(info.time||'')<=genClosesAt)){
+        suppressed[info.id]=true;
+        settlementWarning(warnFn,'結算收斂:忽略重複結清 '+info.id+'(同一對已有進行中的結清)');
+        return;
+      }
+      var term=terminalOf(info);
+      genOpen=true;genClosesAt=term.closesAt;
+      if(term.status==='withdrawn')return;
+      entries.push({claim:info.rec,from:info.from,to:info.to,currency:info.currency,amount:info.amount,status:term.status,response:term.response});
     });
+  });
+  // 6) responses that target a suppressed claim are inert (never affect the canonical, never in history) — warn
+  Object.keys(responsesByClaim).forEach(function(cid){
+    if(suppressed[cid])responsesByClaim[cid].forEach(function(r){settlementWarning(warnFn,'結算收斂:忽略指向被抑制結清 '+cid+' 的回覆 '+String(r.id||''));});
+  });
   return {
     entries:entries,
     confirmed:entries.filter(function(entry){return entry.status==='confirmed';}),
@@ -4001,6 +4055,24 @@ function applyConfirmedSettlements(balances,confirmedEntries){
   });
   return {members:members,memberOrder:(source.memberOrder||[]).slice(),invalidRecords:(source.invalidRecords||[]).slice()};
 }
+
+/* 結算操作可靠性(Ticket 7):pre-await 單裝置操作鎖 + 送出中/等待同步/失敗 按鈕狀態機。
+   跨裝置競態的收斂由 deriveSettlements 的 canonical suppression 負責,本鎖只防單一裝置連點。 */
+var settlementActionLock=(function(){var held=Object.create(null);return {
+  acquire:function(key){key=String(key||'');if(!key||held[key])return false;held[key]=true;return true;},
+  release:function(key){delete held[String(key||'')];},
+  held:function(key){return !!held[String(key||'')];}
+};})();
+function settlementClaimLockKey(universe,from,to,currency){return ['claim',universe==='test'?'test':'formal',canonicalMemberName(from),canonicalMemberName(to),String(currency||'').toUpperCase()].join(' ');}
+function settlementResponseLockKey(claimId){return 'response '+String(claimId||'');}
+function settlementWithdrawLockKey(claimId){return 'withdraw '+String(claimId||'');}
+function settlementUndoLockKey(responseId){return 'undo '+String(responseId||'');}
+var settlementActionPhases=Object.create(null);
+function setSettlementActionPhase(key,phase){key=String(key||'');if(!key)return;if(phase)settlementActionPhases[key]=phase;else delete settlementActionPhases[key];}
+function settlementActionPhase(key){return settlementActionPhases[String(key||'')]||'idle';}
+/* 個人可見範圍(Ticket 8):結算面板每一區只保留與 currentMember 直接相關(from 或 to)的項目,
+   過濾發生在 DOM 產生之前;handshake 交握與轉帳建議共用此純函式,不以 CSS 隱藏他人款項。 */
+function settlementItemsForMember(items,member){var key=canonicalMemberName(member);return (items||[]).filter(function(item){return canonicalMemberName(item&&item.from)===key||canonicalMemberName(item&&item.to)===key;});}
 
 function ledgerDeletionBridgeRecords(){
   try{var records=JSON.parse(localStorage.getItem(LEDGER_DELETION_BRIDGE_KEY)||'[]');return Array.isArray(records)?records:[];}
@@ -5396,10 +5468,13 @@ function ledgerSettlementCurrency(){
 function ledgerHandshakeStatusLine(entry,me){
   var meKey=canonicalMemberName(me),amount=escapeHtml(formatLedgerCurrencyAmount(entry.currency,entry.amount));
   var pair=escapeHtml(entry.from)+' → '+escapeHtml(entry.to),safeId=jsHtmlAttrString(entry.claim.id),actions='';
+  var busy=settlementActionPhase(settlementResponseLockKey(entry.claim.id))==='submitting'||settlementActionPhase(settlementWithdrawLockKey(entry.claim.id))==='submitting';
+  var syncTag=entry.claim&&entry.claim.pending?'<span class="ledger-settle-sync">等待同步</span>':'';
   if(entry.status==='pending'){
-    if(canonicalMemberName(entry.to)===meKey)actions='<span class="ledger-settle-actions"><button class="btn sm" onclick="ledgerConfirmSettlementClaim(\''+safeId+'\')">確認已收</button><button class="btn sm ghost" onclick="ledgerRejectSettlementClaim(\''+safeId+'\')">退回</button></span>';
+    if(busy)actions='<span class="ledger-settle-actions"><button class="btn sm" disabled><span class="button-spinner"></span>送出中…</button></span>';
+    else if(canonicalMemberName(entry.to)===meKey)actions='<span class="ledger-settle-actions"><button class="btn sm" onclick="ledgerConfirmSettlementClaim(\''+safeId+'\')">確認已收</button><button class="btn sm ghost" onclick="ledgerRejectSettlementClaim(\''+safeId+'\')">退回</button></span>';
     else if(canonicalMemberName(entry.from)===meKey)actions='<span class="ledger-settle-actions"><button class="btn sm ghost" onclick="ledgerWithdrawSettlementClaim(\''+safeId+'\')">撤回</button></span>';
-    return '<div class="ledger-settlement-line ledger-settle-pending"><span>⏳ '+pair+' '+amount+'</span><span>待 '+escapeHtml(entry.to)+' 確認'+actions+'</span></div>';
+    return '<div class="ledger-settlement-line ledger-settle-pending"><span>⏳ '+pair+' '+amount+'</span><span>待 '+escapeHtml(entry.to)+' 確認'+syncTag+actions+'</span></div>';
   }
   var reason=String(entry.response&&entry.response.note||'').trim();
   return '<div class="ledger-settlement-line ledger-settle-rejected"><span>❌ '+pair+' '+amount+'</span><span>已退回'+(reason?'・'+escapeHtml(reason):'')+'</span></div>';
@@ -5414,24 +5489,39 @@ function ledgerSettleSuggestionLines(items,me,pendingEntries){
   var meKey=canonicalMemberName(me);
   return items.map(function(item){
     var hasPending=(pendingEntries||[]).some(function(entry){return entry.currency===item.currency&&canonicalMemberName(entry.from)===canonicalMemberName(item.from)&&canonicalMemberName(entry.to)===canonicalMemberName(item.to);});
-    var action=canonicalMemberName(item.from)===meKey&&!hasPending?'<span class="ledger-settle-actions"><button class="btn sm" onclick="ledgerMarkSettlementPaid(\''+jsHtmlAttrString(item.to)+'\','+Number(item.amount)+',\''+jsHtmlAttrString(item.currency)+'\')">我已付款</button></span>':'';
+    var action='';
+    if(canonicalMemberName(item.from)===meKey&&!hasPending){
+      var busy=settlementActionPhase(settlementClaimLockKey(ledgerUniverseMode(),item.from,item.to,item.currency))==='submitting';
+      action=busy?'<span class="ledger-settle-actions"><button class="btn sm" disabled><span class="button-spinner"></span>送出中…</button></span>':'<span class="ledger-settle-actions"><button class="btn sm" onclick="ledgerMarkSettlementPaid(\''+jsHtmlAttrString(item.to)+'\','+Number(item.amount)+',\''+jsHtmlAttrString(item.currency)+'\')">我已付款</button></span>';
+    }
     return '<div class="ledger-settlement-line"><span>'+escapeHtml(item.from)+' → '+escapeHtml(item.to)+'</span><span>'+escapeHtml(formatLedgerCurrencyAmount(item.currency,item.amount))+action+'</span></div>';
   }).join('');
 }
 function openLedgerSettlementPanel(){
   var me=getCurrentMember(),settlement=ledgerCurrentMemberSettlement(mergedLedgerRecords(),me,ledgerUniverseMode()),status=ledgerSettlementStatus(settlement.current);
   var currency=ledgerSettlementCurrency(),otherCurrency=currency==='JPY'?'TWD':'JPY';
-  var mainSuggestions=currency==='TWD'?settlement.twd:settlement.jpy,otherSuggestions=currency==='TWD'?settlement.jpy:settlement.twd;
-  var handshake=settlement.handshake,open=handshake.pending.concat(handshake.rejected);
+  var handshake=settlement.handshake;
+  var myPending=settlementItemsForMember(handshake.pending,me),myRejected=settlementItemsForMember(handshake.rejected,me),myConfirmed=settlementItemsForMember(handshake.confirmed,me);
+  var mainSuggestions=settlementItemsForMember(currency==='TWD'?settlement.twd:settlement.jpy,me),otherSuggestions=settlementItemsForMember(currency==='TWD'?settlement.jpy:settlement.twd,me);
+  var open=myPending.concat(myRejected);
+  if(!(open.length||myConfirmed.length||mainSuggestions.length||otherSuggestions.length)){openLedgerInfoSheet('團體結算','<div class="empty-state">目前沒有需要你處理的結算</div>');return;}
   var openSection=open.length?'<section class="ledger-settlement-section"><h3>待處理結清</h3><div class="ledger-settlement-list">'+open.map(function(entry){return ledgerHandshakeStatusLine(entry,me);}).join('')+'</div></section>':'';
-  var historySection=handshake.confirmed.length?'<section class="ledger-settlement-section"><h3>結清歷史</h3><div class="ledger-settlement-list">'+handshake.confirmed.map(function(entry){return ledgerHandshakeHistoryLine(entry,me);}).join('')+'</div></section>':'';
-  var body='<div class="ledger-settlement-status"><strong>'+escapeHtml(status.label)+'</strong><span>¥'+status.amountJpy.toLocaleString()+' · NT$'+status.amountTwd.toLocaleString()+'</span></div><section class="ledger-settlement-section"><h3>成員淨額</h3><div class="ledger-settlement-list">'+ledgerSettlementLines(settlement.balances.members)+'</div></section>'+openSection+'<section class="ledger-settlement-section"><h3>'+escapeHtml(currency)+' 轉帳建議</h3><div class="ledger-settlement-list">'+ledgerSettleSuggestionLines(mainSuggestions,me,handshake.pending)+'</div></section><section class="ledger-settlement-section"><h3>'+escapeHtml(otherCurrency)+' 轉帳建議（參考）</h3><div class="ledger-settlement-list">'+ledgerTransferLines(otherSuggestions)+'</div></section>'+historySection+(settlement.balances.invalidRecords.length?'<div class="ledger-settlement-warning">已排除 '+settlement.balances.invalidRecords.length+' 筆異常紀錄，請檢查資料。</div>':'');
+  var historySection=myConfirmed.length?'<section class="ledger-settlement-section"><h3>結清歷史</h3><div class="ledger-settlement-list">'+myConfirmed.map(function(entry){return ledgerHandshakeHistoryLine(entry,me);}).join('')+'</div></section>':'';
+  var mainSection=mainSuggestions.length?'<section class="ledger-settlement-section"><h3>'+escapeHtml(currency)+' 轉帳建議</h3><div class="ledger-settlement-list">'+ledgerSettleSuggestionLines(mainSuggestions,me,myPending)+'</div></section>':'';
+  var otherSection=otherSuggestions.length?'<section class="ledger-settlement-section"><h3>'+escapeHtml(otherCurrency)+' 轉帳建議（參考）</h3><div class="ledger-settlement-list">'+ledgerTransferLines(otherSuggestions)+'</div></section>':'';
+  var body='<div class="ledger-settlement-status"><strong>'+escapeHtml(status.label)+'</strong><span>¥'+status.amountJpy.toLocaleString()+' · NT$'+status.amountTwd.toLocaleString()+'</span></div><section class="ledger-settlement-section"><h3>我的淨額</h3><div class="ledger-settlement-list">'+ledgerSettlementLines([settlement.current])+'</div></section>'+openSection+mainSection+otherSection+historySection+(settlement.balances.invalidRecords.length?'<div class="ledger-settlement-warning">已排除 '+settlement.balances.invalidRecords.length+' 筆異常紀錄，請檢查資料。</div>':'');
   openLedgerInfoSheet('團體結算',body);
 }
-function appendSettlementRecord(record,doneMessage){
+function appendSettlementRecord(record,doneMessage,lockKey){
+  if(lockKey)setSettlementActionPhase(lockKey,'submitting');
+  renderSplit();openLedgerSettlementPanel();
   return ledgerRepository.add(record).then(function(delivery){
+    if(lockKey){setSettlementActionPhase(lockKey,'queued');settlementActionLock.release(lockKey);}
     renderSplit();openLedgerSettlementPanel();toast(delivery.ok?doneMessage:doneMessage+'，待同步');return delivery;
-  },function(error){renderSplit();openLedgerSettlementPanel();toast(error.message||'結算操作失敗');throw error;});
+  },function(error){
+    if(lockKey){setSettlementActionPhase(lockKey,'failed');settlementActionLock.release(lockKey);}
+    renderSplit();openLedgerSettlementPanel();toast(error.message||'結算操作失敗');throw error;
+  });
 }
 function settlementActionGuard(){
   if(isTimeSimulationActive()){toast('時間模擬中不可操作結算');return null;}
@@ -5444,10 +5534,12 @@ function ledgerMarkSettlementPaid(to,amount,currency){
   var handshake=deriveSettlements(mergedLedgerRecords(),null,ledgerUniverseMode());
   var duplicated=handshake.pending.some(function(entry){return entry.currency===currency&&canonicalMemberName(entry.from)===canonicalMemberName(me)&&canonicalMemberName(entry.to)===canonicalMemberName(to);});
   if(duplicated){toast('這筆結清已在待確認中');return;}
+  var lockKey=settlementClaimLockKey(ledgerUniverseMode(),me,to,currency);
+  if(!settlementActionLock.acquire(lockKey))return;
   var record;
   try{record=createSettlementClaim(me,to,amount,currency,ledgerUniverseMode()==='test');}
-  catch(error){toast(error.message||'結清資料格式錯誤');return;}
-  appendSettlementRecord(record,'已標記付款，待 '+to+' 確認');
+  catch(error){settlementActionLock.release(lockKey);toast(error.message||'結清資料格式錯誤');return;}
+  appendSettlementRecord(record,'已標記付款，待 '+to+' 確認',lockKey);
 }
 function settlementClaimById(id){
   var handshake=deriveSettlements(mergedLedgerRecords(),null,ledgerUniverseMode());
@@ -5458,10 +5550,12 @@ function ledgerConfirmSettlementClaim(id){
   var entry=settlementClaimById(id);
   if(!entry||entry.status!=='pending'){toast('結清已處理或不存在');openLedgerSettlementPanel();return;}
   if(!confirm('確認已收到 '+entry.from+' 的 '+formatLedgerCurrencyAmount(entry.currency,entry.amount)+'？\n確認後雙方淨額會立即抵銷。'))return;
+  var lockKey=settlementResponseLockKey(entry.claim.id);
+  if(!settlementActionLock.acquire(lockKey))return;
   var record;
   try{record=createSettlementResponse('settlement_confirm',entry.claim,me,'',ledgerUniverseMode()==='test');}
-  catch(error){toast(error.message||'無法確認');return;}
-  appendSettlementRecord(record,'已確認收款');
+  catch(error){settlementActionLock.release(lockKey);toast(error.message||'無法確認');return;}
+  appendSettlementRecord(record,'已確認收款',lockKey);
 }
 function closeSettlementRejectDialog(){var overlay=document.getElementById('ledgerSettlementRejectDialog');if(overlay)overlay.remove();}
 function ledgerRejectSettlementClaim(id){
@@ -5480,11 +5574,13 @@ function submitSettlementReject(id,quickReason){
   var reason=quickReason!==undefined?quickReason:String(input&&input.value||'').trim();
   var entry=settlementClaimById(id);
   if(!entry||entry.status!=='pending'){closeSettlementRejectDialog();toast('結清已處理或不存在');openLedgerSettlementPanel();return;}
+  var lockKey=settlementResponseLockKey(entry.claim.id);
+  if(!settlementActionLock.acquire(lockKey)){closeSettlementRejectDialog();return;}
   var record;
   try{record=createSettlementResponse('settlement_reject',entry.claim,me,reason,ledgerUniverseMode()==='test');}
-  catch(error){toast(error.message||'無法退回');return;}
+  catch(error){settlementActionLock.release(lockKey);toast(error.message||'無法退回');return;}
   closeSettlementRejectDialog();
-  appendSettlementRecord(record,'已退回結清');
+  appendSettlementRecord(record,'已退回結清',lockKey);
 }
 function ledgerWithdrawSettlementClaim(id){
   var me=settlementActionGuard();if(!me)return;
@@ -5492,10 +5588,12 @@ function ledgerWithdrawSettlementClaim(id){
   if(!entry||entry.status!=='pending'){toast('結清已處理或不存在');openLedgerSettlementPanel();return;}
   if(canonicalMemberName(entry.from)!==canonicalMemberName(me)){toast('只有付款人可以撤回');return;}
   if(!confirm('撤回這筆結清標記？'))return;
+  var lockKey=settlementWithdrawLockKey(entry.claim.id);
+  if(!settlementActionLock.acquire(lockKey))return;
   var record;
   try{record=createLedgerDeletion(entry.claim,me,'撤回結清');}
-  catch(error){toast(error.message||'無法撤回');return;}
-  appendSettlementRecord(record,'已撤回結清標記');
+  catch(error){settlementActionLock.release(lockKey);toast(error.message||'無法撤回');return;}
+  appendSettlementRecord(record,'已撤回結清標記',lockKey);
 }
 function ledgerRevokeSettlementConfirm(responseId){
   var me=settlementActionGuard();if(!me)return;
@@ -5504,10 +5602,12 @@ function ledgerRevokeSettlementConfirm(responseId){
   if(!entry){toast('結清確認已不存在');openLedgerSettlementPanel();return;}
   if(canonicalMemberName(entry.to)!==canonicalMemberName(me)){toast('只有收款人可以撤銷確認');return;}
   if(!confirm('撤銷這筆收款確認？\n款項會退回待確認狀態並重新掛帳。'))return;
+  var lockKey=settlementUndoLockKey(responseId);
+  if(!settlementActionLock.acquire(lockKey))return;
   var record;
   try{record=createLedgerDeletion(entry.response,me,'撤銷確認');}
-  catch(error){toast(error.message||'無法撤銷');return;}
-  appendSettlementRecord(record,'已撤銷收款確認');
+  catch(error){settlementActionLock.release(lockKey);toast(error.message||'無法撤銷');return;}
+  appendSettlementRecord(record,'已撤銷收款確認',lockKey);
 }
 function openLedgerProxyPanel(){
   var summary=buildProxySummary(ledgerTrackRecords(),getCurrentMember());
