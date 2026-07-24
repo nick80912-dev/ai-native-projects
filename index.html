@@ -3959,28 +3959,82 @@ function createSettlementResponse(type,claim,member,reason,testMode,now,randomFn
   },at,randomFn,!!testMode);
 }
 function deriveSettlements(records,warnFn,universe){
+  // ADR 0007 — settlement handshake as an append-only event stream of claim generations.
+  // Per settlement key (universe, from, to, currency): canonical = earliest claim by the
+  // stable total order (normalized record.time ASC -> record.id ASC). Claims raised while a
+  // generation is open are suppressed duplicates (permanently inert, warned). A generation is
+  // terminated by a valid confirm/reject/withdraw of the canonical; only an explicit new claim
+  // after that terminal event opens the next generation. This guarantees deterministic
+  // convergence across every input ordering (optimistic and remote) — not server-arrival order.
   universe=universe==='test'?'test':'formal';
-  var visible=effectiveLedgerRecords(records||[],warnFn),entries=[],byId=Object.create(null);
+  var raw=records||[],SEP=' ';
   function inUniverse(record){return universe==='test'?isTestLedgerRecord(record):!isTestLedgerRecord(record);}
-  visible.forEach(function(record){
+  function cmpStable(aTime,aId,bTime,bId){return String(aTime||'').localeCompare(String(bTime||''))||String(aId||'').localeCompare(String(bId||''));}
+  function laterTime(a,b){a=String(a||'');b=String(b||'');return a>=b?a:b;}
+  var byId=Object.create(null);
+  raw.forEach(function(record){if(record&&record.id&&!byId[record.id])byId[record.id]=record;});
+  // 1) valid claims in this universe, keyed by (from, to, currency)
+  var claims=[],claimById=Object.create(null);
+  raw.forEach(function(record){
     if(!isSettlementClaimRecord(record)||!inUniverse(record))return;
     var from=String(record.member||'').trim(),receivers=parseParticipants(record,warnFn),currency=settlementClaimCurrency(record),amount=settlementClaimAmount(record);
     if(!canonicalMemberName(from)){settlementWarning(warnFn,'結算排除結清 '+String(record.id||'')+':缺少付款人');return;}
     if(!receivers||receivers.length!==1){settlementWarning(warnFn,'結算排除結清 '+String(record.id||'')+':收款人快照無效');return;}
     if(canonicalMemberName(from)===canonicalMemberName(receivers[0])){settlementWarning(warnFn,'結算排除結清 '+String(record.id||'')+':付款人與收款人相同');return;}
     if(!currency||amount===null){settlementWarning(warnFn,'結算排除結清 '+String(record.id||'')+':金額或幣別無效');return;}
-    var entry={claim:record,from:from,to:receivers[0],currency:currency,amount:amount,status:'pending',response:null};
-    entries.push(entry);byId[String(record.id)]=entry;
+    var info={rec:record,id:String(record.id),time:String(record.time||''),from:from,to:receivers[0],currency:currency,amount:amount,
+      key:canonicalMemberName(from)+SEP+canonicalMemberName(receivers[0])+SEP+currency};
+    claims.push(info);claimById[info.id]=info;
   });
-  visible.filter(function(record){return isSettlementResponseRecord(record)&&inUniverse(record);})
-    .sort(function(a,b){return String(a.time||'').localeCompare(String(b.time||''))||String(a.id||'').localeCompare(String(b.id||''));})
-    .forEach(function(record){
-      var entry=byId[String(record.targetRecordId||'')];
-      if(!entry){settlementWarning(warnFn,'忽略結算回覆 '+String(record.id||'')+':找不到目標結清');return;}
-      if(entry.response)return;
-      if(canonicalMemberName(record.member)!==canonicalMemberName(entry.to)){settlementWarning(warnFn,'忽略結算回覆 '+String(record.id||'')+':只有收款人可以回覆');return;}
-      entry.response=record;entry.status=record.recordType==='settlement_confirm'?'confirmed':'rejected';
+  // 2) order-independent tombstones: withdrawn claims + revoked responses
+  var withdrawnAt=Object.create(null),revoked=Object.create(null);
+  raw.forEach(function(record){
+    if(!isDeletionRecord(record)||deletionRecordIssue(record))return;
+    var target=byId[String(record.targetRecordId||'')];
+    if(!target)return;
+    if(isSettlementClaimRecord(target)){var cid=String(target.id);if(!(cid in withdrawnAt)||String(record.time||'')<withdrawnAt[cid])withdrawnAt[cid]=String(record.time||'');}
+    else if(isSettlementResponseRecord(target)){revoked[String(target.id)]=true;}
+  });
+  // 3) surviving valid responses grouped by target claim (earliest wins); responder must be the receiver
+  var responsesByClaim=Object.create(null);
+  raw.forEach(function(record){
+    if(!isSettlementResponseRecord(record)||!inUniverse(record)||revoked[String(record.id)])return;
+    var targetId=String(record.targetRecordId||''),target=claimById[targetId];
+    if(!target){settlementWarning(warnFn,'忽略結算回覆 '+String(record.id||'')+':找不到目標結清');return;}
+    if(canonicalMemberName(record.member)!==canonicalMemberName(target.to)){settlementWarning(warnFn,'忽略結算回覆 '+String(record.id||'')+':只有收款人可以回覆');return;}
+    (responsesByClaim[targetId]||(responsesByClaim[targetId]=[])).push(record);
+  });
+  Object.keys(responsesByClaim).forEach(function(cid){responsesByClaim[cid].sort(function(a,b){return cmpStable(a.time,a.id,b.time,b.id);});});
+  // 4) per-claim terminal fact (withdraw dominates; else earliest surviving response; else pending)
+  function terminalOf(info){
+    if(info.id in withdrawnAt)return {status:'withdrawn',closesAt:laterTime(info.time,withdrawnAt[info.id]),response:null};
+    var list=responsesByClaim[info.id];
+    if(list&&list.length){var r=list[0];return {status:r.recordType==='settlement_confirm'?'confirmed':'rejected',closesAt:laterTime(info.time,String(r.time||'')),response:r};}
+    return {status:'pending',closesAt:null,response:null};
+  }
+  // 5) generation walk per key (stable claim order) -> canonical entries + suppressed set
+  var byKey=Object.create(null);
+  claims.forEach(function(info){(byKey[info.key]||(byKey[info.key]=[])).push(info);});
+  var entries=[],suppressed=Object.create(null);
+  Object.keys(byKey).forEach(function(key){
+    var group=byKey[key].slice().sort(function(a,b){return cmpStable(a.time,a.id,b.time,b.id);});
+    var genOpen=false,genClosesAt=null;
+    group.forEach(function(info){
+      if(genOpen&&(genClosesAt===null||String(info.time||'')<=genClosesAt)){
+        suppressed[info.id]=true;
+        settlementWarning(warnFn,'結算收斂:忽略重複結清 '+info.id+'(同一對已有進行中的結清)');
+        return;
+      }
+      var term=terminalOf(info);
+      genOpen=true;genClosesAt=term.closesAt;
+      if(term.status==='withdrawn')return;
+      entries.push({claim:info.rec,from:info.from,to:info.to,currency:info.currency,amount:info.amount,status:term.status,response:term.response});
     });
+  });
+  // 6) responses that target a suppressed claim are inert (never affect the canonical, never in history) — warn
+  Object.keys(responsesByClaim).forEach(function(cid){
+    if(suppressed[cid])responsesByClaim[cid].forEach(function(r){settlementWarning(warnFn,'結算收斂:忽略指向被抑制結清 '+cid+' 的回覆 '+String(r.id||''));});
+  });
   return {
     entries:entries,
     confirmed:entries.filter(function(entry){return entry.status==='confirmed';}),
