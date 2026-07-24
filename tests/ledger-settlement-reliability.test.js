@@ -344,6 +344,37 @@ test('#17 UI: queued shows a persistent wait-for-sync tag until the record reads
   assert(uiSlice.indexOf('等待同步') >= 0, 'a persistent 等待同步 tag is shown for locally-queued (unsynced) records');
 });
 
+// ===== Ticket #8 — Personal visibility: per-member filtering of the settlement panel =====
+const panelSlice = html.slice(html.indexOf('function openLedgerSettlementPanel('), html.indexOf('function appendSettlementRecord('));
+
+test('#9 settlementItemsForMember filters transfer suggestions to the current member', function () {
+  const items = [
+    { from: 'Bar', to: '小美', currency: 'JPY', amount: 100 },
+    { from: '小王', to: '小明', currency: 'JPY', amount: 200 }
+  ];
+  assert.deepStrictEqual(mod.settlementItemsForMember(items, 'Bar').map(function (i) { return i.from + '>' + i.to; }), ['Bar>小美']);
+  assert.deepStrictEqual(mod.settlementItemsForMember(items, '小明').map(function (i) { return i.from + '>' + i.to; }), ['小王>小明']);
+  assert.strictEqual(mod.settlementItemsForMember(items, '阿明').length, 0, 'an unrelated member sees nothing');
+});
+test('#9 settlementItemsForMember filters handshake entries (pending/confirmed/rejected)', function () {
+  const entries = [
+    { claim: { id: 'a' }, from: 'Bar', to: '小美', currency: 'JPY', amount: 100, status: 'pending' },
+    { claim: { id: 'b' }, from: '小王', to: '小明', currency: 'JPY', amount: 200, status: 'pending' }
+  ];
+  assert.strictEqual(mod.settlementItemsForMember(entries, '小美').length, 1);
+  assert.strictEqual(mod.settlementItemsForMember(entries, '小美')[0].claim.id, 'a');
+  assert.strictEqual(mod.settlementItemsForMember(entries, '阿明').length, 0, 'a third party sees no entry');
+});
+test('#9 UI: panel filters every section by the current member', function () {
+  assert(panelSlice.indexOf('settlementItemsForMember') >= 0, 'panel filters pending/rejected/confirmed/suggestions by member');
+});
+test('#9 UI: member nets show only the current member (no group-wide leak)', function () {
+  assert(panelSlice.indexOf('ledgerSettlementLines(settlement.balances.members)') < 0, 'panel no longer renders every member net');
+});
+test('#9 UI: empty-state copy when the current member has nothing to handle', function () {
+  assert(panelSlice.indexOf('目前沒有需要你處理的結算') >= 0, 'panel shows the approved empty-state copy');
+});
+
 // ---- summary ----
 Promise.all(asyncTests).then(function () {
   const failed = results.filter(function (r) { return !r.ok; });

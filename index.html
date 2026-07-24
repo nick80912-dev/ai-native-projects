@@ -4070,6 +4070,9 @@ function settlementUndoLockKey(responseId){return 'undo '+String(responseId||'')
 var settlementActionPhases=Object.create(null);
 function setSettlementActionPhase(key,phase){key=String(key||'');if(!key)return;if(phase)settlementActionPhases[key]=phase;else delete settlementActionPhases[key];}
 function settlementActionPhase(key){return settlementActionPhases[String(key||'')]||'idle';}
+/* 個人可見範圍(Ticket 8):結算面板每一區只保留與 currentMember 直接相關(from 或 to)的項目,
+   過濾發生在 DOM 產生之前;handshake 交握與轉帳建議共用此純函式,不以 CSS 隱藏他人款項。 */
+function settlementItemsForMember(items,member){var key=canonicalMemberName(member);return (items||[]).filter(function(item){return canonicalMemberName(item&&item.from)===key||canonicalMemberName(item&&item.to)===key;});}
 
 function ledgerDeletionBridgeRecords(){
   try{var records=JSON.parse(localStorage.getItem(LEDGER_DELETION_BRIDGE_KEY)||'[]');return Array.isArray(records)?records:[];}
@@ -5497,11 +5500,16 @@ function ledgerSettleSuggestionLines(items,me,pendingEntries){
 function openLedgerSettlementPanel(){
   var me=getCurrentMember(),settlement=ledgerCurrentMemberSettlement(mergedLedgerRecords(),me,ledgerUniverseMode()),status=ledgerSettlementStatus(settlement.current);
   var currency=ledgerSettlementCurrency(),otherCurrency=currency==='JPY'?'TWD':'JPY';
-  var mainSuggestions=currency==='TWD'?settlement.twd:settlement.jpy,otherSuggestions=currency==='TWD'?settlement.jpy:settlement.twd;
-  var handshake=settlement.handshake,open=handshake.pending.concat(handshake.rejected);
+  var handshake=settlement.handshake;
+  var myPending=settlementItemsForMember(handshake.pending,me),myRejected=settlementItemsForMember(handshake.rejected,me),myConfirmed=settlementItemsForMember(handshake.confirmed,me);
+  var mainSuggestions=settlementItemsForMember(currency==='TWD'?settlement.twd:settlement.jpy,me),otherSuggestions=settlementItemsForMember(currency==='TWD'?settlement.jpy:settlement.twd,me);
+  var open=myPending.concat(myRejected);
+  if(!(open.length||myConfirmed.length||mainSuggestions.length||otherSuggestions.length)){openLedgerInfoSheet('團體結算','<div class="empty-state">目前沒有需要你處理的結算</div>');return;}
   var openSection=open.length?'<section class="ledger-settlement-section"><h3>待處理結清</h3><div class="ledger-settlement-list">'+open.map(function(entry){return ledgerHandshakeStatusLine(entry,me);}).join('')+'</div></section>':'';
-  var historySection=handshake.confirmed.length?'<section class="ledger-settlement-section"><h3>結清歷史</h3><div class="ledger-settlement-list">'+handshake.confirmed.map(function(entry){return ledgerHandshakeHistoryLine(entry,me);}).join('')+'</div></section>':'';
-  var body='<div class="ledger-settlement-status"><strong>'+escapeHtml(status.label)+'</strong><span>¥'+status.amountJpy.toLocaleString()+' · NT$'+status.amountTwd.toLocaleString()+'</span></div><section class="ledger-settlement-section"><h3>成員淨額</h3><div class="ledger-settlement-list">'+ledgerSettlementLines(settlement.balances.members)+'</div></section>'+openSection+'<section class="ledger-settlement-section"><h3>'+escapeHtml(currency)+' 轉帳建議</h3><div class="ledger-settlement-list">'+ledgerSettleSuggestionLines(mainSuggestions,me,handshake.pending)+'</div></section><section class="ledger-settlement-section"><h3>'+escapeHtml(otherCurrency)+' 轉帳建議（參考）</h3><div class="ledger-settlement-list">'+ledgerTransferLines(otherSuggestions)+'</div></section>'+historySection+(settlement.balances.invalidRecords.length?'<div class="ledger-settlement-warning">已排除 '+settlement.balances.invalidRecords.length+' 筆異常紀錄，請檢查資料。</div>':'');
+  var historySection=myConfirmed.length?'<section class="ledger-settlement-section"><h3>結清歷史</h3><div class="ledger-settlement-list">'+myConfirmed.map(function(entry){return ledgerHandshakeHistoryLine(entry,me);}).join('')+'</div></section>':'';
+  var mainSection=mainSuggestions.length?'<section class="ledger-settlement-section"><h3>'+escapeHtml(currency)+' 轉帳建議</h3><div class="ledger-settlement-list">'+ledgerSettleSuggestionLines(mainSuggestions,me,myPending)+'</div></section>':'';
+  var otherSection=otherSuggestions.length?'<section class="ledger-settlement-section"><h3>'+escapeHtml(otherCurrency)+' 轉帳建議（參考）</h3><div class="ledger-settlement-list">'+ledgerTransferLines(otherSuggestions)+'</div></section>':'';
+  var body='<div class="ledger-settlement-status"><strong>'+escapeHtml(status.label)+'</strong><span>¥'+status.amountJpy.toLocaleString()+' · NT$'+status.amountTwd.toLocaleString()+'</span></div><section class="ledger-settlement-section"><h3>我的淨額</h3><div class="ledger-settlement-list">'+ledgerSettlementLines([settlement.current])+'</div></section>'+openSection+mainSection+otherSection+historySection+(settlement.balances.invalidRecords.length?'<div class="ledger-settlement-warning">已排除 '+settlement.balances.invalidRecords.length+' 筆異常紀錄，請檢查資料。</div>':'');
   openLedgerInfoSheet('團體結算',body);
 }
 function appendSettlementRecord(record,doneMessage,lockKey){
