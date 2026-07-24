@@ -32,3 +32,28 @@
 | 被退回 rejected | 有 `claim` + 對應 `reject`;淨額維持掛帳,付款方看到退回原因;終結態,重試 = 開新 `claim`。 |
 | 結算幣別 settlement currency | 全團共享、用於計算應收/應付/結清的單一幣別;V1 取自 `Ledger Default Currency`,另一幣純參考。 |
 | 誠實重開 honest re-open | 已結清的一對之後有新共同消費 → 自動產生全新淨額,狀態回到應付/應收;舊結清留存為歷史。 |
+
+## 修訂 — 操作可靠性與收斂不變條件(Tickets #6–#8,2026-07-24)
+
+延伸自本 ADR,不推翻既有決策;實作於前端既有 repository 邊界內,資料契約、Apps Script API、`TripConfig` 白名單零變動,`buildMemberBalances`/`buildTransferSuggestions` 核心計算不變。
+
+### Canonical claim invariant(重複收斂不變條件)
+同一 **settlement key** `(universe, from, to, currency)` 在同一時刻最多只有一筆有效 pending `settlement_claim` 參與餘額、待處理與歷史。多筆同 key 的 claim 只認一筆 **canonical**,其餘為 **suppressed 重複**,不進 effective pending / history / settlement result,並輸出 diagnostic warning。canonical 與 suppressed 的 pending claim 在有效 `settlement_confirm` 前均不改變既有消費餘額(淨額只在 `confirm` 出現時歸零)。
+
+### Stable ordering(穩定全序:time ASC → id ASC)
+canonical 的「最早」以明確且可重現的全序決定:**normalized `record.time` ASC → `record.id` ASC**(`id` 為穩定 tie-break)。所有裝置,以及 optimistic(本機佇列)與 remote(雲端讀回)兩條推導路徑,必須使用**完全相同**的 comparator,確保各端收斂到同一 canonical。
+
+### Deterministic convergence(收斂性,非 server-arrival ordering)
+`record.time` 為 client-provided,因此本設計**只保證各端 deterministic convergence(所有端收斂到同一 canonical),不宣稱也不保證判斷「伺服器實際最早收到」的 claim**。真正的先到先得(authoritative server ordering)與跨裝置 clock skew 屬第二批同步架構議題,需另評估 server timestamp、server sequence 或後端唯一約束,不在本批範圍。
+
+### No-auto-promotion(不自動升格)
+generation 由 canonical 的有效 `confirm` / `reject` / withdraw(墓碑)終止。被 suppressed 的重複 claim 為**終結態,永久不得**因 canonical 被 reject / withdraw / confirm 而自動升格為有效。重新請款一律建立**新的** `settlement_claim`;只有終止事件**之後**明確新建的 claim 才能開啟下一個 generation。
+
+### Suppressed-target responses are inert(指向被抑制 claim 的回覆無效)
+指向 suppressed 重複 claim 的 `settlement_confirm` / `settlement_reject` **不影響 canonical、不進正式結清歷史**,並輸出 diagnostic warning。
+
+### Action lock 與 retry `record.id` idempotency(操作可靠性)
+每個交握操作(標記付款 / 確認 / 退回 / 撤回 / 撤銷)在**第一個 `await` 之前**取得單裝置操作鎖,並以 `try/finally` 保證釋放;confirm 與 reject **共用**同一把 response lock。此鎖只防**單一裝置連點 / 重複觸發**;跨裝置競態的收斂由上述 canonical suppression 負責。送出重試(逾時、離線補送、手動重試)**沿用同一 `record.id`**,不重新產生 id,讓既有伺服器 id 去重生效。按鈕狀態機:`idle → submitting → queued → synced`(失敗 `failed`);`queued` 以 repository delivery(POST 已接受或已安全入離線佇列)為準、不等公開 CSV,也不因 CSV 未更新而轉 `failed`;`synced` 僅在遠端讀回相同 `record.id` 時成立。
+
+### Personal visibility 是前端顯示範圍,非後端授權邊界
+結算面板每一區(成員淨額、待處理、轉帳建議、結清歷史、操作)只在 **DOM 產生之前**保留與 `currentMember` 直接相關(正規化後 `from` 或 `to`)的項目;成員淨額只顯示本人摘要;無相關項目顯示「目前沒有需要你處理的結算」。**此為前端顯示 / 隱私範圍,非後端 authorization security boundary**:原始共享 Ledger 仍可能存在於用戶端記憶體,本批不提供伺服器層存取控制。
