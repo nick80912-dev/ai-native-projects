@@ -106,11 +106,16 @@ function barNet(records, confirmed, field) {
   return bar[field || 'netJpy'];
 }
 
-// ---- collecting runner: report every failing case, not just the first ----
+// ---- collecting runner: report every failing case, not just the first (supports async cases) ----
 const results = [];
+const asyncTests = [];
 function test(name, fn) {
-  try { fn(); results.push({ name, ok: true }); }
-  catch (e) { results.push({ name, ok: false, err: e && e.message ? e.message : String(e) }); }
+  try {
+    const out = fn();
+    if (out && typeof out.then === 'function') {
+      asyncTests.push(out.then(function () { results.push({ name, ok: true }); }, function (e) { results.push({ name, ok: false, err: e && e.message ? e.message : String(e) }); }));
+    } else { results.push({ name, ok: true }); }
+  } catch (e) { results.push({ name, ok: false, err: e && e.message ? e.message : String(e) }); }
 }
 
 // Sanity (must pass on old + new code — a failure here means harness/fixture error, not missing behaviour)
@@ -263,14 +268,92 @@ test('equal-time tie-break: smaller record.id is canonical when times are identi
   assert.strictEqual(rev.pending[0].claim.id, 'c-aaa', 'same canonical regardless of input order');
 });
 
-// ---- summary ----
-const failed = results.filter(function (r) { return !r.ok; });
-results.forEach(function (r) {
-  console.log((r.ok ? 'PASS' : 'FAIL') + ' - ' + r.name + (r.ok ? '' : ('\n        :: ' + r.err)));
+// ===== Ticket #7 — Operation reliability: action lock + button state machine + retry-id idempotency =====
+const html = fs.readFileSync('index.html', 'utf8');
+const uiSlice = html.slice(html.indexOf('function ledgerHandshakeStatusLine('), html.indexOf('function openLedgerProxyPanel('));
+
+// #1/#2 — pre-await action lock suppresses rapid re-entry (5 taps -> 1 record)
+test('#1/#2 action lock: five rapid acquires of one key yield exactly one success', function () {
+  const key = mod.settlementClaimLockKey('formal', 'Bar', '小美', 'JPY');
+  let ok = 0;
+  for (let i = 0; i < 5; i++) { if (mod.settlementActionLock.acquire(key)) ok++; }
+  assert.strictEqual(ok, 1, 'only the first rapid tap acquires the lock');
+  mod.settlementActionLock.release(key);
+  assert.strictEqual(mod.settlementActionLock.acquire(key), true, 'lock is reusable after release');
+  mod.settlementActionLock.release(key);
 });
-console.log('\n' + (results.length - failed.length) + '/' + results.length + ' reliability checks passed');
-if (failed.length) {
-  console.error(failed.length + ' reliability checks FAILED');
-  process.exit(1);
-}
-console.log('ledger settlement reliability tests passed');
+test('action lock: distinct pairs are independent', function () {
+  const a = mod.settlementClaimLockKey('formal', 'Bar', '小美', 'JPY');
+  const b = mod.settlementClaimLockKey('formal', 'Bar', '小明', 'JPY');
+  assert.strictEqual(mod.settlementActionLock.acquire(a), true);
+  assert.strictEqual(mod.settlementActionLock.acquire(b), true, 'a different pair is not blocked');
+  mod.settlementActionLock.release(a); mod.settlementActionLock.release(b);
+});
+test('#8 confirm and reject share one response lock', function () {
+  const rk = mod.settlementResponseLockKey('claim-1');
+  assert.strictEqual(mod.settlementResponseLockKey('claim-1'), rk, 'response lock key is stable');
+  assert.strictEqual(mod.settlementActionLock.acquire(rk), true, 'confirm acquires the response lock');
+  assert.strictEqual(mod.settlementActionLock.acquire(rk), false, 'reject is blocked while confirm holds the shared response lock');
+  mod.settlementActionLock.release(rk);
+});
+
+// #12 — merged cloud + local queue dedupe by record.id (regression)
+test('#12 merged cloud + local queue dedupe by record.id', function () {
+  const rec = { id: 'dup-x', time: '2026-07-22T00:00:00.000Z', member: 'Bar' };
+  const merged = mod.mergeLedgerRecordSets([rec], [Object.assign({}, rec, { pending: true })], []);
+  assert.strictEqual(merged.filter(function (r) { return r.id === 'dup-x'; }).length, 1, 'same id kept once across cloud + queue');
+});
+
+// #3/#4 — retry re-sends the SAME record.id (idempotent, no re-mint); offline keeps a single queue record
+test('#3/#4 retry reuses the same record.id and offline keeps a single queue record', function () {
+  const posted = [];
+  let fail = true;
+  const repo = mod.createLedgerRepository({
+    storage: createStorage(),
+    post: function (rec) { posted.push(rec.id); if (fail) { fail = false; return Promise.resolve({ ok: false, error: 'timeout' }); } return Promise.resolve({ ok: true }); },
+    now: function () { return 1789000000000; }, random: function () { return 0.5; }
+  });
+  const rec = { member: 'Bar', category: 'x', detail: 'x', amountJpy: 1, amountTwd: 0, note: '', participants: '["Bar"]', payMethod: '現金', recordType: 'expense', targetRecordId: '', deleteReason: '', batchId: '' };
+  return repo.add(rec).then(function () {
+    assert.strictEqual(repo.pendingCount(), 1, 'a failed post leaves exactly one queued record');
+    return repo.flushQueue();
+  }).then(function () {
+    assert.strictEqual(posted.length, 2, 'posted initially, then retried');
+    assert.strictEqual(posted[0], posted[1], 'retry reuses the same record.id (no re-mint)');
+    assert.strictEqual(repo.pendingCount(), 0, 'queue empties after the successful retry');
+  });
+});
+
+// Source assertions on the settlement UI slice (button state machine + lock wiring)
+test('#1/#2/#7 UI: handshake actions acquire the pre-await lock', function () {
+  assert(uiSlice.indexOf('settlementActionLock.acquire') >= 0, 'action handlers acquire the lock before the await');
+});
+test('#6 UI: "我已付款" stays hidden while a pending claim exists (regression)', function () {
+  assert(uiSlice.indexOf('!hasPending') >= 0, 'mark-paid is gated on the absence of a pending claim');
+});
+test('#10 UI: submitting disables the button and shows a spinner', function () {
+  assert(uiSlice.indexOf("'submitting'") >= 0, 'the submitting phase is rendered');
+  assert(uiSlice.indexOf('button-spinner') >= 0 && uiSlice.indexOf('disabled') >= 0, 'submitting shows a disabled spinner button');
+});
+test('#11 UI: queued is driven by repository delivery, not the public CSV', function () {
+  assert(uiSlice.indexOf("'queued'") >= 0, 'the queued phase exists');
+  const append = html.slice(html.indexOf('function appendSettlementRecord('), html.indexOf('function settlementActionGuard('));
+  assert(append.indexOf('setSettlementActionPhase') >= 0, 'appendSettlementRecord drives the phase off the repository delivery');
+});
+test('#17 UI: queued shows a persistent wait-for-sync tag until the record reads back', function () {
+  assert(uiSlice.indexOf('等待同步') >= 0, 'a persistent 等待同步 tag is shown for locally-queued (unsynced) records');
+});
+
+// ---- summary ----
+Promise.all(asyncTests).then(function () {
+  const failed = results.filter(function (r) { return !r.ok; });
+  results.forEach(function (r) {
+    console.log((r.ok ? 'PASS' : 'FAIL') + ' - ' + r.name + (r.ok ? '' : ('\n        :: ' + r.err)));
+  });
+  console.log('\n' + (results.length - failed.length) + '/' + results.length + ' reliability checks passed');
+  if (failed.length) {
+    console.error(failed.length + ' reliability checks FAILED');
+    process.exit(1);
+  }
+  console.log('ledger settlement reliability tests passed');
+});
