@@ -1246,13 +1246,35 @@ test('#50 顯示層去重:chip 講狀態、按鈕講動作,同義不重複顯示
   assert.strictEqual(mod.settlementDisplayChip('已送出・等待對方確認', '撤回'), '已送出・等待對方確認',
     '「・」後不是按鈕動作時不得誤切');
   assert.strictEqual(mod.settlementDisplayChip('待你確認', ''), '待你確認',
-    '兩顆按鈕時不傳 actionLabel,chip 完整保留');
+    '底層規則不變:沒有 actionLabel 時 chip 完整保留');
   const slice = html.slice(html.indexOf('function ledgerHandshakeStatusLine('), html.indexOf('function ledgerHandshakeHistoryLine('));
-  assert.ok(slice.indexOf('settlementDisplayChip(view.label,actionLabel)') >= 0, '狀態列走同一條去重規則');
+  assert.ok(slice.indexOf('settlementRowChipText(view.label,actionLabel,view.canRespond)') >= 0, '狀態列走同一條去重規則');
   assert.ok(/chipText\?/.test(slice), 'chip 去重後為空時不輸出空的 chip 元素');
   assert.ok(slice.indexOf("actionLabel='送出中…'") >= 0 && slice.indexOf("actionLabel='重新同步'") >= 0,
     '送出中與重新同步兩種狀態需提供 actionLabel 才會去重');
-  assert.ok(!/canRespond\)\{[^}]*actionLabel=/.test(slice), '兩顆按鈕的情況不得設定 actionLabel');
+  assert.ok(!/canRespond\)\{[^}]*actionLabel=/.test(slice), '兩顆按鈕的情況不設 actionLabel,改由 impliedByAction 處理');
+});
+
+test('#52 兩顆主要按鈕已表達狀態,不再輸出「待你確認」chip', function () {
+  // Bar 用一段時間後回報:兩顆按鈕擺在那裡本身就是「這筆等你處理」,
+  // 再掛一個「待你確認」chip 是同一件事說兩遍,還逼整列變成兩行。
+  assert.strictEqual(mod.settlementRowChipText('待你確認', '', true), '', '有兩顆主要按鈕時不出 chip');
+  assert.strictEqual(mod.settlementRowChipText('待你確認', '', false), '待你確認', '沒有那兩顆按鈕時 chip 必須保留');
+  assert.strictEqual(mod.settlementRowChipText('已送出・等待對方確認', '撤回', false), '已送出・等待對方確認',
+    '「撤回」不等於「還在等對方」,這個 chip 有獨立資訊,保留');
+  assert.strictEqual(mod.settlementRowChipText('對方已退回', '重新標記已付款', false), '對方已退回');
+  assert.strictEqual(mod.settlementRowChipText('送出中…', '送出中…', false), '', '既有去重規則不受影響');
+  assert.strictEqual(mod.settlementRowChipText('同步失敗・重新同步', '重新同步', false), '同步失敗');
+});
+
+test('#52 沒有 chip 也沒有退回原因時,動作留在主列收成一行', function () {
+  const slice = html.slice(html.indexOf('function ledgerHandshakeStatusLine('), html.indexOf('function ledgerHandshakeHistoryLine('));
+  assert.ok(/var inlineActions=!chipText&&!reason/.test(slice),
+    '只有「無 chip 且無退回原因」才把動作併入主列');
+  assert.ok(/ledger-settle-state[^]*inlineActions\?actions:''/.test(slice), '動作併入主列右側,與 chip／等待提示同欄');
+  assert.ok(/foot=\(reason\|\|\(actions&&!inlineActions\)\)\?/.test(slice), '併入主列後不得再輸出空的第二列');
+  assert.ok(slice.indexOf("(reason||'<span></span>')") >= 0 && slice.indexOf("(actions||'<span></span>')") >= 0,
+    '仍需兩列時(退回原因)維持既有補空 span 的左右定位');
 });
 
 test('#51 同步小字:30 秒內與 chip 同義不重複,逾 30 秒保留升級提示', function () {
@@ -1289,7 +1311,8 @@ test('#48 計算明細:參考幣別由結算幣別換算,不得使用另一幣�
 test('#49 退回列:狀態與動作分列對齊,原因不撐開左欄', function () {
   const slice = html.slice(html.indexOf('function ledgerHandshakeStatusLine('), html.indexOf('function ledgerHandshakeHistoryLine('));
   assert.ok(slice.indexOf('ledger-settle-main') >= 0 && slice.indexOf('ledger-settle-foot') >= 0, '固定兩列結構');
-  assert.ok(slice.indexOf("(reason||actions)?") >= 0, '無原因且無動作時不輸出第二列');
+  // 動作可併入主列後,第二列的條件改為「有退回原因,或有動作但不能併入主列」。
+  assert.ok(slice.indexOf("(reason||(actions&&!inlineActions))?") >= 0, '無原因且無需另起一列的動作時不輸出第二列');
   assert.ok(slice.indexOf("(reason||'<span></span>')") >= 0 && slice.indexOf("(actions||'<span></span>')") >= 0,
     '只有其一時補空 span,維持左右定位不塌陷');
   assert.ok(slice.indexOf('對方已退回') < 0, '狀態文案仍由 settlementEntryStatus 提供,不在版面層改寫核准文案');

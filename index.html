@@ -4179,6 +4179,13 @@ function settlementDisplayChip(label,actionLabel){
   var suffix='・'+action;
   return chip.length>suffix.length&&chip.slice(-suffix.length)===suffix?chip.slice(0,chip.length-suffix.length):chip;
 }
+/* 一列最終的 chip:在既有去重規則之上再加一條 —— 當這一列已經擺出「確認已收／退回」
+   兩顆主要按鈕時,按鈕本身就是最強的「這筆等你處理」訊號,再掛一個「待你確認」chip
+   是同一件事說兩遍,而且逼整列變成兩行。其餘 chip(已送出・等待對方確認、對方已退回、
+   同步失敗)帶有按鈕沒有的資訊,一律保留。 */
+function settlementRowChipText(label,actionLabel,impliedByAction){
+  return impliedByAction?'':settlementDisplayChip(label,actionLabel);
+}
 function settlementEntryStatus(entry,me,options){
   var opts=options||{},phase=String(opts.phase||'idle'),meKey=canonicalMemberName(me);
   var view={label:'',reason:'',waitingSync:false,canClaim:false,canRespond:false,canRemark:false,canWithdraw:false,canRetry:false,sortKind:'submitted'};
@@ -6005,15 +6012,17 @@ function ledgerHandshakeStatusLine(entry,me){
   /* 前綴在窄螢幕吃掉約三分之一可用寬度,而右側狀態 chip 已表明本列處於退回態,
      語意不靠前綴也成立;保留 aria-label 讓讀屏仍讀得到欄位名稱。 */
   var reason=view.reason?'<span class="ledger-settle-reason" aria-label="退回原因">'+escapeHtml(view.reason)+'</span>':'';
-  /* 固定兩列:第一列「對象/金額 ｜ 狀態」,第二列「退回原因 ｜ 動作」。
-     兩列各自 space-between,欄位才會對齊;原因不再用 width:100% 撐開左欄,
-     避免右側 chip 與按鈕被擠成錯位(iPhone 窄寬尤其明顯)。
-     兩者皆無時不輸出第二列;只有其一時補一個空 span 維持左右定位。 */
-  var foot=(reason||actions)?'<div class="ledger-settle-foot">'+(reason||'<span></span>')+(actions||'<span></span>')+'</div>':'';
-  var chipText=settlementDisplayChip(view.label,actionLabel);
+  var chipText=settlementRowChipText(view.label,actionLabel,view.canRespond);
+  /* 一列講得完就不要兩列:沒有 chip、也沒有退回原因時,動作直接併入主列右側,
+     收款者那兩顆按鈕因此收成一行。仍保留 chip 的狀態維持兩列 ——
+     chip + 等待提示 + 按鈕擠在同一列,窄螢幕會被迫換行,反而更亂。
+     需要兩列時:第一列「對象/金額 ｜ 狀態」,第二列「退回原因 ｜ 動作」,
+     兩列各自 space-between 才對得齊;只有其一時補一個空 span 維持左右定位。 */
+  var inlineActions=!chipText&&!reason;
+  var foot=(reason||(actions&&!inlineActions))?'<div class="ledger-settle-foot">'+(reason||'<span></span>')+(actions||'<span></span>')+'</div>':'';
   return '<div class="ledger-settlement-line ledger-settle-row ledger-settle-'+escapeHtml(view.sortKind)+'">'+
     '<div class="ledger-settle-main"><span class="ledger-settle-who">'+escapeHtml(other)+' '+amount+'</span>'+
-    '<span class="ledger-settle-state">'+(chipText?'<span class="ledger-settle-chip">'+escapeHtml(chipText)+'</span>':'')+settlementSyncTag(entry,view)+'</span></div>'+foot+'</div>';
+    '<span class="ledger-settle-state">'+(chipText?'<span class="ledger-settle-chip">'+escapeHtml(chipText)+'</span>':'')+settlementSyncTag(entry,view)+(inlineActions?actions:'')+'</span></div>'+foot+'</div>';
 }
 /* §7 次層結清紀錄只呈現歷史事實:已完成者顯示雙方、金額與完成時間,不提供任何永久修改操作。
    10 秒一次性復原只存在於操作裝置當次的 toast,因此本列永遠不輸出操作按鈕。 */

@@ -1,4 +1,12 @@
 # 07 版本紀錄
+## 2026-07-25｜收款者那一列收成一行：移除多餘的「待你確認」chip（dev，SW v56）
+- Bar 用過一段時間後回報：`待你確認` chip 有點多餘，卻讓整列被迫變成兩行。**推翻 v52「`待你確認`＋兩顆按鈕非重複，維持不動」的裁定** —— 兩顆主要按鈕擺在那裡，本身就是「這筆等你處理」最強的訊號，chip 是把同一件事說第二遍。
+- 新增 `settlementRowChipText(label,actionLabel,impliedByAction)`：在 v52 既有去重規則之上再加一條 —— 該列已擺出「確認已收／退回」時（`view.canRespond`）一律不出 chip。其餘 chip 帶有按鈕沒有的資訊，全部保留：`已送出・等待對方確認`（「撤回」不等於「還在等對方」）、`對方已退回`、`同步失敗`。**狀態機 `settlementEntryStatus()` 的 label 仍維持 §3 核准原文，去重只發生在顯示層。**
+- 版面：`ledgerHandshakeStatusLine()` 在「無 chip 且無退回原因」時，把動作併入主列右側（與等待提示同欄），整列收成一行；其餘情況維持既有兩列。仍需兩列時補空 span 的左右定位規則不變。
+- **未縮小字級或按鈕**：`.btn.sm` 目前高 35px 已低於 44px 建議值，再縮會傷到「確認已收」這種金錢操作的點擊率。實測顯示不需要。
+- 320／375／430px 三種寬度以本機 static server 實測（真實 CSS、真實 DOM、量測 `scrollWidth`）：**橫向溢出一律為 0，左欄皆未換行**。320px 下收款者列由兩行 82px 降為一行 52px；最極端的「4 字姓名＋`¥123,456`＋`等待同步`＋兩顆按鈕」仍為一行，剩餘寬度 4px。再長的姓名會讓左欄換行（高度回到約兩行），不會產生橫向捲動。
+- 回歸測試新增：`impliedByAction` 為真／假時的 chip 輸出、其餘四種狀態 chip 必須保留、只有「無 chip 且無退回原因」才併列、併列後不得輸出空的第二列。既有 #49／#50 的切片斷言一併更新（列表建構與 chip 函式已改名／搬家）。完整 43／43 Node tests（reliability 121／121）與 `tools/check-doc-titles.js` 通過。Service Worker cache `okayama-trip-v55` → `okayama-trip-v56`。
+
 ## 2026-07-25｜最後一筆處理完自動收起結算面板（dev，SW v55）
 - Bar 裁定：確認已收後自動關閉「團體結算」面板，但**只有這筆是最後一筆待處理時才關**，避免多筆待處理時被迫逐筆重開面板。
 - 新增純函式 `settlementPanelShouldClose(rowCount,panelOpen)`：面板開著且待處理列數為 0 才回 `true`；`rowCount` 為 `undefined`／`null`／空字串／非有限數一律回 `false`（算不出來時保守不關 —— 誤關會讓使用者以為操作沒生效）。
