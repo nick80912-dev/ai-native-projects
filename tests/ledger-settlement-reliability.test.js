@@ -1018,6 +1018,22 @@ test('#45 次層入口:查看結清紀錄與查看計算明細', function () {
   assert.ok(html.indexOf('function openSettlementBreakdownSheet(') >= 0, '計算明細為獨立次層內容');
 });
 
+test('#47 摘要金額:另一幣顯示換算參考,不得顯示佔位的 0', function () {
+  const receivable = { kind: 'receivable', label: '應收', amountJpy: 3160, amountTwd: 0 };
+  assert.strictEqual(mod.settlementSummaryAmountText(receivable, 'JPY', 0.2), '¥3,160 ≈ NT$632',
+    'JPY 結算幣別:台幣顯示換算參考值,不是 ledgerSettlementStatus 佔位的 0');
+  const payable = { kind: 'payable', label: '應付', amountJpy: 0, amountTwd: 680 };
+  assert.strictEqual(mod.settlementSummaryAmountText(payable, 'TWD', 0.2), 'NT$680 ≈ ¥3,400',
+    'TWD 結算幣別:日幣顯示換算參考值');
+  assert.strictEqual(mod.settlementSummaryAmountText({ kind: 'settled', label: '已結清', amountJpy: 0, amountTwd: 0 }, 'JPY', 0.2), '',
+    '已結清不顯示金額,不得出現「¥0 · NT$0」');
+  assert.strictEqual(mod.settlementSummaryAmountText(receivable, 'JPY', 0), '¥3,160',
+    '匯率不可用時只顯示結算幣別金額,不編造參考值');
+  const summarySlice = html.slice(html.indexOf('function renderSettlementPanelBody('), html.indexOf('function openLedgerSettlementPanel('));
+  assert.ok(summarySlice.indexOf("' · NT$'") < 0, '主面板摘要不再直接串接雙幣佔位數字');
+  assert.ok(summarySlice.indexOf('settlementSummaryAmountText(') >= 0, '主面板與簡易模式共用同一摘要金額規則');
+});
+
 test('#46 次層 sheet 提供返回主面板入口,主面板與其他 sheet 不得出現', function () {
   const start = html.indexOf('function ledgerInfoSheetReturnsToSettlement(');
   assert.ok(start >= 0, '返回入口由具名純函式決定');

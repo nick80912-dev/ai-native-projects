@@ -4128,6 +4128,23 @@ function settlementActionPhase(key){return settlementActionPhases[String(key||''
    過濾發生在 DOM 產生之前;handshake 交握與轉帳建議共用此純函式,不以 CSS 隱藏他人款項。 */
 function settlementItemsForMember(items,member){var key=canonicalMemberName(member);return (items||[]).filter(function(item){return canonicalMemberName(item&&item.from)===key||canonicalMemberName(item&&item.to)===key;});}
 function formatLedgerCurrencyAmount(currency,amount){return currency==='TWD'?'NT$'+Math.round(Number(amount||0)).toLocaleString():'¥'+Math.round(Number(amount||0)).toLocaleString();}
+/* 結算摘要金額:以結算幣別為準,另一幣是「換算參考」(ADR 0007「另一幣純參考」)。
+   ledgerSettlementStatus() 在單一幣別分支會把另一幣填 0 佔位,那個 0 不是餘額,
+   不得直接顯示;已結清時不顯示金額,避免出現「¥0 · NT$0」這種無意義數字。 */
+function settlementSummaryAmountText(status,currency,rate){
+  currency=currency==='TWD'?'TWD':'JPY';
+  if(!status||status.kind==='settled')return '';
+  var other=currency==='TWD'?'JPY':'TWD';
+  var amount=currency==='TWD'?Number(status.amountTwd||0):Number(status.amountJpy||0);
+  var primary=formatLedgerCurrencyAmount(currency,amount);
+  try{
+    var pair=convertLedgerAmounts(currency,amount,rate);
+    return primary+' ≈ '+formatLedgerCurrencyAmount(other,other==='TWD'?pair.amountTwd:pair.amountJpy);
+  }catch(ignore){return primary;}
+}
+function settlementExchangeRate(){
+  try{return currentLedgerSettings().exchangeRate;}catch(ignore){return 0;}
+}
 
 /* ================= 結算狀態機(§3 統一文案) =================
    一筆結算在使用者眼中的狀態,完全由「已推導的 generation 狀態」+「該紀錄是否已被遠端讀回」
@@ -5990,7 +6007,7 @@ function renderSettlementPanelBody(){
   });
   rows.sort(compareSettlementPanelRows);
   var secondary='<div class="ledger-settlement-links"><button class="btn ghost sm" onclick="openSettlementHistorySheet()">查看結清紀錄</button><button class="btn ghost sm" onclick="openSettlementBreakdownSheet()">查看計算明細</button></div>';
-  var summary='<div class="ledger-settlement-status"><strong>'+escapeHtml(status.label)+'</strong><span>¥'+status.amountJpy.toLocaleString()+' · NT$'+status.amountTwd.toLocaleString()+'</span></div>';
+  var summary='<div class="ledger-settlement-status"><strong>'+escapeHtml(status.label)+'</strong><span>'+escapeHtml(settlementSummaryAmountText(status,model.currency,settlementExchangeRate()))+'</span></div>';
   var body=rows.length?'<div class="ledger-settlement-list">'+rows.map(function(row){return row.html;}).join('')+'</div>':'<div class="empty-state">目前沒有需要你處理的結算</div>';
   return '<div id="ledgerSettlementPanelBody">'+settlementClockOffsetBanner()+summary+settlementNewChargeNotices(model)+
     '<section class="ledger-settlement-section"><h3>需要你處理</h3>'+body+'</section>'+secondary+'</div>';
@@ -5999,7 +6016,7 @@ function renderSettlementPanelBody(){
 function renderSimpleSettlementPanelBody(model,status){
   var mine=model.suggestions.filter(function(item){return canonicalMemberName(item.from)===canonicalMemberName(model.me)||canonicalMemberName(item.to)===canonicalMemberName(model.me);});
   var lines=mine.length?ledgerTransferLines(mine):'<div class="empty-state">目前不需轉帳</div>';
-  return '<div id="ledgerSettlementPanelBody"><div class="ledger-settlement-status"><strong>'+escapeHtml(status.label)+'</strong><span>¥'+status.amountJpy.toLocaleString()+' · NT$'+status.amountTwd.toLocaleString()+'</span></div>'+
+  return '<div id="ledgerSettlementPanelBody"><div class="ledger-settlement-status"><strong>'+escapeHtml(status.label)+'</strong><span>'+escapeHtml(settlementSummaryAmountText(status,model.currency,settlementExchangeRate()))+'</span></div>'+
     '<section class="ledger-settlement-section"><h3>轉帳建議</h3><div class="ledger-settlement-list">'+lines+'</div></section>'+
     '<div class="ledger-settlement-links"><button class="btn ghost sm" onclick="openSettlementBreakdownSheet()">查看計算明細</button></div>'+
     '<p class="settings-help">簡易結算模式已開啟;已確認的結清仍照常計入餘額。</p></div>';

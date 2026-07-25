@@ -1,4 +1,10 @@
 # 07 版本紀錄
+## 2026-07-25｜結算摘要參考幣別顯示 0 元 Hotfix（dev，SW v49）
+- 修正「結算摘要台幣參考對照顯示 NT$0」（Bar 真機回報：`應收 ¥3,160 · NT$0`）：`ledgerSettlementStatus()` 在單一結算幣別分支會把另一幣填 `0` 佔位，該 `0` 不是餘額，但結算面板摘要直接把雙欄串接顯示，於是非結算幣別恆顯示 0。
+- 新增純函式 `settlementSummaryAmountText(status,currency,rate)`：以結算幣別金額為主，另一幣以 `convertLedgerAmounts()` 換算為參考值顯示（`¥3,160 ≈ NT$632`），與消費卡片既有雙幣呈現一致；已結清時不顯示金額，不再出現「¥0 · NT$0」；匯率不可用時只顯示結算幣別金額，不編造參考值。正式面板與簡易結算模式共用同一規則。
+- 僅改顯示層。未修改 Schema、Validator、Apps Script、Google Sheet、Ledger 紀錄契約、delivery bridge、fast pull、localStorage key，或 `buildMemberBalances`／`buildTransferSuggestions`／`applyConfirmedSettlements` 計算。Service Worker cache `okayama-trip-v48` → `okayama-trip-v49`。
+- 回歸測試新增：JPY／TWD 兩種結算幣別的換算參考值、已結清不顯示金額、匯率不可用時的降級，以及主面板摘要不得再直接串接雙幣佔位數字。完整 43／43 Node tests（reliability 94／94）與 `tools/check-doc-titles.js` 通過。
+
 ## 2026-07-25｜結算狀態參考幣別殘值 Hotfix（dev，SW v48）
 - 修正「結算完成後仍顯示台幣 680 應付」（Bar 2026-07-25 真機驗收回報：`jane → 黃柏 ¥3,400` 已確認結清後，淨額為 `JPY 0 · TWD -680`，主面板仍顯示「應付 ¥0 · NT$680」）：已確認結清只抵銷 ADR 0007 定義的單一結算幣別，另一幣別為參考值；首頁結算卡與結算面板過去仍用 JPY/TWD 雙欄判斷是否已結清，導致結算幣別已歸零時，參考台幣殘值被誤顯示為未結清。此即 ADR 0007 為否決 Alternative C 而要避免的「這對在 ¥ 已清、卻在 NT$ 欠另一人」破碎狀態。
 - `ledgerSettlementStatus()` 新增結算幣別參數；正式 UI 以 `Ledger Default Currency` 對應的結算幣別判斷已結清／應收／應付，參考幣別不再重新打開狀態卡。計算明細仍保留雙幣淨額與參考轉帳建議供檢查，不改資料語意。
