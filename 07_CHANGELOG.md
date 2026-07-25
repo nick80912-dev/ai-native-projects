@@ -1,4 +1,12 @@
 # 07 版本紀錄
+## 2026-07-25｜計算明細參考幣別殘留與退回列版面 Hotfix（dev，SW v50）
+- 修正「計算明細仍卡著台幣」（Bar 真機回報：`我的淨額 JPY 0 · TWD -116`、`TWD 轉帳建議（參考） jane → 黃柏 NT$116`）：計算明細的淨額直接印 `netTwd`，參考轉帳建議也取自 `settlement.twd`／`settlement.jpy` 這條**獨立累計**的餘額，因此結算幣別已結清時仍殘留幻影欠款。結算面板摘要（v49）只修了一處，本批補齊次層頁面。
+- 新增純函式 `settlementReferenceAmount(amount,currency,rate)` 與 `settlementReferenceTransfers(suggestions,rate)`：參考幣別**一律由結算幣別換算**（保留正負方向），不再讀另一幣獨立累計的餘額；結算幣別無轉帳建議時參考幣別必為空。`ledgerSettlementLines()` 改為輸出「結算幣別淨額 ≈ 參考幣別」。計算明細說明文字明確標示「結算以 X 為準，Y 為換算參考值，不會單獨掛帳」。
+- 退回列版面：`ledgerHandshakeStatusLine()` 改為固定兩列 —— 第一列「對象/金額 ｜ 狀態 chip」，第二列「退回原因 ｜ 動作按鈕」，兩列各自 `space-between` 使欄位對齊。`.ledger-settle-reason` 由 `display:block;width:100%` 改為同列彈性欄，不再撐開左欄把右側 chip 與按鈕擠成錯位（iPhone 窄寬最明顯）。原因與動作皆無時不輸出第二列。**未更動 §3 核准的狀態文案**。
+- 375px 版面實測：`scrollWidth === clientWidth`（無橫向溢出）；對象/金額與 chip 無重疊、退回原因與按鈕無重疊，各列按鈕右緣一致對齊；無原因無動作的列維持單列高度。
+- 僅改顯示層。未修改 Schema、Validator、Apps Script、Google Sheet、Ledger 紀錄契約、delivery bridge、fast pull、localStorage key，或 `buildMemberBalances`／`buildTransferSuggestions`／`applyConfirmedSettlements` 計算。Service Worker cache `okayama-trip-v49` → `okayama-trip-v50`。
+- 回歸測試新增：參考幣別換算（含負值方向、匯率不可用降級、結算幣別為空時參考必為空）、計算明細不得再讀另一幣獨立建議、退回列兩列結構與 CSS 規則。完整 43／43 Node tests（reliability 96／96）與 `tools/check-doc-titles.js` 通過。
+
 ## 2026-07-25｜結算摘要參考幣別顯示 0 元 Hotfix（dev，SW v49）
 - 修正「結算摘要台幣參考對照顯示 NT$0」（Bar 真機回報：`應收 ¥3,160 · NT$0`）：`ledgerSettlementStatus()` 在單一結算幣別分支會把另一幣填 `0` 佔位，該 `0` 不是餘額，但結算面板摘要直接把雙欄串接顯示，於是非結算幣別恆顯示 0。
 - 新增純函式 `settlementSummaryAmountText(status,currency,rate)`：以結算幣別金額為主，另一幣以 `convertLedgerAmounts()` 換算為參考值顯示（`¥3,160 ≈ NT$632`），與消費卡片既有雙幣呈現一致；已結清時不顯示金額，不再出現「¥0 · NT$0」；匯率不可用時只顯示結算幣別金額，不編造參考值。正式面板與簡易結算模式共用同一規則。

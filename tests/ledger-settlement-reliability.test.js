@@ -1018,6 +1018,33 @@ test('#45 次層入口:查看結清紀錄與查看計算明細', function () {
   assert.ok(html.indexOf('function openSettlementBreakdownSheet(') >= 0, '計算明細為獨立次層內容');
 });
 
+test('#48 計算明細:參考幣別由結算幣別換算,不得使用另一幣獨立累計餘額', function () {
+  assert.strictEqual(mod.settlementReferenceAmount(0, 'JPY', 0.2), 0, '結算幣別已結清時參考幣別必須是 0,不得殘留幻影欠款');
+  assert.strictEqual(mod.settlementReferenceAmount(-2820, 'JPY', 0.2), -564, '負淨額換算保留方向');
+  assert.strictEqual(mod.settlementReferenceAmount(-680, 'TWD', 0.2), -3400, 'TWD 結算幣別反向換算');
+  assert.strictEqual(mod.settlementReferenceAmount(3160, 'JPY', 0), null, '匯率不可用時不編造參考值');
+  assert.strictEqual(mod.settlementReferenceTransfers([], 0.2).length, 0,
+    '結算幣別無轉帳建議時,參考幣別也必須是空的(ADR 0007 否決 Alternative C 的破碎狀態)');
+  const converted = plain(mod.settlementReferenceTransfers([{ from: 'jane', to: '黃柏', amount: 2820, currency: 'JPY' }], 0.2));
+  assert.deepStrictEqual(converted, [{ from: 'jane', to: '黃柏', amount: 564, currency: 'TWD' }], '參考建議由結算幣別建議換算而來');
+  const sheet = html.slice(html.indexOf('function openSettlementBreakdownSheet('), html.indexOf('function refreshSettlementSurfaces('));
+  assert.ok(sheet.indexOf('settlementReferenceTransfers(model.suggestions') >= 0, '參考轉帳建議取自結算幣別建議');
+  assert.ok(sheet.indexOf('model.settlement.twd') < 0 && sheet.indexOf('model.settlement.jpy') < 0,
+    '計算明細不得再讀另一幣獨立累計的轉帳建議');
+});
+
+test('#49 退回列:狀態與動作分列對齊,原因不撐開左欄', function () {
+  const slice = html.slice(html.indexOf('function ledgerHandshakeStatusLine('), html.indexOf('function ledgerHandshakeHistoryLine('));
+  assert.ok(slice.indexOf('ledger-settle-main') >= 0 && slice.indexOf('ledger-settle-foot') >= 0, '固定兩列結構');
+  assert.ok(slice.indexOf("(reason||actions)?") >= 0, '無原因且無動作時不輸出第二列');
+  assert.ok(slice.indexOf("(reason||'<span></span>')") >= 0 && slice.indexOf("(actions||'<span></span>')") >= 0,
+    '只有其一時補空 span,維持左右定位不塌陷');
+  assert.ok(slice.indexOf('對方已退回') < 0, '狀態文案仍由 settlementEntryStatus 提供,不在版面層改寫核准文案');
+  assert.ok(/\.ledger-settle-reason\{[^}]*flex:1/.test(html), '退回原因改為同列彈性欄,不再 width:100% 撐開左欄');
+  assert.ok(!/\.ledger-settle-reason\{[^}]*width:100%/.test(html), '舊的 width:100% 規則必須移除');
+  assert.ok(/\.ledger-settle-row\{[^}]*flex-direction:column/.test(html), '列容器改為直向堆疊兩列');
+});
+
 test('#47 摘要金額:另一幣顯示換算參考,不得顯示佔位的 0', function () {
   const receivable = { kind: 'receivable', label: '應收', amountJpy: 3160, amountTwd: 0 };
   assert.strictEqual(mod.settlementSummaryAmountText(receivable, 'JPY', 0.2), '¥3,160 ≈ NT$632',
