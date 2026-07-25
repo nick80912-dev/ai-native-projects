@@ -24,6 +24,16 @@ assert.match(html, /function openDiagnostics\(/, 'the diagnostics panel remains'
 assert.match(html, /healthCheck\(\)/, 'health check remains in the diagnostics panel');
 assert.match(html, /function setTimeSimulationDay\(/, 'travel-day shortcuts remain');
 assert.match(html, /function resetTripProgress\(/, 'trip progress reset remains');
+/* 真機驗收需要知道「這台裝置實際啟用的是哪一版 SW」——
+   activate 會刪掉所有非當前 CACHE_NAME 的快取,因此 caches.keys() 的唯一一筆就是答案。 */
+assert.match(html, /function readActiveShellVersion\(/, 'the diagnostics panel can read the activated shell version');
+assert.match(html, /caches\.keys\(\)/, 'the version comes from the real Cache Storage, not a hard-coded string');
+assert.match(html, /id="diagShellVersion"/, 'the panel renders a placeholder row for the version');
+assert.match(html, /<h3>App 版本<\/h3>/, 'the version row is labelled');
+assert.ok(html.indexOf("okayama-trip-v") < 0, 'index.html must not hard-code the cache name — sw.js stays the single source');
+assert.match(html, /讀取中…/, 'the async read shows a loading state first');
+assert.match(html, /無法讀取/, 'a browser without Cache Storage degrades to an explicit message, never a wrong version');
+
 assert.match(html, /function setupViewportReflow\(/, 'viewport recovery remains');
 assert.match(html, /visualViewport\.addEventListener\('resize'/, 'visual viewport recovery remains');
 assert.match(html, /addEventListener\('visibilitychange'/, 'foreground recovery remains');

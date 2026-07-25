@@ -185,7 +185,10 @@ assert(settlementSource.includes('ledgerMarkSettlementPaid'),'payers can mark a 
 assert(settlementSource.includes('ledgerConfirmSettlementClaim'),'receivers can confirm a claim');
 assert(settlementSource.includes('ledgerRejectSettlementClaim'),'receivers can reject a claim');
 assert(settlementSource.includes('ledgerWithdrawSettlementClaim'),'payers can withdraw a pending claim');
-assert(settlementSource.includes('ledgerRevokeSettlementConfirm'),'receivers can revoke a confirmation');
+/* 已確認結算改為「10 秒一次性復原」:歷史不再提供永久撤銷入口,只有確認當下的 toast 可復原。 */
+assert(settlementSource.includes('ledgerUndoSettlementConfirm'),'receivers get a one-shot 10s undo right after confirming');
+assert(!settlementSource.includes('ledgerRevokeSettlementConfirm'),'the permanent revoke entry point is gone');
+assert(settlementSource.includes('settlementConfirmUndoEligibility'),'the undo handler re-checks eligibility itself');
 assert(settlementSource.includes("createLedgerDeletion(entry.claim,me,'撤回結清')"),'withdrawal reuses the existing tombstone mechanism');
 assert(settlementSource.includes('未收到')&&settlementSource.includes('金額不對')&&settlementSource.includes('重複'),'reject offers the approved one-tap reasons');
 assert(settlementSource.includes('settlementActionGuard'),'every handshake action passes the member/time-simulation guard');

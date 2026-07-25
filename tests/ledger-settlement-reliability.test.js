@@ -676,9 +676,11 @@ test('#12 five rapid taps still produce exactly one record', function () {
   assert.strictEqual(wins.length, 1, 'only one of five rapid taps acquires the lock');
 });
 
-// ===== §9 已確認結算的撤銷限制 =====
+// ===== §9 已確認結算的 10 秒一次性復原 =====
+// 產品裁定(取代原 24 小時撤銷):確認送出後只在操作裝置給 10 秒 action toast;
+// 逾時即為終局,結清歷史不得再提供任何永久撤銷／復原入口。
 
-const DAY = 24 * 60 * 60 * 1000;
+const UNDO_WINDOW = 10 * 1000;
 const confirmTime = '2026-07-25T00:00:00.000Z';
 const confirmAt = Date.parse(confirmTime);
 function confirmedEntry(id, time, key) {
@@ -695,64 +697,234 @@ function generationEntry(id, time, status) {
     from: 'Bar', to: '小美', currency: 'JPY', amount: 3000, status: status
   };
 }
+// confirm 被 deletion 撤銷後,同一 claim 會重新推導成 pending —— eligibility 由此判定 already-undone。
+function undoneEntry(id) {
+  const entry = generationEntry(id, '2026-07-25T00:00:00.000Z', 'pending');
+  entry.claim = { id: id, time: '2026-07-25T00:00:00.000Z' };
+  entry.response = null;
+  return entry;
+}
 const lone = confirmedEntry('c-1', confirmTime);
 
-test('#46 the newest confirmed entry is revocable at 23:59:59.999', function () {
-  const r = mod.settlementConfirmRevokeEligibility(lone, [lone], '小美', confirmAt + DAY - 1);
+test('#3 9,999ms 內可復原', function () {
+  const r = mod.settlementConfirmUndoEligibility(lone, [lone], '小美', confirmAt + UNDO_WINDOW - 1);
   assert.strictEqual(r.allowed, true);
   assert.strictEqual(r.reason, 'allowed');
-  assert.strictEqual(r.expiresAt, confirmAt + DAY, 'expiresAt is exactly 24h after response.time');
+  assert.strictEqual(r.expiresAt, confirmAt + UNDO_WINDOW, 'expiresAt 為 response.time 後正好 10 秒');
 });
-test('#47 exactly 24:00:00.000 is still revocable', function () {
-  assert.strictEqual(mod.settlementConfirmRevokeEligibility(lone, [lone], '小美', confirmAt + DAY).allowed, true);
+test('#4 正好 10,000ms 仍可復原', function () {
+  assert.strictEqual(mod.settlementConfirmUndoEligibility(lone, [lone], '小美', confirmAt + UNDO_WINDOW).allowed, true);
 });
-test('#48 24 hours + 1 ms is not revocable', function () {
-  const r = mod.settlementConfirmRevokeEligibility(lone, [lone], '小美', confirmAt + DAY + 1);
+test('#5 10,001ms 不可復原', function () {
+  const r = mod.settlementConfirmUndoEligibility(lone, [lone], '小美', confirmAt + UNDO_WINDOW + 1);
   assert.strictEqual(r.allowed, false);
   assert.strictEqual(r.reason, 'expired');
 });
-test('#49/#50/#51/#52 an older confirmed entry is not revocable even one hour later', function () {
+test('#6 response.time 無效或位於明顯未來不可復原', function () {
+  const broken = confirmedEntry('c-broken', 'not-a-time');
+  assert.strictEqual(mod.settlementConfirmUndoEligibility(broken, [broken], '小美', confirmAt).reason, 'invalid');
+  const empty = confirmedEntry('c-empty', '');
+  assert.strictEqual(mod.settlementConfirmUndoEligibility(empty, [empty], '小美', confirmAt).reason, 'invalid');
+  const future = confirmedEntry('c-future', '2026-07-25T01:00:00.000Z');   // 比 now 早了一小時的未來
+  assert.strictEqual(mod.settlementConfirmUndoEligibility(future, [future], '小美', confirmAt).reason, 'invalid',
+    '明顯位於未來的 response.time 不得用來延長復原期限');
+});
+test('#6 期限比較使用 ISO record.time,不依顯示時區字串', function () {
+  const utc = confirmedEntry('c-utc', '2026-07-25T00:00:00.000Z');
+  const offset = confirmedEntry('c-off', '2026-07-25T09:00:00+09:00');   // 同一瞬間、另一個 offset 寫法
+  assert.strictEqual(mod.settlementConfirmUndoEligibility(offset, [offset], '小美', confirmAt + UNDO_WINDOW).expiresAt,
+    mod.settlementConfirmUndoEligibility(utc, [utc], '小美', confirmAt + UNDO_WINDOW).expiresAt);
+  assert.strictEqual(mod.settlementConfirmUndoEligibility(offset, [offset], '小美', confirmAt + UNDO_WINDOW + 1).reason, 'expired');
+});
+test('#7 非原收款者不可復原', function () {
+  assert.strictEqual(mod.settlementConfirmUndoEligibility(lone, [lone], 'Bar', confirmAt).reason, 'not-receiver');
+  assert.strictEqual(mod.settlementConfirmUndoEligibility(lone, [lone], '小王', confirmAt).reason, 'not-receiver');
+});
+test('#8 已被撤銷的 confirm 不可再次復原', function () {
+  const entry = confirmedEntry('c-undone', confirmTime);
+  const rederived = undoneEntry('c-undone');   // 同一 claim 已回到 pending
+  const r = mod.settlementConfirmUndoEligibility(entry, [rederived], '小美', confirmAt + 1000);
+  assert.strictEqual(r.allowed, false);
+  assert.strictEqual(r.reason, 'already-undone');
+});
+test('#15 後續已有新 generation 時,即使未滿 10 秒也不可復原', function () {
   const older = confirmedEntry('c-old', confirmTime);
   const followUps = {
-    pending: generationEntry('c-new', '2026-07-25T01:00:00.000Z', 'pending'),
-    rejected: generationEntry('c-new', '2026-07-25T01:00:00.000Z', 'rejected'),
-    confirmed: confirmedEntry('c-new', '2026-07-25T01:30:00.000Z'),
-    withdrawn: generationEntry('c-new', '2026-07-25T01:00:00.000Z', 'withdrawn')
+    pending: generationEntry('c-new', '2026-07-25T00:00:03.000Z', 'pending'),
+    rejected: generationEntry('c-new', '2026-07-25T00:00:03.000Z', 'rejected'),
+    confirmed: confirmedEntry('c-new', '2026-07-25T00:00:04.000Z'),
+    withdrawn: generationEntry('c-new', '2026-07-25T00:00:03.000Z', 'withdrawn')
   };
-  followUps.confirmed.claimPos = { time: '2026-07-25T01:00:00.000Z', id: 'c-new' };
+  followUps.confirmed.claimPos = { time: '2026-07-25T00:00:03.000Z', id: 'c-new' };
   Object.keys(followUps).forEach(function (kind) {
-    const r = mod.settlementConfirmRevokeEligibility(older, [older, followUps[kind]], '小美', confirmAt + 60 * 60 * 1000);
-    assert.strictEqual(r.allowed, false, 'a later ' + kind + ' generation blocks revoking the old confirm');
-    assert.strictEqual(r.reason, 'superseded', 'the blocking reason is superseded, not expired');
+    const r = mod.settlementConfirmUndoEligibility(older, [older, followUps[kind]], '小美', confirmAt + 5000);
+    assert.strictEqual(r.allowed, false, '後續 ' + kind + ' generation 阻擋舊確認的復原');
+    assert.strictEqual(r.reason, 'superseded', '阻擋理由為 superseded,不是 expired');
   });
 });
-test('#53 only the original receiver may revoke', function () {
-  assert.strictEqual(mod.settlementConfirmRevokeEligibility(lone, [lone], 'Bar', confirmAt).reason, 'not-receiver');
-  assert.strictEqual(mod.settlementConfirmRevokeEligibility(lone, [lone], '小王', confirmAt).reason, 'not-receiver');
+test('#16 直接呼叫 handler 超過 10 秒仍被阻擋', function () {
+  const handler = html.slice(html.indexOf('function ledgerUndoSettlementConfirm('), html.indexOf('function openLedgerProxyPanel('));
+  assert.ok(handler.indexOf('settlementConfirmUndoEligibility(') >= 0, 'handler 必須重新呼叫資格檢查,不得只依賴 toast 隱藏');
+  assert.ok(handler.indexOf('deriveSettlements(mergedLedgerRecords()') >= 0, '資格以當下 ledger 事件重新推導,不吃 toast 當時的快照');
+  assert.ok(handler.indexOf('settlementUndoLockKey(') >= 0, '復原使用獨立且穩定的 action lock');
+  assert.ok(handler.indexOf('settlementUndoBlockMessage(') >= 0, '被阻擋時輸出核准阻擋訊息');
+  // 純函式層面:超過期限一律 expired,與 UI 是否仍顯示按鈕無關。
+  assert.strictEqual(mod.settlementConfirmUndoEligibility(lone, [lone], '小美', confirmAt + 60 * 60 * 1000).reason, 'expired');
 });
-test('#55 invalid inputs are rejected rather than allowed by default', function () {
-  assert.strictEqual(mod.settlementConfirmRevokeEligibility(null, [], '小美', confirmAt).reason, 'invalid');
+test('#5/#7/#8 無效輸入預設不允許', function () {
+  assert.strictEqual(mod.settlementConfirmUndoEligibility(null, [], '小美', confirmAt).reason, 'invalid');
   const pendingEntry = generationEntry('p', confirmTime, 'pending');
-  assert.strictEqual(mod.settlementConfirmRevokeEligibility(pendingEntry, [pendingEntry], '小美', confirmAt).reason, 'invalid', 'a non-confirm entry is invalid');
+  assert.strictEqual(mod.settlementConfirmUndoEligibility(pendingEntry, [pendingEntry], '小美', confirmAt).reason, 'invalid', '非 confirmed entry 無效');
   const rejectedResponse = confirmedEntry('rr', confirmTime);
   rejectedResponse.response.recordType = 'settlement_reject';
-  assert.strictEqual(mod.settlementConfirmRevokeEligibility(rejectedResponse, [rejectedResponse], '小美', confirmAt).reason, 'invalid', 'the response must be a valid settlement_confirm');
+  assert.strictEqual(mod.settlementConfirmUndoEligibility(rejectedResponse, [rejectedResponse], '小美', confirmAt).reason, 'invalid', 'response 必須是有效 settlement_confirm');
 });
-test('#56 the 24h comparison uses ISO record.time, not a rendered timezone string', function () {
-  const utc = confirmedEntry('c-utc', '2026-07-25T00:00:00.000Z');
-  const offset = confirmedEntry('c-off', '2026-07-25T09:00:00+09:00');  // the same instant
-  assert.strictEqual(
-    mod.settlementConfirmRevokeEligibility(utc, [utc], '小美', confirmAt + DAY).allowed,
-    mod.settlementConfirmRevokeEligibility(offset, [offset], '小美', confirmAt + DAY).allowed,
-    'the same instant written in another offset behaves identically'
-  );
-  assert.strictEqual(mod.settlementConfirmRevokeEligibility(offset, [offset], '小美', confirmAt + DAY).expiresAt, confirmAt + DAY);
+test('#4 阻擋訊息為核准原文', function () {
+  assert.strictEqual(mod.settlementUndoBlockMessage('expired'), '復原期限已結束，此筆收款確認已完成');
+  assert.strictEqual(mod.settlementUndoBlockMessage('superseded'), '此筆已有後續結算，無法復原舊確認');
+  assert.strictEqual(mod.settlementUndoBlockMessage('not-receiver'), '只有原收款者可以復原確認');
+  assert.strictEqual(mod.settlementUndoBlockMessage('already-undone'), '此筆確認已經復原');
+  assert.strictEqual(mod.settlementUndoBlockMessage('invalid'), '此筆結算狀態無法復原');
 });
-test('#54/#55 the blocking copy is exactly the approved wording', function () {
-  assert.strictEqual(mod.settlementRevokeBlockMessage('expired'), '此筆結清已超過 24 小時,無法撤銷');
-  assert.strictEqual(mod.settlementRevokeBlockMessage('superseded'), '此筆已有後續結算,無法撤銷舊確認');
-  assert.strictEqual(mod.settlementRevokeBlockMessage('not-receiver'), '只有原收款者可以撤銷確認');
-  assert.strictEqual(mod.settlementRevokeBlockMessage('invalid'), '此筆結清狀態無法撤銷');
+test('#2 Toast 的復原期限基於 settlement_confirm response.time,顯示延遲不得延長', function () {
+  assert.strictEqual(mod.settlementUndoToastDurationMs({ time: confirmTime }, confirmAt), UNDO_WINDOW);
+  assert.strictEqual(mod.settlementUndoToastDurationMs({ time: confirmTime }, confirmAt + 4000), 6000,
+    'toast 顯示得晚,只剩下 record.time 起算的剩餘時間');
+  assert.strictEqual(mod.settlementUndoToastDurationMs({ time: confirmTime }, confirmAt + UNDO_WINDOW + 1), 0,
+    '已逾期不再給任何復原時間');
+  assert.strictEqual(mod.settlementUndoToastDurationMs({ time: 'not-a-time' }, confirmAt), 0);
+  assert.strictEqual(mod.settlementUndoToastDurationMs(null, confirmAt), 0);
+});
+
+test('#1 confirm 安全保存後顯示「已確認收款」＋10 秒一次性「復原」', function () {
+  const slice = html.slice(html.indexOf('function ledgerConfirmSettlementClaim('), html.indexOf('function closeSettlementRejectDialog('));
+  assert.ok(slice.indexOf("'已確認收款'") >= 0, '完成訊息沿用核准文案');
+  assert.ok(slice.indexOf("'復原'") >= 0, 'toast 提供「復原」動作');
+  assert.ok(slice.indexOf('ledgerUndoSettlementConfirm(') >= 0, '復原動作指向 10 秒一次性復原 handler');
+  assert.ok(slice.indexOf('settlementUndoToastDurationMs(') >= 0, 'toast 期限由 response.time 決定,不重新起算');
+  assert.ok(slice.indexOf('durable') >= 0, '只有安全保存(POST accepted 或 durable queue)後才提供復原');
+  assert.ok(slice.indexOf('確認後雙方淨額會立即抵銷') >= 0, '保留既有二次確認視窗');
+});
+
+test('#9 同一 response 快速連點復原五次,只建立一筆 deletion record', function () {
+  const key = mod.settlementUndoLockKey('resp-1');
+  assert.strictEqual(key, mod.settlementUndoLockKey('resp-1'), '復原鎖以 response.id 為穩定 key');
+  assert.ok(key.indexOf('resp-1') >= 0 && key !== mod.settlementResponseLockKey('resp-1'),
+    '復原鎖獨立於 confirm／reject 共用的 response lock');
+  const wins = [0, 1, 2, 3, 4].filter(function () { return mod.settlementActionLock.acquire(key); });
+  assert.strictEqual(wins.length, 1, '五次連點只有一次取得鎖');
+  assert.strictEqual(mod.settlementActionLock.acquire(mod.settlementUndoLockKey('resp-2')), true, '不同 response 的復原互不阻擋');
+  mod.settlementActionLock.release(key);
+  mod.settlementActionLock.release(mod.settlementUndoLockKey('resp-2'));
+});
+
+// ---- append-only 復原的資料語意 ----
+const undoClaim = claim('u-c1', 'Bar', '小美', 3000, 'JPY', '2026-07-25T00:00:00.000Z');
+const undoConfirm = confirmRec('u-cf', 'u-c1', '小美', '2026-07-25T00:01:00.000Z');
+const undoRecord = mod.createLedgerDeletion(undoConfirm, '小美', '復原確認', Date.parse('2026-07-25T00:01:05.000Z'));
+
+test('#10 復原 record.targetRecordId 等於 settlement_confirm response.id', function () {
+  assert.strictEqual(undoRecord.recordType, 'deletion');
+  assert.strictEqual(undoRecord.targetRecordId, 'u-cf');
+  assert.ok(undoRecord.id && undoRecord.id !== undoConfirm.id, 'confirm 與 undo 各自保留穩定且相異的 record.id');
+});
+test('#11 復原不得刪除或修改原 settlement_confirm', function () {
+  assert.strictEqual(undoConfirm.recordType, 'settlement_confirm', '原 confirm 型別未被改寫');
+  assert.strictEqual(undoConfirm.targetRecordId, 'u-c1', '原 confirm 仍指向原 claim');
+  assert.strictEqual(undoClaim.recordType, 'settlement_claim', 'claim 未被改寫');
+  const records = base.concat([undoClaim, undoConfirm, undoRecord]);
+  assert.strictEqual(records.filter(function (r) { return r.id === 'u-cf'; }).length, 1, '原 confirm 仍留在 append-only 事件流中');
+});
+test('#12/#23 復原後款項回到待確認,被復原的 confirm 不再計入 confirmed', function () {
+  const records = base.concat([undoClaim, undoConfirm, undoRecord]);
+  const r = derive(records);
+  assert.strictEqual(r.confirmed.length, 0, '被復原的 confirm 不是有效 confirmed settlement');
+  assert.strictEqual(r.pending.length, 1, '款項回到待確認');
+  assert.strictEqual(r.pending[0].claim.id, 'u-c1', '回到的是同一筆 claim,不是新開 generation');
+  assert.strictEqual(mod.settlementEntryStatus(r.pending[0], '小美').canRespond, true, '原收款者可再次確認或退回');
+  assert.strictEqual(barNet(records, r.confirmed), -3000, '餘額由推導回復,不得手動改寫');
+});
+test('#13 confirm 與 undo 分別在 queue／bridge 時仍正確推導', function () {
+  const queued = Object.assign({}, undoRecord, { pending: true });
+  const bridged = Object.assign({}, undoConfirm, { bridgePending: true });
+  const merged = mod.mergeLedgerRecordSets(base.concat([undoClaim]), [queued], [bridged]);
+  assert.strictEqual(merged.filter(function (r) { return r.id === 'u-cf'; }).length, 1, '相同 id 在 cloud／queue／bridge 只合併一次');
+  const r = derive(merged);
+  assert.strictEqual(r.confirmed.length, 0);
+  assert.strictEqual(r.pending.length, 1, 'queue／bridge 中的 undo 仍讓款項回到待確認');
+});
+test('#14 remote read-back 後所有裝置收斂為 pending(與輸入順序無關)', function () {
+  const orders = [
+    base.concat([undoClaim, undoConfirm, undoRecord]),
+    base.concat([undoRecord, undoConfirm, undoClaim]),
+    [undoRecord].concat(base, [undoClaim, undoConfirm]),
+    [undoConfirm, undoRecord].concat(base, [undoClaim])
+  ];
+  orders.forEach(function (records, index) {
+    const r = derive(records);
+    assert.strictEqual(r.confirmed.length, 0, '順序 ' + index + ':不得殘留 confirmed');
+    assert.strictEqual(r.pending.length, 1, '順序 ' + index + ':收斂為同一筆 pending');
+    assert.strictEqual(r.pending[0].claim.id, 'u-c1');
+  });
+});
+test('#21 正式／測試 universe 隔離不退化', function () {
+  const testClaim = Object.assign({}, undoClaim, { id: 't-c1', detail: '[TEST] ' + undoClaim.detail });
+  const testConfirm = Object.assign({}, undoConfirm, { id: 't-cf', targetRecordId: 't-c1', detail: '[TEST] [結清確認]' });
+  const records = base.concat([undoClaim, undoConfirm, undoRecord, testClaim, testConfirm]);
+  assert.strictEqual(derive(records).entries.length, 1, '正式宇宙看不到測試結算');
+  const testUniverse = mod.deriveSettlements(records, null, 'test');
+  assert.strictEqual(testUniverse.confirmed.length, 1, '測試宇宙的確認不受正式宇宙復原影響');
+});
+test('#22 只有 confirmed 才改變淨額', function () {
+  const claimOnly = base.concat([undoClaim]);
+  assert.strictEqual(barNet(claimOnly, derive(claimOnly).confirmed), -3000, 'pending 不改變淨額');
+  const settled = base.concat([undoClaim, undoConfirm]);
+  assert.strictEqual(barNet(settled, derive(settled).confirmed), 0, 'confirmed 才抵銷淨額');
+});
+test('#25 currentMember 可見範圍不退化', function () {
+  const r = derive(base.concat([undoClaim, undoConfirm]));
+  assert.strictEqual(mod.settlementItemsForMember(r.entries, '小美').length, 1, '收款者看得到本筆');
+  assert.strictEqual(mod.settlementItemsForMember(r.entries, 'Bar').length, 1, '付款者看得到本筆');
+  assert.strictEqual(mod.settlementItemsForMember(r.entries, '小王').length, 0, '第三人不進 DOM 產生範圍');
+});
+
+// ---- §7 歷史介面:只呈現事實,不提供永久修改操作 ----
+test('#17/#18 歷史介面不得輸出「撤銷確認」或長期「復原」按鈕', function () {
+  const historyLine = html.slice(html.indexOf('function ledgerHandshakeHistoryLine('), html.indexOf('function ledgerSettleSuggestionLines('));
+  assert.ok(historyLine.indexOf('撤銷') < 0, '結清歷史不得出現撤銷字樣');
+  assert.ok(historyLine.indexOf('復原') < 0, '結清歷史不得出現永久復原入口');
+  assert.ok(historyLine.indexOf('<button') < 0, '歷史列不輸出任何操作按鈕');
+  assert.ok(historyLine.indexOf('Eligibility(') < 0, '歷史列不再依資格輸出操作');
+  assert.ok(historyLine.indexOf('已完成時間') >= 0 || historyLine.indexOf('formatLedgerSyncRecordTime') >= 0,
+    '已確認且未復原者顯示完成時間');
+  assert.ok(html.indexOf('ledgerRevokeSettlementConfirm') < 0, '永久撤銷 handler 必須完全移除');
+  assert.ok(html.indexOf('settlementConfirmRevokeEligibility') < 0, '24 小時撤銷資格函式必須完全移除');
+  assert.ok(html.indexOf('SETTLEMENT_REVOKE_WINDOW_MS') < 0, '24 小時視窗常數必須完全移除');
+  assert.ok(html.indexOf('24 小時') < 0, '不得殘留 24 小時撤銷文案');
+});
+test('#19 reload 後不重新產生 10 秒復原入口', function () {
+  // 復原入口只由 confirm handler 當次 toast 建立;歷史、面板與任何持久化狀態都不得重建它。
+  const undoCallers = html.split('ledgerUndoSettlementConfirm(').length - 1;
+  assert.strictEqual(undoCallers, 2, '全檔只有「函式定義」與「confirm 完成 toast」兩處提及復原 handler');
+  const confirmSlice = html.slice(html.indexOf('function ledgerConfirmSettlementClaim('), html.indexOf('function closeSettlementRejectDialog('));
+  assert.ok(confirmSlice.indexOf('ledgerUndoSettlementConfirm(') >= 0, '唯一的呼叫點在 confirm 完成後的 toast');
+  assert.ok(html.indexOf('undoWindow') < 0 && html.indexOf('UNDO_STATE_KEY') < 0, '復原狀態不得寫入 localStorage');
+  const historySheet = html.slice(html.indexOf('function openSettlementHistorySheet('), html.indexOf('function openSettlementBreakdownSheet('));
+  assert.ok(historySheet.indexOf('Undo') < 0 && historySheet.indexOf('Revoke') < 0, '結清紀錄 sheet 不重建任何復原入口');
+});
+test('#20 undo 寫入完全失敗時維持 confirmed,不得顯示成功', function () {
+  const append = html.slice(html.indexOf('function appendSettlementRecord('), html.indexOf('/* §4 退回後重新付款'));
+  assert.ok(append.indexOf("settlementRecordIsDurable(record)?'':'failed'") >= 0,
+    'POST 失敗且未安全寫入 durable queue 時進 failed,不得靜默成功');
+  assert.ok(/toast\(error\.message/.test(append), '失敗時顯示明確錯誤訊息');
+  assert.ok(/try\{sending=ledgerRepository\.add\(record\);\}/.test(append) && append.indexOf('Promise.reject(error)') >= 0,
+    'durable queue 同步寫入失敗(配額／私密模式)也走同一條失敗路徑,不得靜默無反應');
+  assert.ok(append.indexOf('applyConfirmedSettlements') < 0 && append.indexOf('netJpy') < 0,
+    '送出路徑不得直接改寫餘額,狀態一律由推導決定');
+  const failedView = mod.settlementEntryStatus(
+    { claim: { id: 'c-1' }, response: { id: 'r-1', recordType: 'settlement_confirm' }, from: 'Bar', to: '小美', currency: 'JPY', amount: 3000, status: 'confirmed', latest: true },
+    '小美', { phase: 'failed' });
+  assert.strictEqual(failedView.canRespond, false, '復原失敗不得把 confirmed 變回可操作的待確認按鈕');
 });
 
 // ===== §7 ledger fast pull:增量、去重、降級 =====
@@ -1134,12 +1306,32 @@ test('#40 主面板排序:待你確認 → 需重新付款 → 待你付款 → 
   assert.deepStrictEqual(order, ['awaiting-you', 'rejected', 'to-pay', 'submitted', 'sync-error']);
 });
 
-test('#10 待確認期間的新消費:確認後明確區分本筆已完成與新產生帳款', function () {
-  const note = mod.settlementNewChargeNote({ currency: 'JPY', amount: 3000 }, 1000);
-  assert.ok(note.indexOf('已完成') >= 0, '說明本筆已完成');
-  assert.ok(note.indexOf('待處理') >= 0, '說明另有新產生帳款待處理');
-  assert.ok(note.indexOf('3,000') >= 0 && note.indexOf('1,000') >= 0, '兩筆金額都顯示');
-  assert.strictEqual(mod.settlementNewChargeNote({ currency: 'JPY', amount: 3000 }, 0), '', '沒有新帳款時不顯示');
+test('#10 待確認期間的新消費:精簡為摘要金額下方的一行小字', function () {
+  const entry = { from: 'jane', to: '黃柏', currency: 'JPY', amount: 2500 };
+  const note = mod.settlementNewChargeNote(entry, 150, 'jane');
+  assert.strictEqual(note, '黃柏 上筆 ¥2,500 已結清・新帳款 ¥150', '一行講完:對象、上筆已結清、新帳款');
+  // 舊句子「本筆 ¥2,500 已完成,另有新產生帳款 ¥150 待處理」為 30 字;新版必須明顯更短才放得進摘要列。
+  assert.ok(note.length <= 26, '必須比舊句子短,才放得進摘要列');
+  assert.strictEqual(mod.settlementNewChargeNote(entry, 150, '黃柏'), 'jane 上筆 ¥2,500 已結清・新帳款 ¥150',
+    '對象一律取「我」以外的另一方');
+  assert.strictEqual(mod.settlementNewChargeNote(entry, 0, 'jane'), '', '沒有新帳款時不顯示');
+  assert.strictEqual(mod.settlementNewChargeNote(null, 150, 'jane'), '');
+  // 結清是一對成員之間的淨額,沒有單一明細可指名 —— 不得編造品項名稱。
+  assert.ok(note.indexOf('明細') < 0 && note.indexOf('undefined') < 0, '不輸出明細品項');
+});
+
+test('#10 新帳款說明移入摘要金額下方,不再自成一塊', function () {
+  const panel = html.slice(html.indexOf('function settlementNewChargeNotices('), html.indexOf('function renderSimpleSettlementPanelBody('));
+  assert.ok(panel.indexOf('ledger-settlement-hint') >= 0, '改用摘要列的小字樣式');
+  assert.ok(panel.indexOf('ledger-settlement-note') < 0, '不再輸出獨立的說明區塊');
+  assert.ok(panel.indexOf('settlementNewChargeNote(entry,remaining,model.me)') >= 0, '對象依 currentMember 決定');
+  assert.ok(/ledger-settlement-amount[^]*settlementNewChargeNotices\(model\)/.test(panel),
+    '小字掛在摘要金額同一欄,緊貼應付／應收金額下方');
+  assert.ok(/summary\+\s*$/m.test(panel) || panel.indexOf("+summary+\n") >= 0 || !/summary\+settlementNewChargeNotices/.test(panel),
+    '主體不再於摘要之後另外插入說明區塊');
+  assert.ok(/\.ledger-settlement-hint\{[^}]*font-size:11px/.test(html), '小字比摘要金額小');
+  assert.ok(/\.ledger-settlement-amount\{[^}]*flex-direction:column/.test(html), '金額與小字在摘要右側直向堆疊');
+  assert.ok(html.indexOf('.ledger-settlement-note{') < 0, '舊的獨立說明樣式必須移除');
 });
 
 // ===== §7.4 等待提示 =====
