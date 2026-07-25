@@ -1,4 +1,11 @@
 # 07 版本紀錄
+## 2026-07-25｜最後一筆處理完自動收起結算面板（dev，SW v55）
+- Bar 裁定：確認已收後自動關閉「團體結算」面板，但**只有這筆是最後一筆待處理時才關**，避免多筆待處理時被迫逐筆重開面板。
+- 新增純函式 `settlementPanelShouldClose(rowCount,panelOpen)`：面板開著且待處理列數為 0 才回 `true`；`rowCount` 為 `undefined`／`null`／空字串／非有限數一律回 `false`（算不出來時保守不關 —— 誤關會讓使用者以為操作沒生效）。
+- 「需要你處理」的列表建構抽成 `settlementActionableRows(model)`，主面板渲染與自動關閉判斷**共用同一份**。兩邊各算一套就會出現「面板還列著東西卻被自動關掉」。`renderSettlementPanelBody()` 不再自行 `rows.push`／`rows.sort`。
+- `closeSettlementPanelWhenDone()` 於 `ledgerConfirmSettlementClaim` 的完成回呼中執行，沿用既有 `closeLedgerInfoSheet()`；列數計算拋錯時直接 `return false` 不關。POST 失敗且未安全入列時該筆仍是 pending、列數不為 0，因此不會誤關。
+- 回歸測試新增：0／1／5 列與面板開關的四種組合、三種算不出列數的輸入、主面板與關閉判斷同源（主面板不得再自行組列表）、確認完成後才判斷收起。完整 43／43 Node tests（reliability 119／119）與 `tools/check-doc-titles.js` 通過。Service Worker cache `okayama-trip-v54` → `okayama-trip-v55`。
+
 ## 2026-07-25｜Toast 圖層修正：復原鈕被結算 sheet 蓋住（dev，SW v54）
 - Bar 真機回報：「確認已收 → 送出中」結束後仍停在「團體結算」sheet，底部的 `已確認收款 [復原]` **完全看不到**，等於那 10 秒形同不存在。
 - 主因：`.toast` 的 `z-index:90` **低於 App 內每一個 overlay** —— 結算 sheet 135、退回對話框 140、設定／成員 130、診斷面板 110、採買清單 145／160。toast 固定在 `bottom:80px`，正好落在 sheet 面板範圍內且被蓋住，既看不到也點不到。此為既有缺陷，過去 toast 只是純提示所以沒被發現；復原鈕是**可互動**元素，被蓋住即功能失效。

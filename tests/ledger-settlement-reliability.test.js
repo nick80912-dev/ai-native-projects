@@ -823,6 +823,33 @@ test('#1 復原 toast 必須浮在所有 overlay 之上,否則使用者看不到
   assert.ok(/\.toast\.has-action\{[^}]*pointer-events:auto/.test(html), '帶動作的 toast 必須可點擊');
 });
 
+test('#1 只有這筆是最後一筆待處理時才自動收起結算面板', function () {
+  assert.strictEqual(mod.settlementPanelShouldClose(0, true), true, '沒有任何待處理列 → 收起面板,復原 toast 全螢幕不被遮擋');
+  assert.strictEqual(mod.settlementPanelShouldClose(1, true), false, '還有其他待處理項目一律不關,不得逼使用者逐筆重開面板');
+  assert.strictEqual(mod.settlementPanelShouldClose(5, true), false);
+  assert.strictEqual(mod.settlementPanelShouldClose(0, false), false, '面板本來就沒開,不做任何事');
+  // 算不出列數時保守不關 —— 誤關會讓使用者以為操作沒生效。
+  assert.strictEqual(mod.settlementPanelShouldClose(undefined, true), false);
+  assert.strictEqual(mod.settlementPanelShouldClose(null, true), false);
+  assert.strictEqual(mod.settlementPanelShouldClose('', true), false);
+});
+
+test('#1 自動關閉的列數與主面板實際列出的列數同源', function () {
+  // 兩邊各算一套,就會出現「面板還列著東西卻被自動關掉」。
+  assert.ok(html.indexOf('function settlementActionableRows(') >= 0, '列表建構抽成具名函式');
+  const render = html.slice(html.indexOf('function renderSettlementPanelBody('), html.indexOf('function renderSimpleSettlementPanelBody('));
+  assert.ok(render.indexOf('settlementActionableRows(model)') >= 0, '主面板由該函式產生列表');
+  assert.ok(!/rows\.push\(/.test(render) && !/rows\.sort\(/.test(render), '主面板不再自行組列表');
+  const closer = html.slice(html.indexOf('function closeSettlementPanelWhenDone('), html.indexOf('function openLedgerSettlementPanel('));
+  assert.ok(closer.indexOf('settlementActionableRows(settlementPanelModel())') >= 0, '關閉判斷取用同一份列表');
+  assert.ok(closer.indexOf('settlementPanelShouldClose(') >= 0, '關閉條件走純函式,不在 UI 層另立規則');
+  assert.ok(closer.indexOf('ledgerSettlementPanelOpen()') >= 0, '只有結算面板開著時才處理');
+  assert.ok(closer.indexOf('closeLedgerInfoSheet()') >= 0, '沿用既有 sheet 關閉流程');
+  assert.ok(/catch\s*\([^)]*\)\s*\{\s*return false;/.test(closer), '算不出列數時保守不關');
+  const confirm = html.slice(html.indexOf('function ledgerConfirmSettlementClaim('), html.indexOf('function closeSettlementRejectDialog('));
+  assert.ok(confirm.indexOf('closeSettlementPanelWhenDone()') >= 0, '確認完成後才判斷是否收起面板');
+});
+
 test('#9 同一 response 快速連點復原五次,只建立一筆 deletion record', function () {
   const key = mod.settlementUndoLockKey('resp-1');
   assert.strictEqual(key, mod.settlementUndoLockKey('resp-1'), '復原鎖以 response.id 為穩定 key');
@@ -1190,7 +1217,8 @@ const newPanelSlice = html.slice(html.indexOf('function settlementPanelModel('),
 test('#40/#41 主面板只顯示當下可處理項目,已完成歷史不在主面板', function () {
   assert.ok(newPanelSlice.indexOf('latestSettlementGenerations') >= 0, '主面板只取最新可操作 generation');
   // 「不得堆疊」的斷言只針對主面板 renderer 本身;次層 sheet 保留這些區塊是設計要求。
-  const mainRenderer = html.slice(html.indexOf('function renderSettlementPanelBody('), html.indexOf('function renderSimpleSettlementPanelBody('));
+  // 列表建構已抽成 settlementActionableRows(自動關閉面板與主面板共用同一份),切片起點一併前移。
+  const mainRenderer = html.slice(html.indexOf('function settlementActionableRows('), html.indexOf('function renderSimpleSettlementPanelBody('));
   // 比對渲染出的區塊標題,而不是裸字串 —— 註解裡提到這些字不代表主面板堆疊了該區塊。
   assert.ok(mainRenderer.indexOf('轉帳建議（參考）</h3>') < 0, '參考幣別大區塊移出主面板');
   assert.ok(mainRenderer.indexOf('<h3>結清歷史</h3>') < 0, '結清歷史移至次層');

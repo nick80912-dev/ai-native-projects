@@ -4298,6 +4298,14 @@ function settlementUndoToastDurationMs(response,now){
   if(!isFinite(responseAt)||!isFinite(at))return 0;
   return Math.max(0,responseAt+SETTLEMENT_UNDO_WINDOW_MS-at);
 }
+/* §1 自動收起結算面板的判斷:只有「面板開著」且「已經沒有任何需要我處理的列」才收起,
+   讓 10 秒復原 toast 完全不被遮擋。還有其他待處理項目時一律不關 —— 否則使用者得為
+   每一筆重新點開面板。rowCount 必須來自主面板實際列出的列數,算不出來時保守不關。 */
+function settlementPanelShouldClose(rowCount,panelOpen){
+  var count=Number(rowCount);
+  if(rowCount===null||rowCount===''||rowCount===undefined||!isFinite(count))return false;
+  return !!panelOpen&&count===0;
+}
 function settlementUndoBlockMessage(reason){
   if(reason==='expired')return '復原期限已結束，此筆收款確認已完成';
   if(reason==='superseded')return '此筆已有後續結算，無法復原舊確認';
@@ -6057,11 +6065,10 @@ function settlementNewChargeNotices(model){
     return note?'<em class="ledger-settlement-hint">'+escapeHtml(note)+'</em>':'';
   }).join('');
 }
-/* 主面板只保留:我的應付／應收摘要 + 現在需要我處理的款項;其餘移至次層。 */
-function renderSettlementPanelBody(){
-  var model=settlementPanelModel(),me=model.me,status=ledgerSettlementStatus(model.settlement.current,model.currency);
-  if(isSimpleSettlementMode())return renderSimpleSettlementPanelBody(model,status);
-  var pendingClaims=model.handshake.pending;
+/* 「需要你處理」的列表。自動關閉面板的判斷必須與這裡同源 ——
+   兩邊各算一套就會出現「面板還列著東西卻被自動關掉」。 */
+function settlementActionableRows(model){
+  var me=model.me,pendingClaims=model.handshake.pending;
   var rows=model.actionable.filter(function(entry){return entry.status!=='confirmed';}).map(function(entry){
     return {sortKind:settlementEntryStatus(entry,me,{phase:settlementEntryPhase(entry)}).sortKind,html:ledgerHandshakeStatusLine(entry,me)};
   });
@@ -6072,7 +6079,13 @@ function renderSettlementPanelBody(){
     if(covered||openGeneration)return;
     rows.push({sortKind:'to-pay',html:ledgerSettleSuggestionLines([item],me,pendingClaims)});
   });
-  rows.sort(compareSettlementPanelRows);
+  return rows.sort(compareSettlementPanelRows);
+}
+/* 主面板只保留:我的應付／應收摘要 + 現在需要我處理的款項;其餘移至次層。 */
+function renderSettlementPanelBody(){
+  var model=settlementPanelModel(),status=ledgerSettlementStatus(model.settlement.current,model.currency);
+  if(isSimpleSettlementMode())return renderSimpleSettlementPanelBody(model,status);
+  var rows=settlementActionableRows(model);
   var secondary='<div class="ledger-settlement-links"><button class="btn ghost sm" onclick="openSettlementHistorySheet()">查看結清紀錄</button><button class="btn ghost sm" onclick="openSettlementBreakdownSheet()">查看計算明細</button></div>';
   // 新帳款小字掛在摘要金額同一欄:與「應付／應收」對齊,不再自成一塊佔掉一整行。
   var summary='<div class="ledger-settlement-status"><strong>'+escapeHtml(status.label)+'</strong>'+
@@ -6089,6 +6102,15 @@ function renderSimpleSettlementPanelBody(model,status){
     '<section class="ledger-settlement-section"><h3>轉帳建議</h3><div class="ledger-settlement-list">'+lines+'</div></section>'+
     '<div class="ledger-settlement-links"><button class="btn ghost sm" onclick="openSettlementBreakdownSheet()">查看計算明細</button></div>'+
     '<p class="settings-help">簡易結算模式已開啟;已確認的結清仍照常計入餘額。</p></div>';
+}
+/* 確認完成後,若已經沒有任何需要我處理的款項就收起面板,復原 toast 才完全不被遮擋。
+   還有其他待處理項目時一律不關。列數算不出來時保守不關 —— 誤關會讓人以為操作沒生效。 */
+function closeSettlementPanelWhenDone(){
+  var rows;
+  try{rows=settlementActionableRows(settlementPanelModel()).length;}
+  catch(error){return false;}
+  if(!settlementPanelShouldClose(rows,ledgerSettlementPanelOpen()))return false;
+  closeLedgerInfoSheet();return true;
 }
 function openLedgerSettlementPanel(){
   openLedgerInfoSheet('團體結算',renderSettlementPanelBody(),'settlement');
@@ -6220,6 +6242,8 @@ function ledgerConfirmSettlementClaim(id){
   try{record=createSettlementResponse('settlement_confirm',entry.claim,me,'',ledgerUniverseMode()==='test');}
   catch(error){settlementActionLock.release(lockKey);toast(error.message||'無法確認');return;}
   appendSettlementRecord(record,'已確認收款',lockKey,function(durable){
+    // 這筆是最後一筆待處理時收起面板;還有其他項目就留在面板繼續處理。
+    closeSettlementPanelWhenDone();
     // 只有安全保存(POST accepted 或已寫入 durable queue／bridge)後才給這一次復原;
     // 期限自 record.time 起算,不因 toast 顯示或同步延遲而重新計算。
     var remaining=settlementUndoToastDurationMs(record,Date.now());
