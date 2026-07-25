@@ -806,6 +806,23 @@ test('#1 confirm 安全保存後顯示「已確認收款」＋10 秒一次性「
   assert.ok(slice.indexOf('確認後雙方淨額會立即抵銷') >= 0, '保留既有二次確認視窗');
 });
 
+test('#1 復原 toast 必須浮在所有 overlay 之上,否則使用者看不到也點不到', function () {
+  // Bar 真機回報:確認已收後仍停留在「團體結算」sheet,底部 toast 完全看不見。
+  // 主因是 .toast z-index 90 低於 .ledger-sheet-overlay 135(以及其他每一層 overlay)。
+  const toastRule = /\.toast\{[^}]*\}/.exec(html);
+  assert.ok(toastRule, '.toast 樣式存在');
+  const toastZ = Number(/z-index:\s*(-?\d+)/.exec(toastRule[0])[1]);
+  const all = [];
+  const zRe = /z-index:\s*(-?\d+)/g;
+  let m;
+  while ((m = zRe.exec(html)) !== null) all.push(Number(m[1]));
+  assert.strictEqual(Math.max.apply(null, all), toastZ,
+    'toast 必須是最上層:目前最高層為 ' + Math.max.apply(null, all) + '、toast 為 ' + toastZ);
+  assert.strictEqual(all.filter(function (z) { return z === toastZ; }).length, 1,
+    '不得有其他圖層與 toast 同高 —— 同高時由 DOM 順序決定勝負,結果不可預測');
+  assert.ok(/\.toast\.has-action\{[^}]*pointer-events:auto/.test(html), '帶動作的 toast 必須可點擊');
+});
+
 test('#9 同一 response 快速連點復原五次,只建立一筆 deletion record', function () {
   const key = mod.settlementUndoLockKey('resp-1');
   assert.strictEqual(key, mod.settlementUndoLockKey('resp-1'), '復原鎖以 response.id 為穩定 key');

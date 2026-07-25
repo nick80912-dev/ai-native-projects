@@ -288,7 +288,10 @@ input,select,textarea{font-size:16px}
 .toast{
   position:fixed;bottom:calc(80px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%) translateY(20px);
   background:var(--sea-deep);color:#fff;padding:11px 18px;border-radius:22px;font-size:13.5px;font-weight:600;
-  z-index:90;opacity:0;pointer-events:none;transition:.3s;box-shadow:var(--shadow-lg);white-space:nowrap;
+  /* toast 依定義是最上層的短暫回饋層,必須高於每一個 overlay(目前最高 160)。
+     原本的 90 低於所有 overlay —— 在結算 sheet(135)開著時,「已確認收款 [復原]」
+     整個被蓋住,使用者既看不到也點不到那 10 秒。有動作的 toast 才吃點擊。 */
+  z-index:200;opacity:0;pointer-events:none;transition:.3s;box-shadow:var(--shadow-lg);white-space:nowrap;
 }
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 .toast.has-action{pointer-events:auto;display:flex;align-items:center;gap:12px}

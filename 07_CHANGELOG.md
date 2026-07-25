@@ -1,4 +1,11 @@
 # 07 版本紀錄
+## 2026-07-25｜Toast 圖層修正：復原鈕被結算 sheet 蓋住（dev，SW v54）
+- Bar 真機回報：「確認已收 → 送出中」結束後仍停在「團體結算」sheet，底部的 `已確認收款 [復原]` **完全看不到**，等於那 10 秒形同不存在。
+- 主因：`.toast` 的 `z-index:90` **低於 App 內每一個 overlay** —— 結算 sheet 135、退回對話框 140、設定／成員 130、診斷面板 110、採買清單 145／160。toast 固定在 `bottom:80px`，正好落在 sheet 面板範圍內且被蓋住，既看不到也點不到。此為既有缺陷，過去 toast 只是純提示所以沒被發現；復原鈕是**可互動**元素，被蓋住即功能失效。
+- 修正：`.toast` 提到 `z-index:200`（高於目前最高的 160）。toast 依定義就是最上層的短暫回饋層。`pointer-events` 規則不變 —— 純提示的 toast 仍為 `none`，只有 `.has-action` 吃點擊，不會攔截 overlay 上的操作。
+- **未採用「確認後自動關閉結算面板」**：那只能救到 confirm 這一條路徑，`我已付款`／`退回`／`撤回`／`重新標記已付款` 的 toast 一樣被蓋住；且使用者若還有其他待處理款項，會被強制踢出面板再自己點回來。圖層修好後不必關面板也看得到、點得到。
+- 回歸測試新增：`.toast` 的 `z-index` 必須是全檔最大值，且不得有第二個圖層與它同高（同高時由 DOM 順序決定勝負，結果不可預測）。完整 43／43 Node tests（reliability 117／117）與 `tools/check-doc-titles.js` 通過。Service Worker cache `okayama-trip-v53` → `okayama-trip-v54`。
+
 ## 2026-07-25｜已確認收款改為 10 秒一次性復原（dev，SW v53，待 Bar 真機驗收）
 - **產品裁定（Bar）**：移除結清歷史中的永久「撤銷確認」按鈕，不實作 24 小時撤銷機制。「確認已收」完成後只在**操作裝置**提供 10 秒一次性「復原」；逾時該筆確認即為終局結果。日後發現帳務錯誤改走補登或更正流程，本批不實作更正功能。
 - **移除既有 24 小時方案**：原方案已 commit 在 `dev`（非未提交草稿）。本批刪除 `SETTLEMENT_REVOKE_WINDOW_MS`（24h）、`settlementConfirmRevokeEligibility`、`settlementRevokeBlockMessage`、`ledgerRevokeSettlementConfirm`（含其二次確認視窗），以及結清歷史列的「撤銷確認」按鈕、`· 可撤銷` chip 與 `不可撤銷 · 已超過 24 小時`／`· 已有後續結算` 小字。全檔 `24 小時` 出現次數為 0。
