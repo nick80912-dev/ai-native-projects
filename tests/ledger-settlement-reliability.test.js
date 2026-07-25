@@ -624,10 +624,10 @@ test('#19 only the newest rejected generation may offer 重新標記已付款', 
 
 // ===== §3 狀態文案與按鈕顯示 =====
 
-test('#9 claim: before read-back the payer sees 已送出・等待對方確認, never 我已付款 again', function () {
+test('#9 claim: before read-back the payer sees 等待對方確認, never 我已付款 again', function () {
   const pendingEntry = { claim: { id: 'c-1', pending: true }, from: 'Bar', to: '小美', currency: 'JPY', amount: 3000, status: 'pending', latest: true };
   const view = mod.settlementEntryStatus(pendingEntry, 'Bar');
-  assert.strictEqual(view.label, '已送出・等待對方確認', 'the payer sees the submitted status');
+  assert.strictEqual(view.label, '等待對方確認', 'the payer sees the submitted status');
   assert.strictEqual(view.waitingSync, true, 'a not-yet-read-back record shows 等待同步');
   assert.strictEqual(view.canClaim, false, '我已付款 must not come back while a claim is open');
 });
@@ -1241,9 +1241,9 @@ test('#50 顯示層去重:chip 講狀態、按鈕講動作,同義不重複顯示
     'chip 與按鈕文案完全相同時不顯示 chip');
   assert.strictEqual(mod.settlementDisplayChip('同步失敗・重新同步', '重新同步'), '同步失敗',
     'chip 尾端就是按鈕動作時只保留狀態部分');
-  assert.strictEqual(mod.settlementDisplayChip('對方已退回', '重新標記已付款'), '對方已退回',
+  assert.strictEqual(mod.settlementDisplayChip('對方已退回', '我已付款'), '對方已退回',
     '狀態與動作資訊不同時完整保留');
-  assert.strictEqual(mod.settlementDisplayChip('已送出・等待對方確認', '撤回'), '已送出・等待對方確認',
+  assert.strictEqual(mod.settlementDisplayChip('同步失敗・重新同步', '撤回'), '同步失敗・重新同步',
     '「・」後不是按鈕動作時不得誤切');
   assert.strictEqual(mod.settlementDisplayChip('待你確認', ''), '待你確認',
     '底層規則不變:沒有 actionLabel 時 chip 完整保留');
@@ -1260,21 +1260,44 @@ test('#52 兩顆主要按鈕已表達狀態,不再輸出「待你確認」chip',
   // 再掛一個「待你確認」chip 是同一件事說兩遍,還逼整列變成兩行。
   assert.strictEqual(mod.settlementRowChipText('待你確認', '', true), '', '有兩顆主要按鈕時不出 chip');
   assert.strictEqual(mod.settlementRowChipText('待你確認', '', false), '待你確認', '沒有那兩顆按鈕時 chip 必須保留');
-  assert.strictEqual(mod.settlementRowChipText('已送出・等待對方確認', '撤回', false), '已送出・等待對方確認',
+  assert.strictEqual(mod.settlementRowChipText('等待對方確認', '撤回', false), '等待對方確認',
     '「撤回」不等於「還在等對方」,這個 chip 有獨立資訊,保留');
-  assert.strictEqual(mod.settlementRowChipText('對方已退回', '重新標記已付款', false), '對方已退回');
+  assert.strictEqual(mod.settlementRowChipText('對方已退回', '我已付款', false), '對方已退回');
   assert.strictEqual(mod.settlementRowChipText('送出中…', '送出中…', false), '', '既有去重規則不受影響');
   assert.strictEqual(mod.settlementRowChipText('同步失敗・重新同步', '重新同步', false), '同步失敗');
 });
 
+test('#53 付款者列也收成一行:縮短狀態文案、按鈕改用既有詞彙', function () {
+  // 「已送出」是冗字 —— 這一列有「撤回」可按,本來就代表已送出。
+  const entry = { claim: { id: 'c-1' }, from: 'Bar', to: '小美', currency: 'JPY', amount: 3000, status: 'pending', latest: true };
+  assert.strictEqual(mod.settlementEntryStatus(entry, 'Bar').label, '等待對方確認');
+  const slice = html.slice(html.indexOf('function ledgerHandshakeStatusLine('), html.indexOf('function ledgerHandshakeHistoryLine('));
+  // 退回後的「再標記一次已付款」與轉帳建議的「我已付款」是同一個動作(都建立 settlement_claim),
+  // 用同一個詞才不會讓人以為 App 會代為付款。
+  assert.ok(slice.indexOf('>我已付款</button>') >= 0, '退回後的重新標記沿用既有「我已付款」詞彙');
+  assert.ok(slice.indexOf('重新標記已付款') < 0, '不再出現七個字的長按鈕');
+  assert.ok(slice.indexOf('重新付款') < 0, '不得使用「重新付款」—— App 不會代為付款,那是使用者自己在 App 外完成的事');
+  assert.ok(slice.indexOf('ledgerRemarkSettlementPaid(') >= 0, '行為不變:仍走既有的重新標記 handler');
+  assert.ok(slice.indexOf("actionLabel='我已付款'") >= 0, '仍提供 actionLabel 供顯示層去重');
+});
+
+test('#53 摘要金額字級小一號', function () {
+  assert.ok(/\.ledger-settlement-amount\{[^}]*font-size:13\.5px/.test(html), '摘要金額由 15px 降一級為 13.5px');
+  assert.ok(/\.ledger-settlement-hint\{[^}]*font-size:11px/.test(html), '底下的新帳款小字維持 11px,仍小於金額');
+  const simple = html.slice(html.indexOf('function renderSimpleSettlementPanelBody('), html.indexOf('function openLedgerSettlementPanel('));
+  assert.ok(simple.indexOf('ledger-settlement-amount') >= 0, '簡易結算模式的摘要金額套用同一字級,不得兩種模式不一致');
+});
+
 test('#52 沒有 chip 也沒有退回原因時,動作留在主列收成一行', function () {
   const slice = html.slice(html.indexOf('function ledgerHandshakeStatusLine('), html.indexOf('function ledgerHandshakeHistoryLine('));
-  assert.ok(/var inlineActions=!chipText&&!reason/.test(slice),
-    '只有「無 chip 且無退回原因」才把動作併入主列');
+  assert.ok(/var inlineActions=!reason/.test(slice),
+    '只有「有退回原因」才需要第二列,其餘一律併入主列');
   assert.ok(/ledger-settle-state[^]*inlineActions\?actions:''/.test(slice), '動作併入主列右側,與 chip／等待提示同欄');
-  assert.ok(/foot=\(reason\|\|\(actions&&!inlineActions\)\)\?/.test(slice), '併入主列後不得再輸出空的第二列');
-  assert.ok(slice.indexOf("(reason||'<span></span>')") >= 0 && slice.indexOf("(actions||'<span></span>')") >= 0,
-    '仍需兩列時(退回原因)維持既有補空 span 的左右定位');
+  assert.ok(/foot=reason\?/.test(slice), '沒有退回原因時不得輸出空的第二列');
+  assert.ok(slice.indexOf("(actions||'<span></span>')") >= 0,
+    '有原因但無動作(收款者自己退回)時補空 span 維持左右定位');
+  assert.ok(/等待同步|settlementSyncTag\(entry,view\)\+\(inlineActions/.test(slice),
+    '等待提示留在主列右側的固定寬欄,不移進會被壓縮的左欄');
 });
 
 test('#51 同步小字:30 秒內與 chip 同義不重複,逾 30 秒保留升級提示', function () {
@@ -1311,10 +1334,10 @@ test('#48 計算明細:參考幣別由結算幣別換算,不得使用另一幣�
 test('#49 退回列:狀態與動作分列對齊,原因不撐開左欄', function () {
   const slice = html.slice(html.indexOf('function ledgerHandshakeStatusLine('), html.indexOf('function ledgerHandshakeHistoryLine('));
   assert.ok(slice.indexOf('ledger-settle-main') >= 0 && slice.indexOf('ledger-settle-foot') >= 0, '固定兩列結構');
-  // 動作可併入主列後,第二列的條件改為「有退回原因,或有動作但不能併入主列」。
-  assert.ok(slice.indexOf("(reason||(actions&&!inlineActions))?") >= 0, '無原因且無需另起一列的動作時不輸出第二列');
-  assert.ok(slice.indexOf("(reason||'<span></span>')") >= 0 && slice.indexOf("(actions||'<span></span>')") >= 0,
-    '只有其一時補空 span,維持左右定位不塌陷');
+  // 動作一律併入主列後,第二列只為「退回原因」而存在。
+  assert.ok(slice.indexOf('foot=reason?') >= 0, '沒有退回原因時不輸出第二列');
+  assert.ok(slice.indexOf("(actions||'<span></span>')") >= 0,
+    '有原因但無動作時補空 span,維持左右定位不塌陷');
   assert.ok(slice.indexOf('對方已退回') < 0, '狀態文案仍由 settlementEntryStatus 提供,不在版面層改寫核准文案');
   assert.ok(slice.indexOf('退回原因:') < 0, '窄螢幕不再顯示冗餘的「退回原因:」前綴,右側 chip 已表明狀態');
   assert.ok(slice.indexOf('aria-label="退回原因"') >= 0, '前綴移除後仍以 aria-label 保留欄位語意');
