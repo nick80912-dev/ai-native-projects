@@ -3507,6 +3507,31 @@ function ledgerUniverseRecords(records,mode){
     return mode==='test'?isTestLedgerRecord(record):!isTestLedgerRecord(record);
   });
 }
+/* ---- 團體帳本「與我相關」可見範圍(純函式) ----
+   規則:目前成員是付款人(record.member)**或**在 participants 內,任一成立即相關。
+   付款人不必在 participants 內 —— 全額代墊給別人的紀錄仍是自己建立的,必須看得到、改得動、刪得掉。
+   識別值:本專案 Ledger schema 沒有獨立 member id,`canonicalMemberName()` 正規化後的姓名 key
+   就是既有的穩定成員識別(registeredMemberEntries 的 entry.key、findRegisteredMember、
+   buildMemberBalances、結算全序比對都用它)。此處沿用同一入口,不另立比對規則、不改 schema。
+   Legacy fail-open:participants 缺欄／非 JSON／非陣列／空陣列時 parseParticipants 回 null,
+   無法可靠判斷歸屬就先保留顯示 —— 舊資料不得因本功能靜默消失。
+   Fail-safe:目前成員無法解析時完全不套用過濾,避免整本團體帳突然歸零。 */
+function isLedgerRecordRelatedToMember(record,member,warnFn){
+  var key=canonicalMemberName(member);
+  if(!key)return true;
+  if(canonicalMemberName(record&&record.member)===key)return true;
+  var participants=parseParticipants(record,warnFn||function(){});
+  if(!participants)return true;
+  for(var i=0;i<participants.length;i++)if(canonicalMemberName(participants[i])===key)return true;
+  return false;
+}
+function memberRelatedLedgerRecords(records,member,warnFn){
+  if(!canonicalMemberName(member)){
+    settlementWarning(warnFn,'目前成員無法解析,團體帳本暫不套用「與我相關」過濾');
+    return (records||[]).slice();
+  }
+  return (records||[]).filter(function(record){return isLedgerRecordRelatedToMember(record,member,warnFn);});
+}
 
 function summarizeLedgerRecords(records,includeTest){
   var byMember={}, order=[], total={amountJpy:0,amountTwd:0}, included=[];
@@ -5172,7 +5197,15 @@ function updateLedgerPendingStatus(){
   try{node.textContent='JPY 1 ≈ TWD '+currentLedgerSettings().exchangeRate;node.classList.remove('pending');node.disabled=true;node.setAttribute('aria-label','目前匯率');}
   catch(error){node.textContent='匯率未設定';node.classList.remove('pending');node.disabled=true;node.setAttribute('aria-label','匯率未設定');}
 }
-function ledgerTrackRecords(){return ledgerUiState.track==='shared'?sortLedgerExpenses(ledgerUniverseRecords(spendLedgerRecords(mergedLedgerRecords()),ledgerUniverseMode())):sortLedgerExpenses(personalLedgerRepository.all());}
+/* 可見範圍診斷:每次 renderSplit 都會重跑過濾,同一則訊息只記一次
+   (沿用資料層 _refWarned 的 warn-once 慣例),避免舊資料在 console 洗版。 */
+var _ledgerVisibilityWarned={};
+function ledgerVisibilityWarn(message){
+  if(_ledgerVisibilityWarned[message])return;
+  _ledgerVisibilityWarned[message]=true;AppLog.data(message);
+}
+/* 團體帳唯一節流點:最近消費、完整紀錄頁、筆數、總額、查詢、編輯與刪除入口都取這一批。 */
+function ledgerTrackRecords(){return ledgerUiState.track==='shared'?sortLedgerExpenses(memberRelatedLedgerRecords(ledgerUniverseRecords(spendLedgerRecords(mergedLedgerRecords()),ledgerUniverseMode()),getCurrentMember(),ledgerVisibilityWarn)):sortLedgerExpenses(personalLedgerRepository.all());}
 function setLedgerTrack(value){
   if(value!=='personal'&&value!=='shared')return;
   ledgerUiState.track=value;ledgerUiState.page='dashboard';ledgerUiState.filter='all';ledgerUiState.displayCurrency='';ledgerUiState.selectionMode=false;ledgerUiState.selectedRecordIds={};closeLedgerRecordActions();
@@ -5314,6 +5347,9 @@ function editLedgerRecord(id){
   if(isTimeSimulationActive()){toast('時間模擬中不可編輯支出');return;}
   var track=ledgerUiState.track,source=track==='personal'?personalLedgerRepository.all():mergedLedgerRecords(),records=ledgerEditSelection(source,id);
   if(!records.length){toast('找不到可編輯紀錄');return;}
+  /* 清單過濾只是供料範圍;編輯讀的是未過濾的 mergedLedgerRecords(),因此在此用同一個判斷重查一次,
+     兩邊不會漂移。目前成員未解析時 isLedgerRecordRelatedToMember 回 true,行為與過濾前一致。 */
+  if(track==='shared'&&!records.some(function(record){return isLedgerRecordRelatedToMember(record,getCurrentMember());})){toast('這筆紀錄與你無關,無法編輯');return;}
   ledgerBackgroundScrollY=window.scrollY||window.pageYOffset||0;closeLedgerRecordDetail();closeLedgerEntrySheet(false);
   ledgerUiState.track=track;ledgerUiState.draft=ledgerDraftFromRecords(records,track);ledgerUiState.editing={track:track,originals:records};ledgerUiState.sheet='entry';ledgerUiState.savePending=false;
   var overlay=document.createElement('div');overlay.id='ledgerEntrySheet';overlay.className='ledger-sheet-overlay';document.body.appendChild(overlay);document.body.classList.add('ledger-sheet-open');renderLedgerEntrySheet();
@@ -5768,7 +5804,7 @@ function closeSharedLedgerDelete(){var overlay=document.getElementById('ledgerDe
 function openSharedLedgerDelete(id){openSharedLedgerDeleteBatch([id]);}
 function openSharedLedgerDeleteBatch(ids){
   var wanted={};(ids||[]).forEach(function(id){wanted[id]=true;});
-  var originals=effectiveLedgerRecords(mergedLedgerRecords()).filter(function(record){return wanted[record.id]&&canDeleteLedgerRecord(record);});
+  var originals=effectiveLedgerRecords(mergedLedgerRecords()).filter(function(record){return wanted[record.id]&&canDeleteLedgerRecord(record)&&isLedgerRecordRelatedToMember(record,getCurrentMember());});
   if(!originals.length){toast('紀錄已刪除或不可刪除');return;}
   closeSharedLedgerDelete();
   var overlay=document.createElement('div');
@@ -5784,7 +5820,8 @@ function submitSharedLedgerDeletion(){
   if(!reason){if(errorNode)errorNode.textContent='請輸入刪除原因';if(input)input.focus();return Promise.resolve({ok:false});}
   if(reason.length>50){if(errorNode)errorNode.textContent='刪除原因最多 50 個字';if(input)input.focus();return Promise.resolve({ok:false});}
   var wanted={};ids.forEach(function(id){wanted[id]=true;});
-  var originals=effectiveLedgerRecords(mergedLedgerRecords()).filter(function(record){return wanted[record.id]&&canDeleteLedgerRecord(record);}),deletions;
+  /* 真正寫入墓碑的路徑 —— 對話框存的是 id 陣列,送出時一律重新推導並重跑同一個相關性判斷。 */
+  var originals=effectiveLedgerRecords(mergedLedgerRecords()).filter(function(record){return wanted[record.id]&&canDeleteLedgerRecord(record)&&isLedgerRecordRelatedToMember(record,getCurrentMember());}),deletions;
   if(!originals.length){closeSharedLedgerDelete();renderSplit();toast('紀錄已刪除或不可刪除');return Promise.resolve({ok:false});}
   try{var at=Date.now();deletions=originals.map(function(original,index){return createLedgerDeletion(original,getCurrentMember(),reason,at+index);});}
   catch(error){if(errorNode)errorNode.textContent=error.message||'無法刪除';return Promise.resolve({ok:false});}
@@ -6423,7 +6460,7 @@ function renderSplit(){
   var secondCard=shared?'':'<button class="ledger-compact-card ledger-compact-action ledger-home-summary-card ledger-proxy-summary-card" onclick="openLedgerProxyPanel()"><div class="ledger-home-summary-head"><h3>代購</h3><span class="ledger-card-head-action"><span class="ledger-proxy-summary-target">'+escapeHtml(proxyCard.targetLabel)+'</span><span class="ledger-card-chevron" aria-hidden="true">〉</span></span></div>'+proxyAmounts+'<p class="ledger-proxy-summary-detail">'+escapeHtml(proxyCard.detail)+'</p></button>';
   var selectionButton='<button class="ledger-view-all" onclick="'+(ledgerUiState.selectionMode?'cancelLedgerSelectionMode()':'enterLedgerSelectionMode()')+'">'+(ledgerUiState.selectionMode?'取消':'選取')+'</button>';
   view.innerHTML=testWarning+legacy+'<div class="ledger-dashboard '+(shared?'ledger-shared-dashboard':'')+'">'+
-    '<section class="ledger-summary-card"><div class="ledger-track-grid" role="group" aria-label="記帳模式"><button class="ledger-track-btn '+(!shared?'on':'')+'" aria-pressed="'+(!shared?'true':'false')+'" onclick="setLedgerTrack(\'personal\')">個人</button><button class="ledger-track-btn '+(shared?'on':'')+'" aria-pressed="'+(shared?'true':'false')+'" onclick="setLedgerTrack(\'shared\')">團體</button></div><div class="ledger-summary-meta"><button id="ledgerPendingStatus" class="ledger-status-pill ledger-summary-rate '+(pending?'pending':'')+'" '+(pending?'':'disabled')+' onclick="openLedgerSyncPanel()">'+escapeHtml(status)+'</button><span class="ledger-summary-helper">個人帳留在本機；團體帳跨裝置同步。</span></div><div class="ledger-summary-count">'+(shared?'團體總支出 · '+period.count+' 筆紀錄':'累計支出 · '+period.count+' 筆紀錄')+'</div><button class="ledger-summary-amount" onclick="toggleLedgerDisplayCurrency()" aria-label="切換總額顯示幣別"><strong>'+escapeHtml(formatLedgerCurrencyAmount(currency,primaryTotal))+'</strong><span>'+escapeHtml(formatLedgerCurrencyAmount(secondary,secondaryTotal))+'</span></button></section>'+
+    '<section class="ledger-summary-card"><div class="ledger-track-grid" role="group" aria-label="記帳模式"><button class="ledger-track-btn '+(!shared?'on':'')+'" aria-pressed="'+(!shared?'true':'false')+'" onclick="setLedgerTrack(\'personal\')">個人</button><button class="ledger-track-btn '+(shared?'on':'')+'" aria-pressed="'+(shared?'true':'false')+'" onclick="setLedgerTrack(\'shared\')">團體</button></div><div class="ledger-summary-meta"><button id="ledgerPendingStatus" class="ledger-status-pill ledger-summary-rate '+(pending?'pending':'')+'" '+(pending?'':'disabled')+' onclick="openLedgerSyncPanel()">'+escapeHtml(status)+'</button><span class="ledger-summary-helper">個人帳留在本機；團體帳跨裝置同步。</span></div><div class="ledger-summary-count">'+(shared?'與我相關 · '+period.count+' 筆紀錄':'累計支出 · '+period.count+' 筆紀錄')+'</div><button class="ledger-summary-amount" onclick="toggleLedgerDisplayCurrency()" aria-label="切換總額顯示幣別"><strong>'+escapeHtml(formatLedgerCurrencyAmount(currency,primaryTotal))+'</strong><span>'+escapeHtml(formatLedgerCurrencyAmount(secondary,secondaryTotal))+'</span></button></section>'+
     settlementCard+secondCard+
     '<section class="ledger-recent-section">'+renderLedgerRecentHeading(selectionButton)+todayHint+recentSummary+'<div class="ledger-recent-list">'+recentMarkup+'</div></section></div>'+renderLedgerSelectionToolbar()+'<button class="ledger-fab" aria-label="新增消費" onclick="openLedgerQuickEntryFromFab()">＋</button>';
 }

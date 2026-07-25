@@ -98,7 +98,8 @@ assert(html.includes("var ledgerUiState={track:'personal'"),'one ledger UI state
 assert(!html.includes("var ledgerTrack='personal'"),'parallel ledgerTrack state is removed');
 assert(splitSource.includes('ledger-status-pill'),'dashboard renders the sync/rate status pill');
 assert(splitSource.includes('ledger-summary-card'),'dashboard renders the primary summary card');
-assert(splitSource.includes("shared?'團體總支出 · '+period.count+' 筆紀錄'"),'shared primary card explicitly labels the total-spend section');
+assert(splitSource.includes("shared?'與我相關 · '+period.count+' 筆紀錄'"),'shared primary card states the personal scope of its count and amount');
+assert(!splitSource.includes('團體總支出'),'shared primary card no longer implies a whole-group total');
 assert(splitSource.includes(":'累計支出 · '+period.count+' 筆紀錄'"),'personal primary card explicitly labels cumulative spending');
 assert(!splitSource.includes('ledger-today-card'),'neither ledger track renders a standalone Today card');
 assert.match(splitSource,/<button class="ledger-compact-card ledger-compact-action ledger-home-summary-card ledger-proxy-summary-card" onclick="openLedgerProxyPanel\(\)">/,'personal proxy remains a whole-card button using the shared size contract');
@@ -127,6 +128,7 @@ assert(splitSource.includes("pending=shared?ledgerRepository.pendingCount():0"),
 assert(settlementProgressSource.includes('model.pendingCount'),'settlement people count remains a separate settlement-card value');
 assert(ledgerUiSource.includes('groupLedgerExpensesByDate'),'dashboard uses the tested date grouping');
 assert(ledgerUiSource.includes("spendLedgerRecords(mergedLedgerRecords())"),'shared history consumes effective visible expenses');
+assert(ledgerUiSource.includes('memberRelatedLedgerRecords(')&&ledgerUiSource.includes('getCurrentMember(),ledgerVisibilityWarn'),'shared track applies the member-related filter at the single shared choke point');
 assert(ledgerUiSource.includes('ledgerUniverseRecords'),'shared dashboard selects one formal/TEST universe');
 assert(ledgerUiSource.includes("ledgerUiState.page='all'"),'View all switches the single ledger state into history mode');
 assert(ledgerUiSource.includes("['proxy','代購']")&&ledgerUiSource.includes("['non-proxy','非代購']")&&ledgerUiSource.includes("'setLedgerHistoryProxy'"),'personal history exposes proxy and non-proxy filters');

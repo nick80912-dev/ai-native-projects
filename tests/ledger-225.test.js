@@ -222,7 +222,7 @@ assert(switchSource.includes("behavior:'smooth'"),'re-tapping the dashboard scro
 assert(extractFunction(html,'returnLedgerDashboard').includes("classList.contains('ledger-sheet-open')"),'hidden-nav sheets protect unsaved form state');
 assert(html.includes('aria-label="返回分帳首頁"'),'the history back button remains available');
 
-assert.match(sw,/okayama-trip-v57/,'service worker cache advances exactly one version');
+assert.match(sw,/okayama-trip-v58/,'service worker cache advances exactly one version');
 
 (async function(){
   const originals=[{id:'s1'},{id:'s2'}],overlay={getAttribute(){return JSON.stringify(['s1','s2']);}},input={value:'共同原因'},button={disabled:false};
@@ -231,6 +231,8 @@ assert.match(sw,/okayama-trip-v57/,'service worker cache advances exactly one ve
     effectiveLedgerRecords(){return originals;},mergedLedgerRecords(){return originals;},canDeleteLedgerRecord(){return true;},
     createLedgerDeletion(original,member,reason){return {id:'delete-'+original.id,recordType:'deletion',targetRecordId:original.id,member,deleteReason:reason};},
     getCurrentMember(){return 'Bar';},Date,JSON,Promise,
+    /* 刪除路徑新增的「與我相關」重查:接真實實作而非放行樁,舊測資無 participants 走 legacy fail-open 全數保留。 */
+    isLedgerRecordRelatedToMember:helperSandbox.isLedgerRecordRelatedToMember,
     enqueues:[],ledgerRepository:{enqueueBatch(records){sharedDeleteSandbox.enqueues.push(records);return {ok:true};},add(){throw new Error('batch deletion must not use add');}},
     closeSharedLedgerDelete(){},ledgerUiState:{selectionMode:true,selectedRecordIds:{s1:true,s2:true}},renderSplit(){},toast(){}
   };

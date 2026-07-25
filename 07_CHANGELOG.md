@@ -1,4 +1,18 @@
 # 07 版本紀錄
+## 2026-07-25｜團體帳本只顯示與目前成員相關的紀錄（dev，SW v58，待 Bar 真機驗收）
+- **問題**：團體帳顯示旅程內所有人的消費，Mark 仍看得到只屬於 Jane 與 Baron 的紀錄。本批改為預設只供料「與目前成員相關」的團體紀錄。
+- **相關性定義**：`目前成員是付款人（record.member）` **或** `目前成員在 participants 內`，任一成立即顯示。**付款人不必在 participants 內** —— 全額代墊給別人的紀錄仍是自己建立的，必須看得到、改得動、刪得掉。只用 `participants.includes(me)` 會讓代墊紀錄從建立者眼前消失。
+- **採方案 A（全面一致過濾）**：`ledgerTrackRecords()` 仍是團體帳唯一的共用節流點，過濾就實作在那裡。最近消費、完整紀錄頁、主卡片筆數與總額、查詢、批次選取、編輯與刪除入口全部吃同一批結果，不會出現「清單 5 筆、摘要 8 筆」或「清單過濾了但總額仍是全團」。**不採方案 C**：不新增篩選 chip、不新增「與我相關／全部」切換、不新增設定。
+- **識別值**：本專案 Ledger schema **沒有獨立 member id**，`canonicalMemberName()` 正規化後的姓名 key 就是既有的穩定成員識別（`registeredMemberEntries` 的 `entry.key`、`findRegisteredMember`、`buildMemberBalances`、結算全序比對用的都是它）。新函式沿用同一個正規化入口，不另立比對規則、不改 schema、不做資料 migration。因此「Mark」與全形空白／前後空白版本判為同一人，「Markus」不會被誤判。
+- **Legacy 限定式 fail-open**：`participants` 缺欄／`null`／非 JSON／非陣列／空陣列時 `parseParticipants()` 回 `null`，此時一律**保留顯示** —— 舊資料不得因本功能靜默消失。fail-open 只在「無法可靠判斷」時成立；解析得出來就照規則排除，不會擴散成無條件放行。
+- **成員無法解析時 fail-safe**：`trip_member` 讀不到或只有空白時**完全不套用過濾**並保留全部紀錄，避免整本團體帳突然歸零。這是安全退化，不是略過身分流程。
+- **診斷不洗版**：新增 `ledgerVisibilityWarn()`，沿用資料層 `_refWarned` 的 warn-once 慣例經 `AppLog.data` 輸出，同一則訊息一個 session 只記一次（實測連跑 20 次 `renderSplit()` 零新增訊息）。過濾本身每次重繪都會重跑。
+- **UI 文案**：主卡片 `團體總支出 · N 筆紀錄` → `與我相關 · N 筆紀錄`。全面過濾後那個數字與其下的金額都只代表個人範圍，續用「總支出」會誤導。個人帳的 `累計支出 · N 筆紀錄` 不變。
+- **操作入口補上同一道判斷**：清單過濾只是供料範圍，不是授權控制。`editLedgerRecord()`、`openSharedLedgerDeleteBatch()` 與 `submitSharedLedgerDeletion()` 讀的都是未過濾的 `mergedLedgerRecords()`，因此三處各自以**同一個** `isLedgerRecordRelatedToMember()` 重查，供料與守門不會漂移。這是最小補洞，**不是**新建權限系統；後端（Apps Script `doPost`）仍無操作者驗證，列為既有風險。
+- **未修改**：`buildMemberBalances`／`buildTransferSuggestions`／`deriveSettlements` 與任何金額或結算演算法 —— 結算仍讀全團 `mergedLedgerRecords()`，餘額不受可見範圍影響（實測：可見 4 筆時結算仍以全部 5 筆推導）。個人帳（本機單人資料）不套用團體成員過濾。`schema.js`、`validator.js`、Apps Script 契約、TEST／正式宇宙隔離、ADR 均未動。
+- **本機 static server 實測（375px，橫向溢出 0）**：同一份三人測資下 Mark 4 筆 ¥6,050、Jane 5 筆 ¥10,050、Baron 4 筆 ¥9,050、身分未解析 5 筆 ¥10,050；主卡片筆數＝最近消費卡片數＝完整紀錄頁「找到 N 筆」＝金額加總，四者一致。`n4`（只屬於 Jane／Baron）不出現在任何清單，且 `editLedgerRecord('n4')` 回「這筆紀錄與你無關,無法編輯」、`openSharedLedgerDelete('n4')` 不開啟刪除對話框；自己的代墊紀錄 `n2` 仍可正常開啟編輯表單。
+- 回歸測試新增 `tests/ledger-member-visibility.test.js`（四象限、legacy 七種壞格式、fail-open 不擴散、三種無法解析的身分、姓名格式變動、筆數／總額、最近消費與完整紀錄頁同源、八個消費端共用節流點、編輯／刪除重查、不得新增切換 UI）。`ledger-dashboard.test.js` 更新主卡片文案與節流點斷言；`ledger-225.test.js` 的刪除 sandbox 補上真實 `isLedgerRecordRelatedToMember`（接真實實作而非放行樁）。完整 **44／44** Node tests 與 `tools/check-doc-titles.js` 通過。Service Worker cache `okayama-trip-v57` → `okayama-trip-v58`。
+
 ## 2026-07-25｜付款者那一列也收成一行＋摘要金額降級（dev，SW v57）
 - **§3 核准文案修訂（Bar 裁定）**：`已送出・等待對方確認` → `等待對方確認`。「已送出」是冗字 —— 這一列有「撤回」可按，本身就代表已經送出過。此為**狀態機 label 本身的修訂**，不是顯示層去重，特此記錄。
 - **按鈕文案（Bar 要求縮短，實作採不同用詞）**：`重新標記已付款`（7 字）→ `我已付款`（4 字）。Bar 原提「重新付款」，改用「我已付款」的理由：①`ledgerRemarkSettlementPaid()` 最終呼叫的就是 `ledgerMarkSettlementPaid()`，與轉帳建議列「我已付款」建立的是**同一種 `settlement_claim`**，同一動作應同一用詞；②「重新付款」是祈使句，讀起來像 App 會代為轉帳，但按下去是立刻寫入「我付過了」的宣告 —— 錢是使用者在 App 外自己付的。列上已有 `對方已退回` chip 與退回原因提供「這是第二次」的脈絡，語意不因縮短而流失。
