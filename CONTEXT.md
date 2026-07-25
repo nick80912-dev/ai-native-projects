@@ -14,6 +14,15 @@
 - **Scroll-only**：Modal／Sheet 只允許內容捲動，不以 JavaScript 實作滑動關閉或手勢攔截；觸控行為由 CSS `touch-action` 管理。
 - **封閉集合／開放集合（segmented vs chips）**：互斥且選項固定的狀態使用 segmented control；可多選或可擴充的選項使用 chips。
 
+## 結算同步詞條
+
+- **交付橋接（delivery bridge）**：POST 已被伺服器接受、但遠端 read model 尚未讀回同一 `record.id` 的空窗期,由本機持久化保存完整 record 的機制。交接是原子的:先寫入 bridge 並確認成功,才可把 record 移出 retry queue;只有遠端讀回相同 id 才清除,不因等待過久自動刪除。
+- **事件全序（stable total order）**：所有結算事件一律以 `record.time` ASC → `record.id` ASC 比較。generation close 因此是可比較的 terminal event position `{time,id}`,而非單純時間字串 —— 同毫秒的 reject 與新 claim 才不會讓新付款靜默失效。
+- **generation**：同一 `universe + 付款人 + 收款人 + 幣別` 下的一輪結算。由 claim 開啟,由 confirm／reject／withdraw 終結;只有明確在 terminal event 之後的新 claim 才開啟下一輪。主面板只顯示每個 key 的最新可操作 generation,較舊者進歷史。
+- **canonical／losing response**：同一 claim 收到多筆有效回覆時,`(time,id)` 最小者為 canonical,其餘為 losing response —— 一律 inert(不影響餘額、不進正式歷史),只留 diagnostic warning。
+- **加速層（fast pull）**：Apps Script 唯讀 `doGet` 的 ledger 單表增量讀取。定位是加速層而非取代層:其餘 7 張表維持既有 CSV 原子快照節奏,且 `doGet` 資料必須走與 CSV 相同的正規化管線;失敗一律靜默降級回 CSV。
+- **簡易結算模式**：個人裝置的本機開關,只關閉交握 UI 與面板高頻 polling,不改變資料語意 —— 已確認的 settlement 仍照常計入餘額。
+
 ## 採買清單詞條
 
 - **地點已知／未知項目**：有 `stopRef` 且綁定現有行程站點者為地點已知；沒有 `stopRef` 者為地點未知，只留在完整清單的「隨時可買」區。

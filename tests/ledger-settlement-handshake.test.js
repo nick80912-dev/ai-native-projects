@@ -176,8 +176,10 @@ const html=fs.readFileSync('index.html','utf8');
 const settlementSource=html.slice(html.indexOf('function ledgerCurrentMemberSettlement('),html.indexOf('function showLedgerFullList('));
 assert(settlementSource.includes('applyConfirmedSettlements(buildMemberBalances(records,null,null,universe)'),'the settlement view applies confirmed settlements before suggestions');
 assert(settlementSource.includes('deriveSettlements(records,null,universe)'),'the settlement view derives the handshake from ledger records');
-assert(settlementSource.includes('待處理結清'),'the panel renders the pending handshake section');
-assert(settlementSource.includes('結清歷史'),'the panel renders the confirmed history section');
+/* 面板簡化後:主面板只留「需要你處理」,結清歷史與參考幣別移至次層 sheet(見 §8)。 */
+assert(settlementSource.includes('需要你處理'),'the panel renders the actionable settlement section');
+assert(settlementSource.includes('openSettlementHistorySheet'),'the confirmed history moved to its own secondary sheet');
+assert(settlementSource.includes('openSettlementBreakdownSheet'),'net/reference/計算方式 moved to the breakdown sheet');
 assert(settlementSource.includes('轉帳建議（參考）'),'the non-settlement currency stays reference-only');
 assert(settlementSource.includes('ledgerMarkSettlementPaid'),'payers can mark a suggestion as paid');
 assert(settlementSource.includes('ledgerConfirmSettlementClaim'),'receivers can confirm a claim');

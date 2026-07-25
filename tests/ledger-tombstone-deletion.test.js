@@ -97,12 +97,12 @@ function loadHelpers(){
   const bridgeStorage=createStorage();
   const bridgeMod=loadHelpers();
   bridgeMod.localStorage=bridgeStorage;
-  bridgeMod.rememberLedgerDeletionBridge(deletion);
-  assert.strictEqual(bridgeMod.ledgerDeletionBridgeRecords().length,1,'an acknowledged tombstone remains in the local bridge');
-  const staleMerged=bridgeMod.mergeLedgerRecordSets([expense],[],bridgeMod.ledgerDeletionBridgeRecords());
+  bridgeMod.rememberLedgerDeliveryBridge(deletion);
+  assert.strictEqual(bridgeMod.ledgerDeliveryBridgeRecords().length,1,'an acknowledged tombstone remains in the local bridge');
+  const staleMerged=bridgeMod.mergeLedgerRecordSets([expense],[],bridgeMod.ledgerDeliveryBridgeRecords());
   assert.strictEqual(bridgeMod.spendLedgerRecords(staleMerged).length,0,'the bridge prevents target revival while cloud CSV is stale');
-  bridgeMod.reconcileLedgerDeletionBridge([expense,deletion]);
-  assert.strictEqual(bridgeMod.ledgerDeletionBridgeRecords().length,0,'the bridge clears after the cloud snapshot includes the tombstone');
+  bridgeMod.reconcileLedgerDeliveryBridge([expense,deletion]);
+  assert.strictEqual(bridgeMod.ledgerDeliveryBridgeRecords().length,0,'the bridge clears after the cloud snapshot includes the tombstone');
 
   let deliveredRecord=null, deliveredPendingCount=-1;
   const deliveredRepo=mod.createLedgerRepository({

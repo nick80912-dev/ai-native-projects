@@ -68,7 +68,8 @@ const resetPersonal=plain(draftSandbox.resetLedgerDraftAfterSave({
 assert.strictEqual(resetPersonal.isProxy,false,'save-and-add-another uses the safe non-proxy default');
 assert.strictEqual(resetPersonal.proxyTarget,'','proxy target never carries into the next personal record');
 
-const stateSource=extract('function createLedgerEntryDraft(','function formatLedgerCurrencyAmount(');
+// formatLedgerCurrencyAmount 已移入結算區段(供結算狀態機共用),改以下一個穩定邊界收尾。
+const stateSource=extract('function createLedgerEntryDraft(','function setLedgerSavePending(');
 const stateSandbox={
   ledgerUiState:{draft:null},
   appNow(){return new Date();},
@@ -125,7 +126,7 @@ vm.runInContext(persistSource,persistSandbox);
   assert.strictEqual(sharedResult.queued,true,'shared persistence resolves from local queue acknowledgement');
   assert.strictEqual(personalAdds,1,'shared saves never call the personal repository');
 
-  const sheetSource=extract('var ledgerBackgroundScrollY=0;','function formatLedgerCurrencyAmount(');
+  const sheetSource=extract('var ledgerBackgroundScrollY=0;','function setLedgerSavePending(');
   const builderSource=extract('function buildLedgerExpenseRecords(','function buildMemberBalances(');
   assert(sheetSource.includes("document.body.classList.add('ledger-sheet-open')"),'opening sheet locks background scrolling');
   assert(sheetSource.includes("document.body.classList.remove('ledger-sheet-open')"),'closing sheet restores background scrolling');
