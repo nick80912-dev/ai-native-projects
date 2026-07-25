@@ -1,4 +1,11 @@
 # 07 版本紀錄
+## 2026-07-25｜退回列窄螢幕再收緊（dev，SW v51）
+- 移除退回原因的「退回原因:」前綴：右側狀態 chip 已表明本列處於退回態，前綴語意冗餘，卻在 320／375px 吃掉約三分之一可用寬度。改以 `aria-label="退回原因"` 保留讀屏語意，視覺只留原因本文。
+- 320／375／390／430px 四種寬度實測：對象/金額與狀態 chip 無重疊、原因與動作按鈕無重疊、各列按鈕右緣一致對齊（寬度 − 12px）。含 20 字長原因的極端列在 320px 為 135px 高並正常換行，未推擠按鈕；無原因無動作的列維持 41px 單列。
+- 僅改顯示層。Service Worker cache `okayama-trip-v50` → `okayama-trip-v51`。**未更動 §3 核准的狀態文案。**
+- 回歸測試新增：不得再輸出「退回原因:」前綴、必須保留 `aria-label`。完整 43／43 Node tests（reliability 96／96）與 `tools/check-doc-titles.js` 通過。
+- 備註：Bar 於 10:40 回報的截圖經比對為 **v49**（摘要已是 `≈ NT$880`，但退回列仍為單列擠壓版），v50 兩列版面當時尚未進到裝置；iOS PWA 需自多工列滑除後重開兩次才會 activate 新 SW。
+
 ## 2026-07-25｜計算明細參考幣別殘留與退回列版面 Hotfix（dev，SW v50）
 - 修正「計算明細仍卡著台幣」（Bar 真機回報：`我的淨額 JPY 0 · TWD -116`、`TWD 轉帳建議（參考） jane → 黃柏 NT$116`）：計算明細的淨額直接印 `netTwd`，參考轉帳建議也取自 `settlement.twd`／`settlement.jpy` 這條**獨立累計**的餘額，因此結算幣別已結清時仍殘留幻影欠款。結算面板摘要（v49）只修了一處，本批補齊次層頁面。
 - 新增純函式 `settlementReferenceAmount(amount,currency,rate)` 與 `settlementReferenceTransfers(suggestions,rate)`：參考幣別**一律由結算幣別換算**（保留正負方向），不再讀另一幣獨立累計的餘額；結算幣別無轉帳建議時參考幣別必為空。`ledgerSettlementLines()` 改為輸出「結算幣別淨額 ≈ 參考幣別」。計算明細說明文字明確標示「結算以 X 為準，Y 為換算參考值，不會單獨掛帳」。

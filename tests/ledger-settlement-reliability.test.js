@@ -1040,6 +1040,8 @@ test('#49 退回列:狀態與動作分列對齊,原因不撐開左欄', function
   assert.ok(slice.indexOf("(reason||'<span></span>')") >= 0 && slice.indexOf("(actions||'<span></span>')") >= 0,
     '只有其一時補空 span,維持左右定位不塌陷');
   assert.ok(slice.indexOf('對方已退回') < 0, '狀態文案仍由 settlementEntryStatus 提供,不在版面層改寫核准文案');
+  assert.ok(slice.indexOf('退回原因:') < 0, '窄螢幕不再顯示冗餘的「退回原因:」前綴,右側 chip 已表明狀態');
+  assert.ok(slice.indexOf('aria-label="退回原因"') >= 0, '前綴移除後仍以 aria-label 保留欄位語意');
   assert.ok(/\.ledger-settle-reason\{[^}]*flex:1/.test(html), '退回原因改為同列彈性欄,不再 width:100% 撐開左欄');
   assert.ok(!/\.ledger-settle-reason\{[^}]*width:100%/.test(html), '舊的 width:100% 規則必須移除');
   assert.ok(/\.ledger-settle-row\{[^}]*flex-direction:column/.test(html), '列容器改為直向堆疊兩列');

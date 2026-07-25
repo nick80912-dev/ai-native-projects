@@ -5955,7 +5955,9 @@ function ledgerHandshakeStatusLine(entry,me){
   else if(view.canRetry)actions='<span class="ledger-settle-actions"><button class="btn sm" onclick="retryLedgerQueueSync()">重新同步</button></span>';
   else if(view.canWithdraw)actions='<span class="ledger-settle-actions"><button class="btn sm ghost" onclick="ledgerWithdrawSettlementClaim(\''+safeId+'\')">撤回</button></span>';
   else if(view.label==='送出中…')actions='<span class="ledger-settle-actions"><button class="btn sm" disabled><span class="button-spinner"></span>送出中…</button></span>';
-  var reason=view.reason?'<span class="ledger-settle-reason">退回原因:'+escapeHtml(view.reason)+'</span>':'';
+  /* 前綴在窄螢幕吃掉約三分之一可用寬度,而右側狀態 chip 已表明本列處於退回態,
+     語意不靠前綴也成立;保留 aria-label 讓讀屏仍讀得到欄位名稱。 */
+  var reason=view.reason?'<span class="ledger-settle-reason" aria-label="退回原因">'+escapeHtml(view.reason)+'</span>':'';
   /* 固定兩列:第一列「對象/金額 ｜ 狀態」,第二列「退回原因 ｜ 動作」。
      兩列各自 space-between,欄位才會對齊;原因不再用 width:100% 撐開左欄,
      避免右側 chip 與按鈕被擠成錯位(iPhone 窄寬尤其明顯)。
