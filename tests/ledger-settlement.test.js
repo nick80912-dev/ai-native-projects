@@ -39,6 +39,8 @@ assert.deepStrictEqual(positive,{kind:'receivable',label:'應收',amountJpy:100,
 assert.strictEqual(mod.ledgerSettlementStatus({netJpy:-50,netTwd:-10}).label,'應付');
 assert.strictEqual(mod.ledgerSettlementStatus({netJpy:0,netTwd:0}).label,'已結清');
 assert.strictEqual(mod.ledgerSettlementStatus({netJpy:50,netTwd:-10}).label,'雙幣待結算');
+assert.deepStrictEqual(plain(mod.ledgerSettlementStatus({netJpy:0,netTwd:-680},'JPY')),{kind:'settled',label:'已結清',amountJpy:0,amountTwd:0},'JPY 結算幣別已歸零時,參考台幣餘額不可讓狀態卡殘留 NT$580');
+assert.deepStrictEqual(plain(mod.ledgerSettlementStatus({netJpy:-2762,netTwd:0},'TWD')),{kind:'settled',label:'已結清',amountJpy:0,amountTwd:0},'TWD 結算幣別已歸零時,參考日幣餘額不可讓狀態卡殘留');
 
 assert.deepStrictEqual(Array.from(mod.parseParticipants({id:'p1',participants:'["Bar","Amy"]'})),['Bar','Amy'],'participants parse from the stored JSON string');
 assert.strictEqual(mod.parseParticipants({id:'missing',participants:''}),null,'missing participants are invalid');
@@ -214,8 +216,8 @@ assert.deepStrictEqual(allSettled.details,[],'a settled group does not invent pe
 const otherCurrencyOnly=plain(mod.ledgerSettlementStatusCardModel(settlementFixture(
   {member:'Me',netJpy:0,netTwd:-80},[],[{from:'Me',to:'Amy',amount:80,currency:'TWD'}]
 ),'Me','JPY'));
-assert.strictEqual(otherCurrencyOnly.currency,'TWD','a zero preferred-currency balance falls back to the confirmed non-zero currency');
-assert.strictEqual(otherCurrencyOnly.label,'應付','the fallback still reports the correct direction');
+assert.strictEqual(otherCurrencyOnly.currency,'JPY','the status card stays on the configured settlement currency');
+assert.strictEqual(otherCurrencyOnly.label,'全員已結清','reference-currency-only residuals do not reopen the settlement card');
 
 assert.strictEqual(typeof mod.ledgerSettlementCardProgress,'function','settlement card exposes one progress-copy rule');
 assert.strictEqual(mod.ledgerSettlementCardProgress(multipleReceivable,true),'尚待 2 人 · 小美、小華','receivable card reports counterpart count and at most two names without payment inference');

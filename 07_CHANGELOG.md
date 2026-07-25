@@ -1,4 +1,11 @@
 # 07 版本紀錄
+## 2026-07-25｜結算狀態參考幣別殘值 Hotfix（dev，SW v48）
+- 修正「結算完成後仍顯示台幣 680 應付」（Bar 2026-07-25 真機驗收回報：`jane → 黃柏 ¥3,400` 已確認結清後，淨額為 `JPY 0 · TWD -680`，主面板仍顯示「應付 ¥0 · NT$680」）：已確認結清只抵銷 ADR 0007 定義的單一結算幣別，另一幣別為參考值；首頁結算卡與結算面板過去仍用 JPY/TWD 雙欄判斷是否已結清，導致結算幣別已歸零時，參考台幣殘值被誤顯示為未結清。此即 ADR 0007 為否決 Alternative C 而要避免的「這對在 ¥ 已清、卻在 NT$ 欠另一人」破碎狀態。
+- `ledgerSettlementStatus()` 新增結算幣別參數；正式 UI 以 `Ledger Default Currency` 對應的結算幣別判斷已結清／應收／應付，參考幣別不再重新打開狀態卡。計算明細仍保留雙幣淨額與參考轉帳建議供檢查，不改資料語意。
+- 未修改 Schema、Validator、Apps Script、Google Sheet、Ledger 紀錄契約、delivery bridge、fast pull 或 localStorage key。Service Worker cache 由 `okayama-trip-v47` 順延至 `okayama-trip-v48`，SHELL、install／activate／fetch 策略不變。
+- 結清紀錄與計算明細兩張次層 sheet 加上「‹ 返回」，回到團體結算主面板而非整個關閉重進（Bar 同批回報）；返回入口由 sheet `kind` 決定，不接受呼叫端傳入任意 JS，不新增 onclick 注入面。
+- 回歸測試新增 JPY 已歸零但 TWD 參考殘留 `-680`、TWD 已歸零但 JPY 參考殘留兩種情境，以及兩張次層 sheet 具返回鈕、主面板與其他 sheet 不得出現返回鈕；完整 `tests/*.test.js`、`tests/ledger-settlement-handshake.test.js`、`tests/ledger-settlement-reliability.test.js` 與 `tools/check-doc-titles.js` 通過。
+
 ## 2026-07-25｜結算狀態、近即時同步與介面簡化 Hotfix（fix/settlement-state-and-live-sync，待 Apps Script 部署與 Bar 真機驗收）
 - **契約擴充（Bar 事前核准，記入本檔）**：`apps-script/ledger-sync.gs` 新增唯讀 `doGet`：`GET {WEB_APP_URL}?action=ledger&after=N`。`after` 缺省／空字串／非數字／負數正規化為 0、小數向下取整；`after >= total` 回空陣列且**不呼叫 `getValues()`**；`after > total`（Bar 手動刪列造成截斷）回 `reset:true` 與全量 rows；`total === 0 && after > 0` 回 `reset:true` 且 `total/after` 皆為 0。固定以 `getRange(after+2,1,total-after,21)` 精確讀取，不整表掃描。`action` 必須精確等於 `ledger`。工作表不存在或欄數不足 21 回 `ok:false`。錯誤不回傳例外 stack、Sheet 物件或 Spreadsheet ID。**刻意不取 `LockService`**（唯讀，且不得與 `doPost` 搶鎖或額外消耗每日執行配額）。`doPost` 既有契約與驗證邏輯零改動。
 - **Durable delivery bridge**：POST accepted 後改為原子式 handoff —— 先持久化寫入 bridge、確認寫入成功，才可將 record 移出 retry queue；bridge 寫入失敗（含拋錯）時 record 留在佇列，不產生資料遺失空窗，伺服器既有 `record.id` 去重仍負責避免重複入帳。bridge 保存完整 record、參與 `mergedLedgerRecords()`、支援 claim／confirm／reject／deletion／withdraw／revoke，**不因等待過久自動刪除**，只有遠端讀回相同 `record.id` 才清除。舊 `trip_ledger_deletion_bridge` 於首次讀取時自動併入新 `trip_ledger_delivery_bridge`，升級不遺失在途刪除。

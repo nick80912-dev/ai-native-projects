@@ -1018,6 +1018,22 @@ test('#45 次層入口:查看結清紀錄與查看計算明細', function () {
   assert.ok(html.indexOf('function openSettlementBreakdownSheet(') >= 0, '計算明細為獨立次層內容');
 });
 
+test('#46 次層 sheet 提供返回主面板入口,主面板與其他 sheet 不得出現', function () {
+  const start = html.indexOf('function ledgerInfoSheetReturnsToSettlement(');
+  assert.ok(start >= 0, '返回入口由具名純函式決定');
+  const gate = html.slice(start, html.indexOf('function openLedgerInfoSheet(', start));
+  ['settlement-history', 'settlement-breakdown'].forEach(function (kind) {
+    assert.ok(gate.indexOf("'" + kind + "'") >= 0, kind + ' 需可退回團體結算主面板');
+  });
+  const opener = html.slice(html.indexOf('function openLedgerInfoSheet('), html.indexOf('function closeLedgerRecordActions('));
+  assert.ok(opener.indexOf('ledgerInfoSheetReturnsToSettlement(kind)') >= 0, '返回鈕依 sheet kind 決定,不由呼叫端傳入');
+  assert.ok(opener.indexOf('‹ 返回') >= 0, '返回鈕文案');
+  assert.ok(opener.indexOf('onclick="openLedgerSettlementPanel()"') >= 0, '返回回到團體結算主面板,不是整個關閉');
+  // onclick 內容為原始碼字面值,不得由參數拼接,避免注入面。
+  assert.ok(!/function openLedgerInfoSheet\([^)]*back/.test(opener), 'openLedgerInfoSheet 不接受呼叫端傳入的返回動作');
+  assert.ok(html.indexOf('.ledger-sheet-back{') >= 0, '返回鈕具備可點擊尺寸樣式');
+});
+
 test('#43 次層結清紀錄仍依 currentMember 過濾,第三人資料不進 DOM', function () {
   const start = html.indexOf('function openSettlementHistorySheet(');
   const historySlice = html.slice(start, start + 1600);
