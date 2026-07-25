@@ -4166,6 +4166,16 @@ function settlementReferenceTransfers(suggestions,rate){
    一筆結算在使用者眼中的狀態,完全由「已推導的 generation 狀態」+「該紀錄是否已被遠端讀回」
    +「本機是否正在送出／送出失敗」決定。已操作過的按鈕不得因重新渲染而復原。 */
 function settlementRecordAwaitingSync(record){return !!(record&&(record.pending||record.bridgePending));}
+/* 一列的分工:chip 講「現在是什麼狀態」,按鈕講「你可以做什麼」,小字只在提供額外資訊時出現。
+   狀態機的 label 維持 §3 核准原文不變,只在顯示層去重:
+   chip 與按鈕文案完全相同時不出 chip;chip 尾端就是按鈕動作時只留狀態部分。 */
+function settlementDisplayChip(label,actionLabel){
+  var chip=String(label||''),action=String(actionLabel||'');
+  if(!chip||!action)return chip;
+  if(chip===action)return '';
+  var suffix='・'+action;
+  return chip.length>suffix.length&&chip.slice(-suffix.length)===suffix?chip.slice(0,chip.length-suffix.length):chip;
+}
 function settlementEntryStatus(entry,me,options){
   var opts=options||{},phase=String(opts.phase||'idle'),meKey=canonicalMemberName(me);
   var view={label:'',reason:'',waitingSync:false,canClaim:false,canRespond:false,canRemark:false,canWithdraw:false,canRetry:false,sortKind:'submitted'};
@@ -5942,19 +5952,24 @@ function settlementSyncTag(entry,view){
   if(!view.waitingSync)return '';
   var record=entry.status==='pending'?entry.claim:entry.response;
   var waited=Math.max(0,Date.now()-Date.parse(String(record&&record.time||''))||0);
-  return '<span class="ledger-settle-sync" title="'+escapeHtml(shortRecordId(record&&record.id))+'">'+escapeHtml(settlementWaitHint(waited))+'</span>';
+  var hint=settlementWaitHint(waited);
+  /* chip 已含「同步中」時,30 秒內的「等待同步」與它同義,不重複顯示;
+     逾 30 秒的提示帶有 chip 沒有的「已經等太久」訊號,必須保留。 */
+  if(hint==='等待同步'&&String(view.label||'').indexOf('同步中')>=0)return '';
+  return '<span class="ledger-settle-sync" title="'+escapeHtml(shortRecordId(record&&record.id))+'">'+escapeHtml(hint)+'</span>';
 }
 /* 主面板的一列:對象、金額、明確 status chip、唯一主要操作。 */
 function ledgerHandshakeStatusLine(entry,me){
   var view=settlementEntryStatus(entry,me,{phase:settlementEntryPhase(entry)});
   var amount=escapeHtml(formatLedgerCurrencyAmount(entry.currency,entry.amount));
   var other=canonicalMemberName(entry.from)===canonicalMemberName(me)?entry.to:entry.from;
-  var safeId=jsHtmlAttrString(entry.claim.id),actions='';
+  var safeId=jsHtmlAttrString(entry.claim.id),actions='',actionLabel='';
+  // actionLabel 供顯示層去重;兩顆按鈕時留空,因為 chip 不對應其中任一顆。
   if(view.canRespond)actions='<span class="ledger-settle-actions"><button class="btn sm" onclick="ledgerConfirmSettlementClaim(\''+safeId+'\')">確認已收</button><button class="btn sm ghost" onclick="ledgerRejectSettlementClaim(\''+safeId+'\')">退回</button></span>';
-  else if(view.canRemark)actions='<span class="ledger-settle-actions"><button class="btn sm" onclick="ledgerRemarkSettlementPaid(\''+safeId+'\')">重新標記已付款</button></span>';
-  else if(view.canRetry)actions='<span class="ledger-settle-actions"><button class="btn sm" onclick="retryLedgerQueueSync()">重新同步</button></span>';
-  else if(view.canWithdraw)actions='<span class="ledger-settle-actions"><button class="btn sm ghost" onclick="ledgerWithdrawSettlementClaim(\''+safeId+'\')">撤回</button></span>';
-  else if(view.label==='送出中…')actions='<span class="ledger-settle-actions"><button class="btn sm" disabled><span class="button-spinner"></span>送出中…</button></span>';
+  else if(view.canRemark){actions='<span class="ledger-settle-actions"><button class="btn sm" onclick="ledgerRemarkSettlementPaid(\''+safeId+'\')">重新標記已付款</button></span>';actionLabel='重新標記已付款';}
+  else if(view.canRetry){actions='<span class="ledger-settle-actions"><button class="btn sm" onclick="retryLedgerQueueSync()">重新同步</button></span>';actionLabel='重新同步';}
+  else if(view.canWithdraw){actions='<span class="ledger-settle-actions"><button class="btn sm ghost" onclick="ledgerWithdrawSettlementClaim(\''+safeId+'\')">撤回</button></span>';actionLabel='撤回';}
+  else if(view.label==='送出中…'){actions='<span class="ledger-settle-actions"><button class="btn sm" disabled><span class="button-spinner"></span>送出中…</button></span>';actionLabel='送出中…';}
   /* 前綴在窄螢幕吃掉約三分之一可用寬度,而右側狀態 chip 已表明本列處於退回態,
      語意不靠前綴也成立;保留 aria-label 讓讀屏仍讀得到欄位名稱。 */
   var reason=view.reason?'<span class="ledger-settle-reason" aria-label="退回原因">'+escapeHtml(view.reason)+'</span>':'';
@@ -5963,9 +5978,10 @@ function ledgerHandshakeStatusLine(entry,me){
      避免右側 chip 與按鈕被擠成錯位(iPhone 窄寬尤其明顯)。
      兩者皆無時不輸出第二列;只有其一時補一個空 span 維持左右定位。 */
   var foot=(reason||actions)?'<div class="ledger-settle-foot">'+(reason||'<span></span>')+(actions||'<span></span>')+'</div>':'';
+  var chipText=settlementDisplayChip(view.label,actionLabel);
   return '<div class="ledger-settlement-line ledger-settle-row ledger-settle-'+escapeHtml(view.sortKind)+'">'+
     '<div class="ledger-settle-main"><span class="ledger-settle-who">'+escapeHtml(other)+' '+amount+'</span>'+
-    '<span class="ledger-settle-state"><span class="ledger-settle-chip">'+escapeHtml(view.label)+'</span>'+settlementSyncTag(entry,view)+'</span></div>'+foot+'</div>';
+    '<span class="ledger-settle-state">'+(chipText?'<span class="ledger-settle-chip">'+escapeHtml(chipText)+'</span>':'')+settlementSyncTag(entry,view)+'</span></div>'+foot+'</div>';
 }
 /* 次層結清紀錄的一列;撤銷按鈕只有在資格檢查通過時才輸出。 */
 function ledgerHandshakeHistoryLine(entry,me,allEntries){

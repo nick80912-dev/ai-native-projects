@@ -1018,6 +1018,42 @@ test('#45 次層入口:查看結清紀錄與查看計算明細', function () {
   assert.ok(html.indexOf('function openSettlementBreakdownSheet(') >= 0, '計算明細為獨立次層內容');
 });
 
+test('#50 顯示層去重:chip 講狀態、按鈕講動作,同義不重複顯示', function () {
+  // 狀態機 label 維持 §3 核准原文,去重只發生在顯示層。
+  assert.strictEqual(mod.settlementDisplayChip('送出中…', '送出中…'), '',
+    'chip 與按鈕文案完全相同時不顯示 chip');
+  assert.strictEqual(mod.settlementDisplayChip('同步失敗・重新同步', '重新同步'), '同步失敗',
+    'chip 尾端就是按鈕動作時只保留狀態部分');
+  assert.strictEqual(mod.settlementDisplayChip('對方已退回', '重新標記已付款'), '對方已退回',
+    '狀態與動作資訊不同時完整保留');
+  assert.strictEqual(mod.settlementDisplayChip('已送出・等待對方確認', '撤回'), '已送出・等待對方確認',
+    '「・」後不是按鈕動作時不得誤切');
+  assert.strictEqual(mod.settlementDisplayChip('待你確認', ''), '待你確認',
+    '兩顆按鈕時不傳 actionLabel,chip 完整保留');
+  const slice = html.slice(html.indexOf('function ledgerHandshakeStatusLine('), html.indexOf('function ledgerHandshakeHistoryLine('));
+  assert.ok(slice.indexOf('settlementDisplayChip(view.label,actionLabel)') >= 0, '狀態列走同一條去重規則');
+  assert.ok(/chipText\?/.test(slice), 'chip 去重後為空時不輸出空的 chip 元素');
+  assert.ok(slice.indexOf("actionLabel='送出中…'") >= 0 && slice.indexOf("actionLabel='重新同步'") >= 0,
+    '送出中與重新同步兩種狀態需提供 actionLabel 才會去重');
+  assert.ok(!/canRespond\)\{[^}]*actionLabel=/.test(slice), '兩顆按鈕的情況不得設定 actionLabel');
+});
+
+test('#51 同步小字:30 秒內與 chip 同義不重複,逾 30 秒保留升級提示', function () {
+  // settlementWaitHint 定義在 settlementSyncTag 之前,不可用兩者當切片起訖(end < start 會切出空字串)。
+  const tagStart = html.indexOf('function settlementSyncTag(');
+  assert.ok(tagStart >= 0, 'settlementSyncTag 存在');
+  const tag = html.slice(tagStart, tagStart + 900);
+  assert.ok(tag.indexOf("hint==='等待同步'") >= 0 && tag.indexOf("indexOf('同步中')") >= 0,
+    '僅在 chip 已含「同步中」且提示為「等待同步」時抑制');
+  const guard = tag.split('\n').find(function (line) { return line.indexOf("hint==='等待同步'") >= 0; });
+  assert.ok(guard && guard.indexOf("indexOf('同步中')") >= 0 && /return '';$/.test(guard.trim()),
+    '抑制條件必須兩者同時成立,且僅在成立時 return 空字串');
+  // 邊界:30 秒仍是「等待同步」(與 chip 同義,可抑制);超過才升級為帶新資訊的提示。
+  assert.strictEqual(mod.settlementWaitHint(30000), '等待同步');
+  assert.strictEqual(mod.settlementWaitHint(30001), '同步較久,可手動重試');
+  assert.strictEqual(mod.settlementWaitHint(120000), '同步異常');
+});
+
 test('#48 計算明細:參考幣別由結算幣別換算,不得使用另一幣獨立累計餘額', function () {
   assert.strictEqual(mod.settlementReferenceAmount(0, 'JPY', 0.2), 0, '結算幣別已結清時參考幣別必須是 0,不得殘留幻影欠款');
   assert.strictEqual(mod.settlementReferenceAmount(-2820, 'JPY', 0.2), -564, '負淨額換算保留方向');
