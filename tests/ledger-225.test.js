@@ -33,10 +33,10 @@ vm.createContext(helperSandbox);
 vm.runInContext(html.slice(helperStart,helperEnd),helperSandbox);
 
 const dated=[
-  {id:'old',time:'2026-07-18T23:00:00+08:00',batchId:''},
-  {id:'new-a',time:'2026-07-19T08:00:00+08:00',batchId:'batch-new'},
-  {id:'new-b',time:'2026-07-19T09:00:00+08:00',batchId:'batch-new'},
-  {id:'invalid',time:'not-a-date',batchId:''}
+  {id:'old',time:'2026-07-18T23:00:00+08:00',member:'Bar',batchId:''},
+  {id:'new-a',time:'2026-07-19T08:00:00+08:00',member:'Bar',batchId:'batch-new'},
+  {id:'new-b',time:'2026-07-19T09:00:00+08:00',member:'Bar',batchId:'batch-new'},
+  {id:'invalid',time:'not-a-date',member:'Bar',batchId:''}
 ];
 assert.deepStrictEqual(
   Array.from(helperSandbox.selectLatestLedgerDateExpenses(dated),record=>record.id),
@@ -67,7 +67,7 @@ const selectionSandbox={
   ledgerTrackRecords(){return dated.slice(0,3);},
   ledgerHistoryFilteredRecords(records){return records.filter(record=>record.id!=='old');},
   selectLatestLedgerDateExpenses:helperSandbox.selectLatestLedgerDateExpenses,
-  canDeleteLedgerRecord(){return true;}
+  isLedgerRecordActionTarget(){return true;}
 };
 vm.createContext(selectionSandbox);
 vm.runInContext(extractFunction(html,'ledgerSelectionVisibleRecords'),selectionSandbox);
@@ -222,13 +222,19 @@ assert(switchSource.includes("behavior:'smooth'"),'re-tapping the dashboard scro
 assert(extractFunction(html,'returnLedgerDashboard').includes("classList.contains('ledger-sheet-open')"),'hidden-nav sheets protect unsaved form state');
 assert(html.includes('aria-label="返回分帳首頁"'),'the history back button remains available');
 
-assert.match(sw,/okayama-trip-v58/,'service worker cache advances exactly one version');
+assert.match(sw,/okayama-trip-v59/,'service worker cache advances exactly one version');
 
 (async function(){
-  const originals=[{id:'s1'},{id:'s2'}],overlay={getAttribute(){return JSON.stringify(['s1','s2']);}},input={value:'共同原因'},button={disabled:false};
+  const originals=[
+    {id:'s1',member:'Bar',participants:'["Bar"]',recordType:'expense'},
+    {id:'s2',member:'Bar',participants:'["Bar"]',recordType:'expense'}
+  ],overlay={getAttribute(){return JSON.stringify(['s1','s2']);}},input={value:'共同原因'},button={disabled:false};
   const sharedDeleteSandbox={
     document:{getElementById(id){return {ledgerDeleteDialog:overlay,ledgerDeleteReason:input,ledgerDeleteError:null,ledgerDeleteConfirm:button}[id]||null;}},
-    effectiveLedgerRecords(){return originals;},mergedLedgerRecords(){return originals;},canDeleteLedgerRecord(){return true;},
+    effectiveLedgerRecords:helperSandbox.effectiveLedgerRecords,
+    mergedLedgerRecords(){return originals;},
+    resolveSharedLedgerDeleteSelection:helperSandbox.resolveSharedLedgerDeleteSelection,
+    canDeleteLedgerRecord:helperSandbox.canDeleteLedgerRecord,
     createLedgerDeletion(original,member,reason){return {id:'delete-'+original.id,recordType:'deletion',targetRecordId:original.id,member,deleteReason:reason};},
     getCurrentMember(){return 'Bar';},Date,JSON,Promise,
     /* 刪除路徑新增的「與我相關」重查:接真實實作而非放行樁,舊測資無 participants 走 legacy fail-open 全數保留。 */
@@ -244,5 +250,24 @@ assert.match(sw,/okayama-trip-v58/,'service worker cache advances exactly one ve
   assert.deepStrictEqual(plain([...new Set(sharedDeleteSandbox.enqueues[0].map(record=>record.deleteReason))]),['共同原因'],'shared history tombstones reuse one deletion reason');
   assert.strictEqual(sharedDeleteSandbox.ledgerUiState.selectionMode,false,'shared deletion exits selection mode after enqueue');
   assert.deepStrictEqual(plain(sharedDeleteSandbox.ledgerUiState.selectedRecordIds),{},'shared deletion clears selected IDs after enqueue');
+
+  const mixedOriginals=[
+    {id:'own',member:'Bar',participants:'["Bar"]',recordType:'expense'},
+    {id:'other',member:'Amy',participants:'["Bar","Amy"]',recordType:'expense'}
+  ],mixedOverlay={getAttribute(){return JSON.stringify(['own','other']);}},mixedMessages=[],mixedError={textContent:''};
+  const mixedDeleteSandbox=Object.assign({},sharedDeleteSandbox,{
+    document:{getElementById(id){return {ledgerDeleteDialog:mixedOverlay,ledgerDeleteReason:input,ledgerDeleteError:mixedError,ledgerDeleteConfirm:{disabled:false}}[id]||null;}},
+    mergedLedgerRecords(){return mixedOriginals;},
+    enqueues:[],
+    ledgerRepository:{enqueueBatch(records){mixedDeleteSandbox.enqueues.push(records);return {ok:true};},add(record){mixedDeleteSandbox.enqueues.push([record]);return Promise.resolve({ok:true});}},
+    closeSharedLedgerDelete(){},ledgerUiState:{selectionMode:true,selectedRecordIds:{own:true,other:true}},renderSplit(){},toast(message){mixedMessages.push(message);}
+  });
+  vm.createContext(mixedDeleteSandbox);
+  vm.runInContext(extractFunction(html,'submitSharedLedgerDeletion'),mixedDeleteSandbox);
+  const mixedResult=await mixedDeleteSandbox.submitSharedLedgerDeletion();
+  assert.strictEqual(mixedResult.ok,false,'mixed-owner batch deletion is rejected');
+  assert.strictEqual(mixedDeleteSandbox.enqueues.length,0,'mixed-owner rejection creates no tombstones');
+  assert.strictEqual(mixedError.textContent,'其中 1 筆不是你建立的紀錄,請取消勾選後再試','mixed-owner rejection explains the unauthorized count');
+  assert.strictEqual(mixedDeleteSandbox.ledgerUiState.selectionMode,true,'rejected batch preserves selection for correction');
   console.log('ledger 2.2.5 tests passed');
 })().catch(error=>{console.error(error);process.exitCode=1;});

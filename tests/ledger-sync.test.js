@@ -208,11 +208,11 @@ function loadLedgerModule(){
   assert.deepStrictEqual(Array.from(retryRepo.queuedRecords()),[],'dup:true does not create a second local record');
 
   const original = {id:'1784250000000-abcd',time:'2026-07-17T10:00:00.000Z',member:'阿祺',category:'門票',detail:'美術館',amountJpy:3000,amountTwd:600,note:'',recordType:'expense',batchId:'batch-1'};
-  const deletion = mod.createLedgerDeletion(original,'Bar','重複記帳',1784250100000);
+  const deletion = mod.createLedgerDeletion(original,'阿祺','重複記帳',1784250100000);
   assert.strictEqual(deletion.recordType,'deletion','deletion uses the authoritative record type');
   assert.strictEqual(deletion.targetRecordId,original.id,'deletion points to the original record');
   assert.strictEqual(deletion.deleteReason,'重複記帳','deletion preserves the trimmed reason');
-  assert.strictEqual(deletion.member,'Bar','deletion records the current operator');
+  assert.strictEqual(deletion.member,'阿祺','deletion records the current payer as operator');
   assert.strictEqual(deletion.time,'2026-07-17T01:01:40.000Z','deletion records the supplied current time');
   assert.strictEqual(deletion.amountJpy,0,'deletion never creates a negative JPY amount');
   assert.strictEqual(deletion.amountTwd,0,'deletion never creates a negative TWD amount');

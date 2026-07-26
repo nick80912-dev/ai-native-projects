@@ -1,4 +1,14 @@
 # 07 版本紀錄
+## 2026-07-26｜團體消費權限與資料完整性（dev，SW v59，待 Bar 真機驗收）
+- **根因**：既有「與我相關」只限制團體消費的可見範圍；原 `canDeleteLedgerRecord()` 只排除墓碑與身分註冊，分攤者仍可操作付款人的紀錄。編輯 replacement 也曾由表單建出的 record 帶入目前身分，未把「原付款人不可變」鎖成資料層不變條件。
+- **付款人擁有權**：新增 `canEditLedgerRecord(record,currentMember)`／`canDeleteLedgerRecord(record,currentMember)` 與 handler 層 assert；UI 隱藏不合資格操作，直接呼叫 handler 仍會拒絕。姓名比對沿用 `canonicalMemberName()`；個人帳維持原操作。
+- **fail-closed**：團體紀錄缺少或無法辨識 `record.member` 時仍沿用既有可見性結果，但任何人都不可編輯或刪除，並顯示「無法確認此筆紀錄的付款人,請由管理或資料修復流程處理。」。
+- **編輯不變條件**：完整追查原始 record → 表單 hydration／draft → save handler → `buildSharedLedgerEditBatch()` → 墓碑與 replacement；資料層明確以原始紀錄的原字串覆寫每筆 replacement `member`，忽略 draft／form／currentMember 可能夾帶的不同值。墓碑操作者仍為當前付款人。
+- **刪除完整性**：批次選取可包含可見的他人付款紀錄，但開啟確認與真正寫入前都以同一 helper 完整重查；混有 N 筆非本人紀錄時整批拒絕，不產生部分墓碑。單筆刪除多品項同批收據時顯示「此筆屬於 N 筆的同批收據,其餘 N-1 筆將保留。」。
+- **身分提醒與邊界**：既有身分確認畫面追加「切換後將無法編輯舊身分建立的消費紀錄(可切回原身分處理)。」；未新增身分或後端授權機制。此功能只防前端誤操作，localStorage 身分與 Apps Script POST 不是安全信任邊界。
+- **未修改**：Schema、Validator、Apps Script／Sheet 契約、結算演算法與交握狀態機、10 秒復原、既有「與我相關」可見性、正式／TEST universe、同步流程與個人軌資料邏輯均未變更。Service Worker 僅由 `okayama-trip-v58` 順延至 `okayama-trip-v59`。
+- **驗證**：先以紅燈鎖定擁有權、fail-closed、編輯付款人不變、批次整批拒絕與同批單筆提示；完整 **44／44** Node tests（結算可靠性 **123／123**）及文件標題檢查通過。375／390px Browser QA 覆蓋分帳首頁、完整紀錄頁與個人新增→編輯→刪除流程，console error 0、無水平溢出；團體付款人／分攤者操作邊界以隔離測試驗證，未向真實團體帳送出測試資料。
+
 ## 2026-07-25｜團體帳本只顯示與目前成員相關的紀錄（dev，SW v58，待 Bar 真機驗收）
 - **問題**：團體帳顯示旅程內所有人的消費，Mark 仍看得到只屬於 Jane 與 Baron 的紀錄。本批改為預設只供料「與目前成員相關」的團體紀錄。
 - **相關性定義**：`目前成員是付款人（record.member）` **或** `目前成員在 participants 內`，任一成立即顯示。**付款人不必在 participants 內** —— 全額代墊給別人的紀錄仍是自己建立的，必須看得到、改得動、刪得掉。只用 `participants.includes(me)` 會讓代墊紀錄從建立者眼前消失。

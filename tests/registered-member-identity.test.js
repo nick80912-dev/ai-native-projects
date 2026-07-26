@@ -105,6 +105,12 @@ function loadIdentityModule(){
   mod.openMemberSelector(true);
   assert(mod.__appended().innerHTML.includes('王　小明'),'registered identity is offered as a selection');
   assert(mod.__appended().innerHTML.includes('新成員'),'registered identity flow retains a new-member entry');
+  mod.chooseMember('王　小明');
+  mod.renderMemberSelector(mod.__appended());
+  assert(
+    mod.__appended().innerHTML.includes('切換後將無法編輯舊身分建立的消費紀錄(可切回原身分處理)。'),
+    'the common identity confirmation explains the ledger ownership consequence'
+  );
 
   const settingsSource=mod.__html.slice(mod.__html.indexOf('function openSettings('),mod.__html.indexOf('function mergedLedgerRecords()'));
   assert(settingsSource.includes('目前身分'),'Settings displays the current identity');

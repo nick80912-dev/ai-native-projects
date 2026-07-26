@@ -16,6 +16,7 @@
 
 ## 結算同步詞條
 
+- **消費紀錄擁有權（Ledger Ownership）**：團體消費的編輯與刪除限 `record.member`（付款人）。此機制防的是誤操作，不是安全授權：`currentMember` 存於 localStorage 可被修改，Apps Script 端亦接受任何合法 POST；未來不得在此層之上疊加信任假設。
 - **交付橋接（delivery bridge）**：POST 已被伺服器接受、但遠端 read model 尚未讀回同一 `record.id` 的空窗期,由本機持久化保存完整 record 的機制。交接是原子的:先寫入 bridge 並確認成功,才可把 record 移出 retry queue;只有遠端讀回相同 id 才清除,不因等待過久自動刪除。
 - **事件全序（stable total order）**：所有結算事件一律以 `record.time` ASC → `record.id` ASC 比較。generation close 因此是可比較的 terminal event position `{time,id}`,而非單純時間字串 —— 同毫秒的 reject 與新 claim 才不會讓新付款靜默失效。
 - **generation**：同一 `universe + 付款人 + 收款人 + 幣別` 下的一輪結算。由 claim 開啟,由 confirm／reject／withdraw 終結;只有明確在 terminal event 之後的新 claim 才開啟下一輪。主面板只顯示每個 key 的最新可操作 generation,較舊者進歷史。

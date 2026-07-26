@@ -46,17 +46,31 @@ function loadHelpers(){
   const mod=loadHelpers();
   const expense={id:'expense-1',time:'2026-07-18T01:00:00.000Z',member:'Amy',category:'餐飲',detail:'早餐',amountJpy:800,amountTwd:168,note:'',recordType:'expense',batchId:''};
   const second={id:'expense-2',time:'2026-07-18T02:00:00.000Z',member:'Bar',category:'交通',detail:'車票',amountJpy:500,amountTwd:105,note:'',recordType:'expense',batchId:''};
-  const deletion=mod.createLedgerDeletion(expense,'Bar',' 輸入錯誤 ',1784340000000,()=>0.5);
+  const deletion=mod.createLedgerDeletion(expense,'Amy',' 輸入錯誤 ',1784340000000,()=>0.5);
   const duplicate=mod.createLedgerDeletion(expense,'Amy','重複確認',1784340001000,()=>0.6);
 
   assert.strictEqual(mod.isDeletionRecord(deletion),true,'recordType alone identifies a tombstone');
   assert.strictEqual(mod.isDeletionRecord({detail:'[刪除]',recordType:'expense'}),false,'detail text never grants deletion authority');
-  assert.strictEqual(mod.canDeleteLedgerRecord(expense),true,'ordinary expenses can be deleted');
-  assert.strictEqual(mod.canDeleteLedgerRecord(deletion),false,'tombstones cannot be deleted');
-  assert.strictEqual(mod.canDeleteLedgerRecord({recordType:'identity_registration',detail:'[身分註冊]'}),false,'identity registrations cannot be deleted');
-  assert.throws(()=>mod.createLedgerDeletion(expense,'Bar','   ',1784340000000),/刪除原因必填/,'group deletion requires a reason');
-  assert.throws(()=>mod.createLedgerDeletion(expense,'Bar','a'.repeat(51),1784340000000),/最多 50 個字/,'group deletion enforces the reason limit');
-  assert.throws(()=>mod.createLedgerDeletion(deletion,'Bar','錯誤目標',1784340000000),/不可刪除/,'a tombstone cannot target another tombstone');
+  assert.strictEqual(mod.canDeleteLedgerRecord(expense,'Amy'),true,'the payer can delete an ordinary expense');
+  assert.strictEqual(mod.canDeleteLedgerRecord(expense,'Bar'),false,'a non-payer cannot delete an ordinary expense');
+  assert.strictEqual(mod.canDeleteLedgerRecord(deletion,'Amy'),false,'tombstones cannot be deleted');
+  assert.strictEqual(mod.canDeleteLedgerRecord({recordType:'identity_registration',detail:'[身分註冊]'},'Amy'),false,'identity registrations cannot be deleted');
+  assert.throws(()=>mod.createLedgerDeletion(expense,'Amy','   ',1784340000000),/刪除原因必填/,'group deletion requires a reason');
+  assert.throws(()=>mod.createLedgerDeletion(expense,'Amy','a'.repeat(51),1784340000000),/最多 50 個字/,'group deletion enforces the reason limit');
+  assert.throws(()=>mod.createLedgerDeletion(expense,'Bar','越權刪除',1784340000000),/僅付款人可刪除/,'direct tombstone creation enforces ownership');
+  assert.throws(()=>mod.createLedgerDeletion(deletion,'Amy','錯誤目標',1784340000000),/不可刪除/,'a tombstone cannot target another tombstone');
+
+  const receipt=[
+    Object.assign({},expense,{id:'receipt-1',batchId:'receipt-a'}),
+    Object.assign({},expense,{id:'receipt-2',batchId:'receipt-a'}),
+    Object.assign({},expense,{id:'receipt-3',batchId:'receipt-a'})
+  ];
+  assert.strictEqual(
+    mod.ledgerSingleDeleteBatchHint(receipt[0],receipt),
+    '此筆屬於 3 筆的同批收據,其餘 2 筆將保留。',
+    'single-item deletion warns that sibling receipt items remain'
+  );
+  assert.strictEqual(mod.ledgerSingleDeleteBatchHint(expense,receipt),'','a record without batchId has no sibling warning');
 
   const effective=mod.effectiveLedgerRecords([expense,second,deletion,duplicate]);
   assert.deepStrictEqual(effective.map(record=>record.id),['expense-2'],'duplicate tombstones delete their target only once');

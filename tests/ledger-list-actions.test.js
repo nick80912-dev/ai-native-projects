@@ -37,7 +37,10 @@ const fakeDocument={
 };
 const actionsSandbox={
   document:fakeDocument,window:{innerWidth:390,innerHeight:844},ledgerUiState:{track:'personal'},
-  ledgerTrackRecords(){return [{id:'a'},{id:'b'}];},toast(){},jsHtmlAttrString(value){return String(value);}
+  ledgerTrackRecords(){return [{id:'a'},{id:'b'}];},
+  ledgerEditSelection(records,id){return records.filter(function(record){return record.id===id;});},
+  getCurrentMember(){return 'Bar';},
+  toast(){},jsHtmlAttrString(value){return String(value);}
 };
 vm.createContext(actionsSandbox);
 vm.runInContext(extractFunction(html,'closeLedgerRecordActions')+'\n'+extractFunction(html,'openLedgerRecordActions'),actionsSandbox);
