@@ -57,7 +57,10 @@ assert.deepStrictEqual(added,{
   buyFor:'媽媽',
   stopRef:'10/18_3',
   done:false,
-  createdAt:'2026-07-23T08:00:00.000Z'
+  createdAt:'2026-07-23T08:00:00.000Z',
+  completedAt:'',
+  splitGroupId:'',
+  ledgerLinks:[]
 },'add normalizes and persists the approved local-only fields');
 assert.deepStrictEqual(plain(store.all()),[added],'shopping items round-trip through localStorage');
 
@@ -203,31 +206,33 @@ assert(ui.includes('id="shoppingListOverlay"')||ui.includes("overlay.id='shoppin
 assert(ui.includes('今天有 ')&&ui.includes('項待買'),'Today has the approved reminder copy');
 assert(ui.includes('function renderShoppingTodayEntry(day)'),'Today uses one entry selector to avoid duplicate launchers');
 assert(ui.includes('採買清單 →'),'empty, non-trip, and no-reminder Today states keep a lightweight list entry');
-assert(ui.includes('直接完成')&&ui.includes('同時記帳'),'single completion offers the approved loop choices');
 assert(ui.includes('建立多品項消費'),'pending list exposes the approved batch loop action');
 assert.match(ui,/completeSelectedShopping\(false\)">已購買<\/button>/,'batch completion uses the approved 已購買 label');
-assert.match(ui,/<h3 id="shoppingChoiceTitle">已購買<\/h3>/,'single completion dialog uses the approved 已購買 title');
-assert.match(ui,/onclick="undoShoppingCompleteChoice[\s\S]{0,100}">返回<\/button>/,'single completion dialog offers a return action');
-const undoStart=ui.indexOf('function undoShoppingCompleteChoice(id)');
-const undoEnd=ui.indexOf('\nfunction openShoppingLedgerEntry',undoStart);
-assert(undoStart>=0&&undoEnd>undoStart,'return action has a dedicated undo handler');
-const undoSource=ui.slice(undoStart,undoEnd);
-const undoCalls=[];
+/* B:單筆勾選不再開三選一 Modal,改為直接完成＋toast 復原。 */
+assert(!ui.includes('shoppingCompleteChoice'),'single completion no longer opens the three-way modal');
+assert(!ui.includes('function undoShoppingCompleteChoice'),'the modal-only undo handler is retired');
+const doneStart=ui.indexOf('function toggleShoppingItemDone(id,done)');
+const doneEnd=ui.indexOf('\nfunction openShoppingLedgerEntry',doneStart);
+assert(doneStart>=0&&doneEnd>doneStart,'completion has a dedicated handler');
+const doneSource=ui.slice(doneStart,doneEnd);
+const doneCalls=[];let toastAction=null;
 vm.runInNewContext(
-  undoSource+';undoShoppingCompleteChoice("shopping-undo");',
+  doneSource+';toggleShoppingItemDone("shopping-a",true);',
   {
-    shoppingListStore:{update(id,changes){undoCalls.push(['update',id,changes]);}},
-    closeShoppingCompleteChoice(){undoCalls.push(['close']);},
-    renderToday(){undoCalls.push(['today']);},
-    renderShoppingListOverlay(){undoCalls.push(['list']);}
+    shoppingListStore:{update(id,changes){doneCalls.push(['update',id,changes]);return {id,name:'白桃'};}},
+    timestampDate(value){return new Date(Number(value));},
+    Date:{now(){return Date.parse('2026-10-20T04:00:00.000Z');}},
+    toast(message,label,action){doneCalls.push(['toast',message,label]);toastAction=action;},
+    renderToday(){doneCalls.push(['today']);},
+    renderShoppingListOverlay(){doneCalls.push(['list']);}
   }
 );
-assert.deepStrictEqual(plain(undoCalls),[
-  ['update','shopping-undo',{done:false}],
-  ['close'],
-  ['today'],
-  ['list']
-],'return action restores the item to pending and refreshes both views');
+assert.deepStrictEqual(plain(doneCalls[0]),['update','shopping-a',{done:true,completedAt:'2026-10-20T04:00:00.000Z'}],'勾選寫入 done 與 completedAt');
+assert.strictEqual(doneCalls[3][0],'toast');
+assert.strictEqual(doneCalls[3][2],'復原','toast 提供復原動作');
+assert(String(doneCalls[3][1]).indexOf('已標記')===0,'toast 使用核准文案');
+assert(!/ledgerLinks\s*:/.test(doneSource),'完成與復原都不寫入 ledgerLinks');
+assert(/\{done:false,completedAt:''\}/.test(doneSource),'復原清空 completedAt 並退回待買');
 assert.match(ui,/\.shopping-list-panel\{[^}]*overflow-y:auto[^}]*touch-action:pan-y/,'shopping overlay follows Scroll-only with CSS touch-action');
 
 /* ---- A＋F 的原始碼契約(顯示層無法以純函式覆蓋的部分) ---- */

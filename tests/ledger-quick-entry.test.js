@@ -208,7 +208,9 @@ helperRecords.push(Object.assign({},savedSnapshots[0],{detail:'edited'}));
 assert.strictEqual(helperSandbox.undoPersonalLedgerSave([savedSnapshots[0]]),false,'edited snapshots refuse undo');
 assert.strictEqual(helperRecords.length,1,'a refused undo keeps the edited personal record');
 
-const saveFlowSource=extract('function commitLedgerEntrySave(','function deletePersonalLedgerRecord(');
+/* 儲存成功後的 Shopping link 回寫接真實實作,不用放行樁:本測試的 draft 沒有採買來源,
+   因此必須完全不觸發回寫。回寫本身的契約由 tests/shopping-ledger-links.test.js 覆蓋。 */
+const saveFlowSource=extract('function shoppingLinkSourceIds(','function deletePersonalLedgerRecord(');
 const saveButtons={ledgerSave:{disabled:false},ledgerSaveAnother:{disabled:false}};
 const saveMessages=[],preparedIds=[],submittedIds=[],duplicateLookupIds=[];
 let buildCalls=0,enqueueCalls=0,closeCalls=0,renderCalls=0,confirmationResolve=null;
@@ -232,6 +234,9 @@ const saveSandbox={
   renderSplit(){renderCalls++;},closeLedgerEntrySheet(){closeCalls++;},resetLedgerDraftAfterSave(){throw new Error('add another is not under test');},
   undoPersonalLedgerSave(){throw new Error('personal undo must remain nonblocking and untouched');},toast(message){saveMessages.push(message);},
   document:{getElementById(id){return saveButtons[id]||null;}},navigator:{onLine:true},
+  timestampDate(value){return new Date(Number(value));},AppLog:{repo(){},sync(){}},
+  buildShoppingLedgerLinkPlan(){throw new Error('沒有採買來源時不得計畫任何 link');},
+  shoppingListStore:{applyLedgerLinks(){throw new Error('沒有採買來源時不得回寫 link');}},
   Date,Math,Promise,JSON,String,Number,isFinite
 };
 vm.createContext(saveSandbox);
