@@ -27,6 +27,8 @@
 ## 採買清單詞條
 
 - **地點已知／未知項目**：有 `stopRef` 且綁定現有行程站點者為地點已知；沒有 `stopRef` 者為地點未知，只留在完整清單的「隨時可買」區。
-- **孤兒引用**：採買項目的 `stopRef` 指向已不存在的行程站點；項目仍保留，Today 提醒靜默略過，不主動通知或刪除。
+- **行程站點排名（shopping stop rank）**：採買清單顯示站點群組的唯一排序來源，契約為 `dayIndex ASC → 該日 day.items index ASC`，也就是實際走行程的順序。待買頁與 Today 提醒共用同一份排名，不得各自實作；同一站點內的採買項目維持既有 store order，排序只作用於顯示層，不重寫本機資料順序。已買頁不在此契約範圍——目前 Shopping Item 沒有 `completedAt`，其 store order 不等於購買時間順序。
+- **行程資料權威性（trip dataset authority）**：能否宣告某個 `stopRef` 失效的前提。只有 `CURRENT_SNAPSHOT.source === 'online'`（來自本次旅程 Google Sheet，含同步後離線沿用的持久化快照）且行程有日資料時為 `authoritative`；`builtin` 與 `legacy-migrated` 一律 `unverified`。內建種子資料日期與日數看起來完整卻不保證是本次旅程，不得以「有幾天資料」推定可信。判定沿用資料層既有的 snapshot source（與 `syncStatusModel()` 同一組值），採買模組不另造平行狀態。
+- **孤兒引用三態**：採買項目 `stopRef` 查不到站點時分三種——`resolved`（查得到，正常顯示 `DAY N · 站名`）、`pending`（資料未就緒或來源不可信，顯示中性的「行程站點待確認」）、`orphan`（已確認使用本次旅程權威資料且站點確實不存在，顯示「原行程站點已不存在」並提供修復入口）。任何情況都不自動清除或修改 `stopRef`；清除綁定必須由使用者明確操作。編輯表單在 `pending`／`orphan` 時以原值作為選中的 option，畫面狀態不得與 form state 矛盾。
 - **閉環（Buy-to-Ledger Loop）**：採買項目標記已買後，可直接帶入既有單筆或多品項記帳表單；只負責預填與開啟，不改變記帳流程。
 - **代購對象共用名單**：採買表單與 Ledger 代購表單共用 `trip_ledger_proxy_targets`，任一入口新增後另一入口立即可見並依既有規則去重。

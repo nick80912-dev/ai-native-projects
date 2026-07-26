@@ -1,4 +1,14 @@
 # 07 版本紀錄
+## 2026-07-26｜採買清單依行程排序＋孤兒 stopRef 三態（dev，SW v60，待 Bar 真機驗收）
+- **A 排序（顯示正確性 bug，非 UX 偏好）**：`buildShoppingTodayReminder()` 與 `renderShoppingGroups()` 的站點群組順序原本跟著**採買項目的建立順序**跑。實測（本機 static server，受控三站測資）修正前為 `第三站 → 第一站 → 第二站`，實際行程是 `第一站 → 第二站 → 第三站`；跨日同樣可能出現 DAY 5 排在 DAY 1 之前。
+- **單一排序來源**：新增純函式 `buildShoppingStopOrder(days)`／`shoppingStopRank(order,stopRef)`／`sortShoppingStopGroups(groups,order)`，契約為 `dayIndex ASC → 該日 day.items index ASC`。**待買頁與 Today 提醒共用同一份排名**——兩邊各排一次就會出現兩種順序。`sortShoppingStopGroups` 以 index tiebreak 實作穩定排序，不依賴引擎的 sort 穩定性；`Infinity` 名次以 `!==` 比較迴避 `Infinity-Infinity=NaN`。
+- **不動的部分**：同一站點內的採買項目維持既有 store order（不改字母或分類排序）、不改 `createdAt`、不重寫 localStorage 陣列順序（已驗證排序前後 `store.all()` 順序一致）。**已買頁完全不動**：維持既有平鋪與 store order，程式註解寫明不在本批排序範圍，且因 Shopping Item 尚無 `completedAt`／`purchasedAt`，store order **不得對外宣稱為購買時間順序**。
+- **F 孤兒判定三態**：原本 `shoppingStopById()` 回 null 就一律歸到模糊的「已綁定行程」，把三種完全不同的狀況混成一桶。新增 `tripDatasetAuthority(snapshot,days)` 與 `resolveShoppingStopState(stopRef,stop,authority)`：`resolved`（`DAY N · 站名`）／`pending`（`行程站點待確認`）／`orphan`（`原行程站點已不存在`）。
+- **權威性沿用既有訊號，未另造平行狀態**：判定用資料層既有的 `CURRENT_SNAPSHOT.source`（與 `syncStatusModel()` 同一組值）。`online` 才算本次旅程權威資料——快照會把 `source` 一起持久化，因此「之前同步過、現在離線」仍算權威，不會誤判。`builtin` 與 `legacy-migrated` 一律降級 `unverified`。**不採用 `DB.trip.days.length > 0`**：已核對最新 `dev` 的 BUILTIN，日期確為本次旅程的 10/18–10/23、共六天且結構完整，但 Day 3 之後仍是江之島／鎌倉／新宿的舊東京行程（`tasks/backlog.md` #11 在最新 `dev` 仍成立），站點 ID 與真實 Sheet 不同——若據以判孤兒，會把整批 Day 3–6 的正確綁定一次標成失效。
+- **編輯表單狀態一致性**：原綁定解析不到時，`<select>` 沒有對應 option，瀏覽器顯示第一個「不綁定」而 form state 仍留著舊 ID；使用者不碰下拉直接儲存就會把不知情的舊 ID 一起帶走。改為補一個 **以原值為 `value` 的選中 option**（`原行程站點已不存在（請重新選擇）`／`行程站點待確認（暫時保留）`），加上說明與 `clearShoppingStopBinding()` 明確清除按鈕。實測：不動下拉儲存後 `stopRef` 仍為 `ghost-999`；按下清除後才變空字串。**系統任何路徑都不自動清空 `stopRef`。**
+- **未修改**：勾選 Modal、Toast 記帳、已買頁多選／清空、Shopping-to-Ledger 關聯欄位、`ledgerLink`、部分購買、數量 schema、團體帳預填、必買置頂、`⋯` 選單、表單改 overlay、雲端同步、搜尋、Apps Script、Sheet／Ledger／Shopping localStorage schema。B／C／D／E／G 僅輸出設計提案，未實作。
+- **BUILTIN 種子資料過時**：經最新 `dev` 核對後確認 `backlog` #11 仍成立。此項影響離線可信度，本批已改為不信任 `builtin` 來源以規避誤判，但**根因未解**；建議升級為出發前必要修正而非一般 P2 打磨，重寫 BUILTIN 本身未經核准，本批未動。
+- 測試：先寫紅燈（首輪 `mod.buildShoppingStopOrder is not a function`）再最小實作。`tests/shopping-list.test.js` 的斷言由 31 項擴充至 69 項，涵蓋 A 的七項與 F 的八項要求。完整 **44／44** Node tests 與 `tools/check-doc-titles.js` 通過。Browser QA 375／390px：頁面與元件橫向溢出皆為 0、console error 0，三種資料來源（online／builtin／冷啟動無快照）與編輯表單四種操作實測正確。Service Worker cache `okayama-trip-v59` → `okayama-trip-v60`。
 ## 2026-07-26｜團體消費權限與資料完整性（dev，SW v59，待 Bar 真機驗收）
 - **根因**：既有「與我相關」只限制團體消費的可見範圍；原 `canDeleteLedgerRecord()` 只排除墓碑與身分註冊，分攤者仍可操作付款人的紀錄。編輯 replacement 也曾由表單建出的 record 帶入目前身分，未把「原付款人不可變」鎖成資料層不變條件。
 - **付款人擁有權**：新增 `canEditLedgerRecord(record,currentMember)`／`canDeleteLedgerRecord(record,currentMember)` 與 handler 層 assert；UI 隱藏不合資格操作，直接呼叫 handler 仍會拒絕。姓名比對沿用 `canonicalMemberName()`；個人帳維持原操作。

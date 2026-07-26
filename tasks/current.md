@@ -13,6 +13,7 @@
 - 2026-07-25 退回列窄螢幕再收緊（SW v51）— 移除冗餘的「退回原因:」前綴（保留 `aria-label`），320／375／390／430px 四寬度實測零重疊、按鈕右緣一致。完整 43／43 Node tests（reliability 96／96）與文件標題檢查通過；**待 Bar 真機驗收（需自多工列滑除 App 後重開兩次才會換到新 SW）**。
 - 2026-07-25 團體帳本只顯示與目前成員相關的紀錄（SW v58）— `ledgerTrackRecords()` 這個唯一共用節流點加上「付款人 or 分攤成員」過濾（方案 A 全面一致，不加切換 UI）；舊資料 `participants` 無效時限定式 fail-open、成員無法解析時完全不過濾；主卡片文案改 `與我相關 · N 筆紀錄`；編輯／刪除三處以同一判斷重查。完整 44／44 Node tests 與文件標題檢查通過，375px 本機實測四種身分的筆數／金額／清單一致；**待 Bar 真機驗收**。詳見 `07_CHANGELOG.md`。
 - 2026-07-26 團體消費權限與資料完整性批（SW v59）— 團體消費改為僅付款人可編輯／刪除，handler 再次守門；缺付款人資料 fail-closed；編輯 replacement 永遠保留原始 `record.member`；混合所有權批次刪除整批拒絕；同批單筆刪除提示其餘筆數。完整 44／44 Node tests、文件標題檢查及 375／390px Browser QA 通過；**待 Bar iPhone Safari／PWA 真機驗收**。
+- 2026-07-26 採買清單 A＋F 批（SW v60）— 待買頁與 Today 提醒改依實際行程順序（`dayIndex → 當日 items index`）排列，共用單一排名 helper；孤兒 `stopRef` 由模糊的「已綁定行程」拆成 resolved／pending／orphan 三態，權威性沿用 `CURRENT_SNAPSHOT.source`（`builtin` 因 backlog #11 的舊東京資料一律不可信）；編輯表單以原值作為選中 option 並提供明確清除入口，系統任何路徑都不自動清空 `stopRef`。已買頁完全不動。完整 44／44 Node tests、文件標題檢查及 375／390px Browser QA（溢出 0、console error 0）通過；**待 Bar iPhone Safari／PWA 真機驗收**。B／C／D／E／G 已輸出設計提案待 Bar 裁定，本批未實作。
 - 2026-07-25 結算列顯示層去重（SW v52）— chip 只講狀態、按鈕只講動作、小字只在有額外資訊時出現；4 處同義重複（`送出中…`×2、`同步失敗・重新同步`＋`重新同步`、兩列「同步中」＋「等待同步」）已清除，逾 30 秒的升級提示依 Bar 裁定保留。狀態機 §3 核准 label 未動。完整 43／43 Node tests（reliability 98／98）與文件標題檢查通過；**待 Bar 真機驗收**。
 
 ## ⏸ 等 Bar 動作
