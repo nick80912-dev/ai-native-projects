@@ -1,4 +1,12 @@
 # 07 版本紀錄
+## 2026-07-26｜Ops:Netlify 測試站改為手動部署（dev，純文件）
+- **Bar 已於 Netlify 後台手動停用測試站 `dev-trippilot-jp` 的自動部署**，並手動觸發過一次部署。本批只更新文件以反映現況，未修改任何部署設定。
+- **實測確認**（以推送 `4ead180` 作對照，GitHub Pages 為正對照）：推送後 Pages 的 `07_CHANGELOG.md` 由 71,741 增為 73,901 字元並出現新條目，Netlify 測試站停在 71,728 字元、無新條目 —— 同一次推送一邊更新一邊不動，確認自動部署已停。Bar 手動觸發後複查，測試站最新條目已與 `dev` HEAD 一致，`sw.js` 為 `okayama-trip-v62`。正式站維持 v18（追蹤 `main`，未受影響）。
+- 因此**修正上一批（`4ead180`）寫下的過時敘述**：該批當時實測測試站仍會自動部署，故寫入「仍會在每次推送自動部署」「要停止須改 Netlify settings、待 Bar 裁定」。Bar 隨即完成關閉，該敘述於數分鐘內失效，本批更正。
+- `16_OPS_PLAYBOOK.md` §E:通道表「觸發」欄改為「已停用自動部署（2026-07-26 由 Bar 手動關閉）。需要時於 Netlify 後台手動觸發部署;待系統穩定後，由 Bar 決定並恢復自動部署」;敘述段改為手動部署模型，明寫 **GitHub 分支更新不代表測試站已同步更新**;結尾「Push 至 `dev` 會同時更新 Pages 與測試站」改為「自動更新 Pages（測試站需手動觸發）」。
+- `16_OPS_PLAYBOOK.md` §F3 補一條:**使用測試站驗證 Netlify 特有 headers／redirects 或其他平台行為前，必須先確認已手動部署至目標 commit，並核對 Netlify 顯示的部署 commit SHA**，否則驗到的可能是舊版本。
+- `tasks/backlog.md` #5 的 Netlify 額度段落同步改寫;#5 仍留 backlog（iOS PWA 安裝與離線重開仍無實測證據），`tasks/done.md` 未修改。
+- 純文件批。未修改 App runtime、`sw.js`、`manifest.webmanifest`、GitHub Actions workflow、GitHub Pages settings、Netlify settings 或 branch 發布規則，無 SW 版本變更。
 ## 2026-07-26｜Ops:LAN 與 GitHub Pages 驗收流程納入 Playbook（dev，純文件）
 - **本批只改文件**,未動 App runtime、`sw.js`、`manifest.webmanifest`、GitHub Actions workflow、GitHub Pages repository settings、Netlify settings 或 branch 發布規則。無 SW 版本變更。
 - **GitHub Pages 已啟用**,不再是 backlog 裡「待評估遷移」的狀態。以 repo 與實際端點核對(非推論):URL `https://nick80912-dev.github.io/ai-native-projects/`、發布來源 Deploy from a branch、branch `dev`、子路徑 `/ai-native-projects/`。repo 內 `dev` 與 `main` 的 `.github/workflows/` 都只有 `qa.yml`,**沒有** Pages workflow,故為 GitHub 內建 `pages-build-deployment` 建置。發布來源以行為確認:推送後 Pages 服務中的 `sw.js` 由 `okayama-trip-v61` 變為 `v62`,與 `origin/dev` 一致(`origin/main` 當時為 v18)。

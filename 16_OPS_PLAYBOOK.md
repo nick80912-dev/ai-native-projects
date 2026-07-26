@@ -67,12 +67,12 @@ dev → Pull Request → Bar Review → Bar Merge → Netlify Production Deploy 
 |---|---|---|---|---|
 | Netlify 正式站 | `https://trippilot-jp.netlify.app/` | `main` | Bar 核准 PR merge 後自動部署 | 正式發布 |
 | GitHub Pages | `https://nick80912-dev.github.io/ai-native-projects/` | `dev` | 每次推送自動發布 | **日常 HTTPS／PWA／離線驗收的預設通道**(見 §F3) |
-| Netlify 測試站 | `https://dev-trippilot-jp.netlify.app/` | `dev` | 每次推送自動部署 | 只驗證 Netlify 特有行為(見下) |
+| Netlify 測試站 | `https://dev-trippilot-jp.netlify.app/` | `dev` | 已停用自動部署(2026-07-26 由 Bar 手動關閉)。需要時於 Netlify 後台手動觸發部署;待系統穩定後,由 Bar 決定並恢復自動部署 | 只驗證 Netlify 特有行為(見下) |
 
 - 三個通道為獨立 origin:網域、Service Worker 快取、localStorage 與 PWA 安裝完全隔離,任一站的狀態不污染其他站。
-- **Netlify 測試站仍然存在且仍會在每次 `dev` 推送時自動部署**,本文件未變更該設定。但它不再是每次修改的預設驗收站 —— 日常驗收改走 GitHub Pages,以降低 Netlify 額度消耗。
+- **測試站目前採手動部署模型。GitHub 分支更新不代表測試站已同步更新**;需要使用測試站驗收時,應由 Netlify 後台手動觸發部署。自動部署的恢復時機由 Bar 決定。
+- 日常驗收改走 GitHub Pages,以降低 Netlify 額度消耗。
 - 測試站保留的用途:驗證 `netlify.toml` 定義的 header 行為(例如 `sw.js` 的 `no-cache, no-store, must-revalidate`)、redirects,或其他 GitHub Pages 無法重現的 Netlify 特有整合。**這些是 Pages 驗收不能取代的**(Pages 不讀 `netlify.toml`,一律 `max-age=600`)。
-- 要真正停止測試站的自動部署,必須修改 Netlify site settings —— 屬部署設定變更,需 Bar 明確裁定,不在文件批次範圍內。
 
 **Release Checklist**:
 - CI PASS
@@ -81,7 +81,7 @@ dev → Pull Request → Bar Review → Bar Merge → Netlify Production Deploy 
 - Documentation 已同步
 - ADR 已更新(若涉及架構)
 
-Push 至 `dev` 會同時更新 GitHub Pages 與 Netlify 測試站,**兩者都不等於正式 Release**。只有 Bar 核准並 Merge `dev → main` 才會觸發正式站部署。GitHub Pages 驗收通過**不代表**已發布;正式發布責任仍依本節 Release Flow 與 Bar 核准執行。
+Push 至 `dev` 會自動更新 GitHub Pages(測試站需手動觸發),**兩者都不等於正式 Release**。只有 Bar 核准並 Merge `dev → main` 才會觸發正式站部署。GitHub Pages 驗收通過**不代表**已發布;正式發布責任仍依本節 Release Flow 與 Bar 核准執行。
 
 ## F. 非 Netlify 驗收流程(2026-07-26 新增)
 > 目的:讓日常 UI 與資料邏輯的反覆驗收不必依賴 Netlify 部署。本節不改變 §E 的發布責任。
@@ -151,6 +151,7 @@ GitHub Pages URL：https://nick80912-dev.github.io/ai-native-projects/
 - `navigator.serviceWorker.register('sw.js')` 未指定 `updateViaCache`,瀏覽器預設 `'imports'`,最上層 SW script 本來就會繞過 HTTP 快取,因此 SW 版本更新仍會被偵測到;真正可能延遲的是 `index.html`(CDN 最多壓 10 分鐘)。**驗收 SW 更新時勿把 CDN 延遲誤判成「SW 沒更新」。**
 - 整個 repo 會以靜態站公開(`tasks/`、`docs/`、`07_CHANGELOG.md` 皆可直接瀏覽)。repo 本來就是 public,不構成新增暴露。
 - Pages 沒有獨立的部署快照可回滾;它永遠等於 `dev` 當下的內容。要退版就 `git revert` 後推 `dev`(見 §A4)。
+- **使用測試站驗證 Netlify 特有的 headers、redirects 或其他平台行為前,必須先確認測試站已手動部署至目標 commit,並核對 Netlify 顯示的部署 commit SHA;否則實際驗證的可能是舊版本。** 測試站已停用自動部署(見 §E),`dev` 有新推送不代表測試站已跟上。
 
 ### F4. 標準驗收層級
 日常開發採以下順序,**能在前一層擋掉的問題就不要往後推**:
