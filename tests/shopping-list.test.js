@@ -53,7 +53,9 @@ assert.deepStrictEqual(added,{
   id:'shopping-1',
   name:'岡山白桃',
   category:'伴手禮',
-  qty:'2 盒',
+  quantity:2,
+  unit:'盒',
+  legacyQtyText:'',
   buyFor:'媽媽',
   stopRef:'10/18_3',
   done:false,
@@ -64,9 +66,13 @@ assert.deepStrictEqual(added,{
 },'add normalizes and persists the approved local-only fields');
 assert.deepStrictEqual(plain(store.all()),[added],'shopping items round-trip through localStorage');
 
-const updated=plain(store.update('shopping-1',{qty:'3 盒',done:true}));
-assert.strictEqual(updated.qty,'3 盒');
+const updated=plain(store.update('shopping-1',{quantity:3,unit:'盒',done:true}));
+assert.strictEqual(updated.quantity,3);
+assert.strictEqual(updated.unit,'盒');
 assert.strictEqual(updated.done,true);
+/* qty 已不是可寫入的資料來源:結構化數量存在時,舊 qty patch 不得覆蓋它。 */
+assert.strictEqual(plain(store.update('shopping-1',{qty:'99 箱'})).quantity,3,'legacy qty patch 不得改寫結構化數量');
+assert.strictEqual(plain(store.update('shopping-1',{qty:'99 箱'})).unit,'盒');
 assert.strictEqual(store.all().length,1,'update never duplicates an item');
 assert.throws(()=>store.add({name:'',category:'必買'}),/品名/,'name is the only required field');
 assert.throws(()=>store.add({name:'超出規格',category:'預算'}),/分類/,'categories remain the approved closed set');
@@ -91,6 +97,70 @@ assert.deepStrictEqual(reminder.groups,[{stopRef:'10/18_1',stopName:'永旺夢�
 assert.strictEqual(mod.buildShoppingTodayReminder([{id:'b',name:'藥妝',stopRef:'',done:false}],day),null,'unknown-location items stay off Today');
 assert.strictEqual(mod.buildShoppingTodayReminder([{id:'d',name:'孤兒',stopRef:'10/18_99',done:false}],day),null,'orphan references degrade silently');
 assert.strictEqual(mod.buildShoppingTodayReminder([],null),null,'non-trip days never show the reminder');
+
+/* ================= 結構化數量:quantity／unit／legacyQtyText ================= */
+const QNOW='2026-10-20T04:00:00.000Z';
+const q=over=>mod.normalizeShoppingItem(Object.assign({id:'q1',name:'益生菌',createdAt:QNOW},over||{}));
+assert.strictEqual(q({quantity:5,unit:'罐'}).quantity,5,'新項目接受安全正整數');
+assert.strictEqual(q({quantity:5,unit:'罐'}).unit,'罐','單位獨立保存');
+assert.strictEqual(q({quantity:1,unit:''}).quantity,1,'quantity 1 合法');
+assert.throws(()=>q({quantity:0}),/數量/,'quantity 0 拒絕');
+assert.throws(()=>q({quantity:-1}),/數量/,'quantity -1 拒絕');
+assert.throws(()=>q({quantity:1.5}),/數量/,'quantity 1.5 拒絕');
+assert.throws(()=>q({quantity:NaN}),/數量/,'NaN 拒絕');
+assert.throws(()=>q({quantity:Infinity}),/數量/,'Infinity 拒絕');
+assert.throws(()=>q({quantity:Number.MAX_SAFE_INTEGER+2}),/數量/,'超出安全整數拒絕');
+assert.throws(()=>q({quantity:'5'}),/數量/,'字串數量拒絕,不做隱式轉型');
+/* type="number" 在部分瀏覽器仍會送出 1e6／1.0／+3,表單必須先擋掉非純十進位字串。 */
+const saveSource=mod.__saveSource||fs.readFileSync('index.html','utf8').slice(
+  fs.readFileSync('index.html','utf8').indexOf('function saveShoppingForm()'),
+  fs.readFileSync('index.html','utf8').indexOf('function deleteShoppingItem(')
+);
+assert(/\^\\d\+\$\/\.test\(raw\)/.test(saveSource),'表單只接受純十進位數字字串,不得直接 Number() 轉換');
+assert.strictEqual(q({quantity:3,unit:'　大　包 '}).unit,'大 包','單位正規化全形與連續空白');
+assert.throws(()=>q({quantity:3,unit:'一二三四五六七八九十一'}),/單位/,'單位過長拒絕');
+assert.strictEqual(q({quantity:5,unit:'罐',legacyQtyText:'約 3～5 個'}).legacyQtyText,'','轉換完成後清空 legacyQtyText');
+assert.strictEqual(q({quantity:null,legacyQtyText:'約 3～5 個'}).quantity,null,'legacy 模式允許 quantity null');
+assert.strictEqual(q({quantity:null,legacyQtyText:'約 3～5 個'}).legacyQtyText,'約 3～5 個','legacy 原文完整保留');
+assert.strictEqual(q({}).quantity,null,'完全沒有數量的舊資料為 null');
+assert.strictEqual(q({}).legacyQtyText,'','完全沒有數量時 legacyQtyText 也是空的');
+assert.strictEqual(q({quantity:5,unit:'罐'}).qty,undefined,'正規化輸出不再保留可獨立修改的 qty 鏡像');
+
+/* 舊 qty migration:只接受「正整數＋可選空白＋不含數字的單位」 */
+const mig=text=>q({qty:text});
+assert.strictEqual(mig('5 罐').quantity,5);assert.strictEqual(mig('5 罐').unit,'罐');assert.strictEqual(mig('5 罐').legacyQtyText,'');
+assert.strictEqual(mig('5罐').quantity,5);assert.strictEqual(mig('5罐').unit,'罐');
+assert.strictEqual(mig('10').quantity,10);assert.strictEqual(mig('10').unit,'','純數字轉出空單位');
+assert.strictEqual(mig('3 盒').quantity,3);
+['兩盒','約 3～5 個','3-5 個','一大一小','家庭號 2 包','一組','少量','0 罐','-3 罐','1.5 罐'].forEach(text=>{
+  const item=mig(text);
+  assert.strictEqual(item.quantity,null,'不可解析的舊數量不得猜測:'+text);
+  assert.strictEqual(item.legacyQtyText,text.replace(/　/g,' ').replace(/\s+/g,' ').trim(),'舊數量原文完整保留:'+text);
+  assert.strictEqual(item.unit,'','不可解析時不得留下猜測的單位:'+text);
+});
+assert.strictEqual(mig('').quantity,null);assert.strictEqual(mig('').legacyQtyText,'','空 qty 不產生 legacy 文字');
+
+/* 數量顯示 helper */
+assert.strictEqual(mod.shoppingQuantityLabel({quantity:5,unit:'罐'}),'5 罐');
+assert.strictEqual(mod.shoppingQuantityLabel({quantity:3,unit:''}),'3');
+assert.strictEqual(mod.shoppingQuantityLabel({quantity:null,legacyQtyText:'約 3～5 個'}),'約 3～5 個');
+assert.strictEqual(mod.shoppingQuantityLabel({quantity:null,legacyQtyText:''}),'');
+assert.strictEqual(mod.shoppingQuantityLabel(null),'','空輸入安全回傳空字串');
+assert.strictEqual(mod.shoppingLedgerNote({quantity:5,unit:'罐',buyFor:'媽媽'}),'數量：5 罐 · 幫誰買：媽媽','Ledger note 走同一個 helper');
+assert.strictEqual(mod.shoppingLedgerNote({quantity:null,legacyQtyText:'約 3～5 個',buyFor:''}),'數量：約 3～5 個','舊式數量在 Ledger note 仍可顯示');
+
+/* 部分購買:只輸入本次買到,剩餘由系統計算 */
+const src=q({id:'s1',quantity:5,unit:'罐'});
+assert.deepStrictEqual(plain(mod.shoppingSplitPlan(src,3)),{ok:true,mode:'split',purchasedQuantity:3,remainingQuantity:2,error:''},'買到 3 剩 2');
+assert.deepStrictEqual(plain(mod.shoppingSplitPlan(src,1)),{ok:true,mode:'split',purchasedQuantity:1,remainingQuantity:4,error:''},'買到 1 剩 4');
+assert.strictEqual(mod.shoppingSplitPlan(src,5).mode,'complete','買齊直接完成,不建立 0 數量剩餘');
+assert.strictEqual(mod.shoppingSplitPlan(src,6).ok,false);
+assert.strictEqual(mod.shoppingSplitPlan(src,6).error,'本次買到數量不可超過原需求');
+assert.strictEqual(mod.shoppingSplitPlan(src,0).error,'本次買到數量至少為 1');
+assert.strictEqual(mod.shoppingSplitPlan(src,-2).error,'本次買到數量至少為 1');
+assert.strictEqual(mod.shoppingSplitPlan(src,1.5).error,'本次買到數量至少為 1','小數阻擋');
+assert.strictEqual(mod.shoppingSplitPlan(q({id:'s2',quantity:null,legacyQtyText:'約 3～5 個'}),1).ok,false,'舊式數量不得部分購買');
+assert(/舊式文字數量/.test(mod.shoppingSplitPlan(q({id:'s3',quantity:null,legacyQtyText:'兩盒'}),1).error),'舊式數量提示先轉換');
 
 /* ================= A:待買與 Today 依行程順序排列 =================
    排序契約:dayIndex ASC → 該日 day.items index ASC。
@@ -171,7 +241,8 @@ assert.strictEqual(mod.resolveShoppingStopState('d1_a',stop,'unverified'),'resol
 const single=plain(mod.shoppingLedgerSinglePrefill({
   name:'眼藥水',
   category:'代購',
-  qty:'2',
+  quantity:2,
+  unit:'',
   buyFor:'小明'
 }));
 assert.deepStrictEqual(single,{
@@ -206,8 +277,20 @@ assert(ui.includes('id="shoppingListOverlay"')||ui.includes("overlay.id='shoppin
 assert(ui.includes('今天有 ')&&ui.includes('項待買'),'Today has the approved reminder copy');
 assert(ui.includes('function renderShoppingTodayEntry(day)'),'Today uses one entry selector to avoid duplicate launchers');
 assert(ui.includes('採買清單 →'),'empty, non-trip, and no-reminder Today states keep a lightweight list entry');
-assert(ui.includes('建立多品項消費'),'pending list exposes the approved batch loop action');
-assert.match(ui,/completeSelectedShopping\(false\)">已購買<\/button>/,'batch completion uses the approved 已購買 label');
+/* 待買多選工具列:計數一列、三顆動作一列,320px 也塞得下且不縮 tap target。 */
+assert.match(ui,/completeSelectedShopping\(false\)">已買<\/button>/,'待買多選可只標記已買');
+assert.match(ui,/completeSelectedShopping\(true\)">記帳<\/button>/,'待買多選可直接建立多品項消費');
+assert.match(ui,/deleteSelectedShoppingItems\(\)">刪除<\/button>/,'待買多選可批次刪除');
+assert(!ui.includes('建立多品項消費'),'過長的舊按鈕文案已縮短');
+assert(ui.includes('shopping-selection-toolbar-stacked'),'工具列改為兩列版面');
+/* 單筆記帳入口必須接回既有函式,不另造流程 */
+const itemRenderer=ui.slice(ui.indexOf('function renderShoppingItem(item)'),ui.indexOf('function renderShoppingGroups(items)'));
+assert(itemRenderer.includes('openShoppingLedgerEntry(')&&itemRenderer.includes('>記帳</button>'),'已買未記帳項目直接呼叫既有的 openShoppingLedgerEntry()');
+assert(itemRenderer.includes('releaseShoppingLedgerLink('),'已記帳項目顯示重新開放記帳');
+assert(itemRenderer.includes("linkState.state==='linked'")&&itemRenderer.includes("linkState.state==='unlinked'"),'入口顯示一律走共用 resolver 的三態');
+const itemRendererCode=itemRenderer.replace(/\/\*[\s\S]*?\*\//g,'');
+assert(!/ledgerLinks\.length/.test(itemRendererCode),'不得以 ledgerLinks.length 判斷是否可記帳');
+assert(itemRenderer.indexOf('記帳<')>0&&itemRenderer.indexOf('item.done')>0,'記帳入口只在已買項目出現');
 /* B:單筆勾選不再開三選一 Modal,改為直接完成＋toast 復原。 */
 assert(!ui.includes('shoppingCompleteChoice'),'single completion no longer opens the three-way modal');
 assert(!ui.includes('function undoShoppingCompleteChoice'),'the modal-only undo handler is retired');

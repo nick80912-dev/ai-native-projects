@@ -1,4 +1,15 @@
 # 07 版本紀錄
+## 2026-07-26｜採買清單後續修正：單筆記帳入口、待買批次刪除與結構化數量（dev，SW v62，待 Bar 真機驗收）
+- **補回單筆記帳入口（修 B 批的接線缺口）**：B 批移除「完成後強制詢問記帳」的三選一 Modal 時，連帶移除了 `openShoppingLedgerEntry()` 的**唯一呼叫者**，該函式變成沒有 UI 入口的死碼。裁定只取消「每次完成都強制詢問」，**沒有**取消單筆記帳。入口改掛在已買項目列，直接接回既有函式（含既有 preflight、單筆 prefill、`sourceShoppingItemIds=[item.id]`、金額 focus 與成功後回寫），未另造流程。顯示規則：`unlinked` 顯示「記帳」、`linked` 顯示「重新開放記帳」、`unverified` 兩者都不給（必須阻擋再次記帳），一律走共用 resolver 判斷，不以 `ledgerLinks.length` 判斷。**未恢復完成後 Modal。**
+- **待買頁多選加入批次刪除**：接用既有 `deleteSelectedShoppingItems()`／`removeMany()`，不另造平行刪除流程。工具列文案由過長的「建立多品項消費」縮短為「記帳」，並改為兩列版面（第一列計數、第二列三顆等寬動作）——320px 硬擠四欄會犧牲 tap target，實測兩列版在 320px 按鈕高 49px、無水平捲動。刪除確認將 `linked` 與 `unverified` **分別計數**：前者說明「刪除採買項目不會刪除原本的消費紀錄」，後者說明「不會嘗試修改或刪除帳本紀錄」——待確認的項目我們無法證明帳本紀錄存在，不能混進「已建立消費紀錄」一起講。
+- **撤回自由文字預填方案，改為結構化數量**：`quantity`（安全正整數，最小 1）＋ `unit`（獨立保存，最多 10 字，12 個常用單位 chips ＋自訂輸入）＋ `legacyQtyText`。新項目數量不再選填，預設 1。
+- **表單驗證不只靠 HTML**：`type="number"` 在部分瀏覽器仍會送出 `1e6`／`+3`／`1.0`，直接 `Number()` 會把 `1e6` 悄悄變成一百萬（Browser QA 實際踩到並修正）。儲存前先要求純十進位數字字串 `^\d+$`，再交由 normalizer 驗安全整數。實測 `-1`／`0`／`1.5`／空白／`1e6`／`+3`／`abc` 全數拒絕。
+- **舊 `qty` 的安全 migration**：只有「正整數＋可選單一空白＋不含數字與空白的單位」才自動轉換（`5 罐`→5＋罐、`5罐`→5＋罐、`10`→10＋空單位）。`兩盒`、`約 3～5 個`、`3-5 個`、`一大一小`、`家庭號 2 包`、`一組`、`少量`、`0 罐`、`-3 罐`、`1.5 罐` 一律 `quantity:null` ＋原文保留於 `legacyQtyText`。**不猜中文數字、不從字串中間擷取數字、不取區間端點、不默認成 1、不靜默丟棄原文。** 正規化輸出**不再帶 `qty` 鏡像**，避免兩份可能互相矛盾的數量；`qty` 也不再是可寫入的 patch 來源。
+- **統一顯示 helper**：新增 `shoppingQuantityLabel()`，清單 metadata、Ledger prefill note、拆分表單、編輯表單全部共用，任何位置不得自行拼接。
+- **部分購買改為系統計算**：使用者只輸入「本次買到」，剩餘由 `shoppingSplitPlan()` 計算並即時預覽（`3` → 剩 `2 罐`）。< 1 或 > 原需求一律阻擋；**等於原需求時直接走「全部買到」並 toast `已全部買到`，不建立 0 數量的剩餘項目**。`unit` 由原項目繼承。`quantity:null` 的舊式項目阻擋拆分並直接帶入編輯表單，表單顯示「舊數量：約 3～5 個／此為舊式文字數量。儲存前請改為數字與單位。」——**不在使用者未確認時自行轉換**。原 ID 為已買部分、新 ID 為剩餘、共用 `splitGroupId`、`createdAt` 沿用、剩餘插在原位置、一次原子 write 等既有規則全部不變。
+- **個人狀態備份 v5 → v6**：數量從自由文字變成結構化欄位，舊 App 不認識。若不升版，舊 App 會把 v6 當成相容格式，還原時靜默丟掉數量。v1～v6 皆可還原，未知未來版本明確拒絕。`settings-backup-ux.test.js` 另加一條防漂移斷言：sandbox 的版本常數必須等於 `index.html` 內的實際值。
+- **未修改**：Ledger 21 欄 Schema、Apps Script、Google Sheet、結算演算法、團體權限、`ledgerLinks[]` contract、`releasedAt`／`splitGroupId`／`completedAt` 語意、A＋F 的行程排序與孤兒判定、採買雲端同步。未把 `quantity`／`unit`／`shoppingItemId` 加入 Ledger 欄位。C／E／G 未夾帶。
+- 測試：先寫紅燈（`normalizeShoppingItem` 未回傳 `quantity`）再最小實作。完整 **45／45** Node tests 與 `tools/check-doc-titles.js` 通過。Browser QA 320／375／390px：已買三態的動作組合（`記帳｜編輯｜刪除`／`重新開放記帳｜編輯｜刪除`／`編輯｜刪除`）、待買三顆動作、刪除確認雙計數、數量與單位輸入、舊式數量編輯提示、部分購買即時計算與三種阻擋、買齊不產生 0 剩餘、長品名與長單位；頁面與逐元件橫向溢出皆為 0、最小 tap target 40px、輸入欄字級 16px、console error 0、`overflow-y:auto`／`touch-action:pan-y`／`overscroll-behavior:contain` 未退化。Service Worker cache `okayama-trip-v61` → `okayama-trip-v62`。
 ## 2026-07-26｜採買清單 B＋D：完成流程、已買管理、部分購買與 Shopping-to-Ledger 關聯（dev，SW v61，待 Bar 真機驗收）
 - **B 單筆完成不再被 Modal 打斷**：移除勾選後強制出現的三選一（返回／直接完成／同時記帳）。新流程為「勾選 → 直接標記已買 → 寫入 `completedAt` → toast 提供『復原』」。連續買五樣不再被打斷五次。復原只還原 `done` 與 `completedAt`，**不動 `ledgerLinks`** —— 已記帳項目退回待買後仍顯示已記帳，否則會重複入帳。
 - **`ledgerLinks[]` 而非單一 `ledgerLink`**：每次成功記帳 append 一筆，只有最後一筆代表目前關聯。單一物件會在「解除 → 再記一次」時被覆蓋，原本解除過哪一筆的稽核線索就消失了。不另建平行的 `ledgerLinkHistory`、不刪舊 link、**不持久化任何 `status` 字串**。

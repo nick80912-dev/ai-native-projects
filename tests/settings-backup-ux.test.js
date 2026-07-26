@@ -45,11 +45,12 @@ function createStorage(initial){
     document:{getElementById(id){return id==='personalStateBox'?box:null;}},
     ledgerRepository:{queuedRecords(){return queued;},flushQueue(){flushes++;return Promise.resolve();}},
     personalLedgerRepository:{all(){return [{id:'personal-1',time:'2026-07-18T08:00:00.000Z',member:'黃柏',category:'餐飲',detail:'早餐',amountJpy:500,amountTwd:105,note:'',payMethod:'現金',isProxy:false,proxyTarget:'',batchId:''}];}},
-    /* v5:Shopping Item 新增 completedAt／splitGroupId／ledgerLinks,備份必須連帶升版,
-       否則舊版 App 會把 v5 當成相容格式,還原時靜默丟掉這三個欄位而導致重複入帳。 */
-    PERSONAL_STATE_VERSION:5,
-    PERSONAL_STATE_SUPPORTED_VERSIONS:[1,2,3,4,5],
-    isSupportedPersonalStateVersion(version){return typeof version==='number'&&[1,2,3,4,5].indexOf(version)>=0;},
+    /* v5 加了 completedAt／splitGroupId／ledgerLinks,v6 再加結構化 quantity／unit／legacyQtyText。
+       備份必須連帶升版,否則舊版 App 會把新格式當成相容,還原時靜默丟掉這些欄位:
+       已記帳項目會重新顯示成未記帳而重複入帳,數量也會整批消失。 */
+    PERSONAL_STATE_VERSION:6,
+    PERSONAL_STATE_SUPPORTED_VERSIONS:[1,2,3,4,5,6],
+    isSupportedPersonalStateVersion(version){return typeof version==='number'&&[1,2,3,4,5,6].indexOf(version)>=0;},
     LEDGER_QUEUE_KEY:'trip_ledger_queue',
     PERSONAL_LEDGER_KEY:'trip_personal_ledger',
     LEDGER_CATEGORY_OPTIONS_KEY:'trip_ledger_categories',
@@ -94,7 +95,8 @@ function createStorage(initial){
   await sandbox.exportPersonalState();
   const exported=JSON.parse(copied[0]);
   assert.strictEqual(exported.format,'trip-personal-state');
-  assert.strictEqual(exported.version,5,'新匯出一律使用 v5');
+  assert.strictEqual(exported.version,6,'新匯出一律使用 v6');
+  assert.strictEqual(sandbox.PERSONAL_STATE_VERSION,Number(html.match(/var PERSONAL_STATE_VERSION=(\d+);/)[1]),'sandbox 版本常數與 index.html 一致,避免測試與實作漂移');
   assert.deepStrictEqual(Object.keys(exported).sort(),['checks','exportedAt','format','ledgerCategories','ledgerPayMethods','ledgerQueue','member','personalLedger','proxyTargets','shoppingItems','version','wants'].sort());
   assert.strictEqual(exported.personalLedger[0].id,'personal-1');
   assert.deepStrictEqual(exported.ledgerCategories,['餐飲','咖啡']);
