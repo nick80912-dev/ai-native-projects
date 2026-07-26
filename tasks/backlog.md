@@ -17,7 +17,12 @@
    - 未來測試模擬版:localStorage 前綴隔離(TEST 版不再污染正式狀態)
 3. **驗收後 UI/內容微調**(最小修改,不動 schema)。
 4. **BUILTIN 快照更新 SOP 文件化**:何時重抓、步驟、由誰觸發(目前僅口頭慣例)。
-5. **Netlify 額度事故後續**:監控月額度用量;若再逼近上限，評估遷移 GitHub Pages(涉 SW scope/start_url 相對路徑檢查)。
+5. **GitHub Pages 已啟用,待完成最終真機驗收**:
+   - Pages 已啟用並可載入:`https://nick80912-dev.github.io/ai-native-projects/`,Deploy from a branch(`dev`,repo 內無 Pages workflow),子路徑 `/ai-native-projects/`。
+   - **已完成**(2026-07-26 子路徑實跑):App Shell 於子路徑載入、manifest `start_url`／`scope` 相容、SW 註冊 scope 不依賴網域根目錄、直接開啟與重新整理、停掉伺服器後的離線啟動、與 Netlify 的 origin 隔離、發布來源確認為 `dev`(推送後服務中的 `sw.js` 由 v61 變 v62)。
+   - **尚待驗收**:iOS Safari 的 PWA 安裝與 standalone 模式、iOS 真機離線重開、`github.io` origin 上的 SW 更新實際節奏(Pages 一律 `max-age=600`,`netlify.toml` 的 `no-cache` 不生效)。
+   - LAN 真機與 Pages 驗收 SOP 已納入 `16_OPS_PLAYBOOK.md` §F。
+   - **Netlify 額度**:測試站 `dev-trippilot-jp` 仍追蹤 `dev` 且每次推送自動部署(已實測其 `sw.js` 為 v62)。日常驗收已改走 Pages,但要真正停止該站自動部署需修改 Netlify site settings,待 Bar 裁定。月額度用量仍須持續監控。
 6. **主題系統延後至 merge 後**:保留現行海洋色為預設,另新增兩個主題,共三選項。
 7. **主題區掛入準備**:設定頁已建立骨架與主題區預留註解,待主題批掛入。
 8. **UI 配色規範覆寫**:`08`「UI 配色變數不可變」條文覆寫已由 Bar 核准(2026-07-17),待主題批執行。

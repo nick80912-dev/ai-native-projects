@@ -1,4 +1,15 @@
 # 07 版本紀錄
+## 2026-07-26｜Ops:LAN 與 GitHub Pages 驗收流程納入 Playbook（dev，純文件）
+- **本批只改文件**,未動 App runtime、`sw.js`、`manifest.webmanifest`、GitHub Actions workflow、GitHub Pages repository settings、Netlify settings 或 branch 發布規則。無 SW 版本變更。
+- **GitHub Pages 已啟用**,不再是 backlog 裡「待評估遷移」的狀態。以 repo 與實際端點核對(非推論):URL `https://nick80912-dev.github.io/ai-native-projects/`、發布來源 Deploy from a branch、branch `dev`、子路徑 `/ai-native-projects/`。repo 內 `dev` 與 `main` 的 `.github/workflows/` 都只有 `qa.yml`,**沒有** Pages workflow,故為 GitHub 內建 `pages-build-deployment` 建置。發布來源以行為確認:推送後 Pages 服務中的 `sw.js` 由 `okayama-trip-v61` 變為 `v62`,與 `origin/dev` 一致(`origin/main` 當時為 v18)。
+- **`16_OPS_PLAYBOOK.md` 新增 §F 非 Netlify 驗收流程**:F1 電腦本機、F2 手機 LAN 真機、F3 GitHub Pages HTTPS、F4 標準驗收層級(自動測試 → localhost → LAN → Pages → 必要時才 Netlify)。
+- **F2 的限制寫明**:LAN `http://` 加 IP 不是 secure context,SW 不會註冊,因此不得作為 PWA 安裝、SW scope 與完整離線功能的最終驗收依據;診斷面板「App 版本」會顯示「無法讀取」。另註明該網址是獨立 origin,`localStorage` 與正式站分開。
+- **F3 區分已驗與待驗**:已完成子路徑 Shell 載入、manifest `start_url`／`scope`、SW scope、直接開啟與重新整理、離線啟動、origin 隔離;**iOS PWA 安裝、iOS 真機離線重開、`github.io` 上的 SW 更新節奏標示為待真機驗收**,未寫成通過。
+- **記錄 Pages 與 Netlify 的實際行為差異**:Pages 不讀 `netlify.toml`,一律 `Cache-Control: max-age=600`,Netlify 對 `sw.js` 的 `no-cache, no-store, must-revalidate` 不生效。但 `register('sw.js')` 未指定 `updateViaCache`,預設 `'imports'` 會讓最上層 SW script 繞過 HTTP 快取,故版本更新仍偵測得到,延遲的是 `index.html`。驗收時勿把 CDN 延遲誤判為 SW 未更新。
+- **修正 §E Release Flow 的通道描述**:改為三通道對照表(Netlify 正式站／GitHub Pages／Netlify 測試站)。**未宣稱 Netlify 測試站已停用** —— 實測 `dev-trippilot-jp.netlify.app` 的 `sw.js` 為 v62,證實它仍追蹤 `dev` 且每次推送自動部署。文件將其定位改為「只驗證 Netlify 特有行為(header／redirects)」,並註明要真正停止自動部署須改 Netlify site settings,需 Bar 另行裁定。明確保留「Pages 驗收通過不等於正式 Release」。
+- **backlog #5 未移至 `done.md`**:依實測,iOS PWA 安裝與 iOS 離線重開尚無證據,不符移入 done 的條件。改寫為「GitHub Pages 已啟用,待完成最終真機驗收」,並分列已完成與待完成項目。編號維持 #5,未重新編號其餘項目。`tasks/done.md` 本批未修改。
+- **附帶更正一則先前的錯誤陳述**:本 session 稍早曾以 `12_DEV_WORKFLOW.md` 為據,向 Bar 表示「push `dev` 不會觸發 Netlify 部署」。該說法錯誤 —— `16_OPS_PLAYBOOK.md` §E 早已載明測試站追蹤 `dev` 且每次推送自動部署,實測亦確認。這正是 Netlify 額度持續消耗的來源。特此留痕。
+- 驗證:`node tools/check-doc-titles.js` 通過;`git diff --check` 無空白錯誤;完整 45／45 Node tests 仍通過(本批未動程式,作為未誤觸的佐證)。
 ## 2026-07-26｜採買清單後續修正：單筆記帳入口、待買批次刪除與結構化數量（dev，SW v62，待 Bar 真機驗收）
 - **補回單筆記帳入口（修 B 批的接線缺口）**：B 批移除「完成後強制詢問記帳」的三選一 Modal 時，連帶移除了 `openShoppingLedgerEntry()` 的**唯一呼叫者**，該函式變成沒有 UI 入口的死碼。裁定只取消「每次完成都強制詢問」，**沒有**取消單筆記帳。入口改掛在已買項目列，直接接回既有函式（含既有 preflight、單筆 prefill、`sourceShoppingItemIds=[item.id]`、金額 focus 與成功後回寫），未另造流程。顯示規則：`unlinked` 顯示「記帳」、`linked` 顯示「重新開放記帳」、`unverified` 兩者都不給（必須阻擋再次記帳），一律走共用 resolver 判斷，不以 `ledgerLinks.length` 判斷。**未恢復完成後 Modal。**
 - **待買頁多選加入批次刪除**：接用既有 `deleteSelectedShoppingItems()`／`removeMany()`，不另造平行刪除流程。工具列文案由過長的「建立多品項消費」縮短為「記帳」，並改為兩列版面（第一列計數、第二列三顆等寬動作）——320px 硬擠四欄會犧牲 tap target，實測兩列版在 320px 按鈕高 49px、無水平捲動。刪除確認將 `linked` 與 `unverified` **分別計數**：前者說明「刪除採買項目不會刪除原本的消費紀錄」，後者說明「不會嘗試修改或刪除帳本紀錄」——待確認的項目我們無法證明帳本紀錄存在，不能混進「已建立消費紀錄」一起講。
