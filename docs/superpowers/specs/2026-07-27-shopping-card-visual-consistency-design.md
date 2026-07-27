@@ -152,6 +152,7 @@
 - 待買與已買卡都改用獨立 selection checkbox，初始為空。
 - selection checkbox 的 `checked` 只讀 `shoppingUiState.selected[item.id]`，不讀 `item.done`。
 - 點 selection checkbox 或卡片 body 都只呼叫選取切換，不改 `done`、不開明細。
+- 多選模式隱藏卡片列上的「部分購買」／「記帳」與 `⋯`，避免卡片同時出現單筆與批次兩套操作；相關動作只由底部工具列提供。
 - 已買卡在多選模式不再顯示藍色完成勾選；所在的「已買」分頁與卡片狀態 badge 已足以表達完成狀態。
 - 取消多選或切換待買／已買分頁時，沿用既有流程清空 `shoppingUiState.selected`；離開多選後恢復一般完成 checkbox。
 - 已買項目的批次「移回待買」只能在選取項目後由工具列明確執行。
@@ -221,6 +222,7 @@
 - 兩顆底部按鈕同行，單顆時仍滿寬。
 - 待買與已買進入多選後都輸出 selection checkbox，且其 checked 狀態只依 `shoppingUiState.selected`。
 - 已買多選的 checkbox 不得直接觸發 `toggleShoppingItemDone()`。
+- 多選模式不得輸出列上「部分購買」／「記帳」或 `⋯`。
 - 選取數量為 0 時只輸出「請選擇項目」，不輸出 disabled 批次按鈕。
 - 選取數量大於 0 時輸出單行 `已選 N` 與三顆等寬按鈕，文案不含「項」。
 - 工具列按鈕禁止換行，舊的 `.shopping-selection-toolbar-stacked` 不再控制版面。
