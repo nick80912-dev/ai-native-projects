@@ -171,19 +171,38 @@ assert.strictEqual(appended.length,3,'再次記帳 append 新 link');
 assert.strictEqual(appended[1].releasedAt,NOW,'append 後舊 released link 完整保留');
 assert.strictEqual(appended[2].recordId,'r-new','最後一個 link 才是目前關聯');
 
-/* ================= 多品項 source → record mapping ================= */
+/* ================= allocation source → record mapping ================= */
 const recA={id:'rec-a',batchId:'batch-9'},recB={id:'rec-b',batchId:'batch-9'},recC={id:'rec-c',batchId:'batch-9'};
-const planOk=mod.buildShoppingLedgerLinkPlan(['s-a','s-b','s-c'],[recA,recB,recC],{track:'shared',testMode:false,linkedAt:NOW});
+const sources=[
+  {shoppingItemId:'s-a',allocationId:'a-1'},
+  {shoppingItemId:'s-a',allocationId:'a-2'},
+  {shoppingItemId:'s-b',allocationId:'b-1'}
+];
+const planOk=mod.planShoppingLedgerLinks(sources,[recA,recB,recC],{track:'shared',testMode:false,batchId:'batch-9'},NOW);
 assert.strictEqual(planOk.ok,true,'數量一致時交握成立');
-assert.deepStrictEqual(planOk.links.map(entry=>[entry.shoppingItemId,entry.link.recordId]),[['s-a','rec-a'],['s-b','rec-b'],['s-c','rec-c']],'每個 Shopping Item 只保存自己那一筆 recordId');
+assert.deepStrictEqual(plain(planOk.links.map(entry=>[entry.shoppingItemId,entry.allocationId,entry.link.recordId])),[
+  ['s-a','a-1','rec-a'],['s-a','a-2','rec-b'],['s-b','b-1','rec-c']
+],'每個 allocation 只保存自己那一筆 recordId');
 assert.deepStrictEqual(planOk.links.map(entry=>entry.link.batchId),['batch-9','batch-9','batch-9'],'多品項共用同一 batchId');
 planOk.links.forEach(entry=>assert(!Array.isArray(entry.link.recordId),'link 不保存整批 recordIds'));
-const planMismatch=mod.buildShoppingLedgerLinkPlan(['s-a','s-b','s-c'],[recA,recB],{track:'shared',testMode:false,linkedAt:NOW});
+const planMismatch=mod.planShoppingLedgerLinks(sources,[recA,recB],{track:'shared',testMode:false},NOW);
 assert.strictEqual(planMismatch.ok,false,'數量不一致視為交握錯誤');
 assert.strictEqual(planMismatch.links.length,0,'交握錯誤不得部分回寫');
 assert(/對應/.test(planMismatch.error),'交握錯誤有可顯示的原因');
-assert.strictEqual(mod.buildShoppingLedgerLinkPlan(['s-a','s-a'],[recA,recB],{track:'shared',testMode:false,linkedAt:NOW}).ok,false,'重複的 source id 視為交握錯誤');
-assert.strictEqual(mod.buildShoppingLedgerLinkPlan([],[recA],{track:'shared',testMode:false,linkedAt:NOW}).ok,false,'沒有 source 就不建立 link');
+assert.strictEqual(mod.planShoppingLedgerLinks([
+  {shoppingItemId:'s-a',allocationId:'a-1'},
+  {shoppingItemId:'s-a',allocationId:'a-1'}
+],[recA,recB],{track:'shared',testMode:false},NOW).ok,false,'重複的 composite source 視為交握錯誤');
+assert.strictEqual(mod.planShoppingLedgerLinks([{shoppingItemId:'s-a',allocationId:''}],[recA],{track:'shared',testMode:false},NOW).ok,false,'缺 allocationId 拒絕');
+assert.strictEqual(mod.planShoppingLedgerLinks([],[recA],{track:'shared',testMode:false},NOW).ok,false,'沒有 source 就不建立 link');
+const proxyPrefill=plain(mod.shoppingLedgerPrefillForAllocation(
+  {id:'s',name:'白桃',category:'伴手禮',unit:'盒'},
+  {allocationId:'a',target:'阿寶',quantity:2,ledgerLinks:[]}
+));
+assert.strictEqual(proxyPrefill.category,'購物');
+assert.strictEqual(proxyPrefill.isProxy,true);
+assert.strictEqual(proxyPrefill.proxyTarget,'阿寶');
+assert.match(proxyPrefill.note,/數量：2 盒/);
 
 /* ================= store:原子 link 回寫 ================= */
 function freshStore(){
@@ -203,6 +222,27 @@ let writes=0;
 const countingStorage=Object.create(linkCase.storage);
 assert.throws(()=>linkCase.store.applyLedgerLinks([{shoppingItemId:'missing',link:{track:'personal',testMode:false,recordId:'r',batchId:'',linkedAt:NOW}}]),/找不到/,'目標不存在時整批拒絕');
 assert.deepStrictEqual(linkCase.store.all().map(entry=>entry.allocations[0].ledgerLinks.length),[1,1],'整批拒絕後資料完全未變');
+const allocationLinkCase=freshStore();
+const allocationLinkItem=allocationLinkCase.store.add({name:'多人',targets:['阿寶','媽媽'],quantity:1});
+allocationLinkCase.store.applyLedgerLinks([{
+  shoppingItemId:allocationLinkItem.id,
+  allocationId:allocationLinkItem.allocations[1].allocationId,
+  link:{track:'personal',testMode:false,recordId:'rec-mom',batchId:'',linkedAt:NOW}
+}]);
+assert.deepStrictEqual(plain(allocationLinkCase.store.all()[0].allocations.map(value=>value.ledgerLinks.length)),[0,1],'只回寫指定 allocation');
+assert.throws(()=>allocationLinkCase.store.applyLedgerLinks([{
+  shoppingItemId:allocationLinkItem.id,allocationId:'missing',
+  link:{track:'personal',testMode:false,recordId:'rec-x',batchId:'',linkedAt:NOW}
+}]),/採買分配/);
+assert.throws(()=>allocationLinkCase.store.applyLedgerLinks([
+  {shoppingItemId:allocationLinkItem.id,allocationId:allocationLinkItem.allocations[0].allocationId,link:{track:'personal',testMode:false,recordId:'rec-1',batchId:'',linkedAt:NOW}},
+  {shoppingItemId:allocationLinkItem.id,allocationId:allocationLinkItem.allocations[0].allocationId,link:{track:'personal',testMode:false,recordId:'rec-2',batchId:'',linkedAt:NOW}}
+]),/重複/,'同批不得重複回寫同一 composite source');
+const releasedAllocationItem=allocationLinkCase.store.releaseLedgerLink(
+  allocationLinkItem.id,allocationLinkItem.allocations[1].allocationId,NOW
+);
+assert.strictEqual(releasedAllocationItem.allocations[1].ledgerLinks[0].releasedAt,NOW,'只解除指定 allocation 的 active link');
+assert.deepStrictEqual(plain(releasedAllocationItem.allocations[0].ledgerLinks),[],'其他 allocation 不受解除操作影響');
 
 /* ================= 部分購買拆分 ================= */
 const splitCase=freshStore();
@@ -340,7 +380,7 @@ assert.strictEqual(v6Legacy.legacyQtyText,'約 3～5 個','v6 round-trip 不丟�
 
 /* ================= 原始碼契約 ================= */
 assert(!/status\s*:\s*['"](linked|unlinked|unverified)['"]/.test(html),'不得持久化 UI 狀態字串');
-assert(html.includes('sourceShoppingItemIds'),'draft 以 ephemeral state 追蹤來源 Shopping IDs');
+assert(html.includes('sourceShoppingItemId')&&html.includes('sourceShoppingAllocationId'),'draft 以 composite ephemeral state 追蹤 Shopping allocation 來源');
 const recordShape=html.slice(html.indexOf('function buildLedgerExpenseRecords('),html.indexOf('function ledgerClientCreatedAt('));
 assert(!recordShape.includes('sourceShoppingItemId'),'來源 IDs 不得進入 Ledger record');
 assert(!recordShape.includes('ledgerLink'),'Ledger record 不得帶 Shopping link');
@@ -361,12 +401,12 @@ assert(/刪除採買項目不會嘗試修改或刪除帳本紀錄/.test(shopping
 assert(/if\(state==='linked'\)linked\+\+;else if\(state==='unverified'\)unverified\+\+/.test(shoppingSource),'linked 與 unverified 分別計數');
 assert(shoppingSource.includes('removeMany('),'批次刪除走原子整批路徑');
 assert(!shoppingSource.includes('清空所有已買'),'本批不新增清空已買的危險入口');
-/* preflight 走共用純函式 */
-assert(shoppingSource.includes('shoppingBatchLedgerPreflight(selected,shoppingLedgerContext())'),'多選建立消費前整批 preflight');
-assert(shoppingSource.includes('shoppingBatchLedgerPreflight([item],shoppingLedgerContext())'),'單筆記帳入口同樣 preflight');
+/* preflight 走共用 allocation source helper */
+assert(shoppingSource.includes('shoppingLedgerSources(selected,shoppingLedgerContext())'),'多選建立消費前展開未記帳 allocations');
+assert(shoppingSource.includes('shoppingLedgerSources([item],shoppingLedgerContext())'),'單筆記帳入口同樣展開 allocations');
 const singleEntry=html.slice(html.indexOf('function openShoppingLedgerEntry(id)'),html.indexOf('function completeSelectedShopping('));
-assert(singleEntry.includes('sourceShoppingItemIds=[item.id]'),'單筆記帳的來源只有一個 ID');
-assert(singleEntry.includes('shoppingLedgerSinglePrefill(item)'),'沿用既有單筆 prefill,不另造流程');
+assert(singleEntry.includes('openShoppingLedgerSourcesEntry(sources)'),'單筆入口依 allocation 數決定單筆或多品項表單');
+assert(shoppingSource.includes('sourceShoppingAllocationId=source.allocationId'),'單筆 draft 保存 allocationId');
 /* 結構化數量:表單與拆分都不得再出現自由文字數量輸入 */
 assert(shoppingSource.includes('id="shoppingQuantity"')&&shoppingSource.includes('type="number"'),'數量改為數字輸入');
 assert(shoppingSource.includes('inputmode="numeric"')&&shoppingSource.includes('min="1"')&&shoppingSource.includes('step="1"'),'數量輸入使用數字鍵盤與整數步進');
@@ -383,12 +423,12 @@ assert(!/ledgerLinks\.length\s*>\s*0/.test(shoppingSource),'不得只用 ledgerL
 /* 操作名稱維持簡短,「帳本不受影響」放在確認視窗;原生 confirm() 的按鈕文案不可自訂,故用自訂視窗。 */
 assert(shoppingSource.includes('>改回未記帳</button>'),'選單與確認視窗都用「改回未記帳」');
 assert(shoppingSource.includes('<h3 id="shoppingReleaseTitle">改回未記帳？</h3>'),'確認視窗標題為核准文案');
-assert(shoppingSource.includes('只會移除這個採買項目的「已記帳」標記，不會刪除或修改帳本中的消費紀錄。'),'確認視窗說明帳本不受影響');
+assert(shoppingSource.includes('只會移除採買這一側的「已記帳」標記，不會刪除或修改帳本中的消費紀錄。'),'確認視窗說明帳本不受影響');
 assert(shoppingSource.includes('若帳本中的原紀錄仍在，再次記帳可能產生重複消費。'),'確認視窗把重複入帳的風險一併說完整');
 assert(/shoppingReleaseDialog[\s\S]{0,700}>取消<\/button>[\s\S]{0,200}>改回未記帳<\/button>/.test(shoppingSource),'確認視窗提供取消,且取消排在確認之前');
 assert(!/confirm\('這只會解除/.test(shoppingSource),'不再使用按鈕文案不可自訂的原生 confirm');
 assert(shoppingSource.includes("overlay.className='shopping-choice-overlay'"),'沿用既有 z-index 160 的對話框樣式,未新增 CSS');
-assert(/if\(!activeShoppingLedgerLink\(item\)\)\{toast/.test(shoppingSource),'沒有 active link 時不提供解除');
+assert(shoppingSource.includes('activeShoppingLedgerLink(selected)'),'沒有 active allocation link 時不提供解除');
 /* 部分購買 */
 assert(shoppingSource.includes('function startShoppingSplit('),'提供部分買到入口');
 assert(shoppingSource.includes('canSplitShoppingItem(item,shoppingLedgerContext())'),'拆分前檢查記帳狀態');
@@ -398,7 +438,7 @@ assert(!/系統不會自動計算剩餘數量/.test(shoppingSource),'舊的「�
 assert(!/parseInt|parseFloat|Number\(form\.(purchasedQty|remainderQty)/.test(shoppingSource),'不解析自由文字數量');
 assert(shoppingSource.includes('shoppingListStore.split('),'拆分走 store 的原子操作');
 /* 交握與回寫 */
-const handoff=html.slice(html.indexOf('function shoppingLinkSourceIds('),html.indexOf('function commitLedgerEntrySave('));
+const handoff=html.slice(html.indexOf('function shoppingLinkSourceRefs('),html.indexOf('function commitLedgerEntrySave('));
 assert(handoff.includes('submissionDraft.items'),'多品項以送出用 items 對應,不用 UI index');
 assert(handoff.includes('shoppingListStore.applyLedgerLinks(plan.links)'),'回寫走單次原子 store write');
 assert(/消費已建立，但採買項目的記帳標記更新失敗。請避免再次記帳，並重新開啟採買清單確認。/.test(handoff),'回寫失敗顯示核准降級文案');

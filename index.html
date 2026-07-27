@@ -3125,24 +3125,19 @@ function toggleShoppingItemDone(id,done){
 }
 function openShoppingLedgerEntry(id){
   var item=shoppingListStore.all().filter(function(value){return value.id===String(id);})[0];if(!item)return;
-  var preflight=shoppingBatchLedgerPreflight([item],shoppingLedgerContext());
-  if(!preflight.ok){toast(preflight.error);return;}
-  var seed=shoppingLedgerSinglePrefill(item);closeShoppingList();ledgerUiState.track='personal';openLedgerEntrySheet(false);
-  if(!document.getElementById('ledgerEntrySheet')||!ledgerUiState.draft)return;
-  Object.keys(seed).forEach(function(key){ledgerUiState.draft[key]=seed[key];});
-  /* 來源 IDs 只是 draft 上的 ephemeral state,不進 Ledger 21 欄、不送 Apps Script、不入 Sheet。 */
-  ledgerUiState.draft.sourceShoppingItemIds=[item.id];
-  ledgerUiState.draft.detailsPanelOpen=!!seed.note;renderLedgerEntrySheet();
-  requestAnimationFrame(function(){var amount=document.getElementById('ledgerAmount');if(amount)try{amount.focus({preventScroll:true});}catch(ignore){amount.focus();}});
+  var sources=shoppingLedgerSources([item],shoppingLedgerContext());
+  if(sources.unverifiedCount){toast('記帳狀態尚待確認，請先完成同步或重新確認');return;}
+  if(!sources.length){toast('這筆採買目前沒有未記帳對象');return;}
+  openShoppingLedgerSourcesEntry(sources);
 }
 function completeSelectedShopping(openLedger){
   var selectedIds=Object.keys(shoppingUiState.selected).filter(function(id){return shoppingUiState.selected[id];});
   var selected=shoppingListStore.all().filter(function(item){return selectedIds.indexOf(item.id)>=0;});
   if(!selected.length)return;
   if(openLedger){
-    /* 整批 preflight:含已記帳或待確認一律阻擋,不自動略過、不縮小使用者的選取範圍。 */
-    var preflight=shoppingBatchLedgerPreflight(selected,shoppingLedgerContext());
-    if(!preflight.ok){toast(preflight.error);return;}
+    var sources=shoppingLedgerSources(selected,shoppingLedgerContext());
+    if(sources.unverifiedCount){toast('其中 '+sources.unverifiedCount+' 位對象的記帳狀態尚待確認，請先完成同步或重新確認');return;}
+    if(!sources.length){toast('選取項目目前沒有未記帳對象');return;}
   }
   var pending=selected.filter(function(item){return !item.done;});
   if(pending.length){
@@ -3155,17 +3150,35 @@ function completeSelectedShopping(openLedger){
   openShoppingMultiLedgerEntry(selected);
 }
 function openShoppingMultiLedgerEntry(items){
-  var seeds=shoppingLedgerMultiPrefill(items);closeShoppingList();ledgerUiState.track='personal';openLedgerEntrySheet(false);
+  var sources=shoppingLedgerSources(items,shoppingLedgerContext());
+  if(sources.unverifiedCount){toast('記帳狀態尚待確認，請先完成同步或重新確認');return;}
+  if(!sources.length){toast('選取項目目前沒有未記帳對象');return;}
+  openShoppingLedgerSourcesEntry(sources);
+}
+function openShoppingLedgerSourcesEntry(sources){
+  if(sources.length===1){
+    var source=sources[0],seed=shoppingLedgerPrefillForAllocation(source.item,source.allocation);
+    closeShoppingList();ledgerUiState.track='personal';openLedgerEntrySheet(false);
+    if(!document.getElementById('ledgerEntrySheet')||!ledgerUiState.draft)return;
+    Object.keys(seed).forEach(function(key){ledgerUiState.draft[key]=seed[key];});
+    /* 來源 IDs 只存在 draft,不進 Ledger 21 欄、不送 Apps Script、不入 Sheet。 */
+    ledgerUiState.draft.sourceShoppingItemId=source.shoppingItemId;
+    ledgerUiState.draft.sourceShoppingAllocationId=source.allocationId;
+    ledgerUiState.draft.detailsPanelOpen=!!seed.note;renderLedgerEntrySheet();
+    requestAnimationFrame(function(){var amount=document.getElementById('ledgerAmount');if(amount)try{amount.focus({preventScroll:true});}catch(ignore){amount.focus();}});
+    return;
+  }
+  var seeds=shoppingLedgerMultiPrefill(sources);closeShoppingList();ledgerUiState.track='personal';openLedgerEntrySheet(false);
   var draft=ledgerUiState.draft;if(!document.getElementById('ledgerEntrySheet')||!draft)return;
   draft.multi=true;draft.category='購物';draft.categoryApply='購物';
-  /* 逐項把來源 shopping id 綁在 draft item 上;送出時以 submissionItems 的順序對應,
+  /* 逐項把 Shopping item＋allocation ID 綁在 draft item 上;送出時以 submissionItems 的順序對應,
      不依賴可能被使用者刪除、新增或重排的 UI index。 */
   draft.items=seeds.map(function(seed,index){
+    seed.sourceShoppingItemId=sources[index]?sources[index].shoppingItemId:'';
+    seed.sourceShoppingAllocationId=sources[index]?sources[index].allocationId:'';
     var item=createLedgerDraftItem(draft,seed);
-    item.sourceShoppingItemId=items[index]?items[index].id:'';
     return item;
   });
-  draft.sourceShoppingItemIds=items.map(function(item){return item.id;});
   renderLedgerEntrySheet();
   requestAnimationFrame(function(){var store=document.getElementById('ledgerStoreName');if(store)try{store.focus({preventScroll:true});}catch(ignore){store.focus();}});
 }
@@ -3189,8 +3202,8 @@ function shoppingLedgerContext(){
     shared:{ready:sharedReady,records:sharedRecords}
   };
 }
-var SHOPPING_LINK_STATE_LABEL={linked:'已記帳',unverified:'記帳狀態待確認',unlinked:'未記帳'};
-function shoppingItemLinkState(item){return resolveShoppingLedgerLinkState(item,shoppingLedgerContext());}
+var SHOPPING_LINK_STATE_LABEL={linked:'已記帳',partial:'部分記帳',unverified:'記帳狀態待確認',unlinked:'未記帳'};
+function shoppingItemLinkState(item){return shoppingItemLinkSummary(item,shoppingLedgerContext());}
 function moveSelectedShoppingBackToPending(){
   var selected=shoppingListStore.all().filter(function(item){return item.done&&shoppingUiState.selected[item.id];});
   if(!selected.length)return;
@@ -3223,28 +3236,33 @@ function deleteSelectedShoppingItems(){
    操作名稱維持簡短,「帳本不受影響」由確認視窗負責說明 —— 資訊層級比全塞進選單名稱自然。
    用自訂視窗而非原生 confirm(),因為原生視窗的按鈕文案不可自訂;沿用既有的
    .shopping-choice-overlay(z-index 160,高於採買 overlay 的 145),不新增 CSS。 */
-var shoppingReleaseTargetId='';
-function releaseShoppingLedgerLink(id){
+var shoppingReleaseTarget={itemId:'',allocationId:''};
+function releaseShoppingLedgerLink(id,allocationId){
   var item=shoppingListStore.all().filter(function(value){return value.id===String(id);})[0];if(!item)return;
-  if(!activeShoppingLedgerLink(item)){toast('這筆目前沒有記帳關聯');return;}
+  var context=shoppingLedgerContext();
+  var linked=shoppingItemAllocations(item).filter(function(allocation){
+    return resolveShoppingLedgerLinkState(allocation,context).state==='linked';
+  });
+  var selected=allocationId?linked.filter(function(allocation){return allocation.allocationId===String(allocationId);})[0]:null;
+  if(!selected&&linked.length===1)selected=linked[0];
+  if(!selected&&linked.length>1){toast('請從採買詳情選擇要改回未記帳的對象');return;}
+  if(!selected||!activeShoppingLedgerLink(selected)){toast('這筆目前沒有記帳關聯');return;}
   closeShoppingReleaseConfirm();
-  shoppingReleaseTargetId=String(id);
+  shoppingReleaseTarget={itemId:String(id),allocationId:selected.allocationId};
+  var target=String(selected.target||'').trim();
   var overlay=document.createElement('div');overlay.id='shoppingReleaseDialog';overlay.className='shopping-choice-overlay';
-  overlay.innerHTML='<section class="shopping-choice-panel" role="dialog" aria-modal="true" aria-labelledby="shoppingReleaseTitle"><h3 id="shoppingReleaseTitle">改回未記帳？</h3><p>只會移除這個採買項目的「已記帳」標記，不會刪除或修改帳本中的消費紀錄。</p><p class="shopping-release-risk">若帳本中的原紀錄仍在，再次記帳可能產生重複消費。</p><div class="shopping-form-actions"><button type="button" class="btn ghost" onclick="closeShoppingReleaseConfirm()">取消</button><button type="button" class="btn" onclick="confirmShoppingRelease()">改回未記帳</button></div></section>';
+  overlay.innerHTML='<section class="shopping-choice-panel" role="dialog" aria-modal="true" aria-labelledby="shoppingReleaseTitle"><h3 id="shoppingReleaseTitle">改回未記帳？</h3><p>'+(target?'「'+escapeHtml(target)+'」':'這個採買項目')+'只會移除採買這一側的「已記帳」標記，不會刪除或修改帳本中的消費紀錄。</p><p class="shopping-release-risk">若帳本中的原紀錄仍在，再次記帳可能產生重複消費。</p><div class="shopping-form-actions"><button type="button" class="btn ghost" onclick="closeShoppingReleaseConfirm()">取消</button><button type="button" class="btn" onclick="confirmShoppingRelease()">改回未記帳</button></div></section>';
   document.body.appendChild(overlay);
 }
 function closeShoppingReleaseConfirm(){
   var overlay=document.getElementById('shoppingReleaseDialog');if(overlay)overlay.remove();
-  shoppingReleaseTargetId='';
+  shoppingReleaseTarget={itemId:'',allocationId:''};
 }
 function confirmShoppingRelease(){
-  var id=shoppingReleaseTargetId;
-  var item=shoppingListStore.all().filter(function(value){return value.id===id;})[0];
+  var target=shoppingReleaseTarget;
   closeShoppingReleaseConfirm();
-  if(!item)return;
-  var next=releaseShoppingLedgerLinks(item.ledgerLinks,timestampDate(Date.now()).toISOString());
-  if(!next){toast('這筆目前沒有記帳關聯');return;}
-  try{shoppingListStore.update(item.id,{ledgerLinks:next});}
+  if(!target.itemId||!target.allocationId)return;
+  try{shoppingListStore.releaseLedgerLink(target.itemId,target.allocationId,timestampDate(Date.now()).toISOString());}
   catch(error){toast(error.message||'改回未記帳失敗');return;}
   renderShoppingListOverlay();toast('已改回未記帳，可重新建立消費');
 }
@@ -3570,6 +3588,60 @@ function buildShoppingLedgerLinkPlan(shoppingItemIds,records,context){
     });
   }catch(error){return {ok:false,links:[],error:error.message||'記帳關聯格式錯誤'};}
   return {ok:true,links:links,error:''};
+}
+function planShoppingLedgerLinks(sourceRefs,records,submissionDraft,now){
+  var ctx=submissionDraft||{},sources=(sourceRefs||[]).map(function(source){
+    return {
+      shoppingItemId:String(source&&source.shoppingItemId||'').trim(),
+      allocationId:String(source&&source.allocationId||'').trim()
+    };
+  });
+  var list=records||[],seen={},invalid=false;
+  sources.forEach(function(source){
+    var key=source.shoppingItemId+'\n'+source.allocationId;
+    if(!source.shoppingItemId||!source.allocationId||seen[key])invalid=true;
+    seen[key]=true;
+  });
+  if(!sources.length||!list.length)return {ok:false,links:[],error:'沒有可對應的採買來源'};
+  if(invalid||sources.length!==list.length)return {ok:false,links:[],error:'採買來源與消費紀錄無法一一對應'};
+  var linkedAt=shoppingTimestampField(now,'記帳關聯',true),links;
+  try{
+    links=sources.map(function(source,index){
+      var record=list[index]||{};
+      return {
+        shoppingItemId:source.shoppingItemId,
+        allocationId:source.allocationId,
+        link:normalizeShoppingLedgerLink({
+          track:ctx.track,
+          testMode:ctx.testMode===true,
+          recordId:record.id,
+          batchId:record.batchId||ctx.batchId||'',
+          linkedAt:linkedAt
+        })
+      };
+    });
+  }catch(error){return {ok:false,links:[],error:error.message||'記帳關聯格式錯誤'};}
+  return {ok:true,links:links,error:''};
+}
+function shoppingLedgerSources(items,context){
+  var sources=[],linked=0,unverified=0;
+  (items||[]).forEach(function(item){
+    shoppingItemAllocations(item).forEach(function(allocation){
+      var state=resolveShoppingLedgerLinkState(allocation,context).state;
+      if(state==='linked'){linked++;return;}
+      if(state==='unverified'){unverified++;return;}
+      sources.push({
+        shoppingItemId:item.id,
+        allocationId:allocation.allocationId,
+        item:item,
+        allocation:allocation
+      });
+    });
+  });
+  sources.linkedCount=linked;
+  sources.unverifiedCount=unverified;
+  sources.total=sources.length+linked+unverified;
+  return sources;
 }
 /* 已買頁多選 preflight:整批全 unlinked 才放行,不得自動略過或縮小使用者的選取範圍。 */
 function shoppingBatchLedgerPreflight(items,context){
@@ -4049,7 +4121,18 @@ function createShoppingListStore(options){
   /* 一次原子回寫多筆 link:全部成功或完全不動。逐筆 update() 會在中途失敗時
      留下「一半標成已記帳」的狀態,那正是最容易導致重複入帳的情境。 */
   function applyLedgerLinks(entries){
-    var list=entries||[],current=all(),byId={};
+    var list=(entries||[]).map(function(entry){
+      return {
+        shoppingItemId:String(entry&&entry.shoppingItemId||''),
+        allocationId:String(entry&&entry.allocationId||'').trim(),
+        link:normalizeShoppingLedgerLink(entry&&entry.link)
+      };
+    }),current=all(),byId={},seen={};
+    list.forEach(function(entry){
+      var key=entry.shoppingItemId+'\n'+entry.allocationId;
+      if(seen[key])throw new Error('採買記帳關聯目標重複');
+      seen[key]=true;
+    });
     current.forEach(function(item,index){byId[item.id]=index;});
     var next=current.map(function(item){
       var copy={};Object.keys(item).forEach(function(field){copy[field]=item[field];});
@@ -4060,10 +4143,10 @@ function createShoppingListStore(options){
       return copy;
     });
     list.forEach(function(entry){
-      var id=String(entry&&entry.shoppingItemId||''),index=byId[id];
+      var id=entry.shoppingItemId,index=byId[id];
       if(index===undefined)throw new Error('找不到採買項目：'+id);
       var allocations=next[index].allocations;
-      var allocationId=String(entry&&entry.allocationId||'').trim();
+      var allocationId=entry.allocationId;
       var allocationIndex=-1;
       allocations.forEach(function(allocation,position){
         if(allocationId&&allocation.allocationId===allocationId)allocationIndex=position;
@@ -4073,6 +4156,25 @@ function createShoppingListStore(options){
       allocations[allocationIndex].ledgerLinks=appendShoppingLedgerLink(allocations[allocationIndex].ledgerLinks,entry.link);
     });
     return write(next);
+  }
+  function releaseLedgerLink(itemId,allocationId,at){
+    var current=all(),updated=null;
+    var next=current.map(function(item){
+      if(item.id!==String(itemId))return item;
+      var found=false,copy=Object.assign({},item);
+      copy.allocations=shoppingItemAllocations(item).map(function(allocation){
+        if(allocation.allocationId!==String(allocationId))return allocation;
+        found=true;
+        var links=releaseShoppingLedgerLinks(allocation.ledgerLinks,at);
+        if(!links)throw new Error('這位對象目前沒有記帳關聯');
+        return Object.assign({},allocation,{ledgerLinks:links});
+      });
+      if(!found)throw new Error('找不到採買分配：'+allocationId);
+      updated=copy;return copy;
+    });
+    if(!updated)throw new Error('找不到採買項目：'+itemId);
+    var saved=write(next);
+    return saved.filter(function(item){return item.id===String(itemId);})[0];
   }
   /* 批次移回待買／解除連結也走同一條原子路徑。 */
   function patchMany(patches){
@@ -4104,7 +4206,7 @@ function createShoppingListStore(options){
     var saved=write(next);
     return {purchased:saved[index],remainder:parts.remainder?saved[index+1]:null};
   }
-  return {all:all,add:add,update:update,remove:remove,removeMany:removeMany,replace:replace,normalize:normalize,applyLedgerLinks:applyLedgerLinks,patchMany:patchMany,split:split};
+  return {all:all,add:add,update:update,remove:remove,removeMany:removeMany,replace:replace,normalize:normalize,applyLedgerLinks:applyLedgerLinks,releaseLedgerLink:releaseLedgerLink,patchMany:patchMany,split:split};
 }
 function shoppingStopName(item){return String(item&&item.place||item&&item.act||'行程站點').trim()||'行程站點';}
 /* ---- 採買站點排名:待買頁與 Today 提醒的唯一排序來源 ----
@@ -4175,14 +4277,42 @@ function shoppingLedgerNote(item){
   if(String(item&&item.buyFor||'').trim())parts.push('幫誰買：'+String(item.buyFor).trim());
   return parts.join(' · ');
 }
-function shoppingLedgerSinglePrefill(item){
+function shoppingLedgerPrefillForAllocation(item,allocation){
+  var target=String(allocation&&allocation.target||'').trim();
+  var amount=shoppingQuantityLabel({
+    quantity:allocation&&allocation.quantity,
+    unit:item&&item.unit,
+    legacyQtyText:item&&item.legacyQtyText
+  });
+  return {
+    detail:String(item&&item.name||'').trim(),
+    name:String(item&&item.name||'').trim(),
+    amount:'',
+    category:'購物',
+    note:amount?'數量：'+amount:'',
+    isProxy:!!target,
+    proxyTarget:target
+  };
+}
+function shoppingLedgerSinglePrefill(item,allocation){
+  var selected=allocation||shoppingItemAllocations(item)[0];
+  if(selected)return shoppingLedgerPrefillForAllocation(item,selected);
   var proxy=String(item&&item.category||'')==='代購'&&!!String(item&&item.buyFor||'').trim();
   return {detail:String(item&&item.name||'').trim(),amount:'',category:'購物',note:shoppingLedgerNote(item),isProxy:proxy,proxyTarget:proxy?String(item.buyFor).trim():''};
 }
-function shoppingLedgerMultiPrefill(items){
-  return (items||[]).map(function(item){
-    var single=shoppingLedgerSinglePrefill(item);
-    return {name:single.detail,amount:'',category:single.category,isProxy:single.isProxy,proxyTarget:single.proxyTarget};
+function shoppingLedgerMultiPrefill(sources){
+  var expanded=[];
+  (sources||[]).forEach(function(source){
+    if(source&&source.item&&source.allocation){expanded.push(source);return;}
+    var allocations=shoppingItemAllocations(source);
+    if(allocations.length)allocations.forEach(function(allocation){expanded.push({item:source,allocation:allocation});});
+    else expanded.push({item:source,allocation:null});
+  });
+  return expanded.map(function(source){
+    var single=shoppingLedgerSinglePrefill(source.item,source.allocation);
+    var result={name:single.detail,amount:'',category:single.category,isProxy:single.isProxy,proxyTarget:single.proxyTarget};
+    if(source.allocation)result.note=single.note;
+    return result;
   });
 }
 
@@ -4846,7 +4976,7 @@ function buildLedgerExpenseRecords(draft,context){
     var record={
       id:createLedgerId(now+index+1,random),time:ledgerOccurrenceIso(draft.occurredDate,draft.occurredTime),member:member,
       category:category,detail:name,amountJpy:calculatedItem.amountJpy,amountTwd:calculatedItem.amountTwd,
-      note:String(draft.note||'').trim(),payMethod:String(draft.payMethod||'').trim(),batchId:batchId,
+      note:String(item.note===undefined?draft.note:item.note||'').trim(),payMethod:String(draft.payMethod||'').trim(),batchId:batchId,
       storeName:String(draft.storeName||'').trim(),replacesRecordId:String(draft.replacesRecordId||'').trim(),
       inputCurrency:draft.currency,isTaxFree:!!item.taxExempt,priceMode:draft.priceMode,taxRate:taxRate,couponAmount:calculatedItem.couponAmount
     };
@@ -6440,7 +6570,7 @@ function updateLedgerChoiceState(selector,value){
 }
 function createLedgerDraftItem(draft,seed){
   seed=seed||{};
-  return {key:'item-'+Math.random().toString(36).slice(2,10)+'-'+Math.random().toString(36).slice(2,7),name:String(seed.name||seed.detail||''),amount:String(seed.amount||''),category:String(seed.category||draft.categoryApply||draft.category||ledgerCategoryStore.all()[0]||''),categoryManuallyAdjusted:!!seed.categoryManuallyAdjusted,categoryOpen:!!seed.categoryOpen,taxExempt:!!seed.taxExempt,proxyMode:'custom',isProxy:seed.isProxy===undefined?!!draft.isProxy:!!seed.isProxy,proxyTarget:String(seed.proxyTarget===undefined?(draft.proxyTarget||''):seed.proxyTarget),participantMode:'inherit',participants:(draft.participants||[]).slice(),sourceShoppingItemId:String(seed.sourceShoppingItemId||'')};
+  return {key:'item-'+Math.random().toString(36).slice(2,10)+'-'+Math.random().toString(36).slice(2,7),name:String(seed.name||seed.detail||''),amount:String(seed.amount||''),category:String(seed.category||draft.categoryApply||draft.category||ledgerCategoryStore.all()[0]||''),note:String(seed.note||''),categoryManuallyAdjusted:!!seed.categoryManuallyAdjusted,categoryOpen:!!seed.categoryOpen,taxExempt:!!seed.taxExempt,proxyMode:'custom',isProxy:seed.isProxy===undefined?!!draft.isProxy:!!seed.isProxy,proxyTarget:String(seed.proxyTarget===undefined?(draft.proxyTarget||''):seed.proxyTarget),participantMode:'inherit',participants:(draft.participants||[]).slice(),sourceShoppingItemId:String(seed.sourceShoppingItemId||''),sourceShoppingAllocationId:String(seed.sourceShoppingAllocationId||'')};
 }
 function ledgerDraftItem(key){var draft=ledgerUiState.draft;return draft&&(draft.items||[]).filter(function(item){return item.key===key;})[0];}
 function ledgerItemFieldId(key,field){var safeKey=String(key).replace(/[^a-zA-Z0-9_-]/g,'_');return (field==='amount'?'ledgerItemAmount_':'ledgerItemName_')+safeKey;}
@@ -6747,24 +6877,31 @@ function focusLedgerValidationError(validation){
    開表單、預填、切軌、驗證失敗一律不回寫。
    回寫是單次原子 store write:全部成功或全部不動 —— 一半標成已記帳正是重複入帳的溫床。
    Ledger 已存的事實不回滾,失敗只降級提示,絕不自動再建立一次消費。 */
-function shoppingLinkSourceIds(submissionDraft){
+function shoppingLinkSourceRefs(submissionDraft){
   if(!submissionDraft)return [];
   /* 多品項以「送出用 items」為準:使用者在表單裡刪掉的列不會產生 record,也不該被標成已記帳。
-     若使用者另外新增了不屬於採買清單的品項,該列沒有來源 id,交握即視為不一致而整批不回寫。 */
-  if(submissionDraft.multi)return (submissionDraft.items||[]).map(function(item){return String(item&&item.sourceShoppingItemId||'');});
-  return (submissionDraft.sourceShoppingItemIds||[]).slice();
+     若使用者另外新增了不屬於採買清單的品項,該列沒有完整 composite source,
+     交握即視為不一致而整批不回寫。 */
+  if(submissionDraft.multi)return (submissionDraft.items||[]).map(function(item){
+    return {
+      shoppingItemId:String(item&&item.sourceShoppingItemId||''),
+      allocationId:String(item&&item.sourceShoppingAllocationId||'')
+    };
+  });
+  var itemId=String(submissionDraft.sourceShoppingItemId||''),allocationId=String(submissionDraft.sourceShoppingAllocationId||'');
+  return itemId||allocationId?[{shoppingItemId:itemId,allocationId:allocationId}]:[];
 }
 function writeShoppingLedgerLinks(draft,submissionDraft,records,result){
-  var sourceIds=shoppingLinkSourceIds(submissionDraft);
-  if(!sourceIds.length||sourceIds.every(function(id){return !id;}))return;
+  var sourceRefs=shoppingLinkSourceRefs(submissionDraft);
+  if(!sourceRefs.length)return;
   var saved=(result&&Array.isArray(result.records)&&result.records.length?result.records:records)||[];
-  var plan=buildShoppingLedgerLinkPlan(sourceIds,saved,{
+  var plan=planShoppingLedgerLinks(sourceRefs,saved,{
     track:draft.track,
     testMode:draft.track==='shared'&&ledgerUniverseMode()==='test',
-    linkedAt:timestampDate(Date.now()).toISOString()
-  });
+    batchId:saved[0]&&saved[0].batchId
+  },timestampDate(Date.now()).toISOString());
   if(!plan.ok){
-    AppLog.repo('採買記帳關聯交握失敗：'+plan.error+'（來源 '+sourceIds.length+' 筆、紀錄 '+saved.length+' 筆）');
+    AppLog.repo('採買記帳關聯交握失敗：'+plan.error+'（來源 '+sourceRefs.length+' 筆、紀錄 '+saved.length+' 筆）');
     toast('消費已建立，但採買項目的記帳標記更新失敗。請避免再次記帳，並重新開啟採買清單確認。');
     return;
   }
