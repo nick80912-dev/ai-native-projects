@@ -35,43 +35,55 @@ function loadShoppingModule(){
 }
 
 const mod=loadShoppingModule();
+let allocationSeq=0;
 const store=mod.createShoppingListStore({
   storage:mod.localStorage,
   key:'trip_shopping_list',
   now(){return Date.parse('2026-07-23T08:00:00.000Z');},
-  idFactory(){return 'shopping-1';}
+  idFactory(){return 'shopping-1';},
+  allocationIdFactory(itemId){allocationSeq++;return itemId+'-allocation-'+allocationSeq;}
 });
 
 const added=plain(store.add({
   name:'  岡山白桃  ',
   category:'伴手禮',
-  qty:'2 盒',
-  buyFor:'媽媽',
+  quantity:2,
+  unit:'盒',
+  targets:['媽媽','阿寶'],
   stopRef:'10/18_3'
 }));
 assert.deepStrictEqual(added,{
   id:'shopping-1',
   name:'岡山白桃',
   category:'伴手禮',
-  quantity:2,
   unit:'盒',
   legacyQtyText:'',
-  buyFor:'媽媽',
+  allocations:[
+    {allocationId:'shopping-1-allocation-1',target:'媽媽',quantity:2,ledgerLinks:[]},
+    {allocationId:'shopping-1-allocation-2',target:'阿寶',quantity:2,ledgerLinks:[]}
+  ],
   stopRef:'10/18_3',
   done:false,
   createdAt:'2026-07-23T08:00:00.000Z',
   completedAt:'',
-  splitGroupId:'',
-  ledgerLinks:[]
+  splitGroupId:''
 },'add normalizes and persists the approved local-only fields');
+assert.strictEqual(Object.prototype.hasOwnProperty.call(added,'buyFor'),false);
+assert.strictEqual(Object.prototype.hasOwnProperty.call(added,'quantity'),false);
+assert.strictEqual(Object.prototype.hasOwnProperty.call(added,'ledgerLinks'),false);
 assert.deepStrictEqual(plain(store.all()),[added],'shopping items round-trip through localStorage');
 
-const updated=plain(store.update('shopping-1',{quantity:3,unit:'盒',done:true}));
-assert.strictEqual(updated.quantity,3);
+const updated=plain(store.update('shopping-1',{
+  allocations:added.allocations.map(value=>Object.assign({},value,{quantity:3})),
+  unit:'盒',
+  done:true
+}));
+assert.strictEqual(updated.allocations[0].quantity,3);
+assert.strictEqual(updated.allocations[1].quantity,3);
 assert.strictEqual(updated.unit,'盒');
 assert.strictEqual(updated.done,true);
 /* qty 已不是可寫入的資料來源:結構化數量存在時,舊 qty patch 不得覆蓋它。 */
-assert.strictEqual(plain(store.update('shopping-1',{qty:'99 箱'})).quantity,3,'legacy qty patch 不得改寫結構化數量');
+assert.strictEqual(plain(store.update('shopping-1',{qty:'99 箱'})).allocations[0].quantity,3,'legacy qty patch 不得改寫 allocation 數量');
 assert.strictEqual(plain(store.update('shopping-1',{qty:'99 箱'})).unit,'盒');
 assert.strictEqual(store.all().length,1,'update never duplicates an item');
 assert.throws(()=>store.add({name:'',category:'必買'}),/品名/,'name is the only required field');
@@ -101,9 +113,10 @@ assert.strictEqual(mod.buildShoppingTodayReminder([],null),null,'non-trip days n
 /* ================= 結構化數量:quantity／unit／legacyQtyText ================= */
 const QNOW='2026-10-20T04:00:00.000Z';
 const q=over=>mod.normalizeShoppingItem(Object.assign({id:'q1',name:'益生菌',createdAt:QNOW},over||{}));
-assert.strictEqual(q({quantity:5,unit:'罐'}).quantity,5,'新項目接受安全正整數');
+const allocationQuantity=item=>item.allocations[0].quantity;
+assert.strictEqual(allocationQuantity(q({quantity:5,unit:'罐'})),5,'新項目接受安全正整數');
 assert.strictEqual(q({quantity:5,unit:'罐'}).unit,'罐','單位獨立保存');
-assert.strictEqual(q({quantity:1,unit:''}).quantity,1,'quantity 1 合法');
+assert.strictEqual(allocationQuantity(q({quantity:1,unit:''})),1,'quantity 1 合法');
 assert.throws(()=>q({quantity:0}),/數量/,'quantity 0 拒絕');
 assert.throws(()=>q({quantity:-1}),/數量/,'quantity -1 拒絕');
 assert.throws(()=>q({quantity:1.5}),/數量/,'quantity 1.5 拒絕');
@@ -120,25 +133,50 @@ assert(/\^\\d\+\$\/\.test\(raw\)/.test(saveSource),'表單只接受純十進位�
 assert.strictEqual(q({quantity:3,unit:'　大　包 '}).unit,'大 包','單位正規化全形與連續空白');
 assert.throws(()=>q({quantity:3,unit:'一二三四五六七八九十一'}),/單位/,'單位過長拒絕');
 assert.strictEqual(q({quantity:5,unit:'罐',legacyQtyText:'約 3～5 個'}).legacyQtyText,'','轉換完成後清空 legacyQtyText');
-assert.strictEqual(q({quantity:null,legacyQtyText:'約 3～5 個'}).quantity,null,'legacy 模式允許 quantity null');
+assert.strictEqual(allocationQuantity(q({quantity:null,legacyQtyText:'約 3～5 個'})),null,'legacy 模式允許 quantity null');
 assert.strictEqual(q({quantity:null,legacyQtyText:'約 3～5 個'}).legacyQtyText,'約 3～5 個','legacy 原文完整保留');
-assert.strictEqual(q({}).quantity,null,'完全沒有數量的舊資料為 null');
+assert.strictEqual(allocationQuantity(q({})),null,'完全沒有數量的舊資料為 null');
 assert.strictEqual(q({}).legacyQtyText,'','完全沒有數量時 legacyQtyText 也是空的');
 assert.strictEqual(q({quantity:5,unit:'罐'}).qty,undefined,'正規化輸出不再保留可獨立修改的 qty 鏡像');
+assert.throws(()=>q({allocations:[
+  {allocationId:'a1',target:'阿寶',quantity:1,ledgerLinks:[]},
+  {allocationId:'a2',target:' 阿寶 ',quantity:1,ledgerLinks:[]}
+]}),/代購對象重複/,'同一代購對象不得重複分配');
+assert.throws(()=>q({allocations:[
+  {allocationId:'a1',target:'',quantity:1,ledgerLinks:[]},
+  {allocationId:'a2',target:'阿寶',quantity:1,ledgerLinks:[]}
+]}),/自己的分配不可與代購對象混用/,'自己的份數不得與代購對象混合');
+assert.throws(()=>q({allocations:[
+  {allocationId:'a1',target:'阿寶',quantity:0,ledgerLinks:[]}
+]}),/數量/,'allocation 數量沿用安全正整數限制');
+assert.throws(()=>q({allocations:[
+  {allocationId:'a1',target:'阿寶',quantity:Number.MAX_SAFE_INTEGER,ledgerLinks:[]},
+  {allocationId:'a2',target:'媽媽',quantity:1,ledgerLinks:[]}
+]}),/總數量/,'allocation 總量不得超出安全整數');
+const stableAllocationItem=q({allocations:[
+  {allocationId:'stable-a',target:'阿寶',quantity:2,ledgerLinks:[]},
+  {allocationId:'stable-b',target:'媽媽',quantity:2,ledgerLinks:[]}
+]});
+assert.deepStrictEqual(
+  plain(q(stableAllocationItem).allocations.map(value=>value.allocationId)),
+  ['stable-a','stable-b'],
+  '正規化與儲存往返必須保留 allocationId'
+);
+assert.strictEqual(q({category:'代購',quantity:1}).category,'','新版資料不再把代購當商品分類');
 
 /* 舊 qty migration:只接受「正整數＋可選空白＋不含數字的單位」 */
 const mig=text=>q({qty:text});
-assert.strictEqual(mig('5 罐').quantity,5);assert.strictEqual(mig('5 罐').unit,'罐');assert.strictEqual(mig('5 罐').legacyQtyText,'');
-assert.strictEqual(mig('5罐').quantity,5);assert.strictEqual(mig('5罐').unit,'罐');
-assert.strictEqual(mig('10').quantity,10);assert.strictEqual(mig('10').unit,'','純數字轉出空單位');
-assert.strictEqual(mig('3 盒').quantity,3);
+assert.strictEqual(allocationQuantity(mig('5 罐')),5);assert.strictEqual(mig('5 罐').unit,'罐');assert.strictEqual(mig('5 罐').legacyQtyText,'');
+assert.strictEqual(allocationQuantity(mig('5罐')),5);assert.strictEqual(mig('5罐').unit,'罐');
+assert.strictEqual(allocationQuantity(mig('10')),10);assert.strictEqual(mig('10').unit,'','純數字轉出空單位');
+assert.strictEqual(allocationQuantity(mig('3 盒')),3);
 ['兩盒','約 3～5 個','3-5 個','一大一小','家庭號 2 包','一組','少量','0 罐','-3 罐','1.5 罐'].forEach(text=>{
   const item=mig(text);
-  assert.strictEqual(item.quantity,null,'不可解析的舊數量不得猜測:'+text);
+  assert.strictEqual(allocationQuantity(item),null,'不可解析的舊數量不得猜測:'+text);
   assert.strictEqual(item.legacyQtyText,text.replace(/　/g,' ').replace(/\s+/g,' ').trim(),'舊數量原文完整保留:'+text);
   assert.strictEqual(item.unit,'','不可解析時不得留下猜測的單位:'+text);
 });
-assert.strictEqual(mig('').quantity,null);assert.strictEqual(mig('').legacyQtyText,'','空 qty 不產生 legacy 文字');
+assert.strictEqual(allocationQuantity(mig('')),null);assert.strictEqual(mig('').legacyQtyText,'','空 qty 不產生 legacy 文字');
 
 /* 數量顯示 helper */
 assert.strictEqual(mod.shoppingQuantityLabel({quantity:5,unit:'罐'}),'5 罐');

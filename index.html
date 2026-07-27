@@ -3558,7 +3558,12 @@ function shoppingBatchLedgerPreflight(items,context){
 function canSplitShoppingItem(item,context){
   if(!item)return {ok:false,error:'找不到採買項目'};
   if(item.done===true)return {ok:false,error:'已買項目請先移回待買，再進行部分購買'};
-  var state=resolveShoppingLedgerLinkState(item,context).state;
+  var allocationStates=shoppingItemAllocations(item).map(function(allocation){
+    return resolveShoppingLedgerLinkState(allocation,context).state;
+  });
+  var state=allocationStates.indexOf('unverified')>=0?'unverified':
+    allocationStates.indexOf('linked')>=0?'linked':
+    resolveShoppingLedgerLinkState(item,context).state;
   if(state==='linked')return {ok:false,error:'這筆已建立消費紀錄，無法再拆分'};
   if(state==='unverified')return {ok:false,error:'記帳狀態尚待確認，請先完成同步再拆分'};
   return {ok:true,error:''};
@@ -3569,12 +3574,16 @@ function buildShoppingSplitParts(source,input){
   if(plan.mode!=='split')throw new Error('本次買到等於原需求，請改用全部買到');
   var groupId=String(source.splitGroupId||'').trim()||source.id;
   var stamp=timestampDate(seed.now==null?Date.now():seed.now).toISOString();
+  var sourceAllocation=shoppingItemAllocations(source)[0];
+  if(shoppingItemAllocations(source).length!==1)throw new Error('多對象採買請分別輸入本次買到數量');
   var purchased={};Object.keys(source).forEach(function(key){purchased[key]=source[key];});
-  purchased.quantity=plan.purchasedQuantity;purchased.done=true;purchased.completedAt=stamp;purchased.splitGroupId=groupId;
+  purchased.allocations=[Object.assign({},sourceAllocation,{quantity:plan.purchasedQuantity})];
+  purchased.done=true;purchased.completedAt=stamp;purchased.splitGroupId=groupId;
   var remainder={
-    id:'',name:source.name,category:source.category,quantity:plan.remainingQuantity,unit:source.unit,legacyQtyText:'',buyFor:source.buyFor,
+    id:'',name:source.name,category:source.category,unit:source.unit,legacyQtyText:'',
+    allocations:[{allocationId:'',target:sourceAllocation.target,quantity:plan.remainingQuantity,ledgerLinks:[]}],
     stopRef:seed.remainderStopRef===undefined?source.stopRef:String(seed.remainderStopRef==null?'':seed.remainderStopRef).trim(),
-    done:false,createdAt:source.createdAt,completedAt:'',splitGroupId:groupId,ledgerLinks:[]
+    done:false,createdAt:source.createdAt,completedAt:'',splitGroupId:groupId
   };
   return {purchased:purchased,remainder:remainder};
 }
@@ -3644,23 +3653,97 @@ var SHOPPING_STOP_STATE_LABEL_TEXT={pending:'行程站點待確認',orphan:'原�
 /* 部分購買的計算與驗證。剩餘數量由系統算,使用者只輸入本次買到。 */
 function shoppingSplitPlan(source,purchasedQuantity){
   var item=source&&typeof source==='object'?source:{};
-  if(item.quantity===undefined||item.quantity===null)
+  var allocation=shoppingItemAllocations(item)[0];
+  var quantity=item.quantity;
+  if(quantity===undefined&&allocation)quantity=allocation.quantity;
+  if(quantity===undefined||quantity===null)
     return {ok:false,mode:'',purchasedQuantity:0,remainingQuantity:0,error:'此項目仍使用舊式文字數量，請先編輯為數字與單位，再使用部分購買'};
   if(!isSafeShoppingQuantity(purchasedQuantity))
     return {ok:false,mode:'',purchasedQuantity:0,remainingQuantity:0,error:'本次買到數量至少為 1'};
-  if(purchasedQuantity>item.quantity)
+  if(purchasedQuantity>quantity)
     return {ok:false,mode:'',purchasedQuantity:0,remainingQuantity:0,error:'本次買到數量不可超過原需求'};
-  if(purchasedQuantity===item.quantity)
+  if(purchasedQuantity===quantity)
     return {ok:true,mode:'complete',purchasedQuantity:purchasedQuantity,remainingQuantity:0,error:''};
-  return {ok:true,mode:'split',purchasedQuantity:purchasedQuantity,remainingQuantity:item.quantity-purchasedQuantity,error:''};
+  return {ok:true,mode:'split',purchasedQuantity:purchasedQuantity,remainingQuantity:quantity-purchasedQuantity,error:''};
+}
+function shoppingItemAllocations(item){
+  return item&&Array.isArray(item.allocations)?item.allocations:[];
+}
+function createShoppingAllocationId(itemId,usedIds,randomFn){
+  var used=usedIds||{},random=typeof randomFn==='function'?randomFn:Math.random;
+  for(var attempt=0;attempt<20;attempt++){
+    var suffix=Math.floor(random()*0x100000000).toString(36);
+    var id=String(itemId||'shopping')+'-allocation-'+Date.now().toString(36)+'-'+suffix;
+    if(!used[id])return id;
+  }
+  throw new Error('無法建立採買分配 ID');
+}
+function normalizeShoppingAllocation(source,options){
+  source=source&&typeof source==='object'?source:{};
+  options=options||{};
+  var target=String(source.target==null?'':source.target).replace(/\u3000/g,' ').replace(/\s+/g,' ').trim();
+  if(target)target=normalizeLedgerProxyTarget(target);
+  var quantity=source.quantity;
+  if(quantity!==null&&!isSafeShoppingQuantity(quantity))throw new Error('採買分配數量必須是 1 以上的安全整數');
+  if(source.ledgerLinks!==undefined&&source.ledgerLinks!==null&&!Array.isArray(source.ledgerLinks))throw new Error('記帳關聯必須是陣列');
+  return {
+    allocationId:String(source.allocationId||options.allocationId||'').trim(),
+    target:target,
+    quantity:quantity,
+    ledgerLinks:(source.ledgerLinks||[]).map(normalizeShoppingLedgerLink)
+  };
+}
+function normalizeShoppingAllocations(source,options){
+  options=options||{};
+  var itemId=String(options.itemId||''),raw=[];
+  if(!Array.isArray(source.allocations)&&source.ledgerLinks!==undefined&&source.ledgerLinks!==null&&!Array.isArray(source.ledgerLinks))
+    throw new Error('記帳關聯必須是陣列');
+  if(Array.isArray(source.allocations))raw=source.allocations.slice();
+  else if(Array.isArray(source.targets)&&source.targets.length){
+    raw=source.targets.map(function(target){return {target:target,quantity:options.quantity,ledgerLinks:[]};});
+  }else{
+    raw=[{
+      target:String(source.buyFor==null?'':source.buyFor),
+      quantity:options.quantity,
+      ledgerLinks:Array.isArray(source.ledgerLinks)?source.ledgerLinks:[]
+    }];
+  }
+  if(!raw.length)throw new Error('採買分配不可空白');
+  var usedIds={},usedTargets={},total=0,legacyCount=0;
+  var allocations=raw.map(function(value,index){
+    var preferred=String(value&&value.allocationId||'').trim();
+    var allocationId=preferred;
+    if(!allocationId){
+      if(typeof options.allocationIdFactory==='function')allocationId=String(options.allocationIdFactory(itemId,usedIds)||'').trim();
+      if(!allocationId)allocationId=itemId+'-allocation-'+(index+1);
+    }
+    if(usedIds[allocationId])throw new Error('採買分配 ID 重複');
+    usedIds[allocationId]=true;
+    var allocation=normalizeShoppingAllocation(value,{allocationId:allocationId});
+    var targetKey=allocation.target?canonicalMemberName(allocation.target):'';
+    if(targetKey&&usedTargets[targetKey])throw new Error('代購對象重複');
+    if(targetKey)usedTargets[targetKey]=true;
+    if(allocation.quantity===null)legacyCount++;
+    else{
+      total+=allocation.quantity;
+      if(!Number.isSafeInteger(total))throw new Error('採買總數量超出安全範圍');
+    }
+    return allocation;
+  });
+  var own=allocations.filter(function(value){return !value.target;}).length;
+  if(own&&(allocations.length!==1||own!==1))throw new Error('自己的分配不可與代購對象混用');
+  if(legacyCount&&allocations.length!==1)throw new Error('舊式採買數量格式錯誤');
+  return allocations;
 }
 function normalizeShoppingItem(source,options){
   source=source&&typeof source==='object'?source:{};
   options=options||{};
+  var itemId=String(source.id||options.id||'').trim();
   var name=String(source.name||'').replace(/\u3000/g,' ').replace(/\s+/g,' ').trim();
   var category=String(source.category||'').trim();
   if(!name)throw new Error('採買品名不可空白');
   if(category&&SHOPPING_CATEGORIES.indexOf(category)<0)throw new Error('採買分類不在允許範圍');
+  if(category==='代購')category='';
   var createdAt=String(source.createdAt||'').trim();
   if(!createdAt)createdAt=timestampDate(options.now==null?Date.now():options.now).toISOString();
   if(!isFinite(Date.parse(createdAt)))throw new Error('採買建立時間格式錯誤');
@@ -3668,31 +3751,38 @@ function normalizeShoppingItem(source,options){
   /* legacy 降級:done 為 true 但沒有 completedAt 時保留空字串,不自行編造完成時間。
      done 為 false 時一律清空,避免狀態矛盾的資料被日後的時間排序當成真的完成時間。 */
   var completedAt=done?shoppingTimestampField(source.completedAt,'採買完成',false):'';
-  if(source.ledgerLinks!==undefined&&source.ledgerLinks!==null&&!Array.isArray(source.ledgerLinks))throw new Error('記帳關聯必須是陣列');
-  var amount=resolveShoppingQuantity(source);
+  var amount=Array.isArray(source.allocations)
+    ?{quantity:null,unit:normalizeShoppingUnit(source.unit),legacyQtyText:String(source.legacyQtyText||'').trim()}
+    :resolveShoppingQuantity(source);
   return {
-    id:String(source.id||options.id||'').trim(),
+    id:itemId,
     name:name,
     category:category,
-    quantity:amount.quantity,
     unit:amount.unit,
     legacyQtyText:amount.legacyQtyText,
-    buyFor:String(source.buyFor==null?'':source.buyFor).replace(/\u3000/g,' ').replace(/\s+/g,' ').trim(),
+    allocations:normalizeShoppingAllocations(source,{
+      itemId:itemId,
+      quantity:amount.quantity,
+      legacyQtyText:amount.legacyQtyText,
+      allocationIdFactory:options.allocationIdFactory
+    }),
     stopRef:String(source.stopRef==null?'':source.stopRef).trim(),
     done:done,
     createdAt:createdAt,
     completedAt:completedAt,
-    splitGroupId:String(source.splitGroupId==null?'':source.splitGroupId).trim(),
-    ledgerLinks:(source.ledgerLinks||[]).map(normalizeShoppingLedgerLink)
+    splitGroupId:String(source.splitGroupId==null?'':source.splitGroupId).trim()
   };
 }
 function createShoppingListStore(options){
   var opts=options||{},storage=opts.storage,key=opts.key||SHOPPING_LIST_KEY,now=opts.now||Date.now,idFactory=opts.idFactory||function(){return 'shopping-'+Date.now()+'-'+Math.random().toString(36).slice(2,8);};
+  var allocationIdFactory=opts.allocationIdFactory||function(itemId,usedIds){
+    return createShoppingAllocationId(itemId,usedIds,Math.random);
+  };
   function normalize(values){
     if(!Array.isArray(values))throw new Error('採買清單格式錯誤');
     var seen={};
     return values.map(function(value){
-      var item=normalizeShoppingItem(value,{now:now()});
+      var item=normalizeShoppingItem(value,{now:now(),allocationIdFactory:allocationIdFactory});
       if(!item.id)throw new Error('採買項目缺少 ID');
       if(seen[item.id])throw new Error('採買項目 ID 重複');
       seen[item.id]=true;return item;
@@ -3704,14 +3794,14 @@ function createShoppingListStore(options){
   }
   function write(values){values=normalize(values);storage.setItem(key,JSON.stringify(values));return values.slice();}
   function add(value){
-    var stamp=now(),item=normalizeShoppingItem(value,{id:idFactory(),now:stamp});
+    var stamp=now(),id=idFactory(),item=normalizeShoppingItem(value,{id:id,now:stamp,allocationIdFactory:allocationIdFactory});
     if(!item.id)throw new Error('採買項目缺少 ID');
     write(all().concat([item]));return item;
   }
   function update(id,patch){
     var found=null,next=all().map(function(item){
       if(item.id!==String(id))return item;
-      found=normalizeShoppingItem(Object.assign({},item,patch,{id:item.id,createdAt:item.createdAt}),{now:now()});
+      found=normalizeShoppingItem(Object.assign({},item,patch,{id:item.id,createdAt:item.createdAt}),{now:now(),allocationIdFactory:allocationIdFactory});
       return found;
     });
     if(!found)throw new Error('找不到採買項目');
@@ -3730,11 +3820,26 @@ function createShoppingListStore(options){
   function applyLedgerLinks(entries){
     var list=entries||[],current=all(),byId={};
     current.forEach(function(item,index){byId[item.id]=index;});
-    var next=current.map(function(item){var copy={};Object.keys(item).forEach(function(field){copy[field]=item[field];});copy.ledgerLinks=item.ledgerLinks.slice();return copy;});
+    var next=current.map(function(item){
+      var copy={};Object.keys(item).forEach(function(field){copy[field]=item[field];});
+      copy.allocations=shoppingItemAllocations(item).map(function(allocation){
+        var allocationCopy={};Object.keys(allocation).forEach(function(field){allocationCopy[field]=allocation[field];});
+        allocationCopy.ledgerLinks=allocation.ledgerLinks.slice();return allocationCopy;
+      });
+      return copy;
+    });
     list.forEach(function(entry){
       var id=String(entry&&entry.shoppingItemId||''),index=byId[id];
       if(index===undefined)throw new Error('找不到採買項目：'+id);
-      next[index].ledgerLinks=appendShoppingLedgerLink(next[index].ledgerLinks,entry.link);
+      var allocations=next[index].allocations;
+      var allocationId=String(entry&&entry.allocationId||'').trim();
+      var allocationIndex=-1;
+      allocations.forEach(function(allocation,position){
+        if(allocationId&&allocation.allocationId===allocationId)allocationIndex=position;
+      });
+      if(!allocationId&&allocations.length===1)allocationIndex=0;
+      if(allocationIndex<0)throw new Error('找不到採買分配：'+(allocationId||id));
+      allocations[allocationIndex].ledgerLinks=appendShoppingLedgerLink(allocations[allocationIndex].ledgerLinks,entry.link);
     });
     return write(next);
   }
@@ -3746,7 +3851,7 @@ function createShoppingListStore(options){
     list.forEach(function(entry){
       var id=String(entry&&entry.id||''),index=byId[id];
       if(index===undefined)throw new Error('找不到採買項目：'+id);
-      next[index]=normalizeShoppingItem(Object.assign({},current[index],entry.patch,{id:current[index].id,createdAt:current[index].createdAt}),{now:now()});
+      next[index]=normalizeShoppingItem(Object.assign({},current[index],entry.patch,{id:current[index].id,createdAt:current[index].createdAt}),{now:now(),allocationIdFactory:allocationIdFactory});
     });
     return write(next);
   }

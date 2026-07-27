@@ -46,13 +46,13 @@ const link=over=>Object.assign({version:1,track:'personal',testMode:false,record
 const legacy=mod.normalizeShoppingItem({id:'s-old',name:'舊資料',createdAt:NOW});
 assert.strictEqual(legacy.completedAt,'','舊資料補 completedAt:""');
 assert.strictEqual(legacy.splitGroupId,'','舊資料補 splitGroupId:""');
-assert.deepStrictEqual(plain(legacy.ledgerLinks),[],'舊資料補 ledgerLinks:[]');
+assert.deepStrictEqual(plain(legacy.allocations[0].ledgerLinks),[],'舊資料補 allocation ledgerLinks:[]');
 
 const withLink=mod.normalizeShoppingItem({
   id:'s-1',name:'益生菌',qty:'3 罐',done:true,createdAt:NOW,completedAt:NOW,splitGroupId:'s-1',
   ledgerLinks:[link({recordId:'r-a'}),link({recordId:'r-b',track:'shared',batchId:'batch-1',releasedAt:NOW})]
 });
-assert.deepStrictEqual(plain(withLink.ledgerLinks),[
+assert.deepStrictEqual(plain(withLink.allocations[0].ledgerLinks),[
   {version:1,track:'personal',testMode:false,recordId:'r-a',batchId:'',linkedAt:NOW,releasedAt:''},
   {version:1,track:'shared',testMode:false,recordId:'r-b',batchId:'batch-1',linkedAt:NOW,releasedAt:NOW}
 ],'有效 ledgerLinks 完整 round-trip');
@@ -154,11 +154,11 @@ linkCase.store.applyLedgerLinks([
   {shoppingItemId:itemA.id,link:{track:'personal',testMode:false,recordId:'rec-a',batchId:'',linkedAt:NOW}},
   {shoppingItemId:itemB.id,link:{track:'personal',testMode:false,recordId:'rec-b',batchId:'',linkedAt:NOW}}
 ]);
-assert.deepStrictEqual(linkCase.store.all().map(entry=>entry.ledgerLinks.length),[1,1],'兩筆一次寫入成功');
+assert.deepStrictEqual(linkCase.store.all().map(entry=>entry.allocations[0].ledgerLinks.length),[1,1],'兩筆一次寫入成功');
 let writes=0;
 const countingStorage=Object.create(linkCase.storage);
 assert.throws(()=>linkCase.store.applyLedgerLinks([{shoppingItemId:'missing',link:{track:'personal',testMode:false,recordId:'r',batchId:'',linkedAt:NOW}}]),/找不到/,'目標不存在時整批拒絕');
-assert.deepStrictEqual(linkCase.store.all().map(entry=>entry.ledgerLinks.length),[1,1],'整批拒絕後資料完全未變');
+assert.deepStrictEqual(linkCase.store.all().map(entry=>entry.allocations[0].ledgerLinks.length),[1,1],'整批拒絕後資料完全未變');
 
 /* ================= 部分購買拆分 ================= */
 const splitCase=freshStore();
@@ -170,22 +170,22 @@ const splitResult=splitCase.store.split(source.id,{purchasedQuantity:3,remainder
 const after=splitCase.store.all();
 assert.deepStrictEqual(after.map(entry=>entry.name),['A','益生菌','益生菌','B','C'],'剩餘項目緊鄰原位置,不 append 到最後');
 assert.strictEqual(after[1].id,source.id,'原 item ID 成為已買部分');
-assert.strictEqual(after[1].quantity,3,'已買部分為本次買到的數量');
+assert.strictEqual(after[1].allocations[0].quantity,3,'已買部分為本次買到的數量');
 assert.strictEqual(after[1].unit,'罐');
 assert.strictEqual(after[1].done,true);
 assert.strictEqual(after[1].completedAt,NOW,'已買部分寫入 completedAt');
 assert.strictEqual(after[2].id!==source.id&&!!after[2].id,true,'剩餘部分是新 ID');
-assert.strictEqual(after[2].quantity,2,'剩餘數量由系統計算');
+assert.strictEqual(after[2].allocations[0].quantity,2,'剩餘數量由系統計算');
 assert.strictEqual(after[2].unit,'罐','unit 由原項目繼承');
 assert.strictEqual(after[2].done,false);
 assert.strictEqual(after[2].completedAt,'','剩餘部分 completedAt 為空');
-assert.deepStrictEqual(plain(after[2].ledgerLinks),[],'剩餘部分 ledgerLinks 為空');
+assert.deepStrictEqual(plain(after[2].allocations[0].ledgerLinks),[],'剩餘部分 allocation ledgerLinks 為空');
 assert.strictEqual(after[1].splitGroupId,source.id,'首次拆分以來源 ID 作為 splitGroupId');
 assert.strictEqual(after[2].splitGroupId,source.id,'兩筆共用 splitGroupId');
 assert.strictEqual(after[1].createdAt,source.createdAt);
 assert.strictEqual(after[2].createdAt,source.createdAt,'createdAt 都沿用原值');
-assert.strictEqual(after[2].buyFor,'媽媽');
-assert.strictEqual(after[2].category,'代購');
+assert.strictEqual(after[2].allocations[0].target,'媽媽');
+assert.strictEqual(after[2].category,'','舊代購分類在新模型中移除');
 assert.strictEqual(splitResult.purchased.id,source.id);
 assert.strictEqual(splitResult.remainder.id,after[2].id);
 assert(!('splitFromId' in after[2])&&!('splitAt' in after[2])&&!('originalQty' in after[2])&&!('qty' in after[2]),'不新增 splitFromId／splitAt／originalQty,也不保留 qty 鏡像');
@@ -194,8 +194,8 @@ assert(!('splitFromId' in after[2])&&!('splitAt' in after[2])&&!('originalQty' i
 const again=splitCase.store.split(after[2].id,{purchasedQuantity:1,remainderStopRef:'',now:Date.parse(NOW)});
 const after2=splitCase.store.all();
 assert.deepStrictEqual(after2.map(entry=>entry.name),['A','益生菌','益生菌','益生菌','B','C'],'再次拆分仍緊鄰原位置');
-assert.strictEqual(again.purchased.quantity,1);
-assert.strictEqual(again.remainder.quantity,1,'2 罐再拆 1 罐剩 1 罐');
+assert.strictEqual(again.purchased.allocations[0].quantity,1);
+assert.strictEqual(again.remainder.allocations[0].quantity,1,'2 罐再拆 1 罐剩 1 罐');
 assert.strictEqual(again.remainder.splitGroupId,source.id,'再次拆分沿用既有 splitGroupId');
 assert.strictEqual(again.remainder.stopRef,'','剩餘部分可清為隨時可買');
 assert.strictEqual(again.purchased.stopRef,'d1_a','已買部分保留原站點');
@@ -210,11 +210,11 @@ assert.throws(()=>splitCase.store.split(source.id,{purchasedQuantity:3,now:Date.
 assert.throws(()=>splitCase.store.split('nope',{purchasedQuantity:1,now:Date.parse(NOW)}),/找不到/,'來源不存在時拒絕');
 const legacySplit=freshStore();
 const legacyItem=legacySplit.store.add({name:'舊式數量',qty:'約 3～5 個'});
-assert.strictEqual(legacyItem.quantity,null,'不可解析的舊數量保持 legacy');
+assert.strictEqual(legacyItem.allocations[0].quantity,null,'不可解析的舊數量保持 legacy');
 assert.throws(()=>legacySplit.store.split(legacyItem.id,{purchasedQuantity:1,now:Date.parse(NOW)}),/舊式文字數量/,'舊式數量阻擋部分購買');
 assert.deepStrictEqual(plain(splitCase.store.all()),before,'拆分失敗完全不改資料');
 const spaced=mod.normalizeShoppingItem({id:'q',name:'x',createdAt:NOW,qty:'　3 　罐 '});
-assert.strictEqual(spaced.quantity,3,'舊數量的全形與連續空白正規化後仍可安全轉換');
+assert.strictEqual(spaced.allocations[0].quantity,3,'舊數量的全形與連續空白正規化後仍可安全轉換');
 assert.strictEqual(spaced.unit,'罐');
 
 /* 有 active link 或 unverified 時不得拆分 */
@@ -246,15 +246,15 @@ assert.strictEqual(mod.isSupportedPersonalStateVersion('6'),false,'版本必須�
 
 const v4Item=mod.normalizeShoppingItem({id:'v4',name:'舊備份項目',createdAt:NOW,done:true});
 assert.strictEqual(v4Item.completedAt,'','v4 舊備份缺 completedAt 時補空字串');
-assert.strictEqual(v4Item.quantity,null,'v4 舊備份缺數量時為 legacy null');
-assert.deepStrictEqual(plain(v4Item.ledgerLinks),[],'v4 舊備份缺 ledgerLinks 時補空陣列');
+assert.strictEqual(v4Item.allocations[0].quantity,null,'v4 舊備份缺數量時為 legacy null');
+assert.deepStrictEqual(plain(v4Item.allocations[0].ledgerLinks),[],'v4 舊備份缺 ledgerLinks 時補到 allocation');
 const v5Item=mod.normalizeShoppingItem(plain(withLink));
 assert.strictEqual(v5Item.releasedAt,undefined,'releasedAt 只存在於 link 內,不外洩到 item');
-assert.strictEqual(v5Item.ledgerLinks[1].releasedAt,NOW,'v5 round-trip 不丟失 releasedAt');
+assert.strictEqual(v5Item.allocations[0].ledgerLinks[1].releasedAt,NOW,'v5 round-trip 不丟失 releasedAt');
 assert.strictEqual(v5Item.splitGroupId,'s-1','v5 round-trip 不丟失 splitGroupId');
 assert.strictEqual(v5Item.completedAt,NOW,'round-trip 不丟失 completedAt');
 const v6Item=mod.normalizeShoppingItem(plain(mod.normalizeShoppingItem({id:'v6',name:'結構化',createdAt:NOW,quantity:4,unit:'瓶'})));
-assert.strictEqual(v6Item.quantity,4,'v6 round-trip 不丟失 quantity');
+assert.strictEqual(v6Item.allocations[0].quantity,4,'v6 round-trip 不丟失 quantity');
 assert.strictEqual(v6Item.unit,'瓶','v6 round-trip 不丟失 unit');
 const v6Legacy=mod.normalizeShoppingItem(plain(mod.normalizeShoppingItem({id:'v6l',name:'舊式',createdAt:NOW,qty:'約 3～5 個'})));
 assert.strictEqual(v6Legacy.legacyQtyText,'約 3～5 個','v6 round-trip 不丟失 legacyQtyText');
