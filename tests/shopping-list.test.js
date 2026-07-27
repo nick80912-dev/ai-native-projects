@@ -126,7 +126,7 @@ assert.throws(()=>q({quantity:Number.MAX_SAFE_INTEGER+2}),/數量/,'超出安全
 assert.throws(()=>q({quantity:'5'}),/數量/,'字串數量拒絕,不做隱式轉型');
 /* type="number" 在部分瀏覽器仍會送出 1e6／1.0／+3,表單必須先擋掉非純十進位字串。 */
 const saveSource=mod.__saveSource||fs.readFileSync('index.html','utf8').slice(
-  fs.readFileSync('index.html','utf8').indexOf('function saveShoppingForm()'),
+  fs.readFileSync('index.html','utf8').indexOf('function saveShoppingForm('),
   fs.readFileSync('index.html','utf8').indexOf('function deleteShoppingItem(')
 );
 assert(/\^\\d\+\$\/\.test\(raw\)/.test(saveSource),'表單只接受純十進位數字字串,不得直接 Number() 轉換');
@@ -366,6 +366,30 @@ sharedTargets.add('小明');
 assert.deepStrictEqual(plain(sharedTargets.all()),['小明'],'shopping and ledger use the same de-duplicated proxy-target store');
 
 const ui=fs.readFileSync('index.html','utf8');
+const reset=plain(mod.shoppingSaveAnotherForm({
+  name:'白桃',category:'伴手禮',quantity:'4',unit:'盒',
+  targets:['阿寶','媽媽'],stopRef:'d2_shop'
+}));
+assert.deepStrictEqual(reset,{
+  id:'',name:'',category:'伴手禮',quantity:1,unit:'',
+  legacyQtyText:'',targets:[],allocations:[],
+  stopRef:'d2_shop',done:false,createdAt:''
+});
+const formPayload=plain(mod.shoppingFormPayload({
+  id:'',name:'白桃',category:'伴手禮',quantity:'2',unit:'盒',
+  targets:['阿寶','媽媽'],stopRef:'d2_shop'
+}));
+assert.deepStrictEqual(formPayload.allocations.map(value=>[
+  value.target,value.quantity,value.allocationId
+]),[
+  ['阿寶',2,''],
+  ['媽媽',2,'']
+]);
+assert(ui.includes('幫誰買（可多選）'));
+assert(ui.includes('toggleShoppingFormTarget('));
+assert(ui.includes('id="shoppingBuyForNew"'));
+assert(ui.includes('>儲存並新增</button>'));
+assert(!ui.includes("SHOPPING_CATEGORIES=['必買','伴手禮','代購'"));
 assert(ui.includes('id="shoppingListOverlay"')||ui.includes("overlay.id='shoppingListOverlay'"),'full shopping list opens as an overlay');
 assert(ui.includes('今天有 ')&&ui.includes('項待買'),'Today has the approved reminder copy');
 assert(ui.includes('function renderShoppingTodayEntry(day)'),'Today uses one entry selector to avoid duplicate launchers');
