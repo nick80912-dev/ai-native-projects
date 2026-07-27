@@ -156,6 +156,34 @@ assert.strictEqual(mod.shoppingAllocationSplitPlan(
 assert.strictEqual(mod.shoppingAllocationSplitPlan(
   linkedSplitItem,{linked:1},ctx({personal:{ready:false,records:[]}})
 ).ok,false,'狀態待確認 allocation 不可拆分');
+const splitDone={
+  id:'shopping-a',name:'白桃',unit:'盒',done:true,splitGroupId:'shopping-a',
+  allocations:[
+    {allocationId:'a',target:'阿寶',quantity:2,ledgerLinks:[link({recordId:'r-a'})]},
+    {allocationId:'b',target:'媽媽',quantity:1,ledgerLinks:[link({recordId:'r-b'})]},
+    {allocationId:'c',target:'小明',quantity:1,ledgerLinks:[]}
+  ]
+};
+const splitPending={
+  id:'shopping-b',name:'白桃',unit:'盒',done:false,splitGroupId:'shopping-a',
+  allocations:[
+    {allocationId:'b',target:'媽媽',quantity:1,ledgerLinks:[]},
+    {allocationId:'c',target:'小明',quantity:1,ledgerLinks:[]}
+  ]
+};
+const detailModel=plain(mod.shoppingItemDetailModel(
+  splitDone,[splitDone,splitPending],
+  ctx({personal:{ready:true,records:[expense({id:'r-a'}),expense({id:'r-b'})]}})
+));
+assert.strictEqual(detailModel.originalTotal,6);
+assert.strictEqual(detailModel.currentTotal,4);
+assert.deepStrictEqual(detailModel.allocations.map(value=>[
+  value.target,value.originalQuantity,value.currentQuantity,value.linkState
+]),[
+  ['阿寶',2,2,'linked'],
+  ['媽媽',2,1,'linked'],
+  ['小明',2,1,'unlinked']
+]);
 
 /* ================= 重新開放記帳 ================= */
 const released=mod.releaseShoppingLedgerLinks([link({recordId:'r-old',releasedAt:NOW}),link({recordId:'r-a'})],NOW);
@@ -407,6 +435,14 @@ assert(shoppingSource.includes('shoppingLedgerSources([item],shoppingLedgerConte
 const singleEntry=html.slice(html.indexOf('function openShoppingLedgerEntry(id)'),html.indexOf('function completeSelectedShopping('));
 assert(singleEntry.includes('openShoppingLedgerSourcesEntry(sources)'),'單筆入口依 allocation 數決定單筆或多品項表單');
 assert(shoppingSource.includes('sourceShoppingAllocationId=source.allocationId'),'單筆 draft 保存 allocationId');
+assert(html.includes('function openShoppingItemDetail('));
+assert(html.includes('function renderShoppingItemDetail('));
+assert(html.includes('代購對象與帳本紀錄'));
+assert(html.includes('記帳未完成對象'));
+assert(html.includes('openShoppingLinkedLedgerRecord('));
+assert(html.includes('shoppingDetailReturnItemId'));
+assert(html.includes('handleShoppingItemBodyClick('));
+assert.match(html,/event\.stopPropagation\(\)/);
 /* 結構化數量:表單與拆分都不得再出現自由文字數量輸入 */
 assert(shoppingSource.includes('id="shoppingQuantity"')&&shoppingSource.includes('type="number"'),'數量改為數字輸入');
 assert(shoppingSource.includes('inputmode="numeric"')&&shoppingSource.includes('min="1"')&&shoppingSource.includes('step="1"'),'數量輸入使用數字鍵盤與整數步進');
