@@ -1,4 +1,13 @@
 # 07 版本紀錄
+## 2026-07-27｜採買卡片視覺一致性、部分購買與多選互動（dev，SW v65，待 Bar 真機驗收）
+- **中文字體粗細不一致的根因修正**：原本全站把 `Hiragino Sans` 放在繁中字型之前，瀏覽器會依單一字形是否存在逐字 fallback，因此同一控制項內的「媽媽／爸爸」、「稅與優惠券」與「信用卡」可能看起來粗細不同。全站改用 `"PingFang TC","Noto Sans TC","Microsoft JhengHei",system-ui,-apple-system,sans-serif`；Browser 實測採買代購選項、稅與優惠券及信用卡皆讀到相同 font-family。
+- **卡片 badge 改為語意分工**：代購顯示改為 `幫 [阿寶] [媽媽] +1 買`，只有姓名套 coral／淡紅底 badge；「幫」／「買」／`+N` 使用普通文字，不再顯示 `、`，aria-label 仍保留完整語意。分類改為淡金底／深金字，形狀、間距與姓名 badge 對齊，不再與品名或代購同色。
+- **「部分買到」改為卡片上的「部分購買」**：入口從 `⋯` 移到待買卡片，只有整筆 `unlinked`、全部 allocation 為安全正整數且總需求大於 1 時出現。自己的數量 1、legacy 數量、已買、`linked`／`partial`／`unverified` 都不顯示；自己的數量 2 與三位各 1 份都會顯示。既有逐 allocation 拆分、store 原子寫入及 Ledger 防重複規則未改。
+- **採買明細縮短高度**：標題改為「代購對象與記帳紀錄」；對象與 `需求 3 包 · 待買 1 包`／`需求 3 包 · 已買 2 包` 同行，窄螢幕才自然換行。底部「編輯」與「記帳未完成對象」兩顆等寬同行；沒有未記帳對象時，編輯維持全寬。
+- **批次 selection 與完成 checkbox 完全分離**：待買與已買進入多選時，選取框都從未勾開始且只讀 `shoppingUiState.selected`；點 checkbox 或卡片只切換 selection，不改 `done`。多選時隱藏卡片的「部分購買」／「記帳」／`⋯`；0 項只顯示「請選擇項目」，選取後改為同一行 `已選 N`＋三顆等寬、不斷行、44px 高按鈕。修正原本 `.shopping-selection-toolbar-stacked` 被後方 base selector 蓋掉而在真機擠成直排文字的 CSS 順序問題，並加入 66px safe-area spacer，避免最後卡片被固定工具列遮住。
+- Browser QA：390×844、375×812、320×700 全數通過；document、採買 panel 與卡片水平溢位皆為 0。320px 三顆批次按鈕各約 75px、同一 y 軸、44px 高、`white-space:nowrap`；完成與 selection 切換、卡片點擊、取消多選恢復、部分購買表單、待買／已買明細與最後卡片避讓皆實測通過，console error／warning 為 0。
+- **邊界未變**：Shopping Item `allocations[]`、個人狀態備份 v7、Ledger 21 欄、Apps Script、Google Sheet、同步、結算與 split persistence semantics 皆未修改。完整 **45／45** Node tests、`tools/check-doc-titles.js` 與 `git diff --check` 通過；Service Worker cache `okayama-trip-v64` → `okayama-trip-v65`，未部署任何站點。
+
 ## 2026-07-27｜採買清單代購分配、逐人記帳與卡片明細（dev，SW v64，待 Bar 真機驗收）
 - **資料模型改為逐人分配**：Shopping Item 以 `allocations[]` 保存每一位對象的穩定 `allocationId`、`target`、`quantity` 與 append-only `ledgerLinks[]`。沒有代購對象時仍建立一筆「自己」分配；同一項目不可混用「自己」與代購對象，也不可出現正規化後重複的對象。新建多對象目前採**相同數量／人**，但資料契約與部分購買流程已能保存不同數量，未來開放逐人輸入時不需再改資料格式。
 - **代購對象多選與數量摘要**：新增／編輯表單可多選對象，並保留「新增對象」入口；新對象建立後會立即加入共用名單且自動選取。相同數量顯示 `2 盒／人 · 共 6 盒`，不同數量顯示 `共 4 盒 · 3 位`；卡片最多顯示前兩位，三位以上為 `幫阿寶、媽媽 +1 買`，完整名單可進明細查看。
