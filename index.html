@@ -2808,7 +2808,7 @@ function openShoppingList(){
   document.body.appendChild(overlay);document.body.classList.add('shopping-list-open');renderShoppingListOverlay();
 }
 function closeShoppingList(){
-  closeShoppingItemActions();closeShoppingReleaseConfirm();closeShoppingItemDetail();
+  closeShoppingItemActions();closeShoppingReleaseConfirm();closeShoppingCompletedEditConfirm();closeShoppingItemDetail();
   var overlay=document.getElementById('shoppingListOverlay');if(overlay)overlay.remove();
   document.body.classList.remove('shopping-list-open');
 }
@@ -2819,7 +2819,9 @@ function startShoppingAdd(){
 }
 function startShoppingEdit(id){
   var item=shoppingListStore.all().filter(function(value){return value.id===String(id);})[0];if(!item)return;
-  shoppingUiState.split=null;shoppingUiState.form=newShoppingForm(item);renderShoppingListOverlay();
+  shoppingUiState.split=null;shoppingUiState.form=newShoppingForm(item);
+  shoppingUiState.form.allocationEditPolicy=shoppingAllocationEditPolicy(item,shoppingLedgerContext());
+  renderShoppingListOverlay();
   requestAnimationFrame(function(){var input=document.getElementById('shoppingName');if(input)input.focus();});
 }
 function cancelShoppingForm(){shoppingUiState.form=null;renderShoppingListOverlay();}
@@ -2830,6 +2832,9 @@ function toggleShoppingFormTarget(value,forceOn){
   if(!shoppingUiState.form)return;
   var target=normalizeLedgerProxyTarget(value),key=canonicalMemberName(target);
   var targets=shoppingFormTargets(shoppingUiState.form),found=targets.some(function(current){return canonicalMemberName(current)===key;});
+  var existing=shoppingItemAllocations(shoppingUiState.form).filter(function(allocation){return canonicalMemberName(allocation.target||'')===key;})[0];
+  var policy=existing&&shoppingUiState.form.allocationEditPolicy&&shoppingUiState.form.allocationEditPolicy.allocations.filter(function(value){return value.allocationId===existing.allocationId;})[0];
+  if(found&&forceOn!==true&&policy&&!policy.canEdit){toast(policy.reason+'，目前無法移除這位對象');return;}
   if(forceOn===true&&!found)targets.push(target);
   else if(forceOn!==true)targets=found?targets.filter(function(current){return canonicalMemberName(current)!==key;}):targets.concat([target]);
   shoppingUiState.form.targets=targets;renderShoppingListOverlay();
@@ -2838,6 +2843,42 @@ function addShoppingBuyFor(){
   var input=document.getElementById('shoppingBuyForNew'),value=input&&input.value;
   try{value=normalizeLedgerProxyTarget(value);ledgerProxyTargetStore.add(value);toggleShoppingFormTarget(value,true);toast('代購對象已新增並選取');}
   catch(error){toast(error.message||'代購對象新增失敗');}
+}
+var shoppingCompletedEditPending=null;
+function shoppingEditableAllocationsChanged(original,next,context){
+  var policy=shoppingAllocationEditPolicy(original,context),editable={};
+  policy.allocations.forEach(function(value){if(value.canEdit)editable[value.allocationId]=true;});
+  var before=shoppingItemAllocations(original).filter(function(value){return editable[value.allocationId];});
+  var after=shoppingItemAllocations(next).filter(function(value){return editable[value.allocationId]||!value.allocationId;});
+  if(before.length!==after.length)return true;
+  return before.some(function(value){
+    var candidate=after.filter(function(nextValue){return nextValue.allocationId===value.allocationId;})[0];
+    return !candidate||candidate.quantity!==value.quantity||canonicalMemberName(candidate.target||'')!==canonicalMemberName(value.target||'');
+  });
+}
+function closeShoppingCompletedEditConfirm(){
+  var overlay=document.getElementById('shoppingCompletedEditDialog');if(overlay)overlay.remove();
+  shoppingCompletedEditPending=null;
+}
+function openShoppingCompletedEditConfirm(form,payload){
+  closeShoppingCompletedEditConfirm();
+  shoppingCompletedEditPending={form:form,payload:payload};
+  var overlay=document.createElement('div');overlay.id='shoppingCompletedEditDialog';overlay.className='shopping-choice-overlay';
+  overlay.innerHTML='<section class="shopping-choice-panel" role="dialog" aria-modal="true" aria-labelledby="shoppingCompletedEditTitle"><h3 id="shoppingCompletedEditTitle">修正已買數量或對象？</h3><p>這筆已標記為已買。確認後只會修正尚未記帳的對象與數量；已記帳或狀態待確認的分配仍會鎖定。</p><div class="shopping-form-actions"><button type="button" class="btn ghost" onclick="closeShoppingCompletedEditConfirm()">取消</button><button type="button" class="btn" onclick="confirmShoppingCompletedEdit()">確認修正</button></div></section>';
+  document.body.appendChild(overlay);
+}
+function commitShoppingFormPayload(form,payload,saveAnother){
+  if(form.id)shoppingListStore.update(form.id,payload);else shoppingListStore.add(payload);
+  shoppingUiState.form=!form.id&&saveAnother===true?shoppingSaveAnotherForm(form):null;
+  renderToday();renderShoppingListOverlay();toast(form.id?'採買項目已更新':'採買項目已新增');
+  if(shoppingUiState.form)requestAnimationFrame(function(){var input=document.getElementById('shoppingName');if(input)input.focus();});
+}
+function confirmShoppingCompletedEdit(){
+  var pending=shoppingCompletedEditPending;
+  closeShoppingCompletedEditConfirm();
+  if(!pending)return;
+  try{commitShoppingFormPayload(pending.form,pending.payload,false);}
+  catch(error){toast(error.message||'採買項目儲存失敗');}
 }
 function saveShoppingForm(saveAnother){
   var form=shoppingUiState.form;if(!form)return;
@@ -2849,10 +2890,13 @@ function saveShoppingForm(saveAnother){
     var raw=String(form.quantity==null?'':form.quantity).trim();
     if(!/^\d+$/.test(raw))throw new Error('採買數量必須是 1 以上的安全整數');
     var payload=shoppingFormPayload(Object.assign({},form,{quantity:Number(raw)}));
-    if(form.id)shoppingListStore.update(form.id,payload);else shoppingListStore.add(payload);
-    shoppingUiState.form=!form.id&&saveAnother===true?shoppingSaveAnotherForm(form):null;
-    renderToday();renderShoppingListOverlay();toast(form.id?'採買項目已更新':'採買項目已新增');
-    if(shoppingUiState.form)requestAnimationFrame(function(){var input=document.getElementById('shoppingName');if(input)input.focus();});
+    if(form.id){
+      var original=shoppingListStore.all().filter(function(item){return item.id===form.id;})[0];
+      if(original&&original.done&&shoppingEditableAllocationsChanged(original,payload,shoppingLedgerContext())){
+        openShoppingCompletedEditConfirm(form,payload);return;
+      }
+    }
+    commitShoppingFormPayload(form,payload,saveAnother);
   }catch(error){
     toast(error.message||'採買項目儲存失敗');
     var quantityError=/數量|單位/.test(String(error.message||''));
@@ -2861,7 +2905,9 @@ function saveShoppingForm(saveAnother){
 }
 function deleteShoppingItem(id){
   var item=shoppingListStore.all().filter(function(value){return value.id===String(id);})[0];
-  if(!item||!confirm('刪除「'+item.name+'」？'))return;
+  if(!item)return;
+  var note=shoppingDeleteWarning([item],shoppingLedgerContext());
+  if(!confirm('刪除「'+item.name+'」？'+note+'\n此操作無法復原。'))return;
   shoppingListStore.remove(id);delete shoppingUiState.selected[id];renderToday();renderShoppingListOverlay();toast('採買項目已刪除');
 }
 /* 數量與單位。HTML 的 min／step 只是輸入輔助,真正的把關在 saveShoppingForm() 的
@@ -2897,7 +2943,10 @@ function renderShoppingForm(){
   }).join('');
   var targets=ledgerProxyTargetStore.all().map(function(value){
     var selected=selectedTargets.some(function(target){return canonicalMemberName(target)===canonicalMemberName(value);});
-    return '<button type="button" class="shopping-chip shopping-target-chip '+(selected?'on':'')+'" aria-pressed="'+(selected?'true':'false')+'" onclick="toggleShoppingFormTarget(\''+jsString(value)+'\')">'+escapeHtml(value)+'</button>';
+    var existing=shoppingItemAllocations(form).filter(function(allocation){return canonicalMemberName(allocation.target||'')===canonicalMemberName(value);})[0];
+    var policy=existing&&form.allocationEditPolicy&&form.allocationEditPolicy.allocations.filter(function(entry){return entry.allocationId===existing.allocationId;})[0];
+    var locked=policy&&!policy.canEdit;
+    return '<button type="button" class="shopping-chip shopping-target-chip '+(selected?'on':'')+'" aria-pressed="'+(selected?'true':'false')+'" '+(locked?'disabled title="'+escapeHtml(policy.reason)+'"':'')+' onclick="toggleShoppingFormTarget(\''+jsString(value)+'\')">'+escapeHtml(value)+(locked?' · '+escapeHtml(policy.reason):'')+'</button>';
   }).join('');
   var stops=shoppingItineraryStops(),options='<option value="">不綁定（隨時可買）</option>',lastDay=-1;
   stops.forEach(function(stop){
@@ -3300,16 +3349,8 @@ function moveSelectedShoppingBackToPending(){
 function deleteSelectedShoppingItems(){
   var selected=shoppingListStore.all().filter(function(item){return shoppingUiState.selected[item.id];});
   if(!selected.length)return;
-  /* linked 與 unverified 分開計數:待確認的項目我們無法證明帳本紀錄存在或已刪除,
-     不能混進「已建立消費紀錄」一起講,否則等於對使用者宣稱了一個我們沒有的事實。 */
-  var context=shoppingLedgerContext(),linked=0,unverified=0;
-  selected.forEach(function(item){
-    var state=resolveShoppingLedgerLinkState(item,context).state;
-    if(state==='linked')linked++;else if(state==='unverified')unverified++;
-  });
-  var note='';
-  if(linked)note+='\n其中 '+linked+' 項已建立消費紀錄。刪除採買項目不會刪除原本的消費紀錄。';
-  if(unverified)note+='\n其中 '+unverified+' 項的記帳狀態尚待確認。刪除採買項目不會嘗試修改或刪除帳本紀錄。';
+  /* linked 與 unverified 依 allocation 分開計數，避免多人卡片被低估成一項。 */
+  var note=shoppingDeleteWarning(selected,shoppingLedgerContext());
   if(!confirm('確定刪除選取的 '+selected.length+' 項採買項目？'+note+'\n此操作無法復原。'))return;
   try{shoppingListStore.removeMany(selected.map(function(item){return item.id;}));}
   catch(error){toast(error.message||'刪除失敗');return;}
@@ -3944,13 +3985,15 @@ function shoppingFormQuantity(form){
 }
 function shoppingFormAllocations(form){
   var quantity=shoppingFormQuantity(form),targets=shoppingFormTargets(form);
-  var existing=shoppingItemAllocations(form),byTarget={};
+  var existing=shoppingItemAllocations(form),byTarget={},policyById={};
+  ((form&&form.allocationEditPolicy&&form.allocationEditPolicy.allocations)||[]).forEach(function(value){policyById[value.allocationId]=value;});
   existing.forEach(function(allocation){byTarget[canonicalMemberName(allocation.target||'')]=allocation;});
   var unequal=existing.length>1&&existing.some(function(allocation){return allocation.quantity!==existing[0].quantity;});
   var values=targets.length?targets:[''];
-  return values.map(function(target){
+  var result=values.map(function(target){
     var prior=byTarget[canonicalMemberName(target)]||null;
-    var preserveQuantity=unequal&&prior;
+    var locked=prior&&policyById[prior.allocationId]&&!policyById[prior.allocationId].canEdit;
+    var preserveQuantity=prior&&(unequal||locked);
     return {
       allocationId:prior?String(prior.allocationId||''):'',
       target:target,
@@ -3958,6 +4001,12 @@ function shoppingFormAllocations(form){
       ledgerLinks:prior&&Array.isArray(prior.ledgerLinks)?prior.ledgerLinks.slice():[]
     };
   });
+  existing.forEach(function(allocation){
+    var policy=policyById[allocation.allocationId];
+    var present=result.some(function(value){return value.allocationId===allocation.allocationId;});
+    if(policy&&!policy.canEdit&&!present)result.push(Object.assign({},allocation,{ledgerLinks:(allocation.ledgerLinks||[]).slice()}));
+  });
+  return result;
 }
 function shoppingFormPayload(form){
   form=form||{};
@@ -4041,6 +4090,37 @@ function shoppingAllocationEditPolicy(item,context){
       reason:value.state==='linked'?'已記帳':value.state==='unverified'?'狀態待確認':''
     };
   })};
+}
+function shoppingDeleteWarning(items,context){
+  var linked=0,unverified=0;
+  (items||[]).forEach(function(item){
+    shoppingItemLinkSummary(item,context).allocationStates.forEach(function(value){
+      if(value.state==='linked')linked++;
+      else if(value.state==='unverified')unverified++;
+    });
+  });
+  var note='';
+  if(linked)note+='\n已有 '+linked+' 位建立消費紀錄。刪除採買項目不會刪除原本的消費紀錄。';
+  if(unverified)note+='\n有 '+unverified+' 位記帳狀態待確認。刪除採買項目不會嘗試修改或刪除帳本紀錄。';
+  return note;
+}
+function assertShoppingAllocationUpdateAllowed(previous,next,context){
+  var nextById={};
+  shoppingItemAllocations(next).forEach(function(allocation){nextById[allocation.allocationId]=allocation;});
+  var states={};
+  if(context)shoppingAllocationEditPolicy(previous,context).allocations.forEach(function(value){states[value.allocationId]=value;});
+  shoppingItemAllocations(previous).forEach(function(allocation){
+    var policy=states[allocation.allocationId];
+    var locked=policy?!policy.canEdit:!!activeShoppingLedgerLink(allocation);
+    if(!locked)return;
+    var candidate=nextById[allocation.allocationId];
+    var unchanged=candidate&&
+      canonicalMemberName(candidate.target||'')===canonicalMemberName(allocation.target||'')&&
+      candidate.quantity===allocation.quantity&&
+      JSON.stringify(candidate.ledgerLinks||[])===JSON.stringify(allocation.ledgerLinks||[]);
+    if(!unchanged)throw new Error('已記帳或狀態待確認的代購對象已鎖定');
+  });
+  return true;
 }
 function shoppingSplitGroupAllocationTotals(items,item){
   var groupId=String(item&&item.splitGroupId||item&&item.id||'').trim();
@@ -4201,6 +4281,7 @@ function normalizeShoppingItem(source,options){
 }
 function createShoppingListStore(options){
   var opts=options||{},storage=opts.storage,key=opts.key||SHOPPING_LIST_KEY,now=opts.now||Date.now,idFactory=opts.idFactory||function(){return 'shopping-'+Date.now()+'-'+Math.random().toString(36).slice(2,8);};
+  var allocationEditContext=typeof opts.allocationEditContext==='function'?opts.allocationEditContext:null;
   var allocationIdFactory=opts.allocationIdFactory||function(itemId,usedIds){
     return createShoppingAllocationId(itemId,usedIds,Math.random);
   };
@@ -4228,6 +4309,7 @@ function createShoppingListStore(options){
     var found=null,next=all().map(function(item){
       if(item.id!==String(id))return item;
       found=normalizeShoppingItem(Object.assign({},item,patch,{id:item.id,createdAt:item.createdAt}),{now:now(),allocationIdFactory:allocationIdFactory});
+      assertShoppingAllocationUpdateAllowed(item,found,allocationEditContext?allocationEditContext():null);
       return found;
     });
     if(!found)throw new Error('找不到採買項目');
@@ -4308,6 +4390,7 @@ function createShoppingListStore(options){
       var id=String(entry&&entry.id||''),index=byId[id];
       if(index===undefined)throw new Error('找不到採買項目：'+id);
       next[index]=normalizeShoppingItem(Object.assign({},current[index],entry.patch,{id:current[index].id,createdAt:current[index].createdAt}),{now:now(),allocationIdFactory:allocationIdFactory});
+      assertShoppingAllocationUpdateAllowed(current[index],next[index],allocationEditContext?allocationEditContext():null);
     });
     return write(next);
   }
@@ -6010,7 +6093,11 @@ var ledgerPayMethodStore=createLedgerOptionStore({storage:localStorage,key:LEDGE
 /* 採買單位沿用同一個泛用選項 store,於設定頁「自訂類別與支付方式」區塊一併管理。 */
 var shoppingUnitStore=createLedgerOptionStore({storage:localStorage,key:SHOPPING_UNIT_OPTIONS_KEY,defaults:SHOPPING_COMMON_UNITS});
 var ledgerProxyTargetStore=createLedgerProxyTargetStore({storage:localStorage,key:LEDGER_PROXY_TARGETS_KEY});
-var shoppingListStore=createShoppingListStore({storage:localStorage,key:SHOPPING_LIST_KEY});
+var shoppingListStore=createShoppingListStore({
+  storage:localStorage,
+  key:SHOPPING_LIST_KEY,
+  allocationEditContext:typeof shoppingLedgerContext==='function'?shoppingLedgerContext:null
+});
 
 function ledgerSharedRecordParticipantLabel(record,currentMember,members){
   var participants=parseParticipants(record,function(){}),payer=canonicalMemberName(record&&record.member),currentKey=canonicalMemberName(currentMember);

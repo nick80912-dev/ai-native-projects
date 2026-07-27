@@ -147,6 +147,34 @@ assert.deepStrictEqual(editPolicy.allocations.map(value=>[
   ['linked',false,'已記帳'],
   ['open',true,'']
 ]);
+const guardedItem={
+  id:'shopping-guard',name:'白桃',unit:'盒',done:true,
+  allocations:[
+    {allocationId:'a-linked',target:'阿寶',quantity:1,ledgerLinks:[link({recordId:'r-a'})]},
+    {allocationId:'a-unverified',target:'媽媽',quantity:1,ledgerLinks:[link({recordId:'r-missing',track:'shared'})]},
+    {allocationId:'a-open',target:'小明',quantity:1,ledgerLinks:[]}
+  ]
+};
+const guardedPolicy=plain(mod.shoppingAllocationEditPolicy(
+  guardedItem,
+  ctx({
+    personal:{ready:true,records:[expense({id:'r-a'})]},
+    shared:{ready:false,records:[]}
+  })
+));
+assert.deepStrictEqual(guardedPolicy.allocations.map(value=>[
+  value.allocationId,value.canEdit,value.reason
+]),[
+  ['a-linked',false,'已記帳'],
+  ['a-unverified',false,'狀態待確認'],
+  ['a-open',true,'']
+]);
+const warning=mod.shoppingDeleteWarning([guardedItem],ctx({
+  personal:{ready:true,records:[expense({id:'r-a'})]},
+  shared:{ready:false,records:[]}
+}));
+assert.match(warning,/已有 1 位建立消費紀錄/);
+assert.match(warning,/有 1 位記帳狀態待確認/);
 const linkedSplitItem={
   allocations:[{allocationId:'linked',target:'阿寶',quantity:2,ledgerLinks:[link({recordId:'r-a'})]}]
 };
@@ -271,6 +299,17 @@ const releasedAllocationItem=allocationLinkCase.store.releaseLedgerLink(
 );
 assert.strictEqual(releasedAllocationItem.allocations[1].ledgerLinks[0].releasedAt,NOW,'只解除指定 allocation 的 active link');
 assert.deepStrictEqual(plain(releasedAllocationItem.allocations[0].ledgerLinks),[],'其他 allocation 不受解除操作影響');
+const guardedStoreCase=freshStore();
+const guardedStoreItem=guardedStoreCase.store.add({name:'鎖定測試',targets:['阿寶','媽媽'],quantity:1});
+guardedStoreCase.store.applyLedgerLinks([{
+  shoppingItemId:guardedStoreItem.id,allocationId:guardedStoreItem.allocations[0].allocationId,
+  link:{track:'personal',testMode:false,recordId:'guarded-record',batchId:'',linkedAt:NOW}
+}]);
+const guardedSnapshot=guardedStoreCase.storage.snapshot();
+assert.throws(()=>guardedStoreCase.store.update(guardedStoreItem.id,{
+  allocations:[guardedStoreItem.allocations[1]]
+}),/已記帳|待確認|鎖定/,'不可移除仍有 active link 的 allocation');
+assert.strictEqual(guardedStoreCase.storage.snapshot(),guardedSnapshot,'被拒絕的 linked target 移除不得改寫 store');
 
 /* ================= 部分購買拆分 ================= */
 const splitCase=freshStore();
@@ -424,9 +463,11 @@ assert(/toast\('已標記「'\+item\.name\+'」為已買','復原'/.test(shoppin
 assert(shoppingSource.includes('function moveSelectedShoppingBackToPending('),'已買頁可批次移回待買');
 assert(shoppingSource.includes('function deleteSelectedShoppingItems('),'已買頁可批次刪除');
 assert(/patchMany\(selected\.map\(function\(item\)\{return \{id:item\.id,patch:\{done:false,completedAt:''\}\};\}\)\)/.test(shoppingSource),'移回待買只清完成狀態,保留 ledgerLinks／splitGroupId／createdAt／stopRef');
-assert(/刪除採買項目不會刪除原本的消費紀錄/.test(shoppingSource),'刪除已記帳項目時說明 Ledger 紀錄仍保留');
-assert(/刪除採買項目不會嘗試修改或刪除帳本紀錄/.test(shoppingSource),'待確認項目有獨立提醒');
-assert(/if\(state==='linked'\)linked\+\+;else if\(state==='unverified'\)unverified\+\+/.test(shoppingSource),'linked 與 unverified 分別計數');
+assert(/刪除採買項目不會刪除原本的消費紀錄/.test(html),'刪除已記帳項目時說明 Ledger 紀錄仍保留');
+assert(/刪除採買項目不會嘗試修改或刪除帳本紀錄/.test(html),'待確認項目有獨立提醒');
+assert(html.includes("已有 '+linked+' 位建立消費紀錄"));
+assert(html.includes("有 '+unverified+' 位記帳狀態待確認"));
+assert(/if\(value\.state==='linked'\)linked\+\+;[\s\S]{0,80}else if\(value\.state==='unverified'\)unverified\+\+/.test(html),'linked 與 unverified 依 allocation 分別計數');
 assert(shoppingSource.includes('removeMany('),'批次刪除走原子整批路徑');
 assert(!shoppingSource.includes('清空所有已買'),'本批不新增清空已買的危險入口');
 /* preflight 走共用 allocation source helper */
