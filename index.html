@@ -3411,10 +3411,11 @@ var DEFAULT_LEDGER_PAY_METHODS=['現金','信用卡','行動支付','Suica','其
 var SHOPPING_CATEGORIES=['必買','伴手禮','代購','生活用品','其他'];
 /* 個人狀態備份版本。v5 起 Shopping Item 帶 completedAt／splitGroupId／ledgerLinks;
    v6 起數量改為結構化 quantity／unit／legacyQtyText。
+   v7 起以 allocations[] 保存每位對象的數量與記帳關聯。
    若不升版,舊版 App 會認為格式相容,還原時經舊 normalizer 靜默丟掉新欄位 ——
    已記帳項目會重新顯示成未記帳而重複入帳,數量也會整批消失。新增欄位必須連帶升版。 */
-var PERSONAL_STATE_VERSION=6;
-var PERSONAL_STATE_SUPPORTED_VERSIONS=[1,2,3,4,5,6];
+var PERSONAL_STATE_VERSION=7;
+var PERSONAL_STATE_SUPPORTED_VERSIONS=[1,2,3,4,5,6,7];
 function isSupportedPersonalStateVersion(version){
   return typeof version==='number'&&PERSONAL_STATE_SUPPORTED_VERSIONS.indexOf(version)>=0;
 }

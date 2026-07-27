@@ -27,7 +27,11 @@ function createStorage(initial){
     trip_member:'黃柏'
   });
   storage.setItem('trip_ledger_proxy_targets',JSON.stringify(['阿芬','阿蓁']));
-  storage.setItem('trip_shopping_list',JSON.stringify([{id:'shopping-1',name:'白桃',category:'伴手禮',qty:'2',buyFor:'媽媽',stopRef:'10/18_3',done:false,createdAt:'2026-07-23T08:00:00.000Z'}]));
+  storage.setItem('trip_shopping_list',JSON.stringify([{
+    id:'shopping-1',name:'白桃',category:'伴手禮',unit:'盒',legacyQtyText:'',
+    allocations:[{allocationId:'shopping-1-allocation-1',target:'媽媽',quantity:2,ledgerLinks:[]}],
+    stopRef:'10/18_3',done:false,createdAt:'2026-07-23T08:00:00.000Z',completedAt:'',splitGroupId:''
+  }]));
   const box={value:'',focus(){},select(){}};
   const copied=[];
   let lastToast='';
@@ -45,12 +49,13 @@ function createStorage(initial){
     document:{getElementById(id){return id==='personalStateBox'?box:null;}},
     ledgerRepository:{queuedRecords(){return queued;},flushQueue(){flushes++;return Promise.resolve();}},
     personalLedgerRepository:{all(){return [{id:'personal-1',time:'2026-07-18T08:00:00.000Z',member:'黃柏',category:'餐飲',detail:'早餐',amountJpy:500,amountTwd:105,note:'',payMethod:'現金',isProxy:false,proxyTarget:'',batchId:''}];}},
-    /* v5 加了 completedAt／splitGroupId／ledgerLinks,v6 再加結構化 quantity／unit／legacyQtyText。
+    /* v5 加了 completedAt／splitGroupId／ledgerLinks,v6 再加結構化 quantity／unit／legacyQtyText，
+       v7 將對象、數量與 ledgerLinks 收進 allocations[]。
        備份必須連帶升版,否則舊版 App 會把新格式當成相容,還原時靜默丟掉這些欄位:
        已記帳項目會重新顯示成未記帳而重複入帳,數量也會整批消失。 */
-    PERSONAL_STATE_VERSION:6,
-    PERSONAL_STATE_SUPPORTED_VERSIONS:[1,2,3,4,5,6],
-    isSupportedPersonalStateVersion(version){return typeof version==='number'&&[1,2,3,4,5,6].indexOf(version)>=0;},
+    PERSONAL_STATE_VERSION:7,
+    PERSONAL_STATE_SUPPORTED_VERSIONS:[1,2,3,4,5,6,7],
+    isSupportedPersonalStateVersion(version){return typeof version==='number'&&[1,2,3,4,5,6,7].indexOf(version)>=0;},
     LEDGER_QUEUE_KEY:'trip_ledger_queue',
     PERSONAL_LEDGER_KEY:'trip_personal_ledger',
     LEDGER_CATEGORY_OPTIONS_KEY:'trip_ledger_categories',
@@ -95,7 +100,7 @@ function createStorage(initial){
   await sandbox.exportPersonalState();
   const exported=JSON.parse(copied[0]);
   assert.strictEqual(exported.format,'trip-personal-state');
-  assert.strictEqual(exported.version,6,'新匯出一律使用 v6');
+  assert.strictEqual(exported.version,7,'新匯出一律使用 v7');
   assert.strictEqual(sandbox.PERSONAL_STATE_VERSION,Number(html.match(/var PERSONAL_STATE_VERSION=(\d+);/)[1]),'sandbox 版本常數與 index.html 一致,避免測試與實作漂移');
   assert.deepStrictEqual(Object.keys(exported).sort(),['checks','exportedAt','format','ledgerCategories','ledgerPayMethods','ledgerQueue','member','personalLedger','proxyTargets','shoppingItems','version','wants'].sort());
   assert.strictEqual(exported.personalLedger[0].id,'personal-1');
@@ -103,6 +108,9 @@ function createStorage(initial){
   assert.deepStrictEqual(exported.ledgerPayMethods,['現金','Suica']);
   assert.deepStrictEqual(exported.proxyTargets,['阿芬','阿蓁']);
   assert.strictEqual(exported.shoppingItems[0].name,'白桃');
+  assert.deepStrictEqual(exported.shoppingItems[0].allocations,[{
+    allocationId:'shopping-1-allocation-1',target:'媽媽',quantity:2,ledgerLinks:[]
+  }],'v7 匯出保留 allocation 資料');
   assert.throws(function(){sandbox.validatePersonalStatePayload(Object.assign({},exported,{proxyTargets:'阿芬'}));},/代購對象/);
   assert.strictEqual(lastToast,'備份 JSON 已複製，請保存到安全位置');
 
