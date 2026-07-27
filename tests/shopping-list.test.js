@@ -191,6 +191,24 @@ assert.strictEqual(mod.shoppingItemTargetSummary({
 assert.strictEqual(mod.shoppingItemTargetSummary({
   allocations:[allocation('阿寶',2),allocation('媽媽',2),allocation('小明',2),allocation('爸爸',2)]
 }),'幫阿寶、媽媽 +2 買');
+assert.deepStrictEqual(plain(mod.shoppingCardTargetModel({
+  allocations:[allocation('阿寶',1),allocation('媽媽',1),allocation('小明',1)]
+})),{
+  prefix:'幫',
+  names:['阿寶','媽媽'],
+  overflow:'+1',
+  suffix:'買',
+  ariaLabel:'幫阿寶、媽媽等共 3 位買'
+},'三位以上只標示前兩位姓名並保留完整語意');
+assert.deepStrictEqual(plain(mod.shoppingCardTargetModel({
+  allocations:[allocation('阿寶',1)]
+})),{
+  prefix:'幫',
+  names:['阿寶'],
+  overflow:'',
+  suffix:'買',
+  ariaLabel:'幫阿寶買'
+},'單一對象不顯示分隔符號或 +N');
 assert.strictEqual(mod.shoppingItemQuantitySummary({
   unit:'盒',
   allocations:[allocation('阿寶',2),allocation('媽媽',2),allocation('小明',2)]
@@ -416,8 +434,14 @@ assert(ui.includes('id="shoppingBuyForNew"'));
 assert(ui.includes('>儲存並新增</button>'));
 assert(!ui.includes("SHOPPING_CATEGORIES=['必買','伴手禮','代購'"));
 assert.match(ui,/\.shopping-target-badge\{[^}]*background:var\(--coral-bg\)[^}]*color:var\(--coral\)[^}]*border-radius:6px/);
+assert(ui.includes('font-family:"PingFang TC","Noto Sans TC","Microsoft JhengHei",system-ui,-apple-system,sans-serif'),
+  '全站優先使用繁體中文字型');
+assert(!ui.includes('font-family:"Hiragino Sans","Noto Sans TC","PingFang TC"'),
+  '不得再由日文字型逐字 fallback 造成粗細不一致');
+assert(/\.shopping-category-badge\{[^}]*background:#fff7dc;[^}]*color:#8a6416/.test(ui),
+  '類別使用淡金底與深金字');
 assert.match(ui,/class="shopping-item-title-row"/);
-assert(ui.includes('shoppingItemTargetSummary(item)'));
+assert(ui.includes('shoppingCardTargetModel(item)'));
 assert(ui.includes('shoppingItemQuantitySummary(item)'));
 assert(ui.includes('shoppingItemLinkSummary(item,shoppingLedgerContext())'));
 assert(ui.includes("item.done||linkSummary.state!=='unlinked'"));
@@ -449,6 +473,10 @@ assert(ui.includes('ledger-action-popover'),'沿用帳本既有 popover 樣式,�
 assert(!/shopping-item-actions[\s\S]{0,200}>編輯</.test(ui),'編輯不再直接排在列上');
 /* 單筆記帳入口必須接回既有函式,不另造流程 */
 const itemRenderer=ui.slice(ui.indexOf('function renderShoppingItem(item)'),ui.indexOf('function renderShoppingGroups(items)'));
+assert(itemRenderer.includes('shoppingCardTargetModel(item)'),'卡片使用結構化 target model');
+assert(itemRenderer.includes('shopping-target-affix'),'幫／買／+N 使用普通文字片段');
+assert(itemRenderer.includes('targetModel.names.map'),'姓名逐一輸出 badge');
+assert(!itemRenderer.includes('escapeHtml(targetSummary)'),'不得再把整句摘要包成單一 badge');
 assert(itemRenderer.includes('openShoppingLedgerEntry(')&&itemRenderer.includes('>記帳</button>'),'已買未記帳項目直接呼叫既有的 openShoppingLedgerEntry()');
 assert(itemRenderer.includes('releaseShoppingLedgerLink('),'已記帳項目顯示改回未記帳');
 assert(itemRenderer.includes("linkState.state==='linked'")&&itemRenderer.includes("linkState.state==='unlinked'"),'入口顯示一律走共用 resolver 的三態');
