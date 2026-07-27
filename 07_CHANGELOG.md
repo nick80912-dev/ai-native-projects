@@ -1,4 +1,16 @@
 # 07 版本紀錄
+## 2026-07-27｜採買清單代購分配、逐人記帳與卡片明細（dev，SW v64，待 Bar 真機驗收）
+- **資料模型改為逐人分配**：Shopping Item 以 `allocations[]` 保存每一位對象的穩定 `allocationId`、`target`、`quantity` 與 append-only `ledgerLinks[]`。沒有代購對象時仍建立一筆「自己」分配；同一項目不可混用「自己」與代購對象，也不可出現正規化後重複的對象。新建多對象目前採**相同數量／人**，但資料契約與部分購買流程已能保存不同數量，未來開放逐人輸入時不需再改資料格式。
+- **代購對象多選與數量摘要**：新增／編輯表單可多選對象，並保留「新增對象」入口；新對象建立後會立即加入共用名單且自動選取。相同數量顯示 `2 盒／人 · 共 6 盒`，不同數量顯示 `共 4 盒 · 3 位`；卡片最多顯示前兩位，三位以上為 `幫阿寶、媽媽 +1 買`，完整名單可進明細查看。
+- **卡片資訊重新分層**：品名後方同行顯示代購對象與記帳狀態；代購 badge 沿用行程卡時間的 coral／淡紅底視覺，分類改用 mint badge 明確區隔，下一行顯示分類與數量，站點仍獨立一行。已買卡依 allocation 聚合為 `未記帳`、`記帳 2／3`、`已記帳` 或 `狀態待確認`，不再以 item-level link 粗略判斷。
+- **新增「儲存並新增」**：建立成功後保留分類與行程站點，數量回到 1；品名、單位、代購對象與其他輸入全部清空，方便在同一站連續建立多筆。普通「儲存」仍結束表單。
+- **逐人部分購買**：部分買到時每位對象各自輸入本次數量，可輸入 0；系統可靠計算已買與剩餘 allocation，原 item ID 留給已買部分、剩餘仍插在正後方並沿用 `splitGroupId`。明細以同一 split group 重建原需求，能顯示「原需求 2 盒 · 此卡 1 盒」。
+- **逐人 Buy-to-Ledger**：每個未記帳 allocation 對應一筆 Ledger 品項，並自動帶入原代購對象；draft 同時保留 `sourceShoppingItemId` 與 `sourceShoppingAllocationId`，依提交品項順序逐筆回寫對應 allocation。卡片與明細的狀態仍由 Ledger／queue／bridge／replacement／tombstone 即時推導，來源 ID 不進 Ledger 21 欄、不送 Apps Script、不入 Sheet。
+- **採買卡片可開完整明細**：點卡片顯示對象、分類、目前數量、同源原需求、完成時間、站點與記帳進度；逐人列出原需求／此卡數量及帳本狀態，已關聯者可進原消費紀錄並返回採買明細，未記帳者可直接建立剩餘對象的消費。checkbox、列上「記帳」與 `⋯` 維持各自事件邊界，不會誤開明細。
+- **編輯與刪除保護改到 allocation 粒度**：已記帳或狀態待確認的對象，其對象名稱、數量與 links 都鎖定；同一項目內仍可調整未記帳對象。刪除警告改以「幾位」分別統計 linked／unverified，並維持不修改或刪除 Ledger 原紀錄的既有語意。
+- **分類與代購定位分離**：分類選項不再含「代購」；代購身分只由 allocation target 決定。舊資料的 `category:'代購'` 會安全降級為空分類，`buyFor`／item-level `quantity`／item-level `ledgerLinks` 會在讀取時轉為 v7 allocation，無需保留測試資料的舊畫面相容層。
+- **個人狀態備份升至 v7**：新匯出保存 `allocations[]`；v1～v6 仍可還原並經 normalizer 補成 v7，未知未來版本與錯誤型別明確拒絕。`trip_shopping_list` key、Ledger 21 欄、Apps Script、Google Sheet、結算、團體權限、採買雲端同步與 SW 策略皆未改。
+- 測試：完整 **45／45** Node tests、`tools/check-doc-titles.js` 與 `git diff --check` 通過；結算可靠性另含 **123** 個子檢查。Browser QA 320／375／390px 實測多選新增、建立對象後自動選取、`儲存並新增` 保留／清空規則、三人摘要、逐人部分購買、待買與已買明細、checkbox／記帳／`⋯` 事件邊界；文件、清單 panel 與明細 panel 水平溢出皆為 0，長品名正常換行，明細按鈕高 44px，console error／warning 為 0。Service Worker cache `okayama-trip-v63` → `okayama-trip-v64`。
 ## 2026-07-26｜採買清單真機回饋批：單位下拉、卡片分層、動作收進 ⋯（dev，SW v63，待 Bar 真機驗收）
 - Bar 於 SW v62 真機驗收後的三項回饋，本批一次處理。
 - **單位改下拉並與數量並排**：12 顆 chips 佔兩行、數量欄卻用不到那麼寬。改為 `數量 | 單位` 兩欄同列，單位用 `<select>`（iOS 叫原生滾輪，比 chips 好按）。實測 375px 各 158px、320px 各 131px、字級 16px（不觸發 iOS zoom）。
