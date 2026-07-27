@@ -2996,11 +2996,13 @@ function renderShoppingItem(item){
       '<span class="shopping-target-affix" aria-hidden="true">'+escapeHtml(targetModel.suffix)+'</span>'+
     '</span>'
     :'';
-  /* 固定三層:品名 → 屬性 → 地點。動作收進 ⋯,只有「記帳」留在列上 ——
-     買到→記帳是主流程,不該多一次點擊;其餘(改回未記帳／部分買到／編輯／刪除)都是低頻。 */
+  /* 固定三層:品名 → 屬性 → 地點。部分購買與買到後記帳是列上主流程,
+     改回未記帳／編輯／刪除才收進 ⋯。 */
   var location=shoppingItemLocationLine(item,stop,state);
-  var inlineAction=((linkSummary.state==='unlinked'||linkSummary.state==='partial')&&item.done)
-    ?'<button type="button" class="shopping-item-primary" onclick="event.stopPropagation();openShoppingLedgerEntry(\''+jsString(item.id)+'\')">記帳</button>':'';
+  var inlineAction=selection?'':canOfferShoppingPartialPurchase(item,linkSummary)
+    ?'<button type="button" class="shopping-item-primary" onclick="event.stopPropagation();startShoppingSplit(\''+jsString(item.id)+'\')">部分購買</button>'
+    :((linkSummary.state==='unlinked'||linkSummary.state==='partial')&&item.done)
+      ?'<button type="button" class="shopping-item-primary" onclick="event.stopPropagation();openShoppingLedgerEntry(\''+jsString(item.id)+'\')">記帳</button>':'';
   var menu=selection?'':'<button type="button" class="shopping-item-menu" aria-label="採買項目操作" onclick="openShoppingItemActions(\''+jsString(item.id)+'\',event)">⋯</button>';
   return '<article class="shopping-item'+(state==='orphan'?' shopping-item-orphan':'')+'">'+check+
     '<div class="shopping-item-body" role="button" tabindex="0" aria-label="查看 '+escapeHtml(item.name)+' 詳情" onclick="handleShoppingItemBodyClick(\''+jsString(item.id)+'\',event)" onkeydown="handleShoppingItemBodyClick(\''+jsString(item.id)+'\',event)"><div class="shopping-item-title-row"><strong>'+escapeHtml(item.name)+'</strong>'+
@@ -3030,7 +3032,6 @@ function openShoppingItemActions(id,event){
   closeShoppingItemActions();
   var linkState=shoppingItemLinkState(item),safeId=jsHtmlAttrString(id),actions=[];
   if(linkState.state==='linked')actions.push('<button role="menuitem" onclick="closeShoppingItemActions();releaseShoppingLedgerLink(\''+safeId+'\')">改回未記帳</button>');
-  if(!item.done&&linkState.state==='unlinked')actions.push('<button role="menuitem" onclick="closeShoppingItemActions();startShoppingSplit(\''+safeId+'\')">部分買到</button>');
   actions.push('<button role="menuitem" onclick="closeShoppingItemActions();startShoppingEdit(\''+safeId+'\')">編輯 ✏️</button>');
   actions.push('<button role="menuitem" class="danger" onclick="closeShoppingItemActions();deleteShoppingItem(\''+safeId+'\')">刪除 🗑️</button>');
   var trigger=event&&event.currentTarget,rect=trigger&&trigger.getBoundingClientRect?trigger.getBoundingClientRect():{left:8,right:52,top:8,bottom:52};
@@ -3227,7 +3228,7 @@ function renderShoppingSplitForm(){
     var label=allocation.target?'幫 '+allocation.target+' 買':'自己';
     return '<div class="shopping-field"><label for="shoppingSplitPurchased-'+index+'">'+escapeHtml(label)+' · 本次買到（必填）</label><input class="shopping-input" id="shoppingSplitPurchased-'+index+'" type="number" inputmode="numeric" min="0" step="1" max="'+escapeHtml(String(allocation.quantity))+'" value="'+escapeHtml(String(form.purchasedByAllocationId[allocation.allocationId]))+'" oninput="updateShoppingSplitAllocation(\''+jsString(allocation.allocationId)+'\',this.value)"></div>';
   }).join('');
-  return '<form class="shopping-form shopping-split-form" onsubmit="event.preventDefault();submitShoppingSplit()"><div class="shopping-form-head"><h3>部分買到：'+escapeHtml(form.name)+'</h3><button type="button" class="shopping-icon-button" aria-label="關閉部分購買" onclick="cancelShoppingSplit()">×</button></div>'+
+  return '<form class="shopping-form shopping-split-form" onsubmit="event.preventDefault();submitShoppingSplit()"><div class="shopping-form-head"><h3>部分購買：'+escapeHtml(form.name)+'</h3><button type="button" class="shopping-icon-button" aria-label="關閉部分購買" onclick="cancelShoppingSplit()">×</button></div>'+
     '<p class="shopping-field-notice">原需求：'+escapeHtml(shoppingItemQuantitySummary(form))+'</p>'+
     ((form.error||preview.error)?'<p class="shopping-field-notice shopping-field-notice-warn">'+escapeHtml(form.error||preview.error)+'</p>':'')+
     allocationInputs+
@@ -4048,6 +4049,15 @@ function shoppingAllocationTotal(allocations){
     if(!Number.isSafeInteger(total))valid=false;
   });
   return valid?total:null;
+}
+function canOfferShoppingPartialPurchase(item,linkSummary){
+  if(!item||item.done||!linkSummary||linkSummary.state!=='unlinked')return false;
+  var allocations=shoppingItemAllocations(item);
+  if(!allocations.length||!allocations.every(function(allocation){
+    return isSafeShoppingQuantity(allocation.quantity);
+  }))return false;
+  var total=shoppingAllocationTotal(allocations);
+  return total!==null&&total>1;
 }
 function shoppingItemTargetSummary(item){
   var targets=shoppingTargetAllocations(item).map(function(allocation){return allocation.target;});

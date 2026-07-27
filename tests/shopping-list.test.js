@@ -261,6 +261,27 @@ assert.strictEqual(mod.shoppingItemLocationLine({stopRef:'x'},null,'pending'),'�
 assert.strictEqual(mod.shoppingItemLocationLine({stopRef:''},null,'unbound'),'','隨時可買不佔一行');
 
 /* 部分購買:只輸入本次買到,剩餘由系統計算 */
+const unlinkedSummary={state:'unlinked'};
+assert.strictEqual(mod.canOfferShoppingPartialPurchase({
+  done:false,allocations:[allocation('',1)]
+},unlinkedSummary),false,'自己的數量 1 不顯示部分購買');
+assert.strictEqual(mod.canOfferShoppingPartialPurchase({
+  done:false,allocations:[allocation('',2)]
+},unlinkedSummary),true,'自己的數量 2 可部分購買');
+assert.strictEqual(mod.canOfferShoppingPartialPurchase({
+  done:false,allocations:[allocation('阿寶',1),allocation('媽媽',1),allocation('小明',1)]
+},unlinkedSummary),true,'三位各 1 份時總需求大於 1，可部分購買');
+assert.strictEqual(mod.canOfferShoppingPartialPurchase({
+  done:false,allocations:[allocation('',null)]
+},unlinkedSummary),false,'舊式數量不顯示部分購買');
+['linked','partial','unverified'].forEach(state=>{
+  assert.strictEqual(mod.canOfferShoppingPartialPurchase({
+    done:false,allocations:[allocation('',2)]
+  },{state}),false,state+' 狀態不顯示部分購買');
+});
+assert.strictEqual(mod.canOfferShoppingPartialPurchase({
+  done:true,allocations:[allocation('',2)]
+},unlinkedSummary),false,'已買項目不顯示部分購買');
 const src=q({id:'s1',quantity:5,unit:'罐'});
 assert.deepStrictEqual(plain(mod.shoppingSplitPlan(src,3)),{ok:true,mode:'split',purchasedQuantity:3,remainingQuantity:2,error:''},'買到 3 剩 2');
 assert.deepStrictEqual(plain(mod.shoppingSplitPlan(src,1)),{ok:true,mode:'split',purchasedQuantity:1,remainingQuantity:4,error:''},'買到 1 剩 4');
@@ -477,9 +498,15 @@ assert(itemRenderer.includes('shoppingCardTargetModel(item)'),'卡片使用結�
 assert(itemRenderer.includes('shopping-target-affix'),'幫／買／+N 使用普通文字片段');
 assert(itemRenderer.includes('targetModel.names.map'),'姓名逐一輸出 badge');
 assert(!itemRenderer.includes('escapeHtml(targetSummary)'),'不得再把整句摘要包成單一 badge');
+assert(itemRenderer.includes('canOfferShoppingPartialPurchase(item,linkSummary)'),
+  '卡片部分購買入口使用統一 eligibility helper');
+assert(itemRenderer.includes('>部分購買</button>'),'卡片直接顯示部分購買');
 assert(itemRenderer.includes('openShoppingLedgerEntry(')&&itemRenderer.includes('>記帳</button>'),'已買未記帳項目直接呼叫既有的 openShoppingLedgerEntry()');
 assert(itemRenderer.includes('releaseShoppingLedgerLink('),'已記帳項目顯示改回未記帳');
-assert(itemRenderer.includes("linkState.state==='linked'")&&itemRenderer.includes("linkState.state==='unlinked'"),'入口顯示一律走共用 resolver 的三態');
+assert(itemRenderer.includes('shoppingItemLinkSummary(item,shoppingLedgerContext())')&&
+  itemRenderer.includes("linkSummary.state==='unlinked'")&&
+  itemRenderer.includes("linkSummary.state==='partial'"),
+  '列上入口顯示一律走共用 resolver 的三態');
 const itemRendererCode=itemRenderer.replace(/\/\*[\s\S]*?\*\//g,'');
 assert(!/ledgerLinks\.length/.test(itemRendererCode),'不得以 ledgerLinks.length 判斷是否可記帳');
 assert(itemRenderer.indexOf('記帳<')>0&&itemRenderer.indexOf('item.done')>0,'記帳入口只在已買項目出現');

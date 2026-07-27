@@ -507,7 +507,16 @@ assert(!/confirm\('這只會解除/.test(shoppingSource),'不再使用按鈕文�
 assert(shoppingSource.includes("overlay.className='shopping-choice-overlay'"),'沿用既有 z-index 160 的對話框樣式,未新增 CSS');
 assert(shoppingSource.includes('activeShoppingLedgerLink(selected)'),'沒有 active allocation link 時不提供解除');
 /* 部分購買 */
-assert(shoppingSource.includes('function startShoppingSplit('),'提供部分買到入口');
+assert(shoppingSource.includes('function startShoppingSplit('),'保留部分購買流程');
+assert(shoppingSource.includes('>部分購買</button>'),'卡片直接提供部分購買入口');
+assert(!shoppingSource.includes('>部分買到</button>'),'舊的部分買到文案已移除');
+const itemActionsSource=shoppingSource.slice(
+  shoppingSource.indexOf('function openShoppingItemActions('),
+  shoppingSource.indexOf('var shoppingDetailReturnItemId',shoppingSource.indexOf('function openShoppingItemActions('))
+);
+assert(!itemActionsSource.includes('startShoppingSplit('),'部分購買不再收在 ⋯ 選單');
+assert(shoppingSource.includes('canOfferShoppingPartialPurchase(item,linkSummary)'),
+  '卡片入口使用總需求與記帳狀態 helper');
 assert(shoppingSource.includes('canSplitShoppingItem(item,shoppingLedgerContext())'),'拆分前檢查記帳狀態');
 assert(shoppingSource.includes('本次買到（必填）')&&shoppingSource.includes('剩餘待買（自動計算）'),'只輸入本次買到,剩餘由系統計算');
 assert(shoppingSource.includes('shoppingSplitPreview(form)'),'剩餘數量即時預覽');
