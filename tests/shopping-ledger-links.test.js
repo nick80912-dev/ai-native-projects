@@ -7,10 +7,13 @@ const vm=require('vm');
 
 function createStorage(){
   const values={};
+  let failKey='';
   return {
     getItem(key){return Object.prototype.hasOwnProperty.call(values,key)?values[key]:null;},
-    setItem(key,value){values[key]=String(value);},
+    setItem(key,value){if(key===failKey){failKey='';throw new Error('storage denied');}values[key]=String(value);},
     removeItem(key){delete values[key];},
+    failOnceOn(key){failKey=key;},
+    snapshot(){return JSON.stringify(values);},
     __raw:values
   };
 }
@@ -144,6 +147,15 @@ assert.deepStrictEqual(editPolicy.allocations.map(value=>[
   ['linked',false,'已記帳'],
   ['open',true,'']
 ]);
+const linkedSplitItem={
+  allocations:[{allocationId:'linked',target:'阿寶',quantity:2,ledgerLinks:[link({recordId:'r-a'})]}]
+};
+assert.strictEqual(mod.shoppingAllocationSplitPlan(
+  linkedSplitItem,{linked:1},ctx({personal:{ready:true,records:[expense({id:'r-a'})]}})
+).ok,false,'已記帳 allocation 不可拆分');
+assert.strictEqual(mod.shoppingAllocationSplitPlan(
+  linkedSplitItem,{linked:1},ctx({personal:{ready:false,records:[]}})
+).ok,false,'狀態待確認 allocation 不可拆分');
 
 /* ================= 重新開放記帳 ================= */
 const released=mod.releaseShoppingLedgerLinks([link({recordId:'r-old',releasedAt:NOW}),link({recordId:'r-a'})],NOW);
@@ -232,13 +244,47 @@ assert.strictEqual(again.remainder.splitGroupId,source.id,'再次拆分沿用既
 assert.strictEqual(again.remainder.stopRef,'','剩餘部分可清為隨時可買');
 assert.strictEqual(again.purchased.stopRef,'d1_a','已買部分保留原站點');
 
+/* 多對象依 allocation 拆分，已買與剩餘仍相鄰且只寫入一次 */
+const multiSplitCase=freshStore();
+const multiSplitSource=multiSplitCase.store.add({
+  name:'白桃果凍',category:'伴手禮',unit:'盒',
+  targets:['阿寶','媽媽','小明'],quantity:2,stopRef:'d2_shop'
+});
+const multiIds=multiSplitSource.allocations.map(value=>value.allocationId);
+const multiSplit=multiSplitCase.store.split(multiSplitSource.id,{
+  purchasedByAllocationId:{
+    [multiIds[0]]:2,[multiIds[1]]:1,[multiIds[2]]:1
+  },
+  remainderStopRef:'d2_shop',now:Date.parse(NOW)
+});
+assert.deepStrictEqual(plain(multiSplit.purchased.allocations.map(value=>[value.target,value.quantity])),[
+  ['阿寶',2],['媽媽',1],['小明',1]
+]);
+assert.deepStrictEqual(plain(multiSplit.remainder.allocations.map(value=>[value.target,value.quantity])),[
+  ['媽媽',1],['小明',1]
+]);
+assert.strictEqual(multiSplit.purchased.done,true);
+assert.strictEqual(multiSplit.remainder.done,false);
+const atomicSplitCase=freshStore();
+const atomicSource=atomicSplitCase.store.add({name:'原子測試',targets:['阿寶','媽媽'],quantity:2});
+const atomicBefore=atomicSplitCase.storage.snapshot();
+atomicSplitCase.storage.failOnceOn('trip_shopping_list');
+assert.throws(()=>atomicSplitCase.store.split(atomicSource.id,{
+  purchasedByAllocationId:{
+    [atomicSource.allocations[0].allocationId]:1,
+    [atomicSource.allocations[1].allocationId]:0
+  },
+  now:Date.parse(NOW)
+}),/storage denied/);
+assert.strictEqual(atomicSplitCase.storage.snapshot(),atomicBefore,'儲存失敗時原始序列化資料完全不變');
+
 /* 驗證與原子性 */
 const before=plain(splitCase.store.all());
-assert.throws(()=>splitCase.store.split(source.id,{purchasedQuantity:0,now:Date.parse(NOW)}),/至少為 1/,'買到 0 阻擋');
-assert.throws(()=>splitCase.store.split(source.id,{purchasedQuantity:-2,now:Date.parse(NOW)}),/至少為 1/,'負數阻擋');
-assert.throws(()=>splitCase.store.split(source.id,{purchasedQuantity:1.5,now:Date.parse(NOW)}),/至少為 1/,'小數阻擋');
-assert.throws(()=>splitCase.store.split(source.id,{purchasedQuantity:99,now:Date.parse(NOW)}),/不可超過原需求/,'買超過原需求阻擋');
-assert.throws(()=>splitCase.store.split(source.id,{purchasedQuantity:3,now:Date.parse(NOW)}),/全部買到/,'買齊不得產生 0 數量剩餘,必須改走全部買到');
+assert.throws(()=>splitCase.store.split(source.id,{purchasedQuantity:0,now:Date.parse(NOW)}),/已買/,'已完成來源不可再次拆分');
+assert.throws(()=>splitCase.store.split(source.id,{purchasedQuantity:-2,now:Date.parse(NOW)}),/已買/,'已完成來源先由狀態守門');
+assert.throws(()=>splitCase.store.split(source.id,{purchasedQuantity:1.5,now:Date.parse(NOW)}),/已買/,'已完成來源先由狀態守門');
+assert.throws(()=>splitCase.store.split(source.id,{purchasedQuantity:99,now:Date.parse(NOW)}),/已買/,'已完成來源先由狀態守門');
+assert.throws(()=>splitCase.store.split(source.id,{purchasedQuantity:3,now:Date.parse(NOW)}),/已買/,'已完成來源不可重複走全部買到');
 assert.throws(()=>splitCase.store.split('nope',{purchasedQuantity:1,now:Date.parse(NOW)}),/找不到/,'來源不存在時拒絕');
 const legacySplit=freshStore();
 const legacyItem=legacySplit.store.add({name:'舊式數量',qty:'約 3～5 個'});
@@ -328,7 +374,7 @@ assert(!shoppingSource.includes('id="shoppingQty"'),'舊的自由文字數量欄
 assert(shoppingSource.includes('shoppingUnitStore.all()'),'單位選項改由設定頁可管理的 store 提供');
 assert(!shoppingSource.includes('placeholder="其他單位"'),'表單不再自由輸入單位,新增單位改到設定頁');
 assert(/此為舊式文字數量。儲存前請改為數字與單位。/.test(shoppingSource),'舊式數量在編輯表單有明確提示');
-assert(shoppingSource.includes('shoppingQuantityLabel('),'顯示一律走共用 helper');
+assert(shoppingSource.includes('shoppingItemQuantitySummary('),'顯示一律走 allocation 共用 helper');
 assert(!/'數量 '\+item\.qty|item\.qty/.test(shoppingSource),'顯示層不再自行拼接舊 qty');
 /* 狀態徽章一律走 resolver */
 assert(shoppingSource.includes('shoppingItemLinkState(item)'),'已記帳標記走共用 resolver');

@@ -252,6 +252,31 @@ assert.strictEqual(mod.shoppingSplitPlan(src,6).error,'本次買到數量不可�
 assert.strictEqual(mod.shoppingSplitPlan(src,0).error,'本次買到數量至少為 1');
 assert.strictEqual(mod.shoppingSplitPlan(src,-2).error,'本次買到數量至少為 1');
 assert.strictEqual(mod.shoppingSplitPlan(src,1.5).error,'本次買到數量至少為 1','小數阻擋');
+const allocationSplitSource=q({
+  id:'multi-split',unit:'盒',
+  allocations:[
+    {allocationId:'split-a',target:'阿寶',quantity:2,ledgerLinks:[]},
+    {allocationId:'split-b',target:'媽媽',quantity:2,ledgerLinks:[]},
+    {allocationId:'split-c',target:'小明',quantity:2,ledgerLinks:[]}
+  ]
+});
+const allocationPlan=plain(mod.shoppingAllocationSplitPlan(allocationSplitSource,{
+  'split-a':2,'split-b':1,'split-c':1
+}));
+assert.strictEqual(allocationPlan.ok,true);
+assert.strictEqual(allocationPlan.mode,'split');
+assert.deepStrictEqual(allocationPlan.purchasedAllocations.map(value=>[value.target,value.quantity]),[
+  ['阿寶',2],['媽媽',1],['小明',1]
+]);
+assert.deepStrictEqual(allocationPlan.remainderAllocations.map(value=>[value.target,value.quantity]),[
+  ['媽媽',1],['小明',1]
+]);
+assert.strictEqual(allocationPlan.purchasedTotal,4);
+assert.strictEqual(allocationPlan.remainderTotal,2);
+assert.strictEqual(mod.shoppingAllocationSplitPlan(allocationSplitSource,{'split-a':0,'split-b':0,'split-c':0}).ok,false,'全部 0 不建立空的已買項目');
+assert.strictEqual(mod.shoppingAllocationSplitPlan(allocationSplitSource,{'missing':1}).ok,false,'未知 allocation ID 拒絕');
+assert.strictEqual(mod.shoppingAllocationSplitPlan(allocationSplitSource,{'split-a':3}).ok,false,'單一對象不可買超過需求');
+assert.strictEqual(mod.shoppingAllocationSplitPlan(allocationSplitSource,{'split-a':1.5}).ok,false,'本次買到不得為小數');
 assert.strictEqual(mod.shoppingSplitPlan(q({id:'s2',quantity:null,legacyQtyText:'約 3～5 個'}),1).ok,false,'舊式數量不得部分購買');
 assert(/舊式文字數量/.test(mod.shoppingSplitPlan(q({id:'s3',quantity:null,legacyQtyText:'兩盒'}),1).error),'舊式數量提示先轉換');
 

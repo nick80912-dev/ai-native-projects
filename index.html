@@ -3010,11 +3010,18 @@ function startShoppingSplit(id){
   var item=shoppingListStore.all().filter(function(value){return value.id===String(id);})[0];if(!item)return;
   var guard=canSplitShoppingItem(item,shoppingLedgerContext());
   if(!guard.ok){toast(guard.error);return;}
-  if(item.quantity==null){toast('此項目仍使用舊式文字數量。請先編輯為數字與單位，再使用部分購買');startShoppingEdit(item.id);return;}
+  if(shoppingItemAllocations(item).some(function(allocation){return allocation.quantity==null;})){toast('此項目仍使用舊式文字數量。請先編輯為數字與單位，再使用部分購買');startShoppingEdit(item.id);return;}
+  var purchasedByAllocationId={};
+  shoppingItemAllocations(item).forEach(function(allocation){purchasedByAllocationId[allocation.allocationId]='0';});
   shoppingUiState.form=null;
-  shoppingUiState.split={id:item.id,name:item.name,quantity:item.quantity,unit:item.unit,purchasedQuantity:'',remainderStopRef:item.stopRef,error:''};
+  shoppingUiState.split={
+    id:item.id,name:item.name,unit:item.unit,legacyQtyText:item.legacyQtyText,
+    allocations:shoppingItemAllocations(item).map(function(allocation){return Object.assign({},allocation);}),
+    purchasedByAllocationId:purchasedByAllocationId,
+    remainderStopRef:item.stopRef,error:''
+  };
   renderShoppingListOverlay();
-  requestAnimationFrame(function(){var input=document.getElementById('shoppingSplitPurchased');if(input)input.focus();});
+  requestAnimationFrame(function(){var input=document.querySelector('[id^="shoppingSplitPurchased-"]');if(input)input.focus();});
 }
 function cancelShoppingSplit(){shoppingUiState.split=null;renderShoppingListOverlay();}
 function updateShoppingSplitField(field,value,rerender){
@@ -3022,6 +3029,11 @@ function updateShoppingSplitField(field,value,rerender){
   shoppingUiState.split[field]=value;
   /* 剩餘數量是即時算出來的,輸入本次買到後就要看得到結果。 */
   if(rerender)withShoppingSplitFocus(renderShoppingListOverlay);
+}
+function updateShoppingSplitAllocation(allocationId,value){
+  if(!shoppingUiState.split)return;
+  shoppingUiState.split.purchasedByAllocationId[allocationId]=value;
+  withShoppingSplitFocus(renderShoppingListOverlay);
 }
 function withShoppingSplitFocus(renderFn){
   var active=document.activeElement&&document.activeElement.id,start=null;
@@ -3033,34 +3045,32 @@ function withShoppingSplitFocus(renderFn){
   if(start!=null)try{focus.setSelectionRange(start,start);}catch(ignore){}
 }
 function shoppingSplitPreview(form){
-  var raw=String(form.purchasedQuantity==null?'':form.purchasedQuantity).trim();
-  if(!raw)return {text:'—',error:''};
-  var plan=shoppingSplitPlan({quantity:form.quantity},/^\d+$/.test(raw)?Number(raw):NaN);
-  if(!plan.ok)return {text:'—',error:plan.error};
-  if(plan.mode==='complete')return {text:'0（全部買到）',error:''};
-  return {text:shoppingQuantityLabel({quantity:plan.remainingQuantity,unit:form.unit}),error:''};
+  var values={},invalid=false;
+  shoppingItemAllocations(form).forEach(function(allocation){
+    var raw=String(form.purchasedByAllocationId&&form.purchasedByAllocationId[allocation.allocationId]||'0').trim();
+    if(!/^\d+$/.test(raw)){invalid=true;return;}
+    values[allocation.allocationId]=Number(raw);
+  });
+  if(invalid)return {purchasedLabel:'—',remainderLabel:'—',text:'—',error:'本次買到數量必須是 0 以上的整數'};
+  var plan=shoppingAllocationSplitPlan(form,values);
+  if(!plan.ok)return {purchasedLabel:'—',remainderLabel:'—',text:'—',error:plan.error};
+  var purchasedLabel=shoppingItemQuantitySummary({unit:form.unit,allocations:plan.purchasedAllocations});
+  var remainderLabel=plan.mode==='complete'?'0（全部買到）':shoppingItemQuantitySummary({unit:form.unit,allocations:plan.remainderAllocations});
+  return {purchasedLabel:purchasedLabel,remainderLabel:remainderLabel,text:remainderLabel,error:'',plan:plan};
 }
 function submitShoppingSplit(){
   var form=shoppingUiState.split;if(!form)return;
-  var raw=String(form.purchasedQuantity==null?'':form.purchasedQuantity).trim();
-  var plan=shoppingSplitPlan({quantity:form.quantity},/^\d+$/.test(raw)?Number(raw):NaN);
-  if(!plan.ok){
-    form.error=plan.error;renderShoppingListOverlay();
-    var invalid=document.getElementById('shoppingSplitPurchased');if(invalid)invalid.focus();return;
-  }
-  /* 買到的數量等於原需求時不建立 0 數量的剩餘項目,直接走全部買到。 */
-  if(plan.mode==='complete'){
-    try{shoppingListStore.update(form.id,{done:true,completedAt:timestampDate(Date.now()).toISOString()});}
-    catch(error){form.error=error.message||'儲存失敗';renderShoppingListOverlay();return;}
-    shoppingUiState.split=null;renderToday();renderShoppingListOverlay();toast('已全部買到');return;
-  }
+  var preview=shoppingSplitPreview(form),plan=preview.plan;
+  if(!plan){form.error=preview.error;renderShoppingListOverlay();return;}
+  var purchased={};
+  Object.keys(form.purchasedByAllocationId).forEach(function(id){purchased[id]=Number(form.purchasedByAllocationId[id]);});
   try{
-    shoppingListStore.split(form.id,{purchasedQuantity:plan.purchasedQuantity,remainderStopRef:form.remainderStopRef,now:Date.now()});
+    shoppingListStore.split(form.id,{purchasedByAllocationId:purchased,remainderStopRef:form.remainderStopRef,now:Date.now()});
   }catch(error){
     form.error=error.message||'部分購買儲存失敗';renderShoppingListOverlay();
-    var input=document.getElementById('shoppingSplitPurchased');if(input)input.focus();return;
+    var input=document.querySelector('[id^="shoppingSplitPurchased-"]');if(input)input.focus();return;
   }
-  shoppingUiState.split=null;renderToday();renderShoppingListOverlay();toast('已拆成已買與待買兩筆');
+  shoppingUiState.split=null;renderToday();renderShoppingListOverlay();toast(plan.mode==='complete'?'已全部買到':'已拆成已買與待買兩筆');
 }
 function renderShoppingSplitForm(){
   var form=shoppingUiState.split;if(!form)return '';
@@ -3070,13 +3080,18 @@ function renderShoppingSplitForm(){
     options+='<option value="'+escapeHtml(stop.id)+'" '+(form.remainderStopRef===stop.id?'selected':'')+'>'+escapeHtml(stop.name)+'</option>';
   });
   if(lastDay>=0)options+='</optgroup>';
-  /* 數量已結構化:使用者只輸入本次買到,剩餘由 shoppingSplitPlan() 可靠計算並即時顯示。 */
+  /* 每位對象各自輸入本次買到,剩餘由 shoppingAllocationSplitPlan() 可靠計算並即時顯示。 */
   var preview=shoppingSplitPreview(form);
+  var allocationInputs=shoppingItemAllocations(form).map(function(allocation,index){
+    var label=allocation.target?'幫 '+allocation.target+' 買':'自己';
+    return '<div class="shopping-field"><label for="shoppingSplitPurchased-'+index+'">'+escapeHtml(label)+' · 本次買到（必填）</label><input class="shopping-input" id="shoppingSplitPurchased-'+index+'" type="number" inputmode="numeric" min="0" step="1" max="'+escapeHtml(String(allocation.quantity))+'" value="'+escapeHtml(String(form.purchasedByAllocationId[allocation.allocationId]))+'" oninput="updateShoppingSplitAllocation(\''+jsString(allocation.allocationId)+'\',this.value)"></div>';
+  }).join('');
   return '<form class="shopping-form shopping-split-form" onsubmit="event.preventDefault();submitShoppingSplit()"><div class="shopping-form-head"><h3>部分買到：'+escapeHtml(form.name)+'</h3><button type="button" class="shopping-icon-button" aria-label="關閉部分購買" onclick="cancelShoppingSplit()">×</button></div>'+
-    '<p class="shopping-field-notice">原需求：'+escapeHtml(shoppingQuantityLabel(form))+'</p>'+
+    '<p class="shopping-field-notice">原需求：'+escapeHtml(shoppingItemQuantitySummary(form))+'</p>'+
     ((form.error||preview.error)?'<p class="shopping-field-notice shopping-field-notice-warn">'+escapeHtml(form.error||preview.error)+'</p>':'')+
-    '<div class="shopping-field"><label for="shoppingSplitPurchased">本次買到（必填）</label><input class="shopping-input" id="shoppingSplitPurchased" type="number" inputmode="numeric" min="1" step="1" max="'+escapeHtml(String(form.quantity))+'" value="'+escapeHtml(String(form.purchasedQuantity==null?'':form.purchasedQuantity))+'" oninput="updateShoppingSplitField(\'purchasedQuantity\',this.value,true)"></div>'+
-    '<div class="shopping-field"><span class="shopping-field-label">剩餘待買（自動計算）</span><p class="shopping-split-remainder" id="shoppingSplitRemainder">'+escapeHtml(preview.text)+'</p></div>'+
+    allocationInputs+
+    '<div class="shopping-field"><span class="shopping-field-label">本次買到合計</span><p class="shopping-split-remainder">'+escapeHtml(preview.purchasedLabel)+'</p></div>'+
+    '<div class="shopping-field"><span class="shopping-field-label">剩餘待買（自動計算）</span><p class="shopping-split-remainder" id="shoppingSplitRemainder">'+escapeHtml(preview.remainderLabel)+'</p></div>'+
     '<div class="shopping-field"><label for="shoppingSplitStop">剩餘待買的站點</label><select class="shopping-select" id="shoppingSplitStop" onchange="updateShoppingSplitField(\'remainderStopRef\',this.value)">'+options+'</select></div>'+
     '<div class="shopping-form-actions"><button type="button" class="btn ghost" onclick="cancelShoppingSplit()">取消</button><button type="submit" class="btn">拆成兩筆</button></div></form>';
 }
@@ -3584,24 +3599,63 @@ function canSplitShoppingItem(item,context){
   if(state==='unverified')return {ok:false,error:'記帳狀態尚待確認，請先完成同步再拆分'};
   return {ok:true,error:''};
 }
+function shoppingAllocationSplitPlan(item,purchasedByAllocationId,context){
+  var allocations=shoppingItemAllocations(item),input=purchasedByAllocationId||{};
+  var failure=function(message){
+    return {ok:false,mode:'',purchasedAllocations:[],remainderAllocations:[],purchasedTotal:0,remainderTotal:0,error:message};
+  };
+  if(!allocations.length)return failure('找不到採買分配');
+  var known={};
+  allocations.forEach(function(allocation){known[allocation.allocationId]=true;});
+  var unknown=Object.keys(input).filter(function(id){return !known[id];});
+  if(unknown.length)return failure('找不到採買分配：'+unknown[0]);
+  var purchased=[],remainder=[],purchasedTotal=0,remainderTotal=0;
+  for(var index=0;index<allocations.length;index++){
+    var allocation=allocations[index];
+    if(!isSafeShoppingQuantity(allocation.quantity))return failure('此項目仍使用舊式文字數量，請先編輯為數字與單位，再使用部分購買');
+    var state=context?resolveShoppingLedgerLinkState(allocation,context).state:
+      (activeShoppingLedgerLink(allocation)?'unverified':'unlinked');
+    if(state==='linked')return failure('這位對象已建立消費紀錄，無法再拆分');
+    if(state==='unverified')return failure('記帳狀態尚待確認，請先完成同步再拆分');
+    var raw=Object.prototype.hasOwnProperty.call(input,allocation.allocationId)?input[allocation.allocationId]:0;
+    if(typeof raw!=='number'||!isFinite(raw)||Math.floor(raw)!==raw||raw<0)
+      return failure('本次買到數量必須是 0 以上的整數');
+    if(raw>allocation.quantity)return failure('本次買到數量不可超過原需求');
+    var remaining=allocation.quantity-raw;
+    if(raw>0)purchased.push(Object.assign({},allocation,{quantity:raw,ledgerLinks:(allocation.ledgerLinks||[]).slice()}));
+    if(remaining>0)remainder.push(Object.assign({},allocation,{quantity:remaining,ledgerLinks:[]}));
+    purchasedTotal+=raw;remainderTotal+=remaining;
+    if(!Number.isSafeInteger(purchasedTotal)||!Number.isSafeInteger(remainderTotal))return failure('採買總數量超出安全範圍');
+  }
+  if(!purchased.length)return failure('請至少輸入一位對象本次買到的數量');
+  return {
+    ok:true,
+    mode:remainder.length?'split':'complete',
+    purchasedAllocations:purchased,
+    remainderAllocations:remainder,
+    purchasedTotal:purchasedTotal,
+    remainderTotal:remainderTotal,
+    error:''
+  };
+}
 function buildShoppingSplitParts(source,input){
-  var seed=input||{},plan=shoppingSplitPlan(source,seed.purchasedQuantity);
+  var seed=input||{},allocations=shoppingItemAllocations(source),purchased=seed.purchasedByAllocationId;
+  if(!purchased&&allocations.length===1){purchased={};purchased[allocations[0].allocationId]=seed.purchasedQuantity;}
+  var plan=shoppingAllocationSplitPlan(source,purchased);
   if(!plan.ok)throw new Error(plan.error);
-  if(plan.mode!=='split')throw new Error('本次買到等於原需求，請改用全部買到');
   var groupId=String(source.splitGroupId||'').trim()||source.id;
   var stamp=timestampDate(seed.now==null?Date.now():seed.now).toISOString();
-  var sourceAllocation=shoppingItemAllocations(source)[0];
-  if(shoppingItemAllocations(source).length!==1)throw new Error('多對象採買請分別輸入本次買到數量');
-  var purchased={};Object.keys(source).forEach(function(key){purchased[key]=source[key];});
-  purchased.allocations=[Object.assign({},sourceAllocation,{quantity:plan.purchasedQuantity})];
-  purchased.done=true;purchased.completedAt=stamp;purchased.splitGroupId=groupId;
+  var purchasedItem={};Object.keys(source).forEach(function(key){purchasedItem[key]=source[key];});
+  purchasedItem.allocations=plan.purchasedAllocations;
+  purchasedItem.done=true;purchasedItem.completedAt=stamp;purchasedItem.splitGroupId=groupId;
+  if(plan.mode==='complete')return {purchased:purchasedItem,remainder:null,plan:plan};
   var remainder={
     id:'',name:source.name,category:source.category,unit:source.unit,legacyQtyText:'',
-    allocations:[{allocationId:'',target:sourceAllocation.target,quantity:plan.remainingQuantity,ledgerLinks:[]}],
+    allocations:plan.remainderAllocations,
     stopRef:seed.remainderStopRef===undefined?source.stopRef:String(seed.remainderStopRef==null?'':seed.remainderStopRef).trim(),
     done:false,createdAt:source.createdAt,completedAt:'',splitGroupId:groupId
   };
-  return {purchased:purchased,remainder:remainder};
+  return {purchased:purchasedItem,remainder:remainder,plan:plan};
 }
 /* ---- 結構化採買數量 ----
    quantity 是安全正整數(最小 1),unit 獨立保存,兩者合起來才可靠支援部分購買的減法。
@@ -4039,12 +4093,16 @@ function createShoppingListStore(options){
     var current=all(),index=-1;
     current.forEach(function(item,position){if(item.id===String(id))index=position;});
     if(index<0)throw new Error('找不到採買項目');
+    if(current[index].done)throw new Error('已買項目請先移回待買，再進行部分購買');
     var parts=buildShoppingSplitParts(current[index],Object.assign({now:now()},input||{}));
-    parts.remainder.id=idFactory();
-    if(!parts.remainder.id)throw new Error('採買項目缺少 ID');
-    var next=current.slice(0,index).concat([parts.purchased,parts.remainder],current.slice(index+1));
+    if(parts.remainder){
+      parts.remainder.id=idFactory();
+      if(!parts.remainder.id)throw new Error('採買項目缺少 ID');
+    }
+    var replacements=parts.remainder?[parts.purchased,parts.remainder]:[parts.purchased];
+    var next=current.slice(0,index).concat(replacements,current.slice(index+1));
     var saved=write(next);
-    return {purchased:saved[index],remainder:saved[index+1]};
+    return {purchased:saved[index],remainder:parts.remainder?saved[index+1]:null};
   }
   return {all:all,add:add,update:update,remove:remove,removeMany:removeMany,replace:replace,normalize:normalize,applyLedgerLinks:applyLedgerLinks,patchMany:patchMany,split:split};
 }
