@@ -209,6 +209,18 @@ assert.deepStrictEqual(plain(mod.shoppingCardTargetModel({
   suffix:'買',
   ariaLabel:'幫阿寶買'
 },'單一對象不顯示分隔符號或 +N');
+assert.deepStrictEqual(plain(mod.shoppingSelectionToolbarModel('pending',0)),{
+  label:'請選擇項目',
+  actions:[]
+},'零選取只顯示提示，不渲染 disabled 動作');
+assert.deepStrictEqual(plain(mod.shoppingSelectionToolbarModel('pending',2)),{
+  label:'已選 2',
+  actions:['已買','記帳','刪除']
+},'待買多選使用精簡單行動作');
+assert.deepStrictEqual(plain(mod.shoppingSelectionToolbarModel('done',2)),{
+  label:'已選 2',
+  actions:['移回待買','記帳','刪除']
+},'已買多選動作不借用完成 checkbox');
 assert.strictEqual(mod.shoppingItemQuantitySummary({
   unit:'盒',
   allocations:[allocation('阿寶',2),allocation('媽媽',2),allocation('小明',2)]
@@ -471,12 +483,21 @@ assert(ui.includes('id="shoppingListOverlay"')||ui.includes("overlay.id='shoppin
 assert(ui.includes('今天有 ')&&ui.includes('項待買'),'Today has the approved reminder copy');
 assert(ui.includes('function renderShoppingTodayEntry(day)'),'Today uses one entry selector to avoid duplicate launchers');
 assert(ui.includes('採買清單 →'),'empty, non-trip, and no-reminder Today states keep a lightweight list entry');
-/* 待買多選工具列:計數一列、三顆動作一列,320px 也塞得下且不縮 tap target。 */
-assert.match(ui,/completeSelectedShopping\(false\)">已買<\/button>/,'待買多選可只標記已買');
-assert.match(ui,/completeSelectedShopping\(true\)">記帳<\/button>/,'待買多選可直接建立多品項消費');
-assert.match(ui,/deleteSelectedShoppingItems\(\)">刪除<\/button>/,'待買多選可批次刪除');
+/* 待買多選工具列:計數與三顆動作同列,320px 也不斷行。 */
+assert(ui.includes('completeSelectedShopping(false)'),'待買多選可只標記已買');
+assert(ui.includes('completeSelectedShopping(true)'),'待買多選可直接建立多品項消費');
+assert(ui.includes('deleteSelectedShoppingItems()'),'待買多選可批次刪除');
 assert(!ui.includes('建立多品項消費'),'過長的舊按鈕文案已縮短');
-assert(ui.includes('shopping-selection-toolbar-stacked'),'工具列改為兩列版面');
+const shoppingToolbarRenderer=ui.slice(
+  ui.indexOf('function renderShoppingSelectionToolbar()'),
+  ui.indexOf('function startShoppingSplit(',ui.indexOf('function renderShoppingSelectionToolbar()'))
+);
+assert(!shoppingToolbarRenderer.includes('shopping-selection-toolbar-stacked'),
+  '工具列不再套用兩列版面');
+assert(ui.includes('shopping-selection-toolbar-empty'),'零選取顯示簡潔提示');
+assert(ui.includes('shopping-selection-spacer'),'固定工具列有底部捲動保留空間');
+assert(/\.shopping-selection-toolbar button\{[^}]*white-space:nowrap/.test(ui),
+  '批次按鈕文字不可斷行');
 /* 單位:下拉選單、與數量並排、可在設定頁管理 */
 const quantityFields=ui.slice(ui.indexOf('function renderShoppingQuantityFields(form)'),ui.indexOf('function renderShoppingForm()'));
 assert(quantityFields.includes('shopping-quantity-row'),'數量與單位並排於同一列');
@@ -494,6 +515,14 @@ assert(ui.includes('ledger-action-popover'),'沿用帳本既有 popover 樣式,�
 assert(!/shopping-item-actions[\s\S]{0,200}>編輯</.test(ui),'編輯不再直接排在列上');
 /* 單筆記帳入口必須接回既有函式,不另造流程 */
 const itemRenderer=ui.slice(ui.indexOf('function renderShoppingItem(item)'),ui.indexOf('function renderShoppingGroups(items)'));
+assert(itemRenderer.includes('selection=shoppingUiState.selectionMode'),
+  '待買與已買在多選模式都使用 selection checkbox');
+assert(!itemRenderer.includes('shoppingUiState.selectionMode&&!item.done'),
+  '已買項目不再被排除於多選 checkbox');
+assert(itemRenderer.includes("var inlineAction=selection?'':"),
+  '多選模式隱藏卡片上的部分購買與記帳');
+assert(itemRenderer.includes("var menu=selection?'':"),
+  '多選模式隱藏卡片上的操作選單');
 assert(itemRenderer.includes('shoppingCardTargetModel(item)'),'卡片使用結構化 target model');
 assert(itemRenderer.includes('shopping-target-affix'),'幫／買／+N 使用普通文字片段');
 assert(itemRenderer.includes('targetModel.names.map'),'姓名逐一輸出 badge');
