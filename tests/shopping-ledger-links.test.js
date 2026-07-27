@@ -212,6 +212,16 @@ assert.deepStrictEqual(detailModel.allocations.map(value=>[
   ['媽媽',2,1,'linked'],
   ['小明',2,1,'unlinked']
 ]);
+assert.strictEqual(mod.shoppingDetailAllocationQuantityText(
+  {done:true},
+  {originalQuantity:3,currentQuantity:2},
+  '包'
+),'需求 3 包 · 已買 2 包','已買明細使用需求與已買文案');
+assert.strictEqual(mod.shoppingDetailAllocationQuantityText(
+  {done:false},
+  {originalQuantity:3,currentQuantity:1},
+  '包'
+),'需求 3 包 · 待買 1 包','待買明細使用需求與待買文案');
 
 /* ================= 重新開放記帳 ================= */
 const released=mod.releaseShoppingLedgerLinks([link({recordId:'r-old',releasedAt:NOW}),link({recordId:'r-a'})],NOW);
@@ -478,7 +488,8 @@ assert(singleEntry.includes('openShoppingLedgerSourcesEntry(sources)'),'單筆�
 assert(shoppingSource.includes('sourceShoppingAllocationId=source.allocationId'),'單筆 draft 保存 allocationId');
 assert(html.includes('function openShoppingItemDetail('));
 assert(html.includes('function renderShoppingItemDetail('));
-assert(html.includes('代購對象與帳本紀錄'));
+assert(html.includes('代購對象與記帳紀錄'));
+assert(!html.includes('代購對象與帳本紀錄'));
 assert(html.includes('記帳未完成對象'));
 assert(html.includes('openShoppingLinkedLedgerRecord('));
 assert(html.includes('shoppingDetailReturnItemId'));

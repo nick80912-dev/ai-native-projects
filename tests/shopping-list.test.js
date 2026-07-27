@@ -513,6 +513,14 @@ assert(itemRenderer.indexOf('記帳<')>0&&itemRenderer.indexOf('item.done')>0,'�
 /* B:單筆勾選不再開三選一 Modal,改為直接完成＋toast 復原。 */
 assert(!ui.includes('shoppingCompleteChoice'),'single completion no longer opens the three-way modal');
 assert(!ui.includes('function undoShoppingCompleteChoice'),'the modal-only undo handler is retired');
+assert(ui.includes('代購對象與記帳紀錄'),'明細標題使用核准文案');
+assert(!ui.includes('代購對象與帳本紀錄'),'舊明細標題已移除');
+assert(ui.includes('shoppingDetailAllocationQuantityText(item,allocation,model.unit)'),
+  '明細數量使用狀態感知 helper');
+assert(/\.shopping-detail-allocation-main\{[^}]*display:flex;[^}]*flex-wrap:wrap/.test(ui),
+  '姓名與數量在同列並允許窄螢幕換行');
+assert(/\.shopping-detail-footer-actions\{[^}]*grid-template-columns:repeat\(2,minmax\(0,1fr\)\)/.test(ui),
+  '明細兩顆底部按鈕等寬同行');
 const doneStart=ui.indexOf('function toggleShoppingItemDone(id,done)');
 const doneEnd=ui.indexOf('\nfunction openShoppingLedgerEntry',doneStart);
 assert(doneStart>=0&&doneEnd>doneStart,'completion has a dedicated handler');
