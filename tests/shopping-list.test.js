@@ -149,6 +149,29 @@ assert.strictEqual(mod.shoppingQuantityLabel(null),'','空輸入安全回傳空�
 assert.strictEqual(mod.shoppingLedgerNote({quantity:5,unit:'罐',buyFor:'媽媽'}),'數量：5 罐 · 幫誰買：媽媽','Ledger note 走同一個 helper');
 assert.strictEqual(mod.shoppingLedgerNote({quantity:null,legacyQtyText:'約 3～5 個',buyFor:''}),'數量：約 3～5 個','舊式數量在 Ledger note 仍可顯示');
 
+/* 單位長度上限收斂為 6,與設定頁既有的 normalizeLedgerOption 一致 */
+assert.strictEqual(mod.SHOPPING_UNIT_MAX_LENGTH,6,'單位上限與設定頁選項一致');
+assert.strictEqual('家庭號大包裝'.length,6,'測資本身確實是 6 字');
+assert.strictEqual(q({quantity:3,unit:'家庭號大包裝'}).unit,'家庭號大包裝','6 字單位可存');
+assert.strictEqual('家庭號大包裝袋'.length,7,'測資本身確實是 7 字');
+assert.throws(()=>q({quantity:3,unit:'家庭號大包裝袋'}),/單位/,'7 字單位拒絕');
+
+/* 單位改為可在設定頁管理的選項 store */
+assert.strictEqual(typeof mod.shoppingUnitStore,'object','單位有獨立的選項 store');
+assert.strictEqual(mod.shoppingUnitStore.all().join(','),mod.SHOPPING_COMMON_UNITS.join(','),'預設值即既有的常用單位');
+assert.strictEqual(typeof mod.shoppingUnitStore.add,'function');
+assert.strictEqual(typeof mod.shoppingUnitStore.remove,'function');
+
+/* 卡片資訊分行:屬性一行、地點一行,不再與動作混排 */
+assert.strictEqual(mod.shoppingItemAttrLine({category:'伴手禮',quantity:3,unit:'盒'}),'伴手禮 · 3 盒','屬性以 · 分隔,且不加「數量」前綴');
+assert.strictEqual(mod.shoppingItemAttrLine({category:'代購',quantity:1,unit:'',buyFor:'媽媽'}),'代購 · 1 · 幫媽媽買');
+assert.strictEqual(mod.shoppingItemAttrLine({quantity:null,legacyQtyText:'約 3～5 個'}),'約 3～5 個','舊式數量仍顯示');
+assert.strictEqual(mod.shoppingItemAttrLine({}),'','沒有屬性時回空字串');
+assert.strictEqual(mod.shoppingItemLocationLine({stopRef:'x'},{dayIndex:0,name:'麵酒一照庵 岡山本店'},'resolved'),'DAY 1 · 麵酒一照庵 岡山本店');
+assert.strictEqual(mod.shoppingItemLocationLine({stopRef:'x'},null,'orphan'),'原行程站點已不存在');
+assert.strictEqual(mod.shoppingItemLocationLine({stopRef:'x'},null,'pending'),'行程站點待確認');
+assert.strictEqual(mod.shoppingItemLocationLine({stopRef:''},null,'unbound'),'','隨時可買不佔一行');
+
 /* 部分購買:只輸入本次買到,剩餘由系統計算 */
 const src=q({id:'s1',quantity:5,unit:'罐'});
 assert.deepStrictEqual(plain(mod.shoppingSplitPlan(src,3)),{ok:true,mode:'split',purchasedQuantity:3,remainingQuantity:2,error:''},'買到 3 剩 2');
@@ -283,10 +306,25 @@ assert.match(ui,/completeSelectedShopping\(true\)">記帳<\/button>/,'待買多�
 assert.match(ui,/deleteSelectedShoppingItems\(\)">刪除<\/button>/,'待買多選可批次刪除');
 assert(!ui.includes('建立多品項消費'),'過長的舊按鈕文案已縮短');
 assert(ui.includes('shopping-selection-toolbar-stacked'),'工具列改為兩列版面');
+/* 單位:下拉選單、與數量並排、可在設定頁管理 */
+const quantityFields=ui.slice(ui.indexOf('function renderShoppingQuantityFields(form)'),ui.indexOf('function renderShoppingForm()'));
+assert(quantityFields.includes('shopping-quantity-row'),'數量與單位並排於同一列');
+assert(quantityFields.includes('<select class="shopping-select" id="shoppingUnit"'),'單位改為下拉選單');
+assert(!quantityFields.includes('shopping-chip-grid'),'單位不再使用 chips');
+assert(!quantityFields.includes('placeholder="其他單位"'),'表單不再提供其他單位自由輸入');
+assert(quantityFields.includes('shoppingUnitStore.all()'),'單位選項來自可管理的 store');
+assert(quantityFields.includes('unitMissing'),'目前單位不在清單時仍以自身成為選中的 option,不得靜默改掉既有資料');
+assert(ui.includes("renderLedgerOptionManager('shoppingUnit','採買單位')"),'設定頁可管理採買單位');
+assert(ui.includes("kind==='shoppingUnit'?shoppingUnitStore"),'選項管理器沿用既有泛用 store 分派');
+/* 卡片:動作收進 ⋯,只有「記帳」留在列上 */
+assert(ui.includes('function openShoppingItemActions('),'採買列有 ⋯ 操作選單');
+assert(ui.includes('shoppingItemActionPopover'),'選單有獨立的 popover 節點');
+assert(ui.includes('ledger-action-popover'),'沿用帳本既有 popover 樣式,未另造一套');
+assert(!/shopping-item-actions[\s\S]{0,200}>編輯</.test(ui),'編輯不再直接排在列上');
 /* 單筆記帳入口必須接回既有函式,不另造流程 */
 const itemRenderer=ui.slice(ui.indexOf('function renderShoppingItem(item)'),ui.indexOf('function renderShoppingGroups(items)'));
 assert(itemRenderer.includes('openShoppingLedgerEntry(')&&itemRenderer.includes('>記帳</button>'),'已買未記帳項目直接呼叫既有的 openShoppingLedgerEntry()');
-assert(itemRenderer.includes('releaseShoppingLedgerLink('),'已記帳項目顯示重新開放記帳');
+assert(itemRenderer.includes('releaseShoppingLedgerLink('),'已記帳項目顯示改回未記帳');
 assert(itemRenderer.includes("linkState.state==='linked'")&&itemRenderer.includes("linkState.state==='unlinked'"),'入口顯示一律走共用 resolver 的三態');
 const itemRendererCode=itemRenderer.replace(/\/\*[\s\S]*?\*\//g,'');
 assert(!/ledgerLinks\.length/.test(itemRendererCode),'不得以 ledgerLinks.length 判斷是否可記帳');

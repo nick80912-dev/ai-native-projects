@@ -16,6 +16,7 @@
    - 天氣雨%改取「現在之後」最大值;fetchSheet 重試加 800ms 退避;toast() null guard
    - 未來測試模擬版:localStorage 前綴隔離(TEST 版不再污染正式狀態)
 3. **驗收後 UI/內容微調**(最小修改,不動 schema)。
+3b. **採買單位未納入個人狀態備份**:`trip_shopping_units` 目前不在備份 payload 內(備份已含 `ledgerCategories`／`ledgerPayMethods`)。還原到新裝置時自訂單位會退回預設清單;既有項目的 `unit` 字串仍存在項目上、顯示不受影響。納入需再升一版備份格式(目前 v6),待與其他備份調整一併處理。
 4. **BUILTIN 快照更新 SOP 文件化**:何時重抓、步驟、由誰觸發(目前僅口頭慣例)。
 5. **GitHub Pages 已啟用,待完成最終真機驗收**:
    - Pages 已啟用並可載入:`https://nick80912-dev.github.io/ai-native-projects/`,Deploy from a branch(`dev`,repo 內無 Pages workflow),子路徑 `/ai-native-projects/`。

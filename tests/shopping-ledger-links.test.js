@@ -292,8 +292,8 @@ assert(singleEntry.includes('shoppingLedgerSinglePrefill(item)'),'沿用既有�
 assert(shoppingSource.includes('id="shoppingQuantity"')&&shoppingSource.includes('type="number"'),'數量改為數字輸入');
 assert(shoppingSource.includes('inputmode="numeric"')&&shoppingSource.includes('min="1"')&&shoppingSource.includes('step="1"'),'數量輸入使用數字鍵盤與整數步進');
 assert(!shoppingSource.includes('id="shoppingQty"'),'舊的自由文字數量欄位已退場');
-assert(shoppingSource.includes('SHOPPING_COMMON_UNITS'),'單位提供常用選項');
-assert(shoppingSource.includes('placeholder="其他單位"'),'單位不在清單內時仍可自行輸入');
+assert(shoppingSource.includes('shoppingUnitStore.all()'),'單位選項改由設定頁可管理的 store 提供');
+assert(!shoppingSource.includes('placeholder="其他單位"'),'表單不再自由輸入單位,新增單位改到設定頁');
 assert(/此為舊式文字數量。儲存前請改為數字與單位。/.test(shoppingSource),'舊式數量在編輯表單有明確提示');
 assert(shoppingSource.includes('shoppingQuantityLabel('),'顯示一律走共用 helper');
 assert(!/'數量 '\+item\.qty|item\.qty/.test(shoppingSource),'顯示層不再自行拼接舊 qty');
@@ -301,7 +301,14 @@ assert(!/'數量 '\+item\.qty|item\.qty/.test(shoppingSource),'顯示層不再�
 assert(shoppingSource.includes('shoppingItemLinkState(item)'),'已記帳標記走共用 resolver');
 assert(!/ledgerLinks\.length\s*>\s*0/.test(shoppingSource),'不得只用 ledgerLinks.length 判定已記帳');
 /* 解除連結 */
-assert(/這只會解除採買項目的記帳標記，不會刪除原本的消費紀錄。[\s\S]{0,80}再次記帳可能產生重複消費，確定繼續？/.test(shoppingSource),'解除確認使用核准文案');
+/* 操作名稱維持簡短,「帳本不受影響」放在確認視窗;原生 confirm() 的按鈕文案不可自訂,故用自訂視窗。 */
+assert(shoppingSource.includes('>改回未記帳</button>'),'選單與確認視窗都用「改回未記帳」');
+assert(shoppingSource.includes('<h3 id="shoppingReleaseTitle">改回未記帳？</h3>'),'確認視窗標題為核准文案');
+assert(shoppingSource.includes('只會移除這個採買項目的「已記帳」標記，不會刪除或修改帳本中的消費紀錄。'),'確認視窗說明帳本不受影響');
+assert(shoppingSource.includes('若帳本中的原紀錄仍在，再次記帳可能產生重複消費。'),'確認視窗把重複入帳的風險一併說完整');
+assert(/shoppingReleaseDialog[\s\S]{0,700}>取消<\/button>[\s\S]{0,200}>改回未記帳<\/button>/.test(shoppingSource),'確認視窗提供取消,且取消排在確認之前');
+assert(!/confirm\('這只會解除/.test(shoppingSource),'不再使用按鈕文案不可自訂的原生 confirm');
+assert(shoppingSource.includes("overlay.className='shopping-choice-overlay'"),'沿用既有 z-index 160 的對話框樣式,未新增 CSS');
 assert(/if\(!activeShoppingLedgerLink\(item\)\)\{toast/.test(shoppingSource),'沒有 active link 時不提供解除');
 /* 部分購買 */
 assert(shoppingSource.includes('function startShoppingSplit('),'提供部分買到入口');
@@ -324,6 +331,6 @@ assert(commit.indexOf('writeShoppingLedgerLinks')>commit.indexOf('operation.then
 assert(html.includes('sortShoppingStopGroups(')&&html.includes('buildShoppingStopOrder('),'A 的行程排序契約保留');
 assert(html.includes('resolveShoppingStopState(')&&html.includes('tripDatasetAuthority('),'F 的孤兒三態契約保留');
 const sw=fs.readFileSync('sw.js','utf8');
-assert.match(sw,/okayama-trip-v62/,'service worker cache is v62');
+assert.match(sw,/okayama-trip-v63/,'service worker cache is v63');
 
 console.log('shopping ledger link tests passed');

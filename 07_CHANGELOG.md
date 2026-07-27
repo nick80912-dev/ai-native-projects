@@ -1,4 +1,18 @@
 # 07 版本紀錄
+## 2026-07-26｜採買清單真機回饋批：單位下拉、卡片分層、動作收進 ⋯（dev，SW v63，待 Bar 真機驗收）
+- Bar 於 SW v62 真機驗收後的三項回饋，本批一次處理。
+- **單位改下拉並與數量並排**：12 顆 chips 佔兩行、數量欄卻用不到那麼寬。改為 `數量 | 單位` 兩欄同列，單位用 `<select>`（iOS 叫原生滾輪，比 chips 好按）。實測 375px 各 158px、320px 各 131px、字級 16px（不觸發 iOS zoom）。
+- **新增單位移到設定頁**：新增 `shoppingUnitStore`，沿用既有泛用的 `createLedgerOptionStore`（key `trip_shopping_units`，預設即原本 12 個常用單位）。`ledgerOptionStoreForKind()` 加一個分支、設定頁多呼叫一次 `renderLedgerOptionManager('shoppingUnit','採買單位')` 即可——**沒有另造 UI**，區塊標題改為「自訂類別、支付方式與採買單位」。實測新增／刪除／超長拒絕（`名稱最多 6 個字`）皆生效，且表單下拉即時反映。
+- **單位上限 10 → 6**：與設定頁選項共用的 `normalizeLedgerOption()` 對齊，消除「表單存得下、設定頁加不進去」的兩套規則。Bar 確認現有與未來單位皆不超過 6 字，故不留過渡期。
+- **自訂單位不被靜默改掉**：拿掉自由輸入後，若項目目前的單位不在清單內（使用者曾自訂、或舊 `qty` migration 帶出的 `家庭號`），下拉會補一個以自身為值的**選中** option 並標「（自訂）」。實測不碰下拉直接儲存，`unit` 仍為 `家庭號`。作法與 A＋F 批處理孤兒 `stopRef` 一致。
+- **已買卡片重新分層**：原本「狀態徽章＋分類＋數量＋三顆動作按鈕」擠在同一行同一視覺層級，地點被推到第三行且與上一行斷開。改為固定三層——品名／屬性（`·` 分隔）／地點（獨立一行）。新增純函式 `shoppingItemAttrLine()` 與 `shoppingItemLocationLine()` 取代原本混合的 `shoppingItemMeta()`（已移除）。數量拿掉「數量」前綴（有單位就看得出來，與 v51 拿掉「退回原因:」同一個理由）。
+- **動作收進 `⋯`**：沿用帳本既有的 `.ledger-action-popover` 樣式與定位邏輯，未另造一套視覺；popover z-index 155 高於採買 overlay 的 145，實測 320px 仍完整落在畫面內。選單內容依共用 resolver 的三態決定：`linked` → `改回未記帳｜編輯｜刪除`、`unlinked`+已買 → 列上直接給「記帳」＋選單 `編輯｜刪除`、`unverified` → `編輯｜刪除`（兩種記帳入口都不給）、待買 → `部分買到｜編輯｜刪除`。**「記帳」刻意留在列上**——買到→記帳是主流程，不該多一次點擊。刪除移入選單等於多一層誤觸防護，既有 `confirm()` 保留不動。
+- **「重新開放記帳」更名為「改回未記帳」，並改用自訂確認視窗**：Bar 原提「重新記帳」，未採用——`07_CHANGELOG` v57 已有同型裁定（`重新付款` → `我已付款`，理由是「祈使句讀起來像 App 會代為執行」），而按下它只是清掉標記、還要再點一次「記帳」。改採 Bar 裁定的資訊層級：**操作名稱維持簡短，「帳本不受影響」由確認視窗負責說完整**。視窗標題 `改回未記帳？`、按鈕 `取消`／`改回未記帳`，說明分兩句並區分顏色：先講「不會發生什麼」（只會移除這個採買項目的「已記帳」標記，不會刪除或修改帳本中的消費紀錄。），再以 coral 講「可能發生什麼」（若帳本中的原紀錄仍在，再次記帳可能產生重複消費。）——後者才是這個操作真正的風險，尤其在 `unverified` 下系統看不到那筆紀錄時。兩句同色會讓風險被稀釋成說明。原生 `confirm()` 的按鈕文案不可自訂，故改用自訂視窗——**沿用 B 批移除三選一 Modal 後閒置的 `.shopping-choice-overlay`（z-index 160，高於採買 overlay 的 145），零新增 CSS，同時讓那段死碼重新有用途**。實測 375px 面板 330px、320px 面板 288px，兩顆按鈕各 44px 高，皆完整落在畫面內、溢出 0。
+- **確認「刪掉帳本紀錄會自動改回未記帳」為既有行為**：狀態是每次重繪即時推導而非存下來的，實跑驗證個人帳（讀不到即權威 → `unlinked`）與團體帳（有效墓碑且無 replacement → `unlinked`）都會自動翻回未記帳，記帳按鈕自動出現，**不需要按任何東西**。手動入口只補自動化決定不了的 `unverified`（找不到但無法證明已刪除）與「消費是真的、只是連錯採買項目」兩種情形，因此只在 `linked` 提供。已於 `CONTEXT.md` 明文記下「不得改成找不到就自動當作已刪除」的理由。
+- **選單生命週期**：`renderShoppingListOverlay()` 與 `closeShoppingList()` 都會先收掉 popover（重繪後原觸發按鈕已不存在）；另註冊 outside-click／Escape／scroll（capture）／resize 關閉，與帳本同樣的四道。
+- **未修改**：Shopping Item 資料契約（`quantity`／`unit`／`legacyQtyText`／`ledgerLinks`／`releasedAt`／`splitGroupId`／`completedAt` 語意全部不變）、個人狀態備份版本（無新欄位，維持 v6）、Ledger 21 欄 Schema、Apps Script、Google Sheet、結算、團體權限、A＋F 排序與孤兒三態、B＋D 三態推導與交握時點、採買雲端同步。
+- **已知落差**：`trip_shopping_units` 未納入個人狀態備份（備份目前含 `ledgerCategories`／`ledgerPayMethods`）。這是本批動工前四項確認裡刻意排除的範圍（納入就得再升版）。影響有限——還原後自訂單位會退回預設清單，但既有項目的 `unit` 字串仍存在項目上且照常顯示。已列入 backlog。
+- 測試：先寫紅燈（`SHOPPING_UNIT_MAX_LENGTH` 仍為 10）再最小實作。完整 **45／45** Node tests 與 `tools/check-doc-titles.js` 通過；`ledger-entry-settings.test.js` 與 `shopping-ledger-links.test.js` 的既有斷言依新契約更新（設定頁標題、單位來源、不再有自由輸入）。Browser QA 320／375／390px：三態動作組合、`⋯` 選單四種內容與定位、單位下拉與自訂單位保留、設定頁單位管理、極端長品名（40 字）＋長單位；頁面與逐元件橫向溢出皆為 0、最小 tap target 40px、輸入欄 16px、console error 0、Scroll-only 與 safe-area 未退化。卡片高度由「2 行擠＋動作溢出」變成穩定 62–78px（極端長品名 104px）。Service Worker cache `okayama-trip-v62` → `okayama-trip-v63`。
 ## 2026-07-26｜Ops:Netlify 測試站改為手動部署（dev，純文件）
 - **Bar 已於 Netlify 後台手動停用測試站 `dev-trippilot-jp` 的自動部署**，並手動觸發過一次部署。本批只更新文件以反映現況，未修改任何部署設定。
 - **實測確認**（以推送 `4ead180` 作對照，GitHub Pages 為正對照）：推送後 Pages 的 `07_CHANGELOG.md` 由 71,741 增為 73,901 字元並出現新條目，Netlify 測試站停在 71,728 字元、無新條目 —— 同一次推送一邊更新一邊不動，確認自動部署已停。Bar 手動觸發後複查，測試站最新條目已與 `dev` HEAD 一致，`sw.js` 為 `okayama-trip-v62`。正式站維持 v18（追蹤 `main`，未受影響）。
