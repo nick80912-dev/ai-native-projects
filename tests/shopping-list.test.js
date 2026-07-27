@@ -179,6 +179,38 @@ assert.strictEqual(allocationQuantity(mig('3 盒')),3);
 assert.strictEqual(allocationQuantity(mig('')),null);assert.strictEqual(mig('').legacyQtyText,'','空 qty 不產生 legacy 文字');
 
 /* 數量顯示 helper */
+const allocation=(target,quantity,ledgerLinks=[])=>({
+  allocationId:'a-'+(target||'own'),target,quantity,ledgerLinks
+});
+assert.strictEqual(mod.shoppingItemTargetSummary({
+  allocations:[allocation('阿寶',2)]
+}),'幫阿寶買');
+assert.strictEqual(mod.shoppingItemTargetSummary({
+  allocations:[allocation('阿寶',2),allocation('媽媽',2)]
+}),'幫阿寶、媽媽買');
+assert.strictEqual(mod.shoppingItemTargetSummary({
+  allocations:[allocation('阿寶',2),allocation('媽媽',2),allocation('小明',2),allocation('爸爸',2)]
+}),'幫阿寶、媽媽 +2 買');
+assert.strictEqual(mod.shoppingItemQuantitySummary({
+  unit:'盒',
+  allocations:[allocation('阿寶',2),allocation('媽媽',2),allocation('小明',2)]
+}),'2 盒／人 · 共 6 盒');
+assert.strictEqual(mod.shoppingItemQuantitySummary({
+  unit:'盒',
+  allocations:[allocation('阿寶',2),allocation('媽媽',1),allocation('小明',1)]
+}),'共 4 盒 · 3 位');
+assert.strictEqual(mod.shoppingItemQuantitySummary({
+  unit:'個',
+  allocations:[allocation('',3)]
+}),'3 個');
+assert.deepStrictEqual(plain(mod.shoppingSplitGroupAllocationTotals([
+  {id:'split-a',splitGroupId:'group-1',allocations:[allocation('阿寶',1),allocation('媽媽',2)]},
+  {id:'split-b',splitGroupId:'group-1',allocations:[allocation('阿寶',1)]},
+  {id:'other',allocations:[allocation('阿寶',99)]}
+],{id:'split-a',splitGroupId:'group-1'})),{
+  targets:[{target:'阿寶',quantity:2},{target:'媽媽',quantity:2}],
+  total:4
+},'拆分群組可由目前各筆 allocation 還原原始每人與總數量');
 assert.strictEqual(mod.shoppingQuantityLabel({quantity:5,unit:'罐'}),'5 罐');
 assert.strictEqual(mod.shoppingQuantityLabel({quantity:3,unit:''}),'3');
 assert.strictEqual(mod.shoppingQuantityLabel({quantity:null,legacyQtyText:'約 3～5 個'}),'約 3～5 個');

@@ -113,6 +113,38 @@ const history=[link({recordId:'r-old',releasedAt:NOW}),link({recordId:'r-a'})];
 assert.strictEqual(mod.resolveShoppingLedgerLinkState(item(history),ctx({personal:{ready:true,records:[expense()]}})).state,'linked','舊 released link 不影響後方 active link');
 assert.strictEqual(mod.resolveShoppingLedgerLinkState(item(history),ctx({personal:{ready:true,records:[expense()]}})).activeLink.recordId,'r-a','resolver 只看最後一個 link');
 
+/* ================= item aggregate link state ================= */
+const summary=mod.shoppingItemLinkSummary({
+  allocations:[
+    {allocationId:'a',target:'阿寶',quantity:1,ledgerLinks:[link({recordId:'r-a'})]},
+    {allocationId:'b',target:'媽媽',quantity:1,ledgerLinks:[]},
+    {allocationId:'c',target:'小明',quantity:1,ledgerLinks:[link({recordId:'r-c'})]}
+  ]
+},ctx({personal:{ready:true,records:[expense({id:'r-a'}),expense({id:'r-c'})]}}));
+assert.deepStrictEqual(plain({
+  state:summary.state,label:summary.label,linked:summary.linked,total:summary.total
+}),{state:'partial',label:'記帳 2／3',linked:2,total:3});
+const mixedUnverified=mod.shoppingItemLinkSummary({
+  allocations:[
+    {allocationId:'a',target:'阿寶',quantity:1,ledgerLinks:[link({recordId:'r-a'})]},
+    {allocationId:'b',target:'媽媽',quantity:1,ledgerLinks:[link({recordId:'missing',track:'shared'})]}
+  ]
+},ctx({personal:{ready:true,records:[expense({id:'r-a'})]},shared:{ready:false,records:[]}}));
+assert.strictEqual(mixedUnverified.state,'unverified','任何 allocation 待確認時聚合狀態必須優先待確認');
+assert.strictEqual(mixedUnverified.label,'狀態待確認');
+const editPolicy=plain(mod.shoppingAllocationEditPolicy({
+  allocations:[
+    {allocationId:'linked',target:'阿寶',quantity:1,ledgerLinks:[link({recordId:'r-a'})]},
+    {allocationId:'open',target:'媽媽',quantity:1,ledgerLinks:[]}
+  ]
+},ctx({personal:{ready:true,records:[expense({id:'r-a'})]}})));
+assert.deepStrictEqual(editPolicy.allocations.map(value=>[
+  value.allocationId,value.canEdit,value.reason
+]),[
+  ['linked',false,'已記帳'],
+  ['open',true,'']
+]);
+
 /* ================= 重新開放記帳 ================= */
 const released=mod.releaseShoppingLedgerLinks([link({recordId:'r-old',releasedAt:NOW}),link({recordId:'r-a'})],NOW);
 assert.strictEqual(released.length,2,'解除不新增也不刪除 link');

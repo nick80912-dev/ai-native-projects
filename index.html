@@ -3670,6 +3670,89 @@ function shoppingSplitPlan(source,purchasedQuantity){
 function shoppingItemAllocations(item){
   return item&&Array.isArray(item.allocations)?item.allocations:[];
 }
+function shoppingTargetAllocations(item){
+  return shoppingItemAllocations(item).filter(function(allocation){
+    return !!String(allocation&&allocation.target||'').trim();
+  });
+}
+function shoppingAllocationTotal(allocations){
+  var total=0,valid=true;
+  (allocations||[]).forEach(function(allocation){
+    if(!isSafeShoppingQuantity(allocation&&allocation.quantity)){valid=false;return;}
+    total+=allocation.quantity;
+    if(!Number.isSafeInteger(total))valid=false;
+  });
+  return valid?total:null;
+}
+function shoppingItemTargetSummary(item){
+  var targets=shoppingTargetAllocations(item).map(function(allocation){return allocation.target;});
+  if(!targets.length)return '';
+  var shown=targets.slice(0,2).join('、');
+  if(targets.length>2)return '幫'+shown+' +'+(targets.length-2)+' 買';
+  return '幫'+shown+'買';
+}
+function shoppingItemQuantitySummary(item){
+  var allocations=shoppingItemAllocations(item);
+  if(!allocations.length)return '';
+  if(allocations.length===1&&allocations[0].quantity===null)return String(item&&item.legacyQtyText||'').trim();
+  var total=shoppingAllocationTotal(allocations);
+  if(total===null)return '';
+  var unit=String(item&&item.unit||'').trim();
+  var amount=function(value){return String(value)+(unit?' '+unit:'');};
+  if(allocations.length===1)return amount(allocations[0].quantity);
+  var targetCount=shoppingTargetAllocations(item).length;
+  var first=allocations[0].quantity;
+  var equal=allocations.every(function(allocation){return allocation.quantity===first;});
+  if(equal)return amount(first)+'／人 · 共 '+amount(total);
+  return '共 '+amount(total)+' · '+targetCount+' 位';
+}
+function shoppingItemLinkSummary(item,context){
+  var allocationStates=shoppingItemAllocations(item).map(function(allocation){
+    var resolved=resolveShoppingLedgerLinkState(allocation,context);
+    return {
+      allocationId:allocation.allocationId,
+      target:allocation.target,
+      state:resolved.state,
+      reason:resolved.reason,
+      activeLink:resolved.activeLink,
+      record:resolved.record
+    };
+  });
+  var total=allocationStates.length;
+  var linked=allocationStates.filter(function(value){return value.state==='linked';}).length;
+  var unverified=allocationStates.filter(function(value){return value.state==='unverified';}).length;
+  if(unverified)return {state:'unverified',label:'狀態待確認',linked:linked,total:total,allocationStates:allocationStates};
+  if(total&&linked===total)return {state:'linked',label:'已記帳',linked:linked,total:total,allocationStates:allocationStates};
+  if(linked)return {state:'partial',label:'記帳 '+linked+'／'+total,linked:linked,total:total,allocationStates:allocationStates};
+  return {state:'unlinked',label:'未記帳',linked:0,total:total,allocationStates:allocationStates};
+}
+function shoppingAllocationEditPolicy(item,context){
+  return {allocations:shoppingItemLinkSummary(item,context).allocationStates.map(function(value){
+    var locked=value.state==='linked'||value.state==='unverified';
+    return {
+      allocationId:value.allocationId,
+      canEdit:!locked,
+      reason:value.state==='linked'?'已記帳':value.state==='unverified'?'狀態待確認':''
+    };
+  })};
+}
+function shoppingSplitGroupAllocationTotals(items,item){
+  var groupId=String(item&&item.splitGroupId||item&&item.id||'').trim();
+  var byTarget={},targets=[],total=0,valid=true;
+  (items||[]).forEach(function(candidate){
+    var candidateGroup=String(candidate&&candidate.splitGroupId||candidate&&candidate.id||'').trim();
+    if(candidateGroup!==groupId)return;
+    shoppingItemAllocations(candidate).forEach(function(allocation){
+      var key=canonicalMemberName(allocation.target||'');
+      if(!byTarget[key]){byTarget[key]={target:allocation.target||'',quantity:0};targets.push(byTarget[key]);}
+      if(!isSafeShoppingQuantity(allocation.quantity)){valid=false;return;}
+      byTarget[key].quantity+=allocation.quantity;
+      total+=allocation.quantity;
+      if(!Number.isSafeInteger(byTarget[key].quantity)||!Number.isSafeInteger(total))valid=false;
+    });
+  });
+  return {targets:valid?targets:[],total:valid?total:null};
+}
 function createShoppingAllocationId(itemId,usedIds,randomFn){
   var used=usedIds||{},random=typeof randomFn==='function'?randomFn:Math.random;
   for(var attempt=0;attempt<20;attempt++){
