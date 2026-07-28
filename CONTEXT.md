@@ -13,6 +13,7 @@
 - **父子行程卡**：父站點統整其連續子站點的行程呈現與完成狀態，Today 與行程頁需沿用同一群組關係。
 - **Scroll-only**：Modal／Sheet 只允許內容捲動，不以 JavaScript 實作滑動關閉或手勢攔截；觸控行為由 CSS `touch-action` 管理。
 - **封閉集合／開放集合（segmented vs chips）**：互斥且選項固定的狀態使用 segmented control；可多選或可擴充的選項使用 chips。
+- **全站繁中字型鏈**：介面以 Google Fonts `Noto Sans TC` 400／500／700 為第一順位，並使用 `display=swap`；fallback 固定為 `"PingFang TC","Microsoft JhengHei",system-ui,-apple-system,sans-serif`。不得把 Hiragino／Noto Sans JP／Yu Gothic 等日文字型放回 UI font stack，也不得為外部字型另改 Service Worker 快取策略；網路字型失敗或離線時必須可直接退回系統繁中字型。
 
 ## 結算同步詞條
 
@@ -42,6 +43,7 @@
 - **採買數量（結構化）**：`quantity` 已下沉到每個 allocation，必須是安全正整數（最小 1，不允許 0／負數／小數／`NaN`／`Infinity`／超出 `MAX_SAFE_INTEGER`）；`unit` 仍由 item 共用並獨立保存（正規化空白、**最多 6 字**、可自訂）。相同數量顯示 `2 盒／人 · 共 6 盒`，不同數量顯示 `共 4 盒 · 3 位`；單一 allocation 則顯示 `2 盒`。表單的單位是**下拉選單**並與每人數量並排；選項來自 `shoppingUnitStore`（key `trip_shopping_units`），新增單位在設定頁。新項目數量預設 1；「儲存並新增」只保留分類與站點，數量重設 1，其他欄位清空。
 - **`legacyQtyText`**：只承接無法安全轉換的舊式自由文字。舊 `qty` 僅在「正整數＋可選單一空白＋不含數字與空白的單位」時自動轉換（`5 罐`／`5罐`／`10`）；`兩盒`、`約 3～5 個`、`3-5 個`、`家庭號 2 包`、`一組` 一律原文保留於 `legacyQtyText` 且 `quantity` 為 `null`——**不猜中文數字、不從字串中間擷取數字、不取區間端點、不默認成 1**。`quantity` 有值時 `legacyQtyText` 一律清空，不維護兩份可能互相矛盾的數量。正規化輸出**不再帶 `qty` 鏡像**，避免第二個可獨立修改的數量來源。
 - **數量顯示 helper**：單一 allocation／legacy 顯示仍走 `shoppingQuantityLabel()`；整個 item 的卡片、Today、Ledger note、拆分預覽與明細一律走 `shoppingItemQuantitySummary()`，不得各自拼接「每人／總數」。`quantity:null` 的 v1～v6 舊式單筆資料可顯示 `legacyQtyText`，但必須先在編輯表單轉為數字與單位才能部分購買。
+- **採買預設單位 `個`**：新項目與「儲存並新增」固定從 `1 個` 開始，單位下拉不得提供空白或「不指定」。`shoppingUnitStore` 必須永遠包含 `個`，設定頁不得刪除並顯示固定 Toast `「個」是新增採買項目的預設單位，無法刪除。`。既有非空單位一律原樣保留；既有空單位只在編輯草稿中預選 `個`，不得因讀取或開啟表單就回寫，只有使用者儲存時才落地。此規則不升個人備份版本、不做整批 migration。
 - **`completedAt`**：實際完成時間。首次標記已買時寫入、移回待買時清空、再次完成時重寫、部分購買的已買部分於拆分當下寫入。舊資料缺欄補空字串，`done` 為 true 但無 `completedAt` 屬 legacy 降級，不得自行編造時間。順序分工：store array order 決定清單位置、`completedAt` 表示購買時間、`splitGroupId` 表示同源需求。**`createdAt` 不是購買時間。**
 - **單筆記帳入口**：完成商品後不強制詢問記帳（B 批裁定），但單筆記帳功能沒有取消——入口移到**已買項目列**。只有 `unlinked` 顯示「記帳」（直接呼叫既有 `openShoppingLedgerEntry()`），`linked` 顯示「改回未記帳」，`unverified` 兩者都不提供（必須阻擋再次記帳）。顯示條件一律走共用 resolver，不得以 `ledgerLinks.length` 判斷。
 - **自動改回未記帳**：記帳狀態是每次重繪即時推導，不是存下來的。**把帳本那筆刪掉，採買項目會自動變回「未記帳」**，不需要按任何東西（個人帳 → 讀不到即為權威；團體帳 → 有效墓碑且無 replacement）。手動的「改回未記帳」只補自動化決定不了的兩格：`unverified`（找不到但不能證明已刪除）、以及「消費是真的、只是連錯採買項目」。因此選單只在 `linked` 提供它。**絕不可改成「找不到就自動當作已刪除」**——離線一次就會把所有已記帳項目洗成未記帳，再記一輪即全套重複入帳。

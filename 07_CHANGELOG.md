@@ -1,4 +1,11 @@
 # 07 版本紀錄
+## 2026-07-28｜新增消費表單、採買預設單位與全站思源黑體優化（dev，SW v66，待 Bar 真機驗收）
+- **新增消費主流程重新分層**：單品項依序保留金額、明細、代購開關／對象，再以淡海水灰藍、1px 邊框、10px 圓角的 `其他資訊（選填）` 收合類別、支付方式與日期；摘要顯示 `類別｜支付方式｜今天／M/D／YYYY/M/D`。明細鍵盤改為 Next，個人帳聚焦代購開關、團體帳聚焦分攤成員；不再由鍵盤 Enter 直接送出。儲存按鈕與原有 validation／pending guard／idempotency 流程未改。
+- **採買預設為 `1 個`**：新項目與「儲存並新增」都預設數量 1、單位 `個`；單位下拉移除空白／「不指定」。`shoppingUnitStore` 讀取時保證包含 `個`，設定頁嘗試刪除時保留資料並顯示 `「個」是新增採買項目的預設單位，無法刪除。`。既有非空單位原樣保留；舊資料空單位只在編輯草稿預選 `個`，未儲存前不回寫。
+- **全站繁中字型一致化**：以 Google Fonts `Noto Sans TC` 400／500／700（`display=swap`）為第一順位，fallback 固定為 `"PingFang TC","Microsoft JhengHei",system-ui,-apple-system,sans-serif`；移除日文字型優先序。外部字型不可用時仍由系統繁中字型呈現，Service Worker 不新增跨來源字型快取策略。
+- Browser QA：320×700、375×812、390×844、430×932 全數通過，新增消費 dialog 與控制項無水平溢位；明細 Enter 實測聚焦 `ledgerProxy`，代購對象顯示正常；採買表單實測為 `1 個` 且無空白／「不指定」選項；設定頁刪除 `個` 的保護 Toast 精確通過。停止本機伺服器後仍可由 v66 快取離線重載，字型 fallback 鏈仍保留。
+- **邊界未變**：分類 mapping、Shopping Item／個人備份 v7、Ledger 21 欄、Apps Script、Google Sheet、Repository／Queue／Bridge／Retry、結算、append-only `ledgerLinks[]`、`改回未記帳` 與 SW 策略皆未修改；未做資料 migration、未部署。完整 **46／46** Node tests、`tools/check-doc-titles.js` 與 `git diff --check` 通過；Service Worker cache 僅由 `okayama-trip-v65` → `okayama-trip-v66`。
+
 ## 2026-07-27｜採買卡片視覺一致性、部分購買與多選互動（dev，SW v65，待 Bar 真機驗收）
 - **中文字體粗細不一致的根因修正**：原本全站把 `Hiragino Sans` 放在繁中字型之前，瀏覽器會依單一字形是否存在逐字 fallback，因此同一控制項內的「媽媽／爸爸」、「稅與優惠券」與「信用卡」可能看起來粗細不同。全站改用 `"PingFang TC","Noto Sans TC","Microsoft JhengHei",system-ui,-apple-system,sans-serif`；Browser 實測採買代購選項、稅與優惠券及信用卡皆讀到相同 font-family。
 - **卡片 badge 改為語意分工**：代購顯示改為 `幫 [阿寶] [媽媽] +1 買`，只有姓名套 coral／淡紅底 badge；「幫」／「買」／`+N` 使用普通文字，不再顯示 `、`，aria-label 仍保留完整語意。分類改為淡金底／深金字，形狀、間距與姓名 badge 對齊，不再與品名或代購同色。

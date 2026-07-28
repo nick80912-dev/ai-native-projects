@@ -33,9 +33,9 @@ assert(animationPosition>amountFocusPosition,'the first focus happens before the
 assert.doesNotMatch(openEntrySource.slice(0,amountFocusPosition),/(?:Promise|setTimeout)\s*\(/,'the first focus has no Promise or timer delay');
 
 const amountNextSource=extractFunction('handleLedgerAmountNext');
-const detailDoneSource=extractFunction('handleLedgerDetailDone');
+const detailNextSource=extractFunction('handleLedgerDetailNext');
 assert.doesNotMatch(amountNextSource,/renderLedgerEntrySheet|saveLedgerEntry/,'amount Next keeps the mounted sheet and never saves');
-assert.match(detailDoneSource,/saveLedgerEntry\(false\)/,'detail Done delegates to the guarded save path');
+assert.doesNotMatch(detailNextSource,/saveLedgerEntry/,'detail Next moves to the ownership decision and never saves');
 
 const events=[];
 let amountFocusable=false;

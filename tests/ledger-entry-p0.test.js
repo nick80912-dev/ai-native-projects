@@ -20,9 +20,13 @@ const createSource=extractFunction('createLedgerEntryDraft');
 const editSource=extractFunction('ledgerDraftFromRecords');
 assert.match(createSource,/entryDetailsOpen:false/,'a new single entry starts with secondary fields collapsed');
 assert.match(editSource,/draft\.entryDetailsOpen=true/,'an existing entry opens its populated secondary fields for editing');
+assert.match(editSource,/draft\.isProxy=firstMeta\.isProxy/,'editing restores the existing proxy flag');
+assert.match(editSource,/draft\.proxyTarget=firstMeta\.proxyTarget/,'editing restores the existing proxy target');
 
 const summarySource=extractFunction('renderLedgerSingleSummary');
+const dateLabelSource=extractFunction('ledgerOptionalDateLabel');
 const summaryTextSource=extractFunction('ledgerSingleSummaryText');
+assert.match(summarySource,/其他資訊（選填）/,'the summary owns the approved optional-information title');
 assert.match(summaryTextSource,/draft\.category/,'the compact summary includes category');
 assert.match(summaryTextSource,/draft\.payMethod/,'the compact summary includes payment method');
 assert.match(summaryTextSource,/draft\.occurredDate/,'the compact summary includes the date');
@@ -34,6 +38,24 @@ assert.doesNotMatch(extractFunction('selectLedgerCurrency'),/draft\.detail\s*=/,
 assert.doesNotMatch(extractFunction('selectLedgerCategory'),/draft\.detail\s*=/,'category switches never replace the current detail');
 assert.doesNotMatch(extractFunction('selectLedgerPayMethod'),/draft\.detail\s*=/,'payment switches never replace the current detail');
 
+const summarySandbox={
+  String,Number,Date,
+  parseLedgerDateInput(value){
+    if(!/^\d{4}\/\d{2}\/\d{2}$/.test(value))throw new Error('bad date');
+    return value;
+  },
+  appNow(){return new Date(2026,6,28);}
+};
+vm.createContext(summarySandbox);
+vm.runInContext(dateLabelSource+'\n'+summaryTextSource,summarySandbox);
+assert.strictEqual(summarySandbox.ledgerOptionalDateLabel('2026/07/28',new Date(2026,6,28)),'今天');
+assert.strictEqual(summarySandbox.ledgerOptionalDateLabel('2026/10/18',new Date(2026,6,28)),'10/18');
+assert.strictEqual(summarySandbox.ledgerOptionalDateLabel('2027/01/03',new Date(2026,6,28)),'2027/1/3');
+assert.strictEqual(summarySandbox.ledgerOptionalDateLabel('無效日期',new Date(2026,6,28)),'無效日期');
+assert.strictEqual(summarySandbox.ledgerSingleSummaryText({
+  category:'餐飲',payMethod:'現金',occurredDate:'2026/07/28'
+}),'餐飲｜現金｜今天');
+
 const secondarySource=extractFunction('renderLedgerSingleSecondaryFields');
 assert.doesNotMatch(secondarySource,/renderLedgerSingleItemDetail/,'required detail no longer lives in the collapsed secondary disclosure');
 ['renderLedgerStoreField','renderLedgerOccurrenceFields','renderLedgerSingleItemCategory','renderLedgerPaymentFields'].forEach(function(name){
@@ -44,7 +66,18 @@ const basicInfoSource=extractFunction('renderLedgerSingleBasicInfo');
 const primarySource=extractFunction('renderLedgerSingleItemPrimary');
 assert.match(primarySource,/renderLedgerSingleItemDetail\(draft\)/,'amount and detail share the primary group');
 assert.doesNotMatch(basicInfoSource,/renderLedgerSingleItemDetail\(draft\)/,'detail is not rendered again outside the primary group');
-assert(basicInfoSource.indexOf('renderLedgerSingleItemPrimary(draft)')<basicInfoSource.indexOf('renderLedgerSingleSecondaryFields(draft)'),'required field group precedes optional secondary controls');
+assert.doesNotMatch(basicInfoSource,/renderLedgerSingleSecondaryFields/,'primary information does not own optional fields');
+const trackSpecificSource=extractFunction('renderLedgerTrackSpecificFields');
+assert.match(trackSpecificSource,/這筆是代購/,'the approved proxy Toggle stays in the shared track renderer');
+assert.match(trackSpecificSource,/id="ledgerProxy"/,'the proxy Toggle has one stable focus target');
+assert.match(trackSpecificSource,/draft\.isProxy\?renderLedgerProxySection/,'proxy targets only render while the Toggle is on');
+assert.match(trackSpecificSource,/renderLedgerParticipantGroup\('分攤成員'/,'shared entries keep the existing participant renderer');
+const singleEntryRenderSource=extractFunction('renderLedgerEntrySheet');
+assert.match(
+  singleEntryRenderSource,
+  /renderLedgerSingleBasicInfo\(draft\)\+renderLedgerTrackSpecificFields\(draft\)\+renderLedgerSingleSecondaryFields\(draft\)/,
+  'single entries render amount/detail, ownership controls, then optional information'
+);
 assert.match(html,/\.ledger-single-primary \.ledger-sheet-input\{[^}]*width:100%[^}]*max-width:100%[^}]*box-sizing:border-box/,'required inputs share full content width');
 assert.match(html,/\.ledger-single-primary \.ledger-amount-wrap \.ledger-sheet-input\{[^}]*min-height:62px/,'only amount retains the tall amount height');
 assert.doesNotMatch(html,/\.ledger-single-primary \.ledger-sheet-input\{[^}]*min-height:62px/,'detail does not inherit the amount height');
@@ -52,39 +85,53 @@ assert.match(html,/\.ledger-single-primary \.ledger-sheet-field\+\.ledger-sheet-
 
 assert.match(html,/id="ledgerAmount"[^>]*type="number"[^>]*inputmode="numeric"/,'the approved amount input type and inputmode remain unchanged');
 assert.match(html,/id="ledgerAmount"[^>]*enterkeyhint="next"[^>]*onkeydown="handleLedgerAmountNext\(event\)"/,'the amount keyboard advances through one shared Next handler');
-assert.match(html,/id="ledgerDetail"[^>]*enterkeyhint="done"[^>]*onkeydown="handleLedgerDetailDone\(event\)"/,'the detail keyboard exposes Done through the exact save handler');
+assert.match(html,/id="ledgerDetail"[^>]*enterkeyhint="next"[^>]*onkeydown="handleLedgerDetailNext\(event\)"/,'detail advances to the ownership decision instead of saving');
 assert.match(html,/\.ledger-sheet #ledgerAmount\{[^}]*font-size:30px!important/,'the primary amount is visually prominent without weakening the global 16px floor');
 
 const amountNextSource=extractFunction('handleLedgerAmountNext');
-const detailDoneSource=extractFunction('handleLedgerDetailDone');
+const detailNextSource=extractFunction('handleLedgerDetailNext');
 const inlineErrorSource=extractFunction('showLedgerInlineFieldError');
 assert.doesNotMatch(amountNextSource,/saveLedgerEntry/,'amount Next never submits the entry');
-assert.match(detailDoneSource,/saveLedgerEntry\(false\)/,'detail Done uses the exact primary save path');
-let saves=0,prevented=0,detailFocuses=0,amountFocuses=0;
+assert.doesNotMatch(detailNextSource,/saveLedgerEntry/,'detail Next never submits the entry');
+let saves=0,prevented=0,detailFocuses=0,amountFocuses=0,proxyFocuses=0,participantFocuses=0;
 let inlineError=null;
 const amountField={querySelector(){return inlineError;},appendChild(node){inlineError=node;}};
 const amountWrap={classList:{contains(name){return name==='ledger-amount-wrap';}},parentNode:amountField};
 const amountInput={value:'3500',classList:{add(name){amountInput.invalidClass=name;}},setAttribute(name,value){amountInput[name]=value;},parentNode:amountWrap,focus(){amountFocuses++;}};
 const detailInput={focus(){detailFocuses++;}};
+const proxyInput={focus(){proxyFocuses++;}};
+const participantButton={focus(){participantFocuses++;}};
 const doneSandbox={
-  ledgerUiState:{draft:{amount:'3500',formErrors:{}}},
+  ledgerUiState:{draft:{amount:'3500',track:'personal',formErrors:{}}},
   ledgerItemAmountIsValid(item){return /^\d+$/.test(String(item.amount))&&Number(item.amount)>0;},
-  document:{getElementById(id){return id==='ledgerAmount'?amountInput:(id==='ledgerDetail'?detailInput:null);},createElement(){return {className:'',textContent:''};}},
+  document:{
+    getElementById(id){
+      return id==='ledgerAmount'?amountInput:
+        id==='ledgerDetail'?detailInput:
+        id==='ledgerProxy'?proxyInput:null;
+    },
+    querySelector(selector){return selector==='#ledgerParticipants button'?participantButton:null;},
+    createElement(){return {className:'',textContent:''};}
+  },
   saveLedgerEntry(addAnother){assert.strictEqual(addAnother,false);saves++;},
   Object,String,Number,Promise
 };
 vm.createContext(doneSandbox);
-vm.runInContext(inlineErrorSource+'\n'+amountNextSource+'\n'+detailDoneSource,doneSandbox);
+vm.runInContext(inlineErrorSource+'\n'+amountNextSource+'\n'+detailNextSource,doneSandbox);
 doneSandbox.handleLedgerAmountNext({key:'Enter',isComposing:false,currentTarget:amountInput,preventDefault(){prevented++;}});
 doneSandbox.handleLedgerAmountNext({key:'Tab',isComposing:false,currentTarget:amountInput,preventDefault(){prevented++;}});
 doneSandbox.handleLedgerAmountNext({key:'Enter',isComposing:true,currentTarget:amountInput,preventDefault(){prevented++;}});
-doneSandbox.handleLedgerDetailDone({key:'Enter',isComposing:false,preventDefault(){prevented++;}});
-doneSandbox.handleLedgerDetailDone({key:'Tab',isComposing:false,preventDefault(){prevented++;}});
-doneSandbox.handleLedgerDetailDone({key:'Enter',isComposing:true,preventDefault(){prevented++;}});
+doneSandbox.handleLedgerDetailNext({key:'Enter',isComposing:false,preventDefault(){prevented++;}});
+doneSandbox.ledgerUiState.draft.track='shared';
+doneSandbox.handleLedgerDetailNext({key:'Enter',isComposing:false,preventDefault(){prevented++;}});
+doneSandbox.handleLedgerDetailNext({key:'Tab',isComposing:false,preventDefault(){prevented++;}});
+doneSandbox.handleLedgerDetailNext({key:'Enter',isComposing:true,preventDefault(){prevented++;}});
 assert.strictEqual(detailFocuses,1,'valid amount Enter focuses detail exactly once');
 assert.strictEqual(amountFocuses,0,'valid amount Enter does not return to amount');
-assert.strictEqual(saves,1,'detail Done invokes the exact primary save path once');
-assert.strictEqual(prevented,2,'only handled non-composing Enter keys suppress native form behavior');
+assert.strictEqual(proxyFocuses,1,'personal detail Next focuses the proxy Toggle exactly once');
+assert.strictEqual(participantFocuses,1,'shared detail Next focuses the first participant exactly once');
+assert.strictEqual(saves,0,'detail Next never saves');
+assert.strictEqual(prevented,3,'only handled non-composing Enter keys suppress native behavior');
 amountInput.value='0';
 doneSandbox.handleLedgerAmountNext({key:'Enter',isComposing:false,currentTarget:amountInput,preventDefault(){prevented++;}});
 assert.strictEqual(amountFocuses,1,'invalid amount Enter preserves focus on the amount input');

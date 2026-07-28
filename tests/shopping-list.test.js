@@ -35,6 +35,10 @@ function loadShoppingModule(){
 }
 
 const mod=loadShoppingModule();
+assert.strictEqual(mod.SHOPPING_DEFAULT_UNIT,'個','new Shopping forms have one authoritative default unit');
+assert(mod.SHOPPING_COMMON_UNITS.includes('個'),'the common unit source contains the default unit');
+assert.strictEqual(mod.newShoppingForm({}).quantity,1,'a new Shopping form starts at quantity 1');
+assert.strictEqual(mod.newShoppingForm({}).unit,'個','a new Shopping form starts with 個');
 let allocationSeq=0;
 const store=mod.createShoppingListStore({
   storage:mod.localStorage,
@@ -442,15 +446,34 @@ sharedTargets.add('小明');
 assert.deepStrictEqual(plain(sharedTargets.all()),['小明'],'shopping and ledger use the same de-duplicated proxy-target store');
 
 const ui=fs.readFileSync('index.html','utf8');
+function extractUiFunction(name){
+  const start=ui.indexOf('function '+name+'(');
+  assert.notStrictEqual(start,-1,name+' exists');
+  let index=ui.indexOf('{',start),depth=0;
+  for(;index<ui.length;index++){
+    if(ui[index]==='{')depth++;
+    else if(ui[index]==='}')depth--;
+    if(depth===0)return ui.slice(start,index+1);
+  }
+  throw new Error('Could not extract '+name);
+}
 const reset=plain(mod.shoppingSaveAnotherForm({
   name:'白桃',category:'伴手禮',quantity:'4',unit:'盒',
   targets:['阿寶','媽媽'],stopRef:'d2_shop'
 }));
 assert.deepStrictEqual(reset,{
-  id:'',name:'',category:'伴手禮',quantity:1,unit:'',
+  id:'',name:'',category:'伴手禮',quantity:1,unit:'個',
   legacyQtyText:'',targets:[],allocations:[],
   stopRef:'d2_shop',done:false,createdAt:''
 });
+['盒','包','瓶'].forEach(function(unit){
+  assert.strictEqual(mod.newShoppingForm({id:'old-'+unit,quantity:2,unit:unit}).unit,unit,
+    'editing preserves the existing '+unit+' unit');
+});
+const legacyBlank={id:'legacy-blank',quantity:2,unit:''};
+const legacyDraft=plain(mod.newShoppingForm(legacyBlank));
+assert.strictEqual(legacyDraft.unit,'個','an old blank unit is preselected as 個 in the edit draft');
+assert.strictEqual(legacyBlank.unit,'','opening an old blank unit never rewrites the stored source object');
 const formPayload=plain(mod.shoppingFormPayload({
   id:'',name:'白桃',category:'伴手禮',quantity:'2',unit:'盒',
   targets:['阿寶','媽媽'],stopRef:'d2_shop'
@@ -467,8 +490,9 @@ assert(ui.includes('id="shoppingBuyForNew"'));
 assert(ui.includes('>儲存並新增</button>'));
 assert(!ui.includes("SHOPPING_CATEGORIES=['必買','伴手禮','代購'"));
 assert.match(ui,/\.shopping-target-badge\{[^}]*background:var\(--coral-bg\)[^}]*color:var\(--coral\)[^}]*border-radius:6px/);
-assert(ui.includes('font-family:"PingFang TC","Noto Sans TC","Microsoft JhengHei",system-ui,-apple-system,sans-serif'),
-  '全站優先使用繁體中文字型');
+assert(ui.includes('--font-ui:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,-apple-system,sans-serif'),
+  '全站字體變數優先使用 Noto Sans TC 並保留繁中系統 fallback');
+assert(ui.includes('font-family:var(--font-ui)'),'body 使用全站字體變數');
 assert(!ui.includes('font-family:"Hiragino Sans","Noto Sans TC","PingFang TC"'),
   '不得再由日文字型逐字 fallback 造成粗細不一致');
 assert(/\.shopping-category-badge\{[^}]*background:#fff7dc;[^}]*color:#8a6416/.test(ui),
@@ -499,15 +523,33 @@ assert(ui.includes('shopping-selection-spacer'),'固定工具列有底部捲動�
 assert(/\.shopping-selection-toolbar button\{[^}]*white-space:nowrap/.test(ui),
   '批次按鈕文字不可斷行');
 /* 單位:下拉選單、與數量並排、可在設定頁管理 */
-const quantityFields=ui.slice(ui.indexOf('function renderShoppingQuantityFields(form)'),ui.indexOf('function renderShoppingForm()'));
+const quantityFields=extractUiFunction('renderShoppingQuantityFields');
 assert(quantityFields.includes('shopping-quantity-row'),'數量與單位並排於同一列');
 assert(quantityFields.includes('<select class="shopping-select" id="shoppingUnit"'),'單位改為下拉選單');
 assert(!quantityFields.includes('shopping-chip-grid'),'單位不再使用 chips');
 assert(!quantityFields.includes('placeholder="其他單位"'),'表單不再提供其他單位自由輸入');
+assert(!quantityFields.includes('<option value="">'),'單位下拉不提供空白選項');
+assert(!quantityFields.includes('不指定'),'單位下拉不提供「不指定」選項');
 assert(quantityFields.includes('shoppingUnitStore.all()'),'單位選項來自可管理的 store');
 assert(quantityFields.includes('unitMissing'),'目前單位不在清單時仍以自身成為選中的 option,不得靜默改掉既有資料');
 assert(ui.includes("renderLedgerOptionManager('shoppingUnit','採買單位')"),'設定頁可管理採買單位');
 assert(ui.includes("kind==='shoppingUnit'?shoppingUnitStore"),'選項管理器沿用既有泛用 store 分派');
+assert(mod.shoppingUnitStore.all().includes('個'),'the Shopping unit Store always exposes 個');
+const removeOptionSource=extractUiFunction('removeLedgerOptionFromSettings');
+assert(removeOptionSource.includes('「個」是新增採買項目的預設單位，無法刪除。'),
+  'the settings handler owns the approved protected-unit explanation');
+let unitRemoves=0,unitToast='';
+const removeSandbox={
+  SHOPPING_DEFAULT_UNIT:'個',
+  ledgerOptionStoreForKind(){return {remove(){unitRemoves++;},all(){return ['個'];}};},
+  openSettings(){},
+  toast(message){unitToast=message;}
+};
+vm.createContext(removeSandbox);
+vm.runInContext(removeOptionSource,removeSandbox);
+removeSandbox.removeLedgerOptionFromSettings('shoppingUnit','個');
+assert.strictEqual(unitRemoves,0,'the protected default never reaches Store.remove()');
+assert.strictEqual(unitToast,'「個」是新增採買項目的預設單位，無法刪除。');
 /* 卡片:動作收進 ⋯,只有「記帳」留在列上 */
 assert(ui.includes('function openShoppingItemActions('),'採買列有 ⋯ 操作選單');
 assert(ui.includes('shoppingItemActionPopover'),'選單有獨立的 popover 節點');
