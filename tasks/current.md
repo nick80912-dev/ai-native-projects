@@ -1,8 +1,9 @@
 # CURRENT(現在正在做的)
 
-> 更新於 2026-07-26。細任務層;里程碑看 `06_ROADMAP.md`,歷史交付看 `07_CHANGELOG.md`,正式待辦看 `tasks/backlog.md`。
+> 更新於 2026-07-28。細任務層;里程碑看 `06_ROADMAP.md`,歷史交付看 `07_CHANGELOG.md`,正式待辦看 `tasks/backlog.md`。
 
 ## 📌 現況
+- 最新 App runtime 基準：`c4ce20c`，Service Worker `okayama-trip-v65`；其後若只有文件 commit，不代表 App runtime 或 SW 已換版。工作區若有未提交修改，須另行核對，不得視為此基準的一部分。
 - 2026-07-23 治理決策追認、§4 禁改清單硬停規則與任務板歸位 — 已完成,詳見 `07_CHANGELOG.md`。
 - v34–v44 三秒記帳與首頁／結算卡系列 — 已完成並經 Bar 真機驗收,詳見 `07_CHANGELOG.md`。
 - 採買清單批（SW v45）— 已完成開發；目標測試、完整 41／41 Node tests、文件標題檢查及 375px／390px Browser QA 通過，待 Bar iPhone Safari／PWA 真機驗收；詳見 `07_CHANGELOG.md`。
@@ -17,13 +18,19 @@
 - 2026-07-26 採買清單 B＋D 批（SW v61）— 單筆勾選改為直接完成＋toast 復原（移除三選一 Modal）；新增 append-only `ledgerLinks[]` 與 `releasedAt`，已記帳／待確認／未記帳三態全部動態推導；多品項 source→record 依 `submissionItems` 一一對應、共用 batchId、回寫採單次原子 write；已買頁支援多選／移回待買／批次刪除／建立消費 preflight（整批阻擋）；部分購買採拆分（原 ID 為已買、剩餘插在正後方、共用 `splitGroupId`）；數量維持自由文字；新增 `completedAt`；個人狀態備份升 v5。完整 45／45 Node tests、文件標題檢查及 375／390px Browser QA（溢出 0、console error 0）通過；**待 Bar iPhone Safari／PWA 真機驗收**。C／E／G 未實作。
 - 2026-07-26 採買清單後續修正批（SW v62）— 補回 B 批遺失的單筆記帳入口（已買未記帳項目列，接回既有 `openShoppingLedgerEntry()`）；待買頁多選加入批次刪除並改為兩列工具列；數量改為結構化 `quantity`／`unit`／`legacyQtyText`，舊 `qty` 只在可安全解析時轉換、其餘原文保留不猜測；部分購買改為只輸入本次買到、剩餘由系統計算，買齊直接完成不產生 0 剩餘；備份升 v6。完整 45／45 Node tests、文件標題檢查及 320／375／390px Browser QA（溢出 0、tap 40px、輸入 16px、console error 0）通過；**待 Bar iPhone Safari／PWA 真機驗收**。
 - 2026-07-26 採買清單真機回饋批（SW v63）— 單位改下拉並與數量並排、新增單位移到設定頁（沿用泛用選項 store，單位上限 10→6 與設定頁對齊）、自訂單位不被靜默改掉；已買卡片改為「品名／屬性／地點」三層，動作收進 `⋯`（只有「記帳」留在列上）。完整 45／45 Node tests、文件標題檢查及 320／375／390px Browser QA（溢出 0、tap 40px、輸入 16px、console error 0）通過；**待 Bar iPhone Safari／PWA 真機驗收**。
+- 2026-07-27 採買清單代購分配、逐人記帳與卡片明細（SW v64）— 資料模型改為 `allocations[]` 逐人分配（穩定 `allocationId`、`target`、`quantity` 與 append-only `ledgerLinks[]`）；代購對象改多選並支援「儲存並新增」；卡片資訊重新分層、已買狀態改由 allocation 聚合（`未記帳`／`記帳 2／3`／`已記帳`／`狀態待確認`）；部分購買與 Buy-to-Ledger 都改為逐人粒度；新增採買明細 panel；編輯與刪除保護下放到 allocation 粒度；分類選項移除「代購」；個人狀態備份升 v7（v1～v6 仍可還原）。完整 45／45 Node tests、文件標題檢查及 320／375／390px Browser QA 通過；**待 Bar iPhone Safari／PWA 真機驗收**。
+- 2026-07-27 採買卡片視覺一致性、部分購買與多選互動（SW v65）— 修正繁中字型 fallback 造成的同卡片字重不一致（改 `"PingFang TC","Noto Sans TC","Microsoft JhengHei"` 優先）；badge 改語意分工（只有姓名套 coral、分類改淡金）；「部分購買」入口自 `⋯` 移回待買卡片並收斂出現條件；採買明細縮短高度；批次 selection 與完成 checkbox 完全分離，修正 `.shopping-selection-toolbar-stacked` 被後方 base selector 蓋掉而在真機擠成直排的 CSS 順序問題，並補 66px safe-area spacer。完整 45／45 Node tests、文件標題檢查及 320／375／390px Browser QA 通過；**待 Bar iPhone Safari／PWA 真機驗收**。
 - 2026-07-25 結算列顯示層去重（SW v52）— chip 只講狀態、按鈕只講動作、小字只在有額外資訊時出現；4 處同義重複（`送出中…`×2、`同步失敗・重新同步`＋`重新同步`、兩列「同步中」＋「等待同步」）已清除，逾 30 秒的升級提示依 Bar 裁定保留。狀態機 §3 核准 label 未動。完整 43／43 Node tests（reliability 98／98）與文件標題檢查通過；**待 Bar 真機驗收**。
 
 ## ⏸ 等 Bar 動作
-1. **（優先）部署新版 `apps-script/ledger-sync.gs`**：新版本部署、保持原 Web App URL，並以無痕模式確認 `{WEB_APP_URL}?action=ledger&after=0` 回傳可解析 JSON；步驟見 `apps-script/README.md`「doGet 部署與驗收」。回報後 Claude 才續行真實 GET／CORS／redirect／`after`／`reset`／`serverTime` 與前端 fast pull 整合驗證。
-2. 驗收採買清單的 Today 提醒／常駐入口、完整清單 overlay、單筆與多品項記帳閉環，以及 PWA 更新後的本機資料保留。
-3. 等待設定頁 2.0 批發包;正式範圍見 `tasks/backlog.md`。
+1. **（優先）累積真機驗收 SW v58–v65 共八批**：一次驗完即可，重點在 v64／v65 的採買清單改動 —— 多對象代購新增與「儲存並新增」、逐人部分購買、待買／已買多選工具列（320px 需為單行三顆等寬）、採買明細 panel、逐人記帳與狀態聚合，以及 PWA 更新後的本機資料保留。注意需自多工列滑除 App 後重開兩次才會換到新 SW。
+2. 等待設定頁 2.0 批發包;正式範圍見 `tasks/backlog.md`。
+3. 裁定 `tasks/backlog.md` #13 結算一致性批的核心設計題（更正＝新增反向消費 vs reopen settlement）—— **必須於 2026-10-18 出發前完成**。
 4. 後續批次驗收通過後,由 Bar 核准 PR merge `dev → main`;未核准前不得 merge、push `main` 或部署。
 
+> 已解除：Apps Script `doGet` 部署已由 Bar 完成，真實端點驗證（CORS、redirect、`after`／`reset`／`serverTime`、非 JSON 降級）通過，見上方 SW v47 條目。
+
 ## 下一棒
-→ 完成本批團體消費權限的全測與 375／390px Browser QA，推送 `dev` 後由 Bar 驗收付款人／分攤者操作邊界；其後續做採買清單與結算 Hotfix 的 iPhone Safari／PWA 真機驗收，再發出「設定頁 2.0 批」Codex prompt，全部驗收完成再另案處理 `dev → main`。
+→ Bar 真機驗收 SW v58–v65（GitHub Pages `https://nick80912-dev.github.io/ai-native-projects/`，不消耗 Netlify 額度）；同時裁定 backlog #13 結算更正方案。兩者完成後再排採買清單 C＋E＋G 第三批與「設定頁 2.0 批」，全部驗收通過再另案處理 `dev → main`。
+
+> 採買清單 A／B／D／F 已於 SW v60／v61 交付；**C／E／G 尚未實作**，正式待辦與範圍見 `tasks/backlog.md` #14。

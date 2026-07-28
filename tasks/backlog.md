@@ -1,6 +1,6 @@
 # BACKLOG(待辦,依優先序)
 
-> 更新於 2026-07-26。做完的移到 done.md,正在做的移到 current.md。
+> 更新於 2026-07-28。做完的移到 done.md,正在做的移到 current.md。
 
 ## 高優先(驗收後立即)
 1. **QA 腳本入版控**:Playwright 三情境腳本(斷網內建/連網同步/旅行日 mock Date)寫入 `tests/`,之後每次程式交付必附可執行測試(Bar 已核准 2026-07-09);完成後掛進 `.github/workflows/qa.yml`(Sanity CI 已於 07-09 先行上線)。
@@ -16,7 +16,7 @@
    - 天氣雨%改取「現在之後」最大值;fetchSheet 重試加 800ms 退避;toast() null guard
    - 未來測試模擬版:localStorage 前綴隔離(TEST 版不再污染正式狀態)
 3. **驗收後 UI/內容微調**(最小修改,不動 schema)。
-3b. **採買單位未納入個人狀態備份**:`trip_shopping_units` 目前不在備份 payload 內(備份已含 `ledgerCategories`／`ledgerPayMethods`)。還原到新裝置時自訂單位會退回預設清單;既有項目的 `unit` 字串仍存在項目上、顯示不受影響。納入需再升一版備份格式(目前 v6),待與其他備份調整一併處理。
+3b. **採買單位未納入個人狀態備份**:`trip_shopping_units` 目前不在備份 payload 內(備份已含 `ledgerCategories`／`ledgerPayMethods`)。還原到新裝置時自訂單位會退回預設清單;既有項目的 `unit` 字串仍存在項目上、顯示不受影響。納入需再升一版備份格式(目前 v7,v64 已因 `allocations[]` 由 v6 升上來但未順道納入單位),待與其他備份調整一併處理。
 4. **BUILTIN 快照更新 SOP 文件化**:何時重抓、步驟、由誰觸發(目前僅口頭慣例)。
 5. **GitHub Pages 已啟用,待完成最終真機驗收**:
    - Pages 已啟用並可載入:`https://nick80912-dev.github.io/ai-native-projects/`,Deploy from a branch(`dev`,repo 內無 Pages workflow),子路徑 `/ai-native-projects/`。
@@ -36,6 +36,10 @@
    - 現況為已知開放風險：付款人仍可刪除已結算消費，會使 confirmed settlement 失效且無自動修正機制。
    - 核心設計題（待裁定）：更正＝新增反向消費（append-only，零新機制）或 reopen settlement（改狀態機）。
    - 判定影響範圍時，一筆多人分攤紀錄可能影響多組債權關係，不得只檢查單一 pair。
+14. **採買清單 C＋E＋G 第三批**(設計已提出,尚未實作;A／B／D／F 已於 SW v60／v61 交付):
+   - **C 個人↔團體切軌時的逐項資訊保留**:Ledger 多品項草稿切軌時,需保留逐項 `isProxy`／`proxyTarget` 及採買來源 `sourceShoppingItemId`／`sourceShoppingAllocationId`,避免代購資訊與採買記帳關聯消失;需先定義契約並補齊測試再實作。
+   - **E「必買」在站點群組內置頂**:現行排序只到 `dayIndex → 當日 items index`,站點內未讓必買優先;排序鍵須維持 `日期 → 站點 → 站內必買優先`,不得跨站或跨日重排。
+   - **G 表單位置跳動**:編輯清單深處的項目時,表單仍出現在清單最上方。G 的另一半「列動作統一收進 `⋯`」已被後續決策取代 —— 「部分購買」與「記帳」刻意留在卡片上,只有低頻動作收進 `⋯`,不得回頭把它們收走。
 
 ## 低優先(未來,不急)
 20. **SW SHELL 快取清單補齊評估**:重新盤點現行 App Shell 必要資產與離線回歸範圍，不沿用已作廢的 ZIP 打包流程。
