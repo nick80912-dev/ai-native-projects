@@ -472,7 +472,10 @@ assert(/toast\('已標記「'\+item\.name\+'」為已買','復原'/.test(shoppin
 /* 已買頁多選、移回待買、刪除 */
 assert(shoppingSource.includes('function moveSelectedShoppingBackToPending('),'已買頁可批次移回待買');
 assert(shoppingSource.includes('function deleteSelectedShoppingItems('),'已買頁可批次刪除');
-assert(/patchMany\(selected\.map\(function\(item\)\{return \{id:item\.id,patch:\{done:false,completedAt:''\}\};\}\)\)/.test(shoppingSource),'移回待買只清完成狀態,保留 ledgerLinks／splitGroupId／createdAt／stopRef');
+assert(shoppingSource.includes('shoppingListStore.moveBackToPending(selectedIds)'),
+  '批次移回使用統一原子 Store 操作，不在 UI 逐筆 patch');
+assert((shoppingSource.match(/shoppingListStore\.moveBackToPending\(\[id\]\)/g)||[]).length===2,
+  'checkbox 取消與完成 Toast 復原也使用同一 Store 操作');
 assert(/刪除採買項目不會刪除原本的消費紀錄/.test(html),'刪除已記帳項目時說明 Ledger 紀錄仍保留');
 assert(/刪除採買項目不會嘗試修改或刪除帳本紀錄/.test(html),'待確認項目有獨立提醒');
 assert(html.includes("已有 '+linked+' 位建立消費紀錄"));
@@ -547,6 +550,6 @@ assert(commit.indexOf('writeShoppingLedgerLinks')>commit.indexOf('operation.then
 assert(html.includes('sortShoppingStopGroups(')&&html.includes('buildShoppingStopOrder('),'A 的行程排序契約保留');
 assert(html.includes('resolveShoppingStopState(')&&html.includes('tripDatasetAuthority('),'F 的孤兒三態契約保留');
 const sw=fs.readFileSync('sw.js','utf8');
-assert.match(sw,/okayama-trip-v66/,'service worker cache is v66');
+assert.match(sw,/okayama-trip-v67/,'service worker cache is v67');
 
 console.log('shopping ledger link tests passed');

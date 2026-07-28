@@ -1,4 +1,12 @@
 # 07 版本紀錄
+## 2026-07-28｜新增消費展開縫隙、採買待買卡片精簡與安全回併（dev，SW v67，待 Bar 真機驗收）
+- **根因**：`.ledger-entry-secondary` 沒有建立獨立 block formatting context，第一個 `.ledger-sheet-field` 的 `margin-top:10px` 會穿出父層；因此摘要與展開內容之間露出 10px 米色背景，看起來像兩張不相連的卡片。
+- **修正**：展開容器改為 `display:flow-root`，阻止 first-child margin collapse；摘要與淡藍內容邊框無縫相接，原本 10px 欄位留白仍保留在內容背景內。未使用 overflow 裁切，日期選擇器 popover 邊界不受影響。
+- **待買卡片重複站點的根因與修正**：待買頁已有站點群組標題，卡片 renderer 卻仍固定輸出地點列，造成資訊重複與卡片增高。renderer 現在必須接收明確的 pending／done page context：一般站點、待確認、已失效、隨時可買四類待買卡與其多選模式都不建立地點 DOM；已買卡片仍保留地點，待買／已買明細與 Today 站點群組維持原資訊。
+- **拆分後無法回併的根因與統一操作**：原本 checkbox、批次移回與完成 Toast 復原各自只 patch `done:false`，Store 沒有反向合併邊界。三條路徑現統一呼叫原子 `moveBackToPending(ids)`，一次讀取、一次轉換計畫、一次 normalize／write；單筆與批次不再產生不同結果，任一目標不存在或寫入失敗時資料完全不變。
+- **安全回併與未合併保護**：只有 group 全部待買、原 ID 存在、品名／分類／單位／站點／legacy 狀態一致、allocation 為可安全加總的正整數、所有 append-only `ledgerLinks[]` 完全無歷史、canonical 對象唯一且不混用自己／代購時才回併。結果保留原 item ID／`createdAt`，原 item allocation ID 優先，否則沿用 store order 最前 sibling 的既有 ID，清除 `completedAt`／`splitGroupId` 並原子移除 sibling。仍有已買 sibling、欄位差異、legacy、溢位、資料缺損或 active／unverified／released 等任何 link 歷史時只完成移回、不猜測或吞併資料；批次只顯示一則彙總 Toast。
+- Browser QA：320×700、375×812、390×844 的新增消費摘要／內容外部 gap 均為 **0px**、內容內距均為 **10px**；採買頁面、panel、卡片與 Toast 水平溢位均為 **0px**，待買卡位置列為 0、已買卡位置列完整，待買／已買明細站點均保留，console error／warning 為 0。實測單人 2＋3 回併為 5、多人逐對象回併為 6、仍有已買 sibling／單位不同／released 歷史維持分開，跨兩個 split group 批次顯示 `已將 2 項移回待買，並合併 2 組`。完整 **47／47** Node tests（含 123／123 reliability checks）、`tools/check-doc-titles.js` 與 `git diff --check` 通過；Service Worker cache 僅由 `okayama-trip-v66` → `okayama-trip-v67`，本批不重複升版。
+
 ## 2026-07-28｜新增消費表單、採買預設單位與全站思源黑體優化（dev，SW v66，待 Bar 真機驗收）
 - **新增消費主流程重新分層**：單品項依序保留金額、明細、代購開關／對象，再以淡海水灰藍、1px 邊框、10px 圓角的 `其他資訊（選填）` 收合類別、支付方式與日期；摘要顯示 `類別｜支付方式｜今天／M/D／YYYY/M/D`。明細鍵盤改為 Next，個人帳聚焦代購開關、團體帳聚焦分攤成員；不再由鍵盤 Enter 直接送出。儲存按鈕與原有 validation／pending guard／idempotency 流程未改。
 - **採買預設為 `1 個`**：新項目與「儲存並新增」都預設數量 1、單位 `個`；單位下拉移除空白／「不指定」。`shoppingUnitStore` 讀取時保證包含 `個`，設定頁嘗試刪除時保留資料並顯示 `「個」是新增採買項目的預設單位，無法刪除。`。既有非空單位原樣保留；舊資料空單位只在編輯草稿預選 `個`，未儲存前不回寫。

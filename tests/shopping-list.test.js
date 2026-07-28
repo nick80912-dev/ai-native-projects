@@ -556,7 +556,7 @@ assert(ui.includes('shoppingItemActionPopover'),'選單有獨立的 popover 節�
 assert(ui.includes('ledger-action-popover'),'沿用帳本既有 popover 樣式,未另造一套');
 assert(!/shopping-item-actions[\s\S]{0,200}>編輯</.test(ui),'編輯不再直接排在列上');
 /* 單筆記帳入口必須接回既有函式,不另造流程 */
-const itemRenderer=ui.slice(ui.indexOf('function renderShoppingItem(item)'),ui.indexOf('function renderShoppingGroups(items)'));
+const itemRenderer=extractUiFunction('renderShoppingItem');
 assert(itemRenderer.includes('selection=shoppingUiState.selectionMode'),
   '待買與已買在多選模式都使用 selection checkbox');
 assert(!itemRenderer.includes('shoppingUiState.selectionMode&&!item.done'),
@@ -573,7 +573,7 @@ assert(itemRenderer.includes('canOfferShoppingPartialPurchase(item,linkSummary)'
   '卡片部分購買入口使用統一 eligibility helper');
 assert(itemRenderer.includes('>部分購買</button>'),'卡片直接顯示部分購買');
 assert(itemRenderer.includes('openShoppingLedgerEntry(')&&itemRenderer.includes('>記帳</button>'),'已買未記帳項目直接呼叫既有的 openShoppingLedgerEntry()');
-assert(itemRenderer.includes('releaseShoppingLedgerLink('),'已記帳項目顯示改回未記帳');
+assert(ui.includes('releaseShoppingLedgerLink('),'已記帳項目顯示改回未記帳');
 assert(itemRenderer.includes('shoppingItemLinkSummary(item,shoppingLedgerContext())')&&
   itemRenderer.includes("linkSummary.state==='unlinked'")&&
   itemRenderer.includes("linkSummary.state==='partial'"),
@@ -581,6 +581,45 @@ assert(itemRenderer.includes('shoppingItemLinkSummary(item,shoppingLedgerContext
 const itemRendererCode=itemRenderer.replace(/\/\*[\s\S]*?\*\//g,'');
 assert(!/ledgerLinks\.length/.test(itemRendererCode),'不得以 ledgerLinks.length 判斷是否可記帳');
 assert(itemRenderer.indexOf('記帳<')>0&&itemRenderer.indexOf('item.done')>0,'記帳入口只在已買項目出現');
+const renderShoppingItemSource=extractUiFunction('renderShoppingItem');
+const cardSandbox={
+  shoppingUiState:{selected:{},selectionMode:false},
+  shoppingStopById(stopRef){return stopRef==='resolved'?{dayIndex:1,name:'岡山站'}:null;},
+  shoppingStopStateFor(item){return item.__state;},
+  shoppingItemLinkSummary(){return {state:'unlinked'};},
+  shoppingLedgerContext(){return {};},
+  shoppingCardLinkBadge(){return '';},
+  shoppingCardTargetModel(){return {prefix:'',names:[],overflow:'',suffix:'',ariaLabel:''};},
+  shoppingItemQuantitySummary(){return '1 個';},
+  shoppingItemLocationLine:mod.shoppingItemLocationLine,
+  canOfferShoppingPartialPurchase(){return false;},
+  escapeHtml(value){return String(value);},
+  jsString(value){return String(value);}
+};
+vm.createContext(cardSandbox);
+vm.runInContext(renderShoppingItemSource,cardSandbox);
+[
+  {stopRef:'resolved',__state:'resolved',location:'DAY 2 · 岡山站'},
+  {stopRef:'pending',__state:'pending',location:'行程站點待確認'},
+  {stopRef:'orphan',__state:'orphan',location:'原行程站點已不存在'},
+  {stopRef:'',__state:'unbound',location:''}
+].forEach(function(example){
+  const item={id:'card-'+example.__state,name:'白桃',category:'伴手禮',done:false,stopRef:example.stopRef,__state:example.__state};
+  const pending=cardSandbox.renderShoppingItem(item,{page:'pending'});
+  assert(!pending.includes('shopping-item-location'),'待買 '+example.__state+' 卡片不輸出地點列');
+  if(example.location)assert(!pending.includes(example.location),'待買 '+example.__state+' 卡片的無障礙樹不含重複地點');
+  cardSandbox.shoppingUiState.selectionMode=true;
+  assert(!cardSandbox.renderShoppingItem(item,{page:'pending'}).includes('shopping-item-location'),
+    '待買 '+example.__state+' 多選卡片沿用相同地點規則');
+  cardSandbox.shoppingUiState.selectionMode=false;
+  const done=cardSandbox.renderShoppingItem(Object.assign({},item,{done:true}),{page:'done'});
+  if(example.location)assert(done.includes(example.location),'已買 '+example.__state+' 卡片保留地點列');
+});
+assert.throws(
+  ()=>cardSandbox.renderShoppingItem({id:'missing-context',name:'白桃',done:false,stopRef:'',__state:'unbound'}),
+  /context/,
+  '卡片 renderer 缺少明確頁面 context 時拒絕猜測'
+);
 /* B:單筆勾選不再開三選一 Modal,改為直接完成＋toast 復原。 */
 assert(!ui.includes('shoppingCompleteChoice'),'single completion no longer opens the three-way modal');
 assert(!ui.includes('function undoShoppingCompleteChoice'),'the modal-only undo handler is retired');
@@ -613,7 +652,8 @@ assert.strictEqual(doneCalls[3][0],'toast');
 assert.strictEqual(doneCalls[3][2],'復原','toast 提供復原動作');
 assert(String(doneCalls[3][1]).indexOf('已標記')===0,'toast 使用核准文案');
 assert(!/ledgerLinks\s*:/.test(doneSource),'完成與復原都不寫入 ledgerLinks');
-assert(/\{done:false,completedAt:''\}/.test(doneSource),'復原清空 completedAt 並退回待買');
+assert((doneSource.match(/moveBackToPending\(\[id\]\)/g)||[]).length===2,
+  'checkbox 取消與 Toast 復原共用 Store moveBackToPending');
 assert.match(ui,/\.shopping-list-panel\{[^}]*overflow-y:auto[^}]*touch-action:pan-y/,'shopping overlay follows Scroll-only with CSS touch-action');
 
 /* ---- A＋F 的原始碼契約(顯示層無法以純函式覆蓋的部分) ---- */
@@ -625,7 +665,10 @@ assert(shoppingSource.includes('buildShoppingStopOrder('),'A4 待買頁接上共
 const reminderSource=ui.slice(ui.indexOf('function buildShoppingTodayReminder('),ui.indexOf('function shoppingLedgerSinglePrefill('));
 assert(reminderSource.includes('sortShoppingStopGroups(')&&reminderSource.includes('buildShoppingStopOrder('),'A4 Today 提醒使用同一組 helper');
 /* A6:已買頁不套用行程排序,維持既有 store order */
-assert(/shoppingUiState\.tab==='done'\)return '<section class="shopping-group"><div class="shopping-group-title">已買<\/div>'\+items\.map\(renderShoppingItem\)\.join\(''\)\+'<\/section>'/.test(shoppingSource),'A6 已買頁維持既有平鋪與 store order,不套用行程排序');
+assert(/shoppingUiState\.tab==='done'\)[\s\S]{0,240}renderShoppingItem\(item,\{page:'done'\}\)/.test(shoppingSource),
+  '已買頁以明確 done context 平鋪並保留地點');
+assert((shoppingSource.match(/renderShoppingItem\(item,\{page:'pending'\}\)/g)||[]).length===4,
+  '一般站點、待確認、已失效與隨時可買四種待買群組都使用 pending context');
 assert(/已買頁不在本批排序範圍/.test(shoppingSource),'已買頁排除範圍在程式註解中寫明');
 /* F7:不得因冷啟動、離線或暫時資料空白就批次清空 stopRef */
 assert(!/shoppingListStore\.update\([^)]*\{\s*stopRef\s*:/.test(shoppingSource),'F7 沒有任何自動清除 stopRef 的寫入');

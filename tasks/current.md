@@ -3,7 +3,7 @@
 > 更新於 2026-07-28。細任務層;里程碑看 `06_ROADMAP.md`,歷史交付看 `07_CHANGELOG.md`,正式待辦看 `tasks/backlog.md`。
 
 ## 📌 現況
-- 最新 App runtime 基準：`c4ce20c`，Service Worker `okayama-trip-v65`；其後若只有文件 commit，不代表 App runtime 或 SW 已換版。工作區若有未提交修改，須另行核對，不得視為此基準的一部分。
+- 最新已推送 `dev` App runtime 基準：`aedebd0`，Service Worker `okayama-trip-v66`；其後若只有文件 commit，不代表 App runtime 或 SW 已換版。工作區若有未提交修改，須另行核對，不得視為此基準的一部分。
 - 2026-07-23 治理決策追認、§4 禁改清單硬停規則與任務板歸位 — 已完成,詳見 `07_CHANGELOG.md`。
 - v34–v44 三秒記帳與首頁／結算卡系列 — 已完成並經 Bar 真機驗收,詳見 `07_CHANGELOG.md`。
 - 採買清單批（SW v45）— 已完成開發；目標測試、完整 41／41 Node tests、文件標題檢查及 375px／390px Browser QA 通過，待 Bar iPhone Safari／PWA 真機驗收；詳見 `07_CHANGELOG.md`。
@@ -20,11 +20,12 @@
 - 2026-07-26 採買清單真機回饋批（SW v63）— 單位改下拉並與數量並排、新增單位移到設定頁（沿用泛用選項 store，單位上限 10→6 與設定頁對齊）、自訂單位不被靜默改掉；已買卡片改為「品名／屬性／地點」三層，動作收進 `⋯`（只有「記帳」留在列上）。完整 45／45 Node tests、文件標題檢查及 320／375／390px Browser QA（溢出 0、tap 40px、輸入 16px、console error 0）通過；**待 Bar iPhone Safari／PWA 真機驗收**。
 - 2026-07-27 採買清單代購分配、逐人記帳與卡片明細（SW v64）— 資料模型改為 `allocations[]` 逐人分配（穩定 `allocationId`、`target`、`quantity` 與 append-only `ledgerLinks[]`）；代購對象改多選並支援「儲存並新增」；卡片資訊重新分層、已買狀態改由 allocation 聚合（`未記帳`／`記帳 2／3`／`已記帳`／`狀態待確認`）；部分購買與 Buy-to-Ledger 都改為逐人粒度；新增採買明細 panel；編輯與刪除保護下放到 allocation 粒度；分類選項移除「代購」；個人狀態備份升 v7（v1～v6 仍可還原）。完整 45／45 Node tests、文件標題檢查及 320／375／390px Browser QA 通過；**待 Bar iPhone Safari／PWA 真機驗收**。
 - 2026-07-27 採買卡片視覺一致性、部分購買與多選互動（SW v65）— 修正繁中字型 fallback 造成的同卡片字重不一致（改 `"PingFang TC","Noto Sans TC","Microsoft JhengHei"` 優先）；badge 改語意分工（只有姓名套 coral、分類改淡金）；「部分購買」入口自 `⋯` 移回待買卡片並收斂出現條件；採買明細縮短高度；批次 selection 與完成 checkbox 完全分離，修正 `.shopping-selection-toolbar-stacked` 被後方 base selector 蓋掉而在真機擠成直排的 CSS 順序問題，並補 66px safe-area spacer。完整 45／45 Node tests、文件標題檢查及 320／375／390px Browser QA 通過；**待 Bar iPhone Safari／PWA 真機驗收**。
-- 2026-07-28 新增消費表單、採買預設單位與全站思源黑體優化（SW v66，工作區未提交）— 新增消費主流程改為金額 → 明細 → 代購／對象 → `其他資訊（選填）` → 儲存，類別／支付方式／日期收進可展開摘要；明細 Enter 改為 Next。採買新項目與「儲存並新增」預設 `1 個`，單位選單不再提供空白／「不指定」，`個` 在設定頁不可刪除，舊空單位只於草稿預選且不自動回寫。全站改以 Google Fonts `Noto Sans TC` 400／500／700 為第一順位並保留繁中系統 fallback。完整 46／46 Node tests、文件標題檢查、320／375／390／430px Browser QA 與停止本機伺服器後的 v66 離線重載通過；**未 commit、未 push、未部署，待 Bar iPhone Safari／PWA 真機驗收**。
+- 2026-07-28 新增消費表單、採買預設單位與全站思源黑體優化（SW v66）— 新增消費主流程改為金額 → 明細 → 代購／對象 → `其他資訊（選填）` → 儲存，類別／支付方式／日期收進可展開摘要；明細 Enter 改為 Next。採買新項目與「儲存並新增」預設 `1 個`，單位選單不再提供空白／「不指定」，`個` 在設定頁不可刪除，舊空單位只於草稿預選且不自動回寫。全站改以 Google Fonts `Noto Sans TC` 400／500／700 為第一順位並保留繁中系統 fallback。完整 46／46 Node tests、文件標題檢查、320／375／390／430px Browser QA 與停止本機伺服器後的 v66 離線重載通過；**已 commit 並推送 `dev`（`aedebd0`），未部署，待 Bar iPhone Safari／PWA 真機驗收**。
+- 2026-07-28 新增消費展開縫隙、採買待買卡片精簡與安全回併（SW v67，工作區未提交）— 新增消費以 `flow-root` 修正 first-child margin collapse；待買卡片改由站點群組表達位置，不再輸出重複地點 DOM，已買卡與所有明細仍保留站點。checkbox、批次移回與完成 Toast 復原統一走 Store 原子 `moveBackToPending(ids)`；只有原 ID、欄位、正整數 allocation、空 ledger 歷史與 canonical 對象等完整安全條件成立時才合併，否則移回仍成功但保留 sibling。完整 47／47 Node tests（123／123 reliability checks）與文件檢查通過；320／375／390px Browser QA 實測單人／多人／批次安全回併、未合併保護、卡片／明細位置規則、水平溢位與 console error／warning 皆通過。**未 commit、未 push、未部署，待 Bar 真機驗收**。
 - 2026-07-25 結算列顯示層去重（SW v52）— chip 只講狀態、按鈕只講動作、小字只在有額外資訊時出現；4 處同義重複（`送出中…`×2、`同步失敗・重新同步`＋`重新同步`、兩列「同步中」＋「等待同步」）已清除，逾 30 秒的升級提示依 Bar 裁定保留。狀態機 §3 核准 label 未動。完整 43／43 Node tests（reliability 98／98）與文件標題檢查通過；**待 Bar 真機驗收**。
 
 ## ⏸ 等 Bar 動作
-1. **（優先）累積真機驗收 SW v58–v66 共九批**：一次驗完即可；除 v64／v65 的採買清單改動外，新增 v66 的新增消費層級、明細 Next、採買 `1 個` 預設／刪除保護與全站思源黑體 fallback。並驗證 PWA 更新後的本機資料保留。注意需自多工列滑除 App 後重開兩次才會換到新 SW。
+1. **（優先）累積真機驗收 SW v58–v67 共十批**：一次驗完即可；除 v64／v65 的採買清單改動外，驗證 v66 的新增消費層級、明細 Next、採買 `1 個` 預設／刪除保護與全站思源黑體 fallback，以及 v67 的「其他資訊」展開無米色縫隙、待買卡片無重複站點、已買卡／明細站點完整、部分購買取消後安全回併與不安全資料保留分開。並驗證 PWA 更新後的本機資料保留。注意需自多工列滑除 App 後重開兩次才會換到新 SW。
 2. 等待設定頁 2.0 批發包;正式範圍見 `tasks/backlog.md`。
 3. 裁定 `tasks/backlog.md` #13 結算一致性批的核心設計題（更正＝新增反向消費 vs reopen settlement）—— **必須於 2026-10-18 出發前完成**。
 4. 後續批次驗收通過後,由 Bar 核准 PR merge `dev → main`;未核准前不得 merge、push `main` 或部署。
@@ -32,6 +33,6 @@
 > 已解除：Apps Script `doGet` 部署已由 Bar 完成，真實端點驗證（CORS、redirect、`after`／`reset`／`serverTime`、非 JSON 降級）通過，見上方 SW v47 條目。
 
 ## 下一棒
-→ 先由 Bar 檢視並決定是否提交／推送目前 SW v66 工作區；上線後再真機驗收 SW v58–v66（GitHub Pages `https://nick80912-dev.github.io/ai-native-projects/`，不消耗 Netlify 額度）。同時裁定 backlog #13 結算更正方案；全部驗收通過再另案處理 `dev → main`。
+→ 先由 Bar 檢視並決定是否提交／推送目前 SW v67 工作區；上線後再真機驗收 SW v58–v67（GitHub Pages `https://nick80912-dev.github.io/ai-native-projects/`，不消耗 Netlify 額度）。同時裁定 backlog #13 結算更正方案；全部驗收通過再另案處理 `dev → main`。
 
 > 採買清單 A／B／D／F 已於 SW v60／v61 交付；**C／E／G 尚未實作**，正式待辦與範圍見 `tasks/backlog.md` #14。

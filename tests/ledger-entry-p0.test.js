@@ -81,6 +81,11 @@ assert.match(
 assert.match(html,/\.ledger-single-primary \.ledger-sheet-input\{[^}]*width:100%[^}]*max-width:100%[^}]*box-sizing:border-box/,'required inputs share full content width');
 assert.match(html,/\.ledger-single-primary \.ledger-amount-wrap \.ledger-sheet-input\{[^}]*min-height:62px/,'only amount retains the tall amount height');
 assert.doesNotMatch(html,/\.ledger-single-primary \.ledger-sheet-input\{[^}]*min-height:62px/,'detail does not inherit the amount height');
+assert.match(
+  html,
+  /\.ledger-entry-secondary\{[^}]*display:flow-root/,
+  'expanded optional information contains the first field margin instead of exposing a gap below the summary'
+);
 assert.match(html,/\.ledger-single-primary \.ledger-sheet-field\+\.ledger-sheet-field\{[^}]*margin-top:10px/,'required fields use the approved gap without a divider');
 
 assert.match(html,/id="ledgerAmount"[^>]*type="number"[^>]*inputmode="numeric"/,'the approved amount input type and inputmode remain unchanged');
