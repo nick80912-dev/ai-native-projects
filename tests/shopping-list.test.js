@@ -114,6 +114,32 @@ assert.strictEqual(mod.buildShoppingTodayReminder([{id:'b',name:'藥妝',stopRef
 assert.strictEqual(mod.buildShoppingTodayReminder([{id:'d',name:'孤兒',stopRef:'10/18_99',done:false}],day),null,'orphan references degrade silently');
 assert.strictEqual(mod.buildShoppingTodayReminder([],null),null,'non-trip days never show the reminder');
 
+const priorityInput=[
+  {id:'normal-1',name:'一般一',category:'伴手禮'},
+  {id:'required-1',name:'必買一',category:'必買'},
+  {id:'normal-2',name:'一般二',category:'生活用品'},
+  {id:'required-2',name:'必買二',category:'必買'},
+  {id:'looks-required',name:'相似文字',category:' 必買 '}
+];
+const prioritySnapshot=plain(priorityInput);
+assert.deepStrictEqual(
+  plain(mod.prioritizeShoppingGroupItems(priorityInput)).map(item=>item.id),
+  ['required-1','required-2','normal-1','normal-2','looks-required'],
+  '每個待買群組只把 exact 必買穩定置頂'
+);
+assert.deepStrictEqual(priorityInput,prioritySnapshot,'顯示排序不修改輸入或 store order');
+const priorityReminder=plain(mod.buildShoppingTodayReminder([
+  {id:'normal-1',name:'一般一',category:'伴手禮',stopRef:'10/18_1',done:false},
+  {id:'required-1',name:'必買一',category:'必買',stopRef:'10/18_1',done:false},
+  {id:'normal-2',name:'一般二',category:'生活用品',stopRef:'10/18_1',done:false},
+  {id:'required-2',name:'必買二',category:'必買',stopRef:'10/18_1',done:false}
+],day));
+assert.deepStrictEqual(
+  priorityReminder.groups[0].items,
+  ['必買一','必買二','一般一','一般二'],
+  'Today 站點摘要與待買群組共用必買穩定置頂規則'
+);
+
 /* ================= 結構化數量:quantity／unit／legacyQtyText ================= */
 const QNOW='2026-10-20T04:00:00.000Z';
 const q=over=>mod.normalizeShoppingItem(Object.assign({id:'q1',name:'益生菌',createdAt:QNOW},over||{}));
@@ -457,6 +483,51 @@ function extractUiFunction(name){
   }
   throw new Error('Could not extract '+name);
 }
+const groupSandbox={
+  shoppingUiState:{tab:'pending'},
+  shoppingTripAuthority(){return 'authoritative';},
+  shoppingStopById(stopRef){return stopRef==='resolved'?{id:'resolved',dayIndex:0,name:'岡山站'}:null;},
+  resolveShoppingStopState(stopRef,stop){return stop?'resolved':stopRef||'unbound';},
+  DB:{trip:{days:[]}},
+  buildShoppingStopOrder(){return {};},
+  sortShoppingStopGroups(groups){return groups;},
+  SHOPPING_STOP_STATE_LABEL:{pending:'待確認',orphan:'已失效'},
+  renderShoppingItem(item){return '<i>'+item.id+'</i>';},
+  escapeHtml(value){return String(value);}
+};
+vm.createContext(groupSandbox);
+vm.runInContext(extractUiFunction('prioritizeShoppingGroupItems'),groupSandbox);
+vm.runInContext(extractUiFunction('renderShoppingGroups'),groupSandbox);
+const groupedHtml=groupSandbox.renderShoppingGroups([
+  {id:'resolved-normal',category:'伴手禮',stopRef:'resolved'},
+  {id:'resolved-required',category:'必買',stopRef:'resolved'},
+  {id:'pending-normal',category:'生活用品',stopRef:'pending'},
+  {id:'pending-required',category:'必買',stopRef:'pending'},
+  {id:'orphan-normal',category:'其他',stopRef:'orphan'},
+  {id:'orphan-required',category:'必買',stopRef:'orphan'},
+  {id:'unbound-normal',category:'伴手禮',stopRef:''},
+  {id:'unbound-required',category:'必買',stopRef:''}
+]);
+[
+  ['resolved-required','resolved-normal'],
+  ['pending-required','pending-normal'],
+  ['orphan-required','orphan-normal'],
+  ['unbound-required','unbound-normal']
+].forEach(([requiredId,normalId])=>{
+  assert(
+    groupedHtml.indexOf(requiredId)<groupedHtml.indexOf(normalId),
+    requiredId+' 在所屬待買群組內穩定置頂'
+  );
+});
+groupSandbox.shoppingUiState.tab='done';
+const doneOrderHtml=groupSandbox.renderShoppingGroups([
+  {id:'done-normal',category:'伴手禮'},
+  {id:'done-required',category:'必買'}
+]);
+assert(
+  doneOrderHtml.indexOf('done-normal')<doneOrderHtml.indexOf('done-required'),
+  '已買頁維持原 store order，不套用必買置頂'
+);
 const reset=plain(mod.shoppingSaveAnotherForm({
   name:'白桃',category:'伴手禮',quantity:'4',unit:'盒',
   targets:['阿寶','媽媽'],stopRef:'d2_shop'

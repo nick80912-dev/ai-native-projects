@@ -3136,13 +3136,13 @@ function renderShoppingGroups(items){
   });
   /* 有效站點群組依實際行程順序(dayIndex → 當日 items index),與 Today 提醒共用同一個 helper。 */
   var html=sortShoppingStopGroups(stopGroups,buildShoppingStopOrder((DB.trip&&DB.trip.days)||[])).map(function(group){
-    return '<section class="shopping-group"><div class="shopping-group-title">DAY '+(group.stop.dayIndex+1)+' · '+escapeHtml(group.stop.name)+'</div>'+group.items.map(function(item){return renderShoppingItem(item,{page:'pending'});}).join('')+'</section>';
+    return '<section class="shopping-group"><div class="shopping-group-title">DAY '+(group.stop.dayIndex+1)+' · '+escapeHtml(group.stop.name)+'</div>'+prioritizeShoppingGroupItems(group.items).map(function(item){return renderShoppingItem(item,{page:'pending'});}).join('')+'</section>';
   }).join('');
   /* 特殊群組一律排在 DAY 1–N 正常路線之後,沿用既有「先綁定類、最後隨時可買」的順序;
      舊的單一「已綁定行程」桶在此拆成待確認與已失效兩組,待確認在前(暫時性)、已失效在後(需處理)。 */
-  if(pending.length)html+='<section class="shopping-group"><div class="shopping-group-title">'+SHOPPING_STOP_STATE_LABEL.pending+'</div><p class="shopping-group-hint">行程資料尚未確認來源，暫時保留原綁定；同步完成後會自動回到所屬站點。</p>'+pending.map(function(item){return renderShoppingItem(item,{page:'pending'});}).join('')+'</section>';
-  if(orphans.length)html+='<section class="shopping-group shopping-group-orphan"><div class="shopping-group-title">'+SHOPPING_STOP_STATE_LABEL.orphan+'</div><p class="shopping-group-hint">原本綁定的行程站點已從行程中移除，請編輯後重新選擇站點或改為隨時可買。</p>'+orphans.map(function(item){return renderShoppingItem(item,{page:'pending'});}).join('')+'</section>';
-  if(unknown.length)html+='<section class="shopping-group"><div class="shopping-group-title">隨時可買</div>'+unknown.map(function(item){return renderShoppingItem(item,{page:'pending'});}).join('')+'</section>';
+  if(pending.length)html+='<section class="shopping-group"><div class="shopping-group-title">'+SHOPPING_STOP_STATE_LABEL.pending+'</div><p class="shopping-group-hint">行程資料尚未確認來源，暫時保留原綁定；同步完成後會自動回到所屬站點。</p>'+prioritizeShoppingGroupItems(pending).map(function(item){return renderShoppingItem(item,{page:'pending'});}).join('')+'</section>';
+  if(orphans.length)html+='<section class="shopping-group shopping-group-orphan"><div class="shopping-group-title">'+SHOPPING_STOP_STATE_LABEL.orphan+'</div><p class="shopping-group-hint">原本綁定的行程站點已從行程中移除，請編輯後重新選擇站點或改為隨時可買。</p>'+prioritizeShoppingGroupItems(orphans).map(function(item){return renderShoppingItem(item,{page:'pending'});}).join('')+'</section>';
+  if(unknown.length)html+='<section class="shopping-group"><div class="shopping-group-title">隨時可買</div>'+prioritizeShoppingGroupItems(unknown).map(function(item){return renderShoppingItem(item,{page:'pending'});}).join('')+'</section>';
   return html;
 }
 function renderShoppingSelectionToolbar(){
@@ -4664,6 +4664,13 @@ function sortShoppingStopGroups(groups,order){
     return a.index-b.index;
   }).map(function(entry){return entry.group;});
 }
+function prioritizeShoppingGroupItems(items){
+  var required=[],others=[];
+  (items||[]).forEach(function(item){
+    (item&&item.category==='必買'?required:others).push(item);
+  });
+  return required.concat(others);
+}
 /* ---- 行程資料權威性:能不能宣告某個 stopRef 是孤兒 ----
    沿用資料層既有的 CURRENT_SNAPSHOT.source(syncStatusModel() 用的是同一組值),
    不在採買模組另造一套平行的資料來源狀態。
@@ -4691,10 +4698,13 @@ function buildShoppingTodayReminder(items,day){
     var ref=String(item&&item.stopRef||''),stop=stops[ref];
     if(!item||item.done||!ref||!stop)return;
     if(!groupMap[ref]){groupMap[ref]={stopRef:ref,stopName:shoppingStopName(stop),items:[]};groups.push(groupMap[ref]);}
-    groupMap[ref].items.push(String(item.name||'').trim());
+    groupMap[ref].items.push(item);
   });
   var count=groups.reduce(function(sum,group){return sum+group.items.length;},0);
-  /* 群組依當日行程順序,不再是採買項目的建立順序;組內品項順序維持 store order。 */
+  groups.forEach(function(group){
+    group.items=prioritizeShoppingGroupItems(group.items).map(function(item){return String(item.name||'').trim();});
+  });
+  /* 群組依當日行程順序；組內必買優先，必買與非必買各自維持 store order。 */
   return count?{count:count,groups:sortShoppingStopGroups(groups,buildShoppingStopOrder([day]))}:null;
 }
 function shoppingLedgerNote(item){
