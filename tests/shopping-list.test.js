@@ -497,6 +497,84 @@ assert(
   /startShoppingEdit\(\\'[\s\S]*\\',\\'detail\\'\)/.test(extractUiFunction('renderShoppingItemDetail')),
   '從明細進入編輯會記錄 detail 返回 context'
 );
+const openFormSource=extractUiFunction('openShoppingForm');
+assert(openFormSource.includes('focusShoppingNameInput()'),'開啟 Sheet 同步聚焦品名');
+assert(!openFormSource.includes('requestAnimationFrame'),'開啟 Sheet 不延後到下一個 frame 才聚焦');
+const commitFormSource=extractUiFunction('commitShoppingFormPayload');
+assert(commitFormSource.includes('shoppingSaveAnotherForm(form)'),'儲存並新增沿用核准的清理 helper');
+assert(commitFormSource.includes('focusShoppingNameInput()'),'儲存並新增同步把游標送回品名');
+assert(commitFormSource.includes('restoreShoppingFormReturn('),'一般儲存後依 session 返回');
+const saveFormSource=extractUiFunction('saveShoppingForm');
+assert(saveFormSource.includes('session.savePending'),'重複送出由同一 form session 阻擋');
+assert(saveFormSource.includes('setShoppingFormSavePending(true)')||commitFormSource.includes('setShoppingFormSavePending(true)'),'寫入前設為 pending');
+assert(saveFormSource.includes('setShoppingFormSavePending(false)')||commitFormSource.includes('setShoppingFormSavePending(false)'),'失敗時解除 pending');
+const renderedFormSource=extractUiFunction('renderShoppingForm');
+assert(/aria-label="關閉表單"[\s\S]*disabled/.test(renderedFormSource),'儲存中停用 Sheet 關閉');
+assert(/shopping-save-another[\s\S]*disabled/.test(renderedFormSource),'儲存中停用儲存並新增');
+let shoppingNameFocusCount=0;
+const focusSandbox={
+  document:{
+    getElementById(id){
+      return id==='shoppingName'?{focus(){shoppingNameFocusCount++;}}:null;
+    }
+  }
+};
+vm.createContext(focusSandbox);
+vm.runInContext(extractUiFunction('focusShoppingNameInput'),focusSandbox);
+focusSandbox.focusShoppingNameInput();
+assert.strictEqual(shoppingNameFocusCount,1,'品名聚焦 helper 可在同一呼叫堆疊執行');
+const commitEvents=[];
+let commitAdds=0;
+const originalContinuousForm={
+  id:'',name:'白桃',category:'必買',quantity:'3',unit:'盒',
+  targets:['媽媽'],allocations:[],stopRef:'stop-a',done:false,createdAt:''
+};
+const commitSandbox={
+  shoppingUiState:{
+    form:originalContinuousForm,
+    formSession:plain(mod.createShoppingFormSession('add',null,'list',640))
+  },
+  shoppingListStore:{
+    add(payload){
+      commitAdds++;
+      if(commitAdds===1){
+        commitSandbox.commitShoppingFormPayload(originalContinuousForm,payload,true);
+      }
+      return {id:'saved-1',category:payload.category,stopRef:payload.stopRef};
+    },
+    update(){throw new Error('unexpected update');}
+  },
+  setShoppingFormSavePending(pending){
+    commitSandbox.shoppingUiState.formSession.savePending=!!pending;
+  },
+  shoppingSaveAnotherForm:mod.shoppingSaveAnotherForm,
+  createShoppingFormSession:mod.createShoppingFormSession,
+  renderToday(){},
+  renderShoppingListOverlay(){},
+  renderShoppingFormSheet(){},
+  focusShoppingNameInput(){commitEvents.push('focus');},
+  toast(){commitEvents.push('toast');},
+  closeShoppingFormSheet(){},
+  restoreShoppingFormReturn(){commitEvents.push('restore');},
+  focusShoppingFormError(){commitEvents.push('error-focus');}
+};
+vm.createContext(commitSandbox);
+vm.runInContext(commitFormSource,commitSandbox);
+commitSandbox.commitShoppingFormPayload(
+  originalContinuousForm,
+  {name:'白桃',category:'必買',stopRef:'stop-a'},
+  true
+);
+assert.strictEqual(commitAdds,1,'pending guard 阻擋同一次同步寫入中的重入送出');
+assert.strictEqual(commitSandbox.shoppingUiState.form.name,'','儲存並新增清空品名');
+assert.strictEqual(commitSandbox.shoppingUiState.form.category,'必買','儲存並新增保留分類');
+assert.strictEqual(commitSandbox.shoppingUiState.form.stopRef,'stop-a','儲存並新增保留站點');
+assert.strictEqual(commitSandbox.shoppingUiState.form.quantity,1,'儲存並新增重設數量 1');
+assert.strictEqual(commitSandbox.shoppingUiState.form.unit,'個','儲存並新增重設單位 個');
+assert(
+  commitEvents.indexOf('focus')>=0&&commitEvents.indexOf('focus')<commitEvents.indexOf('toast'),
+  '連續新增在 Toast 前同步聚焦下一筆品名'
+);
 const groupSandbox={
   shoppingUiState:{tab:'pending'},
   shoppingTripAuthority(){return 'authoritative';},
@@ -586,6 +664,38 @@ assert.throws(
   ()=>mod.createShoppingFormSession('edit',null,'list',0),
   /採買項目/,
   '編輯 session 不得在找不到項目時降級成新增'
+);
+assert.deepStrictEqual(
+  plain(mod.shoppingFormReturnPlan(
+    {returnContext:'list',originalCategory:'伴手禮',originalStopRef:'stop-a'},
+    {id:'item-1',category:'伴手禮',stopRef:'stop-a'},
+    false
+  )),
+  {target:'card',restoreExactScroll:true},
+  '未移動的編輯項目回到原卡片與精確捲動位置'
+);
+assert.deepStrictEqual(
+  plain(mod.shoppingFormReturnPlan(
+    {returnContext:'list',originalCategory:'伴手禮',originalStopRef:'stop-a'},
+    {id:'item-1',category:'必買',stopRef:'stop-a'},
+    false
+  )),
+  {target:'card',restoreExactScroll:false},
+  '分類改變時按 item ID 尋找移動後卡片'
+);
+assert.deepStrictEqual(
+  plain(mod.shoppingFormReturnPlan(
+    {returnContext:'detail',originalCategory:'',originalStopRef:''},
+    {id:'item-1',category:'必買',stopRef:'stop-b'},
+    false
+  )),
+  {target:'detail',restoreExactScroll:false},
+  '從明細編輯後重新開啟同一項目明細'
+);
+assert.deepStrictEqual(
+  plain(mod.shoppingFormReturnPlan({returnContext:'list'},null,true)),
+  {target:'list',restoreExactScroll:true},
+  '取消新增時回到原清單捲動位置'
 );
 ['盒','包','瓶'].forEach(function(unit){
   assert.strictEqual(mod.newShoppingForm({id:'old-'+unit,quantity:2,unit:unit}).unit,unit,

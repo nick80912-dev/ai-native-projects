@@ -2824,6 +2824,40 @@ function shoppingListScrollTop(){
   var panel=document.querySelector('#shoppingListOverlay .shopping-list-panel');
   return panel?Math.max(0,Number(panel.scrollTop)||0):0;
 }
+function focusShoppingNameInput(){
+  var input=document.getElementById('shoppingName');if(!input)return;
+  try{input.focus({preventScroll:true});}catch(ignore){input.focus();}
+}
+function shoppingItemCardElement(id){
+  var cards=document.querySelectorAll('[data-shopping-item-id]');
+  for(var index=0;index<cards.length;index++){
+    if(cards[index].getAttribute('data-shopping-item-id')===String(id))return cards[index];
+  }
+  return null;
+}
+function restoreShoppingFormReturn(session,item,cancelled){
+  var plan=shoppingFormReturnPlan(session,item,cancelled);
+  if(plan.target==='detail'&&item){openShoppingItemDetail(item.id);return;}
+  var panel=document.querySelector('#shoppingListOverlay .shopping-list-panel');
+  if(plan.restoreExactScroll&&panel)panel.scrollTop=Math.max(0,Number(session&&session.returnScrollTop)||0);
+  var card=item&&shoppingItemCardElement(item.id);
+  if(card){
+    if(!plan.restoreExactScroll&&card.scrollIntoView)card.scrollIntoView({block:'nearest',inline:'nearest'});
+    var body=card.querySelector('.shopping-item-body');if(body)body.focus();
+    return;
+  }
+  var fallback=document.getElementById('shoppingListTitle');
+  if(fallback){fallback.setAttribute('tabindex','-1');fallback.focus();}
+}
+function setShoppingFormSavePending(pending){
+  if(!shoppingUiState.formSession)return;
+  shoppingUiState.formSession.savePending=!!pending;renderShoppingFormSheet();
+}
+function focusShoppingFormError(error){
+  var quantityError=/數量|單位/.test(String(error&&error.message||''));
+  var input=document.getElementById(quantityError?'shoppingQuantity':'shoppingName');
+  if(input)input.focus();
+}
 function closeShoppingFormSheet(){
   var overlay=document.getElementById('shoppingFormSheet');if(overlay)overlay.remove();
   var list=document.getElementById('shoppingListOverlay');
@@ -2848,11 +2882,17 @@ function openShoppingForm(mode,id,returnContext){
   if(item)shoppingUiState.form.allocationEditPolicy=shoppingAllocationEditPolicy(item,shoppingLedgerContext());
   shoppingUiState.formSession=createShoppingFormSession(mode,item,returnContext,shoppingListScrollTop());
   renderShoppingFormSheet();
-  requestAnimationFrame(function(){var input=document.getElementById('shoppingName');if(input)input.focus();});
+  focusShoppingNameInput();
 }
 function startShoppingAdd(){openShoppingForm('add','','list');}
 function startShoppingEdit(id,returnContext){openShoppingForm('edit',id,returnContext||'list');}
-function cancelShoppingForm(){shoppingUiState.form=null;shoppingUiState.formSession=null;closeShoppingFormSheet();}
+function cancelShoppingForm(){
+  var session=shoppingUiState.formSession;
+  if(session&&session.savePending)return;
+  var item=session&&session.itemId?shoppingListStore.all().filter(function(value){return value.id===session.itemId;})[0]:null;
+  shoppingUiState.form=null;shoppingUiState.formSession=null;closeShoppingFormSheet();
+  restoreShoppingFormReturn(session,item,true);
+}
 /* 清除綁定只在使用者明確按下時發生;系統任何時候都不自動清空 stopRef。 */
 function clearShoppingStopBinding(){if(!shoppingUiState.form)return;shoppingUiState.form.stopRef='';renderShoppingFormSheet();}
 function updateShoppingFormField(field,value,rerender){if(!shoppingUiState.form)return;shoppingUiState.form[field]=value;if(rerender)renderShoppingFormSheet();}
@@ -2896,10 +2936,26 @@ function openShoppingCompletedEditConfirm(form,payload){
   document.body.appendChild(overlay);
 }
 function commitShoppingFormPayload(form,payload,saveAnother){
-  if(form.id)shoppingListStore.update(form.id,payload);else shoppingListStore.add(payload);
-  shoppingUiState.form=!form.id&&saveAnother===true?shoppingSaveAnotherForm(form):null;
-  renderToday();renderShoppingListOverlay();toast(form.id?'採買項目已更新':'採買項目已新增');
-  if(shoppingUiState.form)requestAnimationFrame(function(){var input=document.getElementById('shoppingName');if(input)input.focus();});
+  var session=shoppingUiState.formSession;
+  if(!session||session.savePending)return null;
+  setShoppingFormSavePending(true);
+  try{
+    var saved=form.id?shoppingListStore.update(form.id,payload):shoppingListStore.add(payload);
+    if(!form.id&&saveAnother===true){
+      shoppingUiState.form=shoppingSaveAnotherForm(form);
+      shoppingUiState.formSession=createShoppingFormSession('add',null,'list',session.returnScrollTop);
+      renderToday();renderShoppingListOverlay();renderShoppingFormSheet();
+      focusShoppingNameInput();toast('採買項目已新增');
+      return saved;
+    }
+    shoppingUiState.form=null;shoppingUiState.formSession=null;closeShoppingFormSheet();
+    renderToday();renderShoppingListOverlay();
+    toast(form.id?'採買項目已更新':'採買項目已新增');
+    restoreShoppingFormReturn(session,saved,false);
+    return saved;
+  }catch(error){
+    setShoppingFormSavePending(false);focusShoppingFormError(error);throw error;
+  }
 }
 function confirmShoppingCompletedEdit(){
   var pending=shoppingCompletedEditPending;
@@ -2909,7 +2965,8 @@ function confirmShoppingCompletedEdit(){
   catch(error){toast(error.message||'採買項目儲存失敗');}
 }
 function saveShoppingForm(saveAnother){
-  var form=shoppingUiState.form;if(!form)return;
+  var form=shoppingUiState.form,session=shoppingUiState.formSession;
+  if(!form||!session||session.savePending)return;
   try{
     /* 表單值一律是字串;在此轉成數字並交給 normalizer 做安全整數驗證。
        儲存成功即代表已轉為結構化數量,舊式文字同時清空。 */
@@ -2926,9 +2983,7 @@ function saveShoppingForm(saveAnother){
     }
     commitShoppingFormPayload(form,payload,saveAnother);
   }catch(error){
-    toast(error.message||'採買項目儲存失敗');
-    var quantityError=/數量|單位/.test(String(error.message||''));
-    var input=document.getElementById(quantityError?'shoppingQuantity':'shoppingName');if(input)input.focus();
+    setShoppingFormSavePending(false);toast(error.message||'採買項目儲存失敗');focusShoppingFormError(error);
   }
 }
 function deleteShoppingItem(id){
@@ -2962,6 +3017,7 @@ function renderShoppingQuantityFields(form){
 }
 function renderShoppingForm(){
   var form=shoppingUiState.form;if(!form)return '';
+  var pending=!!(shoppingUiState.formSession&&shoppingUiState.formSession.savePending),disabled=pending?' disabled':'';
   var selectedTargets=shoppingFormTargets(form);
   var quantityPreview='';
   try{quantityPreview=shoppingItemQuantitySummary({unit:form.unit,allocations:shoppingFormAllocations(form)});}catch(error){}
@@ -2992,13 +3048,13 @@ function renderShoppingForm(){
       escapeHtml(stopState==='orphan'?'原本綁定的行程站點已從行程中移除。請改選有效站點，或清除綁定改為隨時可買。':'行程資料尚未確認來源，暫時保留原綁定，不會自動更動。')+
       '</p><button type="button" class="shopping-clear-binding" onclick="clearShoppingStopBinding()">清除綁定，改為隨時可買</button>';
   }
-  return '<form class="shopping-form" onsubmit="event.preventDefault();saveShoppingForm()"><div class="shopping-form-head"><h3 id="shoppingFormTitle">'+(form.id?'編輯採買項目':'新增採買項目')+'</h3><button type="button" class="shopping-icon-button" aria-label="關閉表單" onclick="cancelShoppingForm()">×</button></div>'+
+  return '<form class="shopping-form" aria-busy="'+(pending?'true':'false')+'" onsubmit="event.preventDefault();saveShoppingForm()"><div class="shopping-form-head"><h3 id="shoppingFormTitle">'+(form.id?'編輯採買項目':'新增採買項目')+'</h3><button type="button" class="shopping-icon-button" aria-label="關閉表單" onclick="cancelShoppingForm()"'+disabled+'>×</button></div>'+
     '<div class="shopping-field"><label for="shoppingName">品名（必填）</label><input class="shopping-input" id="shoppingName" maxlength="80" value="'+escapeHtml(form.name)+'" oninput="updateShoppingFormField(\'name\',this.value,false)"></div>'+
     '<div class="shopping-field"><span class="shopping-field-label">分類（選填）</span><div class="shopping-chip-grid">'+categories+'</div></div>'+
     renderShoppingQuantityFields(form)+
     '<div class="shopping-field"><span class="shopping-field-label">幫誰買（可多選）</span><div class="shopping-chip-grid">'+(targets||'<span class="settings-help">尚未建立代購對象</span>')+'</div><span class="shopping-target-summary">已選 '+selectedTargets.length+' 位'+(selectedTargets.length&&quantityPreview?' · '+escapeHtml(quantityPreview):'')+'</span><div class="shopping-target-add"><input class="shopping-input" id="shoppingBuyForNew" maxlength="12" placeholder="新增對象"><button type="button" onclick="addShoppingBuyFor()">新增</button></div></div>'+
     '<div class="shopping-field"><label for="shoppingStopRef">選擇行程站點（選填）</label><select class="shopping-select" id="shoppingStopRef" onchange="updateShoppingFormField(\'stopRef\',this.value,true)">'+options+'</select>'+stopNotice+'</div>'+
-    '<div class="shopping-form-actions"><button type="button" class="btn ghost" onclick="cancelShoppingForm()">取消</button><button type="submit" class="btn">儲存</button>'+(!form.id?'<button type="button" class="btn ghost shopping-save-another" onclick="saveShoppingForm(true)">儲存並新增</button>':'')+'</div></form>';
+    '<div class="shopping-form-actions"><button type="button" class="btn ghost" onclick="cancelShoppingForm()"'+disabled+'>取消</button><button type="submit" class="btn"'+disabled+'>儲存</button>'+(!form.id?'<button type="button" class="btn ghost shopping-save-another" onclick="saveShoppingForm(true)"'+disabled+'>儲存並新增</button>':'')+'</div></form>';
 }
 function shoppingCardLinkBadge(item,linkSummary){
   if(!(item.done||linkSummary.state!=='unlinked'))return '';
@@ -4056,6 +4112,14 @@ function createShoppingFormSession(mode,item,returnContext,scrollTop){
     originalStopRef:mode==='edit'?String(item.stopRef||''):'',
     savePending:false
   };
+}
+function shoppingFormReturnPlan(session,item,cancelled){
+  session=session||{};
+  if(session.returnContext==='detail'&&item)return {target:'detail',restoreExactScroll:false};
+  if(!item)return {target:'list',restoreExactScroll:!!cancelled};
+  var moved=String(item.category||'')!==String(session.originalCategory||'')||
+    String(item.stopRef||'')!==String(session.originalStopRef||'');
+  return {target:'card',restoreExactScroll:!moved};
 }
 function shoppingFormQuantity(form){
   var raw=String(form&&form.quantity==null?'':form.quantity).trim();
