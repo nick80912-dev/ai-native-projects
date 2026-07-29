@@ -1,11 +1,11 @@
 # 07 版本紀錄
-## 2026-07-29｜採買清單 C＋E＋G 第三批（隔離分支，SW v68，待整合／真機驗收）
+## 2026-07-29｜採買清單 C＋E＋G 第三批（dev，SW v68，待真機驗收）
 - **C 根因與修正**：Ledger 多品項個人↔團體切軌原本用有限 seed 重建每列，只複製名稱、金額、分類與免稅，會遺失逐項代購／分攤狀態、穩定 row key 與 `sourceShoppingItemId`／`sourceShoppingAllocationId`，造成切軌後代購對象消失或採買關聯回寫錯列。現改由純 transformer 泛用複製 draft、顯式 clone nested arrays，首次進入另一帳本才套該軌預設；個人與團體隱藏狀態同時保留，但提交仍只序列化目前帳本軌，兩類對象不互相推導，來源 IDs 不進 Ledger 21 欄。
 - **E 根因與修正**：原顯示排序只到日期／站點，組內完全沿用 store order，必買容易被一般品項淹沒。新增 immutable stable partition，只把 exact `category === '必買'` 置頂；一般站點、待確認、已失效、隨時可買與 Today 共用規則，必買／非必買各自保留原順序。已買頁與 localStorage array order 不套用此排序。
 - **G 根因與修正**：新增／編輯表單嵌在清單頂端，每次表單欄位重繪都重建整份清單，深層編輯會失去位置；連續新增還以 `requestAnimationFrame` 延後焦點，行動鍵盤可能先收起。現改為單一獨立 modal Sheet 與 ephemeral form session，保存 mode、item ID、來源 detail/list、scrollTop、原分類／站點與 `savePending`；取消／儲存以 `data-shopping-item-id` 返回原卡片，移動後依同一 ID 捲入視野，detail 入口則重開更新後明細。validation／store failure 保持 Sheet 與輸入，首個錯誤欄位接回焦點；pending 時停用關閉／取消／儲存並防重入。
 - **連續新增與保護**：「儲存並新增」沿用分類／站點，清空品名／對象等品項輸入並固定重設 `1 個`，同一使用者動作內在 Toast 前同步 focus `shoppingName`。部分購買、已買後記帳、checkbox、多選與 `⋯` 的既有事件邊界均未移動；Shopping schema、備份 v7、Ledger 21 欄、Apps Script、Google Sheet、同步與結算皆未修改。
 - **測試證據**：完整 **48／48** Node test files 通過（含 **123／123** settlement reliability checks），文件標題檢查與 `git diff --check` 通過。Browser QA 於 **320×700、375×812、390×844** 驗證：Sheet／清單／卡片水平溢位皆 0；深層卡片開 Sheet 時 list scrollTop 不變，取消後 scroll delta 0；改分類後同 item ID 在新位置取得焦點；明細編輯儲存後重開明細；連續新增每次 active element 都是 `shoppingName` 且 `1 個`／站點保留；數量錯誤不寫入並聚焦 `shoppingQuantity`；已買頁維持 store order；兩筆不同代購對象的多品項草稿經個人→團體→個人→團體切換後仍保留列與各自狀態，未提交團體資料。停止本機伺服器後，v68 外殼可離線重載，採買清單與獨立 Sheet 均可開啟；console error／warning 為 0。
-- **未完成宣告**：桌面 Browser QA 不能證明 iPhone 軟鍵盤生命週期；Safari 與已安裝 PWA 的「儲存並新增後鍵盤保持開啟、游標位於品名」仍列 Bar 真機驗收。此分支未 push `dev`、未部署、未合併 `main`。
+- **未完成宣告**：桌面 Browser QA 不能證明 iPhone 軟鍵盤生命週期；Safari 與已安裝 PWA 的「儲存並新增後鍵盤保持開啟、游標位於品名」仍列 Bar 真機驗收。App runtime 已 commit 並推送 `dev`（`0c5fe45`），未部署、未合併 `main`。
 
 ## 2026-07-28｜新增消費展開縫隙、採買待買卡片精簡與安全回併（dev，SW v67，待 Bar 真機驗收）
 - **根因**：`.ledger-entry-secondary` 沒有建立獨立 block formatting context，第一個 `.ledger-sheet-field` 的 `margin-top:10px` 會穿出父層；因此摘要與展開內容之間露出 10px 米色背景，看起來像兩張不相連的卡片。

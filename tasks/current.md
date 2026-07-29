@@ -3,7 +3,7 @@
 > 更新於 2026-07-29。細任務層;里程碑看 `06_ROADMAP.md`,歷史交付看 `07_CHANGELOG.md`,正式待辦看 `tasks/backlog.md`。
 
 ## 📌 現況
-- 最新已推送 `dev` App runtime 基準：`a7f087d`，Service Worker `okayama-trip-v67`；目前 C＋E＋G v68 實作位於 `codex/shopping-ceg-third-batch` 隔離分支，尚未推送 `dev`、未部署。
+- 最新已推送 `dev` App runtime 基準：`0c5fe45`，Service Worker `okayama-trip-v68`；其後若只有文件 commit，不代表 App runtime 或 SW 已換版。尚未部署、未合併 `main`。
 - 2026-07-23 治理決策追認、§4 禁改清單硬停規則與任務板歸位 — 已完成,詳見 `07_CHANGELOG.md`。
 - v34–v44 三秒記帳與首頁／結算卡系列 — 已完成並經 Bar 真機驗收,詳見 `07_CHANGELOG.md`。
 - 採買清單批（SW v45）— 已完成開發；目標測試、完整 41／41 Node tests、文件標題檢查及 375px／390px Browser QA 通過，待 Bar iPhone Safari／PWA 真機驗收；詳見 `07_CHANGELOG.md`。
@@ -22,7 +22,7 @@
 - 2026-07-27 採買卡片視覺一致性、部分購買與多選互動（SW v65）— 修正繁中字型 fallback 造成的同卡片字重不一致（改 `"PingFang TC","Noto Sans TC","Microsoft JhengHei"` 優先）；badge 改語意分工（只有姓名套 coral、分類改淡金）；「部分購買」入口自 `⋯` 移回待買卡片並收斂出現條件；採買明細縮短高度；批次 selection 與完成 checkbox 完全分離，修正 `.shopping-selection-toolbar-stacked` 被後方 base selector 蓋掉而在真機擠成直排的 CSS 順序問題，並補 66px safe-area spacer。完整 45／45 Node tests、文件標題檢查及 320／375／390px Browser QA 通過；**待 Bar iPhone Safari／PWA 真機驗收**。
 - 2026-07-28 新增消費表單、採買預設單位與全站思源黑體優化（SW v66）— 新增消費主流程改為金額 → 明細 → 代購／對象 → `其他資訊（選填）` → 儲存，類別／支付方式／日期收進可展開摘要；明細 Enter 改為 Next。採買新項目與「儲存並新增」預設 `1 個`，單位選單不再提供空白／「不指定」，`個` 在設定頁不可刪除，舊空單位只於草稿預選且不自動回寫。全站改以 Google Fonts `Noto Sans TC` 400／500／700 為第一順位並保留繁中系統 fallback。完整 46／46 Node tests、文件標題檢查、320／375／390／430px Browser QA 與停止本機伺服器後的 v66 離線重載通過；**已 commit 並推送 `dev`（`aedebd0`），未部署，待 Bar iPhone Safari／PWA 真機驗收**。
 - 2026-07-28 新增消費展開縫隙、採買待買卡片精簡與安全回併（SW v67）— 新增消費以 `flow-root` 修正 first-child margin collapse；待買卡片改由站點群組表達位置，不再輸出重複地點 DOM，已買卡與所有明細仍保留站點。checkbox、批次移回與完成 Toast 復原統一走 Store 原子 `moveBackToPending(ids)`；只有原 ID、欄位、正整數 allocation、空 ledger 歷史與 canonical 對象等完整安全條件成立時才合併，否則移回仍成功但保留 sibling。完整 47／47 Node tests（123／123 reliability checks）與文件檢查通過；320／375／390px Browser QA 實測單人／多人／批次安全回併、未合併保護、卡片／明細位置規則、水平溢位與 console error／warning 皆通過。**已 commit 並推送 `dev`（`a7f087d`），未部署，待 Bar 真機驗收**。
-- 2026-07-29 採買清單 C＋E＋G 第三批（SW v68，隔離分支）— Ledger 個人／團體切軌保留逐項代購、分攤、row key 與採買 source IDs，只序列化目前帳本軌；四類待買群組與 Today 套用 exact `必買` 穩定置頂，已買頁與 store order 不變；新增／編輯改為獨立 Sheet，保存 scroll／detail context，依 item ID 返回，具 save guard、錯誤留場與同步連續新增焦點。Browser QA 於 320×700、375×812、390×844 驗證 Sheet／清單／卡片水平溢位 0、深層取消 scroll delta 0、移動後卡片聚焦、明細返回、連續新增與帳本切軌，console error／warning 0；**真機 iPhone Safari／PWA 鍵盤維持待驗，尚未 push／部署**。
+- 2026-07-29 採買清單 C＋E＋G 第三批（SW v68）— Ledger 個人／團體切軌保留逐項代購、分攤、row key 與採買 source IDs，只序列化目前帳本軌；四類待買群組與 Today 套用 exact `必買` 穩定置頂，已買頁與 store order 不變；新增／編輯改為獨立 Sheet，保存 scroll／detail context，依 item ID 返回，具 save guard、錯誤留場與同步連續新增焦點。Browser QA 於 320×700、375×812、390×844 驗證 Sheet／清單／卡片水平溢位 0、深層取消 scroll delta 0、移動後卡片聚焦、明細返回、連續新增與帳本切軌，console error／warning 0；**已 commit 並推送 `dev`（`0c5fe45`），未部署，真機 iPhone Safari／PWA 鍵盤維持待驗**。
 - 2026-07-25 結算列顯示層去重（SW v52）— chip 只講狀態、按鈕只講動作、小字只在有額外資訊時出現；4 處同義重複（`送出中…`×2、`同步失敗・重新同步`＋`重新同步`、兩列「同步中」＋「等待同步」）已清除，逾 30 秒的升級提示依 Bar 裁定保留。狀態機 §3 核准 label 未動。完整 43／43 Node tests（reliability 98／98）與文件標題檢查通過；**待 Bar 真機驗收**。
 
 ## ⏸ 等 Bar 動作
@@ -34,6 +34,6 @@
 > 已解除：Apps Script `doGet` 部署已由 Bar 完成，真實端點驗證（CORS、redirect、`after`／`reset`／`serverTime`、非 JSON 降級）通過，見上方 SW v47 條目。
 
 ## 下一棒
-→ v68 全量測試與離線快取驗證已完成；由 Bar 決定是否整合／推送 `dev`。推送後再於 GitHub Pages 真機驗收 SW v58–v68（不消耗 Netlify 額度）。同時裁定 backlog #13 結算更正方案；全部驗收通過再另案處理 `dev → main`。
+→ v68 全量測試、離線快取驗證與 `dev` 推送已完成；接著於 GitHub Pages 真機驗收 SW v58–v68（不消耗 Netlify 額度）。同時裁定 backlog #13 結算更正方案；全部驗收通過再另案處理 `dev → main`。
 
 > 採買清單 A／B／D／F 已於 SW v60／v61 交付；C／E／G 已於 SW v68 實作，正式契約見 `tasks/backlog.md` #14 與設計文件。
