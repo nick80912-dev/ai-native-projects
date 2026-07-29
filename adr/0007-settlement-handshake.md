@@ -1,6 +1,6 @@
 # ADR 0007 — 團體結算：握手式結清事實（Settlement Handshake）
 
-> 狀態:**Accepted**(2026-07-23 經 grilling 定案;Bar 已核可 Tier 2 四項確認並完成實作,真機驗收另行進行)。延伸自 [ADR 0006](0006-ledger-sync-apps-script.md) 的 append-only 分帳模型,不推翻其任何既有決策。
+> 狀態:**Accepted**(2026-07-23 經 grilling 定案;Bar 已核可 Tier 2 四項確認並完成實作；2026-07-29 完成真機驗收並核准結算一致性／引導式更正修訂)。延伸自 [ADR 0006](0006-ledger-sync-apps-script.md) 的 append-only 分帳模型,不推翻其任何既有決策。
 
 **Decision**:團體結算狀態由「純推導」升級為「**推導 + 事實**」。費用照舊推導每人淨額,再疊上真實還款事實;結清是雙向握手,以收款方確認為權威。新增三個 `recordType` 值 `settlement_claim`(付款方發動)、`settlement_confirm`(收款方確認,`targetRecordId` 指向 claim)、`settlement_reject`(收款方退回,帶選填原因),全部沿用既有 21 欄位置式契約與 append-only 管線,**不新增欄位、不改 Apps Script、不動白名單**。淨額只在 `settlement_confirm` 出現時歸零;`settlement_claim` 單獨存在時淨額維持掛帳,僅作「待確認」UI 疊層。結算跑單一結算幣別,取自共享的 `Ledger Default Currency`。撤回/撤銷沿用既有 `deletion` 墓碑。
 
@@ -28,8 +28,9 @@
 |---|---|
 | 結清紀錄 settlement record | 記錄真實還款的事實紀錄,`recordType` ∈ {`settlement_claim`,`settlement_confirm`,`settlement_reject`};與 `expense` 區隔,由餘額演算法的結算分支解讀。 |
 | 待確認 pending | 有 `settlement_claim`、無對應 `confirm`/`reject` 的狀態;淨額**未**歸零,雙方裝置顯示「⏳ 待○○確認」。 |
-| 已收款 / 已結清 confirmed | 有 `claim` + 對應 `confirm`;淨額在 `confirm` 出現時歸零。 |
+| 已收款 / 還款確認 confirmed | 有 `claim` + 對應 `confirm`;該 pair 的還款事實成立並套用至淨額,但不代表全團已無應收／應付。 |
 | 被退回 rejected | 有 `claim` + 對應 `reject`;淨額維持掛帳,付款方看到退回原因;終結態,重試 = 開新 `claim`。 |
+| 團體結算完成 | 套用全部有效還款確認後,團體內每位成員在結算幣別的應收與應付均為零。 |
 | 結算幣別 settlement currency | 全團共享、用於計算應收/應付/結清的單一幣別;V1 取自 `Ledger Default Currency`,另一幣純參考。 |
 | 誠實重開 honest re-open | 已結清的一對之後有新共同消費 → 自動產生全新淨額,狀態回到應付/應收;舊結清留存為歷史。 |
 
@@ -57,3 +58,15 @@ generation 由 canonical 的有效 `confirm` / `reject` / withdraw(墓碑)終止
 
 ### Personal visibility 是前端顯示範圍,非後端授權邊界
 結算面板每一區(成員淨額、待處理、轉帳建議、結清歷史、操作)只在 **DOM 產生之前**保留與 `currentMember` 直接相關(正規化後 `from` 或 `to`)的項目;成員淨額只顯示本人摘要;無相關項目顯示「目前沒有需要你處理的結算」。**此為前端顯示 / 隱私範圍,非後端 authorization security boundary**:原始共享 Ledger 仍可能存在於用戶端記憶體,本批不提供伺服器層存取控制。
+
+## 修訂 — 結算歷史最終性與引導式更正(2026-07-29)
+
+Bar 核准「歷史不可改寫」：canonical 還款確認是已發生的真實金流,後續不得因原消費內容有誤而撤銷、重開或重算。單一 confirm 的固定用詞是「還款確認」；只有套用全部有效還款後,所有成員應收／應付均為零,才稱「團體結算完成」。
+
+還款確認不保存 expense ID,因此不能可靠地只鎖或重開某一筆消費。每個有效 canonical confirm 以其 claim 的 client-created ID 建立位置作為更正保護切點；同 universe 中,切點前已建立的團體收據永久禁止直接編輯／刪除。不得使用 expense `time` 判定先後,因該欄是可修正的消費發生時間。多品項收據整批判定；正式帳與 TEST 帳隔離；無法解析建立位置時 fail-closed；全團歸零只關閉舊結算週期,不解除舊收據保護。切點後的新收據維持既有可編輯模型。
+
+受保護收據改走收據級引導式更正：只有原付款人可建立,付款人本身不可改；付款人記錯時,原付款人作廢舊收據,再由實際付款人新增正確收據。更正追加完整版本,原收據、舊還款與所有更正歷史永久保留；作廢是空的新版本,不是 deletion 墓碑。更正造成的差額進入新的待結算餘額,不重開舊週期。
+
+更正事件沿用現有 21 欄與 append-only 管線,新增 `expense_correction_item`、`expense_correction_commit`、`expense_void_commit` 三種 `recordType`,不新增 Google Sheet 欄位、不修改 Apps Script API。item 先入 durable queue,commit 最後入列；沒有完整 commit 的部分版本不得影響餘額。跨裝置對同一上一版本並行更正時,commit 依 `time ASC → id ASC` 選唯一 canonical,losing correction 永遠 inert、不自動升格。
+
+完整欄位契約、版本投影、失敗處理、UI 與測試標準見 `docs/superpowers/specs/2026-07-29-settlement-consistency-guided-correction-design.md`。

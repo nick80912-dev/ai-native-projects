@@ -1,6 +1,6 @@
 # BACKLOG(待辦,依優先序)
 
-> 更新於 2026-07-28。做完的移到 done.md,正在做的移到 current.md。
+> 更新於 2026-07-29。做完的移到 done.md,正在做的移到 current.md。
 
 ## 高優先(驗收後立即)
 1. **QA 腳本入版控**:Playwright 三情境腳本(斷網內建/連網同步/旅行日 mock Date)寫入 `tests/`,之後每次程式交付必附可執行測試(Bar 已核准 2026-07-09);完成後掛進 `.github/workflows/qa.yml`(Sanity CI 已於 07-09 先行上線)。
@@ -18,28 +18,18 @@
 3. **驗收後 UI/內容微調**(最小修改,不動 schema)。
 3b. **採買單位未納入個人狀態備份**:`trip_shopping_units` 目前不在備份 payload 內(備份已含 `ledgerCategories`／`ledgerPayMethods`)。還原到新裝置時自訂單位會退回預設清單;既有項目的 `unit` 字串仍存在項目上、顯示不受影響。納入需再升一版備份格式(目前 v7,v64 已因 `allocations[]` 由 v6 升上來但未順道納入單位),待與其他備份調整一併處理。
 4. **BUILTIN 快照更新 SOP 文件化**:何時重抓、步驟、由誰觸發(目前僅口頭慣例)。
-5. **GitHub Pages 已啟用,待完成最終真機驗收**:
-   - Pages 已啟用並可載入:`https://nick80912-dev.github.io/ai-native-projects/`,Deploy from a branch(`dev`,repo 內無 Pages workflow),子路徑 `/ai-native-projects/`。
-   - **已完成**(2026-07-26 子路徑實跑):App Shell 於子路徑載入、manifest `start_url`／`scope` 相容、SW 註冊 scope 不依賴網域根目錄、直接開啟與重新整理、停掉伺服器後的離線啟動、與 Netlify 的 origin 隔離、發布來源確認為 `dev`(推送後服務中的 `sw.js` 由 v61 變 v62)。
-   - **尚待驗收**:iOS Safari 的 PWA 安裝與 standalone 模式、iOS 真機離線重開、`github.io` origin 上的 SW 更新實際節奏(Pages 一律 `max-age=600`,`netlify.toml` 的 `no-cache` 不生效)。
-   - LAN 真機與 Pages 驗收 SOP 已納入 `16_OPS_PLAYBOOK.md` §F。
-   - **Netlify 額度**:Netlify 自動部署已由 Bar 手動停用,日常功能驗收改走 GitHub Pages;僅在需要驗證 Netlify 特有行為時手動部署測試站。自動部署的恢復時機由 Bar 決定。月額度用量仍須持續監控。
 6. **主題系統延後至 merge 後**:保留現行海洋色為預設,另新增兩個主題,共三選項。
 7. **主題區掛入準備**:設定頁已建立骨架與主題區預留註解,待主題批掛入。
 8. **UI 配色規範覆寫**:`08`「UI 配色變數不可變」條文覆寫已由 Bar 核准(2026-07-17),待主題批執行。
 9. **設定頁 2.0 批**:完整範圍為分區架構、SVG 齒輪入口、摘要計數列、代購對象管理移入設定頁、APP_VERSION 版本資訊列、使用者版更新日誌子頁、成員管理子頁。
-10. **採買清單批**:已於 2026-07-23 發包並完成(純 localStorage、地點已知/未知雙型、Today 提醒與常駐輕量入口、勾選已買轉記帳閉環、多選轉多品項記帳),待 Bar iPhone Safari／PWA 真機驗收。
 11. **BUILTIN 種子資料過時**:內嵌離線快照 Day 3–6 仍為東京舊行程,與現行岡山行程不符,待 Bar 裁定刷新時機。此項與第 4 項「BUILTIN 快照更新 SOP 文件化」不同,兩者並存,不得合併或取代。
 12. **決策記錄**:個人預算功能不做;多旅程平台化延後至旅程結束,併入框架抽取階段。
 13. **結算一致性批（必須於 2026-10-18 出發前完成）**：
-   - 內容：已完成結算之原始消費的編輯／刪除保護，與正式更正流程。
+   - **設計已於 2026-07-29 核准，待實作**；正式契約見 `docs/superpowers/specs/2026-07-29-settlement-consistency-guided-correction-design.md` 與 ADR 0007 修訂。
+   - 內容：還款確認後原始收據永久禁止直接編輯／刪除，改走 append-only 收據級引導式更正；支援多次更正與附理由整張作廢。
    - 現況為已知開放風險：付款人仍可刪除已結算消費，會使 confirmed settlement 失效且無自動修正機制。
-   - 核心設計題（待裁定）：更正＝新增反向消費（append-only，零新機制）或 reopen settlement（改狀態機）。
-   - 判定影響範圍時，一筆多人分攤紀錄可能影響多組債權關係，不得只檢查單一 pair。
-14. **採買清單 C＋E＋G 第三批**（已於 SW v68 實作，待 Bar iPhone Safari／PWA 真機驗收；A／B／D／F 已於 SW v60／v61 交付）：
-   - **C 個人↔團體切軌時的逐項資訊保留**：Ledger 多品項草稿切軌保留逐項 `isProxy`／`proxyTarget`、`participantMode`／`participants`、穩定 row key 與採買來源 `sourceShoppingItemId`／`sourceShoppingAllocationId`；只提交目前帳本軌，兩種對象不互相映射。
-   - **E「必買」在站點群組內置頂**：排序鍵維持 `日期 → 站點 → 站內必買穩定置頂 → 原 store order`，套用四類待買群組與 Today，不跨站／跨日、不重寫資料，已買頁不變。
-   - **G 表單位置跳動**：新增／編輯改為共用獨立 Sheet，保存 item ID、來源明細與 scroll context；取消／儲存回到同一卡片或明細，移動分類／站點後仍依 ID 定位。「儲存並新增」保留分類／站點、重設 `1 個` 並同步聚焦品名。G 的另一半「列動作統一收進 `⋯`」已被後續決策取代 —— 「部分購買」與「記帳」刻意留在卡片上，只有低頻動作收進 `⋯`。
+   - 核准決策：既有還款歷史不可改寫、不採 reopen settlement；新增明確更正事件與 commit-last 完整版本，差額形成新的待結算餘額。
+   - 判定保護範圍時以 canonical confirm 的 claim 建立切點，不猜測單一 pair；一筆多人分攤紀錄可能影響多組債權關係。
 
 ## 低優先(未來,不急)
 20. **SW SHELL 快取清單補齊評估**:重新盤點現行 App Shell 必要資產與離線回歸範圍，不沿用已作廢的 ZIP 打包流程。
