@@ -17,19 +17,21 @@ function loadModule(){
   const end=source.indexOf('/* ================= 分帳(雲端 Ledger)',start);
   assert(start>=0&&end>start,'ledger helper section exists');
   const warnings=[];
+  const dataWarnings=[];
   const sandbox={
     console:{log(){},warn(message){warnings.push(String(message));},error(){}},
     localStorage:createStorage(),
     fetch(){return Promise.reject(new Error('network disabled'));},
     setTimeout,clearTimeout,Date,Math,Promise,JSON,String,Number,isFinite,
     timestampDate(value){return new Date(Number(value));},
-    AppLog:{repo(){},sync(){}},
+    AppLog:{repo(){},sync(){},data(message){dataWarnings.push(String(message));}},
     renderSplit(){},
     updateLedgerPendingStatus(){}
   };
   vm.createContext(sandbox);
   vm.runInContext(source.slice(start,end),sandbox);
   sandbox.__warnings=warnings;
+  sandbox.__dataWarnings=dataWarnings;
   return sandbox;
 }
 
@@ -227,6 +229,40 @@ assert.deepStrictEqual(
   [malformedRoot],
   'a commit whose manifest item is missing fails closed and leaves the prior version current'
 );
+assert(
+  mod.__dataWarnings.some(message=>message.includes('忽略更正版本')),
+  'projection diagnostics use the categorized data logger when no explicit warning sink is supplied'
+);
+const invalidTimeCommit=correctionCommit(
+  '1784429020000-0001',
+  malformedRoot,
+  malformedRoot,
+  ['1784429020001-0001'],
+  {time:'not-a-time'}
+);
+const invalidTimeItem=correctionItem(
+  '1784429020001-0001',
+  invalidTimeCommit.id,
+  malformedRoot,
+  '不應套用'
+);
+const invalidTimeProjection=mod.deriveLedgerCorrectionProjection([
+  expense(malformedRoot,'保留原始版本'),
+  invalidTimeItem,
+  invalidTimeCommit
+],function(){});
+assert.deepStrictEqual(
+  plain(invalidTimeProjection.records.filter(record=>record.recordType==='expense').map(record=>record.detail)),
+  ['保留原始版本'],
+  'a remote correction commit with an invalid timestamp is rejected before canonical ordering'
+);
+const itemA=expense('1784429030000-0001','A');
+const itemB=expense('1784429030001-0001','B');
+assert.deepStrictEqual(
+  plain(mod.ledgerCorrectionItemChanges([itemA,itemB],[itemB])),
+  {added:[],removed:['A（¥900／NT$180）'],modified:[]},
+  'removing the first item reports one removal rather than an index-shift modification plus the wrong removal'
+);
 assert(warnings.length>=1,'incomplete or losing correction data emits diagnostics');
 
 function settlementClaim(id,test){
@@ -300,6 +336,16 @@ assert.strictEqual(
   mod.ledgerReceiptForRecord(cutoffRecords,afterId).protected,
   false,
   'a backdated receipt created after the claim remains directly editable until a later repayment'
+);
+const malformedConfirmIdRecords=[
+  expense(beforeId,'確認 ID 異常時保守保護'),
+  settlementClaim(claimId,false),
+  settlementConfirm('malformed-confirm-id',claimId,false)
+];
+assert.strictEqual(
+  mod.ledgerReceiptForRecord(malformedConfirmIdRecords,beforeId).protected,
+  true,
+  'an unparseable canonical confirm ID fails closed instead of reopening pre-confirm receipts'
 );
 
 const batchBefore=expense('1784429101000-0001','同批早項',{batchId:'batch-cutoff'});
@@ -403,6 +449,32 @@ assert.throws(
   ),
   /還款確認.*更正收據/,
   'direct builder calls cannot bypass protected receipt editing'
+);
+const staleOriginal=expense('1784450000000-0001','舊表單原收據');
+const staleReplacement=expense('1784450100000-0001','另一裝置替代收據');
+staleReplacement.replacesRecordId=staleOriginal.id;
+const staleTombstone={
+  id:'1784450090000-0001',time:'2026-07-29T13:00:00.000Z',member:'Bar',category:'餐飲',detail:'[刪除]',
+  amountJpy:0,amountTwd:0,note:'',participants:'',payMethod:'',recordType:'deletion',
+  targetRecordId:staleOriginal.id,deleteReason:'編輯修改',batchId:''
+};
+const staleClaimId='1784450200000-0001';
+const staleConfirmId='1784450300000-0001';
+const staleFreshRecords=[
+  staleOriginal,staleTombstone,staleReplacement,
+  settlementClaim(staleClaimId,false),
+  settlementConfirm(staleConfirmId,staleClaimId,false)
+];
+assert.strictEqual(mod.ledgerReceiptForRecord(staleFreshRecords,staleOriginal.id),null,'the stale original is absent from the current receipt projection');
+assert.strictEqual(mod.ledgerReceiptForRecord(staleFreshRecords,staleReplacement.id).protected,true,'the remote replacement is protected by the later confirm');
+assert.throws(
+  ()=>mod.buildSharedLedgerEditBatch(
+    [staleOriginal],
+    [Object.assign({},staleOriginal,{detail:'stale save'})],
+    {member:'Bar',now:1784450400000,random(){return 0.4;},records:staleFreshRecords}
+  ),
+  /已更新|不可直接修改|還款確認/,
+  'a stale edit whose original ID was remotely replaced fails closed instead of saving against a missing receipt'
 );
 assert.throws(
   ()=>mod.createLedgerDeletion(
@@ -571,18 +643,31 @@ const caraClaim=Object.assign({},settlementClaim(caraClaimId,false),{
 const caraConfirm=Object.assign({},settlementConfirm(caraConfirmId,caraClaimId,false),{
   time:'2026-07-29T12:01:30.000Z'
 });
+const amyTwdClaim=Object.assign({},settlementClaim('1784440120000-0001',false),{
+  detail:'[結清] Amy → Bar',amountJpy:0,amountTwd:60,inputCurrency:'TWD',time:'2026-07-29T12:00:40.000Z'
+});
+const amyTwdConfirm=Object.assign({},settlementConfirm('1784440220000-0001',amyTwdClaim.id,false),{
+  time:'2026-07-29T12:01:40.000Z'
+});
+const caraTwdClaim=Object.assign({},settlementClaim('1784440130000-0001',false),{
+  member:'Cara',detail:'[結清] Cara → Bar',amountJpy:0,amountTwd:60,inputCurrency:'TWD',time:'2026-07-29T12:00:50.000Z'
+});
+const caraTwdConfirm=Object.assign({},settlementConfirm('1784440230000-0001',caraTwdClaim.id,false),{
+  time:'2026-07-29T12:01:50.000Z'
+});
 const settledEvents=[
   registration('1784439900000-0001','Bar'),
   registration('1784439900001-0001','Amy'),
   registration('1784439900002-0001','Cara'),
   expense(balanceRoot,'三人晚餐'),
-  amyClaim,amyConfirm,caraClaim,caraConfirm
+  amyClaim,amyConfirm,caraClaim,caraConfirm,amyTwdClaim,amyTwdConfirm,caraTwdClaim,caraTwdConfirm
 ];
 const settledReceipt=mod.ledgerReceiptForRecord(settledEvents,balanceRoot);
 const correctedDinner=Object.assign({},settledReceipt.records[0],{
   detail:'三人晚餐（正確）',
   amountJpy:600,
-  amountTwd:120
+  amountTwd:120,
+  _correctionSourceRecordId:balanceRoot
 });
 const preview=plain(mod.buildLedgerCorrectionPreview(
   settledReceipt,
@@ -598,6 +683,16 @@ const preview=plain(mod.buildLedgerCorrectionPreview(
 ));
 assert.deepStrictEqual(preview.oldTotals,{amountJpy:900,amountTwd:180});
 assert.deepStrictEqual(preview.newTotals,{amountJpy:600,amountTwd:120});
+assert.strictEqual(preview.wasGroupSettled,true,'preview records whether both currencies were fully settled before correction');
+assert.strictEqual(preview.createsNewBalances,true,'preview flags a zero-to-nonzero group balance transition');
+assert(preview.modifiedItems.length===1&&preview.modifiedItems[0].before.includes('三人晚餐'),'preview discloses the modified item content');
+assert.deepStrictEqual(preview.addedItems,[],'one-for-one replacement does not invent added items');
+assert.deepStrictEqual(preview.removedItems,[],'one-for-one replacement does not invent removed items');
+assert.strictEqual(
+  mod.ledgerCorrectionBalancesAreZero({members:[{member:'Bar',netJpy:0,netTwd:1}]}),
+  false,
+  'group settlement requires every member balance in both currencies to be zero'
+);
 assert.deepStrictEqual(
   preview.deltas.map(item=>({member:item.member,amount:item.amount})),
   [
@@ -609,8 +704,8 @@ assert.deepStrictEqual(
 );
 assert.strictEqual(
   mod.deriveSettlements(settledEvents,null,'formal').confirmed.length,
-  2,
-  'preview leaves both historical repayment confirmations intact'
+  4,
+  'preview leaves all historical repayment confirmations intact'
 );
 
 console.log('ledger settlement correction tests passed');

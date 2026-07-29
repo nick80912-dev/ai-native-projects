@@ -4,6 +4,7 @@
 - 新增 append-only `expense_correction_item`／`expense_correction_commit`／`expense_void_commit`。更正以完整收據版本提交，item 全數先進 durable queue、commit 最後寫入；缺件、跨付款人、跨 universe 或 manifest 不一致皆不生效。同一上一版本的並行提交以 `(time,id)` 選唯一 canonical，losing sibling 保留歷史但永不自動升格。
 - 更正 Sheet 固定原付款人、要求 1–50 字原因，允許新增／移除／修改整張收據品項；第一次送出只預覽新舊總額與成員餘額差，第二次才入列。整張作廢走同一預覽與追加事件，不建立 deletion。既有還款確認保持終局，更正差額形成新待結算餘額。
 - 清單顯示保護或更正次數；明細可查看原始版本、每次 canonical 更正、作廢與未套用衝突。完整紀錄另保留已作廢收據入口。Schema 升 2.9，但 Ledger 仍為既有 21 欄，Apps Script API 與依賴不變；Service Worker cache 升 `okayama-trip-v69`。
+- **獨立審查後加固**：一般團體編輯在最終送出前重讀 merged events，避免還款確認後仍由 stale 表單繞過保護；更正預覽納入完整事件集 fingerprint，跨裝置同步有變化時必須重新預覽。canonical confirm／claim ID 與遠端更正時間格式異常皆 fail-closed，診斷統一歸類 `AppLog.data`。預覽補上新增／移除／修改品項、受影響成員及「已結清後產生新待結算餘額」警示；歷史補上操作人、各版本金額／類別／參與者。
 
 ## 2026-07-29｜採買清單 C＋E＋G 第三批（dev，SW v68，待真機驗收）
 - **C 根因與修正**：Ledger 多品項個人↔團體切軌原本用有限 seed 重建每列，只複製名稱、金額、分類與免稅，會遺失逐項代購／分攤狀態、穩定 row key 與 `sourceShoppingItemId`／`sourceShoppingAllocationId`，造成切軌後代購對象消失或採買關聯回寫錯列。現改由純 transformer 泛用複製 draft、顯式 clone nested arrays，首次進入另一帳本才套該軌預設；個人與團體隱藏狀態同時保留，但提交仍只序列化目前帳本軌，兩類對象不互相推導，來源 IDs 不進 Ledger 21 欄。

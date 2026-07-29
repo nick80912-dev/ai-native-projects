@@ -30,7 +30,7 @@
 4. 更新 `07_CHANGELOG.md`(有架構變更標 ⭐),必要時更新 06/03
 
 ## 絕不可改變(除非 Bar 明確要求)
-- CMS 八表結構、Schema 2.8 欄位語意、既有 PID/RID/SID/HID 的意義；Ledger 固定 21 欄，`time` 為消費發生時間，末五欄為輸入幣別、免稅品、價格方式、稅率與優惠券金額
+- CMS 八表結構、Schema 2.9 欄位語意、既有 PID/RID/SID/HID 的意義；Ledger 固定 21 欄，`time` 為消費發生時間，末五欄為輸入幣別、免稅品、價格方式、稅率與優惠券金額
 - 三層防線(內建→快取→背景同步)與「絕不空白頁」原則
 - 卡片型別由 Places.Type 明確決定,**禁止 AI 猜測型別**
 - WebView 相容碼:console polyfill、fetch 相容模式(禁 AbortController)、單一吸頂容器
@@ -39,10 +39,13 @@
 - UI 配色變數與四分頁結構;個人狀態(打卡/想逛/成員身分)、個人帳與代購對象清單只存 localStorage、不進 Queue 或 CMS;團體帳一律走 Ledger Repository 跨裝置同步,兩軌資料與統計不得混用。依 ADR 0006,App 只可 append「分帳紀錄」並更新 TripConfig 的 `Exchange Rate` / `Ledger Default Currency`,其餘 CMS 欄位維持 Bar 手動管理且 App 唯讀
 - 產品哲學:3 秒原則、不過度工程化(能給連結就不硬轉結構化資料)
 
-## Ledger 2.1 現行契約
+## Ledger Schema 2.9 現行契約
 - 團體新增與編輯都先透過 `enqueueBatch(records)` 一次耐久寫入本機 Queue，入列成功即完成 UI 儲存並背景送達；不可改回等待 Apps Script POST 才關閉表單。公開 CSV 跨裝置可見延遲 1–5 分鐘是已接受取捨。
 - TEST 模式是獨立平行帳本：開啟時團體儀表板、今日、結算與明細只計算 `[TEST]`，關閉時只計算正式資料；個人帳不受 TEST 模式影響。
-- 個人編輯可原地替換本機紀錄；團體編輯必須 append 舊筆墓碑（原因固定「編輯修改」）與新替代筆，新筆以 `replacesRecordId` 指向原紀錄。詳細理由見 ADR 0006。
+- 個人編輯可原地替換本機紀錄。尚未落入 canonical 還款確認切點的團體收據，編輯時 append 舊筆墓碑（原因固定「編輯修改」）與新替代筆，新筆以 `replacesRecordId` 指向原紀錄。
+- canonical 還款確認成立後，切點前既有團體收據永久禁止直接編輯／刪除；全團餘額歸零不解除保護。只有原付款人可用引導式流程整張追加更正或作廢，付款人不可變，更正原因必填。
+- 更正使用 `expense_correction_item` + `expense_correction_commit`，作廢使用 `expense_void_commit`；資料仍沿用固定 21 欄，不新增 Sheet 欄位或 Apps Script API。item 先入列、commit 最後入列；缺件版本不得生效，歷史與 losing conflict 永久保留。
+- 更正送出前必須顯示品項變更、受影響成員與餘額差；已結清團體因更正重新出現餘額時，舊還款確認維持完成並建立新的待結算餘額。詳細規格見 `docs/superpowers/specs/2026-07-29-settlement-consistency-guided-correction-design.md`。
 
 ## 常見陷阱(前人踩過)
 - 同名 function 後者勝且提升 → 包裝舊函式必先改名,禁 `var old=fn`

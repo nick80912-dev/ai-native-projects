@@ -84,15 +84,15 @@ assert.doesNotThrow(function(){mod.assertCanDeleteLedgerRecord(payerOnly,ME);},'
 
 /* ---------- 批次刪除必須 all-or-none ---------- */
 const ownerBatch=[
-  Object.assign({},payerOnly,{id:'delete-own-1'}),
-  Object.assign({},payerOnly,{id:'delete-own-2'})
+  Object.assign({},payerOnly,{id:'delete-own-1',recordType:'expense'}),
+  Object.assign({},payerOnly,{id:'delete-own-2',recordType:'expense'})
 ];
 const ownerSelection=mod.resolveSharedLedgerDeleteSelection(ownerBatch,['delete-own-1','delete-own-2'],ME);
 assert.strictEqual(ownerSelection.ok,true,'全部為本人紀錄時可進入批次刪除');
 assert.deepStrictEqual(ids(ownerSelection.records),['delete-own-1','delete-own-2'],'本人批次保留完整選取集合');
 
 const mixedSelection=mod.resolveSharedLedgerDeleteSelection(
-  ownerBatch.concat([Object.assign({},participantOnly,{id:'delete-other'})]),
+  ownerBatch.concat([Object.assign({},participantOnly,{id:'delete-other',recordType:'expense'})]),
   ['delete-own-1','delete-other'],
   ME
 );

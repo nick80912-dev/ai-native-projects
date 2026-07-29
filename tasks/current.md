@@ -28,7 +28,7 @@
 ## ▶️ 下一階段
 1. **真機／PWA 驗收已關閉**：Bar 於 2026-07-29 確認 SW v58–v68 累積功能、採買 C＋E＋G、GitHub Pages iOS Safari／PWA 安裝、standalone、離線重開、SW 更新節奏與本機資料保留皆完成驗收。
 2. 依優先序開始 `tasks/backlog.md` #1 Playwright 三情境 QA，再逐批處理品質批、設定頁 2.0 與其餘已核准待辦。
-3. **結算一致性批開發完成，待 Bar 真機驗收**：SW v69 已實作還款確認後永久禁止直接刪改、append-only 收據級更正／作廢、commit-last、跨裝置 canonical conflict、二次預覽與不可改寫歷史。完整 49／49 Node tests、文件標題檢查及 320／375／390px Browser QA 通過；純 App 頁面 console error／warning 0。尚未 push、合併 `main` 或正式部署。
+3. **結算一致性批開發完成，待 Bar 真機驗收**：SW v69 已實作還款確認後永久禁止直接刪改、append-only 收據級更正／作廢、commit-last、跨裝置 canonical conflict、二次預覽與不可改寫歷史；獨立審查發現的 stale 一般編輯表單、stale 預覽與異常事件 fail-closed 路徑亦已加固。完整 49／49 Node tests、文件標題檢查及 320／375／390px Browser QA 通過；純 App 頁面 console error／warning 0。尚未 push、合併 `main` 或正式部署。
 4. 正式發布仍須由 Bar 另行核准 PR merge `dev → main`；未核准前不得 merge、push `main` 或部署。
 
 > 已解除：Apps Script `doGet` 部署已由 Bar 完成，真實端點驗證（CORS、redirect、`after`／`reset`／`serverTime`、非 JSON 降級）通過，見上方 SW v47 條目。

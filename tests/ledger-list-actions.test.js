@@ -39,6 +39,18 @@ assert(
   /function updateLedgerSaveCount\(\)\{[^}]*!ledgerUiState\.correction/.test(html),
   'multi-item input updates must not overwrite the correction preview/confirm button label'
 );
+const persistEditSource=extractFunction(html,'persistLedgerEditedRecords');
+assert(
+  /mergedLedgerRecords\(\)/.test(persistEditSource)&&/records:\s*freshRecords/.test(persistEditSource),
+  'shared edit save re-reads merged events and passes them to the final protection guard'
+);
+assert(
+  /ledgerCorrectionPreviewSignature\(correction,replacements,voidReceipt,source\)/.test(html),
+  'final correction confirmation fingerprints the fresh merged event set and invalidates stale previews'
+);
+const correctionPreviewSource=extractFunction(html,'renderLedgerCorrectionPreview');
+assert(correctionPreviewSource.includes('品項變更')&&correctionPreviewSource.includes('受影響成員'),'preview renders item-level changes and affected members');
+assert(correctionPreviewSource.includes('更正已產生新的待結算餘額'),'preview explicitly warns when a settled group becomes non-zero');
 
 const actionHost={current:null};
 const fakeDocument={
@@ -84,6 +96,9 @@ assert(!detail.includes("['同步狀態'"),'detail presentation removes sync sta
 assert(detail.includes('formatLedgerLocalOccurrence'),'detail uses a local-readable occurrence formatter');
 assert(html.includes('function renderLedgerRecordDetail(')&&html.includes('openLedgerCorrectionHistorySheet'),'protected shared detail links to immutable correction history');
 assert(html.includes('function renderLedgerCorrectionArchive('),'full shared history keeps voided and corrected receipt history reachable');
+const correctionHistorySource=extractFunction(html,'renderLedgerCorrectionHistory');
+assert(correctionHistorySource.includes('操作人：')&&correctionHistorySource.includes('參與：'),'history discloses actor and version item content');
+assert(correctionHistorySource.includes('與前版差異')&&correctionHistorySource.includes('renderLedgerCorrectionChanges(entry.changes)'),'history discloses actual changes relative to the prior canonical version');
 assert(html.includes('function formatLedgerLocalOccurrence('),'local occurrence formatting is shared');
 assert(html.includes('尚無消費紀錄')&&html.includes('點右下角 ＋ 開始記帳'),'recent empty state explains the next action');
 
