@@ -483,6 +483,20 @@ function extractUiFunction(name){
   }
   throw new Error('Could not extract '+name);
 }
+const listOverlaySource=extractUiFunction('renderShoppingListOverlay');
+assert(listOverlaySource.includes('renderShoppingSplitForm()'),'部分購買仍留在採買清單內');
+assert(!listOverlaySource.includes('renderShoppingForm()+'),'新增／編輯表單不再插入採買清單內容流');
+assert(listOverlaySource.includes('renderShoppingFormSheet()'),'清單重繪會同步獨立 Sheet 狀態');
+const formSheetSource=extractUiFunction('renderShoppingFormSheet');
+assert(formSheetSource.includes("overlay.id='shoppingFormSheet'"),'新增／編輯共用唯一 Sheet overlay');
+assert(formSheetSource.includes('role="dialog"'),'Sheet 使用 dialog 語意');
+assert(formSheetSource.includes('aria-modal="true"'),'Sheet 宣告 modal 語意');
+assert(formSheetSource.includes('shoppingFormTitle'),'Sheet 標題可由 aria-labelledby 取得');
+assert(extractUiFunction('renderShoppingItem').includes('data-shopping-item-id'),'每張卡片提供穩定 item ID 返回錨點');
+assert(
+  /startShoppingEdit\(\\'[\s\S]*\\',\\'detail\\'\)/.test(extractUiFunction('renderShoppingItemDetail')),
+  '從明細進入編輯會記錄 detail 返回 context'
+);
 const groupSandbox={
   shoppingUiState:{tab:'pending'},
   shoppingTripAuthority(){return 'authoritative';},
@@ -537,6 +551,42 @@ assert.deepStrictEqual(reset,{
   legacyQtyText:'',targets:[],allocations:[],
   stopRef:'d2_shop',done:false,createdAt:''
 });
+assert.deepStrictEqual(
+  plain(mod.createShoppingFormSession(
+    'edit',
+    {id:'item-1',category:'伴手禮',stopRef:'stop-a'},
+    'list',
+    840
+  )),
+  {
+    mode:'edit',
+    itemId:'item-1',
+    returnContext:'list',
+    returnScrollTop:840,
+    originalCategory:'伴手禮',
+    originalStopRef:'stop-a',
+    savePending:false
+  },
+  '編輯 Sheet session 保存返回位置與原分類／站點'
+);
+assert.deepStrictEqual(
+  plain(mod.createShoppingFormSession('add',null,'list',-3)),
+  {
+    mode:'add',
+    itemId:'',
+    returnContext:'list',
+    returnScrollTop:0,
+    originalCategory:'',
+    originalStopRef:'',
+    savePending:false
+  },
+  '新增 Sheet session 使用安全的清單返回預設值'
+);
+assert.throws(
+  ()=>mod.createShoppingFormSession('edit',null,'list',0),
+  /採買項目/,
+  '編輯 session 不得在找不到項目時降級成新增'
+);
 ['盒','包','瓶'].forEach(function(unit){
   assert.strictEqual(mod.newShoppingForm({id:'old-'+unit,quantity:2,unit:unit}).unit,unit,
     'editing preserves the existing '+unit+' unit');

@@ -546,6 +546,7 @@ body.ledger-sheet-open{overflow:hidden}.ledger-sheet-overlay{position:fixed;inse
 .today-hero-action{display:inline-flex;align-items:center;justify-content:center;width:auto;min-height:44px;margin-top:12px;background:rgba(255,255,255,.16);color:#fff;border:none;border-radius:10px;padding:9px 16px;font:inherit;font-size:13.5px;font-weight:600;line-height:1.2;cursor:pointer;position:relative;touch-action:manipulation}
 body.shopping-list-open{overflow:hidden}.shopping-list-overlay{position:fixed;inset:0;z-index:145;background:var(--paper)}.shopping-list-panel{width:min(100%,620px);height:100dvh;margin:0 auto;overflow-y:auto;touch-action:pan-y;overscroll-behavior:contain;background:var(--paper);padding:0 12px calc(92px + env(safe-area-inset-bottom));box-sizing:border-box}.shopping-list-head{position:sticky;z-index:4;top:0;display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:58px;margin:0 -12px;padding:calc(7px + env(safe-area-inset-top)) 12px 7px;background:rgba(249,247,241,.97);border-bottom:1px solid var(--line);backdrop-filter:blur(10px)}.shopping-list-head h2{min-width:0;font-size:19px;color:var(--sea-deep)}.shopping-list-head-actions{display:flex;align-items:center;gap:4px}.shopping-icon-button{min-width:44px;min-height:44px;border:0;border-radius:9px;background:transparent;color:var(--sea-deep);font:inherit;font-size:22px;font-weight:900}.shopping-add-button{width:44px;height:44px;border:0;border-radius:50%;background:var(--coral);color:#fff;font:inherit;font-size:25px;line-height:1}.shopping-list-segment{position:sticky;z-index:3;top:calc(59px + env(safe-area-inset-top));display:flex;gap:4px;margin:0 -12px 12px;padding:9px 12px;background:var(--paper)}.shopping-list-segment-track{display:flex;width:100%;gap:4px;padding:4px;border:1px solid var(--line);border-radius:999px;background:var(--line-soft)}.shopping-list-segment button{flex:1;min-width:0;min-height:40px;border:0;border-radius:999px;background:transparent;color:var(--ink-soft);font:inherit;font-size:13px;font-weight:900}.shopping-list-segment button.on{background:var(--sea);color:#fff;box-shadow:var(--shadow)}
 .shopping-form{margin:0 0 14px;padding:12px;border:1px solid var(--line);border-radius:10px;background:#fff;box-shadow:var(--shadow)}.shopping-form-head{display:flex;align-items:center;justify-content:space-between;gap:10px}.shopping-form-head h3{font-size:15px;color:var(--sea-deep)}.shopping-field{display:grid;gap:6px;margin-top:11px;min-width:0}.shopping-field label,.shopping-field-label{font-size:12px;font-weight:900;color:var(--ink-soft)}.shopping-input,.shopping-select{width:100%;min-width:0;min-height:46px;border:1px solid var(--line);border-radius:8px;background:#fff;padding:9px 11px;font:inherit;box-sizing:border-box}.shopping-chip-grid{display:flex;flex-wrap:wrap;gap:7px}.shopping-chip{min-height:40px;border:1px solid var(--line);border-radius:999px;background:#fff;color:var(--ink-soft);padding:7px 12px;font:inherit;font-size:12px;font-weight:800}.shopping-chip.on{border-color:var(--sea);background:var(--mint);color:var(--sea-deep)}.shopping-target-chip.on{border-color:transparent;background:var(--coral-bg);color:var(--coral)}.shopping-target-summary{font-size:12px;font-weight:800;color:var(--ink-soft)}.shopping-target-add{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:7px}.shopping-target-add button{min-width:44px;min-height:44px;border:1px dashed var(--sea);border-radius:8px;background:#fff;color:var(--sea);font:inherit;font-weight:900}.shopping-form-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:13px}.shopping-form-actions .btn{min-height:44px}.shopping-form-actions .shopping-save-another{grid-column:1/-1}
+.shopping-form-overlay{z-index:150}.shopping-form-sheet{width:min(100%,620px);max-height:100dvh;overflow-y:auto;touch-action:pan-y;overscroll-behavior:contain;padding-bottom:calc(18px + env(safe-area-inset-bottom))}.shopping-form-sheet .shopping-form{margin:0;border:0;box-shadow:none}
 .shopping-list-tools{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px}.shopping-list-tools strong{font-size:13px;color:var(--ink-soft)}.shopping-list-tools button{min-height:40px;border:0;background:transparent;color:var(--sea);padding:4px 0 4px 12px;font:inherit;font-size:12px;font-weight:900}.shopping-group{display:grid;gap:7px;margin-top:13px}.shopping-group-title{font-size:12px;color:var(--ink-faint);font-weight:900}.shopping-group-hint{margin:-2px 0 1px;color:var(--ink-faint);font-size:11px;line-height:1.45;overflow-wrap:anywhere}.shopping-group-orphan .shopping-group-title,.shopping-group-orphan .shopping-group-hint{color:var(--coral)}.shopping-item-orphan{border-color:var(--coral)}.shopping-field-notice{margin:1px 0 0;color:var(--ink-faint);font-size:11px;line-height:1.45;overflow-wrap:anywhere}.shopping-item-title-row{display:flex;align-items:center;flex-wrap:wrap;gap:4px 6px;min-width:0;overflow-wrap:anywhere}.shopping-card-target-summary{display:inline-flex;align-items:center;flex-wrap:wrap;gap:3px;font-weight:400}.shopping-target-affix{color:var(--ink-soft);font-weight:400}.shopping-target-badge{display:inline-flex;align-items:center;background:var(--coral-bg);color:var(--coral);border-radius:6px;border:0;padding:2px 7px;font-size:10.5px;font-weight:800;line-height:1.3}.shopping-category-badge{display:inline-flex;align-items:center;background:#fff7dc;color:#8a6416;border-radius:6px;border:0;padding:2px 7px;font-size:10.5px;font-weight:800;line-height:1.3}.shopping-link-badge{display:inline-flex;align-items:center;border-radius:999px;padding:1px 7px;font-size:10px;font-weight:900;white-space:nowrap}.shopping-link-linked{background:var(--mint);color:var(--sea-deep)}.shopping-link-partial{background:#e8f0f2;color:var(--sea-deep)}.shopping-link-unverified{background:#fdf0e2;color:#9a5b18}.shopping-link-unlinked{background:var(--line-soft);color:var(--ink-faint)}.shopping-selection-toolbar-done{grid-template-columns:auto minmax(0,1fr) minmax(0,1fr) minmax(0,.9fr)}.shopping-selection-toolbar-done button:last-child{background:var(--coral);color:#fff}.shopping-split-form{border-color:var(--sea)}.shopping-split-remainder{margin:0;min-height:46px;display:flex;align-items:center;border:1px dashed var(--line);border-radius:8px;background:var(--line-soft);padding:9px 11px;font-size:16px;font-weight:900;color:var(--sea-deep)}.shopping-selection-toolbar-stacked{grid-template-columns:minmax(0,1fr);gap:6px}.shopping-selection-actions{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}.shopping-selection-toolbar-stacked .shopping-selection-actions button:last-child{background:var(--coral);color:#fff}.shopping-field-notice-warn{color:var(--coral)}.shopping-clear-binding{justify-self:start;min-height:40px;border:1px dashed var(--coral);border-radius:8px;background:#fff;color:var(--coral);padding:6px 12px;font:inherit;font-size:12px;font-weight:900}.shopping-item{display:grid;grid-template-columns:44px minmax(0,1fr) auto;align-items:center;gap:6px;min-width:0;border:1px solid var(--line);border-radius:9px;background:#fff;padding:8px 7px}.shopping-item-location{margin-top:3px;color:var(--ink-faint);font-size:11px;line-height:1.35;overflow-wrap:anywhere}.shopping-item-menu{min-width:40px;min-height:40px;border:0;border-radius:9px;background:transparent;color:var(--ink-soft);font:inherit;font-size:20px;font-weight:900;line-height:1}.shopping-item-primary{min-height:40px;padding:0 10px;border:1px solid var(--sea);border-radius:999px;background:#fff;color:var(--sea-deep);font:inherit;font-size:12px;font-weight:900;white-space:nowrap}.shopping-quantity-row{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:9px}.shopping-quantity-row>.shopping-field{margin-top:0}.shopping-action-popover{width:auto;min-width:120px}.shopping-item-check{display:grid;place-items:center;width:44px;min-height:44px}.shopping-item-check input{width:20px;height:20px;margin:0}.shopping-item-body{min-width:0}.shopping-item-body strong{display:block;font-size:14px;overflow-wrap:anywhere}.shopping-item-meta{display:flex;align-items:center;flex-wrap:wrap;gap:3px 7px;margin-top:4px;color:var(--ink-faint);font-size:11px;line-height:1.35}.shopping-item-actions{display:flex;align-items:center}.shopping-item-actions button{min-width:40px;min-height:40px;border:0;background:transparent;color:var(--sea);font:inherit;font-size:12px;font-weight:900}.shopping-item-actions button.danger{color:var(--coral)}.shopping-empty{padding:36px 12px;text-align:center;color:var(--ink-faint);font-size:13px}.shopping-selection-toolbar{position:fixed;z-index:148;left:12px;right:12px;bottom:calc(10px + env(safe-area-inset-bottom));width:min(calc(100% - 24px),596px);margin:0 auto;display:grid;grid-template-columns:auto minmax(0,1fr) minmax(0,1.35fr);align-items:center;gap:7px;padding:9px;border-radius:12px;background:var(--sea-deep);box-shadow:var(--shadow-lg);box-sizing:border-box}.shopping-selection-toolbar span{color:#fff;font-size:12px;font-weight:900}.shopping-selection-toolbar button{min-width:0;min-height:42px;border:0;border-radius:999px;background:#fff;color:var(--sea-deep);padding:7px 9px;font:inherit;font-size:11px;font-weight:900}.shopping-selection-toolbar button:last-child{background:var(--coral);color:#fff}.shopping-selection-toolbar button:disabled{opacity:.45}
 .shopping-selection-toolbar{grid-template-columns:auto minmax(0,1fr)}.shopping-selection-actions{grid-template-columns:repeat(3,minmax(0,1fr))}.shopping-selection-toolbar button{min-height:44px;white-space:nowrap;padding-left:5px;padding-right:5px}.shopping-selection-toolbar-empty{grid-template-columns:minmax(0,1fr)}.shopping-selection-spacer{height:calc(66px + env(safe-area-inset-bottom))}
 .shopping-item-body[role="button"]{cursor:pointer;border-radius:6px}.shopping-item-body[role="button"]:focus-visible{outline:2px solid var(--sea);outline-offset:3px}.shopping-detail-overlay{z-index:150}.shopping-linked-ledger-detail,.shopping-linked-ledger-entry{z-index:160}.shopping-detail-section{margin-top:14px}.shopping-detail-section h3{font-size:13px;color:var(--ink-soft);margin-bottom:6px}.shopping-detail-allocation{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line)}.shopping-detail-allocation-main{display:flex;align-items:baseline;flex-wrap:wrap;gap:2px 7px;min-width:0}.shopping-detail-allocation-main strong{font-size:13px;overflow-wrap:anywhere}.shopping-detail-allocation-main span{font-size:11px;color:var(--ink-faint)}.shopping-detail-allocation-actions{display:flex;align-items:center;gap:5px}.shopping-detail-allocation-actions button{min-height:40px;border:0;border-radius:8px;background:var(--line-soft);color:var(--sea-deep);padding:6px 9px;font:inherit;font-size:11px;font-weight:900}.shopping-detail-allocation-actions button.danger{color:var(--coral)}.shopping-detail-chevron{font-size:17px}.shopping-detail-footer-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.shopping-detail-footer-actions-single{grid-template-columns:minmax(0,1fr)}
@@ -2774,7 +2775,7 @@ function renderToday(){
 }
 
 /* ================= 採買清單(純 localStorage) ================= */
-var shoppingUiState={tab:'pending',form:null,split:null,selectionMode:false,selected:{}};
+var shoppingUiState={tab:'pending',form:null,formSession:null,split:null,selectionMode:false,selected:{}};
 function shoppingItineraryStops(){
   var result=[];
   ((DB.trip&&DB.trip.days)||[]).forEach(function(day,dayIndex){
@@ -2807,32 +2808,54 @@ function renderShoppingTodayEntry(day){
 /* 數量不再選填:每個新項目都給 quantity 1,才能可靠支援部分購買的減法。 */
 function openShoppingList(){
   closeShoppingList();
-  shoppingUiState.tab='pending';shoppingUiState.form=null;shoppingUiState.split=null;shoppingUiState.selectionMode=false;shoppingUiState.selected={};
+  shoppingUiState.tab='pending';shoppingUiState.form=null;shoppingUiState.formSession=null;shoppingUiState.split=null;shoppingUiState.selectionMode=false;shoppingUiState.selected={};
   var overlay=document.createElement('div');overlay.id='shoppingListOverlay';overlay.className='shopping-list-overlay';
   overlay.innerHTML='<section class="shopping-list-panel" role="dialog" aria-modal="true" aria-labelledby="shoppingListTitle"></section>';
   document.body.appendChild(overlay);document.body.classList.add('shopping-list-open');renderShoppingListOverlay();
 }
 function closeShoppingList(){
   closeShoppingItemActions();closeShoppingReleaseConfirm();closeShoppingCompletedEditConfirm();closeShoppingItemDetail();
+  closeShoppingFormSheet();shoppingUiState.form=null;shoppingUiState.formSession=null;
   var overlay=document.getElementById('shoppingListOverlay');if(overlay)overlay.remove();
   document.body.classList.remove('shopping-list-open');
 }
 function setShoppingTab(tab){shoppingUiState.tab=tab==='done'?'done':'pending';shoppingUiState.split=null;shoppingUiState.selectionMode=false;shoppingUiState.selected={};renderShoppingListOverlay();}
-function startShoppingAdd(){
-  shoppingUiState.split=null;shoppingUiState.form=newShoppingForm();renderShoppingListOverlay();
+function shoppingListScrollTop(){
+  var panel=document.querySelector('#shoppingListOverlay .shopping-list-panel');
+  return panel?Math.max(0,Number(panel.scrollTop)||0):0;
+}
+function closeShoppingFormSheet(){
+  var overlay=document.getElementById('shoppingFormSheet');if(overlay)overlay.remove();
+  var list=document.getElementById('shoppingListOverlay');
+  if(list){list.removeAttribute('inert');list.removeAttribute('aria-hidden');}
+}
+function renderShoppingFormSheet(){
+  if(!shoppingUiState.form){closeShoppingFormSheet();return;}
+  var overlay=document.getElementById('shoppingFormSheet');
+  if(!overlay){
+    overlay=document.createElement('div');overlay.id='shoppingFormSheet';overlay.className='ledger-sheet-overlay shopping-form-overlay';
+    document.body.appendChild(overlay);
+  }
+  overlay.innerHTML='<section class="ledger-sheet shopping-form-sheet" role="dialog" aria-modal="true" aria-labelledby="shoppingFormTitle">'+renderShoppingForm()+'</section>';
+  var list=document.getElementById('shoppingListOverlay');
+  if(list){list.setAttribute('inert','');list.setAttribute('aria-hidden','true');}
+}
+function openShoppingForm(mode,id,returnContext){
+  var item=mode==='edit'?shoppingListStore.all().filter(function(value){return value.id===String(id);})[0]:null;
+  if(mode==='edit'&&!item){toast('找不到採買項目');return;}
+  shoppingUiState.split=null;
+  shoppingUiState.form=mode==='edit'?newShoppingForm(item):newShoppingForm();
+  if(item)shoppingUiState.form.allocationEditPolicy=shoppingAllocationEditPolicy(item,shoppingLedgerContext());
+  shoppingUiState.formSession=createShoppingFormSession(mode,item,returnContext,shoppingListScrollTop());
+  renderShoppingFormSheet();
   requestAnimationFrame(function(){var input=document.getElementById('shoppingName');if(input)input.focus();});
 }
-function startShoppingEdit(id){
-  var item=shoppingListStore.all().filter(function(value){return value.id===String(id);})[0];if(!item)return;
-  shoppingUiState.split=null;shoppingUiState.form=newShoppingForm(item);
-  shoppingUiState.form.allocationEditPolicy=shoppingAllocationEditPolicy(item,shoppingLedgerContext());
-  renderShoppingListOverlay();
-  requestAnimationFrame(function(){var input=document.getElementById('shoppingName');if(input)input.focus();});
-}
-function cancelShoppingForm(){shoppingUiState.form=null;renderShoppingListOverlay();}
+function startShoppingAdd(){openShoppingForm('add','','list');}
+function startShoppingEdit(id,returnContext){openShoppingForm('edit',id,returnContext||'list');}
+function cancelShoppingForm(){shoppingUiState.form=null;shoppingUiState.formSession=null;closeShoppingFormSheet();}
 /* 清除綁定只在使用者明確按下時發生;系統任何時候都不自動清空 stopRef。 */
-function clearShoppingStopBinding(){if(!shoppingUiState.form)return;shoppingUiState.form.stopRef='';renderShoppingListOverlay();}
-function updateShoppingFormField(field,value,rerender){if(!shoppingUiState.form)return;shoppingUiState.form[field]=value;if(rerender)renderShoppingListOverlay();}
+function clearShoppingStopBinding(){if(!shoppingUiState.form)return;shoppingUiState.form.stopRef='';renderShoppingFormSheet();}
+function updateShoppingFormField(field,value,rerender){if(!shoppingUiState.form)return;shoppingUiState.form[field]=value;if(rerender)renderShoppingFormSheet();}
 function toggleShoppingFormTarget(value,forceOn){
   if(!shoppingUiState.form)return;
   var target=normalizeLedgerProxyTarget(value),key=canonicalMemberName(target);
@@ -2842,7 +2865,7 @@ function toggleShoppingFormTarget(value,forceOn){
   if(found&&forceOn!==true&&policy&&!policy.canEdit){toast(policy.reason+'，目前無法移除這位對象');return;}
   if(forceOn===true&&!found)targets.push(target);
   else if(forceOn!==true)targets=found?targets.filter(function(current){return canonicalMemberName(current)!==key;}):targets.concat([target]);
-  shoppingUiState.form.targets=targets;renderShoppingListOverlay();
+  shoppingUiState.form.targets=targets;renderShoppingFormSheet();
 }
 function addShoppingBuyFor(){
   var input=document.getElementById('shoppingBuyForNew'),value=input&&input.value;
@@ -2969,7 +2992,7 @@ function renderShoppingForm(){
       escapeHtml(stopState==='orphan'?'原本綁定的行程站點已從行程中移除。請改選有效站點，或清除綁定改為隨時可買。':'行程資料尚未確認來源，暫時保留原綁定，不會自動更動。')+
       '</p><button type="button" class="shopping-clear-binding" onclick="clearShoppingStopBinding()">清除綁定，改為隨時可買</button>';
   }
-  return '<form class="shopping-form" onsubmit="event.preventDefault();saveShoppingForm()"><div class="shopping-form-head"><h3>'+(form.id?'編輯採買項目':'新增採買項目')+'</h3><button type="button" class="shopping-icon-button" aria-label="關閉表單" onclick="cancelShoppingForm()">×</button></div>'+
+  return '<form class="shopping-form" onsubmit="event.preventDefault();saveShoppingForm()"><div class="shopping-form-head"><h3 id="shoppingFormTitle">'+(form.id?'編輯採買項目':'新增採買項目')+'</h3><button type="button" class="shopping-icon-button" aria-label="關閉表單" onclick="cancelShoppingForm()">×</button></div>'+
     '<div class="shopping-field"><label for="shoppingName">品名（必填）</label><input class="shopping-input" id="shoppingName" maxlength="80" value="'+escapeHtml(form.name)+'" oninput="updateShoppingFormField(\'name\',this.value,false)"></div>'+
     '<div class="shopping-field"><span class="shopping-field-label">分類（選填）</span><div class="shopping-chip-grid">'+categories+'</div></div>'+
     renderShoppingQuantityFields(form)+
@@ -3010,7 +3033,7 @@ function renderShoppingItem(item,context){
     :((linkSummary.state==='unlinked'||linkSummary.state==='partial')&&item.done)
       ?'<button type="button" class="shopping-item-primary" onclick="event.stopPropagation();openShoppingLedgerEntry(\''+jsString(item.id)+'\')">記帳</button>':'';
   var menu=selection?'':'<button type="button" class="shopping-item-menu" aria-label="採買項目操作" onclick="openShoppingItemActions(\''+jsString(item.id)+'\',event)">⋯</button>';
-  return '<article class="shopping-item'+(state==='orphan'?' shopping-item-orphan':'')+'">'+check+
+  return '<article class="shopping-item'+(state==='orphan'?' shopping-item-orphan':'')+'" data-shopping-item-id="'+escapeHtml(item.id)+'">'+check+
     '<div class="shopping-item-body" role="button" tabindex="0" aria-label="查看 '+escapeHtml(item.name)+' 詳情" onclick="handleShoppingItemBodyClick(\''+jsString(item.id)+'\',event)" onkeydown="handleShoppingItemBodyClick(\''+jsString(item.id)+'\',event)"><div class="shopping-item-title-row"><strong>'+escapeHtml(item.name)+'</strong>'+
       targetMarkup+badge+'</div>'+
       (item.category||quantitySummary?'<div class="shopping-item-meta">'+(item.category?'<span class="shopping-category-badge">'+escapeHtml(item.category)+'</span>':'')+(quantitySummary?'<span>'+escapeHtml(quantitySummary)+'</span>':'')+'</div>':'')+
@@ -3085,7 +3108,7 @@ function renderShoppingItemDetail(item){
   }).join('');
   var hasUnlinked=model.allocations.some(function(allocation){return allocation.linkState==='unlinked';});
   return '<dl class="ledger-detail-rows">'+rows+'</dl><section class="shopping-detail-section"><h3>代購對象與記帳紀錄</h3>'+allocations+'</section>'+
-    '<div class="ledger-detail-actions shopping-detail-footer-actions'+(hasUnlinked?'':' shopping-detail-footer-actions-single')+'"><button type="button" class="btn ghost" onclick="closeShoppingItemDetail();startShoppingEdit(\''+jsHtmlAttrString(item.id)+'\')">編輯</button>'+
+    '<div class="ledger-detail-actions shopping-detail-footer-actions'+(hasUnlinked?'':' shopping-detail-footer-actions-single')+'"><button type="button" class="btn ghost" onclick="closeShoppingItemDetail();startShoppingEdit(\''+jsHtmlAttrString(item.id)+'\',\'detail\')">編輯</button>'+
     (hasUnlinked?'<button type="button" class="btn" onclick="openShoppingIncompleteLedgerEntry(\''+jsHtmlAttrString(item.id)+'\')">記帳未完成對象</button>':'')+'</div>';
 }
 function openShoppingItemDetail(id){
@@ -3255,9 +3278,10 @@ function renderShoppingListOverlay(){
   var items=shoppingListStore.all().filter(function(item){return shoppingUiState.tab==='done'?item.done:!item.done;});
   panel.innerHTML='<header class="shopping-list-head"><h2 id="shoppingListTitle">採買清單</h2><div class="shopping-list-head-actions"><button type="button" class="shopping-add-button" aria-label="新增採買項目" onclick="startShoppingAdd()">＋</button><button type="button" class="shopping-icon-button" aria-label="關閉採買清單" onclick="closeShoppingList()">×</button></div></header>'+
     '<nav class="shopping-list-segment" aria-label="採買狀態"><div class="shopping-list-segment-track"><button type="button" class="'+(shoppingUiState.tab==='pending'?'on':'')+'" aria-pressed="'+(shoppingUiState.tab==='pending'?'true':'false')+'" onclick="setShoppingTab(\'pending\')">待買</button><button type="button" class="'+(shoppingUiState.tab==='done'?'on':'')+'" aria-pressed="'+(shoppingUiState.tab==='done'?'true':'false')+'" onclick="setShoppingTab(\'done\')">已買</button></div></nav>'+
-    renderShoppingSplitForm()+renderShoppingForm()+
+    renderShoppingSplitForm()+
     '<div class="shopping-list-tools"><strong>'+items.length+' 項</strong>'+(items.length?'<button type="button" onclick="toggleShoppingSelectionMode()">'+(shoppingUiState.selectionMode?'取消多選':'多選')+'</button>':'')+'</div>'+
     renderShoppingGroups(items)+renderShoppingSelectionToolbar();
+  renderShoppingFormSheet();
 }
 function toggleShoppingSelectionMode(){shoppingUiState.selectionMode=!shoppingUiState.selectionMode;shoppingUiState.selected={};renderShoppingListOverlay();}
 function toggleShoppingSelection(id,selected){shoppingUiState.selected[id]=!!selected;renderShoppingListOverlay();}
@@ -4018,6 +4042,19 @@ function newShoppingForm(seed){
     stopRef:String(seed.stopRef||''),
     done:seed.done===true,
     createdAt:String(seed.createdAt||'')
+  };
+}
+function createShoppingFormSession(mode,item,returnContext,scrollTop){
+  mode=mode==='edit'?'edit':'add';
+  if(mode==='edit'&&(!item||!String(item.id||'')))throw new Error('找不到採買項目');
+  return {
+    mode:mode,
+    itemId:mode==='edit'?String(item.id):'',
+    returnContext:returnContext==='detail'?'detail':'list',
+    returnScrollTop:Math.max(0,Number(scrollTop)||0),
+    originalCategory:mode==='edit'?String(item.category||''):'',
+    originalStopRef:mode==='edit'?String(item.stopRef||''):'',
+    savePending:false
   };
 }
 function shoppingFormQuantity(form){
