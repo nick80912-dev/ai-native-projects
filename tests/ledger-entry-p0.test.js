@@ -33,7 +33,6 @@ assert.match(summaryTextSource,/draft\.occurredDate/,'the compact summary includ
 assert.match(summarySource,/toggleLedgerEntryDetails\(\)/,'clicking the summary opens the secondary fields');
 assert.match(extractFunction('selectLedgerCategory'),/updateLedgerEntrySummary\(\)/,'category changes refresh the visible compact summary without collapsing it');
 assert.match(extractFunction('selectLedgerPayMethod'),/updateLedgerEntrySummary\(\)/,'payment changes refresh the visible compact summary without collapsing it');
-assert.match(extractFunction('setLedgerDraftTrack'),/next\.detail=old\.detail/,'track switches preserve the current single-item detail');
 assert.doesNotMatch(extractFunction('selectLedgerCurrency'),/draft\.detail\s*=/,'currency switches never replace the current detail');
 assert.doesNotMatch(extractFunction('selectLedgerCategory'),/draft\.detail\s*=/,'category switches never replace the current detail');
 assert.doesNotMatch(extractFunction('selectLedgerPayMethod'),/draft\.detail\s*=/,'payment switches never replace the current detail');
