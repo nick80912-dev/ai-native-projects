@@ -5042,6 +5042,10 @@ function createLedgerProxyTargetStore(options){
 
 function isTestLedgerRecord(record){ return /^\[TEST\]/.test(String(record&&record.detail||'')); }
 function canonicalMemberName(name){ return String(name==null?'':name).replace(/\u3000/g,' ').replace(/\s+/g,' ').trim(); }
+function isLedgerCorrectionItemRecord(record){return !!record&&record.recordType==='expense_correction_item';}
+function isLedgerCorrectionCommitRecord(record){return !!record&&record.recordType==='expense_correction_commit';}
+function isLedgerVoidCommitRecord(record){return !!record&&record.recordType==='expense_void_commit';}
+function isLedgerCorrectionRecord(record){return isLedgerCorrectionItemRecord(record)||isLedgerCorrectionCommitRecord(record)||isLedgerVoidCommitRecord(record);}
 function buildParticipantSnapshot(entries,currentMember){
   var names=[],seen={};
   (entries||[]).forEach(function(entry){var name=String(entry&&entry.name||'').trim(),key=canonicalMemberName(name);if(key&&!seen[key]){seen[key]=true;names.push(name);}});
@@ -5070,18 +5074,26 @@ function ledgerRecordOwnerMatches(record,currentMember){
   var owner=canonicalMemberName(record&&record.member),current=canonicalMemberName(currentMember);
   return !!owner&&!!current&&owner===current;
 }
-function canEditLedgerRecord(record,currentMember){return isLedgerRecordActionTarget(record)&&ledgerRecordOwnerMatches(record,currentMember);}
-function canDeleteLedgerRecord(record,currentMember){return isLedgerRecordActionTarget(record)&&ledgerRecordOwnerMatches(record,currentMember);}
-function assertCanEditLedgerRecord(record,currentMember){
+function ledgerRecordCorrectionProtected(record,records){
+  if(record&&record._correctionProtected)return true;
+  if(!Array.isArray(records)||!record||!record.id)return false;
+  var receipt=ledgerReceiptForRecord(records,record.id,function(){});
+  return !!(receipt&&receipt.protected);
+}
+function canEditLedgerRecord(record,currentMember,records){return isLedgerRecordActionTarget(record)&&ledgerRecordOwnerMatches(record,currentMember)&&!ledgerRecordCorrectionProtected(record,records);}
+function canDeleteLedgerRecord(record,currentMember,records){return isLedgerRecordActionTarget(record)&&ledgerRecordOwnerMatches(record,currentMember)&&!ledgerRecordCorrectionProtected(record,records);}
+function assertCanEditLedgerRecord(record,currentMember,records){
   if(!isLedgerRecordActionTarget(record))throw new Error('此類紀錄不可編輯');
   if(!canonicalMemberName(record&&record.member))throw new Error(LEDGER_OWNER_UNKNOWN_MESSAGE);
-  if(!canEditLedgerRecord(record,currentMember))throw new Error('僅付款人可編輯此筆團體紀錄');
+  if(!ledgerRecordOwnerMatches(record,currentMember))throw new Error('僅付款人可編輯此筆團體紀錄');
+  if(ledgerRecordCorrectionProtected(record,records))throw new Error('此收據已有還款確認，請使用「更正收據」保留歷史');
   return record;
 }
-function assertCanDeleteLedgerRecord(record,currentMember){
+function assertCanDeleteLedgerRecord(record,currentMember,records){
   if(!isLedgerRecordActionTarget(record))throw new Error('此類紀錄不可刪除');
   if(!canonicalMemberName(record&&record.member))throw new Error(LEDGER_OWNER_UNKNOWN_MESSAGE);
-  if(!canDeleteLedgerRecord(record,currentMember))throw new Error('僅付款人可刪除此筆團體紀錄');
+  if(!ledgerRecordOwnerMatches(record,currentMember))throw new Error('僅付款人可刪除此筆團體紀錄');
+  if(ledgerRecordCorrectionProtected(record,records))throw new Error('此收據已有還款確認，請使用「更正收據」保留歷史');
   return record;
 }
 function resolveSharedLedgerDeleteSelection(records,ids,currentMember){
@@ -5105,9 +5117,9 @@ function ledgerSingleDeleteBatchHint(record,records){
   var count=effectiveLedgerRecords(records||[]).filter(function(item){return isLedgerRecordActionTarget(item)&&String(item.batchId||'').trim()===batchId;}).length;
   return count>1?'此筆屬於 '+count+' 筆的同批收據,其餘 '+(count-1)+' 筆將保留。':'';
 }
-function createLedgerDeletion(original,member,reason,now,randomFn){
+function createLedgerDeletion(original,member,reason,now,randomFn,records){
   var source=original||{}, cleanReason=String(reason||'').trim(), at=now==null?Date.now():now;
-  assertCanDeleteLedgerRecord(source,member);
+  assertCanDeleteLedgerRecord(source,member,records);
   if(!cleanReason)throw new Error('刪除原因必填');
   if(cleanReason.length>50)throw new Error('刪除原因最多 50 個字');
   return normalizeLedgerRecord({
@@ -5126,11 +5138,11 @@ function buildSharedLedgerEditBatch(originals,replacements,context){
   if(!old.length||!(replacements||[]).length)throw new Error('編輯紀錄不可空白');
   var ctx=context||{},at=Number(ctx.now==null?Date.now():ctx.now),random=ctx.random||Math.random,member=String(ctx.member||'').trim();
   if(!member)throw new Error('成員必填');
-  old.forEach(function(record){assertCanEditLedgerRecord(record,member);});
+  old.forEach(function(record){assertCanEditLedgerRecord(record,member,ctx.records);});
   var originalMember=String(old[0].member||'');
   if(old.some(function(record){return String(record.member||'')!==originalMember;}))throw new Error('同批紀錄付款人不一致');
   var canonicalId=old[0].id,test=old.some(isTestLedgerRecord),batchId=replacements.length>1?'batch-'+createLedgerId(at+old.length,random):'';
-  var deletions=old.map(function(record,index){return createLedgerDeletion(record,member,'編輯修改',at+index,random);});
+  var deletions=old.map(function(record,index){return createLedgerDeletion(record,member,'編輯修改',at+index,random,ctx.records);});
   var expenses=replacements.map(function(source,index){
     var detail=String(source&&source.detail||'').replace(/^\[TEST\]\s*/,'').trim();
     if(test)detail='[TEST] '+detail;
@@ -5140,7 +5152,74 @@ function buildSharedLedgerEditBatch(originals,replacements,context){
   });
   return deletions.concat(expenses);
 }
-function effectiveLedgerRecords(records,warnFn){
+function normalizeLedgerCorrectionReason(value,label){
+  var reason=String(value||'').trim();
+  if(!reason)throw new Error((label||'更正')+'原因必填');
+  if(reason.length>50)throw new Error((label||'更正')+'原因最多 50 個字');
+  return reason;
+}
+function assertLedgerCorrectionReceipt(receipt,context){
+  var ctx=context||{},member=String(ctx.member||'').trim();
+  if(!receipt||!receipt.rootId||!receipt.anchorId)throw new Error('找不到可更正的收據');
+  if(!receipt.protected)throw new Error('此收據尚未受還款確認保護，請使用一般編輯');
+  if(!canonicalMemberName(member)||canonicalMemberName(member)!==canonicalMemberName(receipt.owner))throw new Error('只有原付款人可更正此收據');
+  if(Array.isArray(ctx.records)){
+    var latest=ledgerReceiptForRecord(ctx.records,receipt.rootId,function(){});
+    if(!latest||latest.anchorId!==receipt.anchorId)throw new Error('收據已有較新的更正，請重新開啟');
+  }
+  return receipt;
+}
+function buildLedgerCorrectionBatch(receipt,replacements,context){
+  var ctx=context||{},current=assertLedgerCorrectionReceipt(receipt,ctx),reason=normalizeLedgerCorrectionReason(ctx.reason,'更正');
+  var sources=(replacements||[]).slice();
+  if(!sources.length)throw new Error('更正收據至少需要一個品項；若整張取消請使用作廢');
+  var at=Number(ctx.now==null?Date.now():ctx.now),random=ctx.random||Math.random,test=current.universe==='test';
+  var itemIds=sources.map(function(_,index){return createLedgerId(at+index+1,random);});
+  var commitAt=at+sources.length+1,commitId=createLedgerId(commitAt,random);
+  var items=sources.map(function(source,index){
+    if(String(source&&source.member||'').trim()&&canonicalMemberName(source.member)!==canonicalMemberName(current.owner))throw new Error('更正收據付款人不可變更');
+    var detail=String(source&&source.detail||'').replace(/^\[TEST\]\s*/,'').trim();
+    if(!detail)throw new Error('請輸入品項名稱');
+    var participants=parseParticipants(source,function(){});
+    if(!participants)throw new Error('更正收據分攤成員無效');
+    var record=normalizeLedgerRecord(Object.assign({},source,{
+      id:itemIds[index],
+      member:current.owner,
+      detail:detail,
+      participants:JSON.stringify(participants),
+      recordType:'expense_correction_item',
+      targetRecordId:commitId,
+      deleteReason:'',
+      batchId:commitId,
+      replacesRecordId:current.rootId
+    }),at+index+1,random,test);
+    record.member=current.owner;
+    validateLedgerRecord(record);
+    if(!isSafeLedgerInteger(record.amountJpy)||record.amountJpy<0||!isSafeLedgerInteger(record.amountTwd)||record.amountTwd<0)throw new Error('更正品項金額必須是非負安全整數');
+    return record;
+  });
+  var commit=normalizeLedgerRecord({
+    id:commitId,time:timestampDate(commitAt).toISOString(),member:current.owner,category:'其他',detail:'[更正收據]',
+    amountJpy:0,amountTwd:0,note:reason,participants:JSON.stringify(itemIds),payMethod:'',
+    recordType:'expense_correction_commit',targetRecordId:current.anchorId,deleteReason:'',batchId:commitId,
+    storeName:'',replacesRecordId:current.rootId,inputCurrency:'',isTaxFree:false,priceMode:'',taxRate:null,couponAmount:0
+  },commitAt,random,test);
+  validateLedgerRecord(commit);
+  return items.concat([commit]);
+}
+function buildLedgerVoidCorrection(receipt,context){
+  var ctx=context||{},current=assertLedgerCorrectionReceipt(receipt,ctx),reason=normalizeLedgerCorrectionReason(ctx.reason,'作廢');
+  var at=Number(ctx.now==null?Date.now():ctx.now),random=ctx.random||Math.random,test=current.universe==='test',id=createLedgerId(at,random);
+  var commit=normalizeLedgerRecord({
+    id:id,time:timestampDate(at).toISOString(),member:current.owner,category:'其他',detail:'[作廢收據]',
+    amountJpy:0,amountTwd:0,note:reason,participants:'[]',payMethod:'',
+    recordType:'expense_void_commit',targetRecordId:current.anchorId,deleteReason:'',batchId:id,
+    storeName:'',replacesRecordId:current.rootId,inputCurrency:'',isTaxFree:false,priceMode:'',taxRate:null,couponAmount:0
+  },at,random,test);
+  validateLedgerRecord(commit);
+  return [commit];
+}
+function tombstoneEffectiveLedgerRecords(records,warnFn){
   var source=records||[], byId={}, deleted={};
   var warn=typeof warnFn==='function'?warnFn:function(message){if(typeof console!=='undefined'&&console.warn)console.warn(message);};
   source.forEach(function(record){if(record&&record.id&&!byId[record.id])byId[record.id]=record;});
@@ -5152,9 +5231,202 @@ function effectiveLedgerRecords(records,warnFn){
     if(!target){warn('忽略刪除紀錄 '+String(record.id||'')+':找不到目標 '+String(record.targetRecordId||''));return;}
     if(isDeletionRecord(target)){warn('忽略刪除紀錄 '+String(record.id||'')+':目標是刪除紀錄');return;}
     if(isIdentityRegistrationRecord(target)){warn('忽略刪除紀錄 '+String(record.id||'')+':不可刪除身分註冊');return;}
+    if(isLedgerCorrectionRecord(target)){warn('忽略刪除紀錄 '+String(record.id||'')+':不可刪除更正事件');return;}
     deleted[target.id]=true;
   });
   return source.filter(function(record){return !isDeletionRecord(record)&&!deleted[record&&record.id];});
+}
+function compareLedgerCreationPositions(left,right){
+  var a=ledgerCreationPosition(left),b=ledgerCreationPosition(right);
+  if(a&&b)return a.createdAt-b.createdAt||a.id.localeCompare(b.id);
+  if(a)return -1;
+  if(b)return 1;
+  return String(left&&left.id||'').localeCompare(String(right&&right.id||''));
+}
+function parseLedgerCorrectionManifest(record){
+  var parsed;
+  try{parsed=JSON.parse(String(record&&record.participants||''));}catch(ignore){return null;}
+  if(!Array.isArray(parsed)||!parsed.length)return null;
+  var seen={},ids=[];
+  for(var i=0;i<parsed.length;i++){
+    if(typeof parsed[i]!=='string')return null;
+    var id=parsed[i].trim();
+    if(!id||seen[id])return null;
+    seen[id]=true;ids.push(id);
+  }
+  return ids;
+}
+function deriveLedgerCorrectionProjection(records,warnFn){
+  var source=records||[],warnings=[],externalWarn=typeof warnFn==='function'?warnFn:null;
+  function warn(message){
+    message=String(message||'');warnings.push(message);
+    if(externalWarn)externalWarn(message);
+    else if(typeof console!=='undefined'&&console.warn)console.warn(message);
+  }
+  var effective=tombstoneEffectiveLedgerRecords(source,warn),byId=Object.create(null);
+  effective.forEach(function(record){if(record&&record.id&&!byId[record.id])byId[record.id]=record;});
+  var groups=Object.create(null),receipts=[],receiptByRoot=Object.create(null),receiptByRecordId=Object.create(null),receiptByAnchorId=Object.create(null);
+  effective.forEach(function(record){
+    if(!record||record.recordType!=='expense')return;
+    var universe=isTestLedgerRecord(record)?'test':'formal';
+    var batch=String(record.batchId||'').trim();
+    var key=universe+'\u0000'+(batch?'batch:'+batch:'record:'+String(record.id||''));
+    (groups[key]||(groups[key]=[])).push(record);
+  });
+  Object.keys(groups).sort().forEach(function(key){
+    var items=groups[key].slice().sort(compareLedgerCreationPositions),root=items[0],owner=String(root&&root.member||''),universe=isTestLedgerRecord(root)?'test':'formal';
+    if(!root||!root.id)return;
+    if(items.some(function(item){return canonicalMemberName(item.member)!==canonicalMemberName(owner)||isTestLedgerRecord(item)!==(universe==='test');})){
+      warn('更正投影忽略收據 '+String(root.id)+':同批付款人或 universe 不一致');
+      return;
+    }
+    var receipt={rootId:String(root.id),anchorId:String(root.id),records:items.slice(),originalRecords:items.slice(),owner:owner,universe:universe,protected:false,voided:false,versionCount:0,history:[],conflicts:[]};
+    receipts.push(receipt);receiptByRoot[receipt.rootId]=receipt;receiptByAnchorId[receipt.rootId]=receipt;
+    items.forEach(function(item){receiptByRecordId[String(item.id)]=receipt;});
+  });
+  var itemsByCommit=Object.create(null);
+  effective.forEach(function(record){
+    if(!isLedgerCorrectionItemRecord(record))return;
+    var target=String(record.targetRecordId||'').trim();
+    (itemsByCommit[target]||(itemsByCommit[target]=[])).push(record);
+  });
+  var versions=[],versionByAnchor=Object.create(null);
+  effective.forEach(function(commit){
+    if(!isLedgerCorrectionCommitRecord(commit)&&!isLedgerVoidCommitRecord(commit))return;
+    var id=String(commit.id||'').trim(),rootId=String(commit.replacesRecordId||'').trim(),previous=String(commit.targetRecordId||'').trim(),receipt=receiptByRoot[rootId];
+    function reject(reason){warn('忽略更正版本 '+id+':'+reason);}
+    if(!id||!rootId||!previous){reject('缺少版本 ID、root 或上一版本');return;}
+    if(!receipt){reject('找不到 root 收據 '+rootId);return;}
+    if(String(commit.batchId||'').trim()!==id){reject('batchId 必須等於 commit ID');return;}
+    if(canonicalMemberName(commit.member)!==canonicalMemberName(receipt.owner)){reject('只有原付款人可更正');return;}
+    if(isTestLedgerRecord(commit)!==(receipt.universe==='test')){reject('正式與 TEST universe 不一致');return;}
+    var reason=String(commit.note||'').trim();
+    if(!reason||reason.length>50){reject('更正原因必須為 1–50 字');return;}
+    if(Number(commit.amountJpy)!==0||Number(commit.amountTwd)!==0||String(commit.payMethod||'').trim()){reject('commit 金額與支付方式格式錯誤');return;}
+    var itemRows=itemsByCommit[id]||[],manifest=[];
+    if(isLedgerVoidCommitRecord(commit)){
+      try{manifest=JSON.parse(String(commit.participants||''));}catch(ignore){manifest=null;}
+      if(!Array.isArray(manifest)||manifest.length||itemRows.length){reject('作廢版本不得包含品項');return;}
+      if(ledgerDetailWithoutTestPrefix(commit)!=='[作廢收據]'){reject('作廢版本明細格式錯誤');return;}
+    }else{
+      manifest=parseLedgerCorrectionManifest(commit);
+      if(!manifest){reject('品項 manifest 無效');return;}
+      if(ledgerDetailWithoutTestPrefix(commit)!=='[更正收據]'){reject('更正版本明細格式錯誤');return;}
+      var manifestSet=Object.create(null),valid=true;
+      manifest.forEach(function(itemId){manifestSet[itemId]=true;});
+      if(itemRows.length!==manifest.length||itemRows.some(function(item){return !manifestSet[String(item.id||'')];})){reject('品項 manifest 缺件或含未列品項');return;}
+      manifest.forEach(function(itemId){
+        var item=byId[itemId];
+        if(!item||!isLedgerCorrectionItemRecord(item)||String(item.targetRecordId||'')!==id||String(item.batchId||'')!==id||String(item.replacesRecordId||'')!==rootId){valid=false;return;}
+        if(canonicalMemberName(item.member)!==canonicalMemberName(receipt.owner)||isTestLedgerRecord(item)!==(receipt.universe==='test')){valid=false;return;}
+        var participants=parseParticipants(item,function(){});
+        if(!participants||!isSafeLedgerInteger(Number(item.amountJpy))||Number(item.amountJpy)<0||!isSafeLedgerInteger(Number(item.amountTwd))||Number(item.amountTwd)<0)valid=false;
+      });
+      if(!valid){reject('品項內容、付款人、universe 或金額無效');return;}
+      itemRows=manifest.map(function(itemId){return byId[itemId];});
+    }
+    var version={rootId:rootId,anchorId:id,previousAnchorId:previous,commit:commit,items:itemRows.slice(),voided:isLedgerVoidCommitRecord(commit),receipt:receipt};
+    versions.push(version);versionByAnchor[id]=version;
+  });
+  var validVersions=[];
+  versions.forEach(function(version){
+    var previousVersion=versionByAnchor[version.previousAnchorId];
+    if(version.previousAnchorId!==version.rootId&&(!previousVersion||previousVersion.rootId!==version.rootId)){
+      warn('忽略更正版本 '+version.anchorId+':上一版本不存在或屬於其他收據');
+      return;
+    }
+    validVersions.push(version);
+  });
+  var children=Object.create(null);
+  validVersions.forEach(function(version){(children[version.previousAnchorId]||(children[version.previousAnchorId]=[])).push(version);});
+  Object.keys(children).forEach(function(anchor){
+    children[anchor].sort(function(left,right){return compareSettlementEvents(left.commit.time,left.commit.id,right.commit.time,right.commit.id);});
+  });
+  var applied=Object.create(null),conflicts=[];
+  receipts.forEach(function(receipt){
+    var current=receipt.rootId,version,next;
+    while(children[current]&&children[current].length){
+      version=children[current][0];applied[version.anchorId]=true;
+      receipt.history.push(version);receipt.versionCount++;receipt.anchorId=version.anchorId;receipt.voided=version.voided;receipt.protected=true;
+      receiptByAnchorId[version.anchorId]=receipt;
+      if(version.voided)receipt.records=[];
+      else receipt.records=version.items.map(function(item){
+        var snapshot=Object.assign({},item,{
+          recordType:'expense',
+          _correctionRootId:receipt.rootId,
+          _correctionAnchorId:version.anchorId,
+          _correctionVersionCount:receipt.versionCount,
+          _correctionProtected:true
+        });
+        receiptByRecordId[String(item.id)]=receipt;
+        return snapshot;
+      });
+      current=version.anchorId;
+    }
+  });
+  validVersions.forEach(function(version){
+    if(applied[version.anchorId])return;
+    var conflict={rootId:version.rootId,anchorId:version.anchorId,previousAnchorId:version.previousAnchorId,commit:version.commit,items:version.items.slice(),reason:'更正衝突・未套用'};
+    conflicts.push(conflict);version.receipt.conflicts.push(conflict);
+    warn('更正衝突・未套用 '+version.anchorId+'(上一版本 '+version.previousAnchorId+')');
+  });
+  ['formal','test'].forEach(function(universe){
+    var confirmed=deriveSettlements(source,function(){},universe).confirmed;
+    if(!confirmed.length)return;
+    var cutoffPositions=confirmed.map(function(entry){return ledgerCreationPosition(entry.claim);});
+    receipts.filter(function(receipt){return receipt.universe===universe&&!receipt.protected;}).forEach(function(receipt){
+      if(cutoffPositions.some(function(position){return !position;})){
+        receipt.protected=true;
+        warn('收據 '+receipt.rootId+' 因還款請求建立位置無法解析而採保守保護');
+        return;
+      }
+      var itemPositions=receipt.originalRecords.map(ledgerCreationPosition);
+      if(itemPositions.some(function(position){return !position;})){
+        receipt.protected=true;
+        warn('收據 '+receipt.rootId+' 因建立位置無法解析而採保守保護');
+        return;
+      }
+      receipt.protected=itemPositions.some(function(itemPosition){
+        return cutoffPositions.some(function(cutoff){
+          return itemPosition.createdAt<cutoff.createdAt||(itemPosition.createdAt===cutoff.createdAt&&itemPosition.id.localeCompare(cutoff.id)<=0);
+        });
+      });
+    });
+  });
+  effective.forEach(function(record){
+    if(!isLedgerCorrectionItemRecord(record))return;
+    if(!versionByAnchor[String(record.targetRecordId||'')])warn('忽略更正品項 '+String(record.id||'')+':找不到完整 commit');
+  });
+  var nonExpenses=effective.filter(function(record){return record&&record.recordType!=='expense'&&!isLedgerCorrectionRecord(record);});
+  var currentExpenses=[];
+  receipts.forEach(function(receipt){
+    receipt.records=receipt.records.map(function(record){
+      var snapshot=Object.assign({},record,{
+        _correctionRootId:receipt.rootId,
+        _correctionAnchorId:receipt.anchorId,
+        _correctionVersionCount:receipt.versionCount,
+        _correctionProtected:receipt.protected
+      });
+      receiptByRecordId[String(snapshot.id)]=receipt;
+      currentExpenses.push(snapshot);
+      return snapshot;
+    });
+  });
+  return {
+    records:nonExpenses.concat(currentExpenses),
+    receipts:receipts,
+    receiptByRecordId:receiptByRecordId,
+    receiptByAnchorId:receiptByAnchorId,
+    conflicts:conflicts,
+    warnings:warnings
+  };
+}
+function ledgerReceiptForRecord(records,recordId,warnFn){
+  var projection=deriveLedgerCorrectionProjection(records,warnFn),id=String(recordId||'');
+  return projection.receiptByRecordId[id]||projection.receiptByAnchorId[id]||null;
+}
+function effectiveLedgerRecords(records,warnFn){
+  return deriveLedgerCorrectionProjection(records,warnFn).records;
 }
 function registeredMemberEntries(records,testMode){
   var ordered=(records||[]).map(function(record,index){return {record:record,index:index};}).sort(function(a,b){
@@ -5528,6 +5800,10 @@ function buildLedgerExpenseRecords(draft,context){
     validateLedgerRecord(record);
     return record;
   });
+}
+function ledgerCreationPosition(record){
+  var id=String(record&&record.id||''),createdAt=ledgerClientCreatedAt(record);
+  return isFinite(createdAt)&&createdAt>0?{createdAt:createdAt,id:id}:null;
 }
 function ledgerClientCreatedAt(record){
   var match=String(record&&record.id||'').match(/^(\d{10,})-[0-9a-z]{4}$/i),createdAt=match?Number(match[1]):NaN;
