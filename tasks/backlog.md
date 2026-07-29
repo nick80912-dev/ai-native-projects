@@ -24,13 +24,6 @@
 9. **設定頁 2.0 批**:完整範圍為分區架構、SVG 齒輪入口、摘要計數列、代購對象管理移入設定頁、APP_VERSION 版本資訊列、使用者版更新日誌子頁、成員管理子頁。
 11. **BUILTIN 種子資料過時**:內嵌離線快照 Day 3–6 仍為東京舊行程,與現行岡山行程不符,待 Bar 裁定刷新時機。此項與第 4 項「BUILTIN 快照更新 SOP 文件化」不同,兩者並存,不得合併或取代。
 12. **決策記錄**:個人預算功能不做;多旅程平台化延後至旅程結束,併入框架抽取階段。
-13. **結算一致性批（必須於 2026-10-18 出發前完成）**：
-   - **設計已於 2026-07-29 核准，待實作**；正式契約見 `docs/superpowers/specs/2026-07-29-settlement-consistency-guided-correction-design.md` 與 ADR 0007 修訂。
-   - 內容：還款確認後原始收據永久禁止直接編輯／刪除，改走 append-only 收據級引導式更正；支援多次更正與附理由整張作廢。
-   - 現況為已知開放風險：付款人仍可刪除已結算消費，會使 confirmed settlement 失效且無自動修正機制。
-   - 核准決策：既有還款歷史不可改寫、不採 reopen settlement；新增明確更正事件與 commit-last 完整版本，差額形成新的待結算餘額。
-   - 判定保護範圍時以 canonical confirm 的 claim 建立切點，不猜測單一 pair；一筆多人分攤紀錄可能影響多組債權關係。
-
 ## 低優先(未來,不急)
 20. **SW SHELL 快取清單補齊評估**:重新盤點現行 App Shell 必要資產與離線回歸範圍，不沿用已作廢的 ZIP 打包流程。
 21. **Sanity CI dev 觸發評估**:`qa.yml` 現僅於 `main` push / Pull Request 執行，評估是否讓 `dev` push 也產生 GitHub Actions 綠勾；核准前以本機同等 CI 驗證。

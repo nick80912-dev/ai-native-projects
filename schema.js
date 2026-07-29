@@ -14,7 +14,7 @@
    ============================================================ */
 
 var SCHEMA = {
-  version: '2.8 (2026-07-19)',
+  version: '2.9 (2026-07-29)',
 
   /* 發布來源(換試算表只改這裡) */
   pubBase: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRenmV8UxEzWbzSjKJKi4rSpYt63geBqhEkKsl1GemWVPmFKTcvv3Uk71Hjla3TGBpGIjC7bQDDdI00/pub?single=true&output=csv&gid=',
@@ -133,7 +133,7 @@ var SCHEMA = {
         { field:'note',      header:'備註' },
         { field:'participants',   header:'分攤成員', desc:'JSON array 字串' },
         { field:'payMethod',      header:'支付方式' },
-        { field:'recordType',     header:'紀錄類型', values:{ 'expense':'expense','identity_registration':'identity_registration','deletion':'deletion','settlement_claim':'settlement_claim','settlement_confirm':'settlement_confirm','settlement_reject':'settlement_reject' } },
+        { field:'recordType',     header:'紀錄類型', values:{ 'expense':'expense','identity_registration':'identity_registration','deletion':'deletion','settlement_claim':'settlement_claim','settlement_confirm':'settlement_confirm','settlement_reject':'settlement_reject','expense_correction_item':'expense_correction_item','expense_correction_commit':'expense_correction_commit','expense_void_commit':'expense_void_commit' } },
         { field:'targetRecordId', header:'目標紀錄ID' },
         { field:'deleteReason',   header:'刪除原因' },
         { field:'batchId',        header:'批次ID' },

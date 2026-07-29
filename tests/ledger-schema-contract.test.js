@@ -10,7 +10,7 @@ vm.createContext(sandbox);
 vm.runInContext(fs.readFileSync('schema.js','utf8'), sandbox);
 vm.runInContext(fs.readFileSync('validator.js','utf8'), sandbox);
 
-assert.strictEqual(sandbox.SCHEMA.version,'2.8 (2026-07-19)','Ledger Schema version is 2.8');
+assert.strictEqual(sandbox.SCHEMA.version,'2.9 (2026-07-29)','Ledger Schema version is 2.9');
 assert.deepStrictEqual(
   Array.from(sandbox.SCHEMA.sheets.ledger.columns,function(column){return column.field;}),
   ['id','time','member','category','detail','amountJpy','amountTwd','note','participants','payMethod','recordType','targetRecordId','deleteReason','batchId','storeName','replacesRecordId','inputCurrency','isTaxFree','priceMode','taxRate','couponAmount'],
@@ -25,7 +25,10 @@ assert.deepStrictEqual(
 );
 
 const html = fs.readFileSync('index.html','utf8');
-assert.match(html,/version:\s*'2\.8 \(2026-07-19\)'/,'inline fallback Schema version is 2.8');
+assert.match(html,/version:\s*'2\.9 \(2026-07-29\)'/,'inline fallback Schema version is 2.9');
+['expense_correction_item','expense_correction_commit','expense_void_commit'].forEach(function(type){
+  assert.match(html,new RegExp("'"+type+"':'"+type+"'"),'inline fallback contains '+type);
+});
 ['inputCurrency','isTaxFree','priceMode','taxRate','couponAmount'].forEach(function(field){
   assert.match(html,new RegExp("field:'"+field+"'"),'inline fallback contains '+field);
 });
@@ -50,4 +53,4 @@ assert.strictEqual(rows[0].deleteReason,'');
 assert.strictEqual(rows[0].batchId,'batch-001');
 assert.strictEqual(Object.prototype.hasOwnProperty.call(rows[0],'未知欄位'),false,'unknown Sheet fields are ignored');
 
-console.log('Ledger Schema 2.8 contract tests passed');
+console.log('Ledger Schema 2.9 contract tests passed');

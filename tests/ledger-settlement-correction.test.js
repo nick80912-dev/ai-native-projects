@@ -178,6 +178,18 @@ assert.strictEqual(projection.receipts[0].protected,true,'a receipt with a corre
 assert.strictEqual(projection.receipts[0].voided,false,'a normal latest version is not voided');
 assert.strictEqual(projection.conflicts.length,1,'the losing sibling is preserved as one conflict');
 assert.strictEqual(projection.conflicts[0].anchorId,losingCommitId,'conflict diagnostics identify the inert commit');
+assert.deepStrictEqual(
+  plain(mod.ledgerCorrectionHistoryModel(projection.receipts[0])).map(entry=>({
+    kind:entry.kind,anchorId:entry.anchorId,reason:entry.reason,applied:entry.applied,itemCount:entry.records.length
+  })),
+  [
+    {kind:'original',anchorId:root,reason:'',applied:true,itemCount:1},
+    {kind:'correction',anchorId:v1CommitId,reason:'金額輸入錯誤',applied:true,itemCount:1},
+    {kind:'correction',anchorId:v2CommitId,reason:'金額輸入錯誤',applied:true,itemCount:1},
+    {kind:'conflict',anchorId:losingCommitId,reason:'金額輸入錯誤',applied:false,itemCount:1}
+  ],
+  'history preserves the original, every applied version, and losing conflicts without rewriting'
+);
 assert(!projection.records.some(record=>record.recordType==='expense_correction_item'),'raw correction items never leak into effective records');
 assert(!projection.records.some(record=>record.id===orphanItem.id),'an item without a commit is inert');
 
@@ -481,5 +493,124 @@ const testBuilt=plain(mod.buildLedgerCorrectionBatch(
   {member:'Bar',reason:'測試修正',now:1784430700000,random(){return 0.8;},records:testProtected}
 ));
 assert(testBuilt.every(record=>/^\[TEST\]/.test(record.detail)),'TEST corrections remain entirely inside the TEST universe');
+
+const invalidManifestCommit=correctionCommit(
+  '1784430800000-0001',
+  protectedReceipt.anchorId,
+  protectedReceipt.rootId,
+  ['1784430800001-0001']
+);
+invalidManifestCommit.participants='not-json';
+assert.throws(
+  ()=>mod.validateLedgerRecord(invalidManifestCommit),
+  /manifest/,
+  'repository validation rejects a normal commit whose item manifest is not valid JSON'
+);
+const invalidVoid=voidCommit(
+  '1784430810000-0001',
+  protectedReceipt.anchorId,
+  protectedReceipt.rootId,
+  {reason:'作廢'}
+);
+invalidVoid.participants='["unexpected-item"]';
+assert.throws(
+  ()=>mod.validateLedgerRecord(invalidVoid),
+  /作廢.*品項/,
+  'void validation rejects a hidden item manifest'
+);
+const invalidCorrectionItem=correctionItem(
+  '1784430820000-0001',
+  '',
+  protectedReceipt.rootId,
+  '缺少 commit'
+);
+assert.throws(
+  ()=>mod.validateLedgerRecord(invalidCorrectionItem),
+  /commit/,
+  'a correction item cannot enter the queue without a target commit ID'
+);
+
+const actionModel=plain(mod.ledgerRecordActionModel(cutoffRecords,beforeId,'Bar',false));
+assert.deepStrictEqual(
+  {canEdit:actionModel.canEdit,canDelete:actionModel.canDelete,canCorrect:actionModel.canCorrect},
+  {canEdit:false,canDelete:false,canCorrect:true},
+  'a protected receipt routes its payer to correction instead of direct mutation'
+);
+const unprotectedAction=plain(mod.ledgerRecordActionModel(cutoffRecords,afterId,'Bar',false));
+assert.deepStrictEqual(
+  {canEdit:unprotectedAction.canEdit,canDelete:unprotectedAction.canDelete,canCorrect:unprotectedAction.canCorrect},
+  {canEdit:true,canDelete:true,canCorrect:false},
+  'a post-claim receipt keeps the existing direct edit and delete actions'
+);
+const nonOwnerAction=plain(mod.ledgerRecordActionModel(cutoffRecords,beforeId,'Amy',false));
+assert.deepStrictEqual(
+  {canEdit:nonOwnerAction.canEdit,canDelete:nonOwnerAction.canDelete,canCorrect:nonOwnerAction.canCorrect},
+  {canEdit:false,canDelete:false,canCorrect:false},
+  'a protected receipt does not grant correction access to a participant who is not the payer'
+);
+
+function registration(id,member){
+  return {
+    id,time:'2026-07-18T00:00:00.000Z',member,category:'其他',detail:'[身分註冊]',
+    amountJpy:0,amountTwd:0,note:'',participants:'',payMethod:'',
+    recordType:'identity_registration',targetRecordId:'',deleteReason:'',batchId:''
+  };
+}
+const balanceRoot='1784440000000-0001';
+const amyClaimId='1784440100000-0001';
+const amyConfirmId='1784440200000-0001';
+const caraClaimId='1784440110000-0001';
+const caraConfirmId='1784440210000-0001';
+const amyClaim=settlementClaim(amyClaimId,false);
+const amyConfirm=settlementConfirm(amyConfirmId,amyClaimId,false);
+const caraClaim=Object.assign({},settlementClaim(caraClaimId,false),{
+  member:'Cara',
+  detail:'[結清] Cara → Bar',
+  time:'2026-07-29T12:00:30.000Z'
+});
+const caraConfirm=Object.assign({},settlementConfirm(caraConfirmId,caraClaimId,false),{
+  time:'2026-07-29T12:01:30.000Z'
+});
+const settledEvents=[
+  registration('1784439900000-0001','Bar'),
+  registration('1784439900001-0001','Amy'),
+  registration('1784439900002-0001','Cara'),
+  expense(balanceRoot,'三人晚餐'),
+  amyClaim,amyConfirm,caraClaim,caraConfirm
+];
+const settledReceipt=mod.ledgerReceiptForRecord(settledEvents,balanceRoot);
+const correctedDinner=Object.assign({},settledReceipt.records[0],{
+  detail:'三人晚餐（正確）',
+  amountJpy:600,
+  amountTwd:120
+});
+const preview=plain(mod.buildLedgerCorrectionPreview(
+  settledReceipt,
+  [correctedDinner],
+  settledEvents,
+  {
+    member:'Bar',
+    reason:'金額應為 600',
+    now:1784440300000,
+    random(){return 0.45;},
+    currency:'JPY'
+  }
+));
+assert.deepStrictEqual(preview.oldTotals,{amountJpy:900,amountTwd:180});
+assert.deepStrictEqual(preview.newTotals,{amountJpy:600,amountTwd:120});
+assert.deepStrictEqual(
+  preview.deltas.map(item=>({member:item.member,amount:item.amount})),
+  [
+    {member:'Bar',amount:-200},
+    {member:'Amy',amount:100},
+    {member:'Cara',amount:100}
+  ],
+  'correcting a settled ¥900 three-person receipt to ¥600 creates new reverse balances without reopening old confirms'
+);
+assert.strictEqual(
+  mod.deriveSettlements(settledEvents,null,'formal').confirmed.length,
+  2,
+  'preview leaves both historical repayment confirmations intact'
+);
 
 console.log('ledger settlement correction tests passed');

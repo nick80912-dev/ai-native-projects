@@ -24,10 +24,21 @@ assert(recent.includes("ledgerUiState.selectionMode?'':'<button class=\"ledger-r
 assert(recent.includes('openLedgerRecordActions'),'ellipsis opens the record action menu');
 assert(recent.includes('handleLedgerRecordCardClick'),'the card body routes normal clicks to record detail and selection clicks to selection');
 assert(html.includes('function handleLedgerRecordCardClick(')&&html.includes('else openLedgerRecordDetail(id)'),'normal card clicks still open record detail');
+assert(recent.includes('_correctionVersionCount'),'corrected cards expose their version count');
 assert(html.includes('function openLedgerRecordActions(')&&html.includes("className='ledger-action-popover'"),'record actions use a dedicated anchored menu entry point');
 assert(html.includes('editLedgerRecord('),'record menu retains editing');
 assert(html.includes('deletePersonalLedgerRecord('),'personal record menu retains local deletion');
 assert(html.includes('openSharedLedgerDelete('),'shared record menu retains tombstone deletion with reason');
+assert(
+  html.includes('function openLedgerCorrectionSheet(')&&
+  html.includes('function saveLedgerCorrection(')&&
+  html.includes('function renderLedgerCorrectionPreview('),
+  'protected receipt actions open a dedicated guided correction workflow with a pre-submit preview'
+);
+assert(
+  /function updateLedgerSaveCount\(\)\{[^}]*!ledgerUiState\.correction/.test(html),
+  'multi-item input updates must not overwrite the correction preview/confirm button label'
+);
 
 const actionHost={current:null};
 const fakeDocument={
@@ -39,6 +50,8 @@ const actionsSandbox={
   document:fakeDocument,window:{innerWidth:390,innerHeight:844},ledgerUiState:{track:'personal'},
   ledgerTrackRecords(){return [{id:'a'},{id:'b'}];},
   ledgerEditSelection(records,id){return records.filter(function(record){return record.id===id;});},
+  mergedLedgerRecords(){return [{id:'a'},{id:'b'}];},
+  ledgerRecordActionModel(records,id){return {records:records.filter(record=>record.id===id),receipt:null,canEdit:true,canDelete:true,canCorrect:false,message:''};},
   getCurrentMember(){return 'Bar';},
   toast(){},jsHtmlAttrString(value){return String(value);}
 };
@@ -53,6 +66,15 @@ assert.strictEqual(actionHost.current,null,'clicking the same ellipsis closes th
 actionsSandbox.openLedgerRecordActions('a',{stopPropagation(){},currentTarget:trigger},false);
 actionsSandbox.openLedgerRecordActions('b',{stopPropagation(){},currentTarget:trigger},false);
 assert.strictEqual(actionHost.current.dataset.actionKey,'record:b','clicking another ellipsis switches the popover');
+
+actionsSandbox.closeLedgerRecordActions();
+actionsSandbox.ledgerUiState.track='shared';
+actionsSandbox.ledgerRecordActionModel=function(records,id){
+  return {records:[{id,member:'Bar'}],receipt:{rootId:id,protected:true},canEdit:false,canDelete:false,canCorrect:true,message:''};
+};
+actionsSandbox.openLedgerRecordActions('a',{stopPropagation(){},currentTarget:trigger},false);
+assert(actionHost.current.innerHTML.includes('更正收據'),'protected payer sees correction instead of edit/delete');
+assert(!actionHost.current.innerHTML.includes('編輯 ✏️')&&!actionHost.current.innerHTML.includes('刪除 🗑️'),'protected menu contains no direct mutation action');
 assert(/\.ledger-action-popover\{[^}]*width:104px[^}]*box-sizing:border-box[^}]*padding:4px/.test(html),'action popover uses the approved 104px border-box shell');
 assert(/\.ledger-action-popover button\{[^}]*min-height:36px[^}]*font-size:12px/.test(html),'action rows use the compact approved size');
 
@@ -60,6 +82,8 @@ assert(!detail.includes("['紀錄 ID'"),'detail presentation removes record ID')
 assert(!detail.includes("['批次 ID'"),'detail presentation removes batch ID');
 assert(!detail.includes("['同步狀態'"),'detail presentation removes sync status');
 assert(detail.includes('formatLedgerLocalOccurrence'),'detail uses a local-readable occurrence formatter');
+assert(html.includes('function renderLedgerRecordDetail(')&&html.includes('openLedgerCorrectionHistorySheet'),'protected shared detail links to immutable correction history');
+assert(html.includes('function renderLedgerCorrectionArchive('),'full shared history keeps voided and corrected receipt history reachable');
 assert(html.includes('function formatLedgerLocalOccurrence('),'local occurrence formatting is shared');
 assert(html.includes('尚無消費紀錄')&&html.includes('點右下角 ＋ 開始記帳'),'recent empty state explains the next action');
 

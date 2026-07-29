@@ -16,6 +16,7 @@
 - 2026-07-29：Bar 完成 SW v58–v68 累積真機驗收；涵蓋團體帳本可見性／權限、採買 A／B／C／D／E／F／G、逐人代購記帳、部分購買、安全回併、必買置頂、獨立新增／編輯 Sheet、Ledger 草稿切軌、iPhone Safari／PWA 鍵盤焦點與更新後本機資料保留。
 - 2026-07-29：GitHub Pages 最終 iOS PWA 驗收完成；包含加到主畫面、standalone、真機離線重開與 `github.io` origin 的 Service Worker 更新節奏。
 - 2026-07-29：採買清單批及 C＋E＋G 第三批完成 Bar 驗收，自 backlog 移入 done。
+- 2026-07-29：結算一致性批完成本機開發與自動化／Browser QA，自 backlog 移出；交付含還款確認後永久保護、append-only 收據級更正／作廢、commit-last、canonical conflict、差額預覽與完整歷史。SW v69 真機驗收、push、`dev → main` 與正式部署仍列 `tasks/current.md`，不得誤報完成。
 
 ## 文件治理
 - 2026-07-13:Netlify 雙站架構上線(`main`=正式站、`dev`=測試站)，兩站部署與瀏覽器狀態完全隔離。

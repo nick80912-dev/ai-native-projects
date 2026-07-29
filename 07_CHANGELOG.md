@@ -1,4 +1,10 @@
 # 07 版本紀錄
+## 2026-07-29｜結算一致性與收據級引導式更正（dev，SW v69，待 Bar 真機驗收）
+- 還款確認後，claim 建立切點前已存在的正式／TEST 收據永久禁止直接編輯與刪除；全團歸零不解除保護。付款人操作選單改為「更正收據」，其他成員只看到權限說明；批次刪除與 handler 仍會再次 fail-closed。
+- 新增 append-only `expense_correction_item`／`expense_correction_commit`／`expense_void_commit`。更正以完整收據版本提交，item 全數先進 durable queue、commit 最後寫入；缺件、跨付款人、跨 universe 或 manifest 不一致皆不生效。同一上一版本的並行提交以 `(time,id)` 選唯一 canonical，losing sibling 保留歷史但永不自動升格。
+- 更正 Sheet 固定原付款人、要求 1–50 字原因，允許新增／移除／修改整張收據品項；第一次送出只預覽新舊總額與成員餘額差，第二次才入列。整張作廢走同一預覽與追加事件，不建立 deletion。既有還款確認保持終局，更正差額形成新待結算餘額。
+- 清單顯示保護或更正次數；明細可查看原始版本、每次 canonical 更正、作廢與未套用衝突。完整紀錄另保留已作廢收據入口。Schema 升 2.9，但 Ledger 仍為既有 21 欄，Apps Script API 與依賴不變；Service Worker cache 升 `okayama-trip-v69`。
+
 ## 2026-07-29｜採買清單 C＋E＋G 第三批（dev，SW v68，待真機驗收）
 - **C 根因與修正**：Ledger 多品項個人↔團體切軌原本用有限 seed 重建每列，只複製名稱、金額、分類與免稅，會遺失逐項代購／分攤狀態、穩定 row key 與 `sourceShoppingItemId`／`sourceShoppingAllocationId`，造成切軌後代購對象消失或採買關聯回寫錯列。現改由純 transformer 泛用複製 draft、顯式 clone nested arrays，首次進入另一帳本才套該軌預設；個人與團體隱藏狀態同時保留，但提交仍只序列化目前帳本軌，兩類對象不互相推導，來源 IDs 不進 Ledger 21 欄。
 - **E 根因與修正**：原顯示排序只到日期／站點，組內完全沿用 store order，必買容易被一般品項淹沒。新增 immutable stable partition，只把 exact `category === '必買'` 置頂；一般站點、待確認、已失效、隨時可買與 Today 共用規則，必買／非必買各自保留原順序。已買頁與 localStorage array order 不套用此排序。

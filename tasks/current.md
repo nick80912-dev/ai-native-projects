@@ -3,7 +3,7 @@
 > 更新於 2026-07-29。細任務層;里程碑看 `06_ROADMAP.md`,歷史交付看 `07_CHANGELOG.md`,正式待辦看 `tasks/backlog.md`。
 
 ## 📌 現況
-- 最新已推送 `dev` App runtime 基準：`0c5fe45`，Service Worker `okayama-trip-v68`；其後若只有文件 commit，不代表 App runtime 或 SW 已換版。Bar 已於 2026-07-29 完成累積真機／PWA 驗收；尚未合併 `main` 或正式部署。
+- 最新已推送 `dev` App runtime 基準：`0c5fe45`，Service Worker `okayama-trip-v68`。本機目前另有結算一致性 SW v69 實作，尚未 push、合併 `main` 或正式部署；Bar 已於 2026-07-29 完成的是截至 v68 的累積真機／PWA 驗收，不包含 v69。
 - 2026-07-23 治理決策追認、§4 禁改清單硬停規則與任務板歸位 — 已完成,詳見 `07_CHANGELOG.md`。
 - v34–v44 三秒記帳與首頁／結算卡系列 — 已完成並經 Bar 真機驗收,詳見 `07_CHANGELOG.md`。
 - 採買清單批（SW v45）— 已完成開發；目標測試、完整 41／41 Node tests、文件標題檢查及 375px／390px Browser QA 通過，並已納入 2026-07-29 Bar iPhone Safari／PWA 累積真機驗收；詳見 `07_CHANGELOG.md`。
@@ -28,12 +28,12 @@
 ## ▶️ 下一階段
 1. **真機／PWA 驗收已關閉**：Bar 於 2026-07-29 確認 SW v58–v68 累積功能、採買 C＋E＋G、GitHub Pages iOS Safari／PWA 安裝、standalone、離線重開、SW 更新節奏與本機資料保留皆完成驗收。
 2. 依優先序開始 `tasks/backlog.md` #1 Playwright 三情境 QA，再逐批處理品質批、設定頁 2.0 與其餘已核准待辦。
-3. `tasks/backlog.md` #13 結算一致性批已於 2026-07-29 完成設計核准，採「歷史不可改寫＋append-only 收據級引導式更正」；目前 repo 尚無對應實作／測試，風險仍待實作關閉。
+3. **結算一致性批開發完成，待 Bar 真機驗收**：SW v69 已實作還款確認後永久禁止直接刪改、append-only 收據級更正／作廢、commit-last、跨裝置 canonical conflict、二次預覽與不可改寫歷史。完整 49／49 Node tests、文件標題檢查及 320／375／390px Browser QA 通過；純 App 頁面 console error／warning 0。尚未 push、合併 `main` 或正式部署。
 4. 正式發布仍須由 Bar 另行核准 PR merge `dev → main`；未核准前不得 merge、push `main` 或部署。
 
 > 已解除：Apps Script `doGet` 部署已由 Bar 完成，真實端點驗證（CORS、redirect、`after`／`reset`／`serverTime`、非 JSON 降級）通過，見上方 SW v47 條目。
 
 ## 下一棒
-→ 真機／PWA 驗收已完成；下一棒先設計並實作 Playwright 三情境 QA，再依序進行品質批與設定頁 2.0。結算一致性批設計已核准、保留為獨立高風險實作；`dev → main` 合併／正式發布另待 Bar 核准。
+→ 截至 SW v68 的真機／PWA 驗收已完成；SW v69 結算一致性批待 Bar 真機驗收。下一棒仍是 Playwright 三情境 QA，再依序進行品質批與設定頁 2.0；`dev → main` 合併／正式發布另待 Bar 核准。
 
 > 採買清單 A／B／D／F 已於 SW v60／v61 交付；C／E／G 已於 SW v68 實作，並於 2026-07-29 完成 Bar 真機驗收；正式契約見設計文件。

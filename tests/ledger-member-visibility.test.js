@@ -174,6 +174,16 @@ function renderActionMenu(record,track,member,records,isBatch){
     ledgerUiState:{track},
     ledgerTrackRecords(){return records||[record];},
     ledgerEditSelection:mod.ledgerEditSelection,
+    mergedLedgerRecords(){return records||[record];},
+    ledgerRecordActionModel(source,id,currentMember,batch){
+      const selected=batch?mod.ledgerEditSelection(source,id):source.filter(function(item){return item.id===id;});
+      const owner=selected[0]&&selected[0].member;
+      const editable=selected.length>0&&selected.every(function(item){return mod.canEditLedgerRecord(item,currentMember);});
+      return {
+        records:selected,receipt:null,canEdit:editable,canDelete:editable,canCorrect:false,
+        message:owner?(editable?'':'僅付款人可編輯或刪除此筆團體紀錄'):mod.LEDGER_OWNER_UNKNOWN_MESSAGE
+      };
+    },
     getCurrentMember(){return member;},
     canEditLedgerRecord:mod.canEditLedgerRecord,
     canDeleteLedgerRecord:mod.canDeleteLedgerRecord,
@@ -182,6 +192,7 @@ function renderActionMenu(record,track,member,records,isBatch){
     closeLedgerRecordActions(){},
     toast(){},
     jsHtmlAttrString(value){return String(value);},
+    escapeHtml(value){return String(value);},
     document:{
       getElementById(){return null;},
       createElement(){return {dataset:{},style:{},setAttribute(){},offsetWidth:144,offsetHeight:92};},
@@ -313,6 +324,6 @@ assert(splitSource.includes("shared?'與我相關 · '+period.count+' 筆紀錄'
 assert(!splitSource.includes('團體總支出'),'主卡片不再暗示為全團總額');
 
 const sw=fs.readFileSync('sw.js','utf8');
-assert.match(sw,/okayama-trip-v68/,'service worker cache is v68');
+assert.match(sw,/okayama-trip-v69/,'service worker cache is v69');
 
 console.log('ledger member visibility tests passed');

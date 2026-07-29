@@ -24,7 +24,7 @@ assert(html.includes('.ledger-time-input-wrap{display:flex;width:100%;min-width:
 assert(html.includes('aria-label="開啟日期選擇器"')&&html.includes('<svg aria-hidden="true"'),'calendar control uses the approved accessible inline SVG');
 
 assert(html.includes('function renderLedgerStoreField('),'store is a shared form field rather than disclosure-only content');
-assert(html.includes("renderLedgerStoreField(draft,true)+renderLedgerMultiSummary(draft)")&&html.includes("renderLedgerStoreField(draft)+renderLedgerOccurrenceFields(draft,true)+renderLedgerSingleItemCategory(draft)+renderLedgerPaymentFields(draft,false)"),'multi store remains first while the single optional store, occurrence, category, and payment fields share the approved secondary disclosure');
+assert(html.includes("draft.correctionMode?renderLedgerStoreField(draft,false):renderLedgerStoreField(draft,true)")&&html.includes("renderLedgerStoreField(draft)+renderLedgerOccurrenceFields(draft,true)+renderLedgerSingleItemCategory(draft)+renderLedgerPaymentFields(draft,false)"),'multi store remains first and required except in correction mode, while single secondary fields retain the approved disclosure');
 assert(html.includes('更多細節（備註選填）'),'details disclosure is note-only');
 assert(!html.includes('更多細節（店家、備註，皆為選填）'),'store is removed from the details disclosure');
 
@@ -42,6 +42,6 @@ assert(/\.ledger-date-summary\{[^}]*grid-template-columns:minmax\(0,1fr\) auto[^
 assert(/\.ledger-date-total\{[^}]*font-size:9px[^}]*white-space:nowrap/.test(html),'daily total alone is reduced to 9px and stays on one line');
 assert(/\.ledger-history-summary\{[^}]*font-size:11px/.test(html),'history result summary is reduced to the approved 11px');
 
-assert.match(sw,/okayama-trip-v68/,'service worker cache is v68');
+assert.match(sw,/okayama-trip-v69/,'service worker cache is v69');
 
 console.log('ledger mobile hotfix tests passed');

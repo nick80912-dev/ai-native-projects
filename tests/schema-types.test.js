@@ -16,7 +16,7 @@ const typeColumn = schema.sheets.places.columns.find(function(column) {
   return column.field === 'type';
 });
 
-assert.strictEqual(schema.version, '2.8 (2026-07-19)');
+assert.strictEqual(schema.version, '2.9 (2026-07-29)');
 assert.strictEqual(
   schema.sheets.exp.desc,
   '行前團費僅存於試算表；App 不渲染，也不從 Exp 推導同行成員。'
@@ -35,7 +35,7 @@ ledgerColumns.slice(8).forEach(function(column){
 const recordTypeColumn = ledgerColumns.find(function(column){ return column.field === 'recordType'; });
 assert.deepStrictEqual(
   Object.assign({}, recordTypeColumn.values),
-  {expense:'expense',identity_registration:'identity_registration',deletion:'deletion',settlement_claim:'settlement_claim',settlement_confirm:'settlement_confirm',settlement_reject:'settlement_reject'}
+  {expense:'expense',identity_registration:'identity_registration',deletion:'deletion',settlement_claim:'settlement_claim',settlement_confirm:'settlement_confirm',settlement_reject:'settlement_reject',expense_correction_item:'expense_correction_item',expense_correction_commit:'expense_correction_commit',expense_void_commit:'expense_void_commit'}
 );
 
 assert(typeColumn, 'Places.Type schema exists');
