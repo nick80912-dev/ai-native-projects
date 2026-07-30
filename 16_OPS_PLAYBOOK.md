@@ -189,7 +189,7 @@ GitHub Pages URL：https://nick80912-dev.github.io/ai-native-projects/
 ### F4. 標準驗收層級
 日常開發採以下順序,**能在前一層擋掉的問題就不要往後推**:
 ```
-自動測試(node tests/*.test.js + tools/check-doc-titles.js)
+自動測試(node tests/*.test.js + tools/check-doc-titles.js + tools/check-app-version.js)
 → 電腦 localhost(§F1)
 → 手機 LAN 真機 UI(§F2)
 → GitHub Pages HTTPS／PWA／離線(§F3)
@@ -200,3 +200,29 @@ GitHub Pages URL：https://nick80912-dev.github.io/ai-native-projects/
 - LAN 負責快速真機操作驗收;GitHub Pages 負責 HTTPS、子路徑、PWA 與離線驗收。
 - Netlify 留給正式站驗證、Netlify 特有 headers／redirects,或正式 Release。
 - **GitHub Pages 驗收通過不等於正式 Release。** 正式發布責任仍依 §E 的 Release Flow 與 Bar 核准執行。
+
+### F5. Netlify 測試站驗收前置核對(2026-07-30 新增,由 Bar 裁定)
+
+**背景**:測試站自動部署已於 2026-07-26 由 Bar 手動關閉。2026-07-30 實測發現 `dev-trippilot-jp.netlify.app` 線上仍停在 **SW v62**(`var CACHE_NAME = 'okayama-trip-v62';`),`app-version.js` 回 **404** —— 與當時 `dev` 分支的 v72 差了 10 個版本。**Git 分支更新不等於測試站已更新。**
+
+**規則:使用 Netlify 測試站驗收任何版本前,必須先手動部署到目標 commit,再以線上實際回應核對三件事,不得只看 Git 分支。**
+
+```
+# 1. SW 版本(應等於目標 commit 的 sw.js SW_VERSION)
+curl -s https://dev-trippilot-jp.netlify.app/sw.js | grep SW_VERSION
+
+# 2. App 版本(應與上一項完全相等)
+curl -s https://dev-trippilot-jp.netlify.app/app-version.js
+
+# 3. header 行為(測試站存在的意義就是驗這個,GitHub Pages 無法重現)
+curl -sI https://dev-trippilot-jp.netlify.app/sw.js | grep -i cache-control
+curl -sI https://dev-trippilot-jp.netlify.app/app-version.js | grep -i cache-control
+```
+
+**裝置端第 4 項核對**(前三項通過後,在真機或桌面 DevTools):
+- Application → Cache Storage 的名稱應為 `okayama-trip-<目標版本>`;
+- 展開該 cache,`index.html` 與 `schema.js` 的內容必須是目標版本,**不是只看名稱對就算過** —— 2026-07-30 實證過「新快取名稱裝舊版內容」是會發生的。
+
+**任何一項不符 → 停止驗收,先重新手動部署。**在錯的版本上驗收出來的結論沒有意義,而且會誤導後續判斷。
+
+> GitHub Pages(`https://nick80912-dev.github.io/ai-native-projects/`)追蹤 `dev` 且每次推送自動發布,不需要本節的手動部署步驟;但它固定送 `Cache-Control: max-age=600`,**不讀 `netlify.toml`**,所以驗不了 header 行為 —— 兩個通道各驗各的,見 §E。

@@ -2,9 +2,9 @@
   "$comment": "AI 導航檔 — 任何 AI 接手第一步只讀這份即可掌握全貌。這是 13 步流程的第 1 步。",
   "project": "japan-travel-pwa(日本旅遊行程 App)",
   "owner": "Bar(產品負責人,非工程師,繁中溝通,要直接執行不要教學;AI=全職工程團隊)",
-  "version": "2.9-settings-theme-v72",
+  "version": "2.9-sw-update-integrity-v73",
   "framework": "ai-native-framework@pending(尚未抽取;見 FUTURE_PLAN_framework-extraction.md)",
-  "updated": "2026-07-29",
+  "updated": "2026-07-30",
   "live": "https://trippilot-jp.netlify.app/",
   "start_here": "先讀本檔 → PROJECT_CONSTITUTION.md(憲章/流程/禁令)→ 08_AI_HANDOVER.md → 15_AI_EXECUTION_RULES.md(決策權限/任務分級,必讀)→ 相關 adr/ → 依任務讀 03_DATABASE/09_SCHEMA_MAPPING(資料與欄位)、05_CODING_RULES/11_CODING_CONVENTION(程式)、12_DEV_WORKFLOW(步驟)",
   "governance": {
@@ -25,13 +25,13 @@
     "workflow": "Gate(第0步,見4.1)+ 十三步(讀manifest→讀handover→讀ADR→定位模組→先設計→最小修改→跑Validator→驗證資料流→更新文件→更新CHANGELOG→一致性檢查healthCheck→完成→開發摘要);A/B級任務走15§5簡化流程",
     "file_tiers": "14_FILE_TIERS_AND_GATE.md:Tier1一般開發/Tier2高風險(改前過原因-影響-風險-回滾確認)/Tier3產生產物禁手改",
     "ai_execution_rules": "15_AI_EXECUTION_RULES.md:指令預設非覆寫、不確定性三分法、檔案增刪權限、任務分級A/B/C、文件vs現實衝突協議",
-    "ops_playbook": "16_OPS_PLAYBOOK.md:Netlify回滾/SW快取災難/Sheet版本還原/清理排程安全",
+    "ops_playbook": "16_OPS_PLAYBOOK.md:Netlify回滾/以tag回滾至v18(§A5)/SW快取災難/Sheet版本還原/清理排程安全/測試站驗收前置核對(§F5)",
     "status_authority": "即時狀態唯一權威=tasks/(current/backlog/done);13_PROJECT_STATUS與本manifest.status為快照;00_CONTEXT_HANDOVER為歷史快照不參與"
   },
   "data_flow": "GoogleSheets(8表)→發布CSV→手機瀏覽器fetch→validator.js(防錯)→parser(Schema驅動)→DB→renderers→UI；個人帳、代購對象、主題與旅途紀錄→localStorage only(不進Queue/CMS)，並由個人備份v8原子匯出／還原；團體帳→enqueueBatch一次寫入localStorage佇列→立即UI完成→ledgerRepository背景送達Apps Script→分帳紀錄表(append-only,Schema 2.9固定21欄,time=消費發生時間,末五欄=輸入幣別/免稅/價格方式/稅率/優惠券)；未受還款確認保護的團體編輯=舊筆墓碑+replacesRecordId替代筆；canonical還款確認切點前的收據永久禁止直接改寫，只能由原付款人以commit-last事件整張更正或作廢；共用分帳設定:Settings→Apps Script→TripConfig兩個固定鍵→發布CSV,確認後以本機bridge涵蓋1–5分鐘延遲；離線三層:BUILTIN內建→localStorage快取→背景同步",
   "files": {
     "index.html": "唯一可編輯 App 與正式部署入口:UI殼+CSS+內嵌JS(區塊分層見10_FOLDER_STRUCTURE)",
-    "app-version.js": "App與Service Worker共用版本單一來源；不得在sw.js重複硬編碼版本",
+    "app-version.js": "App端版本來源(供顯示與旅途紀錄);sw.js 另自帶 SW_VERSION,兩者必須相等,由 tools/check-app-version.js 守住。2026-07-30 起 sw.js 不再 importScripts 本檔取版本——imported script 會經 HTTP cache,GitHub Pages 的 max-age=600 會讓版本升級靜默失效",
     "schema.js": "唯一資料規格SSoT:欄位/gid/型別值/發布URL;schemaDoc()自動產09文件",
     "validator.js": "防錯防線:AppLog六類([Schema/Parser/Data/Repository/Render/Sync Error])+buildHeaderMap+window.healthCheck()",
     "apps-script/ledger-sync.gs": "Apps Script部署唯一維護來源:分帳append-only與TripConfig兩鍵白名單更新"
@@ -39,7 +39,7 @@
   "deploy_files": {
     "index.html": "唯一正式 App 入口",
     "schema.js + validator.js": "資料規格與防錯來源",
-    "sw.js + app-version.js": "Service Worker與App共用版本來源；改版只更新APP_VERSION",
+    "sw.js + app-version.js": "改版須同時更新 sw.js 的 SW_VERSION 與 app-version.js 的 APP_VERSION;不一致時 tools/check-app-version.js 直接讓 CI 失敗",
     "manifest.webmanifest + icon-*.png": "PWA 安裝資產"
   },
   "cms": {
@@ -108,11 +108,12 @@
       "真機驗收回饋(新增消費分攤成員選取改中度青綠底#d6e8e4/不改資料與權限/SW v70)",
       "作廢預覽動作去重(預覽後只留確認整張作廢/不改append-only作廢語意/SW v71/Bar真機驗收通過)",
       "Playwright三情境QA入版控(斷網內建/連網同步/旅行日mock Date/pageerror=0/qa.yml)",
-      "SW v72開發完成(六組主題/設定頁2.0/inline SVG/個人備份v8/旅途紀錄/app-version單一來源/使用者版更新日誌；Bar真機驗收待辦)"
+      "SW v72開發完成(六組主題/設定頁2.0/inline SVG/個人備份v8/旅途紀錄/app-version單一來源/使用者版更新日誌；Bar真機驗收待辦)",
+      "SW更新完整性修正(sw.js自帶SW_VERSION/移除importScripts版本依賴/install用reload、fetch用no-cache避免HTTP cache汙染SHELL/子資源不再fallback成index.html/APP_VERSION安全取值/tools一致性檢查/qa.yml sanity支援dev push；SW v73)"
     ],
     "pending_in_order": [
-      "Bar手機驗收dev SW v72",
-      "Bar核准PR merge(dev→main)→Netlify正式部署與線上驗證",
+      "Bar手機驗收dev SW v73(含v72功能;v72未曾正式發布,兩批合併為同一候選版)",
+      "Bar核准PR merge(dev→main)→Netlify正式部署與線上驗證→建立production-v73 tag",
       "框架抽取(FUTURE_PLAN)"
     ]
   },

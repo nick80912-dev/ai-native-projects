@@ -9,7 +9,8 @@
 - `home-simplification.test.js`:驗證首頁版面高度、下一站取消邏輯、串點子卡簡化與購物清單保留。執行:`node tests/home-simplification.test.js`。
 - `ios-zoom-guard.test.js`:驗證 iOS 16px 字級、Scroll-only／viewport 還原、SW 版次，以及最小 no-op 雙擊相容性監聽器不復活舊雙擊 guard 或 APP build metadata。執行:`node tests/ios-zoom-guard.test.js`。
 - `preview-date.test.js`:驗證預覽日期參數與 `todayMD()` 使用同一模擬時間來源。執行:`node tests/preview-date.test.js`。
-- `pwa-shell.test.js`:驗證 PWA 入口、manifest、Service Worker、Netlify 設定與圖示資產完整性。執行:`node tests/pwa-shell.test.js`。
+- `pwa-shell.test.js`:驗證 PWA 入口、manifest、Service Worker、Netlify 設定與圖示資產完整性;2026-07-30 起改鎖新版 SW 契約(頂層 `SW_VERSION`、`CACHE_NAME` 由它推導、不得 importScripts、install 用 `cache:'reload'`、fetch 用 `cache:'no-cache'`、只有 navigation 才 fallback `index.html`)。執行:`node tests/pwa-shell.test.js`。
+- `app-version-fallback.test.js`:`app-version.js` 載不到時的降級契約。涵蓋 `appVersion()`／`appVersionLabel()` 的回退值、`renderSettingsDataPage()` 在無 `APP_VERSION` 時仍可算出 HTML(顯示「SW 未知」而非 ReferenceError),以及 `index.html` 不得在安全取值區塊外裸讀 `APP_VERSION`。執行:`node tests/app-version-fallback.test.js`。
 - `trip-presentation.test.js`:驗證行程類型標籤與行程頁呈現規則。執行:`node tests/trip-presentation.test.js`。
 - `schema-types.test.js`:驗證 Places.Type 必要中文輸入值的正規化結果,並確認 `index.html` 內嵌 Schema 已同步。執行:`node tests/schema-types.test.js`。
 - `render-note.test.js`:備註條列渲染、下一站卡、MAPCODE、明日預告等元件渲染回歸測試(Node 內建 assert,從預覽 HTML 抽函式驗證)。執行:`node tests/render-note.test.js`(於 repo 根目錄)。
@@ -46,3 +47,5 @@
 ## 規則
 - 測試只依賴 Node 內建模組或 devDependency 明列的工具;引入新測試框架屬技術棧變更,走五段提案。
 - 測試檔命名:`<對象>.test.js` / `<情境>.spec.js`;測試不得修改任何來源檔。
+- **目前版本一律由 `tests/support/version.js` 推導,不得在測試檔硬編碼**。歷史 release note、migration fixture 與已淘汰 cache 名稱的負向斷言例外,保留原字面。
+- Playwright:`tests/browser/trip-three-scenarios.spec.js`(斷網內建／連網同步／旅行日 mock Date)與 `tests/browser/sw-update-cache.spec.js`(SW 更新後快取內容正確性、無混版本、離線完整載入、子資源未命中不得收到 `index.html`;後者自帶 `support/versioned-server.js`,刻意送 `max-age=600` 模擬 GitHub Pages,用 `no-store` 的 `static-server.js` 測不出該缺陷)。執行:`npm run test:browser`。

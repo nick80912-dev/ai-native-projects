@@ -32,6 +32,7 @@
 | #7 | 2026-07-30 | SW v72 | 如原核准完成 |
 | #8 | 2026-07-30 | SW v72 | 如原核准完成 |
 | #9 | 2026-07-30 | SW v72 | 完成,兩項以不同形式交付,**已由 Bar 追認為等價** |
+| #21 | 2026-07-30 | SW v73 | 完成,**範圍如實記錄於下** |
 
 - **#1 QA 腳本入版控** — 證據:`tests/browser/trip-three-scenarios.spec.js` 三個 `test()`(斷網內建 / 連網同步 / 旅行日 mock Date)、`tests/browser/support/qa-fixture.js`、`static-server.js`、`.github/workflows/qa.yml` 的 `browser-qa` job。只新增測試資產、無 runtime 變更,故不對應 SW 版本。
 - **#3b 採買單位納入個人狀態備份** — 證據:`index.html:7421` `personalStateJson()` payload 含 `shoppingUnits:shoppingUnitStore.all()`;`index.html:7497` 還原寫回 `SHOPPING_UNIT_OPTIONS_KEY`,且列於原子回滾 keys;`index.html:3815` `PERSONAL_STATE_VERSION=8`,註解明載「v8 起加入本機主題、採買單位與旅途紀錄」;`tests/settings-backup-ux.test.js:145` 斷言 v8 匯出鍵含 `shoppingUnits`;`07_CHANGELOG.md` 2026-07-30 條目。
@@ -50,6 +51,9 @@
   - ⚠️ 使用者版更新日誌**子頁** → 實際**併入「資料與版本」子頁**內(`APP_RELEASE_NOTES` 五筆 + `renderAppReleaseNotes()`);`SETTINGS_PAGE_IDS` 中沒有獨立的更新日誌頁
   - ⚠️ 成員管理**子頁** → 實際為身分區行內「切換／新增」兩鈕 + 既有 `openMemberSelector()` overlay,非獨立子頁
   - **上述兩項差異已由 Bar 於 2026-07-30 追認為等價交付**,不另立獨立子頁:更新日誌併入「資料與版本」子頁視為符合現行資訊架構;成員管理以身分區行內「切換／新增」入口搭配 `openMemberSelector()` overlay 視為等價,理由是功能無缺漏且不增加額外導覽層級。兩項差異與 `07_CHANGELOG.md` 2026-07-30 條目一致(該條目只列四個子頁:代購對象、帳務、自訂項目、資料與版本)。**#9 維持完成,不新增 backlog 項目。**
+
+- **#21 Sanity CI dev 觸發評估** — `qa.yml` 的 `push.branches` 加入 `dev`,sanity job(文件標題／manifest／版本一致性／全部 `tests/*.test.js`)在 `dev` 每次推送都執行,原項目要的「dev push 也產生 GitHub Actions 綠勾」已達成。
+  - **範圍如實記錄**:`browser-qa` job 依 Bar 2026-07-30 裁定**刻意維持只在 pull request 與 `main` push 執行**,以 job-level `if` 條件排除 dev push,避免每次 dev 推送都安裝 Chromium 跑完整 Playwright。原 backlog #21 只談 sanity 的 dev 觸發,未涵蓋 browser-qa;**本次不另立「dev 也跑 browser-qa」的新項目**(依裁定不新增 backlog 項目)。日後若要放寬,屬新決策。
 
 ## 文件治理
 - 2026-07-13:Netlify 雙站架構上線(`main`=正式站、`dev`=測試站)，兩站部署與瀏覽器狀態完全隔離。

@@ -3,6 +3,7 @@
 > 更新於 2026-07-30。細任務層;里程碑看 `06_ROADMAP.md`,歷史交付看 `07_CHANGELOG.md`,正式待辦看 `tasks/backlog.md`。
 
 ## 📌 現況
+- **最新 `dev` runtime 基準:SW v73**(批次一 P2 C2)。修正兩件實證出來的更新缺陷:①新版 SW 的 install 會從 HTTP cache 取得舊版 SHELL,造成「新快取名稱裝舊內容」與 index／schema 混版本;②任何同源子資源離線未命中時都會 fallback 成 `index.html`,讓 `<script>` 拿到 HTML。修法為 install 用 `cache:'reload'`、日常 fetch 用 `cache:'no-cache'`、只有 navigation 才退回 `index.html`;`sw.js` 改為自帶 `SW_VERSION` 並移除 `importScripts` 版本依賴。`index.html` 的 `APP_VERSION` 全面改走安全 helper。新增 `tools/check-app-version.js` 與 Playwright `sw-update-cache.spec.js`(已做對照驗證:改回舊寫法會失敗)。**v72 未曾正式發布,與 v73 合併為同一個候選版本,只做一次 SW 換代。**
 - 最新已推送 `dev` App runtime 基準：`b372f49`，Service Worker `okayama-trip-v72`。SW v72 的設定頁 2.0、六組主題、旅途紀錄與個人備份 v8 已整合；完整 51／51 Node test files、Playwright 3／3、文件／manifest／diff 檢查及 320／375／390px Browser QA 通過，尚待 Bar 真機／PWA 驗收。**Bar 已於 2026-07-30 完成 SW v69／v70／v71 真機／PWA 驗收**；尚未合併 `main` 或正式部署。
 - SW v72 已在隔離分支 `codex/sw-v72-settings-themes` 完成開發：設定頁 2.0、六組主題、五個功能 SVG、旅途異常／優化建議紀錄、個人備份 v8、`app-version.js` 版本單一來源與 v72–v68 使用者版更新說明。完整 51／51 Node test files、Playwright 3／3、文件／manifest／diff 檢查及 320／375／390px Browser QA 通過；**已 push `dev`（`b372f49`），尚待 Bar 真機／PWA 驗收**。
 - 2026-07-23 治理決策追認、§4 禁改清單硬停規則與任務板歸位 — 已完成,詳見 `07_CHANGELOG.md`。
@@ -32,13 +33,15 @@
 
 | # | Gate | 狀態 | 負責 |
 |---|---|---|---|
-| G1 | SW v72 Bar 真機／PWA 驗收(iPhone Safari／安裝後 PWA／離線重開／SW 更新／六主題／設定頁 2.0／旅途紀錄／備份還原) | ⏳ 待辦 | Bar |
-| G2 | 批次一「發布阻斷項」全數交付且 `tests/` 全綠 + Playwright 3／3 + `check-doc-titles.js` 通過 | 🔄 進行中(P1 已交付 A＋B) | AI |
-| G3 | `main` 現況(`9eefcb0`,SW okayama-trip-v18)建立 annotated 回滾 tag 並 push `origin` | 🔄 本機 tag 已建立;**push 待 Bar 確認** | AI → Bar |
+| G1 | **SW v73** Bar 真機／PWA 驗收(涵蓋 v72 全部功能 + v73 的更新機制修正;清單見批次二驗收清單) | ⏳ 待辦 | Bar |
+| G2 | 批次一「發布阻斷項」全數交付且 `tests/` 全綠 + Playwright 全綠 + `check-doc-titles.js` + `check-app-version.js` 通過 | 🔄 進行中(P1 A＋B、P2 C1／C1.5／C2 已交付;P3／P4／P5 待辦) | AI |
+| G3 | `main` 現況(`9eefcb0`,SW okayama-trip-v18)建立 annotated 回滾 tag 並 push `origin` | ✅ 完成(`production-v18` → `2f1987b`,peeled `9eefcb0`) | AI |
 | G4 | Bar 核准 PR merge `dev → main` | ⏳ 待辦 | Bar |
 | G5 | Netlify 正式站部署後線上驗證 | ⏳ 待辦 | Bar |
+| G6 | v73 正式部署且真機 smoke test 通過後,建立 annotated tag `production-v73` | ⏳ 待辦(**不得建立 `production-v72`** —— v72 未曾正式發布) | AI → Bar |
 
 > G1 與 G4／G5 為 Bar 專屬職責;AI 不得以 G2 全綠為由推進 G4。未核准前不得 merge、push `main` 或部署。
+> **測試站驗收前置**:`dev-trippilot-jp.netlify.app` 自動部署已於 2026-07-26 關閉,2026-07-30 實測線上仍停在 **SW v62**、`app-version.js` 回 404。用它驗收 v73 前必須先手動部署到目標 commit,並依 `16_OPS_PLAYBOOK.md` §F5 核對線上 `sw.js`／`app-version.js` 版本與 CacheStorage 實際內容,**不得只看 Git 分支**。
 
 ## ▶️ 下一階段
 1. **真機／PWA 驗收已關閉**：Bar 於 2026-07-29 確認 SW v58–v68 累積功能、採買 C＋E＋G、GitHub Pages iOS Safari／PWA 安裝、standalone、離線重開、SW 更新節奏與本機資料保留皆完成驗收。
@@ -49,6 +52,6 @@
 > 已解除：Apps Script `doGet` 部署已由 Bar 完成，真實端點驗證（CORS、redirect、`after`／`reset`／`serverTime`、非 JSON 降級）通過，見上方 SW v47 條目。
 
 ## 下一棒
-→ 批次一 P1(任務板歸位 + v18 回滾 tag)已交付。下一棒:P2 C1 階段 — 只做 SW 版本傳遞機制的規範查證、瀏覽器支援確認與最小重現,**不得修改 runtime**;實證後若確認風險存在,重新提交 C2 的 Tier 2 四段說明再動工。並行待辦為 Bar 確認 tag push 至 `origin`。真機／PWA 驗收與 `dev → main` 合併見上方 Release Gate。
+→ 批次一 P2(C1 實證 → C1.5 實證 → C2 實作)已交付,SW 升至 v73。下一棒為 **P3**:不升備份版本(維持 `PERSONAL_STATE_VERSION=8`),補 v1–v8 還原矩陣測試與相容策略文件化;接著 P4(#10 已鎖帳文案,Tier 2 顯示層)與 P5(test_mode／time_simulation 暴露面調查,唯讀)。真機／PWA 驗收與 `dev → main` 合併見上方 Release Gate。
 
 > 採買清單 A／B／D／F 已於 SW v60／v61 交付；C／E／G 已於 SW v68 實作，並於 2026-07-29 完成 Bar 真機驗收；正式契約見設計文件。
