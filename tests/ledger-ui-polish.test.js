@@ -1,4 +1,5 @@
 const assert=require('assert');
+const {appVersion,swVersion}=require('./support/version');
 const fs=require('fs');
 const vm=require('vm');
 
@@ -77,8 +78,7 @@ assert(html.includes('稅與優惠券（選填）'),'tax disclosure uses the app
 assert(html.includes('更多細節（備註選填）'),'optional details disclosure is note-only');
 
 const sw=fs.readFileSync('sw.js','utf8');
-const version=fs.readFileSync('app-version.js','utf8');
-assert.match(version,/^var APP_VERSION='v72';\s*$/,'shared app version is v72');
-assert.match(sw,/importScripts\('\.\/app-version\.js'\);/,'service worker imports the shared version');
+assert.strictEqual(swVersion(),appVersion(),'sw.js 頂層版本標記與 app-version.js 一致');
+assert.doesNotMatch(sw,/importScripts\('\.\/app-version\.js'\)/,'sw.js 不再以 imported APP_VERSION 作為 cache 名稱來源');
 
 console.log('ledger 2.2 UI polish tests passed');

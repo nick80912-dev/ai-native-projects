@@ -3,6 +3,7 @@
    涵蓋正常資料四象限、legacy participants fail-open、成員無法解析的 fail-safe,
    以及「清單／筆數／總額／完整紀錄頁／編輯／刪除入口」共用同一批過濾結果的全域一致性。 */
 const assert=require('assert');
+const {appVersion,swVersion}=require('./support/version');
 const fs=require('fs');
 const vm=require('vm');
 
@@ -324,8 +325,7 @@ assert(splitSource.includes("shared?'與我相關 · '+period.count+' 筆紀錄'
 assert(!splitSource.includes('團體總支出'),'主卡片不再暗示為全團總額');
 
 const sw=fs.readFileSync('sw.js','utf8');
-const version=fs.readFileSync('app-version.js','utf8');
-assert.match(version,/^var APP_VERSION='v72';\s*$/,'shared app version is v72');
-assert.match(sw,/importScripts\('\.\/app-version\.js'\);/,'service worker imports the shared version');
+assert.strictEqual(swVersion(),appVersion(),'sw.js 頂層版本標記與 app-version.js 一致');
+assert.doesNotMatch(sw,/importScripts\('\.\/app-version\.js'\)/,'sw.js 不再以 imported APP_VERSION 作為 cache 名稱來源');
 
 console.log('ledger member visibility tests passed');

@@ -1,10 +1,10 @@
 const assert=require('assert');
+const {appVersion,swVersion}=require('./support/version');
 const fs=require('fs');
 const vm=require('vm');
 
 const html=fs.readFileSync('index.html','utf8');
 const sw=fs.readFileSync('sw.js','utf8');
-const version=fs.readFileSync('app-version.js','utf8');
 
 function plain(value){return JSON.parse(JSON.stringify(value));}
 function extractFunction(source,name){
@@ -223,8 +223,8 @@ assert(switchSource.includes("behavior:'smooth'"),'re-tapping the dashboard scro
 assert(extractFunction(html,'returnLedgerDashboard').includes("classList.contains('ledger-sheet-open')"),'hidden-nav sheets protect unsaved form state');
 assert(html.includes('aria-label="返回分帳首頁"'),'the history back button remains available');
 
-assert.match(version,/^var APP_VERSION='v72';\s*$/,'shared app version is v72');
-assert.match(sw,/importScripts\('\.\/app-version\.js'\);/,'service worker imports the shared version');
+assert.strictEqual(swVersion(),appVersion(),'sw.js 頂層版本標記與 app-version.js 一致');
+assert.doesNotMatch(sw,/importScripts\('\.\/app-version\.js'\)/,'sw.js 不再以 imported APP_VERSION 作為 cache 名稱來源');
 
 (async function(){
   const originals=[

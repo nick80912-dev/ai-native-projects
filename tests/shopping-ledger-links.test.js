@@ -2,6 +2,7 @@
    ledgerLinks[] append-only、releasedAt 解除事實、三態動態推導、
    多品項 source→record 一一對應、原子回寫、部分購買拆分、個人狀態備份 v5。 */
 const assert=require('assert');
+const {appVersion,swVersion}=require('./support/version');
 const fs=require('fs');
 const vm=require('vm');
 
@@ -551,8 +552,7 @@ assert(commit.indexOf('writeShoppingLedgerLinks')>commit.indexOf('operation.then
 assert(html.includes('sortShoppingStopGroups(')&&html.includes('buildShoppingStopOrder('),'A 的行程排序契約保留');
 assert(html.includes('resolveShoppingStopState(')&&html.includes('tripDatasetAuthority('),'F 的孤兒三態契約保留');
 const sw=fs.readFileSync('sw.js','utf8');
-const version=fs.readFileSync('app-version.js','utf8');
-assert.match(version,/^var APP_VERSION='v72';\s*$/,'shared app version is v72');
-assert.match(sw,/importScripts\('\.\/app-version\.js'\);/,'service worker imports the shared version');
+assert.strictEqual(swVersion(),appVersion(),'sw.js 頂層版本標記與 app-version.js 一致');
+assert.doesNotMatch(sw,/importScripts\('\.\/app-version\.js'\)/,'sw.js 不再以 imported APP_VERSION 作為 cache 名稱來源');
 
 console.log('shopping ledger link tests passed');

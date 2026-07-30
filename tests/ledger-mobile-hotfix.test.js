@@ -1,9 +1,9 @@
 const assert=require('assert');
+const {appVersion,swVersion}=require('./support/version');
 const fs=require('fs');
 
 const html=fs.readFileSync('index.html','utf8');
 const sw=fs.readFileSync('sw.js','utf8');
-const version=fs.readFileSync('app-version.js','utf8');
 
 assert(
   html.includes('grid-template-columns:minmax(0,1fr) 44px')&&
@@ -43,7 +43,7 @@ assert(/\.ledger-date-summary\{[^}]*grid-template-columns:minmax\(0,1fr\) auto[^
 assert(/\.ledger-date-total\{[^}]*font-size:9px[^}]*white-space:nowrap/.test(html),'daily total alone is reduced to 9px and stays on one line');
 assert(/\.ledger-history-summary\{[^}]*font-size:11px/.test(html),'history result summary is reduced to the approved 11px');
 
-assert.match(version,/^var APP_VERSION='v72';\s*$/,'shared app version is v72');
-assert.match(sw,/importScripts\('\.\/app-version\.js'\);/,'service worker imports the shared version');
+assert.strictEqual(swVersion(),appVersion(),'sw.js 頂層版本標記與 app-version.js 一致');
+assert.doesNotMatch(sw,/importScripts\('\.\/app-version\.js'\)/,'sw.js 不再以 imported APP_VERSION 作為 cache 名稱來源');
 
 console.log('ledger mobile hotfix tests passed');

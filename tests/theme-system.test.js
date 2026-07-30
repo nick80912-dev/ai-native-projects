@@ -1,4 +1,5 @@
 const assert=require('assert');
+const {appVersion}=require('./support/version');
 const fs=require('fs');
 const vm=require('vm');
 
@@ -146,8 +147,11 @@ function extractThemeIds(html){
   const releaseMatch=html.match(/var APP_RELEASE_NOTES=(\[[\s\S]*?\]);/);
   assert(releaseMatch,'release-note data is extractable');
   const notes=vm.runInNewContext(releaseMatch[1]);
+  /* 「恰好五筆」是 v72 核准的設計,升版時由最新一筆擠掉最舊一筆,不是讓清單長大。
+     最新一筆必須是目前版本(推導);其餘為歷史 release note,依裁定保留原字面。 */
   assert.strictEqual(notes.length,5,'Settings exposes exactly five user-facing releases');
-  assert.deepStrictEqual(Array.from(notes,function(note){return note.version;}),['v72','v71','v70','v69','v68']);
+  assert.strictEqual(notes[0].version,appVersion(),'the newest release note is the current version');
+  assert.deepStrictEqual(Array.from(notes.slice(1),function(note){return note.version;}),['v72','v71','v70','v69']);
   notes.forEach(note=>{
     assert(note.title&&note.title.length<=24,'release title is short and present');
     assert(Array.isArray(note.items)&&note.items.length>=1,'release has user-readable items');

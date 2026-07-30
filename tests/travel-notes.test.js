@@ -34,7 +34,10 @@ function createSandbox(options){
     localStorage:storage,
     navigator:{onLine:false,clipboard:{writeText(text){copied.push(text);return Promise.resolve();}}},
     document:{getElementById(){return null;}},
-    APP_VERSION:'v72',
+    /* fixture,不是「目前版本」—— 這裡在測「旅途紀錄會忠實記下當下的 APP_VERSION」,
+       用哪個版本字串不影響契約,故依裁定保留原字面不隨升版變動。
+       options.withoutAppVersion 時刻意不提供,用來覆蓋 app-version.js 載入失敗的情境。 */
+    ...(options.withoutAppVersion ? {} : { APP_VERSION: 'v72' }),
     curView:'shop',
     syncState:'offline',
     healthCheck(){return ['同步資料過舊'];},
@@ -63,7 +66,20 @@ function createSandbox(options){
     __storage:storage
   };
   vm.createContext(sandbox);
+  /* 把 index.html 裡**真實**的 appVersion()／appVersionLabel() 注入 sandbox,
+     不自己假造一份 —— 否則測到的是測試的實作,不是 App 的實作。 */
+  vm.runInContext(readAppVersionHelpers(), sandbox);
   return sandbox;
+}
+
+/* 由 index.html 的具名標記取出版本安全 helper。標記變動時這裡會直接失敗,
+   而不是靜默改用假實作。 */
+function readAppVersionHelpers(){
+  const html=fs.readFileSync('index.html','utf8');
+  const start=html.indexOf('/* ---- APP_VERSION SAFE ACCESS (C2) ----');
+  const end=html.indexOf('/* ---- /APP_VERSION SAFE ACCESS ---- */',start);
+  assert(start>=0&&end>start,'index.html 的 APP_VERSION 安全取值區塊有穩定標記');
+  return html.slice(start,end);
 }
 
 (async function(){
@@ -143,6 +159,16 @@ function createSandbox(options){
   const oldestId=sandbox.travelNoteStore.all()[199].id;
   assert.throws(()=>sandbox.travelNoteStore.add({kind:'issue',text:'第 201 筆'}),/200/);
   assert.strictEqual(sandbox.travelNoteStore.all()[199].id,oldestId,'the 201st add never deletes the oldest note');
+
+  /* app-version.js 沒載到時(離線且 CacheStorage 未命中),記錄旅途紀錄不得拋錯,
+     appVersion 欄位降級為空字串。2026-07-30 C2 新增。 */
+  const noVersion=createSandbox({withoutAppVersion:true});
+  vm.runInContext(source,noVersion);
+  let noVersionNote;
+  assert.doesNotThrow(()=>{noVersionNote=noVersion.travelNoteStore.add({kind:'issue',text:'版本檔沒載到時仍要記得起來'});},
+    'travel notes still record when app-version.js never loaded');
+  assert.strictEqual(noVersionNote.appVersion,'','a missing version degrades to an empty field');
+  assert.strictEqual(noVersionNote.text,'版本檔沒載到時仍要記得起來');
 
   const fallback=createSandbox({withoutUuid:true});
   vm.runInContext(source,fallback);

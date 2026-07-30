@@ -9,6 +9,16 @@
   [headers.values]
     Cache-Control = "no-cache"
 
+# app-version.js —— **防禦性設定,不是修復**。
+# 2026-07-30 實測 Netlify 對 JS 資產的預設已是 public,max-age=0,must-revalidate,
+# 本規則只是把它明確化,避免未來 Netlify 預設變更後產生沉默的更新盲窗。
+# 注意:這**無法**修復 GitHub Pages —— Pages 不讀本檔,固定送 max-age=600。
+# 真正的修復在 sw.js:版本寫在頂層 + install 用 reload + fetch 用 no-cache。
+[[headers]]
+  for = "/app-version.js"
+  [headers.values]
+    Cache-Control = "no-cache, no-store, must-revalidate"
+
 [[headers]]
   for = "/manifest.webmanifest"
   [headers.values]

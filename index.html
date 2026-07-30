@@ -612,6 +612,21 @@ input:not([type="hidden"]),select,textarea{font-size:16px!important}
 </style>
 <script src="app-version.js"></script>
 <script>
+/* ---- APP_VERSION SAFE ACCESS (C2) ----
+   app-version.js 是獨立外部 script,離線快取未命中或部署缺檔時**會**載不到,
+   此時 APP_VERSION 這個 var 根本不存在,任何裸讀都會拋 ReferenceError
+   (2026-07-30 實證:「資料與版本」頁因此整頁打不開)。
+   全檔禁止直接讀 APP_VERSION,一律走這兩個 helper;
+   tools/check-app-version.js 會掃出違規的裸讀並讓 CI 失敗。
+     appVersion()      → 版本字串,取不到時回空字串(給資料欄位用)
+     appVersionLabel() → 版本字串,取不到時回「未知」(給 UI 顯示用) */
+function appVersion(){
+  return typeof APP_VERSION==='string'&&APP_VERSION?APP_VERSION:'';
+}
+function appVersionLabel(){
+  return appVersion()||'未知';
+}
+/* ---- /APP_VERSION SAFE ACCESS ---- */
 var THEME_STORAGE_KEY='trip_theme';
 var THEME_IDS=['ocean','ivory','wisteria','cedar','mist','tea'];
 var THEME_REGISTRY={
@@ -7187,7 +7202,7 @@ function travelNoteContext(){
   try{findings=healthCheck()||[];}catch(error){findings=['健康檢查失敗'];}
   return {
     view:travelNoteBoundedText(typeof curView==='undefined'?'':curView,24),
-    appVersion:travelNoteBoundedText(typeof APP_VERSION==='string'?APP_VERSION:'',24),
+    appVersion:travelNoteBoundedText(appVersion(),24),
     online:typeof navigator==='undefined'||navigator.onLine!==false,
     syncState:travelNoteBoundedText(typeof syncState==='undefined'?'':syncState,40),
     healthSummary:findings.slice(0,20).map(function(item){
@@ -7657,11 +7672,11 @@ function renderSettingsOptionsPage(){
   return renderSettingsHeader('自訂項目',false)+'<div class="settings-section" id="ledgerOptionSettingsSection"><h3>類別、支付方式與採買單位</h3><div class="settings-help">可新增、刪除或排序；刪除選項不影響既有紀錄。</div>'+renderLedgerOptionManager('category','類別')+renderLedgerOptionManager('payMethod','支付方式')+renderLedgerOptionManager('shoppingUnit','採買單位')+'</div>';
 }
 var APP_RELEASE_NOTES=[
+  {version:'v73',date:'2026-07-30',title:'更新機制修正',items:['修正改版後可能仍載入舊版檔案的問題','離線時缺少檔案不再讓「資料與版本」頁打不開']},
   {version:'v72',date:'2026-07-30',title:'主題、設定與旅途紀錄',items:['新增六組淺色主題與一致的導覽圖示','設定頁重新分區，並可記錄旅途異常與優化建議']},
   {version:'v71',date:'2026-07-30',title:'作廢確認更清楚',items:['整張收據作廢預覽後只保留一個確認動作']},
   {version:'v70',date:'2026-07-30',title:'分攤選取更清楚',items:['分攤成員選取改為較明顯的青綠底色']},
-  {version:'v69',date:'2026-07-29',title:'結算後安全鎖帳',items:['還款確認後的收據改以更正或作廢保留完整歷史']},
-  {version:'v68',date:'2026-07-29',title:'採買操作改善',items:['改善採買排序、編輯返回與連續新增操作']}
+  {version:'v69',date:'2026-07-29',title:'結算後安全鎖帳',items:['還款確認後的收據改以更正或作廢保留完整歷史']}
 ];
 function renderAppReleaseNotes(){
   return '<div class="settings-release-list">'+APP_RELEASE_NOTES.map(function(note){
@@ -7669,7 +7684,7 @@ function renderAppReleaseNotes(){
   }).join('')+'</div>';
 }
 function renderSettingsDataPage(){
-  return renderSettingsHeader('資料與版本',false)+'<div class="settings-section"><h3>本機資料備份／還原</h3><div class="settings-help">換手機、重裝 App 或清除瀏覽器資料前使用。備份包含主題、採買單位與旅途紀錄；還原會覆蓋目前裝置上的個人資料及待同步記帳。</div><div class="settings-actions"><button class="btn ghost" onclick="exportPersonalState()">複製備份 JSON</button><button class="btn" onclick="openPersonalStateRestore()">從 JSON 還原</button></div></div><div class="settings-section"><div class="settings-version-row"><b>版本</b><span>SW '+escapeHtml(APP_VERSION)+'</span></div><h3>最近更新</h3>'+renderAppReleaseNotes()+'</div>';
+  return renderSettingsHeader('資料與版本',false)+'<div class="settings-section"><h3>本機資料備份／還原</h3><div class="settings-help">換手機、重裝 App 或清除瀏覽器資料前使用。備份包含主題、採買單位與旅途紀錄；還原會覆蓋目前裝置上的個人資料及待同步記帳。</div><div class="settings-actions"><button class="btn ghost" onclick="exportPersonalState()">複製備份 JSON</button><button class="btn" onclick="openPersonalStateRestore()">從 JSON 還原</button></div></div><div class="settings-section"><div class="settings-version-row"><b>版本</b><span>SW '+escapeHtml(appVersionLabel())+'</span></div><h3>最近更新</h3>'+renderAppReleaseNotes()+'</div>';
 }
 function renderSettingsPage(page,ledgerSettings,settingsError){
   if(page==='theme')return renderSettingsThemePage();
