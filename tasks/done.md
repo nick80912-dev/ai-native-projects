@@ -31,7 +31,7 @@
 | #6 | 2026-07-30 | SW v72 | 完成,**範圍擴張,已由 Bar 追認** |
 | #7 | 2026-07-30 | SW v72 | 如原核准完成 |
 | #8 | 2026-07-30 | SW v72 | 如原核准完成 |
-| #9 | 2026-07-30 | SW v72 | 完成,**七項中兩項以不同形式交付** |
+| #9 | 2026-07-30 | SW v72 | 完成,兩項以不同形式交付,**已由 Bar 追認為等價** |
 
 - **#1 QA 腳本入版控** — 證據:`tests/browser/trip-three-scenarios.spec.js` 三個 `test()`(斷網內建 / 連網同步 / 旅行日 mock Date)、`tests/browser/support/qa-fixture.js`、`static-server.js`、`.github/workflows/qa.yml` 的 `browser-qa` job。只新增測試資產、無 runtime 變更,故不對應 SW 版本。
 - **#3b 採買單位納入個人狀態備份** — 證據:`index.html:7421` `personalStateJson()` payload 含 `shoppingUnits:shoppingUnitStore.all()`;`index.html:7497` 還原寫回 `SHOPPING_UNIT_OPTIONS_KEY`,且列於原子回滾 keys;`index.html:3815` `PERSONAL_STATE_VERSION=8`,註解明載「v8 起加入本機主題、採買單位與旅途紀錄」;`tests/settings-backup-ux.test.js:145` 斷言 v8 匯出鍵含 `shoppingUnits`;`07_CHANGELOG.md` 2026-07-30 條目。
@@ -49,7 +49,7 @@
   - ✅ APP_VERSION 版本資訊列 — `renderSettingsDataPage()` 顯示 `SW v72`,取自 `APP_VERSION`
   - ⚠️ 使用者版更新日誌**子頁** → 實際**併入「資料與版本」子頁**內(`APP_RELEASE_NOTES` 五筆 + `renderAppReleaseNotes()`);`SETTINGS_PAGE_IDS` 中沒有獨立的更新日誌頁
   - ⚠️ 成員管理**子頁** → 實際為身分區行內「切換／新增」兩鈕 + 既有 `openMemberSelector()` overlay,非獨立子頁
-  - 上述兩項差異與 `07_CHANGELOG.md` 2026-07-30 條目一致(該條目只列四個子頁:代購對象、帳務、自訂項目、資料與版本),屬**設計時的形式選擇而非實作遺漏**;但與 backlog 原文的「子頁」字面不符,列此供 Bar 追認或另立調整項,不自行判定為等價。
+  - **上述兩項差異已由 Bar 於 2026-07-30 追認為等價交付**,不另立獨立子頁:更新日誌併入「資料與版本」子頁視為符合現行資訊架構;成員管理以身分區行內「切換／新增」入口搭配 `openMemberSelector()` overlay 視為等價,理由是功能無缺漏且不增加額外導覽層級。兩項差異與 `07_CHANGELOG.md` 2026-07-30 條目一致(該條目只列四個子頁:代購對象、帳務、自訂項目、資料與版本)。**#9 維持完成,不新增 backlog 項目。**
 
 ## 文件治理
 - 2026-07-13:Netlify 雙站架構上線(`main`=正式站、`dev`=測試站)，兩站部署與瀏覽器狀態完全隔離。

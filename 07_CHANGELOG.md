@@ -1,4 +1,10 @@
 # 07 版本紀錄
+## 2026-07-30｜批次一 P1 後續裁定：#9 子頁形式追認與 v18 tag 上遠端（dev，治理與文件，無 runtime 變更）
+- **backlog #9 的兩項形式差異由 Bar 追認為等價交付**，不另立獨立子頁：①「使用者版更新日誌子頁」併入「資料與版本」子頁，視為符合現行資訊架構；②「成員管理子頁」以身分區行內「切換／新增」入口搭配既有 `openMemberSelector()` overlay 實現，視為等價。裁定理由為功能無缺漏且不增加額外導覽層級。`tasks/done.md` 對應段落由「供 Bar 追認或另立調整項」改為已追認，**#9 維持完成，不新增 backlog 項目**。此裁定只改文件記述，`index.html` 的設定頁結構未動。
+- **`production-v18` annotated tag 已 push `origin`**（Bar 核可，只 push tag 本身）。遠端驗證：tag 物件 `2f1987b`、`git cat-file -t` 回 `tag`（確為 annotated 而非 lightweight）、peeled `refs/tags/production-v18^{}` = `9eefcb0`，與本機 `git rev-parse` / `git rev-list -n1` 完全一致。同時確認 `origin/dev` 仍為 `8802863`、`origin/main` 仍為 `9eefcb0` — **未夾帶任何分支推送**。
+- 自動驗證：完整 **51／51** Node test files、`tools/check-doc-titles.js` 通過。未修改任何 runtime 檔案；未合併 `main`、未 push `main`、未部署。
+- 工具事故（依 `16_OPS_PLAYBOOK.md` §C 記錄）：本條目首次寫入時，AI 將含反引號的內容放進 bash 雙引號字串，反引號被當成命令替換執行，導致 shell 誤執行 `tasks/done.md` 等檔案內容並在根目錄產生一個 0 bytes 的空檔 `更新於`。已確認未產生任何 commit、`07_CHANGELOG.md` 未被寫入、`tasks/done.md` 的 diff 仍僅為預期的兩行，空檔已刪除。後續同類插入改為「內容寫入檔案 + 獨立腳本讀取」，不再把文件內容內嵌進 shell 字串。
+
 ## 2026-07-30｜批次一 P1：任務板歸位、六主題追認與 v18 回滾錨點（dev，治理與文件，無 runtime 變更）
 - **Pre-Work Git Sync Gate 阻礙先清除**：主工作目錄長期掛著 Bar 未提交的 `tasks/backlog.md` #6 主題範圍原文修改（前一條目最後一行記載的待辦）。依 Bar 2026-07-30 裁定第 1 項，先以獨立 commit（`04de67f`）原樣接納該修改、不改一字不夾帶其他變更，後續歸檔才以此原文為基礎，歷史完整保留。
 - **backlog #1／#3b／#6–#9 歸檔**（裁定第 4 項）。每項均先複驗 `index.html`、`tests/` 與本檔的實際證據，不採信任務板文字；證據逐項寫入 `tasks/done.md` 新增的「已歸檔的 backlog 編號項目」。`tasks/backlog.md` **保留原編號不重排**，檔頭註明缺號（1、3b、5、6–9、13–19）是刻意保留，因 `tasks/current.md`、`tasks/done.md` 與本檔都以編號互指。
