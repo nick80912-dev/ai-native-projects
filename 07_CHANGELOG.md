@@ -1,4 +1,10 @@
 # 07 版本紀錄
+## 2026-07-30｜新增消費分攤成員選取色差（本機，SW v70，待推送與 Bar 真機驗收）
+- 真機回饋指出新增消費／更正收據共用的分攤成員按鈕，選取後背景與區塊底色無法區分。根因是 `.ledger-participant-choice.on` 引用未定義的 `--mint`，瀏覽器忽略該背景宣告。
+- 選取狀態改為中度青綠底 `#d6e8e4`、深色文字與既有深色邊框；保留勾號、`aria-pressed`、分攤資料與點選 handler。未定義全域 `--mint`，避免連動其他畫面。
+- 「確認整張作廢」與「重新預覽作廢」目前皆呼叫 `saveLedgerCorrection(true)` 的重複行為已完成討論，本批不修改作廢流程。Service Worker cache 升 `okayama-trip-v70`。
+- 測試先紅燈確認舊背景無效，再最小修正。完整 49／49 Node tests 與文件標題檢查通過；實際瀏覽器驗證選取為 `rgb(214, 232, 228)`、未選取為白色、外層為 `rgb(243, 248, 246)`，`aria-pressed` 正確切換且 console error／warning 0。
+
 ## 2026-07-29｜結算一致性與收據級引導式更正（dev，SW v69，待 Bar 真機驗收）
 - 還款確認後，claim 建立切點前已存在的正式／TEST 收據永久禁止直接編輯與刪除；全團歸零不解除保護。付款人操作選單改為「更正收據」，其他成員只看到權限說明；批次刪除與 handler 仍會再次 fail-closed。
 - 新增 append-only `expense_correction_item`／`expense_correction_commit`／`expense_void_commit`。更正以完整收據版本提交，item 全數先進 durable queue、commit 最後寫入；缺件、跨付款人、跨 universe 或 manifest 不一致皆不生效。同一上一版本的並行提交以 `(time,id)` 選唯一 canonical，losing sibling 保留歷史但永不自動升格。

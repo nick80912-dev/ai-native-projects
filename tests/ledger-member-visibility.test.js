@@ -324,6 +324,6 @@ assert(splitSource.includes("shared?'與我相關 · '+period.count+' 筆紀錄'
 assert(!splitSource.includes('團體總支出'),'主卡片不再暗示為全團總額');
 
 const sw=fs.readFileSync('sw.js','utf8');
-assert.match(sw,/okayama-trip-v69/,'service worker cache is v69');
+assert.match(sw,/okayama-trip-v70/,'service worker cache is v70');
 
 console.log('ledger member visibility tests passed');

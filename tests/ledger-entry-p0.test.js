@@ -213,4 +213,10 @@ assert.match(pendingSource,/button\.disabled=ledgerUiState\.savePending/,'both s
 const commitSource=extractFunction('commitLedgerEntrySave');
 assert.match(commitSource,/setLedgerSavePending\(false\)/,'success and failure paths release the transient save guard');
 
+assert.match(
+  html,
+  /\.ledger-participant-choice\.on\{[^}]*background:#d6e8e4[^}]*color:var\(--sea-deep\)/,
+  'selected participant choices use a distinct medium teal background with deep text'
+);
+
 console.log('ledger entry P0 tests passed');
