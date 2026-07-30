@@ -4,6 +4,7 @@ const vm = require('vm');
 
 const html = fs.readFileSync('index.html', 'utf8');
 const sw = fs.readFileSync('sw.js', 'utf8');
+const version = fs.readFileSync('app-version.js', 'utf8');
 
 function extractFunction(name){
   const start = html.indexOf('function ' + name + '(');
@@ -38,7 +39,8 @@ assert.doesNotMatch(html, /function touchDistance\(/, 'double-tap distance helpe
 assert.match(html, /function setupDiagnostics\(/, 'peach diagnostic gesture remains available');
 assert.match(html, /function setupViewportReflow\(/, 'form focus recovery remains available');
 assert.doesNotMatch(html.match(/<meta name="viewport"[^>]+>/i)[0], /maximum-scale|user-scalable/i, 'viewport restrictions are not persistent');
-assert.match(sw, /okayama-trip-v71/, 'service worker cache is bumped to v71');
+assert.match(version, /^var APP_VERSION='v72';\s*$/, 'shared app version is v72');
+assert.match(sw, /importScripts\('\.\/app-version\.js'\);/, 'service worker imports the shared version');
 assert.doesNotMatch(sw, /okayama-trip-v20/, 'retired v20 cache is not retained');
 assert.doesNotMatch(sw, /tests\//, 'test files are not part of the App Shell');
 assert.doesNotMatch(sw, /ios-gesture-diagnostics\.test\.js/, 'the diagnostic test is never cached');

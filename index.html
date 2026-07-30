@@ -544,6 +544,7 @@ input,select,textarea{font-size:16px}
 .settings-identity-row{display:flex;align-items:center;gap:8px;padding:9px 9px 9px 11px;min-height:52px}.settings-identity-current{min-width:0;flex:1}.settings-identity-current small{display:block;color:var(--ink-faint);font-size:11px}.settings-identity-current b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--ink)}.settings-identity-actions{display:flex;gap:5px;flex:0 0 auto}.settings-identity-actions .btn{min-height:38px;padding:0 9px}
 .settings-menu-button{width:100%;min-height:56px;border:0;background:transparent;color:var(--ink);padding:0;text-align:left;font:inherit;display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:10px}.settings-menu-copy{min-width:0}.settings-menu-copy b{display:block;color:var(--ink);font-size:14px}.settings-menu-copy small{display:block;margin-top:3px;color:var(--ink-faint);font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.settings-menu-chevron{color:var(--ink-faint);font-size:20px}.settings-inline-toggle{margin-top:8px;padding-top:10px;border-top:1px solid var(--line-soft)}
 .settings-theme-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.settings-theme-card{min-width:0;border:1px solid var(--line);border-radius:11px;background:var(--card);padding:8px;color:var(--ink);font:inherit;text-align:left}.settings-theme-card[aria-pressed="true"]{border-color:var(--sea-deep);box-shadow:0 0 0 1px var(--sea-deep)}.settings-theme-preview{display:block;height:66px;border-radius:8px;background:var(--t-paper);overflow:hidden;border:1px solid rgba(0,0,0,.06)}.settings-theme-preview-head{display:block;height:19px;background:var(--t-chrome)}.settings-theme-preview-body{display:block;padding:8px}.settings-theme-preview-line{display:block;height:7px;width:74%;border-radius:5px;background:var(--t-action);margin-bottom:7px}.settings-theme-preview-dot{display:block;width:16px;height:16px;border-radius:50%;background:var(--t-accent)}.settings-theme-name{display:flex;align-items:center;justify-content:space-between;gap:4px;margin-top:7px;font-size:12px;font-weight:900}.settings-theme-check{visibility:hidden;color:var(--sea-deep)}.settings-theme-card[aria-pressed="true"] .settings-theme-check{visibility:visible}
+.settings-version-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 0 12px;border-bottom:1px solid var(--line-soft)}.settings-version-row span{font-size:12px;color:var(--ink-faint)}.settings-release-list{display:grid;gap:10px;margin-top:12px}.settings-release{padding-bottom:10px;border-bottom:1px solid var(--line-soft)}.settings-release:last-child{padding-bottom:0;border-bottom:0}.settings-release-head{display:flex;align-items:baseline;justify-content:space-between;gap:8px}.settings-release-head strong{font-size:13px}.settings-release-head span{font-size:10px;color:var(--ink-faint)}.settings-release ul{margin:5px 0 0 18px;color:var(--ink-soft);font-size:11px}
 .member-options{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.member-option{min-height:48px;border:1px solid var(--line);border-radius:11px;background:#fff;color:var(--ink);font:inherit;font-weight:800}.member-option.on{background:var(--sea);border-color:var(--sea);color:#fff}
 .member-panel{min-height:calc(100vh - 48px);min-height:calc(100dvh - 48px);display:flex;flex-direction:column;justify-content:center}.member-copy{color:var(--ink-soft);font-size:14px;margin-bottom:15px}
 .member-entry{margin-top:12px}.member-entry input{width:100%;min-height:48px;border:1px solid var(--line);border-radius:10px;background:#fff;padding:10px 12px;font:inherit}.member-actions{display:flex;gap:9px;margin-top:12px}.member-actions .btn{flex:1;min-height:44px}.member-error{margin-top:10px;color:var(--coral);font-size:13px;font-weight:700}.member-confirm{padding:16px;border:1px solid var(--line);border-radius:10px;background:#fff;text-align:center;font-weight:800}.member-confirm-note{display:block;margin-top:8px;color:var(--ink-soft);font-size:12px;font-weight:600;line-height:1.5}
@@ -609,6 +610,7 @@ body.shopping-list-open{overflow:hidden}.shopping-list-overlay{position:fixed;in
 input:not([type="hidden"]),select,textarea{font-size:16px!important}
 .ledger-sheet #ledgerAmount{font-size:30px!important}
 </style>
+<script src="app-version.js"></script>
 <script>
 var THEME_STORAGE_KEY='trip_theme';
 var THEME_IDS=['ocean','ivory','wisteria','cedar','mist','tea'];
@@ -943,9 +945,6 @@ var AppLog = {
   render: function(msg){ console.error('[Render Error] ' + msg); },
   sync:   function(msg){ console.warn('[Sync Error] ' + msg); }
 };
-if(typeof themeDiagnosticQueue!=='undefined'){
-  themeDiagnosticQueue.splice(0).forEach(function(message){AppLog.repo(message);});
-}
 
 /* ---- 表頭正規化 ---- */
 function normH(h){ return String(h||'').trim().toLowerCase().replace(/\s+/g,''); }
@@ -1188,6 +1187,9 @@ if(typeof window !== 'undefined') window.healthCheck = healthCheck;
     });
   }catch(e){}
 })();
+if(typeof themeDiagnosticQueue!=='undefined'){
+  themeDiagnosticQueue.splice(0).forEach(function(message){AppLog.repo(message);});
+}
 
 /* ================= CONFIG(唯一設定點) ================= */
 /* 資料來源設定完全由 schema.js(SCHEMA)提供 —— 唯一資料規格 */
@@ -4103,6 +4105,18 @@ function normalizeShoppingUnitOptions(values){
   if(!seen[SHOPPING_DEFAULT_UNIT])result.unshift(SHOPPING_DEFAULT_UNIT);
   return result;
 }
+function normalizeShoppingUnitBackupOptions(values){
+  if(!Array.isArray(values))throw new Error('採買單位格式錯誤');
+  var result=[],seen={};
+  values.forEach(function(value){
+    value=normalizeShoppingUnit(value);
+    if(!value)throw new Error('採買單位不可空白');
+    if(seen[value])throw new Error('採買單位不可重複');
+    seen[value]=true;result.push(value);
+  });
+  if(!seen[SHOPPING_DEFAULT_UNIT])result.unshift(SHOPPING_DEFAULT_UNIT);
+  return result;
+}
 function isSafeShoppingQuantity(value){
   return typeof value==='number'&&isFinite(value)&&Math.floor(value)===value&&value>=1&&value<=Number.MAX_SAFE_INTEGER;
 }
@@ -5097,7 +5111,12 @@ function normalizeLedgerCategoryOptions(values){
 }
 
 function createLedgerOptionStore(options){
-  var opts=options||{}, storage=opts.storage, key=opts.key, normalizeList=opts.normalizeList||function(values){return values.slice();}, defaults=normalizeList((opts.defaults||[]).slice());
+  var opts=options||{}, storage=opts.storage, key=opts.key, normalizeList=opts.normalizeList||function(values){return values.slice();}, normalizeRestore=opts.normalizeRestore, defaults=normalizeList((opts.defaults||[]).slice());
+  function normalize(values){
+    if(!Array.isArray(values))throw new Error('選項清單格式錯誤');
+    if(normalizeRestore)return normalizeRestore(values);
+    return normalizeList(values.map(normalizeLedgerOption));
+  }
   function all(){
     var raw=storage.getItem(key);
     if(raw===null)return defaults.slice();
@@ -5119,7 +5138,7 @@ function createLedgerOptionStore(options){
     if(from<0||to<0||to>=values.length)return values;
     var item=values.splice(from,1)[0];values.splice(to,0,item);return write(values);
   }
-  return {all:all,add:add,remove:remove,move:move};
+  return {all:all,add:add,remove:remove,move:move,normalize:normalize};
 }
 
 function normalizeLedgerProxyTarget(value){
@@ -6985,7 +7004,7 @@ var personalLedgerRepository=createPersonalLedgerRepository({storage:localStorag
 var ledgerCategoryStore=createLedgerOptionStore({storage:localStorage,key:LEDGER_CATEGORY_OPTIONS_KEY,defaults:DEFAULT_LEDGER_CATEGORIES,normalizeList:normalizeLedgerCategoryOptions});
 var ledgerPayMethodStore=createLedgerOptionStore({storage:localStorage,key:LEDGER_PAY_METHOD_OPTIONS_KEY,defaults:DEFAULT_LEDGER_PAY_METHODS});
 /* 採買單位沿用同一個泛用選項 store,於設定頁「自訂類別與支付方式」區塊一併管理。 */
-var shoppingUnitStore=createLedgerOptionStore({storage:localStorage,key:SHOPPING_UNIT_OPTIONS_KEY,defaults:SHOPPING_COMMON_UNITS,normalizeList:normalizeShoppingUnitOptions});
+var shoppingUnitStore=createLedgerOptionStore({storage:localStorage,key:SHOPPING_UNIT_OPTIONS_KEY,defaults:SHOPPING_COMMON_UNITS,normalizeList:normalizeShoppingUnitOptions,normalizeRestore:normalizeShoppingUnitBackupOptions});
 var ledgerProxyTargetStore=createLedgerProxyTargetStore({storage:localStorage,key:LEDGER_PROXY_TARGETS_KEY});
 var shoppingListStore=createShoppingListStore({
   storage:localStorage,
@@ -7637,8 +7656,20 @@ function renderSettingsLedgerPage(ledgerSettings,settingsError){
 function renderSettingsOptionsPage(){
   return renderSettingsHeader('自訂項目',false)+'<div class="settings-section" id="ledgerOptionSettingsSection"><h3>類別、支付方式與採買單位</h3><div class="settings-help">可新增、刪除或排序；刪除選項不影響既有紀錄。</div>'+renderLedgerOptionManager('category','類別')+renderLedgerOptionManager('payMethod','支付方式')+renderLedgerOptionManager('shoppingUnit','採買單位')+'</div>';
 }
+var APP_RELEASE_NOTES=[
+  {version:'v72',date:'2026-07-30',title:'主題、設定與旅途紀錄',items:['新增六組淺色主題與一致的導覽圖示','設定頁重新分區，並可記錄旅途異常與優化建議']},
+  {version:'v71',date:'2026-07-30',title:'作廢確認更清楚',items:['整張收據作廢預覽後只保留一個確認動作']},
+  {version:'v70',date:'2026-07-30',title:'分攤選取更清楚',items:['分攤成員選取改為較明顯的青綠底色']},
+  {version:'v69',date:'2026-07-29',title:'結算後安全鎖帳',items:['還款確認後的收據改以更正或作廢保留完整歷史']},
+  {version:'v68',date:'2026-07-29',title:'採買操作改善',items:['改善採買排序、編輯返回與連續新增操作']}
+];
+function renderAppReleaseNotes(){
+  return '<div class="settings-release-list">'+APP_RELEASE_NOTES.map(function(note){
+    return '<article class="settings-release"><div class="settings-release-head"><strong>'+escapeHtml(note.version+' '+note.title)+'</strong><span>'+escapeHtml(note.date)+'</span></div><ul>'+note.items.map(function(item){return '<li>'+escapeHtml(item)+'</li>';}).join('')+'</ul></article>';
+  }).join('')+'</div>';
+}
 function renderSettingsDataPage(){
-  return renderSettingsHeader('資料與版本',false)+'<div class="settings-section"><h3>本機資料備份／還原</h3><div class="settings-help">換手機、重裝 App 或清除瀏覽器資料前使用。備份包含主題、採買單位與旅途紀錄；還原會覆蓋目前裝置上的個人資料及待同步記帳。</div><div class="settings-actions"><button class="btn ghost" onclick="exportPersonalState()">複製備份 JSON</button><button class="btn" onclick="openPersonalStateRestore()">從 JSON 還原</button></div></div>';
+  return renderSettingsHeader('資料與版本',false)+'<div class="settings-section"><h3>本機資料備份／還原</h3><div class="settings-help">換手機、重裝 App 或清除瀏覽器資料前使用。備份包含主題、採買單位與旅途紀錄；還原會覆蓋目前裝置上的個人資料及待同步記帳。</div><div class="settings-actions"><button class="btn ghost" onclick="exportPersonalState()">複製備份 JSON</button><button class="btn" onclick="openPersonalStateRestore()">從 JSON 還原</button></div></div><div class="settings-section"><div class="settings-version-row"><b>版本</b><span>SW '+escapeHtml(APP_VERSION)+'</span></div><h3>最近更新</h3>'+renderAppReleaseNotes()+'</div>';
 }
 function renderSettingsPage(page,ledgerSettings,settingsError){
   if(page==='theme')return renderSettingsThemePage();

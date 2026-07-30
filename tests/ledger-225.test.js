@@ -4,6 +4,7 @@ const vm=require('vm');
 
 const html=fs.readFileSync('index.html','utf8');
 const sw=fs.readFileSync('sw.js','utf8');
+const version=fs.readFileSync('app-version.js','utf8');
 
 function plain(value){return JSON.parse(JSON.stringify(value));}
 function extractFunction(source,name){
@@ -222,7 +223,8 @@ assert(switchSource.includes("behavior:'smooth'"),'re-tapping the dashboard scro
 assert(extractFunction(html,'returnLedgerDashboard').includes("classList.contains('ledger-sheet-open')"),'hidden-nav sheets protect unsaved form state');
 assert(html.includes('aria-label="返回分帳首頁"'),'the history back button remains available');
 
-assert.match(sw,/okayama-trip-v71/,'service worker cache advances exactly one version');
+assert.match(version,/^var APP_VERSION='v72';\s*$/,'shared app version is v72');
+assert.match(sw,/importScripts\('\.\/app-version\.js'\);/,'service worker imports the shared version');
 
 (async function(){
   const originals=[

@@ -77,6 +77,8 @@ assert(html.includes('稅與優惠券（選填）'),'tax disclosure uses the app
 assert(html.includes('更多細節（備註選填）'),'optional details disclosure is note-only');
 
 const sw=fs.readFileSync('sw.js','utf8');
-assert.match(sw,/okayama-trip-v71/,'service worker cache is v71');
+const version=fs.readFileSync('app-version.js','utf8');
+assert.match(version,/^var APP_VERSION='v72';\s*$/,'shared app version is v72');
+assert.match(sw,/importScripts\('\.\/app-version\.js'\);/,'service worker imports the shared version');
 
 console.log('ledger 2.2 UI polish tests passed');

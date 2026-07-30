@@ -324,6 +324,8 @@ assert(splitSource.includes("shared?'與我相關 · '+period.count+' 筆紀錄'
 assert(!splitSource.includes('團體總支出'),'主卡片不再暗示為全團總額');
 
 const sw=fs.readFileSync('sw.js','utf8');
-assert.match(sw,/okayama-trip-v71/,'service worker cache is v71');
+const version=fs.readFileSync('app-version.js','utf8');
+assert.match(version,/^var APP_VERSION='v72';\s*$/,'shared app version is v72');
+assert.match(sw,/importScripts\('\.\/app-version\.js'\);/,'service worker imports the shared version');
 
 console.log('ledger member visibility tests passed');

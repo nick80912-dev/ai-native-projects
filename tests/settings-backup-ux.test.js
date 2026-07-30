@@ -21,6 +21,9 @@ function createStorage(initial){
   assert(start>=0&&end>start,'personal-state helper section is present');
   const helperSource=html.slice(start,end);
   const settingsSource=html.slice(html.indexOf('function openSettings('),html.indexOf('function mergedLedgerRecords()'));
+  const optionStoreSource=html.slice(html.indexOf('function createLedgerOptionStore('),html.indexOf('function normalizeLedgerProxyTarget('));
+  assert(optionStoreSource.includes('normalize:normalize'),'the real option store exposes backup normalization');
+  assert.match(html,/function normalizeShoppingUnitBackupOptions\(/,'shopping-unit backup validation is explicit');
   const storage=createStorage({
     trip_checks:JSON.stringify({P001:true}),
     trip_shop_wants:JSON.stringify({S001:true}),

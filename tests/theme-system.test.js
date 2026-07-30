@@ -141,5 +141,21 @@ function extractThemeIds(html){
   assert.match(html,/<img class="logo" id="diagnosticBadge" src="okayama-peach-badge\.png"/);
   assert(html.includes("var driveIcon = /開車/.test(drive) ? '🚗'"),'content transport Emoji remains');
 
+  assert.match(html,/var APP_RELEASE_NOTES=\[/);
+  assert.match(html,/function renderAppReleaseNotes\(/);
+  const releaseMatch=html.match(/var APP_RELEASE_NOTES=(\[[\s\S]*?\]);/);
+  assert(releaseMatch,'release-note data is extractable');
+  const notes=vm.runInNewContext(releaseMatch[1]);
+  assert.strictEqual(notes.length,5,'Settings exposes exactly five user-facing releases');
+  assert.deepStrictEqual(Array.from(notes,function(note){return note.version;}),['v72','v71','v70','v69','v68']);
+  notes.forEach(note=>{
+    assert(note.title&&note.title.length<=24,'release title is short and present');
+    assert(Array.isArray(note.items)&&note.items.length>=1,'release has user-readable items');
+  });
+  assert(!JSON.stringify(notes).includes('canonical'),'user notes avoid internal implementation jargon');
+  const dataPageSource=html.slice(html.indexOf('function renderSettingsDataPage('),html.indexOf('function renderSettingsPage('));
+  assert(dataPageSource.includes('renderAppReleaseNotes()'),'release notes render only in Data and Version');
+  assert.strictEqual((dataPageSource.match(/SW /g)||[]).length,1,'Data and Version shows the SW version once');
+
   console.log('theme system tests passed');
 })();

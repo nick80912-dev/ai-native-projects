@@ -18,12 +18,14 @@ function assertPngSize(filePath, expectedSize) {
 const indexPath = path.join(root, 'index.html');
 const manifestPath = path.join(root, 'manifest.webmanifest');
 const serviceWorkerPath = path.join(root, 'sw.js');
+const versionPath = path.join(root, 'app-version.js');
 const netlifyPath = path.join(root, 'netlify.toml');
 const peachBadgePath = path.join(root, 'okayama-peach-badge.png');
 
 assert.ok(fs.existsSync(indexPath), 'PWA entrypoint index.html exists');
 assert.ok(fs.existsSync(manifestPath), 'web app manifest exists');
 assert.ok(fs.existsSync(serviceWorkerPath), 'service worker exists');
+assert.ok(fs.existsSync(versionPath), 'shared app-version.js exists');
 assert.ok(fs.existsSync(netlifyPath), 'Netlify configuration exists');
 assert.ok(fs.existsSync(peachBadgePath), 'header peach badge exists');
 const peachBadge = fs.readFileSync(peachBadgePath);
@@ -37,6 +39,9 @@ assert.strictEqual(
 assert.ok(!fs.existsSync(path.join(root, 'okayama-traveler-icon.png')), 'rejected traveler asset is absent');
 
 const index = fs.readFileSync(indexPath, 'utf8');
+const versionSource = fs.readFileSync(versionPath, 'utf8');
+assert.match(versionSource, /^var APP_VERSION='v72';\s*$/, 'shared version is exactly v72');
+assert.match(index, /<script src="app-version\.js"><\/script>/, 'index loads the shared version before the inline app');
 assert.match(index, /<title>TripPilot<\/title>/, 'index uses the TripPilot browser title');
 assert.match(index, /<link rel="manifest" href="manifest\.webmanifest">/, 'index links the manifest');
 assert.match(index, /<link rel="icon" type="image\/png" sizes="32x32" href="icon-32\.png">/, 'index links the favicon');
@@ -54,7 +59,10 @@ assert.ok(manifest.icons.some((icon) => icon.src === 'icon-maskable-192.png' && 
 assert.ok(manifest.icons.some((icon) => icon.src === 'icon-maskable-512.png' && icon.purpose === 'maskable'), 'manifest uses the maskable 512px icon');
 
 const serviceWorker = fs.readFileSync(serviceWorkerPath, 'utf8');
-assert.match(serviceWorker, /var CACHE_NAME = 'okayama-trip-v71';/, 'service worker cache is exactly v71');
+assert.match(serviceWorker, /importScripts\('\.\/app-version\.js'\);/, 'service worker imports the same version');
+assert.match(serviceWorker, /var CACHE_NAME='okayama-trip-'\+APP_VERSION;/, 'cache name derives from APP_VERSION');
+assert.match(serviceWorker, /'\.\/app-version\.js'/, 'App Shell caches the version file');
+assert.doesNotMatch(serviceWorker, /okayama-trip-v72/, 'service worker does not duplicate the version literal');
 assert.doesNotMatch(serviceWorker, /okayama-trip-v18/, 'retired v18 cache is not retained');
 assert.match(serviceWorker, /'\.\/icon-maskable-192\.png'/, 'service worker caches the maskable 192px icon');
 assert.match(serviceWorker, /'\.\/icon-maskable-512\.png'/, 'service worker caches the maskable 512px icon');

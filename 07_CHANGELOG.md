@@ -1,4 +1,15 @@
 # 07 版本紀錄
+## 2026-07-30｜設定頁 2.0、六組主題與旅途紀錄（開發分支，SW v72，待 Bar 真機驗收）
+- 設定根頁依核准順序重組為「身分 → 主題 → 代購對象 → 帳務 → 自訂項目 → 資料與版本 → 測試模式」；身分卡縮短，`目前身分`、`切換`、`新增` 同列。代購對象、匯率／預設幣別、自訂類別／支付方式／採買單位、備份與版本資訊改為子頁，舊設定入口仍有相容映射，根頁與子頁各自保留 scroll。
+- 新增海洋／岡山、象牙／靛藍、藤紫／夜櫻、杉綠／宮島、霧藍／瀨戶、焙茶／倉敷六組淺色主題。色彩改為 13 個第一層 `--t-*` token＋既有角色變數第二層對映；未知主題回退海洋並記診斷，互動切換採 storage write-first，寫入失敗不留下假選取狀態。
+- 底部今天／行程／購物／分帳與設定入口的五個功能 Emoji 改為同一組 `currentColor` outline inline SVG；分帳 badge、可存取名稱、桃子診斷徽章與交通／內容 Emoji 保留。
+- 診斷面板新增只存在本機的旅途紀錄：異常／優化建議、待評估／已處理、修改、確認刪除、篩選、文字摘要／JSON 複製匯出，最多 200 筆並保存頁面、App 版本、連線／同步與健康摘要。桃子徽章原本的 300ms 兩次 `touchend` 入口未改；桌面瀏覽器不模擬 touch，因此此入口仍由既有 iOS 契約測試與後續 Bar 真機驗收覆蓋。
+- 個人備份升 v8，新增 `themeId`、`shoppingUnits`、`travelNotes`；v1–v7 還原保留裝置現有的三項新狀態，v8 先完整驗證再把所有舊／新 key 一次寫入，任一寫入失敗整批回復，成功後才套用主題。Browser QA 首輪因此抓到正式 option store 未暴露 `normalize()` 的落差，補測試與正式介面後重驗通過。
+- `app-version.js` 成為 App 與 Service Worker 的版本單一來源，`sw.js` 以 `APP_VERSION` 推導 cache 並快取版本檔；設定「資料與版本」顯示 `SW v72` 與 v72–v68 五筆使用者版更新說明。
+- 自動驗證：完整 **51／51** Node test files、Playwright 三情境 **3／3**、文件標題、manifest JSON 與 `git diff --check` 通過。Browser QA 於 320×700、375×812、390×844 驗證七區順序、身分按鈕 38px、四個子頁、六主題 `data-theme`／meta／topbar／tabbar、四個 tab SVG＋設定 SVG、水平溢位 0、console error／warning 0；根頁 ↔ 資料與版本返回 scroll delta 0。v8 還原後霧藍主題、2 筆採買單位與 1 筆旅途紀錄成功寫入，重載後主題與自訂單位仍存在；旅途紀錄資料與原子回滾另由 `travel-notes.test.js`／`settings-backup-ux.test.js` 完整驗證。
+- 本批在 `codex/sw-v72-settings-themes` 隔離分支分段提交，尚未 push `dev`、合併 `main` 或部署；Bar 真機／PWA 驗收仍待完成。
+- `tasks/backlog.md` 的完成項清理由於主工作目錄已有 Bar 尚未提交的 #6 主題範圍原文修改，本批不覆蓋也不納入提交；待整合 `dev` 時以該原文為基礎移除已完成的 #3b／#6／#7／#8／#9。
+
 ## 2026-07-30｜Playwright 三情境 QA 入版控（dev，測試基礎設施）
 - 新增 `@playwright/test`、固定單 worker 的 `playwright.config.js` 與 Node 內建靜態伺服器；測試資產限定在 `tests/browser/`，不會把既有 `tests/*.test.js` 誤當 Playwright 規格執行。
 - 三情境直接啟動真實 `index.html`：斷網時要求 `CURRENT_SNAPSHOT.source === 'builtin'`；連網情境以完整內建 CSV 模擬所有 Sheet 回應並要求原子 online 快照寫入；旅行日以固定 `Date` 驗證 `10/18`、Day 1 與今天頁。三者都收集並要求 `pageerror=0`。

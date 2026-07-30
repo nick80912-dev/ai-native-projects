@@ -6,10 +6,12 @@
       (BUILTIN → localStorage → background sync),SW 與資料層職責不重疊
    4. 版本升級:改 CACHE_NAME 尾碼(v3→v4...),activate 時自動清舊快取
 */
-var CACHE_NAME = 'okayama-trip-v71';
+importScripts('./app-version.js');
+var CACHE_NAME='okayama-trip-'+APP_VERSION;
 var SHELL = [
   './',
   './index.html',
+  './app-version.js',
   './schema.js',
   './validator.js',
   './manifest.webmanifest',
