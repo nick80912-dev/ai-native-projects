@@ -19,29 +19,56 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
-:root{
+:root,[data-theme="ocean"]{
   --tabbar-height:62px;
   --font-ui:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,-apple-system,sans-serif;
-  --paper:#f5f1e8;
-  --card:#fffdf8;
-  --ink:#22303a;
-  --ink-soft:#5c6b73;
-  --ink-faint:#94a0a6;
-  --line:#e5ddcd;
-  --line-soft:#eee8db;
-  --sea:#12707f;
-  --sea-deep:#0e3a44;
-  --coral:#df5f3a;
-  --coral-bg:#fbeee7;
+  --t-paper:#f5f1e8;--t-card:#fffdf8;--t-chrome:#0e3a44;--t-action:#12707f;
+  --t-accent:#df5f3a;--t-accent-bg:#fbeee7;--t-ink:#22303a;--t-ink-soft:#5c6b73;
+  --t-ink-faint:#7c8a90;--t-line:#e5ddcd;--t-line-soft:#eee8db;
+  --t-tabbar:rgba(255,253,248,.96);--t-secondary:#7659a0;
+  --paper:var(--t-paper);--card:var(--t-card);--sea-deep:var(--t-chrome);
+  --sea:var(--t-action);--coral:var(--t-accent);--coral-bg:var(--t-accent-bg);
+  --ink:var(--t-ink);--ink-soft:var(--t-ink-soft);--ink-faint:var(--t-ink-faint);
+  --line:var(--t-line);--line-soft:var(--t-line-soft);--violet:var(--t-secondary);
   --gold:#c1963c;
+  --gold-ink:#85661c;
   --warning-border:#e7c37d;
   --warning-bg:#fff8e8;
   --warning-ink:#75530b;
   --correction-border:#b9d7d2;
-  --green:#3c8062;
-  --violet:#7659a0;
+  --green:#367055;
   --shadow:0 2px 12px rgba(24,44,52,.08);
   --shadow-lg:0 8px 28px rgba(24,44,52,.16);
+}
+[data-theme="ivory"]{
+  --t-paper:#faf9f5;--t-card:#ffffff;--t-chrome:#16243d;--t-action:#800000;
+  --t-accent:#e25a0f;--t-accent-bg:#fdece2;--t-ink:#16243d;--t-ink-soft:#4a5361;
+  --t-ink-faint:#727c8c;--t-line:#dcd8cc;--t-line-soft:#e8e5dc;
+  --t-tabbar:rgba(255,255,255,.96);--t-secondary:#7659a0;
+}
+[data-theme="wisteria"]{
+  --t-paper:#f6f3f7;--t-card:#ffffff;--t-chrome:#3b2d4d;--t-action:#6a3d7d;
+  --t-accent:#c0416e;--t-accent-bg:#fae9ef;--t-ink:#2a2331;--t-ink-soft:#575061;
+  --t-ink-faint:#7e7689;--t-line:#e6dee9;--t-line-soft:#efe9f2;
+  --t-tabbar:rgba(255,255,255,.96);--t-secondary:#2f6f6a;
+}
+[data-theme="cedar"]{
+  --t-paper:#f3f5f0;--t-card:#ffffff;--t-chrome:#23402f;--t-action:#7a4f24;
+  --t-accent:#d2622c;--t-accent-bg:#fbeadf;--t-ink:#1f2b23;--t-ink-soft:#4d5a50;
+  --t-ink-faint:#79857c;--t-line:#dfe5da;--t-line-soft:#eaefe6;
+  --t-tabbar:rgba(255,255,255,.96);--t-secondary:#7659a0;
+}
+[data-theme="mist"]{
+  --t-paper:#f4f5f7;--t-card:#ffffff;--t-chrome:#3f4c5e;--t-action:#416b8a;
+  --t-accent:#c86d4e;--t-accent-bg:#f8eae4;--t-ink:#25303d;--t-ink-soft:#56616f;
+  --t-ink-faint:#747f8c;--t-line:#dce0e5;--t-line-soft:#e9ecef;
+  --t-tabbar:rgba(255,255,255,.96);--t-secondary:#7659a0;
+}
+[data-theme="tea"]{
+  --t-paper:#f7f2ed;--t-card:#fffdfb;--t-chrome:#4e3d32;--t-action:#896748;
+  --t-accent:#b64f5c;--t-accent-bg:#f8e7e9;--t-ink:#332820;--t-ink-soft:#62564e;
+  --t-ink-faint:#81756d;--t-line:#e5d9ce;--t-line-soft:#efe7df;
+  --t-tabbar:rgba(255,253,251,.96);--t-secondary:#7659a0;
 }
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html{scroll-behavior:smooth}
@@ -151,7 +178,7 @@ input,select,textarea{font-size:16px}
   background:var(--card);border-left:4px solid var(--gold);border-radius:12px;
   padding:13px 15px;margin-bottom:16px;box-shadow:var(--shadow);
 }
-.hotel .h-lbl{font-size:10.5px;letter-spacing:.1em;color:var(--gold);font-weight:700;margin-bottom:4px}
+.hotel .h-lbl{font-size:10.5px;letter-spacing:.1em;color:var(--gold-ink);font-weight:700;margin-bottom:4px}
 .hotel .h-name{font-size:15.5px;font-weight:700;margin-bottom:5px}
 .hotel .h-meta{font-size:12.5px;color:var(--ink-soft);line-height:1.65;white-space:pre-line}
 
@@ -274,7 +301,7 @@ input,select,textarea{font-size:16px}
 
 /* ===== 底部導覽 ===== */
 .tabbar{
-  position:fixed;bottom:0;left:0;right:0;z-index:70;background:rgba(255,253,248,.96);
+  position:fixed;bottom:0;left:0;right:0;z-index:70;background:var(--t-tabbar);
   backdrop-filter:blur(10px);border-top:1px solid var(--line);display:flex;
   height:calc(var(--tabbar-height) + env(safe-area-inset-bottom));padding-bottom:env(safe-area-inset-bottom);
 }
@@ -283,7 +310,12 @@ input,select,textarea{font-size:16px}
   display:flex;flex-direction:column;align-items:center;gap:2px;color:var(--ink-faint);font-size:12px;font-weight:600;
 }
 .tabbar-btn .ic{font-size:24px;line-height:1}
-.tabbar-btn.active{color:var(--sea)}
+.tabbar-btn{position:relative}
+.tabbar-btn.active{color:var(--sea-deep);font-weight:800}
+.tabbar-btn.active::before{content:"";position:absolute;top:0;left:28%;right:28%;height:3px;border-radius:0 0 3px 3px;background:currentColor}
+.app-icon{width:24px;height:24px;display:block;fill:none;stroke:currentColor;stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round}
+.settings-btn .app-icon{width:19px;height:19px}
+.tabbar-icon-wrap{position:relative;display:inline-flex}
 
 .totop{
   position:fixed;right:14px;bottom:calc(74px + env(safe-area-inset-bottom));width:42px;height:42px;
@@ -405,7 +437,7 @@ input,select,textarea{font-size:16px}
 .nx-cluster-actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:8px}
 .nx-cluster-actions .qa-btn{margin:0}
 .nx-empty-ticket{margin:12px;background:var(--card);border-radius:14px;box-shadow:var(--shadow);padding:18px;text-align:center;color:var(--ink-soft)}
-.today-pretrip-title-row{display:flex;align-items:center;justify-content:space-between;gap:10px;min-width:0}.today-pretrip-title-row .date{min-width:0}.pretrip-count{flex:0 0 auto;font-size:14px;font-weight:900;color:var(--gold);background:#fff7dc;border:1px solid #ead88e;border-radius:999px;display:inline-flex;padding:5px 10px;margin-top:0;white-space:nowrap;position:relative}
+.today-pretrip-title-row{display:flex;align-items:center;justify-content:space-between;gap:10px;min-width:0}.today-pretrip-title-row .date{min-width:0}.pretrip-count{flex:0 0 auto;font-size:14px;font-weight:900;color:var(--gold-ink);background:#fff7dc;border:1px solid #ead88e;border-radius:999px;display:inline-flex;padding:5px 10px;margin-top:0;white-space:nowrap;position:relative}
 .tomorrow-card{margin:12px;background:linear-gradient(135deg,#fffaf0,#eef8f9);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:16px}
 .tomorrow-lbl{font-size:11px;font-weight:900;letter-spacing:.12em;color:var(--sea);margin-bottom:7px}
 .tomorrow-title{font-size:20px;font-weight:900;color:var(--ink);margin-bottom:9px}
@@ -482,7 +514,7 @@ input,select,textarea{font-size:16px}
 .pc-sub{font-size:11.5px;font-weight:800;color:var(--coral);margin:10px 0 4px;letter-spacing:.05em}
 .pc-rest{padding:7px 0;border-top:1px dashed var(--line)}
 .pc-rest-n{font-size:13.5px;font-weight:700}
-.pc-rest-r{font-size:11px;color:var(--gold);font-weight:700;margin-left:4px}
+.pc-rest-r{font-size:11px;color:var(--gold-ink);font-weight:700;margin-left:4px}
 .pc-rest-d{font-size:12px;color:var(--ink-soft);line-height:1.55;margin-top:1px}
 .st-must{display:inline-block;font-size:9.5px;font-weight:800;color:#fff;background:var(--coral);border-radius:4px;padding:1px 5px;vertical-align:1px}
 .st-tax{display:inline-block;font-size:9.5px;font-weight:800;color:var(--green);border:1px solid var(--green);border-radius:4px;padding:0 4px;vertical-align:1px}
@@ -511,6 +543,7 @@ input,select,textarea{font-size:16px}
 .settings-back{min-height:40px;border:0;background:transparent;color:var(--sea);padding:4px 8px 4px 0;font:inherit;font-size:14px;font-weight:900}.settings-title-wrap{display:flex;align-items:center;gap:6px;min-width:0}.settings-title-wrap h2{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .settings-identity-row{display:flex;align-items:center;gap:8px;padding:9px 9px 9px 11px;min-height:52px}.settings-identity-current{min-width:0;flex:1}.settings-identity-current small{display:block;color:var(--ink-faint);font-size:11px}.settings-identity-current b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--ink)}.settings-identity-actions{display:flex;gap:5px;flex:0 0 auto}.settings-identity-actions .btn{min-height:38px;padding:0 9px}
 .settings-menu-button{width:100%;min-height:56px;border:0;background:transparent;color:var(--ink);padding:0;text-align:left;font:inherit;display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:10px}.settings-menu-copy{min-width:0}.settings-menu-copy b{display:block;color:var(--ink);font-size:14px}.settings-menu-copy small{display:block;margin-top:3px;color:var(--ink-faint);font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.settings-menu-chevron{color:var(--ink-faint);font-size:20px}.settings-inline-toggle{margin-top:8px;padding-top:10px;border-top:1px solid var(--line-soft)}
+.settings-theme-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.settings-theme-card{min-width:0;border:1px solid var(--line);border-radius:11px;background:var(--card);padding:8px;color:var(--ink);font:inherit;text-align:left}.settings-theme-card[aria-pressed="true"]{border-color:var(--sea-deep);box-shadow:0 0 0 1px var(--sea-deep)}.settings-theme-preview{display:block;height:66px;border-radius:8px;background:var(--t-paper);overflow:hidden;border:1px solid rgba(0,0,0,.06)}.settings-theme-preview-head{display:block;height:19px;background:var(--t-chrome)}.settings-theme-preview-body{display:block;padding:8px}.settings-theme-preview-line{display:block;height:7px;width:74%;border-radius:5px;background:var(--t-action);margin-bottom:7px}.settings-theme-preview-dot{display:block;width:16px;height:16px;border-radius:50%;background:var(--t-accent)}.settings-theme-name{display:flex;align-items:center;justify-content:space-between;gap:4px;margin-top:7px;font-size:12px;font-weight:900}.settings-theme-check{visibility:hidden;color:var(--sea-deep)}.settings-theme-card[aria-pressed="true"] .settings-theme-check{visibility:visible}
 .member-options{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.member-option{min-height:48px;border:1px solid var(--line);border-radius:11px;background:#fff;color:var(--ink);font:inherit;font-weight:800}.member-option.on{background:var(--sea);border-color:var(--sea);color:#fff}
 .member-panel{min-height:calc(100vh - 48px);min-height:calc(100dvh - 48px);display:flex;flex-direction:column;justify-content:center}.member-copy{color:var(--ink-soft);font-size:14px;margin-bottom:15px}
 .member-entry{margin-top:12px}.member-entry input{width:100%;min-height:48px;border:1px solid var(--line);border-radius:10px;background:#fff;padding:10px 12px;font:inherit}.member-actions{display:flex;gap:9px;margin-top:12px}.member-actions .btn{flex:1;min-height:44px}.member-error{margin-top:10px;color:var(--coral);font-size:13px;font-weight:700}.member-confirm{padding:16px;border:1px solid var(--line);border-radius:10px;background:#fff;text-align:center;font-weight:800}.member-confirm-note{display:block;margin-top:8px;color:var(--ink-soft);font-size:12px;font-weight:600;line-height:1.5}
@@ -576,6 +609,66 @@ body.shopping-list-open{overflow:hidden}.shopping-list-overlay{position:fixed;in
 input:not([type="hidden"]),select,textarea{font-size:16px!important}
 .ledger-sheet #ledgerAmount{font-size:30px!important}
 </style>
+<script>
+var THEME_STORAGE_KEY='trip_theme';
+var THEME_IDS=['ocean','ivory','wisteria','cedar','mist','tea'];
+var THEME_REGISTRY={
+  ocean:{id:'ocean',name:'海洋／岡山',chrome:'#0e3a44'},
+  ivory:{id:'ivory',name:'象牙／靛藍',chrome:'#16243d'},
+  wisteria:{id:'wisteria',name:'藤紫／夜櫻',chrome:'#3b2d4d'},
+  cedar:{id:'cedar',name:'杉綠／宮島',chrome:'#23402f'},
+  mist:{id:'mist',name:'霧藍／瀨戶',chrome:'#3f4c5e'},
+  tea:{id:'tea',name:'焙茶／倉敷',chrome:'#4e3d32'}
+};
+var themeDiagnosticQueue=[];
+var themeUnknownLogged={};
+function normalizeThemeId(value){
+  var id=String(value||'');
+  return THEME_IDS.indexOf(id)>=0?id:'ocean';
+}
+function reportUnknownTheme(value){
+  var id=String(value||'');
+  if(!id||THEME_IDS.indexOf(id)>=0||themeUnknownLogged[id])return;
+  themeUnknownLogged[id]=true;
+  var message='未知主題「'+id+'」，已改用海洋／岡山';
+  if(typeof AppLog!=='undefined'&&AppLog&&typeof AppLog.repo==='function')AppLog.repo(message);
+  else themeDiagnosticQueue.push(message);
+}
+function currentThemeId(){
+  var rootId=document&&document.documentElement&&document.documentElement.dataset?document.documentElement.dataset.theme:'';
+  if(THEME_IDS.indexOf(rootId)>=0)return rootId;
+  try{return normalizeThemeId(localStorage.getItem(THEME_STORAGE_KEY));}
+  catch(error){return 'ocean';}
+}
+function applyTheme(themeId,options){
+  var requested=String(themeId||''),id=normalizeThemeId(requested),config=THEME_REGISTRY[id];
+  reportUnknownTheme(requested);
+  var persist=!options||options.persist!==false;
+  if(persist)localStorage.setItem(THEME_STORAGE_KEY,id);
+  document.documentElement.dataset.theme=id;
+  var meta=document.querySelector('meta[name="theme-color"]');
+  if(meta)meta.setAttribute('content',config.chrome);
+  return config;
+}
+function selectTheme(themeId){
+  var previous=currentThemeId();
+  try{
+    var selected=applyTheme(themeId);
+    if(typeof openSettings==='function')openSettings('theme');
+    return {ok:true,id:selected.id};
+  }catch(error){
+    applyTheme(previous,{persist:false});
+    if(typeof toast==='function')toast('主題無法儲存，已保留原設定');
+    return {ok:false};
+  }
+}
+(function(){
+  var stored='';
+  try{stored=localStorage.getItem(THEME_STORAGE_KEY)||'ocean';}
+  catch(error){stored='ocean';}
+  applyTheme(stored,{persist:false});
+})();
+</script>
 </head>
 <body>
 
@@ -589,7 +682,7 @@ input:not([type="hidden"]),select,textarea{font-size:16px!important}
       <button class="sync" id="syncBtn" onclick="openSyncStatus()">
         <span class="dot" id="syncDot"></span><span id="syncTxt">同步中</span>
       </button>
-      <button class="settings-btn" aria-label="設定" onclick="openSettings()">⚙</button>
+      <button class="settings-btn" aria-label="設定" onclick="openSettings()"><svg class="app-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.88l.06.06-2.86 2.86-.06-.06A1.7 1.7 0 0 0 15 19.4a1.7 1.7 0 0 0-1 .6 1.7 1.7 0 0 0-.4 1.1V21H9.6v-.1A1.7 1.7 0 0 0 8 19.4a1.7 1.7 0 0 0-1.88.34l-.06.06-2.86-2.86.06-.06A1.7 1.7 0 0 0 3.6 15a1.7 1.7 0 0 0-.6-1 1.7 1.7 0 0 0-1.1-.4H1.8V9.6h.1A1.7 1.7 0 0 0 3.6 8a1.7 1.7 0 0 0-.34-1.88l-.06-.06L6.06 3.2l.06.06A1.7 1.7 0 0 0 8 3.6a1.7 1.7 0 0 0 1-.6 1.7 1.7 0 0 0 .4-1.1V1.8h4v.1A1.7 1.7 0 0 0 15 3.6a1.7 1.7 0 0 0 1.88-.34l.06-.06 2.86 2.86-.06.06A1.7 1.7 0 0 0 19.4 8a1.7 1.7 0 0 0 .6 1 1.7 1.7 0 0 0 1.1.4h.1v4h-.1a1.7 1.7 0 0 0-1.7 1.6z"></path></svg></button>
     </div>
   </div>
   <div class="trip-tabs" id="tripTabs"></div>
@@ -610,16 +703,16 @@ input:not([type="hidden"]),select,textarea{font-size:16px!important}
 
 <div class="tabbar">
   <button class="tabbar-btn active" data-view="today" onclick="switchView('today')">
-    <span class="ic">🏠</span><span>今天</span>
+    <span class="ic"><svg class="app-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m3 11 9-8 9 8"></path><path d="M5 10v10h14V10"></path><path d="M9 20v-6h6v6"></path></svg></span><span>今天</span>
   </button>
   <button class="tabbar-btn" data-view="trip" onclick="switchView('trip')">
-    <span class="ic">🗺️</span><span>行程</span>
+    <span class="ic"><svg class="app-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21 3 6"></polygon><path d="M9 3v15M15 6v15"></path></svg></span><span>行程</span>
   </button>
   <button class="tabbar-btn" data-view="shop" onclick="switchView('shop')">
-    <span class="ic">🏬</span><span>購物</span>
+    <span class="ic"><svg class="app-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 9v11h16V9"></path><path d="M3 4h18l-1 5H4L3 4z"></path><path d="M9 20v-6h6v6"></path><path d="M7 9v2M12 9v2M17 9v2"></path></svg></span><span>購物</span>
   </button>
   <button class="tabbar-btn" data-view="split" onclick="switchView('split')">
-    <span class="ic">💴<span class="tabbar-badge" id="splitTabBadge" hidden></span></span><span>分帳</span>
+    <span class="ic tabbar-icon-wrap"><svg class="app-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="3" y="5" width="18" height="14" rx="2"></rect><path d="M7 9h10M7 15h4"></path><circle cx="16" cy="14" r="2"></circle></svg><span class="tabbar-badge" id="splitTabBadge" hidden></span></span><span>分帳</span>
   </button>
 </div>
 
@@ -850,6 +943,9 @@ var AppLog = {
   render: function(msg){ console.error('[Render Error] ' + msg); },
   sync:   function(msg){ console.warn('[Sync Error] ' + msg); }
 };
+if(typeof themeDiagnosticQueue!=='undefined'){
+  themeDiagnosticQueue.splice(0).forEach(function(message){AppLog.repo(message);});
+}
 
 /* ---- 表頭正規化 ---- */
 function normH(h){ return String(h||'').trim().toLowerCase().replace(/\s+/g,''); }
@@ -3711,10 +3807,11 @@ var SHOPPING_CATEGORIES=['必買','伴手禮','生活用品','其他'];
 /* 個人狀態備份版本。v5 起 Shopping Item 帶 completedAt／splitGroupId／ledgerLinks;
    v6 起數量改為結構化 quantity／unit／legacyQtyText。
    v7 起以 allocations[] 保存每位對象的數量與記帳關聯。
+   v8 起加入本機主題、採買單位與旅途紀錄。
    若不升版,舊版 App 會認為格式相容,還原時經舊 normalizer 靜默丟掉新欄位 ——
    已記帳項目會重新顯示成未記帳而重複入帳,數量也會整批消失。新增欄位必須連帶升版。 */
-var PERSONAL_STATE_VERSION=7;
-var PERSONAL_STATE_SUPPORTED_VERSIONS=[1,2,3,4,5,6,7];
+var PERSONAL_STATE_VERSION=8;
+var PERSONAL_STATE_SUPPORTED_VERSIONS=[1,2,3,4,5,6,7,8];
 function isSupportedPersonalStateVersion(version){
   return typeof version==='number'&&PERSONAL_STATE_SUPPORTED_VERSIONS.indexOf(version)>=0;
 }
@@ -7302,7 +7399,7 @@ function renderTravelNotesSection(){
 /* ================= SETTINGS 2.0 ================= */
 function closeSettings(){ var overlay=document.getElementById('settingsOverlay'); if(overlay) overlay.remove(); }
 function personalStateJson(){
-  var payload={format:'trip-personal-state',version:PERSONAL_STATE_VERSION,exportedAt:timestampDate(Date.now()).toISOString(),checks:lsGet('trip_checks',{}),wants:lsGet('trip_shop_wants',{}),member:getCurrentMember(),ledgerQueue:ledgerRepository.queuedRecords(),personalLedger:personalLedgerRepository.all(),ledgerCategories:ledgerCategoryStore.all(),ledgerPayMethods:ledgerPayMethodStore.all(),proxyTargets:ledgerProxyTargetStore.all(),shoppingItems:shoppingListStore.all()};
+  var payload={format:'trip-personal-state',version:PERSONAL_STATE_VERSION,exportedAt:timestampDate(Date.now()).toISOString(),checks:lsGet('trip_checks',{}),wants:lsGet('trip_shop_wants',{}),member:getCurrentMember(),ledgerQueue:ledgerRepository.queuedRecords(),personalLedger:personalLedgerRepository.all(),ledgerCategories:ledgerCategoryStore.all(),ledgerPayMethods:ledgerPayMethodStore.all(),proxyTargets:ledgerProxyTargetStore.all(),shoppingItems:shoppingListStore.all(),themeId:currentThemeId(),shoppingUnits:shoppingUnitStore.all(),travelNotes:travelNoteStore.all()};
   return JSON.stringify(payload,null,2);
 }
 function copyPersonalStateText(text,timeoutMs){
@@ -7342,7 +7439,7 @@ function openPersonalStateRestore(){
   closePersonalStateDialog();
   var overlay=document.createElement('div');
   overlay.id='personalStateDialog'; overlay.className='settings-overlay state-dialog-overlay'; overlay.setAttribute('data-dialog-kind','restore');
-  overlay.innerHTML='<section class="settings-panel state-dialog-panel" role="dialog" aria-modal="true" aria-labelledby="personalStateDialogTitle"><div class="settings-head"><h2 id="personalStateDialogTitle">從 JSON 還原</h2><button class="settings-close" aria-label="關閉" onclick="closePersonalStateDialog()">×</button></div><p class="settings-help">還原會覆蓋目前裝置上的打卡、想逛、採買清單、身分、個人帳、代購對象、自訂選項及待同步記帳。</p><textarea class="state-dialog-copy" id="personalStateBox" placeholder="貼上備份 JSON"></textarea><div class="settings-actions"><button class="btn ghost" onclick="closePersonalStateDialog()">取消</button><button class="btn" onclick="restorePersonalState()">驗證並還原</button></div></section>';
+  overlay.innerHTML='<section class="settings-panel state-dialog-panel" role="dialog" aria-modal="true" aria-labelledby="personalStateDialogTitle"><div class="settings-head"><h2 id="personalStateDialogTitle">從 JSON 還原</h2><button class="settings-close" aria-label="關閉" onclick="closePersonalStateDialog()">×</button></div><p class="settings-help">還原會覆蓋目前裝置上的打卡、想逛、採買清單、身分、個人帳、代購對象、自訂選項、主題、採買單位、旅途紀錄及待同步記帳。</p><textarea class="state-dialog-copy" id="personalStateBox" placeholder="貼上備份 JSON"></textarea><div class="settings-actions"><button class="btn ghost" onclick="closePersonalStateDialog()">取消</button><button class="btn" onclick="restorePersonalState()">驗證並還原</button></div></section>';
   document.body.appendChild(overlay);
   var box=document.getElementById('personalStateBox'); if(box)box.focus();
 }
@@ -7350,14 +7447,23 @@ function validatePersonalStatePayload(payload){
   if(!payload||payload.format!=='trip-personal-state'||!isSupportedPersonalStateVersion(payload.version))throw new Error('個人狀態格式錯誤');
   if(payload.version<3&&payload.proxyTargets===undefined)payload.proxyTargets=[];
   if(payload.version<4&&payload.shoppingItems===undefined)payload.shoppingItems=[];
+  if(payload.version<8){
+    payload.themeId=currentThemeId();
+    payload.shoppingUnits=shoppingUnitStore.all();
+    payload.travelNotes=travelNoteStore.all();
+  }else if(THEME_IDS.indexOf(String(payload.themeId||''))<0){
+    throw new Error('主題格式錯誤');
+  }
   if(!Array.isArray(payload.proxyTargets))throw new Error('代購對象清單格式錯誤');
   if(!Array.isArray(payload.shoppingItems))throw new Error('採買清單格式錯誤');
   payload.proxyTargets=ledgerProxyTargetStore.normalize(payload.proxyTargets);
   payload.shoppingItems=shoppingListStore.normalize(payload.shoppingItems);
+  payload.shoppingUnits=shoppingUnitStore.normalize(payload.shoppingUnits);
+  payload.travelNotes=travelNoteStore.normalize(payload.travelNotes);
   return payload;
 }
 function applyPersonalStatePayload(payload){
-  var keys=['trip_checks','trip_shop_wants','trip_member',LEDGER_QUEUE_KEY,PERSONAL_LEDGER_KEY,LEDGER_CATEGORY_OPTIONS_KEY,LEDGER_PAY_METHOD_OPTIONS_KEY,LEDGER_PROXY_TARGETS_KEY,SHOPPING_LIST_KEY];
+  var keys=['trip_checks','trip_shop_wants','trip_member',LEDGER_QUEUE_KEY,PERSONAL_LEDGER_KEY,LEDGER_CATEGORY_OPTIONS_KEY,LEDGER_PAY_METHOD_OPTIONS_KEY,LEDGER_PROXY_TARGETS_KEY,SHOPPING_LIST_KEY,THEME_STORAGE_KEY,SHOPPING_UNIT_OPTIONS_KEY,TRAVEL_NOTES_KEY];
   var before=keys.map(function(key){return {key:key,value:localStorage.getItem(key)};});
   try{
     lsSet('trip_checks',payload.checks);
@@ -7369,6 +7475,9 @@ function applyPersonalStatePayload(payload){
     localStorage.setItem(LEDGER_PAY_METHOD_OPTIONS_KEY,JSON.stringify(payload.ledgerPayMethods));
     localStorage.setItem(LEDGER_PROXY_TARGETS_KEY,JSON.stringify(payload.proxyTargets));
     localStorage.setItem(SHOPPING_LIST_KEY,JSON.stringify(payload.shoppingItems));
+    localStorage.setItem(THEME_STORAGE_KEY,payload.themeId);
+    localStorage.setItem(SHOPPING_UNIT_OPTIONS_KEY,JSON.stringify(payload.shoppingUnits));
+    localStorage.setItem(TRAVEL_NOTES_KEY,JSON.stringify(payload.travelNotes));
   }catch(error){
     before.forEach(function(item){
       if(item.value===null)localStorage.removeItem(item.key);
@@ -7376,6 +7485,7 @@ function applyPersonalStatePayload(payload){
     });
     throw error;
   }
+  applyTheme(payload.themeId,{persist:false});
 }
 function restorePersonalState(){
   var box=document.getElementById('personalStateBox'), payload;
@@ -7498,17 +7608,25 @@ function renderSettingsHeader(title,isRoot){
 function renderSettingsRoot(ledgerSettings){
   var proxyCount=ledgerProxyTargetStore.all().length;
   var optionSummary=ledgerCategoryStore.all().length+' 類別 · '+ledgerPayMethodStore.all().length+' 支付方式 · '+shoppingUnitStore.all().length+' 單位';
+  var theme=THEME_REGISTRY[currentThemeId()]||THEME_REGISTRY.ocean;
   return renderSettingsHeader('設定',true)+
     '<div class="settings-section"><h3>身分</h3><div class="settings-identity-row"><div class="settings-identity-current"><small>目前身分</small><b id="settingsCurrentMember">'+escapeHtml(getCurrentMember()||'尚未選擇')+'</b></div><div class="settings-identity-actions"><button class="btn ghost settings-member-switch" onclick="openMemberSelector(false,false)">切換</button><button class="btn settings-member-switch" onclick="openMemberSelector(false,true)">新增</button></div></div></div>'+
-    '<div class="settings-section"><h3>主題</h3><button class="settings-menu-button" onclick="openSettingsPage(\'theme\')"><span class="settings-menu-copy"><b>海洋／岡山</b><small>6 組主題</small></span><span class="settings-menu-chevron">›</span></button></div>'+
+    '<div class="settings-section"><h3>主題</h3><button class="settings-menu-button" onclick="openSettingsPage(\'theme\')"><span class="settings-menu-copy"><b>'+escapeHtml(theme.name)+'</b><small>6 組主題</small></span><span class="settings-menu-chevron">›</span></button></div>'+
     '<div class="settings-section"><h3>代購對象</h3><button class="settings-menu-button" onclick="openSettingsPage(\'proxy\')"><span class="settings-menu-copy"><b>管理代購對象</b><small>'+proxyCount+' 位常用對象</small></span><span class="settings-menu-chevron">›</span></button></div>'+
     '<div class="settings-section"><h3>帳務</h3><button class="settings-menu-button" onclick="openSettingsPage(\'ledger\')"><span class="settings-menu-copy"><b>匯率與預設幣別</b><small>1 JPY = NT$'+escapeHtml(ledgerSettings.exchangeRate||'未設定')+' · '+escapeHtml(ledgerSettings.defaultCurrency)+'</small></span><span class="settings-menu-chevron">›</span></button><div class="toggle-row settings-inline-toggle" id="simpleSettlementSection"><div><b>簡易結算模式</b><div class="settings-help">保留已確認結清</div></div><input type="checkbox" '+(isSimpleSettlementMode()?'checked':'')+' onchange="setSimpleSettlementMode(this)"></div></div>'+
     '<div class="settings-section"><h3>自訂項目</h3><button class="settings-menu-button" onclick="openSettingsPage(\'options\')"><span class="settings-menu-copy"><b>類別、支付方式與採買單位</b><small>'+escapeHtml(optionSummary)+'</small></span><span class="settings-menu-chevron">›</span></button></div>'+
     '<div class="settings-section"><h3>資料與版本</h3><button class="settings-menu-button" onclick="openSettingsPage(\'data\')"><span class="settings-menu-copy"><b>備份、還原與版本資訊</b><small>個人資料備份</small></span><span class="settings-menu-chevron">›</span></button></div>'+
     '<div class="settings-section" id="ledgerTestModeSection"><h3>測試模式</h3><div class="toggle-row"><div><b>團體帳測試模式<span class="settings-warning-tag">僅團體帳</span></b><div class="settings-help">團體帳切換為獨立 [TEST] 帳本；儀表板、結算與明細只顯示測試紀錄，關閉即回正式帳本。個人帳不受影響。</div></div><input type="checkbox" '+(lsGet('trip_ledger_test_mode',false)?'checked':'')+' onchange="setLedgerTestMode(this)"></div></div>';
 }
+function renderThemeSettingsSheet(){
+  var selected=currentThemeId();
+  return '<div class="settings-theme-grid">'+THEME_IDS.map(function(id){
+    var theme=THEME_REGISTRY[id],active=id===selected;
+    return '<button class="settings-theme-card" type="button" aria-pressed="'+(active?'true':'false')+'" onclick="selectTheme(\''+id+'\')"><span class="settings-theme-preview" data-theme="'+id+'"><span class="settings-theme-preview-head"></span><span class="settings-theme-preview-body"><span class="settings-theme-preview-line"></span><span class="settings-theme-preview-dot"></span></span></span><span class="settings-theme-name"><span>'+escapeHtml(theme.name)+'</span><span class="settings-theme-check" aria-hidden="true">✓</span></span></button>';
+  }).join('')+'</div>';
+}
 function renderSettingsThemePage(){
-  return renderSettingsHeader('主題',false)+'<div class="settings-section"><h3>主題</h3><div class="settings-help">六組主題選擇器將在本批下一階段掛入。</div></div>';
+  return renderSettingsHeader('主題',false)+'<div class="settings-section"><h3>選擇主題</h3>'+renderThemeSettingsSheet()+'</div>';
 }
 function renderSettingsProxyPage(){
   return renderSettingsHeader('代購對象',false)+'<div class="settings-section" id="ledgerProxyTargetSettingsSection"><h3>代購對象</h3><div class="settings-help">常用對象會顯示在個人記帳表單；刪除不影響既有紀錄。</div>'+renderLedgerProxyTargetManager()+'</div>';
@@ -7520,7 +7638,7 @@ function renderSettingsOptionsPage(){
   return renderSettingsHeader('自訂項目',false)+'<div class="settings-section" id="ledgerOptionSettingsSection"><h3>類別、支付方式與採買單位</h3><div class="settings-help">可新增、刪除或排序；刪除選項不影響既有紀錄。</div>'+renderLedgerOptionManager('category','類別')+renderLedgerOptionManager('payMethod','支付方式')+renderLedgerOptionManager('shoppingUnit','採買單位')+'</div>';
 }
 function renderSettingsDataPage(){
-  return renderSettingsHeader('資料與版本',false)+'<div class="settings-section"><h3>本機資料備份／還原</h3><div class="settings-help">換手機、重裝 App 或清除瀏覽器資料前使用。還原會覆蓋目前裝置上的打卡、想逛、採買清單、身分、個人帳、代購對象、自訂選項及待同步記帳。</div><div class="settings-actions"><button class="btn ghost" onclick="exportPersonalState()">複製備份 JSON</button><button class="btn" onclick="openPersonalStateRestore()">從 JSON 還原</button></div></div>';
+  return renderSettingsHeader('資料與版本',false)+'<div class="settings-section"><h3>本機資料備份／還原</h3><div class="settings-help">換手機、重裝 App 或清除瀏覽器資料前使用。備份包含主題、採買單位與旅途紀錄；還原會覆蓋目前裝置上的個人資料及待同步記帳。</div><div class="settings-actions"><button class="btn ghost" onclick="exportPersonalState()">複製備份 JSON</button><button class="btn" onclick="openPersonalStateRestore()">從 JSON 還原</button></div></div>';
 }
 function renderSettingsPage(page,ledgerSettings,settingsError){
   if(page==='theme')return renderSettingsThemePage();
