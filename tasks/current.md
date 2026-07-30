@@ -27,6 +27,8 @@
 - 2026-07-29 採買清單 C＋E＋G 第三批（SW v68）— Ledger 個人／團體切軌保留逐項代購、分攤、row key 與採買 source IDs，只序列化目前帳本軌；四類待買群組與 Today 套用 exact `必買` 穩定置頂，已買頁與 store order 不變；新增／編輯改為獨立 Sheet，保存 scroll／detail context，依 item ID 返回，具 save guard、錯誤留場與同步連續新增焦點。Browser QA 於 320×700、375×812、390×844 驗證 Sheet／清單／卡片水平溢位 0、深層取消 scroll delta 0、移動後卡片聚焦、明細返回、連續新增與帳本切軌，console error／warning 0；**已 commit 並推送 `dev`（`0c5fe45`），Bar 已於 2026-07-29 完成 iPhone Safari／PWA 真機驗收，尚未正式部署**。
 - 2026-07-25 結算列顯示層去重（SW v52）— chip 只講狀態、按鈕只講動作、小字只在有額外資訊時出現；4 處同義重複（`送出中…`×2、`同步失敗・重新同步`＋`重新同步`、兩列「同步中」＋「等待同步」）已清除，逾 30 秒的升級提示依 Bar 裁定保留。狀態機 §3 核准 label 未動。完整 43／43 Node tests（reliability 98／98）與文件標題檢查通過；**Bar 已於 2026-07-29 完成真機驗收**。
 
+- **批次一 P3 已交付(2026-07-30)**:複驗確認 backlog #3b 的需求早在 SW v72 的備份 v8 就已滿足,故**不升 v9**(無新欄位卻升版只會讓已發出的 v8 備份被 v8 裝置拒絕,憑空製造相容斷點)。真正的缺口是還原測試只覆蓋 v1／v2／v4／v8,且既有測試用簡化假 store 跑不到遷移邏輯 —— 已補上注入真實實作的 v1–v8 矩陣測試,並把相容策略寫成 `docs/personal-state-compatibility.md` 契約。**逐版本實測無安全還原斷點,無需犧牲任何版本。**
+
 ## 🚦 Release Gate(發布前必過,與 backlog 分離)
 
 > 2026-07-30 依 Bar 裁定第 4 項設立。本節列的是**發布條件**,不是待開發項目 — 已完成的功能不因真機驗收未做而繼續留在 `tasks/backlog.md`。已歸檔項目見 `tasks/done.md`「已歸檔的 backlog 編號項目」。
@@ -52,6 +54,6 @@
 > 已解除：Apps Script `doGet` 部署已由 Bar 完成，真實端點驗證（CORS、redirect、`after`／`reset`／`serverTime`、非 JSON 降級）通過，見上方 SW v47 條目。
 
 ## 下一棒
-→ 批次一 P2(C1 實證 → C1.5 實證 → C2 實作)已交付,SW 升至 v73。下一棒為 **P3**:不升備份版本(維持 `PERSONAL_STATE_VERSION=8`),補 v1–v8 還原矩陣測試與相容策略文件化;接著 P4(#10 已鎖帳文案,Tier 2 顯示層)與 P5(test_mode／time_simulation 暴露面調查,唯讀)。真機／PWA 驗收與 `dev → main` 合併見上方 Release Gate。
+→ 批次一 P3(個人狀態備份相容性)已交付:維持 `PERSONAL_STATE_VERSION=8`,補上 v1–v8 還原矩陣測試與 `docs/personal-state-compatibility.md` 相容策略契約。下一棒為 **P4**(backlog #10「已鎖帳」文案,Tier 2 顯示層,已核可)與 **P5**(test_mode／time_simulation 暴露面調查,唯讀出報告)。真機／PWA 驗收與 `dev → main` 合併見上方 Release Gate。
 
 > 採買清單 A／B／D／F 已於 SW v60／v61 交付；C／E／G 已於 SW v68 實作，並於 2026-07-29 完成 Bar 真機驗收；正式契約見設計文件。

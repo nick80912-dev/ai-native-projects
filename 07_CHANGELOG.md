@@ -1,4 +1,15 @@
 # 07 版本紀錄
+## 2026-07-30｜個人狀態備份 v1–v8 相容策略與還原矩陣（dev，測試與文件，無 runtime 變更）
+- **不升 v9,維持 `PERSONAL_STATE_VERSION=8`**(Bar 裁定)。backlog #3b 原本要求把 `trip_shopping_units` 納入備份並升版,複驗發現該欄位早在 SW v72 的 v8 就已納入(`personalStateJson()` 已含 `shoppingUnits`、還原寫回並列於原子回滾 keys)。無新欄位卻升版,只會讓已發出的 v8 備份被 v8 裝置以「格式驗證失敗」拒絕,**憑空製造一個旅伴裝置間的相容斷點**。
+- **真正的缺口是測試,不是格式。** 此前只有 v1／v2／v4／v8 有還原測試,**v3／v5／v6／v7 完全沒有**;而既有 `settings-backup-ux.test.js` 的 sandbox 用簡化假 store(`shoppingListStore.normalize` 只做淺拷貝),跑不到真正的遷移邏輯 —— 那份測試驗的是 UX 流程,不是版本相容性。
+- **新增 `tests/personal-state-restore-matrix.test.js`** —— 本項的主要交付物。刻意注入 `index.html` 的**真實** store 實作(`createShoppingListStore`／`createLedgerOptionStore`／`normalizeShoppingItem`／數量遷移),只對 DOM 與 Ledger 紀錄等範圍外相依做最小 stub,斷言的是**還原後 `localStorage` 的實際內容**而不是版本號被接受。涵蓋:v1–v8 逐版本缺欄位預設值、`qty` 文字 →結構化數量遷移(不可解析時保留 `legacyQtyText` 不猜數字)、`buyFor`／`targets` → `allocations[]` 遷移、item 級 `ledgerLinks` 下放到 allocation 且已記帳關聯不得遺失、`done:true` 缺 `completedAt` 不編造完成時間、採買單位的 6 字上限／不可重複／「個」自動補回、未來版本一律拒絕、以及任一驗證失敗時裝置狀態一字不動。
+- **已做對照驗證**:暫時破壞 `validatePersonalStatePayload()` 的 `payload.version<8` 分支後,矩陣測試確實失敗;`index.html` 已 byte-identical 還原。測試是承重的,不是裝飾。
+- **新增 `docs/personal-state-compatibility.md`** —— 相容策略的文字契約。明確定義:①向後相容逐版本的缺欄位預設值;②**向前相容裁定為「拒絕」而非「忽略未知欄位」**(理由已寫入:舊版若當成相容而忽略新欄位,已記帳的採買項目會重新顯示成未記帳而重複入帳,數量整批消失 —— 寧可明確失敗也不要看似成功的錯資料);③採買單位既有規則與還原的互動;④全有或全無的失敗語意;⑤未來新增欄位的四項義務。
+- **釐清一個既有誤解**:採買單位的「6」是**字數**上限(`SHOPPING_UNIT_MAX_LENGTH=6`),**不是筆數上限**。程式中沒有任何限制單位筆數的邏輯,還原 10 筆單位會全數保留。設定頁輸入框的 `maxlength="6"` 講的也是字數。
+- **逐版本實測結果:無安全還原斷點**,v1–v8 全部可還原成功,無需犧牲任何版本。
+- 本批**未修改任何 runtime 檔案**(`index.html` 未動,故不涉 SW 版本遞增)。`14_FILE_TIERS_AND_GATE.md` 的 Tier 1 範圍由 `docs/superpowers/` 放寬為整個 `docs/`,並註明相容性契約改動須連帶更新測試。
+- 自動驗證:完整 **53／53** Node test files、`tools/check-doc-titles.js`、`tools/check-app-version.js` 通過。未合併 `main`、未 push `main`、未部署。
+
 ## 2026-07-30｜SW 更新完整性修正（dev，SW v73，待 Bar 真機驗收）
 - **主要修復:新版 SW 不再把舊版 SHELL 裝進新快取。** 隔離實驗實測:在 `max-age=600` 的環境下,新版 Service Worker 的 `install` 會從 **HTTP cache** 取得舊版 SHELL —— 整個 update + install 週期只有 `sw.js` 一個 HTTP 請求,三個 SHELL 資源請求次數為 **0**,結果是「新快取名稱裝舊內容」;重載後更出現「新版 `index.html` 配舊版 `schema.js`」的靜默混版本。修法:`install` 改用 `cache:'reload'`(一次性、正確性優先),日常 network-first 改用 `cache:'no-cache'`(允許 304,省行動網路流量 —— `index.html` 約 726KB)。`addAll` 保留原子語意,只是改傳 `Request` 物件以指定 cache mode:任一資源失敗仍會讓 install 失敗、新 SW 不啟用、舊 SW 續命。網路失敗後的 CacheStorage fallback 完全不變,已實測關閉伺服器後仍完整離線載入。
 - **次要防線:版本標記移回 `sw.js` 頂層。** `sw.js` 自帶 `var SW_VERSION='v73'`,`CACHE_NAME` 由它推導,並移除 `importScripts('./app-version.js')`。理由是 imported script 在 `updateViaCache` 預設值 `'imports'` 下**會**經過 HTTP cache:GitHub Pages 對 `app-version.js` 送 `max-age=600`,實測更新檢查期間該檔 HTTP 請求次數為 0,SW 判定「沒變」而不安裝新版。`app-version.js` **仍留在 SHELL**,`index.html` 要載它、離線必須有。

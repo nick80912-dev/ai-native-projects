@@ -12,7 +12,7 @@
 ## Tier 1 — 一般開發範圍(AI 可依 15 的任務分級自行修改)
 | 檔案 | 性質 |
 |---|---|
-| 所有 `*.md` 文件、`adr/`、`tasks/`、`docs/superpowers/` | 文件/治理(文件同步義務見憲章) |
+| 所有 `*.md` 文件、`adr/`、`tasks/`、`docs/` | 文件/治理(文件同步義務見憲章;`docs/personal-state-compatibility.md` 為備份相容性契約,改動須連帶更新對應測試) |
 | `.ai-manifest.json` | AI 導航檔(改後需與文件一致) |
 | `schema.js`、`validator.js` | 資料規格與防錯**原始碼**;但改 SCHEMA 欄位/型別值屬憲章「須先確認」事項 |
 | `tests/` | 測試資產(交付必附,見 tests/README.md) |
