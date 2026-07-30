@@ -12,18 +12,20 @@
 const { test, expect } = require('@playwright/test');
 const { createVersionedServer } = require('./support/versioned-server');
 
-const PORT = 4174;
-const ORIGIN = 'http://127.0.0.1:' + PORT;
+/* 每個 test 自己起一台伺服器,並用 port 0 讓 OS 配發:
+   - 固定埠會在前一次執行留下 socket 時偶發衝突(實際遇過一次全套執行才失敗、單獨執行通過)
+   - 每 test 一台則讓「測 2 中途關掉伺服器」不會影響其他 test 的執行順序 */
+let server = null;
+let ORIGIN = '';
 
-let server;
-
-test.beforeAll(async () => {
+test.beforeEach(async () => {
   server = createVersionedServer({ generation: 1 });
-  await server.listen(PORT);
+  const port = await server.listen(0);
+  ORIGIN = 'http://127.0.0.1:' + port;
 });
 
-test.afterAll(async () => {
-  if (server) await server.close();
+test.afterEach(async () => {
+  if (server) { await server.close(); server = null; }
 });
 
 async function activeCacheReport(page) {
@@ -48,6 +50,19 @@ async function waitForActiveWorker(page) {
   await page.waitForFunction(async () => {
     const registration = await navigator.serviceWorker.getRegistration();
     return !!(registration && registration.active && navigator.serviceWorker.controller);
+  }, null, { timeout: 20000 });
+}
+
+/* 在「關掉伺服器模擬斷網」之前必須確定 SHELL 真的已經落進 CacheStorage。
+   只等 registration.active 不夠保險 —— 一旦搶在 install 完成前斷網,
+   失敗原因會長得像產品缺陷,其實是測試自己的競態。 */
+async function waitForShellCached(page) {
+  await page.waitForFunction(async () => {
+    const keys = await caches.keys();
+    if (!keys.length) return false;
+    const cache = await caches.open(keys[0]);
+    const cached = (await cache.keys()).map((request) => new URL(request.url).pathname);
+    return ['/index.html', '/app-version.js', '/schema.js'].every((p) => cached.includes(p));
   }, null, { timeout: 20000 });
 }
 
@@ -110,6 +125,8 @@ test('關閉伺服器後仍可完整離線載入,且未快取的子資源不得�
   server.setGeneration(2);
   await page.goto(ORIGIN + '/index.html');
   await waitForActiveWorker(page);
+
+  await waitForShellCached(page);
 
   /* 斷網:直接關掉伺服器,比覆寫 window.fetch 更接近真實(SW 內部的 fetch 也會失敗) */
   await server.close();
