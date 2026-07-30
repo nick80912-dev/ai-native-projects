@@ -23,8 +23,15 @@
 |---|---|
 | `index.html` | 唯一 App 原始碼與正式部署入口;改壞直接影響線上使用者，修改前需通過四項確認 |
 | `sw.js` | Service Worker;改壞會造成使用者快取災難 |
+| `app-version.js` | **App 與 SW 共用的版本單一來源**(2026-07-30 由 Bar 補列);`CACHE_NAME` 由此推導,改壞等同改壞 `sw.js`,風險視同 `sw.js` |
 | `manifest.webmanifest`、`icon-*.png` | PWA 安裝行為 |
-| Netlify 部署設定 | 上線行為 |
+| `netlify.toml`(含 `sw.js`／`index.html`／版本檔的 `Cache-Control` header) | 上線與快取行為;header 改錯會讓「改版必到」失效 |
+
+### PWA 風險群組(2026-07-30 由 Bar 定義)
+`sw.js`、`app-version.js` 與 `netlify.toml` 中對應的 cache header **視為同一風險群組**,理由:三者共同決定「使用者裝置上會不會拿到新版」。因此:
+- 四項確認以**群組為單位**提出,不得因「這次只改一個檔」而略過;動其中任一個,四段說明必須涵蓋對另外兩者的影響。
+- 版本升級時,群組內任何不一致(例如 `app-version.js` 升版但 `sw.js` 的版本標記／`netlify.toml` 的 header 未同步)一律視為交付缺陷。
+- 群組相關的回滾一律依 `16_OPS_PLAYBOOK.md` §A2:往前 bump 版本號重新發布,**禁止以刪除 `sw.js` 作為回滾手段**。
 
 ## Tier 3 — 產生產物(禁止手改,只能重新產生)
 | 產物 | 來源 | 更新方式 |
