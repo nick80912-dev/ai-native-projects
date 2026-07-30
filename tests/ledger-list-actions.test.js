@@ -105,6 +105,44 @@ assert(!detail.includes("['批次 ID'"),'detail presentation removes batch ID');
 assert(!detail.includes("['同步狀態'"),'detail presentation removes sync status');
 assert(detail.includes('formatLedgerLocalOccurrence'),'detail uses a local-readable occurrence formatter');
 assert(html.includes('function renderLedgerRecordDetail(')&&html.includes('openLedgerCorrectionHistorySheet'),'protected shared detail links to immutable correction history');
+
+/* ---- backlog #10:受保護紀錄的文案(2026-07-30 Bar 裁定,只改顯示層)----
+   tag 只負責快速辨識,完整原因移交明細頁。以下三組斷言分別鎖住:
+   新文案存在、舊文案完全移除、原鎖帳行為一字未動。 */
+assert(recent.includes('<span class="ledger-recent-badge">已鎖帳</span>'),'受保護的團體紀錄 badge 顯示「已鎖帳」');
+assert(!html.includes('還款確認後保護'),'舊文案「還款確認後保護」已從整份 index.html 移除');
+
+const recordDetailSource=extractFunction(html,'renderLedgerRecordDetail');
+assert(
+  recordDetailSource.includes('此筆消費已完成還款確認,目前已鎖帳,無法再編輯或刪除。'),
+  '明細頁新增鎖帳原因說明句(這是新增,不是從 badge 搬移)'
+);
+assert(
+  recordDetailSource.includes("track==='shared'&&record._correctionProtected?'<p class=\"ledger-detail-lock-note\">"),
+  '說明句的出現條件與歷史按鈕相同,且只在團體軌的受保護紀錄顯示'
+);
+assert(
+  recordDetailSource.indexOf('ledger-detail-lock-note')<recordDetailSource.indexOf('查看不可改寫歷史'),
+  '說明句排在「查看不可改寫歷史」按鈕之前'
+);
+assert(/\.ledger-detail-lock-note\{[^}]*color:var\(--ink-faint\)/.test(html),'說明句採用既有的次要文字語意色,不新增主題色');
+
+/* 原鎖帳行為不變:判定來源、編輯／刪除守門訊息與不可改寫歷史入口都不得被本項動到 */
+const editGuard=extractFunction(html,'assertCanEditLedgerRecord');
+const deleteGuard=extractFunction(html,'assertCanDeleteLedgerRecord');
+assert(
+  editGuard.includes('此收據已有還款確認，請使用「更正收據」保留歷史'),
+  'assertCanEditLedgerRecord 的錯誤訊息屬行為契約,本項不得更動'
+);
+assert(
+  deleteGuard.includes('此收據已有還款確認，請使用「更正收據」保留歷史'),
+  'assertCanDeleteLedgerRecord 的錯誤訊息屬行為契約,本項不得更動'
+);
+assert(
+  editGuard.includes('ledgerRecordCorrectionProtected(record,records)')&&deleteGuard.includes('ledgerRecordCorrectionProtected(record,records)'),
+  '編輯／刪除仍以 ledgerRecordCorrectionProtected 判定,未改用 badge 的顯示條件'
+);
+assert(!recent.includes('assertCanEdit')&&!recent.includes('assertCanDelete'),'顯示層不得自行呼叫權限守門');
 assert(html.includes('function renderLedgerCorrectionArchive('),'full shared history keeps voided and corrected receipt history reachable');
 const correctionHistorySource=extractFunction(html,'renderLedgerCorrectionHistory');
 assert(correctionHistorySource.includes('操作人：')&&correctionHistorySource.includes('參與：'),'history discloses actor and version item content');

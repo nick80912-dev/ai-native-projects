@@ -32,6 +32,7 @@
 | #7 | 2026-07-30 | SW v72 | 如原核准完成 |
 | #8 | 2026-07-30 | SW v72 | 如原核准完成 |
 | #9 | 2026-07-30 | SW v72 | 完成,兩項以不同形式交付,**已由 Bar 追認為等價** |
+| #10 | 2026-07-30 | SW v73 | 如原裁定完成(顯示層) |
 | #21 | 2026-07-30 | SW v73 | 完成,**範圍如實記錄於下** |
 
 - **#1 QA 腳本入版控** — 證據:`tests/browser/trip-three-scenarios.spec.js` 三個 `test()`(斷網內建 / 連網同步 / 旅行日 mock Date)、`tests/browser/support/qa-fixture.js`、`static-server.js`、`.github/workflows/qa.yml` 的 `browser-qa` job。只新增測試資產、無 runtime 變更,故不對應 SW 版本。
@@ -54,6 +55,8 @@
 
 - **#21 Sanity CI dev 觸發評估** — `qa.yml` 的 `push.branches` 加入 `dev`,sanity job(文件標題／manifest／版本一致性／全部 `tests/*.test.js`)在 `dev` 每次推送都執行,原項目要的「dev push 也產生 GitHub Actions 綠勾」已達成。
   - **範圍如實記錄**:`browser-qa` job 依 Bar 2026-07-30 裁定**刻意維持只在 pull request 與 `main` push 執行**,以 job-level `if` 條件排除 dev push,避免每次 dev 推送都安裝 Chromium 跑完整 Playwright。原 backlog #21 只談 sanity 的 dev 觸發,未涵蓋 browser-qa;**本次不另立「dev 也跑 browser-qa」的新項目**(依裁定不新增 backlog 項目)。日後若要放寬,屬新決策。
+
+- **#10 受保護紀錄 Tag 文案改為「已鎖帳」** — badge 由「還款確認後保護」縮短為「已鎖帳」(`renderLedgerRecentRecord`,複驗確認為整份 `index.html` 的唯一出現處);明細頁**新增**說明句「此筆消費已完成還款確認,目前已鎖帳,無法再編輯或刪除。」,出現條件與「查看不可改寫歷史」按鈕相同(`track==='shared' && record._correctionProtected`)並排在其前。`_correctionProtected` 判定、編輯／刪除守門、還款確認流程與不可改寫歷史一字未動;`assertCanEditLedgerRecord`／`assertCanDeleteLedgerRecord` 的錯誤訊息作為行為契約亦未更動。上述各項已由 `tests/ledger-list-actions.test.js` 逐項鎖住,含「舊文案已從整份 `index.html` 移除」。既有 badge 優先序不受影響:`_correctionVersionCount > 0` 仍優先顯示「已更正 N 次」。備選字「已鎖定」依原裁定不採用。
 
 ## 文件治理
 - 2026-07-13:Netlify 雙站架構上線(`main`=正式站、`dev`=測試站)，兩站部署與瀏覽器狀態完全隔離。

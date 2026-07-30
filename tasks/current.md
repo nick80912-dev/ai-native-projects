@@ -54,6 +54,6 @@
 > 已解除：Apps Script `doGet` 部署已由 Bar 完成，真實端點驗證（CORS、redirect、`after`／`reset`／`serverTime`、非 JSON 降級）通過，見上方 SW v47 條目。
 
 ## 下一棒
-→ 批次一 P3(個人狀態備份相容性)已交付:維持 `PERSONAL_STATE_VERSION=8`,補上 v1–v8 還原矩陣測試與 `docs/personal-state-compatibility.md` 相容策略契約。下一棒為 **P4**(backlog #10「已鎖帳」文案,Tier 2 顯示層,已核可)與 **P5**(test_mode／time_simulation 暴露面調查,唯讀出報告)。真機／PWA 驗收與 `dev → main` 合併見上方 Release Gate。
+→ 批次一 P4(backlog #10「已鎖帳」文案)已交付,純顯示層,v73 不再遞增。下一棒為 **P5**:trip_ledger_test_mode 與 trip_time_simulation 在正式檔的暴露面調查(唯讀出報告,不修改任何檔案),結論由 Bar 裁定是發布阻斷或延後至第四批。真機／PWA 驗收與 dev → main 合併見上方 Release Gate。
 
 > 採買清單 A／B／D／F 已於 SW v60／v61 交付；C／E／G 已於 SW v68 實作，並於 2026-07-29 完成 Bar 真機驗收；正式契約見設計文件。

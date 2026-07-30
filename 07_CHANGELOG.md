@@ -1,4 +1,14 @@
 # 07 版本紀錄
+## 2026-07-30｜受保護紀錄文案改為「已鎖帳」（dev，SW v73，顯示層）
+- **backlog #10 交付**(Bar 2026-07-30 裁定)。團體帳受保護紀錄的 badge 由「還款確認後保護」縮短為 **「已鎖帳」**(`renderLedgerRecentRecord`,複驗確認為整份 `index.html` 的唯一出現處)。tag 只負責快速辨識,完整原因移交明細頁。
+- **明細頁新增**說明句「此筆消費已完成還款確認,目前已鎖帳,無法再編輯或刪除。」—— 這是**新增**不是搬移:明細頁此前只有「查看不可改寫歷史」按鈕,沒有任何說明句。出現條件與該按鈕完全相同(`track==='shared' && record._correctionProtected`),排在按鈕之前,採用既有的 `--ink-faint` 次要文字語意色,不新增主題色。
+- **原鎖帳行為一字未動**,並以測試鎖住:`_correctionProtected` 判定來源不變、編輯／刪除仍以 `ledgerRecordCorrectionProtected()` 守門、`assertCanEditLedgerRecord` 與 `assertCanDeleteLedgerRecord` 的錯誤訊息「此收據已有還款確認,請使用『更正收據』保留歷史」屬行為契約未更動、不可改寫歷史入口保留、顯示層不得自行呼叫權限守門。
+- **既有 badge 優先序未受影響**(實測確認):`_correctionVersionCount > 0` 的紀錄仍優先顯示「已更正 N 次」,「已鎖帳」只在未經更正的受保護紀錄出現;個人軌永遠不顯示。
+- 測試補在 `tests/ledger-list-actions.test.js`:新文案存在、**舊文案「還款確認後保護」已從整份 `index.html` 移除**、說明句的出現條件與排序、CSS 語意色、以及上述行為契約各一則。
+- 瀏覽器實測:375×812 說明句單行、320×700 兩行,皆位於歷史按鈕之前、不超出 sheet、水平溢位 0。
+- 版本不遞增:v73 尚未發布,本項併入同一候選版,只做一次 SW 換代(依 2026-07-30 發布安排)。`APP_RELEASE_NOTES` 的 v73 條目補上對應的使用者版說明。
+- 自動驗證:完整 **53／53** Node test files、Playwright **5／5**、`tools/check-doc-titles.js`、`tools/check-app-version.js` 通過。未合併 `main`、未 push `main`、未部署。
+
 ## 2026-07-30｜個人狀態備份 v1–v8 相容策略與還原矩陣（dev，測試與文件，無 runtime 變更）
 - **不升 v9,維持 `PERSONAL_STATE_VERSION=8`**(Bar 裁定)。backlog #3b 原本要求把 `trip_shopping_units` 納入備份並升版,複驗發現該欄位早在 SW v72 的 v8 就已納入(`personalStateJson()` 已含 `shoppingUnits`、還原寫回並列於原子回滾 keys)。無新欄位卻升版,只會讓已發出的 v8 備份被 v8 裝置以「格式驗證失敗」拒絕,**憑空製造一個旅伴裝置間的相容斷點**。
 - **真正的缺口是測試,不是格式。** 此前只有 v1／v2／v4／v8 有還原測試,**v3／v5／v6／v7 完全沒有**;而既有 `settings-backup-ux.test.js` 的 sandbox 用簡化假 store(`shoppingListStore.normalize` 只做淺拷貝),跑不到真正的遷移邏輯 —— 那份測試驗的是 UX 流程,不是版本相容性。
