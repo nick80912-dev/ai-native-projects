@@ -114,8 +114,8 @@ function loadIdentityModule(){
 
   const settingsSource=mod.__html.slice(mod.__html.indexOf('function openSettings('),mod.__html.indexOf('function mergedLedgerRecords()'));
   assert(settingsSource.includes('目前身分'),'Settings displays the current identity');
-  assert(settingsSource.includes('切換身分'),'Settings exposes existing identity switching');
-  assert(settingsSource.includes('新增身分'),'Settings exposes new identity registration');
+  assert(settingsSource.includes('>切換<'),'Settings exposes compact existing identity switching');
+  assert(settingsSource.includes('>新增<'),'Settings exposes compact new identity registration');
   assert(!settingsSource.includes('修改成員'),'Settings avoids the misleading member-editing label');
   assert(!mod.__html.slice(mod.__html.indexOf('/* ================= 分帳'),mod.__html.indexOf('/* ================= 導覽 / 啟動')).includes('DB.expMembers'),'ledger identity and Split UI do not read Exp member rows');
 

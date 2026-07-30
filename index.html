@@ -495,6 +495,7 @@ input,select,textarea{font-size:16px}
 .diag-help{font-size:11px;color:var(--ink-faint);margin:4px 0 8px}.diag-shortcuts{display:flex;gap:5px;flex-wrap:wrap;margin:8px 0}
 .diag-panel button[onclick^="endTimeSimulation"]{min-height:44px;font-size:15px;width:100%;margin-top:6px}.diag-panel button[onclick="resetTripProgress()"]{min-height:44px;font-size:15px;width:100%;margin-top:6px;border:1px solid var(--coral);border-radius:10px;background:var(--coral);color:#fff;font-weight:800}
 .diag-panel input{font-size:16px}
+.travel-note-kind,.travel-note-filters{display:flex;gap:6px;flex-wrap:wrap;margin:7px 0}.travel-note-kind button,.travel-note-filters button{min-height:36px;border:1px solid var(--line);border-radius:999px;background:#fff;color:var(--ink-soft);padding:6px 11px;font:inherit;font-size:12px;font-weight:800}.travel-note-kind button.on,.travel-note-filters button.on{background:var(--sea);border-color:var(--sea);color:#fff}.travel-note-editor{width:100%;min-height:92px;border:1px solid var(--line);border-radius:9px;background:#fff;padding:9px 10px;font:inherit;font-size:16px;resize:vertical}.travel-note-list{display:grid;gap:8px;margin-top:10px}.travel-note-card{border:1px solid var(--line);border-radius:9px;background:#fff;padding:10px}.travel-note-card-head{display:flex;align-items:center;justify-content:space-between;gap:8px}.travel-note-card-head strong{font-size:12px;color:var(--sea-deep)}.travel-note-status{font-size:10px;font-weight:900;color:var(--ink-faint)}.travel-note-card p{margin:6px 0;color:var(--ink);font-size:13px;line-height:1.5;white-space:pre-wrap;overflow-wrap:anywhere}.travel-note-meta{color:var(--ink-faint);font-size:10px;line-height:1.45}.travel-note-card .diag-actions{margin-top:7px}.travel-note-empty{padding:12px 0;color:var(--ink-faint);font-size:12px;text-align:center}
 .sync-status-overlay{position:fixed;inset:0;z-index:120;background:rgba(6,32,38,.62);padding:12px;display:flex;align-items:center;justify-content:center}
 .sync-status-panel{width:100%;max-width:480px;max-height:86vh;overflow:auto;background:var(--card);border-radius:16px;padding:16px;box-shadow:var(--shadow-lg)}
 .sync-status-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}.sync-status-head h2{font-size:18px}.sync-status-close{border:0;background:transparent;color:var(--ink-soft);font-size:26px;line-height:1;padding:5px}
@@ -506,6 +507,10 @@ input,select,textarea{font-size:16px}
 .settings-panel,.member-panel{width:100%;max-width:560px;margin:0 auto}.settings-head,.member-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}.settings-head h2,.member-head h2{font-size:20px}.settings-close{width:44px;height:44px;border:0;border-radius:50%;background:var(--line-soft);font-size:26px;color:var(--ink-soft)}
 .settings-section{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:15px;margin-bottom:12px;box-shadow:var(--shadow)}.settings-section h3{font-size:15px;color:var(--sea-deep);margin-bottom:8px}.settings-current{font-size:14px;color:var(--ink-soft);margin-bottom:10px}.settings-current b{color:var(--ink)}
 .settings-member-row{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}.settings-member-row .settings-current{margin-bottom:0;min-width:0}.settings-member-switch{min-height:36px;padding:6px 11px;flex:0 0 auto}.settings-warning-tag{display:inline-flex;margin-left:6px;border-radius:999px;padding:2px 7px;background:#fff0e8;color:var(--coral);font-size:11px;font-weight:900;vertical-align:middle}
+.settings-overlay>.settings-panel{height:calc(100vh - 44px);height:calc(100dvh - 44px);overflow-y:auto;overscroll-behavior:contain;padding-bottom:calc(16px + env(safe-area-inset-bottom))}
+.settings-back{min-height:40px;border:0;background:transparent;color:var(--sea);padding:4px 8px 4px 0;font:inherit;font-size:14px;font-weight:900}.settings-title-wrap{display:flex;align-items:center;gap:6px;min-width:0}.settings-title-wrap h2{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.settings-identity-row{display:flex;align-items:center;gap:8px;padding:9px 9px 9px 11px;min-height:52px}.settings-identity-current{min-width:0;flex:1}.settings-identity-current small{display:block;color:var(--ink-faint);font-size:11px}.settings-identity-current b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--ink)}.settings-identity-actions{display:flex;gap:5px;flex:0 0 auto}.settings-identity-actions .btn{min-height:38px;padding:0 9px}
+.settings-menu-button{width:100%;min-height:56px;border:0;background:transparent;color:var(--ink);padding:0;text-align:left;font:inherit;display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:10px}.settings-menu-copy{min-width:0}.settings-menu-copy b{display:block;color:var(--ink);font-size:14px}.settings-menu-copy small{display:block;margin-top:3px;color:var(--ink-faint);font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.settings-menu-chevron{color:var(--ink-faint);font-size:20px}.settings-inline-toggle{margin-top:8px;padding-top:10px;border-top:1px solid var(--line-soft)}
 .member-options{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.member-option{min-height:48px;border:1px solid var(--line);border-radius:11px;background:#fff;color:var(--ink);font:inherit;font-weight:800}.member-option.on{background:var(--sea);border-color:var(--sea);color:#fff}
 .member-panel{min-height:calc(100vh - 48px);min-height:calc(100dvh - 48px);display:flex;flex-direction:column;justify-content:center}.member-copy{color:var(--ink-soft);font-size:14px;margin-bottom:15px}
 .member-entry{margin-top:12px}.member-entry input{width:100%;min-height:48px;border:1px solid var(--line);border-radius:10px;background:#fff;padding:10px 12px;font:inherit}.member-actions{display:flex;gap:9px;margin-top:12px}.member-actions .btn{flex:1;min-height:44px}.member-error{margin-top:10px;color:var(--coral);font-size:13px;font-weight:700}.member-confirm{padding:16px;border:1px solid var(--line);border-radius:10px;background:#fff;text-align:center;font-weight:800}.member-confirm-note{display:block;margin-top:8px;color:var(--ink-soft);font-size:12px;font-weight:600;line-height:1.5}
@@ -7041,6 +7046,260 @@ function refreshMemberSelector(){
   if(overlay)renderMemberSelector(overlay);
   else if(!memberIsAllowed(getCurrentMember()))openMemberSelector(true);
 }
+var TRAVEL_NOTES_KEY='trip_travel_notes';
+var TRAVEL_NOTES_LIMIT=200;
+var TRAVEL_NOTE_TEXT_LIMIT=500;
+var TRAVEL_NOTE_KINDS=['issue','suggestion'];
+var TRAVEL_NOTE_STATUSES=['pending','resolved'];
+var travelNoteIdCounter=0;
+var travelNoteUiState={kind:'suggestion',filter:'all',editingId:'',draftText:''};
+function createTravelNoteId(){
+  if(typeof crypto!=='undefined'&&crypto&&typeof crypto.randomUUID==='function')return crypto.randomUUID();
+  travelNoteIdCounter++;
+  return 'travel-'+appNow().getTime().toString(36)+'-'+Math.floor(Math.random()*0x100000000).toString(36)+'-'+travelNoteIdCounter.toString(36);
+}
+function travelNoteIso(value,label){
+  var time=typeof value==='number'?value:Date.parse(String(value||''));
+  if(!value||!isFinite(time))throw new Error((label||'時間')+'格式錯誤');
+  return timestampDate(time).toISOString();
+}
+function travelNoteBoundedText(value,limit){
+  return String(value==null?'':value).replace(/\r\n?/g,'\n').trim().slice(0,limit);
+}
+function travelNoteContext(){
+  var findings=[];
+  try{findings=healthCheck()||[];}catch(error){findings=['健康檢查失敗'];}
+  return {
+    view:travelNoteBoundedText(typeof curView==='undefined'?'':curView,24),
+    appVersion:travelNoteBoundedText(typeof APP_VERSION==='string'?APP_VERSION:'',24),
+    online:typeof navigator==='undefined'||navigator.onLine!==false,
+    syncState:travelNoteBoundedText(typeof syncState==='undefined'?'':syncState,40),
+    healthSummary:findings.slice(0,20).map(function(item){
+      var value=item&&typeof item==='object'?(item.message||item.code||JSON.stringify(item)):item;
+      return travelNoteBoundedText(value,160);
+    }).filter(Boolean)
+  };
+}
+function normalizeTravelNote(input,existing,strict){
+  if(!input||typeof input!=='object'||Array.isArray(input))throw new Error('旅途紀錄格式錯誤');
+  var kind=String(input.kind||'');
+  var status=String(input.status||(existing&&existing.status)||'pending');
+  var text=String(input.text==null?'':input.text).trim();
+  if(TRAVEL_NOTE_KINDS.indexOf(kind)<0)throw new Error('旅途紀錄類型錯誤');
+  if(TRAVEL_NOTE_STATUSES.indexOf(status)<0)throw new Error('旅途紀錄狀態錯誤');
+  if(Array.from(text).length<1||Array.from(text).length>TRAVEL_NOTE_TEXT_LIMIT)throw new Error('旅途紀錄文字需為 1–500 字');
+  var id=existing?String(existing.id||'').trim():String(input.id||'').trim();
+  if(!id){
+    if(strict)throw new Error('旅途紀錄 ID 格式錯誤');
+    id=createTravelNoteId();
+  }
+  var createdAt=existing?travelNoteIso(existing.createdAt,'建立時間'):input.createdAt?travelNoteIso(input.createdAt,'建立時間'):appNow().toISOString();
+  var updatedAt=input.updatedAt?travelNoteIso(input.updatedAt,'修改時間'):existing?appNow().toISOString():createdAt;
+  var context=existing||input;
+  var health=context.healthSummary;
+  if(!Array.isArray(health)){
+    if(strict)throw new Error('旅途紀錄健康摘要格式錯誤');
+    health=[];
+  }
+  if(strict){
+    if(typeof context.view!=='string'||typeof context.appVersion!=='string'||typeof context.online!=='boolean'||typeof context.syncState!=='string')throw new Error('旅途紀錄上下文格式錯誤');
+    if(health.some(function(item){return typeof item!=='string';}))throw new Error('旅途紀錄健康摘要格式錯誤');
+  }
+  return {
+    id:id,
+    kind:kind,
+    text:text,
+    status:status,
+    createdAt:createdAt,
+    updatedAt:updatedAt,
+    view:travelNoteBoundedText(context.view,24),
+    appVersion:travelNoteBoundedText(context.appVersion,24),
+    online:context.online!==false,
+    syncState:travelNoteBoundedText(context.syncState,40),
+    healthSummary:health.slice(0,20).map(function(item){return travelNoteBoundedText(item,160);}).filter(Boolean)
+  };
+}
+function normalizeTravelNotes(values){
+  if(!Array.isArray(values))throw new Error('旅途紀錄清單格式錯誤');
+  if(values.length>TRAVEL_NOTES_LIMIT)throw new Error('旅途紀錄最多 200 筆');
+  return values.map(function(note){return normalizeTravelNote(note,null,true);}).sort(function(a,b){
+    var timeDiff=Date.parse(b.createdAt)-Date.parse(a.createdAt);
+    return timeDiff||String(a.id).localeCompare(String(b.id));
+  });
+}
+function readTravelNotes(){
+  var raw;
+  try{
+    raw=localStorage.getItem(TRAVEL_NOTES_KEY);
+    return raw?normalizeTravelNotes(JSON.parse(raw)):[];
+  }catch(error){
+    if(typeof AppLog!=='undefined'&&AppLog&&typeof AppLog.repo==='function')AppLog.repo('旅途紀錄讀取失敗：'+(error.message||error));
+    return [];
+  }
+}
+function persistTravelNotes(values){
+  var normalized=normalizeTravelNotes(values);
+  var serialized=JSON.stringify(normalized);
+  var before=localStorage.getItem(TRAVEL_NOTES_KEY);
+  try{
+    localStorage.setItem(TRAVEL_NOTES_KEY,serialized);
+    if(localStorage.getItem(TRAVEL_NOTES_KEY)!==serialized)throw new Error('旅途紀錄寫入驗證失敗');
+  }catch(error){
+    try{
+      if(before===null)localStorage.removeItem(TRAVEL_NOTES_KEY);
+      else localStorage.setItem(TRAVEL_NOTES_KEY,before);
+    }catch(rollbackError){
+      if(typeof AppLog!=='undefined'&&AppLog&&typeof AppLog.repo==='function')AppLog.repo('旅途紀錄回復失敗：'+(rollbackError.message||rollbackError));
+    }
+    throw error;
+  }
+  return normalized.map(function(note){return JSON.parse(JSON.stringify(note));});
+}
+var travelNoteStore={
+  all:function(){return readTravelNotes().map(function(note){return JSON.parse(JSON.stringify(note));});},
+  normalize:function(values){return normalizeTravelNotes(values).map(function(note){return JSON.parse(JSON.stringify(note));});},
+  add:function(input){
+    var current=readTravelNotes();
+    if(current.length>=TRAVEL_NOTES_LIMIT)throw new Error('旅途紀錄已達 200 筆，請先匯出或清理');
+    var context=travelNoteContext();
+    var now=appNow().toISOString();
+    var note=normalizeTravelNote({
+      id:createTravelNoteId(),
+      kind:input&&input.kind,
+      text:input&&input.text,
+      status:'pending',
+      createdAt:now,
+      updatedAt:now,
+      view:context.view,
+      appVersion:context.appVersion,
+      online:context.online,
+      syncState:context.syncState,
+      healthSummary:context.healthSummary
+    },null,true);
+    persistTravelNotes([note].concat(current));
+    return JSON.parse(JSON.stringify(note));
+  },
+  update:function(id,patch){
+    var current=readTravelNotes();
+    var index=current.findIndex(function(note){return note.id===String(id||'');});
+    if(index<0)throw new Error('找不到旅途紀錄');
+    var existing=current[index], context=patch&&patch.recaptureContext?travelNoteContext():existing;
+    var next=normalizeTravelNote({
+      id:existing.id,
+      kind:patch&&patch.kind!==undefined?patch.kind:existing.kind,
+      text:patch&&patch.text!==undefined?patch.text:existing.text,
+      status:patch&&patch.status!==undefined?patch.status:existing.status,
+      createdAt:existing.createdAt,
+      updatedAt:appNow().toISOString(),
+      view:context.view,
+      appVersion:context.appVersion,
+      online:context.online,
+      syncState:context.syncState,
+      healthSummary:context.healthSummary
+    },null,true);
+    current[index]=next;
+    persistTravelNotes(current);
+    return JSON.parse(JSON.stringify(next));
+  },
+  remove:function(id){
+    var current=readTravelNotes();
+    var filtered=current.filter(function(note){return note.id!==String(id||'');});
+    if(filtered.length===current.length)return false;
+    persistTravelNotes(filtered);
+    return true;
+  }
+};
+function travelNoteKindLabel(kind){return kind==='issue'?'異常':'優化建議';}
+function travelNoteStatusLabel(status){return status==='resolved'?'已處理':'待評估';}
+function setTravelNoteKind(kind){
+  var input=document.getElementById('travelNoteText');
+  if(input)travelNoteUiState.draftText=input.value;
+  if(TRAVEL_NOTE_KINDS.indexOf(kind)>=0)travelNoteUiState.kind=kind;
+  openDiagnostics();
+}
+function setTravelNoteFilter(filter){
+  var input=document.getElementById('travelNoteText');
+  if(input)travelNoteUiState.draftText=input.value;
+  travelNoteUiState.filter=filter==='issue'||filter==='suggestion'?filter:'all';
+  openDiagnostics();
+}
+function editTravelNote(id){
+  var note=travelNoteStore.all().filter(function(item){return item.id===String(id||'');})[0];
+  if(!note)return;
+  travelNoteUiState.editingId=note.id;
+  travelNoteUiState.kind=note.kind;
+  travelNoteUiState.draftText=note.text;
+  openDiagnostics();
+}
+function cancelTravelNoteEdit(){
+  travelNoteUiState.editingId='';
+  travelNoteUiState.draftText='';
+  openDiagnostics();
+}
+function saveTravelNote(){
+  var input=document.getElementById('travelNoteText');
+  travelNoteUiState.draftText=input?input.value:travelNoteUiState.draftText;
+  try{
+    if(travelNoteUiState.editingId)travelNoteStore.update(travelNoteUiState.editingId,{kind:travelNoteUiState.kind,text:travelNoteUiState.draftText});
+    else travelNoteStore.add({kind:travelNoteUiState.kind,text:travelNoteUiState.draftText});
+  }catch(error){toast(error.message||'旅途紀錄儲存失敗');return false;}
+  travelNoteUiState.editingId='';
+  travelNoteUiState.draftText='';
+  openDiagnostics();
+  toast('旅途紀錄已儲存');
+  return true;
+}
+function updateTravelNoteStatus(id,status){
+  try{travelNoteStore.update(id,{status:status});}
+  catch(error){toast(error.message||'旅途紀錄更新失敗');return false;}
+  openDiagnostics();
+  return true;
+}
+function confirmRemoveTravelNote(id){
+  if(!confirm('確定刪除此筆旅途紀錄？'))return false;
+  try{
+    if(!travelNoteStore.remove(id))return false;
+  }catch(error){toast(error.message||'旅途紀錄刪除失敗');return false;}
+  if(travelNoteUiState.editingId===String(id||'')){travelNoteUiState.editingId='';travelNoteUiState.draftText='';}
+  openDiagnostics();
+  toast('旅途紀錄已刪除');
+  return true;
+}
+function travelNotesText(notes){
+  var lines=['旅途紀錄','匯出時間：'+appNow().toISOString(),''];
+  notes.forEach(function(note,index){
+    lines.push((index+1)+'. ['+travelNoteStatusLabel(note.status)+'] '+travelNoteKindLabel(note.kind));
+    lines.push(note.text);
+    lines.push('時間：'+note.updatedAt+'｜頁面：'+(note.view||'未知')+'｜版本：'+(note.appVersion||'未知'));
+    lines.push('連線：'+(note.online?'線上':'離線')+'｜同步：'+(note.syncState||'未知'));
+    if(note.healthSummary.length)lines.push('健康摘要：'+note.healthSummary.join('；'));
+    lines.push('');
+  });
+  return lines.join('\n');
+}
+function copyTravelNotes(format){
+  var notes=travelNoteStore.all();
+  var text=format==='json'?JSON.stringify(notes,null,2):travelNotesText(notes);
+  var promise;
+  try{
+    promise=typeof navigator!=='undefined'&&navigator.clipboard&&typeof navigator.clipboard.writeText==='function'?navigator.clipboard.writeText(text):Promise.reject(new Error('clipboard unavailable'));
+  }catch(error){promise=Promise.reject(error);}
+  return Promise.resolve(promise).then(function(){toast(format==='json'?'旅途紀錄 JSON 已複製':'旅途紀錄摘要已複製');return true;},function(){
+    if(typeof openPersonalStateCopyFallback==='function')openPersonalStateCopyFallback(text);
+    else if(typeof prompt==='function')prompt('請手動複製旅途紀錄',text);
+    return false;
+  });
+}
+function renderTravelNotesSection(){
+  var notes=travelNoteStore.all();
+  var filtered=travelNoteUiState.filter==='all'?notes:notes.filter(function(note){return note.kind===travelNoteUiState.filter;});
+  var rows=filtered.map(function(note){
+    var health=note.healthSummary.length?'｜'+note.healthSummary.join('；'):'';
+    return '<article class="travel-note-card"><div class="travel-note-card-head"><strong>'+travelNoteKindLabel(note.kind)+'</strong><span class="travel-note-status">'+travelNoteStatusLabel(note.status)+'</span></div><p>'+escapeHtml(note.text)+'</p><div class="travel-note-meta">'+escapeHtml(note.updatedAt)+'｜'+escapeHtml(note.view||'未知')+'｜'+escapeHtml(note.appVersion||'未知')+'｜'+(note.online?'線上':'離線')+'／'+escapeHtml(note.syncState||'未知')+escapeHtml(health)+'</div><div class="diag-actions"><button onclick="updateTravelNoteStatus(\''+jsString(note.id)+'\',\''+(note.status==='resolved'?'pending':'resolved')+'\')">'+(note.status==='resolved'?'移回待評估':'標記已處理')+'</button><button onclick="editTravelNote(\''+jsString(note.id)+'\')">修改</button><button onclick="confirmRemoveTravelNote(\''+jsString(note.id)+'\')">刪除</button></div></article>';
+  }).join('');
+  return '<div class="diag-section"><h3>旅途紀錄</h3><div class="diag-help">即時記錄旅途中遇到的異常或 UI／UX 優化建議，回來後可據此評估。</div><div class="travel-note-kind"><button class="'+(travelNoteUiState.kind==='issue'?'on':'')+'" onclick="setTravelNoteKind(\'issue\')">異常</button><button class="'+(travelNoteUiState.kind==='suggestion'?'on':'')+'" onclick="setTravelNoteKind(\'suggestion\')">優化建議</button></div><textarea id="travelNoteText" class="travel-note-editor" maxlength="500" placeholder="輸入 1–500 字">'+escapeHtml(travelNoteUiState.draftText)+'</textarea><div class="diag-actions"><button class="primary" onclick="saveTravelNote()">'+(travelNoteUiState.editingId?'儲存修改':'儲存紀錄')+'</button>'+(travelNoteUiState.editingId?'<button onclick="cancelTravelNoteEdit()">取消修改</button>':'')+'</div><div class="travel-note-filters"><button class="'+(travelNoteUiState.filter==='all'?'on':'')+'" onclick="setTravelNoteFilter(\'all\')">全部</button><button class="'+(travelNoteUiState.filter==='issue'?'on':'')+'" onclick="setTravelNoteFilter(\'issue\')">異常</button><button class="'+(travelNoteUiState.filter==='suggestion'?'on':'')+'" onclick="setTravelNoteFilter(\'suggestion\')">優化建議</button></div><div class="diag-actions"><button onclick="copyTravelNotes(\'text\')">複製摘要</button><button onclick="copyTravelNotes(\'json\')">匯出 JSON</button></div><div class="travel-note-list">'+(rows||'<div class="travel-note-empty">尚無旅途紀錄</div>')+'</div></div>';
+}
+/* ================= SETTINGS 2.0 ================= */
 function closeSettings(){ var overlay=document.getElementById('settingsOverlay'); if(overlay) overlay.remove(); }
 function personalStateJson(){
   var payload={format:'trip-personal-state',version:PERSONAL_STATE_VERSION,exportedAt:timestampDate(Date.now()).toISOString(),checks:lsGet('trip_checks',{}),wants:lsGet('trip_shop_wants',{}),member:getCurrentMember(),ledgerQueue:ledgerRepository.queuedRecords(),personalLedger:personalLedgerRepository.all(),ledgerCategories:ledgerCategoryStore.all(),ledgerPayMethods:ledgerPayMethodStore.all(),proxyTargets:ledgerProxyTargetStore.all(),shoppingItems:shoppingListStore.all()};
@@ -7189,32 +7448,87 @@ function addLedgerProxyTargetFromSettings(){
 }
 function removeLedgerProxyTargetFromSettings(value){ledgerProxyTargetStore.remove(value);openSettings('ledgerProxyTargetSettingsSection');toast('代購對象已刪除');}
 function openSettings(targetId){
+  captureSettingsScroll();
+  var target=normalizeSettingsTarget(targetId);
+  settingsUiState.page=target.page;
+  settingsUiState.anchorId=target.anchorId;
   closeSettings();
   var ledgerSettings, settingsError='';
   try{ledgerSettings=currentLedgerSettings();}
   catch(error){ledgerSettings={exchangeRate:'',defaultCurrency:'JPY'};settingsError=error.message||'分帳設定無效';}
   ledgerSettingsDraftCurrency=ledgerSettings.defaultCurrency;
   var overlay=document.createElement('div'); overlay.id='settingsOverlay'; overlay.className='settings-overlay';
-  overlay.innerHTML='<section class="settings-panel" role="dialog" aria-modal="true" aria-labelledby="settingsTitle"><div class="settings-head"><h2 id="settingsTitle">設定</h2><button class="settings-close" aria-label="關閉" onclick="closeSettings()">×</button></div>'+
-    '<div class="settings-section"><h3>成員身分</h3><div class="settings-current">目前身分：<b id="settingsCurrentMember">'+escapeHtml(getCurrentMember()||'尚未選擇')+'</b></div><div class="settings-actions"><button class="btn ghost settings-member-switch" onclick="openMemberSelector(false,false)">切換身分</button><button class="btn settings-member-switch" onclick="openMemberSelector(false,true)">新增身分</button></div></div>'+
-    '<div class="settings-section"><h3>分帳匯率與幣別</h3><div class="settings-current">目前匯率：<b>1 JPY = NT$'+escapeHtml(ledgerSettings.exchangeRate||'未設定')+'</b></div><div class="settings-rate-row"><label class="settings-help" for="ledgerExchangeRate"><b>匯率</b><br>1 日幣可換算多少台幣</label><input id="ledgerExchangeRate" type="number" inputmode="decimal" min="0.000001" step="any" value="'+escapeHtml(ledgerSettings.exchangeRate)+'"></div><div class="settings-help"><b>預設輸入幣別</b><br>新增記帳時預先選擇的幣別</div><div class="ledger-currency-grid" style="margin-top:8px"><button class="ledger-choice settings-currency-option '+(ledgerSettings.defaultCurrency==='JPY'?'on':'')+'" data-currency="JPY" aria-pressed="'+(ledgerSettings.defaultCurrency==='JPY'?'true':'false')+'" onclick="selectLedgerDefaultCurrency(\'JPY\')">JPY 日幣</button><button class="ledger-choice settings-currency-option '+(ledgerSettings.defaultCurrency==='TWD'?'on':'')+'" data-currency="TWD" aria-pressed="'+(ledgerSettings.defaultCurrency==='TWD'?'true':'false')+'" onclick="selectLedgerDefaultCurrency(\'TWD\')">TWD 台幣</button></div>'+(settingsError?'<div class="settings-help" style="color:var(--coral)">'+escapeHtml(settingsError)+'</div>':'')+'<div class="settings-help">儲存後跨裝置共用；CSV 發布可能延遲 1–5 分鐘。</div><button class="btn block" style="margin-top:10px" onclick="saveLedgerSettingsFromForm(this)">儲存共用設定</button></div>'+
-    '<div class="settings-section" id="ledgerOptionSettingsSection"><h3>自訂類別、支付方式與採買單位</h3><div class="settings-help">可新增、刪除或排序；刪除選項不影響既有紀錄。</div>'+renderLedgerOptionManager('category','類別')+renderLedgerOptionManager('payMethod','支付方式')+renderLedgerOptionManager('shoppingUnit','採買單位')+'</div>'+
-    '<div class="settings-section" id="ledgerProxyTargetSettingsSection"><h3>代購對象</h3><div class="settings-help">常用對象會顯示在個人記帳表單；刪除不影響既有紀錄。</div>'+renderLedgerProxyTargetManager()+'</div>'+
-    '<div class="settings-section"><h3>本機資料備份／還原</h3><div class="settings-help">換手機、重裝 App 或清除瀏覽器資料前使用。還原會覆蓋目前裝置上的打卡、想逛、採買清單、身分、個人帳、代購對象、自訂選項及待同步記帳。</div><div class="settings-actions"><button class="btn ghost" onclick="exportPersonalState()">複製備份 JSON</button><button class="btn" onclick="openPersonalStateRestore()">從 JSON 還原</button></div></div>'+
-    '<div class="settings-section" id="ledgerTestModeSection"><div class="toggle-row"><div><h3>測試模式<span class="settings-warning-tag">僅團體帳</span></h3><div class="settings-help">團體帳切換為獨立 [TEST] 帳本；儀表板、結算與明細只顯示測試紀錄，關閉即回正式帳本。個人帳不受影響。</div></div><input type="checkbox" '+(lsGet('trip_ledger_test_mode',false)?'checked':'')+' onchange="setLedgerTestMode(this)"></div></div>'+
-    '<div class="settings-section" id="simpleSettlementSection"><div class="toggle-row"><div><h3>簡易結算模式</h3><div class="settings-help">關閉交握流程，只顯示淨額與轉帳建議。個人裝置設定，不同步；已確認的結清仍照常計入餘額。</div></div><input type="checkbox" '+(isSimpleSettlementMode()?'checked':'')+' onchange="setSimpleSettlementMode(this)"></div></div>'+
-    '<!-- 主題區塊預留：merge 後另批實作,本批不掛入任何主題功能。 -->'+
-    '</section>';
+  overlay.innerHTML='<section class="settings-panel" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">'+renderSettingsPage(settingsUiState.page,ledgerSettings,settingsError)+'</section>';
   document.body.appendChild(overlay);
-  if(targetId){
+  var panel=overlay.querySelector('.settings-panel');
+  if(panel)panel.scrollTop=settingsUiState.scrollTopByPage[settingsUiState.page]||0;
+  if(settingsUiState.anchorId){
     setTimeout(function(){
-      var target=document.getElementById(targetId);
-      if(!target)return;
-      target.scrollIntoView({block:'center'});
-      var input=target.querySelector('input');
+      var anchor=document.getElementById(settingsUiState.anchorId);
+      settingsUiState.anchorId='';
+      if(!anchor)return;
+      anchor.scrollIntoView({block:'center'});
+      var input=anchor.querySelector('input');
       if(input)input.focus();
     },0);
   }
+}
+var settingsUiState={page:'root',scrollTopByPage:{},anchorId:''};
+var SETTINGS_PAGE_IDS=['root','theme','proxy','ledger','options','data'];
+var SETTINGS_LEGACY_TARGETS={
+  ledgerTestModeSection:{page:'root',anchorId:'ledgerTestModeSection'},
+  ledgerOptionSettingsSection:{page:'options',anchorId:''},
+  ledgerProxyTargetSettingsSection:{page:'proxy',anchorId:''}
+};
+function normalizeSettingsTarget(targetId){
+  var value=String(targetId||'root');
+  var legacy=SETTINGS_LEGACY_TARGETS[value];
+  if(legacy)return {page:legacy.page,anchorId:legacy.anchorId};
+  return {page:SETTINGS_PAGE_IDS.indexOf(value)>=0?value:'root',anchorId:''};
+}
+function captureSettingsScroll(){
+  var panel=document.querySelector('#settingsOverlay .settings-panel');
+  if(panel)settingsUiState.scrollTopByPage[settingsUiState.page]=Math.max(0,Number(panel.scrollTop)||0);
+}
+function openSettingsPage(pageId){openSettings(pageId);}
+function backToSettingsRoot(){openSettings('root');}
+function renderSettingsHeader(title,isRoot){
+  return '<div class="settings-head"><div class="settings-title-wrap">'+(isRoot?'':'<button class="settings-back" onclick="backToSettingsRoot()">‹ 返回</button>')+'<h2 id="settingsTitle">'+escapeHtml(title)+'</h2></div><button class="settings-close" aria-label="關閉" onclick="closeSettings()">×</button></div>';
+}
+function renderSettingsRoot(ledgerSettings){
+  var proxyCount=ledgerProxyTargetStore.all().length;
+  var optionSummary=ledgerCategoryStore.all().length+' 類別 · '+ledgerPayMethodStore.all().length+' 支付方式 · '+shoppingUnitStore.all().length+' 單位';
+  return renderSettingsHeader('設定',true)+
+    '<div class="settings-section"><h3>身分</h3><div class="settings-identity-row"><div class="settings-identity-current"><small>目前身分</small><b id="settingsCurrentMember">'+escapeHtml(getCurrentMember()||'尚未選擇')+'</b></div><div class="settings-identity-actions"><button class="btn ghost settings-member-switch" onclick="openMemberSelector(false,false)">切換</button><button class="btn settings-member-switch" onclick="openMemberSelector(false,true)">新增</button></div></div></div>'+
+    '<div class="settings-section"><h3>主題</h3><button class="settings-menu-button" onclick="openSettingsPage(\'theme\')"><span class="settings-menu-copy"><b>海洋／岡山</b><small>6 組主題</small></span><span class="settings-menu-chevron">›</span></button></div>'+
+    '<div class="settings-section"><h3>代購對象</h3><button class="settings-menu-button" onclick="openSettingsPage(\'proxy\')"><span class="settings-menu-copy"><b>管理代購對象</b><small>'+proxyCount+' 位常用對象</small></span><span class="settings-menu-chevron">›</span></button></div>'+
+    '<div class="settings-section"><h3>帳務</h3><button class="settings-menu-button" onclick="openSettingsPage(\'ledger\')"><span class="settings-menu-copy"><b>匯率與預設幣別</b><small>1 JPY = NT$'+escapeHtml(ledgerSettings.exchangeRate||'未設定')+' · '+escapeHtml(ledgerSettings.defaultCurrency)+'</small></span><span class="settings-menu-chevron">›</span></button><div class="toggle-row settings-inline-toggle" id="simpleSettlementSection"><div><b>簡易結算模式</b><div class="settings-help">保留已確認結清</div></div><input type="checkbox" '+(isSimpleSettlementMode()?'checked':'')+' onchange="setSimpleSettlementMode(this)"></div></div>'+
+    '<div class="settings-section"><h3>自訂項目</h3><button class="settings-menu-button" onclick="openSettingsPage(\'options\')"><span class="settings-menu-copy"><b>類別、支付方式與採買單位</b><small>'+escapeHtml(optionSummary)+'</small></span><span class="settings-menu-chevron">›</span></button></div>'+
+    '<div class="settings-section"><h3>資料與版本</h3><button class="settings-menu-button" onclick="openSettingsPage(\'data\')"><span class="settings-menu-copy"><b>備份、還原與版本資訊</b><small>個人資料備份</small></span><span class="settings-menu-chevron">›</span></button></div>'+
+    '<div class="settings-section" id="ledgerTestModeSection"><h3>測試模式</h3><div class="toggle-row"><div><b>團體帳測試模式<span class="settings-warning-tag">僅團體帳</span></b><div class="settings-help">團體帳切換為獨立 [TEST] 帳本；儀表板、結算與明細只顯示測試紀錄，關閉即回正式帳本。個人帳不受影響。</div></div><input type="checkbox" '+(lsGet('trip_ledger_test_mode',false)?'checked':'')+' onchange="setLedgerTestMode(this)"></div></div>';
+}
+function renderSettingsThemePage(){
+  return renderSettingsHeader('主題',false)+'<div class="settings-section"><h3>主題</h3><div class="settings-help">六組主題選擇器將在本批下一階段掛入。</div></div>';
+}
+function renderSettingsProxyPage(){
+  return renderSettingsHeader('代購對象',false)+'<div class="settings-section" id="ledgerProxyTargetSettingsSection"><h3>代購對象</h3><div class="settings-help">常用對象會顯示在個人記帳表單；刪除不影響既有紀錄。</div>'+renderLedgerProxyTargetManager()+'</div>';
+}
+function renderSettingsLedgerPage(ledgerSettings,settingsError){
+  return renderSettingsHeader('帳務',false)+'<div class="settings-section"><h3>匯率與預設幣別</h3><div class="settings-current">目前匯率：<b>1 JPY = NT$'+escapeHtml(ledgerSettings.exchangeRate||'未設定')+'</b></div><div class="settings-rate-row"><label class="settings-help" for="ledgerExchangeRate"><b>匯率</b><br>1 日幣可換算多少台幣</label><input id="ledgerExchangeRate" type="number" inputmode="decimal" min="0.000001" step="any" value="'+escapeHtml(ledgerSettings.exchangeRate)+'"></div><div class="settings-help"><b>預設輸入幣別</b><br>新增記帳時預先選擇的幣別</div><div class="ledger-currency-grid" style="margin-top:8px"><button class="ledger-choice settings-currency-option '+(ledgerSettings.defaultCurrency==='JPY'?'on':'')+'" data-currency="JPY" aria-pressed="'+(ledgerSettings.defaultCurrency==='JPY'?'true':'false')+'" onclick="selectLedgerDefaultCurrency(\'JPY\')">JPY 日幣</button><button class="ledger-choice settings-currency-option '+(ledgerSettings.defaultCurrency==='TWD'?'on':'')+'" data-currency="TWD" aria-pressed="'+(ledgerSettings.defaultCurrency==='TWD'?'true':'false')+'" onclick="selectLedgerDefaultCurrency(\'TWD\')">TWD 台幣</button></div>'+(settingsError?'<div class="settings-help" style="color:var(--coral)">'+escapeHtml(settingsError)+'</div>':'')+'<div class="settings-help">儲存後跨裝置共用；CSV 發布可能延遲 1–5 分鐘。</div><button class="btn block" style="margin-top:10px" onclick="saveLedgerSettingsFromForm(this)">儲存共用設定</button></div>';
+}
+function renderSettingsOptionsPage(){
+  return renderSettingsHeader('自訂項目',false)+'<div class="settings-section" id="ledgerOptionSettingsSection"><h3>類別、支付方式與採買單位</h3><div class="settings-help">可新增、刪除或排序；刪除選項不影響既有紀錄。</div>'+renderLedgerOptionManager('category','類別')+renderLedgerOptionManager('payMethod','支付方式')+renderLedgerOptionManager('shoppingUnit','採買單位')+'</div>';
+}
+function renderSettingsDataPage(){
+  return renderSettingsHeader('資料與版本',false)+'<div class="settings-section"><h3>本機資料備份／還原</h3><div class="settings-help">換手機、重裝 App 或清除瀏覽器資料前使用。還原會覆蓋目前裝置上的打卡、想逛、採買清單、身分、個人帳、代購對象、自訂選項及待同步記帳。</div><div class="settings-actions"><button class="btn ghost" onclick="exportPersonalState()">複製備份 JSON</button><button class="btn" onclick="openPersonalStateRestore()">從 JSON 還原</button></div></div>';
+}
+function renderSettingsPage(page,ledgerSettings,settingsError){
+  if(page==='theme')return renderSettingsThemePage();
+  if(page==='proxy')return renderSettingsProxyPage();
+  if(page==='ledger')return renderSettingsLedgerPage(ledgerSettings,settingsError);
+  if(page==='options')return renderSettingsOptionsPage();
+  if(page==='data')return renderSettingsDataPage();
+  return renderSettingsRoot(ledgerSettings);
 }
 function mergedLedgerRecords(){
   var cloud=DB.ledger||[], pending=ledgerRepository.queuedRecords().map(function(record){var copy={};Object.keys(record).forEach(function(key){copy[key]=record[key];});copy.pending=true;return copy;});
@@ -9053,6 +9367,7 @@ function openDiagnostics(){
   el.innerHTML='<div class="diag-panel"><div class="diag-head"><h2>診斷面板</h2><button class="diag-close" onclick="closeDiagnostics()">×</button></div>'+
     '<div class="diag-section"><h3>App 版本</h3><div class="diag-row" id="diagShellVersion">讀取中…</div><div class="diag-help">本機實際啟用的外殼版本；滑除 PWA 重開兩次才會換版。</div></div>'+
     '<div class="diag-section"><h3>健康檢查</h3><div class="diag-row">'+(findings.length?escapeHtml(findings.join('；')):'正常')+'</div></div>'+
+    renderTravelNotesSection()+
     '<div class="diag-section"><h3>時間模擬</h3><div class="diag-row">'+(isTimeSimulationActive()?'模擬中：目前模擬時間 '+appNow().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})+'（行走中）':'依手機時間')+'</div><input id="diagTime" type="datetime-local" value="'+escapeHtml(simValue||'')+'"><div class="diag-shortcuts">'+days+'</div><div class="diag-actions"><button class="primary" onclick="setTimeSimulation()">套用並開始模擬</button></div><button onclick="endTimeSimulation(true)">結束模擬——還原測試前狀態</button><div class="diag-help">還原進入模擬前的打卡與略過狀態。</div><button onclick="endTimeSimulation(false)">結束模擬——保留測試變更</button><div class="diag-help">保留模擬期間的打卡與略過狀態。</div></div>'+
     '<div class="diag-section"><h3>行程進度</h3><button onclick="resetTripProgress()">重置行程進度</button><div class="diag-help">僅清除打卡與略過，需雙重確認。</div></div></div>';
   document.body.appendChild(el);

@@ -127,12 +127,28 @@ function response(payload){
   assert(settingsSource.includes('新增記帳時預先選擇的幣別'),'Settings explains the default input currency');
   assert(!settingsSource.includes('Exchange Rate（'),'Settings does not expose the internal Exchange Rate key as a label');
   assert(!settingsSource.includes('Ledger Default Currency（'),'Settings does not expose the internal default-currency key as a label');
+  const orderedSettingsLabels=['>身分<','>主題<','>代購對象<','>帳務<','>自訂項目<','>資料與版本<','>測試模式<'];
+  let previousSettingsLabel=-1;
+  orderedSettingsLabels.forEach(function(label){
+    const at=settingsSource.indexOf(label);
+    assert(at>previousSettingsLabel,'Settings keeps approved section order at '+label);
+    previousSettingsLabel=at;
+  });
   assert(settingsSource.includes('目前身分'),'Settings displays the current member identity');
-  assert(settingsSource.includes('切換身分')&&settingsSource.includes('新增身分'),'Settings keeps both identity management actions');
+  assert(settingsSource.includes('>切換<')&&settingsSource.includes('>新增<'),'Settings keeps both identity actions on the compact card');
+  assert(!settingsSource.includes('>成員身分<'),'Settings uses the approved 身分 label');
+  assert(settingsSource.includes('settings-identity-row'),'Settings uses a compact same-row identity layout');
+  assert(settingsSource.includes('SETTINGS_LEGACY_TARGETS'),'legacy Settings deep links have an explicit compatibility map');
+  ['ledgerTestModeSection','ledgerOptionSettingsSection','ledgerProxyTargetSettingsSection'].forEach(function(id){
+    assert(settingsSource.includes(id),'legacy Settings target remains mapped: '+id);
+  });
+  assert(settingsSource.includes('scrollTopByPage'),'root and every subpage preserve independent scroll positions');
+  assert(settingsSource.includes('captureSettingsScroll'),'Settings captures scroll before rerender or navigation');
+  assert(settingsSource.includes('backToSettingsRoot'),'Settings subpages return to the root context');
   assert(settingsSource.includes('ledgerTestModeSection'),'test mode has a stable Settings target');
   assert(settingsSource.includes('僅團體帳'),'Settings labels test mode as shared-ledger-only');
   assert(settingsSource.includes('只顯示測試紀錄')&&settingsSource.includes('關閉即回正式帳本'),'Settings explains the parallel TEST universe');
-  assert(settingsSource.includes('自訂類別、支付方式與採買單位'),'Settings exposes custom ledger option management');
+  assert(settingsSource.includes('類別、支付方式與採買單位'),'Settings exposes custom ledger option management');
   assert(html.includes('addLedgerOptionFromSettings'),'Settings can add custom options');
   assert(html.includes('moveLedgerOptionFromSettings'),'Settings can reorder custom options');
   assert(html.includes('removeLedgerOptionFromSettings'),'Settings can remove default or custom options');
