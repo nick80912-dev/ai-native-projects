@@ -1,4 +1,9 @@
 # 07 版本紀錄
+## 2026-07-30｜整張收據作廢預覽動作去重（dev，SW v71，待 Bar 真機驗收）
+- 更正收據在完成整張作廢預覽後，主要按鈕「確認整張作廢」與次要按鈕「重新預覽作廢」原本都呼叫 `saveLedgerCorrection(true)`；後者沒有重新產生不同預覽，只會走同一個最終確認，因此移除重複且誤導的入口。
+- 作廢預覽前仍保留「整張收據作廢」；作廢預覽後只保留「確認整張作廢」。一般更正預覽、`saveLedgerCorrection`、preview signature、commit-last、canonical conflict、append-only 事件、權限與歷史均未修改。
+- 新增兩階段按鈕契約測試，Service Worker cache 升 `okayama-trip-v71`。完整 49／49 Node test files、文件標題、manifest JSON 與 `git diff --check` 通過；App runtime 已 commit 並推送 `dev`（`8949449`）。
+
 ## 2026-07-30｜新增消費分攤成員選取色差（dev，SW v70，待 Bar 真機驗收）
 - 真機回饋指出新增消費／更正收據共用的分攤成員按鈕，選取後背景與區塊底色無法區分。根因是 `.ledger-participant-choice.on` 引用未定義的 `--mint`，瀏覽器忽略該背景宣告。
 - 選取狀態改為中度青綠底 `#d6e8e4`、深色文字與既有深色邊框；保留勾號、`aria-pressed`、分攤資料與點選 handler。未定義全域 `--mint`，避免連動其他畫面。
