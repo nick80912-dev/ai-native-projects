@@ -25,6 +25,39 @@
 ### A4. 文件/程式碼(GitHub)
 - 任何檔案退回:`git revert <commit>`(保留歷史,禁用 `reset --hard` 覆蓋遠端,呼應憲章 4.1)。
 
+### A5. 以 tag 回滾至 v18 正式版(2026-07-30 新增)
+
+**用途**:v72 發布(`dev → main`)後若正式站出事,需要退回到 v72 之前的最後一個正式版。
+
+**錨點**:annotated tag `production-v18` → `9eefcb0`(2026-07-18 merge PR #5),Service Worker cache `okayama-trip-v18`。這是本 repo 的第一個 tag;在此之前 `main` 沒有任何可指名的正式版錨點,只能靠 SHA 或 Netlify 快照。
+
+> **先分清兩件事**:`production-v18` 是**程式碼**錨點,回答「該退回哪個內容」;讓使用者實際看到舊版靠的是**部署**動作。緊急時**先做 A1(Netlify Publish deploy),再補 git 層**;A1 是秒級且不動 git 歷史,A5 是把 `main` 的內容真正退回去。
+
+**步驟**
+
+1. **止血(先做)**:依 §A1 在正式站 Netlify 後台 Publish 上一個正常 deploy。此時 `main` 內容仍是壞版,只是沒在線上。
+2. **確認錨點內容就是你要的**:
+   ```
+   git fetch --all --tags
+   git show -s production-v18
+   git diff --stat production-v18 origin/main
+   ```
+3. **git 層退回**(依 §A4,**禁用 `reset --hard` 覆蓋遠端**):
+   - 若壞版是一個 merge commit(正常 Release Flow 的情況)→ 開分支做 `git revert -m 1 <merge-sha>`,走 PR 由 Bar merge 回 `main`。
+   - 若需要整棵樹回到 v18 內容 → 開分支後 `git checkout production-v18 -- .`,commit 後同樣走 PR。
+   - **兩種都不得直接 push `main`**;正式站部署由 merge 觸發,繞過 PR 等於繞過 §E Release Flow。
+4. **Netlify 端**(現為 `main`=正式站 `trippilot-jp.netlify.app` / `dev`=測試站 `dev-trippilot-jp.netlify.app` 雙站架構):
+   - 正式站追蹤 `main`,PR merge 後**自動部署**,無需手動觸發。
+   - 測試站自動部署已於 2026-07-26 由 Bar 手動關閉,回滾**不會**同步影響測試站;若要讓測試站也呈現舊版,需在 Netlify 後台手動觸發。
+   - `dev` 分支不受回滾影響 — 壞版程式仍在 `dev` 上,修好後再重新走 Release Flow。
+5. **Service Worker**(依 §A2,回滾最容易踩的一步):
+   - v18 的 `sw.js` 是 `CACHE_NAME = 'okayama-trip-v18'` **硬編碼、無 `importScripts`**;v72 是 `importScripts('./app-version.js')` + `'okayama-trip-'+APP_VERSION`。兩者位元組不同,SW 會判定更新並在 activate 清掉 `okayama-trip-v72`,「開兩次生效」限制仍在。
+   - 回滾後 `app-version.js` 會從部署中消失。v18 的 SW 不引用它,但**已安裝 v72 SW 的裝置**其 SHELL 清單含 `./app-version.js`,該請求會 404 → 依現行 network-first 的 catch 分支退回 `caches.match('./index.html')`。若舊 SW 尚未被替換,這會讓 JS 解析失敗。**回滾後務必以真機(非無痕)確認 SW 已換代**,不要只看無痕視窗。
+   - **禁止**以刪除 `sw.js` 作為回滾手段。
+6. **記錄**:於 `07_CHANGELOG.md` 記回滾時間、原因、退回版本,並更新 `tasks/current.md` 的 Release Gate 狀態。
+
+**新增正式版 tag 的慣例**:每次 `dev → main` merge 完成並線上驗證通過後,對該 merge commit 建 annotated tag `production-v<SW版本>`,message 需含建立日期、對應 SW cache 名稱、建立原因與回滾指令。tag 只 push tag 本身(`git push origin <tag>`),不夾帶分支。
+
 ## B. 本機開發環境清理排程安全規範(自憲章 §8 移入,內容不變)
 - 清理排程必須採保守白名單策略:只清理**已登記且過期**的本地服務,以及**超過 24 小時的低風險暫存**。
 - 「服務登記檔」定義:建立排程前,必須先建立明確的登記檔(如 `~/.dev-services-registry.json`),記錄服務名稱、PID/port、啟動時間、專案來源與過期條件;**未登記者一律不得清理**。
