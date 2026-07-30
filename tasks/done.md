@@ -1,6 +1,6 @@
 # DONE(已完成)
 
-> 更新於 2026-07-29。完成事項來自 `.ai-manifest.json` status.done、既有 CHANGELOG 與 Bar 驗收確認；細節仍以 07_CHANGELOG.md 為準。
+> 更新於 2026-07-30。完成事項來自 `.ai-manifest.json` status.done、既有 CHANGELOG 與 Bar 驗收確認；細節仍以 07_CHANGELOG.md 為準。
 
 ## 已完成
 - V2 Schema 驅動 CMS:7 張 Google Sheets、ID 引用、Restaurants/Shopping/Hotels/Expenses/TripConfig。
@@ -19,6 +19,37 @@
 - 2026-07-29：結算一致性批完成本機開發與自動化／Browser QA，自 backlog 移出；交付含還款確認後永久保護、append-only 收據級更正／作廢、commit-last、canonical conflict、差額預覽與完整歷史。SW v69–v71 後續於 2026-07-30 完成 Bar 真機驗收；`dev → main` 與正式部署仍未核准。
 - 2026-07-30：Bar 完成 SW v69–v71 真機／PWA 驗收；涵蓋結算一致性、分攤成員選取色差與整張作廢預覽動作去重。`dev → main` 與正式部署仍須另行核准。
 - 2026-07-30：backlog #1 Playwright 三情境 QA 入版控並掛入 `qa.yml`；斷網內建、連網同步與旅行日 mock Date 三情境均以真實 App 啟動流程驗證，通過標準為 `pageerror=0`。
+
+## 已歸檔的 backlog 編號項目
+
+> 2026-07-30 依 Bar 裁定第 4 項歸檔。**編號保留不回收**(見 `tasks/backlog.md` 檔頭)。歸檔判準為「程式與文件證據足以證明已完成」,**不以真機／PWA 驗收為條件** — 驗收已另列為 release gate,見 `tasks/current.md`。以下每項均於批次一 P0／P1 逐項複驗程式碼與 `07_CHANGELOG.md`,非僅採信任務板文字。
+
+| 編號 | 完成日 | 對應 SW 版本 | 狀態 |
+|---|---|---|---|
+| #1 | 2026-07-30 | 不涉 SW 版本(純測試資產) | 如原核准完成 |
+| #3b | 2026-07-30 | SW v72(個人備份 v8) | 已完成,原 backlog 敘述過期 |
+| #6 | 2026-07-30 | SW v72 | 完成,**範圍擴張,已由 Bar 追認** |
+| #7 | 2026-07-30 | SW v72 | 如原核准完成 |
+| #8 | 2026-07-30 | SW v72 | 如原核准完成 |
+| #9 | 2026-07-30 | SW v72 | 完成,**七項中兩項以不同形式交付** |
+
+- **#1 QA 腳本入版控** — 證據:`tests/browser/trip-three-scenarios.spec.js` 三個 `test()`(斷網內建 / 連網同步 / 旅行日 mock Date)、`tests/browser/support/qa-fixture.js`、`static-server.js`、`.github/workflows/qa.yml` 的 `browser-qa` job。只新增測試資產、無 runtime 變更,故不對應 SW 版本。
+- **#3b 採買單位納入個人狀態備份** — 證據:`index.html:7421` `personalStateJson()` payload 含 `shoppingUnits:shoppingUnitStore.all()`;`index.html:7497` 還原寫回 `SHOPPING_UNIT_OPTIONS_KEY`,且列於原子回滾 keys;`index.html:3815` `PERSONAL_STATE_VERSION=8`,註解明載「v8 起加入本機主題、採買單位與旅途紀錄」;`tests/settings-backup-ux.test.js:145` 斷言 v8 匯出鍵含 `shoppingUnits`;`07_CHANGELOG.md` 2026-07-30 條目。
+  - **原 backlog 敘述過期**:原文寫「目前不在備份 payload 內」與「目前 v7」,兩者在 v72 交付後均已不成立。歸檔而非重寫,是因為需求本體已滿足。
+  - **殘留缺口(不回填 backlog,已列入批次一 P3)**:`tests/settings-backup-ux.test.js` 只覆蓋 v1／v2／v4／v8 還原,**v3／v5／v6／v7 無任何還原測試**。依 Bar 裁定第 2 項,不升 v9、維持 `PERSONAL_STATE_VERSION=8`,改補 v1–v8 還原矩陣測試與相容策略文件化。
+- **#6 主題系統** — 證據:`index.html:616` `THEME_IDS=['ocean','ivory','wisteria','cedar','mist','tea']`、`:617` `THEME_REGISTRY` 六筆;`tests/theme-system.test.js`(59 條斷言)。附帶修正已完成:`index.html:39` `--green:#367055`,舊值 `#3c8062` 全檔無殘留。預設主題經複驗仍為 `ocean`(`THEME_IDS[0]`,且 `normalizeThemeId()` 對未知值回退 `ocean`)。
+  - **範圍擴張,如實記錄**:核准範圍為「共三選項」(2026-07-17)→ 鬆綁為「三案並列、最終選項數三或四待 Bar 裁定」(2026-07-30);實際交付 **6 組**。核准內的三案為 `ivory`／`wisteria`／`cedar`;**`mist`(霧藍／瀨戶)與 `tea`(焙茶／倉敷)未經任何核准即納入交付**,且選項數超出「三或四」。**已由 Bar 於 2026-07-30 追認為正式交付現況**,並要求立 ADR 記錄未來閘門 → `adr/0008-theme-system-scope.md`。
+- **#7 主題區掛入準備** — 證據:預留骨架已被實作取代,`renderThemeSettingsSheet()`(`index.html:7641`)與 `renderSettingsThemePage()`(`index.html:7647`),`SETTINGS_PAGE_IDS`(`index.html:7606`)含 `'theme'`。
+- **#8 UI 配色規範覆寫** — 證據:`04_UI_GUIDELINES.md:7` 已改寫為兩層 token 制(13 個第一層 `--t-*`;第二層保留 `--paper`／`--sea-deep`／`--coral` 等角色名並只能 `var()` 對映第一層)、`:18` 固定色 `--green #367055`;`08_AI_HANDOVER.md:39` 載明主題只可透過 `data-theme` 覆寫第一層 token。原「UI 配色變數不可變」條文已由上述條文取代。
+- **#9 設定頁 2.0 批** — 七項子範圍中 **五項如原文交付、兩項以不同形式交付**:
+  - ✅ 分區架構 — `renderSettingsRoot()`(`index.html:7627`)七區:身分 → 主題 → 代購對象 → 帳務 → 自訂項目 → 資料與版本 → 測試模式
+  - ✅ SVG 齒輪入口 — `index.html:687` inline SVG(`.settings-btn`,`aria-label="設定"`)
+  - ✅ 摘要計數列 — 主題名稱＋「6 組主題」、「N 位常用對象」、「N 類別 · N 支付方式 · N 單位」、匯率與預設幣別
+  - ✅ 代購對象管理移入設定頁 — `openSettingsPage('proxy')` → `renderSettingsProxyPage()`
+  - ✅ APP_VERSION 版本資訊列 — `renderSettingsDataPage()` 顯示 `SW v72`,取自 `APP_VERSION`
+  - ⚠️ 使用者版更新日誌**子頁** → 實際**併入「資料與版本」子頁**內(`APP_RELEASE_NOTES` 五筆 + `renderAppReleaseNotes()`);`SETTINGS_PAGE_IDS` 中沒有獨立的更新日誌頁
+  - ⚠️ 成員管理**子頁** → 實際為身分區行內「切換／新增」兩鈕 + 既有 `openMemberSelector()` overlay,非獨立子頁
+  - 上述兩項差異與 `07_CHANGELOG.md` 2026-07-30 條目一致(該條目只列四個子頁:代購對象、帳務、自訂項目、資料與版本),屬**設計時的形式選擇而非實作遺漏**;但與 backlog 原文的「子頁」字面不符,列此供 Bar 追認或另立調整項,不自行判定為等價。
 
 ## 文件治理
 - 2026-07-13:Netlify 雙站架構上線(`main`=正式站、`dev`=測試站)，兩站部署與瀏覽器狀態完全隔離。

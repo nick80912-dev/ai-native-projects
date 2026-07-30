@@ -26,6 +26,20 @@
 - 2026-07-29 採買清單 C＋E＋G 第三批（SW v68）— Ledger 個人／團體切軌保留逐項代購、分攤、row key 與採買 source IDs，只序列化目前帳本軌；四類待買群組與 Today 套用 exact `必買` 穩定置頂，已買頁與 store order 不變；新增／編輯改為獨立 Sheet，保存 scroll／detail context，依 item ID 返回，具 save guard、錯誤留場與同步連續新增焦點。Browser QA 於 320×700、375×812、390×844 驗證 Sheet／清單／卡片水平溢位 0、深層取消 scroll delta 0、移動後卡片聚焦、明細返回、連續新增與帳本切軌，console error／warning 0；**已 commit 並推送 `dev`（`0c5fe45`），Bar 已於 2026-07-29 完成 iPhone Safari／PWA 真機驗收，尚未正式部署**。
 - 2026-07-25 結算列顯示層去重（SW v52）— chip 只講狀態、按鈕只講動作、小字只在有額外資訊時出現；4 處同義重複（`送出中…`×2、`同步失敗・重新同步`＋`重新同步`、兩列「同步中」＋「等待同步」）已清除，逾 30 秒的升級提示依 Bar 裁定保留。狀態機 §3 核准 label 未動。完整 43／43 Node tests（reliability 98／98）與文件標題檢查通過；**Bar 已於 2026-07-29 完成真機驗收**。
 
+## 🚦 Release Gate(發布前必過,與 backlog 分離)
+
+> 2026-07-30 依 Bar 裁定第 4 項設立。本節列的是**發布條件**,不是待開發項目 — 已完成的功能不因真機驗收未做而繼續留在 `tasks/backlog.md`。已歸檔項目見 `tasks/done.md`「已歸檔的 backlog 編號項目」。
+
+| # | Gate | 狀態 | 負責 |
+|---|---|---|---|
+| G1 | SW v72 Bar 真機／PWA 驗收(iPhone Safari／安裝後 PWA／離線重開／SW 更新／六主題／設定頁 2.0／旅途紀錄／備份還原) | ⏳ 待辦 | Bar |
+| G2 | 批次一「發布阻斷項」全數交付且 `tests/` 全綠 + Playwright 3／3 + `check-doc-titles.js` 通過 | 🔄 進行中(P1 已交付 A＋B) | AI |
+| G3 | `main` 現況(`9eefcb0`,SW okayama-trip-v18)建立 annotated 回滾 tag 並 push `origin` | 🔄 本機 tag 已建立;**push 待 Bar 確認** | AI → Bar |
+| G4 | Bar 核准 PR merge `dev → main` | ⏳ 待辦 | Bar |
+| G5 | Netlify 正式站部署後線上驗證 | ⏳ 待辦 | Bar |
+
+> G1 與 G4／G5 為 Bar 專屬職責;AI 不得以 G2 全綠為由推進 G4。未核准前不得 merge、push `main` 或部署。
+
 ## ▶️ 下一階段
 1. **真機／PWA 驗收已關閉**：Bar 於 2026-07-29 確認 SW v58–v68 累積功能、採買 C＋E＋G、GitHub Pages iOS Safari／PWA 安裝、standalone、離線重開、SW 更新節奏與本機資料保留皆完成驗收。
 2. **Playwright 三情境 QA 與 SW v72 開發已完成**：斷網內建、連網同步與旅行日 mock Date 已寫入 `tests/browser/` 並掛入 `.github/workflows/qa.yml`；SW v72 設定／主題／備份／旅途紀錄已整合並 push `dev`，下一步由 Bar 真機／PWA 驗收。
@@ -35,6 +49,6 @@
 > 已解除：Apps Script `doGet` 部署已由 Bar 完成，真實端點驗證（CORS、redirect、`after`／`reset`／`serverTime`、非 JSON 降級）通過，見上方 SW v47 條目。
 
 ## 下一棒
-→ SW v72 已整合並 push `dev`（runtime 截點 `b372f49`），下一棒為 Bar 真機／PWA 驗收；`dev → main` 合併與正式發布仍須 Bar 另行核准。
+→ 批次一 P1(任務板歸位 + v18 回滾 tag)已交付。下一棒:P2 C1 階段 — 只做 SW 版本傳遞機制的規範查證、瀏覽器支援確認與最小重現,**不得修改 runtime**;實證後若確認風險存在,重新提交 C2 的 Tier 2 四段說明再動工。並行待辦為 Bar 確認 tag push 至 `origin`。真機／PWA 驗收與 `dev → main` 合併見上方 Release Gate。
 
 > 採買清單 A／B／D／F 已於 SW v60／v61 交付；C／E／G 已於 SW v68 實作，並於 2026-07-29 完成 Bar 真機驗收；正式契約見設計文件。
