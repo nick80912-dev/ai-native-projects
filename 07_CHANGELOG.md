@@ -1,4 +1,15 @@
 # 07 版本紀錄
+## 2026-07-30｜批次一 P1：任務板歸位、六主題追認與 v18 回滾錨點（dev，治理與文件，無 runtime 變更）
+- **Pre-Work Git Sync Gate 阻礙先清除**：主工作目錄長期掛著 Bar 未提交的 `tasks/backlog.md` #6 主題範圍原文修改（前一條目最後一行記載的待辦）。依 Bar 2026-07-30 裁定第 1 項，先以獨立 commit（`04de67f`）原樣接納該修改、不改一字不夾帶其他變更，後續歸檔才以此原文為基礎，歷史完整保留。
+- **backlog #1／#3b／#6–#9 歸檔**（裁定第 4 項）。每項均先複驗 `index.html`、`tests/` 與本檔的實際證據，不採信任務板文字；證據逐項寫入 `tasks/done.md` 新增的「已歸檔的 backlog 編號項目」。`tasks/backlog.md` **保留原編號不重排**，檔頭註明缺號（1、3b、5、6–9、13–19）是刻意保留，因 `tasks/current.md`、`tasks/done.md` 與本檔都以編號互指。
+- **兩處與原核准不符,如實記錄而非粉飾為等價**：①#6 交付 6 組主題，其中 `mist`（霧藍／瀨戶）與 `tea`（焙茶／倉敷）未經任何核准即納入，選項數亦超出原文「三或四」的待裁定區間 → 已由 Bar 追認，並依裁定第 3 項立 `adr/0008-theme-system-scope.md` 記錄原核准範圍、最終六主題、追認理由與未來閘門（新增／移除主題、變更預設主題一律須先核准）。②#9 的「使用者版更新日誌子頁」與「成員管理子頁」實際分別併入「資料與版本」子頁與身分區行內按鈕，非獨立子頁；屬設計時的形式選擇而非實作遺漏，但與 backlog 原文字面不符，列出供 Bar 追認。
+- **#3b 前提複驗結果與原敘述相反**：原 backlog 寫「`trip_shopping_units` 不在備份 payload 內」「目前 v7」，實測 `index.html:7421` payload 已含 `shoppingUnits`、`:7497` 還原寫回並列於原子回滾 keys、`:3815` `PERSONAL_STATE_VERSION=8`，`tests/settings-backup-ux.test.js:145` 已斷言。需求本體在 SW v72 即已滿足，故歸檔而非重做。**真正的殘留缺口是還原測試只覆蓋 v1／v2／v4／v8，v3／v5／v6／v7 完全沒有還原測試**；依裁定第 2 項不升 v9、維持 `PERSONAL_STATE_VERSION=8`，改補 v1–v8 還原矩陣測試與相容策略文件化，列入本批 P3。
+- **真機／PWA 驗收改列 Release Gate**（裁定第 4 項）。`tasks/current.md` 新增 G1–G5，明確區分 Bar 專屬職責（真機驗收、PR merge、線上驗證）與 AI 職責（交付與全綠），已完成的功能不再因驗收未做而滯留 backlog。
+- **`app-version.js` 補列 Tier 2 並定義 PWA 風險群組**（裁定第 7 項）。P0 盤點發現 `14_FILE_TIERS_AND_GATE.md` 完全沒有收錄 `app-version.js`，但它是 `CACHE_NAME` 的唯一來源，改壞等同改壞 `sw.js`。同時把 `sw.js`、`app-version.js` 與 `netlify.toml` 的 cache header 定義為同一風險群組：四項確認以群組為單位提出，群組內版本／header 不一致視為交付缺陷。原本模糊的「Netlify 部署設定」一列具名為 `netlify.toml`。
+- **建立第一個正式版回滾錨點**（裁定第 8 項）。annotated tag `production-v18` → `9eefcb0`（2026-07-18，SW cache `okayama-trip-v18`），message 含建立日期、對應 SW 版本、建立原因與完整回滾指令。本 repo 在此之前**沒有任何 tag**，正式版只能靠 SHA 或 Netlify 快照回頭找。`16_OPS_PLAYBOOK.md` 新增 §A5：區分「程式碼錨點」與「部署動作」（止血一律先做 §A1 Netlify Publish deploy）、寫實 Netlify 雙站行為（正式站追蹤 `main` 自動部署；測試站自動部署 2026-07-26 已關閉，回滾不同步影響）、記下回滾後 `app-version.js` 從部署消失會讓已裝 v72 SW 的裝置 404 → 退回 `index.html` 導致 JS 解析失敗，故須以真機而非無痕確認 SW 換代。**tag 尚未 push `origin`，依裁定第 8 項待 Bar 確認。**
+- 順帶修正 `.ai-manifest.json` 的 `adr_dir` 索引漂移：原本停在 0006，漏收已存在的 `0007-settlement-handshake`，本次一併補上並標明索引權威為 `adr/README.md`。
+- 自動驗證：完整 **51／51** Node test files（P1 動工前基準線與交付後皆全綠）、`tools/check-doc-titles.js` 通過。本批**未修改任何 runtime 檔案**（`index.html`／`sw.js`／`app-version.js`／`schema.js`／`validator.js` 皆未動），故不涉 SW 版本遞增，亦未跑 Playwright／Browser QA。未合併 `main`、未 push `main`、未部署。
+
 ## 2026-07-30｜設定頁 2.0、六組主題與旅途紀錄（dev，SW v72，待 Bar 真機驗收）
 - 設定根頁依核准順序重組為「身分 → 主題 → 代購對象 → 帳務 → 自訂項目 → 資料與版本 → 測試模式」；身分卡縮短，`目前身分`、`切換`、`新增` 同列。代購對象、匯率／預設幣別、自訂類別／支付方式／採買單位、備份與版本資訊改為子頁，舊設定入口仍有相容映射，根頁與子頁各自保留 scroll。
 - 新增海洋／岡山、象牙／靛藍、藤紫／夜櫻、杉綠／宮島、霧藍／瀨戶、焙茶／倉敷六組淺色主題。色彩改為 13 個第一層 `--t-*` token＋既有角色變數第二層對映；未知主題回退海洋並記診斷，互動切換採 storage write-first，寫入失敗不留下假選取狀態。
