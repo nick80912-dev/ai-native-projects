@@ -550,6 +550,6 @@ assert(commit.indexOf('writeShoppingLedgerLinks')>commit.indexOf('operation.then
 assert(html.includes('sortShoppingStopGroups(')&&html.includes('buildShoppingStopOrder('),'A 的行程排序契約保留');
 assert(html.includes('resolveShoppingStopState(')&&html.includes('tripDatasetAuthority('),'F 的孤兒三態契約保留');
 const sw=fs.readFileSync('sw.js','utf8');
-assert.match(sw,/okayama-trip-v70/,'service worker cache is v70');
+assert.match(sw,/okayama-trip-v71/,'service worker cache is v71');
 
 console.log('shopping ledger link tests passed');

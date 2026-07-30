@@ -105,6 +105,6 @@ assert(html.includes('formatLedgerDualAmounts'),'cards always render JPY and TWD
 assert(!/overflow-x\s*:\s*hidden/.test(html.slice(html.indexOf('.ledger-sheet{'),html.indexOf('.ledger-sheet-head{'))),'sheet overflow is not hidden as a workaround');
 
 const sw=fs.readFileSync('sw.js','utf8');
-assert.match(sw,/okayama-trip-v70/,'service worker cache is v70');
+assert.match(sw,/okayama-trip-v71/,'service worker cache is v71');
 
 console.log('ledger 2.2.1 UI tests passed');

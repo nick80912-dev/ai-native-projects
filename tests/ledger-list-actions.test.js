@@ -35,6 +35,16 @@ assert(
   html.includes('function renderLedgerCorrectionPreview('),
   'protected receipt actions open a dedicated guided correction workflow with a pre-submit preview'
 );
+const entrySheetSource=extractFunction(html,'renderLedgerEntrySheet');
+assert(
+  entrySheetSource.includes("correction&&!(correctionKind==='void'&&correction.preview)"),
+  'a completed whole-receipt void preview omits the duplicate secondary void action'
+);
+assert(!entrySheetSource.includes('重新預覽作廢'),'the misleading duplicate void-preview label is removed');
+assert(
+  entrySheetSource.includes('整張收據作廢')&&entrySheetSource.includes('確認整張作廢'),
+  'the void flow retains its distinct preview and final-confirmation labels'
+);
 assert(
   /function updateLedgerSaveCount\(\)\{[^}]*!ledgerUiState\.correction/.test(html),
   'multi-item input updates must not overwrite the correction preview/confirm button label'
