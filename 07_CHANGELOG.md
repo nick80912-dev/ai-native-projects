@@ -1,16 +1,22 @@
 # 07 版本紀錄
-## 2026-07-30｜整張收據作廢預覽動作去重（dev，SW v71，待 Bar 真機驗收）
+## 2026-07-30｜Playwright 三情境 QA 入版控（dev，測試基礎設施）
+- 新增 `@playwright/test`、固定單 worker 的 `playwright.config.js` 與 Node 內建靜態伺服器；測試資產限定在 `tests/browser/`，不會把既有 `tests/*.test.js` 誤當 Playwright 規格執行。
+- 三情境直接啟動真實 `index.html`：斷網時要求 `CURRENT_SNAPSHOT.source === 'builtin'`；連網情境以完整內建 CSV 模擬所有 Sheet 回應並要求原子 online 快照寫入；旅行日以固定 `Date` 驗證 `10/18`、Day 1 與今天頁。三者都收集並要求 `pageerror=0`。
+- `.github/workflows/qa.yml` 新增獨立 `browser-qa` job，使用 `npm ci`、安裝 Chromium 後執行 `npm run test:browser`。本機 Chromium 實跑 3／3 通過。
+- Bar 同日確認 SW v69–v71 已完成真機／PWA 驗收；`dev → main` 與正式部署仍未核准。本批未修改 App runtime、Schema、Apps Script、TripConfig 或 Service Worker 版本。
+
+## 2026-07-30｜整張收據作廢預覽動作去重（dev，SW v71，Bar 真機驗收通過）
 - 更正收據在完成整張作廢預覽後，主要按鈕「確認整張作廢」與次要按鈕「重新預覽作廢」原本都呼叫 `saveLedgerCorrection(true)`；後者沒有重新產生不同預覽，只會走同一個最終確認，因此移除重複且誤導的入口。
 - 作廢預覽前仍保留「整張收據作廢」；作廢預覽後只保留「確認整張作廢」。一般更正預覽、`saveLedgerCorrection`、preview signature、commit-last、canonical conflict、append-only 事件、權限與歷史均未修改。
 - 新增兩階段按鈕契約測試，Service Worker cache 升 `okayama-trip-v71`。完整 49／49 Node test files、文件標題、manifest JSON 與 `git diff --check` 通過；App runtime 已 commit 並推送 `dev`（`8949449`）。
 
-## 2026-07-30｜新增消費分攤成員選取色差（dev，SW v70，待 Bar 真機驗收）
+## 2026-07-30｜新增消費分攤成員選取色差（dev，SW v70，Bar 真機驗收通過）
 - 真機回饋指出新增消費／更正收據共用的分攤成員按鈕，選取後背景與區塊底色無法區分。根因是 `.ledger-participant-choice.on` 引用未定義的 `--mint`，瀏覽器忽略該背景宣告。
 - 選取狀態改為中度青綠底 `#d6e8e4`、深色文字與既有深色邊框；保留勾號、`aria-pressed`、分攤資料與點選 handler。未定義全域 `--mint`，避免連動其他畫面。
 - 「確認整張作廢」與「重新預覽作廢」目前皆呼叫 `saveLedgerCorrection(true)` 的重複行為已完成討論，本批不修改作廢流程。Service Worker cache 升 `okayama-trip-v70`。
 - 測試先紅燈確認舊背景無效，再最小修正。完整 49／49 Node tests 與文件標題檢查通過；實際瀏覽器驗證選取為 `rgb(214, 232, 228)`、未選取為白色、外層為 `rgb(243, 248, 246)`，`aria-pressed` 正確切換且 console error／warning 0。
 
-## 2026-07-29｜結算一致性與收據級引導式更正（dev，SW v69，待 Bar 真機驗收）
+## 2026-07-29｜結算一致性與收據級引導式更正（dev，SW v69，Bar 真機驗收通過）
 - 還款確認後，claim 建立切點前已存在的正式／TEST 收據永久禁止直接編輯與刪除；全團歸零不解除保護。付款人操作選單改為「更正收據」，其他成員只看到權限說明；批次刪除與 handler 仍會再次 fail-closed。
 - 新增 append-only `expense_correction_item`／`expense_correction_commit`／`expense_void_commit`。更正以完整收據版本提交，item 全數先進 durable queue、commit 最後寫入；缺件、跨付款人、跨 universe 或 manifest 不一致皆不生效。同一上一版本的並行提交以 `(time,id)` 選唯一 canonical，losing sibling 保留歷史但永不自動升格。
 - 更正 Sheet 固定原付款人、要求 1–50 字原因，允許新增／移除／修改整張收據品項；第一次送出只預覽新舊總額與成員餘額差，第二次才入列。整張作廢走同一預覽與追加事件，不建立 deletion。既有還款確認保持終局，更正差額形成新待結算餘額。

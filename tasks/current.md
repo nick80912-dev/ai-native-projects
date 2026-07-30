@@ -3,7 +3,7 @@
 > 更新於 2026-07-30。細任務層;里程碑看 `06_ROADMAP.md`,歷史交付看 `07_CHANGELOG.md`,正式待辦看 `tasks/backlog.md`。
 
 ## 📌 現況
-- 最新已推送 `dev` App runtime 基準：`8949449`，Service Worker `okayama-trip-v71`。SW v71 已移除作廢預覽後功能相同的「重新預覽作廢」，只保留「確認整張作廢」；完整 49／49 Node test files、文件標題、manifest JSON 與 diff 檢查通過。v69／v70／v71 皆尚待 Bar 真機／PWA 驗收，亦未合併 `main` 或正式部署；Bar 已於 2026-07-29 完成的是截至 v68 的累積真機／PWA 驗收。
+- 最新已推送 `dev` App runtime 基準：`8949449`，Service Worker `okayama-trip-v71`。SW v71 已移除作廢預覽後功能相同的「重新預覽作廢」，只保留「確認整張作廢」；完整 49／49 Node test files、文件標題、manifest JSON 與 diff 檢查通過。**Bar 已於 2026-07-30 完成 SW v69／v70／v71 真機／PWA 驗收**；尚未合併 `main` 或正式部署。
 - 2026-07-23 治理決策追認、§4 禁改清單硬停規則與任務板歸位 — 已完成,詳見 `07_CHANGELOG.md`。
 - v34–v44 三秒記帳與首頁／結算卡系列 — 已完成並經 Bar 真機驗收,詳見 `07_CHANGELOG.md`。
 - 採買清單批（SW v45）— 已完成開發；目標測試、完整 41／41 Node tests、文件標題檢查及 375px／390px Browser QA 通過，並已納入 2026-07-29 Bar iPhone Safari／PWA 累積真機驗收；詳見 `07_CHANGELOG.md`。
@@ -27,13 +27,13 @@
 
 ## ▶️ 下一階段
 1. **真機／PWA 驗收已關閉**：Bar 於 2026-07-29 確認 SW v58–v68 累積功能、採買 C＋E＋G、GitHub Pages iOS Safari／PWA 安裝、standalone、離線重開、SW 更新節奏與本機資料保留皆完成驗收。
-2. 依優先序開始 `tasks/backlog.md` #1 Playwright 三情境 QA，再逐批處理品質批、設定頁 2.0 與其餘已核准待辦。
-3. **結算一致性批與真機回饋修正已完成至 SW v71，待 Bar 真機驗收**：SW v69 已實作還款確認後永久禁止直接刪改、append-only 收據級更正／作廢、commit-last、跨裝置 canonical conflict、二次預覽與不可改寫歷史；獨立審查發現的 stale 一般編輯表單、stale 預覽與異常事件 fail-closed 路徑亦已加固。SW v70 再將分攤成員選取背景改為 `#d6e8e4`，不改資料、權限或作廢流程，已推送 `dev`（`073ddfc`）。SW v71 移除作廢預覽後功能相同的「重新預覽作廢」，只保留「確認整張作廢」，不改 append-only 語意；完整 49／49 Node test files、文件標題、manifest JSON 與 diff 檢查通過，已推送 `dev`（`8949449`），尚未合併 `main` 或正式部署。
+2. **Playwright 三情境 QA 已完成**：斷網內建、連網同步與旅行日 mock Date 已寫入 `tests/browser/`，本機 Chromium 3／3 通過並掛入 `.github/workflows/qa.yml`；下一批依已核准設計進行 SW v72 主題系統、設定頁 2.0 與旅途紀錄。
+3. **結算一致性批與真機回饋修正已完成至 SW v71 並通過 Bar 真機驗收**：SW v69 已實作還款確認後永久禁止直接刪改、append-only 收據級更正／作廢、commit-last、跨裝置 canonical conflict、二次預覽與不可改寫歷史；獨立審查發現的 stale 一般編輯表單、stale 預覽與異常事件 fail-closed 路徑亦已加固。SW v70 再將分攤成員選取背景改為 `#d6e8e4`，不改資料、權限或作廢流程，已推送 `dev`（`073ddfc`）。SW v71 移除作廢預覽後功能相同的「重新預覽作廢」，只保留「確認整張作廢」，不改 append-only 語意；已推送 `dev`（`8949449`），Bar 於 2026-07-30 完成 v69–v71 真機／PWA 驗收，尚未合併 `main` 或正式部署。
 4. 正式發布仍須由 Bar 另行核准 PR merge `dev → main`；未核准前不得 merge、push `main` 或部署。
 
 > 已解除：Apps Script `doGet` 部署已由 Bar 完成，真實端點驗證（CORS、redirect、`after`／`reset`／`serverTime`、非 JSON 降級）通過，見上方 SW v47 條目。
 
 ## 下一棒
-→ 截至 SW v68 的真機／PWA 驗收已完成；SW v71 已推送 `dev`，結算一致性、分攤成員選取色差及作廢預覽動作去重一併待 Bar 真機驗收。下一棒仍是 Playwright 三情境 QA，再依序進行品質批與設定頁 2.0；`dev → main` 合併／正式發布另待 Bar 核准。
+→ SW v69–v71 已完成 Bar 真機／PWA 驗收；Playwright 三情境 QA 已入版控並掛入 `qa.yml`。下一棒為依核准規格執行 SW v72 主題系統、設定頁 2.0、個人備份 v8 與旅途紀錄；`dev → main` 合併／正式發布另待 Bar 核准。
 
 > 採買清單 A／B／D／F 已於 SW v60／v61 交付；C／E／G 已於 SW v68 實作，並於 2026-07-29 完成 Bar 真機驗收；正式契約見設計文件。

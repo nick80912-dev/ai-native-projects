@@ -104,12 +104,13 @@
       "分帳2.2(Schema 2.8固定21欄/Apps Script真實端點與CSV落位驗證/日期時間拆欄與月曆/篩選面板與元件一致性/結構化稅券資料/近期明細操作入口/SW v22)",
       "結算一致性(Schema 2.9固定21欄/還款確認切點永久保護/原付款人引導式整張更正與作廢/commit-last版本投影/正式與TEST隔離/SW v69)",
       "真機驗收回饋(新增消費分攤成員選取改中度青綠底#d6e8e4/不改資料與權限/SW v70)",
-      "作廢預覽動作去重(預覽後只留確認整張作廢/不改append-only作廢語意/SW v71)"
+      "作廢預覽動作去重(預覽後只留確認整張作廢/不改append-only作廢語意/SW v71/Bar真機驗收通過)",
+      "Playwright三情境QA入版控(斷網內建/連網同步/旅行日mock Date/pageerror=0/qa.yml)"
     ],
     "pending_in_order": [
-      "Bar手機驗收dev SW v71結算一致性/分攤成員選取色差/作廢預覽動作去重",
+      "SW v72主題系統/設定頁2.0/個人備份v8/旅途紀錄開發與驗證",
+      "Bar手機驗收dev SW v72",
       "Bar核准PR merge(dev→main)→Netlify正式部署與線上驗證",
-      "Playwright 三情境入版控(backlog)",
       "框架抽取(FUTURE_PLAN)"
     ]
   },

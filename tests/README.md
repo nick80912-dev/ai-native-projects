@@ -28,21 +28,18 @@
 - `shopping-list.test.js`:採買清單 store 正規化與封閉分類（代購不再是分類）、多對象新增與共用名單、每人／總數摘要、姓名-only 代購 badge／淡金類別 badge、部分購買 eligibility、卡片／明細／selection 事件邊界、Today 歸組與逐 allocation Buy-to-Ledger prefill；另涵蓋 `1 個`／單位契約、**站點排序＋exact 必買穩定置頂**（四類待買群組與 Today、已買頁不變）、孤兒 `stopRef` 三態、pending／done 明確 page context，以及**獨立新增／編輯 Sheet** 的 session、item-ID 返回錨點、明細返回、save guard、錯誤留場與「儲存並新增」同步品名焦點。執行:`node tests/shopping-list.test.js`。
 - `shopping-remerge.test.js`:採買拆分安全反向回併。涵蓋正常 2＋3、逐 canonical 對象加總、原 item／store order allocation ID 保留、原 ID 與未受影響 order、仍有已買 sibling、欄位差異、active／unverified／released 等任意 ledger 歷史、legacy、溢位、重複對象、自己／代購混用與原 item 缺失；另驗證 `moveBackToPending(ids)` 單次 read／normalize／write、跨 group 批次、缺 ID／write 失敗零變更、精確 Toast，以及 checkbox、批次移回與完成 Toast 復原共用同一 Store 操作。執行:`node tests/shopping-remerge.test.js`。
 - `ui-font.test.js`:驗證 Google Fonts 只請求 `Noto Sans TC` 400／500／700 並使用 `display=swap`，全站 font stack 順序與繁中 fallback，且不含 Hiragino／Noto Sans JP／Yu Gothic。執行:`node tests/ui-font.test.js`。
+- `browser/trip-three-scenarios.spec.js`：Playwright 三情境 QA。以真實 App 啟動流程驗證①斷網時採用內建快照、②完整 mock Sheet 連網同步產生 online 快照、③固定旅行日 `Date` 後今天頁落在 Day 1；三情境皆要求 `pageerror=0`。執行：先 `npm ci`、`npx playwright install chromium`，再 `npm run test:browser`。
 - `ledger-member-visibility.test.js`:團體帳本「只顯示與目前成員相關紀錄」。涵蓋付款人 × 分攤成員四象限(含**付款人不在 participants 內的代墊紀錄仍須顯示**)、`participants` 缺欄／`null`／空陣列／非 JSON／非陣列／含非字串／已是陣列共七種舊格式的限定式 fail-open 與不拋錯、fail-open 不擴散、成員無法解析時的安全退化(三種輸入)與診斷訊號、姓名格式變動仍以 `canonicalMemberName()` 穩定 key 判定、筆數與總額只計過濾後紀錄、最近消費／完整紀錄頁／主卡片同源、八個消費端共用 `ledgerTrackRecords()`、編輯與刪除路徑各自重查同一判斷、結算仍讀全團事件流、不得新增範圍切換 UI。執行:`node tests/ledger-member-visibility.test.js`。
 - `apps-script-settings.test.js`:除既有 `doPost` 設定與分帳寫入契約外,另涵蓋唯讀 `doGet` ledger 加速層契約(`after` 正規化、`after >= total` 不呼叫 `getValues()`、`after > total` 回 `reset` 與全量、精確 21 欄 range、不取 `LockService`、不洩漏內部資訊)。執行:`node tests/apps-script-settings.test.js`。
 
 > 測試以 `vm` sandbox 執行 `index.html` 內的程式片段。**注意**:sandbox 內建立的陣列具有不同 realm 的 prototype,`assert.deepStrictEqual` 會因此失敗;比較這類結果請改用 `join()`／`plain()`(JSON round-trip)。切片用的起訖字串只是取樣邊界,不是行為契約 —— 搬動函式位置時一併更新即可。
 
-## 待建(backlog #1,下次程式交付一併補齊)
-- Playwright 三情境 QA 腳本:①斷網內建 ②連網同步 ③旅行日 mock Date;通過標準=三情境零 pageerror。
+## 待建
 - 打包前離線回歸(SW 快取)腳本。
 
-> 在上述 Playwright 腳本納入 repo 前,三情境 QA 是人工/瀏覽器驗收要求;不得將既有 Node 測試寫成「Playwright 已通過」。
-
 ## Sanity CI(2026-07-09 起)
-- `.github/workflows/qa.yml` 於 `main` push / Pull Request 自動執行:①`tools/check-doc-titles.js`(文件標題/檔名一致性+manifest JSON 檢查,防上傳錯位)②`tests/` 內全部 `*.test.js`。`dev` push 目前先執行相同本機 CI，是否納入 workflow 另見 backlog。
+- `.github/workflows/qa.yml` 於 `main` push / Pull Request 自動執行：①`tools/check-doc-titles.js`（文件標題／檔名一致性＋manifest JSON）②`tests/` 內全部 `*.test.js` ③Playwright 三情境。`dev` push 目前先執行相同本機 CI，是否納入 workflow 另見 backlog。
 - 上傳/commit 後到 GitHub 的 **Actions** 頁看結果:綠勾=通過;紅叉=點進去看哪個檔案錯位或哪個測試失敗。
-- Playwright 三情境待驗收穩定後加入(backlog #1),屆時掛進同一 workflow。
 
 ## 規則
 - 測試只依賴 Node 內建模組或 devDependency 明列的工具;引入新測試框架屬技術棧變更,走五段提案。

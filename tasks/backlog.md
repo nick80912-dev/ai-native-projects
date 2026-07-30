@@ -2,9 +2,6 @@
 
 > 更新於 2026-07-30。做完的移到 done.md,正在做的移到 current.md。
 
-## 高優先(驗收後立即)
-1. **QA 腳本入版控**:Playwright 三情境腳本(斷網內建/連網同步/旅行日 mock Date)寫入 `tests/`,之後每次程式交付必附可執行測試(Bar 已核准 2026-07-09);完成後掛進 `.github/workflows/qa.yml`(Sanity CI 已於 07-09 先行上線)。
-
 ## 中優先(已核准正式待辦)
 2. **品質批**(2026-07-10 彙整,Bar 已核准方向):
    - reconcileDayProgress 重構:把自動略過的寫入從 pickNextStop 抽出,恢復純函式(消除渲染副作用)

@@ -25,7 +25,7 @@
 ## 工作流程(必守)
 0. 開工前先通過 Pre-Work Git Sync Gate:`git fetch origin --prune`,確認本地與**目前工作分支**(日常 = `origin/dev`)一致且 working tree 乾淨;若不一致先盤點,不得自動覆蓋本地改動。
 1. 收到需求先確認範圍;**只改必要函式,不重構整包**
-2. 修改 → 跑 repo 內相關可執行測試,並驗證斷網內建/連網同步/旅行日 mock Date 三情境零 pageerror;Playwright 自動化腳本尚在 backlog,完成前不得宣稱已跑 Playwright
+2. 修改 → 跑 repo 內相關可執行測試，並以 `npm run test:browser` 驗證斷網內建／連網同步／旅行日 mock Date 三情境零 pageerror；Playwright 規格位於 `tests/browser/` 並已掛入 `qa.yml`
 3. 交付於 `dev` 分支,Bar 驗收後;正式發版依 16 §E(PR → Bar Merge → Netlify 自動部署)
 4. 更新 `07_CHANGELOG.md`(有架構變更標 ⭐),必要時更新 06/03
 
