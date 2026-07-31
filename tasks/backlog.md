@@ -23,7 +23,7 @@
 23. **12 月東京行接入**:新行程分頁 + TripConfig transport=transit;SHEETS 加一組 gid。
 24. **新版提示立即刷新**:SW updatefound → 畫面提示(取代「開兩次生效」)。
 25. **AI Native Framework 抽取**:App 穩定落地後執行,見 `FUTURE_PLAN_framework-extraction.md`。
-26. **GitHub Actions Node 20 棄用**:`qa.yml` 使用的 `actions/checkout@v4` 與 `actions/setup-node@v4` 仍指向已棄用的 Node.js 20,GitHub 目前強制改跑 Node 24 並發出 annotation。**現在不影響結果**(2026-07-31 run 30595077190 為 success),但 GitHub 最終會移除相容層。屆時升到 `@v5` 系列即可。發現於批次一 R1 遠端 Gate 查核。
+26. **GitHub Actions Node 20 棄用**:`qa.yml` 使用的 `actions/checkout@v4` 與 `actions/setup-node@v4` 仍指向已棄用的 Node.js 20,GitHub 目前強制改跑 Node 24 並發出 annotation。**現在不影響結果**(2026-07-31 run 30595077190 為 success),但 GitHub 最終會移除相容層。屆時升到 `@v5` 系列即可。發現於批次一 R1 遠端 Gate 查核。**不阻擋 v73 發布**;但依 Bar 2026-07-31 裁定,**正式發布完成後應排在低優先區的較前面處理**,避免相容層日後移除才臨時修復。
 
 ## 想法池(未承諾)
 - 社群內容抓取(Facebook 等)——需 Firecrawl/Playwright MCP,尚未配置

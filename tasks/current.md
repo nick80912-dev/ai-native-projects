@@ -39,7 +39,7 @@
 | G1 | **SW v73** Bar 真機／PWA 驗收 | ⏳ 待辦 — 清單已備妥見 `docs/batch2-device-acceptance.md` | Bar |
 | G2 | 批次一「發布阻斷項」全數交付且 `tests/` 全綠 + Playwright 全綠 + `check-doc-titles.js` + `check-app-version.js` 通過 | ✅ 完成(P1–P6 全數交付) | AI |
 | G3 | `main` 現況(`9eefcb0`,SW okayama-trip-v18)建立 annotated 回滾 tag 並 push `origin` | ✅ 完成(`production-v18` → `2f1987b`,peeled `9eefcb0`) | AI |
-| R1 | GitHub Actions 對候選版 commit 的 `qa-sanity / sanity` 遠端綠燈(G4 前置) | ✅ 完成(run `30595077190`,`headSha=5772de5`,success;`browser-qa` 依設計在 dev push 略過) | AI |
+| R1 | 遠端 CI 證據(G4 前置) | ✅ runtime 候選版 `5772de5`(run `30595077190`)與目前 HEAD `d668f09`(run `30596362849`)皆 success;**申請 G4 當下須重新確認最終 merge head 的 CI**,不得沿用舊 run | AI |
 | G4 | Bar 核准 PR merge `dev → main` | ⏳ 待辦 | Bar |
 | G5 | Netlify 正式站部署後線上驗證 | ⏳ 待辦 | Bar |
 | G6 | v73 正式部署且真機 smoke test 通過後,建立 annotated tag `production-v73` | ⏳ 待辦(**不得建立 `production-v72`** —— v72 未曾正式發布) | AI → Bar |

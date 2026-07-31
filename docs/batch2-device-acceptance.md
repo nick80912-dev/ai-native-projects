@@ -2,7 +2,9 @@
 
 > 2026-07-30 起草,同日依 Bar 六項修正定稿。對應 `tasks/current.md` 的 Release Gate **G1**。
 > v72 從未正式發布,故 v72 與 v73 合併為**同一個候選版本**,只做一次 SW 換代 —— 本清單同時涵蓋兩批的功能。
-> 候選版 commit:**`5772de5`**。正式站現況為 **SW v18**(`main` = `9eefcb0`),回滾錨點 tag `production-v18` 已在 `origin`。
+> **runtime 候選版 commit:`5772de5`** —— 驗收要部署的就是這個(其後的 commit 只動文件與任務板,不影響 App 行為)。
+> `dev` HEAD 可能比它新;**merge head 的 CI 另依 R1 判定,不得與 runtime 候選版混為一談**。
+> 正式站現況為 **SW v18**(`main` = `9eefcb0`),回滾錨點 tag `production-v18` 已在 `origin`。
 
 ---
 
@@ -15,15 +17,27 @@
 - **B2／B3／C1／C2 的升級流程,必須全程在同一個 Netlify 測試站 URL 上完成**,同一支 iPhone、同一個已安裝的 PWA。
 - **GitHub Pages 只能用來驗收 v73 的一般功能(D／E／F／H 區)**,**不得**拿來證明「Netlify v18 的本機資料升級成功」—— 那是不同 origin,證明不了任何事。
 
-### 升級驗證的唯一正確流程
+### G1 執行順序(**必須嚴格照此順序,不得跳步或換順序**)
 
-```
-1. Netlify 測試站 → 手動部署 9eefcb0(v18)
-2. 線上核對確認是 v18
-3. 在這支 iPhone、這個測試站安裝 PWA,建立測試資料
-4. Netlify 測試站 → 手動部署 5772de5(v73 候選版)
-5. 在同一個 PWA、同一個 origin 上驗證 SW / CacheStorage / 本機資料 / 離線重開
-```
+順序本身就是驗收內容的一部分 —— 換順序會讓「真實升級路徑」不成立,測到的就不是使用者實際會遇到的情境。
+
+| # | 步驟 | 為什麼順序重要 |
+|---|---|---|
+| 1 | 同一個 Netlify 測試站部署 **`9eefcb0`**,線上確認是 **v18** | 起點必須是正式站現況,不是任意舊版 |
+| 2 | 在 iPhone 安裝**該站**的 PWA,建立測試資料 | PWA 與資料必須綁在這個 origin 上 |
+| 3 | **先在 v18 狀態完成離線重開測試(B1),不要先更新** | 錯過就沒有 v18 的離線基準可對照 |
+| 4 | 同一個測試站部署 **`5772de5`**;**不得改 origin、不得刪 PWA、不得清網站資料** | 這三件事任何一件都會讓升級路徑從「升級」變成「全新安裝」 |
+| 5 | 執行 **B**(SW 更新)與 **C**(升級與混版本驗證) | v18→v73 的一次性窗口只在這裡 |
+| 6 | 再驗 **D／E／F／H** 一般功能 | 功能驗收不影響升級路徑,放後面 |
+| 7 | **最後**才做 **G**:備份 → 只清單一網域 → 還原 | G2 會清掉資料,提前做會毀掉 B／C 的前提 |
+
+> **⚠️ 全程禁止的操作**(做了就要從步驟 1 重來):
+> - 手動 `unregister()` Service Worker
+> - 手動清除 CacheStorage
+> - 移除後重裝 PWA
+> - 中途換到 GitHub Pages 或其他網域繼續驗
+>
+> 這些都會破壞真實升級路徑。**唯一允許清資料的時機是步驟 7 的 G2,而且只清測試站那一個網域。**
 
 ---
 
@@ -161,19 +175,40 @@
 
 ## 驗收通過後:申請 G4 之前必須先確認的遠端 Gate
 
-- [x] **R1. GitHub Actions 遠端 sanity 綠燈 — 已確認通過(2026-07-31)**
+### R1 — 遠端 CI 證據(G4 前置)
+
+**原則(Bar 2026-07-31 裁定):不得只把某一個舊 run 當成最終 merge-head 的唯一 CI 證據。** runtime 候選版通過,與「實際要被 merge 的那個 commit 通過」是兩件事。
+
+- [x] **R1-a. runtime 候選版遠端綠燈 — 已確認**
 
   | 項目 | 實際值 |
   |---|---|
   | Run | [30595077190](https://github.com/nick80912-dev/ai-native-projects/actions/runs/30595077190) |
-  | `headSha` | **`5772de5`**(正是候選版 commit) |
-  | `conclusion` | **success** |
-  | `sanity` job | ✅ 11s |
-  | `browser-qa` job | **未執行(0s)** —— job-level `if` 條件如設計般在 dev push 上排除,符合預期 |
+  | `headSha` | **`5772de5`**(runtime 候選版) |
+  | `conclusion` | **success**(`sanity` 11s) |
+  | `browser-qa` | 未執行(0s)—— job-level `if` 條件如設計般在 dev push 上排除 |
 
-  - **Playwright 不需要在 dev push 遠端重跑** —— `browser-qa` 只在 pull request 與 `main` push 執行,PR 建立後會自動跑。
-  - 重跑查核指令:`gh run list --branch dev --limit 5`
-  - ⚠️ 該 run 帶一則 GitHub 平台側的 annotation:`actions/checkout@v4` 與 `actions/setup-node@v4` 仍指向已棄用的 Node.js 20,目前被強制改跑 Node 24。**不影響本次結果**(run 為 success),已記入 `tasks/backlog.md` #26 待日後處理。
+  這證明的是 **runtime 本身**通過遠端 sanity,**有效且不因後續文件 commit 而失效**。
+
+- [x] **R1-b. 目前 `dev` HEAD 的遠端綠燈 — 已確認(2026-07-31)**
+
+  | 項目 | 實際值 |
+  |---|---|
+  | Run | [30596362849](https://github.com/nick80912-dev/ai-native-projects/actions/runs/30596362849) |
+  | `headSha` | **`d668f09`**(驗收清單定稿) |
+  | `conclusion` | **success** |
+
+- [ ] **R1-c. 申請 G4 當下,重新確認最終 merge head 的 CI**
+  **G1 期間若 `dev` 又有任何新 commit,R1-b 就過期了。** 申請 G4 之前必須重新確認下列任一項:
+  - 最終 `dev` HEAD 自己的 dev-push `qa-sanity / sanity` 成功;**或**
+  - 建立 PR 後,**PR head 的 `sanity` 與 `browser-qa` 全部成功**(PR 會觸發 `browser-qa`,這是比 dev push 更完整的證據)
+
+  ```bash
+  gh run list --branch dev --workflow qa-sanity --limit 3 \
+    --json headSha,conclusion,databaseId \
+    -q '.[] | "\(.databaseId) sha=\(.headSha[0:7]) \(.conclusion)"'
+  ```
+  比對輸出的 `sha` 是否等於當下的 `git rev-parse --short origin/dev`。
 
 ## 全部通過後(Bar 專屬)
 
