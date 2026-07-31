@@ -1,4 +1,14 @@
 # 07 版本紀錄
+## 2026-07-30｜測試模式／時間模擬暴露面調查與備份防呆（dev，SW v73）
+- **P5 唯讀調查結論:三條路徑皆判定為「可延後,非發布阻斷」**,但發現一個值得在出發前補的缺口(見下)。調查全程未修改任何檔案。
+- **調查修正了兩個既有假設**:①`trip_ledger_test_mode` **根本不是隱藏的** —— 設定頁有一個明著的「測試模式」區塊,任何人打開設定往下滑就點得到;②「連點標題 5 下」的除錯面板入口**不存在**,`brandTitle` 上沒有任何 listener,診斷面板的真正入口是**桃子徽章 300ms 內連點兩次 `touchend`**,且因為只綁 `touchend`,桌機滑鼠點不開。
+- **發現第三條未被列入的路徑**:`appNow()` 直接讀 `?previewDate=YYYY-MM-DD` URL 參數覆寫今天日期,不需要任何手勢。不寫 `localStorage`、只影響當次載入,判定低風險。
+- **污染範圍與可復原性**:測試模式只切換團體帳宇宙、個人帳不受影響,有頂部警示與復原按鈕;`[TEST] ` 前綴的紀錄照樣 append 進正式 Sheet(ADR 0006 append-only,列刪不掉)但在正式模式被濾掉、不進統計。時間模擬會改寫 `appNow()` 這個全域時間來源,擴散到打卡／自動略過／下一站進度／新記帳的 `time`;有「模擬中」文字標記與徽章變色,並可用 `endTimeSimulation(true)` 回復到首次啟用前的快照 —— 但**已送出的團體帳列撤銷不了**。
+- **唯一真正的跨裝置污染路徑,已修**:兩個 key 本身都不在備份 payload、也不在還原白名單,不會被帶走或覆寫。但**若在時間模擬期間匯出備份**,payload 內的 `checks`／`wants`／`personalLedger` 就是被污染的狀態,而唯一的回復點 `trip_time_simulation_snapshot` **不在備份內** → 還原到新裝置後沒有任何回復機會,污染變成永久。
+- **修法(Bar 裁定「做」)**:`exportPersonalState()` 開頭加 `isTimeSimulationActive()` 判斷,模擬啟用中一律擋下匯出並提示「時間模擬進行中,請先於診斷面板結束模擬再備份」。**不動備份格式、不升版(維持 `PERSONAL_STATE_VERSION=8`)、不動模擬機制本身**。已做對照驗證:移除該行後 `settings-backup-ux.test.js` 確實失敗。未加入 `APP_RELEASE_NOTES` —— 這是安全防呆而非功能,只在一般使用者不會遇到的邊界情境觸發。
+- **backlog #2 的子項「隱藏『重置今日進度』」移出並歸檔**(Bar 裁定)。P5 調查發現它**早已實作完成**(`resetTripProgress()`,診斷面板「行程進度」區,附雙重 `confirm()`,只清 `trip_checks` 與 `trip_next_stop_progress`),只是任務板未歸位。與原文的入口差異已如實記錄於 `tasks/done.md`。#2 其餘七個子項維持不動。
+- 自動驗證:完整 **53／53** Node test files、Playwright **5／5**、`tools/check-doc-titles.js`、`tools/check-app-version.js` 通過。
+
 ## 2026-07-30｜受保護紀錄文案改為「已鎖帳」（dev，SW v73，顯示層）
 - **backlog #10 交付**(Bar 2026-07-30 裁定)。團體帳受保護紀錄的 badge 由「還款確認後保護」縮短為 **「已鎖帳」**(`renderLedgerRecentRecord`,複驗確認為整份 `index.html` 的唯一出現處)。tag 只負責快速辨識,完整原因移交明細頁。
 - **明細頁新增**說明句「此筆消費已完成還款確認,目前已鎖帳,無法再編輯或刪除。」—— 這是**新增**不是搬移:明細頁此前只有「查看不可改寫歷史」按鈕,沒有任何說明句。出現條件與該按鈕完全相同(`track==='shared' && record._correctionProtected`),排在按鈕之前,採用既有的 `--ink-faint` 次要文字語意色,不新增主題色。

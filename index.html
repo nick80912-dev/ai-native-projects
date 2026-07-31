@@ -7449,6 +7449,10 @@ function copyPersonalStateText(text,timeoutMs){
   });
 }
 function exportPersonalState(){
+  /* 時間模擬期間的 checks／wants／個人帳都是假時間下的狀態,而唯一的回復點
+     trip_time_simulation_snapshot **不在**備份 payload 內 —— 這份備份還原到新裝置後
+     沒有任何回復機會,污染會變成永久。故模擬啟用中一律擋下匯出,而不是匯出一份髒的。 */
+  if(isTimeSimulationActive()){toast('時間模擬進行中,請先於診斷面板結束模擬再備份');return Promise.resolve(false);}
   var text=personalStateJson();
   return copyPersonalStateText(text).then(function(){toast('備份 JSON 已複製，請保存到安全位置');},function(){openPersonalStateCopyFallback(text);});
 }

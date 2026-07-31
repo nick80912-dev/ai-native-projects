@@ -58,6 +58,9 @@
 
 - **#10 受保護紀錄 Tag 文案改為「已鎖帳」** — badge 由「還款確認後保護」縮短為「已鎖帳」(`renderLedgerRecentRecord`,複驗確認為整份 `index.html` 的唯一出現處);明細頁**新增**說明句「此筆消費已完成還款確認,目前已鎖帳,無法再編輯或刪除。」,出現條件與「查看不可改寫歷史」按鈕相同(`track==='shared' && record._correctionProtected`)並排在其前。`_correctionProtected` 判定、編輯／刪除守門、還款確認流程與不可改寫歷史一字未動;`assertCanEditLedgerRecord`／`assertCanDeleteLedgerRecord` 的錯誤訊息作為行為契約亦未更動。上述各項已由 `tests/ledger-list-actions.test.js` 逐項鎖住,含「舊文案已從整份 `index.html` 移除」。既有 badge 優先序不受影響:`_correctionVersionCount > 0` 仍優先顯示「已更正 N 次」。備選字「已鎖定」依原裁定不採用。
 
+- **#2 的子項「隱藏『重置今日進度』」** — 2026-07-30 由 P5 調查發現**早已實作完成**,只是 backlog 未歸位。實作為 `resetTripProgress()`(`index.html`),位於診斷面板「行程進度」區,附雙重 `confirm()`,只清除 `trip_checks` 與 `trip_next_stop_progress`。
+  - **與原文的差異(如實記錄)**:backlog 原文寫入口是「連點標題 5 下」,實際入口是**桃子診斷徽章 300ms 內連點兩次 `touchend`**(`setupDiagnostics()`);`brandTitle` 上沒有任何 listener。因為只綁 `touchend`,桌機滑鼠點擊打不開,實際上比原構想更難誤觸。經 Bar 2026-07-30 裁定移出 #2。
+  - #2 的其餘子項(reconcileDayProgress 重構、面板展開狀態保留、AppLog 環形緩衝評估、同步徽章相對時間、partial 同步 toast、天氣/退避/null guard、localStorage 前綴隔離)**維持在 backlog #2**,不受本次影響。
 ## 文件治理
 - 2026-07-13:Netlify 雙站架構上線(`main`=正式站、`dev`=測試站)，兩站部署與瀏覽器狀態完全隔離。
 - 2026-07-10:修復批交付(事故處理規範 §C、雙通道 SOP §D、檢查器三新規則、CI 全測試涵蓋、測試檔治理)。

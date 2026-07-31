@@ -35,7 +35,8 @@
     "schema.js": "唯一資料規格SSoT:欄位/gid/型別值/發布URL;schemaDoc()自動產09文件",
     "validator.js": "防錯防線:AppLog六類([Schema/Parser/Data/Repository/Render/Sync Error])+buildHeaderMap+window.healthCheck()",
     "apps-script/ledger-sync.gs": "Apps Script部署唯一維護來源:分帳append-only與TripConfig兩鍵白名單更新",
-    "docs/personal-state-compatibility.md": "個人狀態備份 v1–v8 相容策略契約(向後／向前相容、缺欄位預設值、採買單位規則、失敗語意);可執行契約=tests/personal-state-restore-matrix.test.js,兩者不一致即為缺陷"
+    "docs/personal-state-compatibility.md": "個人狀態備份 v1–v8 相容策略契約(向後／向前相容、缺欄位預設值、採買單位規則、失敗語意);可執行契約=tests/personal-state-restore-matrix.test.js,兩者不一致即為缺陷",
+    "docs/batch2-device-acceptance.md": "批次二真機／PWA 驗收清單(SW v73 候選版);含測試站前置核對與 v18→v73「先離線再升級」的一次性風險窗口"
   },
   "deploy_files": {
     "index.html": "唯一正式 App 入口",
@@ -110,7 +111,8 @@
       "作廢預覽動作去重(預覽後只留確認整張作廢/不改append-only作廢語意/SW v71/Bar真機驗收通過)",
       "Playwright三情境QA入版控(斷網內建/連網同步/旅行日mock Date/pageerror=0/qa.yml)",
       "SW v72開發完成(六組主題/設定頁2.0/inline SVG/個人備份v8/旅途紀錄/app-version單一來源/使用者版更新日誌；Bar真機驗收待辦)",
-      "SW更新完整性修正(sw.js自帶SW_VERSION/移除importScripts版本依賴/install用reload、fetch用no-cache避免HTTP cache汙染SHELL/子資源不再fallback成index.html/APP_VERSION安全取值/tools一致性檢查/qa.yml sanity支援dev push；SW v73)"
+      "SW更新完整性修正(sw.js自帶SW_VERSION/移除importScripts版本依賴/install用reload、fetch用no-cache避免HTTP cache汙染SHELL/子資源不再fallback成index.html/APP_VERSION安全取值/tools一致性檢查/qa.yml sanity支援dev push；SW v73)",
+      "批次一發布阻斷項全數交付(任務板歸位/ADR 0008 六主題追認/production-v18 回滾錨點/SW 更新完整性修正 v73/備份 v1-v8 還原矩陣與相容契約/已鎖帳文案/測試模式與時間模擬暴露面調查與備份防呆)"
     ],
     "pending_in_order": [
       "Bar手機驗收dev SW v73(含v72功能;v72未曾正式發布,兩批合併為同一候選版)",

@@ -21,8 +21,7 @@
 - Bar 核准 PR Merge(`dev → main`)→ 進入正式部署流程。
 
 ## 下一步
-1. 手機驗收 SW v73(涵蓋 v72 的主題／設定頁 2.0／旅途紀錄／備份 v8,以及 v73 的 SW 更新機制修正)。v72 未曾正式發布,兩批合併為同一候選版,只做一次 SW 換代。
-2. 微調(不動 schema,遵循 15 的任務分級)。
+1. 手機驗收 SW v73,依 `docs/batch2-device-acceptance.md` 逐項執行;測試站需先手動部署並依 16 §F5 核對線上版本。
 3. 提出 `dev → main` Pull Request,由 Bar Review / Merge。
 4. Netlify 自動部署與線上驗證;回滾程序備援見 16。
 

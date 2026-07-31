@@ -3,6 +3,7 @@
 > 更新於 2026-07-30。細任務層;里程碑看 `06_ROADMAP.md`,歷史交付看 `07_CHANGELOG.md`,正式待辦看 `tasks/backlog.md`。
 
 ## 📌 現況
+- **批次一「發布阻斷項」P1–P6 全部交付完成(2026-07-30)**,SW 升至 **v73**。P5 調查判定測試模式／時間模擬／`?previewDate` 三條路徑皆為「可延後,非發布阻斷」,唯一真正的跨裝置污染路徑(模擬期間匯出備份 → 新裝置無回復點)已由 `exportPersonalState()` 的防呆擋下。批次二真機驗收清單見 `docs/batch2-device-acceptance.md`。
 - **最新 `dev` runtime 基準:SW v73**(批次一 P2 C2)。修正兩件實證出來的更新缺陷:①新版 SW 的 install 會從 HTTP cache 取得舊版 SHELL,造成「新快取名稱裝舊內容」與 index／schema 混版本;②任何同源子資源離線未命中時都會 fallback 成 `index.html`,讓 `<script>` 拿到 HTML。修法為 install 用 `cache:'reload'`、日常 fetch 用 `cache:'no-cache'`、只有 navigation 才退回 `index.html`;`sw.js` 改為自帶 `SW_VERSION` 並移除 `importScripts` 版本依賴。`index.html` 的 `APP_VERSION` 全面改走安全 helper。新增 `tools/check-app-version.js` 與 Playwright `sw-update-cache.spec.js`(已做對照驗證:改回舊寫法會失敗)。**v72 未曾正式發布,與 v73 合併為同一個候選版本,只做一次 SW 換代。**
 - 最新已推送 `dev` App runtime 基準：`b372f49`，Service Worker `okayama-trip-v72`。SW v72 的設定頁 2.0、六組主題、旅途紀錄與個人備份 v8 已整合；完整 51／51 Node test files、Playwright 3／3、文件／manifest／diff 檢查及 320／375／390px Browser QA 通過，尚待 Bar 真機／PWA 驗收。**Bar 已於 2026-07-30 完成 SW v69／v70／v71 真機／PWA 驗收**；尚未合併 `main` 或正式部署。
 - SW v72 已在隔離分支 `codex/sw-v72-settings-themes` 完成開發：設定頁 2.0、六組主題、五個功能 SVG、旅途異常／優化建議紀錄、個人備份 v8、`app-version.js` 版本單一來源與 v72–v68 使用者版更新說明。完整 51／51 Node test files、Playwright 3／3、文件／manifest／diff 檢查及 320／375／390px Browser QA 通過；**已 push `dev`（`b372f49`），尚待 Bar 真機／PWA 驗收**。
@@ -35,8 +36,8 @@
 
 | # | Gate | 狀態 | 負責 |
 |---|---|---|---|
-| G1 | **SW v73** Bar 真機／PWA 驗收(涵蓋 v72 全部功能 + v73 的更新機制修正;清單見批次二驗收清單) | ⏳ 待辦 | Bar |
-| G2 | 批次一「發布阻斷項」全數交付且 `tests/` 全綠 + Playwright 全綠 + `check-doc-titles.js` + `check-app-version.js` 通過 | 🔄 進行中(P1 A＋B、P2 C1／C1.5／C2 已交付;P3／P4／P5 待辦) | AI |
+| G1 | **SW v73** Bar 真機／PWA 驗收 | ⏳ 待辦 — 清單已備妥見 `docs/batch2-device-acceptance.md` | Bar |
+| G2 | 批次一「發布阻斷項」全數交付且 `tests/` 全綠 + Playwright 全綠 + `check-doc-titles.js` + `check-app-version.js` 通過 | ✅ 完成(P1–P6 全數交付) | AI |
 | G3 | `main` 現況(`9eefcb0`,SW okayama-trip-v18)建立 annotated 回滾 tag 並 push `origin` | ✅ 完成(`production-v18` → `2f1987b`,peeled `9eefcb0`) | AI |
 | G4 | Bar 核准 PR merge `dev → main` | ⏳ 待辦 | Bar |
 | G5 | Netlify 正式站部署後線上驗證 | ⏳ 待辦 | Bar |
@@ -54,6 +55,6 @@
 > 已解除：Apps Script `doGet` 部署已由 Bar 完成，真實端點驗證（CORS、redirect、`after`／`reset`／`serverTime`、非 JSON 降級）通過，見上方 SW v47 條目。
 
 ## 下一棒
-→ 批次一 P4(backlog #10「已鎖帳」文案)已交付,純顯示層,v73 不再遞增。下一棒為 **P5**:trip_ledger_test_mode 與 trip_time_simulation 在正式檔的暴露面調查(唯讀出報告,不修改任何檔案),結論由 Bar 裁定是發布阻斷或延後至第四批。真機／PWA 驗收與 dev → main 合併見上方 Release Gate。
+→ **批次一已全部完成並推送 `dev`**。下一棒是 Bar 依 `docs/batch2-device-acceptance.md` 執行真機／PWA 驗收(Release Gate G1),特別注意 **C2「先離線、再升級」只有這次過渡期能測到**。驗收通過後由 Bar 核准 PR merge `dev → main`,部署並線上驗證後才建立 `production-v73` tag。
 
 > 採買清單 A／B／D／F 已於 SW v60／v61 交付；C／E／G 已於 SW v68 實作，並於 2026-07-29 完成 Bar 真機驗收；正式契約見設計文件。

@@ -52,6 +52,7 @@ function createStorage(initial){
   let pendingUpdates=0;
   let flushes=0;
   const appliedThemes=[];
+  let simulationActive=false;
   const queued=[{id:'1-abcd',time:'2026-07-17T10:00:00.000Z',member:'黃柏',category:'餐飲',detail:'午餐',amountJpy:1000,amountTwd:200,note:''}];
   const sandbox={
     console,
@@ -104,6 +105,7 @@ function createStorage(initial){
       }
     },
     currentThemeId(){return storage.getItem('trip_theme')||'ocean';},
+    isTimeSimulationActive(){return simulationActive;},
     applyTheme(themeId,options){appliedThemes.push({themeId,options});return {id:themeId};},
     timestampDate(value){return new Date(value);},
     getCurrentMember(){return storage.getItem('trip_member')||'';},
@@ -133,6 +135,15 @@ function createStorage(initial){
   sandbox.openPersonalStateCopyFallback=function(text){fallbackText=text;};
   sandbox.closePersonalStateDialog=function(){dialogCloses++;};
   sandbox.closeSettings=function(){settingsCloses++;};
+
+  /* 時間模擬進行中不得匯出:回復點 trip_time_simulation_snapshot 不在 payload 內,
+     這份備份還原到新裝置後就沒有任何回復機會(2026-07-30 P5 調查 → Bar 裁定) */
+  simulationActive=true;
+  await sandbox.exportPersonalState();
+  assert.strictEqual(copied.length,0,'時間模擬進行中不得產生備份 JSON');
+  assert.strictEqual(lastToast,'時間模擬進行中,請先於診斷面板結束模擬再備份','擋下時要說清楚該怎麼做');
+  assert.strictEqual(fallbackText,'','擋下時也不得走剪貼簿失敗的手動複製路徑');
+  simulationActive=false;
 
   await sandbox.exportPersonalState();
   const exported=JSON.parse(copied[0]);
