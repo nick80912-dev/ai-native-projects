@@ -36,7 +36,7 @@
 
 | # | Gate | 狀態 | 負責 |
 |---|---|---|---|
-| G1 | **SW v73** Bar 真機／PWA 驗收 | ⏳ 待辦 — 清單見 `docs/batch2-device-acceptance.md`;B／C／D／E／F／H／I2 已標桌機預檢結果,**勾選框仍代表 iPhone 結果,桌機通過不得先勾** | Bar |
+| G1 | **SW v73** Bar 真機／PWA 驗收 | 🔄 進行中 — 測試站已部署 `af520c6` 並發布;**B1／B2／B3／B4／C1／C2／C3 已於 iPhone 通過**(升級路徑全段);剩 A／D／E／F／G／H／I 與 P1 | Bar |
 | G2 | 批次一「發布阻斷項」全數交付且 `tests/` 全綠 + Playwright 全綠 + `check-doc-titles.js` + `check-app-version.js` 通過 | ✅ 完成(P1–P6 全數交付) | AI |
 | G3 | `main` 現況(`9eefcb0`,SW okayama-trip-v18)建立 annotated 回滾 tag 並 push `origin` | ✅ 完成(`production-v18` → `2f1987b`,peeled `9eefcb0`) | AI |
 | R1 | 遠端 CI 證據(G4 前置) | ✅ runtime 候選版 `5772de5`(run `30595077190`)與目前 HEAD `d668f09`(run `30596362849`)皆 success;**申請 G4 當下須重新確認最終 merge head 的 CI**,不得沿用舊 run | AI |
