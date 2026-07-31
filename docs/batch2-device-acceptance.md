@@ -1,20 +1,58 @@
 # 批次二 真機／PWA 驗收清單(SW v73 候選版)
 
-> 2026-07-30 由 AI 起草,**待 Bar 核可後執行**。對應 `tasks/current.md` 的 Release Gate **G1**。
+> 2026-07-30 起草,同日依 Bar 六項修正定稿。對應 `tasks/current.md` 的 Release Gate **G1**。
 > v72 從未正式發布,故 v72 與 v73 合併為**同一個候選版本**,只做一次 SW 換代 —— 本清單同時涵蓋兩批的功能。
-> 正式站現況為 **SW v18**(`main` = `9eefcb0`),回滾錨點 tag `production-v18` 已在 `origin`。
+> 候選版 commit:**`5772de5`**。正式站現況為 **SW v18**(`main` = `9eefcb0`),回滾錨點 tag `production-v18` 已在 `origin`。
 
-## 驗收前置(不做這步,後面所有結果都不可信)
+---
 
-- [ ] **P0. 確認要驗的是哪個版本**
-  - 若用 **GitHub Pages**(`https://nick80912-dev.github.io/ai-native-projects/`):追蹤 `dev`、每次推送自動發布,不需手動部署。
-  - 若用 **Netlify 測試站**(`https://dev-trippilot-jp.netlify.app/`):**自動部署已於 2026-07-26 關閉,2026-07-30 實測線上仍停在 SW v62**。必須先在 Netlify 後台**手動部署到目標 commit**,再依 `16_OPS_PLAYBOOK.md` §F5 核對:
-    - `curl -s .../sw.js | grep SW_VERSION` → 應為 `v73`
-    - `curl -s .../app-version.js` → 應為 `var APP_VERSION='v73';`
-    - **不得只看 Git 分支就認定測試站已同步。**
-- [ ] **P1. 裝置端核對 CacheStorage**(前置通過後)
-  - Cache Storage 名稱應為 `okayama-trip-v73`
-  - 展開該 cache,`index.html` 內容必須是新版 —— **不是只看名稱對就算過**(2026-07-30 已實證「新名稱裝舊內容」會發生)
+## ⚠️ 開始之前:origin 隔離規則(最重要的一條)
+
+**Service Worker、CacheStorage、localStorage 全部是 origin 隔離的。** 在正式站(v18)建立的測試資料,**不會**出現在 GitHub Pages 或任何其他網域上。
+
+因此:
+
+- **B2／B3／C1／C2 的升級流程,必須全程在同一個 Netlify 測試站 URL 上完成**,同一支 iPhone、同一個已安裝的 PWA。
+- **GitHub Pages 只能用來驗收 v73 的一般功能(D／E／F／H 區)**,**不得**拿來證明「Netlify v18 的本機資料升級成功」—— 那是不同 origin,證明不了任何事。
+
+### 升級驗證的唯一正確流程
+
+```
+1. Netlify 測試站 → 手動部署 9eefcb0(v18)
+2. 線上核對確認是 v18
+3. 在這支 iPhone、這個測試站安裝 PWA,建立測試資料
+4. Netlify 測試站 → 手動部署 5772de5(v73 候選版)
+5. 在同一個 PWA、同一個 origin 上驗證 SW / CacheStorage / 本機資料 / 離線重開
+```
+
+---
+
+## 前置 P — 確認要驗的是哪個版本
+
+- [ ] **P0-a. 部署 v18 起點**
+  Netlify 測試站(`https://dev-trippilot-jp.netlify.app/`)手動部署到 **`9eefcb0`**。
+  > 自動部署已於 2026-07-26 由 Bar 關閉;2026-07-30 實測線上停在 SW v62。**Git 分支更新不等於測試站已更新。**
+
+- [ ] **P0-b. 線上核對是 v18**(桌機執行即可)
+  ```bash
+  curl -s https://dev-trippilot-jp.netlify.app/sw.js | grep -E "CACHE_NAME|SW_VERSION"
+  ```
+  應看到 `var CACHE_NAME = 'okayama-trip-v18';`(v18 沒有 `SW_VERSION`,也沒有 `app-version.js`)
+
+- [ ] **P0-c. 升級後核對是 v73**(部署 `5772de5` 之後)
+  ```bash
+  curl -s https://dev-trippilot-jp.netlify.app/sw.js | grep SW_VERSION
+  curl -s https://dev-trippilot-jp.netlify.app/app-version.js
+  ```
+  兩者都應為 `v73`。**不得只看 Git 分支就認定測試站已同步。**
+
+- [ ] **P1. CacheStorage 內容核對**
+  Cache 名稱應為 `okayama-trip-v73`,且展開後 `index.html` 的內容必須是新版 —— **不是只看名稱對就算過**(2026-07-30 已實證「新名稱裝舊內容」會發生)。
+
+  > **沒有 Mac、無法用 iPhone Safari Remote Web Inspector 時的替代做法(Bar 核可)**:
+  > - **桌面瀏覽器**負責 P1:用桌機 Chrome/Edge 開同一個測試站 URL → DevTools → Application → Cache Storage,檢查名稱與 `index.html` 實際內容。
+  > - **iPhone** 負責 B1／B3／B4 的功能結果、版本一致性與離線重開。
+  > - **不得因為 Windows 上展不開 iPhone 的 CacheStorage,就把整個真機驗收判為失敗。**
 
 ---
 
@@ -27,35 +65,52 @@
 
 ## B. Service Worker 更新機制(v73 的主要修復)
 
+> **B2／B3 共用 C1 的那一次換代結果,不需要另外做一個新版本。**
+> **不得為了驗收而製作或提交 v74。**
+
 - [ ] B1. **離線重開**:開啟過一次後開飛航模式,滑掉 App 重開 → 仍完整載入,不是白畫面
-- [ ] B2. **SW 更新節奏**:推一個新版後,滑掉 PWA 重開兩次 → 設定「資料與版本」的版本號變成新版
-- [ ] B3. **更新後內容真的是新的**(v73 修的就是這個):版本號變新之後,隨手確認一個該版新增的畫面元素確實出現。若版本號變了但畫面還是舊的 → **這是 v73 要修的缺陷復發,立即停止驗收並回報**
+- [ ] B2. **更新節奏**:同一個 Netlify 測試站由 **v18(或現況 v62)手動部署至候選版 v73** 後,滑掉 PWA 並重開,確認更新節奏 → 設定「資料與版本」的版本號變成 **v73**(「開兩次生效」的既有限制仍在,重開兩次是正常的)
+- [ ] B3. **更新後內容真的是新的**(v73 修的就是這個):版本號變成 v73 之後,確認該版新增的畫面元素確實出現 —— 例如設定根頁的七區順序、六組主題、已鎖帳文案。
+  **若版本號變了但畫面還是舊的 → 這是 v73 要修的缺陷復發,立即停止驗收並回報。**
 - [ ] B4. 診斷面板「App 版本」列顯示的版本與設定頁一致(讀自真實 Cache Storage)
 
-## C. v18 → v73 資料升級(**必須拆成兩個獨立場景**)
+## C. v18 → v73 資料升級(**同一個 origin,兩個獨立場景**)
 
 - [ ] **C1. 線上升級**
-  - 先在正式站(v18)用一段時間:打幾個卡、記幾筆個人帳與團體帳、加幾個採買項目
-  - 升級到 v73 後:打卡狀態、個人帳、團體帳、採買清單、代購對象全部還在,數量與金額一致
-  - 團體帳的同步狀態正常,待送出佇列沒有憑空消失
+  - 在測試站 v18 狀態下用一段時間:打幾個卡、記幾筆個人帳與團體帳、加幾個採買項目、加一兩個代購對象
+  - 同一個測試站部署到 `5772de5` → 同一個 PWA 更新到 v73
+  - 通過標準:打卡狀態、個人帳、團體帳、採買清單、代購對象全部還在,數量與金額一致;團體帳待送出佇列沒有憑空消失
 
-- [ ] **C2. 先離線、再升級(v18→v73 的已知風險窗口,務必實測)**
-  - 背景:v18 的 SW SHELL 清單**不含 `app-version.js`**。過渡期間若該檔曾被 v18 的 SW 快取則無事;**若從未在 SW 控制下成功抓過**,離線時會 cache miss 並 fallback 回傳 `index.html`,`<script>` 拿到 HTML 就解析失敗、`APP_VERSION` 變成 undefined。
+- [ ] **C2. 先離線、再升級(v18→v73 的一次性風險窗口)**
+
+  **背景**:v18 的 SW SHELL 清單**不含 `app-version.js`**。過渡窗口中若該檔從未在 v18 SW 控制下成功抓取過,離線時會 cache miss 並 fallback 回傳 `index.html`,瀏覽器把 HTML 當 JS 解析 → **產生一次 script parse error**,`APP_VERSION` 變成 undefined。
+
+  **v73 保證的是「App 不因此中斷」,不是「回頭消除舊 SW 已經產生的那個錯誤」。** 舊 SW 在過渡窗口丟出的一次性錯誤,v73 沒有能力事後消除。
+
   - 步驟:v18 狀態下先開飛航模式 → 重開 App → 恢復連線 → 讓它更新到 v73 → 再次離線重開
-  - 通過標準:
-    - App **仍然開得起來**(不是白畫面)
-    - **設定 → 資料與版本 頁面可以開啟** —— 這是 v73 修的重點。顯示「SW 未知」是**可接受**的降級,**拋錯或整頁打不開就是失敗**
-    - 旅途紀錄仍可新增,不拋錯
-  - ⚠️ 這個場景在 v73 完全生效後就消失了,**只有這次過渡期能測到,錯過就沒有第二次**
+  - **通過標準**:
+    - [ ] 過渡階段即使 `APP_VERSION` 缺失,**App 仍可啟動**
+    - [ ] 「資料與版本」頁**可開啟**並顯示 **「SW 未知」**
+    - [ ] **備份與還原入口仍可使用**
+    - [ ] **旅途紀錄可使用**
+    - [ ] **v73 完成控制並再次重開後,版本必須恢復為 `v73`**
+    - [ ] **v73 完全生效後,不得再持續出現 `Unexpected token <` 或子資源收到 HTML**
 
-- [ ] C3. **子資源缺失不得變成 HTML**:離線狀態下,若畫面出現任何「語法錯誤」「Unexpected token <」類型的異常 → 記錄並回報
+  > **Best-effort 條款(Bar 核可)**:「v73 的 index 已更新、`app-version.js` 尚未成功抓取」是一個精確的競態,真機上不一定重現得出來。**若無法穩定重現,C2 標記為 best-effort 真機驗證即可**,核心的缺檔降級契約以現有自動測試為準(`tests/app-version-fallback.test.js`、`tests/browser/sw-update-cache.spec.js`)。
+  > **不得為了製造競態而修改候選版 runtime。**
+
+- [ ] **C3. 子資源缺失不得變成 HTML(v73 接管後)**
+  v73 完全生效之後,離線狀態下操作各分頁 → **不得**再出現「Unexpected token <」類型的錯誤,也不得有子資源收到 HTML。
+  過渡窗口中的一次性錯誤依 C2 判定,不計入本項。
 
 ## D. 主題(六組,SW v72 交付,Bar 已追認)
+
+> D／E／F／H 區屬一般功能驗收,**可在 GitHub Pages 上進行**。
 
 - [ ] D1. 設定 → 主題 → 六組全部可選:海洋／岡山、象牙／靛藍、藤紫／夜櫻、杉綠／宮島、霧藍／瀨戶、焙茶／倉敷
 - [ ] D2. 每組切換後:頂部列、底部導覽、卡片背景都跟著換,沒有殘留舊色的區塊
 - [ ] D3. **重開後保存**:切到非預設主題 → 滑掉 PWA 重開 → 主題仍是剛才選的
-- [ ] D4. 預設仍為**海洋／岡山**(全新裝置或清除資料後確認)
+- [ ] D4. 預設仍為**海洋／岡山**(全新裝置或清除該網域資料後確認)
 - [ ] D5. 狀態語意色(完成綠、警告)在六個主題下都看得清楚
 
 ## E. 設定頁 2.0
@@ -74,10 +129,12 @@
 - [ ] F4. 「複製摘要」與「匯出 JSON」可用
 - [ ] F5. 重開 App 後紀錄仍在
 
-## G. 備份 匯出 → 清除 → 還原(建議放在最後,因為會動到資料)
+## G. 備份 匯出 → 清除 → 還原(放在最後,因為會動到資料)
 
 - [ ] G1. 設定 → 資料與版本 → 複製備份 JSON,貼到備忘錄保存
-- [ ] G2. 清除網站資料(Safari → 設定 → 清除網站資料)
+- [ ] **G2. 只清除測試站該網域的資料**
+  Safari → 設定 → 進階 → 網站資料 → 搜尋 `dev-trippilot-jp.netlify.app` → **只刪除這一筆**。
+  ⚠️ **不要用「清除所有網站資料」** —— 那會一併清掉其他網站與正式站(`trippilot-jp.netlify.app`)的資料。
 - [ ] G3. 重開 App → 從 JSON 還原 → 打卡、想逛、個人帳、團體帳佇列、自訂類別／支付方式、代購對象、採買清單全部回來
 - [ ] G4. **主題**跟著還原(v8 備份帶主題)
 - [ ] G5. **採買單位還原**:自訂單位清單回來,且「個」一定在清單內
@@ -94,16 +151,36 @@
 
 ## I. 收尾
 
-- [ ] I1. 全程 **無白畫面、無 console 錯誤**(可在桌面 Safari 連手機檢查)
+- [ ] **I1. 全程無白畫面、無 console 錯誤**(可用桌機 Safari／Chrome 開同一 URL 對照檢查)
+  > **例外註記(Bar 核可)**:**C2 舊 SW 過渡窗口的已知一次性 script parse error 另依 C2 判定,不計入本項。**
+  > **v73 接管之後仍持續出現,才算失敗。**
 - [ ] I2. 320／375／390px 三個寬度下沒有水平溢位
-- [ ] I3. 驗收期間若曾開啟**測試模式**或**時間模擬** → 確認已關閉、且時間模擬用面板選「回復模擬前狀態」結束
+- [ ] I3. 驗收期間若曾開啟**測試模式**或**時間模擬** → 確認已關閉;時間模擬須用診斷面板選「回復模擬前狀態」結束
 
 ---
 
-## 驗收通過後(Bar 專屬)
+## 驗收通過後:申請 G4 之前必須先確認的遠端 Gate
 
-1. 核准 PR merge `dev → main`
-2. Netlify 正式站自動部署 → 線上驗證
-3. 真機 smoke test 通過後,建立 annotated tag **`production-v73`**(**不得建立 `production-v72`**,v72 未曾正式發布)
+- [x] **R1. GitHub Actions 遠端 sanity 綠燈 — 已確認通過(2026-07-31)**
+
+  | 項目 | 實際值 |
+  |---|---|
+  | Run | [30595077190](https://github.com/nick80912-dev/ai-native-projects/actions/runs/30595077190) |
+  | `headSha` | **`5772de5`**(正是候選版 commit) |
+  | `conclusion` | **success** |
+  | `sanity` job | ✅ 11s |
+  | `browser-qa` job | **未執行(0s)** —— job-level `if` 條件如設計般在 dev push 上排除,符合預期 |
+
+  - **Playwright 不需要在 dev push 遠端重跑** —— `browser-qa` 只在 pull request 與 `main` push 執行,PR 建立後會自動跑。
+  - 重跑查核指令:`gh run list --branch dev --limit 5`
+  - ⚠️ 該 run 帶一則 GitHub 平台側的 annotation:`actions/checkout@v4` 與 `actions/setup-node@v4` 仍指向已棄用的 Node.js 20,目前被強制改跑 Node 24。**不影響本次結果**(run 為 success),已記入 `tasks/backlog.md` #26 待日後處理。
+
+## 全部通過後(Bar 專屬)
+
+1. 回報 G1 通過 + R1 綠燈 → 申請 **G4**
+2. 核准 PR merge `dev → main`(PR 建立後 `browser-qa` 會自動執行)
+3. Netlify 正式站自動部署 → 線上驗證
+4. 真機 smoke test 通過後,建立 annotated tag **`production-v73`**
+   (**不得建立 `production-v72`**,v72 未曾正式發布)
 
 > 任何一項失敗 → 記入 `tasks/backlog.md` 或直接回報,**不要在清單上打勾略過**。
