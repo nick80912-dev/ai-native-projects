@@ -270,7 +270,19 @@
   | `headSha` | **`d668f09`**(驗收清單定稿) |
   | `conclusion` | **success** |
 
-- [x] **R1-c. 最終 merge head 的 CI — 已確認(2026-08-01)**
+- [x] **R1-c. 最終 merge head 的 CI — 已確認(2026-08-01,合併後更正為真正的最終值)**
+
+  > 合併前這一行記的是中途的 head `0fb4a2c` / run `30682328651`。依 Bar 指示**不為了改這一行再推 pre-merge commit**(那會讓 head 再次改變、R1-c 又要重跑),改為在 G6 收尾時更正。**下表才是實際用於合併的證據。**
+
+  | 項目 | 真正的最終值 |
+  |---|---|
+  | 最終 PR head | **`9ec2c211932ba0a570e8978ea60b85898c1de6c4`** |
+  | Workflow run | **`30682429659`** |
+  | `sanity` | success |
+  | `browser-qa` | success |
+  | Netlify deploy-preview | success |
+  | PR 狀態 | MERGEABLE / CLEAN |
+  | 未解決 review thread | 0 |
   merge head `0fb4a2c`;**PR #11 的 `sanity` 與 `browser-qa` 皆 success**(run `30682328651`),PR 狀態 `MERGEABLE` / `CLEAN`。這是比 dev push 更完整的證據(dev push 依設計略過 browser-qa)。
   **G1 期間若 `dev` 又有任何新 commit,R1-b 就過期了。** 申請 G4 之前必須重新確認下列任一項:
   - 最終 `dev` HEAD 自己的 dev-push `qa-sanity / sanity` 成功;**或**
@@ -292,3 +304,56 @@
    (**不得建立 `production-v72`**,v72 未曾正式發布)
 
 > 任何一項失敗 → 記入 `tasks/backlog.md` 或直接回報,**不要在清單上打勾略過**。
+
+---
+
+## 發布收尾紀錄(G4 / G5 / G6,2026-08-01)
+
+**v73 已正式發布。** 正式站由 SW v18 升級至 SW v73。
+
+| 項目 | 值 |
+|---|---|
+| 最終 PR head | `9ec2c211932ba0a570e8978ea60b85898c1de6c4` |
+| Workflow run(合併依據) | `30682429659` — `sanity` + `browser-qa` 皆 success |
+| **Merge commit** | **`17c423f8ac59328f926973024cb407d5e638f838`** |
+| Merge method | merge commit(parents `9eefcb0` + `9ec2c21`),非 squash／rebase |
+| **正式部署 commit** | Netlify deploy `6a6d6be3e3dabf00078f284b`,**`commit_ref` = `17c423f8...`** |
+| 部署發布時間 | `2026-08-01T03:45:48.841Z`(`published_at` 有值,非 null) |
+| **回滾錨點 tag** | **`production-v73`** → tag 物件 `64e8d0b`,peeled `17c423f8...` |
+| 前一版錨點 | `production-v18` → `9eefcb0` |
+| `production-v72` | **未建立**(v72 未曾正式發布) |
+
+### G5 正式站線上驗證(機器端)
+
+```
+sw.js            SW_VERSION='v73'   4,486 bytes   舊 v18 字面 0
+app-version.js   var APP_VERSION='v73';
+index.html       728,196 bytes   安全取值區塊 ✓   已鎖帳文案 ✓   舊文案殘留 0
+六主題            ['ocean','ivory','wisteria','cedar','mist','tea']
+版本一致性        sw.js = app-version.js = v73
+GET /            HTTP 200,728,196 bytes
+```
+
+| 路徑 | Cache-Control |
+|---|---|
+| `sw.js` | `no-cache,no-store,must-revalidate` |
+| `app-version.js` | `no-cache,no-store,must-revalidate`(v73 新增規則已生效) |
+| `index.html` | `no-cache` |
+| `schema.js` / `manifest.webmanifest` | `public,max-age=0,must-revalidate` |
+| `manifest.webmanifest` Content-Type | `application/manifest+json` |
+
+### G5 Bar iPhone smoke test(2026-08-01 通過)
+
+- PWA 完整關閉重開後已換代至 SW v73
+- 今天／行程／購物／分帳四頁正常
+- 原有身分與個人資料保留
+- 設定頁與子頁進出正常
+- 飛航模式下可離線重開
+- 恢復網路後正常
+- 無白畫面、崩潰或持續錯誤
+
+### G6 完成
+
+`production-v73` 已建立並推送 `origin`;文件、任務板與 CHANGELOG 已同步。**v73 發布流程結束。**
+
+> 下一步為 **v74 設定根頁改版**,設計規格見 `docs/superpowers/specs/2026-08-01-settings-grouped-list-design.md`。依 2026-08-01 裁定,v74 runtime 實作在本節完成後方可啟動。

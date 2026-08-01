@@ -4,7 +4,7 @@
   "owner": "Bar(產品負責人,非工程師,繁中溝通,要直接執行不要教學;AI=全職工程團隊)",
   "version": "2.9-sw-update-integrity-v73",
   "framework": "ai-native-framework@pending(尚未抽取;見 FUTURE_PLAN_framework-extraction.md)",
-  "updated": "2026-07-30",
+  "updated": "2026-08-01",
   "live": "https://trippilot-jp.netlify.app/",
   "start_here": "先讀本檔 → PROJECT_CONSTITUTION.md(憲章/流程/禁令)→ 08_AI_HANDOVER.md → 15_AI_EXECUTION_RULES.md(決策權限/任務分級,必讀)→ 相關 adr/ → 依任務讀 03_DATABASE/09_SCHEMA_MAPPING(資料與欄位)、05_CODING_RULES/11_CODING_CONVENTION(程式)、12_DEV_WORKFLOW(步驟)",
   "governance": {
@@ -112,11 +112,11 @@
       "Playwright三情境QA入版控(斷網內建/連網同步/旅行日mock Date/pageerror=0/qa.yml)",
       "SW v72開發完成(六組主題/設定頁2.0/inline SVG/個人備份v8/旅途紀錄/app-version單一來源/使用者版更新日誌；Bar真機驗收待辦)",
       "SW更新完整性修正(sw.js自帶SW_VERSION/移除importScripts版本依賴/install用reload、fetch用no-cache避免HTTP cache汙染SHELL/子資源不再fallback成index.html/APP_VERSION安全取值/tools一致性檢查/qa.yml sanity支援dev push；SW v73)",
-      "批次一發布阻斷項全數交付(任務板歸位/ADR 0008 六主題追認/production-v18 回滾錨點/SW 更新完整性修正 v73/備份 v1-v8 還原矩陣與相容契約/已鎖帳文案/測試模式與時間模擬暴露面調查與備份防呆)"
+      "批次一發布阻斷項全數交付(任務板歸位/ADR 0008 六主題追認/production-v18 回滾錨點/SW 更新完整性修正 v73/備份 v1-v8 還原矩陣與相容契約/已鎖帳文案/測試模式與時間模擬暴露面調查與備份防呆)",
+      "SW v73 正式發布(2026-08-01;v18→v73,merge commit 17c423f,tag production-v73;G1 真機驗收全數通過;未建 production-v72 因 v72 未曾正式發布)"
     ],
     "pending_in_order": [
-      "Bar手機驗收dev SW v73(含v72功能;v72未曾正式發布,兩批合併為同一候選版)",
-      "Bar核准PR merge(dev→main)→Netlify正式部署與線上驗證→建立production-v73 tag",
+      "v74 設定根頁改版(三群組/測試模式移出根頁至 test-mode 子頁);設計規格已核准尚未實作,Tier 2 動工前需四段說明",
       "框架抽取(FUTURE_PLAN)"
     ]
   },

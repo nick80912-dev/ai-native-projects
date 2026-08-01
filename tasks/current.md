@@ -3,6 +3,7 @@
 > 更新於 2026-07-30。細任務層;里程碑看 `06_ROADMAP.md`,歷史交付看 `07_CHANGELOG.md`,正式待辦看 `tasks/backlog.md`。
 
 ## 📌 現況
+- 🚀 **SW v73 已於 2026-08-01 正式發布。** 正式站(`https://trippilot-jp.netlify.app/`)由 **SW v18 升級至 SW v73**,merge commit `17c423f8ac59328f926973024cb407d5e638f838`,回滾錨點 tag `production-v73`。發布內容為 v72(六主題／設定頁 2.0／旅途紀錄／備份 v8)與 v73(SW 更新完整性、子資源 fallback、APP_VERSION 安全取值、已鎖帳文案)合併的同一候選版,**只做一次 SW 換代**。G1–G6 全數通過,逐項證據見 `docs/batch2-device-acceptance.md` 的「發布收尾紀錄」。
 - **批次一「發布阻斷項」P1–P6 全部交付完成(2026-07-30)**,SW 升至 **v73**。P5 調查判定測試模式／時間模擬／`?previewDate` 三條路徑皆為「可延後,非發布阻斷」,唯一真正的跨裝置污染路徑(模擬期間匯出備份 → 新裝置無回復點)已由 `exportPersonalState()` 的防呆擋下。批次二真機驗收清單見 `docs/batch2-device-acceptance.md`。
 - **最新 `dev` runtime 基準:SW v73**(批次一 P2 C2)。修正兩件實證出來的更新缺陷:①新版 SW 的 install 會從 HTTP cache 取得舊版 SHELL,造成「新快取名稱裝舊內容」與 index／schema 混版本;②任何同源子資源離線未命中時都會 fallback 成 `index.html`,讓 `<script>` 拿到 HTML。修法為 install 用 `cache:'reload'`、日常 fetch 用 `cache:'no-cache'`、只有 navigation 才退回 `index.html`;`sw.js` 改為自帶 `SW_VERSION` 並移除 `importScripts` 版本依賴。`index.html` 的 `APP_VERSION` 全面改走安全 helper。新增 `tools/check-app-version.js` 與 Playwright `sw-update-cache.spec.js`(已做對照驗證:改回舊寫法會失敗)。**v72 未曾正式發布,與 v73 合併為同一個候選版本,只做一次 SW 換代。**
 - 最新已推送 `dev` App runtime 基準：`b372f49`，Service Worker `okayama-trip-v72`。SW v72 的設定頁 2.0、六組主題、旅途紀錄與個人備份 v8 已整合；完整 51／51 Node test files、Playwright 3／3、文件／manifest／diff 檢查及 320／375／390px Browser QA 通過，尚待 Bar 真機／PWA 驗收。**Bar 已於 2026-07-30 完成 SW v69／v70／v71 真機／PWA 驗收**；尚未合併 `main` 或正式部署。
@@ -41,10 +42,10 @@
 | G1 | **SW v73** Bar 真機／PWA 驗收 | ✅ **完成(2026-08-01)** — P0／P1／A／B／C／D／E／F／G／H／I 全數於 iPhone 通過,清單見 `docs/batch2-device-acceptance.md` | Bar |
 | G2 | 批次一「發布阻斷項」全數交付且 `tests/` 全綠 + Playwright 全綠 + `check-doc-titles.js` + `check-app-version.js` 通過 | ✅ 完成(P1–P6 全數交付) | AI |
 | G3 | `main` 現況(`9eefcb0`,SW okayama-trip-v18)建立 annotated 回滾 tag 並 push `origin` | ✅ 完成(`production-v18` → `2f1987b`,peeled `9eefcb0`) | AI |
-| R1 | 遠端 CI 證據(G4 前置) | ✅ **完成** — merge head `0fb4a2c`,PR #11 的 sanity 與 browser-qa 皆 success(run `30682328651`),PR 狀態 MERGEABLE／CLEAN | AI |
-| G4 | Bar 核准 PR merge `dev → main` | ⏳ **待你核准** — PR #11 已建立且全綠:https://github.com/nick80912-dev/ai-native-projects/pull/11 | Bar |
-| G5 | Netlify 正式站部署後線上驗證 | ⏳ 待辦 | Bar |
-| G6 | v73 正式部署且真機 smoke test 通過後,建立 annotated tag `production-v73` | ⏳ 待辦(**不得建立 `production-v72`** —— v72 未曾正式發布) | AI → Bar |
+| R1 | 遠端 CI 證據(G4 前置) | ✅ **完成** — 真正用於合併的最終 head `9ec2c21`,run `30682429659`,`sanity` + `browser-qa` 皆 success,PR MERGEABLE／CLEAN,未解決 review thread 0 | AI |
+| G4 | Bar 核准 PR merge `dev → main` | ✅ **完成(2026-08-01)** — PR #11 以 merge commit 合併,head 鎖定 `9ec2c21`,merge commit `17c423f` | Bar |
+| G5 | Netlify 正式站部署後線上驗證 | ✅ **完成(2026-08-01)** — deploy `6a6d6be3`,`commit_ref = 17c423f`,線上 `sw.js`／`app-version.js` 皆 v73、header 正確;Bar iPhone smoke test 通過 | Bar |
+| G6 | 建立 annotated tag `production-v73` | ✅ **完成(2026-08-01)** — tag 物件 `64e8d0b`,peeled `17c423f8...`,已推送 `origin`;**未建立 `production-v72`** | AI |
 
 > G1 與 G4／G5 為 Bar 專屬職責;AI 不得以 G2 全綠為由推進 G4。未核准前不得 merge、push `main` 或部署。
 > **測試站驗收前置**:`dev-trippilot-jp.netlify.app` 自動部署已於 2026-07-26 關閉,2026-07-30 實測線上仍停在 **SW v62**、`app-version.js` 回 404。用它驗收 v73 前必須先手動部署到目標 commit,並依 `16_OPS_PLAYBOOK.md` §F5 核對線上 `sw.js`／`app-version.js` 版本與 CacheStorage 實際內容,**不得只看 Git 分支**。
@@ -58,6 +59,6 @@
 > 已解除：Apps Script `doGet` 部署已由 Bar 完成，真實端點驗證（CORS、redirect、`after`／`reset`／`serverTime`、非 JSON 降級）通過，見上方 SW v47 條目。
 
 ## 下一棒
-→ **G1 真機驗收已全數通過(2026-08-01)**。下一棒依序:R1-c 查最新 merge head 的遠端 CI → 建立 `dev → main` PR → 確認 PR 的 sanity 與 browser-qa 全綠 → 由 Bar 核准並執行 G4 merge → 正式部署與 smoke test → 建立 annotated `production-v73` tag。**v74 實作須待 v73 正式發布完成後才啟動。**
+→ **v73 發布流程已全部結束(G1–G6 全綠,`production-v73` 已建立並推送)。** 下一棒為 **v74 設定根頁改版的實作計畫**:三個常駐群組(個人／記帳／資料)、測試模式移出根頁至 `test-mode` 子頁、legacy deep-link 改指向該頁。設計規格見 `docs/superpowers/specs/2026-08-01-settings-grouped-list-design.md`(§7 測試契約、§8 delta 驗收、§6.1 B2–C3 證據的因果條件)。**v74 為 Tier 2,動工前需先出四段說明並取得 Bar 核准。**
 
 > 採買清單 A／B／D／F 已於 SW v60／v61 交付；C／E／G 已於 SW v68 實作，並於 2026-07-29 完成 Bar 真機驗收；正式契約見設計文件。

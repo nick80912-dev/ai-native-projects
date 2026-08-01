@@ -1,4 +1,15 @@
 # 07 版本紀錄
+## 2026-08-01｜🚀 SW v73 正式發布（main，v18 → v73）
+- **正式站已由 SW v18 升級至 SW v73。** merge commit **`17c423f8ac59328f926973024cb407d5e638f838`**（PR #11，`dev → main`，merge method 為 merge commit，parents `9eefcb0` + `9ec2c21`，非 squash／rebase）。Netlify 正式部署 `6a6d6be3e3dabf00078f284b`，`commit_ref` 與 merge commit 一致，`published_at` 為 `2026-08-01T03:45:48.841Z`。
+- **回滾錨點 tag `production-v73`** 已建立並推送：tag 物件 `64e8d0b`（annotated），peeled `17c423f8...`。**未建立 `production-v72`** —— v72 從未正式發布，v72 與 v73 合併為同一候選版，只做一次 SW 換代。前一版錨點 `production-v18` → `9eefcb0` 保留。
+- **發布內容**：v73 的 SW 更新完整性修正（install 用 `cache:'reload'`、日常 fetch 用 `cache:'no-cache'`、`sw.js` 自帶 `SW_VERSION` 並移除 `importScripts` 版本依賴、離線未命中的子資源不再 fallback 成 `index.html`、`APP_VERSION` 全面改走安全 helper、受保護紀錄文案改為「已鎖帳」），加上 v72 的六組淺色主題、設定頁 2.0、旅途紀錄與個人備份 v8。
+- **G1 真機／PWA 驗收 2026-08-01 全數通過**：P0／P1／A／B／C／D／E／F／G／H／I。其中 C2「先離線、再升級」的一次性過渡窗口在 iPhone 上也通過 —— 該情境原本因競態不一定可重現而標為 best-effort。逐項證據見 `docs/batch2-device-acceptance.md`。
+- **R1 遠端 CI**：真正用於合併的最終 head 為 `9ec2c211932ba0a570e8978ea60b85898c1de6c4`，workflow run `30682429659`，`sanity` 與 `browser-qa` 皆 success，PR 狀態 MERGEABLE／CLEAN，未解決 review thread 0。驗收清單中 R1-c 原記的是中途 head `0fb4a2c`／run `30682328651`；依裁定**不為改這一行再推 pre-merge commit**（那會讓 head 再次改變、R1-c 又要重跑），改於本次 G6 收尾更正。
+- **G5 正式站線上驗證**：`sw.js` `SW_VERSION='v73'`（4,486 bytes，舊 `okayama-trip-v18` 字面 0）、`app-version.js` `v73`、`index.html` 728,196 bytes（含 `APP_VERSION SAFE ACCESS` 區塊與已鎖帳說明句，舊文案「還款確認後保護」殘留 0）、六主題齊全、版本一致性成立、`GET /` HTTP 200。header：`sw.js` 與 **`app-version.js`** 皆 `no-cache,no-store,must-revalidate`（後者為 v73 新增的防禦性規則，線上確認生效）、`index.html` `no-cache`、`manifest.webmanifest` Content-Type 正確。
+- **Bar iPhone smoke test 通過**：PWA 完整關閉重開後已換代至 SW v73、四分頁正常、原有身分與個人資料保留、設定頁與子頁進出正常、飛航模式下可離線重開、恢復網路後正常、無白畫面／崩潰／持續錯誤。
+- **合併安全性（合併前已驗）**：`main` 上沒有任何 `dev` 缺少的非 merge commit；`main` 合併前的 tree 等同 `9abd6a5`（在 `dev` 歷史中）；模擬合併零衝突。合併後 `main` 的 tree 與 PR head tree **完全一致**，合併未引入任何額外變更。
+- 批次一「發布阻斷項」自此結束。下一批為 **v74 設定根頁改版**，設計規格已核准但**尚未實作**，見 `docs/superpowers/specs/2026-08-01-settings-grouped-list-design.md`。
+
 ## 2026-07-30｜測試模式／時間模擬暴露面調查與備份防呆（dev，SW v73）
 - **P5 唯讀調查結論:三條路徑皆判定為「可延後,非發布阻斷」**,但發現一個值得在出發前補的缺口(見下)。調查全程未修改任何檔案。
 - **調查修正了兩個既有假設**:①`trip_ledger_test_mode` **根本不是隱藏的** —— 設定頁有一個明著的「測試模式」區塊,任何人打開設定往下滑就點得到;②「連點標題 5 下」的除錯面板入口**不存在**,`brandTitle` 上沒有任何 listener,診斷面板的真正入口是**桃子徽章 300ms 內連點兩次 `touchend`**,且因為只綁 `touchend`,桌機滑鼠點不開。
