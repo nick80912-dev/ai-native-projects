@@ -1951,19 +1951,32 @@ function isNextStopCleared(item,progress,checks){
 function getWants(){ return lsGet('trip_shop_wants',{}); }
 
 /* ================= 導航 / 高亮 ================= */
+function navigationIntent(it,res){
+  var query='',kind='nearby';
+  if(res&&res.kind==='place'&&res.p){query=String(res.p.name||'').trim();kind='exact';}
+  else if(res&&res.kind==='rest'&&res.r){query=String(res.r.name||'').trim();kind='exact';}
+  else query=String(it&&it.place||it&&it.act||'').replace(/\n[\s\S]*/,'').trim();
+  return query?{kind:kind,query:query}:null;
+}
+function navigationDirectionsUrl(intent,origin){
+  if(!intent||!String(intent.query||'').trim())return '';
+  var query=String(intent.query).trim(),parts=['api=1'];
+  var validOrigin=origin&&isFinite(Number(origin.latitude))&&isFinite(Number(origin.longitude));
+  if(validOrigin)parts.push('origin='+encodeURIComponent(String(Number(origin.latitude))+','+String(Number(origin.longitude))));
+  parts.push('destination='+encodeURIComponent(validOrigin&&intent.kind==='nearby'?query:query+' 日本'));
+  parts.push('travelmode='+(transport()==='drive'?'driving':'transit'));
+  return 'https://www.google.com/maps/dir/?'+parts.join('&');
+}
+function tripItemForNavigation(dayIndex,itemId){
+  var days=DB&&DB.trip&&DB.trip.days||[],day=days[Number(dayIndex)];
+  if(!day)return null;
+  return (day.items||[]).filter(function(item){return item&&item.id===String(itemId);})[0]||null;
+}
 function navQuery(it,res){
-  var q='';
-  if(res&&res.kind==='place'&&res.p.navq) q=res.p.navq;
-  else if(res&&res.kind==='rest') q=res.r.name;
-  else q=(it.place||it.act||'').replace(/\n.*/s,'');
-  return encodeURIComponent(q+' 日本');
+  var intent=navigationIntent(it,res);
+  return intent?encodeURIComponent(intent.query+' 日本'):'';
 }
-function navUrl(it,res){
-  var q=navQuery(it,res);
-  return transport()==='drive'
-    ? 'https://www.google.com/maps/dir/?api=1&destination='+q+'&travelmode=driving'
-    : 'https://www.google.com/maps/dir/?api=1&destination='+q+'&travelmode=transit';
-}
+function navUrl(it,res){return navigationDirectionsUrl(navigationIntent(it,res));}
 function highlightNote(text){
   var t=escapeHtml(text);
   t=t.replace(/(https?:\/\/[^\s，、]+)/g,'<a href="$1" target="_blank" rel="noopener">$1</a>');
