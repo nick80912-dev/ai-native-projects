@@ -7622,9 +7622,13 @@ function openSettings(targetId){
   }
 }
 var settingsUiState={page:'root',scrollTopByPage:{},anchorId:''};
-var SETTINGS_PAGE_IDS=['root','theme','proxy','ledger','options','data'];
+var SETTINGS_PAGE_IDS=['root','theme','proxy','ledger','options','data','test-mode'];
+/* ledgerTestModeSection 於 v74 由根頁改指專屬控制頁(設計規格 §2.5)。
+   anchorId 保留:同名節點搬到 test-mode 頁,既有 anchor 捲動／聚焦邏輯照舊生效。
+   這個 legacy target 不得落到根頁 —— 使用者正在 TEST 模式中按「前往設定關閉」,
+   落到已無開關的根頁等於關不掉測試模式。 */
 var SETTINGS_LEGACY_TARGETS={
-  ledgerTestModeSection:{page:'root',anchorId:'ledgerTestModeSection'},
+  ledgerTestModeSection:{page:'test-mode',anchorId:'ledgerTestModeSection'},
   ledgerOptionSettingsSection:{page:'options',anchorId:''},
   ledgerProxyTargetSettingsSection:{page:'proxy',anchorId:''}
 };
@@ -7653,8 +7657,15 @@ function renderSettingsRoot(ledgerSettings){
     '<div class="settings-section"><h3>代購對象</h3><button class="settings-menu-button" onclick="openSettingsPage(\'proxy\')"><span class="settings-menu-copy"><b>管理代購對象</b><small>'+proxyCount+' 位常用對象</small></span><span class="settings-menu-chevron">›</span></button></div>'+
     '<div class="settings-section"><h3>帳務</h3><button class="settings-menu-button" onclick="openSettingsPage(\'ledger\')"><span class="settings-menu-copy"><b>匯率與預設幣別</b><small>1 JPY = NT$'+escapeHtml(ledgerSettings.exchangeRate||'未設定')+' · '+escapeHtml(ledgerSettings.defaultCurrency)+'</small></span><span class="settings-menu-chevron">›</span></button><div class="toggle-row settings-inline-toggle" id="simpleSettlementSection"><div><b>簡易結算模式</b><div class="settings-help">保留已確認結清</div></div><input type="checkbox" '+(isSimpleSettlementMode()?'checked':'')+' onchange="setSimpleSettlementMode(this)"></div></div>'+
     '<div class="settings-section"><h3>自訂項目</h3><button class="settings-menu-button" onclick="openSettingsPage(\'options\')"><span class="settings-menu-copy"><b>類別、支付方式與採買單位</b><small>'+escapeHtml(optionSummary)+'</small></span><span class="settings-menu-chevron">›</span></button></div>'+
-    '<div class="settings-section"><h3>資料與版本</h3><button class="settings-menu-button" onclick="openSettingsPage(\'data\')"><span class="settings-menu-copy"><b>備份、還原與版本資訊</b><small>個人資料備份</small></span><span class="settings-menu-chevron">›</span></button></div>'+
-    '<div class="settings-section" id="ledgerTestModeSection"><h3>測試模式</h3><div class="toggle-row"><div><b>團體帳測試模式<span class="settings-warning-tag">僅團體帳</span></b><div class="settings-help">團體帳切換為獨立 [TEST] 帳本；儀表板、結算與明細只顯示測試紀錄，關閉即回正式帳本。個人帳不受影響。</div></div><input type="checkbox" '+(lsGet('trip_ledger_test_mode',false)?'checked':'')+' onchange="setLedgerTestMode(this)"></div></div>';
+    '<div class="settings-section"><h3>資料與版本</h3><button class="settings-menu-button" onclick="openSettingsPage(\'data\')"><span class="settings-menu-copy"><b>備份、還原與版本資訊</b><small>個人資料備份</small></span><span class="settings-menu-chevron">›</span></button></div>';
+}
+/* 團體帳測試模式控制頁(v74,設計規格 §2.4)
+   測試模式是開發／驗收工具,不是一般旅遊設定,因此不常駐設定根頁。
+   三個進入點:診斷面板、根頁條件式警告列、分帳頁 TEST banner 的「前往設定關閉」。
+   本頁承載完整說明與唯一的切換控制項;根頁不得再放任何可直接切換的 checkbox。 */
+function renderSettingsTestModePage(){
+  return renderSettingsHeader('測試模式',false)+
+    '<div class="settings-section" id="ledgerTestModeSection"><h3>團體帳測試模式</h3><div class="toggle-row"><div><b>團體帳測試模式<span class="settings-warning-tag">僅團體帳</span></b><div class="settings-help">團體帳切換為獨立 [TEST] 帳本；儀表板、結算與明細只顯示測試紀錄，關閉即回正式帳本。個人帳不受影響。</div></div><input type="checkbox" '+(lsGet('trip_ledger_test_mode',false)?'checked':'')+' onchange="setLedgerTestMode(this)"></div></div>';
 }
 function renderThemeSettingsSheet(){
   var selected=currentThemeId();
@@ -7696,6 +7707,7 @@ function renderSettingsPage(page,ledgerSettings,settingsError){
   if(page==='ledger')return renderSettingsLedgerPage(ledgerSettings,settingsError);
   if(page==='options')return renderSettingsOptionsPage();
   if(page==='data')return renderSettingsDataPage();
+  if(page==='test-mode')return renderSettingsTestModePage();
   return renderSettingsRoot(ledgerSettings);
 }
 function mergedLedgerRecords(){
@@ -9507,6 +9519,10 @@ function endTimeSimulation(restore){
   localStorage.removeItem('trip_time_simulation'); localStorage.removeItem('trip_time_simulation_snapshot'); updateSimulationMarker(); renderAll(); closeDiagnostics(); toast(restore?'已回復模擬前狀態':'已回復手機時間');
 }
 function closeDiagnostics(){ var el=document.getElementById('diagnosticOverlay'); if(el) el.remove(); }
+/* 測試模式關閉時,診斷面板是唯一的啟用入口(設計規格 §2.4)。
+   刻意不在此直接呼叫 setLedgerTestMode() —— 它會 renderSplit() 並可能開啟身分選擇器,
+   不該從診斷面板 overlay 內觸發;一律改走 Settings router 進入控制頁。 */
+function openTestModeSettings(){ closeDiagnostics(); openSettings('test-mode'); }
 /* 真機驗收用:回報「這台裝置實際啟用的外殼版本」,不是伺服器上有什麼。
    sw.js 的 activate 會刪掉所有非當前 CACHE_NAME 的快取,所以 Cache Storage 裡
    剩下的那一筆就是答案 —— 版本字串一律讀自真實快取,index.html 不得自行寫死,
@@ -9538,6 +9554,7 @@ function openDiagnostics(){
   el.innerHTML='<div class="diag-panel"><div class="diag-head"><h2>診斷面板</h2><button class="diag-close" onclick="closeDiagnostics()">×</button></div>'+
     '<div class="diag-section"><h3>App 版本</h3><div class="diag-row" id="diagShellVersion">讀取中…</div><div class="diag-help">本機實際啟用的外殼版本；滑除 PWA 重開兩次才會換版。</div></div>'+
     '<div class="diag-section"><h3>健康檢查</h3><div class="diag-row">'+(findings.length?escapeHtml(findings.join('；')):'正常')+'</div></div>'+
+    '<div class="diag-section"><h3>團體帳測試模式</h3><div class="diag-row">'+(lsGet('trip_ledger_test_mode',false)?'已開啟':'已關閉')+'</div><button onclick="openTestModeSettings()">開啟測試模式控制頁</button><div class="diag-help">只影響團體帳,個人帳不受影響;開關在控制頁上。</div></div>'+
     renderTravelNotesSection()+
     '<div class="diag-section"><h3>時間模擬</h3><div class="diag-row">'+(isTimeSimulationActive()?'模擬中：目前模擬時間 '+appNow().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})+'（行走中）':'依手機時間')+'</div><input id="diagTime" type="datetime-local" value="'+escapeHtml(simValue||'')+'"><div class="diag-shortcuts">'+days+'</div><div class="diag-actions"><button class="primary" onclick="setTimeSimulation()">套用並開始模擬</button></div><button onclick="endTimeSimulation(true)">結束模擬——還原測試前狀態</button><div class="diag-help">還原進入模擬前的打卡與略過狀態。</div><button onclick="endTimeSimulation(false)">結束模擬——保留測試變更</button><div class="diag-help">保留模擬期間的打卡與略過狀態。</div></div>'+
     '<div class="diag-section"><h3>行程進度</h3><button onclick="resetTripProgress()">重置行程進度</button><div class="diag-help">僅清除打卡與略過，需雙重確認。</div></div></div>';

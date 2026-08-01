@@ -4,6 +4,65 @@ const vm = require('vm');
 
 function plain(value){ return JSON.parse(JSON.stringify(value)); }
 
+/* 語意擷取器(2026-08-01 v74 新增,依設計規格 §7.1 規則 3／4)
+   ------------------------------------------------------------------
+   舊寫法是 html.slice(indexOf('function openSettings('), indexOf('function mergedLedgerRecords()')),
+   契約因此綁在「函式在檔案中的排列位置」上:插一個新 render function 到區間外,
+   斷言會靜默失效;更糟的是會誘導實作者為了配合測試而刻意安排函式位置。
+   這裡改成依名稱擷取單一函式本體(跳過字串常值中的括號),契約由語意決定。 */
+function extractFunction(source,name){
+  const start = source.indexOf('function '+name+'(');
+  assert(start >= 0,'function not found in index.html: '+name);
+  const open = source.indexOf('{',start);
+  assert(open > start,'function body not found: '+name);
+  let depth = 0, quote = '';
+  for(let i=open;i<source.length;i++){
+    const ch = source[i];
+    if(quote){
+      if(ch==='\\'){ i++; continue; }
+      if(ch===quote) quote='';
+      continue;
+    }
+    if(ch==='\''||ch==='"'||ch==='`'){ quote=ch; continue; }
+    if(ch==='{') depth++;
+    else if(ch==='}'){ depth--; if(depth===0) return source.slice(start,i+1); }
+  }
+  throw new Error('unbalanced function body: '+name);
+}
+
+function extractDeclaration(source,name){
+  const start = source.indexOf('var '+name+'=');
+  assert(start >= 0,'declaration not found in index.html: '+name);
+  let depth = 0, quote = '';
+  for(let i=start;i<source.length;i++){
+    const ch = source[i];
+    if(quote){
+      if(ch==='\\'){ i++; continue; }
+      if(ch===quote) quote='';
+      continue;
+    }
+    if(ch==='\''||ch==='"'||ch==='`'){ quote=ch; continue; }
+    if(ch==='{'||ch==='[') depth++;
+    else if(ch==='}'||ch===']') depth--;
+    else if(ch===';'&&depth===0) return source.slice(start,i+1);
+  }
+  throw new Error('unterminated declaration: '+name);
+}
+
+/* 實際執行 normalizeSettingsTarget(),斷言它的回傳值 —— 不是斷言原始碼裡有某個字串。
+   TEST banner 的 deep link 是本次改版最不該失效的路徑,必須用行為證明。 */
+function loadSettingsRouting(source){
+  const sandbox = {};
+  vm.createContext(sandbox);
+  vm.runInContext(
+    extractDeclaration(source,'SETTINGS_PAGE_IDS')+'\n'+
+    extractDeclaration(source,'SETTINGS_LEGACY_TARGETS')+'\n'+
+    extractFunction(source,'normalizeSettingsTarget'),
+    sandbox
+  );
+  return sandbox.normalizeSettingsTarget;
+}
+
 function createStorage(){
   const values = {};
   return {
@@ -96,12 +155,19 @@ function response(payload){
   assert.strictEqual(failed.splitRenders,0,'failed save does not rerender Split');
 
   const html = mod.__htmlSource;
-  const settingsSource = html.slice(html.indexOf('function openSettings('),html.indexOf('function mergedLedgerRecords()'));
+  const settingsNavSource = extractFunction(html,'openSettings');
+  const settingsRootSource = extractFunction(html,'renderSettingsRoot');
+  const settingsLedgerPageSource = extractFunction(html,'renderSettingsLedgerPage');
+  const settingsOptionsPageSource = extractFunction(html,'renderSettingsOptionsPage');
+  const settingsTestModePageSource = extractFunction(html,'renderSettingsTestModePage');
+  const settingsDispatchSource = extractFunction(html,'renderSettingsPage');
+  const diagnosticsSource = extractFunction(html,'openDiagnostics');
+  const resolveSettingsTarget = loadSettingsRouting(html);
   const entrySource = html.slice(html.indexOf('function selectLedgerCategory('),html.indexOf('function deletePersonalLedgerRecord('));
   const splitSource = html.slice(html.indexOf('function renderSplit()'),html.indexOf('/* ================= 導覽 / 啟動'));
   const ledgerUiSource = html.slice(html.indexOf('function ledgerTrackRecords()'),html.indexOf('/* ================= 導覽 / 啟動'));
-  assert(settingsSource.includes('openMemberSelector(false,false)'),'Settings exposes the existing-identity switch entry');
-  assert(settingsSource.includes('openMemberSelector(false,true)'),'Settings exposes the new-identity registration entry');
+  assert(settingsRootSource.includes('openMemberSelector(false,false)'),'Settings exposes the existing-identity switch entry');
+  assert(settingsRootSource.includes('openMemberSelector(false,true)'),'Settings exposes the new-identity registration entry');
   assert(!splitSource.includes('openMemberSelector(false'),'Split page does not offer identity switching or registration');
   assert(html.includes("var ledgerUiState={track:'personal'"),'fresh App sessions default to the personal track');
   assert(splitSource.includes('個人帳留在本機；團體帳跨裝置同步。'),'Split uses the fixed dual-track explanation');
@@ -117,38 +183,66 @@ function response(payload){
   assert(splitSource.includes('openLedgerQuickEntryFromFab'),'Split dashboard exposes the dedicated quick-entry FAB path');
   assert(!splitSource.includes('id="ledgerJpy"')&&!splitSource.includes('id="ledgerTwd"'),'legacy dual amount inputs are removed');
   assert(entrySource.includes('convertLedgerAmounts'),'Split entry converts the selected currency into both stored amounts');
-  assert(settingsSource.includes('id="ledgerExchangeRate"'),'Settings exposes the current exchange rate');
-  assert(settingsSource.includes('預設輸入幣別'),'Settings exposes the localized default ledger currency');
+  assert(settingsLedgerPageSource.includes('id="ledgerExchangeRate"'),'Settings exposes the current exchange rate');
+  assert(settingsLedgerPageSource.includes('預設輸入幣別'),'Settings exposes the localized default ledger currency');
   assert(html.includes("header:'Ledger Default Currency'"),'internal Ledger Default Currency contract remains unchanged');
-  assert(settingsSource.includes('saveLedgerSettings'),'Settings saves through the confirmed cloud settings helper');
-  assert(settingsSource.includes('>匯率<'),'Settings shows the localized exchange-rate label');
-  assert(settingsSource.includes('1 日幣可換算多少台幣'),'Settings explains the exchange-rate direction');
-  assert(settingsSource.includes('>預設輸入幣別<'),'Settings shows the localized default-currency label');
-  assert(settingsSource.includes('新增記帳時預先選擇的幣別'),'Settings explains the default input currency');
-  assert(!settingsSource.includes('Exchange Rate（'),'Settings does not expose the internal Exchange Rate key as a label');
-  assert(!settingsSource.includes('Ledger Default Currency（'),'Settings does not expose the internal default-currency key as a label');
-  const orderedSettingsLabels=['>身分<','>主題<','>代購對象<','>帳務<','>自訂項目<','>資料與版本<','>測試模式<'];
-  let previousSettingsLabel=-1;
-  orderedSettingsLabels.forEach(function(label){
-    const at=settingsSource.indexOf(label);
-    assert(at>previousSettingsLabel,'Settings keeps approved section order at '+label);
-    previousSettingsLabel=at;
+  assert(settingsLedgerPageSource.includes('saveLedgerSettings'),'Settings saves through the confirmed cloud settings helper');
+  assert(settingsLedgerPageSource.includes('>匯率<'),'Settings shows the localized exchange-rate label');
+  assert(settingsLedgerPageSource.includes('1 日幣可換算多少台幣'),'Settings explains the exchange-rate direction');
+  assert(settingsLedgerPageSource.includes('>預設輸入幣別<'),'Settings shows the localized default-currency label');
+  assert(settingsLedgerPageSource.includes('新增記帳時預先選擇的幣別'),'Settings explains the default input currency');
+  assert(!settingsLedgerPageSource.includes('Exchange Rate（'),'Settings does not expose the internal Exchange Rate key as a label');
+  assert(!settingsLedgerPageSource.includes('Ledger Default Currency（'),'Settings does not expose the internal default-currency key as a label');
+  assert(settingsRootSource.includes('目前身分'),'Settings displays the current member identity');
+  assert(settingsRootSource.includes('>切換<'),'Settings keeps the identity switch action');
+  assert(!settingsRootSource.includes('>成員身分<'),'Settings uses the approved 身分 label');
+  assert(html.includes('SETTINGS_LEGACY_TARGETS'),'legacy Settings deep links have an explicit compatibility map');
+  assert(settingsNavSource.includes('normalizeSettingsTarget'),'every Settings entry resolves through the routing table');
+  assert(html.includes('scrollTopByPage'),'root and every subpage preserve independent scroll positions');
+  assert(settingsNavSource.includes('captureSettingsScroll'),'Settings captures scroll before rerender or navigation');
+  assert(html.includes('function backToSettingsRoot('),'Settings subpages return to the root context');
+  assert(settingsOptionsPageSource.includes('類別、支付方式與採買單位'),'Settings exposes custom ledger option management');
+
+  /* ---- v74 測試模式控制頁與 legacy deep link(設計規格 §2.4／§2.5／§7.1) ---- */
+  /* 規則 5:斷言 normalizeSettingsTarget() 的實際回傳值,不是原始碼字串。
+     使用者在 TEST 模式中按「前往設定關閉」時必須直接抵達可關閉的控制頁,
+     落到已無該 anchor 的根頁 = 關不掉測試模式,是本次最不該失效的路徑。 */
+  assert.strictEqual(resolveSettingsTarget('ledgerTestModeSection').page,'test-mode',
+    'TEST banner deep link resolves to the test-mode control page');
+  assert.notStrictEqual(resolveSettingsTarget('ledgerTestModeSection').page,'root',
+    'TEST banner deep link never lands on the root page');
+  assert.strictEqual(resolveSettingsTarget('ledgerOptionSettingsSection').page,'options',
+    'legacy custom-option target remains mapped');
+  assert.strictEqual(resolveSettingsTarget('ledgerProxyTargetSettingsSection').page,'proxy',
+    'legacy proxy-target target remains mapped');
+  assert.strictEqual(resolveSettingsTarget('test-mode').page,'test-mode','test-mode is a first-class page id');
+  assert.strictEqual(resolveSettingsTarget('nonsense').page,'root','unknown targets still fall back to root');
+  assert.strictEqual(resolveSettingsTarget('root').page,'root','the root page id still resolves to itself');
+
+  /* 規則 2:完整說明文字必須存在於 renderSettingsTestModePage(),一字不刪 */
+  assert(settingsTestModePageSource.includes('只顯示測試紀錄'),'test-mode page keeps the parallel TEST universe explanation');
+  assert(settingsTestModePageSource.includes('關閉即回正式帳本'),'test-mode page keeps the return-to-real-ledger explanation');
+  assert(settingsTestModePageSource.includes('個人帳不受影響'),'test-mode page keeps the personal-ledger note');
+  assert(settingsTestModePageSource.includes('僅團體帳'),'test-mode page labels test mode as shared-ledger-only');
+  assert(settingsTestModePageSource.includes('setLedgerTestMode(this)'),'test-mode page owns the toggle');
+  assert(settingsTestModePageSource.includes('id="ledgerTestModeSection"'),'test-mode page carries the legacy anchor id');
+  assert(settingsDispatchSource.includes("page==='test-mode'")&&settingsDispatchSource.includes('renderSettingsTestModePage()'),
+    'the Settings dispatcher routes test-mode to its control page');
+
+  /* 規則 8:測試模式關閉時,診斷面板是唯一的啟用入口 */
+  assert(diagnosticsSource.includes('openTestModeSettings()'),'diagnostics can reach the test-mode control page');
+  assert(html.includes("function openTestModeSettings(){")&&html.includes("openSettings('test-mode')"),
+    'the diagnostics entry navigates through the Settings router');
+
+  /* 根頁不再常駐測試模式,也不得帶任何可直接切換的控制項(§2.2.5／§3.4) */
+  assert(!settingsRootSource.includes('setLedgerTestMode'),'the Settings root never carries a test-mode toggle');
+  const rootOrderedLabels=['>身分<','>主題<','>代購對象<','>帳務<','>自訂項目<','>資料與版本<'];
+  let previousRootLabel=-1;
+  rootOrderedLabels.forEach(function(label){
+    const at=settingsRootSource.indexOf(label);
+    assert(at>previousRootLabel,'Settings root keeps section order at '+label);
+    previousRootLabel=at;
   });
-  assert(settingsSource.includes('目前身分'),'Settings displays the current member identity');
-  assert(settingsSource.includes('>切換<')&&settingsSource.includes('>新增<'),'Settings keeps both identity actions on the compact card');
-  assert(!settingsSource.includes('>成員身分<'),'Settings uses the approved 身分 label');
-  assert(settingsSource.includes('settings-identity-row'),'Settings uses a compact same-row identity layout');
-  assert(settingsSource.includes('SETTINGS_LEGACY_TARGETS'),'legacy Settings deep links have an explicit compatibility map');
-  ['ledgerTestModeSection','ledgerOptionSettingsSection','ledgerProxyTargetSettingsSection'].forEach(function(id){
-    assert(settingsSource.includes(id),'legacy Settings target remains mapped: '+id);
-  });
-  assert(settingsSource.includes('scrollTopByPage'),'root and every subpage preserve independent scroll positions');
-  assert(settingsSource.includes('captureSettingsScroll'),'Settings captures scroll before rerender or navigation');
-  assert(settingsSource.includes('backToSettingsRoot'),'Settings subpages return to the root context');
-  assert(settingsSource.includes('ledgerTestModeSection'),'test mode has a stable Settings target');
-  assert(settingsSource.includes('僅團體帳'),'Settings labels test mode as shared-ledger-only');
-  assert(settingsSource.includes('只顯示測試紀錄')&&settingsSource.includes('關閉即回正式帳本'),'Settings explains the parallel TEST universe');
-  assert(settingsSource.includes('類別、支付方式與採買單位'),'Settings exposes custom ledger option management');
   assert(html.includes('addLedgerOptionFromSettings'),'Settings can add custom options');
   assert(html.includes('moveLedgerOptionFromSettings'),'Settings can reorder custom options');
   assert(html.includes('removeLedgerOptionFromSettings'),'Settings can remove default or custom options');
