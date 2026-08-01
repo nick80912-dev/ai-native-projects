@@ -7724,11 +7724,11 @@ function renderSettingsOptionsPage(){
   return renderSettingsHeader('自訂項目',false)+'<div class="settings-section" id="ledgerOptionSettingsSection"><h3>類別、支付方式與採買單位</h3><div class="settings-help">可新增、刪除或排序；刪除選項不影響既有紀錄。</div>'+renderLedgerOptionManager('category','類別')+renderLedgerOptionManager('payMethod','支付方式')+renderLedgerOptionManager('shoppingUnit','採買單位')+'</div>';
 }
 var APP_RELEASE_NOTES=[
+  {version:'v74',date:'2026-08-01',title:'設定頁更好找',items:['設定頁改為個人、記帳、資料三個群組,一頁看完','團體帳測試模式移到獨立控制頁,不再占用設定首頁']},
   {version:'v73',date:'2026-07-30',title:'更新機制修正',items:['修正改版後可能仍載入舊版檔案的問題','離線時缺少檔案不再讓「資料與版本」頁打不開','結清後的團體消費標示改為「已鎖帳」,明細頁補上原因說明']},
   {version:'v72',date:'2026-07-30',title:'主題、設定與旅途紀錄',items:['新增六組淺色主題與一致的導覽圖示','設定頁重新分區，並可記錄旅途異常與優化建議']},
   {version:'v71',date:'2026-07-30',title:'作廢確認更清楚',items:['整張收據作廢預覽後只保留一個確認動作']},
-  {version:'v70',date:'2026-07-30',title:'分攤選取更清楚',items:['分攤成員選取改為較明顯的青綠底色']},
-  {version:'v69',date:'2026-07-29',title:'結算後安全鎖帳',items:['還款確認後的收據改以更正或作廢保留完整歷史']}
+  {version:'v70',date:'2026-07-30',title:'分攤選取更清楚',items:['分攤成員選取改為較明顯的青綠底色']}
 ];
 function renderAppReleaseNotes(){
   return '<div class="settings-release-list">'+APP_RELEASE_NOTES.map(function(note){

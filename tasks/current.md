@@ -31,7 +31,9 @@
 
 - **批次一 P3 已交付(2026-07-30)**:複驗確認 backlog #3b 的需求早在 SW v72 的備份 v8 就已滿足,故**不升 v9**(無新欄位卻升版只會讓已發出的 v8 備份被 v8 裝置拒絕,憑空製造相容斷點)。真正的缺口是還原測試只覆蓋 v1／v2／v4／v8,且既有測試用簡化假 store 跑不到遷移邏輯 —— 已補上注入真實實作的 v1–v8 矩陣測試,並把相容策略寫成 `docs/personal-state-compatibility.md` 契約。**逐版本實測無安全還原斷點,無需犧牲任何版本。**
 
-- **v74 設定根頁改版:設計已核准,尚未實作**(2026-08-01)。規格見 `docs/superpowers/specs/2026-08-01-settings-grouped-list-design.md`。**發布順序已裁定:先完成並正式發布 v73,再開始 v74** —— 不接受正式站由 v18 一次跳到尚未實作與驗收的 v74。目前不得建立 v74 feature branch 或修改任何 runtime。
+- **Release back-merge 已完成(2026-08-01)**:`origin/main`(`17c423f`)以 `--no-ff` 回灌 `dev`,merge commit **`a930858`**,零內容差異。`git merge-base --is-ancestor origin/main origin/dev` 退出碼 0,`dev` 不再落後 `main`;遠端 `qa-sanity` success。
+
+- **v74 設定根頁改版:已實作於 `feat/settings-grouped-v74`,待審查**(2026-08-01)。規格見 `docs/superpowers/specs/2026-08-01-settings-grouped-list-design.md`,實作計畫見 `docs/superpowers/plans/2026-08-01-settings-grouped-list-v74.md`。Tier 2 四段說明已由 Bar 核准,前置條件(先發布 v73)已滿足。三個常駐群組、`test-mode` 控制頁、legacy deep link 改映射、診斷面板入口、條件式警告列全數交付;版本升至 **v74**。54／54 Node tests、Playwright 9／9、兩個 checker 通過,v73→v74 換代與離線重載已本機實測。**尚未合併 `dev`、未動 `main`、未部署、未建 `production-v74` tag,亦未經 Bar 真機驗收。** v74 delta 驗收清單見 `docs/batch2-device-acceptance.md` 末段。
 
 ## 🚦 Release Gate(發布前必過,與 backlog 分離)
 
@@ -59,6 +61,8 @@
 > 已解除：Apps Script `doGet` 部署已由 Bar 完成，真實端點驗證（CORS、redirect、`after`／`reset`／`serverTime`、非 JSON 降級）通過，見上方 SW v47 條目。
 
 ## 下一棒
-→ **v73 發布流程已全部結束(G1–G6 全綠,`production-v73` 已建立並推送)。** 下一棒為 **v74 設定根頁改版的實作計畫**:三個常駐群組(個人／記帳／資料)、測試模式移出根頁至 `test-mode` 子頁、legacy deep-link 改指向該頁。設計規格見 `docs/superpowers/specs/2026-08-01-settings-grouped-list-design.md`(§7 測試契約、§8 delta 驗收、§6.1 B2–C3 證據的因果條件)。**v74 為 Tier 2,動工前需先出四段說明並取得 Bar 核准。**
+→ **v74 實作已完成於 `feat/settings-grouped-v74`(3 個 commit,基於 `a930858`)。** 下一棒為 **審查該分支**,通過後才進入:push 分支 → 遠端 CI → PR `feat/settings-grouped-v74 → dev` → Bar 真機驗收(`docs/batch2-device-acceptance.md` 的 v74 delta 清單 V1–V6)→ 依 Release Flow 走 `dev → main`。
+> 分支上**不得**自行 merge `dev`、動 `main`、部署或建立 `production-v74` tag。
+> 有一項待 Bar 裁定的觀察:測試模式警告列沿用規格指定的 `var(--coral)`,四個主題下對比低於 AA 4.5(詳見 `07_CHANGELOG.md` 與驗收清單 V5 註記),未自行變更。
 
 > 採買清單 A／B／D／F 已於 SW v60／v61 交付；C／E／G 已於 SW v68 實作，並於 2026-07-29 完成 Bar 真機驗收；正式契約見設計文件。

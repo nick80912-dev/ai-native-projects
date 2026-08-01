@@ -4,7 +4,7 @@
 
 ## 目前階段
 
-**2026-08-01:SW v73 已正式發布**(正式站 v18 → v73,merge commit `17c423f`,tag `production-v73`)。下一批為 v74 設定根頁改版,設計已核准尚未實作。
+**2026-08-01:SW v73 已正式發布**(正式站 v18 → v73,merge commit `17c423f`,tag `production-v73`)。發布後已將 `main` 回灌 `dev`(merge commit `a930858`,零內容差異)。**v74 設定根頁改版已實作於 `feat/settings-grouped-v74`,待審查與 Bar 真機驗收,尚未合併或部署。**
 
 六天行程大方向資料已補完,進入「手機驗收 + 微調」階段。日常開發於 `dev` 完成,Bar 核准 PR Merge(`dev → main`)後觸發 Netlify 正式部署。
 
@@ -12,6 +12,7 @@
 - 六天行程大方向資料補完(剩內容微調,修訂走 Google Sheets 即時生效)。
 - 首頁下一站模式、完成/跳過/復原、首頁天氣摘要。
 - SW 更新完整性修正(SW v73):新版 SW 不再從 HTTP cache 裝入舊版 SHELL;離線未命中的子資源不再 fallback 成 index.html;版本一致性由 tools/check-app-version.js 守住。
+- 設定根頁三群組改版與測試模式控制頁(SW v74,`feat/settings-grouped-v74`):根頁由 7 張卡片收斂為個人／記帳／資料三個常駐群組;團體帳測試模式移到專屬 `test-mode` 頁,關閉時根頁完全不渲染、legacy deep link 改指向該頁。SW 的 install／fetch／fallback／SHELL 與 netlify.toml 全未動。**待審查與真機驗收。**
 - 結算一致性批本機開發：還款確認後歷史不可改寫、收據級更正／作廢、二次差額預覽與版本歷史（SW v69；待 Bar 真機驗收與推送）。
 - 購物頁多地點切換(全部/想逛/各購物地點、區域/樓層)。
 - Restaurants R001/R006 欄位補齊(已由發布 CSV 確認)。

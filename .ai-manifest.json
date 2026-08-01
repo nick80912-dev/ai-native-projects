@@ -113,10 +113,11 @@
       "SW v72開發完成(六組主題/設定頁2.0/inline SVG/個人備份v8/旅途紀錄/app-version單一來源/使用者版更新日誌；Bar真機驗收待辦)",
       "SW更新完整性修正(sw.js自帶SW_VERSION/移除importScripts版本依賴/install用reload、fetch用no-cache避免HTTP cache汙染SHELL/子資源不再fallback成index.html/APP_VERSION安全取值/tools一致性檢查/qa.yml sanity支援dev push；SW v73)",
       "批次一發布阻斷項全數交付(任務板歸位/ADR 0008 六主題追認/production-v18 回滾錨點/SW 更新完整性修正 v73/備份 v1-v8 還原矩陣與相容契約/已鎖帳文案/測試模式與時間模擬暴露面調查與備份防呆)",
-      "SW v73 正式發布(2026-08-01;v18→v73,merge commit 17c423f,tag production-v73;G1 真機驗收全數通過;未建 production-v72 因 v72 未曾正式發布)"
+      "SW v73 正式發布(2026-08-01;v18→v73,merge commit 17c423f,tag production-v73;G1 真機驗收全數通過;未建 production-v72 因 v72 未曾正式發布)",
+      "Release back-merge main→dev(2026-08-01;merge commit a930858,零內容差異;origin/main 已是 origin/dev 的 ancestor)"
     ],
     "pending_in_order": [
-      "v74 設定根頁改版(三群組/測試模式移出根頁至 test-mode 子頁);設計規格已核准尚未實作,Tier 2 動工前需四段說明",
+      "v74 設定根頁改版:已實作於 feat/settings-grouped-v74(三群組/test-mode 控制頁/legacy deep link 改映射/SW v74);Tier 2 四段說明已核准;54/54 Node + Playwright 9/9 通過;**待審查與 Bar 真機驗收,未合併未部署**",
       "框架抽取(FUTURE_PLAN)"
     ]
   },

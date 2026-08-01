@@ -11,6 +11,11 @@
    ============================================================ */
 const { test, expect } = require('@playwright/test');
 const { createVersionedServer } = require('./support/versioned-server');
+/* 目前版本一律取自單一來源(見 tests/support/version.js);versioned-server 會把
+   SW_VERSION／APP_VERSION 改寫成 '<目前版本>-QAGEN<N>'。之前這裡寫死 'v73',
+   升版時整個檔會紅 —— 那正是 version.js 當初要消滅的「記得改 N 個地方」。 */
+const { appVersion } = require('../support/version');
+const VERSION = appVersion();
 
 /* 每個 test 自己起一台伺服器,並用 port 0 讓 OS 配發:
    - 固定埠會在前一次執行留下 socket 時偶發衝突(實際遇過一次全套執行才失敗、單獨執行通過)
@@ -74,7 +79,7 @@ test('SW 更新後新快取實際裝入新版資源,且 index／版本檔／sche
   /* 第 1 步:舊版資源先進入 HTTP cache(max-age=600),並確認 gen1 已落在 CacheStorage */
   const first = await activeCacheReport(page);
   const firstKey = Object.keys(first)[0];
-  expect(firstKey).toBe('okayama-trip-v73-QAGEN1');
+  expect(firstKey).toBe('okayama-trip-'+VERSION+'-QAGEN1');
   for (const [pathname, marker] of Object.entries(first[firstKey])) {
     expect(marker, pathname + ' 應為 gen1').toBe('QAGEN1');
   }
@@ -89,12 +94,12 @@ test('SW 更新後新快取實際裝入新版資源,且 index／版本檔／sche
   });
   /* activate 會刪掉舊快取,但刪除是非同步的;輪詢到只剩新快取為止 */
   await expect.poll(async () => page.evaluate(() => caches.keys()), { timeout: 20000 })
-    .toEqual(['okayama-trip-v73-QAGEN2']);
+    .toEqual(['okayama-trip-'+VERSION+'-QAGEN2']);
 
   /* 新 CacheStorage 必須裝新版,而不是 HTTP cache 裡的舊版 —— 這是本檔的核心斷言 */
   const second = await activeCacheReport(page);
-  expect(Object.keys(second)).toEqual(['okayama-trip-v73-QAGEN2']);
-  const entries = second['okayama-trip-v73-QAGEN2'];
+  expect(Object.keys(second)).toEqual(['okayama-trip-'+VERSION+'-QAGEN2']);
+  const entries = second['okayama-trip-'+VERSION+'-QAGEN2'];
   expect(Object.keys(entries).length).toBeGreaterThan(0);
   for (const [pathname, marker] of Object.entries(entries)) {
     expect(marker, pathname + ' 必須是新版;拿到 QAGEN1 即代表 install 吃到 HTTP cache').toBe('QAGEN2');
@@ -114,7 +119,7 @@ test('SW 更新後新快取實際裝入新版資源,且 index／版本檔／sche
       schemaGen: found ? found[0] : null,
     };
   });
-  expect(runtime.appVersion).toBe('v73-QAGEN2');
+  expect(runtime.appVersion).toBe(VERSION+'-QAGEN2');
   expect(runtime.indexGen).toBe('QAGEN2');
   expect(runtime.schemaGen).toBe('QAGEN2');
   /* 三者同世代 = 沒有混版本 */
@@ -146,7 +151,7 @@ test('關閉伺服器後仍可完整離線載入,且未快取的子資源不得�
       hasApp: !!document.getElementById('tripTabs'),
     };
   });
-  expect(offline.appVersion).toBe('v73-QAGEN2');
+  expect(offline.appVersion).toBe(VERSION+'-QAGEN2');
   expect(offline.indexGen).toBe('QAGEN2');
   expect(offline.schemaGen).toBe('QAGEN2');
   expect(offline.hasApp).toBe(true);

@@ -171,7 +171,9 @@ function extractThemeIds(html){
      最新一筆必須是目前版本(推導);其餘為歷史 release note,依裁定保留原字面。 */
   assert.strictEqual(notes.length,5,'Settings exposes exactly five user-facing releases');
   assert.strictEqual(notes[0].version,appVersion(),'the newest release note is the current version');
-  assert.deepStrictEqual(Array.from(notes.slice(1),function(note){return note.version;}),['v72','v71','v70','v69']);
+  /* 滾動的五筆視窗:最新一筆是目前版本,其餘四筆是緊接在後的歷史版本。
+     歷史版本刻意寫死字面值(見 tests/support/version.js 的適用範圍說明)。 */
+  assert.deepStrictEqual(Array.from(notes.slice(1),function(note){return note.version;}),['v73','v72','v71','v70']);
   notes.forEach(note=>{
     assert(note.title&&note.title.length<=24,'release title is short and present');
     assert(Array.isArray(note.items)&&note.items.length>=1,'release has user-readable items');

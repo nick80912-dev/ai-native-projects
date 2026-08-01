@@ -1,4 +1,20 @@
 # 07 版本紀錄
+## 2026-08-01｜設定根頁群組列表與測試模式控制頁（`feat/settings-grouped-v74`，SW v74，**未合併、未部署**）
+
+- **前置:release back-merge 已完成。** `origin/main`(`17c423f`,v73 發布 merge)以 `--no-ff` 回灌 `dev`,merge commit `a930858`。**零內容差異**(`git diff f393256 a930858` 為空),53／53 Node tests、兩個 checker 與遠端 `qa-sanity` 皆通過;`git merge-base --is-ancestor origin/main origin/dev` 退出碼 0,`dev` 不再落後 `main`。v74 分支自 `a930858` 建立。
+- **交付範圍(依 2026-08-01 核准的 Tier 2 四段說明與設計規格 §5)**:設定根頁由 7 張 `.settings-section` 卡片改為**三個常駐群組**(個人／記帳／資料);新增 `renderSettingsTestModePage()` 與 `test-mode` 子頁,團體帳測試模式移出根頁;legacy deep link `ledgerTestModeSection` 由 `{page:'root'}` 改為 `{page:'test-mode'}`;診斷面板新增進入控制頁的入口;版本由 v73 升至 **v74**。
+- **測試模式的入口而非語意改變**:`[TEST]` 前綴、帳本軌道隔離、Apps Script 寫入、`ledgerUniverseMode()` 全部未動。根頁**永遠不放**可直接切換的 checkbox;關閉時該列**完全不渲染**(不是 CSS 隱藏),開啟時才出現在記帳群組底部。三個進入點(診斷面板／根頁警告列／分帳 TEST banner)實測皆有效。
+- **保護項逐項核對(規格 §6.1 因果條件)**:`sw.js` 的 diff 只有 `SW_VERSION` 一行(install／fetch／fallback／SHELL 全未動)、`index.html` 載入 `app-version.js` 的方式未動、`netlify.toml` 完全未動。因此 2026-07-31 的 B2–C3 真機證據**仍可沿用**,不需重跑 v18→v73 升級矩陣。
+- **實作期間 Browser QA 抓到一個真實缺陷並已修**:`.settings-row` 的 `border:0` 與群組分隔線規則 `.settings-group-card>*+*` 特異性相同,分隔線寫在前面會被整個蓋掉(實測 `border-top-width: 0px`,六主題全中)。修法是把分隔線規則移到 `.settings-row` 之後,並在 `theme-system.test.js` 鎖住這個來源順序。
+- **測試契約改為語意契約(規格 §7.1)**:新增 `tests/support/source.js`,依**名稱**擷取 `index.html` 的函式與宣告,取代 `html.slice(indexOf('function openSettings('), indexOf('function mergedLedgerRecords()'))` 這類位置相依 slice —— 舊寫法會讓新增的 render function 落在區間外而靜默通過,也會誘導實作者為配合測試而安排函式位置。TEST banner 的 deep link 改以 `normalizeSettingsTarget()` 的**實際回傳值**斷言。
+- **新增 `tests/settings-grouped-root.test.js`**(執行 `renderSettingsRoot()` 並斷言渲染結果:三群組順序與歸屬、摘要格式、`未設定`／`SW 未知` 降級、測試模式關閉時完全不渲染／開啟時才出現警告列)與 **`tests/browser/settings-grouped-root.spec.js`**(三寬度溢位、測試模式關→開→關完整循環、六主題對比與分隔線、跨頁捲動保存)。
+- **同時修掉兩處硬編碼版本**:`tests/browser/sw-update-cache.spec.js` 寫死 `v73`(升版即全紅)改為取自 `tests/support/version.js`;`theme-system.test.js` 的 release-note 尾段更新為滾動五筆視窗 `['v73','v72','v71','v70']`。`APP_RELEASE_NOTES` 補上 v74 使用者版說明,並依五筆上限移除 v69。
+- **自動驗證**:完整 **54／54** Node test files、Playwright **9／9**、`tools/check-doc-titles.js`、`tools/check-app-version.js`(回報 v74)、`git diff --check` 全部通過。
+- **v73 → v74 換代實測(規格 §6.2)**:以 `a930858`(v73)完整檔案樹起站註冊 SW,再就地換上 v74 檔案。結果:CacheStorage 由 `okayama-trip-v73`(10 筆)換為**只剩** `okayama-trip-v74`;快取中的 `index.html` 含 `.settings-group-card` 與 `renderSettingsTestModePage`、`app-version.js` 字面為 `v74`(無混版本);關閉伺服器後重載仍完整啟動,`APP_VERSION='v74'`、資料與版本頁顯示 `SW v74`、console error 0。
+- **Browser QA 量測**:320／375／390px 下 document／panel／各列水平溢位皆 0;最小列高 52px;身分列在 320px 長名情境維持單列(58px)、名稱 ellipsis 截斷、按鈕 47×38 與 38×38;根頁在 390×844 下 `scrollHeight === clientHeight`(一個畫面看完);console error／warning 0。六主題對比:群組標題 8.00–14.72、列標題 13.31–15.51、摘要 5.43–7.77、圖示 8.73–15.51。
+- **一項留待 Bar 裁定的觀察(未自行變更)**:警告列標題沿用規格指定的既有 `var(--coral)` 語意色,實測對比 ocean 3.54／ivory 3.68／mist 3.65／cedar 3.80／wisteria 4.97／tea 4.86,四個主題低於 AA 的 4.5。此為 App 既有 `--coral` 的水準而非本次新引入,且該列另有 ⚠ 符號與對比 5.43–7.77 的次要文字,訊息不單靠顏色。要提高需動主題 token,已超出本次規格範圍。
+- **交付邊界**:目前僅在 `feat/settings-grouped-v74` 上 commit 與測試。**未合併 `dev`、未動 `main`、未部署、未建立 `production-v74` tag**,亦未進行 Bar 真機驗收。v74 delta 驗收清單見 `docs/batch2-device-acceptance.md` 末段(新增區塊,未覆蓋任何 v73 證據)。
+
 ## 2026-08-01｜🚀 SW v73 正式發布（main，v18 → v73）
 - **正式站已由 SW v18 升級至 SW v73。** merge commit **`17c423f8ac59328f926973024cb407d5e638f838`**（PR #11，`dev → main`，merge method 為 merge commit，parents `9eefcb0` + `9ec2c21`，非 squash／rebase）。Netlify 正式部署 `6a6d6be3e3dabf00078f284b`，`commit_ref` 與 merge commit 一致，`published_at` 為 `2026-08-01T03:45:48.841Z`。
 - **回滾錨點 tag `production-v73`** 已建立並推送：tag 物件 `64e8d0b`（annotated），peeled `17c423f8...`。**未建立 `production-v72`** —— v72 從未正式發布，v72 與 v73 合併為同一候選版，只做一次 SW 換代。前一版錨點 `production-v18` → `9eefcb0` 保留。
