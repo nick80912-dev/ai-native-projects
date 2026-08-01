@@ -602,6 +602,7 @@ const commitSandbox={
   },
   shoppingPhotoIdsReleased(){return [];},
   cleanupShoppingPhotoIds(){return Promise.resolve([]);},
+  refreshShoppingPhotoAudit(){return Promise.resolve();},
   shoppingSaveAnotherForm:mod.shoppingSaveAnotherForm,
   createShoppingFormSession:mod.createShoppingFormSession,
   renderToday(){},
@@ -784,6 +785,12 @@ assert(ui.includes('--font-ui:"Noto Sans TC","PingFang TC","Microsoft JhengHei",
   '全站字體變數優先使用 Noto Sans TC 並保留繁中系統 fallback');
 assert(ui.includes("{version:'v76',date:'2026-08-01',title:'採買多選更快速'"),
   'v76 release notes lead with the approved Shopping select-all improvement');
+assert(ui.includes('var shoppingPhotoAuditState='),'the App owns one attachment audit state');
+assert(ui.includes('function refreshShoppingPhotoAudit('),'the App exposes one audit refresh entry');
+assert(ui.includes('TripShoppingPhotos.auditAttachments('),'the UI delegates integrity rules to the photo module');
+assert(ui.includes("refreshShoppingPhotoAudit({cleanupExpired:true,reason:'startup'})"),'startup schedules one maintenance audit');
+assert(!/cleanupShoppingPhotoIds\(shoppingPhotoIdsReleased\(before,shoppingListStore\.all\(\)\)\)/.test(ui),'saved reference changes wait for orphan maintenance');
+assert(!/cleanupShoppingPhotoIds\(shoppingPhotoIdsReleased\(before,after\)\)/.test(ui),'deleted item photos wait for orphan maintenance');
 assert(ui.includes('font-family:var(--font-ui)'),'body 使用全站字體變數');
 assert(!ui.includes('font-family:"Hiragino Sans","Noto Sans TC","PingFang TC"'),
   '不得再由日文字型逐字 fallback 造成粗細不一致');

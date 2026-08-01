@@ -2952,7 +2952,14 @@ function renderToday(){
 var shoppingUiState={tab:'pending',form:null,formSession:null,split:null,selectionMode:false,selected:{}};
 var shoppingPhotoStore=typeof TripShoppingPhotos!=='undefined'&&TripShoppingPhotos&&typeof TripShoppingPhotos.createStore==='function'
   ?TripShoppingPhotos.createStore()
-  :{put:function(){return Promise.reject(new Error('此裝置無法保存照片附件'));},get:function(){return Promise.resolve(null);},remove:function(){return Promise.resolve();}};
+  :{put:function(){return Promise.reject(new Error('此裝置無法保存照片附件'));},get:function(){return Promise.resolve(null);},remove:function(){return Promise.resolve();},listMetadata:function(){return Promise.reject(new Error('此裝置目前無法使用照片附件'));}};
+var shoppingPhotoAuditState={
+  ready:false,unavailable:false,error:'',checkedAt:0,maintenanceComplete:false,
+  validPhotoIds:[],invalidReferences:[],orphanPhotos:[],eligibleOrphanIds:[],
+  storedPhotoCount:0,storedBytes:0,
+  capacity:{available:false,usageBytes:0,quotaBytes:0,remainingBytes:0,remainingRatio:0,low:false}
+};
+var shoppingPhotoAuditPromise=null;
 function shoppingItineraryStops(){
   var result=[];
   ((DB.trip&&DB.trip.days)||[]).forEach(function(day,dayIndex){
@@ -3120,7 +3127,7 @@ function commitShoppingFormPayload(form,payload,saveAnother){
   try{
     var before=shoppingListStore.all();
     var saved=form.id?shoppingListStore.update(form.id,payload):shoppingListStore.add(payload);
-    cleanupShoppingPhotoIds(shoppingPhotoIdsReleased(before,shoppingListStore.all()));
+    refreshShoppingPhotoAudit({force:true,reason:'shopping-mutation'});
     session.temporaryPhotoIds=[];
     if(!form.id&&saveAnother===true){
       shoppingUiState.form=shoppingSaveAnotherForm(form);
@@ -3172,7 +3179,7 @@ function deleteShoppingItem(id){
   if(!item)return;
   var note=shoppingDeleteWarning([item],shoppingLedgerContext());
   if(!confirm('刪除「'+item.name+'」？'+note+'\n此操作無法復原。'))return;
-  var after=shoppingListStore.remove(id);cleanupShoppingPhotoIds(shoppingPhotoIdsReleased(before,after));delete shoppingUiState.selected[id];renderToday();renderShoppingListOverlay();toast('採買項目已刪除');
+  shoppingListStore.remove(id);refreshShoppingPhotoAudit({force:true,reason:'shopping-mutation'});delete shoppingUiState.selected[id];renderToday();renderShoppingListOverlay();toast('採買項目已刪除');
 }
 /* 數量與單位。HTML 的 min／step 只是輸入輔助,真正的把關在 saveShoppingForm() 的
    normalizeShoppingItem() —— 手機瀏覽器可以送出 -1、1.5、1e6 或空字串。 */
@@ -3379,6 +3386,7 @@ function openShoppingItemDetail(id){
   if(!item){toast('採買項目已不存在');return;}
   closeShoppingItemDetail();
   var overlay=document.createElement('div');overlay.id='shoppingItemDetail';overlay.className='ledger-sheet-overlay shopping-detail-overlay';
+  overlay.dataset.itemId=String(id);
   overlay.innerHTML='<section class="ledger-sheet ledger-detail-sheet" role="dialog" aria-modal="true" aria-labelledby="shoppingItemDetailTitle"><div class="ledger-sheet-head"><h2 id="shoppingItemDetailTitle">'+escapeHtml(item.name)+'</h2><button class="settings-close" aria-label="關閉" onclick="closeShoppingItemDetail()">×</button></div>'+renderShoppingItemDetail(item)+'</section>';
   document.body.appendChild(overlay);
 }
@@ -3735,7 +3743,7 @@ function deleteSelectedShoppingItems(){
   /* linked 與 unverified 依 allocation 分開計數，避免多人卡片被低估成一項。 */
   var note=shoppingDeleteWarning(selected,shoppingLedgerContext());
   if(!confirm('確定刪除選取的 '+selected.length+' 項採買項目？'+note+'\n此操作無法復原。'))return;
-  try{shoppingListStore.removeMany(selected.map(function(item){return item.id;}));cleanupShoppingPhotoIds(shoppingPhotoIdsReleased(before,shoppingListStore.all()));}
+  try{shoppingListStore.removeMany(selected.map(function(item){return item.id;}));refreshShoppingPhotoAudit({force:true,reason:'shopping-mutation'});}
   catch(error){toast(error.message||'刪除失敗');return;}
   shoppingUiState.selectionMode=false;shoppingUiState.selected={};renderToday();renderShoppingListOverlay();
   toast('已刪除 '+selected.length+' 項');
@@ -4914,6 +4922,52 @@ function cleanupShoppingPhotoIds(ids){
   return Promise.all((ids||[]).map(function(id){
     return shoppingPhotoStore.remove(id).catch(function(error){AppLog.repo('採買照片清理失敗：'+(error&&error.message||error));});
   }));
+}
+function shoppingPhotoStatus(item){
+  var id=String(item&&item.photoId||'').trim();
+  if(!id)return 'none';
+  if(!shoppingPhotoAuditState.ready)return 'checking';
+  return shoppingPhotoAuditState.invalidReferences.some(function(ref){return ref.itemId===item.id&&ref.photoId===id;})?'invalid':'valid';
+}
+function estimateShoppingPhotoCapacity(){
+  var storage=typeof navigator!=='undefined'&&navigator.storage;
+  if(!storage||typeof storage.estimate!=='function')return Promise.resolve(TripShoppingPhotos.classifyCapacity());
+  return storage.estimate().then(TripShoppingPhotos.classifyCapacity,function(){return TripShoppingPhotos.classifyCapacity();});
+}
+function cleanupShoppingPhotoOrphans(ids){
+  return (ids||[]).reduce(function(chain,id){
+    return chain.then(function(results){
+      return shoppingPhotoStore.remove(id).then(function(){results.push({id:id,removed:true});return results;},function(error){
+        AppLog.repo('採買照片清理失敗：'+(error&&error.message||error));results.push({id:id,removed:false});return results;
+      });
+    });
+  },Promise.resolve([]));
+}
+function renderShoppingPhotoAuditConsumers(){
+  if(document.getElementById('shoppingListOverlay'))renderShoppingListOverlay();
+  var detail=document.getElementById('shoppingItemDetail');
+  if(detail&&detail.dataset.itemId)openShoppingItemDetail(detail.dataset.itemId);
+  if(document.getElementById('settingsOverlay')&&typeof rerenderOpenSettingsPage==='function')rerenderOpenSettingsPage();
+}
+function refreshShoppingPhotoAudit(options){
+  options=options||{};
+  if(shoppingPhotoAuditPromise&&!options.force)return shoppingPhotoAuditPromise;
+  shoppingPhotoAuditPromise=Promise.all([shoppingPhotoStore.listMetadata(),estimateShoppingPhotoCapacity()]).then(function(values){
+    var audit=TripShoppingPhotos.auditAttachments(shoppingListStore.all(),values[0],Date.now());
+    shoppingPhotoAuditState=Object.assign({ready:true,unavailable:false,error:'',checkedAt:Date.now(),maintenanceComplete:false},audit,{capacity:values[1]});
+    if(!options.cleanupExpired||!audit.eligibleOrphanIds.length){shoppingPhotoAuditState.maintenanceComplete=true;return shoppingPhotoAuditState;}
+    return cleanupShoppingPhotoOrphans(audit.eligibleOrphanIds).then(function(){
+      return shoppingPhotoStore.listMetadata().then(function(records){
+        var refreshed=TripShoppingPhotos.auditAttachments(shoppingListStore.all(),records,Date.now());
+        shoppingPhotoAuditState=Object.assign({},shoppingPhotoAuditState,refreshed,{maintenanceComplete:true,checkedAt:Date.now()});
+        return shoppingPhotoAuditState;
+      });
+    });
+  }).catch(function(error){
+    shoppingPhotoAuditState=Object.assign({},shoppingPhotoAuditState,{ready:true,unavailable:true,error:String(error&&error.message||error),checkedAt:Date.now(),maintenanceComplete:true});
+    return shoppingPhotoAuditState;
+  }).then(function(state){shoppingPhotoAuditPromise=null;renderShoppingPhotoAuditConsumers();return state;});
+  return shoppingPhotoAuditPromise;
 }
 function createShoppingListStore(options){
   var opts=options||{},storage=opts.storage,key=opts.key||SHOPPING_LIST_KEY,now=opts.now||Date.now,idFactory=opts.idFactory||function(){return 'shopping-'+Date.now()+'-'+Math.random().toString(36).slice(2,8);};
@@ -9701,6 +9755,7 @@ function init(){
     var ti=findToday(); if(ti!==null) curDay=ti;
     setSyncState(SRC.itin||'builtin');
     renderAll();
+    refreshShoppingPhotoAudit({cleanupExpired:true,reason:'startup'});
     if(!memberIsAllowed(getCurrentMember())) openMemberSelector(true);
     autoRetryLedgerQueue('startup');
     updateSettlementBadge();

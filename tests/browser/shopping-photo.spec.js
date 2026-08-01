@@ -51,6 +51,31 @@ async function indexedDbPhotoIds(page){
   }));
 }
 
+async function putIndexedDbPhotoRecords(page,records){
+  const bytes=Array.from(PNG);
+  await page.evaluate(({records,bytes})=>new Promise((resolve,reject)=>{
+    const request=indexedDB.open('trip-local-media',1);
+    request.onerror=()=>reject(request.error);
+    request.onupgradeneeded=()=>{
+      const db=request.result;
+      if(!db.objectStoreNames.contains('shopping-photos'))db.createObjectStore('shopping-photos',{keyPath:'id'});
+    };
+    request.onsuccess=()=>{
+      const db=request.result;
+      const tx=db.transaction('shopping-photos','readwrite');
+      const store=tx.objectStore('shopping-photos');
+      records.forEach(record=>store.put({
+        id:record.id,
+        blob:new Blob([new Uint8Array(bytes)],{type:'image/png'}),
+        createdAt:record.createdAt
+      }));
+      tx.oncomplete=()=>{db.close();resolve();};
+      tx.onerror=()=>reject(tx.error);
+      tx.onabort=()=>reject(tx.error);
+    };
+  }),{records,bytes});
+}
+
 async function openStoredPhotoViewer(page){
   await installPersistentOfflineMode(page);
   await openPhotoQaApp(page);
@@ -104,6 +129,28 @@ test('照片檢視器向下滑動可關閉',async({page})=>{
     element.dispatchEvent(new TouchEvent('touchend',{touches:[],changedTouches:[end],bubbles:true,cancelable:true}));
   });
   await expect(viewer).toHaveCount(0);
+});
+
+test('啟動稽核只清理滿 24 小時的孤立照片並保護有效附件',async({page})=>{
+  await page.addInitScript(()=>{Date.now=()=>Date.parse('2026-08-01T00:00:00.000Z');});
+  await installPersistentOfflineMode(page);
+  await openPhotoQaApp(page);
+  await waitForSyncToSettle(page);
+  await putIndexedDbPhotoRecords(page,[
+    {id:'referenced-old',createdAt:'2026-07-01T00:00:00.000Z'},
+    {id:'orphan-old',createdAt:'2026-07-30T00:00:00.000Z'},
+    {id:'orphan-exact',createdAt:'2026-07-31T00:00:00.000Z'},
+    {id:'orphan-young',createdAt:'2026-07-31T00:00:00.001Z'},
+    {id:'orphan-unknown',createdAt:'invalid'}
+  ]);
+  await page.evaluate(()=>localStorage.setItem('trip_shopping_list',JSON.stringify([{
+    id:'referenced-item',name:'有效附件',category:'必買',unit:'盒',legacyQtyText:'',
+    allocations:[{allocationId:'referenced-item-allocation-1',target:'',quantity:1,ledgerLinks:[]}],
+    stopRef:'',done:false,createdAt:'2026-07-31T00:00:00.000Z',completedAt:'',splitGroupId:'',photoId:'referenced-old'
+  }])));
+  await page.reload({waitUntil:'domcontentloaded'});
+  await page.waitForFunction(()=>typeof shoppingPhotoAuditState==='object'&&shoppingPhotoAuditState.maintenanceComplete===true,null,{timeout:3000});
+  expect((await indexedDbPhotoIds(page)).sort()).toEqual(['orphan-unknown','orphan-young','referenced-old']);
 });
 
 test('採買單張照片只存本機,卡片只顯示迴紋針並可在詳情全畫面查看',async({page})=>{
@@ -171,7 +218,8 @@ test('採買單張照片只存本機,卡片只顯示迴紋針並可在詳情全�
   await page.getByRole('button',{name:'移除照片'}).click();
   await page.locator('#shoppingFormSheet button[type=submit]').click();
   await expect(page.locator('[data-shopping-item-id="photo-item"] .shopping-photo-indicator')).toHaveCount(0);
-  await expect.poll(()=>indexedDbPhotoIds(page)).toEqual([]);
+  await expect.poll(()=>indexedDbPhotoIds(page)).toEqual([storedId]);
+  await expect.poll(()=>page.evaluate(()=>shoppingPhotoAuditState.orphanPhotos.map(photo=>photo.id))).toEqual([storedId]);
 
   expect(pageErrors).toEqual([]);
   expect(consoleErrors).toEqual([]);
