@@ -557,6 +557,7 @@ const commitSandbox={
     formSession:plain(mod.createShoppingFormSession('add',null,'list',640))
   },
   shoppingListStore:{
+    all(){return [];},
     add(payload){
       commitAdds++;
       if(commitAdds===1){
@@ -569,6 +570,8 @@ const commitSandbox={
   setShoppingFormSavePending(pending){
     commitSandbox.shoppingUiState.formSession.savePending=!!pending;
   },
+  shoppingPhotoIdsReleased(){return [];},
+  cleanupShoppingPhotoIds(){return Promise.resolve([]);},
   shoppingSaveAnotherForm:mod.shoppingSaveAnotherForm,
   createShoppingFormSession:mod.createShoppingFormSession,
   renderToday(){},
@@ -665,6 +668,8 @@ assert.deepStrictEqual(
     returnScrollTop:840,
     originalCategory:'伴手禮',
     originalStopRef:'stop-a',
+    originalPhotoId:'',
+    temporaryPhotoIds:[],
     savePending:false
   },
   '編輯 Sheet session 保存返回位置與原分類／站點'
@@ -678,6 +683,8 @@ assert.deepStrictEqual(
     returnScrollTop:0,
     originalCategory:'',
     originalStopRef:'',
+    originalPhotoId:'',
+    temporaryPhotoIds:[],
     savePending:false
   },
   '新增 Sheet session 使用安全的清單返回預設值'
