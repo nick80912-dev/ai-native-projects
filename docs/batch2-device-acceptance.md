@@ -511,4 +511,20 @@ v74 的實際 diff 已逐項核對:
 | X3-c | console error 0、pageerror 0 | Playwright | ☐ |
 | W3-e | `schema.js`、`netlify.toml`、Apps Script 與 Sheet schema 未動 | ✅ Git diff 核對 | ☐ |
 
+# v77 delta 驗收清單（照片附件完整性與容量管理）
+
+> 適用 runtime：SW／App **v77**。照片仍只保存在選圖的裝置，不進備份、同步或 Google Sheet。
+
+| ID | 驗收項目 | 自動驗證 | Bar 真機 |
+|---|---|---|---|
+| Y1-a | 實體 Blob 遺失後只顯示警示迴紋針與驚嘆號，沒有狀態文字 | Playwright | ☐ |
+| Y1-b | 重新選擇照片與移除無效引用皆成功；失敗時保留原引用 | Playwright／Node | ☐ |
+| Y1-c | 背景只清理滿一天的孤立照片，不刪有效附件 | Playwright／Node | ☐ |
+| Y1-d | 手動清理顯示張數與容量，確認後才刪除 | Playwright | ☐ |
+| Y1-e | 設定頁顯示附件張數、容量、估算配額及檢查時間 | Playwright | ☐ |
+| Y2-a | 六主題主要／次要文字與警示迴紋針對比皆 ≥ 4.5:1 | Playwright | ☐ |
+| Y2-b | 320×700、375×812、390×844 水平 overflow = 0，點擊高度 ≥ 52px | Playwright | ☐ |
+| Y3-a | v76→v77 後只剩 `okayama-trip-v77`，離線重新啟動正常 | Playwright | ☐ |
+| Y3-b | console error = 0，pageerror = 0 | Playwright | ☐ |
+
 本機自動驗證:Node test files **56／56**、Playwright **13／13**、文件標題檢查、版本一致性檢查與 `git diff --check` 全部通過。真機欄保持未勾選,等待 Bar 驗收。

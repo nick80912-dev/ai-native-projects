@@ -8077,7 +8077,7 @@ function shoppingPhotoStorageSummary(){
   return state.storedPhotoCount+' 張 · '+formatShoppingPhotoBytes(state.storedBytes);
 }
 function shoppingPhotoCheckedAtLabel(value){
-  var date=new Date(Number(value)||0);
+  var date=timestampDate(Number(value)||0);
   if(!value||!isFinite(date.getTime()))return '尚未檢查';
   return date.toLocaleString('zh-TW',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'});
 }
@@ -8098,7 +8098,7 @@ function renderSettingsStoragePage(){
   }).join('');
   return renderSettingsHeader('附件與儲存空間',false)+
     '<div class="shopping-photo-storage-grid">'+
-      '<section class="shopping-photo-storage-card"><div class="shopping-photo-storage-primary">App 附件</div><div class="shopping-photo-storage-value">'+state.storedPhotoCount+' 張 · '+formatShoppingPhotoBytes(state.storedBytes)+'</div><div class="shopping-photo-storage-secondary">其中 '+orphans.length+' 張未被採買清單使用；背景清理會保留 24 小時緩衝。</div></section>'+
+      '<section class="shopping-photo-storage-card"><div class="shopping-photo-storage-primary">App 附件</div><div class="shopping-photo-storage-value">'+state.storedPhotoCount+' 張 · '+formatShoppingPhotoBytes(state.storedBytes)+'</div><div class="shopping-photo-storage-secondary">其中 '+orphans.length+' 張未被採買清單使用；背景清理會保留一天緩衝。</div></section>'+
       '<section class="shopping-photo-storage-card"><div class="shopping-photo-storage-primary">App 儲存空間（估計）</div><div class="shopping-photo-storage-value">'+escapeHtml(capacityValue)+'</div><div class="shopping-photo-storage-secondary">'+escapeHtml(capacityDetail)+'</div>'+(capacity.low?'<div class="shopping-photo-storage-warning">儲存空間偏低，新增照片可能失敗。</div>':'')+'</section>'+
       '<section class="shopping-photo-storage-card"><div class="shopping-photo-storage-primary">附件檢查</div><div class="shopping-photo-storage-secondary">最近檢查：'+escapeHtml(shoppingPhotoCheckedAtLabel(state.checkedAt))+'</div>'+(state.unavailable?'<div class="shopping-photo-storage-warning">此裝置目前無法使用照片附件。</div>':'')+'<div class="shopping-photo-storage-actions"><button type="button" class="btn shopping-photo-storage-action" onclick="checkShoppingPhotoStorage()">立即檢查</button><button type="button" class="btn ghost shopping-photo-storage-action" onclick="confirmShoppingPhotoCleanup()">清理未使用照片'+(orphans.length?'（'+orphans.length+'）':'')+'</button></div></section>'+
       '<section class="shopping-photo-storage-card"><div class="shopping-photo-storage-primary">'+invalid.length+' 個附件待修復</div><div class="shopping-photo-storage-secondary">遺失的照片不會自動移除；請逐筆重新選擇照片或移除引用。</div><div class="shopping-photo-storage-repairs">'+(repairs||'<div class="shopping-photo-storage-secondary">目前沒有需要修復的附件。</div>')+'</div></section>'+
@@ -8154,11 +8154,11 @@ function openShoppingPhotoRepairFromSettings(itemId){
   });
 }
 var APP_RELEASE_NOTES=[
+  {version:'v77',date:'2026-08-01',title:'照片附件更可靠',items:['偵測本機照片遺失，可重新選擇照片或移除無效引用','設定新增附件容量與清理管理，未使用照片保留一天後自動清理']},
   {version:'v76',date:'2026-08-01',title:'採買多選更快速',items:['多選模式可一次選取或取消目前分頁的全部採買項目','切換分頁與完成批次操作後會清除選取，避免誤用舊選取']},
   {version:'v75',date:'2026-08-01',title:'採買照片與附近導航',items:['採買項目可附上一張只保存在本裝置的照片，卡片以迴紋針提示','同名地點會依目前位置尋找最近結果，詳細分點則維持精確導航']},
   {version:'v74',date:'2026-08-01',title:'設定頁更好找',items:['設定頁改為個人、記帳、資料三個群組,一頁看完','團體帳測試模式移到獨立控制頁,不再占用設定首頁']},
-  {version:'v73',date:'2026-07-30',title:'更新機制修正',items:['修正改版後可能仍載入舊版檔案的問題','離線時缺少檔案不再讓「資料與版本」頁打不開','結清後的團體消費標示改為「已鎖帳」,明細頁補上原因說明']},
-  {version:'v72',date:'2026-07-30',title:'主題、設定與旅途紀錄',items:['新增六組淺色主題與一致的導覽圖示','設定頁重新分區，並可記錄旅途異常與優化建議']}
+  {version:'v73',date:'2026-07-30',title:'更新機制修正',items:['修正改版後可能仍載入舊版檔案的問題','離線時缺少檔案不再讓「資料與版本」頁打不開','結清後的團體消費標示改為「已鎖帳」,明細頁補上原因說明']}
 ];
 function renderAppReleaseNotes(){
   return '<div class="settings-release-list">'+APP_RELEASE_NOTES.map(function(note){
