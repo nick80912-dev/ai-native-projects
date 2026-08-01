@@ -1,6 +1,7 @@
 const assert = require('assert');
 const fs = require('fs');
 const vm = require('vm');
+const {extractFunction} = require('./support/source');
 
 function createStorage(initial){
   const values=Object.assign({},initial||{});
@@ -112,11 +113,14 @@ function loadIdentityModule(){
     'the common identity confirmation explains the ledger ownership consequence'
   );
 
-  const settingsSource=mod.__html.slice(mod.__html.indexOf('function openSettings('),mod.__html.indexOf('function mergedLedgerRecords()'));
-  assert(settingsSource.includes('目前身分'),'Settings displays the current identity');
-  assert(settingsSource.includes('>切換<'),'Settings exposes compact existing identity switching');
-  assert(settingsSource.includes('>新增<'),'Settings exposes compact new identity registration');
-  assert(!settingsSource.includes('修改成員'),'Settings avoids the misleading member-editing label');
+  /* 依名稱擷取,不用位置相依的 source slice(v74 設計規格 §7.1 規則 3／4)。 */
+  const settingsRootSource=extractFunction(mod.__html,'renderSettingsRoot');
+  assert(settingsRootSource.includes('目前身分'),'Settings displays the current identity');
+  assert(settingsRootSource.includes('>切換<'),'Settings exposes compact existing identity switching');
+  /* v74 起「新增」是方形 ＋ 按鈕,可存取名稱才是契約 —— 視覺文字不是。 */
+  assert(settingsRootSource.includes('aria-label="新增身分"'),'Settings exposes compact new identity registration');
+  assert(settingsRootSource.includes('openMemberSelector(false,true)'),'the add-identity button still opens registration');
+  assert(!settingsRootSource.includes('修改成員'),'Settings avoids the misleading member-editing label');
   assert(!mod.__html.slice(mod.__html.indexOf('/* ================= 分帳'),mod.__html.indexOf('/* ================= 導覽 / 啟動')).includes('DB.expMembers'),'ledger identity and Split UI do not read Exp member rows');
 
   console.log('registered member identity tests passed');

@@ -2,52 +2,9 @@ const assert = require('assert');
 const fs = require('fs');
 const vm = require('vm');
 
+const {extractFunction,extractDeclaration} = require('./support/source');
+
 function plain(value){ return JSON.parse(JSON.stringify(value)); }
-
-/* 語意擷取器(2026-08-01 v74 新增,依設計規格 §7.1 規則 3／4)
-   ------------------------------------------------------------------
-   舊寫法是 html.slice(indexOf('function openSettings('), indexOf('function mergedLedgerRecords()')),
-   契約因此綁在「函式在檔案中的排列位置」上:插一個新 render function 到區間外,
-   斷言會靜默失效;更糟的是會誘導實作者為了配合測試而刻意安排函式位置。
-   這裡改成依名稱擷取單一函式本體(跳過字串常值中的括號),契約由語意決定。 */
-function extractFunction(source,name){
-  const start = source.indexOf('function '+name+'(');
-  assert(start >= 0,'function not found in index.html: '+name);
-  const open = source.indexOf('{',start);
-  assert(open > start,'function body not found: '+name);
-  let depth = 0, quote = '';
-  for(let i=open;i<source.length;i++){
-    const ch = source[i];
-    if(quote){
-      if(ch==='\\'){ i++; continue; }
-      if(ch===quote) quote='';
-      continue;
-    }
-    if(ch==='\''||ch==='"'||ch==='`'){ quote=ch; continue; }
-    if(ch==='{') depth++;
-    else if(ch==='}'){ depth--; if(depth===0) return source.slice(start,i+1); }
-  }
-  throw new Error('unbalanced function body: '+name);
-}
-
-function extractDeclaration(source,name){
-  const start = source.indexOf('var '+name+'=');
-  assert(start >= 0,'declaration not found in index.html: '+name);
-  let depth = 0, quote = '';
-  for(let i=start;i<source.length;i++){
-    const ch = source[i];
-    if(quote){
-      if(ch==='\\'){ i++; continue; }
-      if(ch===quote) quote='';
-      continue;
-    }
-    if(ch==='\''||ch==='"'||ch==='`'){ quote=ch; continue; }
-    if(ch==='{'||ch==='[') depth++;
-    else if(ch==='}'||ch===']') depth--;
-    else if(ch===';'&&depth===0) return source.slice(start,i+1);
-  }
-  throw new Error('unterminated declaration: '+name);
-}
 
 /* 實際執行 normalizeSettingsTarget(),斷言它的回傳值 —— 不是斷言原始碼裡有某個字串。
    TEST banner 的 deep link 是本次改版最不該失效的路徑,必須用行為證明。 */
@@ -236,13 +193,8 @@ function response(payload){
 
   /* 根頁不再常駐測試模式,也不得帶任何可直接切換的控制項(§2.2.5／§3.4) */
   assert(!settingsRootSource.includes('setLedgerTestMode'),'the Settings root never carries a test-mode toggle');
-  const rootOrderedLabels=['>身分<','>主題<','>代購對象<','>帳務<','>自訂項目<','>資料與版本<'];
-  let previousRootLabel=-1;
-  rootOrderedLabels.forEach(function(label){
-    const at=settingsRootSource.indexOf(label);
-    assert(at>previousRootLabel,'Settings root keeps section order at '+label);
-    previousRootLabel=at;
-  });
+  /* 根頁的群組資訊架構契約在 tests/settings-grouped-root.test.js —— 那裡直接執行
+     renderSettingsRoot() 並斷言渲染結果,而不是在這裡比對原始碼字串順序。 */
   assert(html.includes('addLedgerOptionFromSettings'),'Settings can add custom options');
   assert(html.includes('moveLedgerOptionFromSettings'),'Settings can reorder custom options');
   assert(html.includes('removeLedgerOptionFromSettings'),'Settings can remove default or custom options');

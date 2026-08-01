@@ -541,8 +541,12 @@ input,select,textarea{font-size:16px}
 .settings-member-row{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}.settings-member-row .settings-current{margin-bottom:0;min-width:0}.settings-member-switch{min-height:36px;padding:6px 11px;flex:0 0 auto}.settings-warning-tag{display:inline-flex;margin-left:6px;border-radius:999px;padding:2px 7px;background:#fff0e8;color:var(--coral);font-size:11px;font-weight:900;vertical-align:middle}
 .settings-overlay>.settings-panel{height:calc(100vh - 44px);height:calc(100dvh - 44px);overflow-y:auto;overscroll-behavior:contain;padding-bottom:calc(16px + env(safe-area-inset-bottom))}
 .settings-back{min-height:40px;border:0;background:transparent;color:var(--sea);padding:4px 8px 4px 0;font:inherit;font-size:14px;font-weight:900}.settings-title-wrap{display:flex;align-items:center;gap:6px;min-width:0}.settings-title-wrap h2{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.settings-identity-row{display:flex;align-items:center;gap:8px;padding:9px 9px 9px 11px;min-height:52px}.settings-identity-current{min-width:0;flex:1}.settings-identity-current small{display:block;color:var(--ink-faint);font-size:11px}.settings-identity-current b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--ink)}.settings-identity-actions{display:flex;gap:5px;flex:0 0 auto}.settings-identity-actions .btn{min-height:38px;padding:0 9px}
-.settings-menu-button{width:100%;min-height:56px;border:0;background:transparent;color:var(--ink);padding:0;text-align:left;font:inherit;display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:10px}.settings-menu-copy{min-width:0}.settings-menu-copy b{display:block;color:var(--ink);font-size:14px}.settings-menu-copy small{display:block;margin-top:3px;color:var(--ink-faint);font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.settings-menu-chevron{color:var(--ink-faint);font-size:20px}.settings-inline-toggle{margin-top:8px;padding-top:10px;border-top:1px solid var(--line-soft)}
+.settings-identity-current{min-width:0;flex:1}.settings-identity-current small{display:block;color:var(--ink-faint);font-size:11px}.settings-identity-current b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--ink)}.settings-identity-actions{display:flex;gap:5px;flex:0 0 auto}.settings-identity-actions .btn{min-height:38px;padding:0 9px}.settings-identity-actions .settings-member-add{width:38px;padding:0;font-size:17px;line-height:1}
+.settings-menu-chevron{color:var(--ink-faint);font-size:20px}
+/* v74 設定根頁群組列表:一個群組一張卡,列與列之間只用分隔線,不再每項各包一張卡。 */
+.settings-group{margin-bottom:14px}.settings-group-title{font-size:12px;font-weight:900;color:var(--sea-deep);margin:0 0 6px 3px}.settings-group-card{background:var(--card);border:1px solid var(--line);border-radius:13px;box-shadow:var(--shadow);overflow:hidden}.settings-row{width:100%;min-height:52px;border:0;background:transparent;color:var(--ink);padding:8px 13px;text-align:left;font:inherit;display:flex;align-items:center;gap:10px}.settings-row-icon{flex:0 0 auto;display:flex;color:var(--sea-deep)}.settings-row-icon .app-icon{width:19px;height:19px}.settings-row-main{min-width:0;flex:1}.settings-row-main b{display:block;font-size:14px;font-weight:900;color:var(--ink)}.settings-row-summary{flex:0 1 auto;min-width:0;font-size:12px;color:var(--ink-soft);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.settings-row input[type="checkbox"]{flex:0 0 auto;width:22px;height:22px}.settings-testmode-row .settings-row-main b{color:var(--coral)}
+/* 分隔線必須排在 .settings-row 之後:兩者特異性相同,先寫的 border-top 會被 .settings-row 的 border:0 蓋掉。 */
+.settings-group-card>*+*{border-top:1px solid var(--line-soft)}
 .settings-theme-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.settings-theme-card{min-width:0;border:1px solid var(--line);border-radius:11px;background:var(--card);padding:8px;color:var(--ink);font:inherit;text-align:left}.settings-theme-card[aria-pressed="true"]{border-color:var(--sea-deep);box-shadow:0 0 0 1px var(--sea-deep)}.settings-theme-preview{display:block;height:66px;border-radius:8px;background:var(--t-paper);overflow:hidden;border:1px solid rgba(0,0,0,.06)}.settings-theme-preview-head{display:block;height:19px;background:var(--t-chrome)}.settings-theme-preview-body{display:block;padding:8px}.settings-theme-preview-line{display:block;height:7px;width:74%;border-radius:5px;background:var(--t-action);margin-bottom:7px}.settings-theme-preview-dot{display:block;width:16px;height:16px;border-radius:50%;background:var(--t-accent)}.settings-theme-name{display:flex;align-items:center;justify-content:space-between;gap:4px;margin-top:7px;font-size:12px;font-weight:900}.settings-theme-check{visibility:hidden;color:var(--sea-deep)}.settings-theme-card[aria-pressed="true"] .settings-theme-check{visibility:visible}
 .settings-version-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 0 12px;border-bottom:1px solid var(--line-soft)}.settings-version-row span{font-size:12px;color:var(--ink-faint)}.settings-release-list{display:grid;gap:10px;margin-top:12px}.settings-release{padding-bottom:10px;border-bottom:1px solid var(--line-soft)}.settings-release:last-child{padding-bottom:0;border-bottom:0}.settings-release-head{display:flex;align-items:baseline;justify-content:space-between;gap:8px}.settings-release-head strong{font-size:13px}.settings-release-head span{font-size:10px;color:var(--ink-faint)}.settings-release ul{margin:5px 0 0 18px;color:var(--ink-soft);font-size:11px}
 .member-options{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.member-option{min-height:48px;border:1px solid var(--line);border-radius:11px;background:#fff;color:var(--ink);font:inherit;font-weight:800}.member-option.on{background:var(--sea);border-color:var(--sea);color:#fff}
@@ -7647,17 +7651,50 @@ function backToSettingsRoot(){openSettings('root');}
 function renderSettingsHeader(title,isRoot){
   return '<div class="settings-head"><div class="settings-title-wrap">'+(isRoot?'':'<button class="settings-back" onclick="backToSettingsRoot()">‹ 返回</button>')+'<h2 id="settingsTitle">'+escapeHtml(title)+'</h2></div><button class="settings-close" aria-label="關閉" onclick="closeSettings()">×</button></div>';
 }
+/* v74 設定根頁列圖示。一律沿用既有 .app-icon inline SVG(stroke:currentColor),
+   不加 Emoji、不引入圖示套件、不載入外部資源。 */
+var SETTINGS_ROW_ICONS={
+  identity:'<svg class="app-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="8" r="3.5"></circle><path d="M5 20v-1a7 7 0 0 1 14 0v1"></path></svg>',
+  theme:'<svg class="app-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="9"></circle><path d="M12 3v18"></path><path d="M12 8h8M12 16h8"></path></svg>',
+  proxy:'<svg class="app-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="9" cy="8" r="3"></circle><path d="M3 19v-1a6 6 0 0 1 12 0v1"></path><path d="M16.5 5.6a3 3 0 0 1 0 4.8"></path><path d="M18 19v-1a5 5 0 0 0-1.8-3.8"></path></svg>',
+  ledger:'<svg class="app-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="3" y="6" width="18" height="12" rx="2"></rect><circle cx="12" cy="12" r="2.5"></circle><path d="M6.5 12h.01M17.5 12h.01"></path></svg>',
+  settlement:'<svg class="app-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 7h16M4 17h16"></path><circle cx="9" cy="7" r="2"></circle><circle cx="15" cy="17" r="2"></circle></svg>',
+  options:'<svg class="app-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M9 6h11M9 12h11M9 18h11"></path><path d="M4.5 6h.01M4.5 12h.01M4.5 18h.01"></path></svg>',
+  data:'<svg class="app-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 3v11"></path><path d="m8 10 4 4 4-4"></path><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"></path></svg>'
+};
+function settingsGroup(title,rows){
+  return '<div class="settings-group"><h3 class="settings-group-title">'+escapeHtml(title)+'</h3><div class="settings-group-card">'+rows+'</div></div>';
+}
+function settingsNavRow(page,iconKey,title,summary){
+  return '<button class="settings-row" onclick="openSettingsPage(\''+page+'\')"><span class="settings-row-icon">'+(SETTINGS_ROW_ICONS[iconKey]||'')+'</span><span class="settings-row-main"><b>'+escapeHtml(title)+'</b></span><span class="settings-row-summary">'+escapeHtml(summary)+'</span><span class="settings-menu-chevron">›</span></button>';
+}
+/* 設定根頁 = 三個常駐群組(個人／記帳／資料)。子頁內容與資料語意完全不變,只重排根頁。 */
 function renderSettingsRoot(ledgerSettings){
   var proxyCount=ledgerProxyTargetStore.all().length;
-  var optionSummary=ledgerCategoryStore.all().length+' 類別 · '+ledgerPayMethodStore.all().length+' 支付方式 · '+shoppingUnitStore.all().length+' 單位';
+  /* 採買單位仍完整保留於自訂項目子頁,只是不再擠進根頁摘要(設計規格 §2.2.4)。 */
+  var optionSummary=ledgerCategoryStore.all().length+' 類別 · '+ledgerPayMethodStore.all().length+' 支付方式';
   var theme=THEME_REGISTRY[currentThemeId()]||THEME_REGISTRY.ocean;
+  var simpleOn=isSimpleSettlementMode();
+  var identityRow='<div class="settings-row"><span class="settings-row-icon">'+SETTINGS_ROW_ICONS.identity+'</span><span class="settings-identity-current"><small>目前身分</small><b id="settingsCurrentMember">'+escapeHtml(getCurrentMember()||'尚未選擇')+'</b></span><span class="settings-identity-actions"><button class="btn ghost settings-member-switch" onclick="openMemberSelector(false,false)">切換</button><button class="btn settings-member-add" aria-label="新增身分" onclick="openMemberSelector(false,true)">＋</button></span></div>';
+  /* 「保留已確認結清」不常駐顯示,改掛在 checkbox 的可存取名稱上(設計規格 §2.2.3)。 */
+  var simpleRow='<div class="settings-row"><span class="settings-row-icon">'+SETTINGS_ROW_ICONS.settlement+'</span><span class="settings-row-main"><b>簡易結算模式</b></span><span class="settings-row-summary">'+(simpleOn?'已啟用':'已關閉')+'</span><input type="checkbox" '+(simpleOn?'checked ':'')+'aria-label="簡易結算模式（保留已確認結清）" onchange="setSimpleSettlementMode(this)"></div>';
+  /* 測試模式關閉時完全不渲染 —— 不留佔位、不留隱藏節點(設計規格 §2.2.5)。
+     根頁永遠不放可直接切換的 checkbox,避免誤觸整條團體帳軌道;要切換一律進控制頁。 */
+  var testModeRow=lsGet('trip_ledger_test_mode',false)
+    ? '<button class="settings-row settings-testmode-row" onclick="openSettingsPage(\'test-mode\')"><span class="settings-row-main"><b>⚠ 團體帳測試模式已開啟</b></span><span class="settings-row-summary">前往關閉</span><span class="settings-menu-chevron">›</span></button>'
+    : '';
   return renderSettingsHeader('設定',true)+
-    '<div class="settings-section"><h3>身分</h3><div class="settings-identity-row"><div class="settings-identity-current"><small>目前身分</small><b id="settingsCurrentMember">'+escapeHtml(getCurrentMember()||'尚未選擇')+'</b></div><div class="settings-identity-actions"><button class="btn ghost settings-member-switch" onclick="openMemberSelector(false,false)">切換</button><button class="btn settings-member-switch" onclick="openMemberSelector(false,true)">新增</button></div></div></div>'+
-    '<div class="settings-section"><h3>主題</h3><button class="settings-menu-button" onclick="openSettingsPage(\'theme\')"><span class="settings-menu-copy"><b>'+escapeHtml(theme.name)+'</b><small>6 組主題</small></span><span class="settings-menu-chevron">›</span></button></div>'+
-    '<div class="settings-section"><h3>代購對象</h3><button class="settings-menu-button" onclick="openSettingsPage(\'proxy\')"><span class="settings-menu-copy"><b>管理代購對象</b><small>'+proxyCount+' 位常用對象</small></span><span class="settings-menu-chevron">›</span></button></div>'+
-    '<div class="settings-section"><h3>帳務</h3><button class="settings-menu-button" onclick="openSettingsPage(\'ledger\')"><span class="settings-menu-copy"><b>匯率與預設幣別</b><small>1 JPY = NT$'+escapeHtml(ledgerSettings.exchangeRate||'未設定')+' · '+escapeHtml(ledgerSettings.defaultCurrency)+'</small></span><span class="settings-menu-chevron">›</span></button><div class="toggle-row settings-inline-toggle" id="simpleSettlementSection"><div><b>簡易結算模式</b><div class="settings-help">保留已確認結清</div></div><input type="checkbox" '+(isSimpleSettlementMode()?'checked':'')+' onchange="setSimpleSettlementMode(this)"></div></div>'+
-    '<div class="settings-section"><h3>自訂項目</h3><button class="settings-menu-button" onclick="openSettingsPage(\'options\')"><span class="settings-menu-copy"><b>類別、支付方式與採買單位</b><small>'+escapeHtml(optionSummary)+'</small></span><span class="settings-menu-chevron">›</span></button></div>'+
-    '<div class="settings-section"><h3>資料與版本</h3><button class="settings-menu-button" onclick="openSettingsPage(\'data\')"><span class="settings-menu-copy"><b>備份、還原與版本資訊</b><small>個人資料備份</small></span><span class="settings-menu-chevron">›</span></button></div>';
+    settingsGroup('個人',
+      identityRow+
+      settingsNavRow('theme','theme','主題',theme.name))+
+    settingsGroup('記帳',
+      settingsNavRow('proxy','proxy','代購對象',proxyCount+' 位常用對象')+
+      settingsNavRow('ledger','ledger','帳務',ledgerSettings.defaultCurrency+' · '+(ledgerSettings.exchangeRate||'未設定'))+
+      simpleRow+
+      settingsNavRow('options','options','自訂項目',optionSummary)+
+      testModeRow)+
+    settingsGroup('資料',
+      settingsNavRow('data','data','備份、還原與版本資訊','SW '+appVersionLabel()));
 }
 /* 團體帳測試模式控制頁(v74,設計規格 §2.4)
    測試模式是開發／驗收工具,不是一般旅遊設定,因此不常駐設定根頁。
