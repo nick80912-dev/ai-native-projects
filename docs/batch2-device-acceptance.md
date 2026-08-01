@@ -270,7 +270,7 @@
   | `headSha` | **`d668f09`**(驗收清單定稿) |
   | `conclusion` | **success** |
 
-- [x] **R1-c. 最終 merge head 的 CI — 已確認(2026-08-01)**  
+- [x] **R1-c. 最終 merge head 的 CI — 已確認(2026-08-01)**
   merge head `0fb4a2c`;**PR #11 的 `sanity` 與 `browser-qa` 皆 success**(run `30682328651`),PR 狀態 `MERGEABLE` / `CLEAN`。這是比 dev push 更完整的證據(dev push 依設計略過 browser-qa)。
   **G1 期間若 `dev` 又有任何新 commit,R1-b 就過期了。** 申請 G4 之前必須重新確認下列任一項:
   - 最終 `dev` HEAD 自己的 dev-push `qa-sanity / sanity` 成功;**或**
