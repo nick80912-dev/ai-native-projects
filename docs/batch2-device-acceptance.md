@@ -493,6 +493,22 @@ v74 的實際 diff 已逐項核對:
 | W3-b | App Shell 包含 `shopping-photo-store.js`,離線可重開 | ✅ Playwright SW 離線測試通過 | ☐ |
 | W3-c | 320×700／375×812／390×844 採買照片卡與 panel 水平 overflow 0 | ✅ 三組皆通過 | ☐ |
 | W3-d | 照片與導航情境 console error 0、pageerror 0 | ✅ 兩組皆為 0 | ☐ |
+
+# v76 delta 驗收清單（採買多選全選）
+
+> 適用 runtime：SW／App **v76**。本節只新增 v76 差異；照片、導航與正式發布仍沿用各自既有 gate。
+
+| ID | 驗收項目 | 自動驗證 | Bar 真機 |
+|---|---|---|---|
+| X1-a | 待買與已買的「全選」只選目前分頁 | Playwright／Node | ☐ |
+| X1-b | 全選後顯示「取消全選」；取消其中一項恢復「全選」 | Playwright／Node | ☐ |
+| X1-c | 「取消全選」保留多選模式；「取消多選」退出並清空 | Playwright | ☐ |
+| X1-d | 切換分頁、批次成功後清空；阻擋、失敗或取消確認時保留 | Playwright／既有 Node preflight | ☐ |
+| X2-a | 320×700、375×812、390×844 overflow 0，兩顆控制同列且各至少 44×44px | Playwright | ☐ |
+| X2-b | 身分列、採買卡、底部批次工具列不換行、不溢位、不遮擋 | Playwright | ☐ |
+| X3-a | v75 照片附件與檢視器完整回歸 | Playwright | ☐ |
+| X3-b | v75→v76 後只剩 `okayama-trip-v76`，離線重開正常 | Playwright | ☐ |
+| X3-c | console error 0、pageerror 0 | Playwright | ☐ |
 | W3-e | `schema.js`、`netlify.toml`、Apps Script 與 Sheet schema 未動 | ✅ Git diff 核對 | ☐ |
 
 本機自動驗證:Node test files **56／56**、Playwright **13／13**、文件標題檢查、版本一致性檢查與 `git diff --check` 全部通過。真機欄保持未勾選,等待 Bar 驗收。

@@ -3,6 +3,7 @@
 > 更新於 2026-08-01。細任務層;里程碑看 `06_ROADMAP.md`,歷史交付看 `07_CHANGELOG.md`,正式待辦看 `tasks/backlog.md`。
 
 ## 📌 現況
+- **新 P1「採買流程完整化」已完成 v76 本機實作與完整驗證**（2026-08-01）：多選可全選／取消全選目前待買或已買分頁，既有批次操作與 v75 照片附件回歸通過；56／56 Node test files、Playwright 17／17 全綠。下一步只等待 Bar 真機驗收，不得自行動 `main`、部署或建立 production tag。
 - 🚀 **SW v73 已於 2026-08-01 正式發布。** 正式站(`https://trippilot-jp.netlify.app/`)由 **SW v18 升級至 SW v73**,merge commit `17c423f8ac59328f926973024cb407d5e638f838`,回滾錨點 tag `production-v73`。發布內容為 v72(六主題／設定頁 2.0／旅途紀錄／備份 v8)與 v73(SW 更新完整性、子資源 fallback、APP_VERSION 安全取值、已鎖帳文案)合併的同一候選版,**只做一次 SW 換代**。G1–G6 全數通過,逐項證據見 `docs/batch2-device-acceptance.md` 的「發布收尾紀錄」。
 - **批次一「發布阻斷項」P1–P6 全部交付完成(2026-07-30)**,SW 升至 **v73**。P5 調查判定測試模式／時間模擬／`?previewDate` 三條路徑皆為「可延後,非發布阻斷」,唯一真正的跨裝置污染路徑(模擬期間匯出備份 → 新裝置無回復點)已由 `exportPersonalState()` 的防呆擋下。批次二真機驗收清單見 `docs/batch2-device-acceptance.md`。
 - **最新已推送 `dev` runtime 基準:SW v74**,SHA `c51752ba75193a0616f4f80810acd31ef4787d65`;包含設定根頁三群組、測試模式控制頁與警告列 AA 對比修正。`main` 與正式站仍為 v73。
