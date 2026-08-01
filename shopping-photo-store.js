@@ -11,6 +11,8 @@
   var MAX_INPUT_BYTES=25*1024*1024;
   var DEFAULT_MAX_EDGE=1600;
   var DEFAULT_QUALITY=0.82;
+  var ORPHAN_GRACE_MS=24*60*60*1000;
+  var LOW_REMAINING_BYTES=50*1024*1024;
 
   function fitImageSize(width,height,maxEdge){
     width=Number(width);height=Number(height);maxEdge=Number(maxEdge)||DEFAULT_MAX_EDGE;
@@ -23,6 +25,50 @@
     if(!file||!/^image\//i.test(String(file.type||'')))throw new Error('請選擇圖片檔案');
     if(Number(file.size)>MAX_INPUT_BYTES)throw new Error('圖片不可超過 25 MiB');
     return file;
+  }
+
+  function cleanPhotoId(value){return String(value||'').trim();}
+  function recordMetadata(record){
+    return {
+      id:cleanPhotoId(record&&record.id),
+      size:Math.max(0,Number(record&&record.size!=null?record.size:record&&record.blob&&record.blob.size)||0),
+      createdAt:String(record&&record.createdAt||'')
+    };
+  }
+  function auditAttachments(items,records,nowMs){
+    var referenced={},references=[];
+    (items||[]).forEach(function(item){
+      var photoId=cleanPhotoId(item&&item.photoId);
+      if(!photoId)return;
+      referenced[photoId]=true;
+      references.push({itemId:String(item&&item.id||''),photoId:photoId});
+    });
+    var stored={},metadata=(records||[]).map(recordMetadata).filter(function(record){return !!record.id;});
+    metadata.forEach(function(record){stored[record.id]=record;});
+    var validPhotoIds=Object.keys(referenced).filter(function(id){return !!stored[id];}).sort();
+    var invalidReferences=references.filter(function(ref){return !stored[ref.photoId];});
+    var now=Number(nowMs);if(!isFinite(now))now=Date.now();
+    var orphanPhotos=metadata.filter(function(record){return !referenced[record.id];}).map(function(record){
+      var created=Date.parse(record.createdAt),ageMs=isFinite(created)?Math.max(0,now-created):null;
+      return Object.assign({},record,{ageMs:ageMs,eligibleForCleanup:ageMs!==null&&ageMs>=ORPHAN_GRACE_MS});
+    });
+    return {
+      validPhotoIds:validPhotoIds,
+      invalidReferences:invalidReferences,
+      orphanPhotos:orphanPhotos,
+      eligibleOrphanIds:orphanPhotos.filter(function(record){return record.eligibleForCleanup;}).map(function(record){return record.id;}).sort(),
+      storedPhotoCount:metadata.length,
+      storedBytes:metadata.reduce(function(total,record){return total+record.size;},0)
+    };
+  }
+  function classifyCapacity(estimate){
+    var usage=Number(estimate&&estimate.usage),quota=Number(estimate&&estimate.quota);
+    if(!isFinite(usage)||usage<0||!isFinite(quota)||quota<=0)return {available:false,usageBytes:0,quotaBytes:0,remainingBytes:0,remainingRatio:0,low:false};
+    var remaining=Math.max(0,quota-usage),ratio=remaining/quota;
+    return {available:true,usageBytes:usage,quotaBytes:quota,remainingBytes:remaining,remainingRatio:ratio,low:remaining<LOW_REMAINING_BYTES||ratio<0.1};
+  }
+  function isQuotaExceededError(error){
+    return !!(error&&(error.name==='QuotaExceededError'||Number(error.code)===22||error.name==='NS_ERROR_DOM_QUOTA_REACHED'));
   }
 
   function requestResult(request){
@@ -148,8 +194,12 @@
     DB_NAME:DB_NAME,
     STORE_NAME:STORE_NAME,
     MAX_INPUT_BYTES:MAX_INPUT_BYTES,
+    ORPHAN_GRACE_MS:ORPHAN_GRACE_MS,
     createIndexedDbDriver:createIndexedDbDriver,
     createStore:createStore,
+    auditAttachments:auditAttachments,
+    classifyCapacity:classifyCapacity,
+    isQuotaExceededError:isQuotaExceededError,
     fitImageSize:fitImageSize,
     validateImageFile:validateImageFile,
     compressImage:compressImage
