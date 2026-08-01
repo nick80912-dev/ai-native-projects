@@ -782,6 +782,8 @@ assert(!ui.includes("SHOPPING_CATEGORIES=['必買','伴手禮','代購'"));
 assert.match(ui,/\.shopping-target-badge\{[^}]*background:var\(--coral-bg\)[^}]*color:var\(--coral\)[^}]*border-radius:6px/);
 assert(ui.includes('--font-ui:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,-apple-system,sans-serif'),
   '全站字體變數優先使用 Noto Sans TC 並保留繁中系統 fallback');
+assert(ui.includes("{version:'v76',date:'2026-08-01',title:'採買多選更快速'"),
+  'v76 release notes lead with the approved Shopping select-all improvement');
 assert(ui.includes('font-family:var(--font-ui)'),'body 使用全站字體變數');
 assert(!ui.includes('font-family:"Hiragino Sans","Noto Sans TC","PingFang TC"'),
   '不得再由日文字型逐字 fallback 造成粗細不一致');

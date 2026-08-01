@@ -7910,6 +7910,7 @@ function renderSettingsOptionsPage(){
   return renderSettingsHeader('自訂項目',false)+'<div class="settings-section" id="ledgerOptionSettingsSection"><h3>類別、支付方式與採買單位</h3><div class="settings-help">可新增、刪除或排序；刪除選項不影響既有紀錄。</div>'+renderLedgerOptionManager('category','類別')+renderLedgerOptionManager('payMethod','支付方式')+renderLedgerOptionManager('shoppingUnit','採買單位')+'</div>';
 }
 var APP_RELEASE_NOTES=[
+  {version:'v76',date:'2026-08-01',title:'採買多選更快速',items:['多選模式可一次選取或取消目前分頁的全部採買項目','切換分頁與完成批次操作後會清除選取，避免誤用舊選取']},
   {version:'v75',date:'2026-08-01',title:'採買照片與附近導航',items:['採買項目可附上一張只保存在本裝置的照片，卡片以迴紋針提示','同名地點會依目前位置尋找最近結果，詳細分點則維持精確導航']},
   {version:'v74',date:'2026-08-01',title:'設定頁更好找',items:['設定頁改為個人、記帳、資料三個群組,一頁看完','團體帳測試模式移到獨立控制頁,不再占用設定首頁']},
   {version:'v73',date:'2026-07-30',title:'更新機制修正',items:['修正改版後可能仍載入舊版檔案的問題','離線時缺少檔案不再讓「資料與版本」頁打不開','結清後的團體消費標示改為「已鎖帳」,明細頁補上原因說明']},
