@@ -612,6 +612,10 @@ body.shopping-list-open{overflow:hidden}.shopping-list-overlay{position:fixed;in
 .ledger-participant-group>.ledger-sheet-label{margin-bottom:6px}
 .ledger-participant-choice{min-height:28px;border:1px solid var(--line);border-radius:7px;background:#fff;color:var(--ink-soft);padding:4px 7px;font:inherit;font-size:10px;font-weight:800}
 .ledger-participant-choice.on{border-color:var(--sea-deep);background:#d6e8e4;color:var(--sea-deep)}
+.shopping-list-tools{min-width:0}
+.shopping-list-tools strong{white-space:nowrap}
+.shopping-list-tool-actions{display:flex;align-items:center;justify-content:flex-end;gap:0;min-width:0;white-space:nowrap}
+.shopping-list-tools button{min-width:44px;min-height:44px;padding-left:10px;white-space:nowrap}
 input:not([type="hidden"]),select,textarea{font-size:16px!important}
 .ledger-sheet #ledgerAmount{font-size:30px!important}
 </style>
@@ -3568,19 +3572,46 @@ function renderShoppingSplitForm(){
     '<div class="shopping-field"><label for="shoppingSplitStop">剩餘待買的站點</label><select class="shopping-select" id="shoppingSplitStop" onchange="updateShoppingSplitField(\'remainderStopRef\',this.value)">'+options+'</select></div>'+
     '<div class="shopping-form-actions"><button type="button" class="btn ghost" onclick="cancelShoppingSplit()">取消</button><button type="submit" class="btn">拆成兩筆</button></div></form>';
 }
+function shoppingCurrentTabItems(){
+  return shoppingListStore.all().filter(function(item){
+    return shoppingUiState.tab==='done'?item.done:!item.done;
+  });
+}
+function renderShoppingListSelectionControls(items){
+  if(!items.length)return '';
+  if(!shoppingUiState.selectionMode){
+    return '<div class="shopping-list-tool-actions"><button type="button" onclick="toggleShoppingSelectionMode()">多選</button></div>';
+  }
+  var model=shoppingSelectionControlModel(items,shoppingUiState.selected);
+  return '<div class="shopping-list-tool-actions" role="group" aria-label="多選控制">'+
+    '<button type="button" id="shoppingSelectAllButton" onclick="toggleShoppingPageSelection()">'+model.actionLabel+'</button>'+
+    '<button type="button" id="shoppingCancelSelectionButton" onclick="toggleShoppingSelectionMode()">取消多選</button></div>';
+}
 function renderShoppingListOverlay(){
   var panel=document.querySelector('#shoppingListOverlay .shopping-list-panel');if(!panel)return;
   closeShoppingItemActions();   // 重繪後原本的觸發按鈕已不存在,浮層必須跟著收掉
-  var items=shoppingListStore.all().filter(function(item){return shoppingUiState.tab==='done'?item.done:!item.done;});
+  var items=shoppingCurrentTabItems();
   panel.innerHTML='<header class="shopping-list-head"><h2 id="shoppingListTitle">採買清單</h2><div class="shopping-list-head-actions"><button type="button" class="shopping-add-button" aria-label="新增採買項目" onclick="startShoppingAdd()">＋</button><button type="button" class="shopping-icon-button" aria-label="關閉採買清單" onclick="closeShoppingList()">×</button></div></header>'+
     '<nav class="shopping-list-segment" aria-label="採買狀態"><div class="shopping-list-segment-track"><button type="button" class="'+(shoppingUiState.tab==='pending'?'on':'')+'" aria-pressed="'+(shoppingUiState.tab==='pending'?'true':'false')+'" onclick="setShoppingTab(\'pending\')">待買</button><button type="button" class="'+(shoppingUiState.tab==='done'?'on':'')+'" aria-pressed="'+(shoppingUiState.tab==='done'?'true':'false')+'" onclick="setShoppingTab(\'done\')">已買</button></div></nav>'+
     renderShoppingSplitForm()+
-    '<div class="shopping-list-tools"><strong>'+items.length+' 項</strong>'+(items.length?'<button type="button" onclick="toggleShoppingSelectionMode()">'+(shoppingUiState.selectionMode?'取消多選':'多選')+'</button>':'')+'</div>'+
+    '<div class="shopping-list-tools"><strong>'+items.length+' 項</strong>'+renderShoppingListSelectionControls(items)+'</div>'+
     renderShoppingGroups(items)+renderShoppingSelectionToolbar();
   renderShoppingFormSheet();
 }
+function toggleShoppingPageSelection(){
+  shoppingUiState.selected=nextShoppingPageSelection(shoppingCurrentTabItems(),shoppingUiState.selected);
+  renderShoppingListOverlay();
+  requestAnimationFrame(function(){
+    var button=document.getElementById('shoppingSelectAllButton');
+    if(button)button.focus();
+  });
+}
 function toggleShoppingSelectionMode(){shoppingUiState.selectionMode=!shoppingUiState.selectionMode;shoppingUiState.selected={};renderShoppingListOverlay();}
-function toggleShoppingSelection(id,selected){shoppingUiState.selected[id]=!!selected;renderShoppingListOverlay();}
+function toggleShoppingSelection(id,selected){
+  if(selected)shoppingUiState.selected[id]=true;
+  else delete shoppingUiState.selected[id];
+  renderShoppingListOverlay();
+}
 /* B:勾選不再開三選一 Modal —— 直接完成並寫入 completedAt,記帳與否交給 toast 的復原與已買頁。
    連續採買時每勾一項就被打斷一次,是這個模組最大的現場摩擦點。 */
 function toggleShoppingItemDone(id,done){

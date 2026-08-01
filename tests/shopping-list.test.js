@@ -801,6 +801,18 @@ assert(ui.includes('採買清單 →'),'empty, non-trip, and no-reminder Today s
 assert(ui.includes('completeSelectedShopping(false)'),'待買多選可只標記已買');
 assert(ui.includes('completeSelectedShopping(true)'),'待買多選可直接建立多品項消費');
 assert(ui.includes('deleteSelectedShoppingItems()'),'待買多選可批次刪除');
+assert(ui.includes('function renderShoppingListSelectionControls(items)'),
+  'the list header owns a dedicated selection control renderer');
+assert(ui.includes('id="shoppingSelectAllButton"'),
+  'multi-select exposes one stable focus target for select all and deselect all');
+assert(ui.includes('id="shoppingCancelSelectionButton"'),
+  'cancel multi-select remains a separate action');
+assert(ui.includes('toggleShoppingPageSelection()'),
+  'select all uses the current-tab selection handler');
+assert(/\.shopping-list-tool-actions\{[^}]*display:flex[^}]*white-space:nowrap/.test(ui),
+  'the two controls share a non-wrapping action group');
+assert(/\.shopping-list-tools button\{[^}]*min-height:44px/.test(ui),
+  'top Shopping controls expose a 44px touch target');
 assert(!ui.includes('建立多品項消費'),'過長的舊按鈕文案已縮短');
 const shoppingToolbarRenderer=ui.slice(
   ui.indexOf('function renderShoppingSelectionToolbar()'),
