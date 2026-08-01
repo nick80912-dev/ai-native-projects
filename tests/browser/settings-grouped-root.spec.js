@@ -269,3 +269,43 @@ test('根頁與各子頁(含 test-mode)各自保存捲動位置',async({page})=>
   expect(state.slots).toContain('test-mode');
   expect(pageErrors).toEqual([]);
 });
+
+test('附件與儲存空間維持在資料群組並通過子頁路由與三種手機寬度',async({page})=>{
+  const pageErrors=collectPageErrors(page);
+  await installOfflineAppNetwork(page);
+  await openApp(page);
+  await waitForSyncToSettle(page);
+  await openSettingsRoot(page);
+
+  const storageRow=page.getByRole('button',{name:/附件與儲存空間/});
+  await expect(storageRow).toBeVisible();
+  const ordering=await page.evaluate(()=>{
+    const dataGroup=Array.from(document.querySelectorAll('#settingsOverlay .settings-group')).find(group=>group.querySelector('.settings-group-title').textContent==='資料');
+    return Array.from(dataGroup.querySelectorAll('.settings-row-main b'),node=>node.textContent);
+  });
+  expect(ordering).toEqual(['附件與儲存空間','備份、還原與版本資訊']);
+  await storageRow.click();
+  await expect(page.getByRole('heading',{name:'附件與儲存空間'})).toBeVisible();
+
+  for(const size of WIDTHS){
+    await page.setViewportSize({width:size.w,height:size.h});
+    const layout=await page.evaluate(()=>{
+      const root=document.documentElement,panel=document.querySelector('#settingsOverlay .settings-panel');
+      const actions=Array.from(panel.querySelectorAll('.shopping-photo-storage-action'));
+      return {
+        scrollWidth:root.scrollWidth,clientWidth:root.clientWidth,
+        panelScrollWidth:panel.scrollWidth,panelClientWidth:panel.clientWidth,
+        actionCount:actions.length,
+        minActionHeight:actions.length?Math.min(...actions.map(node=>node.getBoundingClientRect().height)):0
+      };
+    });
+    expect(layout.scrollWidth-layout.clientWidth,`document overflow @${size.w}`).toBe(0);
+    expect(layout.panelScrollWidth-layout.panelClientWidth,`settings overflow @${size.w}`).toBe(0);
+    expect(layout.actionCount).toBeGreaterThanOrEqual(2);
+    expect(layout.minActionHeight).toBeGreaterThanOrEqual(52);
+  }
+
+  await page.getByRole('button',{name:/返回/}).click();
+  await expect(page.getByRole('button',{name:/附件與儲存空間/})).toBeVisible();
+  expect(pageErrors).toEqual([]);
+});

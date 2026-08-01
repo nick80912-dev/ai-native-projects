@@ -536,6 +536,7 @@ input,select,textarea{font-size:16px}
 .sync-status-alert{display:grid;gap:3px;border-top:1px solid var(--line);padding:10px 0;font-size:13px}.sync-status-alert b{color:var(--coral)}.sync-status-alert span{color:var(--ink);overflow-wrap:anywhere}
 .sync-status-retry{width:100%;min-height:44px;border:0;border-radius:10px;background:var(--sea);color:#fff;font:inherit;font-weight:800;margin-top:12px}.sync-status-retry:disabled{opacity:.5}
 .settings-overlay,.member-overlay{position:fixed;inset:0;z-index:130;background:var(--paper);overflow:auto;padding:calc(env(safe-area-inset-top) + 12px) 12px calc(env(safe-area-inset-bottom) + 20px)}
+.settings-overlay{z-index:170}
 .settings-panel,.member-panel{width:100%;max-width:560px;margin:0 auto}.settings-head,.member-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}.settings-head h2,.member-head h2{font-size:20px}.settings-close{width:44px;height:44px;border:0;border-radius:50%;background:var(--line-soft);font-size:26px;color:var(--ink-soft)}
 .settings-section{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:15px;margin-bottom:12px;box-shadow:var(--shadow)}.settings-section h3{font-size:15px;color:var(--sea-deep);margin-bottom:8px}.settings-current{font-size:14px;color:var(--ink-soft);margin-bottom:10px}.settings-current b{color:var(--ink)}
 .settings-member-row{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}.settings-member-row .settings-current{margin-bottom:0;min-width:0}.settings-member-switch{min-height:36px;padding:6px 11px;flex:0 0 auto}.settings-warning-tag{display:inline-flex;margin-left:6px;border-radius:999px;padding:2px 7px;background:#fff0e8;color:var(--coral);font-size:11px;font-weight:900;vertical-align:middle}
@@ -549,6 +550,7 @@ input,select,textarea{font-size:16px}
 .settings-group-card>*+*{border-top:1px solid var(--line-soft)}
 .settings-theme-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.settings-theme-card{min-width:0;border:1px solid var(--line);border-radius:11px;background:var(--card);padding:8px;color:var(--ink);font:inherit;text-align:left}.settings-theme-card[aria-pressed="true"]{border-color:var(--sea-deep);box-shadow:0 0 0 1px var(--sea-deep)}.settings-theme-preview{display:block;height:66px;border-radius:8px;background:var(--t-paper);overflow:hidden;border:1px solid rgba(0,0,0,.06)}.settings-theme-preview-head{display:block;height:19px;background:var(--t-chrome)}.settings-theme-preview-body{display:block;padding:8px}.settings-theme-preview-line{display:block;height:7px;width:74%;border-radius:5px;background:var(--t-action);margin-bottom:7px}.settings-theme-preview-dot{display:block;width:16px;height:16px;border-radius:50%;background:var(--t-accent)}.settings-theme-name{display:flex;align-items:center;justify-content:space-between;gap:4px;margin-top:7px;font-size:12px;font-weight:900}.settings-theme-check{visibility:hidden;color:var(--sea-deep)}.settings-theme-card[aria-pressed="true"] .settings-theme-check{visibility:visible}
 .settings-version-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 0 12px;border-bottom:1px solid var(--line-soft)}.settings-version-row span{font-size:12px;color:var(--ink-faint)}.settings-release-list{display:grid;gap:10px;margin-top:12px}.settings-release{padding-bottom:10px;border-bottom:1px solid var(--line-soft)}.settings-release:last-child{padding-bottom:0;border-bottom:0}.settings-release-head{display:flex;align-items:baseline;justify-content:space-between;gap:8px}.settings-release-head strong{font-size:13px}.settings-release-head span{font-size:10px;color:var(--ink-faint)}.settings-release ul{margin:5px 0 0 18px;color:var(--ink-soft);font-size:11px}
+.shopping-photo-storage-grid{display:grid;gap:12px}.shopping-photo-storage-card{min-width:0;border:1px solid var(--line);border-radius:12px;background:var(--card);padding:14px;color:var(--ink);box-shadow:var(--shadow)}.shopping-photo-storage-primary{color:var(--ink);font-size:14px;font-weight:900;line-height:1.45}.shopping-photo-storage-value{margin-top:4px;color:var(--ink);font-size:20px;font-weight:900;overflow-wrap:anywhere}.shopping-photo-storage-secondary{margin-top:5px;color:var(--ink);font-size:12px;line-height:1.5;overflow-wrap:anywhere}.shopping-photo-storage-warning{margin-top:7px;border-left:3px solid var(--coral);padding-left:9px;color:var(--ink);font-size:12px;font-weight:800;line-height:1.5}.shopping-photo-storage-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:12px}.shopping-photo-storage-action{width:100%;min-width:0;min-height:52px}.shopping-photo-storage-repairs{display:grid;gap:8px;margin-top:10px}.shopping-photo-storage-repair{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:52px;border:1px solid var(--line);border-radius:10px;background:var(--card);color:var(--ink);padding:8px 11px;font:inherit;text-align:left}.shopping-photo-storage-repair span{min-width:0;overflow-wrap:anywhere;font-size:13px;font-weight:900}.shopping-photo-storage-repair b{flex:0 0 auto;color:var(--sea-deep);font-size:12px}@media(max-width:360px){.shopping-photo-storage-actions{grid-template-columns:minmax(0,1fr)}}
 .member-options{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.member-option{min-height:48px;border:1px solid var(--line);border-radius:11px;background:#fff;color:var(--ink);font:inherit;font-weight:800}.member-option.on{background:var(--sea);border-color:var(--sea);color:#fff}
 .member-panel{min-height:calc(100vh - 48px);min-height:calc(100dvh - 48px);display:flex;flex-direction:column;justify-content:center}.member-copy{color:var(--ink-soft);font-size:14px;margin-bottom:15px}
 .member-entry{margin-top:12px}.member-entry input{width:100%;min-height:48px;border:1px solid var(--line);border-radius:10px;background:#fff;padding:10px 12px;font:inherit}.member-actions{display:flex;gap:9px;margin-top:12px}.member-actions .btn{flex:1;min-height:44px}.member-error{margin-top:10px;color:var(--coral);font-size:13px;font-weight:700}.member-confirm{padding:16px;border:1px solid var(--line);border-radius:10px;background:#fff;text-align:center;font-weight:800}.member-confirm-note{display:block;margin-top:8px;color:var(--ink-soft);font-size:12px;font-weight:600;line-height:1.5}
@@ -2960,6 +2962,7 @@ var shoppingPhotoAuditState={
   capacity:{available:false,usageBytes:0,quotaBytes:0,remainingBytes:0,remainingRatio:0,low:false}
 };
 var shoppingPhotoAuditPromise=null;
+var shoppingPhotoSettingsEntered=false;
 function shoppingItineraryStops(){
   var result=[];
   ((DB.trip&&DB.trip.days)||[]).forEach(function(day,dayIndex){
@@ -7761,7 +7764,11 @@ function renderTravelNotesSection(){
   return '<div class="diag-section"><h3>旅途紀錄</h3><div class="diag-help">即時記錄旅途中遇到的異常或 UI／UX 優化建議，回來後可據此評估。</div><div class="travel-note-kind"><button class="'+(travelNoteUiState.kind==='issue'?'on':'')+'" onclick="setTravelNoteKind(\'issue\')">異常</button><button class="'+(travelNoteUiState.kind==='suggestion'?'on':'')+'" onclick="setTravelNoteKind(\'suggestion\')">優化建議</button></div><textarea id="travelNoteText" class="travel-note-editor" maxlength="500" placeholder="輸入 1–500 字">'+escapeHtml(travelNoteUiState.draftText)+'</textarea><div class="diag-actions"><button class="primary" onclick="saveTravelNote()">'+(travelNoteUiState.editingId?'儲存修改':'儲存紀錄')+'</button>'+(travelNoteUiState.editingId?'<button onclick="cancelTravelNoteEdit()">取消修改</button>':'')+'</div><div class="travel-note-filters"><button class="'+(travelNoteUiState.filter==='all'?'on':'')+'" onclick="setTravelNoteFilter(\'all\')">全部</button><button class="'+(travelNoteUiState.filter==='issue'?'on':'')+'" onclick="setTravelNoteFilter(\'issue\')">異常</button><button class="'+(travelNoteUiState.filter==='suggestion'?'on':'')+'" onclick="setTravelNoteFilter(\'suggestion\')">優化建議</button></div><div class="diag-actions"><button onclick="copyTravelNotes(\'text\')">複製摘要</button><button onclick="copyTravelNotes(\'json\')">匯出 JSON</button></div><div class="travel-note-list">'+(rows||'<div class="travel-note-empty">尚無旅途紀錄</div>')+'</div></div>';
 }
 /* ================= SETTINGS 2.0 ================= */
-function closeSettings(){ var overlay=document.getElementById('settingsOverlay'); if(overlay) overlay.remove(); }
+function closeSettings(){
+  var overlay=document.getElementById('settingsOverlay');
+  if(overlay)overlay.remove();
+  shoppingPhotoSettingsEntered=false;
+}
 function shoppingItemsWithoutPhotoRefs(items){
   return (items||[]).map(function(item){var copy=Object.assign({},item);delete copy.photoId;return copy;});
 }
@@ -7953,9 +7960,10 @@ function openSettings(targetId){
       if(input)input.focus();
     },0);
   }
+  if(settingsUiState.page==='storage')setTimeout(enterShoppingPhotoSettings,0);
 }
 var settingsUiState={page:'root',scrollTopByPage:{},anchorId:''};
-var SETTINGS_PAGE_IDS=['root','theme','proxy','ledger','options','data','test-mode'];
+var SETTINGS_PAGE_IDS=['root','theme','proxy','ledger','options','storage','data','test-mode'];
 /* ledgerTestModeSection 於 v74 由根頁改指專屬控制頁(設計規格 §2.5)。
    anchorId 保留:同名節點搬到 test-mode 頁,既有 anchor 捲動／聚焦邏輯照舊生效。
    這個 legacy target 不得落到根頁 —— 使用者正在 TEST 模式中按「前往設定關閉」,
@@ -7989,6 +7997,7 @@ var SETTINGS_ROW_ICONS={
   ledger:'<svg class="app-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="3" y="6" width="18" height="12" rx="2"></rect><circle cx="12" cy="12" r="2.5"></circle><path d="M6.5 12h.01M17.5 12h.01"></path></svg>',
   settlement:'<svg class="app-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 7h16M4 17h16"></path><circle cx="9" cy="7" r="2"></circle><circle cx="15" cy="17" r="2"></circle></svg>',
   options:'<svg class="app-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M9 6h11M9 12h11M9 18h11"></path><path d="M4.5 6h.01M4.5 12h.01M4.5 18h.01"></path></svg>',
+  storage:'<svg class="app-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m9.5 12.5 5.7-5.7a3 3 0 0 1 4.2 4.2l-8.1 8.1a5 5 0 0 1-7.1-7.1l8.5-8.5"></path></svg>',
   data:'<svg class="app-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 3v11"></path><path d="m8 10 4 4 4-4"></path><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"></path></svg>'
 };
 function settingsGroup(title,rows){
@@ -8023,6 +8032,7 @@ function renderSettingsRoot(ledgerSettings){
       settingsNavRow('options','options','自訂項目',optionSummary)+
       testModeRow)+
     settingsGroup('資料',
+      settingsNavRow('storage','storage','附件與儲存空間',shoppingPhotoStorageSummary())+
       settingsNavRow('data','data','備份、還原與版本資訊','SW '+appVersionLabel()));
 }
 /* 團體帳測試模式控制頁(v74,設計規格 §2.4)
@@ -8052,6 +8062,97 @@ function renderSettingsLedgerPage(ledgerSettings,settingsError){
 function renderSettingsOptionsPage(){
   return renderSettingsHeader('自訂項目',false)+'<div class="settings-section" id="ledgerOptionSettingsSection"><h3>類別、支付方式與採買單位</h3><div class="settings-help">可新增、刪除或排序；刪除選項不影響既有紀錄。</div>'+renderLedgerOptionManager('category','類別')+renderLedgerOptionManager('payMethod','支付方式')+renderLedgerOptionManager('shoppingUnit','採買單位')+'</div>';
 }
+function formatShoppingPhotoBytes(value){
+  var bytes=Math.max(0,Number(value)||0);
+  if(bytes<1024)return Math.round(bytes)+' B';
+  if(bytes<1024*1024)return (bytes/1024).toFixed(bytes<10*1024?1:0)+' KB';
+  return (bytes/(1024*1024)).toFixed(bytes<10*1024*1024?1:0)+' MB';
+}
+function shoppingPhotoStorageSummary(){
+  var state=shoppingPhotoAuditState;
+  if(!state.ready)return '檢查中';
+  if(state.unavailable)return '無法使用';
+  if(state.invalidReferences.length)return state.invalidReferences.length+' 個附件待修復';
+  if(state.capacity&&state.capacity.low)return '儲存空間偏低';
+  return state.storedPhotoCount+' 張 · '+formatShoppingPhotoBytes(state.storedBytes);
+}
+function shoppingPhotoCheckedAtLabel(value){
+  var date=new Date(Number(value)||0);
+  if(!value||!isFinite(date.getTime()))return '尚未檢查';
+  return date.toLocaleString('zh-TW',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'});
+}
+function shoppingPhotoInvalidItem(ref){
+  return shoppingListStore.all().filter(function(item){return item&&item.id===ref.itemId;})[0]||null;
+}
+function renderSettingsStoragePage(){
+  var state=shoppingPhotoAuditState,capacity=state.capacity||{},invalid=state.invalidReferences||[],orphans=state.orphanPhotos||[];
+  var capacityValue=capacity.available
+    ? formatShoppingPhotoBytes(capacity.usageBytes)+' / '+formatShoppingPhotoBytes(capacity.quotaBytes)
+    : '瀏覽器未提供容量估算';
+  var capacityDetail=capacity.available
+    ? '約剩 '+formatShoppingPhotoBytes(capacity.remainingBytes)+'（'+Math.round(capacity.remainingRatio*100)+'%）'
+    : '照片仍只保存在此裝置；可由下方立即檢查實際附件狀態。';
+  var repairs=invalid.map(function(ref){
+    var item=shoppingPhotoInvalidItem(ref),name=item&&item.name||'已刪除的採買項目';
+    return '<button type="button" class="shopping-photo-storage-repair shopping-photo-storage-action" aria-label="修復 '+escapeHtml(name)+'" onclick="openShoppingPhotoRepairFromSettings(\''+jsHtmlAttrString(ref.itemId)+'\')"><span>'+escapeHtml(name)+'</span><b>修復 ›</b></button>';
+  }).join('');
+  return renderSettingsHeader('附件與儲存空間',false)+
+    '<div class="shopping-photo-storage-grid">'+
+      '<section class="shopping-photo-storage-card"><div class="shopping-photo-storage-primary">App 附件</div><div class="shopping-photo-storage-value">'+state.storedPhotoCount+' 張 · '+formatShoppingPhotoBytes(state.storedBytes)+'</div><div class="shopping-photo-storage-secondary">其中 '+orphans.length+' 張未被採買清單使用；背景清理會保留 24 小時緩衝。</div></section>'+
+      '<section class="shopping-photo-storage-card"><div class="shopping-photo-storage-primary">App 儲存空間（估計）</div><div class="shopping-photo-storage-value">'+escapeHtml(capacityValue)+'</div><div class="shopping-photo-storage-secondary">'+escapeHtml(capacityDetail)+'</div>'+(capacity.low?'<div class="shopping-photo-storage-warning">儲存空間偏低，新增照片可能失敗。</div>':'')+'</section>'+
+      '<section class="shopping-photo-storage-card"><div class="shopping-photo-storage-primary">附件檢查</div><div class="shopping-photo-storage-secondary">最近檢查：'+escapeHtml(shoppingPhotoCheckedAtLabel(state.checkedAt))+'</div>'+(state.unavailable?'<div class="shopping-photo-storage-warning">此裝置目前無法使用照片附件。</div>':'')+'<div class="shopping-photo-storage-actions"><button type="button" class="btn shopping-photo-storage-action" onclick="checkShoppingPhotoStorage()">立即檢查</button><button type="button" class="btn ghost shopping-photo-storage-action" onclick="confirmShoppingPhotoCleanup()">清理未使用照片'+(orphans.length?'（'+orphans.length+'）':'')+'</button></div></section>'+
+      '<section class="shopping-photo-storage-card"><div class="shopping-photo-storage-primary">'+invalid.length+' 個附件待修復</div><div class="shopping-photo-storage-secondary">遺失的照片不會自動移除；請逐筆重新選擇照片或移除引用。</div><div class="shopping-photo-storage-repairs">'+(repairs||'<div class="shopping-photo-storage-secondary">目前沒有需要修復的附件。</div>')+'</div></section>'+
+    '</div>';
+}
+function settingsRenderContext(){
+  var ledgerSettings,settingsError='';
+  try{ledgerSettings=currentLedgerSettings();}
+  catch(error){ledgerSettings={exchangeRate:'',defaultCurrency:'JPY'};settingsError=error.message||'分帳設定無效';}
+  return {ledgerSettings:ledgerSettings,settingsError:settingsError};
+}
+function rerenderOpenSettingsPage(){
+  var panel=document.querySelector('#settingsOverlay .settings-panel');
+  if(!panel)return;
+  var scrollTop=Math.max(0,Number(panel.scrollTop)||0),context=settingsRenderContext();
+  panel.innerHTML=renderSettingsPage(settingsUiState.page,context.ledgerSettings,context.settingsError);
+  panel.scrollTop=scrollTop;
+}
+function enterShoppingPhotoSettings(){
+  if(shoppingPhotoSettingsEntered||settingsUiState.page!=='storage'||!document.getElementById('settingsOverlay'))return;
+  shoppingPhotoSettingsEntered=true;
+  refreshShoppingPhotoAudit({force:true,reason:'settings'}).then(function(){
+    if(settingsUiState.page==='storage'&&document.getElementById('settingsOverlay'))rerenderOpenSettingsPage();
+  });
+}
+function checkShoppingPhotoStorage(){
+  return refreshShoppingPhotoAudit({force:true,reason:'settings-manual'}).then(function(){
+    rerenderOpenSettingsPage();toast('附件檢查完成');return true;
+  });
+}
+function confirmShoppingPhotoCleanup(){
+  var orphans=(shoppingPhotoAuditState.orphanPhotos||[]).slice();
+  if(!orphans.length){toast('沒有未使用照片可清理');return Promise.resolve(false);}
+  var bytes=orphans.reduce(function(total,record){return total+(Number(record.size)||0);},0);
+  if(!confirm('清理 '+orphans.length+' 張未使用照片（'+formatShoppingPhotoBytes(bytes)+'）？'))return Promise.resolve(false);
+  return cleanupShoppingPhotoOrphans(orphans.map(function(record){return record.id;})).then(function(results){
+    return refreshShoppingPhotoAudit({force:true,reason:'settings-cleanup'}).then(function(){
+      var failed=results.filter(function(result){return !result.removed;}).length;
+      rerenderOpenSettingsPage();
+      toast(failed?'已清理部分照片，'+failed+' 張未能移除':'未使用照片已清理');
+      return failed===0;
+    });
+  });
+}
+function openShoppingPhotoRepairFromSettings(itemId){
+  var item=shoppingListStore.all().filter(function(entry){return entry&&entry.id===String(itemId||'');})[0];
+  if(!item){checkShoppingPhotoStorage();toast('找不到這筆採買項目');return;}
+  closeSettings();openShoppingList();
+  requestAnimationFrame(function(){
+    var card=shoppingItemCardElement(item.id),trigger=card&&card.querySelector('.shopping-photo-indicator-invalid');
+    if(card)card.scrollIntoView({block:'center'});
+    openShoppingPhotoRepair(item.id,trigger||card);
+  });
+}
 var APP_RELEASE_NOTES=[
   {version:'v76',date:'2026-08-01',title:'採買多選更快速',items:['多選模式可一次選取或取消目前分頁的全部採買項目','切換分頁與完成批次操作後會清除選取，避免誤用舊選取']},
   {version:'v75',date:'2026-08-01',title:'採買照片與附近導航',items:['採買項目可附上一張只保存在本裝置的照片，卡片以迴紋針提示','同名地點會依目前位置尋找最近結果，詳細分點則維持精確導航']},
@@ -8072,6 +8173,7 @@ function renderSettingsPage(page,ledgerSettings,settingsError){
   if(page==='proxy')return renderSettingsProxyPage();
   if(page==='ledger')return renderSettingsLedgerPage(ledgerSettings,settingsError);
   if(page==='options')return renderSettingsOptionsPage();
+  if(page==='storage')return renderSettingsStoragePage();
   if(page==='data')return renderSettingsDataPage();
   if(page==='test-mode')return renderSettingsTestModePage();
   return renderSettingsRoot(ledgerSettings);

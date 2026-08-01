@@ -123,6 +123,28 @@ async function createStoredPhotoItem(page){
   return photoId;
 }
 
+async function seedPhotoStorageManagement(page){
+  await installPersistentOfflineMode(page);
+  await openPhotoQaApp(page);
+  await waitForSyncToSettle(page);
+  const now=Date.now();
+  await putIndexedDbPhotoRecords(page,[
+    {id:'settings-valid',createdAt:new Date(now-3*24*60*60*1000).toISOString()},
+    {id:'settings-old-orphan',createdAt:new Date(now-2*24*60*60*1000).toISOString()},
+    {id:'settings-young-orphan',createdAt:new Date(now-60*60*1000).toISOString()}
+  ]);
+  await page.evaluate(async()=>{
+    localStorage.setItem('trip_member','Bar');
+    localStorage.setItem('trip_shopping_list',JSON.stringify([
+      {id:'settings-valid-item',name:'有效附件',category:'必買',unit:'盒',legacyQtyText:'',allocations:[{allocationId:'valid-a',target:'',quantity:1,ledgerLinks:[]}],stopRef:'',done:false,createdAt:'2026-08-01T01:00:00.000Z',completedAt:'',splitGroupId:'',photoId:'settings-valid'},
+      {id:'settings-missing-item',name:'遺失附件',category:'必買',unit:'盒',legacyQtyText:'',allocations:[{allocationId:'missing-a',target:'',quantity:1,ledgerLinks:[]}],stopRef:'',done:false,createdAt:'2026-08-01T02:00:00.000Z',completedAt:'',splitGroupId:'',photoId:'settings-missing'}
+    ]));
+    await refreshShoppingPhotoAudit({force:true,reason:'qa-settings-seed'});
+    openShoppingList();
+    openSettings('root');
+  });
+}
+
 test('照片檢視器頂部操作列會把安全區留在關閉按鈕上方',async({page})=>{
   const viewer=await openStoredPhotoViewer(page);
   const layout=await viewer.evaluate(element=>{
@@ -249,6 +271,75 @@ test('照片 repository 不可用時停用照片操作但保留一般採買編�
   await expect(page.locator('#shoppingPhotoInput')).toBeDisabled();
   await page.locator('#shoppingName').fill('仍可編輯');
   await expect(page.locator('#shoppingName')).toHaveValue('仍可編輯');
+});
+
+test('設定頁集中顯示附件容量並可修復引用或手動清理孤立照片',async({page})=>{
+  await seedPhotoStorageManagement(page);
+  await page.getByRole('button',{name:/附件與儲存空間/}).click();
+  await expect(page.getByRole('heading',{name:'附件與儲存空間'})).toBeVisible();
+  await expect(page.getByText('App 附件',{exact:true})).toBeVisible();
+  await expect(page.getByText(/3 張/)).toBeVisible();
+  await expect(page.getByText('App 儲存空間（估計）',{exact:true})).toBeVisible();
+  await expect(page.getByText(/1 個附件待修復/)).toBeVisible();
+  await expect(page.getByText(/最近檢查/)).toBeVisible();
+
+  await page.getByRole('button',{name:'修復 遺失附件'}).click();
+  await expect(page.locator('#shoppingPhotoRepair')).toBeVisible();
+  await page.locator('#shoppingPhotoRepair').getByRole('button',{name:'關閉'}).click();
+  await page.evaluate(()=>openSettings('storage'));
+
+  page.once('dialog',dialog=>dialog.accept());
+  await page.getByRole('button',{name:/清理未使用照片/}).click();
+  await expect.poll(()=>indexedDbPhotoIds(page)).toEqual(['settings-valid']);
+  expect(await page.evaluate(()=>shoppingListStore.all().find(item=>item.id==='settings-missing-item').photoId)).toBe('settings-missing');
+});
+
+test('六主題下附件管理文字、修復文字與警示迴紋針對比皆達 4.5',async({page})=>{
+  await seedPhotoStorageManagement(page);
+  const readings=await page.evaluate(async()=>{
+    function rgb(value){const parts=(value.match(/[\d.]+/g)||[]).slice(0,3).map(Number);return parts;}
+    function luminance(value){return rgb(value).map(channel=>channel/255).map(channel=>channel<=.03928?channel/12.92:Math.pow((channel+.055)/1.055,2.4)).reduce((sum,channel,index)=>sum+channel*[.2126,.7152,.0722][index],0);}
+    function contrast(foreground,background){const a=luminance(foreground),b=luminance(background);return (Math.max(a,b)+.05)/(Math.min(a,b)+.05);}
+    const result={};
+    for(const id of THEME_IDS){
+      applyTheme(id,{persist:false});
+      renderShoppingListOverlay();
+      const indicator=document.querySelector('[data-shopping-item-id="settings-missing-item"] .shopping-photo-indicator-invalid');
+      const card=indicator.closest('.shopping-item');
+      const iconContrast=contrast(getComputedStyle(indicator).color,getComputedStyle(card).backgroundColor);
+      openShoppingPhotoRepair('settings-missing-item',indicator);
+      const repair=document.querySelector('#shoppingPhotoRepair .shopping-photo-repair-sheet');
+      const repairBg=getComputedStyle(repair).backgroundColor;
+      const repairTitle=contrast(getComputedStyle(repair.querySelector('h2')).color,repairBg);
+      const repairCopy=contrast(getComputedStyle(repair.querySelector('.shopping-photo-repair-copy')).color,repairBg);
+      closeShoppingPhotoRepair(false);
+      openSettings('storage');
+      await new Promise(resolve=>setTimeout(resolve,0));
+      const panel=document.querySelector('#settingsOverlay .settings-panel');
+      const storage=document.querySelector('.shopping-photo-storage-card');
+      const storageBg=getComputedStyle(storage).backgroundColor;
+      result[id]={
+        icon:iconContrast,
+        primary:contrast(getComputedStyle(storage.querySelector('.shopping-photo-storage-primary')).color,storageBg),
+        secondary:contrast(getComputedStyle(storage.querySelector('.shopping-photo-storage-secondary')).color,storageBg),
+        repairTitle,repairCopy,
+        overflow:document.documentElement.scrollWidth-document.documentElement.clientWidth,
+        actionHeight:Math.min(...Array.from(panel.querySelectorAll('.shopping-photo-storage-action'),node=>node.getBoundingClientRect().height))
+      };
+      closeSettings();openShoppingList();
+    }
+    applyTheme('ocean',{persist:false});
+    return result;
+  });
+  for(const [id,reading] of Object.entries(readings)){
+    expect(reading.icon,`${id} warning paperclip`).toBeGreaterThanOrEqual(4.5);
+    expect(reading.primary,`${id} storage primary`).toBeGreaterThanOrEqual(4.5);
+    expect(reading.secondary,`${id} storage secondary`).toBeGreaterThanOrEqual(4.5);
+    expect(reading.repairTitle,`${id} repair title`).toBeGreaterThanOrEqual(4.5);
+    expect(reading.repairCopy,`${id} repair copy`).toBeGreaterThanOrEqual(4.5);
+    expect(reading.overflow,`${id} horizontal overflow`).toBe(0);
+    expect(reading.actionHeight,`${id} action height`).toBeGreaterThanOrEqual(52);
+  }
 });
 
 test('採買單張照片只存本機,卡片只顯示迴紋針並可在詳情全畫面查看',async({page})=>{

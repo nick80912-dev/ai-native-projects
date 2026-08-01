@@ -36,6 +36,7 @@ function renderRoot(overrides,ledgerSettings){
     currentThemeId:function(){ return 'ocean'; },
     isSimpleSettlementMode:function(){ return false; },
     appVersionLabel:function(){ return version; },
+    shoppingPhotoStorageSummary:function(){ return '0 張 · 0 B'; },
     lsGet:function(key,fallback){ return key==='trip_ledger_test_mode' ? false : fallback; }
   },overrides||{});
   vm.createContext(sandbox);
@@ -66,6 +67,8 @@ assert(at('>主題<')>at('>個人<')&&at('>主題<')<at('>記帳<'),'theme row s
   assert(at(label)>at('>記帳<')&&at(label)<at('>資料<'),label+' sits in 記帳');
 });
 assert(at('>備份、還原與版本資訊<')>at('>資料<'),'data row sits in 資料');
+assert(at('>附件與儲存空間<')>at('>資料<'),'attachment storage row sits in 資料');
+assert(at('>附件與儲存空間<')<at('>備份、還原與版本資訊<'),'attachment storage precedes backup and version');
 
 /* ---- §8 新 E2:摘要格式 ---- */
 assert(out.includes('2 位常用對象'),'proxy summary counts the stored targets');
@@ -73,6 +76,7 @@ assert(out.includes('3 類別 · 2 支付方式'),'custom-option summary lists c
 assert(!/\d+\s*單位/.test(out),'shopping units are no longer summarized on the root page');
 assert(out.includes('JPY · 0.22'),'ledger summary shows default currency and exchange rate');
 assert(out.includes('SW '+version),'data summary shows the running Service Worker version');
+assert(out.includes('0 張 · 0 B'),'storage summary shows the device-local attachment count and size');
 assert(out.includes('海洋／岡山'),'theme summary shows the current theme name');
 
 /* ---- 降級路徑 ---- */
@@ -108,7 +112,7 @@ assert(out.includes('openMemberSelector(false,false)'),'identity switch entry pr
 assert(out.includes('openMemberSelector(false,true)'),'identity add entry preserved');
 assert(out.includes('aria-label="新增身分"'),'the add-identity button keeps an accessible name');
 ["openSettingsPage('theme')","openSettingsPage('proxy')","openSettingsPage('ledger')",
- "openSettingsPage('options')","openSettingsPage('data')"].forEach(function(call){
+ "openSettingsPage('options')","openSettingsPage('storage')","openSettingsPage('data')"].forEach(function(call){
   assert(out.includes(call),'root preserves the subpage entry '+call);
 });
 
@@ -126,6 +130,9 @@ assert(simpleOn.includes('保留已確認結清'),'the 保留已確認結清 exp
 const rootSource = extractFunction(html,'renderSettingsRoot');
 assert(!/APP_VERSION/.test(rootSource),'root reads the version only through appVersionLabel()');
 assert(rootSource.includes('appVersionLabel()'),'root uses the safe version helper');
+assert(html.includes("'storage'"),'the Settings router declares the storage page');
+assert(extractFunction(html,'renderSettingsPage').includes("if(page==='storage')return renderSettingsStoragePage();"),
+  'the Settings router renders the attachment storage page');
 
 /* ---- 觸控面積與圖示來源(§1 §3.2) ---- */
 const icons = extractDeclaration(html,'SETTINGS_ROW_ICONS');
