@@ -1977,6 +1977,33 @@ function navQuery(it,res){
   return intent?encodeURIComponent(intent.query+' 日本'):'';
 }
 function navUrl(it,res){return navigationDirectionsUrl(navigationIntent(it,res));}
+function renderTripNavigationLink(it,res,dayIndex,className){
+  var intent=navigationIntent(it,res);if(!intent)return '';
+  var label=transport()==='drive'?'🚗 導航':'🚃 路線';
+  var click=intent.kind==='nearby'?' onclick="return openTripNavigation(event,'+Number(dayIndex)+',\''+jsHtmlAttrString(it.id)+'\')"':'';
+  return '<a class="'+escapeHtml(className||'qa-btn drv')+'" href="'+navigationDirectionsUrl(intent)+'" target="_blank" rel="noopener"'+click+'>'+label+'</a>';
+}
+function openTripNavigation(event,dayIndex,itemId){
+  var item=tripItemForNavigation(dayIndex,itemId),intent=item&&navigationIntent(item,resolveRef(item));
+  if(!intent||intent.kind==='exact')return true;
+  if(event&&event.preventDefault)event.preventDefault();
+  var fallback=navigationDirectionsUrl(intent),target=null;
+  try{target=window.open('about:blank','_blank');if(target)target.opener=null;}catch(ignore){target=null;}
+  function navigate(url){
+    if(target){
+      try{if(target.location&&typeof target.location.replace==='function')target.location.replace(url);else target.location=url;return;}catch(ignore){}
+    }
+    window.location.href=url;
+  }
+  if(typeof navigator==='undefined'||!navigator.geolocation||typeof navigator.geolocation.getCurrentPosition!=='function'){
+    navigate(fallback);return false;
+  }
+  navigator.geolocation.getCurrentPosition(function(position){
+    var coords=position&&position.coords||{};
+    navigate(navigationDirectionsUrl(intent,{latitude:coords.latitude,longitude:coords.longitude})||fallback);
+  },function(){navigate(fallback);},{enableHighAccuracy:false,timeout:6000,maximumAge:300000});
+  return false;
+}
 function highlightNote(text){
   var t=escapeHtml(text);
   t=t.replace(/(https?:\/\/[^\s，、]+)/g,'<a href="$1" target="_blank" rel="noopener">$1</a>');
@@ -2280,7 +2307,7 @@ function renderItem(it,checks,currentItemId,dayProgress){
 
   var qa='';
   if(hasPlaceTxt||res){
-    qa+='<a class="qa-btn drv" href="'+navUrl(it,res)+'" target="_blank" rel="noopener">'+(transport()==='drive'?'🚗 導航':'🚃 路線')+'</a>';
+    qa+=renderTripNavigationLink(it,res,curDay,'qa-btn drv');
   }
   var pk=p&&(p.mapcode||p.pfee||p.pnote)?parkingPanel(p):'';
   if(pk&&transport()==='drive') qa+='<button class="qa-btn pk" onclick="togglePanel(\''+it.id+'\',\'pk\',this)">🅿 停車</button>';
@@ -2703,7 +2730,7 @@ function renderClusterNextStopCard(day,dayIndex,pick,cluster,checks,progress,now
       '<button class="nx-cluster-expand '+(open?'on':'')+'" onclick="toggleHomeCluster(\''+jsString(cluster.parent.id)+'\')">'+(open?'收合該區串點':'展開該區串點')+'</button>'+
       (open?'<div class="nx-cluster-list">'+cluster.items.map(function(item){ return renderClusterStop(item,checks,progress,dayIndex); }).join('')+'</div>':'')+
     '</div>'+
-    (canNav?'<div class="nx-primary-actions"><a class="nx-drive-btn" href="'+navUrl(current,res)+'" target="_blank" rel="noopener">'+(transport()==='drive'?'🚗 導航':'🚃 路線')+'</a></div>':'')+
+    (canNav?'<div class="nx-primary-actions">'+renderTripNavigationLink(current,res,dayIndex,'nx-drive-btn')+'</div>':'')+
     '<div class="nx-ticket-low"><button class="nx-decision-btn done" onclick="onNextStopDone('+dayIndex+',\''+current.id+'\')">完成：'+escapeHtml(clusterItemName(current))+'</button><button class="nx-decision-btn skip" onclick="onNextStopSkip('+dayIndex+',\''+current.id+'\')">跳過：'+escapeHtml(clusterItemName(current))+'</button></div></div>';
   if(pick.remaining+childPick.remaining>0) h+='<div class="nx-remain">今日還有 '+(pick.remaining+childPick.remaining)+' 個行程</div>';
   return h;
@@ -2733,7 +2760,7 @@ function renderNextStopCard(day,dayIndex,pick){
         (meta.note?'<div class="nx-ticket-line nx-ticket-note"><b>提醒</b>'+renderNote(meta.note)+'</div>':'')+
       '</div>'+
     '</div>'+
-    (canNav?'<div class="nx-primary-actions"><a class="nx-drive-btn" href="'+navUrl(it,res)+'" target="_blank" rel="noopener">'+(transport()==='drive'?'🚗 導航':'🚃 路線')+'</a></div>':'')+
+    (canNav?'<div class="nx-primary-actions">'+renderTripNavigationLink(it,res,dayIndex,'nx-drive-btn')+'</div>':'')+
     '<div class="nx-secondary-actions">'+
       (meta.web?'<a class="qa-btn nf" href="'+escapeHtml(meta.web)+'" target="_blank" rel="noopener">🌐 官網</a>':'')+
       (meta.shopPlaceId?'<button class="qa-btn sp" onclick="openShopPlace(\''+jsString(meta.shopPlaceId)+'\')">🏬 樓層</button>':'')+
