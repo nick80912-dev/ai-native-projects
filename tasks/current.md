@@ -38,7 +38,7 @@
 
 | # | Gate | 狀態 | 負責 |
 |---|---|---|---|
-| G1 | **SW v73** Bar 真機／PWA 驗收 | 🔄 進行中 — **P0／P1／A／B／C／D／E／F 已全數通過**;剩 **G(備份還原)／H(已鎖帳)／I(收尾)** | Bar |
+| G1 | **SW v73** Bar 真機／PWA 驗收 | ✅ **完成(2026-08-01)** — P0／P1／A／B／C／D／E／F／G／H／I 全數於 iPhone 通過,清單見 `docs/batch2-device-acceptance.md` | Bar |
 | G2 | 批次一「發布阻斷項」全數交付且 `tests/` 全綠 + Playwright 全綠 + `check-doc-titles.js` + `check-app-version.js` 通過 | ✅ 完成(P1–P6 全數交付) | AI |
 | G3 | `main` 現況(`9eefcb0`,SW okayama-trip-v18)建立 annotated 回滾 tag 並 push `origin` | ✅ 完成(`production-v18` → `2f1987b`,peeled `9eefcb0`) | AI |
 | R1 | 遠端 CI 證據(G4 前置) | ✅ runtime 候選版 `5772de5`(run `30595077190`)與目前 HEAD `d668f09`(run `30596362849`)皆 success;**申請 G4 當下須重新確認最終 merge head 的 CI**,不得沿用舊 run | AI |
@@ -58,6 +58,6 @@
 > 已解除：Apps Script `doGet` 部署已由 Bar 完成，真實端點驗證（CORS、redirect、`after`／`reset`／`serverTime`、非 JSON 降級）通過，見上方 SW v47 條目。
 
 ## 下一棒
-→ **批次一已全部完成並推送 `dev`**。下一棒是 Bar 依 `docs/batch2-device-acceptance.md` 執行真機／PWA 驗收(Release Gate G1),特別注意 **C2「先離線、再升級」只有這次過渡期能測到**。驗收通過後由 Bar 核准 PR merge `dev → main`,部署並線上驗證後才建立 `production-v73` tag。
+→ **G1 真機驗收已全數通過(2026-08-01)**。下一棒依序:R1-c 查最新 merge head 的遠端 CI → 建立 `dev → main` PR → 確認 PR 的 sanity 與 browser-qa 全綠 → 由 Bar 核准並執行 G4 merge → 正式部署與 smoke test → 建立 annotated `production-v73` tag。**v74 實作須待 v73 正式發布完成後才啟動。**
 
 > 採買清單 A／B／D／F 已於 SW v60／v61 交付；C／E／G 已於 SW v68 實作，並於 2026-07-29 完成 Bar 真機驗收；正式契約見設計文件。
