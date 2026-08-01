@@ -14,6 +14,7 @@ function memoryDriver(){
     put(record){records.set(record.id,record);return Promise.resolve(record);},
     get(id){return Promise.resolve(records.get(id)||null);},
     remove(id){records.delete(id);return Promise.resolve();},
+    list(){return Promise.resolve(Array.from(records.values()));},
     ids(){return Array.from(records.keys());}
   };
 }
@@ -82,6 +83,15 @@ function memoryDriver(){
   assert.notStrictEqual(firstId,secondId,'separate puts never overwrite one another');
   assert.strictEqual(await store.get(firstId),firstBlob,'get returns the stored Blob, not the record wrapper');
   assert.deepStrictEqual(driver.ids(),[firstId,secondId],'both records remain present before explicit removal');
+  assert.deepStrictEqual(await store.listMetadata(),[
+    {id:firstId,size:firstBlob.size,createdAt:'2024-08-01T00:00:00.000Z'},
+    {id:secondId,size:secondBlob.size,createdAt:'2024-08-01T00:00:00.000Z'}
+  ]);
+
+  await assert.rejects(
+    createStore({driver:{put(){},get(){},remove(){},list(){return Promise.reject(new Error('LIST_FAILED'));}}}).listMetadata(),
+    /LIST_FAILED/
+  );
 
   await store.remove(firstId);
   assert.strictEqual(await store.get(firstId),null,'removed photos read as null');

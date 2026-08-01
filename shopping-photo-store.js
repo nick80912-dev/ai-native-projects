@@ -115,7 +115,8 @@
     return {
       put:function(record){return transact('readwrite',function(store){return store.put(record);}).then(function(){return record;});},
       get:function(id){return transact('readonly',function(store){return store.get(id);});},
-      remove:function(id){return transact('readwrite',function(store){return store.delete(id);}).then(function(){return null;});}
+      remove:function(id){return transact('readwrite',function(store){return store.delete(id);}).then(function(){return null;});},
+      list:function(){return transact('readonly',function(store){return store.getAll();});}
     };
   }
 
@@ -142,6 +143,11 @@
         id=String(id||'').trim();
         if(!id)return Promise.resolve();
         return Promise.resolve(driver.remove(id)).then(function(){return undefined;});
+      },
+      listMetadata:function(){
+        return Promise.resolve(driver.list()).then(function(records){
+          return (records||[]).map(recordMetadata).filter(function(record){return !!record.id;}).sort(function(a,b){return a.id.localeCompare(b.id);});
+        });
       }
     };
   }
