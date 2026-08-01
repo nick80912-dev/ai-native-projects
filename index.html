@@ -4449,6 +4449,22 @@ function shoppingSelectionToolbarModel(tab,count){
     actions:tab==='done'?['移回待買','記帳','刪除']:['已買','記帳','刪除']
   };
 }
+function shoppingSelectionControlModel(items,selected){
+  var ids=[],seen={};
+  (items||[]).forEach(function(item){
+    var id=String(item&&item.id||'');
+    if(!id||seen[id])return;
+    seen[id]=true;ids.push(id);
+  });
+  var allSelected=ids.length>0&&ids.every(function(id){return !!(selected&&selected[id]);});
+  return {ids:ids,allSelected:allSelected,actionLabel:allSelected?'取消全選':'全選'};
+}
+function nextShoppingPageSelection(items,selected){
+  var model=shoppingSelectionControlModel(items,selected),next={};
+  if(model.allSelected)return next;
+  model.ids.forEach(function(id){next[id]=true;});
+  return next;
+}
 function canOfferShoppingPartialPurchase(item,linkSummary){
   if(!item||item.done||!linkSummary||linkSummary.state!=='unlinked')return false;
   var allocations=shoppingItemAllocations(item);

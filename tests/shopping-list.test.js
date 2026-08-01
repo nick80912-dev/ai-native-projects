@@ -255,6 +255,36 @@ assert.deepStrictEqual(plain(mod.shoppingSelectionToolbarModel('done',2)),{
   label:'已選 2',
   actions:['移回待買','記帳','刪除']
 },'已買多選動作不借用完成 checkbox');
+const visibleSelectionItems=[{id:'pending-1'},{id:'pending-2'}];
+assert.deepStrictEqual(plain(mod.shoppingSelectionControlModel(
+  visibleSelectionItems,
+  {'pending-1':true,'done-1':true,'deleted-id':true}
+)),{
+  ids:['pending-1','pending-2'],
+  allSelected:false,
+  actionLabel:'全選'
+},'selection controls derive state only from current-tab item IDs');
+assert.deepStrictEqual(plain(mod.nextShoppingPageSelection(
+  visibleSelectionItems,
+  {'pending-1':true,'done-1':true,'deleted-id':true}
+)),{
+  'pending-1':true,
+  'pending-2':true
+},'select all rebuilds the map from current-tab IDs and removes stale IDs');
+assert.deepStrictEqual(plain(mod.shoppingSelectionControlModel(
+  visibleSelectionItems,
+  {'pending-1':true,'pending-2':true,'done-1':true}
+)),{
+  ids:['pending-1','pending-2'],
+  allSelected:true,
+  actionLabel:'取消全選'
+},'all visible items switch the control to deselect all');
+assert.deepStrictEqual(plain(mod.nextShoppingPageSelection(
+  visibleSelectionItems,
+  {'pending-1':true,'pending-2':true,'done-1':true}
+)),{},'deselect all keeps multi-select active but clears the map');
+assert.deepStrictEqual(plain(mod.nextShoppingPageSelection([],{'stale':true})),{},
+  'an empty current tab cannot retain stale selection');
 assert.strictEqual(mod.shoppingItemQuantitySummary({
   unit:'盒',
   allocations:[allocation('阿寶',2),allocation('媽媽',2),allocation('小明',2)]
