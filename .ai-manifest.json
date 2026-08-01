@@ -2,14 +2,14 @@
   "$comment": "AI 導航檔 — 任何 AI 接手第一步只讀這份即可掌握全貌。這是 13 步流程的第 1 步。",
   "project": "japan-travel-pwa(日本旅遊行程 App)",
   "owner": "Bar(產品負責人,非工程師,繁中溝通,要直接執行不要教學;AI=全職工程團隊)",
-  "version": "2.5-ledger-settings",
+  "version": "2.9-sw-update-integrity-v73",
   "framework": "ai-native-framework@pending(尚未抽取;見 FUTURE_PLAN_framework-extraction.md)",
-  "updated": "2026-07-17",
+  "updated": "2026-07-30",
   "live": "https://trippilot-jp.netlify.app/",
   "start_here": "先讀本檔 → PROJECT_CONSTITUTION.md(憲章/流程/禁令)→ 08_AI_HANDOVER.md → 15_AI_EXECUTION_RULES.md(決策權限/任務分級,必讀)→ 相關 adr/ → 依任務讀 03_DATABASE/09_SCHEMA_MAPPING(資料與欄位)、05_CODING_RULES/11_CODING_CONVENTION(程式)、12_DEV_WORKFLOW(步驟)",
   "governance": {
     "constitution": "PROJECT_CONSTITUTION.md",
-    "adr_dir": "adr/(0001-schema-first, 0002-data-driven-ui, 0003-google-sheet-cms, 0004-renderer-architecture, 0005-branch-strategy, 0006-ledger-sync-apps-script);重構前必讀",
+    "adr_dir": "adr/(0001-schema-first, 0002-data-driven-ui, 0003-google-sheet-cms, 0004-renderer-architecture, 0005-branch-strategy, 0006-ledger-sync-apps-script, 0007-settlement-handshake, 0008-theme-system-scope);重構前必讀;索引權威=adr/README.md",
     "must_confirm_with_bar": [
       "換框架",
       "大重構",
@@ -25,20 +25,23 @@
     "workflow": "Gate(第0步,見4.1)+ 十三步(讀manifest→讀handover→讀ADR→定位模組→先設計→最小修改→跑Validator→驗證資料流→更新文件→更新CHANGELOG→一致性檢查healthCheck→完成→開發摘要);A/B級任務走15§5簡化流程",
     "file_tiers": "14_FILE_TIERS_AND_GATE.md:Tier1一般開發/Tier2高風險(改前過原因-影響-風險-回滾確認)/Tier3產生產物禁手改",
     "ai_execution_rules": "15_AI_EXECUTION_RULES.md:指令預設非覆寫、不確定性三分法、檔案增刪權限、任務分級A/B/C、文件vs現實衝突協議",
-    "ops_playbook": "16_OPS_PLAYBOOK.md:Netlify回滾/SW快取災難/Sheet版本還原/清理排程安全",
+    "ops_playbook": "16_OPS_PLAYBOOK.md:Netlify回滾/以tag回滾至v18(§A5)/SW快取災難/Sheet版本還原/清理排程安全/測試站驗收前置核對(§F5)",
     "status_authority": "即時狀態唯一權威=tasks/(current/backlog/done);13_PROJECT_STATUS與本manifest.status為快照;00_CONTEXT_HANDOVER為歷史快照不參與"
   },
-  "data_flow": "GoogleSheets(8表)→發布CSV→手機瀏覽器fetch→validator.js(防錯)→parser(Schema驅動)→DB→renderers→UI；分帳寫入:localStorage佇列→ledgerRepository→Apps Script→分帳紀錄表(append-only)；共用分帳設定:Settings→Apps Script→TripConfig兩個固定鍵→發布CSV,確認後以本機bridge涵蓋1–5分鐘延遲；離線三層:BUILTIN內建→localStorage快取→背景同步",
+  "data_flow": "GoogleSheets(8表)→發布CSV→手機瀏覽器fetch→validator.js(防錯)→parser(Schema驅動)→DB→renderers→UI；個人帳、代購對象、主題與旅途紀錄→localStorage only(不進Queue/CMS)，並由個人備份v8原子匯出／還原；團體帳→enqueueBatch一次寫入localStorage佇列→立即UI完成→ledgerRepository背景送達Apps Script→分帳紀錄表(append-only,Schema 2.9固定21欄,time=消費發生時間,末五欄=輸入幣別/免稅/價格方式/稅率/優惠券)；未受還款確認保護的團體編輯=舊筆墓碑+replacesRecordId替代筆；canonical還款確認切點前的收據永久禁止直接改寫，只能由原付款人以commit-last事件整張更正或作廢；共用分帳設定:Settings→Apps Script→TripConfig兩個固定鍵→發布CSV,確認後以本機bridge涵蓋1–5分鐘延遲；離線三層:BUILTIN內建→localStorage快取→背景同步",
   "files": {
     "index.html": "唯一可編輯 App 與正式部署入口:UI殼+CSS+內嵌JS(區塊分層見10_FOLDER_STRUCTURE)",
+    "app-version.js": "App端版本來源(供顯示與旅途紀錄);sw.js 另自帶 SW_VERSION,兩者必須相等,由 tools/check-app-version.js 守住。2026-07-30 起 sw.js 不再 importScripts 本檔取版本——imported script 會經 HTTP cache,GitHub Pages 的 max-age=600 會讓版本升級靜默失效",
     "schema.js": "唯一資料規格SSoT:欄位/gid/型別值/發布URL;schemaDoc()自動產09文件",
     "validator.js": "防錯防線:AppLog六類([Schema/Parser/Data/Repository/Render/Sync Error])+buildHeaderMap+window.healthCheck()",
-    "apps-script/ledger-sync.gs": "Apps Script部署唯一維護來源:分帳append-only與TripConfig兩鍵白名單更新"
+    "apps-script/ledger-sync.gs": "Apps Script部署唯一維護來源:分帳append-only與TripConfig兩鍵白名單更新",
+    "docs/personal-state-compatibility.md": "個人狀態備份 v1–v8 相容策略契約(向後／向前相容、缺欄位預設值、採買單位規則、失敗語意);可執行契約=tests/personal-state-restore-matrix.test.js,兩者不一致即為缺陷",
+    "docs/batch2-device-acceptance.md": "批次二真機／PWA 驗收清單(SW v73 候選版);含測試站前置核對與 v18→v73「先離線再升級」的一次性風險窗口"
   },
   "deploy_files": {
     "index.html": "唯一正式 App 入口",
     "schema.js + validator.js": "資料規格與防錯來源",
-    "sw.js": "Service Worker(改版 bump VERSION)",
+    "sw.js + app-version.js": "改版須同時更新 sw.js 的 SW_VERSION 與 app-version.js 的 APP_VERSION;不一致時 tools/check-app-version.js 直接讓 CI 失敗",
     "manifest.webmanifest + icon-*.png": "PWA 安裝資產"
   },
   "cms": {
@@ -63,7 +66,8 @@
     "viewport meta 不得常駐 maximum-scale 或 user-scalable=no;只允許輸入 focus 縮放殘留時瞬鎖約100ms,並原樣還原啟動時字串",
     "停車 MAP CODE 純顯示無複製鈕、『停車同Pxxx』繼承",
     "渡輪不建班次庫(末班資訊+官方時刻表連結)",
-    "個人狀態(打卡/想逛/成員身分)存 localStorage 不進 CMS;依ADR 0006,App僅可append分帳紀錄並更新TripConfig的Exchange Rate / Ledger Default Currency兩鍵,其餘CMS欄位維持Bar手動管理且App唯讀",
+    "個人狀態(打卡/想逛/成員身分)、個人帳、代購對象、themeId與travelNotes存localStorage且不進Queue/CMS；主題、採買單位與旅途紀錄屬個人備份v8欄位;團體帳只走Ledger Repository,兩軌資料與統計禁止混用;TEST團體帳與正式團體帳依目前模式平行隔離;依ADR 0006,App僅可append分帳紀錄並更新TripConfig的Exchange Rate / Ledger Default Currency兩鍵,其餘CMS欄位維持Bar手動管理且App唯讀",
+    "主題僅覆寫13個第一層--t-* token，第二層語意角色與今天/行程/購物/分帳四分頁結構保持穩定；主導覽與設定入口用inline SVG，內容Emoji與桃子診斷徽章保留",
     "產品哲學:3秒原則、不過度工程化"
   ],
   "known_traps": [
@@ -94,12 +98,25 @@
       "Dev PWA 圖示更新(SW cache v13)",
       "分帳跨裝置同步(Schema 2.4/ADR 0006/Apps Script repository/SW v14)",
       "分帳單幣輸入換算與共用設定(Schema 2.5/Apps Script版本控管/SW v16;新版端點/TripConfig CSV/ledger dup已驗證)",
-      "分帳安全與設定備份UX(中文標籤/TEST頂部警示/行內身分切換/類別session沿用/JSON剪貼簿與按需還原/SW v17)"
+      "分帳安全與設定備份UX(中文標籤/TEST頂部警示/行內身分切換/類別session沿用/JSON剪貼簿與按需還原/SW v17)",
+      "Ledger 2.0契約完成(Schema 2.6/Apps Script 14欄/舊payload相容/真實端點與CSV回讀驗證)",
+      "分帳2.0雙軌資料層(個人localStorage/團體Repository/自訂類別與支付方式/備份v2/SW v19)",
+      "分帳2.0刪除語意(個人真刪/團體墓碑/有效紀錄冪等解析/舊負數相容)",
+      "分帳2.0結算核心(participants快照/最大餘數整數分配/雙幣餘額/確定性貪婪轉帳)",
+      "分帳2.0手機UI(PR5:雙軌儀表板/Bottom Sheet快速記帳/多品項稅折與覆寫/代購彙總/團體結算/完整歷史與明細/SW v20)",
+      "分帳2.1(Schema 2.7固定16欄/time消費時間/queue-first樂觀儲存/TEST平行帳本/店名與搜尋/代購對象v3備份/個人原地編輯/團體墓碑替代編輯/SW v21)",
+      "分帳2.2(Schema 2.8固定21欄/Apps Script真實端點與CSV落位驗證/日期時間拆欄與月曆/篩選面板與元件一致性/結構化稅券資料/近期明細操作入口/SW v22)",
+      "結算一致性(Schema 2.9固定21欄/還款確認切點永久保護/原付款人引導式整張更正與作廢/commit-last版本投影/正式與TEST隔離/SW v69)",
+      "真機驗收回饋(新增消費分攤成員選取改中度青綠底#d6e8e4/不改資料與權限/SW v70)",
+      "作廢預覽動作去重(預覽後只留確認整張作廢/不改append-only作廢語意/SW v71/Bar真機驗收通過)",
+      "Playwright三情境QA入版控(斷網內建/連網同步/旅行日mock Date/pageerror=0/qa.yml)",
+      "SW v72開發完成(六組主題/設定頁2.0/inline SVG/個人備份v8/旅途紀錄/app-version單一來源/使用者版更新日誌；Bar真機驗收待辦)",
+      "SW更新完整性修正(sw.js自帶SW_VERSION/移除importScripts版本依賴/install用reload、fetch用no-cache避免HTTP cache汙染SHELL/子資源不再fallback成index.html/APP_VERSION安全取值/tools一致性檢查/qa.yml sanity支援dev push；SW v73)",
+      "批次一發布阻斷項全數交付(任務板歸位/ADR 0008 六主題追認/production-v18 回滾錨點/SW 更新完整性修正 v73/備份 v1-v8 還原矩陣與相容契約/已鎖帳文案/測試模式與時間模擬暴露面調查與備份防呆)"
     ],
     "pending_in_order": [
-      "Bar 手機全面驗收 dev(含離線補送、雙擊不縮放與快速控制項點擊)",
-      "Bar 核准 PR merge(dev → main)→ Netlify 正式部署",
-      "Playwright 三情境入版控(backlog #1)",
+      "Bar手機驗收dev SW v73(含v72功能;v72未曾正式發布,兩批合併為同一候選版)",
+      "Bar核准PR merge(dev→main)→Netlify正式部署與線上驗證→建立production-v73 tag",
       "框架抽取(FUTURE_PLAN)"
     ]
   },

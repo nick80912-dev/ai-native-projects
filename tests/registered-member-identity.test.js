@@ -77,7 +77,7 @@ function loadIdentityModule(){
   mod.ledgerRepository={add(record){writes.push(record);return Promise.resolve({ok:true,pending:0,record});}};
   await mod.commitMemberCandidate(fresh);
   assert.strictEqual(mod.localStorage.getItem('trip_member'),'新 成員','remote success stores the current identity');
-  assert.deepStrictEqual(JSON.parse(JSON.stringify(writes[0])),{member:'新 成員',category:'其他',detail:'[身分註冊]',amountJpy:0,amountTwd:0,note:''},'new identities write the zero-amount registration contract through ledgerRepository');
+  assert.deepStrictEqual(JSON.parse(JSON.stringify(writes[0])),{member:'新 成員',category:'其他',detail:'[身分註冊]',amountJpy:0,amountTwd:0,note:'',participants:'',payMethod:'',recordType:'identity_registration',targetRecordId:'',deleteReason:'',batchId:''},'new identities write the zero-amount registration contract through ledgerRepository');
 
   mod.localStorage.removeItem('trip_member');
   mod.ledgerRepository={add(){return Promise.resolve({ok:false,pending:1});}};
@@ -105,11 +105,17 @@ function loadIdentityModule(){
   mod.openMemberSelector(true);
   assert(mod.__appended().innerHTML.includes('王　小明'),'registered identity is offered as a selection');
   assert(mod.__appended().innerHTML.includes('新成員'),'registered identity flow retains a new-member entry');
+  mod.chooseMember('王　小明');
+  mod.renderMemberSelector(mod.__appended());
+  assert(
+    mod.__appended().innerHTML.includes('切換後將無法編輯舊身分建立的消費紀錄(可切回原身分處理)。'),
+    'the common identity confirmation explains the ledger ownership consequence'
+  );
 
   const settingsSource=mod.__html.slice(mod.__html.indexOf('function openSettings('),mod.__html.indexOf('function mergedLedgerRecords()'));
   assert(settingsSource.includes('目前身分'),'Settings displays the current identity');
-  assert(settingsSource.includes('切換身分'),'Settings exposes existing identity switching');
-  assert(settingsSource.includes('新增身分'),'Settings exposes new identity registration');
+  assert(settingsSource.includes('>切換<'),'Settings exposes compact existing identity switching');
+  assert(settingsSource.includes('>新增<'),'Settings exposes compact new identity registration');
   assert(!settingsSource.includes('修改成員'),'Settings avoids the misleading member-editing label');
   assert(!mod.__html.slice(mod.__html.indexOf('/* ================= 分帳'),mod.__html.indexOf('/* ================= 導覽 / 啟動')).includes('DB.expMembers'),'ledger identity and Split UI do not read Exp member rows');
 

@@ -97,14 +97,24 @@ function response(payload){
 
   const html = mod.__htmlSource;
   const settingsSource = html.slice(html.indexOf('function openSettings('),html.indexOf('function mergedLedgerRecords()'));
-  const entrySource = html.slice(html.indexOf('function selectLedgerCategory('),html.indexOf('function reverseLedgerRecord('));
+  const entrySource = html.slice(html.indexOf('function selectLedgerCategory('),html.indexOf('function deletePersonalLedgerRecord('));
   const splitSource = html.slice(html.indexOf('function renderSplit()'),html.indexOf('/* ================= 導覽 / 啟動'));
+  const ledgerUiSource = html.slice(html.indexOf('function ledgerTrackRecords()'),html.indexOf('/* ================= 導覽 / 啟動'));
   assert(settingsSource.includes('openMemberSelector(false,false)'),'Settings exposes the existing-identity switch entry');
   assert(settingsSource.includes('openMemberSelector(false,true)'),'Settings exposes the new-identity registration entry');
   assert(!splitSource.includes('openMemberSelector(false'),'Split page does not offer identity switching or registration');
-  assert(html.includes("var LEDGER_CATEGORIES=['餐飲','交通','票卷','購物','其他','代墊']"),'Split page defines the six fixed categories');
-  assert(splitSource.includes('id="ledgerAmount"'),'Split page has one editable amount input');
-  assert(splitSource.includes('id="ledgerConvertedPreview"'),'Split page has a converted amount preview');
+  assert(html.includes("var ledgerUiState={track:'personal'"),'fresh App sessions default to the personal track');
+  assert(splitSource.includes('個人帳留在本機；團體帳跨裝置同步。'),'Split uses the fixed dual-track explanation');
+  assert(splitSource.includes("setLedgerTrack(\\'personal\\')")&&splitSource.includes("setLedgerTrack(\\'shared\\')"),'Split exposes personal/shared segmented controls');
+  assert(entrySource.includes("if(track==='personal')")&&entrySource.includes('personalLedgerRepository.add'),'personal entries use only the personal repository');
+  assert(entrySource.includes('ledgerRepository.enqueueBatch'),'shared entries retain the atomic shared repository queue');
+  assert(html.includes("record.recordType='expense'")&&html.includes('normalizeLedgerParticipantSelection'),'shared expenses save the Ledger 2.0 contract fields');
+  assert(ledgerUiSource.includes('record.payMethod'),'historical payment methods remain visible even when custom options change');
+  assert(ledgerUiSource.includes('shared&&isTestLedgerRecord(record)'),'TEST badges are restricted to the shared track');
+  assert(html.includes("var DEFAULT_LEDGER_CATEGORIES=['餐飲','交通','票券','購物','衣物','美妝','其他']"),'Split page defines the confirmed default categories');
+  assert(html.includes("var DEFAULT_LEDGER_PAY_METHODS=['現金','信用卡','行動支付','Suica','其他']"),'Split page defines the confirmed default payment methods');
+  assert(!splitSource.includes('id="ledgerAmount"'),'Split dashboard does not embed the editable amount input');
+  assert(splitSource.includes('openLedgerQuickEntryFromFab'),'Split dashboard exposes the dedicated quick-entry FAB path');
   assert(!splitSource.includes('id="ledgerJpy"')&&!splitSource.includes('id="ledgerTwd"'),'legacy dual amount inputs are removed');
   assert(entrySource.includes('convertLedgerAmounts'),'Split entry converts the selected currency into both stored amounts');
   assert(settingsSource.includes('id="ledgerExchangeRate"'),'Settings exposes the current exchange rate');
@@ -117,15 +127,40 @@ function response(payload){
   assert(settingsSource.includes('新增記帳時預先選擇的幣別'),'Settings explains the default input currency');
   assert(!settingsSource.includes('Exchange Rate（'),'Settings does not expose the internal Exchange Rate key as a label');
   assert(!settingsSource.includes('Ledger Default Currency（'),'Settings does not expose the internal default-currency key as a label');
+  const orderedSettingsLabels=['>身分<','>主題<','>代購對象<','>帳務<','>自訂項目<','>資料與版本<','>測試模式<'];
+  let previousSettingsLabel=-1;
+  orderedSettingsLabels.forEach(function(label){
+    const at=settingsSource.indexOf(label);
+    assert(at>previousSettingsLabel,'Settings keeps approved section order at '+label);
+    previousSettingsLabel=at;
+  });
   assert(settingsSource.includes('目前身分'),'Settings displays the current member identity');
-  assert(settingsSource.includes('切換身分')&&settingsSource.includes('新增身分'),'Settings keeps both identity management actions');
+  assert(settingsSource.includes('>切換<')&&settingsSource.includes('>新增<'),'Settings keeps both identity actions on the compact card');
+  assert(!settingsSource.includes('>成員身分<'),'Settings uses the approved 身分 label');
+  assert(settingsSource.includes('settings-identity-row'),'Settings uses a compact same-row identity layout');
+  assert(settingsSource.includes('SETTINGS_LEGACY_TARGETS'),'legacy Settings deep links have an explicit compatibility map');
+  ['ledgerTestModeSection','ledgerOptionSettingsSection','ledgerProxyTargetSettingsSection'].forEach(function(id){
+    assert(settingsSource.includes(id),'legacy Settings target remains mapped: '+id);
+  });
+  assert(settingsSource.includes('scrollTopByPage'),'root and every subpage preserve independent scroll positions');
+  assert(settingsSource.includes('captureSettingsScroll'),'Settings captures scroll before rerender or navigation');
+  assert(settingsSource.includes('backToSettingsRoot'),'Settings subpages return to the root context');
   assert(settingsSource.includes('ledgerTestModeSection'),'test mode has a stable Settings target');
-  assert(settingsSource.includes('僅分帳用'),'Settings labels test mode as ledger-only');
+  assert(settingsSource.includes('僅團體帳'),'Settings labels test mode as shared-ledger-only');
+  assert(settingsSource.includes('只顯示測試紀錄')&&settingsSource.includes('關閉即回正式帳本'),'Settings explains the parallel TEST universe');
+  assert(settingsSource.includes('類別、支付方式與採買單位'),'Settings exposes custom ledger option management');
+  assert(html.includes('addLedgerOptionFromSettings'),'Settings can add custom options');
+  assert(html.includes('moveLedgerOptionFromSettings'),'Settings can reorder custom options');
+  assert(html.includes('removeLedgerOptionFromSettings'),'Settings can remove default or custom options');
+  assert(splitSource.includes('⚠ 目前顯示測試帳本'),'Split renders the test-universe warning');
+  assert(splitSource.includes('不影響正式分帳'),'Split explains that the active test universe is isolated');
+  /* Retired pre-universe warning copy assertions:
   assert(splitSource.includes('⚠ 測試模式中'),'Split renders the test-mode warning');
-  assert(splitSource.includes('此頁新增的記帳不會列入彙算'),'Split explains that test entries are excluded');
+  assert(splitSource.includes('團體帳新增的記帳不會列入彙算'),'Split explains that only shared test entries are excluded');
+  */
   assert(splitSource.includes('openSettings')&&splitSource.includes('ledgerTestModeSection'),'warning opens Settings at test mode');
-  assert(html.includes("var ledgerDraftCategory=LEDGER_CATEGORIES[0]"),'fresh App sessions default category to 餐飲');
-  assert(!entrySource.includes("ledgerDraftCategory=''"),'successful entry retains the current category');
+  assert(html.includes('var category=ledgerDefaultCategory()')&&html.includes('category:category,categoryApply:category'),'fresh entry drafts remember the last category with a Dining fallback and initialize the multi-item apply value');
+  assert(html.includes('next.category=draft.category'),'save-and-add-another retains the current category');
 
   const testModeSource = html.slice(html.indexOf('function setLedgerTestMode('),html.indexOf('function selectLedgerDefaultCurrency('));
   assert(testModeSource.includes('renderSplit()'),'test-mode changes immediately rerender Split');

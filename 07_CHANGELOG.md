@@ -1,4 +1,545 @@
 # 07 版本紀錄
+## 2026-07-30｜測試模式／時間模擬暴露面調查與備份防呆（dev，SW v73）
+- **P5 唯讀調查結論:三條路徑皆判定為「可延後,非發布阻斷」**,但發現一個值得在出發前補的缺口(見下)。調查全程未修改任何檔案。
+- **調查修正了兩個既有假設**:①`trip_ledger_test_mode` **根本不是隱藏的** —— 設定頁有一個明著的「測試模式」區塊,任何人打開設定往下滑就點得到;②「連點標題 5 下」的除錯面板入口**不存在**,`brandTitle` 上沒有任何 listener,診斷面板的真正入口是**桃子徽章 300ms 內連點兩次 `touchend`**,且因為只綁 `touchend`,桌機滑鼠點不開。
+- **發現第三條未被列入的路徑**:`appNow()` 直接讀 `?previewDate=YYYY-MM-DD` URL 參數覆寫今天日期,不需要任何手勢。不寫 `localStorage`、只影響當次載入,判定低風險。
+- **污染範圍與可復原性**:測試模式只切換團體帳宇宙、個人帳不受影響,有頂部警示與復原按鈕;`[TEST] ` 前綴的紀錄照樣 append 進正式 Sheet(ADR 0006 append-only,列刪不掉)但在正式模式被濾掉、不進統計。時間模擬會改寫 `appNow()` 這個全域時間來源,擴散到打卡／自動略過／下一站進度／新記帳的 `time`;有「模擬中」文字標記與徽章變色,並可用 `endTimeSimulation(true)` 回復到首次啟用前的快照 —— 但**已送出的團體帳列撤銷不了**。
+- **唯一真正的跨裝置污染路徑,已修**:兩個 key 本身都不在備份 payload、也不在還原白名單,不會被帶走或覆寫。但**若在時間模擬期間匯出備份**,payload 內的 `checks`／`wants`／`personalLedger` 就是被污染的狀態,而唯一的回復點 `trip_time_simulation_snapshot` **不在備份內** → 還原到新裝置後沒有任何回復機會,污染變成永久。
+- **修法(Bar 裁定「做」)**:`exportPersonalState()` 開頭加 `isTimeSimulationActive()` 判斷,模擬啟用中一律擋下匯出並提示「時間模擬進行中,請先於診斷面板結束模擬再備份」。**不動備份格式、不升版(維持 `PERSONAL_STATE_VERSION=8`)、不動模擬機制本身**。已做對照驗證:移除該行後 `settings-backup-ux.test.js` 確實失敗。未加入 `APP_RELEASE_NOTES` —— 這是安全防呆而非功能,只在一般使用者不會遇到的邊界情境觸發。
+- **backlog #2 的子項「隱藏『重置今日進度』」移出並歸檔**(Bar 裁定)。P5 調查發現它**早已實作完成**(`resetTripProgress()`,診斷面板「行程進度」區,附雙重 `confirm()`,只清 `trip_checks` 與 `trip_next_stop_progress`),只是任務板未歸位。與原文的入口差異已如實記錄於 `tasks/done.md`。#2 其餘七個子項維持不動。
+- 自動驗證:完整 **53／53** Node test files、Playwright **5／5**、`tools/check-doc-titles.js`、`tools/check-app-version.js` 通過。
+
+## 2026-07-30｜受保護紀錄文案改為「已鎖帳」（dev，SW v73，顯示層）
+- **backlog #10 交付**(Bar 2026-07-30 裁定)。團體帳受保護紀錄的 badge 由「還款確認後保護」縮短為 **「已鎖帳」**(`renderLedgerRecentRecord`,複驗確認為整份 `index.html` 的唯一出現處)。tag 只負責快速辨識,完整原因移交明細頁。
+- **明細頁新增**說明句「此筆消費已完成還款確認,目前已鎖帳,無法再編輯或刪除。」—— 這是**新增**不是搬移:明細頁此前只有「查看不可改寫歷史」按鈕,沒有任何說明句。出現條件與該按鈕完全相同(`track==='shared' && record._correctionProtected`),排在按鈕之前,採用既有的 `--ink-faint` 次要文字語意色,不新增主題色。
+- **原鎖帳行為一字未動**,並以測試鎖住:`_correctionProtected` 判定來源不變、編輯／刪除仍以 `ledgerRecordCorrectionProtected()` 守門、`assertCanEditLedgerRecord` 與 `assertCanDeleteLedgerRecord` 的錯誤訊息「此收據已有還款確認,請使用『更正收據』保留歷史」屬行為契約未更動、不可改寫歷史入口保留、顯示層不得自行呼叫權限守門。
+- **既有 badge 優先序未受影響**(實測確認):`_correctionVersionCount > 0` 的紀錄仍優先顯示「已更正 N 次」,「已鎖帳」只在未經更正的受保護紀錄出現;個人軌永遠不顯示。
+- 測試補在 `tests/ledger-list-actions.test.js`:新文案存在、**舊文案「還款確認後保護」已從整份 `index.html` 移除**、說明句的出現條件與排序、CSS 語意色、以及上述行為契約各一則。
+- 瀏覽器實測:375×812 說明句單行、320×700 兩行,皆位於歷史按鈕之前、不超出 sheet、水平溢位 0。
+- 版本不遞增:v73 尚未發布,本項併入同一候選版,只做一次 SW 換代(依 2026-07-30 發布安排)。`APP_RELEASE_NOTES` 的 v73 條目補上對應的使用者版說明。
+- 自動驗證:完整 **53／53** Node test files、Playwright **5／5**、`tools/check-doc-titles.js`、`tools/check-app-version.js` 通過。未合併 `main`、未 push `main`、未部署。
+
+## 2026-07-30｜個人狀態備份 v1–v8 相容策略與還原矩陣（dev，測試與文件，無 runtime 變更）
+- **不升 v9,維持 `PERSONAL_STATE_VERSION=8`**(Bar 裁定)。backlog #3b 原本要求把 `trip_shopping_units` 納入備份並升版,複驗發現該欄位早在 SW v72 的 v8 就已納入(`personalStateJson()` 已含 `shoppingUnits`、還原寫回並列於原子回滾 keys)。無新欄位卻升版,只會讓已發出的 v8 備份被 v8 裝置以「格式驗證失敗」拒絕,**憑空製造一個旅伴裝置間的相容斷點**。
+- **真正的缺口是測試,不是格式。** 此前只有 v1／v2／v4／v8 有還原測試,**v3／v5／v6／v7 完全沒有**;而既有 `settings-backup-ux.test.js` 的 sandbox 用簡化假 store(`shoppingListStore.normalize` 只做淺拷貝),跑不到真正的遷移邏輯 —— 那份測試驗的是 UX 流程,不是版本相容性。
+- **新增 `tests/personal-state-restore-matrix.test.js`** —— 本項的主要交付物。刻意注入 `index.html` 的**真實** store 實作(`createShoppingListStore`／`createLedgerOptionStore`／`normalizeShoppingItem`／數量遷移),只對 DOM 與 Ledger 紀錄等範圍外相依做最小 stub,斷言的是**還原後 `localStorage` 的實際內容**而不是版本號被接受。涵蓋:v1–v8 逐版本缺欄位預設值、`qty` 文字 →結構化數量遷移(不可解析時保留 `legacyQtyText` 不猜數字)、`buyFor`／`targets` → `allocations[]` 遷移、item 級 `ledgerLinks` 下放到 allocation 且已記帳關聯不得遺失、`done:true` 缺 `completedAt` 不編造完成時間、採買單位的 6 字上限／不可重複／「個」自動補回、未來版本一律拒絕、以及任一驗證失敗時裝置狀態一字不動。
+- **已做對照驗證**:暫時破壞 `validatePersonalStatePayload()` 的 `payload.version<8` 分支後,矩陣測試確實失敗;`index.html` 已 byte-identical 還原。測試是承重的,不是裝飾。
+- **新增 `docs/personal-state-compatibility.md`** —— 相容策略的文字契約。明確定義:①向後相容逐版本的缺欄位預設值;②**向前相容裁定為「拒絕」而非「忽略未知欄位」**(理由已寫入:舊版若當成相容而忽略新欄位,已記帳的採買項目會重新顯示成未記帳而重複入帳,數量整批消失 —— 寧可明確失敗也不要看似成功的錯資料);③採買單位既有規則與還原的互動;④全有或全無的失敗語意;⑤未來新增欄位的四項義務。
+- **釐清一個既有誤解**:採買單位的「6」是**字數**上限(`SHOPPING_UNIT_MAX_LENGTH=6`),**不是筆數上限**。程式中沒有任何限制單位筆數的邏輯,還原 10 筆單位會全數保留。設定頁輸入框的 `maxlength="6"` 講的也是字數。
+- **逐版本實測結果:無安全還原斷點**,v1–v8 全部可還原成功,無需犧牲任何版本。
+- 本批**未修改任何 runtime 檔案**(`index.html` 未動,故不涉 SW 版本遞增)。`14_FILE_TIERS_AND_GATE.md` 的 Tier 1 範圍由 `docs/superpowers/` 放寬為整個 `docs/`,並註明相容性契約改動須連帶更新測試。
+- 自動驗證:完整 **53／53** Node test files、`tools/check-doc-titles.js`、`tools/check-app-version.js` 通過。未合併 `main`、未 push `main`、未部署。
+
+## 2026-07-30｜SW 更新完整性修正（dev，SW v73，待 Bar 真機驗收）
+- **主要修復:新版 SW 不再把舊版 SHELL 裝進新快取。** 隔離實驗實測:在 `max-age=600` 的環境下,新版 Service Worker 的 `install` 會從 **HTTP cache** 取得舊版 SHELL —— 整個 update + install 週期只有 `sw.js` 一個 HTTP 請求,三個 SHELL 資源請求次數為 **0**,結果是「新快取名稱裝舊內容」;重載後更出現「新版 `index.html` 配舊版 `schema.js`」的靜默混版本。修法:`install` 改用 `cache:'reload'`(一次性、正確性優先),日常 network-first 改用 `cache:'no-cache'`(允許 304,省行動網路流量 —— `index.html` 約 726KB)。`addAll` 保留原子語意,只是改傳 `Request` 物件以指定 cache mode:任一資源失敗仍會讓 install 失敗、新 SW 不啟用、舊 SW 續命。網路失敗後的 CacheStorage fallback 完全不變,已實測關閉伺服器後仍完整離線載入。
+- **次要防線:版本標記移回 `sw.js` 頂層。** `sw.js` 自帶 `var SW_VERSION='v73'`,`CACHE_NAME` 由它推導,並移除 `importScripts('./app-version.js')`。理由是 imported script 在 `updateViaCache` 預設值 `'imports'` 下**會**經過 HTTP cache:GitHub Pages 對 `app-version.js` 送 `max-age=600`,實測更新檢查期間該檔 HTTP 請求次數為 0,SW 判定「沒變」而不安裝新版。`app-version.js` **仍留在 SHELL**,`index.html` 要載它、離線必須有。
+- **fallback 資源型別修正。** 原本任何同源資源在離線未命中時都會退回 `index.html`,導致 `<script>` 拿到 HTML 而解析失敗(實測 `APP_VERSION` 因此變成 `undefined`)。改為:CacheStorage 命中即回傳命中內容;未命中且為 navigation request 才退回 `index.html`;其餘子資源回 504。**攔截邊界一字未動**:跨域放行、非 GET 放行、同源 GET 維持 network-first;**SHELL 清單未動**(backlog #20 不在本批)。
+- **App 端版本安全取值。** 新增以具名標記界定的 `appVersion()`／`appVersionLabel()`,`index.html` 三處使用點全部改走 helper,全檔不再有裸讀。版本檔缺失時:App 主功能不中斷、旅途紀錄記為空字串、「資料與版本」頁顯示 `SW 未知` 而非拋 `ReferenceError`。`APP_RELEASE_NOTES` 補 v73;維持 v72 核准的「恰好五筆」設計,由 v73 擠掉 v68,不讓清單長大。
+- **`netlify.toml` 補 `/app-version.js` 的 no-cache header,並在註解標明這是防禦性設定而不是修復** —— Netlify 對 JS 資產的預設本來就是 `public,max-age=0,must-revalidate`(已實測),而 GitHub Pages 根本不讀 `netlify.toml`。真正的修復在 `sw.js`。
+- **測試:舊契約反向改寫而非刪除。** `tests/pwa-shell.test.js` 原本鎖住的三項(必須 `importScripts`、`CACHE_NAME` 必須由 imported `APP_VERSION` 推導、`sw.js` 不得有版本字面)鎖的正是本批要移除的設計,改為鎖住新契約(頂層 `SW_VERSION`、`CACHE_NAME` 由它推導、不得 `importScripts`、程式碼不得引用 `APP_VERSION`、兩個版本必須相等),不允許回頭。新增 `tests/app-version-fallback.test.js` 與 Playwright `tests/browser/sw-update-cache.spec.js`;後者用**真實的 `sw.js`** 跑完整 C1.5 情境,並自帶 `versioned-server.js` 刻意送 `max-age=600`(用 `no-store` 的 `static-server.js` 測不出這個缺陷)。**已做對照驗證:把 cache mode 改回舊寫法,該測試會以 `Received: "QAGEN1"` 失敗** —— 確認測試抓得到回歸,不是形式上的綠燈。
+- **版本字面逐一分類,未機械替換。** 8 個測試檔原本各自硬編碼 `v72`,改由新增的 `tests/support/version.js` 推導;`travel-notes` 的 `APP_VERSION:'v72'` 是 fixture、`theme-system` 的 v72–v69 是歷史 release note、`ios-zoom-guard` 的 `okayama-trip-v20` 是已淘汰 cache 名稱 —— 三者依裁定保留原字面。
+- **`tools/check-app-version.js` 新增並掛入 CI。** 版本改為兩個檔案各自持有,代價必須由機器承擔:檢查兩個版本相等、`CACHE_NAME` 由 `SW_VERSION` 推導、`sw.js` 不得 `importScripts`、`index.html` 保有 helper 且無區塊外裸讀、`APP_RELEASE_NOTES` 最新一筆等於目前版本、`netlify.toml` 有對應規則。已做正負向驗證(改成 v74 會 exit 1 並指出兩邊各是什麼)。
+- **CI 觸發策略(歸檔 backlog #21)。** `qa.yml` 的 `push.branches` 加入 `dev`,sanity job 在 dev 每次推送都跑;`browser-qa` 加 job-level `if` 條件,只在 pull request 與 `main` push 執行,避免 dev 每次推送都安裝 Chromium。**#21 原文只談 sanity 的 dev 觸發,browser-qa 維持現狀是本次裁定,未另立新項目。**
+- **發布安排。** v72 從未正式發布,故與 v73 合併為**同一個候選版本、只做一次 SW 換代**,避免連續兩次「開兩次生效」的風險窗口。**不建立 `production-v72`**;待 v73 合併 `main`、正式部署完成、真機／PWA smoke test 通過後才建立 `production-v73`(已列入 `tasks/current.md` 的 Release Gate G6)。
+- **驗收前置(16 §F5 新增)。** 2026-07-30 實測 Netlify 測試站線上仍停在 **SW v62**、`app-version.js` 回 404 —— 自動部署 2026-07-26 關閉後與 `dev` 差了 10 個版本。用它驗收 v73 前必須先手動部署到目標 commit,並核對線上 `sw.js`／`app-version.js` 版本與裝置端 CacheStorage 的**實際內容**(不是只看名稱對),**不得只根據 Git 分支判定已同步**。
+- 自動驗證:完整 **52／52** Node test files、Playwright **5／5**、`tools/check-doc-titles.js`、`tools/check-app-version.js`、`git diff --check` 全通過。未合併 `main`、未 push `main`、未部署。
+
+## 2026-07-30｜批次一 P1 後續裁定：#9 子頁形式追認與 v18 tag 上遠端（dev，治理與文件，無 runtime 變更）
+- **backlog #9 的兩項形式差異由 Bar 追認為等價交付**，不另立獨立子頁：①「使用者版更新日誌子頁」併入「資料與版本」子頁，視為符合現行資訊架構；②「成員管理子頁」以身分區行內「切換／新增」入口搭配既有 `openMemberSelector()` overlay 實現，視為等價。裁定理由為功能無缺漏且不增加額外導覽層級。`tasks/done.md` 對應段落由「供 Bar 追認或另立調整項」改為已追認，**#9 維持完成，不新增 backlog 項目**。此裁定只改文件記述，`index.html` 的設定頁結構未動。
+- **`production-v18` annotated tag 已 push `origin`**（Bar 核可，只 push tag 本身）。遠端驗證：tag 物件 `2f1987b`、`git cat-file -t` 回 `tag`（確為 annotated 而非 lightweight）、peeled `refs/tags/production-v18^{}` = `9eefcb0`，與本機 `git rev-parse` / `git rev-list -n1` 完全一致。同時確認 `origin/dev` 仍為 `8802863`、`origin/main` 仍為 `9eefcb0` — **未夾帶任何分支推送**。
+- 自動驗證：完整 **51／51** Node test files、`tools/check-doc-titles.js` 通過。未修改任何 runtime 檔案；未合併 `main`、未 push `main`、未部署。
+- 工具事故（依 `16_OPS_PLAYBOOK.md` §C 記錄）：本條目首次寫入時，AI 將含反引號的內容放進 bash 雙引號字串，反引號被當成命令替換執行，導致 shell 誤執行 `tasks/done.md` 等檔案內容並在根目錄產生一個 0 bytes 的空檔 `更新於`。已確認未產生任何 commit、`07_CHANGELOG.md` 未被寫入、`tasks/done.md` 的 diff 仍僅為預期的兩行，空檔已刪除。後續同類插入改為「內容寫入檔案 + 獨立腳本讀取」，不再把文件內容內嵌進 shell 字串。
+
+## 2026-07-30｜批次一 P1：任務板歸位、六主題追認與 v18 回滾錨點（dev，治理與文件，無 runtime 變更）
+- **Pre-Work Git Sync Gate 阻礙先清除**：主工作目錄長期掛著 Bar 未提交的 `tasks/backlog.md` #6 主題範圍原文修改（前一條目最後一行記載的待辦）。依 Bar 2026-07-30 裁定第 1 項，先以獨立 commit（`04de67f`）原樣接納該修改、不改一字不夾帶其他變更，後續歸檔才以此原文為基礎，歷史完整保留。
+- **backlog #1／#3b／#6–#9 歸檔**（裁定第 4 項）。每項均先複驗 `index.html`、`tests/` 與本檔的實際證據，不採信任務板文字；證據逐項寫入 `tasks/done.md` 新增的「已歸檔的 backlog 編號項目」。`tasks/backlog.md` **保留原編號不重排**，檔頭註明缺號（1、3b、5、6–9、13–19）是刻意保留，因 `tasks/current.md`、`tasks/done.md` 與本檔都以編號互指。
+- **兩處與原核准不符,如實記錄而非粉飾為等價**：①#6 交付 6 組主題，其中 `mist`（霧藍／瀨戶）與 `tea`（焙茶／倉敷）未經任何核准即納入，選項數亦超出原文「三或四」的待裁定區間 → 已由 Bar 追認，並依裁定第 3 項立 `adr/0008-theme-system-scope.md` 記錄原核准範圍、最終六主題、追認理由與未來閘門（新增／移除主題、變更預設主題一律須先核准）。②#9 的「使用者版更新日誌子頁」與「成員管理子頁」實際分別併入「資料與版本」子頁與身分區行內按鈕，非獨立子頁；屬設計時的形式選擇而非實作遺漏，但與 backlog 原文字面不符，列出供 Bar 追認。
+- **#3b 前提複驗結果與原敘述相反**：原 backlog 寫「`trip_shopping_units` 不在備份 payload 內」「目前 v7」，實測 `index.html:7421` payload 已含 `shoppingUnits`、`:7497` 還原寫回並列於原子回滾 keys、`:3815` `PERSONAL_STATE_VERSION=8`，`tests/settings-backup-ux.test.js:145` 已斷言。需求本體在 SW v72 即已滿足，故歸檔而非重做。**真正的殘留缺口是還原測試只覆蓋 v1／v2／v4／v8，v3／v5／v6／v7 完全沒有還原測試**；依裁定第 2 項不升 v9、維持 `PERSONAL_STATE_VERSION=8`，改補 v1–v8 還原矩陣測試與相容策略文件化，列入本批 P3。
+- **真機／PWA 驗收改列 Release Gate**（裁定第 4 項）。`tasks/current.md` 新增 G1–G5，明確區分 Bar 專屬職責（真機驗收、PR merge、線上驗證）與 AI 職責（交付與全綠），已完成的功能不再因驗收未做而滯留 backlog。
+- **`app-version.js` 補列 Tier 2 並定義 PWA 風險群組**（裁定第 7 項）。P0 盤點發現 `14_FILE_TIERS_AND_GATE.md` 完全沒有收錄 `app-version.js`，但它是 `CACHE_NAME` 的唯一來源，改壞等同改壞 `sw.js`。同時把 `sw.js`、`app-version.js` 與 `netlify.toml` 的 cache header 定義為同一風險群組：四項確認以群組為單位提出，群組內版本／header 不一致視為交付缺陷。原本模糊的「Netlify 部署設定」一列具名為 `netlify.toml`。
+- **建立第一個正式版回滾錨點**（裁定第 8 項）。annotated tag `production-v18` → `9eefcb0`（2026-07-18，SW cache `okayama-trip-v18`），message 含建立日期、對應 SW 版本、建立原因與完整回滾指令。本 repo 在此之前**沒有任何 tag**，正式版只能靠 SHA 或 Netlify 快照回頭找。`16_OPS_PLAYBOOK.md` 新增 §A5：區分「程式碼錨點」與「部署動作」（止血一律先做 §A1 Netlify Publish deploy）、寫實 Netlify 雙站行為（正式站追蹤 `main` 自動部署；測試站自動部署 2026-07-26 已關閉，回滾不同步影響）、記下回滾後 `app-version.js` 從部署消失會讓已裝 v72 SW 的裝置 404 → 退回 `index.html` 導致 JS 解析失敗，故須以真機而非無痕確認 SW 換代。**tag 尚未 push `origin`，依裁定第 8 項待 Bar 確認。**
+- 順帶修正 `.ai-manifest.json` 的 `adr_dir` 索引漂移：原本停在 0006，漏收已存在的 `0007-settlement-handshake`，本次一併補上並標明索引權威為 `adr/README.md`。
+- 自動驗證：完整 **51／51** Node test files（P1 動工前基準線與交付後皆全綠）、`tools/check-doc-titles.js` 通過。本批**未修改任何 runtime 檔案**（`index.html`／`sw.js`／`app-version.js`／`schema.js`／`validator.js` 皆未動），故不涉 SW 版本遞增，亦未跑 Playwright／Browser QA。未合併 `main`、未 push `main`、未部署。
+
+## 2026-07-30｜設定頁 2.0、六組主題與旅途紀錄（dev，SW v72，待 Bar 真機驗收）
+- 設定根頁依核准順序重組為「身分 → 主題 → 代購對象 → 帳務 → 自訂項目 → 資料與版本 → 測試模式」；身分卡縮短，`目前身分`、`切換`、`新增` 同列。代購對象、匯率／預設幣別、自訂類別／支付方式／採買單位、備份與版本資訊改為子頁，舊設定入口仍有相容映射，根頁與子頁各自保留 scroll。
+- 新增海洋／岡山、象牙／靛藍、藤紫／夜櫻、杉綠／宮島、霧藍／瀨戶、焙茶／倉敷六組淺色主題。色彩改為 13 個第一層 `--t-*` token＋既有角色變數第二層對映；未知主題回退海洋並記診斷，互動切換採 storage write-first，寫入失敗不留下假選取狀態。
+- 底部今天／行程／購物／分帳與設定入口的五個功能 Emoji 改為同一組 `currentColor` outline inline SVG；分帳 badge、可存取名稱、桃子診斷徽章與交通／內容 Emoji 保留。
+- 診斷面板新增只存在本機的旅途紀錄：異常／優化建議、待評估／已處理、修改、確認刪除、篩選、文字摘要／JSON 複製匯出，最多 200 筆並保存頁面、App 版本、連線／同步與健康摘要。桃子徽章原本的 300ms 兩次 `touchend` 入口未改；桌面瀏覽器不模擬 touch，因此此入口仍由既有 iOS 契約測試與後續 Bar 真機驗收覆蓋。
+- 個人備份升 v8，新增 `themeId`、`shoppingUnits`、`travelNotes`；v1–v7 還原保留裝置現有的三項新狀態，v8 先完整驗證再把所有舊／新 key 一次寫入，任一寫入失敗整批回復，成功後才套用主題。Browser QA 首輪因此抓到正式 option store 未暴露 `normalize()` 的落差，補測試與正式介面後重驗通過。
+- `app-version.js` 成為 App 與 Service Worker 的版本單一來源，`sw.js` 以 `APP_VERSION` 推導 cache 並快取版本檔；設定「資料與版本」顯示 `SW v72` 與 v72–v68 五筆使用者版更新說明。
+- 自動驗證：完整 **51／51** Node test files、Playwright 三情境 **3／3**、文件標題、manifest JSON 與 `git diff --check` 通過。Browser QA 於 320×700、375×812、390×844 驗證七區順序、身分按鈕 38px、四個子頁、六主題 `data-theme`／meta／topbar／tabbar、四個 tab SVG＋設定 SVG、水平溢位 0、console error／warning 0；根頁 ↔ 資料與版本返回 scroll delta 0。v8 還原後霧藍主題、2 筆採買單位與 1 筆旅途紀錄成功寫入，重載後主題與自訂單位仍存在；旅途紀錄資料與原子回滾另由 `travel-notes.test.js`／`settings-backup-ux.test.js` 完整驗證。
+- 本批在 `codex/sw-v72-settings-themes` 隔離分支分段提交後已 push `dev`（runtime 截點 `b372f49`）；尚未合併 `main` 或部署，Bar 真機／PWA 驗收仍待完成。
+- `tasks/backlog.md` 的完成項清理由於主工作目錄已有 Bar 尚未提交的 #6 主題範圍原文修改，本批不覆蓋也不納入提交；待 Bar 完成該原文修改後，再以其內容為基礎移除已完成的 #3b／#6／#7／#8／#9。
+
+## 2026-07-30｜Playwright 三情境 QA 入版控（dev，測試基礎設施）
+- 新增 `@playwright/test`、固定單 worker 的 `playwright.config.js` 與 Node 內建靜態伺服器；測試資產限定在 `tests/browser/`，不會把既有 `tests/*.test.js` 誤當 Playwright 規格執行。
+- 三情境直接啟動真實 `index.html`：斷網時要求 `CURRENT_SNAPSHOT.source === 'builtin'`；連網情境以完整內建 CSV 模擬所有 Sheet 回應並要求原子 online 快照寫入；旅行日以固定 `Date` 驗證 `10/18`、Day 1 與今天頁。三者都收集並要求 `pageerror=0`。
+- `.github/workflows/qa.yml` 新增獨立 `browser-qa` job，使用 `npm ci`、安裝 Chromium 後執行 `npm run test:browser`。本機 Chromium 實跑 3／3 通過。
+- Bar 同日確認 SW v69–v71 已完成真機／PWA 驗收；`dev → main` 與正式部署仍未核准。本批未修改 App runtime、Schema、Apps Script、TripConfig 或 Service Worker 版本。
+
+## 2026-07-30｜整張收據作廢預覽動作去重（dev，SW v71，Bar 真機驗收通過）
+- 更正收據在完成整張作廢預覽後，主要按鈕「確認整張作廢」與次要按鈕「重新預覽作廢」原本都呼叫 `saveLedgerCorrection(true)`；後者沒有重新產生不同預覽，只會走同一個最終確認，因此移除重複且誤導的入口。
+- 作廢預覽前仍保留「整張收據作廢」；作廢預覽後只保留「確認整張作廢」。一般更正預覽、`saveLedgerCorrection`、preview signature、commit-last、canonical conflict、append-only 事件、權限與歷史均未修改。
+- 新增兩階段按鈕契約測試，Service Worker cache 升 `okayama-trip-v71`。完整 49／49 Node test files、文件標題、manifest JSON 與 `git diff --check` 通過；App runtime 已 commit 並推送 `dev`（`8949449`）。
+
+## 2026-07-30｜新增消費分攤成員選取色差（dev，SW v70，Bar 真機驗收通過）
+- 真機回饋指出新增消費／更正收據共用的分攤成員按鈕，選取後背景與區塊底色無法區分。根因是 `.ledger-participant-choice.on` 引用未定義的 `--mint`，瀏覽器忽略該背景宣告。
+- 選取狀態改為中度青綠底 `#d6e8e4`、深色文字與既有深色邊框；保留勾號、`aria-pressed`、分攤資料與點選 handler。未定義全域 `--mint`，避免連動其他畫面。
+- 「確認整張作廢」與「重新預覽作廢」目前皆呼叫 `saveLedgerCorrection(true)` 的重複行為已完成討論，本批不修改作廢流程。Service Worker cache 升 `okayama-trip-v70`。
+- 測試先紅燈確認舊背景無效，再最小修正。完整 49／49 Node tests 與文件標題檢查通過；實際瀏覽器驗證選取為 `rgb(214, 232, 228)`、未選取為白色、外層為 `rgb(243, 248, 246)`，`aria-pressed` 正確切換且 console error／warning 0。
+
+## 2026-07-29｜結算一致性與收據級引導式更正（dev，SW v69，Bar 真機驗收通過）
+- 還款確認後，claim 建立切點前已存在的正式／TEST 收據永久禁止直接編輯與刪除；全團歸零不解除保護。付款人操作選單改為「更正收據」，其他成員只看到權限說明；批次刪除與 handler 仍會再次 fail-closed。
+- 新增 append-only `expense_correction_item`／`expense_correction_commit`／`expense_void_commit`。更正以完整收據版本提交，item 全數先進 durable queue、commit 最後寫入；缺件、跨付款人、跨 universe 或 manifest 不一致皆不生效。同一上一版本的並行提交以 `(time,id)` 選唯一 canonical，losing sibling 保留歷史但永不自動升格。
+- 更正 Sheet 固定原付款人、要求 1–50 字原因，允許新增／移除／修改整張收據品項；第一次送出只預覽新舊總額與成員餘額差，第二次才入列。整張作廢走同一預覽與追加事件，不建立 deletion。既有還款確認保持終局，更正差額形成新待結算餘額。
+- 清單顯示保護或更正次數；明細可查看原始版本、每次 canonical 更正、作廢與未套用衝突。完整紀錄另保留已作廢收據入口。Schema 升 2.9，但 Ledger 仍為既有 21 欄，Apps Script API 與依賴不變；Service Worker cache 升 `okayama-trip-v69`。
+- **獨立審查後加固**：一般團體編輯在最終送出前重讀 merged events，避免還款確認後仍由 stale 表單繞過保護；更正預覽納入完整事件集 fingerprint，跨裝置同步有變化時必須重新預覽。canonical confirm／claim ID 與遠端更正時間格式異常皆 fail-closed，診斷統一歸類 `AppLog.data`。預覽補上新增／移除／修改品項、受影響成員及「已結清後產生新待結算餘額」警示；歷史補上操作人、各版本金額／類別／參與者。
+
+## 2026-07-29｜採買清單 C＋E＋G 第三批（dev，SW v68，待真機驗收）
+- **C 根因與修正**：Ledger 多品項個人↔團體切軌原本用有限 seed 重建每列，只複製名稱、金額、分類與免稅，會遺失逐項代購／分攤狀態、穩定 row key 與 `sourceShoppingItemId`／`sourceShoppingAllocationId`，造成切軌後代購對象消失或採買關聯回寫錯列。現改由純 transformer 泛用複製 draft、顯式 clone nested arrays，首次進入另一帳本才套該軌預設；個人與團體隱藏狀態同時保留，但提交仍只序列化目前帳本軌，兩類對象不互相推導，來源 IDs 不進 Ledger 21 欄。
+- **E 根因與修正**：原顯示排序只到日期／站點，組內完全沿用 store order，必買容易被一般品項淹沒。新增 immutable stable partition，只把 exact `category === '必買'` 置頂；一般站點、待確認、已失效、隨時可買與 Today 共用規則，必買／非必買各自保留原順序。已買頁與 localStorage array order 不套用此排序。
+- **G 根因與修正**：新增／編輯表單嵌在清單頂端，每次表單欄位重繪都重建整份清單，深層編輯會失去位置；連續新增還以 `requestAnimationFrame` 延後焦點，行動鍵盤可能先收起。現改為單一獨立 modal Sheet 與 ephemeral form session，保存 mode、item ID、來源 detail/list、scrollTop、原分類／站點與 `savePending`；取消／儲存以 `data-shopping-item-id` 返回原卡片，移動後依同一 ID 捲入視野，detail 入口則重開更新後明細。validation／store failure 保持 Sheet 與輸入，首個錯誤欄位接回焦點；pending 時停用關閉／取消／儲存並防重入。
+- **連續新增與保護**：「儲存並新增」沿用分類／站點，清空品名／對象等品項輸入並固定重設 `1 個`，同一使用者動作內在 Toast 前同步 focus `shoppingName`。部分購買、已買後記帳、checkbox、多選與 `⋯` 的既有事件邊界均未移動；Shopping schema、備份 v7、Ledger 21 欄、Apps Script、Google Sheet、同步與結算皆未修改。
+- **測試證據**：完整 **48／48** Node test files 通過（含 **123／123** settlement reliability checks），文件標題檢查與 `git diff --check` 通過。Browser QA 於 **320×700、375×812、390×844** 驗證：Sheet／清單／卡片水平溢位皆 0；深層卡片開 Sheet 時 list scrollTop 不變，取消後 scroll delta 0；改分類後同 item ID 在新位置取得焦點；明細編輯儲存後重開明細；連續新增每次 active element 都是 `shoppingName` 且 `1 個`／站點保留；數量錯誤不寫入並聚焦 `shoppingQuantity`；已買頁維持 store order；兩筆不同代購對象的多品項草稿經個人→團體→個人→團體切換後仍保留列與各自狀態，未提交團體資料。停止本機伺服器後，v68 外殼可離線重載，採買清單與獨立 Sheet 均可開啟；console error／warning 為 0。
+- **未完成宣告**：桌面 Browser QA 不能證明 iPhone 軟鍵盤生命週期；Safari 與已安裝 PWA 的「儲存並新增後鍵盤保持開啟、游標位於品名」仍列 Bar 真機驗收。App runtime 已 commit 並推送 `dev`（`0c5fe45`），未部署、未合併 `main`。
+
+## 2026-07-28｜新增消費展開縫隙、採買待買卡片精簡與安全回併（dev，SW v67，待 Bar 真機驗收）
+- **根因**：`.ledger-entry-secondary` 沒有建立獨立 block formatting context，第一個 `.ledger-sheet-field` 的 `margin-top:10px` 會穿出父層；因此摘要與展開內容之間露出 10px 米色背景，看起來像兩張不相連的卡片。
+- **修正**：展開容器改為 `display:flow-root`，阻止 first-child margin collapse；摘要與淡藍內容邊框無縫相接，原本 10px 欄位留白仍保留在內容背景內。未使用 overflow 裁切，日期選擇器 popover 邊界不受影響。
+- **待買卡片重複站點的根因與修正**：待買頁已有站點群組標題，卡片 renderer 卻仍固定輸出地點列，造成資訊重複與卡片增高。renderer 現在必須接收明確的 pending／done page context：一般站點、待確認、已失效、隨時可買四類待買卡與其多選模式都不建立地點 DOM；已買卡片仍保留地點，待買／已買明細與 Today 站點群組維持原資訊。
+- **拆分後無法回併的根因與統一操作**：原本 checkbox、批次移回與完成 Toast 復原各自只 patch `done:false`，Store 沒有反向合併邊界。三條路徑現統一呼叫原子 `moveBackToPending(ids)`，一次讀取、一次轉換計畫、一次 normalize／write；單筆與批次不再產生不同結果，任一目標不存在或寫入失敗時資料完全不變。
+- **安全回併與未合併保護**：只有 group 全部待買、原 ID 存在、品名／分類／單位／站點／legacy 狀態一致、allocation 為可安全加總的正整數、所有 append-only `ledgerLinks[]` 完全無歷史、canonical 對象唯一且不混用自己／代購時才回併。結果保留原 item ID／`createdAt`，原 item allocation ID 優先，否則沿用 store order 最前 sibling 的既有 ID，清除 `completedAt`／`splitGroupId` 並原子移除 sibling。仍有已買 sibling、欄位差異、legacy、溢位、資料缺損或 active／unverified／released 等任何 link 歷史時只完成移回、不猜測或吞併資料；批次只顯示一則彙總 Toast。
+- Browser QA：320×700、375×812、390×844 的新增消費摘要／內容外部 gap 均為 **0px**、內容內距均為 **10px**；採買頁面、panel、卡片與 Toast 水平溢位均為 **0px**，待買卡位置列為 0、已買卡位置列完整，待買／已買明細站點均保留，console error／warning 為 0。實測單人 2＋3 回併為 5、多人逐對象回併為 6、仍有已買 sibling／單位不同／released 歷史維持分開，跨兩個 split group 批次顯示 `已將 2 項移回待買，並合併 2 組`。完整 **47／47** Node tests（含 123／123 reliability checks）、`tools/check-doc-titles.js` 與 `git diff --check` 通過；Service Worker cache 僅由 `okayama-trip-v66` → `okayama-trip-v67`，本批不重複升版。
+
+## 2026-07-28｜新增消費表單、採買預設單位與全站思源黑體優化（dev，SW v66，待 Bar 真機驗收）
+- **新增消費主流程重新分層**：單品項依序保留金額、明細、代購開關／對象，再以淡海水灰藍、1px 邊框、10px 圓角的 `其他資訊（選填）` 收合類別、支付方式與日期；摘要顯示 `類別｜支付方式｜今天／M/D／YYYY/M/D`。明細鍵盤改為 Next，個人帳聚焦代購開關、團體帳聚焦分攤成員；不再由鍵盤 Enter 直接送出。儲存按鈕與原有 validation／pending guard／idempotency 流程未改。
+- **採買預設為 `1 個`**：新項目與「儲存並新增」都預設數量 1、單位 `個`；單位下拉移除空白／「不指定」。`shoppingUnitStore` 讀取時保證包含 `個`，設定頁嘗試刪除時保留資料並顯示 `「個」是新增採買項目的預設單位，無法刪除。`。既有非空單位原樣保留；舊資料空單位只在編輯草稿預選 `個`，未儲存前不回寫。
+- **全站繁中字型一致化**：以 Google Fonts `Noto Sans TC` 400／500／700（`display=swap`）為第一順位，fallback 固定為 `"PingFang TC","Microsoft JhengHei",system-ui,-apple-system,sans-serif`；移除日文字型優先序。外部字型不可用時仍由系統繁中字型呈現，Service Worker 不新增跨來源字型快取策略。
+- Browser QA：320×700、375×812、390×844、430×932 全數通過，新增消費 dialog 與控制項無水平溢位；明細 Enter 實測聚焦 `ledgerProxy`，代購對象顯示正常；採買表單實測為 `1 個` 且無空白／「不指定」選項；設定頁刪除 `個` 的保護 Toast 精確通過。停止本機伺服器後仍可由 v66 快取離線重載，字型 fallback 鏈仍保留。
+- **邊界未變**：分類 mapping、Shopping Item／個人備份 v7、Ledger 21 欄、Apps Script、Google Sheet、Repository／Queue／Bridge／Retry、結算、append-only `ledgerLinks[]`、`改回未記帳` 與 SW 策略皆未修改；未做資料 migration、未部署。完整 **46／46** Node tests、`tools/check-doc-titles.js` 與 `git diff --check` 通過；Service Worker cache 僅由 `okayama-trip-v65` → `okayama-trip-v66`。
+
+## 2026-07-27｜採買卡片視覺一致性、部分購買與多選互動（dev，SW v65，待 Bar 真機驗收）
+- **中文字體粗細不一致的根因修正**：原本全站把 `Hiragino Sans` 放在繁中字型之前，瀏覽器會依單一字形是否存在逐字 fallback，因此同一控制項內的「媽媽／爸爸」、「稅與優惠券」與「信用卡」可能看起來粗細不同。全站改用 `"PingFang TC","Noto Sans TC","Microsoft JhengHei",system-ui,-apple-system,sans-serif`；Browser 實測採買代購選項、稅與優惠券及信用卡皆讀到相同 font-family。
+- **卡片 badge 改為語意分工**：代購顯示改為 `幫 [阿寶] [媽媽] +1 買`，只有姓名套 coral／淡紅底 badge；「幫」／「買」／`+N` 使用普通文字，不再顯示 `、`，aria-label 仍保留完整語意。分類改為淡金底／深金字，形狀、間距與姓名 badge 對齊，不再與品名或代購同色。
+- **「部分買到」改為卡片上的「部分購買」**：入口從 `⋯` 移到待買卡片，只有整筆 `unlinked`、全部 allocation 為安全正整數且總需求大於 1 時出現。自己的數量 1、legacy 數量、已買、`linked`／`partial`／`unverified` 都不顯示；自己的數量 2 與三位各 1 份都會顯示。既有逐 allocation 拆分、store 原子寫入及 Ledger 防重複規則未改。
+- **採買明細縮短高度**：標題改為「代購對象與記帳紀錄」；對象與 `需求 3 包 · 待買 1 包`／`需求 3 包 · 已買 2 包` 同行，窄螢幕才自然換行。底部「編輯」與「記帳未完成對象」兩顆等寬同行；沒有未記帳對象時，編輯維持全寬。
+- **批次 selection 與完成 checkbox 完全分離**：待買與已買進入多選時，選取框都從未勾開始且只讀 `shoppingUiState.selected`；點 checkbox 或卡片只切換 selection，不改 `done`。多選時隱藏卡片的「部分購買」／「記帳」／`⋯`；0 項只顯示「請選擇項目」，選取後改為同一行 `已選 N`＋三顆等寬、不斷行、44px 高按鈕。修正原本 `.shopping-selection-toolbar-stacked` 被後方 base selector 蓋掉而在真機擠成直排文字的 CSS 順序問題，並加入 66px safe-area spacer，避免最後卡片被固定工具列遮住。
+- Browser QA：390×844、375×812、320×700 全數通過；document、採買 panel 與卡片水平溢位皆為 0。320px 三顆批次按鈕各約 75px、同一 y 軸、44px 高、`white-space:nowrap`；完成與 selection 切換、卡片點擊、取消多選恢復、部分購買表單、待買／已買明細與最後卡片避讓皆實測通過，console error／warning 為 0。
+- **邊界未變**：Shopping Item `allocations[]`、個人狀態備份 v7、Ledger 21 欄、Apps Script、Google Sheet、同步、結算與 split persistence semantics 皆未修改。完整 **45／45** Node tests、`tools/check-doc-titles.js` 與 `git diff --check` 通過；Service Worker cache `okayama-trip-v64` → `okayama-trip-v65`，未部署任何站點。
+
+## 2026-07-27｜採買清單代購分配、逐人記帳與卡片明細（dev，SW v64，待 Bar 真機驗收）
+- **資料模型改為逐人分配**：Shopping Item 以 `allocations[]` 保存每一位對象的穩定 `allocationId`、`target`、`quantity` 與 append-only `ledgerLinks[]`。沒有代購對象時仍建立一筆「自己」分配；同一項目不可混用「自己」與代購對象，也不可出現正規化後重複的對象。新建多對象目前採**相同數量／人**，但資料契約與部分購買流程已能保存不同數量，未來開放逐人輸入時不需再改資料格式。
+- **代購對象多選與數量摘要**：新增／編輯表單可多選對象，並保留「新增對象」入口；新對象建立後會立即加入共用名單且自動選取。相同數量顯示 `2 盒／人 · 共 6 盒`，不同數量顯示 `共 4 盒 · 3 位`；卡片最多顯示前兩位，三位以上為 `幫阿寶、媽媽 +1 買`，完整名單可進明細查看。
+- **卡片資訊重新分層**：品名後方同行顯示代購對象與記帳狀態；代購 badge 沿用行程卡時間的 coral／淡紅底視覺，分類改用 mint badge 明確區隔，下一行顯示分類與數量，站點仍獨立一行。已買卡依 allocation 聚合為 `未記帳`、`記帳 2／3`、`已記帳` 或 `狀態待確認`，不再以 item-level link 粗略判斷。
+- **新增「儲存並新增」**：建立成功後保留分類與行程站點，數量回到 1；品名、單位、代購對象與其他輸入全部清空，方便在同一站連續建立多筆。普通「儲存」仍結束表單。
+- **逐人部分購買**：部分買到時每位對象各自輸入本次數量，可輸入 0；系統可靠計算已買與剩餘 allocation，原 item ID 留給已買部分、剩餘仍插在正後方並沿用 `splitGroupId`。明細以同一 split group 重建原需求，能顯示「原需求 2 盒 · 此卡 1 盒」。
+- **逐人 Buy-to-Ledger**：每個未記帳 allocation 對應一筆 Ledger 品項，並自動帶入原代購對象；draft 同時保留 `sourceShoppingItemId` 與 `sourceShoppingAllocationId`，依提交品項順序逐筆回寫對應 allocation。卡片與明細的狀態仍由 Ledger／queue／bridge／replacement／tombstone 即時推導，來源 ID 不進 Ledger 21 欄、不送 Apps Script、不入 Sheet。
+- **採買卡片可開完整明細**：點卡片顯示對象、分類、目前數量、同源原需求、完成時間、站點與記帳進度；逐人列出原需求／此卡數量及帳本狀態，已關聯者可進原消費紀錄並返回採買明細，未記帳者可直接建立剩餘對象的消費。checkbox、列上「記帳」與 `⋯` 維持各自事件邊界，不會誤開明細。
+- **編輯與刪除保護改到 allocation 粒度**：已記帳或狀態待確認的對象，其對象名稱、數量與 links 都鎖定；同一項目內仍可調整未記帳對象。刪除警告改以「幾位」分別統計 linked／unverified，並維持不修改或刪除 Ledger 原紀錄的既有語意。
+- **分類與代購定位分離**：分類選項不再含「代購」；代購身分只由 allocation target 決定。舊資料的 `category:'代購'` 會安全降級為空分類，`buyFor`／item-level `quantity`／item-level `ledgerLinks` 會在讀取時轉為 v7 allocation，無需保留測試資料的舊畫面相容層。
+- **個人狀態備份升至 v7**：新匯出保存 `allocations[]`；v1～v6 仍可還原並經 normalizer 補成 v7，未知未來版本與錯誤型別明確拒絕。`trip_shopping_list` key、Ledger 21 欄、Apps Script、Google Sheet、結算、團體權限、採買雲端同步與 SW 策略皆未改。
+- 測試：完整 **45／45** Node tests、`tools/check-doc-titles.js` 與 `git diff --check` 通過；結算可靠性另含 **123** 個子檢查。Browser QA 320／375／390px 實測多選新增、建立對象後自動選取、`儲存並新增` 保留／清空規則、三人摘要、逐人部分購買、待買與已買明細、checkbox／記帳／`⋯` 事件邊界；文件、清單 panel 與明細 panel 水平溢出皆為 0，長品名正常換行，明細按鈕高 44px，console error／warning 為 0。Service Worker cache `okayama-trip-v63` → `okayama-trip-v64`。
+## 2026-07-26｜採買清單真機回饋批：單位下拉、卡片分層、動作收進 ⋯（dev，SW v63，待 Bar 真機驗收）
+- Bar 於 SW v62 真機驗收後的三項回饋，本批一次處理。
+- **單位改下拉並與數量並排**：12 顆 chips 佔兩行、數量欄卻用不到那麼寬。改為 `數量 | 單位` 兩欄同列，單位用 `<select>`（iOS 叫原生滾輪，比 chips 好按）。實測 375px 各 158px、320px 各 131px、字級 16px（不觸發 iOS zoom）。
+- **新增單位移到設定頁**：新增 `shoppingUnitStore`，沿用既有泛用的 `createLedgerOptionStore`（key `trip_shopping_units`，預設即原本 12 個常用單位）。`ledgerOptionStoreForKind()` 加一個分支、設定頁多呼叫一次 `renderLedgerOptionManager('shoppingUnit','採買單位')` 即可——**沒有另造 UI**，區塊標題改為「自訂類別、支付方式與採買單位」。實測新增／刪除／超長拒絕（`名稱最多 6 個字`）皆生效，且表單下拉即時反映。
+- **單位上限 10 → 6**：與設定頁選項共用的 `normalizeLedgerOption()` 對齊，消除「表單存得下、設定頁加不進去」的兩套規則。Bar 確認現有與未來單位皆不超過 6 字，故不留過渡期。
+- **自訂單位不被靜默改掉**：拿掉自由輸入後，若項目目前的單位不在清單內（使用者曾自訂、或舊 `qty` migration 帶出的 `家庭號`），下拉會補一個以自身為值的**選中** option 並標「（自訂）」。實測不碰下拉直接儲存，`unit` 仍為 `家庭號`。作法與 A＋F 批處理孤兒 `stopRef` 一致。
+- **已買卡片重新分層**：原本「狀態徽章＋分類＋數量＋三顆動作按鈕」擠在同一行同一視覺層級，地點被推到第三行且與上一行斷開。改為固定三層——品名／屬性（`·` 分隔）／地點（獨立一行）。新增純函式 `shoppingItemAttrLine()` 與 `shoppingItemLocationLine()` 取代原本混合的 `shoppingItemMeta()`（已移除）。數量拿掉「數量」前綴（有單位就看得出來，與 v51 拿掉「退回原因:」同一個理由）。
+- **動作收進 `⋯`**：沿用帳本既有的 `.ledger-action-popover` 樣式與定位邏輯，未另造一套視覺；popover z-index 155 高於採買 overlay 的 145，實測 320px 仍完整落在畫面內。選單內容依共用 resolver 的三態決定：`linked` → `改回未記帳｜編輯｜刪除`、`unlinked`+已買 → 列上直接給「記帳」＋選單 `編輯｜刪除`、`unverified` → `編輯｜刪除`（兩種記帳入口都不給）、待買 → `部分買到｜編輯｜刪除`。**「記帳」刻意留在列上**——買到→記帳是主流程，不該多一次點擊。刪除移入選單等於多一層誤觸防護，既有 `confirm()` 保留不動。
+- **「重新開放記帳」更名為「改回未記帳」，並改用自訂確認視窗**：Bar 原提「重新記帳」，未採用——`07_CHANGELOG` v57 已有同型裁定（`重新付款` → `我已付款`，理由是「祈使句讀起來像 App 會代為執行」），而按下它只是清掉標記、還要再點一次「記帳」。改採 Bar 裁定的資訊層級：**操作名稱維持簡短，「帳本不受影響」由確認視窗負責說完整**。視窗標題 `改回未記帳？`、按鈕 `取消`／`改回未記帳`，說明分兩句並區分顏色：先講「不會發生什麼」（只會移除這個採買項目的「已記帳」標記，不會刪除或修改帳本中的消費紀錄。），再以 coral 講「可能發生什麼」（若帳本中的原紀錄仍在，再次記帳可能產生重複消費。）——後者才是這個操作真正的風險，尤其在 `unverified` 下系統看不到那筆紀錄時。兩句同色會讓風險被稀釋成說明。原生 `confirm()` 的按鈕文案不可自訂，故改用自訂視窗——**沿用 B 批移除三選一 Modal 後閒置的 `.shopping-choice-overlay`（z-index 160，高於採買 overlay 的 145），零新增 CSS，同時讓那段死碼重新有用途**。實測 375px 面板 330px、320px 面板 288px，兩顆按鈕各 44px 高，皆完整落在畫面內、溢出 0。
+- **確認「刪掉帳本紀錄會自動改回未記帳」為既有行為**：狀態是每次重繪即時推導而非存下來的，實跑驗證個人帳（讀不到即權威 → `unlinked`）與團體帳（有效墓碑且無 replacement → `unlinked`）都會自動翻回未記帳，記帳按鈕自動出現，**不需要按任何東西**。手動入口只補自動化決定不了的 `unverified`（找不到但無法證明已刪除）與「消費是真的、只是連錯採買項目」兩種情形，因此只在 `linked` 提供。已於 `CONTEXT.md` 明文記下「不得改成找不到就自動當作已刪除」的理由。
+- **選單生命週期**：`renderShoppingListOverlay()` 與 `closeShoppingList()` 都會先收掉 popover（重繪後原觸發按鈕已不存在）；另註冊 outside-click／Escape／scroll（capture）／resize 關閉，與帳本同樣的四道。
+- **未修改**：Shopping Item 資料契約（`quantity`／`unit`／`legacyQtyText`／`ledgerLinks`／`releasedAt`／`splitGroupId`／`completedAt` 語意全部不變）、個人狀態備份版本（無新欄位，維持 v6）、Ledger 21 欄 Schema、Apps Script、Google Sheet、結算、團體權限、A＋F 排序與孤兒三態、B＋D 三態推導與交握時點、採買雲端同步。
+- **已知落差**：`trip_shopping_units` 未納入個人狀態備份（備份目前含 `ledgerCategories`／`ledgerPayMethods`）。這是本批動工前四項確認裡刻意排除的範圍（納入就得再升版）。影響有限——還原後自訂單位會退回預設清單，但既有項目的 `unit` 字串仍存在項目上且照常顯示。已列入 backlog。
+- 測試：先寫紅燈（`SHOPPING_UNIT_MAX_LENGTH` 仍為 10）再最小實作。完整 **45／45** Node tests 與 `tools/check-doc-titles.js` 通過；`ledger-entry-settings.test.js` 與 `shopping-ledger-links.test.js` 的既有斷言依新契約更新（設定頁標題、單位來源、不再有自由輸入）。Browser QA 320／375／390px：三態動作組合、`⋯` 選單四種內容與定位、單位下拉與自訂單位保留、設定頁單位管理、極端長品名（40 字）＋長單位；頁面與逐元件橫向溢出皆為 0、最小 tap target 40px、輸入欄 16px、console error 0、Scroll-only 與 safe-area 未退化。卡片高度由「2 行擠＋動作溢出」變成穩定 62–78px（極端長品名 104px）。Service Worker cache `okayama-trip-v62` → `okayama-trip-v63`。
+## 2026-07-26｜Ops:Netlify 測試站改為手動部署（dev，純文件）
+- **Bar 已於 Netlify 後台手動停用測試站 `dev-trippilot-jp` 的自動部署**，並手動觸發過一次部署。本批只更新文件以反映現況，未修改任何部署設定。
+- **實測確認**（以推送 `4ead180` 作對照，GitHub Pages 為正對照）：推送後 Pages 的 `07_CHANGELOG.md` 由 71,741 增為 73,901 字元並出現新條目，Netlify 測試站停在 71,728 字元、無新條目 —— 同一次推送一邊更新一邊不動，確認自動部署已停。Bar 手動觸發後複查，測試站最新條目已與 `dev` HEAD 一致，`sw.js` 為 `okayama-trip-v62`。正式站維持 v18（追蹤 `main`，未受影響）。
+- 因此**修正上一批（`4ead180`）寫下的過時敘述**：該批當時實測測試站仍會自動部署，故寫入「仍會在每次推送自動部署」「要停止須改 Netlify settings、待 Bar 裁定」。Bar 隨即完成關閉，該敘述於數分鐘內失效，本批更正。
+- `16_OPS_PLAYBOOK.md` §E:通道表「觸發」欄改為「已停用自動部署（2026-07-26 由 Bar 手動關閉）。需要時於 Netlify 後台手動觸發部署;待系統穩定後，由 Bar 決定並恢復自動部署」;敘述段改為手動部署模型，明寫 **GitHub 分支更新不代表測試站已同步更新**;結尾「Push 至 `dev` 會同時更新 Pages 與測試站」改為「自動更新 Pages（測試站需手動觸發）」。
+- `16_OPS_PLAYBOOK.md` §F3 補一條:**使用測試站驗證 Netlify 特有 headers／redirects 或其他平台行為前，必須先確認已手動部署至目標 commit，並核對 Netlify 顯示的部署 commit SHA**，否則驗到的可能是舊版本。
+- `tasks/backlog.md` #5 的 Netlify 額度段落同步改寫;#5 仍留 backlog（iOS PWA 安裝與離線重開仍無實測證據），`tasks/done.md` 未修改。
+- 純文件批。未修改 App runtime、`sw.js`、`manifest.webmanifest`、GitHub Actions workflow、GitHub Pages settings、Netlify settings 或 branch 發布規則，無 SW 版本變更。
+## 2026-07-26｜Ops:LAN 與 GitHub Pages 驗收流程納入 Playbook（dev，純文件）
+- **本批只改文件**,未動 App runtime、`sw.js`、`manifest.webmanifest`、GitHub Actions workflow、GitHub Pages repository settings、Netlify settings 或 branch 發布規則。無 SW 版本變更。
+- **GitHub Pages 已啟用**,不再是 backlog 裡「待評估遷移」的狀態。以 repo 與實際端點核對(非推論):URL `https://nick80912-dev.github.io/ai-native-projects/`、發布來源 Deploy from a branch、branch `dev`、子路徑 `/ai-native-projects/`。repo 內 `dev` 與 `main` 的 `.github/workflows/` 都只有 `qa.yml`,**沒有** Pages workflow,故為 GitHub 內建 `pages-build-deployment` 建置。發布來源以行為確認:推送後 Pages 服務中的 `sw.js` 由 `okayama-trip-v61` 變為 `v62`,與 `origin/dev` 一致(`origin/main` 當時為 v18)。
+- **`16_OPS_PLAYBOOK.md` 新增 §F 非 Netlify 驗收流程**:F1 電腦本機、F2 手機 LAN 真機、F3 GitHub Pages HTTPS、F4 標準驗收層級(自動測試 → localhost → LAN → Pages → 必要時才 Netlify)。
+- **F2 的限制寫明**:LAN `http://` 加 IP 不是 secure context,SW 不會註冊,因此不得作為 PWA 安裝、SW scope 與完整離線功能的最終驗收依據;診斷面板「App 版本」會顯示「無法讀取」。另註明該網址是獨立 origin,`localStorage` 與正式站分開。
+- **F3 區分已驗與待驗**:已完成子路徑 Shell 載入、manifest `start_url`／`scope`、SW scope、直接開啟與重新整理、離線啟動、origin 隔離;**iOS PWA 安裝、iOS 真機離線重開、`github.io` 上的 SW 更新節奏標示為待真機驗收**,未寫成通過。
+- **記錄 Pages 與 Netlify 的實際行為差異**:Pages 不讀 `netlify.toml`,一律 `Cache-Control: max-age=600`,Netlify 對 `sw.js` 的 `no-cache, no-store, must-revalidate` 不生效。但 `register('sw.js')` 未指定 `updateViaCache`,預設 `'imports'` 會讓最上層 SW script 繞過 HTTP 快取,故版本更新仍偵測得到,延遲的是 `index.html`。驗收時勿把 CDN 延遲誤判為 SW 未更新。
+- **修正 §E Release Flow 的通道描述**:改為三通道對照表(Netlify 正式站／GitHub Pages／Netlify 測試站)。**未宣稱 Netlify 測試站已停用** —— 實測 `dev-trippilot-jp.netlify.app` 的 `sw.js` 為 v62,證實它仍追蹤 `dev` 且每次推送自動部署。文件將其定位改為「只驗證 Netlify 特有行為(header／redirects)」,並註明要真正停止自動部署須改 Netlify site settings,需 Bar 另行裁定。明確保留「Pages 驗收通過不等於正式 Release」。
+- **backlog #5 未移至 `done.md`**:依實測,iOS PWA 安裝與 iOS 離線重開尚無證據,不符移入 done 的條件。改寫為「GitHub Pages 已啟用,待完成最終真機驗收」,並分列已完成與待完成項目。編號維持 #5,未重新編號其餘項目。`tasks/done.md` 本批未修改。
+- **附帶更正一則先前的錯誤陳述**:本 session 稍早曾以 `12_DEV_WORKFLOW.md` 為據,向 Bar 表示「push `dev` 不會觸發 Netlify 部署」。該說法錯誤 —— `16_OPS_PLAYBOOK.md` §E 早已載明測試站追蹤 `dev` 且每次推送自動部署,實測亦確認。這正是 Netlify 額度持續消耗的來源。特此留痕。
+- 驗證:`node tools/check-doc-titles.js` 通過;`git diff --check` 無空白錯誤;完整 45／45 Node tests 仍通過(本批未動程式,作為未誤觸的佐證)。
+## 2026-07-26｜採買清單後續修正：單筆記帳入口、待買批次刪除與結構化數量（dev，SW v62，待 Bar 真機驗收）
+- **補回單筆記帳入口（修 B 批的接線缺口）**：B 批移除「完成後強制詢問記帳」的三選一 Modal 時，連帶移除了 `openShoppingLedgerEntry()` 的**唯一呼叫者**，該函式變成沒有 UI 入口的死碼。裁定只取消「每次完成都強制詢問」，**沒有**取消單筆記帳。入口改掛在已買項目列，直接接回既有函式（含既有 preflight、單筆 prefill、`sourceShoppingItemIds=[item.id]`、金額 focus 與成功後回寫），未另造流程。顯示規則：`unlinked` 顯示「記帳」、`linked` 顯示「重新開放記帳」、`unverified` 兩者都不給（必須阻擋再次記帳），一律走共用 resolver 判斷，不以 `ledgerLinks.length` 判斷。**未恢復完成後 Modal。**
+- **待買頁多選加入批次刪除**：接用既有 `deleteSelectedShoppingItems()`／`removeMany()`，不另造平行刪除流程。工具列文案由過長的「建立多品項消費」縮短為「記帳」，並改為兩列版面（第一列計數、第二列三顆等寬動作）——320px 硬擠四欄會犧牲 tap target，實測兩列版在 320px 按鈕高 49px、無水平捲動。刪除確認將 `linked` 與 `unverified` **分別計數**：前者說明「刪除採買項目不會刪除原本的消費紀錄」，後者說明「不會嘗試修改或刪除帳本紀錄」——待確認的項目我們無法證明帳本紀錄存在，不能混進「已建立消費紀錄」一起講。
+- **撤回自由文字預填方案，改為結構化數量**：`quantity`（安全正整數，最小 1）＋ `unit`（獨立保存，最多 10 字，12 個常用單位 chips ＋自訂輸入）＋ `legacyQtyText`。新項目數量不再選填，預設 1。
+- **表單驗證不只靠 HTML**：`type="number"` 在部分瀏覽器仍會送出 `1e6`／`+3`／`1.0`，直接 `Number()` 會把 `1e6` 悄悄變成一百萬（Browser QA 實際踩到並修正）。儲存前先要求純十進位數字字串 `^\d+$`，再交由 normalizer 驗安全整數。實測 `-1`／`0`／`1.5`／空白／`1e6`／`+3`／`abc` 全數拒絕。
+- **舊 `qty` 的安全 migration**：只有「正整數＋可選單一空白＋不含數字與空白的單位」才自動轉換（`5 罐`→5＋罐、`5罐`→5＋罐、`10`→10＋空單位）。`兩盒`、`約 3～5 個`、`3-5 個`、`一大一小`、`家庭號 2 包`、`一組`、`少量`、`0 罐`、`-3 罐`、`1.5 罐` 一律 `quantity:null` ＋原文保留於 `legacyQtyText`。**不猜中文數字、不從字串中間擷取數字、不取區間端點、不默認成 1、不靜默丟棄原文。** 正規化輸出**不再帶 `qty` 鏡像**，避免兩份可能互相矛盾的數量；`qty` 也不再是可寫入的 patch 來源。
+- **統一顯示 helper**：新增 `shoppingQuantityLabel()`，清單 metadata、Ledger prefill note、拆分表單、編輯表單全部共用，任何位置不得自行拼接。
+- **部分購買改為系統計算**：使用者只輸入「本次買到」，剩餘由 `shoppingSplitPlan()` 計算並即時預覽（`3` → 剩 `2 罐`）。< 1 或 > 原需求一律阻擋；**等於原需求時直接走「全部買到」並 toast `已全部買到`，不建立 0 數量的剩餘項目**。`unit` 由原項目繼承。`quantity:null` 的舊式項目阻擋拆分並直接帶入編輯表單，表單顯示「舊數量：約 3～5 個／此為舊式文字數量。儲存前請改為數字與單位。」——**不在使用者未確認時自行轉換**。原 ID 為已買部分、新 ID 為剩餘、共用 `splitGroupId`、`createdAt` 沿用、剩餘插在原位置、一次原子 write 等既有規則全部不變。
+- **個人狀態備份 v5 → v6**：數量從自由文字變成結構化欄位，舊 App 不認識。若不升版，舊 App 會把 v6 當成相容格式，還原時靜默丟掉數量。v1～v6 皆可還原，未知未來版本明確拒絕。`settings-backup-ux.test.js` 另加一條防漂移斷言：sandbox 的版本常數必須等於 `index.html` 內的實際值。
+- **未修改**：Ledger 21 欄 Schema、Apps Script、Google Sheet、結算演算法、團體權限、`ledgerLinks[]` contract、`releasedAt`／`splitGroupId`／`completedAt` 語意、A＋F 的行程排序與孤兒判定、採買雲端同步。未把 `quantity`／`unit`／`shoppingItemId` 加入 Ledger 欄位。C／E／G 未夾帶。
+- 測試：先寫紅燈（`normalizeShoppingItem` 未回傳 `quantity`）再最小實作。完整 **45／45** Node tests 與 `tools/check-doc-titles.js` 通過。Browser QA 320／375／390px：已買三態的動作組合（`記帳｜編輯｜刪除`／`重新開放記帳｜編輯｜刪除`／`編輯｜刪除`）、待買三顆動作、刪除確認雙計數、數量與單位輸入、舊式數量編輯提示、部分購買即時計算與三種阻擋、買齊不產生 0 剩餘、長品名與長單位；頁面與逐元件橫向溢出皆為 0、最小 tap target 40px、輸入欄字級 16px、console error 0、`overflow-y:auto`／`touch-action:pan-y`／`overscroll-behavior:contain` 未退化。Service Worker cache `okayama-trip-v61` → `okayama-trip-v62`。
+## 2026-07-26｜採買清單 B＋D：完成流程、已買管理、部分購買與 Shopping-to-Ledger 關聯（dev，SW v61，待 Bar 真機驗收）
+- **B 單筆完成不再被 Modal 打斷**：移除勾選後強制出現的三選一（返回／直接完成／同時記帳）。新流程為「勾選 → 直接標記已買 → 寫入 `completedAt` → toast 提供『復原』」。連續買五樣不再被打斷五次。復原只還原 `done` 與 `completedAt`，**不動 `ledgerLinks`** —— 已記帳項目退回待買後仍顯示已記帳，否則會重複入帳。
+- **`ledgerLinks[]` 而非單一 `ledgerLink`**：每次成功記帳 append 一筆，只有最後一筆代表目前關聯。單一物件會在「解除 → 再記一次」時被覆蓋，原本解除過哪一筆的稽核線索就消失了。不另建平行的 `ledgerLinkHistory`、不刪舊 link、**不持久化任何 `status` 字串**。
+- **`releasedAt` 是事實不是 UI 狀態**：「使用者決定解除此採買項目的記帳關聯」無法從 Ledger 推導，因此必須落地。只更新最後一個尚未解除的 link，不刪 link、不清 `recordId`／`batchId`／`linkedAt`、不動原 Ledger 紀錄。確認文案明確寫出「這只會解除採買項目的記帳標記，不會刪除原本的消費紀錄。再次記帳可能產生重複消費，確定繼續？」。沒有 active link 時不提供入口，已解除者不重複寫入。
+- **三態動態推導 `resolveShoppingLedgerLinkState()`**：`linked`／`unverified`／`unlinked` 全部由目前 Ledger、durable queue、delivery bridge、replacement 與 tombstone 推導。團體紀錄安全寫入 durable queue 即算 `linked`，不必等 Sheet 回讀。**「找不到 record」一律只能降級為 `unverified`** —— 離線、資料未載入、bridge 未收斂、TEST／正式不符、目前成員可見性差異都不構成刪除證據；`unverified` 阻擋再次記帳、不清 link、不自動寫 `releasedAt`。只有「原紀錄仍在事件流中、已被有效墓碑刪除且無有效 replacement」才是 `unlinked`。有效性沿用既有 `effectiveLedgerRecords`／tombstone／replacement 語意，未在採買模組另造簡化版；團體批次編輯只把 `replacesRecordId` 指向該批根紀錄，因此批內其他 record 另以 `batchId` 追 replacement。
+- **推導必須讀 `mergedLedgerRecords()`**：自 SW v58 起 `ledgerTrackRecords()` 套了「與我相關」過濾，拿它推導會把可見性差異誤判成紀錄消失。
+- **交握時點與 mapping**：來源 `sourceShoppingItemIds` 只存在於 draft（ephemeral），**不進 Ledger 21 欄、不送 Apps Script、不入 Sheet**。回寫只發生在個人帳已持久化、或團體帳 `enqueueBatch` 已原子寫入 durable queue 之後；開表單、預填、切軌、驗證失敗一律不寫。多品項對應依 `validateLedgerEntryDraft()` 產出的 `submissionItems` 順序（已濾掉空白列），**不依賴可能被刪除、新增或重排的 UI index**；每個項目只保存自己那一筆 `recordId`，多品項共用同一 `batchId`。數量對不上即為交握錯誤：保留 Ledger 已儲存的事實，但**一筆 link 都不寫**，顯示降級提示並記錄診斷。
+- **回寫失敗的降級**：新增 `shoppingListStore.applyLedgerLinks()` 單次原子 write（全部成功或全部不動）。失敗時不回滾 Ledger、不顯示完全成功、不自動再建立一次消費，提示「消費已建立，但採買項目的記帳標記更新失敗。請避免再次記帳，並重新開啟採買清單確認。」
+- **D 已買頁**：新增多選、移回待買、批次刪除、建立消費與三態徽章。多選建立消費採整批 preflight —— 含 `linked` 顯示「選取項目中有 N 項已記帳，請取消選取後再建立消費」，含 `unverified` 顯示「其中 N 項的記帳狀態尚待確認，請先完成同步或重新確認」，**一律整批阻擋，不自動略過、不縮小使用者的選取範圍**。移回待買保留 `ledgerLinks`／`splitGroupId`／`createdAt`／`stopRef`；刪除採原子整批，含已記帳項目時確認文案說明原消費紀錄仍會保留。**未新增「清空所有已買」** —— 全選＋刪除已能達成，不多開一個危險入口。
+- **部分購買採拆分**：原 item ID 成為已買部分，剩餘部分取新 ID 並**插在 store array 的正後方**（用 `add()` append 會讓剩餘項目跳到該站點群組尾端）。`splitGroupId = 既有 || 來源 id`，重複拆分沿用同一個；兩筆都沿用原 `createdAt`。新增 `shoppingListStore.split()`：一次 normalize、一次 write，任一驗證失敗完全不寫入。已記帳或 `unverified` 的項目不得拆分，已完成者須先退回待買。
+- **數量維持自由文字（Bar 裁定）**：不做 `quantity`／`unit`，不保存 `originalQty`，不新增 `splitFromId`／`splitAt`、不建拆分樹。因此系統**不驗證**「本次買到＋剩餘待買」等於原需求，兩欄都由使用者輸入，原 `qty` 只在表單中作參考顯示。接受此限制的理由：現有輸入包含「兩盒」「約 3～5 個」「一組」等本質不可解析的值，且 App 是旅行採買追蹤而非庫存系統。
+- **`completedAt`**：首次完成寫入、移回待買清空、再次完成重寫、拆分的已買部分於當下寫入。`done` 為 false 時 normalizer 強制清空以免狀態矛盾；`done` 為 true 但缺值屬 legacy 降級，保留空字串不編造時間。本批**未改已買頁排序**（仍為 store order），是否改時間排序另行控制。
+- **個人狀態備份升至 v5**：新欄位若仍以 v4 匯出，舊版 App 會當成相容格式，還原時靜默丟掉 `ledgerLinks`／`releasedAt`／`splitGroupId`／`completedAt`，已記帳項目會重新顯示成未記帳而重複入帳。v1～v5 皆可還原並補預設值，未知未來版本明確拒絕（`isSupportedPersonalStateVersion()` 同時檢查型別，字串 `'5'` 不通過）。`trip_shopping_list` key 不變，不做整批預先 migration。
+- **未修改**：Ledger 21 欄 Schema、Apps Script、Google Sheet、結算演算法、團體權限、10 秒收款復原、個人帳 5 秒復原、durable queue／delivery bridge 邏輯、採買雲端同步，以及 A＋F 的行程排序與孤兒三態契約。C／E／G（切軌資訊保留、必買置頂、列動作與表單體驗）未實作。
+- 測試：先寫紅燈（首輪 `normalizeShoppingItem` 未回傳 `completedAt`）再最小實作。新增 `tests/shopping-ledger-links.test.js`（139 個斷言）。`shopping-list.test.js` 更新完成流程契約；`settings-backup-ux.test.js` 補上版本常數並改判 v5；`ledger-quick-entry.test.js` 的儲存流程 sandbox 改接**真實**回寫實作（非放行樁），驗證無採買來源時完全不觸發。完整 **45／45** Node tests 與 `tools/check-doc-titles.js` 通過。Service Worker cache `okayama-trip-v60` → `okayama-trip-v61`。
+- Browser QA（本機 static server，375／390px）：三態徽章、已買多選三顆動作、preflight 兩種阻擋文案、移回待買保留 link、解除連結後回到 `unlinked`、部分購買驗證與拆分結果、多品項真實 `saveLedgerEntry()` 後兩筆各自取得**不同 `recordId` 但同一 `batchId`**、已解除的舊 link 完整保留在歷史中、再次選入被阻擋。頁面與逐元件橫向溢出皆為 0（含 36 字品名＋長數量＋長代購對象的極端列），console error 0，`overflow-y:auto`／`touch-action:pan-y`／`overscroll-behavior:contain` 與三處 `env(safe-area-inset-*)` 未退化。
+## 2026-07-26｜採買清單依行程排序＋孤兒 stopRef 三態（dev，SW v60，待 Bar 真機驗收）
+- **A 排序（顯示正確性 bug，非 UX 偏好）**：`buildShoppingTodayReminder()` 與 `renderShoppingGroups()` 的站點群組順序原本跟著**採買項目的建立順序**跑。實測（本機 static server，受控三站測資）修正前為 `第三站 → 第一站 → 第二站`，實際行程是 `第一站 → 第二站 → 第三站`；跨日同樣可能出現 DAY 5 排在 DAY 1 之前。
+- **單一排序來源**：新增純函式 `buildShoppingStopOrder(days)`／`shoppingStopRank(order,stopRef)`／`sortShoppingStopGroups(groups,order)`，契約為 `dayIndex ASC → 該日 day.items index ASC`。**待買頁與 Today 提醒共用同一份排名**——兩邊各排一次就會出現兩種順序。`sortShoppingStopGroups` 以 index tiebreak 實作穩定排序，不依賴引擎的 sort 穩定性；`Infinity` 名次以 `!==` 比較迴避 `Infinity-Infinity=NaN`。
+- **不動的部分**：同一站點內的採買項目維持既有 store order（不改字母或分類排序）、不改 `createdAt`、不重寫 localStorage 陣列順序（已驗證排序前後 `store.all()` 順序一致）。**已買頁完全不動**：維持既有平鋪與 store order，程式註解寫明不在本批排序範圍，且因 Shopping Item 尚無 `completedAt`／`purchasedAt`，store order **不得對外宣稱為購買時間順序**。
+- **F 孤兒判定三態**：原本 `shoppingStopById()` 回 null 就一律歸到模糊的「已綁定行程」，把三種完全不同的狀況混成一桶。新增 `tripDatasetAuthority(snapshot,days)` 與 `resolveShoppingStopState(stopRef,stop,authority)`：`resolved`（`DAY N · 站名`）／`pending`（`行程站點待確認`）／`orphan`（`原行程站點已不存在`）。
+- **權威性沿用既有訊號，未另造平行狀態**：判定用資料層既有的 `CURRENT_SNAPSHOT.source`（與 `syncStatusModel()` 同一組值）。`online` 才算本次旅程權威資料——快照會把 `source` 一起持久化，因此「之前同步過、現在離線」仍算權威，不會誤判。`builtin` 與 `legacy-migrated` 一律降級 `unverified`。**不採用 `DB.trip.days.length > 0`**：已核對最新 `dev` 的 BUILTIN，日期確為本次旅程的 10/18–10/23、共六天且結構完整，但 Day 3 之後仍是江之島／鎌倉／新宿的舊東京行程（`tasks/backlog.md` #11 在最新 `dev` 仍成立），站點 ID 與真實 Sheet 不同——若據以判孤兒，會把整批 Day 3–6 的正確綁定一次標成失效。
+- **編輯表單狀態一致性**：原綁定解析不到時，`<select>` 沒有對應 option，瀏覽器顯示第一個「不綁定」而 form state 仍留著舊 ID；使用者不碰下拉直接儲存就會把不知情的舊 ID 一起帶走。改為補一個 **以原值為 `value` 的選中 option**（`原行程站點已不存在（請重新選擇）`／`行程站點待確認（暫時保留）`），加上說明與 `clearShoppingStopBinding()` 明確清除按鈕。實測：不動下拉儲存後 `stopRef` 仍為 `ghost-999`；按下清除後才變空字串。**系統任何路徑都不自動清空 `stopRef`。**
+- **未修改**：勾選 Modal、Toast 記帳、已買頁多選／清空、Shopping-to-Ledger 關聯欄位、`ledgerLink`、部分購買、數量 schema、團體帳預填、必買置頂、`⋯` 選單、表單改 overlay、雲端同步、搜尋、Apps Script、Sheet／Ledger／Shopping localStorage schema。B／C／D／E／G 僅輸出設計提案，未實作。
+- **BUILTIN 種子資料過時**：經最新 `dev` 核對後確認 `backlog` #11 仍成立。此項影響離線可信度，本批已改為不信任 `builtin` 來源以規避誤判，但**根因未解**；建議升級為出發前必要修正而非一般 P2 打磨，重寫 BUILTIN 本身未經核准，本批未動。
+- 測試：先寫紅燈（首輪 `mod.buildShoppingStopOrder is not a function`）再最小實作。`tests/shopping-list.test.js` 的斷言由 31 項擴充至 69 項，涵蓋 A 的七項與 F 的八項要求。完整 **44／44** Node tests 與 `tools/check-doc-titles.js` 通過。Browser QA 375／390px：頁面與元件橫向溢出皆為 0、console error 0，三種資料來源（online／builtin／冷啟動無快照）與編輯表單四種操作實測正確。Service Worker cache `okayama-trip-v59` → `okayama-trip-v60`。
+## 2026-07-26｜團體消費權限與資料完整性（dev，SW v59，待 Bar 真機驗收）
+- **根因**：既有「與我相關」只限制團體消費的可見範圍；原 `canDeleteLedgerRecord()` 只排除墓碑與身分註冊，分攤者仍可操作付款人的紀錄。編輯 replacement 也曾由表單建出的 record 帶入目前身分，未把「原付款人不可變」鎖成資料層不變條件。
+- **付款人擁有權**：新增 `canEditLedgerRecord(record,currentMember)`／`canDeleteLedgerRecord(record,currentMember)` 與 handler 層 assert；UI 隱藏不合資格操作，直接呼叫 handler 仍會拒絕。姓名比對沿用 `canonicalMemberName()`；個人帳維持原操作。
+- **fail-closed**：團體紀錄缺少或無法辨識 `record.member` 時仍沿用既有可見性結果，但任何人都不可編輯或刪除，並顯示「無法確認此筆紀錄的付款人,請由管理或資料修復流程處理。」。
+- **編輯不變條件**：完整追查原始 record → 表單 hydration／draft → save handler → `buildSharedLedgerEditBatch()` → 墓碑與 replacement；資料層明確以原始紀錄的原字串覆寫每筆 replacement `member`，忽略 draft／form／currentMember 可能夾帶的不同值。墓碑操作者仍為當前付款人。
+- **刪除完整性**：批次選取可包含可見的他人付款紀錄，但開啟確認與真正寫入前都以同一 helper 完整重查；混有 N 筆非本人紀錄時整批拒絕，不產生部分墓碑。單筆刪除多品項同批收據時顯示「此筆屬於 N 筆的同批收據,其餘 N-1 筆將保留。」。
+- **身分提醒與邊界**：既有身分確認畫面追加「切換後將無法編輯舊身分建立的消費紀錄(可切回原身分處理)。」；未新增身分或後端授權機制。此功能只防前端誤操作，localStorage 身分與 Apps Script POST 不是安全信任邊界。
+- **未修改**：Schema、Validator、Apps Script／Sheet 契約、結算演算法與交握狀態機、10 秒復原、既有「與我相關」可見性、正式／TEST universe、同步流程與個人軌資料邏輯均未變更。Service Worker 僅由 `okayama-trip-v58` 順延至 `okayama-trip-v59`。
+- **驗證**：先以紅燈鎖定擁有權、fail-closed、編輯付款人不變、批次整批拒絕與同批單筆提示；完整 **44／44** Node tests（結算可靠性 **123／123**）及文件標題檢查通過。375／390px Browser QA 覆蓋分帳首頁、完整紀錄頁與個人新增→編輯→刪除流程，console error 0、無水平溢出；團體付款人／分攤者操作邊界以隔離測試驗證，未向真實團體帳送出測試資料。
+
+## 2026-07-25｜團體帳本只顯示與目前成員相關的紀錄（dev，SW v58，待 Bar 真機驗收）
+- **問題**：團體帳顯示旅程內所有人的消費，Mark 仍看得到只屬於 Jane 與 Baron 的紀錄。本批改為預設只供料「與目前成員相關」的團體紀錄。
+- **相關性定義**：`目前成員是付款人（record.member）` **或** `目前成員在 participants 內`，任一成立即顯示。**付款人不必在 participants 內** —— 全額代墊給別人的紀錄仍是自己建立的，必須看得到、改得動、刪得掉。只用 `participants.includes(me)` 會讓代墊紀錄從建立者眼前消失。
+- **採方案 A（全面一致過濾）**：`ledgerTrackRecords()` 仍是團體帳唯一的共用節流點，過濾就實作在那裡。最近消費、完整紀錄頁、主卡片筆數與總額、查詢、批次選取、編輯與刪除入口全部吃同一批結果，不會出現「清單 5 筆、摘要 8 筆」或「清單過濾了但總額仍是全團」。**不採方案 C**：不新增篩選 chip、不新增「與我相關／全部」切換、不新增設定。
+- **識別值**：本專案 Ledger schema **沒有獨立 member id**，`canonicalMemberName()` 正規化後的姓名 key 就是既有的穩定成員識別（`registeredMemberEntries` 的 `entry.key`、`findRegisteredMember`、`buildMemberBalances`、結算全序比對用的都是它）。新函式沿用同一個正規化入口，不另立比對規則、不改 schema、不做資料 migration。因此「Mark」與全形空白／前後空白版本判為同一人，「Markus」不會被誤判。
+- **Legacy 限定式 fail-open**：`participants` 缺欄／`null`／非 JSON／非陣列／空陣列時 `parseParticipants()` 回 `null`，此時一律**保留顯示** —— 舊資料不得因本功能靜默消失。fail-open 只在「無法可靠判斷」時成立；解析得出來就照規則排除，不會擴散成無條件放行。
+- **成員無法解析時 fail-safe**：`trip_member` 讀不到或只有空白時**完全不套用過濾**並保留全部紀錄，避免整本團體帳突然歸零。這是安全退化，不是略過身分流程。
+- **診斷不洗版**：新增 `ledgerVisibilityWarn()`，沿用資料層 `_refWarned` 的 warn-once 慣例經 `AppLog.data` 輸出，同一則訊息一個 session 只記一次（實測連跑 20 次 `renderSplit()` 零新增訊息）。過濾本身每次重繪都會重跑。
+- **UI 文案**：主卡片 `團體總支出 · N 筆紀錄` → `與我相關 · N 筆紀錄`。全面過濾後那個數字與其下的金額都只代表個人範圍，續用「總支出」會誤導。個人帳的 `累計支出 · N 筆紀錄` 不變。
+- **操作入口補上同一道判斷**：清單過濾只是供料範圍，不是授權控制。`editLedgerRecord()`、`openSharedLedgerDeleteBatch()` 與 `submitSharedLedgerDeletion()` 讀的都是未過濾的 `mergedLedgerRecords()`，因此三處各自以**同一個** `isLedgerRecordRelatedToMember()` 重查，供料與守門不會漂移。這是最小補洞，**不是**新建權限系統；後端（Apps Script `doPost`）仍無操作者驗證，列為既有風險。
+- **未修改**：`buildMemberBalances`／`buildTransferSuggestions`／`deriveSettlements` 與任何金額或結算演算法 —— 結算仍讀全團 `mergedLedgerRecords()`，餘額不受可見範圍影響（實測：可見 4 筆時結算仍以全部 5 筆推導）。個人帳（本機單人資料）不套用團體成員過濾。`schema.js`、`validator.js`、Apps Script 契約、TEST／正式宇宙隔離、ADR 均未動。
+- **本機 static server 實測（375px，橫向溢出 0）**：同一份三人測資下 Mark 4 筆 ¥6,050、Jane 5 筆 ¥10,050、Baron 4 筆 ¥9,050、身分未解析 5 筆 ¥10,050；主卡片筆數＝最近消費卡片數＝完整紀錄頁「找到 N 筆」＝金額加總，四者一致。`n4`（只屬於 Jane／Baron）不出現在任何清單，且 `editLedgerRecord('n4')` 回「這筆紀錄與你無關,無法編輯」、`openSharedLedgerDelete('n4')` 不開啟刪除對話框；自己的代墊紀錄 `n2` 仍可正常開啟編輯表單。
+- 回歸測試新增 `tests/ledger-member-visibility.test.js`（四象限、legacy 七種壞格式、fail-open 不擴散、三種無法解析的身分、姓名格式變動、筆數／總額、最近消費與完整紀錄頁同源、八個消費端共用節流點、編輯／刪除重查、不得新增切換 UI）。`ledger-dashboard.test.js` 更新主卡片文案與節流點斷言；`ledger-225.test.js` 的刪除 sandbox 補上真實 `isLedgerRecordRelatedToMember`（接真實實作而非放行樁）。完整 **44／44** Node tests 與 `tools/check-doc-titles.js` 通過。Service Worker cache `okayama-trip-v57` → `okayama-trip-v58`。
+
+## 2026-07-25｜付款者那一列也收成一行＋摘要金額降級（dev，SW v57）
+- **§3 核准文案修訂（Bar 裁定）**：`已送出・等待對方確認` → `等待對方確認`。「已送出」是冗字 —— 這一列有「撤回」可按，本身就代表已經送出過。此為**狀態機 label 本身的修訂**，不是顯示層去重，特此記錄。
+- **按鈕文案（Bar 要求縮短，實作採不同用詞）**：`重新標記已付款`（7 字）→ `我已付款`（4 字）。Bar 原提「重新付款」，改用「我已付款」的理由：①`ledgerRemarkSettlementPaid()` 最終呼叫的就是 `ledgerMarkSettlementPaid()`，與轉帳建議列「我已付款」建立的是**同一種 `settlement_claim`**，同一動作應同一用詞；②「重新付款」是祈使句，讀起來像 App 會代為轉帳，但按下去是立刻寫入「我付過了」的宣告 —— 錢是使用者在 App 外自己付的。列上已有 `對方已退回` chip 與退回原因提供「這是第二次」的脈絡，語意不因縮短而流失。
+- **版面**：動作一律併入主列右側；**只有「退回原因」需要自己的一列**（長度不可控的自由文字，擠進主列會壓垮右側）。付款者列因此由兩行 82px 降為一行 52px。
+- **未採納「把等待同步移到姓名後方」**：實測顯示這不會省下任何寬度（內容總量相同），反而更差 —— 移進左欄會與姓名搶同一個可壓縮空間，窄螢幕更早換行。320px 實測：留在右欄剩餘 34px、移到左欄剩餘 30px。真正讓付款者列收成一行的是 chip 從 10 字縮到 6 字。
+- **摘要金額**：`.ledger-settlement-amount` 由繼承的 15px 降為 13.5px（與 `.btn` 同級），底下的新帳款小字維持 11px 仍小於金額；簡易結算模式的摘要套用同一 class，兩種模式不再不一致。
+- 320／375／430px 以本機 static server 實測九種列型（真實 CSS／DOM／`scrollWidth`）：**橫向溢出一律 0**。320px 下除兩種帶退回原因的列（80／64px，設計如此）外全部為一行 50–52px；唯一左欄換行的是「4 字姓名＋`¥123,456`＋`等待對方確認`＋`等待同步`＋`撤回`」，高度 55px 且無橫向溢出。
+- 回歸測試新增／更新：新狀態文案、按鈕不得使用祈使句式付款動詞、`foot` 只為退回原因存在、摘要金額字級與簡易模式一致性；`settlementDisplayChip` 的「`・`後不是按鈕動作時不得誤切」改用仍在線上的 `同步失敗・重新同步` 當測資。完整 43／43 Node tests（reliability 123／123）與 `tools/check-doc-titles.js` 通過。Service Worker cache `okayama-trip-v56` → `okayama-trip-v57`。
+
+## 2026-07-25｜收款者那一列收成一行：移除多餘的「待你確認」chip（dev，SW v56）
+- Bar 用過一段時間後回報：`待你確認` chip 有點多餘，卻讓整列被迫變成兩行。**推翻 v52「`待你確認`＋兩顆按鈕非重複，維持不動」的裁定** —— 兩顆主要按鈕擺在那裡，本身就是「這筆等你處理」最強的訊號，chip 是把同一件事說第二遍。
+- 新增 `settlementRowChipText(label,actionLabel,impliedByAction)`：在 v52 既有去重規則之上再加一條 —— 該列已擺出「確認已收／退回」時（`view.canRespond`）一律不出 chip。其餘 chip 帶有按鈕沒有的資訊，全部保留：`已送出・等待對方確認`（「撤回」不等於「還在等對方」）、`對方已退回`、`同步失敗`。**狀態機 `settlementEntryStatus()` 的 label 仍維持 §3 核准原文，去重只發生在顯示層。**
+- 版面：`ledgerHandshakeStatusLine()` 在「無 chip 且無退回原因」時，把動作併入主列右側（與等待提示同欄），整列收成一行；其餘情況維持既有兩列。仍需兩列時補空 span 的左右定位規則不變。
+- **未縮小字級或按鈕**：`.btn.sm` 目前高 35px 已低於 44px 建議值，再縮會傷到「確認已收」這種金錢操作的點擊率。實測顯示不需要。
+- 320／375／430px 三種寬度以本機 static server 實測（真實 CSS、真實 DOM、量測 `scrollWidth`）：**橫向溢出一律為 0，左欄皆未換行**。320px 下收款者列由兩行 82px 降為一行 52px；最極端的「4 字姓名＋`¥123,456`＋`等待同步`＋兩顆按鈕」仍為一行，剩餘寬度 4px。再長的姓名會讓左欄換行（高度回到約兩行），不會產生橫向捲動。
+- 回歸測試新增：`impliedByAction` 為真／假時的 chip 輸出、其餘四種狀態 chip 必須保留、只有「無 chip 且無退回原因」才併列、併列後不得輸出空的第二列。既有 #49／#50 的切片斷言一併更新（列表建構與 chip 函式已改名／搬家）。完整 43／43 Node tests（reliability 121／121）與 `tools/check-doc-titles.js` 通過。Service Worker cache `okayama-trip-v55` → `okayama-trip-v56`。
+
+## 2026-07-25｜最後一筆處理完自動收起結算面板（dev，SW v55）
+- Bar 裁定：確認已收後自動關閉「團體結算」面板，但**只有這筆是最後一筆待處理時才關**，避免多筆待處理時被迫逐筆重開面板。
+- 新增純函式 `settlementPanelShouldClose(rowCount,panelOpen)`：面板開著且待處理列數為 0 才回 `true`；`rowCount` 為 `undefined`／`null`／空字串／非有限數一律回 `false`（算不出來時保守不關 —— 誤關會讓使用者以為操作沒生效）。
+- 「需要你處理」的列表建構抽成 `settlementActionableRows(model)`，主面板渲染與自動關閉判斷**共用同一份**。兩邊各算一套就會出現「面板還列著東西卻被自動關掉」。`renderSettlementPanelBody()` 不再自行 `rows.push`／`rows.sort`。
+- `closeSettlementPanelWhenDone()` 於 `ledgerConfirmSettlementClaim` 的完成回呼中執行，沿用既有 `closeLedgerInfoSheet()`；列數計算拋錯時直接 `return false` 不關。POST 失敗且未安全入列時該筆仍是 pending、列數不為 0，因此不會誤關。
+- 回歸測試新增：0／1／5 列與面板開關的四種組合、三種算不出列數的輸入、主面板與關閉判斷同源（主面板不得再自行組列表）、確認完成後才判斷收起。完整 43／43 Node tests（reliability 119／119）與 `tools/check-doc-titles.js` 通過。Service Worker cache `okayama-trip-v54` → `okayama-trip-v55`。
+
+## 2026-07-25｜Toast 圖層修正：復原鈕被結算 sheet 蓋住（dev，SW v54）
+- Bar 真機回報：「確認已收 → 送出中」結束後仍停在「團體結算」sheet，底部的 `已確認收款 [復原]` **完全看不到**，等於那 10 秒形同不存在。
+- 主因：`.toast` 的 `z-index:90` **低於 App 內每一個 overlay** —— 結算 sheet 135、退回對話框 140、設定／成員 130、診斷面板 110、採買清單 145／160。toast 固定在 `bottom:80px`，正好落在 sheet 面板範圍內且被蓋住，既看不到也點不到。此為既有缺陷，過去 toast 只是純提示所以沒被發現；復原鈕是**可互動**元素，被蓋住即功能失效。
+- 修正：`.toast` 提到 `z-index:200`（高於目前最高的 160）。toast 依定義就是最上層的短暫回饋層。`pointer-events` 規則不變 —— 純提示的 toast 仍為 `none`，只有 `.has-action` 吃點擊，不會攔截 overlay 上的操作。
+- **未採用「確認後自動關閉結算面板」**：那只能救到 confirm 這一條路徑，`我已付款`／`退回`／`撤回`／`重新標記已付款` 的 toast 一樣被蓋住；且使用者若還有其他待處理款項，會被強制踢出面板再自己點回來。圖層修好後不必關面板也看得到、點得到。
+- 回歸測試新增：`.toast` 的 `z-index` 必須是全檔最大值，且不得有第二個圖層與它同高（同高時由 DOM 順序決定勝負，結果不可預測）。完整 43／43 Node tests（reliability 117／117）與 `tools/check-doc-titles.js` 通過。Service Worker cache `okayama-trip-v53` → `okayama-trip-v54`。
+
+## 2026-07-25｜已確認收款改為 10 秒一次性復原（dev，SW v53，待 Bar 真機驗收）
+- **產品裁定（Bar）**：移除結清歷史中的永久「撤銷確認」按鈕，不實作 24 小時撤銷機制。「確認已收」完成後只在**操作裝置**提供 10 秒一次性「復原」；逾時該筆確認即為終局結果。日後發現帳務錯誤改走補登或更正流程，本批不實作更正功能。
+- **移除既有 24 小時方案**：原方案已 commit 在 `dev`（非未提交草稿）。本批刪除 `SETTLEMENT_REVOKE_WINDOW_MS`（24h）、`settlementConfirmRevokeEligibility`、`settlementRevokeBlockMessage`、`ledgerRevokeSettlementConfirm`（含其二次確認視窗），以及結清歷史列的「撤銷確認」按鈕、`· 可撤銷` chip 與 `不可撤銷 · 已超過 24 小時`／`· 已有後續結算` 小字。全檔 `24 小時` 出現次數為 0。
+- **10 秒復原資格**：新增純函式 `settlementConfirmUndoEligibility(entry,allEntries,actor,now)` 回傳 `{allowed,reason,expiresAt}`，`reason` 為 `allowed｜expired｜superseded｜not-receiver｜already-undone｜invalid`。須同時為原收款者、有效 `settlement_confirm`、尚未被 deletion 撤銷、該 settlement key 最新有效 generation，且距 `response.time` ≤ 10 秒（9,999ms 與正好 10,000ms 可復原、10,001ms 不可）。`response.time` 無法解析或明顯位於未來一律 `invalid`。時間比較使用 ISO `record.time`，不依顯示時區字串，也不以 toast 顯示完成時間重新起算。
+- **Toast 與 handler**：`appendSettlementRecord` 新增 `doneToast(durable)` 掛鉤，僅在 POST accepted 或已安全寫入 durable queue／bridge 時輸出 `已確認收款 [復原]`；期限取 `settlementUndoToastDurationMs()` 的**剩餘**時間，動畫或同步延遲只會變短不會變長。`ledgerUndoSettlementConfirm()` 不得只依賴 toast 隱藏 —— 一律以當下 ledger 事件重新 `deriveSettlements` 並重跑資格檢查，以獨立 `undo:{responseId}` action lock 保證連點只產生一筆 deletion record。
+- **Append-only 語意不變**：復原沿用既有 `createLedgerDeletion`，`targetRecordId` 指向 `settlement_confirm.id`，原 confirm／claim 不刪除、不修改；餘額回復純由 `deriveSettlements` 與 `applyConfirmedSettlements` 推導。confirm 與 undo 各自保留穩定 `record.id`，同 id 在 cloud／queue／bridge 只合併一次，遠端先看到 undo 後看到 confirm 仍收斂到同一結果。
+- **歷史介面**：`ledgerHandshakeHistoryLine()` 不再輸出任何 `<button>`，已完成者顯示付款者、收款者、金額與完成時間（`formatLedgerSyncRecordTime`）；已復原者因 confirm 被撤銷而回到待確認，不列為有效已完成結清。reload／換裝置皆不重建復原入口。
+- **摘要新帳款小字（Bar 截圖回報）**：`本筆 ¥2,500 已完成,另有新產生帳款 ¥150 待處理` 這條佔滿整行的說明區塊，改為摘要金額同欄的 11px 小字 `黃柏 上筆 ¥2,500 已結清・新帳款 ¥150`（30 字 → 25 字）。`settlementNewChargeNote()` 新增 `me` 參數以取得對象姓名。**刻意不採「上筆〈明細內容〉已結清」寫法** —— 結清是一對成員之間由多筆消費彙總的淨額，沒有單一明細可指名，指名任一品項都會誤導。移除 `.ledger-settlement-note`，新增 `.ledger-settlement-amount`／`.ledger-settlement-hint`。
+- **附帶修補**：`appendSettlementRecord` 原本直接 `ledgerRepository.add(record).then(...)`，而 `add` 內的 `writeQueue` 在 localStorage 配額用盡／私密模式下會**同步拋出**，導致既無成功也無錯誤提示且鎖不釋放。已包成 `try/catch → Promise.reject`，與非同步失敗走同一路徑（明確錯誤 + `failed` phase + 釋放鎖 + 維持 confirmed），符合本批「復原無法安全保存時不得顯示成功」的要求。
+- **診斷面板新增「App 版本」（Bar 要求）**：真機驗收過去無法確認手機跑的是哪一版（Bar 曾以 v49 的截圖回報 v50 才修好的問題）。新增 `readActiveShellVersion()`：`sw.js` 的 activate 會刪掉所有非當前 `CACHE_NAME` 的快取，因此 Cache Storage 中剩下的 `okayama-trip-*` 就是**這台裝置實際啟用**的版本。版本字串一律讀自真實快取，`index.html` 不得寫死版本號；瀏覽器不支援或讀取失敗顯示「無法讀取」，絕不猜一個版本號。入口：雙擊桃子徽章 → 診斷面板第一列。
+- 未修改：Apps Script `doPost` 契約、`schema.js`、`validator.js`、Google Sheet 表頭、`buildMemberBalances`／`buildTransferSuggestions` 核心數學、後端授權模型、ADR。未新增 24 小時撤銷、帳款更正、反向付款、登入驗證或 server timestamp ordering。Service Worker cache `okayama-trip-v52` → `okayama-trip-v53`。
+- 測試：先寫紅燈（首輪 16 項失敗）再最小實作。`tests/ledger-settlement-reliability.test.js` 由 98 擴充至 116 檢查，涵蓋規格 25 項要求（10 秒三個邊界、無效／未來時間、非收款者、已復原、後續 generation、連點五次一筆、`targetRecordId` 對應、原紀錄未被改寫、queue／bridge 併存推導、四種輸入順序收斂、宇宙隔離、歷史不得輸出按鈕、reload 不重建入口、寫入失敗維持 confirmed）。完整 43／43 Node tests 與 `tools/check-doc-titles.js` 通過。
+
+## 2026-07-25｜結算列顯示層去重（dev，SW v52）
+- Bar 回報「按鈕已顯示狀態時，上方小字不需再顯示類似資訊」（截圖：chip `送出中…` 與按鈕 `送出中…` 並存）。全面盤點狀態機的「chip × 按鈕 × 小字」組合後共 4 處同義重複，本批一次處理。
+- **新規則**：chip 只講「現在是什麼狀態」，按鈕只講「你可以做什麼」，小字只在提供額外資訊時出現。**狀態機 `settlementEntryStatus()` 的 label 維持 §3 核准原文不變，去重只發生在顯示層。**
+- 新增純函式 `settlementDisplayChip(label,actionLabel)`：chip 與按鈕文案完全相同時不輸出 chip（`送出中…`）；chip 尾端就是按鈕動作時只保留狀態部分（`同步失敗・重新同步` → chip 顯示 `同步失敗`，動作留在按鈕）。「・」後不是按鈕動作時不得誤切（`已送出・等待對方確認` + `撤回` 完整保留）。兩顆按鈕的情況（`待你確認` + `確認已收`／`退回`）不傳 `actionLabel`，chip 完整保留。
+- `settlementSyncTag()`：chip 已含「同步中」且提示為「等待同步」時不重複輸出（`已確認・同步中`、`已退回・同步中` 兩列）。**逾 30 秒升級的「同步較久,可手動重試」與「同步異常」一律保留** —— 那是 chip 沒有的經過時間訊號，Bar 明確裁定保留。
+- 維持不動的四種組合：`待你確認`＋兩顆按鈕、`已送出・等待對方確認`＋`撤回`、`對方已退回`＋`重新標記已付款`、`已完成`。狀態與動作資訊不同，非重複。
+- 僅改顯示層。Service Worker cache `okayama-trip-v51` → `okayama-trip-v52`。
+- 回歸測試新增：去重規則五種輸入、不得誤切「・」、兩顆按鈕不去重、抑制條件須兩者同時成立、30000／30001／120000ms 三個等待提示邊界。完整 43／43 Node tests（reliability 98／98）與 `tools/check-doc-titles.js` 通過。
+
+## 2026-07-25｜退回列窄螢幕再收緊（dev，SW v51）
+- 移除退回原因的「退回原因:」前綴：右側狀態 chip 已表明本列處於退回態，前綴語意冗餘，卻在 320／375px 吃掉約三分之一可用寬度。改以 `aria-label="退回原因"` 保留讀屏語意，視覺只留原因本文。
+- 320／375／390／430px 四種寬度實測：對象/金額與狀態 chip 無重疊、原因與動作按鈕無重疊、各列按鈕右緣一致對齊（寬度 − 12px）。含 20 字長原因的極端列在 320px 為 135px 高並正常換行，未推擠按鈕；無原因無動作的列維持 41px 單列。
+- 僅改顯示層。Service Worker cache `okayama-trip-v50` → `okayama-trip-v51`。**未更動 §3 核准的狀態文案。**
+- 回歸測試新增：不得再輸出「退回原因:」前綴、必須保留 `aria-label`。完整 43／43 Node tests（reliability 96／96）與 `tools/check-doc-titles.js` 通過。
+- 備註：Bar 於 10:40 回報的截圖經比對為 **v49**（摘要已是 `≈ NT$880`，但退回列仍為單列擠壓版），v50 兩列版面當時尚未進到裝置；iOS PWA 需自多工列滑除後重開兩次才會 activate 新 SW。
+
+## 2026-07-25｜計算明細參考幣別殘留與退回列版面 Hotfix（dev，SW v50）
+- 修正「計算明細仍卡著台幣」（Bar 真機回報：`我的淨額 JPY 0 · TWD -116`、`TWD 轉帳建議（參考） jane → 黃柏 NT$116`）：計算明細的淨額直接印 `netTwd`，參考轉帳建議也取自 `settlement.twd`／`settlement.jpy` 這條**獨立累計**的餘額，因此結算幣別已結清時仍殘留幻影欠款。結算面板摘要（v49）只修了一處，本批補齊次層頁面。
+- 新增純函式 `settlementReferenceAmount(amount,currency,rate)` 與 `settlementReferenceTransfers(suggestions,rate)`：參考幣別**一律由結算幣別換算**（保留正負方向），不再讀另一幣獨立累計的餘額；結算幣別無轉帳建議時參考幣別必為空。`ledgerSettlementLines()` 改為輸出「結算幣別淨額 ≈ 參考幣別」。計算明細說明文字明確標示「結算以 X 為準，Y 為換算參考值，不會單獨掛帳」。
+- 退回列版面：`ledgerHandshakeStatusLine()` 改為固定兩列 —— 第一列「對象/金額 ｜ 狀態 chip」，第二列「退回原因 ｜ 動作按鈕」，兩列各自 `space-between` 使欄位對齊。`.ledger-settle-reason` 由 `display:block;width:100%` 改為同列彈性欄，不再撐開左欄把右側 chip 與按鈕擠成錯位（iPhone 窄寬最明顯）。原因與動作皆無時不輸出第二列。**未更動 §3 核准的狀態文案**。
+- 375px 版面實測：`scrollWidth === clientWidth`（無橫向溢出）；對象/金額與 chip 無重疊、退回原因與按鈕無重疊，各列按鈕右緣一致對齊；無原因無動作的列維持單列高度。
+- 僅改顯示層。未修改 Schema、Validator、Apps Script、Google Sheet、Ledger 紀錄契約、delivery bridge、fast pull、localStorage key，或 `buildMemberBalances`／`buildTransferSuggestions`／`applyConfirmedSettlements` 計算。Service Worker cache `okayama-trip-v49` → `okayama-trip-v50`。
+- 回歸測試新增：參考幣別換算（含負值方向、匯率不可用降級、結算幣別為空時參考必為空）、計算明細不得再讀另一幣獨立建議、退回列兩列結構與 CSS 規則。完整 43／43 Node tests（reliability 96／96）與 `tools/check-doc-titles.js` 通過。
+
+## 2026-07-25｜結算摘要參考幣別顯示 0 元 Hotfix（dev，SW v49）
+- 修正「結算摘要台幣參考對照顯示 NT$0」（Bar 真機回報：`應收 ¥3,160 · NT$0`）：`ledgerSettlementStatus()` 在單一結算幣別分支會把另一幣填 `0` 佔位，該 `0` 不是餘額，但結算面板摘要直接把雙欄串接顯示，於是非結算幣別恆顯示 0。
+- 新增純函式 `settlementSummaryAmountText(status,currency,rate)`：以結算幣別金額為主，另一幣以 `convertLedgerAmounts()` 換算為參考值顯示（`¥3,160 ≈ NT$632`），與消費卡片既有雙幣呈現一致；已結清時不顯示金額，不再出現「¥0 · NT$0」；匯率不可用時只顯示結算幣別金額，不編造參考值。正式面板與簡易結算模式共用同一規則。
+- 僅改顯示層。未修改 Schema、Validator、Apps Script、Google Sheet、Ledger 紀錄契約、delivery bridge、fast pull、localStorage key，或 `buildMemberBalances`／`buildTransferSuggestions`／`applyConfirmedSettlements` 計算。Service Worker cache `okayama-trip-v48` → `okayama-trip-v49`。
+- 回歸測試新增：JPY／TWD 兩種結算幣別的換算參考值、已結清不顯示金額、匯率不可用時的降級，以及主面板摘要不得再直接串接雙幣佔位數字。完整 43／43 Node tests（reliability 94／94）與 `tools/check-doc-titles.js` 通過。
+
+## 2026-07-25｜結算狀態參考幣別殘值 Hotfix（dev，SW v48）
+- 修正「結算完成後仍顯示台幣 680 應付」（Bar 2026-07-25 真機驗收回報：`jane → 黃柏 ¥3,400` 已確認結清後，淨額為 `JPY 0 · TWD -680`，主面板仍顯示「應付 ¥0 · NT$680」）：已確認結清只抵銷 ADR 0007 定義的單一結算幣別，另一幣別為參考值；首頁結算卡與結算面板過去仍用 JPY/TWD 雙欄判斷是否已結清，導致結算幣別已歸零時，參考台幣殘值被誤顯示為未結清。此即 ADR 0007 為否決 Alternative C 而要避免的「這對在 ¥ 已清、卻在 NT$ 欠另一人」破碎狀態。
+- `ledgerSettlementStatus()` 新增結算幣別參數；正式 UI 以 `Ledger Default Currency` 對應的結算幣別判斷已結清／應收／應付，參考幣別不再重新打開狀態卡。計算明細仍保留雙幣淨額與參考轉帳建議供檢查，不改資料語意。
+- 未修改 Schema、Validator、Apps Script、Google Sheet、Ledger 紀錄契約、delivery bridge、fast pull 或 localStorage key。Service Worker cache 由 `okayama-trip-v47` 順延至 `okayama-trip-v48`，SHELL、install／activate／fetch 策略不變。
+- 結清紀錄與計算明細兩張次層 sheet 加上「‹ 返回」，回到團體結算主面板而非整個關閉重進（Bar 同批回報）；返回入口由 sheet `kind` 決定，不接受呼叫端傳入任意 JS，不新增 onclick 注入面。
+- 回歸測試新增 JPY 已歸零但 TWD 參考殘留 `-680`、TWD 已歸零但 JPY 參考殘留兩種情境，以及兩張次層 sheet 具返回鈕、主面板與其他 sheet 不得出現返回鈕；完整 `tests/*.test.js`、`tests/ledger-settlement-handshake.test.js`、`tests/ledger-settlement-reliability.test.js` 與 `tools/check-doc-titles.js` 通過。
+
+## 2026-07-25｜結算狀態、近即時同步與介面簡化 Hotfix（fix/settlement-state-and-live-sync，待 Apps Script 部署與 Bar 真機驗收）
+- **契約擴充（Bar 事前核准，記入本檔）**：`apps-script/ledger-sync.gs` 新增唯讀 `doGet`：`GET {WEB_APP_URL}?action=ledger&after=N`。`after` 缺省／空字串／非數字／負數正規化為 0、小數向下取整；`after >= total` 回空陣列且**不呼叫 `getValues()`**；`after > total`（Bar 手動刪列造成截斷）回 `reset:true` 與全量 rows；`total === 0 && after > 0` 回 `reset:true` 且 `total/after` 皆為 0。固定以 `getRange(after+2,1,total-after,21)` 精確讀取，不整表掃描。`action` 必須精確等於 `ledger`。工作表不存在或欄數不足 21 回 `ok:false`。錯誤不回傳例外 stack、Sheet 物件或 Spreadsheet ID。**刻意不取 `LockService`**（唯讀，且不得與 `doPost` 搶鎖或額外消耗每日執行配額）。`doPost` 既有契約與驗證邏輯零改動。
+- **Durable delivery bridge**：POST accepted 後改為原子式 handoff —— 先持久化寫入 bridge、確認寫入成功，才可將 record 移出 retry queue；bridge 寫入失敗（含拋錯）時 record 留在佇列，不產生資料遺失空窗，伺服器既有 `record.id` 去重仍負責避免重複入帳。bridge 保存完整 record、參與 `mergedLedgerRecords()`、支援 claim／confirm／reject／deletion／withdraw／revoke，**不因等待過久自動刪除**，只有遠端讀回相同 `record.id` 才清除。舊 `trip_ledger_deletion_bridge` 於首次讀取時自動併入新 `trip_ledger_delivery_bridge`，升級不遺失在途刪除。
+- **事件全序**：generation close 由單純 `closesAt` 時間字串改為可比較的 terminal event position `{time,id}`，claim/claim、confirm/reject、terminal 與下一筆 claim、withdraw 與下一筆 claim 全部共用 `compareSettlementEvents`（`record.time` ASC → `record.id` ASC）。同毫秒時新 claim `(time,id)` 大於 terminal 才開新 generation，修正「reject 與新 claim 同毫秒導致新付款靜默失效」。跨裝置 confirm／reject 競態選出 canonical response，losing response inert（不影響餘額、不進正式歷史）並產生 diagnostic warning。
+- **狀態機與按鈕**：統一文案（待你付款／送出中…／已送出・等待對方確認／待你確認／已確認・同步中／已退回・同步中／對方已退回/已完成／同步失敗・重新同步）。已操作按鈕不再因重新渲染復原；僅當 POST 未成功**且**本機 queue／bridge 皆未持久化才進入 failed。退回後付款者可「重新標記已付款」，以全新 `record.id` 開啟新 generation；本機仍讀到舊 pending 時給明確訊息並自動執行一次 ledger fast pull 後重判。
+- **近即時同步**：面板開啟且前景、線上時每 5 秒 ledger fast pull；連續 2 分鐘無新資料退避 15 秒、10 分鐘退避 60 秒（保護 Apps Script 每日執行配額），一有新資料立即回復 5 秒。面板關閉後 bridge 已清空則停止、未清空改 30 秒低頻直到全部讀回。`document.hidden`／offline 一律暫停，回前景／`pageshow`／`online` 立即拉一次並重啟對應節奏。同時最多一個 in-flight，重疊 trigger 共用同一 Promise。claim／confirm／reject／withdraw／revoke POST 完成與面板開啟亦立即觸發。`doGet` 回傳走與 CSV 相同的 `parseLedgerSheetCsv` 正規化管線，非 JSON（配額用盡／部署失效／權限錯誤的 HTML 錯誤頁）一律視為失敗並靜默降級回 CSV，不清除 bridge、不讓按鈕復原；未使用 `no-cors` 或代理。
+- **面板簡化**：主面板只保留我的應付／應收摘要與「需要你處理」（對象、金額、status chip、唯一主要操作），排序為待你確認 → 需重新付款 → 待你付款 → 已送出 → 同步異常；已完成不放主面板。每個 settlement key 只顯示最新可操作 generation，較舊 rejected／confirmed 移入次層「查看結清紀錄」，我的淨額／參考幣別／計算方式移入「查看計算明細」；兩個次層仍依 `currentMember` 過濾，第三人資料不進 DOM。
+- **撤銷限制**：~~24 小時內可撤銷已確認結清~~ —— **本項已於 2026-07-25「10 秒一次性復原」批次整批取代並自程式移除，見本檔最新章節**。當時實作的 `settlementConfirmRevokeEligibility`（24 小時視窗）與結清歷史的「撤銷確認」按鈕皆已不存在，此條僅留作歷史沿革。
+- **其他**：時鐘偏移以 `doGet.serverTime` 與 request 往返中點估算，超過 2 分鐘於面板頂部告知（僅告知，不自動校時、不改寫 `record.time`、不參與 canonical ordering）。身分切換提醒只在「舊身分仍有未完成結算」且「建立全新身分」時出現，不修改任何既有 `record.member`。新增設定頁「簡易結算模式」（`localStorage`，個人裝置設定不同步）：隱藏交握 UI 與 status chip、停止面板高頻 polling，但已確認 settlement 仍照常計入餘額，計算結果與關閉時完全一致。分帳分頁新增待處理徽章，依 `currentMember` 過濾，不需開啟結算面板即可看到。
+- `buildMemberBalances`、`buildTransferSuggestions` 核心計算、`schema.js`、`validator.js`、TripConfig 白名單、Google Sheet 表頭與其餘 7 張表的同步節奏與原子快照機制均零改動。
+- 測試：`tests/ledger-settlement-reliability.test.js` 由 30 擴充至 92 檢查（bridge 原子交接與持久性、全序與同毫秒競態、跨裝置收斂、狀態機、退回後重新付款、撤銷資格邊界（該組已由 10 秒復原邊界取代）、fast pull 增量／降級、polling 兩層退避與生命週期、徽章、簡易模式、時鐘偏移、身分提醒）；`tests/apps-script-settings.test.js` 補齊 `doGet` 契約（含「`after >= total` 不呼叫 `getValues()`」與精確 range 斷言）。完整 43／43 Node tests 逐一執行及 `tools/check-doc-titles.js` 均 exit 0。Browser 冒煙驗證 0 console error。Service Worker cache 由 `okayama-trip-v46` 順延至 `okayama-trip-v47`，其他策略不變。
+
+## 2026-07-23｜團體結算握手：已付款／待確認／已收款（dev，ADR 0007，待 Bar 真機驗收）
+- 依 ADR 0007 將團體結算由純推導升級為「推導＋事實」：新增 `settlement_claim`（付款方標記已付款）、`settlement_confirm`（收款方確認，淨額在此刻歸零）、`settlement_reject`（收款方退回，帶選填原因，淨額維持掛帳）三個 `recordType`，全部沿用既有 21 欄契約、離線佇列、ID 去重與墓碑機制；Apps Script 與 TripConfig 白名單零改動。
+- 結算 Sheet 依共享 `Ledger Default Currency` 分為主結算幣別（建議行含「我已付款」按鈕，僅付款方可見）與參考幣別；新增「待處理結清」（⏳ 待確認／❌ 已退回＋原因）與「結清歷史」（✅ 已收款；當時附收款方撤銷入口，**已於 2026-07-25「10 秒一次性復原」批次移除**）區塊。收款方確認前餘額誠實維持應收／應付；退回提供未收到／金額不對／重複一鍵原因；付款方可撤回待確認結清，重試一律開新紀錄。
+- `buildMemberBalances` 與 `buildTransferSuggestions` 本體零改動；新增純函式 `deriveSettlements`（含收款人權威驗證、最早回覆優先、宇宙隔離）與 `applyConfirmedSettlements`（不可變套用已確認結清），轉帳建議跑在扣除結清後的殘餘淨額。`spendLedgerRecords` 排除結算紀錄，消費清單與總支出不受污染。已結清配對之後的新消費誠實重新掛帳，舊結清留存歷史。
+- Schema `recordType` values 同步補上三個新值（`schema.js`＋內嵌 SCHEMA；`schemaDoc()` 不輸出 values，`09_SCHEMA_MAPPING.md` 無需重生）。測試模式結清紀錄帶 `[TEST]` 前綴且僅影響測試帳本。
+- 新增 `tests/ledger-settlement-handshake.test.js`（builders 驗證、三態推導、多裝置競態、墓碑撤回／撤銷、宇宙隔離、餘額整合、誠實重開、消費清單隔離、UI 接線）；完整 42／42 Node tests 逐一執行及 `tools/check-doc-titles.js` 均 exit 0。Service Worker cache 由 `okayama-trip-v45` 順延至 `okayama-trip-v46`，其他策略不變。
+
+## 2026-07-23｜採買清單、Today 站點提醒與 Buy-to-Ledger 閉環（dev，待 Bar 真機驗收）
+- 新增純 `localStorage` 採買清單，支援品名、固定五類、數量、共用代購對象、Day 1–6 行程站點綁定、待買／已買、編輯、刪除及取消勾選；地點未知項目列於「隨時可買」，孤兒 `stopRef` 保留且不進入 Today 提醒。
+- Today 只在當日有效站點有未完成項目時顯示「今天有 N 項待買」與站名／品名摘要；依 Bar 追加裁定，無提醒或非旅程日改顯示輕量「採買清單 →」入口，避免空清單無法建立第一筆，且不與提醒卡重複。
+- 單筆標記已買提供「直接完成／同時記帳」，後者沿用既有快速記帳 Sheet 並預填品名、購物類別、數量／對象備註及代購對象，金額保持空白；多選可直接標記已買或帶入既有多品項表單。取消記帳不回滾已買狀態。
+- 採買表單與 Ledger 共用 `trip_ledger_proxy_targets` 並沿用既有去重；個人狀態備份升為 v4 並納入採買清單，v1–v3 還原時安全補空清單。新增根目錄 `CONTEXT.md` 詞彙表。
+- 375px／390px Browser QA 已驗證 Today、完整清單及單筆／多品項閉環無水平溢出，Scroll-only panel 為 `touch-action: pan-y`，browser error 0。Service Worker cache 僅由 `okayama-trip-v44` 順延至 `okayama-trip-v45`，SHELL、install／activate／fetch 不變；未修改 Schema、Validator、Apps Script、Google Sheet、BUILTIN、購物頁或部署設定。
+- 採買清單與備份／Ledger／Today／PWA 目標測試通過；完整 41／41 Node tests 逐一執行及 `tools/check-doc-titles.js` 均 exit 0。
+
+## 2026-07-23｜治理決策追認與規則增訂
+- 分帳 2.1／2.2 於禁改清單外擴充 Schema（2.6→2.8，Ledger 契約 14→21 欄）並修改 `apps-script/`，屬未授權契約擴充，經 Bar 追認保留；同步增訂 §4 禁改清單硬停規則以防再次發生。
+- PR1 六欄擴充、PR1–PR5 分段交付、「票券」正名（修正原「票卷」錯字）、團體帳刪除原因必填（A 案）、2026-07-18 成員名單來源收斂為僅 `[身分註冊]` 紀錄——均經 Bar 追認核准。
+- 本批未修改任何程式、Schema、Apps Script、測試或部署設定。
+
+## 2026-07-22｜Ledger 摘要卡尺寸與箭頭補正（dev，待 iPhone Safari／PWA 真機驗收）
+- 個人代購卡移除標題 Emoji，「代購」恢復沿用既有 12px 標題字級與粗細；對象人數與箭頭以 10px 間距排列，整卡仍開啟既有代購彙總 Sheet。
+- 個人代購與團體結算改用同一個 `ledger-home-summary-card` 三層 Grid 尺寸契約，以及完全相同的 `ledger-card-chevron` span／`〉` 字元／18px／700 字重／line-height／顏色與對齊規則；個別卡不再覆寫 padding、min-height 或 gap。
+- 375px／390px Browser QA 量測兩卡均為 106px 高且同寬，標題、主要資訊、底部摘要及箭頭右邊界一致，`scrollWidth == clientWidth`、兩個既有 Sheet 入口正常且 browser error 0；11 個目標測試及完整 40／40 Node tests 通過。Service Worker cache 僅由 `okayama-trip-v43` 順延至 `okayama-trip-v44`，其他策略不變。
+
+## 2026-07-22｜Ledger 首頁摘要卡資訊補強（dev，待 iPhone Safari／PWA 真機驗收）
+- 個人「🛍 代購」改為整卡可點的三層摘要：右上顯示既有代購對象數，主區沿用 `buildProxySummary()` 的雙幣總額，底部顯示筆數及最多 2 位對象名稱（超過加「等」）；零筆只顯示「尚無代購紀錄」，既有代購彙總 Sheet 與計算不變。
+- 團體「我的結算狀態」移除獨立「查看結算」按鈕，改為整卡開啟既有結算 Sheet；右上僅保留箭頭，應收／應付底部顯示既有待處理人數及最多 2 位對象名稱，「我已結清」、「全員已結清」與無資料狀態使用對應摘要，不在首頁顯示個別金額明細。
+- 兩張卡以 scoped `min-height:0`、10px／12px padding、gap 與可換行文字維持自然高度及手機觸控範圍；未修改同步、最近消費、`buildProxySummary()`、餘額／轉帳建議演算法或 Apps Script API。Service Worker cache 僅由 `okayama-trip-v42` 順延至 `okayama-trip-v43`，其他 SW 策略不變。
+- 11 個首頁／代購／結算／同步／行動版／PWA 目標測試及完整 40／40 Node tests 通過；375px／390px Browser QA 確認兩卡整卡可開啟既有 Sheet、自然高度且 `scrollWidth == clientWidth`，iPhone Safari／PWA 真機仍待驗收。
+
+## 2026-07-22｜Ledger 首頁資訊去重與結算卡緊湊化（dev，待 iPhone Safari／PWA 真機驗收）
+- 個人首頁移除獨立今日卡，改為累計支出、自然高度代購卡、最近消費及日期群組；代購卡仍整卡開啟既有對象彙總，並以既有 `proxyTotal` 顯示目前幣別主金額與另一幣別換算。團體首頁維持團體總支出、我的結算狀態、最近消費及日期群組，不再於最近消費標題重複今日統計。
+- 個人／團體共用今日提示規則：今天有消費時日期摘要顯示「今天」且不加提示；今天零筆但有歷史紀錄時只顯示淡色「今日尚無消費」；完全無紀錄時只保留原空狀態。既有日期分組、筆數與 JPY／TWD 日總額不變。
+- 「我的結算狀態」改為標題、主要狀態金額、底部進度／「查看結算 〉」三層緊湊排列；首頁不再渲染 `model.details`，完整成員淨額及轉帳建議仍留在既有 Sheet。結算模型、餘額與轉帳建議演算法均未修改。
+- 代購卡與結算卡以 scoped `min-height:0`、padding、gap 及 margin 自然撐高，不設定裁切內容的固定高度；375px／390px 由可換行標題、雙幣日期 grid 與不換行底部操作列契約保護。Service Worker cache 僅由 `okayama-trip-v41` 順延至 `okayama-trip-v42`，SHELL、install／activate／fetch 不變。
+
+## 2026-07-22｜Ledger 團體首頁緊湊化與待同步操作改善（dev，待 iPhone Safari／PWA 真機驗收）
+- 團體首頁移除獨立「今日」卡，順序調整為團體總支出、我的結算狀態、最近消費（內含既有 `period.today` 筆數／目前 JPY 或 TWD 金額）、最近消費紀錄；今日零筆顯示「今日尚無消費」。個人帳的今日／代購雙卡、最近消費卡、付款者與分攤人數均維持不變。
+- 待同步狀態改為可開啟的同步面板，直接以既有 `pendingCount()`、`queuedRecords()` 呈現待同步筆數、最近錯誤、明細、目前顯示幣別金額與建立時間；「重新同步」只呼叫既有 `flushQueue()`，同步中停用按鈕，成功／部分成功／失敗依實際剩餘佇列顯示結果，未直接清除或跳過紀錄。
+- 新增單次同步 coordinator，與 repository 原有 `flushInFlight` 雙層防止啟動、回前景、網路恢復及手動點擊同時觸發重複 flush；client-generated ID、逐筆成功後才移出佇列及 Apps Script API 格式均未修改。Service Worker cache 僅由 `okayama-trip-v40` 順延至 `okayama-trip-v41`，SHELL、install／activate／fetch 不變。
+- 首頁／同步／結算與既有行動版 SW 目標測試已通過；375px／390px 以 scoped flex-wrap、`min-width:0` 與不換行操作區保護，實際 iPhone Safari／PWA 的前景恢復、離線補送、部分成功及無水平捲動仍待 Bar 真機驗收。
+
+## 2026-07-22｜Ledger 團體「我的結算狀態」全寬卡（dev，待 Bar 手機驗收）
+- 團體總支出下方新增唯一的全寬「我的結算狀態」卡，直接沿用 `buildMemberBalances()`、`buildTransferSuggestions()` 與 `ledgerCurrentMemberSettlement()`，呈現目前成員的應收／應付、我已結清或全員已結清；待處理明細最多列 2 筆，資料不足時不推測付款進度。
+- 原本與「今日」並排的結算卡移除，團體「今日」改為全寬；個人帳仍維持「今日／代購」雙卡。團體最近消費補上「付款者 · N 人分攤」，目前成員付款且涵蓋全員時顯示「我付款 · 全員分攤」。
+- 結算入口仍只有「查看結算」且開啟既有結算功能；未修改新增消費、Schema、Repository／Queue、同步或分帳計算。Service Worker cache 僅由 `okayama-trip-v39` 順延至 `okayama-trip-v40`，其他 SW 邏輯不變。
+- 40 個 `tests/*.test.js` 與文件標題檢查通過；375px／390px Browser QA 確認團體結算／今日卡全寬、個人雙卡不變、無水平溢出且 browser error 為 0，仍等待 Bar iPhone Safari／PWA 真機驗收。
+
+## 2026-07-22｜Ledger 團體消費紀錄卡金額跨列置中修正（dev，待 Bar 手機驗收）
+- 修正上一版僅加入 `align-self:center`、仍只在第一個 Grid row 內置中的不足：共用單筆 renderer 會在存在 Badge 時加入 `has-badges` 內容狀態，金額欄跨越主內容與 Badge 兩列，Badge 固定留在左下列，使 JPY／TWD 金額相對整張內容區置中。
+- 此規則不是團體專用；個人待同步／代購 Badge 同樣沿用，無 Badge 的個人卡與 batch 卡不受影響。375px／390px Browser QA 以實際團體「拉麵／¥6,500／NT$1,300／1 人分攤」卡量測，金額與整個內容區及 `⋯` 的中心差均為 0px，無水平溢出、console error 0。未修改金額、分帳、同步或資料契約；Service Worker cache 僅由 `okayama-trip-v38` 順延至 `okayama-trip-v39`。
+## 2026-07-22｜Ledger 團體消費紀錄卡金額置中（dev，待 Bar 手機驗收）
+- 個人帳與團體帳的消費紀錄卡沿用同一個 `renderLedgerRecentRecord()`、`formatLedgerDualAmounts()` 與 `.ledger-dual-amounts`；共用金額容器新增 `align-self:center`，修正團體卡因成員／分攤資訊增高時金額向上偏移，不新增團體專用樣式，也不修改金額、分帳或同步邏輯。
+- 新增共用對齊回歸測試；Service Worker cache 僅由 `okayama-trip-v37` 順延至 `okayama-trip-v38`，SHELL、install／activate／fetch 不變。375px／390px Browser QA 與完整測試結果記錄於 `tasks/current.md`，仍等待 Bar 手機驗收。
+
+## 2026-07-22 — Ledger 頁面說明列緊湊化（Dev；Bar 驗收前）
+- 將「個人帳留在本機；團體帳跨裝置同步。」由卡片區下方移至個人／團體切換列正下方，與既有 `JPY 1 ≈ TWD 匯率` 共用單一 flex meta row；匯率靠左、保存說明靠右且垂直置中，原中段重複說明已移除。
+- 匯率字級由 12px 收為 10px，右側說明使用更淡的 10px 次要文字；最近消費 section 的有效上方間距由 12px 收為 8px。未修改匯率數值、帳本切換、同步方式或資料邏輯。
+- 375px／390px Browser QA 的個人／團體軌均只有一份保存說明，左右內容至少保留 55px 間距、垂直中心差 0px、最近消費上方間距為 8px，無水平溢出且 browser error 為 0。Service Worker cache 僅由 `okayama-trip-v36` 順延至 `okayama-trip-v37`，SHELL、install／activate／fetch 不變；仍等待 Bar iPhone Safari／PWA 手機驗收。
+
+## 2026-07-22 — Ledger 單品項金額／明細同群組（Dev；Bar 驗收前）
+- 單品項新增／編輯頁將金額與明細上下收進同一張 `.ledger-single-primary` 白底圓角群組，兩個 input 共用相同 content padding 並完全對齊左右邊界；欄位間距為 10px且不新增分隔線。
+- 明細沿用既有 46px 高度、16px 字級、placeholder、Enter Done、inline validation 與儲存流程；62px 最小高度只套用金額 input。多品項、Schema、Apps Script、Repository／Queue、結算、墓碑契約、localStorage key 與資料欄位均未修改。
+- 375px／390px Browser QA 的左右邊界誤差均為 0px，明細維持 46px／16px，金額 Next 聚焦明細、明細 Done 單次儲存、無水平溢出且 browser error 為 0。Service Worker cache 僅由 `okayama-trip-v35` 順延至 `okayama-trip-v36`，SHELL、install／activate／fetch 不變；仍等待 Bar iPhone Safari／PWA 手機驗收。
+
+## 2026-07-22 — Ledger 首頁卡片對齊與單品項必填流程修正（Dev；Bar 驗收前）
+- 分帳首頁「今日」與個人「代購」／團體「結算」卡片統一使用同一套左對齊 flex、內容寬度、margin 與原生 button reset；卡片 padding、高度節奏及既有整卡點擊行為不變。
+- 單品項明細移至金額下方固定顯示，次要摘要仍只涵蓋類別、支付方式與日期，展開後只提供店家、日期時間、完整類別及支付方式控制。
+- 金額鍵盤改為 Next：有效金額直接聚焦明細且不重繪、不儲存；無效金額留在原欄並顯示既有 inline error。明細鍵盤改為 Done 並沿用 `saveLedgerEntry(false)`、pending guard、spinner、disabled 與 idempotency 流程；驗證失敗不再為明細展開次要區塊。
+- 多品項、Schema、Apps Script、Repository／Queue、結算、墓碑契約、localStorage key 與既有資料欄位均未修改。Service Worker cache 僅由 `okayama-trip-v34` 順延至 `okayama-trip-v35`，SHELL、install／activate／fetch 不變。
+- 40 個 `tests/*.test.js`、文件標題檢查及 375px／390px Browser QA 通過；卡片等寬等高且內容左對齊，FAB 開啟即聚焦金額，鍵盤 Next／Done 與無效金額原地錯誤符合規格，無水平溢出且 browser error 為 0。仍等待 Bar iPhone Safari／PWA 手機驗收。
+
+## 2026-07-22 — Ledger P0 三秒記帳輸入流程（Dev；Bar 驗收前）
+- 新增消費頂部將帳本與幣別整理為兩組精簡控制；390px 同列、375px 仍安全排列，視覺面約 32px、觸控區至少 40px，且未更動金額 input 的 `type`、`inputmode`、解析或換算。
+- 單品項以金額作為第一焦點與主要輸入，金額完成鍵沿用既有儲存流程；必要欄位不足時展開「類別・支付方式・日期」摘要下的次要欄位並聚焦明細。編輯既有紀錄時預設展開，切換帳本、幣別、類別或支付方式不會遺失 disclosure state。
+- 多品項先輸入店家，再依「品項名稱 → 金額 → 下一品項名稱」移動焦點；最後一筆金額只收鍵盤、不自動儲存。日期、支付方式與預設類別收在摘要內，操作區顯示有效筆數與既有雙幣整單實付，新增品項後立即聚焦新品項名稱。
+- 儲存新增同步 pending guard：重複點擊或完成鍵不會重建 ID 或送出第二次，兩個儲存按鈕共用既有 spinner 與停用狀態；取消、成功及失敗皆清除 guard。個人復原、團體重複確認、同步 Toast 與 Queue／墓碑契約維持既有行為。
+- 40 個 `tests/*.test.js`、文件標題檢查與 diff check 通過；375px／390px Browser QA 確認無水平溢出、表單控制字級至少 16px、焦點順序正確且 console error 為 0。Service Worker 維持 `okayama-trip-v34`，未再 bump；Schema、Apps Script、Repository／Queue、結算、墓碑契約及 localStorage key 未修改。
+
+## 2026-07-20 — Ledger 三秒記帳整合批次（Dev；Bar 驗收前）
+- 完整紀錄依類別分組時，群組標題顯示目前可見資料的雙幣合計，且多品項帳單仍以單一 batch 顯示；`⋯` 操作 Popover 縮為 104px，同一按鈕再次點擊仍會收合。
+- 團體多品項表單先顯示帳單分攤成員，品項預設繼承該選擇；只有啟用「單項分攤」才展開自訂成員。預設類別選擇器初始／選取後皆收合，套用全部控制項維持可用。
+- FAB 以同一手勢開啟個人快速記帳並聚焦金額欄。個人儲存後提供 5 秒「復原」；團體帳顯示獨立同步 Toast，偵測到可能重複時須確認才儲存，取消不入列且核准流程只寫入一次。重複偵測亦涵蓋草稿軌道與測試資料範圍的 idempotency 回歸。
+- Service Worker cache 由 `okayama-trip-v33` 順延至 `okayama-trip-v34`；未修改 SHELL、install／activate／fetch、Schema、Apps Script、Repository／Queue、結算、墓碑契約或 localStorage key。375px／390px Browser QA 與 iOS 鍵盤／行動裝置驗收仍待 Bar。
+
+## 2026-07-20 — Ledger 2.2.5 日期金額、操作選單與團體分攤精修（Dev）
+- 首頁最新日與完整紀錄每日右側的固定 `¥JPY ≈ NT$TWD` 加總縮為 9px；左側日期／筆數及完整紀錄 11px 結果摘要維持不變。
+- `⋯` 操作 Popover 改為 118px 外框、4px 內距、36px 操作列與 12px 字級，顯示 `編輯 ✏️`／`刪除 🗑️`；再次點擊同一個 `⋯` 可收合，切換其他卡片則直接開啟對應選單。
+- 團體帳的帳單「分攤成員」與多品項「單項分攤成員」共用淡綠群組 renderer；成員按鈕改為 28px 高、7px 圓角長方形與 10px 字級，新建團體草稿維持所有已註冊成員預設全選。
+- Service Worker cache 由 `okayama-trip-v32` 順延至 `okayama-trip-v33`；未修改 SHELL、install／activate／fetch、Schema、Apps Script、Repository／Queue、結算、墓碑契約或 localStorage key。
+
+## 2026-07-20 — Ledger 2.2.5 消費卡置中與日期雙幣加總（Dev）
+- 首頁最近消費與完整紀錄的單筆／多品項摘要卡，右側 JPY／TWD 金額及 `⋯` 功能鈕改以 Grid 原生方式垂直置中；選取模式仍不產生 `⋯` DOM，卡片互動不變。
+- 首頁最新有效日期摘要新增固定 `¥JPY ≈ NT$TWD` 加總；完整紀錄按日期分組時，每日右側顯示目前搜尋／篩選結果的日加總，按類別分組維持純類別標題。
+- 完整紀錄結果摘要改為 11px 次要樣式，格式統一為 `找到 N 筆 · ¥JPY ≈ NT$TWD`；所有金額由 renderer 目前收到的有效實體紀錄即時計算，不新增 state 或資料欄位。
+- Service Worker cache 由 `okayama-trip-v31` 順延至 `okayama-trip-v32`；未修改 SHELL、install／activate／fetch、Schema、Apps Script、Repository／Queue、結算、墓碑契約或 localStorage key。
+
+## 2026-07-20 — Ledger 2.2.5 iOS 時間控制寬度修正（Dev）
+- 依 iOS App 實機截圖修正原生 `input[type=time]` 仍吃掉群組右側 padding 的問題；新增專用 `ledger-time-input-wrap`，由 wrapper 管理內容區寬度，time input 改以 `flex:1 1 0`／`width:0` 收斂原生 intrinsic width。
+- 單品項與多品項沿用同一個 occurrence renderer；日期欄、時間值、字級、picker、儲存語意及群組 padding 均不變。
+- Service Worker cache 由 `okayama-trip-v30` 順延至 `okayama-trip-v31`；未修改 SHELL、install／activate／fetch、Schema、Apps Script、Repository／Queue、結算、墓碑契約、localStorage key 或資料欄位。
+
+## 2026-07-20 — Ledger 2.2.5 時間欄位右側對齊補正（Dev）
+- 單品項與多品項共用的日期／時間直列補齊 `minmax(0,1fr)`、`min-width:0`、`max-width:100%` 與 `box-sizing:border-box`；日期／時間 wrapper 及 input 均限制在白底群組既有內容區，不使用負 margin、transform 或全域 overflow 掩蓋。
+- 時間欄位維持 `width:100%` 填滿群組內容區，右側與日期欄位完全對齊並保留群組既有 11px 內距；原有字級、月曆 SVG、日期 Popover 與資料行為不變。
+- Service Worker cache 由 `okayama-trip-v29` 順延至 `okayama-trip-v30`；未修改 SHELL、install／activate／fetch、Schema、Apps Script、Repository／Queue、結算、墓碑契約、localStorage key 或資料欄位。
+
+## 2026-07-20 — Ledger 2.2.5 表單直列與代購群組精修（Dev）
+- 單品項「這筆是代購」改為淡暖紅低飽和群組列，文字維持原字級、Toggle 固定靠右，且不新增重複的「代購」欄位標題。
+- 單品項與多品項的日期／時間皆改為日期在上、時間（選填）在下的直列版型；欄位與標籤維持既有字級，並保留現有月曆線條 SVG 與自訂日期 Popover 行為。
+- 代購對象按鈕改為垂直置中；新增對象欄與 30px 加號強制移至下一個完整列，單品項與多品項共用相同 renderer、state 及儲存語意。
+- Service Worker cache 由 `okayama-trip-v28` 順延至 `okayama-trip-v29`；未修改 SHELL、install／activate／fetch、Schema、Apps Script、Repository／Queue、結算、墓碑契約、localStorage key 或資料欄位。
+
+## 2026-07-20 — Ledger 2.2.5 手機回饋精修（Dev）
+- 完整紀錄進入選取模式時，多品項摘要卡預設維持收合；點擊摘要卡才展開／收合逐筆紀錄，摘要 checkbox 仍沿用既有整批全選／取消及半選三態。
+- 日期與時間採同列內縮方案：時間欄縮為 110px、欄距縮為 8px，右側保留 6px 安全距離；自訂日期 Popover 的尺寸、定位與資料行為不變。
+- 多品項代購採 A 精修版小型選取按鈕；單品項代購採 B「這筆是代購」開關。兩者共用既有代購 state、對象 renderer 與儲存語意；「代購金額會另列」移至「幫誰買」旁並降為 9px，對象按鈕縮為 28px，新增對象欄與加號縮為 30px。
+- Service Worker cache 由 `okayama-trip-v27` 順延至 `okayama-trip-v28`；未修改 SHELL、install／activate／fetch、Schema、Apps Script、Repository／Queue、結算、墓碑契約、localStorage key 或既有資料欄位。
+
+## 2026-07-20 — Ledger 2.2.5 最新日、完整紀錄多選與分帳返回（Dev）
+- 多品項帳單資訊將「套用類別」改名為「預設類別」，同列加入 10px 次要說明「新品項自動帶入，可逐筆調整」；新品項繼承、手動品項保護與「套用至全部」既有表單 state 行為不變。
+- 最近消費由跨日期最近 15 筆改為目前個人／團體及正式／TEST 軌別的最新一個有效日期，顯示該日全部有效實體紀錄；最新日清空後會回退下一個有效日期，既有 batchId 摘要與墓碑排除維持不變。
+- 完整紀錄直接共用最近消費的選取 state、卡片 checkbox、batch 三態、浮動工具列及個人真刪／團體墓碑批次刪除流程；全選範圍限定目前搜尋與篩選結果，切換軌別、TEST 狀態或離開頁面會清空選取。
+- 篩選面板新增「清除篩選」，一次重設類別、支付方式、代購與免稅條件、Badge、面板及選取狀態，搜尋關鍵字保留。類別與支付方式改為 34px／8px 圓角低彩度矩形並支援換行與安全截斷，兩區沿用既有 `ledger-entry-divider`。
+- 底部分帳按鈕在完整紀錄等實際可點擊的分帳子頁可直接重設內部 view state 並回首頁；分帳首頁再次點擊會捲頂。Bottom Sheet／Modal 等導航被覆蓋的狀態維持原狀，未強制顯示導航或丟失未儲存表單。
+- Service Worker cache 升至 `okayama-trip-v27`；本批未修改 Schema 2.8、Apps Script、Repository／Queue／Retry／Flush、結算、墓碑資料契約、localStorage key、BUILTIN、治理文件、非分帳頁或部署設定。
+
+## 2026-07-19 — Ledger 2.2.3 表單驗證與多品項預設（Dev）
+- 多品項店家與品項改為欄位內驗證：必填店家空白、半填品項或無有效品項時顯示紅框與行內訊息，自動捲動並聚焦第一個錯誤；輸入後立即清除該欄錯誤。完全空白品項列不送出，半填列仍會阻擋儲存。
+- 帳單資訊卡新增「套用類別」草稿狀態；新開多品項以系統預設類別起始，新品項沿用目前套用值，手動改過的品項不受一般切換影響。「套用至全部品項」會在有差異時確認並覆寫全部；編輯既有批次採 A 方案，以第一筆類別初始化且先將所有既有品項視為手動調整。
+- 新增模式依有效品項動態顯示「確認儲存（N 筆）」；「儲存並再記一筆」保留帳本、幣別、日期、時間、店家、支付方式、套用類別與團體分攤成員，清空品項、稅／優惠、代購、備註與金額。編輯模式只保留「儲存修改／取消」。
+- 日期／時間維持同列並調整為可伸縮日期＋116px 時間；支付方式改為可換行的 8px 圓角矩形。品項列改為 32px 序號、彈性名稱、112–120px 金額與 36px 刪除鈕；類別、免稅與代購視覺統一為 32px 低彩度矩形，代購內容只在勾選後出現於低彩度容器。
+- 單筆模式將金額、明細、日期與時間收進白色基本資料卡，店家維持卡片下方選填；類別與支付方式套用同款矩形且可換行。Service Worker cache 升至 `okayama-trip-v26`；本批未修改 Schema 2.8、Apps Script、Repository／Queue／Retry／Flush、結算、墓碑資料契約、localStorage key、BUILTIN、治理文件或非分帳頁。
+
+## 2026-07-19 — Ledger 2.2.2 多品項模式版面優化（Dev）
+- 多品項將日期、選填時間、必填店家名稱與支付方式集中為品項清單上方的白色「帳單資訊」卡；單品店家仍為選填。多品項店家空白時以「請輸入店家名稱」阻擋儲存，既有空店家批次編輯時亦須補填。
+- 移除可見的「品項 N」標題，改為 40px 自動重編序號、名稱、88–96px 金額與條件式 40px 刪除鈕同列；只剩一筆時不保留刪除空欄。類別維持 44px 觸控區，內層視覺縮為 34px／上限 120px 並截斷長字。
+- 多品項的支付、類別、免稅、代購、代購對象與品項分攤改為 8px 圓角矩形；帳本、幣別、税込／税抜、稅率等封閉集合仍維持 Segmented 軌道膠囊，單品模式未受影響。
+- 空白金額不再常駐顯示錯誤；非數字、小數、負數、零值或既有安全整數保護擋下的金額統一顯示「請輸入有效金額」，未放寬計算上限。375px／390px 已驗證 1／3／5／10 品項、長店名、1／5／8 位金額、類別與代購展開均無水平溢出或瀏覽器 error log。
+- Service Worker cache 升至 `okayama-trip-v25`。本批未修改 Schema 2.8、Apps Script、Repository／Queue、結算、墓碑資料契約、localStorage key、BUILTIN、治理文件或非分帳頁；iOS 真機 Dynamic Type 100%／115% 與鍵盤流程仍待 Bar 驗收。
+
+## 2026-07-19 — Ledger 2.2.1 Mobile Hotfix（Dev）
+- 最近消費、批次卡與批次子項改為依模式交換的二欄 Grid：一般模式為內容／44px 操作鈕，選取模式為 44px Checkbox／內容；選取模式不再產生 `⋯` DOM 或隱藏欄位，內容寬度與卡片高度維持一致。JPY 主金額不變，TWD 次要金額縮為 10px。
+- 新增消費日期與時間改為可伸縮日期欄＋112px 時間欄，375px／390px 優先同列、360px 以下維持直排 fallback；日期列移至單筆類別上方，多品項則置於完整品項清單後。身分列與日期列共用同一分隔線 token，月曆入口改為 `currentColor` inline SVG 並保留 44px 觸控區。
+- 店家改為單筆／多品項共用的常駐欄位並置於支付方式上方，「更多細節」只保留備註。多品項的類別、免稅品與個人代購重排為同列緊湊控制，團體帳不保留代購空位。
+- 預設類別「衣服」更名為「衣物」，新增 👕／💄 專屬 Emoji；既有本機「衣服」選項讀取時正規化為「衣物」並去重，歷史紀錄不改寫。Service Worker cache 升至 `okayama-trip-v24`；本批未修改 Schema 2.8、Apps Script、Repository／Queue、結算、墓碑契約、localStorage key、BUILTIN 或治理文件。
+
+## 2026-07-19 — 分帳 2.2.1 卡片、批次與多選操作（Dev）
+- 新增消費表單將目前身分與多品項開關收在同一標題列；日期鍵入會依序補成 `YYYY/MM/DD`，清空只作為編輯中狀態，空白、不完整、非既定格式或不存在日期均阻擋儲存。此規則取代 2.2 的 `-`／`.` 寬鬆輸入，月曆與既有 ISO 消費發生時間語意不變。
+- 修正 Bottom Sheet 在 390px／375px 的實際超版根因：表單、Grid、輸入框、代購列及月曆補齊 `min-width:0`／box sizing／最大寬度約束，未使用 `overflow-x:hidden` 掩蓋。
+- 最近消費與完整紀錄依既有 `batchId` 將多品項收成批次卡，預設收合並可展開子項；卡片統一顯示店名優先、類別 Emoji、支付方式與 JPY／TWD 雙幣別，個人卡隱藏成員且只在個人帳顯示代購資訊，團體卡保留成員與分攤摘要。
+- `⋯` 由全寬 Bottom Sheet 改為錨定式小選單，支援邊界翻轉、單一開啟、外部點擊、Escape、捲動與 resize 關閉；卡片本體仍開明細，操作鈕不會誤觸卡片。
+- 最近 15 筆有效紀錄新增記憶體內多選、全選、批次部分／全選狀態與 safe-area 浮動工具列。個人多刪以一次既有 localStorage key 寫入完成；團體多刪沿用既有 deletion 墓碑，每筆一張、共用必填原因並以既有 `enqueueBatch` 一次入列，離線、去重與已刪目標隔離規則不變。
+- 多品項列改為緊湊名稱／金額、可收合類別、免稅與個人代購；未新增結構欄位。Service Worker cache 升至 `okayama-trip-v23`；本批未修改 Schema 2.8、Apps Script、Repository／Queue 契約、結算、墓碑資料契約、localStorage key、BUILTIN、治理文件或非分帳頁。
+
+## 2026-07-19 — 分帳 2.2 UI/UX 與結構化稅券資料（Dev）⭐ 架構變更
+- Schema 升至 `2.8 (2026-07-19)`；Ledger 固定契約由 16 欄擴為 21 欄，末端新增輸入幣別、免稅品、價格方式、稅率與優惠券金額。Apps Script 21 欄版本已部署於既有 `/exec`；真實測試 ID `1784454068072-9d57` 首送回 `{ok:true}`、重送回 `{ok:true,dup:true}`，公開 CSV 僅一列且 UTF-8 中文與五個新欄值完整落位。
+- 消費日期與時間拆欄：日期接受 `YYYY/MM/DD`、`-`、`.` 分隔並提供 390px 自製月曆，時間維持選填；非法日期保留原輸入並阻擋送出，`time` 仍保存 ISO 8601 消費發生時間。
+- 完整紀錄改為搜尋＋可收合篩選面板，類別／支付方式使用可多選 Chips，代購／免稅與日期／類別分組使用 Segmented；團體帳不顯示個人代購篩選。封閉集合用軌道、開放集合用獨立膠囊的規則已寫入程式註解。
+- 多品項列改為名稱／金額、類別與緊湊免稅／代購控制；個人代購統一使用「未指定／既有對象／行內新增」選擇器，團體帳維持不啟用代購。稅與優惠券、店家與備註改為收合區，單筆優惠券只作記錄，多品項固定折扣維持總額計算。
+- 最近消費優先顯示店名，卡片本體開明細，獨立 `⋯` 開啟編輯／刪除；明細隱藏紀錄 ID、批次 ID、同步狀態，日期時間改為本地可讀格式且空欄不占位。團體刪除仍走必填原因墓碑，個人刪除仍為本機確認真刪。
+- Service Worker cache 升至 `okayama-trip-v22`。本批未修改 Validator 六類日誌、結算算法、墓碑語意、四分頁、BUILTIN、icons、manifest、Netlify、Scroll-only 或 no-op 雙擊相容監聽器。
+
+## 2026-07-19 — 分帳 2.1 快速記帳、編輯與 TEST 平行帳本（Dev）⭐ 架構變更
+- Schema 升至 `2.7 (2026-07-19)`；Ledger 固定契約由 14 欄擴為 16 欄，末端新增 `storeName`／店名與 `replacesRecordId`／取代紀錄 ID，`time` 正式定義為使用者可修改的消費發生時間。Apps Script 維護來源、Schema Mapping、資料文件及真實部署端點同步更新。
+- 團體記帳改以 `enqueueBatch(records)` 將整批資料一次寫入本機 Queue，入列成功即關閉表單並背景 POST；離線或送達失敗保留待同步狀態，CSV 跨裝置可見仍有 1–5 分鐘發布延遲。個人帳與代購對象清單維持 localStorage only，備份格式升至 v3 並相容 v1／v2。
+- TEST 模式改為平行帳本：開啟時儀表板、今日、結算、代購與明細只計算 `[TEST]` 團體紀錄；關閉時只顯示正式紀錄，兩邊互不混算。頂部警示明確標示目前測試帳本且不影響正式分帳。
+- 快速記帳 Bottom Sheet 新增店名、可改消費時間、行內幣別換算、捲動位置保護與背景位置還原；稅與優惠改為可收合的 `税込（含稅）`／`税抜（未稅）`、無稅／8%／10%／自訂、折扣及單品／全部免稅，計算使用整數 basis points 與最大餘數分配。
+- 代購對象改為可管理的本機膠囊清單。完整紀錄支援品名／店名／備註搜尋、類別／支付／代購篩選與日期／類別分組；設定儲存及手動同步新增 spinner、disabled 與 `aria-busy`。
+- 個人編輯以一次 localStorage 寫入原地替換並盡量保留 ID；團體編輯固定建立原因「編輯修改」的舊筆墓碑，再 append 新支出並以 `replacesRecordId` 串接，整批原子入列。ADR 0006 已補記雙軌編輯語意。
+- Service Worker cache 升至 `okayama-trip-v21`。本批未修改 validator 六類日誌機制、BUILTIN、四分頁、icons、manifest、Netlify、Scroll-only、viewport recovery 或其他 CMS 表。
+
+## 2026-07-18 — 分帳 2.0 手機儀表板與快速記帳（Dev）
+- 分帳首頁改為個人／團體雙軌儀表板，提供雙幣總額切換、今日摘要、個人代購摘要、團體結算摘要及依本機日期分組的最近 15 筆消費。
+- 新增 Scroll-only Bottom Sheet 快速記帳：單品支援即時換算；多品項支援獨立類別、整單税込／税抜 8% 或 10%／免稅、固定折扣，以及個人代購或團體分攤的單項覆寫。Sheet 只用 CSS `touch-action` 宣告並維持背景鎖捲動，未加入 JavaScript 手勢攔截。
+- 多品項實付金額以確定性最大餘數法分配，JPY／TWD 各品項總和精確守恆；每筆具獨立 Record ID、團體批次共用 batchId，且所有團體品項會先進既有 Queue 再等待網路結果。
+- 個人代購可依對象查看小計；團體結算卡與面板直接使用 PR 4 的 balances／transfer suggestions。新增完整歷史、個人代購篩選與紀錄明細，並沿用個人真刪、團體墓碑刪除及已刪目標隔離規則。
+- 新增 dashboard、proxy、multi-item、quick-entry、settlement、history 與 tombstone 聚焦回歸；390px 本機 QA 通過主要導覽、Bottom Sheet、多品項、完整歷史、明細及空結算狀態，browser error 為 0。Service Worker cache 升至 `okayama-trip-v20`。
+- 本批未修改 Schema、Validator、Apps Script、Google Sheet、BUILTIN、manifest、icon 或 Netlify 設定。
+
+## 2026-07-18 — Modal／Bottom Sheet Scroll-only 手勢裁定（Dev，純文件）
+- Modal／Bottom Sheet 類表面一律視為 Scroll-only 區，不開放捏合例外；可捲動區使用 `touch-action:pan-y`，互動控制項使用 `touch-action:manipulation`，祖先手勢交集仍禁止 pinch zoom。
+- 開啟 Bottom Sheet 時維持背景鎖捲動，Sheet 內只提供垂直捲動；禁止新增 JavaScript `touchstart`、`touchmove`、`gesturestart` 或 `preventDefault()` 手勢攔截。
+- PR 5 分帳儀表板／快速記帳設計與實作計畫已同步此裁定。本批未修改 App、Schema、Validator、SW、測試、資料或部署設定。
+
+## 2026-07-18 — 分帳 2.0 精確分配與確定性團體結算引擎（Dev）
+- 新增無 DOM 相依的 participants JSON 解析、最大餘數整數分配、每人已付／應付／淨額與確定性貪婪轉帳建議純函式。
+- 團體結算只使用有效 `recordType=expense` 紀錄保存的 participants 快照；不依目前成員名單重算。缺失、空白、重複或格式錯誤的 participants，以及負數、非整數或超出安全整數範圍的金額會警告並原子排除。
+- JPY 與 TWD 完全獨立結算；不可整除的最小貨幣單位依 participants 原始順序分配，分配總和與淨額守恆均由回歸測試鎖定。
+- 轉帳建議每輪配對最大應付者與最大應收者，同額時優先正式身分註冊順序、其次正規化名稱；結果正確且筆數精簡，不宣稱全域最少。
+- 墓碑、被刪除紀錄、身分註冊、TEST、個人帳及舊版無 `recordType=expense` 的紀錄不參與結算。本批未修改 UI、Schema、Validator、Apps Script、SW、Netlify 或共享資料。
+
+## 2026-07-18 — 分帳 2.0 個人真刪與團體墓碑刪除（Dev）⭐ 架構變更
+- 個人帳刪除使用不可復原的二次確認，確認後直接從 `trip_personal_ledger` 移除，不建立墓碑且不影響團體帳。
+- 團體帳刪除改為必填原因的協作式對話框，透過既有 Ledger Repository append `recordType=deletion` 墓碑；保存目標 ID、操作者、時間、原因與原始 batchId，金額固定為零。
+- 新增單一有效紀錄解析器：墓碑及其目標不顯示、不計入筆數與總額；重複墓碑保持冪等，非法或不存在目標安全忽略並輸出警告，身分註冊與墓碑不可刪除。
+- 移除建立負數沖銷的 UI 與程式入口；既有負數歷史紀錄維持讀取及原有金額效果。離線墓碑沿用現有 queue、retry、flush 與伺服器 ID 去重；送達後由本機 bridge 保留至公開 CSV 確認，避免延遲期間原紀錄復活。
+- ADR 0006 追加墓碑決策。本批未修改 Schema、Validator、Apps Script、Google Sheet、BUILTIN、SW、Netlify、結算或完整儀表板。
+
+## 2026-07-18 — 分帳 2.0 個人／團體雙軌資料層（Dev）
+- 分帳頁新增 `個人 / 團體` session 模式，預設個人；個人帳只寫入 `trip_personal_ledger`，不呼叫團體 Ledger Repository、不進 Queue、不寫 Sheet，團體帳維持既有跨裝置同步。
+- 個人與團體的列表、筆數與總額完全隔離；TEST 模式僅作用於團體帳。團體一般支出開始保存 `recordType=expense`、支付方式與記帳當下的註冊成員 JSON 快照，身分註冊保存 `recordType=identity_registration`。
+- 預設類別改為餐飲、交通、票券、購物、衣服、美妝、其他；預設支付方式為現金、信用卡、行動支付、Suica、其他。設定頁可新增、刪除及排序，刪除選項不影響既有紀錄顯示。
+- 本機備份升至 version 2，加入個人帳、自訂類別與支付方式；version 1 備份仍可還原，缺少的新欄位使用安全預設，無效 JSON 與寫入失敗維持原子回滾。
+- Service Worker cache 升至 `okayama-trip-v19`。本批未修改 Schema、Validator、Apps Script、Google Sheet、BUILTIN、Netlify、墓碑刪除、結算或完整儀表板。
+- 390px 本機 QA 通過四分頁、雙軌切換、個人本機保存、團體資料隔離、自訂類別新增／刪除與 Settings；無水平溢出，browser error 為 0。另發現四筆既有 Sheet 身分註冊資料因先前欄位移動而錯位，本批未自動修復或刪除共享資料。
+
+## 2026-07-18 — Ledger 2.0 Schema 與 Apps Script 契約擴充（Dev）⭐ 架構變更
+- Schema 升至 `2.6 (2026-07-18)`；Ledger 在既有八欄末端追加分攤成員、支付方式、紀錄類型、目標紀錄 ID、刪除原因與批次 ID，六欄均為選填，`participants` 契約為 JSON Array 字串。
+- Apps Script append 契約擴充為固定 14 欄；舊 payload 缺少新欄時補空字串，既有 Record ID 去重、零金額身分註冊、驗證語意與 `updateSettings` 不變。
+- Exp 說明修正為行前團費僅存於試算表，App 不渲染也不從 Exp 推導同行成員；`09_SCHEMA_MAPPING.md` 已由 `schemaDoc()` 重建。
+- Sheet 六欄表頭與 Apps Script 新版本已部署於既有 Web App URL；真實端點測試 ID `1784359857550-eva1` 回 `{ok:true}`，公開 CSV 已確認固定 14 欄正確落位，`participants='["Bar","Amy"]'`、非空支付方式、`recordType=expense`、空目標／原因與 batchId 均完整回讀。本批未修改分帳 UI、Repository、Queue、Parser 行為、BUILTIN、Validator 核心、SW 或 Netlify。
 
 ## 2026-07-18 — 分帳共享身分、購物分類與團費區塊修正（Dev）
 - 分帳成員來源收斂為 Ledger 精確 `[身分註冊]` 紀錄；一般模式排除 TEST 註冊，測試模式可選正式與 TEST 註冊，Exp、一般支出、沖銷、BUILTIN 與 localStorage 均不再推導共享成員名單。

@@ -25,19 +25,28 @@
 ## 工作流程(必守)
 0. 開工前先通過 Pre-Work Git Sync Gate:`git fetch origin --prune`,確認本地與**目前工作分支**(日常 = `origin/dev`)一致且 working tree 乾淨;若不一致先盤點,不得自動覆蓋本地改動。
 1. 收到需求先確認範圍;**只改必要函式,不重構整包**
-2. 修改 → 跑 repo 內相關可執行測試,並驗證斷網內建/連網同步/旅行日 mock Date 三情境零 pageerror;Playwright 自動化腳本尚在 backlog,完成前不得宣稱已跑 Playwright
+2. 修改 → 跑 repo 內相關可執行測試，並以 `npm run test:browser` 驗證斷網內建／連網同步／旅行日 mock Date 三情境零 pageerror；Playwright 規格位於 `tests/browser/` 並已掛入 `qa.yml`
 3. 交付於 `dev` 分支,Bar 驗收後;正式發版依 16 §E(PR → Bar Merge → Netlify 自動部署)
 4. 更新 `07_CHANGELOG.md`(有架構變更標 ⭐),必要時更新 06/03
 
 ## 絕不可改變(除非 Bar 明確要求)
-- CMS 八表結構、欄位語意、既有 PID/RID/SID/HID 的意義
+- CMS 八表結構、Schema 2.9 欄位語意、既有 PID/RID/SID/HID 的意義；Ledger 固定 21 欄，`time` 為消費發生時間，末五欄為輸入幣別、免稅品、價格方式、稅率與優惠券金額
 - 三層防線(內建→快取→背景同步)與「絕不空白頁」原則
 - 卡片型別由 Places.Type 明確決定,**禁止 AI 猜測型別**
 - WebView 相容碼:console polyfill、fetch 相容模式(禁 AbortController)、單一吸頂容器
 - 停車 MAP CODE 純顯示(無複製鈕)、「停車同Pxxx」繼承機制
 - 渡輪不建班次資料庫;班次資訊維持備註摘要與官方時刻表連結
-- UI 配色變數與四分頁結構;個人狀態(打卡/想逛/成員身分)存 localStorage 不進 CMS;依 ADR 0006,App 只可 append「分帳紀錄」並更新 TripConfig 的 `Exchange Rate` / `Ledger Default Currency`,其餘 CMS 欄位維持 Bar 手動管理且 App 唯讀
+- UI 的語意角色與今天／行程／購物／分帳四分頁結構不可任意改變；主題只可透過 `data-theme` 覆寫 13 個第一層 `--t-*` token，第二層 `--paper`／`--card`／`--sea-deep`／`--sea`／`--coral` 等角色名稱維持不變。主導覽與設定入口用 inline SVG，內容 Emoji 與桃子診斷徽章保留，不引入 icon font。
+- 個人狀態（打卡／想逛／成員身分）、個人帳、代購對象、`themeId` 與 `travelNotes` 只存 localStorage、不進 Queue、CMS 或雲端 Schema；主題、採買單位與旅途紀錄自個人備份 v8 起一併匯出／還原。團體帳一律走 Ledger Repository 跨裝置同步，兩軌資料與統計不得混用。依 ADR 0006，App 只可 append「分帳紀錄」並更新 TripConfig 的 `Exchange Rate` / `Ledger Default Currency`，其餘 CMS 欄位維持 Bar 手動管理且 App 唯讀
 - 產品哲學:3 秒原則、不過度工程化(能給連結就不硬轉結構化資料)
+
+## Ledger Schema 2.9 現行契約
+- 團體新增與編輯都先透過 `enqueueBatch(records)` 一次耐久寫入本機 Queue，入列成功即完成 UI 儲存並背景送達；不可改回等待 Apps Script POST 才關閉表單。公開 CSV 跨裝置可見延遲 1–5 分鐘是已接受取捨。
+- TEST 模式是獨立平行帳本：開啟時團體儀表板、今日、結算與明細只計算 `[TEST]`，關閉時只計算正式資料；個人帳不受 TEST 模式影響。
+- 個人編輯可原地替換本機紀錄。尚未落入 canonical 還款確認切點的團體收據，編輯時 append 舊筆墓碑（原因固定「編輯修改」）與新替代筆，新筆以 `replacesRecordId` 指向原紀錄。
+- canonical 還款確認成立後，切點前既有團體收據永久禁止直接編輯／刪除；全團餘額歸零不解除保護。只有原付款人可用引導式流程整張追加更正或作廢，付款人不可變，更正原因必填。
+- 更正使用 `expense_correction_item` + `expense_correction_commit`，作廢使用 `expense_void_commit`；資料仍沿用固定 21 欄，不新增 Sheet 欄位或 Apps Script API。item 先入列、commit 最後入列；缺件版本不得生效，歷史與 losing conflict 永久保留。
+- 更正送出前必須顯示品項變更、受影響成員與餘額差；已結清團體因更正重新出現餘額時，舊還款確認維持完成並建立新的待結算餘額。詳細規格見 `docs/superpowers/specs/2026-07-29-settlement-consistency-guided-correction-design.md`。
 
 ## 常見陷阱(前人踩過)
 - 同名 function 後者勝且提升 → 包裝舊函式必先改名,禁 `var old=fn`

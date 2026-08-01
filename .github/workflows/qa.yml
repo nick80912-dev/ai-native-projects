@@ -1,11 +1,16 @@
 # Sanity CI — 每次 push / PR 自動跑的輕量檢查
 # 目的:把 Gate 從「文字規範」升級為「自動檢查」。
-# 涵蓋:①文件標題/檔名一致性(防上傳錯位)②manifest JSON 有效性 ③既有回歸測試
-# Playwright 三情境屬重量級 QA,待手機驗收穩定後另行加入(tasks/backlog #3)。
+# 涵蓋:①文件標題/檔名一致性(防上傳錯位)②manifest JSON 有效性 ③版本一致性 ④既有回歸測試
+# Playwright 在獨立 job 驗證三情境,以及 SW 更新後的快取正確性與離線 fallback 型別。
+#
+# 觸發策略(2026-07-30 修訂,對應 backlog #21 的 sanity 部分):
+#   sanity      → main push / dev push / PR 都跑。輕量、無瀏覽器,dev 每次推送都值得綠勾。
+#   browser-qa  → 只在 PR 與 main push 跑。要裝 Chromium,dev 每次推送都跑代價太高;
+#                 以 job-level if 條件排除 dev push,而不是拆成兩個 workflow。
 name: qa-sanity
 on:
   push:
-    branches: [main]
+    branches: [main, dev]
   pull_request:
 
 jobs:
@@ -18,6 +23,8 @@ jobs:
           node-version: '20'
       - name: 文件標題/檔名一致性 + manifest 檢查
         run: node tools/check-doc-titles.js
+      - name: 版本一致性檢查(app-version.js / sw.js / index.html / netlify.toml)
+        run: node tools/check-app-version.js
       - name: 全部回歸測試(自動涵蓋 tests/ 內所有 *.test.js,新增測試免改本檔)
         run: |
           set -e
@@ -25,3 +32,21 @@ jobs:
             echo "== $f =="
             node "$f"
           done
+
+  browser-qa:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    # dev push 不跑完整 Playwright:只在 PR 與 main push 執行
+    if: github.event_name == 'pull_request' || github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+      - name: 安裝 Playwright 測試依賴
+        run: npm ci
+      - name: 安裝 Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Playwright QA(三情境 + SW 更新快取正確性)
+        run: npm run test:browser

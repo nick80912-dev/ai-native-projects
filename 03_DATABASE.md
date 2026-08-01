@@ -42,7 +42,7 @@
 | Shopping | 維護店家、樓層、必逛、免稅等資料 | 新店家只新增資料列;PID 指向商場 Place |
 | Hotels | 維護住宿細節 | 新住宿只新增資料列;住宿地點仍需在 Places 有對應資料 |
 | Expenses | 維護行前團費 | 依 `schema.js` 的 freeform layout 維護,不是一般資料列表 |
-| 分帳紀錄 | 保存旅途記帳 | 只由 Apps Script append;刪帳新增負向沖銷列,不得修改原列 |
+| 分帳紀錄 | 保存旅途記帳 | 只由 Apps Script append;團體刪帳新增墓碑列,不得修改原列 |
 | TripConfig | 維護 key/value 設定 | `Exchange Rate` / `Ledger Default Currency` 可由 App 設定頁更新；其餘鍵由 Bar 手動管理 |
 
 ## 重要資料規則
@@ -53,7 +53,7 @@
 - 一般資料表 ID 格式:Places=`P###`、Restaurants=`R###`、Shopping=`S###`、Hotels=`H###`;不需連號,但不得重複、不得改變既有 ID 意義。
 - Expenses 是自由格式,沒有 `E###` ID;行程總表目前只使用 `P###` / `R###` 引用地點或餐廳。
 - 同一地點多次造訪使用同一 PID。
-- 個人狀態(打卡/想逛/成員身分)存 localStorage,不進 CMS。依 ADR 0006,App 只可 append「分帳紀錄」及更新 TripConfig 的 `Exchange Rate` / `Ledger Default Currency`；其餘 CMS 欄位由 Bar 手動管理且 App 唯讀。
+- 個人狀態(打卡/想逛/成員身分)與個人帳存 localStorage,不進 CMS。依 ADR 0006,App 只可 append「分帳紀錄」及更新 TripConfig 的 `Exchange Rate` / `Ledger Default Currency`；其餘 CMS 欄位由 Bar 手動管理且 App 唯讀。
 
 ## Places.Type 規則
 - Places.Type 決定卡片型別,禁止 AI 依名稱或文字自行猜測。
@@ -95,11 +95,17 @@
 - Expenses 只負責行前團費與同行成員來源；旅途中記帳改走「分帳紀錄」表,不寫入 Expenses。
 
 ## 分帳紀錄特別規則
-- 位置式 8 欄:`紀錄ID | 時間 | 成員 | 類別 | 明細 | 日幣 | 台幣 | 備註`。
+- Schema 2.9 沿用位置式 21 欄:`紀錄ID | 時間 | 成員 | 類別 | 明細 | 日幣 | 台幣 | 備註 | 分攤成員 | 支付方式 | 紀錄類型 | 目標紀錄ID | 刪除原因 | 批次ID | 店名 | 取代紀錄ID | 輸入幣別 | 免稅品 | 價格方式 | 稅率 | 優惠券金額`；2.9 只擴充 `recordType` 白名單，不新增 Sheet 欄位或 Apps Script payload 欄位。
+- `時間` 為 ISO 8601 消費發生時間；既有紀錄不遷移，直接依此語意讀取。
+- 末端 5 個 Schema 2.8 欄位保存原始輸入幣別、品項免稅、税込／税抜、稅率與優惠券記錄；均為選填，舊 16 欄 payload 由 Apps Script 補空字串。個人帳另以 localStorage 保存代購旗標與對象，團體帳不寫入代購資料。
 - `紀錄ID`、`成員`、`日幣` 為 required；使用者只輸入 JPY 或 TWD 其中一種,App 依當前匯率四捨五入換算並同時保存兩個金額。
-- Apps Script 契約:`POST {id,time,member,category,detail,amountJpy,amountTwd,note}`。
+- Apps Script 契約:`POST {id,time,member,category,detail,amountJpy,amountTwd,note,participants,payMethod,recordType,targetRecordId,deleteReason,batchId,storeName,replacesRecordId,inputCurrency,isTaxFree,priceMode,taxRate,couponAmount}`。
 - 回覆 `ok:true` 與 `ok:true,dup:true` 均視為送達；其他回覆保留在本機佇列。
-- 資料 append-only；刪帳以金額取負且備註指向原始 ID 的沖銷紀錄表示。
+- 資料 append-only；團體刪帳新增 `recordType=deletion` 墓碑並以 `targetRecordId` 指向原紀錄，不修改原列。
+- 結算握手（ADR 0007）：`settlement_claim`（付款方標記已付款，金額為結算幣別當下淨額，`participants` 快照收款人）→ `settlement_confirm`（收款方確認，淨額歸零）或 `settlement_reject`（收款方退回，選填原因存備註）；confirm／reject 金額為零並以 `targetRecordId` 指向 claim。撤回／撤銷沿用墓碑。結算幣別取自 `Ledger Default Currency`。
+- 還款確認後的收據永久禁止直接編輯或刪除；後續修正使用完整版本事件：先依 manifest 順序追加一或多筆 `expense_correction_item`，最後才追加 `expense_correction_commit` 作為可見性 commit。整張作廢只追加 `expense_void_commit`，不得用 deletion 墓碑取代。
+- 更正事件皆保留原付款人與正式／TEST universe。commit 的 `replacesRecordId` 固定指向 root 收據、`targetRecordId` 指向上一個 canonical 版本、`batchId` 等於自身 commit ID、`note` 保存 1–50 字原因；item 的 `targetRecordId`／`batchId` 指向最後才寫入的 commit。缺件、manifest 不一致、跨付款人或跨 universe 的版本一律 inert。
+- 同一上一版本的並行更正，以 commit `(time,id)` 最小者為 canonical；losing sibling 永不自動升格，只保留診斷與歷史。已確認還款不因更正而撤銷；新舊版本帳務差額形成新的待結算餘額。
 - 公開 CSV 可能延遲 1–5 分鐘；ledger 下載失敗時沿用目前 ledger 快照,不得阻塞其他 7 表。
 
 ## TripConfig 分帳設定特別規則

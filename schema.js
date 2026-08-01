@@ -14,7 +14,7 @@
    ============================================================ */
 
 var SCHEMA = {
-  version: '2.5 (2026-07-17)',
+  version: '2.9 (2026-07-29)',
 
   /* 發布來源(換試算表只改這裡) */
   pubBase: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRenmV8UxEzWbzSjKJKi4rSpYt63geBqhEkKsl1GemWVPmFKTcvv3Uk71Hjla3TGBpGIjC7bQDDdI00/pub?single=true&output=csv&gid=',
@@ -116,7 +116,7 @@ var SCHEMA = {
         noteCol: 6,                   // 備註
         totalMarks: ['小計','總計']   // 合計列
       },
-      desc: '行前團費。旅途記帳在 App 端(localStorage),兩者於分帳頁並列不重複計算。同行成員自動帶入分帳成員(首次)。'
+      desc: '行前團費僅存於試算表；App 不渲染，也不從 Exp 推導同行成員。'
     },
 
     /* ── Ledger 分帳紀錄 ── */
@@ -124,13 +124,26 @@ var SCHEMA = {
       gid: '896856089', label: '分帳紀錄', kind: 'table', idField: 'id',
       columns: [
         { field:'id',        header:'紀錄ID', required:true, desc:'時間戳-4位隨機;append-only 去重鍵' },
-        { field:'time',      header:'時間',                 desc:'ISO 8601 寫入時間' },
+        { field:'time',      header:'時間',                 desc:'ISO 8601 消費發生時間' },
         { field:'member',    header:'成員',   required:true, desc:'寫入當下的成員身分' },
         { field:'category',  header:'類別' },
         { field:'detail',    header:'明細' },
         { field:'amountJpy', header:'日幣',   required:true, desc:'日幣金額;沖銷紀錄為負數' },
         { field:'amountTwd', header:'台幣',                 desc:'台幣金額;沖銷紀錄為負數' },
-        { field:'note',      header:'備註' }
+        { field:'note',      header:'備註' },
+        { field:'participants',   header:'分攤成員', desc:'JSON array 字串' },
+        { field:'payMethod',      header:'支付方式' },
+        { field:'recordType',     header:'紀錄類型', values:{ 'expense':'expense','identity_registration':'identity_registration','deletion':'deletion','settlement_claim':'settlement_claim','settlement_confirm':'settlement_confirm','settlement_reject':'settlement_reject','expense_correction_item':'expense_correction_item','expense_correction_commit':'expense_correction_commit','expense_void_commit':'expense_void_commit' } },
+        { field:'targetRecordId', header:'目標紀錄ID' },
+        { field:'deleteReason',   header:'刪除原因' },
+        { field:'batchId',        header:'批次ID' },
+        { field:'storeName',      header:'店名',       desc:'選填;消費店家名稱,供搜尋與顯示' },
+        { field:'replacesRecordId', header:'取代紀錄ID', desc:'選填;團體編輯新筆指向被取代紀錄或 batch 根紀錄' },
+        { field:'inputCurrency',    header:'輸入幣別',   desc:'選填;JPY 或 TWD,記錄原始輸入與優惠券單位' },
+        { field:'isTaxFree',        header:'免稅品',     desc:'選填;TRUE/FALSE,每筆品項獨立狀態' },
+        { field:'priceMode',        header:'價格方式',   desc:'選填;included=税込、excluded=税抜' },
+        { field:'taxRate',          header:'稅率',       desc:'選填;0–100,最多一位小數' },
+        { field:'couponAmount',     header:'優惠券金額', desc:'選填;依輸入幣別記錄;多品項逐筆分配後合計守恆' }
       ]
     },
 

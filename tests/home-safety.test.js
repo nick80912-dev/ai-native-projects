@@ -24,30 +24,27 @@ for (const file of files) {
   assert.match(html, /var days=DB\.trip\?DB\.trip\.days:\[\];/, `${file} shows every pre-trip day`);
   assert.doesNotMatch(html, /DB\.trip\.days\.slice\(0,3\)/, `${file} does not cap pre-trip days`);
   assert.match(html, /html,body\{touch-action:pan-x pan-y\}/, `${file} keeps the approved iOS Scroll-only gesture policy`);
-  assert.doesNotMatch(html, /touch-action:manipulation/, `${file} does not restore the superseded gesture policy`);
+  assert.doesNotMatch(html, /(?:\*|html|body)\s*(?:,\s*(?:html|body))?\s*\{[^}]*touch-action\s*:\s*manipulation/i, `${file} does not restore manipulation globally`);
+  assert.match(html, /\.ledger-sheet button[^}]*touch-action\s*:\s*manipulation/i, `${file} keeps the approved Bottom Sheet control exception`);
 
-  const calls = { confirm: 0, confirmText: '', added: 0, rendered: 0 };
+  const calls = { confirm: 0, confirmText: '', removed: 0, rendered: 0 };
   const sandbox = {
     confirm(message) { calls.confirm++; calls.confirmText=message; return false; },
-    mergedLedgerRecords() { return [{ id:'keep' }, { id:'reverse',amountJpy:100,amountTwd:0 }]; },
-    spendLedgerRecords(records) { return records; },
-    createLedgerReversal(record) { return {id:'reversal',original:record.id}; },
-    ledgerRepository:{add(){calls.added++;return Promise.resolve({ok:true});}},
+    personalLedgerRepository:{all(){return [{ id:'keep' }, { id:'remove' }];},remove(){calls.removed++;return true;}},
     renderSplit() { calls.rendered++; },
     toast(){},
-    Date,
   };
   vm.createContext(sandbox);
-  vm.runInContext(extractFunction(html, 'reverseLedgerRecord'), sandbox);
-  sandbox.reverseLedgerRecord('reverse');
+  vm.runInContext(extractFunction(html, 'deletePersonalLedgerRecord'), sandbox);
+  sandbox.deletePersonalLedgerRecord('remove');
   assert.strictEqual(calls.confirm, 1, `${file} asks before deleting an expense`);
-  assert.strictEqual(calls.confirmText, '將新增一筆負向沖銷紀錄以抵銷此筆，原紀錄保留。確定？', `${file} explains append-only reversal semantics in the confirmation`);
-  assert.strictEqual(calls.added, 0, `${file} does not write a reversal when deletion is cancelled`);
+  assert.strictEqual(calls.confirmText, '確定刪除這筆個人紀錄？\n此操作無法復原。', `${file} explains irreversible personal deletion in the confirmation`);
+  assert.strictEqual(calls.removed, 0, `${file} preserves personal data when deletion is cancelled`);
   assert.strictEqual(calls.rendered, 0, `${file} does not rerender when deletion is cancelled`);
 
   sandbox.confirm = () => true;
-  sandbox.reverseLedgerRecord('reverse');
-  assert.strictEqual(calls.added, 1, `${file} appends a reversal after deletion is confirmed`);
+  sandbox.deletePersonalLedgerRecord('remove');
+  assert.strictEqual(calls.removed, 1, `${file} truly removes personal data after deletion is confirmed`);
 }
 
 console.log('home safety tests passed');

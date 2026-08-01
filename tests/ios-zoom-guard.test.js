@@ -1,4 +1,5 @@
 const assert = require('assert');
+const {appVersion,swVersion}=require('./support/version');
 const fs = require('fs');
 const vm = require('vm');
 
@@ -27,7 +28,9 @@ assert.match(html, /input\s*,\s*select\s*,\s*textarea\s*\{[^}]*font-size\s*:\s*1
 ].forEach(function(rule){ assert.match(html, rule); });
 
 assert.match(html, /html\s*,\s*body\s*\{[^}]*touch-action\s*:\s*pan-x\s+pan-y/i, 'root policy allows panning without zoom');
-assert.doesNotMatch(html, /touch-action\s*:\s*manipulation/i, 'manipulation no longer permits continuous zoom');
+assert.doesNotMatch(html, /(?:\*|html|body)\s*(?:,\s*(?:html|body))?\s*\{[^}]*touch-action\s*:\s*manipulation/i, 'manipulation is never applied globally');
+assert.match(html, /\.ledger-sheet\{[^}]*touch-action\s*:\s*pan-y/i, 'Bottom Sheet remains a Scroll-only ancestor');
+assert.match(html, /\.ledger-sheet button[^}]*touch-action\s*:\s*manipulation/i, 'only Bottom Sheet controls use scoped manipulation');
 assert.doesNotMatch(html, /function setupPinchZoom\(/, 'custom pinch transform is removed');
 assert.doesNotMatch(html, /pinch-zooming/, 'custom pinch CSS state is removed');
 assert.doesNotMatch(html, /function setupDoubleTapGuard\(/, 'failed double-tap JavaScript guard is removed');
@@ -36,8 +39,9 @@ assert.doesNotMatch(html, /function touchDistance\(/, 'double-tap distance helpe
 assert.match(html, /function setupDiagnostics\(/, 'peach diagnostic gesture remains available');
 assert.match(html, /function setupViewportReflow\(/, 'form focus recovery remains available');
 assert.doesNotMatch(html.match(/<meta name="viewport"[^>]+>/i)[0], /maximum-scale|user-scalable/i, 'viewport restrictions are not persistent');
-assert.match(sw, /okayama-trip-v18/, 'service worker cache is bumped to v18');
-assert.doesNotMatch(sw, /okayama-trip-v16/, 'retired v16 cache is not retained');
+assert.strictEqual(swVersion(),appVersion(),'sw.js 頂層版本標記與 app-version.js 一致');
+assert.doesNotMatch(sw,/importScripts\('\.\/app-version\.js'\)/,'sw.js 不再以 imported APP_VERSION 作為 cache 名稱來源');
+assert.doesNotMatch(sw, /okayama-trip-v20/, 'retired v20 cache is not retained');
 assert.doesNotMatch(sw, /tests\//, 'test files are not part of the App Shell');
 assert.doesNotMatch(sw, /ios-gesture-diagnostics\.test\.js/, 'the diagnostic test is never cached');
 assert.doesNotMatch(html,/var APP_BUILD=/,'unused diagnostic build metadata is retired');
