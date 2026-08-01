@@ -95,7 +95,10 @@ function extractThemeIds(html){
   assert.doesNotMatch(groupCss,/#[0-9a-fA-F]{3,8}\b/,'grouped Settings CSS declares no literal hex colors');
   assert.doesNotMatch(groupCss,/rgba?\(/,'grouped Settings CSS declares no literal rgb colors');
   assert.match(groupCss,/\.settings-row\{[^}]*min-height:52px/,'grouped Settings rows keep a 52px touch target');
-  assert.match(groupCss,/\.settings-testmode-row[^{]*\{[^}]*var\(--coral\)/,'the warning row uses the semantic warning color');
+  assert.match(groupCss,/\.settings-testmode-row \.settings-row-main b\{[^}]*var\(--ink\)/,
+    'the warning row uses the high-contrast semantic text color');
+  assert.doesNotMatch(groupCss,/\.settings-testmode-row \.settings-row-main b\{[^}]*var\(--coral\)/,
+    'the warning row does not use coral for its main text');
   /* 實測過的回歸:.settings-row 的 border:0 與分隔線規則特異性相同,
      分隔線若寫在前面會被整個蓋掉,群組看起來就是一團沒有分隔的列。 */
   const dividerAt=html.indexOf('.settings-group-card>*+*{border-top:1px solid var(--line-soft)}');

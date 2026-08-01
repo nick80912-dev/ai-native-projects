@@ -30,6 +30,7 @@ test('三群組根頁在 320／375／390px 下沒有水平溢位,列高與觸控
   await installOfflineAppNetwork(page);
   await openApp(page);
   await waitForSyncToSettle(page);
+  await page.evaluate(()=>localStorage.setItem('trip_member','Bar 測試超長身分名稱 ABCDEFGHIJKLMNOPQRSTUVWXYZ'));
 
   for(const size of WIDTHS){
     await page.setViewportSize({width:size.w,height:size.h});
@@ -37,15 +38,26 @@ test('三群組根頁在 320／375／390px 下沒有水平溢位,列高與觸控
     const state=await page.evaluate(()=>{
       const panel=document.querySelector('#settingsOverlay .settings-panel');
       const rows=Array.from(panel.querySelectorAll('.settings-row'));
+      const identityName=panel.querySelector('#settingsCurrentMember');
+      const identityActions=panel.querySelector('.settings-identity-actions');
+      const identityStyle=getComputedStyle(identityName);
       return {
         groups:Array.from(panel.querySelectorAll('.settings-group-title'),el=>el.textContent),
+        docScrollWidth:document.documentElement.scrollWidth,
+        docClientWidth:document.documentElement.clientWidth,
         docOverflow:document.documentElement.scrollWidth>document.documentElement.clientWidth,
+        panelScrollWidth:panel.scrollWidth,
+        panelClientWidth:panel.clientWidth,
         panelOverflow:panel.scrollWidth>panel.clientWidth,
+        rootScrollHeight:panel.scrollHeight,
+        viewportHeight:window.innerHeight,
         rowOverflow:rows.filter(row=>row.scrollWidth>row.clientWidth).length,
         minRowHeight:Math.min(...rows.map(row=>Math.round(row.getBoundingClientRect().height))),
         minActionHeight:Math.min(...Array.from(panel.querySelectorAll('.settings-identity-actions .btn'),
           btn=>Math.round(btn.getBoundingClientRect().height))),
-        identityRowLines:Math.round(panel.querySelector('.settings-identity-current').getBoundingClientRect().height)
+        identityWhiteSpace:identityStyle.whiteSpace,
+        identityOverflowX:identityStyle.overflowX,
+        identityClearOfActions:identityName.getBoundingClientRect().right<=identityActions.getBoundingClientRect().left
       };
     });
     expect(state.groups,`群組順序 @${size.w}px`).toEqual(['個人','記帳','資料']);
@@ -54,6 +66,9 @@ test('三群組根頁在 320／375／390px 下沒有水平溢位,列高與觸控
     expect(state.rowOverflow,`列水平溢位 @${size.w}px`).toBe(0);
     expect(state.minRowHeight,`最小列高 @${size.w}px`).toBeGreaterThanOrEqual(52);
     expect(state.minActionHeight,`身分按鈕觸控高度 @${size.w}px`).toBeGreaterThanOrEqual(38);
+    expect(state.identityWhiteSpace,`身分名稱不換行 @${size.w}px`).toBe('nowrap');
+    expect(state.identityOverflowX,`身分名稱隱藏溢位 @${size.w}px`).toBe('hidden');
+    expect(state.identityClearOfActions,`身分名稱不覆蓋動作按鈕 @${size.w}px`).toBe(true);
   }
   expect(pageErrors).toEqual([]);
 });
@@ -152,6 +167,7 @@ test('六個主題下群組卡片、分隔線與文字都保持可讀',async({pa
   await installOfflineAppNetwork(page);
   await openApp(page);
   await waitForSyncToSettle(page);
+  await setTestMode(page,true);
   await openSettingsRoot(page);
 
   const readings=await page.evaluate(()=>{
@@ -176,17 +192,32 @@ test('六個主題下群組卡片、分隔線與文字都保持可讀',async({pa
       const cardBg=getComputedStyle(card).backgroundColor;
       const paper=getComputedStyle(document.body).backgroundColor;
       const second=panel.querySelectorAll('.settings-group-card>*')[1];
+      const warning=panel.querySelector('.settings-testmode-row');
+      const warningTitle=warning.querySelector('.settings-row-main b');
+      const warningSummary=warning.querySelector('.settings-row-summary');
+      const warningTitleColor=getComputedStyle(warningTitle).color;
+      const warningSummaryColor=getComputedStyle(warningSummary).color;
       result[id]={
         dividerWidth:parseFloat(getComputedStyle(second).borderTopWidth),
         groupTitle:contrast(getComputedStyle(panel.querySelector('.settings-group-title')).color,paper),
         rowTitle:contrast(getComputedStyle(panel.querySelector('.settings-row-main b')).color,cardBg),
         summary:contrast(getComputedStyle(panel.querySelector('.settings-row-summary')).color,cardBg),
-        icon:contrast(getComputedStyle(panel.querySelector('.settings-row-icon')).color,cardBg)
+        icon:contrast(getComputedStyle(panel.querySelector('.settings-row-icon')).color,cardBg),
+        warningBackground:cardBg,
+        warningTitleColor,
+        warningTitle:contrast(warningTitleColor,cardBg),
+        warningSummaryColor,
+        warningSummary:contrast(warningSummaryColor,cardBg)
       };
     });
     applyTheme('ocean',{persist:false});
     return result;
   });
+
+  for(const [id,reading] of Object.entries(readings)){
+    expect(reading.warningTitle,`${id} test-mode warning title contrast`).toBeGreaterThanOrEqual(4.5);
+    expect(reading.warningSummary,`${id} test-mode warning summary contrast`).toBeGreaterThanOrEqual(4.5);
+  }
 
   for(const [id,reading] of Object.entries(readings)){
     /* 分隔線必須真的畫出來 —— .settings-row 的 border:0 曾經把它整個蓋掉 */
