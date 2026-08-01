@@ -7851,11 +7851,11 @@ function renderSettingsOptionsPage(){
   return renderSettingsHeader('自訂項目',false)+'<div class="settings-section" id="ledgerOptionSettingsSection"><h3>類別、支付方式與採買單位</h3><div class="settings-help">可新增、刪除或排序；刪除選項不影響既有紀錄。</div>'+renderLedgerOptionManager('category','類別')+renderLedgerOptionManager('payMethod','支付方式')+renderLedgerOptionManager('shoppingUnit','採買單位')+'</div>';
 }
 var APP_RELEASE_NOTES=[
+  {version:'v75',date:'2026-08-01',title:'採買照片與附近導航',items:['採買項目可附上一張只保存在本裝置的照片，卡片以迴紋針提示','同名地點會依目前位置尋找最近結果，詳細分點則維持精確導航']},
   {version:'v74',date:'2026-08-01',title:'設定頁更好找',items:['設定頁改為個人、記帳、資料三個群組,一頁看完','團體帳測試模式移到獨立控制頁,不再占用設定首頁']},
   {version:'v73',date:'2026-07-30',title:'更新機制修正',items:['修正改版後可能仍載入舊版檔案的問題','離線時缺少檔案不再讓「資料與版本」頁打不開','結清後的團體消費標示改為「已鎖帳」,明細頁補上原因說明']},
   {version:'v72',date:'2026-07-30',title:'主題、設定與旅途紀錄',items:['新增六組淺色主題與一致的導覽圖示','設定頁重新分區，並可記錄旅途異常與優化建議']},
-  {version:'v71',date:'2026-07-30',title:'作廢確認更清楚',items:['整張收據作廢預覽後只保留一個確認動作']},
-  {version:'v70',date:'2026-07-30',title:'分攤選取更清楚',items:['分攤成員選取改為較明顯的青綠底色']}
+  {version:'v71',date:'2026-07-30',title:'作廢確認更清楚',items:['整張收據作廢預覽後只保留一個確認動作']}
 ];
 function renderAppReleaseNotes(){
   return '<div class="settings-release-list">'+APP_RELEASE_NOTES.map(function(note){
@@ -7863,7 +7863,7 @@ function renderAppReleaseNotes(){
   }).join('')+'</div>';
 }
 function renderSettingsDataPage(){
-  return renderSettingsHeader('資料與版本',false)+'<div class="settings-section"><h3>本機資料備份／還原</h3><div class="settings-help">換手機、重裝 App 或清除瀏覽器資料前使用。備份包含主題、採買單位與旅途紀錄；還原會覆蓋目前裝置上的個人資料及待同步記帳。</div><div class="settings-actions"><button class="btn ghost" onclick="exportPersonalState()">複製備份 JSON</button><button class="btn" onclick="openPersonalStateRestore()">從 JSON 還原</button></div></div><div class="settings-section"><div class="settings-version-row"><b>版本</b><span>SW '+escapeHtml(appVersionLabel())+'</span></div><h3>最近更新</h3>'+renderAppReleaseNotes()+'</div>';
+  return renderSettingsHeader('資料與版本',false)+'<div class="settings-section"><h3>本機資料備份／還原</h3><div class="settings-help">換手機、重裝 App 或清除瀏覽器資料前使用。備份包含主題、採買單位與旅途紀錄；還原會覆蓋目前裝置上的個人資料及待同步記帳。照片附件只保存在本裝置，不包含於備份。</div><div class="settings-actions"><button class="btn ghost" onclick="exportPersonalState()">複製備份 JSON</button><button class="btn" onclick="openPersonalStateRestore()">從 JSON 還原</button></div></div><div class="settings-section"><div class="settings-version-row"><b>版本</b><span>SW '+escapeHtml(appVersionLabel())+'</span></div><h3>最近更新</h3>'+renderAppReleaseNotes()+'</div>';
 }
 function renderSettingsPage(page,ledgerSettings,settingsError){
   if(page==='theme')return renderSettingsThemePage();

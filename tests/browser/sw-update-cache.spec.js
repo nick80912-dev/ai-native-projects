@@ -16,6 +16,7 @@ const { createVersionedServer } = require('./support/versioned-server');
    升版時整個檔會紅 —— 那正是 version.js 當初要消滅的「記得改 N 個地方」。 */
 const { appVersion } = require('../support/version');
 const VERSION = appVersion();
+const PREVIOUS_VERSION = 'v' + (Number(VERSION.slice(1)) - 1);
 
 /* 每個 test 自己起一台伺服器,並用 port 0 讓 OS 配發:
    - 固定埠會在前一次執行留下 socket 時偶發衝突(實際遇過一次全套執行才失敗、單獨執行通過)
@@ -24,7 +25,7 @@ let server = null;
 let ORIGIN = '';
 
 test.beforeEach(async () => {
-  server = createVersionedServer({ generation: 1 });
+  server = createVersionedServer({ generation: 1, versions: { 1: PREVIOUS_VERSION, 2: VERSION } });
   const port = await server.listen(0);
   ORIGIN = 'http://127.0.0.1:' + port;
 });
@@ -67,7 +68,7 @@ async function waitForShellCached(page) {
     if (!keys.length) return false;
     const cache = await caches.open(keys[0]);
     const cached = (await cache.keys()).map((request) => new URL(request.url).pathname);
-    return ['/index.html', '/app-version.js', '/schema.js'].every((p) => cached.includes(p));
+    return ['/index.html', '/app-version.js', '/shopping-photo-store.js', '/schema.js'].every((p) => cached.includes(p));
   }, null, { timeout: 20000 });
 }
 
@@ -79,7 +80,7 @@ test('SW 更新後新快取實際裝入新版資源,且 index／版本檔／sche
   /* 第 1 步:舊版資源先進入 HTTP cache(max-age=600),並確認 gen1 已落在 CacheStorage */
   const first = await activeCacheReport(page);
   const firstKey = Object.keys(first)[0];
-  expect(firstKey).toBe('okayama-trip-'+VERSION+'-QAGEN1');
+  expect(firstKey).toBe('okayama-trip-'+PREVIOUS_VERSION+'-QAGEN1');
   for (const [pathname, marker] of Object.entries(first[firstKey])) {
     expect(marker, pathname + ' 應為 gen1').toBe('QAGEN1');
   }

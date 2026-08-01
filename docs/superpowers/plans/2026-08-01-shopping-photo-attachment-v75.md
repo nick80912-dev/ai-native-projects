@@ -129,4 +129,3 @@ Run the new spec at 320×700, 375×812 and 390×844; assert `scrollWidth-clientW
 git add index.html tests/browser/shopping-photo.spec.js tests/README.md
 git commit -m "feat(shopping): add one-photo attachment flow"
 ```
-

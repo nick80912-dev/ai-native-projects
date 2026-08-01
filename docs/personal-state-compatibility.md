@@ -70,6 +70,12 @@ if(payload.version<8){
 
 **同版本的未知欄位**:v8 payload 夾帶額外欄位不影響還原,且該欄位不會被寫進 `localStorage`(`applyPersonalStatePayload()` 只寫白名單內的 key)。
 
+### v75 裝置照片不屬於備份格式
+
+採買項目的 `photoId` 只是在目前裝置上指向 IndexedDB Blob 的引用,不是可攜資料。`personalStateJson()` 匯出每筆採買項目時會移除 `photoId`;`validatePersonalStatePayload()` 還原時也會剝除手動夾帶的 `photoId`,避免在另一台裝置產生指向不存在 Blob 的懸空引用。因此本次**不升 v9**,備份格式仍為 v8。
+
+清除網站資料、移除 App 儲存空間或換手機時照片不會跟著備份還原；設定頁必須明示「照片附件只保存在本裝置，不包含於備份。」
+
 ## 三、採買單位的既有規則如何與還原互動
 
 | 規則 | 還原時是否適用 | 說明 |

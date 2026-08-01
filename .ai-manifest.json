@@ -2,7 +2,7 @@
   "$comment": "AI 導航檔 — 任何 AI 接手第一步只讀這份即可掌握全貌。這是 13 步流程的第 1 步。",
   "project": "japan-travel-pwa(日本旅遊行程 App)",
   "owner": "Bar(產品負責人,非工程師,繁中溝通,要直接執行不要教學;AI=全職工程團隊)",
-  "version": "2.9-sw-update-integrity-v73",
+  "version": "2.11-shopping-photo-navigation-v75",
   "framework": "ai-native-framework@pending(尚未抽取;見 FUTURE_PLAN_framework-extraction.md)",
   "updated": "2026-08-01",
   "live": "https://trippilot-jp.netlify.app/",
@@ -28,15 +28,16 @@
     "ops_playbook": "16_OPS_PLAYBOOK.md:Netlify回滾/以tag回滾至v18(§A5)/SW快取災難/Sheet版本還原/清理排程安全/測試站驗收前置核對(§F5)",
     "status_authority": "即時狀態唯一權威=tasks/(current/backlog/done);13_PROJECT_STATUS與本manifest.status為快照;00_CONTEXT_HANDOVER為歷史快照不參與"
   },
-  "data_flow": "GoogleSheets(8表)→發布CSV→手機瀏覽器fetch→validator.js(防錯)→parser(Schema驅動)→DB→renderers→UI；個人帳、代購對象、主題與旅途紀錄→localStorage only(不進Queue/CMS)，並由個人備份v8原子匯出／還原；團體帳→enqueueBatch一次寫入localStorage佇列→立即UI完成→ledgerRepository背景送達Apps Script→分帳紀錄表(append-only,Schema 2.9固定21欄,time=消費發生時間,末五欄=輸入幣別/免稅/價格方式/稅率/優惠券)；未受還款確認保護的團體編輯=舊筆墓碑+replacesRecordId替代筆；canonical還款確認切點前的收據永久禁止直接改寫，只能由原付款人以commit-last事件整張更正或作廢；共用分帳設定:Settings→Apps Script→TripConfig兩個固定鍵→發布CSV,確認後以本機bridge涵蓋1–5分鐘延遲；離線三層:BUILTIN內建→localStorage快取→背景同步",
+  "data_flow": "GoogleSheets(8表)→發布CSV→手機瀏覽器fetch→validator.js(防錯)→parser(Schema驅動)→DB→renderers→UI；個人帳、代購對象、主題與旅途紀錄→localStorage only(不進Queue/CMS)，並由個人備份v8原子匯出／還原；採買照片→shopping-photo-store.js壓縮→IndexedDB trip-local-media/shopping-photos,採買項目localStorage只存photoId且備份剝除；團體帳→enqueueBatch一次寫入localStorage佇列→立即UI完成→ledgerRepository背景送達Apps Script→分帳紀錄表(append-only,Schema 2.9固定21欄,time=消費發生時間,末五欄=輸入幣別/免稅/價格方式/稅率/優惠券)；未受還款確認保護的團體編輯=舊筆墓碑+replacesRecordId替代筆；canonical還款確認切點前的收據永久禁止直接改寫，只能由原付款人以commit-last事件整張更正或作廢；共用分帳設定:Settings→Apps Script→TripConfig兩個固定鍵→發布CSV,確認後以本機bridge涵蓋1–5分鐘延遲；離線三層:BUILTIN內建→localStorage快取→背景同步",
   "files": {
-    "index.html": "唯一可編輯 App 與正式部署入口:UI殼+CSS+內嵌JS(區塊分層見10_FOLDER_STRUCTURE)",
+    "index.html": "App 與正式部署入口:UI殼+CSS+內嵌JS(區塊分層見10_FOLDER_STRUCTURE)",
+    "shopping-photo-store.js": "採買照片縮放壓縮與IndexedDB put/get/remove邊界;Blob只存在目前裝置,不進備份或同步",
     "app-version.js": "App端版本來源(供顯示與旅途紀錄);sw.js 另自帶 SW_VERSION,兩者必須相等,由 tools/check-app-version.js 守住。2026-07-30 起 sw.js 不再 importScripts 本檔取版本——imported script 會經 HTTP cache,GitHub Pages 的 max-age=600 會讓版本升級靜默失效",
     "schema.js": "唯一資料規格SSoT:欄位/gid/型別值/發布URL;schemaDoc()自動產09文件",
     "validator.js": "防錯防線:AppLog六類([Schema/Parser/Data/Repository/Render/Sync Error])+buildHeaderMap+window.healthCheck()",
     "apps-script/ledger-sync.gs": "Apps Script部署唯一維護來源:分帳append-only與TripConfig兩鍵白名單更新",
     "docs/personal-state-compatibility.md": "個人狀態備份 v1–v8 相容策略契約(向後／向前相容、缺欄位預設值、採買單位規則、失敗語意);可執行契約=tests/personal-state-restore-matrix.test.js,兩者不一致即為缺陷",
-    "docs/batch2-device-acceptance.md": "批次二真機／PWA 驗收清單(SW v73 候選版);含測試站前置核對與 v18→v73「先離線再升級」的一次性風險窗口"
+    "docs/batch2-device-acceptance.md": "批次二真機／PWA 驗收清單;保留v73/v74證據並附v75採買照片與定位導航delta"
   },
   "deploy_files": {
     "index.html": "唯一正式 App 入口",
@@ -66,7 +67,7 @@
     "viewport meta 不得常駐 maximum-scale 或 user-scalable=no;只允許輸入 focus 縮放殘留時瞬鎖約100ms,並原樣還原啟動時字串",
     "停車 MAP CODE 純顯示無複製鈕、『停車同Pxxx』繼承",
     "渡輪不建班次庫(末班資訊+官方時刻表連結)",
-    "個人狀態(打卡/想逛/成員身分)、個人帳、代購對象、themeId與travelNotes存localStorage且不進Queue/CMS；主題、採買單位與旅途紀錄屬個人備份v8欄位;團體帳只走Ledger Repository,兩軌資料與統計禁止混用;TEST團體帳與正式團體帳依目前模式平行隔離;依ADR 0006,App僅可append分帳紀錄並更新TripConfig的Exchange Rate / Ledger Default Currency兩鍵,其餘CMS欄位維持Bar手動管理且App唯讀",
+    "個人狀態(打卡/想逛/成員身分)、個人帳、代購對象、themeId與travelNotes存localStorage且不進Queue/CMS；主題、採買單位與旅途紀錄屬個人備份v8欄位;採買照片Blob只存目前裝置IndexedDB,photoId不得進備份或跨裝置同步;團體帳只走Ledger Repository,兩軌資料與統計禁止混用;TEST團體帳與正式團體帳依目前模式平行隔離;依ADR 0006,App僅可append分帳紀錄並更新TripConfig的Exchange Rate / Ledger Default Currency兩鍵,其餘CMS欄位維持Bar手動管理且App唯讀",
     "主題僅覆寫13個第一層--t-* token，第二層語意角色與今天/行程/購物/分帳四分頁結構保持穩定；主導覽與設定入口用inline SVG，內容Emoji與桃子診斷徽章保留",
     "產品哲學:3秒原則、不過度工程化"
   ],
@@ -114,10 +115,12 @@
       "SW更新完整性修正(sw.js自帶SW_VERSION/移除importScripts版本依賴/install用reload、fetch用no-cache避免HTTP cache汙染SHELL/子資源不再fallback成index.html/APP_VERSION安全取值/tools一致性檢查/qa.yml sanity支援dev push；SW v73)",
       "批次一發布阻斷項全數交付(任務板歸位/ADR 0008 六主題追認/production-v18 回滾錨點/SW 更新完整性修正 v73/備份 v1-v8 還原矩陣與相容契約/已鎖帳文案/測試模式與時間模擬暴露面調查與備份防呆)",
       "SW v73 正式發布(2026-08-01;v18→v73,merge commit 17c423f,tag production-v73;G1 真機驗收全數通過;未建 production-v72 因 v72 未曾正式發布)",
-      "Release back-merge main→dev(2026-08-01;merge commit a930858,零內容差異;origin/main 已是 origin/dev 的 ancestor)"
+      "Release back-merge main→dev(2026-08-01;merge commit a930858,零內容差異;origin/main 已是 origin/dev 的 ancestor)",
+      "SW v74設定根頁三群組與測試模式控制頁已推送dev(c51752b;含警告列AA對比修正;main未動)",
+      "SW v75採買照片與定位導航完成(裝置本機IndexedDB照片/無文字迴紋針/備份剝除photoId/一般同名地點依目前位置導航/詳細分點精確導航;56/56 Node + Playwright 11/11)"
     ],
     "pending_in_order": [
-      "v74 設定根頁改版:已實作於 feat/settings-grouped-v74(三群組/test-mode 控制頁/legacy deep link 改映射/SW v74);Tier 2 四段說明已核准;54/54 Node + Playwright 9/9 通過;**待審查與 Bar 真機驗收,未合併未部署**",
+      "v75採買照片與定位導航:自動驗證完成,依Bar指令交付dev;待Bar真機/PWA驗收,不得動main或production tag",
       "框架抽取(FUTURE_PLAN)"
     ]
   },

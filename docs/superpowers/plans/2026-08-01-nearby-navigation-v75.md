@@ -127,4 +127,3 @@ git push origin HEAD:dev
 ```
 
 No force push. Verify `git ls-remote origin refs/heads/dev` equals local HEAD.
-

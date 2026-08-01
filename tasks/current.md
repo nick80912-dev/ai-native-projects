@@ -1,12 +1,12 @@
 # CURRENT(現在正在做的)
 
-> 更新於 2026-07-30。細任務層;里程碑看 `06_ROADMAP.md`,歷史交付看 `07_CHANGELOG.md`,正式待辦看 `tasks/backlog.md`。
+> 更新於 2026-08-01。細任務層;里程碑看 `06_ROADMAP.md`,歷史交付看 `07_CHANGELOG.md`,正式待辦看 `tasks/backlog.md`。
 
 ## 📌 現況
 - 🚀 **SW v73 已於 2026-08-01 正式發布。** 正式站(`https://trippilot-jp.netlify.app/`)由 **SW v18 升級至 SW v73**,merge commit `17c423f8ac59328f926973024cb407d5e638f838`,回滾錨點 tag `production-v73`。發布內容為 v72(六主題／設定頁 2.0／旅途紀錄／備份 v8)與 v73(SW 更新完整性、子資源 fallback、APP_VERSION 安全取值、已鎖帳文案)合併的同一候選版,**只做一次 SW 換代**。G1–G6 全數通過,逐項證據見 `docs/batch2-device-acceptance.md` 的「發布收尾紀錄」。
 - **批次一「發布阻斷項」P1–P6 全部交付完成(2026-07-30)**,SW 升至 **v73**。P5 調查判定測試模式／時間模擬／`?previewDate` 三條路徑皆為「可延後,非發布阻斷」,唯一真正的跨裝置污染路徑(模擬期間匯出備份 → 新裝置無回復點)已由 `exportPersonalState()` 的防呆擋下。批次二真機驗收清單見 `docs/batch2-device-acceptance.md`。
-- **最新 `dev` runtime 基準:SW v73**(批次一 P2 C2)。修正兩件實證出來的更新缺陷:①新版 SW 的 install 會從 HTTP cache 取得舊版 SHELL,造成「新快取名稱裝舊內容」與 index／schema 混版本;②任何同源子資源離線未命中時都會 fallback 成 `index.html`,讓 `<script>` 拿到 HTML。修法為 install 用 `cache:'reload'`、日常 fetch 用 `cache:'no-cache'`、只有 navigation 才退回 `index.html`;`sw.js` 改為自帶 `SW_VERSION` 並移除 `importScripts` 版本依賴。`index.html` 的 `APP_VERSION` 全面改走安全 helper。新增 `tools/check-app-version.js` 與 Playwright `sw-update-cache.spec.js`(已做對照驗證:改回舊寫法會失敗)。**v72 未曾正式發布,與 v73 合併為同一個候選版本,只做一次 SW 換代。**
-- 最新已推送 `dev` App runtime 基準：`b372f49`，Service Worker `okayama-trip-v72`。SW v72 的設定頁 2.0、六組主題、旅途紀錄與個人備份 v8 已整合；完整 51／51 Node test files、Playwright 3／3、文件／manifest／diff 檢查及 320／375／390px Browser QA 通過，尚待 Bar 真機／PWA 驗收。**Bar 已於 2026-07-30 完成 SW v69／v70／v71 真機／PWA 驗收**；尚未合併 `main` 或正式部署。
+- **最新已推送 `dev` runtime 基準:SW v74**,SHA `c51752ba75193a0616f4f80810acd31ef4787d65`;包含設定根頁三群組、測試模式控制頁與警告列 AA 對比修正。`main` 與正式站仍為 v73。
+- **v75 採買照片與定位導航已完成本機實作與完整驗證**(2026-08-01):照片只存本裝置 IndexedDB,卡片只顯示迴紋針,備份排除 `photoId`;一般同名地點以目前座標作為導航 origin,詳細分點直接導航,定位失敗退回 `名稱 + 日本`。56／56 Node test files、Playwright 11／11 通過;依 Bar 明確指令交付 `dev`,不得動 `main`、部署或 production tag。
 - SW v72 已在隔離分支 `codex/sw-v72-settings-themes` 完成開發：設定頁 2.0、六組主題、五個功能 SVG、旅途異常／優化建議紀錄、個人備份 v8、`app-version.js` 版本單一來源與 v72–v68 使用者版更新說明。完整 51／51 Node test files、Playwright 3／3、文件／manifest／diff 檢查及 320／375／390px Browser QA 通過；**已 push `dev`（`b372f49`），尚待 Bar 真機／PWA 驗收**。
 - 2026-07-23 治理決策追認、§4 禁改清單硬停規則與任務板歸位 — 已完成,詳見 `07_CHANGELOG.md`。
 - v34–v44 三秒記帳與首頁／結算卡系列 — 已完成並經 Bar 真機驗收,詳見 `07_CHANGELOG.md`。
@@ -33,7 +33,7 @@
 
 - **Release back-merge 已完成(2026-08-01)**:`origin/main`(`17c423f`)以 `--no-ff` 回灌 `dev`,merge commit **`a930858`**,零內容差異。`git merge-base --is-ancestor origin/main origin/dev` 退出碼 0,`dev` 不再落後 `main`;遠端 `qa-sanity` success。
 
-- **v74 設定根頁改版:已實作於 `feat/settings-grouped-v74`,待審查**(2026-08-01)。規格見 `docs/superpowers/specs/2026-08-01-settings-grouped-list-design.md`,實作計畫見 `docs/superpowers/plans/2026-08-01-settings-grouped-list-v74.md`。Tier 2 四段說明已由 Bar 核准,前置條件(先發布 v73)已滿足。三個常駐群組、`test-mode` 控制頁、legacy deep link 改映射、診斷面板入口、條件式警告列全數交付;版本升至 **v74**。54／54 Node tests、Playwright 9／9、兩個 checker 通過,v73→v74 換代與離線重載已本機實測。**尚未合併 `dev`、未動 `main`、未部署、未建 `production-v74` tag,亦未經 Bar 真機驗收。** v74 delta 驗收清單見 `docs/batch2-device-acceptance.md` 末段。
+- **v74 設定根頁改版已推送 `dev`**(2026-08-01),最終 SHA `c51752b`;警告列對比阻斷修正已包含在內。`main`、production tags 未動。v74 delta 驗收清單見 `docs/batch2-device-acceptance.md`。
 
 ## 🚦 Release Gate(發布前必過,與 backlog 分離)
 
@@ -61,8 +61,7 @@
 > 已解除：Apps Script `doGet` 部署已由 Bar 完成，真實端點驗證（CORS、redirect、`after`／`reset`／`serverTime`、非 JSON 降級）通過，見上方 SW v47 條目。
 
 ## 下一棒
-→ **v74 實作已完成於 `feat/settings-grouped-v74`(3 個 commit,基於 `a930858`)。** 下一棒為 **審查該分支**,通過後才進入:push 分支 → 遠端 CI → PR `feat/settings-grouped-v74 → dev` → Bar 真機驗收(`docs/batch2-device-acceptance.md` 的 v74 delta 清單 V1–V6)→ 依 Release Flow 走 `dev → main`。
-> 分支上**不得**自行 merge `dev`、動 `main`、部署或建立 `production-v74` tag。
-> 有一項待 Bar 裁定的觀察:測試模式警告列沿用規格指定的 `var(--coral)`,四個主題下對比低於 AA 4.5(詳見 `07_CHANGELOG.md` 與驗收清單 V5 註記),未自行變更。
+→ **v75 採買照片與定位導航已完成自動驗證並依 Bar 指令交付 `dev`。** 下一棒是 Bar 真機驗收 `docs/batch2-device-acceptance.md` 的 v75 delta；正式發布仍須另行核准 `dev → main`。
+> **不得**自行動 `main`、部署正式站或建立 `production-v75` tag。
 
 > 採買清單 A／B／D／F 已於 SW v60／v61 交付；C／E／G 已於 SW v68 實作，並於 2026-07-29 完成 Bar 真機驗收；正式契約見設計文件。

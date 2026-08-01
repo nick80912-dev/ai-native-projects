@@ -1,5 +1,14 @@
 # 07 版本紀錄
-## 2026-08-01｜設定根頁群組列表與測試模式控制頁（`feat/settings-grouped-v74`，SW v74，**未合併、未部署**）
+## 2026-08-01｜採買照片附件與依目前位置導航（`codex/shopping-photo-navigation-v75`，SW v75）
+
+- **基準與核准範圍**：`origin/dev` 已包含 v74 最終修正 `c51752b`;本批依 Bar 核准實作後推送 `dev`,不動 `main`、不部署正式站、不建立 production tag、不 force push。Tier 2 四段說明、設計規格與兩份實作計畫位於 `docs/superpowers/`。
+- **採買照片只留在拍照裝置**：每筆採買項目可從手機相簿／相機選一張 `image/*`;圖片縮放至最長邊 1600px 並以 JPEG 0.82 儲存於 IndexedDB `trip-local-media/shopping-photos`。卡片只顯示無文字的迴紋針 SVG,不顯示縮圖；詳情可全畫面查看、替換或移除。
+- **引用生命週期**：採買項目在 localStorage 只存 `photoId`;部分購買拆分共用同一引用,安全回併亦保留引用。刪除項目或移除附件時,只有在最後一個引用消失後才刪除 Blob。個人備份維持 v8,匯出剝除 `photoId`,還原也剝除手動夾帶的引用；設定頁明示照片不包含於備份。
+- **導航定位**：具 Places／Restaurants 詳細分點的行程維持精確目的地；只有一般同名地點在點擊導航時請求一次目前位置,以座標作為 Google Maps directions origin 搜尋最近同名目的地。定位被拒、逾時或不可用時退回 `名稱 + 日本`;按鈕仍只顯示「導航」,不增加「精確地點／附近搜尋」標籤。
+- **PWA 升版**：`app-version.js` 與 `sw.js` 同步升至 v75;SHELL 只新增 `shopping-photo-store.js`,install／fetch／fallback 策略完全未動。`schema.js`、`netlify.toml`、Apps Script 與 Google Sheet schema 完全未動。
+- **自動驗證**：完整 **56／56** Node test files、Playwright **11／11** 通過；照片與定位兩個瀏覽器測試皆斷言 console error 0、pageerror 0。Playwright 另確認三個手機 viewport 照片卡與 panel 水平 overflow 0、照片重新載入後仍在、備份不帶引用、移除後 Blob 清理，以及 SW 新世代快取與離線重啟正常。
+
+## 2026-08-01｜設定根頁群組列表與測試模式控制頁（`feat/settings-grouped-v74`，SW v74，後續已推 `dev`）
 
 - **前置:release back-merge 已完成。** `origin/main`(`17c423f`,v73 發布 merge)以 `--no-ff` 回灌 `dev`,merge commit `a930858`。**零內容差異**(`git diff f393256 a930858` 為空),53／53 Node tests、兩個 checker 與遠端 `qa-sanity` 皆通過;`git merge-base --is-ancestor origin/main origin/dev` 退出碼 0,`dev` 不再落後 `main`。v74 分支自 `a930858` 建立。
 - **交付範圍(依 2026-08-01 核准的 Tier 2 四段說明與設計規格 §5)**:設定根頁由 7 張 `.settings-section` 卡片改為**三個常駐群組**(個人／記帳／資料);新增 `renderSettingsTestModePage()` 與 `test-mode` 子頁,團體帳測試模式移出根頁;legacy deep link `ledgerTestModeSection` 由 `{page:'root'}` 改為 `{page:'test-mode'}`;診斷面板新增進入控制頁的入口;版本由 v73 升至 **v74**。
@@ -13,7 +22,7 @@
 - **v73 → v74 換代實測(規格 §6.2)**:以 `a930858`(v73)完整檔案樹起站註冊 SW,再就地換上 v74 檔案。結果:CacheStorage 由 `okayama-trip-v73` 換為**只剩** `okayama-trip-v74`;安裝的 10 個 SHELL 在 App 啟動後另正常快取桃子徽章,穩定狀態共 11 entries。快取中的 `index.html` 含 `.settings-group-card`、`renderSettingsTestModePage` 與本次 `var(--ink)` 對比修正,`app-version.js` 字面為 `v74`(無混版本);關閉伺服器後重載仍完整啟動,`APP_VERSION='v74'`、資料與版本頁顯示 `SW v74`、console error／pageerror 0。
 - **Browser QA 量測**:320／375／390px 下 document／panel／各列水平溢位皆 0;最小列高 52px;身分列在 320px 長名情境維持單列(58px)、名稱 ellipsis 截斷、按鈕 47×38 與 38×38;根頁在 390×844 下 `scrollHeight === clientHeight`(一個畫面看完);console error／warning 0。六主題對比:群組標題 8.00–14.72、列標題 13.31–15.51、摘要 5.43–7.77、圖示 8.73–15.51。
 - **測試模式警告列對比阻斷已修正**:依 Bar 核准只在 `.settings-testmode-row .settings-row-main b` 將主文字由 `var(--coral)` 改為 `var(--ink)`,不修改六主題 token 或其他 coral 元件。Playwright 先啟用測試模式再讀取 computed color／card background,六主題主文字對比分別為 ocean 13.31／ivory 15.51／mist 13.39／cedar 14.71／wisteria 15.18／tea 14.13,次要文字分別為 5.43／7.77／6.30／7.26／7.71／6.99,全部 ≥ 4.5。
-- **交付邊界**:目前僅在 `feat/settings-grouped-v74` 上 commit 與測試。**未合併 `dev`、未動 `main`、未部署、未建立 `production-v74` tag**,亦未進行 Bar 真機驗收。v74 delta 驗收清單見 `docs/batch2-device-acceptance.md` 末段(新增區塊,未覆蓋任何 v73 證據)。
+- **後續交付狀態**:`feat/settings-grouped-v74` 最終 SHA `c51752b` 已推送並快轉 `dev`;`main` 與 production tag 未動。v74 delta 驗收清單見 `docs/batch2-device-acceptance.md`(新增區塊,未覆蓋任何 v73 證據)。
 
 ## 2026-08-01｜🚀 SW v73 正式發布（main，v18 → v73）
 - **正式站已由 SW v18 升級至 SW v73。** merge commit **`17c423f8ac59328f926973024cb407d5e638f838`**（PR #11，`dev → main`，merge method 為 merge commit，parents `9eefcb0` + `9ec2c21`，非 squash／rebase）。Netlify 正式部署 `6a6d6be3e3dabf00078f284b`，`commit_ref` 與 merge commit 一致，`published_at` 為 `2026-08-01T03:45:48.841Z`。

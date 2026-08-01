@@ -82,4 +82,3 @@
 - Playwright mock geolocation 驗證一般名稱帶目前座標；權限拒絕走日本 fallback；明確 reference 不請求定位。
 - 320×700、375×812、390×844 無水平 overflow；console error 與 pageerror 都為 0。
 - v74→v75 CacheStorage 只剩 `okayama-trip-v75`，換代後離線重新啟動正常。
-
