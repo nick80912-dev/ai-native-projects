@@ -791,6 +791,10 @@ assert(ui.includes('TripShoppingPhotos.auditAttachments('),'the UI delegates int
 assert(ui.includes("refreshShoppingPhotoAudit({cleanupExpired:true,reason:'startup'})"),'startup schedules one maintenance audit');
 assert(!/cleanupShoppingPhotoIds\(shoppingPhotoIdsReleased\(before,shoppingListStore\.all\(\)\)\)/.test(ui),'saved reference changes wait for orphan maintenance');
 assert(!/cleanupShoppingPhotoIds\(shoppingPhotoIdsReleased\(before,after\)\)/.test(ui),'deleted item photos wait for orphan maintenance');
+assert(ui.includes('function openShoppingPhotoRepair('),'missing attachments expose an in-context repair sheet');
+assert(ui.includes('function repairShoppingPhoto('),'repair stores a replacement photo');
+assert(ui.includes('function removeInvalidShoppingPhotoReference('),'repair can remove only the invalid reference');
+assert(ui.includes('isQuotaExceededError(error)'),'save failures distinguish quota exhaustion');
 assert(ui.includes('font-family:var(--font-ui)'),'body 使用全站字體變數');
 assert(!ui.includes('font-family:"Hiragino Sans","Noto Sans TC","PingFang TC"'),
   '不得再由日文字型逐字 fallback 造成粗細不一致');
@@ -868,6 +872,10 @@ assert(ui.includes('ledger-action-popover'),'沿用帳本既有 popover 樣式,�
 assert(!/shopping-item-actions[\s\S]{0,200}>編輯</.test(ui),'編輯不再直接排在列上');
 /* 單筆記帳入口必須接回既有函式,不另造流程 */
 const itemRenderer=extractUiFunction('renderShoppingItem');
+assert(itemRenderer.includes('shoppingPhotoStatus(item)'),'card rendering consumes the audited photo status');
+assert(itemRenderer.includes('aria-label="附件已遺失"'),'invalid attachment has an accessible name');
+assert(itemRenderer.includes('shopping-photo-indicator-invalid'),'invalid attachment has a dedicated component class');
+assert(!itemRenderer.includes('>附件已遺失<'),'invalid card status has no visible text');
 assert(itemRenderer.includes('selection=shoppingUiState.selectionMode'),
   '待買與已買在多選模式都使用 selection checkbox');
 assert(!itemRenderer.includes('shoppingUiState.selectionMode&&!item.done'),
@@ -900,6 +908,7 @@ const cardSandbox={
   shoppingItemLinkSummary(){return {state:'unlinked'};},
   shoppingLedgerContext(){return {};},
   shoppingCardLinkBadge(){return '';},
+  shoppingPhotoStatus(){return 'none';},
   shoppingCardTargetModel(){return {prefix:'',names:[],overflow:'',suffix:'',ariaLabel:''};},
   shoppingItemQuantitySummary(){return '1 個';},
   shoppingItemLocationLine:mod.shoppingItemLocationLine,

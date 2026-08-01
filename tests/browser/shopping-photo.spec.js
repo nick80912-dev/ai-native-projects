@@ -51,6 +51,21 @@ async function indexedDbPhotoIds(page){
   }));
 }
 
+async function deleteIndexedDbPhoto(page,id){
+  await page.evaluate(id=>new Promise((resolve,reject)=>{
+    const request=indexedDB.open('trip-local-media',1);
+    request.onerror=()=>reject(request.error);
+    request.onsuccess=()=>{
+      const db=request.result;
+      const tx=db.transaction('shopping-photos','readwrite');
+      tx.objectStore('shopping-photos').delete(id);
+      tx.oncomplete=()=>{db.close();resolve();};
+      tx.onerror=()=>reject(tx.error);
+      tx.onabort=()=>reject(tx.error);
+    };
+  }),id);
+}
+
 async function putIndexedDbPhotoRecords(page,records){
   const bytes=Array.from(PNG);
   await page.evaluate(({records,bytes})=>new Promise((resolve,reject)=>{
@@ -93,6 +108,19 @@ async function openStoredPhotoViewer(page){
     return image&&image.naturalWidth>0&&image.naturalHeight>0;
   });
   return viewer;
+}
+
+async function createStoredPhotoItem(page){
+  await installPersistentOfflineMode(page);
+  await openPhotoQaApp(page);
+  await waitForSyncToSettle(page);
+  await seedShoppingItem(page);
+  await page.locator('#shoppingPhotoInput').setInputFiles({name:'reference.png',mimeType:'image/png',buffer:PNG});
+  await page.waitForFunction(()=>shoppingUiState.form&&/^shopping-photo-/.test(shoppingUiState.form.photoId||''));
+  const photoId=await page.evaluate(()=>shoppingUiState.form.photoId);
+  await page.locator('#shoppingFormSheet button[type=submit]').click();
+  await page.waitForFunction(id=>shoppingPhotoAuditState.ready&&shoppingPhotoAuditState.validPhotoIds.includes(id),photoId);
+  return photoId;
 }
 
 test('照片檢視器頂部操作列會把安全區留在關閉按鈕上方',async({page})=>{
@@ -151,6 +179,76 @@ test('啟動稽核只清理滿 24 小時的孤立照片並保護有效附件',as
   await page.reload({waitUntil:'domcontentloaded'});
   await page.waitForFunction(()=>typeof shoppingPhotoAuditState==='object'&&shoppingPhotoAuditState.maintenanceComplete===true,null,{timeout:3000});
   expect((await indexedDbPhotoIds(page)).sort()).toEqual(['orphan-unknown','orphan-young','referenced-old']);
+});
+
+test('實體照片遺失只顯示警示圖示並可重新選擇照片',async({page})=>{
+  const oldId=await createStoredPhotoItem(page);
+  await deleteIndexedDbPhoto(page,oldId);
+  await page.evaluate(()=>refreshShoppingPhotoAudit({force:true,reason:'qa-loss'}));
+  const card=page.locator('[data-shopping-item-id="photo-item"]');
+  const indicator=card.locator('.shopping-photo-indicator-invalid[aria-label="附件已遺失"]');
+  await expect(indicator).toHaveCount(1);
+  await expect(indicator.locator('svg')).toHaveCount(1);
+  await expect(indicator.locator('.shopping-photo-warning-mark')).toHaveText('!');
+  expect(await card.textContent()).not.toContain('附件已遺失');
+  const box=await indicator.boundingBox();
+  expect(box.width).toBeGreaterThanOrEqual(52);
+  expect(box.height).toBeGreaterThanOrEqual(52);
+
+  await indicator.click();
+  const repair=page.locator('#shoppingPhotoRepair');
+  await expect(repair).toBeVisible();
+  await repair.locator('input[type=file]').setInputFiles({name:'replacement.png',mimeType:'image/png',buffer:PNG});
+  await page.waitForFunction(oldId=>{
+    const item=shoppingListStore.all().find(value=>value.id==='photo-item');
+    return item&&item.photoId&&item.photoId!==oldId&&shoppingPhotoAuditState.validPhotoIds.includes(item.photoId);
+  },oldId);
+  const newId=await page.evaluate(()=>shoppingListStore.all().find(value=>value.id==='photo-item').photoId);
+  expect(newId).not.toBe(oldId);
+  expect(await indexedDbPhotoIds(page)).toContain(newId);
+  await expect(card.locator('.shopping-photo-indicator[aria-label="有照片附件"]')).toHaveCount(1);
+});
+
+test('無效附件引用必須由使用者確認後移除',async({page})=>{
+  const oldId=await createStoredPhotoItem(page);
+  await deleteIndexedDbPhoto(page,oldId);
+  await page.evaluate(()=>refreshShoppingPhotoAudit({force:true,reason:'qa-loss'}));
+  await page.locator('.shopping-photo-indicator-invalid').click();
+  page.once('dialog',dialog=>dialog.accept());
+  await page.getByRole('button',{name:'移除附件引用'}).click();
+  await expect(page.locator('#shoppingPhotoRepair')).toHaveCount(0);
+  expect(await page.evaluate(()=>shoppingListStore.all().find(value=>value.id==='photo-item').photoId)).toBe('');
+  await expect(page.locator('[data-shopping-item-id="photo-item"] .shopping-photo-indicator')).toHaveCount(0);
+});
+
+test('容量不足時保留原引用並提供儲存空間管理入口',async({page})=>{
+  const oldId=await createStoredPhotoItem(page);
+  await deleteIndexedDbPhoto(page,oldId);
+  await page.evaluate(async()=>{
+    await refreshShoppingPhotoAudit({force:true,reason:'qa-loss'});
+    shoppingPhotoStore.put=()=>Promise.reject(new DOMException('full','QuotaExceededError'));
+  });
+  await page.locator('.shopping-photo-indicator-invalid').click();
+  await page.locator('#shoppingPhotoRepair input[type=file]').setInputFiles({name:'replacement.png',mimeType:'image/png',buffer:PNG});
+  await expect(page.getByText('儲存空間不足，照片尚未加入',{exact:true})).toBeVisible();
+  await expect(page.getByRole('button',{name:'管理儲存空間'})).toBeVisible();
+  expect(await page.evaluate(()=>shoppingListStore.all().find(value=>value.id==='photo-item').photoId)).toBe(oldId);
+});
+
+test('照片 repository 不可用時停用照片操作但保留一般採買編輯',async({page})=>{
+  await installPersistentOfflineMode(page);
+  await openPhotoQaApp(page);
+  await waitForSyncToSettle(page);
+  await seedShoppingItem(page);
+  await page.evaluate(async()=>{
+    shoppingPhotoStore.listMetadata=()=>Promise.reject(new Error('IDB unavailable'));
+    await refreshShoppingPhotoAudit({force:true,reason:'qa-unavailable'});
+    renderShoppingFormSheet();
+  });
+  await expect(page.getByText('此裝置目前無法使用照片附件',{exact:true})).toBeVisible();
+  await expect(page.locator('#shoppingPhotoInput')).toBeDisabled();
+  await page.locator('#shoppingName').fill('仍可編輯');
+  await expect(page.locator('#shoppingName')).toHaveValue('仍可編輯');
 });
 
 test('採買單張照片只存本機,卡片只顯示迴紋針並可在詳情全畫面查看',async({page})=>{
