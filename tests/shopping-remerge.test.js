@@ -56,7 +56,8 @@ const item=over=>Object.assign({
   done:true,
   createdAt:CREATED,
   completedAt:DONE,
-  splitGroupId:'group-1'
+  splitGroupId:'group-1',
+  photoId:'shopping-photo-shared'
 },over||{});
 
 assert.strictEqual(typeof mod.shoppingSplitRemergeEligibility,'function',
@@ -100,7 +101,8 @@ assert.deepStrictEqual(normalPlan.items[1],{
   done:false,
   createdAt:CREATED,
   completedAt:'',
-  splitGroupId:''
+  splitGroupId:'',
+  photoId:'shopping-photo-shared'
 },'保留原 ID／createdAt／allocationId，數量加回 5 並清除拆分狀態');
 
 /* 多對象依 canonical 名稱加總；新對象沿用 store order 最前 sibling 的 allocationId。 */
@@ -171,7 +173,8 @@ assert.strictEqual(
   ['category','購物'],
   ['unit','包'],
   ['stopRef','day-2-shop'],
-  ['legacyQtyText','舊式文字']
+  ['legacyQtyText','舊式文字'],
+  ['photoId','shopping-photo-different']
 ].forEach(function(entry){
   const changed=item({id:'remaining-'+entry[0],done:false,completedAt:'',[entry[0]]:entry[1]});
   const eligibility=plain(mod.shoppingSplitRemergeEligibility([item({done:false,completedAt:''}),changed],'group-1'));

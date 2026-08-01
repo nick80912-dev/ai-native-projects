@@ -615,6 +615,7 @@ input:not([type="hidden"]),select,textarea{font-size:16px!important}
 .ledger-sheet #ledgerAmount{font-size:30px!important}
 </style>
 <script src="app-version.js"></script>
+<script src="shopping-photo-store.js"></script>
 <script>
 /* ---- APP_VERSION SAFE ACCESS (C2) ----
    app-version.js 是獨立外部 script,離線快取未命中或部署缺檔時**會**載不到,
@@ -2904,6 +2905,9 @@ function renderToday(){
 
 /* ================= 採買清單(純 localStorage) ================= */
 var shoppingUiState={tab:'pending',form:null,formSession:null,split:null,selectionMode:false,selected:{}};
+var shoppingPhotoStore=typeof TripShoppingPhotos!=='undefined'&&TripShoppingPhotos&&typeof TripShoppingPhotos.createStore==='function'
+  ?TripShoppingPhotos.createStore()
+  :{put:function(){return Promise.reject(new Error('此裝置無法保存照片附件'));},get:function(){return Promise.resolve(null);},remove:function(){return Promise.resolve();}};
 function shoppingItineraryStops(){
   var result=[];
   ((DB.trip&&DB.trip.days)||[]).forEach(function(day,dayIndex){
@@ -3115,11 +3119,11 @@ function saveShoppingForm(saveAnother){
   }
 }
 function deleteShoppingItem(id){
-  var item=shoppingListStore.all().filter(function(value){return value.id===String(id);})[0];
+  var before=shoppingListStore.all(),item=before.filter(function(value){return value.id===String(id);})[0];
   if(!item)return;
   var note=shoppingDeleteWarning([item],shoppingLedgerContext());
   if(!confirm('刪除「'+item.name+'」？'+note+'\n此操作無法復原。'))return;
-  shoppingListStore.remove(id);delete shoppingUiState.selected[id];renderToday();renderShoppingListOverlay();toast('採買項目已刪除');
+  var after=shoppingListStore.remove(id);cleanupShoppingPhotoIds(shoppingPhotoIdsReleased(before,after));delete shoppingUiState.selected[id];renderToday();renderShoppingListOverlay();toast('採買項目已刪除');
 }
 /* 數量與單位。HTML 的 min／step 只是輸入輔助,真正的把關在 saveShoppingForm() 的
    normalizeShoppingItem() —— 手機瀏覽器可以送出 -1、1.5、1e6 或空字串。 */
@@ -3587,12 +3591,12 @@ function moveSelectedShoppingBackToPending(){
   toast(shoppingMoveBackFeedback(moved,true));
 }
 function deleteSelectedShoppingItems(){
-  var selected=shoppingListStore.all().filter(function(item){return shoppingUiState.selected[item.id];});
+  var before=shoppingListStore.all(),selected=before.filter(function(item){return shoppingUiState.selected[item.id];});
   if(!selected.length)return;
   /* linked 與 unverified 依 allocation 分開計數，避免多人卡片被低估成一項。 */
   var note=shoppingDeleteWarning(selected,shoppingLedgerContext());
   if(!confirm('確定刪除選取的 '+selected.length+' 項採買項目？'+note+'\n此操作無法復原。'))return;
-  try{shoppingListStore.removeMany(selected.map(function(item){return item.id;}));}
+  try{shoppingListStore.removeMany(selected.map(function(item){return item.id;}));cleanupShoppingPhotoIds(shoppingPhotoIdsReleased(before,shoppingListStore.all()));}
   catch(error){toast(error.message||'刪除失敗');return;}
   shoppingUiState.selectionMode=false;shoppingUiState.selected={};renderToday();renderShoppingListOverlay();
   toast('已刪除 '+selected.length+' 項');
@@ -4094,7 +4098,7 @@ function buildShoppingSplitParts(source,input){
     id:'',name:source.name,category:source.category,unit:source.unit,legacyQtyText:'',
     allocations:plan.remainderAllocations,
     stopRef:seed.remainderStopRef===undefined?source.stopRef:String(seed.remainderStopRef==null?'':seed.remainderStopRef).trim(),
-    done:false,createdAt:source.createdAt,completedAt:'',splitGroupId:groupId
+    done:false,createdAt:source.createdAt,completedAt:'',splitGroupId:groupId,photoId:source.photoId
   };
   return {purchased:purchasedItem,remainder:remainder,plan:plan};
 }
@@ -4238,7 +4242,8 @@ function newShoppingForm(seed){
     allocations:allocations,
     stopRef:String(seed.stopRef||''),
     done:seed.done===true,
-    createdAt:String(seed.createdAt||'')
+    createdAt:String(seed.createdAt||''),
+    photoId:String(seed.photoId||'')
   };
 }
 function createShoppingFormSession(mode,item,returnContext,scrollTop){
@@ -4305,7 +4310,8 @@ function shoppingFormPayload(form){
     allocations:shoppingFormAllocations(form),
     stopRef:String(form.stopRef||''),
     done:form.done===true,
-    createdAt:String(form.createdAt||'')
+    createdAt:String(form.createdAt||''),
+    photoId:String(form.photoId||'')
   };
 }
 function shoppingSaveAnotherForm(form){
@@ -4466,7 +4472,7 @@ function analyzeShoppingSplitRemerge(items,splitGroupId){
   var original=null;
   group.forEach(function(item){if(item.id===groupId)original=item;});
   if(!original)return {ok:false,reason:'missing-original'};
-  var comparable=['name','category','unit','stopRef','legacyQtyText'];
+  var comparable=['name','category','unit','stopRef','legacyQtyText','photoId'];
   if(group.some(function(item){
     return comparable.some(function(field){return String(item&&item[field]||'')!==String(original[field]||'');});
   }))return {ok:false,reason:'field-mismatch'};
@@ -4713,6 +4719,11 @@ function normalizeShoppingItem(source,options){
   var amount=Array.isArray(source.allocations)
     ?{quantity:null,unit:normalizeShoppingUnit(source.unit),legacyQtyText:String(source.legacyQtyText||'').trim()}
     :resolveShoppingQuantity(source);
+  var photoId=source.photoId;
+  if(photoId===undefined||photoId===null)photoId='';
+  if(typeof photoId!=='string')throw new Error('照片附件 ID 格式錯誤');
+  photoId=photoId.trim();
+  if(photoId.length>160||/[\u0000-\u001f]/.test(photoId))throw new Error('照片附件 ID 格式錯誤');
   return {
     id:itemId,
     name:name,
@@ -4729,8 +4740,23 @@ function normalizeShoppingItem(source,options){
     done:done,
     createdAt:createdAt,
     completedAt:completedAt,
-    splitGroupId:String(source.splitGroupId==null?'':source.splitGroupId).trim()
+    splitGroupId:String(source.splitGroupId==null?'':source.splitGroupId).trim(),
+    photoId:photoId
   };
+}
+function shoppingPhotoReferenceSet(items){
+  var refs={};
+  (items||[]).forEach(function(item){var id=String(item&&item.photoId||'').trim();if(id)refs[id]=true;});
+  return refs;
+}
+function shoppingPhotoIdsReleased(before,after){
+  var prior=shoppingPhotoReferenceSet(before),next=shoppingPhotoReferenceSet(after);
+  return Object.keys(prior).filter(function(id){return !next[id];});
+}
+function cleanupShoppingPhotoIds(ids){
+  return Promise.all((ids||[]).map(function(id){
+    return shoppingPhotoStore.remove(id).catch(function(error){AppLog.repo('採買照片清理失敗：'+(error&&error.message||error));});
+  }));
 }
 function createShoppingListStore(options){
   var opts=options||{},storage=opts.storage,key=opts.key||SHOPPING_LIST_KEY,now=opts.now||Date.now,idFactory=opts.idFactory||function(){return 'shopping-'+Date.now()+'-'+Math.random().toString(36).slice(2,8);};
@@ -7436,8 +7462,11 @@ function renderTravelNotesSection(){
 }
 /* ================= SETTINGS 2.0 ================= */
 function closeSettings(){ var overlay=document.getElementById('settingsOverlay'); if(overlay) overlay.remove(); }
+function shoppingItemsWithoutPhotoRefs(items){
+  return (items||[]).map(function(item){var copy=Object.assign({},item);delete copy.photoId;return copy;});
+}
 function personalStateJson(){
-  var payload={format:'trip-personal-state',version:PERSONAL_STATE_VERSION,exportedAt:timestampDate(Date.now()).toISOString(),checks:lsGet('trip_checks',{}),wants:lsGet('trip_shop_wants',{}),member:getCurrentMember(),ledgerQueue:ledgerRepository.queuedRecords(),personalLedger:personalLedgerRepository.all(),ledgerCategories:ledgerCategoryStore.all(),ledgerPayMethods:ledgerPayMethodStore.all(),proxyTargets:ledgerProxyTargetStore.all(),shoppingItems:shoppingListStore.all(),themeId:currentThemeId(),shoppingUnits:shoppingUnitStore.all(),travelNotes:travelNoteStore.all()};
+  var payload={format:'trip-personal-state',version:PERSONAL_STATE_VERSION,exportedAt:timestampDate(Date.now()).toISOString(),checks:lsGet('trip_checks',{}),wants:lsGet('trip_shop_wants',{}),member:getCurrentMember(),ledgerQueue:ledgerRepository.queuedRecords(),personalLedger:personalLedgerRepository.all(),ledgerCategories:ledgerCategoryStore.all(),ledgerPayMethods:ledgerPayMethodStore.all(),proxyTargets:ledgerProxyTargetStore.all(),shoppingItems:shoppingItemsWithoutPhotoRefs(shoppingListStore.all()),themeId:currentThemeId(),shoppingUnits:shoppingUnitStore.all(),travelNotes:travelNoteStore.all()};
   return JSON.stringify(payload,null,2);
 }
 function copyPersonalStateText(text,timeoutMs){
@@ -7499,7 +7528,7 @@ function validatePersonalStatePayload(payload){
   if(!Array.isArray(payload.proxyTargets))throw new Error('代購對象清單格式錯誤');
   if(!Array.isArray(payload.shoppingItems))throw new Error('採買清單格式錯誤');
   payload.proxyTargets=ledgerProxyTargetStore.normalize(payload.proxyTargets);
-  payload.shoppingItems=shoppingListStore.normalize(payload.shoppingItems);
+  payload.shoppingItems=shoppingItemsWithoutPhotoRefs(shoppingListStore.normalize(payload.shoppingItems));
   payload.shoppingUnits=shoppingUnitStore.normalize(payload.shoppingUnits);
   payload.travelNotes=travelNoteStore.normalize(payload.travelNotes);
   return payload;

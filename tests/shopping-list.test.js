@@ -70,7 +70,8 @@ assert.deepStrictEqual(added,{
   done:false,
   createdAt:'2026-07-23T08:00:00.000Z',
   completedAt:'',
-  splitGroupId:''
+  splitGroupId:'',
+  photoId:''
 },'add normalizes and persists the approved local-only fields');
 assert.strictEqual(Object.prototype.hasOwnProperty.call(added,'buyFor'),false);
 assert.strictEqual(Object.prototype.hasOwnProperty.call(added,'quantity'),false);
@@ -144,6 +145,9 @@ assert.deepStrictEqual(
 const QNOW='2026-10-20T04:00:00.000Z';
 const q=over=>mod.normalizeShoppingItem(Object.assign({id:'q1',name:'益生菌',createdAt:QNOW},over||{}));
 const allocationQuantity=item=>item.allocations[0].quantity;
+assert.strictEqual(q({photoId:'  shopping-photo-1  '}).photoId,'shopping-photo-1','photo reference is trimmed and preserved locally');
+assert.strictEqual(q({}).photoId,'','legacy items receive an empty photo reference');
+assert.throws(()=>q({photoId:{id:'nested'}}),/照片附件/,'photo references must remain scalar IDs');
 assert.strictEqual(allocationQuantity(q({quantity:5,unit:'罐'})),5,'新項目接受安全正整數');
 assert.strictEqual(q({quantity:5,unit:'罐'}).unit,'罐','單位獨立保存');
 assert.strictEqual(allocationQuantity(q({quantity:1,unit:''})),1,'quantity 1 合法');
@@ -358,6 +362,24 @@ assert.strictEqual(mod.shoppingAllocationSplitPlan(allocationSplitSource,{'split
 assert.strictEqual(mod.shoppingAllocationSplitPlan(allocationSplitSource,{'missing':1}).ok,false,'未知 allocation ID 拒絕');
 assert.strictEqual(mod.shoppingAllocationSplitPlan(allocationSplitSource,{'split-a':3}).ok,false,'單一對象不可買超過需求');
 assert.strictEqual(mod.shoppingAllocationSplitPlan(allocationSplitSource,{'split-a':1.5}).ok,false,'本次買到不得為小數');
+const photoSplit=plain(mod.buildShoppingSplitParts(q({id:'photo-split',quantity:3,unit:'盒',photoId:'shopping-photo-shared'}),{
+  purchasedQuantity:1,remainderStopRef:'next-stop',now:Date.parse(QNOW)
+}));
+assert.strictEqual(photoSplit.purchased.photoId,'shopping-photo-shared','purchased split keeps the attachment reference');
+assert.strictEqual(photoSplit.remainder.photoId,'shopping-photo-shared','remaining split shares the attachment reference');
+assert.deepStrictEqual(
+  plain(mod.shoppingPhotoIdsReleased(
+    [{id:'a',photoId:'shared'},{id:'b',photoId:'shared'}],
+    [{id:'b',photoId:'shared'}]
+  )),
+  [],
+  'removing one shared split does not release its Blob'
+);
+assert.deepStrictEqual(
+  plain(mod.shoppingPhotoIdsReleased([{id:'b',photoId:'shared'}],[])),
+  ['shared'],
+  'the final reference releases exactly one Blob ID'
+);
 assert.strictEqual(mod.shoppingSplitPlan(q({id:'s2',quantity:null,legacyQtyText:'約 3～5 個'}),1).ok,false,'舊式數量不得部分購買');
 assert(/舊式文字數量/.test(mod.shoppingSplitPlan(q({id:'s3',quantity:null,legacyQtyText:'兩盒'}),1).error),'舊式數量提示先轉換');
 
@@ -627,7 +649,7 @@ const reset=plain(mod.shoppingSaveAnotherForm({
 assert.deepStrictEqual(reset,{
   id:'',name:'',category:'伴手禮',quantity:1,unit:'個',
   legacyQtyText:'',targets:[],allocations:[],
-  stopRef:'d2_shop',done:false,createdAt:''
+  stopRef:'d2_shop',done:false,createdAt:'',photoId:''
 });
 assert.deepStrictEqual(
   plain(mod.createShoppingFormSession(

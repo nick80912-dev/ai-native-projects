@@ -209,7 +209,7 @@ const payloads = {
   8: Object.assign({}, BASE, {
     version: 8, personalLedger: [PERSONAL_RECORD], ledgerCategories: ['交通'], ledgerPayMethods: ['Suica'],
     proxyTargets: ['媽媽'],
-    shoppingItems: [{ id: 'shopping-v8', name: '茶葉', category: '伴手禮', unit: '包', legacyQtyText: '', allocations: [{ allocationId: 'shopping-v8-allocation-1', target: '', quantity: 3, ledgerLinks: [] }], stopRef: '', done: false, createdAt: '2026-07-27T09:00:00.000Z', completedAt: '', splitGroupId: '' }],
+    shoppingItems: [{ id: 'shopping-v8', name: '茶葉', category: '伴手禮', unit: '包', legacyQtyText: '', allocations: [{ allocationId: 'shopping-v8-allocation-1', target: '', quantity: 3, ledgerLinks: [] }], stopRef: '', done: false, createdAt: '2026-07-27T09:00:00.000Z', completedAt: '', splitGroupId: '', photoId: 'shopping-photo-from-backup' }],
     /* v8 起 payload 自帶三項新狀態 */
     themeId: 'cedar',
     shoppingUnits: ['個', '罐'],
@@ -345,6 +345,7 @@ for (const version of [1, 2, 3, 4, 5, 6, 7]) {
   assert.deepStrictEqual(read(KEYS.units), ['個', '罐'], 'v8 的採買單位覆蓋裝置現值');
   assert.strictEqual(read(KEYS.notes).length, 1);
   assert.strictEqual(read(KEYS.notes)[0].id, 'note-backup', 'v8 的旅途紀錄覆蓋裝置現值');
+  assert.strictEqual(Object.prototype.hasOwnProperty.call(read(KEYS.shopping)[0], 'photoId'), false, 'v8 即使夾帶 photoId 也不得在另一台裝置建立無效附件引用');
   assert.deepStrictEqual(plain(sandbox.__themes), [{ themeId: 'cedar', options: { persist: false } }], 'v8 套用備份帶來的主題');
 }
 

@@ -40,7 +40,7 @@ function createStorage(initial){
   storage.setItem('trip_shopping_list',JSON.stringify([{
     id:'shopping-1',name:'白桃',category:'伴手禮',unit:'盒',legacyQtyText:'',
     allocations:[{allocationId:'shopping-1-allocation-1',target:'媽媽',quantity:2,ledgerLinks:[]}],
-    stopRef:'10/18_3',done:false,createdAt:'2026-07-23T08:00:00.000Z',completedAt:'',splitGroupId:''
+    stopRef:'10/18_3',done:false,createdAt:'2026-07-23T08:00:00.000Z',completedAt:'',splitGroupId:'',photoId:'shopping-photo-device-only'
   }]));
   const box={value:'',focus(){},select(){}};
   const copied=[];
@@ -159,6 +159,7 @@ function createStorage(initial){
   assert.deepStrictEqual(exported.ledgerPayMethods,['現金','Suica']);
   assert.deepStrictEqual(exported.proxyTargets,['阿芬','阿蓁']);
   assert.strictEqual(exported.shoppingItems[0].name,'白桃');
+  assert.strictEqual(Object.prototype.hasOwnProperty.call(exported.shoppingItems[0],'photoId'),false,'personal backup never carries a device-local photo reference');
   assert.deepStrictEqual(exported.shoppingItems[0].allocations,[{
     allocationId:'shopping-1-allocation-1',target:'媽媽',quantity:2,ledgerLinks:[]
   }],'v7 匯出保留 allocation 資料');
@@ -167,6 +168,10 @@ function createStorage(initial){
   assert.throws(function(){sandbox.validatePersonalStatePayload(Object.assign({},exported,{shoppingUnits:'盒'}));},/採買單位/);
   assert.throws(function(){sandbox.validatePersonalStatePayload(Object.assign({},exported,{travelNotes:'note'}));},/旅途紀錄/);
   assert.throws(function(){sandbox.validatePersonalStatePayload(Object.assign({},exported,{travelNotes:Array.from({length:201},function(){return exported.travelNotes[0];})}));},/旅途紀錄/);
+  const smuggledPhoto=JSON.parse(JSON.stringify(exported));
+  smuggledPhoto.shoppingItems[0].photoId='shopping-photo-from-another-device';
+  const validatedPhoto=sandbox.validatePersonalStatePayload(smuggledPhoto);
+  assert.strictEqual(Object.prototype.hasOwnProperty.call(validatedPhoto.shoppingItems[0],'photoId'),false,'restore strips a manually smuggled device-local photo reference');
   assert.strictEqual(lastToast,'備份 JSON 已複製，請保存到安全位置');
 
   sandbox.navigator.clipboard.writeText=function(){return Promise.reject(new Error('denied'));};
