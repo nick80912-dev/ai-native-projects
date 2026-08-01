@@ -117,7 +117,7 @@
       "SW v73 正式發布(2026-08-01;v18→v73,merge commit 17c423f,tag production-v73;G1 真機驗收全數通過;未建 production-v72 因 v72 未曾正式發布)",
       "Release back-merge main→dev(2026-08-01;merge commit a930858,零內容差異;origin/main 已是 origin/dev 的 ancestor)",
       "SW v74設定根頁三群組與測試模式控制頁已推送dev(c51752b;含警告列AA對比修正;main未動)",
-      "SW v75採買照片與定位導航完成(裝置本機IndexedDB照片/無文字迴紋針/備份剝除photoId/一般同名地點依目前位置導航/詳細分點精確導航;56/56 Node + Playwright 11/11)"
+      "SW v75採買照片與定位導航完成(裝置本機IndexedDB照片/無文字迴紋針/照片檢視器頂部safe-area與下滑關閉/備份剝除photoId/一般同名地點依目前位置導航/詳細分點精確導航;56/56 Node + Playwright 13/13)"
     ],
     "pending_in_order": [
       "v75採買照片與定位導航:自動驗證完成,依Bar指令交付dev;待Bar真機/PWA驗收,不得動main或production tag",

@@ -6,7 +6,7 @@
 - 🚀 **SW v73 已於 2026-08-01 正式發布。** 正式站(`https://trippilot-jp.netlify.app/`)由 **SW v18 升級至 SW v73**,merge commit `17c423f8ac59328f926973024cb407d5e638f838`,回滾錨點 tag `production-v73`。發布內容為 v72(六主題／設定頁 2.0／旅途紀錄／備份 v8)與 v73(SW 更新完整性、子資源 fallback、APP_VERSION 安全取值、已鎖帳文案)合併的同一候選版,**只做一次 SW 換代**。G1–G6 全數通過,逐項證據見 `docs/batch2-device-acceptance.md` 的「發布收尾紀錄」。
 - **批次一「發布阻斷項」P1–P6 全部交付完成(2026-07-30)**,SW 升至 **v73**。P5 調查判定測試模式／時間模擬／`?previewDate` 三條路徑皆為「可延後,非發布阻斷」,唯一真正的跨裝置污染路徑(模擬期間匯出備份 → 新裝置無回復點)已由 `exportPersonalState()` 的防呆擋下。批次二真機驗收清單見 `docs/batch2-device-acceptance.md`。
 - **最新已推送 `dev` runtime 基準:SW v74**,SHA `c51752ba75193a0616f4f80810acd31ef4787d65`;包含設定根頁三群組、測試模式控制頁與警告列 AA 對比修正。`main` 與正式站仍為 v73。
-- **v75 採買照片與定位導航已完成本機實作與完整驗證**(2026-08-01):照片只存本裝置 IndexedDB,卡片只顯示迴紋針,備份排除 `photoId`;一般同名地點以目前座標作為導航 origin,詳細分點直接導航,定位失敗退回 `名稱 + 日本`。56／56 Node test files、Playwright 11／11 通過;依 Bar 明確指令交付 `dev`,不得動 `main`、部署或 production tag。
+- **v75 採買照片與定位導航已完成本機實作與完整驗證**(2026-08-01):照片只存本裝置 IndexedDB,卡片只顯示迴紋針,備份排除 `photoId`;一般同名地點以目前座標作為導航 origin,詳細分點直接導航,定位失敗退回 `名稱 + 日本`。iPhone 照片檢視器已補正頂部 safe-area 並支援向下滑關閉。56／56 Node test files、Playwright 13／13 通過;不得動 `main`、部署或 production tag。
 - SW v72 已在隔離分支 `codex/sw-v72-settings-themes` 完成開發：設定頁 2.0、六組主題、五個功能 SVG、旅途異常／優化建議紀錄、個人備份 v8、`app-version.js` 版本單一來源與 v72–v68 使用者版更新說明。完整 51／51 Node test files、Playwright 3／3、文件／manifest／diff 檢查及 320／375／390px Browser QA 通過；**已 push `dev`（`b372f49`），尚待 Bar 真機／PWA 驗收**。
 - 2026-07-23 治理決策追認、§4 禁改清單硬停規則與任務板歸位 — 已完成,詳見 `07_CHANGELOG.md`。
 - v34–v44 三秒記帳與首頁／結算卡系列 — 已完成並經 Bar 真機驗收,詳見 `07_CHANGELOG.md`。

@@ -51,6 +51,61 @@ async function indexedDbPhotoIds(page){
   }));
 }
 
+async function openStoredPhotoViewer(page){
+  await installPersistentOfflineMode(page);
+  await openPhotoQaApp(page);
+  await waitForSyncToSettle(page);
+  await seedShoppingItem(page);
+  await page.locator('#shoppingPhotoInput').setInputFiles({name:'reference.png',mimeType:'image/png',buffer:PNG});
+  await page.waitForFunction(()=>shoppingUiState.form&&/^shopping-photo-/.test(shoppingUiState.form.photoId||''));
+  await page.locator('#shoppingFormSheet button[type=submit]').click();
+  await page.locator('[data-shopping-item-id="photo-item"] .shopping-item-body').click();
+  await page.getByRole('button',{name:'查看照片'}).click();
+  const viewer=page.locator('#shoppingPhotoViewer');
+  await expect(viewer).toBeVisible();
+  await page.waitForFunction(()=>{
+    const image=document.querySelector('#shoppingPhotoViewer img');
+    return image&&image.naturalWidth>0&&image.naturalHeight>0;
+  });
+  return viewer;
+}
+
+test('照片檢視器頂部操作列會把安全區留在關閉按鈕上方',async({page})=>{
+  const viewer=await openStoredPhotoViewer(page);
+  const layout=await viewer.evaluate(element=>{
+    let headRule=null;
+    Array.from(document.styleSheets).some(sheet=>{
+      let rules=[];try{rules=Array.from(sheet.cssRules||[]);}catch(ignore){return false;}
+      return rules.some(rule=>{
+        if(rule.selectorText==='.shopping-photo-viewer-head'){headRule=rule;return true;}
+        return false;
+      });
+    });
+    if(!headRule)throw new Error('missing photo viewer head rule');
+    headRule.style.padding=headRule.style.padding.replace('env(safe-area-inset-top)','47px');
+    const head=element.querySelector('.shopping-photo-viewer-head');
+    const close=element.querySelector('.shopping-photo-viewer-close');
+    const style=getComputedStyle(head),rect=close.getBoundingClientRect();
+    return {paddingTop:parseFloat(style.paddingTop),paddingBottom:parseFloat(style.paddingBottom),closeTop:rect.top};
+  });
+  expect(layout.paddingTop).toBe(55);
+  expect(layout.paddingBottom).toBe(8);
+  expect(layout.closeTop).toBeGreaterThanOrEqual(47);
+});
+
+test('照片檢視器向下滑動可關閉',async({page})=>{
+  const viewer=await openStoredPhotoViewer(page);
+  await viewer.evaluate(element=>{
+    function touch(y){
+      return new Touch({identifier:7,target:element,clientX:180,clientY:y,pageX:180,pageY:y,screenX:180,screenY:y,radiusX:1,radiusY:1,rotationAngle:0,force:1});
+    }
+    const start=touch(180),end=touch(300);
+    element.dispatchEvent(new TouchEvent('touchstart',{touches:[start],changedTouches:[start],bubbles:true,cancelable:true}));
+    element.dispatchEvent(new TouchEvent('touchend',{touches:[],changedTouches:[end],bubbles:true,cancelable:true}));
+  });
+  await expect(viewer).toHaveCount(0);
+});
+
 test('採買單張照片只存本機,卡片只顯示迴紋針並可在詳情全畫面查看',async({page})=>{
   const pageErrors=collectPageErrors(page),consoleErrors=[];
   page.on('console',message=>{if(message.type()==='error')consoleErrors.push(message.text());});

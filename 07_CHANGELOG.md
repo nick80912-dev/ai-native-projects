@@ -6,7 +6,8 @@
 - **引用生命週期**：採買項目在 localStorage 只存 `photoId`;部分購買拆分共用同一引用,安全回併亦保留引用。刪除項目或移除附件時,只有在最後一個引用消失後才刪除 Blob。個人備份維持 v8,匯出剝除 `photoId`,還原也剝除手動夾帶的引用；設定頁明示照片不包含於備份。
 - **導航定位**：具 Places／Restaurants 詳細分點的行程維持精確目的地；只有一般同名地點在點擊導航時請求一次目前位置,以座標作為 Google Maps directions origin 搜尋最近同名目的地。定位被拒、逾時或不可用時退回 `名稱 + 日本`;按鈕仍只顯示「導航」,不增加「精確地點／附近搜尋」標籤。
 - **PWA 升版**：`app-version.js` 與 `sw.js` 同步升至 v75;SHELL 只新增 `shopping-photo-store.js`,install／fetch／fallback 策略完全未動。`schema.js`、`netlify.toml`、Apps Script 與 Google Sheet schema 完全未動。
-- **自動驗證**：完整 **56／56** Node test files、Playwright **11／11** 通過；照片與定位兩個瀏覽器測試皆斷言 console error 0、pageerror 0。Playwright 另確認三個手機 viewport 照片卡與 panel 水平 overflow 0、照片重新載入後仍在、備份不帶引用、移除後 Blob 清理，以及 SW 新世代快取與離線重啟正常。
+- **iPhone 照片檢視器 hotfix**：真機截圖確認頂部 CSS 三值 `padding` 誤把 `safe-area-inset-top` 套在底部,使關閉鈕落入狀態列觸控區；已將安全區移到頂部,並新增單指向下 72px、垂直位移明顯大於水平位移時關閉。兩個真實瀏覽器測試先紅後綠,分別模擬 47px 頂部安全區與 120px 下滑手勢。
+- **自動驗證**：完整 **56／56** Node test files、Playwright **13／13** 通過；照片與定位瀏覽器測試皆維持 console error 0、pageerror 0。Playwright 另確認三個手機 viewport 照片卡與 panel 水平 overflow 0、照片重新載入後仍在、備份不帶引用、移除後 Blob 清理，以及 SW 新世代快取與離線重啟正常。
 
 ## 2026-08-01｜設定根頁群組列表與測試模式控制頁（`feat/settings-grouped-v74`，SW v74，後續已推 `dev`）
 
