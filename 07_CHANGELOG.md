@@ -1,4 +1,12 @@
 # 07 版本紀錄
+## 2026-08-02｜完成／跳過改為單行省略號（SW v81）
+
+- **完成鈕也收單行**：v80 只把跳過鈕收成單行省略號（受「一條 CSS 規則」的範圍限制），完成鈕仍會換行，長地點名稱下實測長到 65px。將 `white-space:nowrap` 移到 `.nx-decision-btn` 基底規則，兩顆按鈕一致以省略號收尾，維持 46px 單行高度。
+- **同時把左右內距移到基底規則**：`padding:0 14px` 由 `.nx-decision-btn.skip` 上移到 `.nx-decision-btn`，否則完成鈕沒有內距，省略號會緊貼邊框。跳過鈕的 `max-width:120px` 為 border-box，內距上移不改變其寬度。
+- **範圍**：只動這兩條既有規則，未新增規則；`.nx-ticket-low` 與 `.nx-decision-btn.done` 仍未動。`PERSONAL_STATE_VERSION` 維持 8；schema、localStorage key、備份格式、SW 的 install／fetch／SHELL、`netlify.toml` 與相依套件均未修改。
+- **為何遞增版本而非併入 v80**：v80 已推上 `dev` 並進入真機驗證，折回同一版號會讓已安裝 v80 的裝置拿不到這次修正 —— 正是版本機制要防的靜默過期。
+- **驗證**：先寫失敗測試（完成鈕 `white-space` 實測為 `normal`）再實作；完整 **57／57** Node test files 與 Playwright **31／31** 通過。
+
 ## 2026-08-02｜六主題固定淺色、設定圖示放大、完成鈕不再被擠掉（SW v80）
 
 - **移除自動暗色**：刪除 v78 加入的 `@media(prefers-color-scheme:dark)` 整段（六組 token 覆寫、`body{color-scheme:dark}` 與四條元件背景覆寫），並在 `html` 加上 `color-scheme:light`。六個主題是照淺色設計的，元件層仍有約 108 處硬編碼淺色背景，token 級暗色永遠對不齊；改為同一主題在 iPhone 淺色／深色外觀下完全一致，原生控制項與捲軸也維持淺色。

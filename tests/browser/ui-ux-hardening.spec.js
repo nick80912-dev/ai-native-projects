@@ -90,14 +90,32 @@ test('a long place name cannot starve the done button', async ({ page }) => {
       '<button class="nx-decision-btn skip">跳過：' + name + '</button>' +
       '</div>';
     document.querySelector('.view.active').appendChild(ticket);
-    const done = ticket.querySelector('.done').getBoundingClientRect();
-    const skip = ticket.querySelector('.skip').getBoundingClientRect();
-    const result = { doneWidth: done.width, doneHeight: done.height, skipWidth: skip.width };
+    const doneEl = ticket.querySelector('.done');
+    const skipEl = ticket.querySelector('.skip');
+    const done = doneEl.getBoundingClientRect();
+    const skip = skipEl.getBoundingClientRect();
+    const result = {
+      doneWidth: done.width,
+      doneHeight: done.height,
+      skipWidth: skip.width,
+      skipHeight: skip.height,
+      doneWhiteSpace: getComputedStyle(doneEl).whiteSpace,
+      skipWhiteSpace: getComputedStyle(skipEl).whiteSpace,
+      doneOverflows: doneEl.scrollWidth > doneEl.clientWidth,
+      skipOverflows: skipEl.scrollWidth > skipEl.clientWidth,
+    };
     ticket.remove();
     return result;
   });
   expect(metrics.doneWidth).toBeGreaterThan(metrics.skipWidth);
-  expect(metrics.doneHeight).toBeLessThan(72);
+  /* 兩顆都必須是「一行 + 省略號」,而不是換行長高:
+     min-height 是 46px,所以單行就等於 46px。 */
+  expect(metrics.doneWhiteSpace).toBe('nowrap');
+  expect(metrics.skipWhiteSpace).toBe('nowrap');
+  expect(metrics.doneHeight).toBe(46);
+  expect(metrics.skipHeight).toBe(46);
+  expect(metrics.doneOverflows).toBe(true);
+  expect(metrics.skipOverflows).toBe(true);
 });
 
 function relativeLuminance(rgb) {
