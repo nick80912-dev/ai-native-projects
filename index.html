@@ -4105,7 +4105,7 @@ function shopMalls(){
 function storeRow(s,id,on){
   var must=/是|y|✓|v/i.test(s.must||'');
   var tax=/是|y|✓|v/i.test(s.taxfree||'');
-  return '<div class="store-row" data-want="'+escapeHtml(id)+'" onclick="toggleWant(\''+id.replace(/'/g,"\\'")+'\')">'+
+  return '<div class="store-row" data-want="'+escapeHtml(id)+'" onclick="toggleWant(\''+jsHtmlAttrString(id)+'\')">'+
     '<span class="st-chk'+(on?' on':'')+'">'+(on?'✓':'')+'</span>'+
     '<span class="st-n">'+escapeHtml(s.name)+(s.cat?' <span class="store-cat">'+escapeHtml(s.cat)+'</span>':'')+(must?' <span class="st-must">必逛</span>':'')+(tax?' <span class="st-tax">免稅</span>':'')+'</span>'+
     '<span class="st-f">'+escapeHtml([s.floor,s.note?s.note.replace('櫃位 ',''):''].filter(Boolean).join('·'))+'</span></div>';
@@ -4140,7 +4140,7 @@ function renderShopResults(){
     malls.map(function(m){
       var key=(m.place.placeId||m.place.name||'').toUpperCase();
       var label=m.place.name||key;
-      return '<button class="shop-filter-btn '+(shopPlaceFilter===key?'on':'')+'" onclick="setShopPlaceFilter(\''+key.replace(/'/g,"\\'")+'\')">'+escapeHtml(label)+'<small>'+m.stores.length+'</small></button>';
+      return '<button class="shop-filter-btn '+(shopPlaceFilter===key?'on':'')+'" onclick="setShopPlaceFilter(\''+jsHtmlAttrString(key)+'\')">'+escapeHtml(label)+'<small>'+m.stores.length+'</small></button>';
     }).join('')+
     '</div>';
   var rendered=0;
@@ -4168,7 +4168,7 @@ function renderShopResults(){
     if(wanted.length){
       var wkey=shopWantListStateKey(p,mi);
       var wopen=!!shopWantListOpen[wkey];
-      h+='<div class="want-box" data-want-box="'+escapeHtml(wkey)+'"><button class="want-head '+(wopen?'on':'')+'" onclick="toggleShopWantList(\''+wkey.replace(/'/g,"\\'")+'\')">'+
+      h+='<div class="want-box" data-want-box="'+escapeHtml(wkey)+'"><button class="want-head '+(wopen?'on':'')+'" onclick="toggleShopWantList(\''+jsHtmlAttrString(wkey)+'\')">'+
         '<span data-want-head="'+escapeHtml(wkey)+'">⭐ 想逛清單：'+wanted.length+' 家</span><span>'+(wopen?'收合':'展開')+'</span></button>'+
         (wopen?'<div class="want-body">'+wanted.map(function(s){return storeRow(s,shopWantStoreKey(m.place,mi,s),true);}).join('')+'</div>':'')+
         '</div>';
@@ -4187,7 +4187,7 @@ function renderShopResults(){
       var domId='flbody_'+cssId(fkey);
       var isOpen=!!shopOpenFloors[fkey];
       var wc=floors[f].filter(function(s){return wants[shopWantStoreKey(m.place,mi,s)];}).length;
-      h+='<div class="floor"><button class="floor-head'+(isOpen?' on':'')+'" onclick="toggleFloor(\''+fkey.replace(/'/g,"\\'")+'\',this)">'+
+      h+='<div class="floor"><button class="floor-head'+(isOpen?' on':'')+'" onclick="toggleFloor(\''+jsHtmlAttrString(fkey)+'\',this)">'+
         '<span class="fl-f">'+escapeHtml(f)+'</span><span class="fl-n" data-floor-count="'+escapeHtml(fkey)+'" data-floor-total="'+floors[f].length+'">'+floors[f].length+' 家'+(wc?'｜⭐'+wc:'')+'</span><span class="fl-arw">▼</span></button>'+
         '<div class="floor-body'+(isOpen?' open':'')+'" id="'+domId+'">'+floors[f].map(function(s){var id=shopWantStoreKey(m.place,mi,s);return storeRow(s,id,!!wants[id]);}).join('')+'</div></div>';
     });
