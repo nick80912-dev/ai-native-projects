@@ -431,16 +431,17 @@ assert.strictEqual(withUnverified.ok,false,'含待確認整批阻擋');
 assert.strictEqual(withUnverified.error,'其中 1 項的記帳狀態尚待確認，請先完成同步或重新確認');
 assert.strictEqual(pre([]).ok,false,'空選取不得建立消費');
 
-/* ================= 備份 v8 ================= */
-assert.strictEqual(mod.PERSONAL_STATE_VERSION,8,'個人狀態備份升為 v8');
-assert.strictEqual(mod.PERSONAL_STATE_SUPPORTED_VERSIONS.join(','),'1,2,3,4,5,6,7,8','v1～v8 皆可還原');
+/* ================= 備份 v9 ================= */
+assert.strictEqual(mod.PERSONAL_STATE_VERSION,9,'個人狀態備份升為 v9(想逛 key 識別語意變更)');
+assert.strictEqual(mod.PERSONAL_STATE_SUPPORTED_VERSIONS.join(','),'1,2,3,4,5,6,7,8,9','v1～v9 皆可還原');
 assert.strictEqual(mod.isSupportedPersonalStateVersion(4),true);
 assert.strictEqual(mod.isSupportedPersonalStateVersion(5),true);
 assert.strictEqual(mod.isSupportedPersonalStateVersion(6),true);
 assert.strictEqual(mod.isSupportedPersonalStateVersion(7),true);
 assert.strictEqual(mod.isSupportedPersonalStateVersion(8),true);
-assert.strictEqual(mod.isSupportedPersonalStateVersion(9),false,'未知未來版本明確拒絕');
-assert.strictEqual(mod.isSupportedPersonalStateVersion('8'),false,'版本必須是數字');
+assert.strictEqual(mod.isSupportedPersonalStateVersion(9),true);
+assert.strictEqual(mod.isSupportedPersonalStateVersion(10),false,'未知未來版本明確拒絕');
+assert.strictEqual(mod.isSupportedPersonalStateVersion('9'),false,'版本必須是數字');
 
 const v4Item=mod.normalizeShoppingItem({id:'v4',name:'舊備份項目',createdAt:NOW,done:true});
 assert.strictEqual(v4Item.completedAt,'','v4 舊備份缺 completedAt 時補空字串');

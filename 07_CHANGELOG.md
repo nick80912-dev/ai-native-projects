@@ -7,6 +7,16 @@
 - **為何遞增版本而非併入 v80**：v80 已推上 `dev` 並進入真機驗證，折回同一版號會讓已安裝 v80 的裝置拿不到這次修正 —— 正是版本機制要防的靜默過期。
 - **驗證**：先寫失敗測試（完成鈕 `white-space` 實測為 `normal`）再實作；完整 **57／57** Node test files 與 Playwright **31／31** 通過。
 
+### 併入 v81：想逛標記改用穩定 key
+
+- **正確性缺陷**：想逛標記的 key 是 `w_<mallIndex>_<樓層>_<店名>`，而 `mallIndex` 是 `shopMalls()` 的**列舉索引**（依行程出現順序排序）。新增任一購物地點就會位移索引，已存的標記靜默指到別家店。**實測已發生**：加入 P048 後 P007 由索引 1 變 2；且「無印良品 1F」同時存在於 P001 與 P039，位移一格即在兩家不同店之間轉移。
+- **唯一權威 helper**：新增 `shopWantStoreKey(place,index,store)`，格式 `w2:p<placeId>:<樓層>:<店名>`，各段以 `encodeURIComponent()` 編碼（`:` 編成 `%3A`，店名含冒號也不會切斷分隔）。`renderShopResults()` 的六個讀寫點（`wantTotal`／`wanted`／搜尋／想逛清單／樓層計數／樓層列）與 `toggleWant()` 全部改走它，runtime 不再以 `mi` 判斷是否想逛。只負責展開狀態的 `shopWantKey()` 更名為 `shopWantListStateKey()`，避免兩種用途共用含糊名稱。
+- **舊資料轉換**：`migrateShopWantKeys()` 為純函式且冪等。**不**把舊 index 換成「目前同一 index 的 placeId」——順序可能早已改變，那只會把錯誤映射永久固定下來；改以「樓層＋店名」搜尋候選，唯一才轉、0 個或多個一律移除。非 `w_` 開頭的 key 原樣保留。有無法安全轉換的標記時吐一次提示，因轉換冪等故天然不重複，不需額外的 localStorage 旗標。
+- **個人備份升 v9**：`PERSONAL_STATE_VERSION = 9`、`SUPPORTED = [1..9]`。v1–v8 還原時對 `payload.wants` 執行同一套轉換（在寫入前，維持全有或全無）；匯出前亦先轉換，確保 v9 備份不帶出索引型 key。舊版 App 的 `SUPPORTED` 仍是 `[1..8]`，會明確拒絕 v9 而非當成 v8 靜默錯讀。`docs/personal-state-compatibility.md` 與還原矩陣同步更新。
+- **版本策略**：`origin/main` 為 v73（最後正式發布），v81 尚屬未發布的候選版，故本修正**併入 v81 不另跳版**。`sw.js` 與 `app-version.js` 完全未修改（`sw.js` diff 為空），`netlify.toml` 未動。
+- **範圍**：只處理索引型 key 的正確性問題。清單局部更新、搜尋分類與空狀態、debounce、store-row 無障礙、onclick 跳脫整理均未混入，後續另批處理。
+- **驗證**：三組失敗測試先行（key 不存在／還原未轉換／`w_99_` 未被消化）；完整 **58／58** Node test files 與 Playwright **33／33** 通過。
+
 ## 2026-08-02｜六主題固定淺色、設定圖示放大、完成鈕不再被擠掉（SW v80）
 
 - **移除自動暗色**：刪除 v78 加入的 `@media(prefers-color-scheme:dark)` 整段（六組 token 覆寫、`body{color-scheme:dark}` 與四條元件背景覆寫），並在 `html` 加上 `color-scheme:light`。六個主題是照淺色設計的，元件層仍有約 108 處硬編碼淺色背景，token 級暗色永遠對不齊；改為同一主題在 iPhone 淺色／深色外觀下完全一致，原生控制項與捲軸也維持淺色。

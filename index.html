@@ -3887,11 +3887,64 @@ var _shopQ='';
 var shopPlaceFilter='all';
 var shopOpenFloors={};
 var shopWantListOpen={};
+/* 舊 key 轉換的提示在同一次 session 內只吐一次。轉換本身是冪等的 ——
+   舊格式 key 第一次就被消化光,之後 dropped 必為 0,因此不需要額外的 localStorage 旗標。 */
+var shopWantMigrationNoticed=false;
 function cssId(s){
   return String(s).replace(/[^a-zA-Z0-9]/g,'_');
 }
-function shopWantKey(place,index){
+/* 想逛清單「展開狀態」的 key(僅存在於記憶體的 shopWantListOpen)。
+   與下方的 store want key 用途完全不同,故不共用含糊的名稱。 */
+function shopWantListStateKey(place,index){
   return (place&&place.placeId)?place.placeId:('M'+index);
+}
+/* ---- 想逛標記的唯一權威 key ----
+   2026-08-02:原本的 `w_<mallIndex>_<floor>_<name>` 以 shopMalls() 的**列舉索引**識別
+   購物地點,而該陣列依「行程出現順序 → 名稱」排序 —— 新增一個購物地點就會位移索引,
+   已存的標記於是靜默指到別家店(實測:加入 P048 後 P007 由索引 1 變 2;
+   「無印良品 1F」同時存在於 P001 與 P039,位移一格即在兩家不同店之間轉移)。
+
+   分段以 encodeURIComponent 編碼:':' 會被編成 %3A,因此店名或樓層內含冒號也不可能
+   切斷分隔;'"'、'&'、'<' 一併被編碼。index 只有在 placeId 與 name 都缺席時才會用到 ——
+   shopMalls() 目前兩個分支都會跳過沒有 placeId 的項目,故該路徑不可達,
+   保留它只是為了日後若放寬過濾,不會靜默退回索引語意。 */
+function shopWantStoreKey(place,index,store){
+  var pid=place&&place.placeId?String(place.placeId).toUpperCase():'';
+  var name=place&&place.name?String(place.name):'';
+  var token=pid?('p'+encodeURIComponent(pid))
+    :(name?('n'+encodeURIComponent(name)):('i'+encodeURIComponent(String(index))));
+  var floor=store&&store.floor?String(store.floor):'';
+  var label=store&&store.name?String(store.name):'';
+  return 'w2:'+token+':'+encodeURIComponent(floor)+':'+encodeURIComponent(label);
+}
+/* 舊索引型 key 的一次性、冪等轉換。
+   刻意**不**把舊 index 直接換成「目前同一 index 的 placeId」—— 順序可能早已改變,
+   那只會把錯誤映射永久固定下來。改以「樓層＋店名」在目前全部購物地點搜尋候選:
+   唯一候選才轉換,0 個或多個一律移除並計數,絕不猜測。
+   不自行切割 floor 與 name(兩者都可能含底線),而是重建同樣的串接字串來比對。
+   非 w_ 開頭的 key(含已是 w2 的新格式)原樣保留,因此重跑不會再變更資料。 */
+function migrateShopWantKeys(wants,malls){
+  var source=wants&&typeof wants==='object'?wants:{};
+  var list=malls||[];
+  var next={},migrated=0,dropped=0,changed=false;
+  Object.keys(source).forEach(function(key){
+    var matched=/^w_\d+_/.exec(key);
+    if(!matched){ next[key]=source[key]; return; }
+    var tail=key.slice(matched[0].length);
+    var hits=[];
+    list.forEach(function(mall,index){
+      (mall&&mall.stores||[]).forEach(function(store){
+        var rebuilt=String(store&&store.floor||'')+'_'+String(store&&store.name||'');
+        if(rebuilt!==tail) return;
+        var stable=shopWantStoreKey(mall.place,index,store);
+        if(hits.indexOf(stable)<0) hits.push(stable);
+      });
+    });
+    changed=true;
+    if(hits.length===1){ next[hits[0]]=source[key]; migrated++; }
+    else dropped++;
+  });
+  return {wants:next,migrated:migrated,dropped:dropped,changed:changed};
 }
 function toggleShopWantList(key){
   shopWantListOpen[key]=!shopWantListOpen[key];
@@ -3987,10 +4040,20 @@ function renderShop(){
 }
 function renderShopResults(){
   var box=document.getElementById('shopResults'); if(!box) return;
-  var wants=getWants(), h='', malls=shopMalls();
+  var h='', malls=shopMalls();
+  /* 舊索引型 key 在這裡消化掉:轉換是冪等的,只有真的動到資料才寫回。 */
+  var migration=migrateShopWantKeys(getWants(),malls);
+  if(migration.changed){
+    lsSet('trip_shop_wants',migration.wants);
+    if(migration.dropped&&!shopWantMigrationNoticed){
+      shopWantMigrationNoticed=true;
+      toast('有 '+migration.dropped+' 筆舊想逛標記無法安全對應，請重新勾選。');
+    }
+  }
+  var wants=migration.wants;
   var wantTotal=0;
   malls.forEach(function(m,mi){
-    wantTotal+=m.stores.filter(function(s){return wants['w_'+mi+'_'+s.floor+'_'+s.name];}).length;
+    wantTotal+=m.stores.filter(function(s){return wants[shopWantStoreKey(m.place,mi,s)];}).length;
   });
   h+='<div class="shop-filter" id="shopFilterBar">'+
     '<button class="shop-filter-btn '+(shopPlaceFilter==='all'?'on':'')+'" onclick="setShopPlaceFilter(\'all\')">全部<small>'+malls.length+'</small></button>'+
@@ -4005,14 +4068,14 @@ function renderShopResults(){
   malls.forEach(function(m,mi){
     var p=m.place;
     var pkey=(p.placeId||p.name||'').toUpperCase();
-    var wanted=m.stores.filter(function(s){return wants['w_'+mi+'_'+s.floor+'_'+s.name];});
+    var wanted=m.stores.filter(function(s){return wants[shopWantStoreKey(m.place,mi,s)];});
     if(shopPlaceFilter==='wants'&&!wanted.length) return;
     if(shopPlaceFilter!=='all'&&shopPlaceFilter!=='wants'&&shopPlaceFilter!==pkey) return;
     if(_shopQ){
       var searchBase=(shopPlaceFilter==='wants')?wanted:m.stores;
       var hits=searchBase.filter(function(s){return (s.name||'').toLowerCase().indexOf(_shopQ)>=0;});
       h+='<div class="shop-mall" id="shopmall_'+cssId(pkey)+'"><div class="sm-name">🏬 '+escapeHtml(p.name)+'</div>'+
-        (hits.length?hits.map(function(s){var id='w_'+mi+'_'+s.floor+'_'+s.name;return storeRow(s,id,!!wants[id]);}).join(''):'<div class="empty-state" style="padding:16px">找不到「'+escapeHtml(_shopQ)+'」</div>')+'</div>';
+        (hits.length?hits.map(function(s){var id=shopWantStoreKey(m.place,mi,s);return storeRow(s,id,!!wants[id]);}).join(''):'<div class="empty-state" style="padding:16px">找不到「'+escapeHtml(_shopQ)+'」</div>')+'</div>';
       rendered++;
       return;
     }
@@ -4021,11 +4084,11 @@ function renderShopResults(){
       (p.web?'<div class="sm-actions"><a class="qa-btn nf" href="'+escapeHtml(p.web)+'" target="_blank" rel="noopener">🌐 官方資訊</a></div>':'')+
       renderNoteBlock(p.note);
     if(wanted.length){
-      var wkey=shopWantKey(p,mi);
+      var wkey=shopWantListStateKey(p,mi);
       var wopen=!!shopWantListOpen[wkey];
       h+='<div class="want-box"><button class="want-head '+(wopen?'on':'')+'" onclick="toggleShopWantList(\''+wkey.replace(/'/g,"\\'")+'\')">'+
         '<span>⭐ 想逛清單：'+wanted.length+' 家</span><span>'+(wopen?'收合':'展開')+'</span></button>'+
-        (wopen?'<div class="want-body">'+wanted.map(function(s){var id='w_'+mi+'_'+s.floor+'_'+s.name;return storeRow(s,id,true);}).join('')+'</div>':'')+
+        (wopen?'<div class="want-body">'+wanted.map(function(s){return storeRow(s,shopWantStoreKey(m.place,mi,s),true);}).join('')+'</div>':'')+
         '</div>';
     }
     var floors={};
@@ -4041,10 +4104,10 @@ function renderShopResults(){
       var fkey=(p.placeId||('M'+mi))+'::'+f;
       var domId='flbody_'+cssId(fkey);
       var isOpen=!!shopOpenFloors[fkey];
-      var wc=floors[f].filter(function(s){return wants['w_'+mi+'_'+s.floor+'_'+s.name];}).length;
+      var wc=floors[f].filter(function(s){return wants[shopWantStoreKey(m.place,mi,s)];}).length;
       h+='<div class="floor"><button class="floor-head'+(isOpen?' on':'')+'" onclick="toggleFloor(\''+fkey.replace(/'/g,"\\'")+'\',this)">'+
         '<span class="fl-f">'+escapeHtml(f)+'</span><span class="fl-n">'+floors[f].length+' 家'+(wc?'｜⭐'+wc:'')+'</span><span class="fl-arw">▼</span></button>'+
-        '<div class="floor-body'+(isOpen?' open':'')+'" id="'+domId+'">'+floors[f].map(function(s){var id='w_'+mi+'_'+s.floor+'_'+s.name;return storeRow(s,id,!!wants[id]);}).join('')+'</div></div>';
+        '<div class="floor-body'+(isOpen?' open':'')+'" id="'+domId+'">'+floors[f].map(function(s){var id=shopWantStoreKey(m.place,mi,s);return storeRow(s,id,!!wants[id]);}).join('')+'</div></div>';
     });
     h+='</div>';
     rendered++;
@@ -4078,8 +4141,11 @@ var SHOPPING_CATEGORIES=['必買','伴手禮','生活用品','其他'];
    v8 起加入本機主題、採買單位與旅途紀錄。
    若不升版,舊版 App 會認為格式相容,還原時經舊 normalizer 靜默丟掉新欄位 ——
    已記帳項目會重新顯示成未記帳而重複入帳,數量也會整批消失。新增欄位必須連帶升版。 */
-var PERSONAL_STATE_VERSION=8;
-var PERSONAL_STATE_SUPPORTED_VERSIONS=[1,2,3,4,5,6,7,8];
+/* v9 起想逛標記的 key 由 `w_<mallIndex>_...` 改為以 placeId 為主的 `w2:...`。
+   這是既有欄位的**識別語意變更**,不是新增欄位 —— 若不升版,舊版 App 會把 v9 當成 v8,
+   把它無法解讀的 key 照單全收,使用者看到的是「還原成功但想逛全空」。 */
+var PERSONAL_STATE_VERSION=9;
+var PERSONAL_STATE_SUPPORTED_VERSIONS=[1,2,3,4,5,6,7,8,9];
 function isSupportedPersonalStateVersion(version){
   return typeof version==='number'&&PERSONAL_STATE_SUPPORTED_VERSIONS.indexOf(version)>=0;
 }
@@ -7777,7 +7843,9 @@ function shoppingItemsWithoutPhotoRefs(items){
   return (items||[]).map(function(item){var copy=Object.assign({},item);delete copy.photoId;return copy;});
 }
 function personalStateJson(){
-  var payload={format:'trip-personal-state',version:PERSONAL_STATE_VERSION,exportedAt:timestampDate(Date.now()).toISOString(),checks:lsGet('trip_checks',{}),wants:lsGet('trip_shop_wants',{}),member:getCurrentMember(),ledgerQueue:ledgerRepository.queuedRecords(),personalLedger:personalLedgerRepository.all(),ledgerCategories:ledgerCategoryStore.all(),ledgerPayMethods:ledgerPayMethodStore.all(),proxyTargets:ledgerProxyTargetStore.all(),shoppingItems:shoppingItemsWithoutPhotoRefs(shoppingListStore.all()),themeId:currentThemeId(),shoppingUnits:shoppingUnitStore.all(),travelNotes:travelNoteStore.all()};
+  /* 匯出前先轉換:使用者可能還沒進過購物頁,本機仍是索引型 key ——
+     v9 備份不得帶出索引型 key。轉換是冪等的,已轉換過的資料不受影響。 */
+  var payload={format:'trip-personal-state',version:PERSONAL_STATE_VERSION,exportedAt:timestampDate(Date.now()).toISOString(),checks:lsGet('trip_checks',{}),wants:migrateShopWantKeys(lsGet('trip_shop_wants',{}),shopMalls()).wants,member:getCurrentMember(),ledgerQueue:ledgerRepository.queuedRecords(),personalLedger:personalLedgerRepository.all(),ledgerCategories:ledgerCategoryStore.all(),ledgerPayMethods:ledgerPayMethodStore.all(),proxyTargets:ledgerProxyTargetStore.all(),shoppingItems:shoppingItemsWithoutPhotoRefs(shoppingListStore.all()),themeId:currentThemeId(),shoppingUnits:shoppingUnitStore.all(),travelNotes:travelNoteStore.all()};
   return JSON.stringify(payload,null,2);
 }
 function copyPersonalStateText(text,timeoutMs){
@@ -7874,6 +7942,9 @@ function restorePersonalState(){
   try{ payload=JSON.parse(box&&box.value||''); }catch(error){ toast('JSON 格式錯誤'); return; }
   if(!payload||payload.format!=='trip-personal-state'||!isSupportedPersonalStateVersion(payload.version)||!payload.checks||Array.isArray(payload.checks)||typeof payload.checks!=='object'||!payload.wants||Array.isArray(payload.wants)||typeof payload.wants!=='object'||!Array.isArray(payload.ledgerQueue)||!memberIsAllowed(String(payload.member||''))){ toast('個人狀態格式驗證失敗'); return; }
   if(payload.version===1){payload.personalLedger=[];payload.ledgerCategories=DEFAULT_LEDGER_CATEGORIES.slice();payload.ledgerPayMethods=DEFAULT_LEDGER_PAY_METHODS.slice();}
+  /* v<9 的想逛 key 是索引型,必須在寫入前轉換(保持全有或全無的原子語意)。
+     模糊候選一律移除 —— 備份裡的 index 同樣不可信,拿它猜測只會把錯誤映射固定下來。 */
+  if(payload.version<9)payload.wants=migrateShopWantKeys(payload.wants,shopMalls()).wants;
   try{validatePersonalStatePayload(payload);}catch(error){toast(error.message||'代購對象清單格式錯誤');return;}
   if(!Array.isArray(payload.personalLedger)||!Array.isArray(payload.ledgerCategories)||!Array.isArray(payload.ledgerPayMethods)){toast('個人狀態格式驗證失敗');return;}
   try{ payload.ledgerQueue.forEach(function(record){if(!record||!String(record.id||'').trim()||!String(record.time||'').trim())throw new Error('佇列缺少 ID 或時間');validateLedgerRecord(normalizeLedgerRecord(record,Date.now(),Math.random,false));}); }
@@ -8158,7 +8229,7 @@ function openShoppingPhotoRepairFromSettings(itemId){
   });
 }
 var APP_RELEASE_NOTES=[
-  {version:'v81',date:'2026-08-02',title:'完成與跳過只佔一行',items:['下一站的「完成」「跳過」過長時以省略號收尾，不再換行把按鈕撐高']},
+  {version:'v81',date:'2026-08-02',title:'完成與跳過只佔一行',items:['下一站的「完成」「跳過」過長時以省略號收尾，不再換行把按鈕撐高','購物頁的想逛標記改綁定地點本身，新增購物地點後不會再跑到別家店']},
   {version:'v80',date:'2026-08-02',title:'主題固定淺色、操作更好按',items:['六個主題在手機深色外觀下不再自動轉深，畫面與淺色外觀一致','設定圖示放大更好按，下一站的「完成」不再被長地點名稱擠成直排']},
   {version:'v79',date:'2026-08-02',title:'設定圖示更清楚',items:['右上角設定按鈕改為圓角六齒圖示，各主題與不同裝置保持一致']},
   {version:'v78',date:'2026-08-02',title:'旅途中更穩、更好操作',items:['離線首屏不再等待遠端字體，App 圖示與桃子標誌可從快取顯示','頁面顯示失敗時可直接重新整理，並改善 Today、觸控、夜間與照片提示體驗']},
