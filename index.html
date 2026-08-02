@@ -297,8 +297,9 @@ input,select,textarea{font-size:16px}
 
 .empty-state{text-align:center;padding:30px 20px;color:var(--ink-faint);font-size:13.5px;line-height:1.7}
 .shop-empty-actions{margin-top:14px}
-.shop-list-entry-wrap{padding:0 12px 10px}
-.shop-list-entry{width:100%;min-height:46px;display:flex;align-items:center;justify-content:center;gap:8px;border:1px solid var(--line);border-radius:12px;background:var(--card);color:var(--sea-deep);font:inherit;font-size:14px;font-weight:900;cursor:pointer}
+.shop-top{display:flex;align-items:stretch;gap:8px;margin-bottom:12px}
+.shop-top .shop-search{flex:1 1 auto;min-width:0;margin-bottom:0}
+.shop-list-entry{flex:0 0 auto;min-height:46px;display:flex;align-items:center;justify-content:center;gap:6px;padding:0 12px;border:1px solid var(--line);border-radius:12px;background:var(--card);color:var(--sea-deep);font:inherit;font-size:13px;font-weight:900;white-space:nowrap;cursor:pointer;box-shadow:var(--shadow)}
 .shop-list-count{display:inline-flex;align-items:center;justify-content:center;min-width:22px;height:22px;padding:0 6px;border-radius:999px;background:var(--coral);color:#fff;font-size:12px;font-weight:900}
 .shop-list-count[hidden]{display:none}
 .shop-wants-actions{display:flex;justify-content:flex-end;padding:0 12px 4px}
@@ -4177,11 +4178,14 @@ function renderShop(){
   var view=document.getElementById('view-shop');
   /* 採買清單與購物地點資料無關,連沒有購物地點時也該給得到入口 */
   var pending=shoppingPendingCount();
-  var listEntry='<div class="shop-list-entry-wrap"><button type="button" class="shop-list-entry" onclick="openShoppingList()">'+
-    '採買清單<span id="shopListCount" class="shop-list-count"'+(pending?'':' hidden')+'>'+(pending?pending:'')+'</span></button></div>';
-  if(!shopMalls().length){ view.innerHTML=listEntry+'<div class="empty-state">尚無購物地點<br>在 Places 新增 Type=購物 後會自動出現</div>'; return; }
-  view.innerHTML='<div class="shop-search"><input id="shopSearchInput" placeholder="🔍 搜尋店家（如 UNIQLO、大創）" value="'+escapeHtml(_shopQ)+'" oninput="shopQ(this.value)"></div>'+
-    listEntry+'<div id="shopResults"></div>';
+  var listEntry='<button type="button" class="shop-list-entry" onclick="openShoppingList()">'+
+    '採買清單<span id="shopListCount" class="shop-list-count"'+(pending?'':' hidden')+'>'+(pending?pending:'')+'</span></button>';
+  if(!shopMalls().length){ view.innerHTML='<div class="shop-top">'+listEntry+'</div><div class="empty-state">尚無購物地點<br>在 Places 新增 Type=購物 後會自動出現</div>'; return; }
+  /* 搜尋與採買清單同列:兩者都是進到購物頁最先要做的事,分兩列會把店家清單
+     往下推,也讓入口看起來像是清單的一部分。 */
+  view.innerHTML='<div class="shop-top">'+
+    '<div class="shop-search"><input id="shopSearchInput" placeholder="🔍 搜尋店家或分類" value="'+escapeHtml(_shopQ)+'" oninput="shopQ(this.value)"></div>'+
+    listEntry+'</div><div id="shopResults"></div>';
   renderShopResults();
   requestAnimationFrame(centerShopFilterChip);
 }

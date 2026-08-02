@@ -137,3 +137,55 @@ test('the list open/close helpers never touch view state', async ({ page }) => {
     expect(fn, name + ' 不得指派 curView').not.toMatch(/curView\s*=[^=]/);
   }
 });
+
+/* 入口與搜尋框同列:兩者都是「進到購物頁最先要做的事」,分兩列會把
+   店家清單往下推,也讓入口看起來像是清單的一部分。 */
+test('the shopping list entry shares a row with the search box at phone widths', async ({ page }) => {
+  await seedItems(page, 3, 0);
+
+  for (const width of [320, 375, 390]) {
+    await page.setViewportSize({ width, height: 812 });
+    const layout = await page.evaluate(() => {
+      renderShop();
+      const input = document.getElementById('shopSearchInput');
+      const btn = document.querySelector('.shop-list-entry');
+      const i = input.getBoundingClientRect();
+      const b = btn.getBoundingClientRect();
+      const doc = document.scrollingElement;
+      return {
+        sameRow: Math.abs(i.top - b.top) <= 2 && Math.abs(i.bottom - b.bottom) <= 2,
+        btnAfterInput: b.left >= i.right - 1,
+        inputWidth: Math.round(i.width),
+        btnHeight: Math.round(b.height),
+        inputHeight: Math.round(i.height),
+        overflow: doc.scrollWidth - doc.clientWidth,
+        /* 與底下的店家清單左右對齊 —— 入口不得比搜尋框更內縮 */
+        inputLeft: Math.round(i.left),
+        btnRight: Math.round(b.right),
+        /* 縮窄之後 placeholder 必須仍放得下,否則使用者看到的是被截斷的半句話 */
+        placeholderNeeds: (() => {
+          const probe = document.createElement('span');
+          probe.style.cssText = 'position:absolute;visibility:hidden;white-space:nowrap;font-size:'
+            + getComputedStyle(input).fontSize + ';font-family:' + getComputedStyle(input).fontFamily;
+          probe.textContent = input.placeholder;
+          document.body.appendChild(probe);
+          const need = Math.ceil(probe.getBoundingClientRect().width);
+          probe.remove();
+          return need;
+        })(),
+        textWidth: Math.round(i.width)
+          - parseFloat(getComputedStyle(input).paddingLeft)
+          - parseFloat(getComputedStyle(input).paddingRight),
+      };
+    });
+
+    expect(layout.sameRow, `${width}px 應同列`).toBe(true);
+    expect(layout.btnAfterInput, `${width}px 入口應在搜尋框右側`).toBe(true);
+    expect(layout.btnHeight, `${width}px 觸控區`).toBeGreaterThanOrEqual(44);
+    expect(layout.inputHeight, `${width}px 兩者等高`).toBe(layout.btnHeight);
+    expect(layout.overflow, `${width}px 不得水平溢出`).toBeLessThanOrEqual(0);
+    expect(layout.inputWidth, `${width}px 搜尋框仍需可用寬度`).toBeGreaterThan(140);
+    expect(layout.placeholderNeeds, `${width}px placeholder 不得被截斷`)
+      .toBeLessThanOrEqual(layout.textWidth);
+  }
+});
