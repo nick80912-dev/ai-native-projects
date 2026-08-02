@@ -4203,8 +4203,11 @@ function renderShopResults(){
     wantTotal+=m.stores.filter(function(s){return wants[shopWantStoreKey(m.place,mi,s)];}).length;
   });
   h+='<div class="shop-filter" id="shopFilterBar">'+
-    '<button class="shop-filter-btn '+(shopPlaceFilter==='all'?'on':'')+'" onclick="setShopPlaceFilter(\'all\')">全部<small>'+malls.length+'</small></button>'+
-    '<button class="shop-filter-btn '+(shopPlaceFilter==='wants'?'on':'')+'" onclick="setShopPlaceFilter(\'wants\')">想逛<small id="shopWantTotal">'+wantTotal+'</small></button>'+
+    /* 兩個全域 chip 的數字是不同實體(地點 vs 家),把單位寫出來;
+       各購物地點 chip 維持純數字 —— 名稱＋數字在情境中已無歧義。
+       單位放在計數元素**之外**,就地更新才不會把單位一起洗掉。 */
+    '<button class="shop-filter-btn '+(shopPlaceFilter==='all'?'on':'')+'" onclick="setShopPlaceFilter(\'all\')">全部<small>'+malls.length+' 個地點</small></button>'+
+    '<button class="shop-filter-btn '+(shopPlaceFilter==='wants'?'on':'')+'" onclick="setShopPlaceFilter(\'wants\')">想逛<small><span id="shopWantTotal">'+wantTotal+'</span> 家</small></button>'+
     malls.map(function(m){
       var key=(m.place.placeId||m.place.name||'').toUpperCase();
       var label=m.place.name||key;
@@ -8402,7 +8405,7 @@ function openShoppingPhotoRepairFromSettings(itemId){
   });
 }
 var APP_RELEASE_NOTES=[
-  {version:'v81',date:'2026-08-02',title:'購物頁更順手',items:['下一站的「完成」「跳過」過長時以省略號收尾，不再換行把按鈕撐高','購物頁的想逛標記改綁定地點本身，新增購物地點後不會再跑到別家店','勾選想逛不再整頁重畫，篩選列的位置會留在原地','搜尋可用分類（如「服飾」）尋找，沒結果的購物地點不再留下空白區塊','店家列可用鍵盤操作，讀螢幕軟體也會唸出是否已標記想逛']},
+  {version:'v81',date:'2026-08-02',title:'購物頁更順手',items:['下一站的「完成」「跳過」過長時以省略號收尾，不再換行把按鈕撐高','購物頁的想逛標記改綁定地點本身，新增購物地點後不會再跑到別家店','勾選想逛不再整頁重畫，篩選列的位置會留在原地','搜尋可用分類（如「服飾」）尋找，沒結果的購物地點不再留下空白區塊','店家列可用鍵盤操作，讀螢幕軟體也會唸出是否已標記想逛','「想逛」頁籤改為只列出已加入的店家，並可一鍵清除全部（可復原）','購物頁新增採買清單入口，顯示未完成項目數']},
   {version:'v80',date:'2026-08-02',title:'主題固定淺色、操作更好按',items:['六個主題在手機深色外觀下不再自動轉深，畫面與淺色外觀一致','設定圖示放大更好按，下一站的「完成」不再被長地點名稱擠成直排']},
   {version:'v79',date:'2026-08-02',title:'設定圖示更清楚',items:['右上角設定按鈕改為圓角六齒圖示，各主題與不同裝置保持一致']},
   {version:'v78',date:'2026-08-02',title:'旅途中更穩、更好操作',items:['離線首屏不再等待遠端字體，App 圖示與桃子標誌可從快取顯示','頁面顯示失敗時可直接重新整理，並改善 Today、觸控、夜間與照片提示體驗']},
