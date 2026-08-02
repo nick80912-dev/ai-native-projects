@@ -357,6 +357,7 @@ input,select,textarea{font-size:16px}
 .tabbar-btn.active::before{content:"";position:absolute;top:0;left:28%;right:28%;height:3px;border-radius:0 0 3px 3px;background:currentColor}
 .app-icon{width:24px;height:24px;display:block;fill:none;stroke:currentColor;stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round}
 .settings-btn .app-icon{width:19px;height:19px}
+.settings-btn .settings-gear-six{width:20px;height:20px;stroke-width:2}
 .tabbar-icon-wrap{position:relative;display:inline-flex}
 
 .totop{
@@ -753,7 +754,7 @@ function selectTheme(themeId){
       <button class="sync" id="syncBtn" onclick="openSyncStatus()">
         <span class="dot" id="syncDot"></span><span id="syncTxt">同步中</span>
       </button>
-      <button class="settings-btn" aria-label="設定" onclick="openSettings()"><svg class="app-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.88l.06.06-2.86 2.86-.06-.06A1.7 1.7 0 0 0 15 19.4a1.7 1.7 0 0 0-1 .6 1.7 1.7 0 0 0-.4 1.1V21H9.6v-.1A1.7 1.7 0 0 0 8 19.4a1.7 1.7 0 0 0-1.88.34l-.06.06-2.86-2.86.06-.06A1.7 1.7 0 0 0 3.6 15a1.7 1.7 0 0 0-.6-1 1.7 1.7 0 0 0-1.1-.4H1.8V9.6h.1A1.7 1.7 0 0 0 3.6 8a1.7 1.7 0 0 0-.34-1.88l-.06-.06L6.06 3.2l.06.06A1.7 1.7 0 0 0 8 3.6a1.7 1.7 0 0 0 1-.6 1.7 1.7 0 0 0 .4-1.1V1.8h4v.1A1.7 1.7 0 0 0 15 3.6a1.7 1.7 0 0 0 1.88-.34l.06-.06 2.86 2.86-.06.06A1.7 1.7 0 0 0 19.4 8a1.7 1.7 0 0 0 .6 1 1.7 1.7 0 0 0 1.1.4h.1v4h-.1a1.7 1.7 0 0 0-1.7 1.6z"></path></svg></button>
+      <button class="settings-btn" aria-label="設定" onclick="openSettings()"><svg class="app-icon settings-gear-six" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="6.25"></circle><g class="settings-gear-six-teeth"><line class="settings-gear-tooth" x1="12" y1="2.5" x2="12" y2="5.75" transform="rotate(0 12 12)"></line><line class="settings-gear-tooth" x1="12" y1="2.5" x2="12" y2="5.75" transform="rotate(60 12 12)"></line><line class="settings-gear-tooth" x1="12" y1="2.5" x2="12" y2="5.75" transform="rotate(120 12 12)"></line><line class="settings-gear-tooth" x1="12" y1="2.5" x2="12" y2="5.75" transform="rotate(180 12 12)"></line><line class="settings-gear-tooth" x1="12" y1="2.5" x2="12" y2="5.75" transform="rotate(240 12 12)"></line><line class="settings-gear-tooth" x1="12" y1="2.5" x2="12" y2="5.75" transform="rotate(300 12 12)"></line></g><circle cx="12" cy="12" r="2.35"></circle></svg></button>
     </div>
   </div>
   <div class="trip-tabs" id="tripTabs"></div>
@@ -8200,11 +8201,11 @@ function openShoppingPhotoRepairFromSettings(itemId){
   });
 }
 var APP_RELEASE_NOTES=[
+  {version:'v79',date:'2026-08-02',title:'設定圖示更清楚',items:['右上角設定按鈕改為圓角六齒圖示，各主題與不同裝置保持一致']},
   {version:'v78',date:'2026-08-02',title:'旅途中更穩、更好操作',items:['離線首屏不再等待遠端字體，App 圖示與桃子標誌可從快取顯示','頁面顯示失敗時可直接重新整理，並改善 Today、觸控、夜間與照片提示體驗']},
   {version:'v77',date:'2026-08-01',title:'照片附件更可靠',items:['偵測本機照片遺失，可重新選擇照片或移除無效引用','設定新增附件容量與清理管理，未使用照片保留一天後自動清理']},
   {version:'v76',date:'2026-08-01',title:'採買多選更快速',items:['多選模式可一次選取或取消目前分頁的全部採買項目','切換分頁與完成批次操作後會清除選取，避免誤用舊選取']},
-  {version:'v75',date:'2026-08-01',title:'採買照片與附近導航',items:['採買項目可附上一張只保存在本裝置的照片，卡片以迴紋針提示','同名地點會依目前位置尋找最近結果，詳細分點則維持精確導航']},
-  {version:'v74',date:'2026-08-01',title:'設定頁更好找',items:['設定頁改為個人、記帳、資料三個群組,一頁看完','團體帳測試模式移到獨立控制頁,不再占用設定首頁']}
+  {version:'v75',date:'2026-08-01',title:'採買照片與附近導航',items:['採買項目可附上一張只保存在本裝置的照片，卡片以迴紋針提示','同名地點會依目前位置尋找最近結果，詳細分點則維持精確導航']}
 ];
 function renderAppReleaseNotes(){
   return '<div class="settings-release-list">'+APP_RELEASE_NOTES.map(function(note){

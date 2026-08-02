@@ -138,7 +138,9 @@ test('關閉伺服器後仍可完整離線載入,且未快取的子資源不得�
   await server.close();
   server = null;
 
-  await page.reload();
+  /* page.reload() 走 CDP Page.reload,在伺服器剛關閉時偶發直接回 ERR_CONNECTION_REFUSED、
+     未形成這裡真正要驗證的正常 navigation request。明確 goto 與下方 deep-link 驗證同路徑。 */
+  await page.goto(ORIGIN + '/index.html');
   await waitForActiveWorker(page);
 
   /* 導覽請求:離線仍要完整載入 */

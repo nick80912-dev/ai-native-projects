@@ -1,4 +1,10 @@
 # 07 版本紀錄
+## 2026-08-02｜設定圖示改為圓角六齒（SW v79）
+
+- **設定入口圖示**：右上角設定按鈕改為 24×24 inline SVG，以六條相隔 60° 的圓頭齒、外圈與中心圓構成；實際圖示為 20×20，沿用 `currentColor`，六個主題與離線環境不需額外資源。
+- **既有契約不變**：設定按鈕維持 44×44 觸控區、`aria-label="設定"` 與原本開啟行為；MAPCODE、資料 schema、同步、照片儲存與部署設定均未修改。
+- **版本換代**：`app-version.js`、`sw.js` 與使用者版更新說明同步升至 v79，確保已安裝 App 取得新版 `index.html`。
+
 ## 2026-08-02｜離線、行車操作與夜間可用性（SW v78）
 
 - **離線首屏**：移除 Google Fonts 與兩個 font preconnect，改用裝置內建繁中字體；桃子 header badge、16／32px favicon 與 152／167／180px Apple touch icons 納入原子 SHELL precache。

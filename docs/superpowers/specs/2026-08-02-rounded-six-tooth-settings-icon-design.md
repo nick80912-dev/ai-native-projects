@@ -9,7 +9,7 @@ Replace the top-right settings button's current gear artwork with a softer six-t
 - Keep the existing 44 × 44 px `.settings-btn`, click handler, and `aria-label="設定"`.
 - Keep the icon inline in `index.html`; do not add an icon library, font, remote asset, or network dependency.
 - Use a 24 × 24 SVG viewBox with `fill="none"` and `stroke="currentColor"` through the existing `.app-icon` contract.
-- Draw exactly six evenly spaced radial teeth. Each tooth uses a round line cap so the silhouette feels softer than the current gear.
+- Draw exactly six evenly spaced radial `<line>` teeth at 60-degree intervals. Each tooth uses a round line cap so the silhouette feels softer than the current gear and remains directly verifiable in the rendered DOM.
 - Retain an outer hub circle and a smaller center circle so the symbol remains recognizable as settings rather than a sun.
 - Size the rendered artwork at 20 × 20 px with a 2 px stroke inside the existing button.
 
@@ -21,7 +21,7 @@ Replace the top-right settings button's current gear artwork with a softer six-t
 
 ## Validation
 
-- A static contract test verifies the settings button still has its accessible name and contains the dedicated six-tooth SVG structure.
+- A browser contract test verifies the settings button's accessible name, rendered size and inherited color, plus six round-ended teeth at 60-degree intervals.
 - Browser regression continues to verify the header action keeps its 44 px touch target.
 - Existing version, offline shell, Node, and Playwright suites must remain green.
 - MAPCODE behavior and unrelated application files remain unchanged.

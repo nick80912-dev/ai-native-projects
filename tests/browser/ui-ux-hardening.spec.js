@@ -27,6 +27,26 @@ test('Today hides the trip day picker and header actions fit without absolute po
   expect(header.settingsHeight).toBeGreaterThanOrEqual(44);
 });
 
+test('settings button renders a themed rounded six-tooth gear', async ({ page }) => {
+  const button=page.getByRole('button',{name:'設定'});
+  const icon=button.locator('.settings-gear-six');
+  await expect(icon).toBeVisible();
+  await expect(icon.locator('.settings-gear-tooth')).toHaveCount(6);
+  const gear=await icon.evaluate(svg=>({
+    size:[svg.getBoundingClientRect().width,svg.getBoundingClientRect().height],
+    stroke:getComputedStyle(svg).stroke,
+    color:getComputedStyle(svg.closest('button')).color,
+    teeth:Array.from(svg.querySelectorAll('.settings-gear-tooth')).map(line=>({
+      transform:line.getAttribute('transform'),
+      cap:getComputedStyle(line).strokeLinecap,
+    })),
+  }));
+  expect(gear.size).toEqual([20,20]);
+  expect(gear.stroke).toBe(gear.color);
+  expect(gear.teeth.map(tooth=>tooth.transform)).toEqual([0,60,120,180,240,300].map(degree=>`rotate(${degree} 12 12)`));
+  expect(gear.teeth.every(tooth=>tooth.cap==='round')).toBe(true);
+});
+
 test('trip and shopping controls keep car-friendly targets and decision text', async ({ page }) => {
   await page.evaluate(() => switchView('trip'));
   await expect(page.locator('#daybar')).toBeVisible();
