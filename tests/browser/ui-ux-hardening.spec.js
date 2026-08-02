@@ -34,6 +34,11 @@ test('settings button renders a themed rounded six-tooth gear', async ({ page })
   await expect(icon.locator('.settings-gear-tooth')).toHaveCount(6);
   const gear=await icon.evaluate(svg=>({
     size:[svg.getBoundingClientRect().width,svg.getBoundingClientRect().height],
+    strokeWidth:getComputedStyle(svg).strokeWidth,
+    viewBox:svg.getAttribute('viewBox'),
+    radii:Array.from(svg.querySelectorAll('circle')).map(circle=>circle.getAttribute('r')),
+    button:[svg.closest('button').getBoundingClientRect().width,svg.closest('button').getBoundingClientRect().height],
+    buttonRadius:getComputedStyle(svg.closest('button')).borderRadius,
     stroke:getComputedStyle(svg).stroke,
     color:getComputedStyle(svg.closest('button')).color,
     teeth:Array.from(svg.querySelectorAll('.settings-gear-tooth')).map(line=>({
@@ -41,7 +46,14 @@ test('settings button renders a themed rounded six-tooth gear', async ({ page })
       cap:getComputedStyle(line).strokeLinecap,
     })),
   }));
-  expect(gear.size).toEqual([20,20]);
+  /* v80:字符放大到 24px、筆畫收細到 1.75,但 44×44 的按鈕與圓形底不得跟著變 ——
+     否則放大的是觸控區而不是看得見的圖示。 */
+  expect(gear.size).toEqual([24,24]);
+  expect(parseFloat(gear.strokeWidth)).toBe(1.75);
+  expect(gear.button).toEqual([44,44]);
+  expect(gear.buttonRadius).toBe('50%');
+  expect(gear.viewBox).toBe('0 0 24 24');
+  expect(gear.radii).toEqual(['6.25','2.35']);
   expect(gear.stroke).toBe(gear.color);
   expect(gear.teeth.map(tooth=>tooth.transform)).toEqual([0,60,120,180,240,300].map(degree=>`rotate(${degree} 12 12)`));
   expect(gear.teeth.every(tooth=>tooth.cap==='round')).toBe(true);
