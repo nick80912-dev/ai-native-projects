@@ -3955,7 +3955,22 @@ function setShopPlaceFilter(key){
   renderShopResults();
   requestAnimationFrame(centerShopFilterChip);
 }
-function shopQ(v){ _shopQ=v.trim().toLowerCase(); renderShopResults(); }
+/* 比對名稱與分類。分類本來就顯示在每一列上,搜不到只是介面自己造成的期待落差。 */
+function shopStoreMatches(store,query){
+  var q=String(query==null?'':query).trim().toLowerCase();
+  if(!q) return true;
+  var s=store||{};
+  if(String(s.name||'').toLowerCase().indexOf(q)>=0) return true;
+  return String(s.cat||'').toLowerCase().indexOf(q)>=0;
+}
+var SHOP_SEARCH_DEBOUNCE_MS=120;
+var shopSearchTimer=null;
+/* _shopQ 立即更新,只延後重繪 —— 輸入框在 #shopResults 之外,focus 不受影響。 */
+function shopQ(v){
+  _shopQ=String(v==null?'':v).trim().toLowerCase();
+  if(shopSearchTimer) clearTimeout(shopSearchTimer);
+  shopSearchTimer=setTimeout(function(){ shopSearchTimer=null; renderShopResults(); },SHOP_SEARCH_DEBOUNCE_MS);
+}
 function openShopPlace(placeId){
   var key=String(placeId||'').trim().toUpperCase();
   var exists=shopMalls().some(function(m){
@@ -4137,9 +4152,12 @@ function renderShopResults(){
     if(shopPlaceFilter!=='all'&&shopPlaceFilter!=='wants'&&shopPlaceFilter!==pkey) return;
     if(_shopQ){
       var searchBase=(shopPlaceFilter==='wants')?wanted:m.stores;
-      var hits=searchBase.filter(function(s){return (s.name||'').toLowerCase().indexOf(_shopQ)>=0;});
+      var hits=searchBase.filter(function(s){return shopStoreMatches(s,_shopQ);});
+      /* 沒命中就整塊不渲染。原本會留下一塊只寫著「找不到」的空殼,
+         搜尋 UNIQLO 實測產生 3 塊空殼 —— 要捲過三個死標題才看得到 2 筆結果。 */
+      if(!hits.length) return;
       h+='<div class="shop-mall" id="shopmall_'+cssId(pkey)+'"><div class="sm-name">🏬 '+escapeHtml(p.name)+'</div>'+
-        (hits.length?hits.map(function(s){var id=shopWantStoreKey(m.place,mi,s);return storeRow(s,id,!!wants[id]);}).join(''):'<div class="empty-state" style="padding:16px">找不到「'+escapeHtml(_shopQ)+'」</div>')+'</div>';
+        hits.map(function(s){var id=shopWantStoreKey(m.place,mi,s);return storeRow(s,id,!!wants[id]);}).join('')+'</div>';
       rendered++;
       return;
     }
@@ -4177,7 +4195,11 @@ function renderShopResults(){
     rendered++;
   });
   if(!rendered){
-    h+='<div class="empty-state">'+(shopPlaceFilter==='wants'?'尚未標記想逛店家':'目前沒有符合條件的購物資料')+'</div>';
+    /* 搜尋語意優先:使用者輸入了字串卻沒結果,該說的是找不到那個字串,
+       而不是「目前沒有符合條件的購物資料」。 */
+    h+='<div class="empty-state">'+
+      (_shopQ?'找不到「'+escapeHtml(_shopQ)+'」'
+        :(shopPlaceFilter==='wants'?'尚未標記想逛店家':'目前沒有符合條件的購物資料'))+'</div>';
   }
   /* 刻意不在這裡置中篩選 chip:重繪不代表篩選改變,每次都捲動會把使用者
      手動捲到的位置一直拉回去。改由 setShopPlaceFilter() 與首次渲染呼叫。 */
@@ -8294,7 +8316,7 @@ function openShoppingPhotoRepairFromSettings(itemId){
   });
 }
 var APP_RELEASE_NOTES=[
-  {version:'v81',date:'2026-08-02',title:'完成與跳過只佔一行',items:['下一站的「完成」「跳過」過長時以省略號收尾，不再換行把按鈕撐高','購物頁的想逛標記改綁定地點本身，新增購物地點後不會再跑到別家店']},
+  {version:'v81',date:'2026-08-02',title:'購物頁更順手',items:['下一站的「完成」「跳過」過長時以省略號收尾，不再換行把按鈕撐高','購物頁的想逛標記改綁定地點本身，新增購物地點後不會再跑到別家店','勾選想逛不再整頁重畫，篩選列的位置會留在原地','搜尋可用分類（如「服飾」）尋找，沒結果的購物地點不再留下空白區塊']},
   {version:'v80',date:'2026-08-02',title:'主題固定淺色、操作更好按',items:['六個主題在手機深色外觀下不再自動轉深，畫面與淺色外觀一致','設定圖示放大更好按，下一站的「完成」不再被長地點名稱擠成直排']},
   {version:'v79',date:'2026-08-02',title:'設定圖示更清楚',items:['右上角設定按鈕改為圓角六齒圖示，各主題與不同裝置保持一致']},
   {version:'v78',date:'2026-08-02',title:'旅途中更穩、更好操作',items:['離線首屏不再等待遠端字體，App 圖示與桃子標誌可從快取顯示','頁面顯示失敗時可直接重新整理，並改善 Today、觸控、夜間與照片提示體驗']},
