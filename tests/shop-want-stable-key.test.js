@@ -179,8 +179,11 @@ const oldKey = function (mi, store) { return 'w_' + mi + '_' + store.floor + '_'
   const end = html.indexOf('function isSupportedPersonalStateVersion(', start);
   assert(start >= 0 && end > start, 'renderShopResults 區段可定位');
   const source = html.slice(start, end);
+  /* 不鎖死呼叫次數 —— 新增渲染模式時次數本來就會變(想逛模式即是)。
+     真正的不變式是上面那條「全檔不得自行拼接 w_<index>_」;這裡只確認
+     各讀寫點確實走 helper,而不是有人繞過去。 */
   const uses = (source.match(/shopWantStoreKey\(/g) || []).length;
-  assert.strictEqual(uses, 6, 'wantTotal／wanted／搜尋／想逛清單／樓層計數／樓層列六處全部走 shopWantStoreKey');
+  assert(uses >= 6, '各讀寫點全部走 shopWantStoreKey,實際:' + uses);
 
   /* 展開狀態的 key 與 store want key 用途不同,必須改名以免混淆 */
   assert(html.indexOf('function shopWantListStateKey(') > 0, '展開狀態 key 已更名為 shopWantListStateKey');

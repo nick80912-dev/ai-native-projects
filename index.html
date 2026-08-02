@@ -296,6 +296,7 @@ input,select,textarea{font-size:16px}
 .sw-opt.on{background:#e9f2ec;color:var(--green);border-color:var(--green)}
 
 .empty-state{text-align:center;padding:30px 20px;color:var(--ink-faint);font-size:13.5px;line-height:1.7}
+.shop-empty-actions{margin-top:14px}
 .render-retry{display:block;min-height:44px;margin:14px auto 0}
 
 /* ===== 底部導覽 ===== */
@@ -4183,6 +4184,18 @@ function renderShopResults(){
       rendered++;
       return;
     }
+    /* 想逛模式是獨立的閱讀版面,不是篩選條件:
+       全部 = 探索商場,需要樓層結構;想逛 = 執行既定路線,需要快速掃描目標。
+       故只留商場標題與想逛店家平鋪,不渲染樓層手風琴、want-box 與營業時間／官網／備註
+       —— 後三者屬探索用途,執行路線時是雜訊。樓層／櫃位資訊仍在每列右側的 st-f。
+       順序直接沿用 wanted(= m.stores.filter),天然是「商場行程順序 → 店家原始順序」,
+       不得在此另行 sort()。 */
+    if(shopPlaceFilter==='wants'){
+      h+='<div class="shop-mall" id="shopmall_'+cssId(pkey)+'"><div class="sm-name">🏬 '+escapeHtml(p.name)+'</div>'+
+        wanted.map(function(s){return storeRow(s,shopWantStoreKey(m.place,mi,s),true);}).join('')+'</div>';
+      rendered++;
+      return;
+    }
     h+='<div class="shop-mall" id="shopmall_'+cssId(pkey)+'"><div class="sm-name">🏬 '+escapeHtml(p.name)+'</div>'+
       (p.hours?'<div class="sm-hours">🕒 '+escapeHtml(p.hours)+'</div>':'')+
       (p.web?'<div class="sm-actions"><a class="qa-btn nf" href="'+escapeHtml(p.web)+'" target="_blank" rel="noopener">🌐 官方資訊</a></div>':'')+
@@ -4221,7 +4234,9 @@ function renderShopResults(){
        而不是「目前沒有符合條件的購物資料」。 */
     h+='<div class="empty-state">'+
       (_shopQ?'找不到「'+escapeHtml(_shopQ)+'」'
-        :(shopPlaceFilter==='wants'?'尚未標記想逛店家':'目前沒有符合條件的購物資料'))+'</div>';
+        :(shopPlaceFilter==='wants'
+          ?'尚未加入想逛店家，可從「全部」頁籤加入<div class="shop-empty-actions"><button type="button" class="btn" onclick="setShopPlaceFilter(\'all\')">回到全部</button></div>'
+          :'目前沒有符合條件的購物資料'))+'</div>';
   }
   /* 刻意不在這裡置中篩選 chip:重繪不代表篩選改變,每次都捲動會把使用者
      手動捲到的位置一直拉回去。改由 setShopPlaceFilter() 與首次渲染呼叫。 */
