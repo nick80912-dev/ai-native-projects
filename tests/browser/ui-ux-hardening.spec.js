@@ -77,9 +77,8 @@ function contrastRatio(first, second) {
   return (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05);
 }
 
-test('all six themes adapt to a readable dark palette', async ({ page }) => {
-  await page.emulateMedia({ colorScheme: 'dark' });
-  const palettes = await page.evaluate(() => ['ocean','ivory','wisteria','cedar','mist','tea'].map(id => {
+function readThemePalettes(page) {
+  return page.evaluate(() => ['ocean','ivory','wisteria','cedar','mist','tea'].map(id => {
     document.documentElement.dataset.theme = id;
     const card = document.createElement('div');
     card.className = 'card';
@@ -93,9 +92,21 @@ test('all six themes adapt to a readable dark palette', async ({ page }) => {
     card.remove();
     return result;
   }));
-  for (const palette of palettes) {
-    expect(relativeLuminance(palette.paper), palette.id + ' paper').toBeLessThan(0.18);
-    expect(relativeLuminance(palette.card), palette.id + ' card').toBeLessThan(0.22);
+}
+
+/* v80:同一個主題在 iPhone 淺色／深色外觀下必須長得一模一樣。
+   量兩次(light / dark)再比對,比單獨斷言「是淺色」更能擋住日後又被加回來的自動深色。 */
+test('all six themes stay light under system dark appearance', async ({ page }) => {
+  await page.emulateMedia({ colorScheme: 'light' });
+  const light = await readThemePalettes(page);
+  await page.emulateMedia({ colorScheme: 'dark' });
+  const dark = await readThemePalettes(page);
+
+  expect(dark).toEqual(light);
+  expect(await page.evaluate(() => getComputedStyle(document.documentElement).colorScheme)).toBe('light');
+  for (const palette of dark) {
+    expect(relativeLuminance(palette.paper), palette.id + ' paper').toBeGreaterThan(0.7);
+    expect(relativeLuminance(palette.card), palette.id + ' card').toBeGreaterThan(0.7);
     expect(contrastRatio(palette.ink, palette.paper), palette.id + ' ink').toBeGreaterThanOrEqual(4.5);
   }
 });

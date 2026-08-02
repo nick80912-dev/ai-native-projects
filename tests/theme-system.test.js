@@ -74,15 +74,13 @@ function extractThemeIds(html){
   assert.match(html,/\.pc-rest-r\{[^}]*color:var\(--gold-ink\)/);
 
   assert.deepStrictEqual(Array.from(extractThemeIds(html)),themeIds);
-  const darkStart=html.indexOf('@media(prefers-color-scheme:dark)');
+  /* v80:六個主題一律淺色。系統深色外觀不得改寫任何 token —— 六組調色盤是照淺色設計的,
+     而元件層還有約 108 處硬編碼淺色背景,token 級的深色模式永遠對不齊。
+     改以 color-scheme:light 讓原生控制項與捲軸也維持淺色。 */
+  assert(html.indexOf('@media(prefers-color-scheme:dark)')<0,'no automatic dark override remains');
+  assert.match(html,/html\{[^}]*color-scheme:light/,'the document opts out of system dark rendering');
   const reducedStart=html.indexOf('@media(prefers-reduced-motion:reduce)');
-  assert(darkStart>=0,'automatic dark mode is defined');
-  assert(reducedStart>darkStart,'reduced-motion override follows theme tokens');
-  const darkCss=html.slice(darkStart,reducedStart);
-  themeIds.forEach(id=>{
-    const selector=id==='ocean'?':root,[data-theme="ocean"]':'[data-theme="'+id+'"]';
-    assert(darkCss.includes(selector),id+' has an automatic dark variant');
-  });
+  assert(reducedStart>=0,'reduced-motion override is defined');
   const reducedCss=html.slice(reducedStart,html.indexOf('}',reducedStart)+1);
   assert.match(reducedCss,/scroll-behavior:auto!important/,'reduced motion removes smooth scrolling');
   assert.match(reducedCss,/animation-duration:\.01ms!important/,'reduced motion collapses animation duration');
