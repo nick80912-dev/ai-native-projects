@@ -420,7 +420,7 @@ input,select,textarea{font-size:16px}
 .nx-ticket-low{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;border-top:1px dashed var(--line);padding:12px 16px 14px 20px;background:#fffaf0}
 .nx-decision-btn{min-height:46px;border-radius:12px;font-size:16px;font-weight:900;font-family:inherit;cursor:pointer;overflow:hidden;text-overflow:ellipsis}
 .nx-decision-btn.done{background:var(--green);color:#fff;border:1.5px solid var(--green)}
-.nx-decision-btn.skip{min-width:88px;padding:0 14px;background:#f7f3ea;color:var(--ink-faint);border:1px solid var(--line)}
+.nx-decision-btn.skip{min-width:88px;max-width:120px;white-space:nowrap;padding:0 14px;background:#f7f3ea;color:var(--ink-faint);border:1px solid var(--line)}
 .nx-decision-btn:active{transform:scale(.97)}
 .nx-remain{margin:0 12px 12px;color:var(--ink-faint);font-size:13px;text-align:center}
 .nx-cluster-summary{font-size:14px;line-height:1.55;color:var(--sea-deep);font-weight:800;margin:4px 0 8px}
@@ -8158,11 +8158,11 @@ function openShoppingPhotoRepairFromSettings(itemId){
   });
 }
 var APP_RELEASE_NOTES=[
+  {version:'v80',date:'2026-08-02',title:'主題固定淺色、操作更好按',items:['六個主題在手機深色外觀下不再自動轉深，畫面與淺色外觀一致','設定圖示放大更好按，下一站的「完成」不再被長地點名稱擠成直排']},
   {version:'v79',date:'2026-08-02',title:'設定圖示更清楚',items:['右上角設定按鈕改為圓角六齒圖示，各主題與不同裝置保持一致']},
   {version:'v78',date:'2026-08-02',title:'旅途中更穩、更好操作',items:['離線首屏不再等待遠端字體，App 圖示與桃子標誌可從快取顯示','頁面顯示失敗時可直接重新整理，並改善 Today、觸控、夜間與照片提示體驗']},
   {version:'v77',date:'2026-08-01',title:'照片附件更可靠',items:['偵測本機照片遺失，可重新選擇照片或移除無效引用','設定新增附件容量與清理管理，未使用照片保留一天後自動清理']},
-  {version:'v76',date:'2026-08-01',title:'採買多選更快速',items:['多選模式可一次選取或取消目前分頁的全部採買項目','切換分頁與完成批次操作後會清除選取，避免誤用舊選取']},
-  {version:'v75',date:'2026-08-01',title:'採買照片與附近導航',items:['採買項目可附上一張只保存在本裝置的照片，卡片以迴紋針提示','同名地點會依目前位置尋找最近結果，詳細分點則維持精確導航']}
+  {version:'v76',date:'2026-08-01',title:'採買多選更快速',items:['多選模式可一次選取或取消目前分頁的全部採買項目','切換分頁與完成批次操作後會清除選取，避免誤用舊選取']}
 ];
 function renderAppReleaseNotes(){
   return '<div class="settings-release-list">'+APP_RELEASE_NOTES.map(function(note){

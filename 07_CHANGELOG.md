@@ -1,4 +1,12 @@
 # 07 版本紀錄
+## 2026-08-02｜六主題固定淺色、設定圖示放大、完成鈕不再被擠掉（SW v80）
+
+- **移除自動暗色**：刪除 v78 加入的 `@media(prefers-color-scheme:dark)` 整段（六組 token 覆寫、`body{color-scheme:dark}` 與四條元件背景覆寫），並在 `html` 加上 `color-scheme:light`。六個主題是照淺色設計的，元件層仍有約 108 處硬編碼淺色背景，token 級暗色永遠對不齊；改為同一主題在 iPhone 淺色／深色外觀下完全一致，原生控制項與捲軸也維持淺色。
+- **設定圖示放大**：`.settings-btn .settings-gear-six` 由 20×20／`stroke-width:2` 改為 24×24／`stroke-width:1.75`。44×44 觸控區、圓形底、`viewBox` 與兩個 `circle` 半徑均未改，放大的是看得見的圖示而不是觸控區。
+- **完成鈕不再被長地點名稱擠掉**：`.nx-ticket-low` 第二軌是 `auto`，跳過鈕的 max-content 會吃掉整列寬度，把 `minmax(0,1fr)` 的完成鈕壓到 2px，標籤於是一個字一行直排。以單一規則為跳過鈕加上 `max-width:120px` 與 `white-space:nowrap`，讓它套用既有 ellipsis 並把寬度還給完成鈕；`.nx-ticket-low`、`.nx-decision-btn` 與 `.nx-decision-btn.done` 均未動。
+- **範圍保護**：`PERSONAL_STATE_VERSION` 維持 8；schema、localStorage key、備份格式、SW 的 install／fetch／SHELL、`netlify.toml` 與相依套件均未修改。`sw.js` 的 diff 只有 `SW_VERSION` 一行。未加入 `night` 主題、未將 108 處硬編碼淺色背景轉為 token、未動 `.day-chip.active`。
+- **驗證**：三個變更皆先寫失敗測試再實作；完整 **57／57** Node test files 與 Playwright **31／31** 通過。`app-version.js` 與 `sw.js` 同步升至 v80。
+
 ## 2026-08-02｜設定圖示改為圓角六齒（SW v79）
 
 - **設定入口圖示**：右上角設定按鈕改為 24×24 inline SVG，以六條相隔 60° 的圓頭齒、外圈與中心圓構成；實際圖示為 20×20，沿用 `currentColor`，六個主題與離線環境不需額外資源。

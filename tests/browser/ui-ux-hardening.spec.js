@@ -75,6 +75,31 @@ test('trip and shopping controls keep car-friendly targets and decision text', a
   expect(await filter.evaluate(el => el.getBoundingClientRect().height)).toBeGreaterThanOrEqual(44);
 });
 
+/* v80:同區串點的下方決策列會把地點名稱塞進兩顆按鈕(「完成：永旺夢樂城…」)。
+   .nx-ticket-low 的第二軌是 auto,跳過鈕的 max-content 會吃掉整列寬度,
+   讓 minmax(0,1fr) 的完成鈕被壓到接近 0,標籤於是一個字一行直排。
+   量的是真實 view 寬度下的實際 markup。 */
+test('a long place name cannot starve the done button', async ({ page }) => {
+  const metrics = await page.evaluate(() => {
+    const name = '永旺夢樂城岡山購物中心四樓無印良品櫃位';
+    const ticket = document.createElement('div');
+    ticket.className = 'nx-ticket nx-cluster-ticket';
+    ticket.innerHTML =
+      '<div class="nx-ticket-low">' +
+      '<button class="nx-decision-btn done">完成：' + name + '</button>' +
+      '<button class="nx-decision-btn skip">跳過：' + name + '</button>' +
+      '</div>';
+    document.querySelector('.view.active').appendChild(ticket);
+    const done = ticket.querySelector('.done').getBoundingClientRect();
+    const skip = ticket.querySelector('.skip').getBoundingClientRect();
+    const result = { doneWidth: done.width, doneHeight: done.height, skipWidth: skip.width };
+    ticket.remove();
+    return result;
+  });
+  expect(metrics.doneWidth).toBeGreaterThan(metrics.skipWidth);
+  expect(metrics.doneHeight).toBeLessThan(72);
+});
+
 function relativeLuminance(rgb) {
   const channels = rgb.match(/[\d.]+/g).slice(0, 3).map(value => {
     const channel = Number(value) / 255;
