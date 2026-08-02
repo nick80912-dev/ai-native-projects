@@ -3953,6 +3953,7 @@ function toggleShopWantList(key){
 function setShopPlaceFilter(key){
   shopPlaceFilter=key||'all';
   renderShopResults();
+  requestAnimationFrame(centerShopFilterChip);
 }
 function shopQ(v){ _shopQ=v.trim().toLowerCase(); renderShopResults(); }
 function openShopPlace(placeId){
@@ -3979,9 +3980,71 @@ function centerShopFilterChip(){
   if(typeof bar.scrollTo==='function') bar.scrollTo({left:left,behavior:'smooth'});
   else bar.scrollLeft=left;
 }
+/* 想逛數量的單一推導處:總數、每個購物地點、每個樓層。
+   計數一律由 storage 重算,不從 DOM 讀回來 —— DOM 只是投影。 */
+function shopWantCounts(){
+  var malls=shopMalls(), wants=getWants();
+  var total=0, byMall={}, byFloor={};
+  malls.forEach(function(m,mi){
+    var p=m.place, n=0;
+    m.stores.forEach(function(s){
+      if(!wants[shopWantStoreKey(p,mi,s)]) return;
+      n++; total++;
+      var fkey=(p.placeId||('M'+mi))+'::'+(s.floor||'其他');
+      byFloor[fkey]=(byFloor[fkey]||0)+1;
+    });
+    byMall[shopWantListStateKey(p,mi)]=n;
+  });
+  return {total:total,byMall:byMall,byFloor:byFloor};
+}
+/* 就地更新勾選狀態與三處計數。回傳 false 代表這次改動會改變區塊結構,
+   必須交給整份重繪 —— 那是內容真的變了,不是效能問題。 */
+function applyWantToggleInPlace(id,on){
+  var box=document.getElementById('shopResults');
+  if(!box) return false;
+  /* 想逛篩選下,取消標記會讓該列整個離開清單 */
+  if(shopPlaceFilter==='wants') return false;
+  var counts=shopWantCounts();
+  /* 搜尋模式不渲染想逛清單區塊,沒有結構可比對 */
+  if(!_shopQ){
+    var present={},boxes=box.querySelectorAll('[data-want-box]'),bi;
+    for(bi=0;bi<boxes.length;bi++) present[boxes[bi].getAttribute('data-want-box')]=true;
+    var structural=false;
+    Object.keys(counts.byMall).forEach(function(wkey){
+      var n=counts.byMall[wkey];
+      if((n>0)!==!!present[wkey]) structural=true;      /* 區塊要出現或消失 */
+      if(n>0&&shopWantListOpen[wkey]) structural=true;  /* 展開中,內容要增減列 */
+    });
+    if(structural) return false;
+  }
+  var rows=box.querySelectorAll('.store-row'),updated=0,ri;
+  for(ri=0;ri<rows.length;ri++){
+    if(rows[ri].getAttribute('data-want')!==id) continue;
+    var chk=rows[ri].querySelector('.st-chk');
+    if(chk){ chk.className='st-chk'+(on?' on':''); chk.textContent=on?'✓':''; }
+    updated++;
+  }
+  if(!updated) return false;
+  var totalEl=document.getElementById('shopWantTotal');
+  if(totalEl) totalEl.textContent=String(counts.total);
+  var heads=box.querySelectorAll('[data-want-head]'),hi;
+  for(hi=0;hi<heads.length;hi++){
+    heads[hi].textContent='⭐ 想逛清單：'+(counts.byMall[heads[hi].getAttribute('data-want-head')]||0)+' 家';
+  }
+  var fls=box.querySelectorAll('[data-floor-count]'),fi;
+  for(fi=0;fi<fls.length;fi++){
+    var wc=counts.byFloor[fls[fi].getAttribute('data-floor-count')]||0;
+    fls[fi].textContent=fls[fi].getAttribute('data-floor-total')+' 家'+(wc?'｜⭐'+wc:'');
+  }
+  return true;
+}
 function toggleWant(id){
-  var w=getWants(); if(w[id]) delete w[id]; else w[id]=true;
-  lsSet('trip_shop_wants',w); renderShopResults();
+  var w=getWants(), on=!w[id];
+  if(on) w[id]=true; else delete w[id];
+  lsSet('trip_shop_wants',w);
+  /* 整份重繪會把約 720 個節點全部換掉,連帶重設篩選列捲動位置;
+     常見情況(勾選/取消一家)只需要改幾個字,不必重建。 */
+  if(!applyWantToggleInPlace(id,on)) renderShopResults();
 }
 function toggleFloor(fkey,btn){
   var el=document.getElementById('flbody_'+cssId(fkey));
@@ -4027,7 +4090,7 @@ function shopMalls(){
 function storeRow(s,id,on){
   var must=/是|y|✓|v/i.test(s.must||'');
   var tax=/是|y|✓|v/i.test(s.taxfree||'');
-  return '<div class="store-row" onclick="toggleWant(\''+id.replace(/'/g,"\\'")+'\')">'+
+  return '<div class="store-row" data-want="'+escapeHtml(id)+'" onclick="toggleWant(\''+id.replace(/'/g,"\\'")+'\')">'+
     '<span class="st-chk'+(on?' on':'')+'">'+(on?'✓':'')+'</span>'+
     '<span class="st-n">'+escapeHtml(s.name)+(s.cat?' <span class="store-cat">'+escapeHtml(s.cat)+'</span>':'')+(must?' <span class="st-must">必逛</span>':'')+(tax?' <span class="st-tax">免稅</span>':'')+'</span>'+
     '<span class="st-f">'+escapeHtml([s.floor,s.note?s.note.replace('櫃位 ',''):''].filter(Boolean).join('·'))+'</span></div>';
@@ -4037,6 +4100,7 @@ function renderShop(){
   if(!shopMalls().length){ view.innerHTML='<div class="empty-state">尚無購物地點<br>在 Places 新增 Type=購物 後會自動出現</div>'; return; }
   view.innerHTML='<div class="shop-search"><input id="shopSearchInput" placeholder="🔍 搜尋店家（如 UNIQLO、大創）" value="'+escapeHtml(_shopQ)+'" oninput="shopQ(this.value)"></div><div id="shopResults"></div>';
   renderShopResults();
+  requestAnimationFrame(centerShopFilterChip);
 }
 function renderShopResults(){
   var box=document.getElementById('shopResults'); if(!box) return;
@@ -4057,7 +4121,7 @@ function renderShopResults(){
   });
   h+='<div class="shop-filter" id="shopFilterBar">'+
     '<button class="shop-filter-btn '+(shopPlaceFilter==='all'?'on':'')+'" onclick="setShopPlaceFilter(\'all\')">全部<small>'+malls.length+'</small></button>'+
-    '<button class="shop-filter-btn '+(shopPlaceFilter==='wants'?'on':'')+'" onclick="setShopPlaceFilter(\'wants\')">想逛<small>'+wantTotal+'</small></button>'+
+    '<button class="shop-filter-btn '+(shopPlaceFilter==='wants'?'on':'')+'" onclick="setShopPlaceFilter(\'wants\')">想逛<small id="shopWantTotal">'+wantTotal+'</small></button>'+
     malls.map(function(m){
       var key=(m.place.placeId||m.place.name||'').toUpperCase();
       var label=m.place.name||key;
@@ -4086,8 +4150,8 @@ function renderShopResults(){
     if(wanted.length){
       var wkey=shopWantListStateKey(p,mi);
       var wopen=!!shopWantListOpen[wkey];
-      h+='<div class="want-box"><button class="want-head '+(wopen?'on':'')+'" onclick="toggleShopWantList(\''+wkey.replace(/'/g,"\\'")+'\')">'+
-        '<span>⭐ 想逛清單：'+wanted.length+' 家</span><span>'+(wopen?'收合':'展開')+'</span></button>'+
+      h+='<div class="want-box" data-want-box="'+escapeHtml(wkey)+'"><button class="want-head '+(wopen?'on':'')+'" onclick="toggleShopWantList(\''+wkey.replace(/'/g,"\\'")+'\')">'+
+        '<span data-want-head="'+escapeHtml(wkey)+'">⭐ 想逛清單：'+wanted.length+' 家</span><span>'+(wopen?'收合':'展開')+'</span></button>'+
         (wopen?'<div class="want-body">'+wanted.map(function(s){return storeRow(s,shopWantStoreKey(m.place,mi,s),true);}).join('')+'</div>':'')+
         '</div>';
     }
@@ -4106,7 +4170,7 @@ function renderShopResults(){
       var isOpen=!!shopOpenFloors[fkey];
       var wc=floors[f].filter(function(s){return wants[shopWantStoreKey(m.place,mi,s)];}).length;
       h+='<div class="floor"><button class="floor-head'+(isOpen?' on':'')+'" onclick="toggleFloor(\''+fkey.replace(/'/g,"\\'")+'\',this)">'+
-        '<span class="fl-f">'+escapeHtml(f)+'</span><span class="fl-n">'+floors[f].length+' 家'+(wc?'｜⭐'+wc:'')+'</span><span class="fl-arw">▼</span></button>'+
+        '<span class="fl-f">'+escapeHtml(f)+'</span><span class="fl-n" data-floor-count="'+escapeHtml(fkey)+'" data-floor-total="'+floors[f].length+'">'+floors[f].length+' 家'+(wc?'｜⭐'+wc:'')+'</span><span class="fl-arw">▼</span></button>'+
         '<div class="floor-body'+(isOpen?' open':'')+'" id="'+domId+'">'+floors[f].map(function(s){var id=shopWantStoreKey(m.place,mi,s);return storeRow(s,id,!!wants[id]);}).join('')+'</div></div>';
     });
     h+='</div>';
@@ -4115,8 +4179,9 @@ function renderShopResults(){
   if(!rendered){
     h+='<div class="empty-state">'+(shopPlaceFilter==='wants'?'尚未標記想逛店家':'目前沒有符合條件的購物資料')+'</div>';
   }
+  /* 刻意不在這裡置中篩選 chip:重繪不代表篩選改變,每次都捲動會把使用者
+     手動捲到的位置一直拉回去。改由 setShopPlaceFilter() 與首次渲染呼叫。 */
   box.innerHTML=h;
-  requestAnimationFrame(centerShopFilterChip);
 }
 
 /* ================= ledgerRepository(Apps Script append-only 寫入) ================= */
