@@ -83,3 +83,114 @@ test('typing does not re-render on every keystroke', async ({ page }) => {
   expect(renders.immediate).toBe(0);
   expect(renders.settled).toBe(1);
 });
+
+/* ---------- 一鍵清除搜尋 ---------- */
+
+test('a clear button appears only while the search box has text', async ({ page }) => {
+  const states = await page.evaluate(async () => {
+    renderShop();
+    const input = document.getElementById('shopSearchInput');
+    const read = () => {
+      const btn = document.getElementById('shopSearchClear');
+      return { exists: !!btn, hidden: btn ? btn.hidden : null };
+    };
+    const empty = read();
+    input.value = 'UNI';
+    shopQ(input.value);
+    const typed = read();
+    /* 只有空白字元也算「有文字」—— 使用者仍然需要清掉它 */
+    input.value = '   ';
+    shopQ(input.value);
+    const spaces = read();
+    return { empty, typed, spaces };
+  });
+
+  expect(states.empty.exists).toBe(true);
+  expect(states.empty.hidden).toBe(true);
+  expect(states.typed.hidden).toBe(false);
+  expect(states.spaces.hidden).toBe(false);
+});
+
+test('the clear button wipes the search immediately and returns focus', async ({ page }) => {
+  const result = await page.evaluate(() => {
+    renderShop();
+    const input = document.getElementById('shopSearchInput');
+    input.value = 'UNIQLO';
+    shopQ(input.value);
+    renderShopResults();                     /* 略過 debounce,先進入已搜尋狀態 */
+    const searching = {
+      malls: document.querySelectorAll('.shop-mall').length,
+      rows: document.querySelectorAll('.store-row').length,
+    };
+
+    document.getElementById('shopSearchClear').click();
+    /* 立即檢查:清除不該還要再等 debounce */
+    const cleared = {
+      value: input.value,
+      query: _shopQ,
+      malls: document.querySelectorAll('.shop-mall').length,
+      rows: document.querySelectorAll('.store-row').length,
+      btnHidden: document.getElementById('shopSearchClear').hidden,
+      focused: document.activeElement === input,
+    };
+    return { searching, cleared };
+  });
+
+  expect(result.searching.rows).toBeGreaterThan(0);
+  expect(result.cleared.value).toBe('');
+  expect(result.cleared.query).toBe('');
+  expect(result.cleared.btnHidden).toBe(true);
+  expect(result.cleared.focused).toBe(true);
+  /* 完整清單回來了,而且是同步的 */
+  expect(result.cleared.rows).toBeGreaterThan(result.searching.rows);
+  expect(result.cleared.malls).toBeGreaterThanOrEqual(result.searching.malls);
+});
+
+test('a pending debounced render cannot resurrect the cleared query', async ({ page }) => {
+  const after = await page.evaluate(async () => {
+    renderShop();
+    const input = document.getElementById('shopSearchInput');
+    input.value = 'UNIQLO';
+    shopQ(input.value);                      /* 排程了一次 debounce 重繪 */
+    document.getElementById('shopSearchClear').click();
+    await new Promise((r) => setTimeout(r, 400));   /* 等 debounce 視窗過去 */
+    return {
+      value: input.value,
+      query: _shopQ,
+      rows: document.querySelectorAll('.store-row').length,
+      btnHidden: document.getElementById('shopSearchClear').hidden,
+    };
+  });
+  expect(after.value).toBe('');
+  expect(after.query).toBe('');
+  expect(after.btnHidden).toBe(true);
+  expect(after.rows).toBeGreaterThan(2);
+});
+
+test('the clear button is an accessible, tappable control', async ({ page }) => {
+  const meta = await page.evaluate(() => {
+    renderShop();
+    const input = document.getElementById('shopSearchInput');
+    input.value = 'UNIQLO';
+    shopQ(input.value);
+    const btn = document.getElementById('shopSearchClear');
+    const r = btn.getBoundingClientRect();
+    const i = input.getBoundingClientRect();
+    return {
+      tag: btn.tagName,
+      type: btn.getAttribute('type'),
+      label: btn.getAttribute('aria-label'),
+      w: Math.round(r.width), h: Math.round(r.height),
+      insideInput: r.right <= i.right + 1 && r.left >= i.left,
+      /* 輸入的文字不得鑽到 X 底下 */
+      textClearsButton: parseFloat(getComputedStyle(input).paddingRight) >= r.width,
+    };
+  });
+  expect(meta.tag).toBe('BUTTON');
+  expect(meta.type).toBe('button');
+  expect(meta.label).toBeTruthy();
+  expect(meta.w).toBeGreaterThanOrEqual(44);
+  expect(meta.h).toBeGreaterThanOrEqual(44);
+  expect(meta.insideInput).toBe(true);
+  expect(meta.textClearsButton).toBe(true);
+});

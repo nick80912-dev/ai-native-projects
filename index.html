@@ -516,7 +516,15 @@ input,select,textarea{font-size:16px}
 
 
 .shop-search{margin-bottom:12px}
+.shop-search{position:relative}
 .shop-search input{width:100%;border:1.5px solid var(--line);border-radius:12px;padding:12px 14px;font-size:16px;font-family:inherit;background:var(--card);box-shadow:var(--shadow)}
+/* 只有真的有文字(= X 顯示中)才讓出右側空間。placeholder 只在空值時出現,
+   那時 X 是隱藏的,不該被它佔走寬度 —— 320px 下常駐內距會讓 placeholder 被截斷。
+   文字靠左,加右內距不會造成視覺跳動。 */
+.shop-search input.has-text{padding-right:46px}
+.shop-search-clear{position:absolute;top:50%;right:1px;transform:translateY(-50%);width:44px;height:44px;display:flex;align-items:center;justify-content:center;border:0;background:transparent;color:var(--ink-faint);font:inherit;font-size:22px;line-height:1;border-radius:50%;cursor:pointer}
+.shop-search-clear:focus-visible{outline:2px solid var(--sea);outline-offset:-4px}
+.shop-search-clear[hidden]{display:none}
 .shop-search input:focus{outline:none;border-color:var(--sea)}
 
 
@@ -3991,11 +3999,33 @@ function shopStoreMatches(store,query){
 }
 var SHOP_SEARCH_DEBOUNCE_MS=120;
 var shopSearchTimer=null;
+/* 依輸入框的**原始值**決定,不看 _shopQ —— _shopQ 已 trim,
+   使用者若只打了空白,X 仍然要出現,那些空白同樣需要一鍵清掉。 */
+function updateShopSearchClear(){
+  var input=document.getElementById('shopSearchInput'),btn=document.getElementById('shopSearchClear');
+  var hasText=!!(input&&input.value);
+  if(btn) btn.hidden=!hasText;
+  /* 右側內距跟著 X 一起出現／消失,空值時把整條寬度還給 placeholder */
+  if(input) input.className=hasText?'has-text':'';
+}
 /* _shopQ 立即更新,只延後重繪 —— 輸入框在 #shopResults 之外,focus 不受影響。 */
 function shopQ(v){
   _shopQ=String(v==null?'':v).trim().toLowerCase();
+  updateShopSearchClear();
   if(shopSearchTimer) clearTimeout(shopSearchTimer);
   shopSearchTimer=setTimeout(function(){ shopSearchTimer=null; renderShopResults(); },SHOP_SEARCH_DEBOUNCE_MS);
+}
+/* 一鍵清除:必須**取消**已排程的 debounce 重繪,否則那次重繪會晚一步跑,
+   而且要立即重繪(使用者按了清除就是要馬上看到完整清單,不該再等 120ms)。
+   清完把焦點還給輸入框,才能直接接著打字。 */
+function clearShopSearch(){
+  var input=document.getElementById('shopSearchInput');
+  if(input) input.value='';
+  _shopQ='';
+  if(shopSearchTimer){ clearTimeout(shopSearchTimer); shopSearchTimer=null; }
+  updateShopSearchClear();
+  renderShopResults();
+  if(input) input.focus();
 }
 function openShopPlace(placeId){
   var key=String(placeId||'').trim().toUpperCase();
@@ -4184,7 +4214,8 @@ function renderShop(){
   /* 搜尋與採買清單同列:兩者都是進到購物頁最先要做的事,分兩列會把店家清單
      往下推,也讓入口看起來像是清單的一部分。 */
   view.innerHTML='<div class="shop-top">'+
-    '<div class="shop-search"><input id="shopSearchInput" placeholder="🔍 搜尋店家或分類" value="'+escapeHtml(_shopQ)+'" oninput="shopQ(this.value)"></div>'+
+    '<div class="shop-search"><input id="shopSearchInput"'+(_shopQ?' class="has-text"':'')+' placeholder="🔍 搜尋店家或分類" value="'+escapeHtml(_shopQ)+'" oninput="shopQ(this.value)">'+
+      '<button type="button" id="shopSearchClear" class="shop-search-clear" aria-label="清除搜尋"'+(_shopQ?'':' hidden')+' onclick="clearShopSearch()">×</button></div>'+
     listEntry+'</div><div id="shopResults"></div>';
   renderShopResults();
   requestAnimationFrame(centerShopFilterChip);
