@@ -156,3 +156,88 @@ test('the empty wants mode explains how to add stores and offers a way back', as
   expect(after.filter).toBe('all');
   expect(after.floors).toBeGreaterThan(0);
 });
+
+/* ---------- 清除全部想逛 ---------- */
+
+test('the clear-all button only exists in the wants mode and only with data', async ({ page }) => {
+  const empty = await page.evaluate(() => {
+    setShopPlaceFilter('wants');
+    return !!document.querySelector('.shop-wants-actions button');
+  });
+  expect(empty).toBe(false);
+
+  await seedWants(page);
+  const states = await page.evaluate(() => {
+    const has = () => !!document.querySelector('.shop-wants-actions button');
+    setShopPlaceFilter('all');
+    const inAll = has();
+    setShopPlaceFilter('wants');
+    const inWants = has();
+    return { inAll, inWants, label: document.querySelector('.shop-wants-actions button').textContent.trim() };
+  });
+  expect(states.inAll).toBe(false);
+  expect(states.inWants).toBe(true);
+  /* 文案必須明確,不能只寫「清除」—— 避免誤解為刪除店家或採買資料 */
+  expect(states.label).toBe('清除全部想逛');
+});
+
+test('clearing wipes all wants, shows the count, and undo restores the exact snapshot', async ({ page }) => {
+  const seed = await seedWants(page);
+
+  const result = await page.evaluate((total) => {
+    /* 混入一筆轉換保留下來、無法辨識的 key:復原必須連它一起還原 */
+    const stored = JSON.parse(localStorage.getItem('trip_shop_wants'));
+    stored.S999 = true;
+    localStorage.setItem('trip_shop_wants', JSON.stringify(stored));
+    const before = JSON.parse(localStorage.getItem('trip_shop_wants'));
+
+    /* 計數 lsSet 呼叫次數:清除與復原各只能寫入一次 */
+    const realSet = window.lsSet;
+    let writes = 0;
+    window.lsSet = function (k, v) { if (k === 'trip_shop_wants') writes++; return realSet(k, v); };
+
+    const toasts = [];
+    const realToast = window.toast;
+    let undoFn = null;
+    window.toast = function (msg, label, fn) { toasts.push({ msg, label }); undoFn = fn; };
+
+    setShopPlaceFilter('wants');
+    document.querySelector('.shop-wants-actions button').click();
+
+    const afterClear = {
+      stored: JSON.parse(localStorage.getItem('trip_shop_wants')),
+      rows: document.querySelectorAll('.store-row').length,
+      emptyStateShown: /尚未加入想逛店家/.test(document.getElementById('shopResults').textContent),
+      writes,
+    };
+
+    const writesBeforeUndo = writes;
+    undoFn();
+    const afterUndo = {
+      stored: JSON.parse(localStorage.getItem('trip_shop_wants')),
+      rows: document.querySelectorAll('.store-row').length,
+      writes: writes - writesBeforeUndo,
+    };
+
+    window.lsSet = realSet;
+    window.toast = realToast;
+    return { before, toasts, afterClear, afterUndo, total };
+  }, seed.total);
+
+  /* 清除 */
+  expect(result.afterClear.stored).toEqual({});
+  expect(result.afterClear.rows).toBe(0);
+  expect(result.afterClear.emptyStateShown).toBe(true);
+  expect(result.afterClear.writes).toBe(1);
+
+  /* Toast 文案與復原動作 */
+  expect(result.toasts.length).toBe(1);
+  expect(result.toasts[0].msg).toBe('已清除 ' + seed.total + ' 家想逛店家');
+  expect(result.toasts[0].label).toBe('復原');
+
+  /* 復原:逐鍵完全相同,含無法辨識的 S999 */
+  expect(result.afterUndo.stored).toEqual(result.before);
+  expect(result.afterUndo.stored.S999).toBe(true);
+  expect(result.afterUndo.rows).toBe(seed.total);
+  expect(result.afterUndo.writes).toBe(1);
+});

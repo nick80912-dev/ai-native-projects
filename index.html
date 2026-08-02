@@ -297,6 +297,8 @@ input,select,textarea{font-size:16px}
 
 .empty-state{text-align:center;padding:30px 20px;color:var(--ink-faint);font-size:13.5px;line-height:1.7}
 .shop-empty-actions{margin-top:14px}
+.shop-wants-actions{display:flex;justify-content:flex-end;padding:0 12px 4px}
+.shop-wants-actions .btn{min-height:40px;font-size:13px}
 .render-retry{display:block;min-height:44px;margin:14px auto 0}
 
 /* ===== 底部導覽 ===== */
@@ -4057,6 +4059,23 @@ function applyWantToggleInPlace(id,on){
   }
   return true;
 }
+/* 清除全部想逛。復原採**完整快照**而非逐筆反向切換 —— 逐筆會寫入 N 次、
+   重繪 N 次,而且無法還原轉換保留下來、無法辨識的 key。
+   清除與復原各只寫入一次 storage、各只重繪一次。
+   顯示的家數是 shopWantCounts().total(使用者實際看得到的),清除的則是整包 ——
+   若內含無法辨識的 key,它們一併清除並由快照完整還原,對使用者而言數字仍誠實。 */
+function clearAllShopWants(){
+  var count=shopWantCounts().total;
+  if(!count) return;
+  var before=getWants(), snapshot={};
+  Object.keys(before).forEach(function(key){ snapshot[key]=before[key]; });
+  lsSet('trip_shop_wants',{});
+  renderShopResults();
+  toast('已清除 '+count+' 家想逛店家','復原',function(){
+    lsSet('trip_shop_wants',snapshot);
+    renderShopResults();
+  });
+}
 function focusShopRow(id){
   var box=document.getElementById('shopResults'); if(!box) return;
   var rows=box.querySelectorAll('.store-row'),i;
@@ -4166,6 +4185,10 @@ function renderShopResults(){
       return '<button class="shop-filter-btn '+(shopPlaceFilter===key?'on':'')+'" onclick="setShopPlaceFilter(\''+jsHtmlAttrString(key)+'\')">'+escapeHtml(label)+'<small>'+m.stores.length+'</small></button>';
     }).join('')+
     '</div>';
+  /* 只在想逛模式且真的有資料時出現:破壞性操作不該常駐在探索用的「全部」頁籤上 */
+  if(shopPlaceFilter==='wants'&&wantTotal){
+    h+='<div class="shop-wants-actions"><button type="button" class="btn ghost" onclick="clearAllShopWants()">清除全部想逛</button></div>';
+  }
   var rendered=0;
   malls.forEach(function(m,mi){
     var p=m.place;
