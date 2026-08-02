@@ -297,6 +297,10 @@ input,select,textarea{font-size:16px}
 
 .empty-state{text-align:center;padding:30px 20px;color:var(--ink-faint);font-size:13.5px;line-height:1.7}
 .shop-empty-actions{margin-top:14px}
+.shop-list-entry-wrap{padding:0 12px 10px}
+.shop-list-entry{width:100%;min-height:46px;display:flex;align-items:center;justify-content:center;gap:8px;border:1px solid var(--line);border-radius:12px;background:var(--card);color:var(--sea-deep);font:inherit;font-size:14px;font-weight:900;cursor:pointer}
+.shop-list-count{display:inline-flex;align-items:center;justify-content:center;min-width:22px;height:22px;padding:0 6px;border-radius:999px;background:var(--coral);color:#fff;font-size:12px;font-weight:900}
+.shop-list-count[hidden]{display:none}
 .shop-wants-actions{display:flex;justify-content:flex-end;padding:0 12px 4px}
 .shop-wants-actions .btn{min-height:40px;font-size:13px}
 .render-retry{display:block;min-height:44px;margin:14px auto 0}
@@ -3008,11 +3012,28 @@ function openShoppingList(){
   overlay.innerHTML='<section class="shopping-list-panel" role="dialog" aria-modal="true" aria-labelledby="shoppingListTitle"></section>';
   document.body.appendChild(overlay);document.body.classList.add('shopping-list-open');renderShoppingListOverlay();
 }
+/* 購物頁入口用的未完成數:全清單,刻意不同於 Today 卡片的「今天有 N 項待買」——
+   購物頁不綁特定日期。 */
+function shoppingPendingCount(){
+  return shoppingListStore.all().filter(function(item){ return item&&!item.done; }).length;
+}
+function updateShopListCount(){
+  var el=document.getElementById('shopListCount'); if(!el) return;
+  var n=shoppingPendingCount();
+  el.textContent=n?String(n):'';
+  el.hidden=!n;
+}
 function closeShoppingList(){
   closeShoppingItemActions();closeShoppingReleaseConfirm();closeShoppingCompletedEditConfirm();closeShoppingPhotoViewer();closeShoppingItemDetail();
   closeShoppingFormSheet();shoppingUiState.form=null;shoppingUiState.formSession=null;
-  var overlay=document.getElementById('shoppingListOverlay');if(overlay)overlay.remove();
+  var overlay=document.getElementById('shoppingListOverlay'),removed=!!overlay;
+  if(overlay)overlay.remove();
   document.body.classList.remove('shopping-list-open');
+  /* 全檔沒有任何採買流程呼叫 renderAll() —— 不在這裡更新,購物頁的數字會停在舊值。
+     只改一個數字,不整份重繪(比照 applyWantToggleInPlace 的作法)。
+     刻意不動 curView 或 switchView:採買清單是疊上去的 overlay,使用者從未離開原頁,
+     「從哪裡進去就回哪裡」是天然成立的,多做反而會改壞。 */
+  if(removed&&curView==='shop')updateShopListCount();
 }
 function setShoppingTab(tab){shoppingUiState.tab=tab==='done'?'done':'pending';shoppingUiState.split=null;shoppingUiState.selectionMode=false;shoppingUiState.selected={};renderShoppingListOverlay();}
 function shoppingListScrollTop(){
@@ -4154,8 +4175,13 @@ function storeRow(s,id,on){
 }
 function renderShop(){
   var view=document.getElementById('view-shop');
-  if(!shopMalls().length){ view.innerHTML='<div class="empty-state">尚無購物地點<br>在 Places 新增 Type=購物 後會自動出現</div>'; return; }
-  view.innerHTML='<div class="shop-search"><input id="shopSearchInput" placeholder="🔍 搜尋店家（如 UNIQLO、大創）" value="'+escapeHtml(_shopQ)+'" oninput="shopQ(this.value)"></div><div id="shopResults"></div>';
+  /* 採買清單與購物地點資料無關,連沒有購物地點時也該給得到入口 */
+  var pending=shoppingPendingCount();
+  var listEntry='<div class="shop-list-entry-wrap"><button type="button" class="shop-list-entry" onclick="openShoppingList()">'+
+    '採買清單<span id="shopListCount" class="shop-list-count"'+(pending?'':' hidden')+'>'+(pending?pending:'')+'</span></button></div>';
+  if(!shopMalls().length){ view.innerHTML=listEntry+'<div class="empty-state">尚無購物地點<br>在 Places 新增 Type=購物 後會自動出現</div>'; return; }
+  view.innerHTML='<div class="shop-search"><input id="shopSearchInput" placeholder="🔍 搜尋店家（如 UNIQLO、大創）" value="'+escapeHtml(_shopQ)+'" oninput="shopQ(this.value)"></div>'+
+    listEntry+'<div id="shopResults"></div>';
   renderShopResults();
   requestAnimationFrame(centerShopFilterChip);
 }
