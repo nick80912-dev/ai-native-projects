@@ -20,7 +20,8 @@
 - `ios-viewport-resume.test.js`:驗證 iOS 回前景時還原 viewport、清除舊 transform 並保留捲動位置。執行:`node tests/ios-viewport-resume.test.js`。
 - `ios-gesture-diagnostics.test.js`:驗證 document 僅註冊一個 passive no-op `dblclick` 相容性監聽器、舊手勢診斷識別字已退役，並保留桃子診斷入口、健康檢查、時間模擬、viewport recovery 與重置行程進度；另驗證診斷面板「App 版本」列讀自真實 Cache Storage（`index.html` 不得寫死版本號，讀不到須顯示「無法讀取」）。執行:`node tests/ios-gesture-diagnostics.test.js`。
 - `travel-notes.test.js`：驗證診斷面板內的本機旅途紀錄新增、編輯、狀態、確認刪除、200 筆上限、寫入失敗回滾、文字／JSON 複製匯出、健康摘要脈絡，以及舊版 WebKit 無 `crypto.randomUUID()` 時的唯一 ID fallback。執行：`node tests/travel-notes.test.js`。
-- `theme-system.test.js`：驗證六組主題的 13-token、對比率、舊變數角色對映、未知 ID 回退、原子切換、迷你介面卡，以及五個功能 Emoji 精準替換為 SVG。執行：`node tests/theme-system.test.js`。
+- `theme-system.test.js`：驗證六組主題的 13-token、亮色對比率、六組自動暗色 token、reduced-motion、舊變數角色對映、未知 ID 回退、原子切換、迷你介面卡，以及五個功能 Emoji 精準替換為 SVG。執行：`node tests/theme-system.test.js`。
+- `ui-ux-hardening.test.js`：驗證渲染失敗的可執行重試、Today daybar 隱藏、flex header、44px 觸控目標、照片失敗 inline status／單一健康入口、toast live region，以及下一站 Enter／Space 鍵盤啟動。執行：`node tests/ui-ux-hardening.test.js`。
 - `settings-grouped-root.test.js`：驗證設定根頁三個常駐群組（個人／記帳／資料）的順序與歸屬、各列摘要格式與 `未設定`／`SW 未知` 降級、既有子頁入口、身分列可存取名稱，以及測試模式關閉時完全不渲染、開啟時才出現條件式警告列且根頁永不帶切換控制項。執行：`node tests/settings-grouped-root.test.js`。
 
 - `ledger-settlement-reliability.test.js`:結算可靠性總測試。涵蓋 durable delivery bridge(原子交接、持久性、只在遠端讀回同一 `record.id` 才清除、不自動過期)、事件全序與同毫秒競態、跨裝置 confirm／reject 收斂與 losing response inert、狀態機文案與按鈕不復原、退回後重新付款開新 generation、已確認收款的 10 秒一次性復原（資格六項條件、9,999／10,000／10,001ms 邊界、無效或未來 `response.time`、已復原、後續 generation、連點五次只一筆 deletion、歷史不得輸出永久撤銷／復原按鈕）、ledger fast pull 增量與非 JSON 降級、polling 兩層退避與生命週期、待處理徽章、簡易結算模式與時鐘偏移。執行:`node tests/ledger-settlement-reliability.test.js`。
@@ -36,7 +37,8 @@
 - `browser/shopping-photo.spec.js`:以 Chromium 真實 Canvas／IndexedDB 驗證採買單張照片選取、壓縮、重載持久化、卡片只顯示無文字迴紋針、遺失附件警示與修復、容量不足降級、設定頁附件容量／清理管理、一天孤立照片背景清理、六主題文字對比、詳情全畫面查看、頂部 safe-area 與向下滑關閉、備份排除，以及 320／375／390px 水平 overflow、console error／pageerror 為 0。執行:`npx playwright test tests/browser/shopping-photo.spec.js`。
 - `navigation-location.test.js`:行程導航純函式契約。驗證 Places／Restaurants 明確目的地不帶 origin、一般名稱帶有效目前座標、無效／缺少座標退回「名稱＋日本」、drive／transit URL 與缺失 day／item 安全降級。執行:`node tests/navigation-location.test.js`。
 - `browser/navigation-location.spec.js`:驗證既有單一導航按鈕的點擊行為；一般名稱只在點擊時請求一次定位並帶入 origin、拒絕定位退回日本搜尋、明確 reference 不掛定位 handler，且不新增「精確地點／附近搜尋」可見文字。執行:`npx playwright test tests/browser/navigation-location.spec.js`。
-- `ui-font.test.js`:驗證 Google Fonts 只請求 `Noto Sans TC` 400／500／700 並使用 `display=swap`，全站 font stack 順序與繁中 fallback，且不含 Hiragino／Noto Sans JP／Yu Gothic。執行:`node tests/ui-font.test.js`。
+- `ui-font.test.js`:驗證首屏不載入或 preconnect Google Fonts，全站使用裝置內建繁中 font stack，且不含 Hiragino／Noto Sans JP／Yu Gothic。執行:`node tests/ui-font.test.js`。
+- `browser/ui-ux-hardening.spec.js`：以 Chromium 驗證 Today 隱藏 daybar、header flex、同步／設定／Day chip／購物 filter 的 44px 實際高度、16px 完成／跳過、六主題暗色亮度與文字對比，以及 reduced-motion 的 computed behavior。執行：`npx playwright test tests/browser/ui-ux-hardening.spec.js`。
 - `browser/trip-three-scenarios.spec.js`：Playwright 三情境 QA。以真實 App 啟動流程驗證①斷網時採用內建快照、②完整 mock Sheet 連網同步產生 online 快照、③固定旅行日 `Date` 後今天頁落在 Day 1；三情境皆要求 `pageerror=0`。執行：先 `npm ci`、`npx playwright install chromium`，再 `npm run test:browser`。
 - `ledger-member-visibility.test.js`:團體帳本「只顯示與目前成員相關紀錄」。涵蓋付款人 × 分攤成員四象限(含**付款人不在 participants 內的代墊紀錄仍須顯示**)、`participants` 缺欄／`null`／空陣列／非 JSON／非陣列／含非字串／已是陣列共七種舊格式的限定式 fail-open 與不拋錯、fail-open 不擴散、成員無法解析時的安全退化(三種輸入)與診斷訊號、姓名格式變動仍以 `canonicalMemberName()` 穩定 key 判定、筆數與總額只計過濾後紀錄、最近消費／完整紀錄頁／主卡片同源、八個消費端共用 `ledgerTrackRecords()`、編輯與刪除路徑各自重查同一判斷、結算仍讀全團事件流、不得新增範圍切換 UI。執行:`node tests/ledger-member-visibility.test.js`。
 - `apps-script-settings.test.js`:除既有 `doPost` 設定與分帳寫入契約外,另涵蓋唯讀 `doGet` ledger 加速層契約(`after` 正規化、`after >= total` 不呼叫 `getValues()`、`after > total` 回 `reset` 與全量、精確 21 欄 range、不取 `LockService`、不洩漏內部資訊)。執行:`node tests/apps-script-settings.test.js`。

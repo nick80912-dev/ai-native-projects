@@ -49,7 +49,9 @@ for (const file of ['index.html']) {
   assert.match(html, /class="today-shopping-launcher'\+\(day\?'':' today-hero-action'\)/, `${file} uses the shared action class for non-trip shopping`);
   assert.match(html, /\.today-pretrip-title-row\{[^}]*display:flex[^}]*justify-content:space-between/, `${file} keeps the non-trip title and countdown on one row`);
   assert.match(html, /想逛<small>/, `${file} preserves the shop wishlist`);
-  assert.match(html, /\.nx-decision-btn\{[^}]*font-size:12px/, `${file} uses compact home decision buttons`);
+  assert.match(html, /\.nx-ticket-low\{[^}]*grid-template-columns:minmax\(0,1fr\) auto/, `${file} gives completion the flexible primary column`);
+  assert.match(html, /\.nx-decision-btn\{[^}]*font-size:16px/, `${file} keeps home decisions readable in the car`);
+  assert.match(html, /\.nx-decision-btn\.done\{[^}]*background:var\(--green\)[^}]*color:#fff/, `${file} presents completion as the primary decision`);
 }
 
 console.log('home simplification tests passed');

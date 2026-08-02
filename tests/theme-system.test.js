@@ -74,6 +74,18 @@ function extractThemeIds(html){
   assert.match(html,/\.pc-rest-r\{[^}]*color:var\(--gold-ink\)/);
 
   assert.deepStrictEqual(Array.from(extractThemeIds(html)),themeIds);
+  const darkStart=html.indexOf('@media(prefers-color-scheme:dark)');
+  const reducedStart=html.indexOf('@media(prefers-reduced-motion:reduce)');
+  assert(darkStart>=0,'automatic dark mode is defined');
+  assert(reducedStart>darkStart,'reduced-motion override follows theme tokens');
+  const darkCss=html.slice(darkStart,reducedStart);
+  themeIds.forEach(id=>{
+    const selector=id==='ocean'?':root,[data-theme="ocean"]':'[data-theme="'+id+'"]';
+    assert(darkCss.includes(selector),id+' has an automatic dark variant');
+  });
+  const reducedCss=html.slice(reducedStart,html.indexOf('}',reducedStart)+1);
+  assert.match(reducedCss,/scroll-behavior:auto!important/,'reduced motion removes smooth scrolling');
+  assert.match(reducedCss,/animation-duration:\.01ms!important/,'reduced motion collapses animation duration');
   assert.match(html,/var THEME_STORAGE_KEY='trip_theme'/);
   assert.match(html,/function normalizeThemeId\(/);
   assert.match(html,/function applyTheme\(/);
@@ -176,7 +188,7 @@ function extractThemeIds(html){
   assert.strictEqual(notes[0].version,appVersion(),'the newest release note is the current version');
   /* 滾動的五筆視窗:最新一筆是目前版本,其餘四筆是緊接在後的歷史版本。
      歷史版本刻意寫死字面值(見 tests/support/version.js 的適用範圍說明)。 */
-  assert.deepStrictEqual(Array.from(notes.slice(1),function(note){return note.version;}),['v76','v75','v74','v73']);
+  assert.deepStrictEqual(Array.from(notes.slice(1),function(note){return note.version;}),['v77','v76','v75','v74']);
   notes.forEach(note=>{
     assert(note.title&&note.title.length<=24,'release title is short and present');
     assert(Array.isArray(note.items)&&note.items.length>=1,'release has user-readable items');

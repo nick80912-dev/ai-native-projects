@@ -270,22 +270,22 @@ test('根頁與各子頁(含 test-mode)各自保存捲動位置',async({page})=>
   expect(pageErrors).toEqual([]);
 });
 
-test('附件與儲存空間維持在資料群組並通過子頁路由與三種手機寬度',async({page})=>{
+test('照片健康狀態維持在資料群組並通過子頁路由與三種手機寬度',async({page})=>{
   const pageErrors=collectPageErrors(page);
   await installOfflineAppNetwork(page);
   await openApp(page);
   await waitForSyncToSettle(page);
   await openSettingsRoot(page);
 
-  const storageRow=page.getByRole('button',{name:/附件與儲存空間/});
+  const storageRow=page.getByRole('button',{name:/照片健康狀態/});
   await expect(storageRow).toBeVisible();
   const ordering=await page.evaluate(()=>{
     const dataGroup=Array.from(document.querySelectorAll('#settingsOverlay .settings-group')).find(group=>group.querySelector('.settings-group-title').textContent==='資料');
     return Array.from(dataGroup.querySelectorAll('.settings-row-main b'),node=>node.textContent);
   });
-  expect(ordering).toEqual(['附件與儲存空間','備份、還原與版本資訊']);
+  expect(ordering).toEqual(['照片健康狀態','備份、還原與版本資訊']);
   await storageRow.click();
-  await expect(page.getByRole('heading',{name:'附件與儲存空間'})).toBeVisible();
+  await expect(page.getByRole('heading',{name:'照片健康狀態'})).toBeVisible();
 
   for(const size of WIDTHS){
     await page.setViewportSize({width:size.w,height:size.h});
@@ -306,6 +306,6 @@ test('附件與儲存空間維持在資料群組並通過子頁路由與三種�
   }
 
   await page.getByRole('button',{name:/返回/}).click();
-  await expect(page.getByRole('button',{name:/附件與儲存空間/})).toBeVisible();
+  await expect(page.getByRole('button',{name:/照片健康狀態/})).toBeVisible();
   expect(pageErrors).toEqual([]);
 });

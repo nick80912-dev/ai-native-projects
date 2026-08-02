@@ -15,13 +15,10 @@
 <link rel="apple-touch-icon" sizes="152x152" href="icon-152.png">
 <link rel="apple-touch-icon" sizes="167x167" href="icon-167.png">
 <link rel="apple-touch-icon" sizes="180x180" href="icon-180.png">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
 :root,[data-theme="ocean"]{
   --tabbar-height:62px;
-  --font-ui:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,-apple-system,sans-serif;
+  --font-ui:"PingFang TC","Microsoft JhengHei",system-ui,-apple-system,sans-serif;
   --t-paper:#f5f1e8;--t-card:#fffdf8;--t-chrome:#0e3a44;--t-action:#12707f;
   --t-accent:#df5f3a;--t-accent-bg:#fbeee7;--t-ink:#22303a;--t-ink-soft:#5c6b73;
   --t-ink-faint:#7c8a90;--t-line:#e5ddcd;--t-line-soft:#eee8db;
@@ -70,6 +67,50 @@
   --t-ink-faint:#81756d;--t-line:#e5d9ce;--t-line-soft:#efe7df;
   --t-tabbar:rgba(255,253,251,.96);--t-secondary:#7659a0;
 }
+@media(prefers-color-scheme:dark){
+  :root,[data-theme="ocean"]{
+    --t-paper:#10181c;--t-card:#172328;--t-chrome:#081f25;--t-action:#286b78;
+    --t-accent:#ff8a68;--t-accent-bg:#3b211b;--t-ink:#f2f5f6;--t-ink-soft:#bdc8cc;
+    --t-ink-faint:#92a2a8;--t-line:#34464d;--t-line-soft:#28393f;
+    --t-tabbar:rgba(23,35,40,.96);--t-secondary:#b69ad7;
+  }
+  [data-theme="ivory"]{
+    --t-paper:#15171d;--t-card:#1d2028;--t-chrome:#0d1627;--t-action:#934545;
+    --t-accent:#ff8a3d;--t-accent-bg:#3b241b;--t-ink:#f5f4f0;--t-ink-soft:#c6c4bd;
+    --t-ink-faint:#9b9b98;--t-line:#3b3d46;--t-line-soft:#2b2e36;
+    --t-tabbar:rgba(29,32,40,.96);--t-secondary:#b9a1d5;
+  }
+  [data-theme="wisteria"]{
+    --t-paper:#17131b;--t-card:#211a26;--t-chrome:#24172e;--t-action:#744683;
+    --t-accent:#ef759c;--t-accent-bg:#3a1d29;--t-ink:#f5f0f7;--t-ink-soft:#cbbfce;
+    --t-ink-faint:#a092a4;--t-line:#44364a;--t-line-soft:#312738;
+    --t-tabbar:rgba(33,26,38,.96);--t-secondary:#53918b;
+  }
+  [data-theme="cedar"]{
+    --t-paper:#111813;--t-card:#19231c;--t-chrome:#10271a;--t-action:#79512d;
+    --t-accent:#f0804c;--t-accent-bg:#38251b;--t-ink:#f1f5f2;--t-ink-soft:#bec9c1;
+    --t-ink-faint:#94a097;--t-line:#34463a;--t-line-soft:#27352c;
+    --t-tabbar:rgba(25,35,28,.96);--t-secondary:#b49acf;
+  }
+  [data-theme="mist"]{
+    --t-paper:#12171d;--t-card:#1a222b;--t-chrome:#202a37;--t-action:#416b8a;
+    --t-accent:#e5896b;--t-accent-bg:#39241e;--t-ink:#f2f4f7;--t-ink-soft:#c1c8d0;
+    --t-ink-faint:#969faa;--t-line:#394552;--t-line-soft:#2a343f;
+    --t-tabbar:rgba(26,34,43,.96);--t-secondary:#aa93ca;
+  }
+  [data-theme="tea"]{
+    --t-paper:#181411;--t-card:#241e1a;--t-chrome:#2d211a;--t-action:#76563c;
+    --t-accent:#df7781;--t-accent-bg:#392126;--t-ink:#f6f1ed;--t-ink-soft:#cfc2b9;
+    --t-ink-faint:#a3948a;--t-line:#493b33;--t-line-soft:#352b26;
+    --t-tabbar:rgba(36,30,26,.96);--t-secondary:#ac91c8;
+  }
+  body{color-scheme:dark}
+  .btn.ghost,.inline-add input,.field input,.field select,.payer-opt,.sw-opt,.qa-btn,.nx-done,
+  .nx-cluster-expand,.floor-head,.ft-chip,.shop-filter-btn,.shop-search input,.shopping-input,
+  .shopping-select,.nx-ticket-low{background:var(--card);color:var(--ink)}
+  .pc-v{color:var(--ink-soft)}
+}
+@media(prefers-reduced-motion:reduce){html,*,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html{scroll-behavior:smooth}
 html,body{touch-action:pan-x pan-y}
@@ -88,22 +129,22 @@ input,select,textarea{font-size:16px}
   background:var(--sea-deep);
   padding:calc(env(safe-area-inset-top) + 8px) 12px 0;
 }
-.brand{display:flex;align-items:center;gap:8px;padding:0 128px 8px 8px;justify-content:flex-start;position:relative;min-width:0}
+.brand{display:flex;align-items:center;gap:8px;padding:0 0 8px 8px;justify-content:flex-start;min-width:0}
 .brand .logo{
   width:26px;height:26px;border-radius:7px;object-fit:cover;display:block;flex:0 0 26px;
 }
 .brand .logo.simulating{filter:hue-rotate(120deg) saturate(1.35)}
 .sim-marker{display:none;color:#ffe19a;font-size:11px;font-weight:800}
 .sim-marker.on{display:inline}
-.brand .t{color:#fff;font-size:15px;font-weight:700;letter-spacing:.03em;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.brand .t{flex:1;color:#fff;font-size:15px;font-weight:700;letter-spacing:.03em;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .brand .sync{
-  font-size:11px;color:rgba(255,255,255,.7);display:flex;align-items:center;gap:4px;
+  min-height:44px;font-size:12px;color:rgba(255,255,255,.78);display:flex;align-items:center;gap:4px;
   background:rgba(255,255,255,.1);border-radius:20px;padding:5px 10px;border:none;cursor:pointer;
   font-family:inherit;
 }
-.brand-actions{position:absolute;right:0;top:0;display:flex;align-items:center;gap:5px}
-.settings-btn{width:32px;height:32px;border:0;border-radius:50%;background:rgba(255,255,255,.1);color:#fff;font-size:18px;line-height:1;display:flex;align-items:center;justify-content:center;cursor:pointer}
-@media(max-width:390px){.brand{padding-right:124px}.brand .t{max-width:150px}.brand .logo{width:24px;height:24px;flex-basis:24px}.brand .sync{padding:5px 8px}}
+.brand-actions{position:static;flex:0 0 auto;display:flex;align-items:center;gap:5px}
+.settings-btn{width:44px;height:44px;min-height:44px;border:0;border-radius:50%;background:rgba(255,255,255,.1);color:#fff;font-size:18px;line-height:1;display:flex;align-items:center;justify-content:center;cursor:pointer}
+@media(max-width:390px){.brand .logo{width:24px;height:24px;flex-basis:24px}.brand .sync{padding:5px 8px}}
 .brand .sync .dot{width:7px;height:7px;border-radius:50%;background:#5ec27a}
 .brand .sync .dot.stale{background:var(--gold)}
 .brand .sync .dot.err{background:var(--coral)}
@@ -126,7 +167,7 @@ input,select,textarea{font-size:16px}
 }
 .daybar::-webkit-scrollbar{display:none}
 .day-chip{
-  flex:0 0 auto;background:rgba(255,255,255,.13);border:none;border-radius:18px;cursor:pointer;
+  min-height:44px;flex:0 0 auto;background:rgba(255,255,255,.13);border:none;border-radius:18px;cursor:pointer;
   color:rgba(255,255,255,.85);font-family:inherit;padding:6px 13px;font-size:13px;
   font-weight:600;white-space:nowrap;transition:.2s;line-height:1.3;text-align:center;
 }
@@ -298,6 +339,7 @@ input,select,textarea{font-size:16px}
 .sw-opt.on{background:#e9f2ec;color:var(--green);border-color:var(--green)}
 
 .empty-state{text-align:center;padding:30px 20px;color:var(--ink-faint);font-size:13.5px;line-height:1.7}
+.render-retry{display:block;min-height:44px;margin:14px auto 0}
 
 /* ===== 底部導覽 ===== */
 .tabbar{
@@ -417,10 +459,10 @@ input,select,textarea{font-size:16px}
 .nx-secondary-actions{display:flex;gap:8px;flex-wrap:wrap;padding:0 16px 12px 20px}
 .nx-secondary-actions:empty{display:none}
 .nx-secondary-actions .qa-btn{margin:0}
-.nx-ticket-low{display:grid;grid-template-columns:1fr 1fr;gap:10px;border-top:1px dashed var(--line);padding:12px 16px 14px 20px;background:#fffaf0}
-.nx-decision-btn{min-height:46px;border-radius:12px;font-size:12px;font-weight:900;font-family:inherit;cursor:pointer}
-.nx-decision-btn.done{background:#fff;color:var(--green);border:1.5px solid var(--green)}
-.nx-decision-btn.skip{background:#f7f3ea;color:var(--ink-faint);border:1px solid var(--line)}
+.nx-ticket-low{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;border-top:1px dashed var(--line);padding:12px 16px 14px 20px;background:#fffaf0}
+.nx-decision-btn{min-height:46px;border-radius:12px;font-size:16px;font-weight:900;font-family:inherit;cursor:pointer;overflow:hidden;text-overflow:ellipsis}
+.nx-decision-btn.done{background:var(--green);color:#fff;border:1.5px solid var(--green)}
+.nx-decision-btn.skip{min-width:88px;padding:0 14px;background:#f7f3ea;color:var(--ink-faint);border:1px solid var(--line)}
 .nx-decision-btn:active{transform:scale(.97)}
 .nx-remain{margin:0 12px 12px;color:var(--ink-faint);font-size:13px;text-align:center}
 .nx-cluster-summary{font-size:14px;line-height:1.55;color:var(--sea-deep);font-weight:800;margin:4px 0 8px}
@@ -475,7 +517,7 @@ input,select,textarea{font-size:16px}
 .sm-actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}
 .shop-filter{display:flex;gap:7px;overflow-x:auto;padding:2px 2px 10px;margin-bottom:8px;scrollbar-width:none}
 .shop-filter::-webkit-scrollbar{display:none}
-.shop-filter-btn{flex:0 0 auto;border:1px solid var(--line);background:#fff;color:var(--ink-soft);border-radius:999px;padding:8px 12px;font-size:12.5px;font-weight:800;font-family:inherit;box-shadow:var(--shadow);cursor:pointer}
+.shop-filter-btn{min-height:44px;flex:0 0 auto;border:1px solid var(--line);background:#fff;color:var(--ink-soft);border-radius:999px;padding:8px 12px;font-size:12.5px;font-weight:800;font-family:inherit;box-shadow:var(--shadow);cursor:pointer}
 .shop-filter-btn.on{background:var(--sea);border-color:var(--sea);color:#fff}
 .shop-filter-btn small{font-size:10px;font-weight:800;opacity:.72;margin-left:3px}
 .want-box{margin-top:12px;background:#fdf6e0;border:1px solid #eeddb0;border-radius:11px;padding:10px 12px}
@@ -597,7 +639,7 @@ body.ledger-sheet-open{overflow:hidden}.ledger-sheet-overlay{position:fixed;inse
 .today-hero-action{display:inline-flex;align-items:center;justify-content:center;width:auto;min-height:44px;margin-top:12px;background:rgba(255,255,255,.16);color:#fff;border:none;border-radius:10px;padding:9px 16px;font:inherit;font-size:13.5px;font-weight:600;line-height:1.2;cursor:pointer;position:relative;touch-action:manipulation}
 body.shopping-list-open{overflow:hidden}.shopping-list-overlay{position:fixed;inset:0;z-index:145;background:var(--paper)}.shopping-list-panel{width:min(100%,620px);height:100dvh;margin:0 auto;overflow-y:auto;touch-action:pan-y;overscroll-behavior:contain;background:var(--paper);padding:0 12px calc(92px + env(safe-area-inset-bottom));box-sizing:border-box}.shopping-list-head{position:sticky;z-index:4;top:0;display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:58px;margin:0 -12px;padding:calc(7px + env(safe-area-inset-top)) 12px 7px;background:rgba(249,247,241,.97);border-bottom:1px solid var(--line);backdrop-filter:blur(10px)}.shopping-list-head h2{min-width:0;font-size:19px;color:var(--sea-deep)}.shopping-list-head-actions{display:flex;align-items:center;gap:4px}.shopping-icon-button{min-width:44px;min-height:44px;border:0;border-radius:9px;background:transparent;color:var(--sea-deep);font:inherit;font-size:22px;font-weight:900}.shopping-add-button{width:44px;height:44px;border:0;border-radius:50%;background:var(--coral);color:#fff;font:inherit;font-size:25px;line-height:1}.shopping-list-segment{position:sticky;z-index:3;top:calc(59px + env(safe-area-inset-top));display:flex;gap:4px;margin:0 -12px 12px;padding:9px 12px;background:var(--paper)}.shopping-list-segment-track{display:flex;width:100%;gap:4px;padding:4px;border:1px solid var(--line);border-radius:999px;background:var(--line-soft)}.shopping-list-segment button{flex:1;min-width:0;min-height:40px;border:0;border-radius:999px;background:transparent;color:var(--ink-soft);font:inherit;font-size:13px;font-weight:900}.shopping-list-segment button.on{background:var(--sea);color:#fff;box-shadow:var(--shadow)}
 .shopping-form{margin:0 0 14px;padding:12px;border:1px solid var(--line);border-radius:10px;background:#fff;box-shadow:var(--shadow)}.shopping-form-head{display:flex;align-items:center;justify-content:space-between;gap:10px}.shopping-form-head h3{font-size:15px;color:var(--sea-deep)}.shopping-field{display:grid;gap:6px;margin-top:11px;min-width:0}.shopping-field label,.shopping-field-label{font-size:12px;font-weight:900;color:var(--ink-soft)}.shopping-input,.shopping-select{width:100%;min-width:0;min-height:46px;border:1px solid var(--line);border-radius:8px;background:#fff;padding:9px 11px;font:inherit;box-sizing:border-box}.shopping-chip-grid{display:flex;flex-wrap:wrap;gap:7px}.shopping-chip{min-height:40px;border:1px solid var(--line);border-radius:999px;background:#fff;color:var(--ink-soft);padding:7px 12px;font:inherit;font-size:12px;font-weight:800}.shopping-chip.on{border-color:var(--sea);background:var(--mint);color:var(--sea-deep)}.shopping-target-chip.on{border-color:transparent;background:var(--coral-bg);color:var(--coral)}.shopping-target-summary{font-size:12px;font-weight:800;color:var(--ink-soft)}.shopping-target-add{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:7px}.shopping-target-add button{min-width:44px;min-height:44px;border:1px dashed var(--sea);border-radius:8px;background:#fff;color:var(--sea);font:inherit;font-weight:900}.shopping-form-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:13px}.shopping-form-actions .btn{min-height:44px}.shopping-form-actions .shopping-save-another{grid-column:1/-1}
-.shopping-form-overlay{z-index:150}.shopping-form-sheet{width:min(100%,620px);max-height:100dvh;overflow-y:auto;touch-action:pan-y;overscroll-behavior:contain;padding-bottom:calc(18px + env(safe-area-inset-bottom))}.shopping-form-sheet .shopping-form{margin:0;border:0;box-shadow:none}
+.shopping-form-overlay{z-index:150}.shopping-form-sheet{width:min(100%,620px);max-height:100dvh;overflow-y:auto;touch-action:pan-y;overscroll-behavior:contain;padding-bottom:calc(18px + env(safe-area-inset-bottom))}.shopping-form-sheet .shopping-form{margin:0;border:0;box-shadow:none}.shopping-photo-inline-error{color:var(--coral);font-weight:800}
 .shopping-list-tools{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px}.shopping-list-tools strong{font-size:13px;color:var(--ink-soft)}.shopping-list-tools button{min-height:40px;border:0;background:transparent;color:var(--sea);padding:4px 0 4px 12px;font:inherit;font-size:12px;font-weight:900}.shopping-group{display:grid;gap:7px;margin-top:13px}.shopping-group-title{font-size:12px;color:var(--ink-faint);font-weight:900}.shopping-group-hint{margin:-2px 0 1px;color:var(--ink-faint);font-size:11px;line-height:1.45;overflow-wrap:anywhere}.shopping-group-orphan .shopping-group-title,.shopping-group-orphan .shopping-group-hint{color:var(--coral)}.shopping-item-orphan{border-color:var(--coral)}.shopping-field-notice{margin:1px 0 0;color:var(--ink-faint);font-size:11px;line-height:1.45;overflow-wrap:anywhere}.shopping-item-title-row{display:flex;align-items:center;flex-wrap:wrap;gap:4px 6px;min-width:0;overflow-wrap:anywhere}.shopping-card-target-summary{display:inline-flex;align-items:center;flex-wrap:wrap;gap:3px;font-weight:400}.shopping-target-affix{color:var(--ink-soft);font-weight:400}.shopping-target-badge{display:inline-flex;align-items:center;background:var(--coral-bg);color:var(--coral);border-radius:6px;border:0;padding:2px 7px;font-size:10.5px;font-weight:800;line-height:1.3}.shopping-category-badge{display:inline-flex;align-items:center;background:#fff7dc;color:#8a6416;border-radius:6px;border:0;padding:2px 7px;font-size:10.5px;font-weight:800;line-height:1.3}.shopping-link-badge{display:inline-flex;align-items:center;border-radius:999px;padding:1px 7px;font-size:10px;font-weight:900;white-space:nowrap}.shopping-link-linked{background:var(--mint);color:var(--sea-deep)}.shopping-link-partial{background:#e8f0f2;color:var(--sea-deep)}.shopping-link-unverified{background:#fdf0e2;color:#9a5b18}.shopping-link-unlinked{background:var(--line-soft);color:var(--ink-faint)}.shopping-selection-toolbar-done{grid-template-columns:auto minmax(0,1fr) minmax(0,1fr) minmax(0,.9fr)}.shopping-selection-toolbar-done button:last-child{background:var(--coral);color:#fff}.shopping-split-form{border-color:var(--sea)}.shopping-split-remainder{margin:0;min-height:46px;display:flex;align-items:center;border:1px dashed var(--line);border-radius:8px;background:var(--line-soft);padding:9px 11px;font-size:16px;font-weight:900;color:var(--sea-deep)}.shopping-selection-toolbar-stacked{grid-template-columns:minmax(0,1fr);gap:6px}.shopping-selection-actions{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}.shopping-selection-toolbar-stacked .shopping-selection-actions button:last-child{background:var(--coral);color:#fff}.shopping-field-notice-warn{color:var(--coral)}.shopping-clear-binding{justify-self:start;min-height:40px;border:1px dashed var(--coral);border-radius:8px;background:#fff;color:var(--coral);padding:6px 12px;font:inherit;font-size:12px;font-weight:900}.shopping-item{display:grid;grid-template-columns:44px minmax(0,1fr) auto;align-items:center;gap:6px;min-width:0;border:1px solid var(--line);border-radius:9px;background:#fff;padding:8px 7px}.shopping-item-location{margin-top:3px;color:var(--ink-faint);font-size:11px;line-height:1.35;overflow-wrap:anywhere}.shopping-item-menu{min-width:40px;min-height:40px;border:0;border-radius:9px;background:transparent;color:var(--ink-soft);font:inherit;font-size:20px;font-weight:900;line-height:1}.shopping-item-primary{min-height:40px;padding:0 10px;border:1px solid var(--sea);border-radius:999px;background:#fff;color:var(--sea-deep);font:inherit;font-size:12px;font-weight:900;white-space:nowrap}.shopping-quantity-row{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:9px}.shopping-quantity-row>.shopping-field{margin-top:0}.shopping-action-popover{width:auto;min-width:120px}.shopping-item-check{display:grid;place-items:center;width:44px;min-height:44px}.shopping-item-check input{width:20px;height:20px;margin:0}.shopping-item-body{min-width:0}.shopping-item-body strong{display:block;font-size:14px;overflow-wrap:anywhere}.shopping-item-meta{display:flex;align-items:center;flex-wrap:wrap;gap:3px 7px;margin-top:4px;color:var(--ink-faint);font-size:11px;line-height:1.35}.shopping-item-actions{display:flex;align-items:center}.shopping-item-actions button{min-width:40px;min-height:40px;border:0;background:transparent;color:var(--sea);font:inherit;font-size:12px;font-weight:900}.shopping-item-actions button.danger{color:var(--coral)}.shopping-empty{padding:36px 12px;text-align:center;color:var(--ink-faint);font-size:13px}.shopping-selection-toolbar{position:fixed;z-index:148;left:12px;right:12px;bottom:calc(10px + env(safe-area-inset-bottom));width:min(calc(100% - 24px),596px);margin:0 auto;display:grid;grid-template-columns:auto minmax(0,1fr) minmax(0,1.35fr);align-items:center;gap:7px;padding:9px;border-radius:12px;background:var(--sea-deep);box-shadow:var(--shadow-lg);box-sizing:border-box}.shopping-selection-toolbar span{color:#fff;font-size:12px;font-weight:900}.shopping-selection-toolbar button{min-width:0;min-height:42px;border:0;border-radius:999px;background:#fff;color:var(--sea-deep);padding:7px 9px;font:inherit;font-size:11px;font-weight:900}.shopping-selection-toolbar button:last-child{background:var(--coral);color:#fff}.shopping-selection-toolbar button:disabled{opacity:.45}
 .shopping-selection-toolbar{grid-template-columns:auto minmax(0,1fr)}.shopping-selection-actions{grid-template-columns:repeat(3,minmax(0,1fr))}.shopping-selection-toolbar button{min-height:44px;white-space:nowrap;padding-left:5px;padding-right:5px}.shopping-selection-toolbar-empty{grid-template-columns:minmax(0,1fr)}.shopping-selection-spacer{height:calc(66px + env(safe-area-inset-bottom))}
 .shopping-item-body[role="button"]{cursor:pointer;border-radius:6px}.shopping-item-body[role="button"]:focus-visible{outline:2px solid var(--sea);outline-offset:3px}.shopping-detail-overlay{z-index:150}.shopping-linked-ledger-detail,.shopping-linked-ledger-entry{z-index:160}.shopping-detail-section{margin-top:14px}.shopping-detail-section h3{font-size:13px;color:var(--ink-soft);margin-bottom:6px}.shopping-detail-allocation{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line)}.shopping-detail-allocation-main{display:flex;align-items:baseline;flex-wrap:wrap;gap:2px 7px;min-width:0}.shopping-detail-allocation-main strong{font-size:13px;overflow-wrap:anywhere}.shopping-detail-allocation-main span{font-size:11px;color:var(--ink-faint)}.shopping-detail-allocation-actions{display:flex;align-items:center;gap:5px}.shopping-detail-allocation-actions button{min-height:40px;border:0;border-radius:8px;background:var(--line-soft);color:var(--sea-deep);padding:6px 9px;font:inherit;font-size:11px;font-weight:900}.shopping-detail-allocation-actions button.danger{color:var(--coral)}.shopping-detail-chevron{font-size:17px}.shopping-detail-footer-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.shopping-detail-footer-actions-single{grid-template-columns:minmax(0,1fr)}
@@ -728,7 +770,7 @@ function selectTheme(themeId){
 </div>
 
 <button class="totop" id="totop" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑</button>
-<div class="toast" id="toast"></div>
+<div class="toast" id="toast" role="status" aria-live="polite" aria-atomic="true"></div>
 
 <div class="tabbar">
   <button class="tabbar-btn active" data-view="today" onclick="switchView('today')">
@@ -2242,7 +2284,7 @@ function openTripItem(dayIndex,itemId){
 }
 function renderDaybar(){
   var bar=document.getElementById('daybar');
-  if(curView==='split'||curView==='shop'){ bar.style.display='none'; return; }
+  if(curView!=='trip'){ bar.style.display='none'; return; }
   var t=DB.trip;
   if(!t||!t.days.length){ bar.style.display='none'; return; }
   bar.style.display='flex';
@@ -2741,6 +2783,10 @@ function renderClusterNextStopCard(day,dayIndex,pick,cluster,checks,progress,now
   if(pick.remaining+childPick.remaining>0) h+='<div class="nx-remain">今日還有 '+(pick.remaining+childPick.remaining)+' 個行程</div>';
   return h;
 }
+function activateKeyboardButton(event,action){
+  if(!event||(event.key!=='Enter'&&event.key!==' ')||typeof action!=='function')return false;
+  event.preventDefault();action();return true;
+}
 function renderNextStopCard(day,dayIndex,pick){
   var it=pick.item;
   if(!it){
@@ -2750,7 +2796,7 @@ function renderNextStopCard(day,dayIndex,pick){
   var meta=nextStopMeta(it,res);
   var canNav=(it.place&&it.place.trim())||res;
   var h='<div class="nx-ticket">'+
-    '<div class="nx-ticket-main openable" onclick="openTripItem('+dayIndex+',\''+it.id+'\')">'+
+    '<div class="nx-ticket-main openable" role="button" tabindex="0" aria-label="開啟完整行程：'+escapeHtml(meta.place.replace(/\n/g,' '))+'" onclick="openTripItem('+dayIndex+',\''+it.id+'\')" onkeydown="activateKeyboardButton(event,function(){openTripItem('+dayIndex+',\''+it.id+'\')})">'+
       '<div class="nx-ticket-kicker">NEXT STOP · DAY '+(dayIndex+1)+'</div>'+
       (it.time?'<div class="nx-ticket-time">'+escapeHtml(it.time)+'</div>':'')+
       '<div class="nx-ticket-title">'+escapeHtml(meta.place.replace(/\n/g,' '))+'</div>'+
@@ -2951,7 +2997,7 @@ function renderToday(){
 }
 
 /* ================= 採買清單(純 localStorage) ================= */
-var shoppingUiState={tab:'pending',form:null,formSession:null,split:null,selectionMode:false,selected:{}};
+var shoppingUiState={tab:'pending',form:null,formSession:null,split:null,selectionMode:false,selected:{},photoError:''};
 var shoppingPhotoStore=typeof TripShoppingPhotos!=='undefined'&&TripShoppingPhotos&&typeof TripShoppingPhotos.createStore==='function'
   ?TripShoppingPhotos.createStore()
   :{put:function(){return Promise.reject(new Error('此裝置無法保存照片附件'));},get:function(){return Promise.resolve(null);},remove:function(){return Promise.resolve();},listMetadata:function(){return Promise.reject(new Error('此裝置目前無法使用照片附件'));}};
@@ -3064,7 +3110,7 @@ function renderShoppingFormSheet(){
 function openShoppingForm(mode,id,returnContext){
   var item=mode==='edit'?shoppingListStore.all().filter(function(value){return value.id===String(id);})[0]:null;
   if(mode==='edit'&&!item){toast('找不到採買項目');return;}
-  shoppingUiState.split=null;
+  shoppingUiState.split=null;shoppingUiState.photoError='';
   shoppingUiState.form=mode==='edit'?newShoppingForm(item):newShoppingForm();
   if(item)shoppingUiState.form.allocationEditPolicy=shoppingAllocationEditPolicy(item,shoppingLedgerContext());
   shoppingUiState.formSession=createShoppingFormSession(mode,item,returnContext,shoppingListScrollTop());
@@ -3250,22 +3296,24 @@ function renderShoppingForm(){
 }
 function renderShoppingPhotoField(form,pending){
   var hasPhoto=!!String(form&&form.photoId||'').trim(),unavailable=shoppingPhotoAuditState.ready&&shoppingPhotoAuditState.unavailable,disabled=pending||unavailable?' disabled':'';
+  var error=String(shoppingUiState.photoError||''),message=error||
+    (unavailable?'此裝置目前無法使用照片附件；請至設定的「照片健康狀態」查看。':pending?'正在處理照片…':hasPhoto?'已夾帶一張照片；只保存在本裝置，不包含於備份。':'照片只保存在本裝置，不包含於備份。');
   return '<div class="shopping-field"><span class="shopping-field-label">照片附件（選填）</span><input id="shoppingPhotoInput" type="file" accept="image/*" hidden onchange="selectShoppingPhoto(this)"'+disabled+'>'+
     '<div class="shopping-photo-field-actions'+(hasPhoto?'':' shopping-photo-field-actions-single')+'"><button type="button" class="btn ghost" onclick="document.getElementById(\'shoppingPhotoInput\').click()"'+disabled+'>'+(hasPhoto?'更換照片':'選擇照片')+'</button>'+
     (hasPhoto?'<button type="button" class="btn ghost" onclick="removeShoppingFormPhoto()"'+disabled+'>移除照片</button>':'')+'</div>'+
-    '<p class="shopping-photo-note">'+(unavailable?'此裝置目前無法使用照片附件':pending?'正在處理照片…':hasPhoto?'已夾帶一張照片；只保存在本裝置，不包含於備份。':'照片只保存在本裝置，不包含於備份。')+'</p></div>';
+    '<p class="shopping-photo-note'+(error||unavailable?' shopping-photo-inline-error':'')+'" role="status" aria-live="polite">'+escapeHtml(message)+'</p></div>';
 }
 function removeShoppingFormPhoto(){if(!shoppingUiState.form||shoppingUiState.formSession&&shoppingUiState.formSession.savePending)return;shoppingUiState.form.photoId='';renderShoppingFormSheet();}
 function selectShoppingPhoto(input){
   var file=input&&input.files&&input.files[0],session=shoppingUiState.formSession,form=shoppingUiState.form;
   if(!file||!session||!form||session.savePending||shoppingPhotoAuditState.unavailable)return Promise.resolve(false);
-  setShoppingFormSavePending(true);
+  shoppingUiState.photoError='';setShoppingFormSavePending(true);
   return TripShoppingPhotos.compressImage(file).then(function(blob){return shoppingPhotoStore.put(blob);}).then(function(photoId){
     if(shoppingUiState.formSession!==session||shoppingUiState.form!==form){cleanupShoppingPhotoIds([photoId]);return false;}
     var previous=String(form.photoId||'');
     form.photoId=photoId;session.temporaryPhotoIds.push(photoId);
     if(previous&&session.temporaryPhotoIds.indexOf(previous)>=0){session.temporaryPhotoIds=session.temporaryPhotoIds.filter(function(id){return id!==previous;});cleanupShoppingPhotoIds([previous]);}
-    setShoppingFormSavePending(false);toast('照片附件已加入');return true;
+    shoppingUiState.photoError='';setShoppingFormSavePending(false);toast('照片附件已加入');return true;
   }).catch(function(error){
     if(shoppingUiState.formSession===session)setShoppingFormSavePending(false);
     showShoppingPhotoSaveFailure(error);return false;
@@ -3400,7 +3448,7 @@ function openShoppingItemDetail(id){
   overlay.innerHTML='<section class="ledger-sheet ledger-detail-sheet" role="dialog" aria-modal="true" aria-labelledby="shoppingItemDetailTitle"><div class="ledger-sheet-head"><h2 id="shoppingItemDetailTitle">'+escapeHtml(item.name)+'</h2><button class="settings-close" aria-label="關閉" onclick="closeShoppingItemDetail()">×</button></div>'+renderShoppingItemDetail(item)+'</section>';
   document.body.appendChild(overlay);
 }
-var shoppingPhotoRepairState={itemId:'',trigger:null,pending:false};
+var shoppingPhotoRepairState={itemId:'',trigger:null,pending:false,error:''};
 function setShoppingPhotoRepairUnderlyingInert(inert){
   ['shoppingListOverlay','shoppingItemDetail'].forEach(function(id){
     var element=document.getElementById(id);if(!element)return;
@@ -3412,7 +3460,7 @@ function closeShoppingPhotoRepair(restoreFocus){
   var overlay=document.getElementById('shoppingPhotoRepair'),trigger=shoppingPhotoRepairState.trigger;
   if(overlay)overlay.remove();
   setShoppingPhotoRepairUnderlyingInert(false);
-  shoppingPhotoRepairState={itemId:'',trigger:null,pending:false};
+  shoppingPhotoRepairState={itemId:'',trigger:null,pending:false,error:''};
   if(restoreFocus!==false&&trigger&&trigger.isConnected)setTimeout(function(){trigger.focus();},0);
 }
 function installShoppingPhotoRepairDismiss(overlay){
@@ -3435,9 +3483,9 @@ function openShoppingPhotoRepair(itemId,trigger){
   var item=shoppingListStore.all().filter(function(value){return value.id===String(itemId);})[0];
   if(!item||!item.photoId){toast('這筆採買項目沒有照片附件');return false;}
   closeShoppingPhotoRepair(false);
-  shoppingPhotoRepairState={itemId:item.id,trigger:trigger||document.activeElement,pending:false};
+  shoppingPhotoRepairState={itemId:item.id,trigger:trigger||document.activeElement,pending:false,error:''};
   var overlay=document.createElement('div');overlay.id='shoppingPhotoRepair';overlay.className='shopping-photo-repair-overlay';
-  overlay.innerHTML='<section class="shopping-photo-repair-sheet" role="dialog" aria-modal="true" aria-labelledby="shoppingPhotoRepairTitle"><div class="shopping-photo-repair-head"><h2 id="shoppingPhotoRepairTitle">修復照片附件</h2><button type="button" class="settings-close" aria-label="關閉" onclick="closeShoppingPhotoRepair()">×</button></div><p class="shopping-photo-repair-copy">照片可能已被瀏覽器清除，或 App 儲存空間不足。</p><input id="shoppingPhotoRepairInput" type="file" accept="image/*" hidden onchange="repairShoppingPhoto(this)"><div class="shopping-photo-repair-actions"><button type="button" class="btn" onclick="document.getElementById(\'shoppingPhotoRepairInput\').click()">重新選擇照片</button><button type="button" class="btn ghost" onclick="removeInvalidShoppingPhotoReference(\''+jsHtmlAttrString(item.id)+'\')">移除附件引用</button></div></section>';
+  overlay.innerHTML='<section class="shopping-photo-repair-sheet" role="dialog" aria-modal="true" aria-labelledby="shoppingPhotoRepairTitle"><div class="shopping-photo-repair-head"><h2 id="shoppingPhotoRepairTitle">修復照片附件</h2><button type="button" class="settings-close" aria-label="關閉" onclick="closeShoppingPhotoRepair()">×</button></div><p class="shopping-photo-repair-copy">照片可能已被瀏覽器清除，或 App 儲存空間不足。</p><p id="shoppingPhotoRepairStatus" class="shopping-photo-note shopping-photo-inline-error" role="status" aria-live="polite" hidden></p><input id="shoppingPhotoRepairInput" type="file" accept="image/*" hidden onchange="repairShoppingPhoto(this)"><div class="shopping-photo-repair-actions"><button type="button" class="btn" onclick="document.getElementById(\'shoppingPhotoRepairInput\').click()">重新選擇照片</button><button type="button" class="btn ghost" onclick="removeInvalidShoppingPhotoReference(\''+jsHtmlAttrString(item.id)+'\')">移除附件引用</button></div></section>';
   installShoppingPhotoRepairDismiss(overlay);setShoppingPhotoRepairUnderlyingInert(true);document.body.appendChild(overlay);
   setTimeout(function(){var button=overlay.querySelector('.shopping-photo-repair-actions .btn');if(button)button.focus();},0);
   return true;
@@ -3469,18 +3517,16 @@ function removeInvalidShoppingPhotoReference(itemId){
   closeShoppingPhotoRepair(false);renderToday();renderShoppingListOverlay();
   return refreshShoppingPhotoAudit({force:true,reason:'repair-remove'}).then(function(){toast('附件引用已移除');return true;});
 }
-function closeShoppingPhotoStorageFailure(){var overlay=document.getElementById('shoppingPhotoStorageFailure');if(overlay)overlay.remove();}
-function openShoppingPhotoStorageFailure(){
-  closeShoppingPhotoStorageFailure();
-  var overlay=document.createElement('div');overlay.id='shoppingPhotoStorageFailure';overlay.className='shopping-photo-repair-overlay shopping-photo-storage-failure';
-  overlay.innerHTML='<section class="shopping-photo-repair-sheet" role="dialog" aria-modal="true" aria-labelledby="shoppingPhotoStorageFailureTitle"><div class="shopping-photo-repair-head"><h2 id="shoppingPhotoStorageFailureTitle">照片尚未加入</h2><button type="button" class="settings-close" aria-label="關閉" onclick="closeShoppingPhotoStorageFailure()">×</button></div><p class="shopping-photo-repair-copy">儲存空間不足，照片尚未加入</p><div class="shopping-photo-repair-actions"><button type="button" class="btn" onclick="closeShoppingPhotoStorageFailure();openSettings(\'storage\')">管理儲存空間</button><button type="button" class="btn ghost" onclick="closeShoppingPhotoStorageFailure()">稍後再試</button></div></section>';
-  overlay.addEventListener('click',function(event){if(event.target===overlay)closeShoppingPhotoStorageFailure();});document.body.appendChild(overlay);
+function shoppingPhotoFailureMessage(error){
+  return TripShoppingPhotos.isQuotaExceededError(error)?'儲存空間不足，照片尚未加入':String(error&&error.message||'照片附件處理失敗');
 }
 function showShoppingPhotoSaveFailure(error){
-  if(TripShoppingPhotos.isQuotaExceededError(error)){
-    closeShoppingPhotoRepair(false);openShoppingPhotoStorageFailure();return '儲存空間不足，照片尚未加入';
+  var message=shoppingPhotoFailureMessage(error),repairStatus=document.getElementById('shoppingPhotoRepairStatus');
+  if(repairStatus){
+    shoppingPhotoRepairState.error=message;repairStatus.textContent=message+'；可至設定的「照片健康狀態」查看儲存空間。';repairStatus.hidden=false;return message;
   }
-  var message=error&&error.message||'照片附件處理失敗';toast(message);return message;
+  if(shoppingUiState.form){shoppingUiState.photoError=message;renderShoppingFormSheet();return message;}
+  toast(message);return message;
 }
 var shoppingPhotoViewerObjectUrl='';
 function closeShoppingPhotoViewer(){
@@ -8032,7 +8078,7 @@ function renderSettingsRoot(ledgerSettings){
       settingsNavRow('options','options','自訂項目',optionSummary)+
       testModeRow)+
     settingsGroup('資料',
-      settingsNavRow('storage','storage','附件與儲存空間',shoppingPhotoStorageSummary())+
+      settingsNavRow('storage','storage','照片健康狀態',shoppingPhotoStorageSummary())+
       settingsNavRow('data','data','備份、還原與版本資訊','SW '+appVersionLabel()));
 }
 /* 團體帳測試模式控制頁(v74,設計規格 §2.4)
@@ -8096,7 +8142,7 @@ function renderSettingsStoragePage(){
     var item=shoppingPhotoInvalidItem(ref),name=item&&item.name||'已刪除的採買項目';
     return '<button type="button" class="shopping-photo-storage-repair shopping-photo-storage-action" aria-label="修復 '+escapeHtml(name)+'" onclick="openShoppingPhotoRepairFromSettings(\''+jsHtmlAttrString(ref.itemId)+'\')"><span>'+escapeHtml(name)+'</span><b>修復 ›</b></button>';
   }).join('');
-  return renderSettingsHeader('附件與儲存空間',false)+
+  return renderSettingsHeader('照片健康狀態',false)+
     '<div class="shopping-photo-storage-grid">'+
       '<section class="shopping-photo-storage-card"><div class="shopping-photo-storage-primary">App 附件</div><div class="shopping-photo-storage-value">'+state.storedPhotoCount+' 張 · '+formatShoppingPhotoBytes(state.storedBytes)+'</div><div class="shopping-photo-storage-secondary">其中 '+orphans.length+' 張未被採買清單使用；背景清理會保留一天緩衝。</div></section>'+
       '<section class="shopping-photo-storage-card"><div class="shopping-photo-storage-primary">App 儲存空間（估計）</div><div class="shopping-photo-storage-value">'+escapeHtml(capacityValue)+'</div><div class="shopping-photo-storage-secondary">'+escapeHtml(capacityDetail)+'</div>'+(capacity.low?'<div class="shopping-photo-storage-warning">儲存空間偏低，新增照片可能失敗。</div>':'')+'</section>'+
@@ -8154,11 +8200,11 @@ function openShoppingPhotoRepairFromSettings(itemId){
   });
 }
 var APP_RELEASE_NOTES=[
+  {version:'v78',date:'2026-08-02',title:'旅途中更穩、更好操作',items:['離線首屏不再等待遠端字體，App 圖示與桃子標誌可從快取顯示','頁面顯示失敗時可直接重新整理，並改善 Today、觸控、夜間與照片提示體驗']},
   {version:'v77',date:'2026-08-01',title:'照片附件更可靠',items:['偵測本機照片遺失，可重新選擇照片或移除無效引用','設定新增附件容量與清理管理，未使用照片保留一天後自動清理']},
   {version:'v76',date:'2026-08-01',title:'採買多選更快速',items:['多選模式可一次選取或取消目前分頁的全部採買項目','切換分頁與完成批次操作後會清除選取，避免誤用舊選取']},
   {version:'v75',date:'2026-08-01',title:'採買照片與附近導航',items:['採買項目可附上一張只保存在本裝置的照片，卡片以迴紋針提示','同名地點會依目前位置尋找最近結果，詳細分點則維持精確導航']},
-  {version:'v74',date:'2026-08-01',title:'設定頁更好找',items:['設定頁改為個人、記帳、資料三個群組,一頁看完','團體帳測試模式移到獨立控制頁,不再占用設定首頁']},
-  {version:'v73',date:'2026-07-30',title:'更新機制修正',items:['修正改版後可能仍載入舊版檔案的問題','離線時缺少檔案不再讓「資料與版本」頁打不開','結清後的團體消費標示改為「已鎖帳」,明細頁補上原因說明']}
+  {version:'v74',date:'2026-08-01',title:'設定頁更好找',items:['設定頁改為個人、記帳、資料三個群組,一頁看完','團體帳測試模式移到獨立控制頁,不再占用設定首頁']}
 ];
 function renderAppReleaseNotes(){
   return '<div class="settings-release-list">'+APP_RELEASE_NOTES.map(function(note){
@@ -9923,6 +9969,11 @@ function switchView(v){
   renderCurrent(v);
   window.scrollTo({top:0});
 }
+function retryCurrentView(button){
+  if(button)button.disabled=true;
+  renderDaybar();
+  renderCurrent();
+}
 function renderCurrent(v){
   v=v||curView;
   var fns={ today:renderToday, trip:renderTrip, shop:renderShop, split:renderSplit };
@@ -9931,7 +9982,7 @@ function renderCurrent(v){
   catch(e){
     AppLog.render('視圖「'+v+'」渲染失敗:'+(e.message||e));
     var el=document.getElementById('view-'+v);
-    if(el) el.innerHTML='<div class="empty-state">此頁面暫時無法顯示,請下拉重試或按右上角同步。<br><small>('+escapeHtml(e.message||'')+')</small></div>';
+    if(el) el.innerHTML='<div class="empty-state">此頁面暫時無法顯示。<br><small>('+escapeHtml(e.message||'')+')</small><button class="btn render-retry" onclick="retryCurrentView(this)">重新整理</button></div>';
   }
 }
 function renderAll(){ renderDaybar(); renderCurrent(); }

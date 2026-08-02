@@ -1,4 +1,13 @@
 # 07 版本紀錄
+## 2026-08-02｜離線、行車操作與夜間可用性（SW v78）
+
+- **離線首屏**：移除 Google Fonts 與兩個 font preconnect，改用裝置內建繁中字體；桃子 header badge、16／32px favicon 與 152／167／180px Apple touch icons 納入原子 SHELL precache。
+- **可恢復錯誤**：視圖渲染失敗不再要求不存在的「下拉重試」，改為 44px「重新整理」按鈕，實際重跑 daybar 與目前 view renderer。
+- **Today 與車上操作**：Day chips 只在行程頁出現；header 改為 flex，不再以固定 `padding-right` 搭配絕對定位。同步、設定、Day chips 與購物 filters 均至少 44px；完成／跳過提高到 16px，完成為主要且較大的操作。
+- **照片健康狀態**：設定入口集中命名為「照片健康狀態」；容量或處理失敗留在目前表單／修復 dialog 的 inline status，不再疊加獨立 storage-failure overlay。照片修復功能本身維持。
+- **夜間與可及性**：六個既有主題新增自動暗色 token；`prefers-reduced-motion` 關閉平滑捲動並壓縮動畫。toast 加入 live-region 語意；下一站可開啟區支援鍵盤 Enter／Space。
+- **範圍保護**：MAPCODE 顯示、點任意處關閉行為、資料 schema、parser、同步資料流與 `netlify.toml` 均未修改。`app-version.js` 與 `sw.js` 同步升至 v78。
+
 ## 2026-08-01｜採買多選全選（SW v76）
 
 - **目前分頁全選**：待買／已買進入多選後，可全選或取消目前分頁全部項目；不跨分頁保留選取。

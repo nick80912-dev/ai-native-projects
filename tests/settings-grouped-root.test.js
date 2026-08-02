@@ -67,8 +67,8 @@ assert(at('>主題<')>at('>個人<')&&at('>主題<')<at('>記帳<'),'theme row s
   assert(at(label)>at('>記帳<')&&at(label)<at('>資料<'),label+' sits in 記帳');
 });
 assert(at('>備份、還原與版本資訊<')>at('>資料<'),'data row sits in 資料');
-assert(at('>附件與儲存空間<')>at('>資料<'),'attachment storage row sits in 資料');
-assert(at('>附件與儲存空間<')<at('>備份、還原與版本資訊<'),'attachment storage precedes backup and version');
+assert(at('>照片健康狀態<')>at('>資料<'),'photo health row sits in 資料');
+assert(at('>照片健康狀態<')<at('>備份、還原與版本資訊<'),'photo health precedes backup and version');
 
 /* ---- §8 新 E2:摘要格式 ---- */
 assert(out.includes('2 位常用對象'),'proxy summary counts the stored targets');

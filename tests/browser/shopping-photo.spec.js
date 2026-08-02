@@ -243,7 +243,7 @@ test('無效附件引用必須由使用者確認後移除',async({page})=>{
   await expect(page.locator('[data-shopping-item-id="photo-item"] .shopping-photo-indicator')).toHaveCount(0);
 });
 
-test('容量不足時保留原引用並提供儲存空間管理入口',async({page})=>{
+test('容量不足時保留原引用並在修復流程顯示 inline 提示',async({page})=>{
   const oldId=await createStoredPhotoItem(page);
   await deleteIndexedDbPhoto(page,oldId);
   await page.evaluate(async()=>{
@@ -252,8 +252,9 @@ test('容量不足時保留原引用並提供儲存空間管理入口',async({pa
   });
   await page.locator('.shopping-photo-indicator-invalid').click();
   await page.locator('#shoppingPhotoRepair input[type=file]').setInputFiles({name:'replacement.png',mimeType:'image/png',buffer:PNG});
-  await expect(page.getByText('儲存空間不足，照片尚未加入',{exact:true})).toBeVisible();
-  await expect(page.getByRole('button',{name:'管理儲存空間'})).toBeVisible();
+  await expect(page.locator('#shoppingPhotoRepairStatus')).toContainText('儲存空間不足，照片尚未加入');
+  await expect(page.locator('#shoppingPhotoRepairStatus')).toContainText('照片健康狀態');
+  await expect(page.locator('.shopping-photo-storage-failure')).toHaveCount(0);
   expect(await page.evaluate(()=>shoppingListStore.all().find(value=>value.id==='photo-item').photoId)).toBe(oldId);
 });
 
@@ -267,7 +268,8 @@ test('照片 repository 不可用時停用照片操作但保留一般採買編�
     await refreshShoppingPhotoAudit({force:true,reason:'qa-unavailable'});
     renderShoppingFormSheet();
   });
-  await expect(page.getByText('此裝置目前無法使用照片附件',{exact:true})).toBeVisible();
+  await expect(page.locator('.shopping-photo-note[role="status"]')).toContainText('此裝置目前無法使用照片附件');
+  await expect(page.locator('.shopping-photo-note[role="status"]')).toContainText('照片健康狀態');
   await expect(page.locator('#shoppingPhotoInput')).toBeDisabled();
   await page.locator('#shoppingName').fill('仍可編輯');
   await expect(page.locator('#shoppingName')).toHaveValue('仍可編輯');
@@ -275,8 +277,8 @@ test('照片 repository 不可用時停用照片操作但保留一般採買編�
 
 test('設定頁集中顯示附件容量並可修復引用或手動清理孤立照片',async({page})=>{
   await seedPhotoStorageManagement(page);
-  await page.getByRole('button',{name:/附件與儲存空間/}).click();
-  await expect(page.getByRole('heading',{name:'附件與儲存空間'})).toBeVisible();
+  await page.getByRole('button',{name:/照片健康狀態/}).click();
+  await expect(page.getByRole('heading',{name:'照片健康狀態'})).toBeVisible();
   await expect(page.getByText('App 附件',{exact:true})).toBeVisible();
   await expect(page.getByText(/3 張/)).toBeVisible();
   await expect(page.getByText('App 儲存空間（估計）',{exact:true})).toBeVisible();

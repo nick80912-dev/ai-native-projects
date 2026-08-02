@@ -76,6 +76,16 @@ const swCode = serviceWorker.replace(/\/\*[\s\S]*?\*\//g, '');
 assert.doesNotMatch(swCode, /\bAPP_VERSION\b/, 'service worker code never references the imported APP_VERSION');
 assert.match(serviceWorker, /'\.\/app-version\.js'/, 'App Shell still caches the version file for the App and offline use');
 assert.match(serviceWorker, /'\.\/shopping-photo-store\.js'/, 'App Shell caches the device-local shopping photo store for offline use');
+for (const asset of [
+  'okayama-peach-badge.png',
+  'icon-16.png',
+  'icon-32.png',
+  'icon-152.png',
+  'icon-167.png',
+  'icon-180.png',
+]) {
+  assert.match(serviceWorker, new RegExp("'\\.\\/" + asset.replace('.', '\\.') + "'"), `App Shell caches ${asset}`);
+}
 assert.doesNotMatch(serviceWorker, /okayama-trip-v72/, 'retired v72 cache is not retained');
 assert.doesNotMatch(serviceWorker, /okayama-trip-v18/, 'retired v18 cache is not retained');
 
