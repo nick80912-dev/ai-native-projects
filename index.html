@@ -493,6 +493,7 @@ input,select,textarea{font-size:16px}
 .floor-body{display:none;padding:6px 4px}
 .floor-body.open{display:block;animation:fade .25s ease}
 .store-row{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:9px;cursor:pointer}
+.store-row:focus-visible{outline:2px solid var(--sea);outline-offset:-2px}
 .store-row:active{background:var(--line-soft)}
 .st-chk{flex:0 0 auto;width:22px;height:22px;border-radius:6px;border:2px solid var(--line);background:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;color:#fff}
 .st-chk.on{background:var(--gold);border-color:var(--gold)}
@@ -4035,6 +4036,8 @@ function applyWantToggleInPlace(id,on){
   var rows=box.querySelectorAll('.store-row'),updated=0,ri;
   for(ri=0;ri<rows.length;ri++){
     if(rows[ri].getAttribute('data-want')!==id) continue;
+    /* aria-checked 必須跟著改 —— 否則畫面打了勾,語音仍會說未勾選 */
+    rows[ri].setAttribute('aria-checked',on?'true':'false');
     var chk=rows[ri].querySelector('.st-chk');
     if(chk){ chk.className='st-chk'+(on?' on':''); chk.textContent=on?'✓':''; }
     updated++;
@@ -4053,13 +4056,26 @@ function applyWantToggleInPlace(id,on){
   }
   return true;
 }
+function focusShopRow(id){
+  var box=document.getElementById('shopResults'); if(!box) return;
+  var rows=box.querySelectorAll('.store-row'),i;
+  for(i=0;i<rows.length;i++){
+    if(rows[i].getAttribute('data-want')===id){ rows[i].focus(); return; }
+  }
+}
 function toggleWant(id){
   var w=getWants(), on=!w[id];
   if(on) w[id]=true; else delete w[id];
   lsSet('trip_shop_wants',w);
   /* 整份重繪會把約 720 個節點全部換掉,連帶重設篩選列捲動位置;
      常見情況(勾選/取消一家)只需要改幾個字,不必重建。 */
-  if(!applyWantToggleInPlace(id,on)) renderShopResults();
+  if(applyWantToggleInPlace(id,on)) return;
+  /* 需要重繪時,鍵盤焦點會跟著整個 DOM 一起消失、掉回 body ——
+     鍵盤使用者連按第二下就沒有作用。重繪後把焦點放回同一家店。 */
+  var keyboard=document.activeElement&&document.activeElement.getAttribute
+    &&document.activeElement.getAttribute('data-want')===id;
+  renderShopResults();
+  if(keyboard) focusShopRow(id);
 }
 function toggleFloor(fkey,btn){
   var el=document.getElementById('flbody_'+cssId(fkey));
@@ -4105,8 +4121,14 @@ function shopMalls(){
 function storeRow(s,id,on){
   var must=/是|y|✓|v/i.test(s.must||'');
   var tax=/是|y|✓|v/i.test(s.taxfree||'');
-  return '<div class="store-row" data-want="'+escapeHtml(id)+'" onclick="toggleWant(\''+jsHtmlAttrString(id)+'\')">'+
-    '<span class="st-chk'+(on?' on':'')+'">'+(on?'✓':'')+'</span>'+
+  /* role="checkbox" 而非 button:這是二元選取,視覺上本來就是核取方塊,
+     語音回報「未勾選／已勾選」比「按鈕」精確。可及名稱取自列內既有文字,
+     不另造 aria-label —— 店名、分類、必逛／免稅與樓層本來就都在列內。 */
+  var call='toggleWant(\''+jsHtmlAttrString(id)+'\')';
+  return '<div class="store-row" data-want="'+escapeHtml(id)+'" role="checkbox" tabindex="0"'+
+    ' aria-checked="'+(on?'true':'false')+'" onclick="'+call+'"'+
+    ' onkeydown="activateKeyboardButton(event,function(){'+call+'})">'+
+    '<span class="st-chk'+(on?' on':'')+'" aria-hidden="true">'+(on?'✓':'')+'</span>'+
     '<span class="st-n">'+escapeHtml(s.name)+(s.cat?' <span class="store-cat">'+escapeHtml(s.cat)+'</span>':'')+(must?' <span class="st-must">必逛</span>':'')+(tax?' <span class="st-tax">免稅</span>':'')+'</span>'+
     '<span class="st-f">'+escapeHtml([s.floor,s.note?s.note.replace('櫃位 ',''):''].filter(Boolean).join('·'))+'</span></div>';
 }
@@ -8316,7 +8338,7 @@ function openShoppingPhotoRepairFromSettings(itemId){
   });
 }
 var APP_RELEASE_NOTES=[
-  {version:'v81',date:'2026-08-02',title:'購物頁更順手',items:['下一站的「完成」「跳過」過長時以省略號收尾，不再換行把按鈕撐高','購物頁的想逛標記改綁定地點本身，新增購物地點後不會再跑到別家店','勾選想逛不再整頁重畫，篩選列的位置會留在原地','搜尋可用分類（如「服飾」）尋找，沒結果的購物地點不再留下空白區塊']},
+  {version:'v81',date:'2026-08-02',title:'購物頁更順手',items:['下一站的「完成」「跳過」過長時以省略號收尾，不再換行把按鈕撐高','購物頁的想逛標記改綁定地點本身，新增購物地點後不會再跑到別家店','勾選想逛不再整頁重畫，篩選列的位置會留在原地','搜尋可用分類（如「服飾」）尋找，沒結果的購物地點不再留下空白區塊','店家列可用鍵盤操作，讀螢幕軟體也會唸出是否已標記想逛']},
   {version:'v80',date:'2026-08-02',title:'主題固定淺色、操作更好按',items:['六個主題在手機深色外觀下不再自動轉深，畫面與淺色外觀一致','設定圖示放大更好按，下一站的「完成」不再被長地點名稱擠成直排']},
   {version:'v79',date:'2026-08-02',title:'設定圖示更清楚',items:['右上角設定按鈕改為圓角六齒圖示，各主題與不同裝置保持一致']},
   {version:'v78',date:'2026-08-02',title:'旅途中更穩、更好操作',items:['離線首屏不再等待遠端字體，App 圖示與桃子標誌可從快取顯示','頁面顯示失敗時可直接重新整理，並改善 Today、觸控、夜間與照片提示體驗']},

@@ -33,6 +33,21 @@
 - **範圍**：#4（store-row 無障礙）與 #5（onclick 跳脫整理）均未混入，後續另批處理。
 - **驗證**：兩批皆先寫失敗測試（節點識別為 `false`、篩選列被歸零、`shopStoreMatches` 不存在、3 塊空殼）；完整 **59／59** Node test files 與 Playwright **41／41** 通過。
 
+### 併入 v81：onclick 屬性跳脫統一
+
+- **潛在缺陷**：購物頁四處 `onclick` 以 `.replace(/'/g,"\\'")` 手工跳脫，只處理單引號。其中兩處內插的值**直接來自 Google 表格**——樓層名稱（`toggleFloor`）與購物地點名稱（篩選 chip）。含 `"` 會直接截斷 `onclick="…"` 屬性，含 `&`、`<` 也不安全；實際店名已經含 `&`（`earth music&ecology`、`H&M`），目前只是碰巧還沒壞。
+- **改用既有 helper**：四處一律改走 `jsHtmlAttrString()`（`jsString()` 再加上 `&`／`"`／`<`／`>` 的實體編碼），該函式早已存在並用在別處。`shop-category-tags` 的 sandbox 補上真實跳脫器實作而非 stub。
+
+### 併入 v81：店家列成為可鍵盤操作的 checkbox
+
+- **現象**：店家列是購物頁最常被點的控制項（實測 101 家店），卻是沒有 `role`、沒有 `tabindex` 的 `<div>`；勾選與否只是 `.st-chk` 裡的一個 ✓ 字元。完全無法以鍵盤操作，螢幕閱讀器也讀不出已勾選。
+- **語意選擇**：採 `role="checkbox"` + `aria-checked`，而非 `role="button"` + `aria-pressed`。這是二元選取、視覺上本來就是核取方塊，語音回報「未勾選／已勾選」比「按鈕」精確。可及名稱取自列內既有文字（店名、分類、必逛／免稅、樓層），不另造 `aria-label`。✓ 字元加 `aria-hidden="true"`，狀態由 `aria-checked` 承載。
+- **鍵盤操作**：`tabindex="0"` + `onkeydown` 沿用既有的 `activateKeyboardButton()`（同時支援 Enter 與 Space）。新增 `.store-row:focus-visible` 外框，沿用既有 `[role="button"]:focus-visible` 的樣式語彙。
+- **實作過程中發現並修掉的第二個缺陷**：需要重繪的那一次（該地點的**第一次**標記）會換掉整個 DOM，鍵盤焦點掉回 `body`——連按第二下 Space 完全沒有作用。新增 `focusShopRow()`，重繪後把焦點放回同一家店；只在焦點原本就在該列時還原，滑鼠點選不搶焦點。
+- **就地更新同步**：`applyWantToggleInPlace()` 一併更新 `aria-checked`，否則畫面打了勾、語音仍說未勾選。
+- **未改動**：觸控區維持現狀（實測 63px，本來就足夠）。
+- **驗證**：兩批皆先寫失敗測試；完整 **61／61** Node test files 與 Playwright **47／47** 通過。
+
 ## 2026-08-02｜六主題固定淺色、設定圖示放大、完成鈕不再被擠掉（SW v80）
 
 - **移除自動暗色**：刪除 v78 加入的 `@media(prefers-color-scheme:dark)` 整段（六組 token 覆寫、`body{color-scheme:dark}` 與四條元件背景覆寫），並在 `html` 加上 `color-scheme:light`。六個主題是照淺色設計的，元件層仍有約 108 處硬編碼淺色背景，token 級暗色永遠對不齊；改為同一主題在 iPhone 淺色／深色外觀下完全一致，原生控制項與捲軸也維持淺色。
