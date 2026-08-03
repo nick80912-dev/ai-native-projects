@@ -168,3 +168,44 @@ test('expanding the disclosure survives a re-render', async ({ page }) => {
   });
   if (!result.skipped) expect(result.stillOpen).toBe(true);
 });
+
+/* ---------- 卡片內的控制項不得觸發整張卡的導覽 ---------- */
+
+/* 真機回饋:點「其他資訊」會直接跳進行程分頁。
+   成因是 .nx-ticket-main 本身是 role="button" + onclick="openTripItem(...)",
+   而我把 <details> 放進了它的 .nx-ticket-lines 裡 —— 點 summary 展開之後,
+   click 繼續往上冒泡到整張卡的 onclick。 */
+test('expanding the details does not navigate to the trip tab', async ({ page }) => {
+  await seedNextStopMeta(page);
+
+  const result = await page.evaluate(() => {
+    switchView('today');
+    const before = curView;
+    const summary = document.querySelector('#view-today .nx-more-summary');
+    summary.click();
+    return {
+      before,
+      after: curView,
+      detailsOpen: document.querySelector('#view-today .nx-more').open,
+    };
+  });
+
+  expect(result.before).toBe('today');
+  expect(result.detailsOpen).toBe(true);
+  expect(result.after).toBe('today');
+});
+
+/* 根因層級的保護,取代逐一列舉個案:整張卡的 role="button" 內不得再有可聚焦的
+   互動元素。巢狀互動控制項在語意上無效 —— 冒泡會誤觸整張卡的導覽,鍵盤 tab 會
+   落進一個「按鈕裡的按鈕」,螢幕閱讀器也讀不出正確的角色。
+   日後若有人再往卡片內塞控制項(例如 MAPCODE),這條會直接紅。 */
+test('the openable card contains no nested focusable controls', async ({ page }) => {
+  await seedNextStopMeta(page);
+  const nested = await page.evaluate(() => {
+    const main = document.querySelector('#view-today .nx-ticket-main[role="button"]');
+    if (!main) return null;
+    return Array.from(main.querySelectorAll('a[href],button,summary,details,[tabindex],[role="button"]'))
+      .map((el) => el.tagName.toLowerCase() + (el.className ? '.' + String(el.className).split(' ')[0] : ''));
+  });
+  expect(nested).toEqual([]);
+});

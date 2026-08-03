@@ -428,7 +428,8 @@ input,select,textarea{font-size:16px}
 .nx-buy-count{flex:0 0 auto;font-weight:900}
 .nx-buy-names{flex:1 1 auto;min-width:0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;font-weight:700;opacity:.9}
 .nx-buy:focus-visible{outline:2px solid var(--sea);outline-offset:2px}
-.nx-more{margin-top:2px}
+/* 移出 .nx-ticket-main 之後要自己補回對齊用的內距(原本是繼承卡片本體的 padding) */
+.nx-more{margin:0 16px 10px 20px}
 .nx-more-summary{min-height:44px;display:flex;align-items:center;font-size:13px;font-weight:800;color:var(--sea-deep);cursor:pointer;list-style:none}
 .nx-more-summary::-webkit-details-marker{display:none}
 .nx-more-summary::after{content:"▾";margin-left:5px;font-size:11px}
@@ -2963,11 +2964,14 @@ function renderNextStopCard(day,dayIndex,pick){
         renderTicketLine('交通',meta.drive)+
         renderParkingTicketLine('停車',meta.parking)+
         renderTicketLine('營業',meta.hours)+
-        /* 常駐到此為止:交通／停車／營業回答「到得了嗎、開著嗎」,抵達前就要看。
-           付款與提醒是抵達後才需要的細節,收進可展開區塊,預設收合。 */
-        renderNextStopMore(it.id,meta)+
       '</div>'+
     '</div>'+
+    /* 常駐到此為止:交通／停車／營業回答「到得了嗎、開著嗎」,抵達前就要看。
+       付款與提醒是抵達後才需要的細節,收進可展開區塊,預設收合。
+       **必須放在 .nx-ticket-main 之外** —— 那個 div 本身是 role="button" +
+       onclick="openTripItem(...)",把可互動元素放進去,點展開會冒泡成整張卡的導覽
+       (真機實測:點「其他資訊」直接跳進行程分頁),而且「按鈕裡的按鈕」在語意上無效。 */
+    renderNextStopMore(it.id,meta)+
     renderNextStopBuy(it.id)+
     (canNav?'<div class="nx-primary-actions">'+renderTripNavigationLink(it,res,dayIndex,'nx-drive-btn')+'</div>':'')+
     '<div class="nx-secondary-actions">'+
@@ -8640,11 +8644,11 @@ function openShoppingPhotoRepairFromSettings(itemId){
   });
 }
 var APP_RELEASE_NOTES=[
+  {version:'v85',date:'2026-08-03',title:'修正點「其他資訊」會跳頁',items:['在今天卡片上點開「其他資訊」不再誤跳到行程分頁，只會展開']},
   {version:'v84',date:'2026-08-02',title:'Today 看得到當下要做的事',items:['下一站卡片顯示這站要買什麼，點一下直接開到採買清單的對應站點','降雨機率改為「現在之後」的最高值，不再被早上已經過去的雨影響','付款與提醒收進「其他資訊」，交通、停車、營業維持常駐','購物搜尋顯示「找到 N 家店 · M 個購物地點」']},
   {version:'v83',date:'2026-08-02',title:'「回到現在」只在需要時出現',items:['待在今天那一天時不再顯示，因為隱藏已完成加上再點分頁回頂已經到得了','只有當你跑到別天瀏覽時才出現，一鍵切回今天並定位當下那一站']},
   {version:'v82',date:'2026-08-02',title:'切換分頁不再迷路',items:['各分頁記住自己的位置，切走再回來會回到原處；再點同一個分頁則回到最上面','行程的交通、停車、備註展開後不會因為打卡就被收合','行程新增「回到現在」，逛完別天可一鍵回到當下那一站','打卡格可用鍵盤操作，讀螢幕軟體也會唸出是否已打卡']},
   {version:'v81',date:'2026-08-02',title:'購物頁更順手',items:['下一站的「完成」「跳過」過長時以省略號收尾，不再換行把按鈕撐高','購物頁的想逛標記改綁定地點本身，新增購物地點後不會再跑到別家店','勾選想逛不再整頁重畫，篩選列的位置會留在原地','搜尋可用分類（如「服飾」）尋找，沒結果的購物地點不再留下空白區塊','店家列可用鍵盤操作，讀螢幕軟體也會唸出是否已標記想逛','「想逛」頁籤改為只列出已加入的店家，並可一鍵清除全部（可復原）','購物頁新增採買清單入口，顯示未完成項目數']},
-  {version:'v80',date:'2026-08-02',title:'主題固定淺色、操作更好按',items:['六個主題在手機深色外觀下不再自動轉深，畫面與淺色外觀一致','設定圖示放大更好按，下一站的「完成」不再被長地點名稱擠成直排']},
 ];
 function renderAppReleaseNotes(){
   return '<div class="settings-release-list">'+APP_RELEASE_NOTES.map(function(note){
