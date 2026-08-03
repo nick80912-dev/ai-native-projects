@@ -2622,11 +2622,42 @@ function weatherIcon(code){
   return '☁️';
 }
 function weatherCacheKey(city){ return 'trip_weather_'+city.key; }
+/* 「現在之後」的最高降雨機率。原本取整天最大值,包含已經過去的時段 ——
+   早上下過雨、下午全晴,晚上看到的還是 80%,對「等一下要不要帶傘」毫無幫助。
+   全部時段都過去時退回當日最大值,而不是回 null 讓畫面空白。 */
+function rainChanceFromNow(hours,now){
+  if(!hours||!hours.time||!hours.precipitation_probability) return null;
+  var times=hours.time,values=hours.precipitation_probability;
+  var len=Math.min(times.length,values.length);
+  if(!len) return null;
+  var cutoff=(now||appNow()).getTime(),best=null,all=null,i,v,t;
+  for(i=0;i<len;i++){
+    v=values[i];
+    if(typeof v!=='number') continue;
+    all=(all===null||v>all)?v:all;
+    t=Date.parse(times[i]);
+    if(isFinite(t)&&t<cutoff) continue;   /* 已經過去的時段不算 */
+    if(best===null||v>best) best=v;
+  }
+  return best!==null?best:all;
+}
 function getCachedWeather(city){
   var cached=lsGet(weatherCacheKey(city),null);
   if(!cached||!cached.t) return null;
   var maxAge=3*60*60*1000;
-  return (Date.now()-cached.t)<maxAge?cached.data:null;
+  if((Date.now()-cached.t)>=maxAge) return null;
+  var data=cached.data;
+  if(!data) return null;
+  /* 依**當下**重算,而不是用存進去時算好的數字 —— 三小時 TTL 內時間會走,
+     早上存的「現在之後」到中午就是錯的。舊格式(沒有 hours)安全降級用舊值。 */
+  if(data.hours){
+    var fresh=rainChanceFromNow(data.hours,appNow());
+    if(fresh!==null){
+      var copy={};Object.keys(data).forEach(function(k){copy[k]=data[k];});
+      copy.rain=fresh;return copy;
+    }
+  }
+  return data;
 }
 function setCachedWeather(city,data){
   lsSet(weatherCacheKey(city),{ t:Date.now(), data:data });
@@ -2641,14 +2672,16 @@ function fetchWeather(city){
     if(!r.ok) throw new Error('weather '+r.status);
     return r.json();
   }).then(function(json){
-    var rain=0;
-    if(json.hourly&&json.hourly.precipitation_probability&&json.hourly.precipitation_probability.length){
-      rain=Math.max.apply(null,json.hourly.precipitation_probability.filter(function(v){return typeof v==='number';}));
-    }
+    /* 保留原始 hourly 序列進快取,讓讀取時能依當下重算「現在之後」。
+       只存算完的數字會在三小時 TTL 內失準。 */
+    var hours=(json.hourly&&json.hourly.time&&json.hourly.precipitation_probability)
+      ?{time:json.hourly.time,precipitation_probability:json.hourly.precipitation_probability}:null;
+    var rain=rainChanceFromNow(hours,appNow());
+    if(rain===null) rain=0;
     var temp=json.current&&typeof json.current.temperature_2m==='number'?Math.round(json.current.temperature_2m):null;
     var code=json.current?json.current.weather_code:null;
     if(temp===null) return null;
-    return { city:city.label, temp:temp, rain:rain||0, icon:weatherIcon(code), code:code };
+    return { city:city.label, temp:temp, rain:rain||0, icon:weatherIcon(code), code:code, hours:hours };
   });
 }
 function loadWeatherForCity(city){
@@ -2982,7 +3015,10 @@ function onNextStopSkip(dayIndex,itemId){
 var homeWeatherState={};
 function renderWeatherChip(weather){
   if(!weather) return '';
-  return '<div class="weather-chip"><span class="city">'+escapeHtml(weather.city)+'</span>'+escapeHtml(' '+weather.icon+' '+weather.temp+'° 雨'+weather.rain+'%')+'</div>';
+  /* 「之後雨 N%」而不是「雨 N%」—— 數字的語意是「現在之後的最高降雨機率」,
+     不寫出來會被讀成當下正在下雨的機率。 */
+  return '<div class="weather-chip" aria-label="'+escapeHtml(weather.city+' '+weather.temp+' 度，現在之後最高降雨機率 '+weather.rain+'%')+'">'+
+    '<span class="city">'+escapeHtml(weather.city)+'</span>'+escapeHtml(' '+weather.icon+' '+weather.temp+'° 之後雨'+weather.rain+'%')+'</div>';
 }
 function requestHomeWeather(dayIndex,item){
   if(!item) return;
