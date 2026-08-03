@@ -305,6 +305,7 @@ input,select,textarea{font-size:16px}
 .shop-list-entry{flex:0 0 auto;min-height:46px;display:flex;align-items:center;justify-content:center;gap:6px;padding:0 12px;border:1px solid var(--line);border-radius:12px;background:var(--card);color:var(--sea-deep);font:inherit;font-size:13px;font-weight:900;white-space:nowrap;cursor:pointer;box-shadow:var(--shadow)}
 .shop-list-count{display:inline-flex;align-items:center;justify-content:center;min-width:22px;height:22px;padding:0 6px;border-radius:999px;background:var(--coral);color:#fff;font-size:12px;font-weight:900}
 .shop-list-count[hidden]{display:none}
+.shop-search-summary{padding:2px 2px 10px;font-size:12.5px;font-weight:800;color:var(--ink-faint)}
 .shop-wants-actions{display:flex;justify-content:flex-end;padding:0 12px 4px}
 .shop-wants-actions .btn{min-height:40px;font-size:13px}
 .render-retry{display:block;min-height:44px;margin:14px auto 0}
@@ -4442,6 +4443,8 @@ function renderShopResults(){
     h+='<div class="shop-wants-actions"><button type="button" class="btn ghost" onclick="clearAllShopWants()">清除全部想逛</button></div>';
   }
   var rendered=0;
+  /* 摘要的數字必須來自**實際渲染的那一輪**,不另外再算一次 —— 兩份計算遲早會不一致 */
+  var searchHits=0,searchPlaces=0,summaryAt=h.length;
   malls.forEach(function(m,mi){
     var p=m.place;
     var pkey=(p.placeId||p.name||'').toUpperCase();
@@ -4454,6 +4457,8 @@ function renderShopResults(){
       /* 沒命中就整塊不渲染。原本會留下一塊只寫著「找不到」的空殼,
          搜尋 UNIQLO 實測產生 3 塊空殼 —— 要捲過三個死標題才看得到 2 筆結果。 */
       if(!hits.length) return;
+      searchHits+=hits.length;
+      searchPlaces++;
       h+='<div class="shop-mall" id="shopmall_'+cssId(pkey)+'"><div class="sm-name">🏬 '+escapeHtml(p.name)+'</div>'+
         hits.map(function(s){var id=shopWantStoreKey(m.place,mi,s);return storeRow(s,id,!!wants[id]);}).join('')+'</div>';
       rendered++;
@@ -4504,6 +4509,13 @@ function renderShopResults(){
     h+='</div>';
     rendered++;
   });
+  /* 搜尋結果摘要插在結果清單最前面。沒有命中時不顯示 —— 那時已經有全域空狀態,
+     再補一句「找到 0 家」只是重複。 */
+  if(_shopQ&&searchHits){
+    h=h.slice(0,summaryAt)+
+      '<div class="shop-search-summary" role="status">找到 '+searchHits+' 家店 · '+searchPlaces+' 個購物地點</div>'+
+      h.slice(summaryAt);
+  }
   if(!rendered){
     /* 搜尋語意優先:使用者輸入了字串卻沒結果,該說的是找不到那個字串,
        而不是「目前沒有符合條件的購物資料」。 */

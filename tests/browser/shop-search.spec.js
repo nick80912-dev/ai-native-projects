@@ -194,3 +194,37 @@ test('the clear button is an accessible, tappable control', async ({ page }) => 
   expect(meta.insideInput).toBe(true);
   expect(meta.textClearsButton).toBe(true);
 });
+
+/* ---------- 搜尋結果摘要 ---------- */
+
+test('search results are summarised by store and place count', async ({ page }) => {
+  const result = await page.evaluate(() => {
+    shopQ('UNIQLO');
+    renderShopResults();
+    const el = document.querySelector('#shopResults .shop-search-summary');
+    return {
+      text: el ? el.textContent.replace(/\s+/g, ' ').trim() : null,
+      rows: document.querySelectorAll('.store-row').length,
+      malls: document.querySelectorAll('.shop-mall').length,
+    };
+  });
+  expect(result.text).not.toBeNull();
+  expect(result.text).toContain(String(result.rows));
+  expect(result.text).toContain(String(result.malls));
+  expect(result.text).toContain('家店');
+  expect(result.text).toContain('購物地點');
+});
+
+test('the summary is absent when not searching and when nothing matches', async ({ page }) => {
+  const states = await page.evaluate(() => {
+    renderShopResults();
+    const idle = !document.querySelector('#shopResults .shop-search-summary');
+    shopQ('zzzznotarealstore');
+    renderShopResults();
+    const noHits = !document.querySelector('#shopResults .shop-search-summary');
+    shopQ('');
+    return { idle, noHits };
+  });
+  expect(states.idle).toBe(true);
+  expect(states.noHits).toBe(true);
+});
