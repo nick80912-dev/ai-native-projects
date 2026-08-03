@@ -899,6 +899,23 @@ assert(ui.includes('ledger-action-popover'),'沿用帳本既有 popover 樣式,�
 assert(!/shopping-item-actions[\s\S]{0,200}>編輯</.test(ui),'編輯不再直接排在列上');
 /* 單筆記帳入口必須接回既有函式,不另造流程 */
 const itemRenderer=extractUiFunction('renderShoppingItem');
+const proxyTargetRenderer=extractUiFunction('renderProxyTargetMarkup');
+const proxyTargetSandbox={
+  escapeHtml(value){
+    return String(value).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+};
+vm.createContext(proxyTargetSandbox);
+vm.runInContext(proxyTargetRenderer,proxyTargetSandbox);
+const escapedTargetMarkup=proxyTargetSandbox.renderProxyTargetMarkup({
+  prefix:'幫',names:['Bar & <Aaron>'],overflow:'+1',suffix:'買',ariaLabel:'幫Bar & <Aaron>等共 3 位買'
+},'shopping-card-target-summary');
+assert(escapedTargetMarkup.includes('aria-label="幫Bar &amp; &lt;Aaron&gt;等共 3 位買"'),'shared target renderer escapes its complete accessible name');
+assert(escapedTargetMarkup.includes('>Bar &amp; &lt;Aaron&gt;</span>'),'shared target renderer escapes visible target names');
+assert(escapedTargetMarkup.includes('class="shopping-target-overflow" aria-hidden="true">+1</span>'),'multi-target overflow remains a distinct unchanged fragment');
+assert.strictEqual((escapedTargetMarkup.match(/aria-hidden="true"/g)||[]).length,4,'all split visual fragments stay hidden from assistive technology');
+assert(/\.shopping-target-badge\{[^}]*font-size:10\.5px/.test(ui),'target name badge remains 10.5px');
+assert(/\.shopping-target-affix\{[^}]*font-size:9\.5px[^}]*line-height:1\.3/.test(ui),'幫／買 affixes are exactly one pixel smaller');
 assert(itemRenderer.includes('shoppingPhotoStatus(item)'),'card rendering consumes the audited photo status');
 assert(itemRenderer.includes('aria-label="附件已遺失"'),'invalid attachment has an accessible name');
 assert(itemRenderer.includes('shopping-photo-indicator-invalid'),'invalid attachment has a dedicated component class');
@@ -912,8 +929,8 @@ assert(itemRenderer.includes("var inlineAction=selection?'':"),
 assert(itemRenderer.includes("var menu=selection?'':"),
   '多選模式隱藏卡片上的操作選單');
 assert(itemRenderer.includes('shoppingCardTargetModel(item)'),'卡片使用結構化 target model');
-assert(itemRenderer.includes('shopping-target-affix'),'幫／買／+N 使用普通文字片段');
-assert(itemRenderer.includes('targetModel.names.map'),'姓名逐一輸出 badge');
+assert(itemRenderer.includes("renderProxyTargetMarkup(targetModel,'shopping-card-target-summary')"),'採買卡使用共用 target renderer');
+assert(!itemRenderer.includes('targetModel.names.map'),'採買卡不再維護另一份 target markup');
 assert(!itemRenderer.includes('escapeHtml(targetSummary)'),'不得再把整句摘要包成單一 badge');
 assert(itemRenderer.includes('canOfferShoppingPartialPurchase(item,linkSummary)'),
   '卡片部分購買入口使用統一 eligibility helper');
@@ -944,6 +961,7 @@ const cardSandbox={
   jsString(value){return String(value);}
 };
 vm.createContext(cardSandbox);
+vm.runInContext(proxyTargetRenderer,cardSandbox);
 vm.runInContext(renderShoppingItemSource,cardSandbox);
 [
   {stopRef:'resolved',__state:'resolved',location:'DAY 2 · 岡山站'},

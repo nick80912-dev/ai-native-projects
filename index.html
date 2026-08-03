@@ -661,6 +661,10 @@ body.shopping-list-open{overflow:hidden}.shopping-list-overlay{position:fixed;in
 .shopping-list-tools button{min-width:44px;min-height:44px;padding-left:10px;white-space:nowrap}
 input:not([type="hidden"]),select,textarea{font-size:16px!important}
 .ledger-sheet #ledgerAmount{font-size:30px!important}
+.ledger-item-title-row{display:flex;align-items:center;flex-wrap:wrap;gap:4px 6px;min-width:0;overflow-wrap:anywhere}
+.shopping-card-target-summary,.ledger-proxy-target-summary{display:inline-flex;align-items:center;flex-wrap:wrap;gap:3px;font-weight:400}
+.shopping-target-affix{font-size:9.5px;line-height:1.3}
+.shopping-target-overflow{color:var(--ink-soft);font-weight:400}
 </style>
 <script src="app-version.js"></script>
 <script src="shopping-photo-store.js"></script>
@@ -3577,6 +3581,19 @@ function shoppingCardLinkBadge(item,linkSummary){
   if(!(item.done||linkSummary.state!=='unlinked'))return '';
   return '<span class="shopping-link-badge shopping-link-'+linkSummary.state+'">'+escapeHtml(linkSummary.label)+'</span>';
 }
+function renderProxyTargetMarkup(model,extraClass){
+  if(!model||!Array.isArray(model.names)||!model.names.length)return '';
+  var className='shopping-target-summary'+(extraClass?' '+escapeHtml(String(extraClass).trim()):'');
+  return '<span class="'+className+'" aria-label="'+escapeHtml(model.ariaLabel)+'">'+
+    '<span class="shopping-target-affix" aria-hidden="true">'+escapeHtml(model.prefix)+'</span>'+
+    model.names.map(function(name){
+      return '<span class="shopping-target-badge" aria-hidden="true">'+escapeHtml(name)+'</span>';
+    }).join('')+
+    (model.overflow?'<span class="shopping-target-overflow" aria-hidden="true">'+escapeHtml(model.overflow)+'</span>':'')+
+    '<span class="shopping-target-affix" aria-hidden="true">'+escapeHtml(model.suffix)+'</span>'+
+  '</span>';
+}
+
 function renderShoppingItem(item,context){
   var page=String(context&&context.page||'');
   if(page!=='pending'&&page!=='done')throw new Error('採買卡片缺少頁面 context');
@@ -3595,16 +3612,7 @@ function renderShoppingItem(item,context){
     photoIndicator='<span class="shopping-photo-indicator" role="img" aria-label="有照片附件"><svg class="app-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m9.5 12.5 5.7-5.7a3 3 0 0 1 4.2 4.2l-8.1 8.1a5 5 0 0 1-7.1-7.1l8.5-8.5"></path></svg></span>';
   }
   var targetModel=shoppingCardTargetModel(item),quantitySummary=shoppingItemQuantitySummary(item);
-  var targetMarkup=targetModel.names.length
-    ?'<span class="shopping-target-summary shopping-card-target-summary" aria-label="'+escapeHtml(targetModel.ariaLabel)+'">'+
-      '<span class="shopping-target-affix" aria-hidden="true">'+escapeHtml(targetModel.prefix)+'</span>'+
-      targetModel.names.map(function(name){
-        return '<span class="shopping-target-badge" aria-hidden="true">'+escapeHtml(name)+'</span>';
-      }).join('')+
-      (targetModel.overflow?'<span class="shopping-target-affix" aria-hidden="true">'+escapeHtml(targetModel.overflow)+'</span>':'')+
-      '<span class="shopping-target-affix" aria-hidden="true">'+escapeHtml(targetModel.suffix)+'</span>'+
-    '</span>'
-    :'';
+  var targetMarkup=renderProxyTargetMarkup(targetModel,'shopping-card-target-summary');
   /* 待買頁的群組標題已是位置來源，不把同一地點再放進卡片與無障礙樹；
      已買頁只有單一平鋪群組，因此仍由卡片保留地點。 */
   var location=page==='done'?shoppingItemLocationLine(item,stop,state):'';
@@ -8776,11 +8784,11 @@ function renderSettingsDataHealth(){
   return '<div class="settings-section settings-data-health"><h3>資料健康狀態</h3><div class="settings-health-list">'+model.rows.map(function(row){return '<div class="settings-health-row data-health-'+escapeHtml(row.key)+'"><span class="settings-health-main"><b>'+escapeHtml(row.label)+'</b>'+(row.detail?'<span>'+escapeHtml(row.detail)+'</span>':'')+'</span><strong>'+escapeHtml(row.value)+'</strong></div>';}).join('')+'</div></div>';
 }
 var APP_RELEASE_NOTES=[
+  {version:'v89',date:'2026-08-03',title:'代購對象更容易掃讀',items:['最近消費把代購對象移到品名旁邊，不再多占下一行','消費卡與採買卡統一顯示「幫誰買」，資訊位置一致','「幫／買」縮小一級，姓名仍保留醒目的代購標記','長品名或長姓名會在內容欄安全換行，不會擠到金額與操作按鈕']},
   {version:'v88',date:'2026-08-03',title:'資料狀態一眼看懂',items:['記帳首頁以今日支出為主，並在同一卡片保留旅程累計','正常時同步徽章保持精簡，更新時間可在同步詳情查看','部分同步會指出未更新的是哪一類資料，不再顯示內部代碼','設定的資料與版本頁集中顯示行程、團體帳、個人資料與照片狀態']},
   {version:'v87',date:'2026-08-03',title:'修正身分選擇與回頂',items:['設定頁點「切換」或「＋」時，身分選擇器會正確顯示在設定頁上方，不必先關掉設定','再點一次目前所在的分頁改為平滑回到頂端，畫面不再閃一下']},
   {version:'v86',date:'2026-08-03',title:'Today 採買提醒更精簡',items:['Today 待買只列其他站點，下一站不再重複出現','下一站改為右上角待買數字，仍可直接開到該站採買清單','每站最多顯示三個品名，更多站點以精簡提示呈現','天氣降雨文字縮短，讀螢幕軟體仍保留完整語意']},
   {version:'v85',date:'2026-08-03',title:'修正點「其他資訊」會跳頁',items:['在今天卡片上點開「其他資訊」不再誤跳到行程分頁，只會展開']},
-  {version:'v84',date:'2026-08-02',title:'Today 看得到當下要做的事',items:['下一站卡片顯示這站要買什麼，點一下直接開到採買清單的對應站點','降雨機率改為「現在之後」的最高值，不再被早上已經過去的雨影響','付款與提醒收進「其他資訊」，交通、停車、營業維持常駐','購物搜尋顯示「找到 N 家店 · M 個購物地點」']},
 ];
 function renderAppReleaseNotes(){
   return '<div class="settings-release-list">'+APP_RELEASE_NOTES.map(function(note){
@@ -9915,17 +9923,19 @@ function renderLedgerSelectionControl(records){
 }
 function renderLedgerRecentRecord(record,shared,currency){
   var badges=[],meta=ledgerRecordMetadata(record),selected=!!(ledgerUiState.selectedRecordIds||{})[record.id];
+  var proxyTarget=meta.proxyTarget||'未指定';
+  var proxyTargetModel={prefix:'幫',names:[proxyTarget],overflow:'',suffix:'買',ariaLabel:'幫'+proxyTarget+'買'};
+  var proxyTargetMarkup=!shared&&meta.isProxy?renderProxyTargetMarkup(proxyTargetModel,'ledger-proxy-target-summary'):'';
   if(record.pending)badges.push('<span class="ledger-recent-badge pending">待同步</span>');
   if(shared&&isTestLedgerRecord(record))badges.push('<span class="ledger-recent-badge">TEST</span>');
   if(shared&&Number(record._correctionVersionCount||0)>0)badges.push('<span class="ledger-recent-badge">已更正 '+Number(record._correctionVersionCount)+' 次</span>');
   else if(shared&&record._correctionProtected)badges.push('<span class="ledger-recent-badge">已鎖帳</span>');
   if(shared)badges.push('<span class="ledger-recent-badge">'+escapeHtml(ledgerSharedRecordParticipantLabel(record,getCurrentMember(),registeredMembersForCurrentMode()))+'</span>');
-  if(!shared&&meta.isProxy)badges.push('<span class="ledger-recent-badge">代購 '+escapeHtml(meta.proxyTarget||'未指定')+'</span>');
   if(meta.isTaxFree)badges.push('<span class="ledger-recent-badge">免稅品</span>');
   var store=record.storeName?'<span class="ledger-recent-store">'+escapeHtml(record.storeName)+'</span>':'';
   var metaText=[ledgerCategoryEmoji(record.category)+' '+record.category,record.payMethod].filter(Boolean).join(' · ');
   var modeClass=ledgerUiState.selectionMode?'ledger-selection-card ':'',menu=ledgerUiState.selectionMode?'':'<button class="ledger-record-menu-button" aria-label="消費操作" onclick="openLedgerRecordActions(\''+jsHtmlAttrString(record.id)+'\',event)">⋯</button>';
-  return '<article class="ledger-recent-row '+modeClass+(selected?'selected':'')+'">'+renderLedgerSelectionControl([record])+'<button class="ledger-recent-body '+(badges.length?'has-badges':'')+'" onclick="handleLedgerRecordCardClick(\''+jsHtmlAttrString(record.id)+'\',event)"><span class="ledger-recent-main"><strong>'+escapeHtml(record.detail||'未命名')+'</strong>'+store+'<span class="ledger-recent-meta">'+escapeHtml(metaText)+'</span></span>'+formatLedgerDualAmounts(record)+(badges.length?'<span class="ledger-recent-badges">'+badges.join('')+'</span>':'')+'</button>'+menu+'</article>';
+  return '<article class="ledger-recent-row '+modeClass+(selected?'selected':'')+'">'+renderLedgerSelectionControl([record])+'<button class="ledger-recent-body '+(badges.length?'has-badges':'')+'" onclick="handleLedgerRecordCardClick(\''+jsHtmlAttrString(record.id)+'\',event)"><span class="ledger-recent-main"><span class="ledger-item-title-row"><strong>'+escapeHtml(record.detail||'未命名')+'</strong>'+proxyTargetMarkup+'</span>'+store+'<span class="ledger-recent-meta">'+escapeHtml(metaText)+'</span></span>'+formatLedgerDualAmounts(record)+(badges.length?'<span class="ledger-recent-badges">'+badges.join('')+'</span>':'')+'</button>'+menu+'</article>';
 }
 function renderLedgerBatchCard(records,shared,currency){
   var first=records[0],batchId=String(first.batchId||''),expanded=!!ledgerUiState.expandedBatches[batchId],selection=ledgerBatchSelectionState(records,ledgerUiState.selectedRecordIds||{}),totals=records.reduce(function(sum,record){sum.amountJpy+=Number(record.amountJpy||0);sum.amountTwd+=Number(record.amountTwd||0);return sum;},{amountJpy:0,amountTwd:0});

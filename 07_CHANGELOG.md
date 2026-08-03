@@ -1,4 +1,12 @@
 # 07 版本紀錄
+## 2026-08-03｜消費與採買代購標記同行（SW v89）
+
+- **消費卡減少一行**：個人帳代購紀錄不再於品名下方另外顯示「代購 姓名」badge，改為緊接品名的「幫 [姓名] 買」。最近消費、完整紀錄與批次展開子項使用同一個 renderer，因此位置與語意一致；批次父卡仍保留「N 項代購」摘要。
+- **與採買卡共用呈現**：抽出 `renderProxyTargetMarkup()`，消費卡與採買卡共用姓名 escape、完整 aria-label、多人採買與 `+N` 片段。姓名 badge 維持 10.5px；「幫／買」固定 9.5px，降低視覺競爭。
+- **窄螢幕安全**：消費品名區改為可換行 flex title row，代購標記只在左側內容欄換行，不侵入右側金額與操作鈕。Playwright 以長品名、長姓名驗證 320／375／390px 的最近消費、完整紀錄、批次子項及採買卡均無水平 overflow。
+- **相容與範圍**：不改明細、篩選、Ledger record、Shopping allocation、同步、備份或 schema；`PERSONAL_STATE_VERSION` 維持 9，`netlify.toml` 未修改。`sw.js` 只變更版本字串，未改生命週期或快取策略。
+- **測試**：Node 鎖定共用 renderer、HTML escape、aria、DOM 位置、舊 badge 移除及 9.5／10.5px 契約；新增 Playwright `proxy-inline.spec.js`。完整 **65／65** Node test files 與 Playwright **115／115** 通過；`check-doc-titles`、`check-app-version`、`git diff --check` 全數通過。
+
 ## 2026-08-03｜資料可感知性（SW v88）
 
 - **分帳首頁一眼分清今天與整趟**：沿用單一摘要卡，不增加獨立卡片。大字主值固定為今日支出與筆數，卡片底部顯示旅程累計；個人帳使用「今日支出／旅程累計」，團體帳使用「與我相關 · 今日消費／與我相關旅程累計」，避免把目前成員可見範圍誤讀成全團總額。今日無消費時顯示 `¥0`，不再另疊重複提示。
