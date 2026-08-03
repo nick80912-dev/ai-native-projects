@@ -365,18 +365,38 @@ test('when the checked item leaves the list, focus moves to a sensible next targ
 
 /* ---------- 回到現在 ---------- */
 
-test('back-to-now appears only when today is inside the trip', async ({ page }) => {
-  const inTrip = await page.evaluate(() => {
+/* 只在「它做得到別處做不到的事」時才出現。
+   實測:待在今天那一天時,「隱藏已完成」(預設開)已把過去的站點移走,
+   「現在」在三種情境下都落在第一屏內(第 1／2／4 筆,255／391／783px,視窗 844px),
+   而「再點同一分頁回頂」已能到達 —— 那時這顆按鈕等於捲到頂,是多餘的。
+   真正無可取代的只有跨日:人在 Day 5、今天是 Day 1 時,篩選與回頂都幫不上忙。 */
+test('back-to-now stays hidden on today, because hide-done plus back-to-top already covers it', async ({ page }) => {
+  const onToday = await page.evaluate(() => {
     switchView('trip');
-    return { todayIndex: findToday(), hasButton: !!document.querySelector('#view-trip .trip-back-now') };
+    return { curDay, todayIndex: findToday(), hasButton: !!document.querySelector('#view-trip .trip-back-now') };
   });
-  expect(inTrip.todayIndex).not.toBe(null);
-  expect(inTrip.hasButton).toBe(true);
+  expect(onToday.todayIndex).not.toBe(null);
+  expect(onToday.curDay).toBe(onToday.todayIndex);
+  expect(onToday.hasButton).toBe(false);
+});
 
-  /* 把行程日期挪開,今天就不在範圍內 —— 按鈕不該出現 */
+test('back-to-now appears once you are on a different day', async ({ page }) => {
+  const away = await page.evaluate(() => {
+    switchView('trip');
+    const today = findToday();
+    gotoDay(today === 0 ? 1 : 0);
+    return { curDay, todayIndex: today, hasButton: !!document.querySelector('#view-trip .trip-back-now') };
+  });
+  expect(away.curDay).not.toBe(away.todayIndex);
+  expect(away.hasButton).toBe(true);
+});
+
+test('back-to-now stays hidden when today is outside the trip entirely', async ({ page }) => {
   const outside = await page.evaluate(() => {
+    switchView('trip');
     const saved = DB.trip.days.map((d) => d.date);
     DB.trip.days.forEach((d, i) => { d.date = '1/' + (i + 1); });
+    curDay = 3;                       /* 就算不在第 0 天,沒有「今天」也不該出現 */
     renderTrip();
     const hasButton = !!document.querySelector('#view-trip .trip-back-now');
     DB.trip.days.forEach((d, i) => { d.date = saved[i]; });
@@ -414,6 +434,7 @@ test('back-to-now jumps to today and positions the current stop', async ({ page 
 test('back-to-now is a real, tappable, labelled control', async ({ page }) => {
   const meta = await page.evaluate(() => {
     switchView('trip');
+    gotoDay(findToday() === 0 ? 1 : 0);   /* 只有離開今天那一天時才會出現 */
     const btn = document.querySelector('#view-trip .trip-back-now');
     const r = btn.getBoundingClientRect();
     return { tag: btn.tagName, type: btn.getAttribute('type'), text: btn.textContent.trim(), h: Math.round(r.height) };

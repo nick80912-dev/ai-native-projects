@@ -2482,8 +2482,14 @@ function renderTrip(){
     '<span class="prog">完成 '+doneN+' · 略過 '+skipN+' / 共 '+acts.length+'</span></div>'+
     '<div class="trip-filter"><button class="trip-filter-btn '+(!tripHideDone?'on':'')+'" onclick="setTripHideDone(false)">顯示全部</button>'+
     '<button class="trip-filter-btn '+(tripHideDone?'on':'')+'" onclick="setTripHideDone(true)">隱藏已完成</button>'+
-    /* 只有今天真的落在行程範圍內才有「現在」可回;旅行前後顯示它只會讓人按了沒反應 */
-    (findToday()!==null?'<button type="button" class="trip-back-now" onclick="backToNow()">⏱ 回到現在</button>':'')+
+    /* 只在「它做得到別處做不到的事」時出現,兩個條件都必要:
+       ① 今天要真的落在行程範圍內,否則按了沒反應;
+       ② 人必須不在今天那一天 —— 待在今天時,「隱藏已完成」已把過去的站點移走,
+          實測「現在」都落在第一屏內(第 1／2／4 筆,255／391／783px,視窗 844px),
+          而「再點同一分頁回頂」已能到達,這顆按鈕等於捲到頂,是多餘的。
+       真正無可取代的只有跨日:人在 Day 5、今天是 Day 1 時,篩選與回頂都幫不上忙。 */
+    (findToday()!==null&&findToday()!==curDay
+      ?'<button type="button" class="trip-back-now" onclick="backToNow()">⏱ 回到現在</button>':'')+
     '</div>'+
     (visibleActs.length?visibleItems.map(function(it){return renderItem(it,checks,currentItemId,progress);}).join(''):'<div class="empty-state">今天的行程都已完成 ✓</div>');
 }
@@ -8528,11 +8534,11 @@ function openShoppingPhotoRepairFromSettings(itemId){
   });
 }
 var APP_RELEASE_NOTES=[
+  {version:'v83',date:'2026-08-02',title:'「回到現在」只在需要時出現',items:['待在今天那一天時不再顯示，因為隱藏已完成加上再點分頁回頂已經到得了','只有當你跑到別天瀏覽時才出現，一鍵切回今天並定位當下那一站']},
   {version:'v82',date:'2026-08-02',title:'切換分頁不再迷路',items:['各分頁記住自己的位置，切走再回來會回到原處；再點同一個分頁則回到最上面','行程的交通、停車、備註展開後不會因為打卡就被收合','行程新增「回到現在」，逛完別天可一鍵回到當下那一站','打卡格可用鍵盤操作，讀螢幕軟體也會唸出是否已打卡']},
   {version:'v81',date:'2026-08-02',title:'購物頁更順手',items:['下一站的「完成」「跳過」過長時以省略號收尾，不再換行把按鈕撐高','購物頁的想逛標記改綁定地點本身，新增購物地點後不會再跑到別家店','勾選想逛不再整頁重畫，篩選列的位置會留在原地','搜尋可用分類（如「服飾」）尋找，沒結果的購物地點不再留下空白區塊','店家列可用鍵盤操作，讀螢幕軟體也會唸出是否已標記想逛','「想逛」頁籤改為只列出已加入的店家，並可一鍵清除全部（可復原）','購物頁新增採買清單入口，顯示未完成項目數']},
   {version:'v80',date:'2026-08-02',title:'主題固定淺色、操作更好按',items:['六個主題在手機深色外觀下不再自動轉深，畫面與淺色外觀一致','設定圖示放大更好按，下一站的「完成」不再被長地點名稱擠成直排']},
   {version:'v79',date:'2026-08-02',title:'設定圖示更清楚',items:['右上角設定按鈕改為圓角六齒圖示，各主題與不同裝置保持一致']},
-  {version:'v78',date:'2026-08-02',title:'旅途中更穩、更好操作',items:['離線首屏不再等待遠端字體，App 圖示與桃子標誌可從快取顯示','頁面顯示失敗時可直接重新整理，並改善 Today、觸控、夜間與照片提示體驗']},
 ];
 function renderAppReleaseNotes(){
   return '<div class="settings-release-list">'+APP_RELEASE_NOTES.map(function(note){
