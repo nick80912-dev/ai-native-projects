@@ -783,8 +783,10 @@ assert(!ui.includes("SHOPPING_CATEGORIES=['必買','伴手禮','代購'"));
 assert.match(ui,/\.shopping-target-badge\{[^}]*background:var\(--coral-bg\)[^}]*color:var\(--coral\)[^}]*border-radius:6px/);
 assert(ui.includes('--font-ui:"PingFang TC","Microsoft JhengHei",system-ui,-apple-system,sans-serif'),
   '全站字體變數只使用裝置內建繁中 fallback，不等待遠端字體');
-assert(ui.includes("{version:'v77',date:'2026-08-01',title:'照片附件更可靠'"),
-  'v77 release notes lead with the approved photo integrity and storage management improvement');
+/* 這裡原本釘住 v77 的使用者版更新說明。但 APP_RELEASE_NOTES 是**刻意**只留五筆的
+   滾動視窗(契約在 theme-system.test.js),歷史條目遲早會被擠掉 —— v82 就擠掉了 v77。
+   釘住會滾掉的東西是時間炸彈,且與本檔要驗的「照片完整性功能是否存在」無關;
+   功能本身由下面三條斷言負責,歷史交付紀錄則在 07_CHANGELOG.md。 */
 assert(ui.includes('var shoppingPhotoAuditState='),'the App owns one attachment audit state');
 assert(ui.includes('function refreshShoppingPhotoAudit('),'the App exposes one audit refresh entry');
 assert(ui.includes('TripShoppingPhotos.auditAttachments('),'the UI delegates integrity rules to the photo module');

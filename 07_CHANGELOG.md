@@ -1,4 +1,18 @@
 # 07 版本紀錄
+## 2026-08-02｜操作脈絡保存（SW v82）
+
+批次主題：**使用者的操作脈絡不得被導航或重繪無故破壞。** 三個症狀同一個根因 —— 捲動位置、面板展開、操作焦點都只活在 DOM 裡，重繪即消失。
+
+- **暫態 UI 狀態有了落點**：新增 session-only 的 `viewUiState`（四個分頁各自的 `scrollY`，行程頁另有 `openPanels`）。刻意**不**寫 localStorage、**不**進備份：把 A 手機的捲動位置還原到 B 手機毫無意義，而且會讓備份格式再升一版。測試從 key、值、payload 三處鎖住這條邊界。
+- **分頁捲動位置**：`switchView()` 結尾原本無條件 `window.scrollTo({top:0})`；實測更糟 —— 因為 `html{scroll-behavior:smooth}`，那個 scrollTo 是**動畫**的，切換瞬間量到的是滑到一半的 226px。改為離開前記位置（必須在 `curView` 改變之前）、`renderCurrent()` **之後**以 `requestAnimationFrame` 還原，並 clamp 到目前可捲動範圍。還原一律 `behavior:'instant'`，否則會被 CSS 的 smooth 變成動畫。
+- **入口意圖優先**：帶目標的入口（看某個行程、某個購物地點、跳某一天、回到現在）以**結構化資料**傳參 —— `{type:'trip-item',itemId}` 等。參數傳遞天然只消耗一次，沒有殘留旗標要清；結構化比 `skipRestore=true` 好測，日後新增入口不必改判斷邏輯。順帶收掉重複：`openTripItem()` 原本自己複製了一份 `switchView` 的 body，因此完全沒有參與捲動保存。
+- **行程面板展開狀態**：`togglePanel()` 原本只做 `classList.toggle`，而 `onCheck()` 會 `renderTrip()` —— 使用者的實際體驗是「每打一次卡，交通／停車／備註全部收合」。狀態改存進 `viewUiState.trip.openPanels`，並在 `renderTrip()` 依 `visibleItems` GC 掉被篩除者。
+- **打卡改為可鍵盤操作的 checkbox**：與 v81 為 `.store-row` 修掉的是同一個缺陷，沿用同一套樣板。差別在 `.chk` 是獨立小方塊、列內文字不在它裡面，因此**必須**自帶 `aria-label`。鍵盤與滑鼠不能用 `document.activeElement` 反推（`<div tabindex="0">` 被點擊時同樣會取得焦點），改由 keydown handler 明確傳 `fromKeyboard`。
+- **焦點還原的例外處理**：契約寫成「重繪不得**無故**破壞仍然存在的狀態；使用者刻意讓目標離開結果集時，焦點移往下一個合理目標」。`tripHideDone` 預設為 true，打完卡那一筆本來就會離開清單 —— 目標仍在→還原同一元素；已離開→原位置的下一筆；連下一筆都沒有→退到篩選按鈕。實作過程中第一版測試正是把這個例外誤當成缺陷，**實作是對的、預期寫錯了**。
+- **「回到現在」**：`backToNow()` = 今天那一天 + 目前這一站，沿用同一套意圖機制。只有 `findToday()` 不為 null 時才渲染，旅行前後顯示它只會讓人按了沒反應。
+- **版本策略**：依 2026-08-02 裁定，每批鎖定一版；整批完成、測試全綠後才升版。`sw.js` 的 diff **只有版本字串一行**，生命週期與快取策略未動；`netlify.toml` 未動；`PERSONAL_STATE_VERSION` 維持 9。
+- **驗證**：五項皆先寫失敗測試（切分頁量到 226px、面板 3→0、`viewUiState` 不存在、`role` 非 checkbox、按鈕不存在）；完整 **64／64** Node test files 與 Playwright **81／81** 通過。
+
 ## 2026-08-02｜完成／跳過改為單行省略號（SW v81）
 
 - **完成鈕也收單行**：v80 只把跳過鈕收成單行省略號（受「一條 CSS 規則」的範圍限制），完成鈕仍會換行，長地點名稱下實測長到 65px。將 `white-space:nowrap` 移到 `.nx-decision-btn` 基底規則，兩顆按鈕一致以省略號收尾，維持 46px 單行高度。

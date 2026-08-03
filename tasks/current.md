@@ -9,9 +9,9 @@
 |---|---|
 | **正式版(`main` / 正式站)** | **SW v73**,merge commit `17c423f`,回滾 tag `production-v73` |
 | 正式站 | `https://trippilot-jp.netlify.app/` — 2026-08-01 由 SW v18 升級至 v73,G1–G6 全數通過 |
-| **dev 候選版** | **SW v81**,最新 SHA `3c7c115`,`app-version.js` 與 `sw.js` 均為 v81 |
+| **dev 候選版** | **SW v82**,`app-version.js` 與 `sw.js` 均為 v82 |
 | 個人備份格式 | **v9**(`PERSONAL_STATE_SUPPORTED_VERSIONS = [1..9]`)—— v81 因想逛 key 識別語意變更而升版 |
-| dev 自動驗證 | **62／62** Node test files、Playwright **64／64**、`check-doc-titles` 與 `check-app-version` 通過 |
+| dev 自動驗證 | **64／64** Node test files、Playwright **81／81**、`check-doc-titles` 與 `check-app-version` 通過 |
 | 既有 tag | `production-v18`、`production-v73` |
 
 **`dev` 領先 `main` 八個候選版(v74–v81),全部尚未正式發布。** v74 起的每一批都通過完整自動驗證,但只有 v73 經過 Bar 真機驗收與正式部署。
