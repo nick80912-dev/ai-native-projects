@@ -18,6 +18,15 @@ vm.createContext(sandbox);
 vm.runInContext(extractFunction(html, 'rainChanceFromNow'), sandbox);
 const { rainChanceFromNow } = sandbox;
 
+/* 這是 Bar 已核准且在本批動工前就存在的工作區差異，禁止為了製造 RED 而回復它。 */
+vm.runInContext(extractFunction(html, 'escapeHtml'), sandbox);
+vm.runInContext(extractFunction(html, 'renderWeatherChip'), sandbox);
+const weatherChip=sandbox.renderWeatherChip({city:'岡山',icon:'☔',temp:21,rain:30});
+assert(weatherChip.includes('21° 雨30%'),'weather visual copy stays compact');
+assert(!weatherChip.includes('之後雨'),'weather visual copy no longer says 之後');
+assert(weatherChip.includes('aria-label="岡山 21 度，現在之後最高降雨機率 30%"'),
+  'weather aria-label keeps the complete future-window meaning');
+
 const H = (hour) => '2026-10-18T' + String(hour).padStart(2, '0') + ':00';
 const series = {
   time: [H(6), H(9), H(12), H(15), H(18), H(21)],

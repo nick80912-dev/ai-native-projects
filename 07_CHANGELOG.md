@@ -1,4 +1,14 @@
 # 07 版本紀錄
+## 2026-08-03｜Today 採買提醒精簡（SW v86）
+
+- **消除重複提醒**：Today 待買模型接受目前下一站的 exact `stopRef`，排除後重新計算 count；一般卡使用下一站 id，同區串點只使用目前 child id。若今天全部待買都由有效下一站承擔，Today 不再補回卡片或 generic「採買清單 →」入口；行程尚未開始與沒有有效下一站時則維持原本入口／完整 Today 提醒。
+- **下一站改為 badge**：原本整列 `.nx-buy` 改為右上 `🛍 N`，實際按鈕至少 44×44px，`aria-label` 為「開啟這一站的 N 項待買」。badge 是 `.nx-ticket-main` 的直接 sibling，點擊只執行 `openShoppingList(stopRef)`，不會冒泡觸發 `openTripItem()`；一般卡與 cluster current child 共用同一契約。
+- **Today 卡收斂**：文案改為「今天 N 項待買／查看全部 →」，最多兩個站點、每站前三個品名；第四項起以 ASCII `...` 表示，剛好三項不加。超過兩站時在第二列右側固定顯示「另有 N 個地點」，不增加第三列。站名與品名分配獨立截斷空間，過長站名不會吃掉全部品名或 overflow 標記。
+- **實測高度**：同一組 12 筆待買資料在 v85 HEAD／v86 工作樹對照，375×844 的 Today 卡由 **115.2px → 94.9px**，下一站起點由 **302.3px → 282.8px**；下一站卡由 **263.7px → 209.7px**，合計省 **74.3px**。320px 因舊 `.nx-buy` 會換成兩行，合計省 **97.9px**；390px 省 **74.3px**。三種寬度均無水平 overflow，badge 為 50×44px，移除 badge 前後卡高差為 0。
+- **保留既有天氣修正**：視覺文字縮短為「雨 N%」，`aria-label` 仍保留「現在之後最高降雨機率」，未改 API、TTL、快取、降雨計算或離線策略。
+- **版本邊界**：`app-version.js` 與 `sw.js` 升 v86；`sw.js` 除版本字串外不動生命週期與快取策略；`PERSONAL_STATE_VERSION` 維持 9，`netlify.toml` 未動。
+- **驗證**：依 TDD 先確認 model、render 與 browser 測試在 v85 行為下失敗，再實作；完整 **65／65** Node test files 與 Playwright **101／101** 通過。
+
 ## 2026-08-03｜修正「其他資訊」誤觸卡片導覽（SW v85）
 
 - **真機回饋**：在今天的行程卡點「其他資訊」會直接跳進行程分頁。

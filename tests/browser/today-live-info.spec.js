@@ -38,24 +38,32 @@ async function seedForNextStop(page, names) {
   }, names);
 }
 
-test('the next-stop card shows how many things to buy there, with a summary', async ({ page }) => {
+test('the next-stop card shows a compact accessible shopping badge', async ({ page }) => {
   const seeded = await seedForNextStop(page, ['白桃果凍', '桃子酒', '吉備糰子']);
 
   const card = await page.evaluate(() => {
-    const el = document.querySelector('#view-today .nx-buy');
-    return el ? { text: el.textContent.replace(/\s+/g, ' ').trim(), html: el.outerHTML } : null;
+    const el = document.querySelector('#view-today .nx-buy-badge');
+    return el ? {
+      text: el.textContent.replace(/\s+/g, ' ').trim(),
+      ariaLabel: el.getAttribute('aria-label'),
+      tag: el.tagName,
+      type: el.type,
+    } : null;
   });
 
   expect(card).not.toBeNull();
-  expect(card.text).toContain('3');
-  /* 摘要要看得到品名,不是只有一個數字 */
-  expect(card.text).toContain('白桃果凍');
+  expect(card.text).toBe('🛍 3');
+  expect(card.ariaLabel).toBe('開啟這一站的 3 項待買');
+  expect(card.tag).toBe('BUTTON');
+  expect(card.type).toBe('button');
+  expect(card.text).not.toContain('白桃果凍');
+  expect(seeded.stopRef).toBeTruthy();
 });
 
-test('the buy block is absent when the next stop has nothing to buy', async ({ page }) => {
+test('the shopping badge is absent when the next stop has nothing to buy', async ({ page }) => {
   const absent = await page.evaluate(() => {
     switchView('today');
-    return !document.querySelector('#view-today .nx-buy');
+    return !document.querySelector('#view-today .nx-buy-badge');
   });
   expect(absent).toBe(true);
 });
@@ -66,31 +74,187 @@ test('completed items do not count toward the next stop', async ({ page }) => {
     const pending = shoppingListStore.all().filter((i) => !i.done && i.stopRef);
     shoppingListStore.update(pending[0].id, { done: true, completedAt: '2026-10-18T04:00:00.000Z' });
     renderToday();
-    const el = document.querySelector('#view-today .nx-buy');
+    const el = document.querySelector('#view-today .nx-buy-badge');
     return el ? el.textContent.replace(/\s+/g, ' ').trim() : null;
   });
-  expect(after).toContain('1');
-  expect(after).not.toContain('甲、乙');
+  expect(after).toBe('🛍 1');
 });
 
-test('tapping the buy block opens the shopping list at that stop', async ({ page }) => {
+test('tapping the badge opens the shopping list at that stop without navigating', async ({ page }) => {
   const seeded = await seedForNextStop(page, ['白桃果凍', '桃子酒']);
 
   const result = await page.evaluate(async (stopRef) => {
-    document.querySelector('#view-today .nx-buy').click();
+    const badge=document.querySelector('#view-today .nx-buy-badge');
+    if(!badge)return {missing:true};
+    const before=curView;
+    badge.click();
     await new Promise((r) => setTimeout(r, 400));
     const overlay = document.getElementById('shoppingListOverlay');
     const group = document.getElementById('shopgroup_' + cssId(stopRef));
     return {
+      missing:false,
+      before,
+      after:curView,
       overlayOpen: !!overlay,
       groupExists: !!group,
       groupText: group ? group.textContent.replace(/\s+/g, ' ').trim().slice(0, 60) : null,
     };
   }, seeded.stopRef);
 
+  expect(result.missing).toBe(false);
+  expect(result.before).toBe('today');
+  expect(result.after).toBe('today');
   expect(result.overlayOpen).toBe(true);
   expect(result.groupExists).toBe(true);
   expect(result.groupText).toContain('白桃果凍');
+});
+
+async function seedTodayShoppingGroups(page, groupNames) {
+  return page.evaluate((groupNames) => {
+    switchView('today');
+    const dayIndex=findToday();
+    const day=DB.trip.days[dayIndex];
+    const checkable=(day.items||[]).filter(isTripCheckableItem);
+    const pick=pickNextStop(checkable,getDayProgress(day,dayIndex),getChecks(),currentMinutes(),{day,dayIndex});
+    const current=pick.item;
+    const seen={};
+    if(current)seen[String(current.id)]=true;
+    const others=[];
+    checkable.forEach((item)=>{
+      const id=String(item&&item.id||'');
+      if(!id||seen[id]||others.length>=3)return;
+      seen[id]=true;others.push(item);
+    });
+    const stops=[current].concat(others);
+    groupNames.forEach((names,index)=>{
+      const stop=stops[index];
+      if(!stop)return;
+      names.forEach((name)=>{
+        const item=shoppingListStore.add({name,category:'其他',quantity:1,unit:'個'});
+        shoppingListStore.update(item.id,{stopRef:stop.id});
+      });
+    });
+    renderToday();
+    return {currentRef:current&&current.id,otherRefs:others.map((item)=>item.id)};
+  }, groupNames);
+}
+
+test('Today excludes the exact next stop and renders two compact other-stop rows', async ({ page }) => {
+  await seedTodayShoppingGroups(page,[
+    ['下一站一','下一站二'],
+    ['醬油','抹茶','和菓子'],
+    ['咖啡豆','果醬','餅乾','茶葉'],
+    ['桃子果凍']
+  ]);
+  const card=page.locator('#view-today .today-shopping-card');
+  await expect(card.locator('.today-shopping-card-head strong')).toHaveText('今天 8 項待買');
+  await expect(card.locator('.today-shopping-card-head span')).toHaveText('查看全部 →');
+  await expect(card.locator('.today-shopping-summary-row')).toHaveCount(2);
+  await expect(card).not.toContainText('下一站一');
+  await expect(card).toContainText('醬油、抹茶、和菓子');
+  await expect(card).toContainText('咖啡豆、果醬、餅乾...');
+  await expect(card).not.toContainText('茶葉');
+  await expect(card).toContainText('另有 1 個地點');
+  await expect(card).not.toContainText('等');
+});
+
+test('all shopping at the valid next stop leaves only the badge, never a fallback launcher', async ({ page }) => {
+  await seedTodayShoppingGroups(page,[['下一站一','下一站二']]);
+  await expect(page.locator('#view-today .nx-buy-badge')).toHaveText('🛍 2');
+  await expect(page.locator('#view-today .today-shopping-card')).toHaveCount(0);
+  await expect(page.locator('#view-today .today-shopping-launcher')).toHaveCount(0);
+});
+
+test('other-stop shopping remains visible when the next stop has nothing to buy', async ({ page }) => {
+  await seedTodayShoppingGroups(page,[[],['其他站一','其他站二']]);
+  await expect(page.locator('#view-today .nx-buy-badge')).toHaveCount(0);
+  await expect(page.locator('#view-today .today-shopping-card')).toContainText('今天 2 項待買');
+});
+
+test('the Today shopping card remains one button and opens the full list without navigation', async ({ page }) => {
+  await seedTodayShoppingGroups(page,[[],['醬油']]);
+  const card=page.locator('#view-today .today-shopping-card');
+  await expect(card.locator('button,a,[role="button"],[tabindex]')).toHaveCount(0);
+  await card.evaluate((element)=>element.click());
+  await expect(page.locator('#shoppingListOverlay')).toBeVisible();
+  expect(await page.evaluate(()=>curView)).toBe('today');
+});
+
+test('the badge is a direct sibling and keeps the openable card free of nested controls', async ({ page }) => {
+  await seedForNextStop(page,['白桃']);
+  const structure=await page.evaluate(()=>{
+    const ticket=document.querySelector('#view-today .nx-ticket');
+    const main=ticket&&ticket.querySelector(':scope > .nx-ticket-main');
+    const badge=ticket&&ticket.querySelector(':scope > .nx-buy-badge');
+    return {
+      hasTicketClass:!!(ticket&&ticket.classList.contains('has-next-buy')),
+      directSibling:!!(main&&badge&&main.parentElement===badge.parentElement),
+      nested:Array.from(main.querySelectorAll('a[href],button,summary,details,[tabindex],[role="button"]'))
+        .map((el)=>el.tagName.toLowerCase()+'.'+String(el.className||''))
+    };
+  });
+  expect(structure.hasTicketClass).toBe(true);
+  expect(structure.directSibling).toBe(true);
+  expect(structure.nested).toEqual([]);
+});
+
+test('the badge supports Tab, Enter, Space and a visible keyboard focus ring', async ({ page }) => {
+  await seedForNextStop(page,['白桃']);
+  const badge=page.locator('#view-today .nx-buy-badge');
+  await badge.focus();
+  const focusStyle=await badge.evaluate((el)=>{
+    const style=getComputedStyle(el);
+    return {outlineStyle:style.outlineStyle,outlineWidth:parseFloat(style.outlineWidth)||0};
+  });
+  expect(focusStyle.outlineStyle).not.toBe('none');
+  expect(focusStyle.outlineWidth).toBeGreaterThanOrEqual(2);
+  await badge.press('Enter');
+  await expect(page.locator('#shoppingListOverlay')).toBeVisible();
+  await page.evaluate(()=>closeShoppingList());
+  await badge.focus();
+  await badge.press('Space');
+  await expect(page.locator('#shoppingListOverlay')).toBeVisible();
+});
+
+test('320, 375 and 390px keep the badge clear and Today rows on one line', async ({ page }) => {
+  await seedTodayShoppingGroups(page,[
+    ['下一站一','下一站二','下一站三'],
+    ['這是一個非常非常長的岡山車站伴手禮樓層名稱','抹茶','和菓子','柚子胡椒'],
+    ['咖啡豆','果醬','餅乾'],
+    ['桃子果凍']
+  ]);
+  for(const width of [320,375,390]){
+    await page.setViewportSize({width,height:844});
+    const layout=await page.evaluate(()=>{
+      const badge=document.querySelector('#view-today .nx-buy-badge');
+      const ticket=document.querySelector('#view-today .nx-ticket');
+      const targets=['.nx-ticket-kicker','.nx-ticket-time','.nx-ticket-title']
+        .map((selector)=>ticket.querySelector(selector)).filter(Boolean);
+      const b=badge.getBoundingClientRect();
+      const overlaps=targets.some((element)=>{
+        const r=element.getBoundingClientRect();
+        return b.left<r.right&&b.right>r.left&&b.top<r.bottom&&b.bottom>r.top;
+      });
+      const rows=Array.from(document.querySelectorAll('#view-today .today-shopping-summary-row'));
+      return {
+        overflow:document.documentElement.scrollWidth>window.innerWidth,
+        /* Chromium 可能把 44 CSS px 回報為 43.999969；以 CSS pixel 取整驗收觸控區。 */
+        badgeWidth:Math.round(b.width),badgeHeight:Math.round(b.height),overlaps,
+        rows:rows.length,
+        multiline:rows.some((row)=>row.getBoundingClientRect().height>22),
+        oldBuy:!!document.querySelector('#view-today .nx-buy'),
+        badgePosition:getComputedStyle(badge).position
+      };
+    });
+    expect(layout.overflow,`${width}px horizontal overflow`).toBe(false);
+    expect(layout.badgeWidth).toBeGreaterThanOrEqual(44);
+    expect(layout.badgeHeight).toBeGreaterThanOrEqual(44);
+    expect(layout.overlaps,`${width}px badge overlap`).toBe(false);
+    expect(layout.rows).toBe(2);
+    expect(layout.multiline,`${width}px summary wraps`).toBe(false);
+    expect(layout.oldBuy).toBe(false);
+    expect(layout.badgePosition).toBe('absolute');
+  }
 });
 
 /* ---------- 次要資訊收合 ---------- */

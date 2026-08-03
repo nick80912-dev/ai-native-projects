@@ -424,10 +424,10 @@ input,select,textarea{font-size:16px}
 .nx-ticket-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
 .nx-ticket-actions .qa-btn{margin:0}
 .nx-primary-actions{padding:0 16px 10px 20px}
-.nx-buy{display:flex;align-items:center;gap:8px;flex-wrap:wrap;width:calc(100% - 36px);margin:0 16px 10px 20px;min-height:44px;padding:8px 12px;border:1px solid var(--gold);border-radius:12px;background:var(--warning-bg);color:var(--gold-ink);font:inherit;font-size:13px;font-weight:800;text-align:left;cursor:pointer}
-.nx-buy-count{flex:0 0 auto;font-weight:900}
-.nx-buy-names{flex:1 1 auto;min-width:0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;font-weight:700;opacity:.9}
-.nx-buy:focus-visible{outline:2px solid var(--sea);outline-offset:2px}
+.nx-ticket.has-next-buy .nx-ticket-kicker,.nx-ticket.has-next-buy .nx-ticket-time,.nx-ticket.has-next-buy .nx-ticket-title{max-width:calc(100% - 54px);box-sizing:border-box}
+.nx-buy-badge{position:absolute;z-index:2;top:8px;right:8px;display:grid;place-items:center;min-width:44px;height:44px;padding:0 4px;border:0;border-radius:10px;background:transparent;color:var(--gold-ink);font:inherit;cursor:pointer;touch-action:manipulation}
+.nx-buy-badge-visual{display:inline-flex;align-items:center;justify-content:center;min-height:28px;padding:2px 8px;border:1px solid var(--gold);border-radius:999px;background:var(--warning-bg);font-size:13px;font-weight:900;line-height:1;white-space:nowrap;box-sizing:border-box}
+.nx-buy-badge:focus-visible{outline:3px solid var(--sea);outline-offset:2px}
 /* 移出 .nx-ticket-main 之後要自己補回對齊用的內距(原本是繼承卡片本體的 padding) */
 .nx-more{margin:0 16px 10px 20px}
 .nx-more-summary{min-height:44px;display:flex;align-items:center;font-size:13px;font-weight:800;color:var(--sea-deep);cursor:pointer;list-style:none}
@@ -624,7 +624,7 @@ body.ledger-sheet-open{overflow:hidden}.ledger-sheet-overlay{position:fixed;inse
 .ledger-sheet-field>label.ledger-proxy-switch{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:42px;margin-bottom:0;padding:7px 10px;border:1px solid #c99c94;border-radius:9px;background:#f4e9e6;color:#6e4540}
 .ledger-item-proxy .ledger-sheet-choice-grid{align-items:center}
 .ledger-proxy-add-row{flex:1 0 100%;width:100%;box-sizing:border-box}
-.today-shopping-card{width:100%;margin:10px 0 0;border:1px solid #cfe0dd;border-radius:10px;background:var(--mint);padding:12px;color:var(--ink);text-align:left;font:inherit;box-shadow:var(--shadow);touch-action:manipulation}.today-shopping-card-head{display:flex;align-items:center;justify-content:space-between;gap:12px}.today-shopping-card-head strong{font-size:15px;color:var(--sea-deep)}.today-shopping-card-head span{flex:0 0 auto;color:var(--sea);font-size:13px;font-weight:900}.today-shopping-summary{display:grid;gap:3px;margin-top:7px;color:var(--ink-soft);font-size:12px;line-height:1.45}.today-shopping-summary div{min-width:0;overflow-wrap:anywhere}
+.today-shopping-card{width:100%;margin:10px 0 0;border:1px solid #cfe0dd;border-radius:10px;background:var(--mint);padding:12px;color:var(--ink);text-align:left;font:inherit;box-shadow:var(--shadow);touch-action:manipulation}.today-shopping-card-head{display:flex;align-items:center;justify-content:space-between;gap:12px}.today-shopping-card-head strong{font-size:15px;color:var(--sea-deep)}.today-shopping-card-head span{flex:0 0 auto;color:var(--sea);font-size:13px;font-weight:900}.today-shopping-summary{display:grid;gap:3px;margin-top:7px;color:var(--ink-soft);font-size:12px;line-height:1.45}.today-shopping-summary-row{display:block;min-width:0;white-space:nowrap}.today-shopping-summary-row.has-location-overflow{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:baseline;gap:6px}.today-shopping-summary-copy{display:flex;min-width:0;white-space:nowrap}.today-shopping-stop{flex:0 1 42%;max-width:42%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.today-shopping-separator{flex:0 0 auto}.today-shopping-items{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.today-shopping-location-overflow{white-space:nowrap;color:var(--sea);font-size:10px;font-weight:900;padding:1px 5px;border-radius:999px;background:rgba(255,255,255,.72)}
 .today-shopping-launcher{width:100%;min-height:44px;margin:9px 0 0;border:0;border-bottom:1px solid var(--line);background:transparent;color:var(--sea);padding:8px 2px;text-align:right;font:inherit;font-size:13px;font-weight:900;touch-action:manipulation}
 .today-hero-action{display:inline-flex;align-items:center;justify-content:center;width:auto;min-height:44px;margin-top:12px;background:rgba(255,255,255,.16);color:#fff;border:none;border-radius:10px;padding:9px 16px;font:inherit;font-size:13.5px;font-weight:600;line-height:1.2;cursor:pointer;position:relative;touch-action:manipulation}
 body.shopping-list-open{overflow:hidden}.shopping-list-overlay{position:fixed;inset:0;z-index:145;background:var(--paper)}.shopping-list-panel{width:min(100%,620px);height:100dvh;margin:0 auto;overflow-y:auto;touch-action:pan-y;overscroll-behavior:contain;background:var(--paper);padding:0 12px calc(92px + env(safe-area-inset-bottom));box-sizing:border-box}.shopping-list-head{position:sticky;z-index:4;top:0;display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:58px;margin:0 -12px;padding:calc(7px + env(safe-area-inset-top)) 12px 7px;background:rgba(249,247,241,.97);border-bottom:1px solid var(--line);backdrop-filter:blur(10px)}.shopping-list-head h2{min-width:0;font-size:19px;color:var(--sea-deep)}.shopping-list-head-actions{display:flex;align-items:center;gap:4px}.shopping-icon-button{min-width:44px;min-height:44px;border:0;border-radius:9px;background:transparent;color:var(--sea-deep);font:inherit;font-size:22px;font-weight:900}.shopping-add-button{width:44px;height:44px;border:0;border-radius:50%;background:var(--coral);color:#fff;font:inherit;font-size:25px;line-height:1}.shopping-list-segment{position:sticky;z-index:3;top:calc(59px + env(safe-area-inset-top));display:flex;gap:4px;margin:0 -12px 12px;padding:9px 12px;background:var(--paper)}.shopping-list-segment-track{display:flex;width:100%;gap:4px;padding:4px;border:1px solid var(--line);border-radius:999px;background:var(--line-soft)}.shopping-list-segment button{flex:1;min-width:0;min-height:40px;border:0;border-radius:999px;background:transparent;color:var(--ink-soft);font:inherit;font-size:13px;font-weight:900}.shopping-list-segment button.on{background:var(--sea);color:#fff;box-shadow:var(--shadow)}
@@ -2886,7 +2886,8 @@ function renderClusterNextStopCard(day,dayIndex,pick,cluster,checks,progress,now
   var currentMeta=nextStopMeta(current,res);
   var canNav=(current.place&&current.place.trim())||res;
   var skipped=cluster.items.filter(function(item){ return isAutoSkipped(item.id,progress); }).length;
-  var h='<div class="nx-ticket nx-cluster-ticket">'+
+  var buy=renderNextStopBuy(current.id);
+  var h='<div class="nx-ticket nx-cluster-ticket'+(buy?' has-next-buy':'')+'">'+
     '<div class="nx-ticket-main">'+
       '<div class="nx-ticket-kicker">NEXT STOP · 同區串點</div>'+
       (clusterTimeRange(cluster.parent,cluster.items)?'<div class="nx-ticket-time">'+escapeHtml(clusterTimeRange(cluster.parent,cluster.items))+'</div>':'')+
@@ -2896,8 +2897,7 @@ function renderClusterNextStopCard(day,dayIndex,pick,cluster,checks,progress,now
       '<div class="nx-ticket-lines"><div class="nx-ticket-line"><b>目前</b> '+escapeHtml((current.time?current.time+' ':'')+clusterItemName(current))+'</div>'+renderTicketLine('交通',currentMeta.drive)+'</div>'+
       '<button class="nx-cluster-expand '+(open?'on':'')+'" onclick="toggleHomeCluster(\''+jsString(cluster.parent.id)+'\')">'+(open?'收合該區串點':'展開該區串點')+'</button>'+
       (open?'<div class="nx-cluster-list">'+cluster.items.map(function(item){ return renderClusterStop(item,checks,progress,dayIndex); }).join('')+'</div>':'')+
-    '</div>'+
-    renderNextStopBuy(current.id)+
+    '</div>'+buy+
     (canNav?'<div class="nx-primary-actions">'+renderTripNavigationLink(current,res,dayIndex,'nx-drive-btn')+'</div>':'')+
     '<div class="nx-ticket-low"><button class="nx-decision-btn done" onclick="onNextStopDone('+dayIndex+',\''+current.id+'\')">完成：'+escapeHtml(clusterItemName(current))+'</button><button class="nx-decision-btn skip" onclick="onNextStopSkip('+dayIndex+',\''+current.id+'\')">跳過：'+escapeHtml(clusterItemName(current))+'</button></div></div>';
   if(pick.remaining+childPick.remaining>0) h+='<div class="nx-remain">今日還有 '+(pick.remaining+childPick.remaining)+' 個行程</div>';
@@ -2910,10 +2910,11 @@ function activateKeyboardButton(event,action){
 /* 下一站要買什麼。採買項目的 stopRef **就是站點 id**,與行程項目的 id 是 1:1 直接 join ——
    不經由商場推導,因此沒有「一個商場對多個不同日期站點」的歧義。
    必買優先,沿用與採買清單相同的 prioritizeShoppingGroupItems。 */
-function nextStopBuyModel(stopRef){
+function nextStopBuyModel(stopRef,sourceItems){
   var ref=String(stopRef||'');
   if(!ref) return null;
-  var items=shoppingListStore.all().filter(function(item){
+  var source=Array.isArray(sourceItems)?sourceItems:shoppingListStore.all();
+  var items=source.filter(function(item){
     return item&&!item.done&&String(item.stopRef||'')===ref;
   });
   if(!items.length) return null;
@@ -2924,10 +2925,9 @@ function nextStopBuyModel(stopRef){
 function renderNextStopBuy(stopRef){
   var model=nextStopBuyModel(stopRef);
   if(!model) return '';
-  return '<button type="button" class="nx-buy" onclick="openShoppingList(\''+jsHtmlAttrString(stopRef)+'\')"'+
-    ' aria-label="'+escapeHtml('這站有 '+model.count+' 項待買，開啟採買清單')+'">'+
-    '<span class="nx-buy-count">🛍 這站待買 '+model.count+'</span>'+
-    '<span class="nx-buy-names">'+escapeHtml(model.names.join('、')+(model.more?' 等':''))+'</span></button>';
+  return '<button type="button" class="nx-buy-badge" onclick="openShoppingList(\''+jsHtmlAttrString(stopRef)+'\')"'+
+    ' aria-label="'+escapeHtml('開啟這一站的 '+model.count+' 項待買')+'">'+
+    '<span class="nx-buy-badge-visual" aria-hidden="true">🛍 '+model.count+'</span></button>';
 }
 /* 付款與提醒收進 <details>。展開狀態屬暫態 UI,沿用 v82 的 viewUiState 慣例
    (不進 localStorage、不進備份),否則每次重繪都會自己收回去。 */
@@ -2951,7 +2951,8 @@ function renderNextStopCard(day,dayIndex,pick){
   var res=resolveRef(it);
   var meta=nextStopMeta(it,res);
   var canNav=(it.place&&it.place.trim())||res;
-  var h='<div class="nx-ticket">'+
+  var buy=renderNextStopBuy(it.id);
+  var h='<div class="nx-ticket'+(buy?' has-next-buy':'')+'">'+
     '<div class="nx-ticket-main openable" role="button" tabindex="0" aria-label="開啟完整行程：'+escapeHtml(meta.place.replace(/\n/g,' '))+'" onclick="openTripItem('+dayIndex+',\''+it.id+'\')" onkeydown="activateKeyboardButton(event,function(){openTripItem('+dayIndex+',\''+it.id+'\')})">'+
       '<div class="nx-ticket-kicker">NEXT STOP · DAY '+(dayIndex+1)+'</div>'+
       (it.time?'<div class="nx-ticket-time">'+escapeHtml(it.time)+'</div>':'')+
@@ -2965,14 +2966,13 @@ function renderNextStopCard(day,dayIndex,pick){
         renderParkingTicketLine('停車',meta.parking)+
         renderTicketLine('營業',meta.hours)+
       '</div>'+
-    '</div>'+
+    '</div>'+buy+
     /* 常駐到此為止:交通／停車／營業回答「到得了嗎、開著嗎」,抵達前就要看。
        付款與提醒是抵達後才需要的細節,收進可展開區塊,預設收合。
        **必須放在 .nx-ticket-main 之外** —— 那個 div 本身是 role="button" +
        onclick="openTripItem(...)",把可互動元素放進去,點展開會冒泡成整張卡的導覽
        (真機實測:點「其他資訊」直接跳進行程分頁),而且「按鈕裡的按鈕」在語意上無效。 */
     renderNextStopMore(it.id,meta)+
-    renderNextStopBuy(it.id)+
     (canNav?'<div class="nx-primary-actions">'+renderTripNavigationLink(it,res,dayIndex,'nx-drive-btn')+'</div>':'')+
     '<div class="nx-secondary-actions">'+
       (meta.web?'<a class="qa-btn nf" href="'+escapeHtml(meta.web)+'" target="_blank" rel="noopener">🌐 官網</a>':'')+
@@ -3041,10 +3041,10 @@ function onNextStopSkip(dayIndex,itemId){
 var homeWeatherState={};
 function renderWeatherChip(weather){
   if(!weather) return '';
-  /* 「之後雨 N%」而不是「雨 N%」—— 數字的語意是「現在之後的最高降雨機率」,
-     不寫出來會被讀成當下正在下雨的機率。 */
+  /* 顯示文字維持精簡的「雨 N%」;完整語意(現在之後的最高降雨機率)留在 aria-label,
+     螢幕閱讀器仍讀得到,視覺上不佔寬度。 */
   return '<div class="weather-chip" aria-label="'+escapeHtml(weather.city+' '+weather.temp+' 度，現在之後最高降雨機率 '+weather.rain+'%')+'">'+
-    '<span class="city">'+escapeHtml(weather.city)+'</span>'+escapeHtml(' '+weather.icon+' '+weather.temp+'° 之後雨'+weather.rain+'%')+'</div>';
+    '<span class="city">'+escapeHtml(weather.city)+'</span>'+escapeHtml(' '+weather.icon+' '+weather.temp+'° 雨'+weather.rain+'%')+'</div>';
 }
 function requestHomeWeather(dayIndex,item){
   if(!item) return;
@@ -3122,7 +3122,7 @@ function renderToday(){
     view.innerHTML='<div class="today-hero"><div class="lbl">TODAY · '+todayMD()+'</div>'+
       '<div class="today-pretrip-title-row"><div class="date">還沒到出發日</div>'+renderPreTripCountdown()+'</div>'+
       '<div class="empty">今天沒有排定行程 🗓️<br>出發當天這裡會自動顯示當日安排與下一站。</div>'+
-      renderShoppingTodayEntry(null)+
+      renderShoppingTodayEntry(null,'')+
       renderPreTripBrief()+
       '<button class="today-jump today-hero-action" onclick="switchView(\'trip\')">查看完整行程 →</button></div>'+
       (days.length?'<div class="seg">行程重點</div>':'')+
@@ -3143,14 +3143,16 @@ function renderToday(){
   var clusterParent=clusterParentForPick(day.items,pick.item);
   var cluster=getChildStopCluster(day.items,clusterParent);
   var clusterPick=cluster?pickClusterChild(cluster,progress,checks,nowMinutes,{day:day,dayIndex:ti}):null;
-  var weatherItem=clusterPick&&clusterPick.item?clusterPick.item:pick.item;
+  var currentStop=clusterPick&&clusterPick.item?clusterPick.item:pick.item;
+  var currentStopRef=currentStop&&currentStop.id?currentStop.id:'';
+  var weatherItem=currentStop;
   requestHomeWeather(ti,weatherItem);
   var weather=homeWeatherFor(ti,weatherItem);
   var h='<div class="today-hero today-hero-trip'+(weather?' weather-on':'')+'"><div class="today-hero-top"><div class="lbl">TODAY · DAY '+(ti+1)+'</div>'+
     '<div class="loc">'+completed+'/'+items.length+' 已處理</div></div>'+
     '<div class="today-hero-main"><div class="date">'+day.date+(day.dow?' ('+day.dow+')':'')+'</div></div>'+
     renderWeatherChip(weather)+'</div>';
-  h+=renderShoppingTodayEntry(day);
+  h+=renderShoppingTodayEntry(day,currentStopRef);
   h+=cluster&&clusterPick&&clusterPick.item?renderClusterNextStopCard(day,ti,pick,cluster,checks,progress,nowMinutes):renderNextStopCard(day,ti,pick);
   if(DB.trip.days[ti+1]){
     if(shouldReplaceWithTomorrowPreview(pick)) h+=renderTomorrowPreview(ti,false);
@@ -3191,16 +3193,23 @@ function shoppingStopStateFor(item){
   return resolveShoppingStopState(ref,shoppingStopById(ref),shoppingTripAuthority());
 }
 var SHOPPING_STOP_STATE_LABEL={pending:'行程站點待確認',orphan:'原行程站點已不存在'};
-function renderShoppingTodayCard(day){
-  var model=buildShoppingTodayReminder(shoppingListStore.all(),day);
+function renderShoppingTodayCard(model){
   if(!model)return '';
-  var summary=model.groups.slice(0,3).map(function(group){
-    return '<div><b>'+escapeHtml(group.stopName)+'</b> · '+escapeHtml(group.items.slice(0,2).join('、')+(group.items.length>2?'等':''))+'</div>';
+  var visibleGroups=model.groups.slice(0,2);
+  var summary=visibleGroups.map(function(group,index){
+    var names=group.items.slice(0,3).join('、')+(group.items.length>3?'...':'');
+    var copy='<span class="today-shopping-summary-copy"><b class="today-shopping-stop">'+escapeHtml(group.stopName)+'</b><span class="today-shopping-separator" aria-hidden="true"> · </span><span class="today-shopping-items">'+escapeHtml(names)+'</span></span>';
+    var overflow=index===visibleGroups.length-1&&model.groups.length>2?'<span class="today-shopping-location-overflow">另有 '+(model.groups.length-2)+' 個地點</span>':'';
+    return '<span class="today-shopping-summary-row'+(overflow?' has-location-overflow':'')+'">'+copy+overflow+'</span>';
   }).join('');
-  return '<button type="button" class="today-shopping-card" onclick="openShoppingList()"><span class="today-shopping-card-head"><strong>今天有 '+model.count+' 項待買</strong><span>全部 →</span></span><span class="today-shopping-summary">'+summary+'</span></button>';
+  return '<button type="button" class="today-shopping-card" onclick="openShoppingList()"><span class="today-shopping-card-head"><strong>今天 '+model.count+' 項待買</strong><span>查看全部 →</span></span><span class="today-shopping-summary">'+summary+'</span></button>';
 }
-function renderShoppingTodayEntry(day){
-  return renderShoppingTodayCard(day)||'<button type="button" class="today-shopping-launcher'+(day?'':' today-hero-action')+'" onclick="openShoppingList()">採買清單 →</button>';
+function renderShoppingTodayEntry(day,currentStopRef){
+  var items=shoppingListStore.all();
+  var model=buildShoppingTodayReminder(items,day,currentStopRef);
+  if(model)return renderShoppingTodayCard(model);
+  if(day&&currentStopRef&&nextStopBuyModel(currentStopRef,items))return '';
+  return '<button type="button" class="today-shopping-launcher'+(day?'':' today-hero-action')+'" onclick="openShoppingList()">採買清單 →</button>';
 }
 /* 數量不再選填:每個新項目都給 quantity 1,才能可靠支援部分購買的減法。 */
 /* focusStopRef 選填:從「下一站待買」進來時捲到該站群組,省去自己找。
@@ -5746,13 +5755,14 @@ function resolveShoppingStopState(stopRef,stop,authority){
   if(stop)return 'resolved';
   return authority==='authoritative'?'orphan':'pending';
 }
-function buildShoppingTodayReminder(items,day){
+function buildShoppingTodayReminder(items,day,excludedStopRef){
   if(!day||!Array.isArray(day.items))return null;
+  var excluded=String(excludedStopRef||'');
   var stops={},groups=[],groupMap={};
   day.items.forEach(function(item){if(item&&item.id)stops[item.id]=item;});
   (items||[]).forEach(function(item){
     var ref=String(item&&item.stopRef||''),stop=stops[ref];
-    if(!item||item.done||!ref||!stop)return;
+    if(!item||item.done||!ref||!stop||(excluded&&ref===excluded))return;
     if(!groupMap[ref]){groupMap[ref]={stopRef:ref,stopName:shoppingStopName(stop),items:[]};groups.push(groupMap[ref]);}
     groupMap[ref].items.push(item);
   });
@@ -8644,11 +8654,11 @@ function openShoppingPhotoRepairFromSettings(itemId){
   });
 }
 var APP_RELEASE_NOTES=[
+  {version:'v86',date:'2026-08-03',title:'Today 採買提醒更精簡',items:['Today 待買只列其他站點，下一站不再重複出現','下一站改為右上角待買數字，仍可直接開到該站採買清單','每站最多顯示三個品名，更多站點以精簡提示呈現','天氣降雨文字縮短，讀螢幕軟體仍保留完整語意']},
   {version:'v85',date:'2026-08-03',title:'修正點「其他資訊」會跳頁',items:['在今天卡片上點開「其他資訊」不再誤跳到行程分頁，只會展開']},
   {version:'v84',date:'2026-08-02',title:'Today 看得到當下要做的事',items:['下一站卡片顯示這站要買什麼，點一下直接開到採買清單的對應站點','降雨機率改為「現在之後」的最高值，不再被早上已經過去的雨影響','付款與提醒收進「其他資訊」，交通、停車、營業維持常駐','購物搜尋顯示「找到 N 家店 · M 個購物地點」']},
   {version:'v83',date:'2026-08-02',title:'「回到現在」只在需要時出現',items:['待在今天那一天時不再顯示，因為隱藏已完成加上再點分頁回頂已經到得了','只有當你跑到別天瀏覽時才出現，一鍵切回今天並定位當下那一站']},
   {version:'v82',date:'2026-08-02',title:'切換分頁不再迷路',items:['各分頁記住自己的位置，切走再回來會回到原處；再點同一個分頁則回到最上面','行程的交通、停車、備註展開後不會因為打卡就被收合','行程新增「回到現在」，逛完別天可一鍵回到當下那一站','打卡格可用鍵盤操作，讀螢幕軟體也會唸出是否已打卡']},
-  {version:'v81',date:'2026-08-02',title:'購物頁更順手',items:['下一站的「完成」「跳過」過長時以省略號收尾，不再換行把按鈕撐高','購物頁的想逛標記改綁定地點本身，新增購物地點後不會再跑到別家店','勾選想逛不再整頁重畫，篩選列的位置會留在原地','搜尋可用分類（如「服飾」）尋找，沒結果的購物地點不再留下空白區塊','店家列可用鍵盤操作，讀螢幕軟體也會唸出是否已標記想逛','「想逛」頁籤改為只列出已加入的店家，並可一鍵清除全部（可復原）','購物頁新增採買清單入口，顯示未完成項目數']},
 ];
 function renderAppReleaseNotes(){
   return '<div class="settings-release-list">'+APP_RELEASE_NOTES.map(function(note){

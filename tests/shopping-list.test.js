@@ -115,6 +115,28 @@ assert.strictEqual(mod.buildShoppingTodayReminder([{id:'b',name:'藥妝',stopRef
 assert.strictEqual(mod.buildShoppingTodayReminder([{id:'d',name:'孤兒',stopRef:'10/18_99',done:false}],day),null,'orphan references degrade silently');
 assert.strictEqual(mod.buildShoppingTodayReminder([],null),null,'non-trip days never show the reminder');
 
+/* v86:Today 只排除目前有效下一站的 exact stopRef；同名、日期與位置都不能代替 ID join。 */
+const excludedReminder=plain(mod.buildShoppingTodayReminder([
+  {id:'next-a',name:'下一站一',stopRef:'10/18_0',done:false},
+  {id:'next-b',name:'下一站二',stopRef:'10/18_0',done:false},
+  {id:'other-a',name:'其他站',stopRef:'10/18_1',done:false}
+],day,'10/18_0'));
+assert.strictEqual(excludedReminder.count,1,'v86 exclusion recomputes Today count after removing the next stop');
+assert.deepStrictEqual(excludedReminder.groups,[{
+  stopRef:'10/18_1',stopName:'永旺夢樂城 岡山',items:['其他站']
+}],'v86 excludes only the exact next stopRef');
+assert.strictEqual(mod.buildShoppingTodayReminder([
+  {id:'next-only',name:'下一站獨占',stopRef:'10/18_0',done:false}
+],day,'10/18_0'),null,'all-in-next produces no duplicate Today reminder');
+assert.strictEqual(
+  plain(mod.buildShoppingTodayReminder([
+    {id:'next',name:'下一站',stopRef:'10/18_0',done:false},
+    {id:'other',name:'其他站',stopRef:'10/18_1',done:false}
+  ],day,'')).count,
+  2,
+  'without a valid next stop Today excludes nothing'
+);
+
 const priorityInput=[
   {id:'normal-1',name:'一般一',category:'伴手禮'},
   {id:'required-1',name:'必買一',category:'必買'},
@@ -811,9 +833,10 @@ assert(ui.includes('shoppingItemLinkSummary(item,shoppingLedgerContext())'));
 assert(ui.includes("item.done||linkSummary.state!=='unlinked'"));
 assert(ui.includes("linkSummary.state==='partial'"));
 assert(ui.includes('id="shoppingListOverlay"')||ui.includes("overlay.id='shoppingListOverlay'"),'full shopping list opens as an overlay');
-assert(ui.includes('今天有 ')&&ui.includes('項待買'),'Today has the approved reminder copy');
-assert(ui.includes('function renderShoppingTodayEntry(day)'),'Today uses one entry selector to avoid duplicate launchers');
+assert(ui.includes('今天 ')&&ui.includes('項待買'),'Today has the approved compact reminder copy');
+assert(ui.includes('function renderShoppingTodayEntry(day,currentStopRef)'),'Today entry receives the exact active stop ID');
 assert(ui.includes('採買清單 →'),'empty, non-trip, and no-reminder Today states keep a lightweight list entry');
+assert(!ui.includes('class="nx-buy"'),'the old full-width next-stop buy row is removed');
 /* 待買多選工具列:計數與三顆動作同列,320px 也不斷行。 */
 assert(ui.includes('completeSelectedShopping(false)'),'待買多選可只標記已買');
 assert(ui.includes('completeSelectedShopping(true)'),'待買多選可直接建立多品項消費');

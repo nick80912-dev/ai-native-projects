@@ -21,14 +21,19 @@ for (const file of ['index.html']) {
     `${file} places the D-day countdown beside the non-trip title`
   );
   assert(
-    nonTripToday.indexOf('renderShoppingTodayEntry(null)') < nonTripToday.indexOf('renderPreTripBrief()'),
+    nonTripToday.indexOf("renderShoppingTodayEntry(null,'')") < nonTripToday.indexOf('renderPreTripBrief()'),
     `${file} places the non-trip shopping launcher inside Today before the D-day preview`
   );
   const preTripBrief = html.slice(html.indexOf('function renderPreTripBrief'), html.indexOf('var TOMORROW_PREVIEW_HOUR'));
   assert.doesNotMatch(preTripBrief, /pretrip-count/, `${file} renders the countdown only in the title row`);
   assert(
-    renderToday.indexOf('renderShoppingTodayEntry(day)') < renderToday.indexOf('renderClusterNextStopCard'),
+    renderToday.indexOf('renderShoppingTodayEntry(day,currentStopRef)') < renderToday.indexOf('renderClusterNextStopCard'),
     `${file} places the shopping entry immediately below the Today summary and before the next-stop card`
+  );
+  assert.match(
+    renderToday,
+    /var currentStop=clusterPick&&clusterPick\.item\?clusterPick\.item:pick\.item;[\s\S]*var currentStopRef=currentStop&&currentStop\.id\?currentStop\.id:'';/,
+    `${file} excludes the exact regular stop or active cluster child from Today shopping`
   );
   assert.match(html, /\.today-hero\{[^}]*padding:11px 14px 12px/, `${file} trims Today card padding without shrinking its typography`);
   assert.match(html, /\.today-hero \.lbl\{font-size:11px/, `${file} preserves the Today label size`);
