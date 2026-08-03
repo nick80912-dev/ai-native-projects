@@ -2308,11 +2308,25 @@ function gotoDay(i){
   curDay=i;
   switchView('trip',{type:'trip-day',dayIndex:i});
 }
+function tripPanelKey(itemId,kind){ return String(itemId)+'::'+kind; }
+function isTripPanelOpen(itemId,kind){ return !!viewUiState.trip.openPanels[tripPanelKey(itemId,kind)]; }
+/* 展開狀態必須有落點:原本只做 classList.toggle,狀態只活在 DOM 裡,
+   而 onCheck() 會 renderTrip() —— 每打一次卡,所有展開的面板就全部收合。 */
 function togglePanel(itemId,kind,btn){
   var el=document.getElementById('pn_'+kind+'_'+itemId);
   if(!el) return;
   var open=el.classList.toggle('open');
+  if(open) viewUiState.trip.openPanels[tripPanelKey(itemId,kind)]=true;
+  else delete viewUiState.trip.openPanels[tripPanelKey(itemId,kind)];
   if(btn) btn.classList.toggle('on',open);
+}
+/* 只保留目前仍會渲染的 item,否則被篩掉的項目會在暫態狀態裡無限累積 */
+function pruneTripPanelState(visibleIds){
+  var keep={};
+  visibleIds.forEach(function(id){ keep[String(id)]=true; });
+  Object.keys(viewUiState.trip.openPanels).forEach(function(key){
+    if(!keep[key.split('::')[0]]) delete viewUiState.trip.openPanels[key];
+  });
 }
 function onCheck(id){
   var day=DB.trip&&DB.trip.days?DB.trip.days[curDay]:null;
@@ -2367,25 +2381,25 @@ function renderItem(it,checks,currentItemId,dayProgress){
     qa+=renderTripNavigationLink(it,res,curDay,'qa-btn drv');
   }
   var pk=p&&(p.mapcode||p.pfee||p.pnote)?parkingPanel(p):'';
-  if(pk&&transport()==='drive') qa+='<button class="qa-btn pk" onclick="togglePanel(\''+it.id+'\',\'pk\',this)">🅿 停車</button>';
+  if(pk&&transport()==='drive') qa+='<button class="qa-btn pk'+(isTripPanelOpen(it.id,'pk')?' on':'')+'" onclick="togglePanel(\''+it.id+'\',\'pk\',this)">🅿 停車</button>';
   var info=infoPanel(res);
   if(info){
     var lbl='ℹ️ 資訊';
     if(res.kind==='rest') lbl='🍜 資訊';
     else if(p){ lbl=({shopping:'🏬 資訊',restarea:'🍜 美食',hotel:'🏨 資訊',ferry:'⛴ 渡輪',parking:'🚗 租車',fuel:'⛽ 加油資訊'})[p.tnorm]||'ℹ️ 資訊'; }
-    qa+='<button class="qa-btn '+(p&&p.tnorm==='ferry'?'fr':'nf')+'" onclick="togglePanel(\''+it.id+'\',\'nf\',this)">'+lbl+'</button>';
+    qa+='<button class="qa-btn '+(p&&p.tnorm==='ferry'?'fr':'nf')+(isTripPanelOpen(it.id,'nf')?' on':'')+'" onclick="togglePanel(\''+it.id+'\',\'nf\',this)">'+lbl+'</button>';
   }
   if(p&&p.tnorm==='shopping'&&DB.shop.some(function(s){return (s.placeId||'').toUpperCase()===(p.placeId||'').toUpperCase();})){
     qa+='<button class="qa-btn sp" onclick="openShopPlace(\''+jsString(p.placeId)+'\')">🏬 樓層</button>';
   }
   var hasMore=it.move||it.note;
-  if(hasMore) qa+='<button class="qa-btn mo" onclick="togglePanel(\''+it.id+'\',\'mo\',this)">📝 更多</button>';
+  if(hasMore) qa+='<button class="qa-btn mo'+(isTripPanelOpen(it.id,'mo')?' on':'')+'" onclick="togglePanel(\''+it.id+'\',\'mo\',this)">📝 更多</button>';
 
-  var panels='';
-  if(pk) panels+='<div class="panel" id="pn_pk_'+it.id+'">'+pk+'</div>';
-  if(info) panels+='<div class="panel" id="pn_nf_'+it.id+'">'+info+'</div>';
+  var panels='',pnCls=function(kind){ return 'panel'+(isTripPanelOpen(it.id,kind)?' open':''); };
+  if(pk) panels+='<div class="'+pnCls('pk')+'" id="pn_pk_'+it.id+'">'+pk+'</div>';
+  if(info) panels+='<div class="'+pnCls('nf')+'" id="pn_nf_'+it.id+'">'+info+'</div>';
   if(hasMore){
-    panels+='<div class="panel" id="pn_mo_'+it.id+'">'+
+    panels+='<div class="'+pnCls('mo')+'" id="pn_mo_'+it.id+'">'+
       (it.move?'<div class="sec move"><div class="sec-lbl">🚗 交通</div>'+highlightNote(it.move)+'</div>':'')+
       (it.note?'<div class="sec" style="margin-top:8px"><div class="sec-lbl">📝 備註</div>'+renderNote(it.note)+'</div>':'')+
       '</div>';
@@ -2421,6 +2435,7 @@ function renderTrip(){
   var doneN=acts.filter(function(it){return !progress.skip[it.id]&&(!!checks[it.id]||!!progress.done[it.id]);}).length;
   var visibleItems=tripHideDone?day.items.filter(function(it){return !isTripCheckableItem(it) || !isTripItemCleared(it,day,curDay,checks);}):day.items;
   var visibleActs=visibleItems.filter(isTripCheckableItem);
+  pruneTripPanelState(visibleItems.map(function(it){ return it.id; }));
   view.innerHTML='<div class="day-head"><span class="num">DAY '+(curDay+1)+'</span>'+
     '<span class="date">'+day.date+(day.dow?' ('+day.dow+')':'')+'</span>'+
     '<span class="prog">完成 '+doneN+' · 略過 '+skipN+' / 共 '+acts.length+'</span></div>'+

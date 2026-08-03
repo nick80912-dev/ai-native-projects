@@ -186,3 +186,93 @@ test('gotoDay and openShopPlace position their targets rather than restoring', a
   expect(shopResult.curView).toBe('shop');
   expect(shopResult.filter).toBe(shopResult.pid.toUpperCase());
 });
+
+/* ---------- 行程面板展開狀態 ---------- */
+
+/* 展開幾個面板,回傳它們的 key 與當時的展開數 */
+async function openSomePanels(page) {
+  return page.evaluate(() => {
+    switchView('trip');
+    const buttons = Array.from(document.querySelectorAll('#view-trip .qa-btn[onclick^="togglePanel"]')).slice(0, 3);
+    buttons.forEach((b) => b.click());
+    return {
+      clicked: buttons.length,
+      open: document.querySelectorAll('#view-trip .panel.open, #view-trip [id^="pn_"].open').length,
+    };
+  });
+}
+
+/* 注意:tripHideDone 預設為 true,所以被打卡的那一筆會**刻意**離開結果集。
+   本測試驗的是「仍然存在的項目」的面板不得被無故收掉;被篩除者另見下方測試。 */
+test('detail panels of surviving items are kept when another item is checked off', async ({ page }) => {
+  const result = await page.evaluate(() => {
+    switchView('trip');
+    const items = Array.from(document.querySelectorAll('#view-trip .item'));
+    const victim = items[0];
+    const victimId = victim.id.replace(/^it_/, '');
+
+    /* 只展開「不會被打卡」的項目的面板 */
+    const survivors = items.slice(1);
+    const opened = [];
+    survivors.forEach((item) => {
+      const btn = item.querySelector('.qa-btn[onclick^="togglePanel"]');
+      if (btn && opened.length < 3) { btn.click(); opened.push(item.id.replace(/^it_/, '')); }
+    });
+    const before = document.querySelectorAll('#view-trip [id^="pn_"].open').length;
+
+    victim.querySelector('.chk').click();   /* 觸發 renderTrip() */
+
+    return {
+      opened,
+      before,
+      after: document.querySelectorAll('#view-trip [id^="pn_"].open').length,
+      victimGone: !document.getElementById('it_' + victimId),
+      survivorsStillHere: opened.every((id) => !!document.getElementById('it_' + id)),
+    };
+  });
+
+  expect(result.opened.length).toBeGreaterThan(0);
+  expect(result.before).toBe(result.opened.length);
+  expect(result.survivorsStillHere).toBe(true);
+  /* 改版前這裡會是 0 —— 每打一次卡所有面板全部收合 */
+  expect(result.after).toBe(result.before);
+});
+
+test('detail panels survive leaving and returning to the trip tab', async ({ page }) => {
+  const before = await openSomePanels(page);
+  const after = await page.evaluate(async () => {
+    switchView('today');
+    switchView('trip');
+    await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+    return { open: document.querySelectorAll('#view-trip .panel.open, #view-trip [id^="pn_"].open').length };
+  });
+  expect(after.open).toBe(before.open);
+});
+
+test('panel state for filtered-out items is dropped, not accumulated', async ({ page }) => {
+  const result = await page.evaluate(() => {
+    switchView('trip');
+    const firstItem = document.querySelector('#view-trip .item');
+    const itemId = firstItem.id.replace(/^it_/, '');
+    /* 先展開這一筆的面板 */
+    const btn = firstItem.querySelector('.qa-btn[onclick^="togglePanel"]');
+    if (btn) btn.click();
+    const keysBefore = Object.keys(viewUiState.trip.openPanels);
+
+    /* 打卡後開啟「隱藏已完成」,讓它離開結果集 */
+    firstItem.querySelector('.chk').click();
+    setTripHideDone(true);
+
+    return {
+      itemId,
+      keysBefore,
+      keysAfter: Object.keys(viewUiState.trip.openPanels),
+      stillRendered: !!document.getElementById('it_' + itemId),
+    };
+  });
+
+  expect(result.keysBefore.some((k) => k.indexOf(result.itemId) === 0)).toBe(true);
+  expect(result.stillRendered).toBe(false);
+  /* 被篩除的 item 不得在暫態狀態裡無限累積 */
+  expect(result.keysAfter.some((k) => k.indexOf(result.itemId) === 0)).toBe(false);
+});
