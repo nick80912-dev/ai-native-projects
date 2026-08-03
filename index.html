@@ -427,6 +427,12 @@ input,select,textarea{font-size:16px}
 .nx-buy-count{flex:0 0 auto;font-weight:900}
 .nx-buy-names{flex:1 1 auto;min-width:0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;font-weight:700;opacity:.9}
 .nx-buy:focus-visible{outline:2px solid var(--sea);outline-offset:2px}
+.nx-more{margin-top:2px}
+.nx-more-summary{min-height:44px;display:flex;align-items:center;font-size:13px;font-weight:800;color:var(--sea-deep);cursor:pointer;list-style:none}
+.nx-more-summary::-webkit-details-marker{display:none}
+.nx-more-summary::after{content:"▾";margin-left:5px;font-size:11px}
+.nx-more[open] .nx-more-summary::after{content:"▴"}
+.nx-more-summary:focus-visible{outline:2px solid var(--sea);outline-offset:2px}
 .nx-drive-btn{display:flex;align-items:center;justify-content:center;width:100%;min-height:48px;background:var(--sea);color:#fff;border-radius:12px;font-size:16px;font-weight:900;text-decoration:none}
 .nx-drive-btn:active{transform:scale(.98)}
 .nx-secondary-actions{display:flex;gap:8px;flex-wrap:wrap;padding:0 16px 12px 20px}
@@ -2233,7 +2239,7 @@ var curDay=0, curView='today';
    刻意**不**寫 localStorage、**不**進備份:把 A 手機的捲動位置還原到 B 手機毫無意義,
    而且會讓備份格式再升一版。重開 App 一律歸零。 */
 var viewUiState={
-  today:{scrollY:0},
+  today:{scrollY:0,openMore:{}},
   trip:{scrollY:0,openPanels:{}},
   shop:{scrollY:0},
   split:{scrollY:0}
@@ -2921,6 +2927,20 @@ function renderNextStopBuy(stopRef){
     '<span class="nx-buy-count">🛍 這站待買 '+model.count+'</span>'+
     '<span class="nx-buy-names">'+escapeHtml(model.names.join('、')+(model.more?' 等':''))+'</span></button>';
 }
+/* 付款與提醒收進 <details>。展開狀態屬暫態 UI,沿用 v82 的 viewUiState 慣例
+   (不進 localStorage、不進備份),否則每次重繪都會自己收回去。 */
+function renderNextStopMore(itemId,meta){
+  var pay=renderTicketLine('付款',meta.pay);
+  var note=meta.note?'<div class="nx-ticket-line nx-ticket-note"><b>提醒</b>'+renderNote(meta.note)+'</div>':'';
+  if(!pay&&!note) return '';
+  var open=!!viewUiState.today.openMore[String(itemId)];
+  return '<details class="nx-more"'+(open?' open':'')+' ontoggle="setNextStopMoreOpen(\''+jsHtmlAttrString(itemId)+'\',this.open)">'+
+    '<summary class="nx-more-summary">其他資訊</summary>'+pay+note+'</details>';
+}
+function setNextStopMoreOpen(itemId,open){
+  if(open) viewUiState.today.openMore[String(itemId)]=true;
+  else delete viewUiState.today.openMore[String(itemId)];
+}
 function renderNextStopCard(day,dayIndex,pick){
   var it=pick.item;
   if(!it){
@@ -2942,8 +2962,9 @@ function renderNextStopCard(day,dayIndex,pick){
         renderTicketLine('交通',meta.drive)+
         renderParkingTicketLine('停車',meta.parking)+
         renderTicketLine('營業',meta.hours)+
-        renderTicketLine('付款',meta.pay)+
-        (meta.note?'<div class="nx-ticket-line nx-ticket-note"><b>提醒</b>'+renderNote(meta.note)+'</div>':'')+
+        /* 常駐到此為止:交通／停車／營業回答「到得了嗎、開著嗎」,抵達前就要看。
+           付款與提醒是抵達後才需要的細節,收進可展開區塊,預設收合。 */
+        renderNextStopMore(it.id,meta)+
       '</div>'+
     '</div>'+
     renderNextStopBuy(it.id)+

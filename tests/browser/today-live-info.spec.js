@@ -92,3 +92,79 @@ test('tapping the buy block opens the shopping list at that stop', async ({ page
   expect(result.groupExists).toBe(true);
   expect(result.groupText).toContain('白桃果凍');
 });
+
+/* ---------- 次要資訊收合 ---------- */
+
+/* 常駐:交通／停車／營業 —— 回答「到得了嗎、開著嗎」,抵達前就要看。
+   收合:付款／提醒 —— 抵達後才需要的細節。
+   (原始需求還有「依當下情境動態調整優先順序」,因判準未定義,不在本批。) */
+/* 這個 fixture 的下一站本身沒有交通／付款／備註欄位(實測 .nx-ticket-lines 是空的),
+   所以由測試自己種下資料,而不是賭 fixture 剛好有。 */
+async function seedNextStopMeta(page) {
+  return page.evaluate(() => {
+    switchView('today');
+    const dayIndex = findToday();
+    const day = DB.trip.days[dayIndex];
+    const pick = pickNextStop((day.items || []).filter(isTripCheckableItem),
+      getDayProgress(day, dayIndex), getChecks(), currentMinutes(), { day, dayIndex });
+    pick.item.move = '開車 15 分鐘';        /* 常駐:交通 */
+    pick.item.note = '記得帶折價券';          /* 收合:提醒 */
+    renderToday();
+    return pick.item.id;
+  });
+}
+
+test('payment and notes are collapsed behind a disclosure, transport is not', async ({ page }) => {
+  await seedNextStopMeta(page);
+
+  const layout = await page.evaluate(() => {
+    const card = document.querySelector('#view-today .nx-ticket');
+    const details = card.querySelector('.nx-more');
+    const outside = card.querySelector('.nx-ticket-lines').cloneNode(true);
+    const clonedDetails = outside.querySelector('.nx-more');
+    if (clonedDetails) clonedDetails.remove();
+    return {
+      hasDetails: !!details,
+      openByDefault: details ? details.open : null,
+      outsideText: outside.textContent.replace(/\s+/g, ' ').trim(),
+      insideText: details ? details.textContent.replace(/\s+/g, ' ').trim() : '',
+    };
+  });
+
+  expect(layout.hasDetails).toBe(true);
+  expect(layout.openByDefault).toBe(false);
+  /* 交通留在外面常駐 */
+  expect(layout.outsideText).toContain('交通');
+  expect(layout.outsideText).not.toContain('提醒');
+  /* 提醒收進可展開區塊 */
+  expect(layout.insideText).toContain('提醒');
+  expect(layout.insideText).toContain('記得帶折價券');
+});
+
+test('the disclosure is absent when there is neither payment nor note', async ({ page }) => {
+  const absent = await page.evaluate(() => {
+    /* 把今天下一站的付款與備註都清掉 */
+    const day = DB.trip.days[findToday()];
+    (day.items || []).forEach((it) => { it.note = ''; });
+    Object.keys(DB.places || {}).forEach((k) => { DB.places[k].pay = ''; DB.places[k].note = ''; });
+    Object.keys(DB.rests || {}).forEach((k) => { DB.rests[k].pay = ''; DB.rests[k].note = ''; });
+    renderToday();
+    const card = document.querySelector('#view-today .nx-ticket');
+    return card ? !card.querySelector('.nx-more') : null;
+  });
+  expect(absent).toBe(true);
+});
+
+test('expanding the disclosure survives a re-render', async ({ page }) => {
+  const result = await page.evaluate(() => {
+    switchView('today');
+    const details = document.querySelector('#view-today .nx-more');
+    if (!details) return { skipped: true };
+    details.open = true;
+    details.dispatchEvent(new Event('toggle'));
+    renderToday();
+    const after = document.querySelector('#view-today .nx-more');
+    return { skipped: false, stillOpen: after ? after.open : null };
+  });
+  if (!result.skipped) expect(result.stillOpen).toBe(true);
+});

@@ -64,6 +64,9 @@ vm.runInContext([
   extractFunction('prioritizeShoppingGroupItems'),
   extractFunction('nextStopBuyModel'),
   extractFunction('renderNextStopBuy'),
+  /* v84:付款與提醒收進可展開區塊,展開狀態放在 viewUiState */
+  extractConst('viewUiState'),
+  extractFunction('renderNextStopMore'),
   extractFunction('renderNextStopCard'),
   extractFunction('clusterItemName'),
   extractFunction('clusterTimeRange'),
