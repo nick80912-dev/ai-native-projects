@@ -219,7 +219,15 @@ assert(html.includes('function returnLedgerDashboard('),'ledger owns a dashboard
 const switchSource=extractFunction(html,'switchView');
 assert(switchSource.includes("v==='split'&&curView==='split'"),'re-tapping the visible Split tab is detected');
 assert(switchSource.includes('returnLedgerDashboard()'),'Split child views return through the shared helper');
-assert(switchSource.includes("behavior:'smooth'"),'re-tapping the dashboard scrolls to the top');
+/* 平滑回頂已移到共用的 scrollCurrentViewToTop():四個分頁共用同一條路徑,
+   且要一併處理 prefers-reduced-motion 與 viewUiState 的保存值歸零。
+   斷言的意圖不變 —— 分帳 dashboard 再點一次要回頂 —— 只是改看新的落點。 */
+assert(switchSource.includes('scrollCurrentViewToTop()'),'re-tapping the dashboard scrolls to the top');
+const scrollTopSource=extractFunction(html,'scrollCurrentViewToTop');
+assert(scrollTopSource.includes("behavior:reduced?'instant':'smooth'"),
+  'the shared helper scrolls smoothly unless the user asked for reduced motion');
+assert(scrollTopSource.includes('viewUiState[curView].scrollY=0'),
+  'the shared helper also zeroes the saved scroll position');
 assert(extractFunction(html,'returnLedgerDashboard').includes("classList.contains('ledger-sheet-open')"),'hidden-nav sheets protect unsaved form state');
 assert(html.includes('aria-label="返回分帳首頁"'),'the history back button remains available');
 

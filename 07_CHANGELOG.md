@@ -1,4 +1,31 @@
 # 07 版本紀錄
+## 2026-08-03｜身分選擇器層級與同分頁回頂（SW v87）
+
+兩個真機回報的 UI 缺陷，先重現查證再修改。
+
+### A. 身分選擇器被設定頁遮住
+
+- **實測根因**：`settingsOverlay` computed `z-index:170`、`memberOverlay` `130`；中心點 `elementFromPoint` 落在 `settingsOverlay`。兩者都是 `body` 直接子節點、`position:fixed`、`display:block`、`visibility:visible`、`opacity:1`、`transform:none` —— **沒有 stacking context 干擾，純粹是 z-index 反了**。來源是共用規則 `.settings-overlay,.member-overlay{z-index:130}` 後又由 `.settings-overlay{z-index:170}` 單獨提高。
+- **修法**：疊層寫成具名 token。**基準層維持 130**，只在「從設定頁叫出」時加 `.over-settings`（180，落在既有 170 與 185 之間）。
+- **為什麼不全域抬高**：第一版直接把 `.member-overlay` 提到 180，**造成 6 個既有 Playwright 測試回歸** —— `.shopping-list-overlay` 是 145，開著的身分選擇器會蓋住整個 App 並攔截採買清單的點擊。基準層低於採買清單是既有且刻意的關係，不該被順手改掉。
+- **背景不可操作**：從設定頁開啟時對 `settingsOverlay` 設 `inert`，關閉即恢復。**注意**：`inert` 只擋真實互動，程式化的 `element.click()` 依規格仍會派送事件，因此測試改用真實指標的 `elementFromPoint` 命中測試與焦點行為驗證，而不是拿 `.click()` 當證明。
+- **焦點**：記住觸發的「切換」／「＋」按鈕，關閉後歸還；設定頁若已重繪則退回同類按鈕，不讓焦點掉回 `body`。
+- **不退化**：非設定頁與 forced 流程維持原本層級與語意；`settingsCurrentMember` 於切換完成後即時更新（既有行為，補測試鎖住）。
+
+### B. 再點目前分頁回頂會閃
+
+- **實測根因**：再點時 `renderCurrent()`／`renderTrip()` 各被呼叫 **1 次**，第一個 `.item` 節點被換掉（**整份重繪**）；捲動由 488 **一步跳到 0**（t=2ms 仍 488、t=10ms 已 0，無中間值）。
+- **修正了一項推測**：原先懷疑 `.view.active` 被移除再加回會重新觸發 fade。實測 **不會** —— remove 與 add 在同一個同步區塊、中間沒有 reflow，`animationstart` 觸發 **0** 次；刻意插入 `void offsetHeight` 才變成 1 次。故閃爍來自「整份重繪 + 瞬間跳頂」，**不是 fade**。
+- **修法**：在 `switchView()` 前段攔截 `v===curView && !intent`，改呼叫共用的 `scrollCurrentViewToTop()` 後直接 return —— 不重繪、不動 `.view.active`、不碰暫態 UI 狀態，只平滑捲動並把 `viewUiState[view].scrollY` 歸零。
+- **reduced motion**：`scrollTo` 的 `behavior:'smooth'` 是明確值，**不會**被 CSS 的 `scroll-behavior` 覆寫，因此自行判斷 `prefers-reduced-motion` 並改用 `instant`。
+- **分帳例外保持**：次層頁再點「分帳」仍先回 dashboard；已在 dashboard 才回頂，並改走同一個共用 helper（`ledger-225.test.js` 原本釘住 `switchView` 內的 `behavior:'smooth'` 字面值，斷言意圖不變，改為檢查新的落點與 helper 行為）。
+- **明確 intent 不受影響**：`trip-item`／`trip-now`／`shop-place` 等程式化跳轉不走此捷徑。
+
+### 共通
+
+- 三個手機寬度（320／375×844／390）實測：選擇器為最上層、輸入框自動聚焦、無水平溢位；再點分頁 0 次重繪、回到頂端。
+- **版本**：`sw.js` diff 只有版本字串一行，install／activate／fetch／skipWaiting／clients.claim／快取策略全未動；`netlify.toml` 未動；`PERSONAL_STATE_VERSION` 維持 9；schema 與資料格式未變。roadmap 原本把 v87 排給 SW 更新提示，已整體順延為 v89／v90，避免同一版號承載不同 runtime。
+- **驗證**：新增 11 個測試（6 個先紅後綠）；完整 **65／65** Node test files 與 Playwright **112／112** 通過。
 ## 2026-08-03｜Today 採買提醒精簡（SW v86）
 
 - **消除重複提醒**：Today 待買模型接受目前下一站的 exact `stopRef`，排除後重新計算 count；一般卡使用下一站 id，同區串點只使用目前 child id。若今天全部待買都由有效下一站承擔，Today 不再補回卡片或 generic「採買清單 →」入口；行程尚未開始與沒有有效下一站時則維持原本入口／完整 Today 提醒。

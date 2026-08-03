@@ -17,6 +17,13 @@
 <link rel="apple-touch-icon" sizes="180x180" href="icon-180.png">
 <style>
 :root,[data-theme="ocean"]{
+  /* 疊層順序寫成具名 token。身分選擇器的基準層維持 130 —— 它低於採買清單(145)
+     等既有 overlay,那是刻意的既有關係,全域抬高會讓開著的選擇器蓋住整個 App
+     (實測會攔截採買清單的點擊)。只有「從設定頁叫出來」時才需要疊在設定頁之上,
+     因此另給一個 modifier 層級,180 落在既有的 170 與 185(照片修復)之間。 */
+  --z-settings-overlay:170;
+  --z-member-overlay:130;
+  --z-member-over-settings:180;
   --tabbar-height:62px;
   --font-ui:"PingFang TC","Microsoft JhengHei",system-ui,-apple-system,sans-serif;
   --t-paper:#f5f1e8;--t-card:#fffdf8;--t-chrome:#0e3a44;--t-action:#12707f;
@@ -568,7 +575,9 @@ input,select,textarea{font-size:16px}
 .sync-status-alert{display:grid;gap:3px;border-top:1px solid var(--line);padding:10px 0;font-size:13px}.sync-status-alert b{color:var(--coral)}.sync-status-alert span{color:var(--ink);overflow-wrap:anywhere}
 .sync-status-retry{width:100%;min-height:44px;border:0;border-radius:10px;background:var(--sea);color:#fff;font:inherit;font-weight:800;margin-top:12px}.sync-status-retry:disabled{opacity:.5}
 .settings-overlay,.member-overlay{position:fixed;inset:0;z-index:130;background:var(--paper);overflow:auto;padding:calc(env(safe-area-inset-top) + 12px) 12px calc(env(safe-area-inset-bottom) + 20px)}
-.settings-overlay{z-index:170}
+.settings-overlay{z-index:var(--z-settings-overlay)}
+.member-overlay{z-index:var(--z-member-overlay)}
+.member-overlay.over-settings{z-index:var(--z-member-over-settings)}
 .settings-panel,.member-panel{width:100%;max-width:560px;margin:0 auto}.settings-head,.member-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}.settings-head h2,.member-head h2{font-size:20px}.settings-close{width:44px;height:44px;border:0;border-radius:50%;background:var(--line-soft);font-size:26px;color:var(--ink-soft)}
 .settings-section{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:15px;margin-bottom:12px;box-shadow:var(--shadow)}.settings-section h3{font-size:15px;color:var(--sea-deep);margin-bottom:8px}.settings-current{font-size:14px;color:var(--ink-soft);margin-bottom:10px}.settings-current b{color:var(--ink)}
 .settings-member-row{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}.settings-member-row .settings-current{margin-bottom:0;min-width:0}.settings-member-switch{min-height:36px;padding:6px 11px;flex:0 0 auto}.settings-warning-tag{display:inline-flex;margin-left:6px;border-radius:999px;padding:2px 7px;background:#fff0e8;color:var(--coral);font-size:11px;font-weight:900;vertical-align:middle}
@@ -7933,7 +7942,20 @@ function commitMemberCandidate(candidate){
     return result;
   });
 }
-function closeMemberSelector(){var overlay=document.getElementById('memberOverlay');if(overlay)overlay.remove();}
+function closeMemberSelector(){
+  var overlay=document.getElementById('memberOverlay');if(overlay)overlay.remove();
+  memberSelectorGuardSettings(false);
+  /* 焦點還給觸發的按鈕。設定頁重繪過就找不到原節點,退回同類按鈕,
+     不讓焦點掉回 body —— 鍵盤使用者會失去位置。 */
+  var back=memberSelectorReturnFocus;
+  memberSelectorReturnFocus=null;
+  if(!back) return;
+  if(!document.body.contains(back)){
+    var cls=(back.className||'').indexOf('settings-member-add')>=0?'.settings-member-add':'.settings-member-switch';
+    back=document.querySelector('#settingsOverlay '+cls);
+  }
+  if(back&&back.focus) back.focus();
+}
 function chooseMember(member){
   try{memberSelectorState.candidate=resolveMemberCandidate(member,memberIdentityRecords(),!!lsGet('trip_ledger_test_mode',false));}
   catch(error){memberSelectorState.error=error.message;renderMemberSelector();return;}
@@ -7960,12 +7982,30 @@ function renderMemberSelector(existingOverlay){
   overlay.innerHTML='<section class="member-panel" role="dialog" aria-modal="true" aria-labelledby="memberTitle"><div class="member-head"><h2 id="memberTitle">選擇你的成員身分</h2>'+close+'</div><p class="member-copy">正式成員由共享身分註冊紀錄建立。切換身分不會修改既有支出。</p>'+body+'</section>';
   if(memberSelectorState.showNew){var input=document.getElementById('memberNameInput');if(input)input.focus();}
 }
+/* 從設定頁叫出選擇器時,設定頁要留在背景但**不可操作** ——
+   只把 z-index 調對而不擋住背景,使用者仍點得到底下的設定列、Tab 也會跑進去。
+   關閉後必須恢復,並把焦點還給原本的「切換」或「＋」按鈕。 */
+var memberSelectorReturnFocus=null;
+function memberSelectorGuardSettings(on){
+  var settings=document.getElementById('settingsOverlay');
+  if(!settings) return;
+  if(on) settings.setAttribute('inert','');
+  else settings.removeAttribute('inert');
+  settings.inert=!!on;
+}
 function openMemberSelector(forced,startNew){
   var old=document.getElementById('memberOverlay'); if(old) old.remove();
+  var active=document.activeElement;
+  memberSelectorReturnFocus=(active&&active!==document.body&&active.closest&&active.closest('#settingsOverlay'))?active:null;
   var entries=registeredMembersForCurrentMode();
   memberSelectorState={forced:!!forced,stage:'choose',showNew:!!startNew||!entries.length,input:'',candidate:null,error:'',busy:false};
-  var overlay=document.createElement('div'); overlay.id='memberOverlay'; overlay.className='member-overlay';
+  var overSettings=!!document.getElementById('settingsOverlay');
+  var overlay=document.createElement('div'); overlay.id='memberOverlay';
+  /* 只有從設定頁叫出來時才疊到設定頁之上;其他情境維持原本的基準層,
+     否則開著的選擇器會蓋住採買清單等既有 overlay。 */
+  overlay.className='member-overlay'+(overSettings?' over-settings':'');
   document.body.appendChild(overlay);
+  if(overSettings) memberSelectorGuardSettings(true);
   renderMemberSelector(overlay);
 }
 function startNewMember(){memberSelectorState.showNew=true;memberSelectorState.error='';renderMemberSelector();}
@@ -8654,11 +8694,11 @@ function openShoppingPhotoRepairFromSettings(itemId){
   });
 }
 var APP_RELEASE_NOTES=[
+  {version:'v87',date:'2026-08-03',title:'修正身分選擇與回頂',items:['設定頁點「切換」或「＋」時，身分選擇器會正確顯示在設定頁上方，不必先關掉設定','再點一次目前所在的分頁改為平滑回到頂端，畫面不再閃一下']},
   {version:'v86',date:'2026-08-03',title:'Today 採買提醒更精簡',items:['Today 待買只列其他站點，下一站不再重複出現','下一站改為右上角待買數字，仍可直接開到該站採買清單','每站最多顯示三個品名，更多站點以精簡提示呈現','天氣降雨文字縮短，讀螢幕軟體仍保留完整語意']},
   {version:'v85',date:'2026-08-03',title:'修正點「其他資訊」會跳頁',items:['在今天卡片上點開「其他資訊」不再誤跳到行程分頁，只會展開']},
   {version:'v84',date:'2026-08-02',title:'Today 看得到當下要做的事',items:['下一站卡片顯示這站要買什麼，點一下直接開到採買清單的對應站點','降雨機率改為「現在之後」的最高值，不再被早上已經過去的雨影響','付款與提醒收進「其他資訊」，交通、停車、營業維持常駐','購物搜尋顯示「找到 N 家店 · M 個購物地點」']},
   {version:'v83',date:'2026-08-02',title:'「回到現在」只在需要時出現',items:['待在今天那一天時不再顯示，因為隱藏已完成加上再點分頁回頂已經到得了','只有當你跑到別天瀏覽時才出現，一鍵切回今天並定位當下那一站']},
-  {version:'v82',date:'2026-08-02',title:'切換分頁不再迷路',items:['各分頁記住自己的位置，切走再回來會回到原處；再點同一個分頁則回到最上面','行程的交通、停車、備註展開後不會因為打卡就被收合','行程新增「回到現在」，逛完別天可一鍵回到當下那一站','打卡格可用鍵盤操作，讀螢幕軟體也會唸出是否已打卡']},
 ];
 function renderAppReleaseNotes(){
   return '<div class="settings-release-list">'+APP_RELEASE_NOTES.map(function(note){
@@ -10408,15 +10448,27 @@ function renderSplit(){
 }
 
 /* ================= 導覽 / 啟動 ================= */
+/* 回到目前這一頁的頂端。減少動態時直接跳,否則平滑捲動 ——
+   scrollTo 的 behavior:'smooth' 是明確值,不會被 CSS 的 scroll-behavior 覆寫,
+   因此必須自己判斷 prefers-reduced-motion。 */
+function scrollCurrentViewToTop(){
+  var reduced=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if(viewUiState[curView]) viewUiState[curView].scrollY=0;
+  window.scrollTo({top:0,behavior:reduced?'instant':'smooth'});
+}
 function switchView(v,intent){
   /* 分帳次層頁再點「分帳」仍先回 dashboard,沿用現況 */
   if(v==='split'&&curView==='split'){
     if(ledgerUiState.page!=='dashboard')returnLedgerDashboard();
-    else{closeLedgerRecordActions();window.scrollTo({top:0,behavior:'smooth'});}
+    else{closeLedgerRecordActions();scrollCurrentViewToTop();}
     return;
   }
-  /* 再點目前所在的分頁 = 回頂;帶著明確意圖進來則以意圖優先 */
-  if(v===curView&&!intent) intent={type:'top'};
+  /* 再點目前所在的分頁 = 只是回頂,不是換頁。
+     實測舊作法會 renderCurrent() 整份重繪(第一個 .item 節點被換掉)、
+     並以 behavior:'instant' 由 488 一步跳到 0 —— 使用者看到的就是閃一下。
+     這裡直接攔截:不重繪、不動 .view.active、不碰暫態 UI 狀態,只平滑捲動。
+     帶明確 intent 的程式化跳轉不走這條,仍以 intent 定位為優先。 */
+  if(v===curView&&!intent){ scrollCurrentViewToTop(); return; }
   /* 離開前先記住位置 —— 必須在 curView 改變之前 */
   if(v!==curView) captureViewScroll(curView);
   if(curView==='split'){ledgerUiState.selectionMode=false;ledgerUiState.selectedRecordIds={};closeLedgerRecordActions();}
