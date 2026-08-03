@@ -2231,8 +2231,8 @@ var viewUiState={
   shop:{scrollY:0},
   split:{scrollY:0}
 };
-/* 入口意圖只消耗一次:套用後即清除,之後正常切回仍走位置還原 */
-var pendingViewIntent=null;
+/* 入口意圖以參數傳遞而非模組層變數:天然只消耗一次,不會有殘留狀態需要清除。
+   結構化資料(而非布林旗標)讓日後新增入口不必改動判斷邏輯。 */
 function viewScrollElement(){ return document.scrollingElement||document.documentElement; }
 function captureViewScroll(view){
   var state=viewUiState[view];
@@ -2252,7 +2252,21 @@ function applyViewPosition(view,intent){
 /* 回傳 true 代表這個 intent 已自行完成定位,不再套用捲動還原。
    意圖用結構化資料而非布林旗標,才好測試、也方便日後新增入口。 */
 function applyViewIntent(view,intent){
-  if(intent.type==='top'){ window.scrollTo({top:0,behavior:'instant'}); return true; }
+  var el;
+  if(intent.type==='top'||intent.type==='trip-day'){ window.scrollTo({top:0,behavior:'instant'}); return true; }
+  if(intent.type==='trip-item'||intent.type==='trip-now'){
+    el=intent.itemId?document.getElementById('it_'+intent.itemId):null;
+    /* 目標不存在(例如被篩掉或資料變了)就退到頂,不留在還原來的舊位置 —— 那會很困惑 */
+    if(!el){ window.scrollTo({top:0,behavior:'instant'}); return true; }
+    el.scrollIntoView({behavior:'instant',block:'center'});
+    return true;
+  }
+  if(intent.type==='shop-place'){
+    el=document.getElementById('shopmall_'+cssId(String(intent.placeId||'').toUpperCase()));
+    if(el) el.scrollIntoView({behavior:'instant',block:'start'});
+    else window.scrollTo({top:0,behavior:'instant'});
+    return true;
+  }
   return false;
 }
 var tripHideDone=true;
@@ -2273,23 +2287,11 @@ function getCurrentTripItemId(day,dayIndex,checks){
   var next=items.find(function(it){ return !isTripItemCleared(it,day,dayIndex,checks); });
   return next?next.id:null;
 }
+/* 走共用的 switchView 路徑,不再自己複製一份 view／tabbar 切換的 body ——
+   複製版本無法參與捲動保存與意圖機制,兩邊行為只會愈長愈不一樣。 */
 function openTripItem(dayIndex,itemId){
   curDay=dayIndex;
-  curView='trip';
-  document.querySelectorAll('.view').forEach(function(v){ v.classList.remove('active'); });
-  document.getElementById('view-trip').classList.add('active');
-  document.querySelectorAll('.tabbar-btn').forEach(function(b){ b.classList.remove('active'); });
-  var tripBtn=document.querySelector('.tabbar-btn[data-view="trip"]');
-  if(tripBtn) tripBtn.classList.add('active');
-  renderDaybar();
-  renderTrip();
-  setTimeout(function(){
-    var item=document.getElementById('it_'+itemId);
-    if(!item) return;
-    var info=document.getElementById('pn_nf_'+itemId);
-    if(info) info.classList.add('open');
-    item.scrollIntoView({behavior:'smooth',block:'center'});
-  },0);
+  switchView('trip',{type:'trip-item',itemId:itemId});
 }
 function renderDaybar(){
   var bar=document.getElementById('daybar');
@@ -2304,9 +2306,7 @@ function renderDaybar(){
 }
 function gotoDay(i){
   curDay=i;
-  if(curView!=='trip') switchView('trip');
-  else { renderDaybar(); renderTrip(); }
-  window.scrollTo({top:0,behavior:'smooth'});
+  switchView('trip',{type:'trip-day',dayIndex:i});
 }
 function togglePanel(itemId,kind,btn){
   var el=document.getElementById('pn_'+kind+'_'+itemId);
@@ -4068,12 +4068,7 @@ function openShopPlace(placeId){
   });
   _shopQ='';
   shopPlaceFilter=exists?key:'all';
-  switchView('shop');
-  if(!exists) return;
-  requestAnimationFrame(function(){
-    var target=document.getElementById('shopmall_'+cssId(key));
-    if(target) target.scrollIntoView({behavior:'smooth',block:'start'});
-  });
+  switchView('shop',exists?{type:'shop-place',placeId:key}:{type:'top'});
 }
 function centerShopFilterChip(){
   var bar=document.getElementById('shopFilterBar');

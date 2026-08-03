@@ -105,3 +105,84 @@ test('the transient UI state never reaches localStorage or the backup', async ({
   expect(leaked.valueLeak).toBe(false);
   expect(leaked.backupLeak).toBe(false);
 });
+
+/* ---------- 入口意圖 ---------- */
+
+test('an explicit entry positions its target instead of restoring the old scroll', async ({ page }) => {
+  /* 先在行程頁留下一個明顯的捲動位置 */
+  await page.evaluate(() => switchView('trip'));
+  const saved = await scrollTo(page, 700);
+  expect(saved).toBeGreaterThan(100);
+  await page.evaluate(() => switchView('today'));
+
+  /* 由明確入口回行程頁:應定位該 item,而不是還原 700 */
+  const result = await page.evaluate(async () => {
+    const day = DB.trip.days[0];
+    const target = day.items.filter((it) => it.act || it.place)[6] || day.items[day.items.length - 1];
+    openTripItem(0, target.id);
+    await new Promise((r) => setTimeout(r, 400));
+    const el = document.getElementById('it_' + target.id);
+    const box = el.getBoundingClientRect();
+    return {
+      itemId: target.id,
+      inViewport: box.top >= -10 && box.top <= window.innerHeight,
+      scrollTop: Math.round(document.scrollingElement.scrollTop),
+      curView,
+    };
+  });
+
+  expect(result.curView).toBe('trip');
+  expect(result.inViewport).toBe(true);
+});
+
+test('the intent is consumed once — later plain switches restore again', async ({ page }) => {
+  await page.evaluate(() => switchView('trip'));
+  await scrollTo(page, 700);
+  await page.evaluate(() => switchView('today'));
+
+  /* 明確入口進去 */
+  await page.evaluate(async () => {
+    const day = DB.trip.days[0];
+    openTripItem(0, day.items[day.items.length - 1].id);
+    await new Promise((r) => setTimeout(r, 300));
+  });
+
+  /* 之後用一般分頁切換離開再回來:走的是位置還原,不是再定位一次 item */
+  const restored = await page.evaluate(async () => {
+    const afterIntent = Math.round(document.scrollingElement.scrollTop);
+    switchView('today');
+    switchView('trip');
+    await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+    return { afterIntent, now: Math.round(document.scrollingElement.scrollTop) };
+  });
+
+  /* intent 以參數傳遞,天然只消耗一次 —— 沒有模組層旗標會殘留 */
+  /* 回到「離開明確入口時」的位置,而不是被 intent 再次定位 */
+  expect(Math.abs(restored.now - restored.afterIntent)).toBeLessThanOrEqual(4);
+});
+
+test('gotoDay and openShopPlace position their targets rather than restoring', async ({ page }) => {
+  const dayResult = await page.evaluate(async () => {
+    switchView('trip');
+    document.scrollingElement.scrollTop = 600;
+    switchView('today');
+    gotoDay(1);
+    await new Promise((r) => setTimeout(r, 400));
+    return { curView, curDay, scrollTop: Math.round(document.scrollingElement.scrollTop) };
+  });
+  expect(dayResult.curView).toBe('trip');
+  expect(dayResult.curDay).toBe(1);
+  expect(dayResult.scrollTop).toBeLessThanOrEqual(4);
+
+  const shopResult = await page.evaluate(async () => {
+    switchView('shop');
+    document.scrollingElement.scrollTop = 300;
+    switchView('today');
+    const pid = shopMalls()[0].place.placeId;
+    openShopPlace(pid);
+    await new Promise((r) => setTimeout(r, 500));
+    return { curView, filter: shopPlaceFilter, pid };
+  });
+  expect(shopResult.curView).toBe('shop');
+  expect(shopResult.filter).toBe(shopResult.pid.toUpperCase());
+});

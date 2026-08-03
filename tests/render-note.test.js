@@ -48,6 +48,8 @@ vm.runInContext([
   extractFunction('renderTomorrowPreview'),
   extractFunction('cssId'),
   extractFunction('openShopPlace'),
+  /* v82:定位改由 switchView 的意圖機制執行,注入真實的 applyViewIntent 一起驗 */
+  extractFunction('applyViewIntent'),
   extractFunction('centerShopFilterChip'),
   extractFunction('parkingLines'),
   extractFunction('renderParkingValue'),
@@ -69,7 +71,15 @@ sandbox._shopQ = 'uniqlo';
 sandbox.shopPlaceFilter = 'wants';
 sandbox.shopOpenFloors = { 'P001::1F':true };
 sandbox.shopMalls = function(){ return [{ place:{ placeId:'P001' }, stores:[] }]; };
-sandbox.switchView = function(view){ switchedView = view; };
+/* v82:openShopPlace 不再自己捲動,而是把結構化意圖交給 switchView。
+   這裡照真實流程在 render 之後套用意圖,端到端的斷言才仍然成立。 */
+let passedIntent = null;
+sandbox.switchView = function(view, intent){
+  switchedView = view;
+  passedIntent = intent || null;
+  if(intent) sandbox.applyViewIntent(view, intent);
+};
+sandbox.window = { scrollTo:function(){} };
 sandbox.requestAnimationFrame = function(fn){ fn(); };
 sandbox.document = {
   getElementById:function(id){
@@ -81,6 +91,11 @@ sandbox.openShopPlace('p001');
 assert.strictEqual(sandbox._shopQ, '', 'shopping deep link clears stale search');
 assert.strictEqual(sandbox.shopPlaceFilter, 'P001', 'shopping deep link selects the resolved place');
 assert.strictEqual(switchedView, 'shop', 'shopping deep link opens the Shopping view');
+assert.deepStrictEqual(
+  passedIntent && { type: passedIntent.type, placeId: passedIntent.placeId },
+  { type: 'shop-place', placeId: 'P001' },
+  'shopping deep link hands a structured intent to switchView'
+);
 assert.strictEqual(scrolled, true, 'shopping deep link scrolls to the place card after render');
 assert.strictEqual(sandbox.shopOpenFloors['P001::1F'], true, 'shopping deep link preserves floor state');
 
