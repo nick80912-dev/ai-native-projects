@@ -199,6 +199,7 @@ input,select,textarea{font-size:16px}
   transition:.15s;font-size:14px;color:#fff;
 }
 .chk.on{background:var(--green);border-color:var(--green)}
+.chk:focus-visible{outline:2px solid var(--sea);outline-offset:2px}
 .time{flex:0 0 auto;font-size:12.5px;font-weight:700;color:var(--coral);background:var(--coral-bg);border-radius:6px;padding:3px 7px;margin-top:1px;min-width:50px;text-align:center;line-height:1.3}
 .time.blank{background:var(--line-soft);color:var(--ink-faint)}
 .body{flex:1;min-width:0}
@@ -2328,7 +2329,24 @@ function pruneTripPanelState(visibleIds){
     if(!keep[key.split('::')[0]]) delete viewUiState.trip.openPanels[key];
   });
 }
-function onCheck(id){
+/* 重繪會換掉整個列表,鍵盤焦點會掉回 body —— 連續打卡第二下就沒有作用。
+   契約的例外在這裡落實:目標仍在就還原它;使用者刻意讓它離開結果集(隱藏已完成)
+   則移到原位置的下一筆;連下一筆都沒有就退到篩選按鈕,而不是把焦點丟掉。 */
+function restoreTripCheckFocus(id,prevIndex){
+  var el=document.getElementById('it_'+id),chk=el?el.querySelector('.chk'):null;
+  if(chk){ chk.focus(); return; }
+  var all=document.querySelectorAll('#view-trip .item .chk');
+  if(all.length){ all[Math.min(prevIndex,all.length-1)].focus(); return; }
+  var filter=document.querySelector('#view-trip .trip-filter-btn');
+  if(filter) filter.focus();
+}
+function onCheck(id,fromKeyboard){
+  /* 先記住它在可見清單中的位置,重繪後才知道「下一筆」是哪一筆 */
+  var prevIndex=0;
+  if(fromKeyboard){
+    var rows=document.querySelectorAll('#view-trip .item');
+    for(var i=0;i<rows.length;i++){ if(rows[i].id==='it_'+id){ prevIndex=i; break; } }
+  }
   var day=DB.trip&&DB.trip.days?DB.trip.days[curDay]:null;
   if(day){
     var progress=getDayProgress(day,curDay);
@@ -2337,6 +2355,7 @@ function onCheck(id){
       markNextStop(day,curDay,id,'done');
       if(curView==='trip') renderTrip();
       else if(curView==='today') renderToday();
+      if(fromKeyboard&&curView==='trip') restoreTripCheckFocus(id,prevIndex);
       toast('已修正為完成 ✓');
       return;
     }
@@ -2356,6 +2375,7 @@ function onCheck(id){
   }
   renderToday();
   if(curView==='trip') renderTrip();
+  if(fromKeyboard&&curView==='trip') restoreTripCheckFocus(id,prevIndex);
   toast(cancelledPast?'已取消,該行程時間已過,列於已略過':(getChecks()[id]?'已打卡 ✓':'取消打卡'));
 }
 function renderItem(it,checks,currentItemId,dayProgress){
@@ -2406,7 +2426,16 @@ function renderItem(it,checks,currentItemId,dayProgress){
   }
   return '<div class="item '+(done?'checked':'')+' '+(isNow?'now-item':'')+'" id="it_'+it.id+'">'+
     '<div class="item-main">'+
-      '<div class="chk '+(done?'on':'')+'" onclick="onCheck(\''+it.id+'\')">'+(done?'✓':'')+'</div>'+
+      /* role="checkbox" 而非 button:這是二元狀態。.chk 內沒有列文字,
+         必須自帶 aria-label,否則螢幕閱讀器只會唸「核取方塊」。
+         鍵盤路徑明確傳 fromKeyboard —— <div tabindex="0"> 被點擊時同樣會取得焦點,
+         用 document.activeElement 反推不出是滑鼠還是鍵盤。 */
+      '<div class="chk '+(done?'on':'')+'" role="checkbox" tabindex="0"'+
+        ' aria-checked="'+(done?'true':'false')+'"'+
+        ' aria-label="'+escapeHtml('打卡：'+String(it.act||it.place||'此行程').replace(/\n/g,' '))+'"'+
+        ' onclick="onCheck(\''+jsHtmlAttrString(it.id)+'\')"'+
+        ' onkeydown="activateKeyboardButton(event,function(){onCheck(\''+jsHtmlAttrString(it.id)+'\',true)})">'+
+        '<span aria-hidden="true">'+(done?'✓':'')+'</span></div>'+
       '<div class="time '+(it.time?'':'blank')+'">'+escapeHtml(it.time||'·')+'</div>'+
       '<div class="body">'+
         (it.act?'<div class="act">'+escapeHtml(it.act)+(isNow?'<span class="now-badge">現在</span>':'')+(autoSkipped?'<span class="auto-skip-badge" title="時間已過,系統自動略過;點左側打卡可修正為完成">⏱ 自動略過</span>':'')+'</div>':'')+

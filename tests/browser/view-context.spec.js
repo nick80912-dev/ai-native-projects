@@ -276,3 +276,89 @@ test('panel state for filtered-out items is dropped, not accumulated', async ({ 
   /* 被篩除的 item 不得在暫態狀態裡無限累積 */
   expect(result.keysAfter.some((k) => k.indexOf(result.itemId) === 0)).toBe(false);
 });
+
+/* ---------- 打卡的鍵盤操作與焦點 ---------- */
+
+test('check-in is a keyboard operable checkbox', async ({ page }) => {
+  const meta = await page.evaluate(() => {
+    switchView('trip');
+    const chk = document.querySelector('#view-trip .item .chk');
+    return {
+      role: chk.getAttribute('role'),
+      tabindex: chk.getAttribute('tabindex'),
+      checked: chk.getAttribute('aria-checked'),
+      label: chk.getAttribute('aria-label'),
+      glyphHidden: chk.querySelector('[aria-hidden="true"]') !== null,
+    };
+  });
+  expect(meta.role).toBe('checkbox');
+  expect(meta.tabindex).toBe('0');
+  expect(meta.checked).toBe('false');
+  expect(meta.label).toBeTruthy();
+  expect(meta.glyphHidden).toBe(true);
+});
+
+test('Space checks in from the keyboard and Enter works too', async ({ page }) => {
+  await page.evaluate(() => { switchView('trip'); setTripHideDone(false); });
+  const chk = page.locator('#view-trip .item .chk').first();
+  await chk.focus();
+  await page.keyboard.press(' ');
+  await expect(page.locator('#view-trip .item .chk').first()).toHaveAttribute('aria-checked', 'true');
+
+  await page.locator('#view-trip .item .chk').first().focus();
+  await page.keyboard.press('Enter');
+  await expect(page.locator('#view-trip .item .chk').first()).toHaveAttribute('aria-checked', 'false');
+});
+
+test('keyboard check-in restores focus, mouse click does not steal it', async ({ page }) => {
+  const result = await page.evaluate(() => {
+    switchView('trip');
+    setTripHideDone(false);   /* 讓目標留在結果集內 */
+
+    const chk = document.querySelector('#view-trip .item .chk');
+    const itemId = chk.closest('.item').id;
+    chk.focus();
+    chk.dispatchEvent(new KeyboardEvent('keydown', { key: ' ', bubbles: true }));
+    const afterKeyboard = {
+      onSameItem: document.activeElement.closest('.item') && document.activeElement.closest('.item').id === itemId,
+      isChk: document.activeElement.classList.contains('chk'),
+    };
+
+    /* 滑鼠路徑:先把焦點放到別處,點擊後不該被搶走 */
+    document.body.focus();
+    const parked = document.activeElement;
+    document.querySelector('#view-trip .item .chk').click();
+    const afterMouse = { stolen: document.activeElement !== parked && document.activeElement.classList.contains('chk') };
+
+    return { afterKeyboard, afterMouse };
+  });
+
+  expect(result.afterKeyboard.isChk).toBe(true);
+  expect(result.afterKeyboard.onSameItem).toBe(true);
+  expect(result.afterMouse.stolen).toBe(false);
+});
+
+/* 契約的例外:使用者刻意讓目標離開結果集時,焦點移往下一個合理目標 */
+test('when the checked item leaves the list, focus moves to a sensible next target', async ({ page }) => {
+  const result = await page.evaluate(() => {
+    switchView('trip');
+    setTripHideDone(true);    /* 打完卡該筆會離開結果集 */
+
+    const chk = document.querySelector('#view-trip .item .chk');
+    const itemId = chk.closest('.item').id;
+    chk.focus();
+    chk.dispatchEvent(new KeyboardEvent('keydown', { key: ' ', bubbles: true }));
+
+    const active = document.activeElement;
+    return {
+      victimGone: !document.getElementById(itemId),
+      focusLost: active === document.body || active === null,
+      onNextChk: active.classList.contains('chk'),
+      onFilter: active.classList.contains('trip-filter-btn'),
+    };
+  });
+
+  expect(result.victimGone).toBe(true);
+  expect(result.focusLost).toBe(false);
+  expect(result.onNextChk || result.onFilter).toBe(true);
+});
