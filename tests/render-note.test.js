@@ -24,7 +24,9 @@ function extractConst(name){
   return html.slice(start, end + 1);
 }
 
-const sandbox = {};
+/* v84:下一站卡片會問「這站有什麼要買」。本檔驗的是備註／車票渲染,
+   給一個空的採買清單即可 —— 沒有待買項目時該區塊完全不渲染。 */
+const sandbox = { shoppingListStore: { all(){ return []; } } };
 vm.createContext(sandbox);
 vm.runInContext([
   extractConst('TOMORROW_PREVIEW_HOUR'),
@@ -58,6 +60,10 @@ vm.runInContext([
   extractFunction('renderTicketLine'),
   extractFunction('nextStopMeta'),
   extractFunction('parkingPanel'),
+  /* v84:下一站卡片多了「這站待買」區塊,注入真實實作而非 stub */
+  extractFunction('prioritizeShoppingGroupItems'),
+  extractFunction('nextStopBuyModel'),
+  extractFunction('renderNextStopBuy'),
   extractFunction('renderNextStopCard'),
   extractFunction('clusterItemName'),
   extractFunction('clusterTimeRange'),

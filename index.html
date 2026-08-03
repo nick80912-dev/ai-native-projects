@@ -423,6 +423,10 @@ input,select,textarea{font-size:16px}
 .nx-ticket-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
 .nx-ticket-actions .qa-btn{margin:0}
 .nx-primary-actions{padding:0 16px 10px 20px}
+.nx-buy{display:flex;align-items:center;gap:8px;flex-wrap:wrap;width:calc(100% - 36px);margin:0 16px 10px 20px;min-height:44px;padding:8px 12px;border:1px solid var(--gold);border-radius:12px;background:var(--warning-bg);color:var(--gold-ink);font:inherit;font-size:13px;font-weight:800;text-align:left;cursor:pointer}
+.nx-buy-count{flex:0 0 auto;font-weight:900}
+.nx-buy-names{flex:1 1 auto;min-width:0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;font-weight:700;opacity:.9}
+.nx-buy:focus-visible{outline:2px solid var(--sea);outline-offset:2px}
 .nx-drive-btn{display:flex;align-items:center;justify-content:center;width:100%;min-height:48px;background:var(--sea);color:#fff;border-radius:12px;font-size:16px;font-weight:900;text-decoration:none}
 .nx-drive-btn:active{transform:scale(.98)}
 .nx-secondary-actions{display:flex;gap:8px;flex-wrap:wrap;padding:0 16px 12px 20px}
@@ -2852,6 +2856,7 @@ function renderClusterNextStopCard(day,dayIndex,pick,cluster,checks,progress,now
       '<button class="nx-cluster-expand '+(open?'on':'')+'" onclick="toggleHomeCluster(\''+jsString(cluster.parent.id)+'\')">'+(open?'收合該區串點':'展開該區串點')+'</button>'+
       (open?'<div class="nx-cluster-list">'+cluster.items.map(function(item){ return renderClusterStop(item,checks,progress,dayIndex); }).join('')+'</div>':'')+
     '</div>'+
+    renderNextStopBuy(current.id)+
     (canNav?'<div class="nx-primary-actions">'+renderTripNavigationLink(current,res,dayIndex,'nx-drive-btn')+'</div>':'')+
     '<div class="nx-ticket-low"><button class="nx-decision-btn done" onclick="onNextStopDone('+dayIndex+',\''+current.id+'\')">完成：'+escapeHtml(clusterItemName(current))+'</button><button class="nx-decision-btn skip" onclick="onNextStopSkip('+dayIndex+',\''+current.id+'\')">跳過：'+escapeHtml(clusterItemName(current))+'</button></div></div>';
   if(pick.remaining+childPick.remaining>0) h+='<div class="nx-remain">今日還有 '+(pick.remaining+childPick.remaining)+' 個行程</div>';
@@ -2860,6 +2865,28 @@ function renderClusterNextStopCard(day,dayIndex,pick,cluster,checks,progress,now
 function activateKeyboardButton(event,action){
   if(!event||(event.key!=='Enter'&&event.key!==' ')||typeof action!=='function')return false;
   event.preventDefault();action();return true;
+}
+/* 下一站要買什麼。採買項目的 stopRef **就是站點 id**,與行程項目的 id 是 1:1 直接 join ——
+   不經由商場推導,因此沒有「一個商場對多個不同日期站點」的歧義。
+   必買優先,沿用與採買清單相同的 prioritizeShoppingGroupItems。 */
+function nextStopBuyModel(stopRef){
+  var ref=String(stopRef||'');
+  if(!ref) return null;
+  var items=shoppingListStore.all().filter(function(item){
+    return item&&!item.done&&String(item.stopRef||'')===ref;
+  });
+  if(!items.length) return null;
+  var ordered=prioritizeShoppingGroupItems(items);
+  var names=ordered.slice(0,2).map(function(item){ return String(item.name||'').trim(); }).filter(Boolean);
+  return {count:items.length,names:names,more:items.length>names.length};
+}
+function renderNextStopBuy(stopRef){
+  var model=nextStopBuyModel(stopRef);
+  if(!model) return '';
+  return '<button type="button" class="nx-buy" onclick="openShoppingList(\''+jsHtmlAttrString(stopRef)+'\')"'+
+    ' aria-label="'+escapeHtml('這站有 '+model.count+' 項待買，開啟採買清單')+'">'+
+    '<span class="nx-buy-count">🛍 這站待買 '+model.count+'</span>'+
+    '<span class="nx-buy-names">'+escapeHtml(model.names.join('、')+(model.more?' 等':''))+'</span></button>';
 }
 function renderNextStopCard(day,dayIndex,pick){
   var it=pick.item;
@@ -2886,6 +2913,7 @@ function renderNextStopCard(day,dayIndex,pick){
         (meta.note?'<div class="nx-ticket-line nx-ticket-note"><b>提醒</b>'+renderNote(meta.note)+'</div>':'')+
       '</div>'+
     '</div>'+
+    renderNextStopBuy(it.id)+
     (canNav?'<div class="nx-primary-actions">'+renderTripNavigationLink(it,res,dayIndex,'nx-drive-btn')+'</div>':'')+
     '<div class="nx-secondary-actions">'+
       (meta.web?'<a class="qa-btn nf" href="'+escapeHtml(meta.web)+'" target="_blank" rel="noopener">🌐 官網</a>':'')+
@@ -3113,12 +3141,20 @@ function renderShoppingTodayEntry(day){
   return renderShoppingTodayCard(day)||'<button type="button" class="today-shopping-launcher'+(day?'':' today-hero-action')+'" onclick="openShoppingList()">採買清單 →</button>';
 }
 /* 數量不再選填:每個新項目都給 quantity 1,才能可靠支援部分購買的減法。 */
-function openShoppingList(){
+/* focusStopRef 選填:從「下一站待買」進來時捲到該站群組,省去自己找。
+   刻意不動 curView —— 這是疊上去的 overlay,使用者沒有離開原本的頁面。 */
+function openShoppingList(focusStopRef){
   closeShoppingList();
   shoppingUiState.tab='pending';shoppingUiState.form=null;shoppingUiState.formSession=null;shoppingUiState.split=null;shoppingUiState.selectionMode=false;shoppingUiState.selected={};
   var overlay=document.createElement('div');overlay.id='shoppingListOverlay';overlay.className='shopping-list-overlay';
   overlay.innerHTML='<section class="shopping-list-panel" role="dialog" aria-modal="true" aria-labelledby="shoppingListTitle"></section>';
   document.body.appendChild(overlay);document.body.classList.add('shopping-list-open');renderShoppingListOverlay();
+  if(focusStopRef){
+    requestAnimationFrame(function(){
+      var group=document.getElementById('shopgroup_'+cssId(focusStopRef));
+      if(group) group.scrollIntoView({behavior:'instant',block:'start'});
+    });
+  }
 }
 /* 購物頁入口用的未完成數:全清單,刻意不同於 Today 卡片的「今天有 N 項待買」——
    購物頁不綁特定日期。 */
@@ -3696,7 +3732,8 @@ function renderShoppingGroups(items){
   });
   /* 有效站點群組依實際行程順序(dayIndex → 當日 items index),與 Today 提醒共用同一個 helper。 */
   var html=sortShoppingStopGroups(stopGroups,buildShoppingStopOrder((DB.trip&&DB.trip.days)||[])).map(function(group){
-    return '<section class="shopping-group"><div class="shopping-group-title">DAY '+(group.stop.dayIndex+1)+' · '+escapeHtml(group.stop.name)+'</div>'+prioritizeShoppingGroupItems(group.items).map(function(item){return renderShoppingItem(item,{page:'pending'});}).join('')+'</section>';
+    /* 錨點讓「下一站待買」能直接捲到對應站點的群組 */
+    return '<section class="shopping-group" id="shopgroup_'+cssId(group.stopRef)+'"><div class="shopping-group-title">DAY '+(group.stop.dayIndex+1)+' · '+escapeHtml(group.stop.name)+'</div>'+prioritizeShoppingGroupItems(group.items).map(function(item){return renderShoppingItem(item,{page:'pending'});}).join('')+'</section>';
   }).join('');
   /* 特殊群組一律排在 DAY 1–N 正常路線之後,沿用既有「先綁定類、最後隨時可買」的順序;
      舊的單一「已綁定行程」桶在此拆成待確認與已失效兩組,待確認在前(暫時性)、已失效在後(需處理)。 */

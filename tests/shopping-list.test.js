@@ -645,6 +645,8 @@ const groupSandbox={
 };
 vm.createContext(groupSandbox);
 vm.runInContext(extractUiFunction('prioritizeShoppingGroupItems'),groupSandbox);
+/* v84:站點群組加了 id 錨點,讓「下一站待買」能直接捲到對應群組 */
+vm.runInContext(extractUiFunction('cssId'),groupSandbox);
 vm.runInContext(extractUiFunction('renderShoppingGroups'),groupSandbox);
 const groupedHtml=groupSandbox.renderShoppingGroups([
   {id:'resolved-normal',category:'伴手禮',stopRef:'resolved'},
