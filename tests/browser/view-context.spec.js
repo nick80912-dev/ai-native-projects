@@ -362,3 +362,64 @@ test('when the checked item leaves the list, focus moves to a sensible next targ
   expect(result.focusLost).toBe(false);
   expect(result.onNextChk || result.onFilter).toBe(true);
 });
+
+/* ---------- 回到現在 ---------- */
+
+test('back-to-now appears only when today is inside the trip', async ({ page }) => {
+  const inTrip = await page.evaluate(() => {
+    switchView('trip');
+    return { todayIndex: findToday(), hasButton: !!document.querySelector('#view-trip .trip-back-now') };
+  });
+  expect(inTrip.todayIndex).not.toBe(null);
+  expect(inTrip.hasButton).toBe(true);
+
+  /* 把行程日期挪開,今天就不在範圍內 —— 按鈕不該出現 */
+  const outside = await page.evaluate(() => {
+    const saved = DB.trip.days.map((d) => d.date);
+    DB.trip.days.forEach((d, i) => { d.date = '1/' + (i + 1); });
+    renderTrip();
+    const hasButton = !!document.querySelector('#view-trip .trip-back-now');
+    DB.trip.days.forEach((d, i) => { d.date = saved[i]; });
+    renderTrip();
+    return hasButton;
+  });
+  expect(outside).toBe(false);
+});
+
+test('back-to-now jumps to today and positions the current stop', async ({ page }) => {
+  const result = await page.evaluate(async () => {
+    switchView('trip');
+    const todayIndex = findToday();
+    /* 先跑到別天、別的位置 */
+    gotoDay(todayIndex === 0 ? 1 : 0);
+    document.scrollingElement.scrollTop = 500;
+
+    document.querySelector('#view-trip .trip-back-now').click();
+    await new Promise((r) => setTimeout(r, 300));
+
+    const day = DB.trip.days[curDay];
+    const currentId = selectCurrentTripItem(day, curDay, getChecks());
+    const el = currentId ? document.getElementById('it_' + currentId) : null;
+    const box = el ? el.getBoundingClientRect() : null;
+    return {
+      curDay, todayIndex, currentId,
+      inViewport: box ? box.top >= -20 && box.top <= window.innerHeight : null,
+    };
+  });
+
+  expect(result.curDay).toBe(result.todayIndex);
+  if (result.currentId) expect(result.inViewport).toBe(true);
+});
+
+test('back-to-now is a real, tappable, labelled control', async ({ page }) => {
+  const meta = await page.evaluate(() => {
+    switchView('trip');
+    const btn = document.querySelector('#view-trip .trip-back-now');
+    const r = btn.getBoundingClientRect();
+    return { tag: btn.tagName, type: btn.getAttribute('type'), text: btn.textContent.trim(), h: Math.round(r.height) };
+  });
+  expect(meta.tag).toBe('BUTTON');
+  expect(meta.type).toBe('button');
+  expect(meta.text).toBeTruthy();
+  expect(meta.h).toBeGreaterThanOrEqual(44);
+});

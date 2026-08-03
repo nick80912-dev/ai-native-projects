@@ -186,7 +186,9 @@ input,select,textarea{font-size:16px}
 .day-head .date{font-size:19px;font-weight:800;color:var(--sea-deep)}
 .day-head .prog{margin-left:auto;font-size:12px;color:var(--ink-faint);font-weight:600}
 .trip-filter{display:flex;gap:8px;margin:10px 0 12px}
-.trip-filter-btn{flex:1;border:1px solid var(--line);background:var(--card);color:var(--ink-soft);border-radius:999px;padding:9px 10px;font-size:13px;font-weight:800}
+.trip-filter-btn{flex:1;min-height:44px;border:1px solid var(--line);background:var(--card);color:var(--ink-soft);border-radius:999px;padding:9px 10px;font-size:13px;font-weight:800}
+.trip-back-now{flex:0 0 auto;min-height:44px;border:1px solid var(--sea);background:var(--card);color:var(--sea-deep);border-radius:999px;padding:9px 12px;font:inherit;font-size:13px;font-weight:900;white-space:nowrap;cursor:pointer}
+.trip-back-now:focus-visible{outline:2px solid var(--sea);outline-offset:2px}
 .trip-filter-btn.on{background:var(--sea);border-color:var(--sea);color:#fff}
 
 /* 行程項目 */
@@ -2309,6 +2311,16 @@ function gotoDay(i){
   curDay=i;
   switchView('trip',{type:'trip-day',dayIndex:i});
 }
+/* 回到「現在」= 今天那一天 + 目前這一站。逛完別天之後要回到當下,
+   原本得先找到今天的 chip、再自己捲到現在的位置。 */
+function backToNow(){
+  var di=findToday();
+  if(di===null) return;
+  curDay=di;
+  var day=DB.trip.days[di];
+  var currentId=selectCurrentTripItem(day,di,getChecks());
+  switchView('trip',currentId?{type:'trip-now',itemId:currentId}:{type:'top'});
+}
 function tripPanelKey(itemId,kind){ return String(itemId)+'::'+kind; }
 function isTripPanelOpen(itemId,kind){ return !!viewUiState.trip.openPanels[tripPanelKey(itemId,kind)]; }
 /* 展開狀態必須有落點:原本只做 classList.toggle,狀態只活在 DOM 裡,
@@ -2469,7 +2481,10 @@ function renderTrip(){
     '<span class="date">'+day.date+(day.dow?' ('+day.dow+')':'')+'</span>'+
     '<span class="prog">完成 '+doneN+' · 略過 '+skipN+' / 共 '+acts.length+'</span></div>'+
     '<div class="trip-filter"><button class="trip-filter-btn '+(!tripHideDone?'on':'')+'" onclick="setTripHideDone(false)">顯示全部</button>'+
-    '<button class="trip-filter-btn '+(tripHideDone?'on':'')+'" onclick="setTripHideDone(true)">隱藏已完成</button></div>'+
+    '<button class="trip-filter-btn '+(tripHideDone?'on':'')+'" onclick="setTripHideDone(true)">隱藏已完成</button>'+
+    /* 只有今天真的落在行程範圍內才有「現在」可回;旅行前後顯示它只會讓人按了沒反應 */
+    (findToday()!==null?'<button type="button" class="trip-back-now" onclick="backToNow()">⏱ 回到現在</button>':'')+
+    '</div>'+
     (visibleActs.length?visibleItems.map(function(it){return renderItem(it,checks,currentItemId,progress);}).join(''):'<div class="empty-state">今天的行程都已完成 ✓</div>');
 }
 
