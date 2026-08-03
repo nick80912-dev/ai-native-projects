@@ -60,6 +60,7 @@ for (const bad of ['', null, undefined, 0, {}]) {
 const dataPage = vm.createContext({
   escapeHtml(value) { return String(value); },
   renderSettingsHeader(title) { return '<h2>' + title + '</h2>'; },
+  renderSettingsDataHealth() { return '<section><h3>資料健康狀態</h3></section>'; },
   renderAppReleaseNotes() { return '<div class="settings-release-list"></div>'; },
 });
 vm.runInContext(helperSource, dataPage);
@@ -71,12 +72,14 @@ assert.doesNotThrow(() => { markup = dataPage.renderSettingsDataPage(); },
 assert.ok(markup.includes('SW 未知'), 'a missing version degrades to SW 未知 instead of throwing');
 assert.ok(markup.includes('複製備份 JSON') && markup.includes('從 JSON 還原'),
   'backup and restore stay reachable without the version file');
+assert.ok(markup.includes('資料健康狀態'),'the v88 data-health summary remains reachable without the version file');
 
 /* 有版本時顯示真實版本 */
 const dataPageOk = vm.createContext({
   APP_VERSION: 'v99',
   escapeHtml(value) { return String(value); },
   renderSettingsHeader(title) { return '<h2>' + title + '</h2>'; },
+  renderSettingsDataHealth() { return '<section></section>'; },
   renderAppReleaseNotes() { return ''; },
 });
 vm.runInContext(helperSource, dataPageOk);

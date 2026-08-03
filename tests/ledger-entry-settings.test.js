@@ -212,7 +212,8 @@ function response(payload){
   assert(testModeSource.includes('renderSplit()'),'test-mode changes immediately rerender Split');
 
   const syncSource = html.slice(html.indexOf('function setSyncState('),html.indexOf('/* ================= DB 組裝'));
-  assert(syncSource.includes("txt.textContent='已同步'"),'healthy sync label is 已同步');
+  assert(syncSource.includes('syncHeaderModel(state,CURRENT_SNAPSHOT,Date.now())'),'sync header delegates healthy and stale copy to the relative-time model');
+  assert(syncSource.includes('txt.textContent=header.text'),'healthy sync label renders the relative-time model text');
   assert(!syncSource.includes("txt.textContent='✓ 已同步'"),'healthy sync label has no leading check');
 
   console.log('ledger entry settings tests passed');

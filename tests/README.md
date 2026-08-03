@@ -3,14 +3,14 @@
 > Bar 於 2026-07-09 核准:自此之後,**每次程式交付必附與修改範圍相符的可執行測試**,測試檔納入 repo 版控;「通過自動測試」以 repo 內可重跑的腳本為準,不接受口頭宣稱。三情境完整 QA 仍須另行驗證。
 
 ## 現有測試
-- `atomic-sheet-sync.test.js`:驗證七張 Sheet 候選資料需整批驗證後一次啟用、舊快取遷移、失敗候選保留與同步狀態面板。執行:`node tests/atomic-sheet-sync.test.js`。
+- `atomic-sheet-sync.test.js`:驗證七張 Sheet 候選資料需整批驗證後一次啟用、舊快取遷移、失敗候選保留與同步狀態面板；v88 另鎖定健康 header 只顯示「已同步」但 aria 保留更新時間、其他狀態相對時間、最後完整同步時間、partial 失敗來源的人類可讀文案，以及舊快照 metadata 相容。執行:`node tests/atomic-sheet-sync.test.js`。
 - `app-now.test.js`:驗證正式時間、offset/custom 時間模擬與共用 `appNow()` 時鐘。執行:`node tests/app-now.test.js`。
 - `home-safety.test.js`:驗證首頁行程日完整顯示、Scroll-only 政策與高風險清除操作的確認防線。執行:`node tests/home-safety.test.js`。
 - `home-simplification.test.js`:驗證首頁版面高度、下一站取消邏輯、串點子卡簡化與購物清單保留。執行:`node tests/home-simplification.test.js`。
 - `ios-zoom-guard.test.js`:驗證 iOS 16px 字級、Scroll-only／viewport 還原、SW 版次，以及最小 no-op 雙擊相容性監聽器不復活舊雙擊 guard 或 APP build metadata。執行:`node tests/ios-zoom-guard.test.js`。
 - `preview-date.test.js`:驗證預覽日期參數與 `todayMD()` 使用同一模擬時間來源。執行:`node tests/preview-date.test.js`。
 - `pwa-shell.test.js`:驗證 PWA 入口、manifest、Service Worker、Netlify 設定與圖示資產完整性;2026-07-30 起改鎖新版 SW 契約(頂層 `SW_VERSION`、`CACHE_NAME` 由它推導、不得 importScripts、install 用 `cache:'reload'`、fetch 用 `cache:'no-cache'`、只有 navigation 才 fallback `index.html`)。執行:`node tests/pwa-shell.test.js`。
-- `app-version-fallback.test.js`:`app-version.js` 載不到時的降級契約。涵蓋 `appVersion()`／`appVersionLabel()` 的回退值、`renderSettingsDataPage()` 在無 `APP_VERSION` 時仍可算出 HTML(顯示「SW 未知」而非 ReferenceError),以及 `index.html` 不得在安全取值區塊外裸讀 `APP_VERSION`。執行:`node tests/app-version-fallback.test.js`。
+- `app-version-fallback.test.js`:`app-version.js` 載不到時的降級契約。涵蓋 `appVersion()`／`appVersionLabel()` 的回退值、`renderSettingsDataPage()` 在無 `APP_VERSION` 時仍可算出資料健康區塊與 HTML(顯示「SW 未知」而非 ReferenceError),以及 `index.html` 不得在安全取值區塊外裸讀 `APP_VERSION`。執行:`node tests/app-version-fallback.test.js`。
 - `trip-presentation.test.js`:驗證行程類型標籤與行程頁呈現規則。執行:`node tests/trip-presentation.test.js`。
 - `schema-types.test.js`:驗證 Places.Type 必要中文輸入值的正規化結果,並確認 `index.html` 內嵌 Schema 已同步。執行:`node tests/schema-types.test.js`。
 - `render-note.test.js`:備註條列渲染、下一站卡、MAPCODE、明日預告等元件渲染回歸測試(Node 內建 assert,從預覽 HTML 抽函式驗證)。執行:`node tests/render-note.test.js`(於 repo 根目錄)。
@@ -22,7 +22,9 @@
 - `travel-notes.test.js`：驗證診斷面板內的本機旅途紀錄新增、編輯、狀態、確認刪除、200 筆上限、寫入失敗回滾、文字／JSON 複製匯出、健康摘要脈絡，以及舊版 WebKit 無 `crypto.randomUUID()` 時的唯一 ID fallback。執行：`node tests/travel-notes.test.js`。
 - `theme-system.test.js`：驗證六組主題的 13-token、亮色對比率、六組自動暗色 token、reduced-motion、舊變數角色對映、未知 ID 回退、原子切換、迷你介面卡，以及五個功能 Emoji 精準替換為 SVG。執行：`node tests/theme-system.test.js`。
 - `ui-ux-hardening.test.js`：驗證渲染失敗的可執行重試、Today daybar 隱藏、flex header、44px 觸控目標、照片失敗 inline status／單一健康入口、toast live region，以及下一站 Enter／Space 鍵盤啟動。執行：`node tests/ui-ux-hardening.test.js`。
-- `settings-grouped-root.test.js`：驗證設定根頁三個常駐群組（個人／記帳／資料）的順序與歸屬、各列摘要格式與 `未設定`／`SW 未知` 降級、既有子頁入口、身分列可存取名稱，以及測試模式關閉時完全不渲染、開啟時才出現條件式警告列且根頁永不帶切換控制項。執行：`node tests/settings-grouped-root.test.js`。
+- `settings-grouped-root.test.js`：驗證設定根頁三個常駐群組（個人／記帳／資料）的順序與歸屬、各列摘要格式與降級、既有子頁入口、身分列可存取名稱，以及測試模式條件列；v88 另鎖定行程、團體帳、個人本機帳與照片的集中健康摘要及注意項目計數。執行：`node tests/settings-grouped-root.test.js`。
+
+- `ledger-dashboard.test.js`：驗證分帳首頁摘要、個人／團體軌與期間切換；v88 鎖定今日支出為主值、旅程累計為次值，並確認團體帳使用「與我相關」脈絡而非全團誤導文案。執行：`node tests/ledger-dashboard.test.js`。
 
 - `ledger-settlement-reliability.test.js`:結算可靠性總測試。涵蓋 durable delivery bridge(原子交接、持久性、只在遠端讀回同一 `record.id` 才清除、不自動過期)、事件全序與同毫秒競態、跨裝置 confirm／reject 收斂與 losing response inert、狀態機文案與按鈕不復原、退回後重新付款開新 generation、已確認收款的 10 秒一次性復原（資格六項條件、9,999／10,000／10,001ms 邊界、無效或未來 `response.time`、已復原、後續 generation、連點五次只一筆 deletion、歷史不得輸出永久撤銷／復原按鈕）、ledger fast pull 增量與非 JSON 降級、polling 兩層退避與生命週期、待處理徽章、簡易結算模式與時鐘偏移。執行:`node tests/ledger-settlement-reliability.test.js`。
 - `ledger-settlement-correction.test.js`：結算後不可改寫與引導式更正總測試。涵蓋 claim／canonical confirm 建立位置保護切點、正式／TEST 隔離、confirm 復原、多人收據、永久保護、完整版本投影、commit-last 缺件 inert、重複更正、整張作廢、跨裝置 canonical／losing conflict、不合法 ID／時間事件 fail-closed 與分類診斷、付款人／原因守門、刪改阻擋、action model、品項變更揭露，以及已全數還款後更正產生的新餘額差。一般編輯 stale-DOM 與更正預覽事件 fingerprint 的 UI 守門另由 `ledger-list-actions.test.js` 鎖定。執行：`node tests/ledger-settlement-correction.test.js`。
@@ -40,6 +42,7 @@
 - `ui-font.test.js`:驗證首屏不載入或 preconnect Google Fonts，全站使用裝置內建繁中 font stack，且不含 Hiragino／Noto Sans JP／Yu Gothic。執行:`node tests/ui-font.test.js`。
 - `browser/ui-ux-hardening.spec.js`：以 Chromium 驗證 Today 隱藏 daybar、header flex、同步／設定／Day chip／購物 filter 的 44px 實際高度、16px 完成／跳過、六主題暗色亮度與文字對比，以及 reduced-motion 的 computed behavior。執行：`npx playwright test tests/browser/ui-ux-hardening.spec.js`。
 - `browser/today-live-info.spec.js`：驗證 Today 採買卡精確排除目前下一站、兩列／三品名／更多地點提示、all-in-next 不補 fallback，以及一般下一站 badge 的 stopRef、sibling DOM、aria、Enter／Space、focus-visible、採買錨點與不誤觸導覽；cluster current child 的 stopRef 由 `render-note.test.js` 補足。另以 320／375／390px 驗證 44px 觸控區、單行摘要、無重疊與水平 overflow。執行：`npx playwright test tests/browser/today-live-info.spec.js`。
+- `browser/data-observability.spec.js`：以 320／375／390px 驗證 v88 個人／團體今日支出與旅程累計不溢位；另驗證健康同步 header 精簡、aria 更新時間、鍵盤開啟、partial 失敗來源與設定頁資料健康摘要。執行：`npx playwright test tests/browser/data-observability.spec.js`。
 - `browser/trip-three-scenarios.spec.js`：Playwright 三情境 QA。以真實 App 啟動流程驗證①斷網時採用內建快照、②完整 mock Sheet 連網同步產生 online 快照、③固定旅行日 `Date` 後今天頁落在 Day 1；三情境皆要求 `pageerror=0`。執行：先 `npm ci`、`npx playwright install chromium`，再 `npm run test:browser`。
 - `ledger-member-visibility.test.js`:團體帳本「只顯示與目前成員相關紀錄」。涵蓋付款人 × 分攤成員四象限(含**付款人不在 participants 內的代墊紀錄仍須顯示**)、`participants` 缺欄／`null`／空陣列／非 JSON／非陣列／含非字串／已是陣列共七種舊格式的限定式 fail-open 與不拋錯、fail-open 不擴散、成員無法解析時的安全退化(三種輸入)與診斷訊號、姓名格式變動仍以 `canonicalMemberName()` 穩定 key 判定、筆數與總額只計過濾後紀錄、最近消費／完整紀錄頁／主卡片同源、八個消費端共用 `ledgerTrackRecords()`、編輯與刪除路徑各自重查同一判斷、結算仍讀全團事件流、不得新增範圍切換 UI。執行:`node tests/ledger-member-visibility.test.js`。
 - `apps-script-settings.test.js`:除既有 `doPost` 設定與分帳寫入契約外,另涵蓋唯讀 `doGet` ledger 加速層契約(`after` 正規化、`after >= total` 不呼叫 `getValues()`、`after > total` 回 `reset` 與全量、精確 21 欄 range、不取 `LockService`、不洩漏內部資訊)。執行:`node tests/apps-script-settings.test.js`。

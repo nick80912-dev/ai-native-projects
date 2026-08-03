@@ -37,6 +37,7 @@ function renderRoot(overrides,ledgerSettings){
     isSimpleSettlementMode:function(){ return false; },
     appVersionLabel:function(){ return version; },
     shoppingPhotoStorageSummary:function(){ return '0 張 · 0 B'; },
+    settingsDataHealthModel:function(){ return {summary:'資料狀態正常'}; },
     lsGet:function(key,fallback){ return key==='trip_ledger_test_mode' ? false : fallback; }
   },overrides||{});
   vm.createContext(sandbox);
@@ -75,7 +76,7 @@ assert(out.includes('2 位常用對象'),'proxy summary counts the stored target
 assert(out.includes('3 類別 · 2 支付方式'),'custom-option summary lists categories and payment methods');
 assert(!/\d+\s*單位/.test(out),'shopping units are no longer summarized on the root page');
 assert(out.includes('JPY · 0.22'),'ledger summary shows default currency and exchange rate');
-assert(out.includes('SW '+version),'data summary shows the running Service Worker version');
+assert(out.includes('資料狀態正常'),'data summary reports the aggregated health state');
 assert(out.includes('0 張 · 0 B'),'storage summary shows the device-local attachment count and size');
 assert(out.includes('海洋／岡山'),'theme summary shows the current theme name');
 
@@ -84,8 +85,8 @@ assert(renderRoot(null,{exchangeRate:'',defaultCurrency:'JPY'}).includes('JPY ·
   'ledger summary degrades to 未設定 when no rate is stored');
 assert(renderRoot(null,{exchangeRate:'',defaultCurrency:'TWD'}).includes('TWD · 未設定'),
   'ledger summary follows the stored default currency');
-assert(renderRoot({appVersionLabel:function(){ return '未知'; }}).includes('SW 未知'),
-  'data summary degrades to SW 未知 when APP_VERSION is missing');
+assert(renderRoot({settingsDataHealthModel:function(){return {summary:'2 項需注意'};}}).includes('2 項需注意'),
+  'data summary surfaces the aggregated attention count');
 assert(renderRoot({currentThemeId:function(){ return 'nonexistent'; }}).includes('海洋／岡山'),
   'an unknown theme id still renders the ocean fallback name');
 assert(renderRoot({getCurrentMember:function(){ return ''; }}).includes('尚未選擇'),
@@ -129,7 +130,7 @@ assert(simpleOn.includes('保留已確認結清'),'the 保留已確認結清 exp
 /* ---- 版本安全取值(§4):根頁不得裸讀 APP_VERSION ---- */
 const rootSource = extractFunction(html,'renderSettingsRoot');
 assert(!/APP_VERSION/.test(rootSource),'root reads the version only through appVersionLabel()');
-assert(rootSource.includes('appVersionLabel()'),'root uses the safe version helper');
+assert(rootSource.includes('settingsDataHealthModel()'),'root reads the single tested health model');
 assert(html.includes("'storage'"),'the Settings router declares the storage page');
 assert(extractFunction(html,'renderSettingsPage').includes("if(page==='storage')return renderSettingsStoragePage();"),
   'the Settings router renders the attachment storage page');
@@ -140,5 +141,38 @@ assert(icons.includes('class="app-icon"'),'row icons reuse the existing inline S
 assert(icons.includes('aria-hidden="true"'),'row icons are hidden from assistive technology');
 assert(!/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]/u.test(icons),'row icons contain no Emoji');
 assert(!/<img|https?:\/\//.test(icons),'row icons load nothing external');
+
+/* ---- v88 資料健康 model：防止本機資料被誤稱已同步，或忽略 partial／pending。 ---- */
+const healthSandbox={};
+vm.createContext(healthSandbox);
+vm.runInContext(extractFunction(html,'settingsDataHealthModel'),healthSandbox);
+const healthy=JSON.parse(JSON.stringify(healthSandbox.settingsDataHealthModel({
+  sync:{state:'online',label:'同步正常',relative:'3 分鐘前',failedSources:[]},
+  pendingCount:0,photoSummary:'0 張 · 0 B',photoAttention:false
+})));
+assert.strictEqual(healthy.summary,'資料狀態正常');
+assert.deepStrictEqual(healthy.rows,[
+  {key:'trip',label:'行程資料',value:'同步正常 · 3 分鐘前',detail:''},
+  {key:'shared',label:'團體帳',value:'已送出',detail:'團體紀錄會跨裝置同步'},
+  {key:'personal',label:'個人資料',value:'僅此裝置',detail:'個人記帳、採買與設定不會同步'},
+  {key:'photos',label:'照片附件',value:'0 張 · 0 B',detail:'照片只保存在此裝置'}
+]);
+assert.strictEqual(JSON.stringify(healthy).includes('個人資料","value":"已同步'),false,'personal local data is never labelled synced');
+
+const partial=JSON.parse(JSON.stringify(healthSandbox.settingsDataHealthModel({
+  sync:{state:'partial',label:'部分同步',relative:'剛剛',failedSources:[{label:'分帳資料'}]},
+  pendingCount:0,photoSummary:'0 張 · 0 B',photoAttention:false
+})));
+assert.strictEqual(partial.summary,'1 項需注意');
+assert.strictEqual(partial.rows[0].value,'部分同步 · 剛剛');
+assert.strictEqual(partial.rows[0].detail,'未更新：分帳資料');
+
+const localAttention=JSON.parse(JSON.stringify(healthSandbox.settingsDataHealthModel({
+  sync:{state:'offline',label:'離線資料',relative:'昨天 21:30',failedSources:[]},
+  pendingCount:2,photoSummary:'1 個附件待修復',photoAttention:true
+})));
+assert.strictEqual(localAttention.summary,'2 項需注意','offline use itself is healthy; queue and broken photo each count once');
+assert.strictEqual(localAttention.rows[1].value,'2 筆待同步');
+assert.strictEqual(localAttention.rows[3].value,'1 個附件待修復');
 
 console.log('settings grouped root tests passed');

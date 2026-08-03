@@ -19,6 +19,5 @@
 3. 部署包與 QA 腳本納入 repo 版控(見 tasks/backlog)
 
 ## 🔮 未來(不急)
-- 12 月東京行程接入(新行程分頁+transport=transit)
 - 新版本上線提示立即刷新(SW updatefound UI)
 - AI Native Framework 抽取(見 `FUTURE_PLAN_framework-extraction.md`,App 落地後執行)
