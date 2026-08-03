@@ -2221,6 +2221,40 @@ function infoPanel(res){
 
 /* ================= 渲染:行程頁 ================= */
 var curDay=0, curView='today';
+/* ---- 暫態 UI 狀態(session-only)----
+   捲動位置、面板展開、操作焦點原本只活在 DOM 裡,重繪即消失 —— 三個症狀同一個根因。
+   刻意**不**寫 localStorage、**不**進備份:把 A 手機的捲動位置還原到 B 手機毫無意義,
+   而且會讓備份格式再升一版。重開 App 一律歸零。 */
+var viewUiState={
+  today:{scrollY:0},
+  trip:{scrollY:0,openPanels:{}},
+  shop:{scrollY:0},
+  split:{scrollY:0}
+};
+/* 入口意圖只消耗一次:套用後即清除,之後正常切回仍走位置還原 */
+var pendingViewIntent=null;
+function viewScrollElement(){ return document.scrollingElement||document.documentElement; }
+function captureViewScroll(view){
+  var state=viewUiState[view];
+  if(state) state.scrollY=Math.max(0,Math.round(viewScrollElement().scrollTop));
+}
+/* 還原一律用 behavior:'instant'。html{scroll-behavior:smooth} 會讓 'auto' 沿用 CSS 值,
+   還原就變成頁面自己滑動的動畫,快速切換時還會互相打架。 */
+function applyViewPosition(view,intent){
+  requestAnimationFrame(function(){
+    if(intent&&applyViewIntent(view,intent)) return;
+    var doc=viewScrollElement();
+    var state=viewUiState[view];
+    var max=Math.max(0,doc.scrollHeight-doc.clientHeight);
+    window.scrollTo({top:Math.min(state?state.scrollY:0,max),behavior:'instant'});
+  });
+}
+/* 回傳 true 代表這個 intent 已自行完成定位,不再套用捲動還原。
+   意圖用結構化資料而非布林旗標,才好測試、也方便日後新增入口。 */
+function applyViewIntent(view,intent){
+  if(intent.type==='top'){ window.scrollTo({top:0,behavior:'instant'}); return true; }
+  return false;
+}
 var tripHideDone=true;
 function setTripHideDone(v){
   tripHideDone=!!v;
@@ -10194,12 +10228,17 @@ function renderSplit(){
 }
 
 /* ================= 導覽 / 啟動 ================= */
-function switchView(v){
+function switchView(v,intent){
+  /* 分帳次層頁再點「分帳」仍先回 dashboard,沿用現況 */
   if(v==='split'&&curView==='split'){
     if(ledgerUiState.page!=='dashboard')returnLedgerDashboard();
     else{closeLedgerRecordActions();window.scrollTo({top:0,behavior:'smooth'});}
     return;
   }
+  /* 再點目前所在的分頁 = 回頂;帶著明確意圖進來則以意圖優先 */
+  if(v===curView&&!intent) intent={type:'top'};
+  /* 離開前先記住位置 —— 必須在 curView 改變之前 */
+  if(v!==curView) captureViewScroll(curView);
   if(curView==='split'){ledgerUiState.selectionMode=false;ledgerUiState.selectedRecordIds={};closeLedgerRecordActions();}
   curView=v;
   document.querySelectorAll('.view').forEach(function(el){el.classList.remove('active');});
@@ -10207,7 +10246,7 @@ function switchView(v){
   document.querySelectorAll('.tabbar-btn').forEach(function(b){b.classList.toggle('active',b.dataset.view===v);});
   renderDaybar();
   renderCurrent(v);
-  window.scrollTo({top:0});
+  applyViewPosition(v,intent);
 }
 function retryCurrentView(button){
   if(button)button.disabled=true;
