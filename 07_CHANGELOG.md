@@ -1,4 +1,14 @@
 # 07 版本紀錄
+## 2026-08-03｜修正「其他資訊」誤觸卡片導覽（SW v85）
+
+- **真機回饋**：在今天的行程卡點「其他資訊」會直接跳進行程分頁。
+- **成因（v84 引入）**：`.nx-ticket-main` 本身是 `role="button"` + `onclick="openTripItem(...)"`，而 v84 把 `<details>` 放進了它內部的 `.nx-ticket-lines`。點 summary 展開之後，click 繼續往上冒泡成整張卡的導覽。這同時也是**語意錯誤** —— 「按鈕裡的按鈕」在 HTML／ARIA 上無效，鍵盤 tab 會落進去、螢幕閱讀器讀不出正確角色。
+- **修法**：把 `<details>` 移出 `.nx-ticket-main`，成為卡片的同層區塊（放在待買區塊之前）。**不用 `stopPropagation` 掩蓋** —— 那只會消掉症狀，留下巢狀互動控制項的語意問題。移出後補回原本繼承自卡片本體的左右內距。
+- **根因層級的保護**：新增結構不變式測試 —— 整張卡的 `role="button"` 內**不得**再有任何可聚焦的互動元素（`a[href]`／`button`／`summary`／`details`／`[tabindex]`／`[role=button]`）。日後若有人再往卡片內塞控制項，這條會直接紅，而不必逐一列舉個案。
+- **一併澄清**：原本懷疑停車 MAPCODE 有同類問題，實測在此卡片中無法重現（該卡的 `role="button"` 內除了新加的 `<details>` 之外沒有其他互動元素），故**不宣稱**、也未做預防性修改；上述結構不變式已涵蓋日後出現的情況。
+- **版本**：依「不得讓同一版號承載兩份不同 runtime」，v84 已推上 `dev`，本次 runtime 變更升 **v85**。`sw.js` diff 只有版本字串一行；`netlify.toml` 未動；`PERSONAL_STATE_VERSION` 維持 9。
+- **驗證**：先寫失敗測試（點展開後 `curView` 由 `today` 變成 `trip`）再修；完整 **65／65** Node test files 與 Playwright **94／94** 通過。
+
 ## 2026-08-02｜Today 即時資訊（SW v84）
 
 批次主題：**讓 Today 回答「現在要幹嘛」，而不只是「行程有什麼」。**
