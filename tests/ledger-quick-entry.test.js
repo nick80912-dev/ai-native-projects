@@ -154,7 +154,7 @@ vm.runInContext(persistSource,persistSandbox);
   assert(sheetSource.includes('固定折扣金額')&&sheetSource.includes('優惠券金額'));
   assert(!sheetSource.includes('多品項將於本批下一階段啟用'),'multi-item toggle is fully functional');
   assert(!/addEventListener\(['"](?:touchstart|touchmove|gesturestart)/.test(sheetSource),'sheet adds no JavaScript gesture interceptor');
-  assert.strictEqual((sheetSource.match(/preventDefault\(\)/g)||[]).length,5,'preventDefault is limited to the five single/multi keyboard Enter handlers, not touch gestures');
+  assert.strictEqual((sheetSource.match(/preventDefault\(\)/g)||[]).length,6,'preventDefault is limited to the five single/multi Enter handlers and calculator Tab containment, not touch gestures');
   assert(sheetSource.includes("result.queued?'已儲存，待同步':'已儲存'"),'shared optimistic save reports pending background delivery');
   assert(sheetSource.includes('ledgerBackgroundScrollY=window.scrollY'),'opening captures the background scroll position');
   assert(sheetSource.includes('sheet.scrollTop=0'),'new sheets start at the top');

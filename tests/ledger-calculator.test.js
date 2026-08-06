@@ -1,0 +1,136 @@
+const assert=require('assert');
+const fs=require('fs');
+const vm=require('vm');
+const {extractFunction}=require('./support/source');
+
+const html=fs.readFileSync('index.html','utf8');
+const evaluatorSource=extractFunction(html,'evaluateLedgerCalculatorExpression');
+const normalizeSource=extractFunction(html,'normalizeLedgerCalculatorExpression');
+const amountResultSource=extractFunction(html,'ledgerCalculatorAmountResult');
+const targetValueSource=extractFunction(html,'ledgerCalculatorTargetValue');
+const targetInputIdSource=extractFunction(html,'ledgerCalculatorTargetInputId');
+const applyValueSource=extractFunction(html,'ledgerCalculatorApplyValue');
+
+const parserSandbox={String,Number,Math,isFinite};
+vm.createContext(parserSandbox);
+vm.runInContext(normalizeSource+'\n'+evaluatorSource,parserSandbox);
+
+function result(expression){
+  return JSON.parse(JSON.stringify(parserSandbox.evaluateLedgerCalculatorExpression(expression)));
+}
+
+assert.deepStrictEqual(result('1200+380+250'),{ok:true,value:1830,error:''},'continuous additions produce one exact total');
+assert.deepStrictEqual(result('2+3*4'),{ok:true,value:14,error:''},'multiplication keeps normal precedence');
+assert.deepStrictEqual(result('100÷4＋25'),{ok:true,value:50,error:''},'display operators normalize before evaluation');
+assert.deepStrictEqual(result('7/2'),{ok:true,value:3.5,error:''},'the evaluator preserves fractional results for apply-time validation');
+assert.deepStrictEqual(result('10/0'),{ok:false,value:null,error:'不能除以 0'},'division by zero is explicit');
+assert.deepStrictEqual(result('1+'),{ok:false,value:null,error:'算式尚未完成'},'an incomplete expression is rejected');
+assert.deepStrictEqual(result('1+a'),{ok:false,value:null,error:'算式包含不支援的內容'},'illegal tokens are rejected');
+assert.deepStrictEqual(result('1 2'),{ok:false,value:null,error:'算式格式不正確'},'whitespace cannot silently separate two operands');
+assert.deepStrictEqual(result('1+2 3'),{ok:false,value:null,error:'算式格式不正確'},'a later operand is never silently discarded');
+assert.deepStrictEqual(result(''),{ok:false,value:null,error:'請輸入算式'},'an empty expression has a stable error');
+assert.deepStrictEqual(result('9007199254740991+1'),{ok:false,value:null,error:'結果超出可用範圍'},'unsafe intermediate results stop before precision is lost');
+
+assert.doesNotMatch(evaluatorSource,/\beval\s*\(|\bFunction\s*\(/,'the parser never executes dynamic JavaScript');
+
+const workflowSandbox={
+  String,Number,Math,isFinite,
+  ledgerUiState:{draft:{multi:false,amount:'1680',discount:'80',items:[{key:'item-123',amount:'380'}]}},
+  ledgerDraftItem(key){return workflowSandbox.ledgerUiState.draft.items.filter(item=>item.key===key)[0];},
+  updateLedgerDraftField(field,value){workflowSandbox.ledgerUiState.draft[field]=value;workflowSandbox.fieldUpdates.push([field,value]);},
+  updateLedgerDraftItem(key,patch,rerender){
+    workflowSandbox.itemUpdates.push([key,patch,rerender]);
+    workflowSandbox.ledgerUiState.draft.items=workflowSandbox.ledgerUiState.draft.items.map(item=>item.key===key?Object.assign({},item,patch):item);
+    if(rerender===false)workflowSandbox.updateLedgerMultiPreview();
+  },
+  updateLedgerConversionPreview(){workflowSandbox.conversionUpdates++;},
+  updateLedgerMultiPreview(){workflowSandbox.multiUpdates++;},
+  fieldUpdates:[],itemUpdates:[],conversionUpdates:0,multiUpdates:0
+};
+vm.createContext(workflowSandbox);
+vm.runInContext(normalizeSource+'\n'+evaluatorSource+'\n'+amountResultSource+'\n'+targetValueSource+'\n'+targetInputIdSource+'\n'+applyValueSource,workflowSandbox);
+
+function amountResult(expression,allowZero){
+  return JSON.parse(JSON.stringify(workflowSandbox.ledgerCalculatorAmountResult(expression,allowZero)));
+}
+
+assert.deepStrictEqual(amountResult('1200+380',false),{ok:true,value:1580,error:''},'positive integers may be applied');
+assert.deepStrictEqual(amountResult('7/2',false),{ok:false,value:null,error:'記帳金額必須是大於 0 的整數'},'fractional ledger amounts are never rounded');
+assert.deepStrictEqual(amountResult('5-5',false),{ok:false,value:null,error:'記帳金額必須是大於 0 的整數'},'zero ledger amounts are rejected');
+assert.deepStrictEqual(amountResult('5-8',false),{ok:false,value:null,error:'記帳金額必須是大於 0 的整數'},'negative ledger amounts are rejected');
+assert.deepStrictEqual(amountResult('9007199254740991+1',false),{ok:false,value:null,error:'結果超出可用範圍'},'unsafe integers are rejected');
+assert.deepStrictEqual(amountResult('5-5',true),{ok:true,value:0,error:''},'discount retains the existing zero policy');
+assert.deepStrictEqual(amountResult('7/2',true),{ok:false,value:null,error:'折扣金額必須是 0 以上的整數'},'fractional discounts are rejected');
+
+const draft=workflowSandbox.ledgerUiState.draft;
+assert.strictEqual(workflowSandbox.ledgerCalculatorTargetValue(draft,{type:'single'}),'1680');
+draft.multi=true;
+assert.strictEqual(workflowSandbox.ledgerCalculatorTargetValue(draft,{type:'item',key:'item-123'}),'380');
+assert.strictEqual(workflowSandbox.ledgerCalculatorTargetValue(draft,{type:'discount'}),'80');
+assert.strictEqual(workflowSandbox.ledgerCalculatorTargetValue(draft,{type:'item',key:'missing'}),null,'stale item targets do not fall back to another field');
+assert.strictEqual(workflowSandbox.ledgerCalculatorTargetInputId({type:'single'}),'ledgerAmount');
+assert.strictEqual(workflowSandbox.ledgerCalculatorTargetInputId({type:'item',key:'item-123'}),'ledgerItemAmount_item-123');
+assert.strictEqual(workflowSandbox.ledgerCalculatorTargetInputId({type:'discount'}),'ledgerDiscount');
+
+draft.multi=false;
+assert.strictEqual(workflowSandbox.ledgerCalculatorApplyValue({type:'single'},1830),true);
+assert.deepStrictEqual(workflowSandbox.fieldUpdates.pop(),['amount','1830']);
+assert.strictEqual(workflowSandbox.conversionUpdates,1,'single apply refreshes conversion immediately');
+workflowSandbox.ledgerUiState.draft.multi=true;
+assert.strictEqual(workflowSandbox.ledgerCalculatorApplyValue({type:'item',key:'item-123'},630),true);
+assert.deepStrictEqual(JSON.parse(JSON.stringify(workflowSandbox.itemUpdates.pop())),['item-123',{amount:'630'},false]);
+assert.strictEqual(workflowSandbox.multiUpdates,1,'item apply refreshes the multi-item total immediately');
+assert.strictEqual(workflowSandbox.ledgerCalculatorApplyValue({type:'discount'},100),true);
+assert.deepStrictEqual(workflowSandbox.fieldUpdates.pop(),['discount','100']);
+assert.strictEqual(workflowSandbox.multiUpdates,2,'multi-item discount apply refreshes the bill total');
+const beforeUpdates=workflowSandbox.itemUpdates.length;
+assert.strictEqual(workflowSandbox.ledgerCalculatorApplyValue({type:'item',key:'missing'},500),false);
+assert.strictEqual(workflowSandbox.itemUpdates.length,beforeUpdates,'a stale item target never writes another item');
+
+assert.match(html,/var ledgerCalculatorState=\{open:false,target:null,expression:'',originalValue:'',result:null,error:'',sheetScrollTop:0\}/,'one transient calculator state owns a data target and no DOM reference');
+
+const triggerSource=extractFunction(html,'renderLedgerCalculatorTrigger');
+const sheetSource=extractFunction(html,'renderLedgerCalculatorSheet');
+const openSource=extractFunction(html,'openLedgerCalculator');
+const closeSource=extractFunction(html,'closeLedgerCalculator');
+const inputSource=extractFunction(html,'inputLedgerCalculatorKey');
+const backspaceSource=extractFunction(html,'backspaceLedgerCalculator');
+const clearSource=extractFunction(html,'clearLedgerCalculator');
+const applySource=extractFunction(html,'applyLedgerCalculator');
+const singleFieldSource=extractFunction(html,'renderLedgerSingleItemPrimary');
+const multiFieldSource=extractFunction(html,'renderLedgerDraftItem');
+const discountSource=extractFunction(html,'renderLedgerTaxDisclosure');
+
+assert.match(triggerSource,/type="button"/,'calculator trigger is a formal button');
+assert.match(triggerSource,/aria-label="'\+escapeHtml\(label\|\|'開啟金額計算機'\)/,'calculator trigger escapes a target-specific accessible name with a stable fallback');
+assert.match(triggerSource,/<svg[^>]*aria-hidden="true"/,'calculator trigger uses the shared monochrome line SVG style');
+assert.match(singleFieldSource,/ledger-amount-field-head[\s\S]*renderLedgerCalculatorTrigger\(\{type:'single'/,'single amount places the trigger in the label row');
+assert.match(multiFieldSource,/renderLedgerCalculatorTrigger\(\{type:'item',key:item\.key\}/,'every dynamic item amount receives the same trigger renderer');
+assert.match(discountSource,/renderLedgerCalculatorTrigger\(\{type:'discount'/,'discount receives the same trigger renderer');
+assert.doesNotMatch(discountSource,/ledgerCustomTaxRate[\s\S]{0,300}renderLedgerCalculatorTrigger/,'tax rate never receives a calculator trigger');
+
+assert.match(sheetSource,/role="dialog"[^>]*aria-modal="true"[^>]*aria-labelledby="ledgerCalculatorTitle"/,'calculator is an accessible modal sheet');
+assert.match(sheetSource,/aria-live="polite"/,'result and validation updates are announced');
+assert.match(sheetSource,/ledger-calculator-result" aria-live="polite"/,'valid result changes have their own polite live region');
+assert.match(sheetSource,/取消[\s\S]*套用/,'calculator offers explicit cancel and apply actions');
+assert.match(sheetSource,/['"]7['"],[\s\S]*['"]8['"],[\s\S]*['"]9['"],[\s\S]*['"]\/["']/,'keypad begins with the approved 7 8 9 divide row');
+assert.doesNotMatch(sheetSource,/onclick="closeLedgerCalculator\([^)]*\)"[^>]*class="ledger-calculator-overlay/,'the background does not close the calculator');
+assert.match(openSource,/activeElement[\s\S]*\.blur\(/,'opening dismisses the native number keyboard');
+assert.match(openSource,/sheetScrollTop/,'opening stores the mounted Ledger sheet scroll position');
+assert.match(openSource,/setAttribute\('inert',''\)/,'opening makes the background Ledger sheet inoperable');
+assert.match(closeSource,/removeAttribute\('inert'\)/,'closing restores the background Ledger sheet');
+assert.match(closeSource,/ledgerCalculatorTargetInputId/,'closing resolves a fresh focus target from data');
+assert.match(closeSource,/scrollTop=scrollTop/,'closing restores the Ledger sheet position');
+assert.match(inputSource,/ledgerCalculatorState\.expression/,'key presses update the single expression state');
+assert.match(backspaceSource,/slice\(0,-1\)/,'backspace removes one expression character');
+assert.match(clearSource,/expression=''/,'clear resets the expression');
+assert.match(applySource,/ledgerCalculatorAmountResult/,'apply uses the shared integer validation');
+assert.match(applySource,/ledgerCalculatorApplyValue/,'apply routes through the live draft target');
+assert.match(applySource,/closeLedgerCalculator\(true\)/,'successful apply restores the original field focus');
+
+assert.match(html,/\.ledger-calculator-trigger\{[^}]*width:44px[^}]*height:44px/,'calculator trigger has a 44 by 44 CSS touch target');
+assert.match(html,/\.ledger-calculator-key\{[^}]*min-height:48px/,'calculator keys have comfortable touch targets');
+assert.match(html,/\.ledger-calculator-overlay\{[^}]*z-index:180/,'calculator sits above the Ledger entry sheet');
+assert.doesNotMatch(html,/\beval\s*\(|\bnew Function\s*\(/,'the full runtime does not introduce dynamic evaluation');
+
+console.log('ledger calculator tests passed');

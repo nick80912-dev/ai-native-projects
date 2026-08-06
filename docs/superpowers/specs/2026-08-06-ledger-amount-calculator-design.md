@@ -42,11 +42,10 @@
 
 ## 版本與相容性
 
-本批使用 v92；v90／v91 保留給既定 SW 更新提示驗收。`app-version.js` 與 `sw.js` 同步升 v92，`sw.js` 僅修改版本字串。`PERSONAL_STATE_VERSION` 維持 9，`netlify.toml` 不修改。
+本批使用 v92；v90／v91 原先已排給 SW 更新提示驗收，因此不重用。v92 交付後，該雙版本驗收順延為 v93／v94，保持版本單調前進。`app-version.js` 與 `sw.js` 同步升 v92，`sw.js` 僅修改版本字串。`PERSONAL_STATE_VERSION` 維持 9，`netlify.toml` 不修改。
 
 ## 驗證
 
 - Node：parser 優先序、連續加總、除零、非法／不完整算式、整數與安全範圍；target 更新、取消、套用及重繪後 item key 定位。
 - DOM 契約：三種按鈕、SVG、44×44px、sibling 結構、aria、無 `eval()`／`Function()`。
 - Playwright：320／375／390px；單品、多品項、折扣；焦點、inert、scroll、Escape、換算更新、無水平 overflow、草稿內容保留。
-

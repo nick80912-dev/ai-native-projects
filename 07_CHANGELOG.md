@@ -1,4 +1,13 @@
 # 07 版本紀錄
+## 2026-08-06｜Ledger 共用金額計算器（SW v92）
+
+- **一套計算器覆蓋全部可編輯金額**：單品新增、個人／團體帳、編輯／更正、採買轉記帳與「儲存並再記一筆」均沿用同一個 Ledger renderer；多品項每列與優惠券／固定折扣欄亦使用相同計算器。匯率、稅率、日期時間、採買數量、分攤人數與系統推導結清金額不加入入口。
+- **安全四則運算**：支援連續加總與 `＋、−、×、÷` 優先序，使用明確 tokenizer／operator stack，不使用 `eval()` 或 `Function()`。除以零、未完成算式、非法內容與超過 safe integer 的 token／中間結果均阻止套用；記帳金額必須為大於 0 的整數，折扣保留既有可為 0 的規則，任何小數都不四捨五入。
+- **資料 target 而非 DOM target**：單一 `ledgerCalculatorState` 只保存 `{type:'single'}`、`{type:'item',key}` 或 `{type:'discount'}`。套用時重新解析目前草稿及 mounted input，再走既有 `updateLedgerDraftField()`／`updateLedgerDraftItem()`；不存在的 item key fail closed，不會把結果寫到別列。
+- **手機操作脈絡**：44×44px 線條 SVG 入口位於金額 label 右側；底部 sheet 有四欄 keypad、完整算式、即時結果、清除、退格、取消與明確套用。開啟先 blur 原輸入以收起 iPhone 數字鍵盤並將背景 Ledger sheet 設為 inert；關閉恢復 scroll，套用與取消都把焦點送回原欄位，不關閉新增消費表單或清掉其他草稿。
+- **窄螢幕與相容性**：Playwright 驗證 320／375／390px 的單品、多品項與折扣入口皆無水平 overflow，背景點擊不會誤關閉。Ledger schema、同步、備份格式與帳務推導不變；`PERSONAL_STATE_VERSION` 維持 9，`netlify.toml` 未修改。`sw.js` 只修改版本字串；原排定的 SW 更新提示雙版本驗收由 v90／v91 順延為 v93／v94。
+- **測試**：新增 `ledger-calculator.test.js` 與 `browser/ledger-calculator.spec.js`。完整 **66／66** Node test files、Playwright **117／117**、`check-doc-titles`、`check-app-version` 與 `git diff --check` 通過。
+
 ## 2026-08-03｜消費與採買代購標記同行（SW v89）
 
 - **消費卡減少一行**：個人帳代購紀錄不再於品名下方另外顯示「代購 姓名」badge，改為緊接品名的「幫 [姓名] 買」。最近消費、完整紀錄與批次展開子項使用同一個 renderer，因此位置與語意一致；批次父卡仍保留「N 項代購」摘要。

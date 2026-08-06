@@ -10,7 +10,7 @@
 
 ## Global Constraints
 
-- Runtime version is v92 because v90/v91 remain reserved for the SW update-notice acceptance sequence.
+- Runtime version is v92 because v90/v91 were already reserved; after v92, the SW update-notice acceptance sequence moves forward to v93/v94.
 - Do not use `eval()`, `Function()`, a parser dependency, or a build step.
 - Do not change Ledger schema, backup payload, `PERSONAL_STATE_VERSION`, accounting calculations, or sync behavior.
 - Do not change `netlify.toml`; in `sw.js`, change only `SW_VERSION`.
@@ -28,21 +28,21 @@
 **Interfaces:**
 - Produces: `evaluateLedgerCalculatorExpression(expression)` returning `{ok,value,error}`.
 
-- [ ] **Step 1: Write failing Node tests**
+- [x] **Step 1: Write failing Node tests**
 
 Cover `1200+380+250`, operator precedence, division, divide-by-zero, incomplete syntax, illegal tokens, a fractional result, zero/negative final values, and values above `Number.MAX_SAFE_INTEGER`.
 
-- [ ] **Step 2: Run the focused Node test and verify RED**
+- [x] **Step 2: Run the focused Node test and verify RED**
 
 Run: `node tests/ledger-calculator.test.js`
 
 Expected: failure because the evaluator and state do not exist.
 
-- [ ] **Step 3: Implement the tokenizer and precedence evaluator**
+- [x] **Step 3: Implement the tokenizer and precedence evaluator**
 
 Accept digits and the four operators, normalize display operators, evaluate without dynamic code execution, and return explicit errors.
 
-- [ ] **Step 4: Run the focused Node test and verify GREEN**
+- [x] **Step 4: Run the focused Node test and verify GREEN**
 
 Run: `node tests/ledger-calculator.test.js`
 
@@ -58,21 +58,21 @@ Expected: all parser assertions pass.
 - Consumes: `evaluateLedgerCalculatorExpression(expression)`.
 - Produces: one `ledgerCalculatorState`; target lookup, open, key input, clear, backspace, cancel, apply, focus restoration, and draft update behavior.
 
-- [ ] **Step 1: Add failing workflow tests**
+- [x] **Step 1: Add failing workflow tests**
 
 Cover initial value, target descriptors for single/item/discount, single and item updates through existing update functions, discount zero policy, stale item target refusal, cancellation immutability, conversion/multi preview refresh, inert restoration, focus restoration, and sheet scroll preservation.
 
-- [ ] **Step 2: Run the focused test and verify RED**
+- [x] **Step 2: Run the focused test and verify RED**
 
 Run: `node tests/ledger-calculator.test.js`
 
 Expected: workflow assertions fail because handlers do not exist.
 
-- [ ] **Step 3: Implement minimal calculator state and workflow**
+- [x] **Step 3: Implement minimal calculator state and workflow**
 
 Mount a separate modal bottom sheet, blur the active input, mark `#ledgerEntrySheet` inert, retain `scrollTop`, and apply only after re-resolving the target against the live Ledger draft.
 
-- [ ] **Step 4: Run the focused test and verify GREEN**
+- [x] **Step 4: Run the focused test and verify GREEN**
 
 Run: `node tests/ledger-calculator.test.js`
 
@@ -90,11 +90,11 @@ Expected: parser and workflow assertions pass.
 - Consumes: calculator workflow handlers.
 - Produces: calculator buttons for single amount, each multi-item amount, and discount; calculator SVG and sheet markup.
 
-- [ ] **Step 1: Add failing DOM and browser tests**
+- [x] **Step 1: Add failing DOM and browser tests**
 
 Assert formal buttons, SVG, aria labels, 44×44px targets, sibling placement, no nested interactive elements, and absence from non-amount fields. In Chromium cover single, multi, discount, cancel, apply, Escape, focus, inert, draft retention, conversion refresh, and 320/375/390px overflow.
 
-- [ ] **Step 2: Run focused tests and verify RED**
+- [x] **Step 2: Run focused tests and verify RED**
 
 Run: `node tests/ledger-calculator.test.js`
 
@@ -102,11 +102,11 @@ Run: `npx playwright test tests/browser/ledger-calculator.spec.js`
 
 Expected: missing button/sheet assertions fail.
 
-- [ ] **Step 3: Add shared renderer markup and CSS**
+- [x] **Step 3: Add shared renderer markup and CSS**
 
 Use existing color/radius tokens, a monochrome line SVG, 44px triggers and keys, a four-column keypad, safe-area padding, `aria-modal`, live result/error output, and no backdrop close handler.
 
-- [ ] **Step 4: Run focused tests and verify GREEN**
+- [x] **Step 4: Run focused tests and verify GREEN**
 
 Run the two focused commands above and confirm zero failures.
 
@@ -123,11 +123,11 @@ Run the two focused commands above and confirm zero failures.
 **Interfaces:**
 - Produces: v92 release metadata with `PERSONAL_STATE_VERSION` unchanged at 9.
 
-- [ ] **Step 1: Update v92 metadata and documentation**
+- [x] **Step 1: Update v92 metadata and documentation**
 
-Add the calculator release note, roll the existing five-note window, record actual verification counts, preserve v90/v91 reservation history, and mark the next review target as v92.
+Add the calculator release note, roll the existing five-note window, record actual verification counts, preserve the v90/v91 reservation history, move the future two-version sequence to v93/v94, and mark the next review target as v92.
 
-- [ ] **Step 2: Run formatting and static checks**
+- [x] **Step 2: Run formatting and static checks**
 
 Run: `git diff --check`
 
@@ -135,16 +135,16 @@ Run: `node tools/check-doc-titles.js`
 
 Run: `node tools/check-app-version.js`
 
-- [ ] **Step 3: Run all Node tests**
+- [x] **Step 3: Run all Node tests**
 
 Run every `tests/*.test.js` file and record the actual file count.
 
-- [ ] **Step 4: Run all Playwright tests**
+- [x] **Step 4: Run all Playwright tests**
 
 Run: `npm run test:browser`
 
 Record the actual pass count and verify no console/page errors in the new coverage.
 
-- [ ] **Step 5: Audit scope and commit locally**
+- [x] **Step 5: Audit scope and commit locally**
 
 Inspect `git diff --stat`, full `git diff`, `git status --short`, `git diff app-version.js sw.js`, and confirm `netlify.toml` plus `PERSONAL_STATE_VERSION` are unchanged. Commit the v92 implementation locally; do not push, deploy, tag, or modify `main`.
