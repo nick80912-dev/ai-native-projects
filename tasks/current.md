@@ -9,14 +9,14 @@
 |---|---|
 | **`main` 原始碼** | **SW v96**，PR #13 merge commit `02705c3`；因 Netlify 額度用罄尚未部署／建立 tag |
 | 正式站 | `https://trippilot-jp.netlify.app/` — 2026-08-01 由 SW v18 升級至 v73,G1–G6 全數通過 |
-| **dev 候選版** | **SW v97**,`app-version.js` 與 `sw.js` 均為 v97 |
+| **dev 候選版** | **SW v98**,`app-version.js` 與 `sw.js` 均為 v98 |
 | 個人備份格式 | **v9**(`PERSONAL_STATE_SUPPORTED_VERSIONS = [1..9]`)—— v81 因想逛 key 識別語意變更而升版 |
-| dev 自動驗證 | **71／71** Node test files、Playwright **131／131**、`check-doc-titles` 與 `check-app-version` 通過 |
+| dev 自動驗證 | **71／71** Node test files、Playwright **132／132**、`check-doc-titles` 與 `check-app-version` 通過 |
 | 既有 tag | `production-v18`、`production-v73` |
 
-**`main` 已合併 v96，但正式站仍停在 v73；v97 是目前僅存在本機 `dev` 的下一個候選版。** v74–v87 已由 Bar 於 2026-08-03 確認真機驗收皆正常；v88–v89、v92–v95 亦於 2026-08-08 完成 Bar 畫面／真機確認。v96 因 Netlify 額度用罄尚未正式部署，也未建立 `production-v96` tag。
+**`main` 已合併 v96，但正式站仍停在 v73；v98 是目前僅存在本機 `dev` 的下一個候選版。** v74–v87 已由 Bar 於 2026-08-03 確認真機驗收皆正常；v88–v89、v92–v95 亦於 2026-08-08 完成 Bar 畫面／真機確認。v96 因 Netlify 額度用罄尚未正式部署，也未建立 `production-v96` tag。
 
-### v74–v97 已折疊的主要能力
+### v74–v98 已折疊的主要能力
 
 | 版本 | 能力 |
 |---|---|
@@ -42,6 +42,7 @@
 | v95 | **Ledger UI state seam**：帳本軌、完整紀錄、篩選／分組與多選共用不可變 transition + ordered effects workflow；UI／資料語意不變 |
 | v96 | **發布阻斷補正**：照片 quota 失敗提供「管理儲存空間」直接入口；計算機 `=` 後可接 `%`；同步 ADR／runtime 文件索引 |
 | v97 | **Ledger entry session state seam**：同一 module 接管新增／編輯 lifecycle、draft／editing ownership、save pending、calendar 與返回脈絡；以 session／request ID 防重複提交及 stale completion |
+| v98 | **更正操作列遮罩修正**：更正多品項收據捲動時，金額計算機入口不再穿透顯示於 sticky 預覽／作廢／取消操作列 |
 
 > v45–v73 的逐版交付紀錄見 `07_CHANGELOG.md`,不在本檔重述。
 
@@ -94,12 +95,13 @@
 | v95 | Ledger UI 歷史瀏覽 workflow／state seam：帳本軌、完整紀錄、filters、selection 與 ordered UI effects | ✅ 已交付至 dev |
 | v96 | Release review 補正：照片 quota 直接管理入口、`=` 後 `%`、ADR／架構索引同步 | ✅ 已由 PR #13 合併 main；正式部署暫停 |
 | v97 | Ledger create／edit entry session workflow／state seam：lifecycle、draft／editing ownership、save guard、calendar、return context 與 ordered effects | ✅ 已交付至本機 dev，完整 gate 通過 |
-| v98／v99 | SW 更新提示 —— **需兩個版本才能完成驗收**：v98 加入監聽與提示，v99 作為真實更新目標。不修改 SW 生命週期與快取策略，只做正常版本遞增 | ⬜ 未開始 |
+| v98 | 更正收據 sticky 操作列遮罩：捲動時不再浮出品項金額計算機入口 | ✅ 已完成，完整 gate 通過 |
+| v99／v100 | SW 更新提示 —— **需兩個版本才能完成驗收**：v99 加入監聽與提示，v100 作為真實更新目標。不修改 SW 生命週期與快取策略，只做正常版本遞增 | ⬜ 未開始 |
 
 **已知未做(需先定判準)**:Today 的「交通／停車／營業／付款／提醒**依當下情境動態調整優先順序**」。v84 只做了可明確驗收的收合(常駐交通／停車／營業,收合付款／提醒);「當下情境」的判準(依時間?依距離?依是否已抵達?)尚未定義,不同讀法會做出完全不同的東西,故未實作。
 
 ## 下一棒
 
-→ **v97 已完成 Ledger entry session workflow／state seam 與本機完整 gate。** v96 已在 `main`，但因 Netlify 額度用罄，正式站仍為 v73，正式部署驗證與 `production-v96` tag 暫停。下一個預留工作是 v98／v99 的 SW 更新提示雙版本驗收；Shopping UI workflow/state 仍需另行規劃，不在本批擴張。
+→ **v98 已修正更正收據操作列被計算機入口穿透的真機缺陷，本機完整 gate 已通過。** v96 已在 `main`，但因 Netlify 額度用罄，正式站仍為 v73，正式部署驗證與 `production-v96` tag 暫停。下一個預留工作是 v99／v100 的 SW 更新提示雙版本驗收；Shopping UI workflow/state 仍需另行規劃，不在本批擴張。
 
 > **不得**自行動 `main`、部署正式站或建立 production tag。未經 Bar 核准不得 merge `dev → main`。

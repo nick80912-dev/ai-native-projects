@@ -1,4 +1,11 @@
 # 07 版本紀錄
+## 2026-08-08｜更正收據操作列遮罩修正（SW v98）
+
+- **真機回報**：更正多品項收據並展開收據資訊後，捲動內容會讓品項金額旁的計算機圖示穿透顯示在底部「預覽更正／整張收據作廢／取消」操作列上，容易被誤認為操作列的一部分。
+- **最小修正**：根因是金額計算機入口具有局部 `z-index:1`，而 sticky Ledger 操作列沒有建立較高堆疊層。操作列改為 `z-index:2`，確保所有 Ledger sticky footer 都完整遮住捲過其下的表單內容；計算機入口本身、44px 觸控區與可編輯欄位位置不變。
+- **TDD 與完整 gate**：新增 390×844 真實 renderer regression，建立多品項 correction、展開收據資訊並將計算機入口捲到操作列下方；修正前 hit-test 仍取得「開啟第 1 項金額計算機」，修正後操作列成為最上層且入口不再穿透。計算器與 correction 的針對性 Node tests 及 Playwright 4／4 通過；最終完整 **71／71** Node test files、Playwright **132／132**、文件／版本檢查、manifest JSON 與 `git diff --check` 全數通過。
+- **相容與版本**：未修改更正內容、Ledger 計算、repository、settlement、同步、備份格式、schema、`PERSONAL_STATE_VERSION=9` 或 `netlify.toml`。`app-version.js`／`sw.js` 升為 v98，SW 僅修改版本字串；更新提示雙版本驗收順延至 v99／v100。
+
 ## 2026-08-08｜Ledger Entry Session workflow／state seam（SW v97）⭐ 架構變更
 
 - **深化同一 module**：`ledger-ui-state.js` 在既有 dashboard／history state seam 上接管 create／edit entry session 的 lifecycle、draft／editing ownership、`savePending`、calendar 與 return context；公開 interface 維持 `createState(seed)`、`transition(state,action)`、`activeHistoryFilterCount(state)` 與 `createWorkflow(adapter)`，沒有建立第二份 entry state 或全域 store。
