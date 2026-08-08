@@ -1,4 +1,13 @@
 # 07 版本紀錄
+## 2026-08-08｜Ledger 計算機小數、百分比與即時計算介面（SW v94）
+
+- **參考圖五列四欄介面**：計算 Sheet 改為 `%／AC／退格／÷`、數字與四則運算、`.／0／00／=` 的手機計算機配置；標題列新增 44×44px 明確關閉鈕，底部保留取消與「套用金額」。完整算式與大字結果分層顯示，背景仍不可誤觸關閉。
+- **小數與購物式百分比**：明確 tokenizer／operator stack 支援小數 literal 與 postfix `%`；`1000−10%=900`、`1000＋10%=1100`、`1000×10%=100`、`1000÷10%=10000`，連續加減百分比以當下累計為基準。未使用 `eval()` 或 `Function()`。
+- **等號與套用分工**：`=` 只結算並保留 Sheet；之後輸入數字會開始新算式，輸入運算子則從結果繼續。螢幕按鍵與實體鍵盤共用 reducer，支援 Enter、Backspace、Delete、Escape 與 Tab focus trap。
+- **小數安全套用**：顯示保留原始小數；套用正數金額時才無條件捨去，並先顯示「將套用 ¥N／NT$N」。浮點誤差容限內的近整數先校正，避免 `2.9999999999999996` 少一元；一般金額捨去為 0 時阻止，固定折扣維持可套用 0。
+- **資料與相容範圍**：沿用 single／item／discount data target 與 live draft 寫回；未修改 Ledger／Shopping schema、Apps Script、同步、備份格式、帳務推導、`PERSONAL_STATE_VERSION=9` 或 `netlify.toml`。`sw.js` 只修改版本字串；SW 更新提示雙版本驗收順延至 v95／v96。
+- **驗證**：68／68 個 Node test files、Playwright 123／123 全數通過；SW 更新／離線快取另連跑 10 輪共 20／20 通過。`git diff --check`、文件標題與 App／SW 版本一致性檢查均通過。
+
 ## 2026-08-08｜Buy-to-Ledger 垂直切片架構收斂（SW v93）⭐ 架構變更
 
 - **先鎖行為再移動邊界**：新增 Shopping → Ledger → durable commit → Shopping allocation link 原子回寫 → 返回的 characterization 與真實瀏覽器測試，涵蓋單筆／多筆、個人／團體、驗證失敗、保留採買 overlay、再記一筆與 link 回寫失敗降級。使用者可見流程與文案維持不變。

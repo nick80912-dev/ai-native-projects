@@ -8737,11 +8737,11 @@ function renderSettingsDataHealth(){
   return '<div class="settings-section settings-data-health"><h3>資料健康狀態</h3><div class="settings-health-list">'+model.rows.map(function(row){return '<div class="settings-health-row data-health-'+escapeHtml(row.key)+'"><span class="settings-health-main"><b>'+escapeHtml(row.label)+'</b>'+(row.detail?'<span>'+escapeHtml(row.detail)+'</span>':'')+'</span><strong>'+escapeHtml(row.value)+'</strong></div>';}).join('')+'</div></div>';
 }
 var APP_RELEASE_NOTES=[
+  {version:'v94',date:'2026-08-08',title:'計算金額更直覺',items:['金額計算器改為手機熟悉的四欄按鍵配置，清除、退格、等號與關閉位置更明確','可直接輸入小數與百分比，像 1000 減 10% 會算出 900','等號只顯示結果，不會離開記帳表單或提前改動原金額','結果有小數時會先顯示實際套用值，再無條件捨去寫回整數金額']},
   {version:'v93',date:'2026-08-08',title:'記帳流程底層更穩定',items:['採買轉記帳的個人帳、團體帳與多品項流程現在共用同一條可靠路徑','消費成功後才標記採買項目，失敗時仍保留既有防重複提醒','採買清單返回、再記一筆與既有記帳畫面維持原本操作方式','離線外殼已包含必要模組，既有資料、備份與同步格式不變']},
   {version:'v92',date:'2026-08-06',title:'記帳金額可直接計算',items:['單品、多品項與折扣金額都可開啟同一套四則計算機','套用後立即更新原欄位與幣別換算，不必離開新增消費表單','取消不會改動原金額，其他明細、代購與分攤草稿也會保留','小數、零或負數等不合法記帳金額會明確阻止套用']},
   {version:'v89',date:'2026-08-03',title:'代購對象更容易掃讀',items:['最近消費把代購對象移到品名旁邊，不再多占下一行','消費卡與採買卡統一顯示「幫誰買」，資訊位置一致','「幫／買」縮小一級，姓名仍保留醒目的代購標記','長品名或長姓名會在內容欄安全換行，不會擠到金額與操作按鈕']},
   {version:'v88',date:'2026-08-03',title:'資料狀態一眼看懂',items:['記帳首頁以今日支出為主，並在同一卡片保留旅程累計','正常時同步徽章保持精簡，更新時間可在同步詳情查看','部分同步會指出未更新的是哪一類資料，不再顯示內部代碼','設定的資料與版本頁集中顯示行程、團體帳、個人資料與照片狀態']},
-  {version:'v87',date:'2026-08-03',title:'修正身分選擇與回頂',items:['設定頁點「切換」或「＋」時，身分選擇器會正確顯示在設定頁上方，不必先關掉設定','再點一次目前所在的分頁改為平滑回到頂端，畫面不再閃一下']},
 ];
 function renderAppReleaseNotes(){
   return '<div class="settings-release-list">'+APP_RELEASE_NOTES.map(function(note){

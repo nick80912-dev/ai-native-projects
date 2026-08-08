@@ -142,6 +142,7 @@ test('斷網後仍可完整離線載入,且未快取的子資源不得收到 ind
      未形成這裡真正要驗證的正常 navigation request。明確 goto 與下方 deep-link 驗證同路徑。 */
   await page.goto(ORIGIN + '/index.html');
   await waitForActiveWorker(page);
+  await waitForShellCached(page);
 
   /* 導覽請求:離線仍要完整載入 */
   const offline = await page.evaluate(async () => {
