@@ -57,4 +57,4 @@
 
 ## Future Impact
 
-後續 Ledger entry session lifecycle 可沿用「純 transition + ordered effects + injected adapter」模式，前提是先補 characterization tests 並證明介面需求。不得僅為追求單一大 store 而移動 draft schema、repository、sync 或 settlement；正式 runtime interface 應按已實證的垂直切片逐步深化。
+Ledger create／edit entry session 已依 ADR 0011 沿用「純 transition + ordered effects + injected adapter」模式，並深化同一份 `ledger-ui-state.js`，沒有建立第二份 entry state。correction、settlement 與 Shopping UI workflow 仍須先補 characterization tests 並證明介面需求；不得僅為追求單一大 store 而移動 draft schema、repository、sync 或 settlement。

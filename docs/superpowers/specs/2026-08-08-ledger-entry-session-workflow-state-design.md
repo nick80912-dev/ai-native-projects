@@ -1,7 +1,7 @@
 # Ledger Entry Session Workflow State Design
 
 日期：2026-08-08
-狀態：已核准，待 implementation plan
+狀態：已實作，待 v97 完整 gate
 基準：`dev` `cb373814dd2fd6520e72810cbc3beea02c82816d`（v96）
 
 ## 1. 背景
@@ -199,7 +199,7 @@ render-split
 | save requested | `sync-entry-pending` |
 | save failed | `sync-entry-pending → notify-entry-result` |
 | save succeeded, close | `sync-entry-pending → unmount-entry → render-split → restore-entry-context → notify-entry-result` |
-| save succeeded, add another | `sync-entry-pending → render-entry`（回頂）`→ focus-entry(amount) → notify-entry-result` |
+| save succeeded, add another | `sync-entry-pending → render-split → render-entry`（回頂）`→ focus-entry(amount) → notify-entry-result` |
 | close | `unmount-entry → restore-entry-context` |
 | calendar action | `render-entry`（保留位置與合理焦點） |
 
@@ -299,7 +299,7 @@ calculator 不加入本批 state/actions。`unmount-entry` adapter 暫時保留�
 - 所有新增 entry actions 都有純 transition tests。
 - savePending 與 stale completion guard 可由 Node 及 browser tests 重現。
 - create/edit、Buy-to-Ledger、calendar、calculator cleanup 與 correction 使用者行為不變。
-- `ledger-ui-state.js` 公開 Interface 未增加第四個入口，也沒有新增第二份 entry state。
+- `ledger-ui-state.js` 未新增 entry 專用 export；既有 `createState`／`transition`／`activeHistoryFilterCount`／`createWorkflow` 維持，且沒有新增第二份 entry state。
 - module 不依賴 DOM、repository、Ledger schema、sync 或 Shopping implementation。
 - runtime adapter 是唯一 DOM/effect 邊界。
 - 無 schema、備份格式、`PERSONAL_STATE_VERSION` 或部署設定變更。
