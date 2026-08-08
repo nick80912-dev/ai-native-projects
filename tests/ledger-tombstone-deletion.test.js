@@ -1,6 +1,7 @@
 const assert = require('assert');
 const fs = require('fs');
 const vm = require('vm');
+const TripBuyToLedger = require('../buy-to-ledger.js');
 
 function extractFunction(source,name){
   const start=source.indexOf(`function ${name}(`);
@@ -32,6 +33,7 @@ function loadHelpers(){
     console:{log(){},warn(message){warnings.push(String(message));},error(){}},
     localStorage:createStorage(),fetch(){return Promise.reject(new Error('offline'));},
     setTimeout,clearTimeout,Date,Math,Promise,JSON,String,Number,isFinite,
+    TripBuyToLedger,buyToLedgerRuntimeAdapter:{},
     timestampDate(value){return new Date(Number(value));},AppLog:{repo(){},sync(){}},
     renderSplit(){},updateLedgerPendingStatus(){}
   };

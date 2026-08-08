@@ -1,6 +1,7 @@
 const assert=require('assert');
 const fs=require('fs');
 const vm=require('vm');
+const TripBuyToLedger=require('../buy-to-ledger.js');
 
 const html=fs.readFileSync('index.html','utf8');
 function extractFunction(source,name){
@@ -12,7 +13,7 @@ function extractFunction(source,name){
 const start=html.indexOf('/* ================= ledgerRepository');
 const end=html.indexOf('/* ================= 分帳(雲端 Ledger)',start);
 assert(start>=0&&end>start,'ledger helper section exists');
-const sandbox={console,localStorage:{getItem(){return null;},setItem(){},removeItem(){}},fetch(){return Promise.reject(new Error('offline'));},setTimeout,clearTimeout,Date,Math,Promise,JSON,String,Number,isFinite,timestampDate(value){return new Date(Number(value));},AppLog:{repo(){},sync(){}},renderSplit(){},updateLedgerPendingStatus(){}};
+const sandbox={console,localStorage:{getItem(){return null;},setItem(){},removeItem(){}},fetch(){return Promise.reject(new Error('offline'));},setTimeout,clearTimeout,Date,Math,Promise,JSON,String,Number,isFinite,TripBuyToLedger,buyToLedgerRuntimeAdapter:{},timestampDate(value){return new Date(Number(value));},AppLog:{repo(){},sync(){}},renderSplit(){},updateLedgerPendingStatus(){}};
 vm.createContext(sandbox);vm.runInContext(html.slice(start,end),sandbox);
 function plain(value){return JSON.parse(JSON.stringify(value));}
 

@@ -1,6 +1,7 @@
 const assert=require('assert');
 const fs=require('fs');
 const vm=require('vm');
+const TripBuyToLedger=require('../buy-to-ledger.js');
 
 function createStorage(){
   const values={};
@@ -20,6 +21,7 @@ function loadModule(){
     console:{log(){},warn(){},error(){}},localStorage:createStorage(),
     fetch(){return Promise.reject(new Error('network disabled'));},setTimeout,clearTimeout,
     Date,Math,Promise,JSON,String,Number,isFinite,
+    TripBuyToLedger,buyToLedgerRuntimeAdapter:{},
     timestampDate(value){return new Date(Number(value));},AppLog:{repo(){},sync(){}},
     renderSplit(){},updateLedgerPendingStatus(){}
   };

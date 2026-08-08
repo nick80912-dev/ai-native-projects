@@ -45,6 +45,7 @@ assert.match(versionSource, /^var APP_VERSION='v\d+';\s*$/, 'app-version.js keep
 assert.strictEqual(appVersion(), swVersion(), 'app-version.js and the sw.js version marker agree');
 assert.match(index, /<script src="app-version\.js"><\/script>/, 'index loads the shared version before the inline app');
 assert.match(index, /<script src="shopping-photo-store\.js"><\/script>/, 'index loads the device-local shopping photo store');
+assert.match(index, /<script src="buy-to-ledger\.js"><\/script>/, 'index loads the Buy-to-Ledger runtime module');
 assert.match(index, /<title>TripPilot<\/title>/, 'index uses the TripPilot browser title');
 assert.match(index, /<link rel="manifest" href="manifest\.webmanifest">/, 'index links the manifest');
 assert.match(index, /<link rel="icon" type="image\/png" sizes="32x32" href="icon-32\.png">/, 'index links the favicon');
@@ -76,6 +77,7 @@ const swCode = serviceWorker.replace(/\/\*[\s\S]*?\*\//g, '');
 assert.doesNotMatch(swCode, /\bAPP_VERSION\b/, 'service worker code never references the imported APP_VERSION');
 assert.match(serviceWorker, /'\.\/app-version\.js'/, 'App Shell still caches the version file for the App and offline use');
 assert.match(serviceWorker, /'\.\/shopping-photo-store\.js'/, 'App Shell caches the device-local shopping photo store for offline use');
+assert.match(serviceWorker, /'\.\/buy-to-ledger\.js'/, 'App Shell caches the Buy-to-Ledger runtime module for offline use');
 for (const asset of [
   'okayama-peach-badge.png',
   'icon-16.png',

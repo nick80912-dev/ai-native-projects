@@ -1,6 +1,7 @@
 const assert = require('assert');
 const fs = require('fs');
 const vm = require('vm');
+const TripBuyToLedger = require('../buy-to-ledger.js');
 
 function createStorage(initial){
   const values = Object.assign({}, initial || {});
@@ -28,6 +29,8 @@ function loadLedgerModule(){
     Date,
     Math,
     Promise,
+    TripBuyToLedger,
+    buyToLedgerRuntimeAdapter:{},
     timestampDate(value){ return new Date(Number(value)); },
     AppLog:{repo(){},sync(){}},
     renderSplit(){},

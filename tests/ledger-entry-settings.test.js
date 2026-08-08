@@ -1,6 +1,7 @@
 const assert = require('assert');
 const fs = require('fs');
 const vm = require('vm');
+const TripBuyToLedger = require('../buy-to-ledger.js');
 
 const {extractFunction,extractDeclaration} = require('./support/source');
 
@@ -50,6 +51,8 @@ function loadModule(fetchImpl){
     String,
     Number,
     isFinite,
+    TripBuyToLedger,
+    buyToLedgerRuntimeAdapter:{},
     AppLog:{repo(){},sync(){}},
     timestampDate(value){ return new Date(Number(value)); },
     lsGet(key,fallback){

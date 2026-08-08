@@ -2,6 +2,7 @@ const assert=require('assert');
 const {appVersion,swVersion}=require('./support/version');
 const fs=require('fs');
 const vm=require('vm');
+const TripBuyToLedger=require('../buy-to-ledger.js');
 
 const html=fs.readFileSync('index.html','utf8');
 const sw=fs.readFileSync('sw.js','utf8');
@@ -28,6 +29,8 @@ const helperSandbox={
   fetch(){return Promise.reject(new Error('offline'));},setTimeout,clearTimeout,
   Date,Math,Promise,JSON,String,Number,isFinite,
   timestampDate(value){return new Date(Number(value));},
+  TripBuyToLedger,
+  buyToLedgerRuntimeAdapter:{},
   AppLog:{repo(){},sync(){}},renderSplit(){},updateLedgerPendingStatus(){}
 };
 vm.createContext(helperSandbox);

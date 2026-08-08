@@ -1,7 +1,7 @@
 # 日本旅遊 App — README
 
 ## 這是什麼
-六天五夜日本自駕旅遊的手機 PWA。Google Sheets 當 CMS,單一 HTML 檔 App,部署於 Netlify。
+六天五夜日本自駕旅遊的手機 PWA。Google Sheets 當 CMS，以單頁 App 搭配少量獨立 runtime module，部署於 Netlify。
 - 正式站:https://trippilot-jp.netlify.app/
 - 使用者:Bar(產品負責人,非工程師)與同行友人
 - **權威來源**:程式與文件以 **GitHub 本 repo 為唯一權威**;Google Drive 僅為備份。內容資料來源為 Drive 試算表「261018-261023岡山四國六天五夜」(發布 CSV,見 03/schema.js)。
@@ -30,7 +30,8 @@
 5. 資料內容改動走 Google Sheets,不改程式;程式只在功能/邏輯變動時修改
 
 ## 專案檔案
-- `index.html` — 唯一可編輯 App 與 Netlify 正式入口
+- `index.html` — App UI、DOM adapter 與 Netlify 正式入口
+- `buy-to-ledger.js` — 採買轉記帳的純 domain／workflow runtime module
 - `schema.js` / `validator.js` — 資料規格 SSoT / 防錯與健康檢查
 - `tests/` / `tools/` — 可重跑測試與文件一致性檢查
 - `tasks/` — 即時工作狀態唯一權威

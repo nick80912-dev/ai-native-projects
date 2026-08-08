@@ -211,7 +211,12 @@ const pendingSource=extractFunction('setLedgerSavePending');
 assert.match(pendingSource,/button-spinner/,'pending save buttons expose the existing spinner');
 assert.match(pendingSource,/button\.disabled=ledgerUiState\.savePending/,'both save buttons follow the same disabled state');
 const commitSource=extractFunction('commitLedgerEntrySave');
-assert.match(commitSource,/setLedgerSavePending\(false\)/,'success and failure paths release the transient save guard');
+const finishSaveSource=extractFunction('finishLedgerEntrySaveUi');
+const failSaveSource=extractFunction('failLedgerEntrySaveUi');
+assert.match(finishSaveSource,/setLedgerSavePending\(false\)/,'successful saves release the transient guard in the UI adapter boundary');
+assert.match(failSaveSource,/setLedgerSavePending\(false\)/,'failed saves release the transient guard in the UI adapter boundary');
+assert.match(commitSource,/finishLedgerEntrySaveUi\(command,result\)/,'generic Ledger success delegates to the shared UI finish boundary');
+assert.match(commitSource,/failLedgerEntrySaveUi\(command,error\)/,'generic Ledger failure delegates to the shared UI failure boundary');
 
 assert.match(
   html,

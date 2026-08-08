@@ -1,6 +1,7 @@
 const assert = require('assert');
 const fs = require('fs');
 const vm = require('vm');
+const TripBuyToLedger = require('../buy-to-ledger.js');
 const {extractFunction} = require('./support/source');
 
 function createStorage(initial){
@@ -40,6 +41,8 @@ function loadIdentityModule(){
     String,
     Number,
     isFinite,
+    TripBuyToLedger,
+    buyToLedgerRuntimeAdapter:{},
     DB:{cfg:{exchangeRate:0.2,ledgerDefaultCurrency:'JPY'}},
     AppLog:{repo(){},sync(){}},
     timestampDate(value){return new Date(Number(value));},

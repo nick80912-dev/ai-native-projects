@@ -1,6 +1,7 @@
 const assert=require('assert');
 const fs=require('fs');
 const vm=require('vm');
+const TripBuyToLedger=require('../buy-to-ledger.js');
 
 function createStorage(){
   const values={};
@@ -28,6 +29,7 @@ function loadModule(){
     console:{log(){},warn(){},error(){}},
     localStorage:createStorage(),
     Date,Math,Promise,JSON,String,Number,Boolean,isFinite,
+    TripBuyToLedger,buyToLedgerRuntimeAdapter:{},
     setTimeout,clearTimeout,
     timestampDate(value){return new Date(Number(value));},
     canonicalMemberName(value){return String(value==null?'':value).replace(/　/g,' ').replace(/\s+/g,' ').trim();},

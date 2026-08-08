@@ -32,6 +32,7 @@
   "files": {
     "index.html": "App 與正式部署入口:UI殼+CSS+內嵌JS(區塊分層見10_FOLDER_STRUCTURE)",
     "shopping-photo-store.js": "採買照片縮放壓縮與IndexedDB put/get/remove邊界;Blob只存在目前裝置,不進備份或同步",
+    "buy-to-ledger.js": "採買轉記帳純domain與workflow coordinator;dependency adapter留在index.html,模組不直接讀DOM或storage",
     "app-version.js": "App端版本來源(供顯示與旅途紀錄);sw.js 另自帶 SW_VERSION,兩者必須相等,由 tools/check-app-version.js 守住。2026-07-30 起 sw.js 不再 importScripts 本檔取版本——imported script 會經 HTTP cache,GitHub Pages 的 max-age=600 會讓版本升級靜默失效",
     "schema.js": "唯一資料規格SSoT:欄位/gid/型別值/發布URL;schemaDoc()自動產09文件",
     "validator.js": "防錯防線:AppLog六類([Schema/Parser/Data/Repository/Render/Sync Error])+buildHeaderMap+window.healthCheck()",
@@ -40,7 +41,8 @@
     "docs/batch2-device-acceptance.md": "批次二真機／PWA 驗收清單;保留v73/v74證據並附v75採買照片與定位導航delta"
   },
   "deploy_files": {
-    "index.html": "唯一正式 App 入口",
+    "index.html": "App UI、DOM adapter與正式入口",
+    "buy-to-ledger.js": "採買轉記帳純domain／workflow runtime module",
     "schema.js + validator.js": "資料規格與防錯來源",
     "sw.js + app-version.js": "改版須同時更新 sw.js 的 SW_VERSION 與 app-version.js 的 APP_VERSION;不一致時 tools/check-app-version.js 直接讓 CI 失敗",
     "manifest.webmanifest + icon-*.png": "PWA 安裝資產"

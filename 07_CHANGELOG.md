@@ -1,4 +1,13 @@
 # 07 版本紀錄
+## 2026-08-08｜Buy-to-Ledger 垂直切片架構收斂（SW v93）⭐ 架構變更
+
+- **先鎖行為再移動邊界**：新增 Shopping → Ledger → durable commit → Shopping allocation link 原子回寫 → 返回的 characterization 與真實瀏覽器測試，涵蓋單筆／多筆、個人／團體、驗證失敗、保留採買 overlay、再記一筆與 link 回寫失敗降級。使用者可見流程與文案維持不變。
+- **純 domain module**：新增 `buy-to-ledger.js`，以 `createDomain({effectiveRecords})` 集中 linked／partial／unverified 推導、來源準備、draft plan、source-to-record commit plan 與 append-only link history。模組不讀 DOM、localStorage、sessionStorage 或 IndexedDB，輸入資料不就地修改。
+- **workflow coordinator 與正式 seam**：`createWorkflow({domain,adapter})` 以 `start(intent)`／`commit(command)` 協調採買轉記帳；production adapter 仍掌管 DOM、個人 repository、團體 durable queue、Shopping store 與 Toast。一般 Ledger 新增／編輯不經此 seam，既有行為不變。
+- **fail-safe 不變量**：個人帳必須完成本機 repository 寫入、團體帳必須取得 durable queue acknowledgement 後才原子回寫 Shopping link；Ledger 成功但 link 寫入失敗時不回滾、不重送 Ledger，保留既有明確警告。Shopping source ID 只存在草稿／協調命令，不進 21 欄 Ledger record。
+- **離線與資料相容**：`buy-to-ledger.js` 納入 SW App Shell；`PERSONAL_STATE_VERSION` 維持 9，未新增 storage key，未修改 Ledger／Shopping schema、備份格式、Apps Script、`netlify.toml` 或 SW install／activate／fetch 策略。SW 更新提示雙版本驗收順延至 v94／v95。
+- **驗證**：新增 `buy-to-ledger-characterization.test.js`、`buy-to-ledger-module.test.js` 與 `browser/buy-to-ledger.spec.js`；完整 **68／68** Node test files、Playwright **123／123**、`check-doc-titles`、`check-app-version` 與 `git diff --check` 通過。
+
 ## 2026-08-06｜Ledger 共用金額計算器（SW v92）
 
 - **一套計算器覆蓋全部可編輯金額**：單品新增、個人／團體帳、編輯／更正、採買轉記帳與「儲存並再記一筆」均沿用同一個 Ledger renderer；多品項每列與優惠券／固定折扣欄亦使用相同計算器。匯率、稅率、日期時間、採買數量、分攤人數與系統推導結清金額不加入入口。
