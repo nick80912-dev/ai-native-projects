@@ -487,10 +487,10 @@ assert(/if\(value\.state==='linked'\)linked\+\+;[\s\S]{0,80}else if\(value\.stat
 assert(shoppingSource.includes('removeMany('),'批次刪除走原子整批路徑');
 assert(!shoppingSource.includes('清空所有已買'),'本批不新增清空已買的危險入口');
 /* preflight 走共用 allocation source helper */
-assert(shoppingSource.includes('shoppingLedgerSources(selected,shoppingLedgerContext())'),'多選建立消費前展開未記帳 allocations');
-assert(shoppingSource.includes('shoppingLedgerSources([item],shoppingLedgerContext())'),'單筆記帳入口同樣展開 allocations');
+assert(shoppingSource.includes('shoppingLedgerSources(selected,buyToLedgerRuntimeAdapter.readLinkContext())'),'多選建立消費透過 runtime seam 取得 context 並展開未記帳 allocations');
+assert(shoppingSource.includes('shoppingLedgerSources([item],buyToLedgerRuntimeAdapter.readLinkContext())'),'單筆記帳入口透過相同 seam 展開 allocations');
 const singleEntry=html.slice(html.indexOf('function openShoppingLedgerEntry(id)'),html.indexOf('function completeSelectedShopping('));
-assert(singleEntry.includes('openShoppingLedgerSourcesEntry(sources)'),'單筆入口依 allocation 數決定單筆或多品項表單');
+assert(singleEntry.includes('buyToLedgerRuntimeAdapter.openLedgerDraft(sources,{keepShoppingList:false})'),'單筆入口透過 runtime seam 依 allocation 數開啟表單');
 assert(shoppingSource.includes('sourceShoppingAllocationId=source.allocationId'),'單筆 draft 保存 allocationId');
 assert(html.includes('function openShoppingItemDetail('));
 assert(html.includes('function renderShoppingItemDetail('));
@@ -543,7 +543,7 @@ assert(shoppingSource.includes('shoppingListStore.split('),'拆分走 store 的�
 /* 交握與回寫 */
 const handoff=html.slice(html.indexOf('function shoppingLinkSourceRefs('),html.indexOf('function commitLedgerEntrySave('));
 assert(handoff.includes('submissionDraft.items'),'多品項以送出用 items 對應,不用 UI index');
-assert(handoff.includes('shoppingListStore.applyLedgerLinks(plan.links)'),'回寫走單次原子 store write');
+assert(handoff.includes('buyToLedgerRuntimeAdapter.applyLinks(plan.links)'),'回寫透過 runtime seam 走單次原子 store write');
 assert(/消費已建立，但採買項目的記帳標記更新失敗。請避免再次記帳，並重新開啟採買清單確認。/.test(handoff),'回寫失敗顯示核准降級文案');
 assert(!/persistLedger|ledgerRepository\.(add|enqueueBatch)/.test(handoff),'回寫失敗不得自動再建立一次消費');
 const commit=html.slice(html.indexOf('function commitLedgerEntrySave('),html.indexOf('function setLedgerSavePending('));

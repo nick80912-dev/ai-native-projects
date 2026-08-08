@@ -20,6 +20,7 @@ function extractFunction(name){
 function plain(value){return JSON.parse(JSON.stringify(value));}
 
 const workflowSource=[
+  extractFunction('createBuyToLedgerRuntimeAdapter'),
   extractFunction('shoppingTimestampField'),
   extractFunction('normalizeShoppingLedgerLink'),
   extractFunction('planShoppingLedgerLinks'),
@@ -28,6 +29,35 @@ const workflowSource=[
   extractFunction('writeShoppingLedgerLinks'),
   extractFunction('commitLedgerEntrySave')
 ].join('\n');
+
+function loadRuntimeAdapterFactory(){
+  const sandbox={
+    shoppingListStore:{all(){return [];},applyLedgerLinks(){return 0;}},
+    shoppingLedgerContext(){return {};},
+    openShoppingLedgerSourcesEntry(){},
+    persistLedgerExpenseRecords(){return Promise.resolve({ok:true});},
+    toast(){},AppLog:{repo(){}},timestampDate(value){return new Date(value);},
+    Object,Array,String,Date,Promise
+  };
+  vm.createContext(sandbox);
+  vm.runInContext(extractFunction('createBuyToLedgerRuntimeAdapter'),sandbox);
+  return sandbox;
+}
+
+{
+  const sandbox=loadRuntimeAdapterFactory();
+  const expectedMethods=[
+    'readItems','readLinkContext','openLedgerDraft','persistLedger','applyLinks',
+    'finishLedger','failLedger','notify','log','nowIso'
+  ];
+  const production=sandbox.createBuyToLedgerRuntimeAdapter();
+  assert.deepStrictEqual(Object.keys(production).sort(),expectedMethods.slice().sort(),'runtime adapter exposes only the approved dependency surface');
+  expectedMethods.forEach(name=>assert.strictEqual(typeof production[name],'function',name+' is a function'));
+  const replacement=function replacementReadItems(){return ['override'];};
+  const recording=sandbox.createBuyToLedgerRuntimeAdapter({readItems:replacement});
+  assert.strictEqual(recording.readItems,replacement,'an individual method can be overridden');
+  assert.notStrictEqual(production.readItems,replacement,'overrides never mutate a previously created production adapter');
+}
 
 function createHarness(options){
   options=options||{};
@@ -87,6 +117,10 @@ function createHarness(options){
   };
   vm.createContext(sandbox);
   vm.runInContext(workflowSource,sandbox);
+  sandbox.buyToLedgerRuntimeAdapter=sandbox.createBuyToLedgerRuntimeAdapter({
+    finishLedger(){events.push('finish:adapter');},
+    failLedger(){events.push('fail:adapter');}
+  });
   return {
     sandbox,events,messages,logs,links,personalRecords,cleanDraft,
     counts(){return {closeCount,resetCount,renderCount,sharedEnqueueCount,editPersistCount};}
@@ -133,7 +167,7 @@ function eventIndex(events,name){
     assert.deepStrictEqual(harness.links[0].link.track,'personal');
     assert.strictEqual(harness.links[0].link.testMode,false);
     assert(eventIndex(harness.events,'persist:personal')<eventIndex(harness.events,'applyLinks'),'Ledger persists before Shopping links');
-    assert(eventIndex(harness.events,'applyLinks')<eventIndex(harness.events,'finish:close'),'Shopping links finish before the sheet closes');
+    assert(eventIndex(harness.events,'applyLinks')<eventIndex(harness.events,'finish:adapter'),'Shopping links finish before the workflow reports completion');
   }
 
   {
