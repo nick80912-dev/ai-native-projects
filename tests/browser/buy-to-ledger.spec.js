@@ -49,8 +49,10 @@ async function seedShopping(page,items){
 async function openSingleEntry(page,id,keepShoppingList){
   await page.evaluate(({itemId,keep})=>{
     if(!keep){openShoppingLedgerEntry(itemId);return;}
-    const item=shoppingListStore.all().find(value=>value.id===itemId);
-    openShoppingLedgerSourcesEntry(shoppingLedgerSources([item],shoppingLedgerContext()),true);
+    return buyToLedgerWorkflow.start({
+      itemIds:[itemId],keepShoppingList:true,
+      messages:{unverified:'記帳狀態尚待確認，請先完成同步或重新確認',alreadyLinked:'這筆採買目前沒有未記帳對象'}
+    });
   },{itemId:id,keep:!!keepShoppingList});
   await expect(page.locator('#ledgerEntrySheet')).toBeVisible();
 }

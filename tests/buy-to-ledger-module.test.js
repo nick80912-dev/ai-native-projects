@@ -1,4 +1,5 @@
 const assert=require('assert');
+const fs=require('fs');
 const TripBuyToLedger=require('../buy-to-ledger.js');
 
 function plain(value){return JSON.parse(JSON.stringify(value));}
@@ -27,6 +28,18 @@ const domain=TripBuyToLedger.createDomain({
     return records.filter(record=>record.recordType!=='deletion'&&!deleted[record.id]);
   }
 });
+
+assert.deepStrictEqual(Object.keys(TripBuyToLedger).sort(),['createDomain','createWorkflow'],'module top-level exports are exact');
+const moduleSource=fs.readFileSync('buy-to-ledger.js','utf8');
+assert.doesNotMatch(moduleSource,/\b(?:document|localStorage|sessionStorage|indexedDB)\b/,'module has no DOM or storage globals');
+const runtimeSource=fs.readFileSync('index.html','utf8');
+[
+  'normalizeShoppingLedgerLink','activeShoppingLedgerLink','releaseShoppingLedgerLinks','appendShoppingLedgerLink',
+  'resolveShoppingLedgerLinkState','buildShoppingLedgerLinkPlan','planShoppingLedgerLinks','shoppingLedgerSources',
+  'shoppingBatchLedgerPreflight','canSplitShoppingItem','canOfferShoppingPartialPurchase','shoppingItemLinkSummary',
+  'shoppingAllocationEditPolicy','shoppingLedgerPrefillForAllocation','shoppingLedgerSinglePrefill',
+  'shoppingLedgerMultiPrefill','shoppingLinkSourceRefs'
+].forEach(name=>assert(!runtimeSource.includes('function '+name+'('),name+' transitional wrapper is removed'));
 
 assert.deepStrictEqual(
   Object.keys(domain).sort(),
@@ -241,10 +254,12 @@ function recordingAdapter(options){
   {
     const recording=recordingAdapter();
     const workflow=TripBuyToLedger.createWorkflow({domain,adapter:recording.adapter});
+    const before=plain(command);
     const outcome=await workflow.commit(command);
     assert.strictEqual(outcome.status,'saved-linked');
     assert.deepStrictEqual(recording.events,['persistLedger','nowIso','applyLinks','finishLedger']);
     assert.strictEqual(recording.adapter.links[0].link.recordId,'record-1');
+    assert.deepStrictEqual(command,before,'workflow commit does not mutate its command');
   }
 
   {

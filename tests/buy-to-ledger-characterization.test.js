@@ -23,7 +23,6 @@ function plain(value){return JSON.parse(JSON.stringify(value));}
 const workflowSource=[
   extractFunction('createBuyToLedgerRuntimeAdapter'),
   extractFunction('persistLedgerExpenseRecords'),
-  extractFunction('shoppingLinkSourceRefs'),
   extractFunction('finishLedgerEntrySaveUi'),
   extractFunction('failLedgerEntrySaveUi'),
   extractFunction('commitLedgerEntrySave')

@@ -38,6 +38,7 @@ function loadShoppingModule(){
 }
 
 const mod=loadShoppingModule();
+const buyToLedgerDomain=TripBuyToLedger.createDomain({effectiveRecords(records){return records;}});
 assert.strictEqual(mod.SHOPPING_DEFAULT_UNIT,'個','new Shopping forms have one authoritative default unit');
 assert(mod.SHOPPING_COMMON_UNITS.includes('個'),'the common unit source contains the default unit');
 assert.strictEqual(mod.newShoppingForm({}).quantity,1,'a new Shopping form starts at quantity 1');
@@ -335,8 +336,12 @@ assert.strictEqual(mod.shoppingQuantityLabel({quantity:3,unit:''}),'3');
 assert.strictEqual(mod.shoppingQuantityLabel({quantity:null,legacyQtyText:'約 3～5 個'}),'約 3～5 個');
 assert.strictEqual(mod.shoppingQuantityLabel({quantity:null,legacyQtyText:''}),'');
 assert.strictEqual(mod.shoppingQuantityLabel(null),'','空輸入安全回傳空字串');
-assert.strictEqual(mod.shoppingLedgerNote({quantity:5,unit:'罐',buyFor:'媽媽'}),'數量：5 罐 · 幫誰買：媽媽','Ledger note 走同一個 helper');
-assert.strictEqual(mod.shoppingLedgerNote({quantity:null,legacyQtyText:'約 3～5 個',buyFor:''}),'數量：約 3～5 個','舊式數量在 Ledger note 仍可顯示');
+assert.strictEqual(buyToLedgerDomain.createDraftPlan([{
+  shoppingItemId:'note-a',allocationId:'',item:{name:'益生菌',quantity:5,unit:'罐',buyFor:'媽媽'},allocation:null
+}]).seed.note,'數量：5 罐 · 幫誰買：媽媽','Ledger note 由正式 draft plan 建立');
+assert.strictEqual(buyToLedgerDomain.createDraftPlan([{
+  shoppingItemId:'note-b',allocationId:'',item:{name:'舊資料',quantity:null,legacyQtyText:'約 3～5 個',buyFor:''},allocation:null
+}]).seed.note,'數量：約 3～5 個','舊式數量在 Ledger note 仍可顯示');
 
 /* 單位長度上限收斂為 6,與設定頁既有的 normalizeLedgerOption 一致 */
 assert.strictEqual(mod.SHOPPING_UNIT_MAX_LENGTH,6,'單位上限與設定頁選項一致');
@@ -362,27 +367,28 @@ assert.strictEqual(mod.shoppingItemLocationLine({stopRef:'x'},null,'pending'),'�
 assert.strictEqual(mod.shoppingItemLocationLine({stopRef:''},null,'unbound'),'','隨時可買不佔一行');
 
 /* 部分購買:只輸入本次買到,剩餘由系統計算 */
-const unlinkedSummary={state:'unlinked'};
-assert.strictEqual(mod.canOfferShoppingPartialPurchase({
+const canOfferPartial=item=>buyToLedgerDomain.inspectItem(item,{}).canOfferPartialPurchase;
+assert.strictEqual(canOfferPartial({
   done:false,allocations:[allocation('',1)]
-},unlinkedSummary),false,'自己的數量 1 不顯示部分購買');
-assert.strictEqual(mod.canOfferShoppingPartialPurchase({
+}),false,'自己的數量 1 不顯示部分購買');
+assert.strictEqual(canOfferPartial({
   done:false,allocations:[allocation('',2)]
-},unlinkedSummary),true,'自己的數量 2 可部分購買');
-assert.strictEqual(mod.canOfferShoppingPartialPurchase({
+}),true,'自己的數量 2 可部分購買');
+assert.strictEqual(canOfferPartial({
   done:false,allocations:[allocation('阿寶',1),allocation('媽媽',1),allocation('小明',1)]
-},unlinkedSummary),true,'三位各 1 份時總需求大於 1，可部分購買');
-assert.strictEqual(mod.canOfferShoppingPartialPurchase({
+}),true,'三位各 1 份時總需求大於 1，可部分購買');
+assert.strictEqual(canOfferPartial({
   done:false,allocations:[allocation('',null)]
-},unlinkedSummary),false,'舊式數量不顯示部分購買');
-['linked','partial','unverified'].forEach(state=>{
-  assert.strictEqual(mod.canOfferShoppingPartialPurchase({
-    done:false,allocations:[allocation('',2)]
-  },{state}),false,state+' 狀態不顯示部分購買');
-});
-assert.strictEqual(mod.canOfferShoppingPartialPurchase({
+}),false,'舊式數量不顯示部分購買');
+assert.strictEqual(canOfferPartial({
+  done:false,allocations:[Object.assign(allocation('',2),{ledgerLinks:[{
+    version:1,track:'personal',testMode:false,recordId:'missing',batchId:'',
+    linkedAt:'2026-08-08T01:00:00.000Z',releasedAt:''
+  }]})]
+}),false,'有待確認的既有記帳關聯不顯示部分購買');
+assert.strictEqual(canOfferPartial({
   done:true,allocations:[allocation('',2)]
-},unlinkedSummary),false,'已買項目不顯示部分購買');
+}),false,'已買項目不顯示部分購買');
 const src=q({id:'s1',quantity:5,unit:'罐'});
 assert.deepStrictEqual(plain(mod.shoppingSplitPlan(src,3)),{ok:true,mode:'split',purchasedQuantity:3,remainingQuantity:2,error:''},'買到 3 剩 2');
 assert.deepStrictEqual(plain(mod.shoppingSplitPlan(src,1)),{ok:true,mode:'split',purchasedQuantity:1,remainingQuantity:4,error:''},'買到 1 剩 4');
@@ -514,34 +520,37 @@ assert.strictEqual(mod.resolveShoppingStopState('d1_a',null,'authoritative'),'or
 assert.strictEqual(mod.resolveShoppingStopState('d1_a',null,'unverified'),'pending','F1/F2 資料未就緒或身分未知 → 待確認,不是孤兒');
 assert.strictEqual(mod.resolveShoppingStopState('d1_a',stop,'unverified'),'resolved','站點查得到就照常顯示,不因來源降級');
 
-const single=plain(mod.shoppingLedgerSinglePrefill({
-  name:'眼藥水',
-  category:'代購',
-  quantity:2,
-  unit:'',
-  buyFor:'小明'
-}));
+const single=plain(buyToLedgerDomain.createDraftPlan([{
+  shoppingItemId:'legacy-single',allocationId:'',
+  item:{name:'眼藥水',category:'代購',quantity:2,unit:'',buyFor:'小明'},allocation:null
+}]).seed);
 assert.deepStrictEqual(single,{
   detail:'眼藥水',
+  name:'眼藥水',
   amount:'',
   category:'購物',
   note:'數量：2 · 幫誰買：小明',
   isProxy:true,
   proxyTarget:'小明'
 },'single-item loop maps fields without inventing an amount');
-const ordinary=plain(mod.shoppingLedgerSinglePrefill({name:'牙刷',category:'生活用品',qty:'',buyFor:''}));
+const ordinary=plain(buyToLedgerDomain.createDraftPlan([{
+  shoppingItemId:'ordinary',allocationId:'',item:{name:'牙刷',category:'生活用品',qty:'',buyFor:''},allocation:null
+}]).seed);
 assert.strictEqual(ordinary.category,'購物');
 assert.strictEqual(ordinary.amount,'');
 assert.strictEqual(ordinary.isProxy,false);
 
-const multi=plain(mod.shoppingLedgerMultiPrefill([
-  {name:'眼藥水',category:'代購',buyFor:'小明'},
-  {name:'白桃',category:'伴手禮',buyFor:''}
-]));
-assert.deepStrictEqual(multi,[
-  {name:'眼藥水',amount:'',category:'購物',isProxy:true,proxyTarget:'小明'},
-  {name:'白桃',amount:'',category:'購物',isProxy:false,proxyTarget:''}
-],'multi-item loop creates one blank-amount ledger item per shopping item');
+const multi=plain(buyToLedgerDomain.createDraftPlan([
+  {shoppingItemId:'shopping-a',allocationId:'allocation-a',item:{name:'眼藥水',category:'代購',unit:''},allocation:{allocationId:'allocation-a',target:'小明',quantity:1,ledgerLinks:[]}},
+  {shoppingItemId:'shopping-b',allocationId:'allocation-b',item:{name:'白桃',category:'伴手禮',unit:''},allocation:{allocationId:'allocation-b',target:'',quantity:1,ledgerLinks:[]}}
+]).items);
+assert.deepStrictEqual(multi.map(value=>({
+  name:value.name,amount:value.amount,category:value.category,isProxy:value.isProxy,proxyTarget:value.proxyTarget,
+  sourceShoppingItemId:value.sourceShoppingItemId,sourceShoppingAllocationId:value.sourceShoppingAllocationId
+})),[
+  {name:'眼藥水',amount:'',category:'購物',isProxy:true,proxyTarget:'小明',sourceShoppingItemId:'shopping-a',sourceShoppingAllocationId:'allocation-a'},
+  {name:'白桃',amount:'',category:'購物',isProxy:false,proxyTarget:'',sourceShoppingItemId:'shopping-b',sourceShoppingAllocationId:'allocation-b'}
+],'multi-item loop creates one source-addressable blank-amount ledger item per shopping allocation');
 
 const sharedTargets=mod.createLedgerProxyTargetStore({storage:mod.localStorage,key:'trip_ledger_proxy_targets'});
 sharedTargets.add(' 小明 ');
@@ -832,7 +841,7 @@ assert(/\.shopping-category-badge\{[^}]*background:#fff7dc;[^}]*color:#8a6416/.t
 assert.match(ui,/class="shopping-item-title-row"/);
 assert(ui.includes('shoppingCardTargetModel(item)'));
 assert(ui.includes('shoppingItemQuantitySummary(item)'));
-assert(ui.includes('shoppingItemLinkSummary(item,shoppingLedgerContext())'));
+assert(ui.includes('buyToLedgerDomain.inspectItem(item,shoppingLedgerContext())'));
 assert(ui.includes("item.done||linkSummary.state!=='unlinked'"));
 assert(ui.includes("linkSummary.state==='partial'"));
 assert(ui.includes('id="shoppingListOverlay"')||ui.includes("overlay.id='shoppingListOverlay'"),'full shopping list opens as an overlay');
@@ -935,12 +944,12 @@ assert(itemRenderer.includes('shoppingCardTargetModel(item)'),'卡片使用結�
 assert(itemRenderer.includes("renderProxyTargetMarkup(targetModel,'shopping-card-target-summary')"),'採買卡使用共用 target renderer');
 assert(!itemRenderer.includes('targetModel.names.map'),'採買卡不再維護另一份 target markup');
 assert(!itemRenderer.includes('escapeHtml(targetSummary)'),'不得再把整句摘要包成單一 badge');
-assert(itemRenderer.includes('canOfferShoppingPartialPurchase(item,linkSummary)'),
-  '卡片部分購買入口使用統一 eligibility helper');
+assert(itemRenderer.includes('linkSummary.canOfferPartialPurchase'),
+  '卡片部分購買入口使用 domain inspection 的統一 eligibility');
 assert(itemRenderer.includes('>部分購買</button>'),'卡片直接顯示部分購買');
 assert(itemRenderer.includes('openShoppingLedgerEntry(')&&itemRenderer.includes('>記帳</button>'),'已買未記帳項目直接呼叫既有的 openShoppingLedgerEntry()');
 assert(ui.includes('releaseShoppingLedgerLink('),'已記帳項目顯示改回未記帳');
-assert(itemRenderer.includes('shoppingItemLinkSummary(item,shoppingLedgerContext())')&&
+assert(itemRenderer.includes('buyToLedgerDomain.inspectItem(item,shoppingLedgerContext())')&&
   itemRenderer.includes("linkSummary.state==='unlinked'")&&
   itemRenderer.includes("linkSummary.state==='partial'"),
   '列上入口顯示一律走共用 resolver 的三態');
@@ -952,14 +961,13 @@ const cardSandbox={
   shoppingUiState:{selected:{},selectionMode:false},
   shoppingStopById(stopRef){return stopRef==='resolved'?{dayIndex:1,name:'岡山站'}:null;},
   shoppingStopStateFor(item){return item.__state;},
-  shoppingItemLinkSummary(){return {state:'unlinked'};},
+  buyToLedgerDomain:{inspectItem(){return {state:'unlinked',canOfferPartialPurchase:false};}},
   shoppingLedgerContext(){return {};},
   shoppingCardLinkBadge(){return '';},
   shoppingPhotoStatus(){return 'none';},
   shoppingCardTargetModel(){return {prefix:'',names:[],overflow:'',suffix:'',ariaLabel:''};},
   shoppingItemQuantitySummary(){return '1 個';},
   shoppingItemLocationLine:mod.shoppingItemLocationLine,
-  canOfferShoppingPartialPurchase(){return false;},
   escapeHtml(value){return String(value);},
   jsString(value){return String(value);}
 };
@@ -1030,7 +1038,7 @@ assert(shoppingSource.length>2000,'採買清單區段切片有效');
 /* A:待買頁與 Today 共用同一份排序 helper,不各自實作 */
 assert(shoppingSource.includes('sortShoppingStopGroups('),'A4 待買頁接上共用群組排序 helper');
 assert(shoppingSource.includes('buildShoppingStopOrder('),'A4 待買頁接上共用站點排名');
-const reminderSource=ui.slice(ui.indexOf('function buildShoppingTodayReminder('),ui.indexOf('function shoppingLedgerSinglePrefill('));
+const reminderSource=ui.slice(ui.indexOf('function buildShoppingTodayReminder('),ui.indexOf('function ledgerBooleanValue('));
 assert(reminderSource.includes('sortShoppingStopGroups(')&&reminderSource.includes('buildShoppingStopOrder('),'A4 Today 提醒使用同一組 helper');
 /* A6:已買頁不套用行程排序,維持既有 store order */
 assert(/shoppingUiState\.tab==='done'\)[\s\S]{0,240}renderShoppingItem\(item,\{page:'done'\}\)/.test(shoppingSource),
