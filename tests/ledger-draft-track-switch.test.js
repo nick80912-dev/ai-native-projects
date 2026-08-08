@@ -1,6 +1,7 @@
 const assert=require('assert');
 const fs=require('fs');
 const vm=require('vm');
+const TripLedgerUiState=require('../ledger-ui-state.js');
 
 const html=fs.readFileSync('index.html','utf8');
 
@@ -125,16 +126,19 @@ let handlerPositions=0;
 const handlerErrors=[];
 const handlerSandbox={
   Object,Array,String,Boolean,Number,RegExp,
-  ledgerUiState:{draft:plain(personal)},
+  ledgerUiState:TripLedgerUiState.createState({sheet:'entry',draft:plain(personal),entrySessionId:'handler-session'}),
   createLedgerEntryDraft(track){
     return track==='shared'
       ?plain(sharedDefaults)
       :{track:'personal',participants:[],isProxy:false,proxyTarget:''};
   },
-  renderLedgerEntrySheet(){handlerRenders++;},
-  withLedgerSheetPosition(fn){handlerPositions++;fn();},
   toast(message){handlerErrors.push(message);}
 };
+handlerSandbox.ledgerUiWorkflow=TripLedgerUiState.createWorkflow({
+  readState(){return handlerSandbox.ledgerUiState;},
+  writeState(next){handlerSandbox.ledgerUiState=next;},
+  renderEntry(effect){if(effect.preservePosition)handlerPositions++;handlerRenders++;}
+});
 vm.createContext(handlerSandbox);
 vm.runInContext(source+'\n'+extractFunction('setLedgerDraftTrack'),handlerSandbox);
 handlerSandbox.setLedgerDraftTrack('shared');

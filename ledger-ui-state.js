@@ -296,11 +296,19 @@
     function invoke(effect,state){
       var handler={
         'close-actions':'closeActions','render-split':'renderSplit','render-history-results':'renderHistoryResults',
-        'sync-history-filter-panel':'syncHistoryFilterPanel','scroll-top':'scrollTop'
+        'sync-history-filter-panel':'syncHistoryFilterPanel','scroll-top':'scrollTop',
+        'mount-entry':'mountEntry','unmount-entry':'unmountEntry','render-entry':'renderEntry',
+        'sync-entry-pending':'syncEntryPending','focus-entry':'focusEntry',
+        'restore-entry-context':'restoreEntryContext','notify-entry-result':'notifyEntryResult'
       }[effect.type];
       if(!handler||typeof target[handler]!=='function')throw new Error('Ledger UI workflow missing effect adapter: '+effect.type);
       if(effect.type==='sync-history-filter-panel')target[handler](state);
       else if(effect.type==='scroll-top')target[handler](effect.behavior);
+      else if(effect.type==='mount-entry'||effect.type==='unmount-entry'||effect.type==='render-entry')target[handler](effect,state);
+      else if(effect.type==='sync-entry-pending')target[handler](state);
+      else if(effect.type==='focus-entry')target[handler](effect.target);
+      else if(effect.type==='restore-entry-context')target[handler](effect.context,effect.restoreBackground);
+      else if(effect.type==='notify-entry-result')target[handler](effect.notification);
       else target[handler]();
     }
     function dispatch(action){

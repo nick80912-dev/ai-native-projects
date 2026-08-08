@@ -212,4 +212,41 @@ assert.deepStrictEqual(plain(closedCalendar.effects),[{type:'render-entry',prese
   assert.strictEqual(invalidCalendar.changed,false,'calendar actions fail closed outside their valid state');
 });
 
+const workflowEvents=[];
+let workflowState=TripLedgerUiState.createState();
+const workflow=TripLedgerUiState.createWorkflow({
+  readState:function(){workflowEvents.push(['read']);return workflowState;},
+  writeState:function(next){workflowState=next;workflowEvents.push(['write',next.entrySessionId,next.sheet]);},
+  closeActions:function(){workflowEvents.push(['close-actions',workflowState.entrySessionId]);},
+  mountEntry:function(effect,state){workflowEvents.push(['mount-entry',state.entrySessionId]);},
+  unmountEntry:function(){workflowEvents.push(['unmount-entry',workflowState.sheet]);},
+  renderEntry:function(effect,state){workflowEvents.push(['render-entry',effect.preservePosition,state.draft&&state.draft.amount]);},
+  syncEntryPending:function(state){workflowEvents.push(['sync-entry-pending',state.savePending]);},
+  focusEntry:function(target){workflowEvents.push(['focus-entry',target]);},
+  restoreEntryContext:function(contextValue,restore){workflowEvents.push(['restore-entry-context',contextValue&&contextValue.kind,restore]);},
+  notifyEntryResult:function(notification){workflowEvents.push(['notify-entry-result',notification&&notification.message]);},
+  renderSplit:function(){workflowEvents.push(['render-split',workflowState.sheet]);}
+});
+workflow.dispatch({
+  type:'open-entry-create',draft:{track:'personal',amount:'100'},sessionId:'workflow-session',
+  returnContext:{kind:'ledger',scrollY:12},focusTarget:'amount'
+});
+assert.deepStrictEqual(workflowEvents,[
+  ['read'],['write','workflow-session','entry'],['close-actions','workflow-session'],
+  ['mount-entry','workflow-session'],['render-entry',false,'100'],['focus-entry','amount']
+],'workflow writes entry state before executing ordered open effects');
+workflowEvents.length=0;
+workflow.dispatch({
+  type:'entry-validation-failed',sessionId:'workflow-session',
+  draft:{track:'personal',amount:'',formErrors:{amount:'請輸入有效金額'}},errorTarget:'amount'
+});
+assert.deepStrictEqual(workflowEvents,[
+  ['read'],['write','workflow-session','entry'],['render-entry',true,''],['focus-entry','amount']
+]);
+workflowEvents.length=0;
+workflow.dispatch({type:'close-entry',restoreBackground:true});
+assert.deepStrictEqual(workflowEvents,[
+  ['read'],['write','',null],['unmount-entry',null],['restore-entry-context','ledger',true]
+]);
+
 console.log('ledger entry UI state tests passed');
