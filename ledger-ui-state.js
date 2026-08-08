@@ -30,19 +30,38 @@
     return result;
   }
   function numberOrZero(value){var parsed=Number(value);return isFinite(parsed)?parsed:0;}
+  function plainObject(value){return value&&typeof value==='object'&&!Array.isArray(value)?value:null;}
+  function cloneContext(value){
+    var source=plainObject(value),next={};
+    if(!source)return null;
+    Object.keys(source).forEach(function(key){
+      var item=source[key];
+      if(typeof item!=='function'&&!(item&&item.nodeType))next[key]=item;
+    });
+    return next;
+  }
+  function clearEntrySession(state){
+    state.sheet=null;state.draft=null;state.editing=null;state.savePending=false;
+    state.calendarOpen=false;state.calendarYear=0;state.calendarMonth=0;
+    state.entryReturnContext=null;state.entrySessionId='';state.entrySaveRequestId='';
+    return state;
+  }
 
   function createState(seed){
-    var source=seed&&typeof seed==='object'?seed:{};
+    var source=seed&&typeof seed==='object'?seed:{},sheet=source.sheet==='entry'?'entry':null;
+    var correction=source.correction==null?null:source.correction;
+    var sessionId=text(source.entrySessionId).trim();
+    var entryActive=sheet==='entry'&&(!!sessionId||!!correction);
     return {
       track:oneOf(source.track,TRACKS,'personal'),
       displayCurrency:oneOf(source.displayCurrency,['','JPY','TWD'],''),
       page:oneOf(source.page,PAGES,'dashboard'),
       filter:oneOf(source.filter,['all','proxy'],'all'),
-      sheet:source.sheet==null?null:source.sheet,
+      sheet:entryActive?'entry':null,
       selectedRecordId:text(source.selectedRecordId),
-      draft:source.draft==null?null:source.draft,
-      editing:source.editing==null?null:source.editing,
-      correction:source.correction==null?null:source.correction,
+      draft:entryActive&&source.draft!=null?source.draft:null,
+      editing:entryActive&&sessionId&&source.editing!=null?source.editing:null,
+      correction:entryActive?correction:null,
       retainedParticipants:source.retainedParticipants==null?null:source.retainedParticipants,
       historyQuery:text(source.historyQuery),
       historyCategories:uniqueStrings(source.historyCategories),
@@ -51,13 +70,16 @@
       historyTaxExempt:oneOf(source.historyTaxExempt,TAX_FILTERS,'all'),
       historyFiltersOpen:source.historyFiltersOpen===true,
       historyGrouping:oneOf(source.historyGrouping,GROUPINGS,'date'),
-      calendarOpen:source.calendarOpen===true,
-      calendarYear:numberOrZero(source.calendarYear),
-      calendarMonth:numberOrZero(source.calendarMonth),
+      calendarOpen:entryActive&&source.calendarOpen===true,
+      calendarYear:entryActive?numberOrZero(source.calendarYear):0,
+      calendarMonth:entryActive?numberOrZero(source.calendarMonth):0,
       expandedBatches:truthMap(source.expandedBatches),
       selectionMode:source.selectionMode===true,
       selectedRecordIds:truthMap(source.selectedRecordIds),
-      savePending:source.savePending===true
+      savePending:entryActive&&source.savePending===true,
+      entryReturnContext:entryActive&&sessionId?cloneContext(source.entryReturnContext):null,
+      entrySessionId:entryActive?sessionId:'',
+      entrySaveRequestId:entryActive&&sessionId?text(source.entrySaveRequestId).trim():''
     };
   }
 
@@ -89,6 +111,30 @@
     var command=action&&typeof action==='object'?action:{};
     var next,id,ids,map,allSelected,index,field,value;
     switch(command.type){
+    case 'open-entry-create':
+    case 'open-entry-edit':
+      if(!plainObject(command.draft)||!text(command.sessionId).trim())return unchanged(state);
+      next=createState(state);next.sheet='entry';next.draft=command.draft;
+      next.editing=command.type==='open-entry-edit'&&plainObject(command.editing)?command.editing:null;
+      next.correction=null;next.track=oneOf(command.draft.track,TRACKS,next.track);
+      next.savePending=false;next.calendarOpen=false;next.calendarYear=0;next.calendarMonth=0;next.entrySaveRequestId='';
+      next.entrySessionId=text(command.sessionId).trim();next.entryReturnContext=cloneContext(command.returnContext);
+      return result(next,[
+        {type:'close-actions'},{type:'mount-entry'},
+        {type:'render-entry',preservePosition:false},
+        {type:'focus-entry',target:text(command.focusTarget)}
+      ]);
+    case 'entry-track-switched':
+      if(state.sheet!=='entry'||state.correction||text(command.sessionId)!==state.entrySessionId||!plainObject(command.draft))return unchanged(state);
+      next=createState(state);next.draft=command.draft;next.track=oneOf(command.draft.track,TRACKS,next.track);
+      return result(next,[{type:'render-entry',preservePosition:true}]);
+    case 'close-entry':
+      if(state.sheet!=='entry'||state.correction)return unchanged(state);
+      next=clearEntrySession(createState(state));
+      return result(next,[
+        {type:'unmount-entry'},
+        {type:'restore-entry-context',context:cloneContext(state.entryReturnContext),restoreBackground:command.restoreBackground!==false}
+      ]);
     case 'switch-track':
       if(TRACKS.indexOf(command.track)<0)return unchanged(state);
       next=createState(state);next.track=command.track;next.page='dashboard';next.filter='all';next.displayCurrency='';
