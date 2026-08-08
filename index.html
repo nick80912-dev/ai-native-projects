@@ -9149,6 +9149,10 @@ document.addEventListener('keydown',function ledgerCalendarEscape(event){if(even
 document.addEventListener('keydown',function ledgerCalculatorKeyboard(event){
   if(!ledgerCalculatorState.open||!event)return;
   if(event.key==='Escape'){closeLedgerCalculator(true);return;}
+  if(event.key==='Enter'||event.key==='='){if(event.preventDefault)event.preventDefault();evaluateLedgerCalculator();return;}
+  if(event.key==='Backspace'){if(event.preventDefault)event.preventDefault();backspaceLedgerCalculator();return;}
+  if(event.key==='Delete'){if(event.preventDefault)event.preventDefault();clearLedgerCalculator();return;}
+  if(/^[0-9.+\-*/%]$/.test(event.key)){if(event.preventDefault)event.preventDefault();inputLedgerCalculatorKey(event.key);return;}
   if(event.key!=='Tab')return;
   var sheet=document.querySelector('#ledgerCalculatorSheet .ledger-calculator-sheet'),buttons=sheet&&sheet.querySelectorAll('button:not([disabled])');
   if(!buttons||!buttons.length)return;
