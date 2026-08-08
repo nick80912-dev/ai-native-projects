@@ -11,7 +11,7 @@
 | 正式站 | `https://trippilot-jp.netlify.app/` — 2026-08-01 由 SW v18 升級至 v73,G1–G6 全數通過 |
 | **dev 候選版** | **SW v98**＋Ledger 新增消費快速版面，`app-version.js` 與 `sw.js` 仍為 v98 |
 | 個人備份格式 | **v9**(`PERSONAL_STATE_SUPPORTED_VERSIONS = [1..9]`)—— v81 因想逛 key 識別語意變更而升版 |
-| dev 自動驗證 | **71／71** Node test files、Playwright **139／139**、`check-doc-titles` 與 `check-app-version` 通過 |
+| dev 自動驗證 | **71／71** Node test files、Playwright **140／140**、`check-doc-titles` 與 `check-app-version` 通過 |
 | 既有 tag | `production-v18`、`production-v73` |
 
 **`main` 已合併 v96，但正式站仍停在 v73；v98 是目前僅存在本機 `dev` 的下一個候選版。** v74–v87 已由 Bar 於 2026-08-03 確認真機驗收皆正常；v88–v89、v92–v95 亦於 2026-08-08 完成 Bar 畫面／真機確認。v96 因 Netlify 額度用罄尚未正式部署，也未建立 `production-v96` tag。

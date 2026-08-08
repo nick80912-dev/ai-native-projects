@@ -3,8 +3,8 @@
 
 - **方案 A 落地**：單品新增消費維持「金額 → 明細 → 代購／分攤 → 其他資訊 → 儲存」；團體帳的成員 chips 預設收成「全員 N 人／已選 N 人」摘要，點擊才展開既有選擇器。個人帳仍使用既有代購開關，只有啟用後才顯示對象。
 - **選填資訊收斂**：原本分散的「其他資訊」「稅與優惠券」「更多細節」合併為單一入口，摘要改為「日期 · 類別 · 支付方式 · 有／無備註」；展開後仍保留店家、日期、時間、分類、支付、價格方式、稅率、優惠券與備註全部欄位及原計算語意。
-- **操作權重**：「儲存」維持主要按鈕，單品「儲存並再記一筆」降為低強度文字按鈕但保留 44px 觸控區、原 ID、pending guard 與 save workflow；多品項的操作樣式與欄位結構不變。
-- **範圍與驗證**：未修改 Ledger schema、備份、repository、同步、分攤／代購計算、calculator、Service Worker 或版本字串。新增 Browser regression 覆蓋個人／團體、鍵盤焦點、分攤／代購／其他資訊展開及 320／375／390px 水平 overflow；完整 gate 為 **71／71** Node test files、Playwright **139／139**、文件／版本檢查、manifest JSON 與 `git diff --check` 通過。
+- **操作權重**：「儲存」維持主要按鈕，單品「儲存並再記一筆」使用由各主題 action／card token 混合出的低彩度次要底色，保留 44px 觸控區、原 ID、pending guard 與 save workflow；多品項的操作樣式與欄位結構不變。
+- **範圍與驗證**：未修改 Ledger schema、備份、repository、同步、分攤／代購計算、calculator、Service Worker 或版本字串。新增 Browser regression 覆蓋個人／團體、鍵盤焦點、分攤／代購／其他資訊展開、六主題次要按鈕底色及 320／375／390px 水平 overflow；完整 gate 為 **71／71** Node test files、Playwright **140／140**、文件／版本檢查、manifest JSON 與 `git diff --check` 通過。
 
 ## 2026-08-08｜更正收據操作列遮罩修正（SW v98）
 

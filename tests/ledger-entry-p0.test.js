@@ -178,7 +178,7 @@ assert.match(focusSource,/ledgerDetail/,'invalid detail returns focus to the alw
 
 assert.match(html,/\.ledger-single-primary/,'single entry has a dedicated primary amount surface');
 assert.match(html,/\.ledger-entry-summary/,'single entry has a compact summary disclosure');
-assert.match(html,/\.ledger-sheet-actions \.ledger-save-another-quiet\{[^}]*min-height:44px[^}]*border:0[^}]*background:transparent/,'save-and-add-another keeps its touch target while using lower visual emphasis');
+assert.match(html,/\.ledger-sheet-actions \.ledger-save-another-quiet\{[^}]*min-height:44px[^}]*border:1px solid color-mix\(in srgb,var\(--sea\) 34%,var\(--line\)\)[^}]*background:color-mix\(in srgb,var\(--sea\) 14%,var\(--card\)\)/,'save-and-add-another keeps its touch target and derives its secondary surface from the active theme');
 assert.match(html,/\.ledger-sheet-actions\{[^}]*position:sticky[^}]*env\(safe-area-inset-bottom\)/,'the save actions remain sticky and safe-area aware above the keyboard');
 
 assert.match(createSource,/multiBillDetailsOpen:false/,'a new multi-item bill starts with its repeated bill settings collapsed');

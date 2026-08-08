@@ -78,6 +78,27 @@ test('personal entry uses one optional-information disclosure and preserves prox
   expect(errors).toEqual([]);
 });
 
+test('single save-another uses a visible theme-aware secondary background while multi keeps its original button',async({page})=>{
+  const errors=collectPageErrors(page);
+  await prepareEntry(page,390);
+  await page.evaluate(()=>setLedgerDraftTrack('personal'));
+
+  const styles=await page.evaluate(()=>THEME_IDS.map(id=>{
+    applyTheme(id,{persist:false});
+    const button=document.getElementById('ledgerSaveAnother'),style=getComputedStyle(button);
+    return {id:id,background:style.backgroundColor,color:style.color,height:button.getBoundingClientRect().height};
+  }));
+  styles.forEach(style=>{
+    expect(style.background,style.id+' needs a visible secondary background').not.toBe('rgba(0, 0, 0, 0)');
+    expect(style.height,style.id+' keeps the touch target').toBeGreaterThanOrEqual(44);
+  });
+  expect(new Set(styles.map(style=>style.background)).size).toBeGreaterThan(1);
+
+  await page.evaluate(()=>setLedgerDraftMulti(true));
+  await expect(page.locator('#ledgerSaveAnother')).not.toHaveClass(/ledger-save-another-quiet/);
+  expect(errors).toEqual([]);
+});
+
 for(const width of [320,375,390]){
   test(width+'px keeps collapsed and expanded quick-entry states free of horizontal overflow',async({page})=>{
     const errors=collectPageErrors(page);

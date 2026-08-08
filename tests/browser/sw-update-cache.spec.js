@@ -76,6 +76,7 @@ test('SW 更新後新快取實際裝入新版資源,且 index／版本檔／sche
   server.setGeneration(1);
   await page.goto(ORIGIN + '/index.html');
   await waitForActiveWorker(page);
+  await waitForShellCached(page);
 
   /* 第 1 步:舊版資源先進入 HTTP cache(max-age=600),並確認 gen1 已落在 CacheStorage */
   const first = await activeCacheReport(page);
