@@ -160,3 +160,63 @@ test('多品項與折扣共用計算器並在窄螢幕保持可操作',async({pa
   }
   expect(errors).toEqual([]);
 });
+
+test('更正收據的操作層不會被金額計算機入口穿透',async({page})=>{
+  const errors=collectPageErrors(page);
+  await page.setViewportSize({width:390,height:844});
+  await openEntry(page);
+  await page.evaluate(()=>{
+    ['Bar','Jane','Mark','David','baron'].forEach((member,index)=>memberRegistrationBridge.push({
+      id:'correction-member-'+index,time:'2026-08-03T00:00:0'+index+'.000Z',member,recordType:'identity_registration'
+    }));
+    const draft=ledgerUiState.draft;
+    draft.track='shared';
+    draft.multi=true;
+    draft.multiBillDetailsOpen=true;
+    draft.correctionMode=true;
+    draft.storeName='';
+    draft.participants=['Bar','Jane','Mark','David'];
+    draft.items=[createLedgerDraftItem(draft,{
+      name:'餐飲',amount:'3500',category:'餐飲',categoryManuallyAdjusted:true
+    })];
+    draft.items[0].participants=['Bar','Jane','Mark','David'];
+    draft.items[0].participantMode='custom';
+    ledgerUiState.track='shared';
+    ledgerUiState.correction={
+      rootId:'receipt-root',anchorId:'receipt-root',owner:'Bar',reason:'',
+      preview:null,previewSignature:'',previewKind:''
+    };
+    renderLedgerEntrySheet();
+  });
+
+  await expect(page.getByRole('heading',{name:'更正收據'})).toBeVisible();
+  await page.evaluate(()=>{
+    const sheet=document.querySelector('#ledgerEntrySheet .ledger-sheet');
+    const actions=document.querySelector('.ledger-correction-entry .ledger-sheet-actions');
+    const trigger=document.querySelector('.ledger-correction-entry .ledger-item-amount-field .ledger-calculator-trigger');
+    const actionRect=actions.getBoundingClientRect(),triggerRect=trigger.getBoundingClientRect();
+    const targetTop=actionRect.top+(actionRect.height-triggerRect.height)/2;
+    sheet.scrollTop=Math.max(0,Math.min(sheet.scrollHeight-sheet.clientHeight,sheet.scrollTop+triggerRect.top-targetTop));
+  });
+  const placement=await page.evaluate(()=>{
+    const actions=document.querySelector('.ledger-correction-entry .ledger-sheet-actions');
+    const actionRect=actions.getBoundingClientRect();
+    const triggers=Array.from(document.querySelectorAll('.ledger-correction-entry .ledger-calculator-trigger'));
+    const overlaps=triggers.filter(trigger=>{
+      const rect=trigger.getBoundingClientRect();
+      return rect.left<actionRect.right&&rect.right>actionRect.left&&rect.top<actionRect.bottom&&rect.bottom>actionRect.top;
+    });
+    const exposed=overlaps.filter(trigger=>{
+      const rect=trigger.getBoundingClientRect();
+      const top=document.elementFromPoint(rect.left+rect.width/2,rect.top+rect.height/2);
+      return top===trigger||trigger.contains(top);
+    });
+    return {
+      actionDescendants:actions.querySelectorAll('.ledger-calculator-trigger').length,
+      underlyingOverlaps:overlaps.length,
+      exposedLabels:exposed.map(trigger=>trigger.getAttribute('aria-label'))
+    };
+  });
+  expect(placement).toEqual({actionDescendants:0,underlyingOverlaps:1,exposedLabels:[]});
+  expect(errors).toEqual([]);
+});
