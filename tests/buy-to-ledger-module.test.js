@@ -183,4 +183,121 @@ assert.strictEqual(domain.releaseLink(released,'2026-08-08T05:00:00.000Z'),null,
 assert.throws(()=>domain.normalizeLink(Object.assign(link('bad'),{track:'other'})),/軌別/);
 assert(effectiveCalls.length>0,'shared state resolution uses the injected effective-record projection');
 
-console.log('Buy-to-Ledger module tests passed');
+function recordingAdapter(options){
+  options=options||{};
+  const events=[],messages=[],logs=[];
+  const adapter={
+    readItems(ids){events.push('readItems');if(options.readThrows)throw new Error('read failed');return options.items||[];},
+    readLinkContext(){events.push('readLinkContext');return options.context||personalContext;},
+    openLedgerDraft(plan,openOptions){events.push('openLedgerDraft');adapter.opened={plan,options:openOptions};},
+    persistLedger(records,track){
+      events.push('persistLedger');adapter.persisted={records,track};
+      if(options.persistThrows)throw new Error('persist threw');
+      if(options.persistRejects)return Promise.reject(new Error('persist rejected'));
+      return Promise.resolve(options.result||{ok:true,personal:true,records});
+    },
+    applyLinks(links){events.push('applyLinks');if(options.applyThrows)throw new Error('apply failed');adapter.links=links;},
+    finishLedger(command,result){events.push('finishLedger');adapter.finished={command,result};},
+    failLedger(command,error){events.push('failLedger');adapter.failed={command,error};},
+    notify(message){events.push('notify');messages.push(message);},
+    log(message){events.push('log');logs.push(message);},
+    nowIso(){events.push('nowIso');return '2026-08-08T05:00:00.000Z';}
+  };
+  return {adapter,events,messages,logs};
+}
+
+(async function(){
+  assert.strictEqual(typeof TripBuyToLedger.createWorkflow,'function','module exports the workflow factory');
+
+  {
+    const sourceItem=item('workflow-item',[allocation('workflow-allocation','Bar',1,[])]);
+    const recording=recordingAdapter({items:[sourceItem]});
+    const workflow=TripBuyToLedger.createWorkflow({domain,adapter:recording.adapter});
+    const outcome=await workflow.start({itemIds:['workflow-item'],keepShoppingList:true});
+    assert.strictEqual(outcome.status,'opened');
+    assert.deepStrictEqual(recording.events,['readItems','readLinkContext','openLedgerDraft']);
+    assert.strictEqual(recording.adapter.opened.plan.mode,'single');
+    assert.strictEqual(recording.adapter.opened.options.keepShoppingList,true);
+  }
+
+  {
+    const unknown=item('unknown',[allocation('allocation-u','',1,[link('remote-missing',{track:'shared'})])]);
+    const recording=recordingAdapter({items:[unknown],context:{testMode:false,personal:{ready:true,records:[]},shared:{ready:false,records:[]}}});
+    const workflow=TripBuyToLedger.createWorkflow({domain,adapter:recording.adapter});
+    const outcome=await workflow.start({
+      itemIds:['unknown'],messages:{unverified:'尚待確認',alreadyLinked:'已經記帳',empty:'找不到來源'}
+    });
+    assert.strictEqual(outcome.status,'blocked');
+    assert.strictEqual(outcome.reason,'unverified');
+    assert.deepStrictEqual(recording.events,['readItems','readLinkContext','notify']);
+    assert.deepStrictEqual(recording.messages,['尚待確認']);
+  }
+
+  const command={
+    draft:{track:'personal'},
+    submissionDraft:{track:'personal',multi:false,sourceShoppingItemId:'shopping-1',sourceShoppingAllocationId:'allocation-1'},
+    records:[{id:'record-1'}],addAnother:false
+  };
+  {
+    const recording=recordingAdapter();
+    const workflow=TripBuyToLedger.createWorkflow({domain,adapter:recording.adapter});
+    const outcome=await workflow.commit(command);
+    assert.strictEqual(outcome.status,'saved-linked');
+    assert.deepStrictEqual(recording.events,['persistLedger','nowIso','applyLinks','finishLedger']);
+    assert.strictEqual(recording.adapter.links[0].link.recordId,'record-1');
+  }
+
+  {
+    const recording=recordingAdapter({result:{ok:true,personal:true,records:[]}});
+    const workflow=TripBuyToLedger.createWorkflow({domain,adapter:recording.adapter});
+    const mismatch=Object.assign({},command,{
+      submissionDraft:{track:'personal',multi:true,items:[
+        {sourceShoppingItemId:'shopping-1',sourceShoppingAllocationId:'allocation-1'},
+        {sourceShoppingItemId:'shopping-2',sourceShoppingAllocationId:'allocation-2'}
+      ]}
+    });
+    const outcome=await workflow.commit(mismatch);
+    assert.strictEqual(outcome.status,'saved-degraded');
+    assert.deepStrictEqual(recording.events,['persistLedger','nowIso','log','notify','finishLedger']);
+    assert.match(recording.messages[0],/消費已建立/);
+  }
+
+  {
+    const recording=recordingAdapter({applyThrows:true});
+    const workflow=TripBuyToLedger.createWorkflow({domain,adapter:recording.adapter});
+    const outcome=await workflow.commit(command);
+    assert.strictEqual(outcome.status,'saved-degraded');
+    assert.strictEqual(recording.events.filter(value=>value==='persistLedger').length,1,'link failure never retries Ledger persistence');
+    assert.deepStrictEqual(recording.events,['persistLedger','nowIso','applyLinks','log','notify','finishLedger']);
+  }
+
+  for(const failure of [{persistThrows:true},{persistRejects:true}]){
+    const recording=recordingAdapter(failure);
+    const workflow=TripBuyToLedger.createWorkflow({domain,adapter:recording.adapter});
+    const outcome=await workflow.commit(command);
+    assert.strictEqual(outcome.status,'failed');
+    assert.deepStrictEqual(recording.events,['persistLedger','failLedger']);
+  }
+
+  {
+    const recording=recordingAdapter({readThrows:true});
+    const workflow=TripBuyToLedger.createWorkflow({domain,adapter:recording.adapter});
+    const outcome=await workflow.start({itemIds:['x']});
+    assert.strictEqual(outcome.status,'failed','synchronous start errors become outcomes');
+    assert.deepStrictEqual(recording.events,['readItems','failLedger']);
+  }
+
+  {
+    const recording=recordingAdapter();
+    const workflow=TripBuyToLedger.createWorkflow({domain,adapter:recording.adapter});
+    assert.deepStrictEqual(await workflow.commit({editing:{id:'record-1'},draft:{track:'personal'},records:[]}),{
+      ok:false,status:'blocked',reason:'editing'
+    });
+    assert.deepStrictEqual(await workflow.commit({draft:{track:'personal'},submissionDraft:{},records:[]}),{
+      ok:false,status:'blocked',reason:'no-shopping-session'
+    });
+    assert.deepStrictEqual(recording.events,[],'edits and generic Ledger saves never cross the workflow seam');
+  }
+
+  console.log('Buy-to-Ledger module tests passed');
+})().catch(error=>{console.error(error);process.exitCode=1;});

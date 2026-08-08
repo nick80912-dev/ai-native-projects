@@ -22,12 +22,10 @@ function plain(value){return JSON.parse(JSON.stringify(value));}
 
 const workflowSource=[
   extractFunction('createBuyToLedgerRuntimeAdapter'),
-  extractFunction('shoppingTimestampField'),
-  extractFunction('normalizeShoppingLedgerLink'),
-  extractFunction('planShoppingLedgerLinks'),
   extractFunction('persistLedgerExpenseRecords'),
   extractFunction('shoppingLinkSourceRefs'),
-  extractFunction('writeShoppingLedgerLinks'),
+  extractFunction('finishLedgerEntrySaveUi'),
+  extractFunction('failLedgerEntrySaveUi'),
   extractFunction('commitLedgerEntrySave')
 ].join('\n');
 
@@ -120,9 +118,10 @@ function createHarness(options){
   vm.createContext(sandbox);
   vm.runInContext(workflowSource,sandbox);
   sandbox.buyToLedgerRuntimeAdapter=sandbox.createBuyToLedgerRuntimeAdapter({
-    finishLedger(){events.push('finish:adapter');},
-    failLedger(){events.push('fail:adapter');}
+    finishLedger(command,outcome){events.push('finish:adapter');return sandbox.finishLedgerEntrySaveUi(command,outcome&&outcome.result);},
+    failLedger(command,error){events.push('fail:adapter');return sandbox.failLedgerEntrySaveUi(command,error);}
   });
+  sandbox.buyToLedgerWorkflow=TripBuyToLedger.createWorkflow({domain:sandbox.buyToLedgerDomain,adapter:sandbox.buyToLedgerRuntimeAdapter});
   return {
     sandbox,events,messages,logs,links,personalRecords,cleanDraft,
     counts(){return {closeCount,resetCount,renderCount,sharedEnqueueCount,editPersistCount};}

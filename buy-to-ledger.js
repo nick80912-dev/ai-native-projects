@@ -248,5 +248,82 @@
     };
   }
 
-  return {createDomain:createDomain};
+  function createWorkflow(options){
+    var config=options||{},domain=config.domain,adapter=config.adapter;
+    if(!domain||typeof domain.prepare!=='function'||typeof domain.planCommit!=='function')throw new Error('Buy-to-Ledger workflow requires domain');
+    if(!adapter)throw new Error('Buy-to-Ledger workflow requires adapter');
+    var degradedMessage='消費已建立，但採買項目的記帳標記更新失敗。請避免再次記帳，並重新開啟採買清單確認。';
+
+    function failed(command,error){
+      try{adapter.failLedger(command,error);}catch(ignore){}
+      return {ok:false,status:'failed',error:error};
+    }
+    function start(intent){
+      var command=intent||{};
+      return Promise.resolve().then(function(){
+        var items=adapter.readItems(command.itemIds||[]);
+        var context=adapter.readLinkContext();
+        var prepared=domain.prepare(items,context);
+        if(!prepared.ok){
+          var messages=command.messages||{},message=messages[prepared.reason];
+          if(typeof message==='function')message=message(prepared);
+          if(message)adapter.notify(message);
+          return {ok:false,status:'blocked',reason:prepared.reason,prepared:prepared};
+        }
+        var plan=domain.createDraftPlan(prepared.sources);
+        adapter.openLedgerDraft(plan,{
+          keepShoppingList:command.keepShoppingList===true,
+          returnContext:command.returnContext||'',
+          completePending:command.completePending===true,
+          itemIds:(command.itemIds||[]).slice()
+        });
+        return {ok:true,status:'opened',plan:plan,prepared:prepared};
+      }).catch(function(error){return failed(command,error);});
+    }
+    function finishDegraded(command,result,plan,error,kind){
+      var message=kind==='apply'
+        ?'採買記帳關聯回寫失敗：'+(error&&error.message||error)
+        :'採買記帳關聯交握失敗：'+plan.error+'（來源 '+plan.sourceRefs.length+' 筆、紀錄 '+plan.records.length+' 筆）';
+      adapter.log(message);
+      adapter.notify(degradedMessage);
+      var outcome={ok:true,status:'saved-degraded',result:result,plan:plan,error:error||null};
+      adapter.finishLedger(command,outcome);
+      return outcome;
+    }
+    function commit(command){
+      var input=command||{};
+      if(input.editing)return Promise.resolve({ok:false,status:'blocked',reason:'editing'});
+      var refs;
+      try{refs=domain.sourceRefs(input.submissionDraft||input.draft);}
+      catch(error){return Promise.resolve(failed(input,error));}
+      if(!refs.length)return Promise.resolve({ok:false,status:'blocked',reason:'no-shopping-session'});
+      var persistence;
+      try{persistence=adapter.persistLedger(input.records||[],input.draft&&input.draft.track);}
+      catch(error){return Promise.resolve(failed(input,error));}
+      return Promise.resolve(persistence).then(function(result){
+        var plan;
+        try{
+          plan=domain.planCommit({
+            draft:input.draft,submissionDraft:input.submissionDraft,records:input.records,
+            result:result,testMode:input.testMode===true,nowIso:adapter.nowIso()
+          });
+        }catch(error){
+          plan={ok:false,status:'degraded',links:[],sourceRefs:refs,records:result&&result.records||input.records||[],error:error.message||String(error)};
+        }
+        if(!plan.ok)return finishDegraded(input,result,plan,null,'plan');
+        var application;
+        try{application=adapter.applyLinks(plan.links);}
+        catch(error){return finishDegraded(input,result,plan,error,'apply');}
+        return Promise.resolve(application).then(function(){
+          var outcome={ok:true,status:'saved-linked',result:result,plan:plan};
+          adapter.finishLedger(input,outcome);
+          return outcome;
+        },function(error){return finishDegraded(input,result,plan,error,'apply');});
+      },function(error){return failed(input,error);});
+    }
+
+    return {start:start,commit:commit};
+  }
+
+  return {createDomain:createDomain,createWorkflow:createWorkflow};
 });

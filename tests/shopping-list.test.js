@@ -26,6 +26,7 @@ function loadShoppingModule(){
     setTimeout,clearTimeout,
     timestampDate(value){return new Date(Number(value));},
     TripBuyToLedger,
+    buyToLedgerRuntimeAdapter:{},
     canonicalMemberName(value){return String(value||'').trim();},
     AppLog:{repo(){},sync(){}},
     fetch(){return Promise.reject(new Error('network disabled'));},

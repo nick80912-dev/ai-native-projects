@@ -31,6 +31,7 @@ function loadModule(){
     Date,Math,Promise,JSON,String,Number,Boolean,isFinite,setTimeout,clearTimeout,
     timestampDate(value){return new Date(Number(value));},
     TripBuyToLedger,
+    buyToLedgerRuntimeAdapter:{},
     canonicalMemberName(value){return String(value==null?'':value).replace(/　/g,' ').replace(/\s+/g,' ').trim();},
     AppLog:{repo(){},sync(){},data(){}},
     fetch(){return Promise.reject(new Error('network disabled'));},
@@ -488,12 +489,11 @@ assert(html.includes("有 '+unverified+' 位記帳狀態待確認"));
 assert(/if\(value\.state==='linked'\)linked\+\+;[\s\S]{0,80}else if\(value\.state==='unverified'\)unverified\+\+/.test(html),'linked 與 unverified 依 allocation 分別計數');
 assert(shoppingSource.includes('removeMany('),'批次刪除走原子整批路徑');
 assert(!shoppingSource.includes('清空所有已買'),'本批不新增清空已買的危險入口');
-/* preflight 走共用 allocation source helper */
-assert(shoppingSource.includes('shoppingLedgerSources(selected,buyToLedgerRuntimeAdapter.readLinkContext())'),'多選建立消費透過 runtime seam 取得 context 並展開未記帳 allocations');
-assert(shoppingSource.includes('shoppingLedgerSources([item],buyToLedgerRuntimeAdapter.readLinkContext())'),'單筆記帳入口透過相同 seam 展開 allocations');
+/* 所有入口走共用 workflow seam */
+assert(shoppingSource.includes('buyToLedgerWorkflow.start({'),'採買記帳入口統一走 workflow coordinator');
 const singleEntry=html.slice(html.indexOf('function openShoppingLedgerEntry(id)'),html.indexOf('function completeSelectedShopping('));
-assert(singleEntry.includes('buyToLedgerRuntimeAdapter.openLedgerDraft(sources,{keepShoppingList:false})'),'單筆入口透過 runtime seam 依 allocation 數開啟表單');
-assert(shoppingSource.includes('sourceShoppingAllocationId=source.allocationId'),'單筆 draft 保存 allocationId');
+assert(singleEntry.includes('buyToLedgerWorkflow.start({'),'單筆入口走相同 workflow seam');
+assert(shoppingSource.includes('sourceShoppingAllocationId=plan.sourceShoppingAllocationId'),'單筆 draft 保存 domain plan 的 allocationId');
 assert(html.includes('function openShoppingItemDetail('));
 assert(html.includes('function renderShoppingItemDetail('));
 assert(html.includes('代購對象與記帳紀錄'));
@@ -545,12 +545,9 @@ assert(shoppingSource.includes('shoppingListStore.split('),'拆分走 store 的�
 /* 交握與回寫 */
 const handoff=html.slice(html.indexOf('function shoppingLinkSourceRefs('),html.indexOf('function commitLedgerEntrySave('));
 assert(handoff.includes('buyToLedgerDomain.sourceRefs(submissionDraft)'),'多品項來源改由 domain 依送出用 draft 對應,不用 UI index');
-assert(handoff.includes('buyToLedgerRuntimeAdapter.applyLinks(plan.links)'),'回寫透過 runtime seam 走單次原子 store write');
-assert(/消費已建立，但採買項目的記帳標記更新失敗。請避免再次記帳，並重新開啟採買清單確認。/.test(handoff),'回寫失敗顯示核准降級文案');
-assert(!/persistLedger|ledgerRepository\.(add|enqueueBatch)/.test(handoff),'回寫失敗不得自動再建立一次消費');
 const commit=html.slice(html.indexOf('function commitLedgerEntrySave('),html.indexOf('function setLedgerSavePending('));
-assert(/if\(!editing\)writeShoppingLedgerLinks\(/.test(commit),'只有在 Ledger 儲存成功後才回寫,且編輯不回寫');
-assert(commit.indexOf('writeShoppingLedgerLinks')>commit.indexOf('operation.then'),'回寫發生在持久化 Promise 完成之後');
+assert(commit.includes('buyToLedgerWorkflow.commit(command)'),'只有具備完整 Shopping source 的新增消費交由 coordinator commit');
+assert(!html.includes('function writeShoppingLedgerLinks('),'舊的 inline workflow 已移除');
 /* 不變條件 */
 assert(html.includes('sortShoppingStopGroups(')&&html.includes('buildShoppingStopOrder('),'A 的行程排序契約保留');
 assert(html.includes('resolveShoppingStopState(')&&html.includes('tripDatasetAuthority('),'F 的孤兒三態契約保留');
