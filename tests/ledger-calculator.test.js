@@ -112,7 +112,7 @@ const clearSource=extractFunction(html,'clearLedgerCalculator');
 const applySource=extractFunction(html,'applyLedgerCalculator');
 const singleFieldSource=extractFunction(html,'renderLedgerSingleItemPrimary');
 const multiFieldSource=extractFunction(html,'renderLedgerDraftItem');
-const discountSource=extractFunction(html,'renderLedgerTaxDisclosure');
+const discountSource=extractFunction(html,'renderLedgerTaxFields');
 
 const inputSandbox={
   String,Number,Math,isFinite,
