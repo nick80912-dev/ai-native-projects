@@ -23,6 +23,17 @@ assert.deepStrictEqual(result('1200+380+250'),{ok:true,value:1830,error:''},'con
 assert.deepStrictEqual(result('2+3*4'),{ok:true,value:14,error:''},'multiplication keeps normal precedence');
 assert.deepStrictEqual(result('100÷4＋25'),{ok:true,value:50,error:''},'display operators normalize before evaluation');
 assert.deepStrictEqual(result('7/2'),{ok:true,value:3.5,error:''},'the evaluator preserves fractional results for apply-time validation');
+assert.deepStrictEqual(result('.5+1.25'),{ok:true,value:1.75,error:''},'decimal literals may begin with a decimal point');
+assert.deepStrictEqual(result('0.1+0.2'),{ok:true,value:0.30000000000000004,error:''},'the evaluator preserves the raw decimal result');
+assert.deepStrictEqual(result('1.2.3'),{ok:false,value:null,error:'算式格式不正確'},'a number cannot contain two decimal points');
+assert.deepStrictEqual(result('10%'),{ok:true,value:0.1,error:''},'a standalone percent becomes a ratio');
+assert.deepStrictEqual(result('1000*10%'),{ok:true,value:100,error:''},'multiplication consumes a percent as a ratio');
+assert.deepStrictEqual(result('1000/10%'),{ok:true,value:10000,error:''},'division consumes a percent as a ratio');
+assert.deepStrictEqual(result('1000+10%'),{ok:true,value:1100,error:''},'addition treats percent as a percentage of the current total');
+assert.deepStrictEqual(result('1000-10%'),{ok:true,value:900,error:''},'subtraction treats percent as a percentage of the current total');
+assert.deepStrictEqual(result('1000+10%+10%'),{ok:true,value:1210,error:''},'chained additive percents use the running total');
+assert.deepStrictEqual(result('10%%'),{ok:false,value:null,error:'百分比格式不正確'},'a percent cannot be applied twice to one operand');
+assert.deepStrictEqual(result('10+%'),{ok:false,value:null,error:'百分比格式不正確'},'a percent requires a complete operand');
 assert.deepStrictEqual(result('10/0'),{ok:false,value:null,error:'不能除以 0'},'division by zero is explicit');
 assert.deepStrictEqual(result('1+'),{ok:false,value:null,error:'算式尚未完成'},'an incomplete expression is rejected');
 assert.deepStrictEqual(result('1+a'),{ok:false,value:null,error:'算式包含不支援的內容'},'illegal tokens are rejected');
@@ -33,6 +44,7 @@ assert.deepStrictEqual(result('9007199254740991+1'),{ok:false,value:null,error:'
 
 assert.doesNotMatch(evaluatorSource,/\beval\s*\(|\bFunction\s*\(/,'the parser never executes dynamic JavaScript');
 
+const floorSource=extractFunction(html,'ledgerCalculatorFloorValue');
 const workflowSandbox={
   String,Number,Math,isFinite,
   ledgerUiState:{draft:{multi:false,amount:'1680',discount:'80',items:[{key:'item-123',amount:'380'}]}},
@@ -48,19 +60,22 @@ const workflowSandbox={
   fieldUpdates:[],itemUpdates:[],conversionUpdates:0,multiUpdates:0
 };
 vm.createContext(workflowSandbox);
-vm.runInContext(normalizeSource+'\n'+evaluatorSource+'\n'+amountResultSource+'\n'+targetValueSource+'\n'+targetInputIdSource+'\n'+applyValueSource,workflowSandbox);
+vm.runInContext(normalizeSource+'\n'+evaluatorSource+'\n'+floorSource+'\n'+amountResultSource+'\n'+targetValueSource+'\n'+targetInputIdSource+'\n'+applyValueSource,workflowSandbox);
 
 function amountResult(expression,allowZero){
   return JSON.parse(JSON.stringify(workflowSandbox.ledgerCalculatorAmountResult(expression,allowZero)));
 }
 
-assert.deepStrictEqual(amountResult('1200+380',false),{ok:true,value:1580,error:''},'positive integers may be applied');
-assert.deepStrictEqual(amountResult('7/2',false),{ok:false,value:null,error:'記帳金額必須是大於 0 的整數'},'fractional ledger amounts are never rounded');
-assert.deepStrictEqual(amountResult('5-5',false),{ok:false,value:null,error:'記帳金額必須是大於 0 的整數'},'zero ledger amounts are rejected');
-assert.deepStrictEqual(amountResult('5-8',false),{ok:false,value:null,error:'記帳金額必須是大於 0 的整數'},'negative ledger amounts are rejected');
-assert.deepStrictEqual(amountResult('9007199254740991+1',false),{ok:false,value:null,error:'結果超出可用範圍'},'unsafe integers are rejected');
-assert.deepStrictEqual(amountResult('5-5',true),{ok:true,value:0,error:''},'discount retains the existing zero policy');
-assert.deepStrictEqual(amountResult('7/2',true),{ok:false,value:null,error:'折扣金額必須是 0 以上的整數'},'fractional discounts are rejected');
+assert.deepStrictEqual(amountResult('1200+380',false),{ok:true,value:1580,rawValue:1580,truncated:false,error:''},'positive integers may be applied unchanged');
+assert.deepStrictEqual(amountResult('1512.9',false),{ok:true,value:1512,rawValue:1512.9,truncated:true,error:''},'positive fractional amounts floor only at the apply boundary');
+assert.deepStrictEqual(amountResult('0.9',false),{ok:false,value:null,rawValue:0.9,truncated:true,error:'捨去後金額必須大於 0'},'a general amount cannot become zero after flooring');
+assert.deepStrictEqual(amountResult('0.9',true),{ok:true,value:0,rawValue:0.9,truncated:true,error:''},'a discount may floor to the existing zero value');
+assert.deepStrictEqual(amountResult('5-5',false),{ok:false,value:null,rawValue:0,truncated:false,error:'記帳金額必須大於 0'},'zero ledger amounts are rejected');
+assert.deepStrictEqual(amountResult('1-2.2',false),{ok:false,value:null,rawValue:-1.2000000000000002,truncated:false,error:'記帳金額必須大於 0'},'negative ledger amounts are rejected before flooring');
+assert.deepStrictEqual(amountResult('9007199254740991+1',false),{ok:false,value:null,rawValue:null,truncated:false,error:'結果超出可用範圍'},'unsafe integers are rejected');
+assert.deepStrictEqual(amountResult('5-5',true),{ok:true,value:0,rawValue:0,truncated:false,error:''},'discount retains the existing zero policy');
+assert.strictEqual(workflowSandbox.ledgerCalculatorFloorValue(2.9999999999999996),3,'floating noise next to an integer does not lose one unit');
+assert.strictEqual(workflowSandbox.ledgerCalculatorFloorValue(2.9),2,'a meaningful fraction is always floored');
 
 const draft=workflowSandbox.ledgerUiState.draft;
 assert.strictEqual(workflowSandbox.ledgerCalculatorTargetValue(draft,{type:'single'}),'1680');

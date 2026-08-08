@@ -7735,25 +7735,41 @@ function normalizeLedgerCalculatorExpression(expression){
 function evaluateLedgerCalculatorExpression(expression){
   var source=normalizeLedgerCalculatorExpression(expression),numbers=[],operators=[],index=0,expectNumber=true,safeInteger=Number.MAX_SAFE_INTEGER||9007199254740991;
   function precedence(operator){return operator==='*'||operator==='/'?2:1;}
+  function ratioValue(operand){return operand.percent?operand.value/100:operand.value;}
   function applyTop(){
-    var operator=operators.pop(),right=numbers.pop(),left=numbers.pop(),value;
+    var operator=operators.pop(),rightOperand=numbers.pop(),leftOperand=numbers.pop(),left=ratioValue(leftOperand),right,value;
+    if(operator==='+'||operator==='-')right=rightOperand.percent?left*rightOperand.value/100:rightOperand.value;
+    else right=ratioValue(rightOperand);
     if(operator==='/'&&right===0)return {ok:false,value:null,error:'不能除以 0'};
     if(operator==='+')value=left+right;
     else if(operator==='-')value=left-right;
     else if(operator==='*')value=left*right;
     else value=left/right;
     if(!isFinite(value)||Math.abs(value)>safeInteger)return {ok:false,value:null,error:'結果超出可用範圍'};
-    numbers.push(value);return null;
+    numbers.push({value:value,percent:false});return null;
   }
   while(index<source.length){
     var character=source.charAt(index);
     if(character===' '||character==='\t'||character==='\n'||character==='\r'){index++;continue;}
-    if(character>='0'&&character<='9'){
+    if((character>='0'&&character<='9')||character==='.'){
       if(!expectNumber)return {ok:false,value:null,error:'算式格式不正確'};
-      var start=index;while(index<source.length&&source.charAt(index)>='0'&&source.charAt(index)<='9')index++;
-      var numericValue=Number(source.slice(start,index));if(numericValue>safeInteger)return {ok:false,value:null,error:'結果超出可用範圍'};
-      numbers.push(numericValue);expectNumber=false;continue;
+      var start=index,dotCount=0,digitCount=0;
+      while(index<source.length){
+        var numericCharacter=source.charAt(index);
+        if(numericCharacter>='0'&&numericCharacter<='9'){digitCount++;index++;continue;}
+        if(numericCharacter==='.'){dotCount++;index++;continue;}
+        break;
+      }
+      if(!digitCount||dotCount>1)return {ok:false,value:null,error:'算式格式不正確'};
+      var numericText=source.slice(start,index),numericValue=Number(numericText),percent=false;
+      if(!isFinite(numericValue)||numericValue>safeInteger)return {ok:false,value:null,error:'結果超出可用範圍'};
+      if(source.charAt(index)==='%'){
+        if(numericText.slice(-1)==='.')return {ok:false,value:null,error:'百分比格式不正確'};
+        percent=true;index++;
+      }
+      numbers.push({value:numericValue,percent:percent});expectNumber=false;continue;
     }
+    if(character==='%')return {ok:false,value:null,error:'百分比格式不正確'};
     if(character!=='+'&&character!=='-'&&character!=='*'&&character!=='/')return {ok:false,value:null,error:'算式包含不支援的內容'};
     if(expectNumber)return {ok:false,value:null,error:'算式格式不正確'};
     while(operators.length&&precedence(operators[operators.length-1])>=precedence(character)){
@@ -7764,16 +7780,26 @@ function evaluateLedgerCalculatorExpression(expression){
   if(!numbers.length)return {ok:false,value:null,error:'請輸入算式'};
   if(expectNumber)return {ok:false,value:null,error:'算式尚未完成'};
   while(operators.length){var result=applyTop();if(result)return result;}
-  return {ok:true,value:numbers[0],error:''};
+  var finalValue=ratioValue(numbers[0]);
+  if(!isFinite(finalValue)||Math.abs(finalValue)>safeInteger)return {ok:false,value:null,error:'結果超出可用範圍'};
+  return {ok:true,value:finalValue,error:''};
 }
 var legacyExpenseNoticeVisible=false;
 var ledgerUiState={track:'personal',displayCurrency:'',page:'dashboard',filter:'all',sheet:null,selectedRecordId:'',draft:null,editing:null,correction:null,retainedParticipants:null,historyQuery:'',historyCategories:[],historyPayMethods:[],historyProxy:'all',historyTaxExempt:'all',historyFiltersOpen:false,historyGrouping:'date',calendarOpen:false,calendarYear:0,calendarMonth:0,expandedBatches:{},selectionMode:false,selectedRecordIds:{},savePending:false};
 var ledgerCalculatorState={open:false,target:null,expression:'',originalValue:'',result:null,error:'',sheetScrollTop:0};
+function ledgerCalculatorFloorValue(value){
+  var epsilon=Number.EPSILON||2.220446049250313e-16,nearest=Math.round(value),tolerance=epsilon*Math.max(1,Math.abs(value))*8;
+  return Math.abs(value-nearest)<=tolerance?nearest:Math.floor(value);
+}
 function ledgerCalculatorAmountResult(expression,allowZero){
   var evaluated=evaluateLedgerCalculatorExpression(expression);
-  if(!evaluated.ok)return evaluated;
-  var value=evaluated.value,valid=isFinite(value)&&Math.floor(value)===value&&value<=(Number.MAX_SAFE_INTEGER||9007199254740991)&&(allowZero?value>=0:value>0);
-  return valid?{ok:true,value:value,error:''}:{ok:false,value:null,error:allowZero?'折扣金額必須是 0 以上的整數':'記帳金額必須是大於 0 的整數'};
+  if(!evaluated.ok)return {ok:false,value:null,rawValue:null,truncated:false,error:evaluated.error};
+  var rawValue=evaluated.value,safeInteger=Number.MAX_SAFE_INTEGER||9007199254740991;
+  if(!isFinite(rawValue)||Math.abs(rawValue)>safeInteger)return {ok:false,value:null,rawValue:null,truncated:false,error:'結果超出可用範圍'};
+  if(rawValue<0)return {ok:false,value:null,rawValue:rawValue,truncated:false,error:allowZero?'折扣金額必須是 0 以上':'記帳金額必須大於 0'};
+  var value=ledgerCalculatorFloorValue(rawValue),epsilon=Number.EPSILON||2.220446049250313e-16,tolerance=epsilon*Math.max(1,Math.abs(rawValue))*8,truncated=Math.abs(rawValue-value)>tolerance;
+  if(!allowZero&&value<=0)return {ok:false,value:null,rawValue:rawValue,truncated:truncated,error:rawValue>0?'捨去後金額必須大於 0':'記帳金額必須大於 0'};
+  return {ok:true,value:value,rawValue:rawValue,truncated:truncated,error:''};
 }
 function ledgerCalculatorTargetValue(draft,target){
   if(!draft||!target)return null;
