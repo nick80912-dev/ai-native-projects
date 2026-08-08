@@ -27,36 +27,99 @@ test('Today hides the trip day picker and header actions fit without absolute po
   expect(header.settingsHeight).toBeGreaterThanOrEqual(44);
 });
 
-test('settings button renders a themed rounded six-tooth gear', async ({ page }) => {
+test('settings button renders a compact currentColor sliders icon', async ({ page }) => {
   const button=page.getByRole('button',{name:'設定'});
-  const icon=button.locator('.settings-gear-six');
+  const icon=button.locator('.settings-sliders');
   await expect(icon).toBeVisible();
-  await expect(icon.locator('.settings-gear-tooth')).toHaveCount(6);
-  const gear=await icon.evaluate(svg=>({
+  await expect(icon.locator('.settings-slider-rail')).toHaveCount(3);
+  await expect(icon.locator('.settings-slider-knob')).toHaveCount(3);
+  const sliders=await icon.evaluate(svg=>({
     size:[svg.getBoundingClientRect().width,svg.getBoundingClientRect().height],
     strokeWidth:getComputedStyle(svg).strokeWidth,
     viewBox:svg.getAttribute('viewBox'),
-    radii:Array.from(svg.querySelectorAll('circle')).map(circle=>circle.getAttribute('r')),
+    rails:Array.from(svg.querySelectorAll('.settings-slider-rail'),path=>path.getAttribute('d')),
+    knobs:Array.from(svg.querySelectorAll('.settings-slider-knob'),circle=>[circle.getAttribute('cx'),circle.getAttribute('cy'),circle.getAttribute('r')]),
     button:[svg.closest('button').getBoundingClientRect().width,svg.closest('button').getBoundingClientRect().height],
     buttonRadius:getComputedStyle(svg.closest('button')).borderRadius,
     stroke:getComputedStyle(svg).stroke,
     color:getComputedStyle(svg.closest('button')).color,
-    teeth:Array.from(svg.querySelectorAll('.settings-gear-tooth')).map(line=>({
-      transform:line.getAttribute('transform'),
-      cap:getComputedStyle(line).strokeLinecap,
-    })),
+    caps:Array.from(svg.querySelectorAll('.settings-slider-rail'),path=>getComputedStyle(path).strokeLinecap),
   }));
-  /* v80:字符放大到 24px、筆畫收細到 1.75,但 44×44 的按鈕與圓形底不得跟著變 ——
-     否則放大的是觸控區而不是看得見的圖示。 */
-  expect(gear.size).toEqual([24,24]);
-  expect(parseFloat(gear.strokeWidth)).toBe(1.75);
-  expect(gear.button).toEqual([44,44]);
-  expect(gear.buttonRadius).toBe('50%');
-  expect(gear.viewBox).toBe('0 0 24 24');
-  expect(gear.radii).toEqual(['6.25','2.35']);
-  expect(gear.stroke).toBe(gear.color);
-  expect(gear.teeth.map(tooth=>tooth.transform)).toEqual([0,60,120,180,240,300].map(degree=>`rotate(${degree} 12 12)`));
-  expect(gear.teeth.every(tooth=>tooth.cap==='round')).toBe(true);
+  expect(sliders.size).toEqual([22,22]);
+  expect(parseFloat(sliders.strokeWidth)).toBe(1.75);
+  expect(sliders.button).toEqual([44,44]);
+  expect(sliders.buttonRadius).toBe('50%');
+  expect(sliders.viewBox).toBe('0 0 24 24');
+  expect(sliders.rails).toEqual(['M3 6h3 M10 6h11','M3 12h11 M18 12h3','M3 18h7 M14 18h7']);
+  expect(sliders.knobs).toEqual([['8','6','2'],['16','12','2'],['12','18','2']]);
+  expect(sliders.stroke).toBe(sliders.color);
+  expect(sliders.caps.every(cap=>cap==='round')).toBe(true);
+});
+
+test('settings and sync keep compact chrome inside 44px targets at phone widths',async({page})=>{
+  for(const width of [320,375,390]){
+    await page.setViewportSize({width,height:844});
+    const layout=await page.evaluate(()=>{
+      function metrics(button,content){
+        const rect=button.getBoundingClientRect(),style=getComputedStyle(button),chrome=getComputedStyle(button,'::before'),contentRect=content.getBoundingClientRect();
+        const top=parseFloat(chrome.top),bottom=parseFloat(chrome.bottom);
+        return {
+          width:rect.width,
+          height:rect.height,
+          visualHeight:rect.height-top-bottom,
+          chromeTop:top,
+          chromeBottom:bottom,
+          chromeBackground:chrome.backgroundColor,
+          chromePointerEvents:chrome.pointerEvents,
+          chromeZIndex:chrome.zIndex,
+          buttonBackground:style.backgroundColor,
+          contentZIndex:getComputedStyle(content).zIndex,
+          centerOffset:Math.abs((contentRect.top+contentRect.height/2)-(rect.top+rect.height/2)),
+          left:rect.left,
+          right:rect.right,
+        };
+      }
+      const settings=document.querySelector('.settings-btn'),sync=document.getElementById('syncBtn');
+      return {
+        documentOverflow:document.documentElement.scrollWidth>document.documentElement.clientWidth,
+        settings:metrics(settings,settings.querySelector('svg')),
+        sync:metrics(sync,document.getElementById('syncTxt')),
+      };
+    });
+    expect(layout.documentOverflow,`document overflow @${width}`).toBe(false);
+    expect(layout.sync.right,`sync stays left of settings @${width}`).toBeLessThanOrEqual(layout.settings.left);
+    for(const [name,control] of Object.entries({settings:layout.settings,sync:layout.sync})){
+      expect(control.height,`${name} target height @${width}`).toBeGreaterThanOrEqual(44);
+      expect(control.chromeTop,`${name} chrome top @${width}`).toBe(4);
+      expect(control.chromeBottom,`${name} chrome bottom @${width}`).toBe(4);
+      expect(control.visualHeight,`${name} visual height @${width}`).toBe(36);
+      expect(control.chromeBackground,`${name} chrome background @${width}`).not.toBe('rgba(0, 0, 0, 0)');
+      expect(control.chromePointerEvents,`${name} chrome pointer behavior @${width}`).toBe('none');
+      expect(control.chromeZIndex,`${name} chrome layer @${width}`).toBe('0');
+      expect(control.buttonBackground,`${name} button background @${width}`).toBe('rgba(0, 0, 0, 0)');
+      expect(control.contentZIndex,`${name} content layer @${width}`).toBe('1');
+      expect(control.centerOffset,`${name} vertical center @${width}`).toBeLessThanOrEqual(.5);
+    }
+  }
+});
+
+test('all six themes preserve sliders currentColor and compact header chrome',async({page})=>{
+  const themes=await page.evaluate(()=>THEME_IDS.map(id=>{
+    document.documentElement.dataset.theme=id;
+    const settings=document.querySelector('.settings-btn'),sync=document.getElementById('syncBtn'),icon=settings.querySelector('.settings-sliders');
+    return {
+      id,
+      iconStroke:icon&&getComputedStyle(icon).stroke,
+      buttonColor:getComputedStyle(settings).color,
+      settingsChrome:getComputedStyle(settings,'::before').backgroundColor,
+      syncChrome:getComputedStyle(sync,'::before').backgroundColor,
+    };
+  }));
+  for(const theme of themes){
+    expect(theme.iconStroke,theme.id+' sliders currentColor').toBe(theme.buttonColor);
+    expect(theme.settingsChrome,theme.id+' settings chrome').not.toBe('rgba(0, 0, 0, 0)');
+    expect(theme.syncChrome,theme.id+' sync chrome').not.toBe('rgba(0, 0, 0, 0)');
+  }
 });
 
 test('trip and shopping controls keep car-friendly targets and decision text', async ({ page }) => {
