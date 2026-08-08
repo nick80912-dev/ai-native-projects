@@ -5,6 +5,7 @@
 - **等號後百分比**：修正 calculator evaluated-state 分支，讓 `%` 與四則運算子一樣可延續已完成結果；`1000 = %` 會形成 `1000%` 並顯示 10。數字仍在 `=` 後開始新算式，既有購物式 `1000−10%=900`、安全 parser 與套用時無條件捨去不變。
 - **release review 文件收斂**：ADR 0010 依七段格式重整並加入 ADR index；`ledger-ui-state.js` 補入 README、架構、資料夾與 AI manifest 的 runtime／部署清單；真機驗收文件補記 Bar 於 2026-08-08 對 v88–v89、v92–v95 的累積核准。
 - **版本與相容性**：`app-version.js`／`sw.js` 升為 v96，`APP_RELEASE_NOTES` 依五筆規則滾動；未修改 SW install／activate／fetch／skipWaiting／clients.claim、Ledger／Shopping schema、Apps Script、備份格式、同步、`PERSONAL_STATE_VERSION=9` 或 `netlify.toml`。SW 更新提示雙版本驗收順延至 v97／v98。
+- **跨平台 release CI**：GitHub Linux Chromium 揭露購物搜尋框會受字型 metrics 影響量到 45px，而同列採買入口固定為 46px；搜尋框改以 `height:46px; box-sizing:border-box` 明確履行既有等高契約，不靠放寬測試掩蓋 1px 差異。
 - **TDD 與完整 gate**：新增兩個 browser regression assertions，修正前分別因找不到「管理儲存空間」與 `1000 = %` 仍停在 `1000` 而失敗；最小修正後 targeted Playwright 2／2 通過。最終完整 70／70 個 Node test files、Playwright 124／124、`check-doc-titles`、`check-app-version`、兩份 manifest JSON 與 `git diff --check` 全數通過；Standards／Spec 複核確認原 findings 均已關閉。
 
 ## 2026-08-08｜Ledger UI 歷史瀏覽 workflow／state seam（SW v95）⭐ 架構變更
