@@ -3,10 +3,14 @@
 > 原則:每個檔案責任單一,命名一致,AI 一眼知道去哪修改。不使用 common/misc/temp 這類模糊命名。
 
 ## 正式 App 與 PWA 檔案(Netlify 根目錄)
-> `index.html` 是唯一可編輯 App 與正式入口;根目錄檔案由 GitHub 連動部署至 Netlify。
+> `index.html` 是 App 與正式入口；裝置照片儲存邊界獨立為 `shopping-photo-store.js`，採買轉記帳的純 domain／workflow 邊界獨立為 `buy-to-ledger.js`，Ledger 歷史瀏覽 state／workflow 邊界獨立為 `ledger-ui-state.js`。根目錄檔案由 GitHub 連動部署至 Netlify。
 
 ```
 index.html              App 本體:UI殼 + CSS + 內嵌 JS(依區塊分層,見下)
+app-version.js          App 顯示版本(必須與 sw.js 的 SW_VERSION 一致)
+shopping-photo-store.js 採買照片壓縮與 IndexedDB put/get/remove 邊界
+buy-to-ledger.js        採買轉記帳的純 domain 與 workflow coordinator（UMD/CommonJS）
+ledger-ui-state.js      Ledger 歷史瀏覽不可變 state transition 與 ordered effects workflow（UMD/CommonJS）
 schema.js               唯一資料規格(SSoT):欄位/gid/型別值/發布URL
 validator.js            防錯防線:AppLog 六類 + buildHeaderMap + healthCheck
 sw.js                   Service Worker:離線快取(改版 bump VERSION)
@@ -25,7 +29,7 @@ okayama-peach-badge.png 診斷徽章圖
 netlify.toml            Netlify 快取 header 設定
 .ai-manifest.json       AI 導航檔(接手第一步只讀這份)
 ```
-> App UI 與主要邏輯維持單一 `index.html`;`schema.js` / `validator.js` 同時作為獨立權威來源,其餘 JS 仍以區塊註解分層。
+> App UI、DOM adapter 與多數流程維持在單一 `index.html`；`shopping-photo-store.js`、`buy-to-ledger.js`、`ledger-ui-state.js`、`schema.js` / `validator.js` 分別作為裝置照片、採買轉記帳、Ledger 歷史瀏覽 state、資料規格與驗證的獨立邊界，其餘 JS 仍以區塊註解分層。
 
 ## App HTML 內部分層(區塊順序,即邏輯模組)
 ```
@@ -55,13 +59,16 @@ PROJECT_CONSTITUTION.md    專案憲章(最高規範)
 14_FILE_TIERS_AND_GATE.md  檔案風險分級與 Gate 保護
 15_AI_EXECUTION_RULES.md   AI 決策權限/指令效力/不確定性協議/任務分級
 16_OPS_PLAYBOOK.md         回滾手冊 + DevOps 安全規範
-adr/                       架構決策紀錄(0001-0005 + README)
+adr/                       架構決策紀錄(0001-0010 + README)
 tasks/                     即時狀態唯一權威(current/backlog/done)
 tests/                     測試資產(交付必附)
 tools/                     檢查腳本(check-doc-titles.js:標題/檔名一致性)
 .github/workflows/         Sanity CI(qa.yml,main push/PR 自動檢查;dev 目前跑同等本機 CI)
 docs/superpowers/          功能設計規格與實作計畫
 schema.js / validator.js   資料規格 SSoT / 防錯防線(Tier 1 原始碼)
-index.html                 唯一可編輯 App 與 Netlify 正式入口
+index.html                 App UI 與 Netlify 正式入口
+shopping-photo-store.js    採買照片的裝置本機 IndexedDB 邊界
+buy-to-ledger.js           採買轉記帳的純 domain／workflow runtime module
+ledger-ui-state.js         Ledger 歷史瀏覽 state／workflow runtime module
 sw.js / manifest.webmanifest / icon-*.png  PWA 離線與安裝資產
 ```

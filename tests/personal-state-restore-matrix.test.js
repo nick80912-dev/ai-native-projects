@@ -1,4 +1,4 @@
-/* 個人狀態備份 v1–v8 還原矩陣(2026-07-30 P3)
+/* 個人狀態備份 v1–v9 還原矩陣(2026-07-30 P3)
    ============================================================
    為什麼要有這個檔:備份格式歷經 v1 → v8 八次演進,但在此之前只有 v1／v2／v4／v8
    四個版本有還原測試,**v3／v5／v6／v7 完全沒有**。而 `settings-backup-ux.test.js`
@@ -15,6 +15,7 @@
 const assert = require('assert');
 const fs = require('fs');
 const vm = require('vm');
+const TripBuyToLedger = require('../buy-to-ledger.js');
 
 const html = fs.readFileSync('index.html', 'utf8');
 
@@ -35,8 +36,11 @@ const shoppingSource = slice('var SHOPPING_UNIT_MAX_LENGTH=', 'function shopping
 const optionStoreSource = slice('function normalizeLedgerOption(', 'function isTestLedgerRecord(');
 const travelNoteSource = slice('var TRAVEL_NOTES_KEY=', '/* ================= SETTINGS 2.0 ================= */');
 const personalStateSource = slice('function closeSettings()', 'function setLedgerTestMode(');
+/* v9 的想逛 key 轉換:注入 index.html 的真實實作,不在測試裡另寫一份 */
+const shopWantKeySource = slice('function shopWantStoreKey(', 'function toggleShopWantList(');
 
 /* 真實實作的證據:抓到假 store 混進來時要立刻失敗 */
+assert.match(shopWantKeySource, /function migrateShopWantKeys\(/, '注入的是真的想逛 key 轉換');
 assert.match(shoppingSource, /function normalizeShoppingItem\(/, '注入的是真的採買正規化');
 assert.match(shoppingSource, /function migrateShoppingQtyText\(/, '注入的是真的數量遷移');
 assert.match(optionStoreSource, /function normalizeShoppingUnitBackupOptions\(|normalizeRestore/, '選項 store 具備還原專用正規化');
@@ -91,6 +95,7 @@ function createSandbox() {
   const sandbox = {
     console, JSON, Date, Math, Promise, String, Number, Boolean, Array, Object, RegExp, Error,
     isFinite, parseInt, parseFloat, setTimeout, clearTimeout,
+    buyToLedgerDomain: TripBuyToLedger.createDomain({effectiveRecords(records){return records;}}),
     localStorage: storage,
     navigator: { clipboard: { writeText() { return Promise.resolve(); } } },
     document: { getElementById(id) { return id === 'personalStateBox' ? box : null; } },
@@ -118,9 +123,18 @@ function createSandbox() {
     validateLedgerRecord() { return true; },
     currentThemeId() { return storage.getItem(KEYS.theme) || 'ocean'; },
     /* ---- 常數:與 index.html 一致 ---- */
-    PERSONAL_STATE_VERSION: 8,
-    PERSONAL_STATE_SUPPORTED_VERSIONS: [1, 2, 3, 4, 5, 6, 7, 8],
-    isSupportedPersonalStateVersion(version) { return typeof version === 'number' && [1, 2, 3, 4, 5, 6, 7, 8].indexOf(version) >= 0; },
+    PERSONAL_STATE_VERSION: 9,
+    PERSONAL_STATE_SUPPORTED_VERSIONS: [1, 2, 3, 4, 5, 6, 7, 8, 9],
+    isSupportedPersonalStateVersion(version) { return typeof version === 'number' && [1, 2, 3, 4, 5, 6, 7, 8, 9].indexOf(version) >= 0; },
+    /* v9 的想逛 key 轉換需要目前的購物地點。固定成 fixture,讓「唯一候選／模糊候選」可控。
+       「無印良品 1F」刻意同時存在於 P001 與 P039 —— 這正是不得猜測的模糊案例。 */
+    shopMalls() {
+      return [
+        { place: { placeId: 'P001', name: '永旺夢樂城岡山' }, stores: [{ floor: '1F', name: '無印良品' }, { floor: '4F', name: 'UNIQLO' }] },
+        { place: { placeId: 'P007', name: '廣島本通商店街' }, stores: [{ floor: '路面店', name: 'BEAMS' }] },
+        { place: { placeId: 'P039', name: 'Ario 倉敷' }, stores: [{ floor: '1F', name: '無印良品' }] },
+      ];
+    },
     THEME_IDS: ['ocean', 'ivory', 'wisteria', 'cedar', 'mist', 'tea'],
     SHOPPING_CATEGORIES: ['必買', '伴手禮', '生活用品', '其他'],
     DEFAULT_LEDGER_CATEGORIES: ['餐飲', '交通', '票券', '購物', '衣物', '美妝', '其他'],
@@ -138,6 +152,7 @@ function createSandbox() {
   vm.runInContext(shoppingSource, sandbox);
   vm.runInContext(optionStoreSource, sandbox);
   vm.runInContext(travelNoteSource, sandbox);
+  vm.runInContext(shopWantKeySource, sandbox);
   /* store 實例:與 index.html 的建構參數逐字對齊 */
   vm.runInContext([
     "var ledgerCategoryStore=createLedgerOptionStore({storage:localStorage,key:LEDGER_CATEGORY_OPTIONS_KEY,defaults:DEFAULT_LEDGER_CATEGORIES,normalizeList:normalizeLedgerCategoryOptions});",
@@ -209,8 +224,16 @@ const payloads = {
   8: Object.assign({}, BASE, {
     version: 8, personalLedger: [PERSONAL_RECORD], ledgerCategories: ['交通'], ledgerPayMethods: ['Suica'],
     proxyTargets: ['媽媽'],
-    shoppingItems: [{ id: 'shopping-v8', name: '茶葉', category: '伴手禮', unit: '包', legacyQtyText: '', allocations: [{ allocationId: 'shopping-v8-allocation-1', target: '', quantity: 3, ledgerLinks: [] }], stopRef: '', done: false, createdAt: '2026-07-27T09:00:00.000Z', completedAt: '', splitGroupId: '' }],
+    shoppingItems: [{ id: 'shopping-v8', name: '茶葉', category: '伴手禮', unit: '包', legacyQtyText: '', allocations: [{ allocationId: 'shopping-v8-allocation-1', target: '', quantity: 3, ledgerLinks: [] }], stopRef: '', done: false, createdAt: '2026-07-27T09:00:00.000Z', completedAt: '', splitGroupId: '', photoId: 'shopping-photo-from-backup' }],
     /* v8 起 payload 自帶三項新狀態 */
+    themeId: 'cedar',
+    shoppingUnits: ['個', '罐'],
+    travelNotes: [{ id: 'note-backup', kind: 'suggestion', text: '備份帶來的紀錄', status: 'resolved', createdAt: '2026-07-28T08:00:00.000Z', updatedAt: '2026-07-28T09:00:00.000Z', view: 'split', appVersion: 'v72', online: true, syncState: 'synced', healthSummary: [] }],
+  }),
+  9: Object.assign({}, BASE, {
+    version: 9, personalLedger: [PERSONAL_RECORD], ledgerCategories: ['交通'], ledgerPayMethods: ['Suica'],
+    proxyTargets: ['媽媽'],
+    shoppingItems: [{ id: 'shopping-v9', name: '茶葉', category: '伴手禮', unit: '包', legacyQtyText: '', allocations: [{ allocationId: 'shopping-v9-allocation-1', target: '', quantity: 3, ledgerLinks: [] }], stopRef: '', done: false, createdAt: '2026-07-27T09:00:00.000Z', completedAt: '', splitGroupId: '' }],
     themeId: 'cedar',
     shoppingUnits: ['個', '罐'],
     travelNotes: [{ id: 'note-backup', kind: 'suggestion', text: '備份帶來的紀錄', status: 'resolved', createdAt: '2026-07-28T08:00:00.000Z', updatedAt: '2026-07-28T09:00:00.000Z', view: 'split', appVersion: 'v72', online: true, syncState: 'synced', healthSummary: [] }],
@@ -218,13 +241,13 @@ const payloads = {
 };
 
 /* ============================================================
-   共同契約:v1–v8 全部都必須還原成功
+   共同契約:v1–v9 全部都必須還原成功
    ============================================================ */
-for (const version of [1, 2, 3, 4, 5, 6, 7, 8]) {
+for (const version of [1, 2, 3, 4, 5, 6, 7, 8, 9]) {
   const { read, toasts } = restore(payloads[version]);
   assert.deepStrictEqual(toasts, ['個人狀態已還原'], 'v' + version + ' 必須還原成功且只吐一則成功訊息');
   assert.deepStrictEqual(read(KEYS.checks), { P001: true }, 'v' + version + ' 還原打卡狀態');
-  assert.deepStrictEqual(read(KEYS.wants), { S001: true }, 'v' + version + ' 還原想逛狀態');
+  assert.deepStrictEqual(read(KEYS.wants), { S001: true }, 'v' + version + ' 還原想逛狀態(非索引型 key 原樣保留)');
   assert.strictEqual(read(KEYS.member), '黃柏', 'v' + version + ' 還原成員身分');
   assert.ok(Array.isArray(read(KEYS.shopping)), 'v' + version + ' 採買清單一定是陣列');
   assert.ok(Array.isArray(read(KEYS.units)), 'v' + version + ' 採買單位一定是陣列');
@@ -345,6 +368,7 @@ for (const version of [1, 2, 3, 4, 5, 6, 7]) {
   assert.deepStrictEqual(read(KEYS.units), ['個', '罐'], 'v8 的採買單位覆蓋裝置現值');
   assert.strictEqual(read(KEYS.notes).length, 1);
   assert.strictEqual(read(KEYS.notes)[0].id, 'note-backup', 'v8 的旅途紀錄覆蓋裝置現值');
+  assert.strictEqual(Object.prototype.hasOwnProperty.call(read(KEYS.shopping)[0], 'photoId'), false, 'v8 即使夾帶 photoId 也不得在另一台裝置建立無效附件引用');
   assert.deepStrictEqual(plain(sandbox.__themes), [{ themeId: 'cedar', options: { persist: false } }], 'v8 套用備份帶來的主題');
 }
 
@@ -377,11 +401,56 @@ for (const version of [1, 2, 3, 4, 5, 6, 7]) {
 }
 
 /* ============================================================
+   v9:想逛 key 由索引型改為 placeId 型
+   ============================================================ */
+const STABLE = { muji: 'w2:pP001:1F:%E7%84%A1%E5%8D%B0%E8%89%AF%E5%93%81', beams: 'w2:pP007:%E8%B7%AF%E9%9D%A2%E5%BA%97:BEAMS' };
+
+/* v1–v8 還原時對 payload.wants 執行轉換:唯一候選轉成 stable key */
+{
+  const { read, toasts } = restore(Object.assign({}, payloads[8], { wants: { 'w_1_路面店_BEAMS': true } }));
+  assert.deepStrictEqual(toasts, ['個人狀態已還原'], 'v8 備份仍可還原');
+  assert.deepStrictEqual(read(KEYS.wants), { [STABLE.beams]: true },
+    'v8 備份的索引型想逛 key 在還原時轉成 stable key');
+}
+/* 模糊舊 key(無印良品 1F 同時在 P001 與 P039)不得錯誤映射到任一家 */
+{
+  const { read } = restore(Object.assign({}, payloads[8], { wants: { 'w_0_1F_無印良品': true, 'w_1_路面店_BEAMS': true } }));
+  const restored = read(KEYS.wants);
+  assert.deepStrictEqual(restored, { [STABLE.beams]: true },
+    '模糊舊 key 一律移除,不得依 payload 內的 index 猜測是 P001 還是 P039');
+  assert.strictEqual(Object.keys(restored).some((k) => /^w_\d+_/.test(k)), false, '還原後不得殘留索引型 key');
+}
+/* v9 payload 已是 stable key,原樣還原不再轉換 */
+{
+  const { read } = restore(Object.assign({}, payloads[9], { wants: { [STABLE.muji]: true } }));
+  assert.deepStrictEqual(read(KEYS.wants), { [STABLE.muji]: true }, 'v9 的 stable key 原樣還原');
+}
+/* v9 匯出只含 stable key,且其他欄位不受影響 */
+{
+  const sandbox = createSandbox();
+  sandbox.__storage.setItem(KEYS.wants, JSON.stringify({ 'w_1_路面店_BEAMS': true, S000: true }));
+  const exported = JSON.parse(sandbox.personalStateJson());
+  assert.strictEqual(exported.version, 9, '匯出版本為 9');
+  assert.deepStrictEqual(exported.wants, { [STABLE.beams]: true, S000: true },
+    '匯出前先轉換,v9 備份不得帶出索引型 key');
+  assert.deepStrictEqual(exported.checks, { P000: true }, '匯出不影響打卡');
+  assert.strictEqual(exported.themeId, DEVICE_THEME, '匯出不影響主題');
+}
+/* 匯出 → 清除 → 還原,想逛標記位置正確 */
+{
+  const source = createSandbox();
+  source.__storage.setItem(KEYS.wants, JSON.stringify({ [STABLE.muji]: true, [STABLE.beams]: true }));
+  const { read } = restore(JSON.parse(source.personalStateJson()));
+  assert.deepStrictEqual(read(KEYS.wants), { [STABLE.muji]: true, [STABLE.beams]: true },
+    'v9 匯出→還原後想逛標記位置完全一致');
+}
+
+/* ============================================================
    向前相容:未來版本的 payload 一律拒絕(不是忽略未知欄位)
    ============================================================ */
 {
-  const { read, toasts } = restore(Object.assign({}, payloads[8], { version: 9 }));
-  assert.deepStrictEqual(toasts, ['個人狀態格式驗證失敗'], 'v9 payload 必須被明確拒絕');
+  const { read, toasts } = restore(Object.assign({}, payloads[9], { version: 10 }));
+  assert.deepStrictEqual(toasts, ['個人狀態格式驗證失敗'], 'v10 payload 必須被明確拒絕');
   assert.deepStrictEqual(read(KEYS.checks), { P000: true }, '拒絕時裝置原狀態一字不動');
   assert.strictEqual(read(KEYS.theme), DEVICE_THEME, '拒絕時不得套用任何主題');
 }
@@ -420,4 +489,4 @@ for (const version of [1, 2, 3, 4, 5, 6, 7]) {
   assert.deepStrictEqual(read(KEYS.checks), { P000: true }, '失敗時裝置狀態不得被改動');
 }
 
-console.log('personal state restore matrix (v1–v8) tests passed');
+console.log('personal state restore matrix (v1–v9) tests passed');

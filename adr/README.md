@@ -21,5 +21,7 @@ Decision · Context · Alternatives Considered · Why This Decision · Expected 
 | 0006 | Ledger Sync via Apps Script | Accepted |
 | 0007 | 團體結算:握手式結清事實(Settlement Handshake) | Accepted |
 | 0008 | 主題系統交付範圍:六組淺色主題(Six-Theme Scope Ratification) | Accepted |
+| 0009 | Buy-to-Ledger 垂直切片與 Runtime Seam | Accepted |
+| 0010 | Ledger UI 歷史瀏覽 Workflow／State Seam | Accepted |
 
 新增 ADR:複製格式、編號遞增、更新本索引。

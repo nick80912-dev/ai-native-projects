@@ -9,8 +9,8 @@
      - 可切換世代:同一組 URL 回不同內容,模仿「同 URL 部署新版」
 
    世代標記注入方式(全部可在 runtime 觀測,且必然改變位元組):
-     sw.js          SW_VERSION  → 'v73-QAGEN<N>'   (連帶決定 CACHE_NAME)
-     app-version.js APP_VERSION → 'v73-QAGEN<N>'
+     sw.js          SW_VERSION  → '<指定版本>-QAGEN<N>'   (連帶決定 CACHE_NAME)
+     app-version.js APP_VERSION → '<指定版本>-QAGEN<N>'
      index.html     </body> 前插入 var QA_INDEX_GEN
      schema.js      檔尾追加  var QA_SCHEMA_GEN
    ============================================================ */
@@ -36,11 +36,12 @@ function createVersionedServer(options) {
 
   function transform(relativePath, buffer) {
     const tag = 'QAGEN' + state.generation;
+    const configuredVersion = options.versions && options.versions[state.generation];
     if (relativePath === 'sw.js') {
-      return Buffer.from(String(buffer).replace(/var SW_VERSION='([^']+)';/, "var SW_VERSION='$1-" + tag + "';"));
+      return Buffer.from(String(buffer).replace(/var SW_VERSION='([^']+)';/, (_, current) => "var SW_VERSION='" + (configuredVersion || current) + '-' + tag + "';"));
     }
     if (relativePath === 'app-version.js') {
-      return Buffer.from(String(buffer).replace(/var APP_VERSION='([^']+)';/, "var APP_VERSION='$1-" + tag + "';"));
+      return Buffer.from(String(buffer).replace(/var APP_VERSION='([^']+)';/, (_, current) => "var APP_VERSION='" + (configuredVersion || current) + '-' + tag + "';"));
     }
     if (relativePath === 'index.html') {
       return Buffer.from(String(buffer).replace('</body>', "<script>var QA_INDEX_GEN='" + tag + "';</script>\n</body>"));

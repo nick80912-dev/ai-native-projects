@@ -1,6 +1,8 @@
 const assert=require('assert');
 const fs=require('fs');
 const vm=require('vm');
+const TripBuyToLedger=require('../buy-to-ledger.js');
+const TripLedgerUiState=require('../ledger-ui-state.js');
 
 function createStorage(){
   const values={};
@@ -20,6 +22,7 @@ function loadModule(){
     console:{log(){},warn(){},error(){}},localStorage:createStorage(),
     fetch(){return Promise.reject(new Error('network disabled'));},setTimeout,clearTimeout,
     Date,Math,Promise,JSON,String,Number,isFinite,
+    TripBuyToLedger,TripLedgerUiState,buyToLedgerRuntimeAdapter:{},
     timestampDate(value){return new Date(Number(value));},AppLog:{repo(){},sync(){}},
     formatLedgerCurrencyAmount(currency,amount){return (currency==='TWD'?'NT$':'¥')+Math.round(Number(amount||0)).toLocaleString();},
     escapeHtml(value){return String(value);},
@@ -63,15 +66,36 @@ assert.strictEqual(summary.today.count,15,'Today card uses the device-local date
 assert.strictEqual(summary.total.amountJpy,records.reduce((sum,record)=>sum+record.amountJpy,0));
 assert.strictEqual(summary.today.amountTwd,records.slice(2).reduce((sum,record)=>sum+record.amountTwd,0));
 
+/* v88: catches the dashboard regressing to a cumulative-only total or calling
+   a shared related amount "my spending". Expectations are hand-derived. */
+assert.strictEqual(typeof mod.ledgerSummaryPresentation,'function','v88 exposes one presentation model for both tracks');
+const personalPresentation=plain(mod.ledgerSummaryPresentation('personal',{
+  count:5,total:{amountJpy:1800,amountTwd:360},today:{count:2,amountJpy:700,amountTwd:140}
+},'JPY'));
+assert.deepStrictEqual(personalPresentation,{
+  todayLabel:'今日支出 · 2 筆',todayPrimary:'¥700',todaySecondary:'NT$140',
+  totalLabel:'旅程累計 · 5 筆',totalAmount:'¥1,800'
+});
+const sharedPresentation=plain(mod.ledgerSummaryPresentation('shared',{
+  count:4,total:{amountJpy:2400,amountTwd:480},today:{count:1,amountJpy:900,amountTwd:180}
+},'TWD'));
+assert.deepStrictEqual(sharedPresentation,{
+  todayLabel:'與我相關 · 今日消費 · 1 筆',todayPrimary:'NT$180',todaySecondary:'¥900',
+  totalLabel:'與我相關旅程累計 · 4 筆',totalAmount:'NT$480'
+});
+assert.deepStrictEqual(plain(mod.ledgerSummaryPresentation('personal',{
+  count:3,total:{amountJpy:600,amountTwd:120},today:{count:0,amountJpy:0,amountTwd:0}
+},'JPY')),{
+  todayLabel:'今日支出 · 0 筆',todayPrimary:'¥0',todaySecondary:'NT$0',
+  totalLabel:'旅程累計 · 3 筆',totalAmount:'¥600'
+},'zero Today spending stays explicit instead of falling back to the cumulative amount');
+
 assert.strictEqual(typeof mod.renderLedgerRecentHeading,'function','dashboard exposes one recent heading renderer');
 const recentHeading=mod.renderLedgerRecentHeading('<button>選取</button>');
 assert(recentHeading.includes('最近消費'),'recent heading keeps the section title');
 assert(recentHeading.includes('查看全部 〉'),'recent heading keeps the complete history entry');
 assert(!recentHeading.includes('今日'),'recent heading never duplicates Today counts or amounts');
-assert.strictEqual(typeof mod.renderLedgerTodayHint,'function','dashboard exposes one shared Today-hint rule');
-assert.strictEqual(mod.renderLedgerTodayHint({today:{count:5}},5),'','Today spending needs no additional hint');
-assert(mod.renderLedgerTodayHint({today:{count:0}},3).includes('今日尚無消費'),'history with zero Today spending gets the lightweight hint');
-assert.strictEqual(mod.renderLedgerTodayHint({today:{count:0}},0),'','an empty ledger does not duplicate the existing empty state');
+assert.strictEqual(typeof mod.renderLedgerTodayHint,'undefined','the old zero-Today hint is removed because the summary always shows Today');
 assert.strictEqual(typeof mod.ledgerRecentDateLabel,'function','dashboard exposes one recent-date label rule');
 assert.strictEqual(mod.ledgerRecentDateLabel([{time:new Date(now).toISOString()}],now),'今天','the current local date is labelled Today');
 assert.strictEqual(mod.ledgerRecentDateLabel(recent,now+86400000),'2026/07/18','historical recent spending keeps its formatted date');
@@ -94,13 +118,14 @@ const splitSource=html.slice(html.indexOf('function renderSplit()'),html.indexOf
 const ledgerUiSource=html.slice(html.indexOf('function ledgerTrackRecords()'),html.indexOf('/* ================= 導覽 / 啟動'));
 const settlementCardSource=html.slice(html.indexOf('function renderLedgerSettlementCard('),html.indexOf('function ledgerSettlementLines('));
 const settlementProgressSource=html.slice(html.indexOf('function ledgerSettlementCardProgress('),html.indexOf('function postLedgerRecord('));
-assert(html.includes("var ledgerUiState={track:'personal'"),'one ledger UI state defaults to personal');
+assert(html.includes('var ledgerUiState=TripLedgerUiState.createState();'),'one Ledger UI state uses the canonical module defaults');
+assert.strictEqual(TripLedgerUiState.createState().track,'personal','fresh Ledger UI sessions default to personal');
 assert(!html.includes("var ledgerTrack='personal'"),'parallel ledgerTrack state is removed');
 assert(splitSource.includes('ledger-status-pill'),'dashboard renders the sync/rate status pill');
 assert(splitSource.includes('ledger-summary-card'),'dashboard renders the primary summary card');
-assert(splitSource.includes("shared?'與我相關 · '+period.count+' 筆紀錄'"),'shared primary card states the personal scope of its count and amount');
+assert(splitSource.includes("ledgerSummaryPresentation(shared?'shared':'personal',period,currency)"),'both tracks render through the tested v88 presentation model');
 assert(!splitSource.includes('團體總支出'),'shared primary card no longer implies a whole-group total');
-assert(splitSource.includes(":'累計支出 · '+period.count+' 筆紀錄'"),'personal primary card explicitly labels cumulative spending');
+assert(splitSource.includes('ledger-summary-trip'),'the existing summary card includes the trip cumulative footer');
 assert(!splitSource.includes('ledger-today-card'),'neither ledger track renders a standalone Today card');
 assert.match(splitSource,/<button class="ledger-compact-card ledger-compact-action ledger-home-summary-card ledger-proxy-summary-card" onclick="openLedgerProxyPanel\(\)">/,'personal proxy remains a whole-card button using the shared size contract');
 assert(splitSource.includes('ledger-home-summary-head'),'personal proxy uses the shared title and action row');
@@ -130,7 +155,7 @@ assert(ledgerUiSource.includes('groupLedgerExpensesByDate'),'dashboard uses the 
 assert(ledgerUiSource.includes("spendLedgerRecords(mergedLedgerRecords())"),'shared history consumes effective visible expenses');
 assert(ledgerUiSource.includes('memberRelatedLedgerRecords(')&&ledgerUiSource.includes('getCurrentMember(),ledgerVisibilityWarn'),'shared track applies the member-related filter at the single shared choke point');
 assert(ledgerUiSource.includes('ledgerUniverseRecords'),'shared dashboard selects one formal/TEST universe');
-assert(ledgerUiSource.includes("ledgerUiState.page='all'"),'View all switches the single ledger state into history mode');
+assert(ledgerUiSource.includes("ledgerUiWorkflow.dispatch({type:'open-history'})"),'View all switches the single ledger state into history mode through the workflow seam');
 assert(ledgerUiSource.includes("['proxy','代購']")&&ledgerUiSource.includes("['non-proxy','非代購']")&&ledgerUiSource.includes("'setLedgerHistoryProxy'"),'personal history exposes proxy and non-proxy filters');
 const detailSource=html.slice(html.indexOf('function ledgerRecordDetailRows('),html.indexOf('function renderSplit()'));
 assert(detailSource.includes('ledgerTrackRecords().filter'),'detail lookup searches the currently visible track only');
@@ -143,7 +168,7 @@ assert(splitSource.includes('不影響正式分帳'),'TEST banner confirms forma
 assert.match(html,/\.ledger-shared-dashboard \.ledger-recent-section\{[^}]*margin-top:-?\d+px/,'shared dashboard uses a scoped compact vertical rhythm');
 assert.match(html,/\.ledger-section-head\{[^}]*min-width:0[^}]*flex-wrap:wrap/,'recent heading can wrap safely at 375px and 390px');
 assert.match(html,/\.ledger-section-head-actions\{[^}]*flex:0 0 auto[^}]*white-space:nowrap/,'recent actions stay readable without horizontal overflow');
-assert.match(html,/\.ledger-today-hint\{[^}]*color:var\(--ink-faint\)[^}]*font-size:11px/,'zero-Today hint is lightweight secondary text');
+assert.strictEqual(html.includes('.ledger-today-hint{'),false,'obsolete zero-Today hint CSS is removed');
 const homeSummaryCss=(html.match(/\.ledger-home-summary-card\{([^}]*)\}/)||[])[1]||'';
 assert(homeSummaryCss.includes('width:100%')&&homeSummaryCss.includes('min-height:')&&homeSummaryCss.includes('padding:')&&homeSummaryCss.includes('border-radius:8px'),'both cards share one complete size contract');
 assert(homeSummaryCss.includes('display:grid')&&homeSummaryCss.includes('grid-template-rows:'),'both cards align heading, primary information, and footer through one three-row layout');

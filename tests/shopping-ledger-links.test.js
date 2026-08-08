@@ -5,6 +5,7 @@ const assert=require('assert');
 const {appVersion,swVersion}=require('./support/version');
 const fs=require('fs');
 const vm=require('vm');
+const TripBuyToLedger=require('../buy-to-ledger.js');
 
 function createStorage(){
   const values={};
@@ -29,6 +30,8 @@ function loadModule(){
     console:{log(){},warn(){},error(){}},localStorage:createStorage(),
     Date,Math,Promise,JSON,String,Number,Boolean,isFinite,setTimeout,clearTimeout,
     timestampDate(value){return new Date(Number(value));},
+    TripBuyToLedger,
+    buyToLedgerRuntimeAdapter:{},
     canonicalMemberName(value){return String(value==null?'':value).replace(/　/g,' ').replace(/\s+/g,' ').trim();},
     AppLog:{repo(){},sync(){},data(){}},
     fetch(){return Promise.reject(new Error('network disabled'));},
@@ -42,6 +45,7 @@ function loadModule(){
 
 const mod=loadModule();
 const html=mod.__html;
+const domain=TripBuyToLedger.createDomain({effectiveRecords(records){return mod.effectiveLedgerRecords(records,function(){});}});
 const NOW='2026-10-20T04:00:00.000Z';
 const ids=list=>Array.from(list,item=>item.id);
 const link=over=>Object.assign({version:1,track:'personal',testMode:false,recordId:'r-1',batchId:'',linkedAt:NOW,releasedAt:''},over||{});
@@ -72,9 +76,10 @@ assert.strictEqual(mod.normalizeShoppingItem({id:'x',name:'x',createdAt:NOW,done
 assert.throws(()=>mod.normalizeShoppingItem({id:'x',name:'x',createdAt:NOW,done:true,completedAt:'bad'}),/時間/,'非空無效 completedAt 拒絕');
 
 /* ================= active link ================= */
-assert.strictEqual(mod.activeShoppingLedgerLink({ledgerLinks:[]}),null,'無 link 時沒有 active link');
-assert.strictEqual(mod.activeShoppingLedgerLink({ledgerLinks:[link({releasedAt:NOW})]}),null,'已 released 沒有 active link');
-assert.strictEqual(mod.activeShoppingLedgerLink({ledgerLinks:[link({recordId:'r-a',releasedAt:NOW}),link({recordId:'r-b'})]}).recordId,'r-b','只看最後一個 link');
+const inspectAllocation=(links,context)=>domain.inspectItem({allocations:[{allocationId:'a',target:'',quantity:1,ledgerLinks:links||[]}]},context||{}).allocationStates[0];
+assert.strictEqual(inspectAllocation([]).activeLink,null,'無 link 時沒有 active link');
+assert.strictEqual(inspectAllocation([link({releasedAt:NOW})]).activeLink,null,'已 released 沒有 active link');
+assert.strictEqual(inspectAllocation([link({recordId:'r-a',releasedAt:NOW}),link({recordId:'r-b'})]).activeLink.recordId,'r-b','只看最後一個 link');
 
 /* ================= link state resolver ================= */
 const ctx=over=>Object.assign({
@@ -82,43 +87,43 @@ const ctx=over=>Object.assign({
   personal:{ready:true,records:[]},
   shared:{ready:true,records:[]}
 },over||{});
-const item=links=>({id:'s-1',name:'x',ledgerLinks:links||[]});
+const item=links=>({id:'s-1',name:'x',done:false,allocations:[{allocationId:'a',target:'',quantity:1,ledgerLinks:links||[]}]});
 const expense=over=>Object.assign({id:'r-a',time:'2026-10-20T05:00:00.000Z',member:'Mark',recordType:'expense',participants:'["Mark"]',amountJpy:100,amountTwd:20,detail:'益生菌'},over||{});
 
-assert.strictEqual(mod.resolveShoppingLedgerLinkState(item([]),ctx()).state,'unlinked','無 link → unlinked');
-assert.strictEqual(mod.resolveShoppingLedgerLinkState(item([link({releasedAt:NOW})]),ctx()).state,'unlinked','最後 link released → unlinked');
-assert.strictEqual(mod.resolveShoppingLedgerLinkState(item([link({recordId:'r-a'})]),ctx({personal:{ready:true,records:[expense()]}})).state,'linked','個人 record 存在 → linked');
-assert.strictEqual(mod.resolveShoppingLedgerLinkState(item([link({recordId:'r-a',track:'shared'})]),ctx({shared:{ready:true,records:[expense()]}})).state,'linked','團體遠端有效 record → linked');
+assert.strictEqual(domain.inspectItem(item([]),ctx()).state,'unlinked','無 link → unlinked');
+assert.strictEqual(domain.inspectItem(item([link({releasedAt:NOW})]),ctx()).state,'unlinked','最後 link released → unlinked');
+assert.strictEqual(domain.inspectItem(item([link({recordId:'r-a'})]),ctx({personal:{ready:true,records:[expense()]}})).state,'linked','個人 record 存在 → linked');
+assert.strictEqual(domain.inspectItem(item([link({recordId:'r-a',track:'shared'})]),ctx({shared:{ready:true,records:[expense()]}})).state,'linked','團體遠端有效 record → linked');
 assert.strictEqual(
-  mod.resolveShoppingLedgerLinkState(item([link({recordId:'r-a',track:'shared'})]),ctx({shared:{ready:false,records:[Object.assign(expense(),{pending:true})]}})).state,
+  domain.inspectItem(item([link({recordId:'r-a',track:'shared'})]),ctx({shared:{ready:false,records:[Object.assign(expense(),{pending:true})]}})).state,
   'linked','團體 record 仍在 durable queue → linked,不必等 Sheet 回讀');
 assert.strictEqual(
-  mod.resolveShoppingLedgerLinkState(item([link({recordId:'r-a',track:'shared'})]),ctx({shared:{ready:false,records:[Object.assign(expense(),{bridgePending:true})]}})).state,
+  domain.inspectItem(item([link({recordId:'r-a',track:'shared'})]),ctx({shared:{ready:false,records:[Object.assign(expense(),{bridgePending:true})]}})).state,
   'linked','團體 record 仍在 delivery bridge → linked');
 
 /* replacement:編輯後新紀錄指向原 record */
 const replaced=[expense({id:'r-new',replacesRecordId:'r-a'}),{id:'d-1',time:'2026-10-20T06:00:00.000Z',member:'Mark',recordType:'deletion',targetRecordId:'r-a',deleteReason:'編輯修改',participants:'',payMethod:'',amountJpy:0,amountTwd:0},expense()];
-assert.strictEqual(mod.resolveShoppingLedgerLinkState(item([link({recordId:'r-a',track:'shared'})]),ctx({shared:{ready:true,records:replaced}})).state,'linked','replacement 有效 → linked');
+assert.strictEqual(domain.inspectItem(item([link({recordId:'r-a',track:'shared'})]),ctx({shared:{ready:true,records:replaced}})).state,'linked','replacement 有效 → linked');
 
 /* confirmed tombstone 且無 replacement → unlinked */
 const tombstoned=[expense(),{id:'d-1',time:'2026-10-20T06:00:00.000Z',member:'Mark',recordType:'deletion',targetRecordId:'r-a',deleteReason:'買錯了',participants:'',payMethod:'',amountJpy:0,amountTwd:0}];
-const tombState=mod.resolveShoppingLedgerLinkState(item([link({recordId:'r-a',track:'shared'})]),ctx({shared:{ready:true,records:tombstoned}}));
+const tombState=domain.inspectItem(item([link({recordId:'r-a',track:'shared'})]),ctx({shared:{ready:true,records:tombstoned}}));
 assert.strictEqual(tombState.state,'unlinked','confirmed tombstone 且無 replacement → unlinked');
 
 /* 不得因暫時找不到就判失效 */
-assert.strictEqual(mod.resolveShoppingLedgerLinkState(item([link({recordId:'r-a',track:'shared'})]),ctx({shared:{ready:false,records:[]}})).state,'unverified','資料未就緒且找不到 → unverified');
-assert.strictEqual(mod.resolveShoppingLedgerLinkState(item([link({recordId:'r-a',track:'shared'})]),ctx({shared:{ready:true,records:[]}})).state,'unverified','已就緒但完全找不到且無 tombstone → 仍是 unverified,不得判刪除');
-assert.strictEqual(mod.resolveShoppingLedgerLinkState(item([link({recordId:'r-a'})]),ctx({personal:{ready:false,records:[]}})).state,'unverified','個人帳讀取失敗 → unverified');
-assert.strictEqual(mod.resolveShoppingLedgerLinkState(item([link({recordId:'r-a',testMode:true})]),ctx()).state,'unverified','TEST／正式 universe 不符 → unverified');
-assert.strictEqual(mod.resolveShoppingLedgerLinkState(item([link({recordId:'r-a'})]),ctx({testMode:true,personal:{ready:true,records:[expense()]}})).state,'unverified','正式 link 在 TEST 模式下不得判為 linked');
+assert.strictEqual(domain.inspectItem(item([link({recordId:'r-a',track:'shared'})]),ctx({shared:{ready:false,records:[]}})).state,'unverified','資料未就緒且找不到 → unverified');
+assert.strictEqual(domain.inspectItem(item([link({recordId:'r-a',track:'shared'})]),ctx({shared:{ready:true,records:[]}})).state,'unverified','已就緒但完全找不到且無 tombstone → 仍是 unverified,不得判刪除');
+assert.strictEqual(domain.inspectItem(item([link({recordId:'r-a'})]),ctx({personal:{ready:false,records:[]}})).state,'unverified','個人帳讀取失敗 → unverified');
+assert.strictEqual(domain.inspectItem(item([link({recordId:'r-a',testMode:true})]),ctx()).state,'unverified','TEST／正式 universe 不符 → unverified');
+assert.strictEqual(domain.inspectItem(item([link({recordId:'r-a'})]),ctx({testMode:true,personal:{ready:true,records:[expense()]}})).state,'unverified','正式 link 在 TEST 模式下不得判為 linked');
 
 /* 舊 released link 不得覆蓋後方 active link */
 const history=[link({recordId:'r-old',releasedAt:NOW}),link({recordId:'r-a'})];
-assert.strictEqual(mod.resolveShoppingLedgerLinkState(item(history),ctx({personal:{ready:true,records:[expense()]}})).state,'linked','舊 released link 不影響後方 active link');
-assert.strictEqual(mod.resolveShoppingLedgerLinkState(item(history),ctx({personal:{ready:true,records:[expense()]}})).activeLink.recordId,'r-a','resolver 只看最後一個 link');
+assert.strictEqual(domain.inspectItem(item(history),ctx({personal:{ready:true,records:[expense()]}})).state,'linked','舊 released link 不影響後方 active link');
+assert.strictEqual(domain.inspectItem(item(history),ctx({personal:{ready:true,records:[expense()]}})).allocationStates[0].activeLink.recordId,'r-a','resolver 只看最後一個 link');
 
 /* ================= item aggregate link state ================= */
-const summary=mod.shoppingItemLinkSummary({
+const summary=domain.inspectItem({
   allocations:[
     {allocationId:'a',target:'阿寶',quantity:1,ledgerLinks:[link({recordId:'r-a'})]},
     {allocationId:'b',target:'媽媽',quantity:1,ledgerLinks:[]},
@@ -128,7 +133,7 @@ const summary=mod.shoppingItemLinkSummary({
 assert.deepStrictEqual(plain({
   state:summary.state,label:summary.label,linked:summary.linked,total:summary.total
 }),{state:'partial',label:'記帳 2／3',linked:2,total:3});
-const mixedUnverified=mod.shoppingItemLinkSummary({
+const mixedUnverified=domain.inspectItem({
   allocations:[
     {allocationId:'a',target:'阿寶',quantity:1,ledgerLinks:[link({recordId:'r-a'})]},
     {allocationId:'b',target:'媽媽',quantity:1,ledgerLinks:[link({recordId:'missing',track:'shared'})]}
@@ -136,12 +141,12 @@ const mixedUnverified=mod.shoppingItemLinkSummary({
 },ctx({personal:{ready:true,records:[expense({id:'r-a'})]},shared:{ready:false,records:[]}}));
 assert.strictEqual(mixedUnverified.state,'unverified','任何 allocation 待確認時聚合狀態必須優先待確認');
 assert.strictEqual(mixedUnverified.label,'狀態待確認');
-const editPolicy=plain(mod.shoppingAllocationEditPolicy({
+const editPolicy=plain(domain.inspectItem({
   allocations:[
     {allocationId:'linked',target:'阿寶',quantity:1,ledgerLinks:[link({recordId:'r-a'})]},
     {allocationId:'open',target:'媽媽',quantity:1,ledgerLinks:[]}
   ]
-},ctx({personal:{ready:true,records:[expense({id:'r-a'})]}})));
+},ctx({personal:{ready:true,records:[expense({id:'r-a'})]}})).editPolicy);
 assert.deepStrictEqual(editPolicy.allocations.map(value=>[
   value.allocationId,value.canEdit,value.reason
 ]),[
@@ -156,13 +161,13 @@ const guardedItem={
     {allocationId:'a-open',target:'小明',quantity:1,ledgerLinks:[]}
   ]
 };
-const guardedPolicy=plain(mod.shoppingAllocationEditPolicy(
+const guardedPolicy=plain(domain.inspectItem(
   guardedItem,
   ctx({
     personal:{ready:true,records:[expense({id:'r-a'})]},
     shared:{ready:false,records:[]}
   })
-));
+).editPolicy);
 assert.deepStrictEqual(guardedPolicy.allocations.map(value=>[
   value.allocationId,value.canEdit,value.reason
 ]),[
@@ -223,53 +228,6 @@ assert.strictEqual(mod.shoppingDetailAllocationQuantityText(
   {originalQuantity:3,currentQuantity:1},
   '包'
 ),'需求 3 包 · 待買 1 包','待買明細使用需求與待買文案');
-
-/* ================= 重新開放記帳 ================= */
-const released=mod.releaseShoppingLedgerLinks([link({recordId:'r-old',releasedAt:NOW}),link({recordId:'r-a'})],NOW);
-assert.strictEqual(released.length,2,'解除不新增也不刪除 link');
-assert.strictEqual(released[1].releasedAt,NOW,'只更新最後一個 active link');
-assert.strictEqual(released[1].recordId,'r-a','不清除 recordId');
-assert.strictEqual(released[1].linkedAt,NOW,'不修改 linkedAt');
-assert.strictEqual(released[0].releasedAt,NOW,'原本已 released 的舊 link 保持不變');
-assert.strictEqual(mod.releaseShoppingLedgerLinks([],NOW),null,'無 link 時不可解除');
-assert.strictEqual(mod.releaseShoppingLedgerLinks([link({releasedAt:NOW})],NOW),null,'已 released 不重複寫入');
-const appended=mod.appendShoppingLedgerLink(released,{track:'personal',testMode:false,recordId:'r-new',batchId:'',linkedAt:NOW});
-assert.strictEqual(appended.length,3,'再次記帳 append 新 link');
-assert.strictEqual(appended[1].releasedAt,NOW,'append 後舊 released link 完整保留');
-assert.strictEqual(appended[2].recordId,'r-new','最後一個 link 才是目前關聯');
-
-/* ================= allocation source → record mapping ================= */
-const recA={id:'rec-a',batchId:'batch-9'},recB={id:'rec-b',batchId:'batch-9'},recC={id:'rec-c',batchId:'batch-9'};
-const sources=[
-  {shoppingItemId:'s-a',allocationId:'a-1'},
-  {shoppingItemId:'s-a',allocationId:'a-2'},
-  {shoppingItemId:'s-b',allocationId:'b-1'}
-];
-const planOk=mod.planShoppingLedgerLinks(sources,[recA,recB,recC],{track:'shared',testMode:false,batchId:'batch-9'},NOW);
-assert.strictEqual(planOk.ok,true,'數量一致時交握成立');
-assert.deepStrictEqual(plain(planOk.links.map(entry=>[entry.shoppingItemId,entry.allocationId,entry.link.recordId])),[
-  ['s-a','a-1','rec-a'],['s-a','a-2','rec-b'],['s-b','b-1','rec-c']
-],'每個 allocation 只保存自己那一筆 recordId');
-assert.deepStrictEqual(planOk.links.map(entry=>entry.link.batchId),['batch-9','batch-9','batch-9'],'多品項共用同一 batchId');
-planOk.links.forEach(entry=>assert(!Array.isArray(entry.link.recordId),'link 不保存整批 recordIds'));
-const planMismatch=mod.planShoppingLedgerLinks(sources,[recA,recB],{track:'shared',testMode:false},NOW);
-assert.strictEqual(planMismatch.ok,false,'數量不一致視為交握錯誤');
-assert.strictEqual(planMismatch.links.length,0,'交握錯誤不得部分回寫');
-assert(/對應/.test(planMismatch.error),'交握錯誤有可顯示的原因');
-assert.strictEqual(mod.planShoppingLedgerLinks([
-  {shoppingItemId:'s-a',allocationId:'a-1'},
-  {shoppingItemId:'s-a',allocationId:'a-1'}
-],[recA,recB],{track:'shared',testMode:false},NOW).ok,false,'重複的 composite source 視為交握錯誤');
-assert.strictEqual(mod.planShoppingLedgerLinks([{shoppingItemId:'s-a',allocationId:''}],[recA],{track:'shared',testMode:false},NOW).ok,false,'缺 allocationId 拒絕');
-assert.strictEqual(mod.planShoppingLedgerLinks([],[recA],{track:'shared',testMode:false},NOW).ok,false,'沒有 source 就不建立 link');
-const proxyPrefill=plain(mod.shoppingLedgerPrefillForAllocation(
-  {id:'s',name:'白桃',category:'伴手禮',unit:'盒'},
-  {allocationId:'a',target:'阿寶',quantity:2,ledgerLinks:[]}
-));
-assert.strictEqual(proxyPrefill.category,'購物');
-assert.strictEqual(proxyPrefill.isProxy,true);
-assert.strictEqual(proxyPrefill.proxyTarget,'阿寶');
-assert.match(proxyPrefill.note,/數量：2 盒/);
 
 /* ================= store:原子 link 回寫 ================= */
 function freshStore(){
@@ -414,33 +372,22 @@ assert.strictEqual(spaced.allocations[0].quantity,3,'舊數量的全形與連續
 assert.strictEqual(spaced.unit,'罐');
 
 /* 有 active link 或 unverified 時不得拆分 */
-const guard=mod.canSplitShoppingItem({id:'s',name:'x',done:false,ledgerLinks:[link({recordId:'r-a'})]},ctx({personal:{ready:true,records:[expense()]}}));
-assert.strictEqual(guard.ok,false,'已記帳項目不得部分購買');
-assert.strictEqual(mod.canSplitShoppingItem({id:'s',name:'x',done:false,ledgerLinks:[link({recordId:'r-a'})]},ctx({personal:{ready:false,records:[]}})).ok,false,'unverified 不得部分購買');
-assert.strictEqual(mod.canSplitShoppingItem({id:'s',name:'x',done:true,ledgerLinks:[]},ctx()).ok,false,'已完成需先退回待買才可拆分');
-assert.strictEqual(mod.canSplitShoppingItem({id:'s',name:'x',done:false,ledgerLinks:[]},ctx()).ok,true,'未完成且未記帳可拆分');
+assert.strictEqual(domain.inspectItem(item([link({recordId:'r-a'})]),ctx({personal:{ready:true,records:[expense()]}})).canSplit,false,'已記帳項目不得部分購買');
+assert.strictEqual(domain.inspectItem(item([link({recordId:'r-a'})]),ctx({personal:{ready:false,records:[]}})).canSplit,false,'unverified 不得部分購買');
+assert.strictEqual(domain.inspectItem(Object.assign(item([]),{done:true}),ctx()).canSplit,false,'已完成需先退回待買才可拆分');
+assert.strictEqual(domain.inspectItem(item([]),ctx()).canSplit,true,'未完成且未記帳可拆分');
 
-/* ================= 已買多選 preflight ================= */
-const pre=(items,context)=>mod.shoppingBatchLedgerPreflight(items,context||ctx());
-assert.strictEqual(pre([item([]),item([])]).ok,true,'全部 unlinked 可建立消費');
-const withLinked=pre([item([]),item([link({recordId:'r-a'})]),item([link({recordId:'r-a'})])],ctx({personal:{ready:true,records:[expense()]}}));
-assert.strictEqual(withLinked.ok,false,'含已記帳整批阻擋');
-assert.strictEqual(withLinked.error,'選取項目中有 2 項已記帳，請取消選取後再建立消費');
-const withUnverified=pre([item([]),item([link({recordId:'r-a',track:'shared'})])],ctx({shared:{ready:true,records:[]}}));
-assert.strictEqual(withUnverified.ok,false,'含待確認整批阻擋');
-assert.strictEqual(withUnverified.error,'其中 1 項的記帳狀態尚待確認，請先完成同步或重新確認');
-assert.strictEqual(pre([]).ok,false,'空選取不得建立消費');
-
-/* ================= 備份 v8 ================= */
-assert.strictEqual(mod.PERSONAL_STATE_VERSION,8,'個人狀態備份升為 v8');
-assert.strictEqual(mod.PERSONAL_STATE_SUPPORTED_VERSIONS.join(','),'1,2,3,4,5,6,7,8','v1～v8 皆可還原');
+/* ================= 備份 v9 ================= */
+assert.strictEqual(mod.PERSONAL_STATE_VERSION,9,'個人狀態備份升為 v9(想逛 key 識別語意變更)');
+assert.strictEqual(mod.PERSONAL_STATE_SUPPORTED_VERSIONS.join(','),'1,2,3,4,5,6,7,8,9','v1～v9 皆可還原');
 assert.strictEqual(mod.isSupportedPersonalStateVersion(4),true);
 assert.strictEqual(mod.isSupportedPersonalStateVersion(5),true);
 assert.strictEqual(mod.isSupportedPersonalStateVersion(6),true);
 assert.strictEqual(mod.isSupportedPersonalStateVersion(7),true);
 assert.strictEqual(mod.isSupportedPersonalStateVersion(8),true);
-assert.strictEqual(mod.isSupportedPersonalStateVersion(9),false,'未知未來版本明確拒絕');
-assert.strictEqual(mod.isSupportedPersonalStateVersion('8'),false,'版本必須是數字');
+assert.strictEqual(mod.isSupportedPersonalStateVersion(9),true);
+assert.strictEqual(mod.isSupportedPersonalStateVersion(10),false,'未知未來版本明確拒絕');
+assert.strictEqual(mod.isSupportedPersonalStateVersion('9'),false,'版本必須是數字');
 
 const v4Item=mod.normalizeShoppingItem({id:'v4',name:'舊備份項目',createdAt:NOW,done:true});
 assert.strictEqual(v4Item.completedAt,'','v4 舊備份缺 completedAt 時補空字串');
@@ -485,12 +432,11 @@ assert(html.includes("有 '+unverified+' 位記帳狀態待確認"));
 assert(/if\(value\.state==='linked'\)linked\+\+;[\s\S]{0,80}else if\(value\.state==='unverified'\)unverified\+\+/.test(html),'linked 與 unverified 依 allocation 分別計數');
 assert(shoppingSource.includes('removeMany('),'批次刪除走原子整批路徑');
 assert(!shoppingSource.includes('清空所有已買'),'本批不新增清空已買的危險入口');
-/* preflight 走共用 allocation source helper */
-assert(shoppingSource.includes('shoppingLedgerSources(selected,shoppingLedgerContext())'),'多選建立消費前展開未記帳 allocations');
-assert(shoppingSource.includes('shoppingLedgerSources([item],shoppingLedgerContext())'),'單筆記帳入口同樣展開 allocations');
+/* 所有入口走共用 workflow seam */
+assert(shoppingSource.includes('buyToLedgerWorkflow.start({'),'採買記帳入口統一走 workflow coordinator');
 const singleEntry=html.slice(html.indexOf('function openShoppingLedgerEntry(id)'),html.indexOf('function completeSelectedShopping('));
-assert(singleEntry.includes('openShoppingLedgerSourcesEntry(sources)'),'單筆入口依 allocation 數決定單筆或多品項表單');
-assert(shoppingSource.includes('sourceShoppingAllocationId=source.allocationId'),'單筆 draft 保存 allocationId');
+assert(singleEntry.includes('buyToLedgerWorkflow.start({'),'單筆入口走相同 workflow seam');
+assert(shoppingSource.includes('sourceShoppingAllocationId=plan.sourceShoppingAllocationId'),'單筆 draft 保存 domain plan 的 allocationId');
 assert(html.includes('function openShoppingItemDetail('));
 assert(html.includes('function renderShoppingItemDetail('));
 assert(html.includes('代購對象與記帳紀錄'));
@@ -521,7 +467,7 @@ assert(shoppingSource.includes('若帳本中的原紀錄仍在，再次記帳可
 assert(/shoppingReleaseDialog[\s\S]{0,700}>取消<\/button>[\s\S]{0,200}>改回未記帳<\/button>/.test(shoppingSource),'確認視窗提供取消,且取消排在確認之前');
 assert(!/confirm\('這只會解除/.test(shoppingSource),'不再使用按鈕文案不可自訂的原生 confirm');
 assert(shoppingSource.includes("overlay.className='shopping-choice-overlay'"),'沿用既有 z-index 160 的對話框樣式,未新增 CSS');
-assert(shoppingSource.includes('activeShoppingLedgerLink(selected)'),'沒有 active allocation link 時不提供解除');
+assert(shoppingSource.includes('states[selected.allocationId].activeLink'),'沒有 active allocation link 時不提供解除');
 /* 部分購買 */
 assert(shoppingSource.includes('function startShoppingSplit('),'保留部分購買流程');
 assert(shoppingSource.includes('>部分購買</button>'),'卡片直接提供部分購買入口');
@@ -531,23 +477,19 @@ const itemActionsSource=shoppingSource.slice(
   shoppingSource.indexOf('var shoppingDetailReturnItemId',shoppingSource.indexOf('function openShoppingItemActions('))
 );
 assert(!itemActionsSource.includes('startShoppingSplit('),'部分購買不再收在 ⋯ 選單');
-assert(shoppingSource.includes('canOfferShoppingPartialPurchase(item,linkSummary)'),
-  '卡片入口使用總需求與記帳狀態 helper');
-assert(shoppingSource.includes('canSplitShoppingItem(item,shoppingLedgerContext())'),'拆分前檢查記帳狀態');
+assert(shoppingSource.includes('linkSummary.canOfferPartialPurchase'),
+  '卡片入口使用 domain inspection 的總需求與記帳狀態投影');
+assert(shoppingSource.includes('buyToLedgerDomain.inspectItem(item,shoppingLedgerContext())'),'拆分前檢查共用 domain inspection');
 assert(shoppingSource.includes('本次買到（必填）')&&shoppingSource.includes('剩餘待買（自動計算）'),'只輸入本次買到,剩餘由系統計算');
 assert(shoppingSource.includes('shoppingSplitPreview(form)'),'剩餘數量即時預覽');
 assert(!/系統不會自動計算剩餘數量/.test(shoppingSource),'舊的「不自動計算」說明已退場');
 assert(!/parseInt|parseFloat|Number\(form\.(purchasedQty|remainderQty)/.test(shoppingSource),'不解析自由文字數量');
 assert(shoppingSource.includes('shoppingListStore.split('),'拆分走 store 的原子操作');
 /* 交握與回寫 */
-const handoff=html.slice(html.indexOf('function shoppingLinkSourceRefs('),html.indexOf('function commitLedgerEntrySave('));
-assert(handoff.includes('submissionDraft.items'),'多品項以送出用 items 對應,不用 UI index');
-assert(handoff.includes('shoppingListStore.applyLedgerLinks(plan.links)'),'回寫走單次原子 store write');
-assert(/消費已建立，但採買項目的記帳標記更新失敗。請避免再次記帳，並重新開啟採買清單確認。/.test(handoff),'回寫失敗顯示核准降級文案');
-assert(!/persistLedger|ledgerRepository\.(add|enqueueBatch)/.test(handoff),'回寫失敗不得自動再建立一次消費');
 const commit=html.slice(html.indexOf('function commitLedgerEntrySave('),html.indexOf('function setLedgerSavePending('));
-assert(/if\(!editing\)writeShoppingLedgerLinks\(/.test(commit),'只有在 Ledger 儲存成功後才回寫,且編輯不回寫');
-assert(commit.indexOf('writeShoppingLedgerLinks')>commit.indexOf('operation.then'),'回寫發生在持久化 Promise 完成之後');
+assert(commit.includes('buyToLedgerDomain.sourceRefs(sourceDraft)'),'多品項來源由 domain 依送出用 draft 對應,不用 UI index');
+assert(commit.includes('buyToLedgerWorkflow.commit(command)'),'只有具備完整 Shopping source 的新增消費交由 coordinator commit');
+assert(!html.includes('function writeShoppingLedgerLinks('),'舊的 inline workflow 已移除');
 /* 不變條件 */
 assert(html.includes('sortShoppingStopGroups(')&&html.includes('buildShoppingStopOrder('),'A 的行程排序契約保留');
 assert(html.includes('resolveShoppingStopState(')&&html.includes('tripDatasetAuthority('),'F 的孤兒三態契約保留');

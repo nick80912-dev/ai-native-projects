@@ -53,7 +53,13 @@
 - 一般資料表 ID 格式:Places=`P###`、Restaurants=`R###`、Shopping=`S###`、Hotels=`H###`;不需連號,但不得重複、不得改變既有 ID 意義。
 - Expenses 是自由格式,沒有 `E###` ID;行程總表目前只使用 `P###` / `R###` 引用地點或餐廳。
 - 同一地點多次造訪使用同一 PID。
-- 個人狀態(打卡/想逛/成員身分)與個人帳存 localStorage,不進 CMS。依 ADR 0006,App 只可 append「分帳紀錄」及更新 TripConfig 的 `Exchange Rate` / `Ledger Default Currency`；其餘 CMS 欄位由 Bar 手動管理且 App 唯讀。
+- 個人狀態(打卡/想逛/成員身分)與個人帳存 localStorage,不進 CMS。採買照片 Blob 存 IndexedDB `trip-local-media/shopping-photos`,採買項目只保存 `photoId` 引用；照片不進 CMS、Ledger、個人備份或跨裝置同步。依 ADR 0006,App 只可 append「分帳紀錄」及更新 TripConfig 的 `Exchange Rate` / `Ledger Default Currency`；其餘 CMS 欄位由 Bar 手動管理且 App 唯讀。
+
+## 採買照片本機資料規則
+- 每個採買項目最多一張照片；Blob 由 `shopping-photo-store.js` 管理,與 localStorage 的採買項目分離。
+- `photoId` 是裝置內引用,不是可攜資料。匯出備份時一律移除；還原 payload 即使手動夾帶也一律剝除。
+- 部分購買拆分會共用原 `photoId`；刪除／移除照片時必須先確認沒有其他採買項目引用,避免提早刪除共用 Blob。
+- 清除瀏覽器網站資料、移除 App 儲存空間或更換裝置都可能遺失照片；這是產品核准的 device-local 語意。
 
 ## Places.Type 規則
 - Places.Type 決定卡片型別,禁止 AI 依名稱或文字自行猜測。

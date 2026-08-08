@@ -6,6 +6,20 @@
 > `dev` HEAD 可能比它新;**merge head 的 CI 另依 R1 判定,不得與 runtime 候選版混為一談**。
 > 正式站現況為 **SW v18**(`main` = `9eefcb0`),回滾錨點 tag `production-v18` 已在 `origin`。
 
+## 2026-08-03｜v74–v87 累積真機驗收結論
+
+- Bar 確認 v74–v87 累積功能已完成真機／PWA 驗收，結果均為 OK；`tasks/current.md` 的 G1' 據此標記通過。
+- 驗收涵蓋設定三群組、照片附件與修復、多選／想逛流程、離線首屏與觸控、六主題、操作脈絡保存、Today 即時資訊與採買精簡，以及 v87 的身分 overlay／同分頁回頂修正。
+- 本結論是 Bar 的累積驗收簽核，不回填或捏造早期清單中未逐項保存的量測數字；各版自動驗證證據仍以 `07_CHANGELOG.md` 為準。
+- 此簽核不等於核准 `dev → main`、正式部署或 production tag；G4'–G6' 仍須另行核准。
+- v88 不包含在本次真機簽核內，須先看過資料可感知性實際畫面再決定後續驗收／發布。
+
+## 2026-08-08｜v88–v89、v92–v95 累積畫面／真機驗收結論
+
+- Bar 確認 v88–v89、v92–v95 的畫面與真機驗收皆已完成，結果均為 OK；`tasks/current.md` 的 G1'' 據此標記通過。
+- 本段是最終累積簽核，不回填或捏造未逐項保存的裝置量測；自動驗證證據仍以各版 `07_CHANGELOG.md` 為準。
+- 此簽核不等於核准當時尚未執行的 `dev → main` merge、正式部署或 production tag；G4'–G6' 仍依發布流程另行執行。
+
 ---
 
 ## 標記圖例
@@ -270,7 +284,19 @@
   | `headSha` | **`d668f09`**(驗收清單定稿) |
   | `conclusion` | **success** |
 
-- [x] **R1-c. 最終 merge head 的 CI — 已確認(2026-08-01)**
+- [x] **R1-c. 最終 merge head 的 CI — 已確認(2026-08-01,合併後更正為真正的最終值)**
+
+  > 合併前這一行記的是中途的 head `0fb4a2c` / run `30682328651`。依 Bar 指示**不為了改這一行再推 pre-merge commit**(那會讓 head 再次改變、R1-c 又要重跑),改為在 G6 收尾時更正。**下表才是實際用於合併的證據。**
+
+  | 項目 | 真正的最終值 |
+  |---|---|
+  | 最終 PR head | **`9ec2c211932ba0a570e8978ea60b85898c1de6c4`** |
+  | Workflow run | **`30682429659`** |
+  | `sanity` | success |
+  | `browser-qa` | success |
+  | Netlify deploy-preview | success |
+  | PR 狀態 | MERGEABLE / CLEAN |
+  | 未解決 review thread | 0 |
   merge head `0fb4a2c`;**PR #11 的 `sanity` 與 `browser-qa` 皆 success**(run `30682328651`),PR 狀態 `MERGEABLE` / `CLEAN`。這是比 dev push 更完整的證據(dev push 依設計略過 browser-qa)。
   **G1 期間若 `dev` 又有任何新 commit,R1-b 就過期了。** 申請 G4 之前必須重新確認下列任一項:
   - 最終 `dev` HEAD 自己的 dev-push `qa-sanity / sanity` 成功;**或**
@@ -292,3 +318,227 @@
    (**不得建立 `production-v72`**,v72 未曾正式發布)
 
 > 任何一項失敗 → 記入 `tasks/backlog.md` 或直接回報,**不要在清單上打勾略過**。
+
+---
+
+## 發布收尾紀錄(G4 / G5 / G6,2026-08-01)
+
+**v73 已正式發布。** 正式站由 SW v18 升級至 SW v73。
+
+| 項目 | 值 |
+|---|---|
+| 最終 PR head | `9ec2c211932ba0a570e8978ea60b85898c1de6c4` |
+| Workflow run(合併依據) | `30682429659` — `sanity` + `browser-qa` 皆 success |
+| **Merge commit** | **`17c423f8ac59328f926973024cb407d5e638f838`** |
+| Merge method | merge commit(parents `9eefcb0` + `9ec2c21`),非 squash／rebase |
+| **正式部署 commit** | Netlify deploy `6a6d6be3e3dabf00078f284b`,**`commit_ref` = `17c423f8...`** |
+| 部署發布時間 | `2026-08-01T03:45:48.841Z`(`published_at` 有值,非 null) |
+| **回滾錨點 tag** | **`production-v73`** → tag 物件 `64e8d0b`,peeled `17c423f8...` |
+| 前一版錨點 | `production-v18` → `9eefcb0` |
+| `production-v72` | **未建立**(v72 未曾正式發布) |
+
+### G5 正式站線上驗證(機器端)
+
+```
+sw.js            SW_VERSION='v73'   4,486 bytes   舊 v18 字面 0
+app-version.js   var APP_VERSION='v73';
+index.html       728,196 bytes   安全取值區塊 ✓   已鎖帳文案 ✓   舊文案殘留 0
+六主題            ['ocean','ivory','wisteria','cedar','mist','tea']
+版本一致性        sw.js = app-version.js = v73
+GET /            HTTP 200,728,196 bytes
+```
+
+| 路徑 | Cache-Control |
+|---|---|
+| `sw.js` | `no-cache,no-store,must-revalidate` |
+| `app-version.js` | `no-cache,no-store,must-revalidate`(v73 新增規則已生效) |
+| `index.html` | `no-cache` |
+| `schema.js` / `manifest.webmanifest` | `public,max-age=0,must-revalidate` |
+| `manifest.webmanifest` Content-Type | `application/manifest+json` |
+
+### G5 Bar iPhone smoke test(2026-08-01 通過)
+
+- PWA 完整關閉重開後已換代至 SW v73
+- 今天／行程／購物／分帳四頁正常
+- 原有身分與個人資料保留
+- 設定頁與子頁進出正常
+- 飛航模式下可離線重開
+- 恢復網路後正常
+- 無白畫面、崩潰或持續錯誤
+
+### G6 完成
+
+`production-v73` 已建立並推送 `origin`;文件、任務板與 CHANGELOG 已同步。**v73 發布流程結束。**
+
+> 下一步為 **v74 設定根頁改版**,設計規格見 `docs/superpowers/specs/2026-08-01-settings-grouped-list-design.md`。依 2026-08-01 裁定,v74 runtime 實作在本節完成後方可啟動。
+
+---
+
+# v74 delta 驗收清單(設定根頁群組列表)
+
+> 2026-08-01 依設計規格 `docs/superpowers/specs/2026-08-01-settings-grouped-list-design.md` §8 併入。
+> ⚠️ **本節不覆蓋、不取代上方任何 v73 驗收證據。** 上方的 v73 E1(七區順序)與 E2(摘要含 `N 單位`)是 **v73 的**有效驗收標準,已完成的紀錄一律保留。
+> 適用 runtime:`feat/settings-grouped-v74`,SW/App **v74**；最終 SHA `c51752b` 已推送 `dev`,`main` 與 production tag 未動。
+
+## 為什麼 B2–C3 的既有證據仍可沿用
+
+規格 §6.1 訂了因果條件:2026-07-31 在 iPhone 完成的 v18→v73 B2–C3 實測(SW 更新機制、快取內容正確性、混版本、離線 fallback),**只有在後續版本不修改下列項目時**才能外推 —— SW install／fetch／fallback 策略、SHELL 清單、`index.html` 載入 `app-version.js` 的方式。
+
+v74 的實際 diff 已逐項核對:
+
+| 保護項 | v74 狀態 | 證據 |
+|---|---|---|
+| SW install 策略 | 未動 | `git diff a930858 -- sw.js` 只有 `SW_VERSION` 一行 |
+| SW fetch 策略 | 未動 | 同上 |
+| SW fallback 策略 | 未動 | 同上 |
+| SHELL 清單 | 未動 | 同上 |
+| `index.html` 載入 `app-version.js` 的方式 | 未動 | `git diff a930858 -- index.html` 中無 `app-version.js` 相關增刪行 |
+| `netlify.toml` | 完全未動 | `git diff a930858 -- netlify.toml` 為空 |
+
+**結論:B2–C3 證據可沿用,不需在 v74 重跑 v18→v73 的升級矩陣。** 但 v73→v74 的換代本身仍必須實測(見下 V1)。
+
+## V1. v73 → v74 換代(已於本機實測,iPhone 仍須複核)
+
+| # | 項目 | 本機結果 | iPhone |
+|---|---|---|---|
+| V1-a | 由 v73 升級後 CacheStorage 只剩 `okayama-trip-v74` | ✅ 實測:swap 前 `okayama-trip-v73`(10 筆)→ 更新後只剩 `okayama-trip-v74` | ☐ |
+| V1-b | 新快取裝的是 v74 內容,不是舊版 | ✅ 快取中的 `index.html` 含 `.settings-group-card` 與 `renderSettingsTestModePage`;`app-version.js` 字面為 `v74` | ☐ |
+| V1-c | 換代後離線重載仍可完整啟動 | ✅ 關閉伺服器後重載:App 正常、`APP_VERSION='v74'`、資料與版本頁顯示 `SW v74`、console error 0 | ☐ |
+| V1-d | 設定頁顯示 `SW v74` | ✅ | ☐ |
+
+> 本機實測方式:以 `a930858`(v73)的完整檔案樹起站並註冊 SW,再就地換上 v74 的 `index.html`／`sw.js`／`app-version.js`／`schema.js`,執行 `registration.update()` 後重載。**「開兩次生效」限制仍在**,iPhone 上請完整關閉 PWA 再開兩次。
+
+## V2. 新 E1 —— 三個常駐群組
+
+設定根頁順序必須是:
+
+```text
+個人 → 記帳 → 資料
+```
+
+| # | 項目 | iPhone |
+|---|---|---|
+| V2-a | 三個群組依序出現,常態下看不到測試模式 | ☐ |
+| V2-b | 個人群組:目前身分(切換／＋)、主題 | ☐ |
+| V2-c | 記帳群組:代購對象、帳務、簡易結算模式、自訂項目 | ☐ |
+| V2-d | 資料群組:備份、還原與版本資訊 | ☐ |
+| V2-e | 明顯比 v73 緊湊,沒有「每項各一張大卡片」的浪費感 | ☐ |
+
+## V3. 新 E2 —— 摘要格式
+
+| # | 項目 | iPhone |
+|---|---|---|
+| V3-a | 代購對象顯示 `N 位常用對象` | ☐ |
+| V3-b | 自訂項目顯示 `N 類別 · N 支付方式`(**不再顯示採買單位數**) | ☐ |
+| V3-c | 採買單位仍完整保留在自訂項目子頁 | ☐ |
+| V3-d | 帳務顯示 `<幣別> · <匯率>`,未設定時為 `<幣別> · 未設定` | ☐ |
+| V3-e | 資料與版本顯示 `SW v74`;`APP_VERSION` 缺失時為 `SW 未知` | ☐ |
+
+## V4. 測試模式(改由專屬控制頁承載)
+
+| # | 項目 | 本機結果 | iPhone |
+|---|---|---|---|
+| V4-a | 關閉時根頁**完全不顯示**測試模式(不是隱藏) | ✅ 渲染結果完全不含該列 | ☐ |
+| V4-b | 診斷面板可進入控制頁並啟用 | ✅ | ☐ |
+| V4-c | 開啟後根頁記帳群組**底部**出現警告列 | ✅ 位於自訂項目之後、資料群組之前 | ☐ |
+| V4-d | 分帳頁 TEST banner「前往設定關閉」直接抵達控制頁 | ✅ `openSettings('ledgerTestModeSection')` → `test-mode`,checkbox 可見且為開啟狀態 | ☐ |
+| V4-e | 根頁警告列可直接進入控制頁 | ✅ | ☐ |
+| V4-f | 關閉後警告列**立即消失** | ✅ | ☐ |
+| V4-g | 關閉後分帳回到正式帳本 | ✅ `ledgerUniverseMode()` 回 `formal` | ☐ |
+| V4-h | 根頁全程沒有任何可直接切換測試模式的控制項 | ✅ 開啟／關閉兩種狀態下皆為 0 | ☐ |
+
+## V5. 版面與主題
+
+| # | 項目 | 本機結果 | iPhone |
+|---|---|---|---|
+| V5-a | 320／375／390px 無水平溢位 | ✅ document／panel／各列皆 0 | ☐ |
+| V5-b | 所有可點擊列 ≥52px | ✅ 最小 52px | ☐ |
+| V5-c | 身分列在 320px 下不換行、不溢位,切換與 ＋ 皆可點 | ✅ 單列 58px,長名以 ellipsis 截斷,按鈕 47×38／38×38 | ☐ |
+| V5-d | 簡易結算模式可切換,顯示狀態與實際值一致 | ✅ 已啟用／已關閉 與 checkbox 同步 | ☐ |
+| V5-e | 六個主題下文字、分隔線、圖示與按鈕都清楚可讀 | ✅ 群組標題 8.00–14.72、列標題 13.31–15.51、摘要 5.43–7.77、圖示 8.73–15.51 | ☐ |
+| V5-f | 返回捲動位置保存正常(含 `test-mode` 頁) | ✅ Playwright 於 320×420 實測根頁與子頁各自恢復 | ☐ |
+
+> **警告列對比阻斷已修正**:只把 `.settings-testmode-row .settings-row-main b` 的主文字改用 `var(--ink)`,未改全域 `--coral` 或其他既有 coral 元件。六主題主文字對比為 ocean 13.31／ivory 15.51／mist 13.39／cedar 14.71／wisteria 15.18／tea 14.13；次要文字為 5.43／7.77／6.30／7.26／7.71／6.99,全部 ≥4.5。
+
+## V6. 沒有功能遺失
+
+| # | 項目 | iPhone |
+|---|---|---|
+| V6-a | 主題、代購對象、帳務、自訂項目、資料與版本五個子頁都能進出 | ☐ |
+| V6-b | 五個子頁的內部布局與 v73 相同(本次未改) | ☐ |
+| V6-c | 身分切換與新增身分都能用 | ☐ |
+| V6-d | 備份匯出／還原仍正常 | ☐ |
+
+---
+
+# v75 delta 驗收清單(採買照片與依目前位置導航)
+
+> 適用 runtime:SW/App **v75**。本節只新增 v75 差異,不覆蓋 v73 正式發布或 v74 的既有證據。
+> 照片的核准資料語意是「只保存在拍照／選圖的這台裝置」；不備份、不同步、不進 Google Sheet。
+
+## W1. 採買照片
+
+| # | 項目 | 自動驗證 | iPhone |
+|---|---|---|---|
+| W1-a | 採買項目可從手機相簿／相機選一張照片 | ✅ `accept=image/*`,真實檔案輸入與 IndexedDB 寫入通過 | ☐ |
+| W1-b | 卡片只有迴紋針圖示,沒有文字或縮圖 | ✅ DOM 斷言通過 | ☐ |
+| W1-c | 詳情「查看照片」以全螢幕開啟；關閉鈕避開頂部安全區,亦可向下滑關閉 | ✅ 47px safe-area 與 120px 下滑回歸通過 | ☐ |
+| W1-d | 重新載入 App 後照片與迴紋針仍存在 | ✅ 通過 | ☐ |
+| W1-e | 可替換／移除；刪除最後引用後 Blob 才清除 | ✅ store、拆分、回併與瀏覽器流程通過 | ☐ |
+| W1-f | 部分購買拆分共用照片,刪除其中一筆不會誤刪 | ✅ Node 引用生命週期測試通過 | ☐ |
+| W1-g | 個人備份不含 `photoId`,還原也剝除手動夾帶引用 | ✅ v1–v8 矩陣與 UX 測試通過 | ☐ |
+| W1-h | 設定「資料與版本」明示照片只存本裝置且不包含於備份 | ✅ 來源契約測試通過 | ☐ |
+
+## W2. 導航定位
+
+| # | 項目 | 自動驗證 | iPhone |
+|---|---|---|---|
+| W2-a | 一般同名地點點導航後請求目前位置一次 | ✅ geolocation mock 呼叫 1 次 | ☐ |
+| W2-b | 取得位置後以目前座標作為 origin,目的地保留原名稱 | ✅ URL 斷言通過 | ☐ |
+| W2-c | 拒絕／逾時／不可用時退回 `名稱 + 日本` | ✅ 拒絕定位情境通過 | ☐ |
+| W2-d | Places／Restaurants 的詳細分點直接導航,不請求定位 | ✅ 精確地點情境通過 | ☐ |
+| W2-e | 按鈕仍只顯示「導航」,不出現「附近搜尋／精確地點」 | ✅ DOM 斷言通過 | ☐ |
+
+## W3. PWA 與回歸
+
+| # | 項目 | 自動驗證 | iPhone |
+|---|---|---|---|
+| W3-a | `app-version.js` 與 `sw.js` 均為 v75 | ✅ checker 通過 | ☐ |
+| W3-b | App Shell 包含 `shopping-photo-store.js`,離線可重開 | ✅ Playwright SW 離線測試通過 | ☐ |
+| W3-c | 320×700／375×812／390×844 採買照片卡與 panel 水平 overflow 0 | ✅ 三組皆通過 | ☐ |
+| W3-d | 照片與導航情境 console error 0、pageerror 0 | ✅ 兩組皆為 0 | ☐ |
+
+# v76 delta 驗收清單（採買多選全選）
+
+> 適用 runtime：SW／App **v76**。本節只新增 v76 差異；照片、導航與正式發布仍沿用各自既有 gate。
+
+| ID | 驗收項目 | 自動驗證 | Bar 真機 |
+|---|---|---|---|
+| X1-a | 待買與已買的「全選」只選目前分頁 | Playwright／Node | ☐ |
+| X1-b | 全選後顯示「取消全選」；取消其中一項恢復「全選」 | Playwright／Node | ☐ |
+| X1-c | 「取消全選」保留多選模式；「取消多選」退出並清空 | Playwright | ☐ |
+| X1-d | 切換分頁、批次成功後清空；阻擋、失敗或取消確認時保留 | Playwright／既有 Node preflight | ☐ |
+| X2-a | 320×700、375×812、390×844 overflow 0，兩顆控制同列且各至少 44×44px | Playwright | ☐ |
+| X2-b | 身分列、採買卡、底部批次工具列不換行、不溢位、不遮擋 | Playwright | ☐ |
+| X3-a | v75 照片附件與檢視器完整回歸 | Playwright | ☐ |
+| X3-b | v75→v76 後只剩 `okayama-trip-v76`，離線重開正常 | Playwright | ☐ |
+| X3-c | console error 0、pageerror 0 | Playwright | ☐ |
+| W3-e | `schema.js`、`netlify.toml`、Apps Script 與 Sheet schema 未動 | ✅ Git diff 核對 | ☐ |
+
+# v77 delta 驗收清單（照片附件完整性與容量管理）
+
+> 適用 runtime：SW／App **v77**。照片仍只保存在選圖的裝置，不進備份、同步或 Google Sheet。
+
+| ID | 驗收項目 | 自動驗證 | Bar 真機 |
+|---|---|---|---|
+| Y1-a | 實體 Blob 遺失後只顯示警示迴紋針與驚嘆號，沒有狀態文字 | Playwright | ☐ |
+| Y1-b | 重新選擇照片與移除無效引用皆成功；失敗時保留原引用 | Playwright／Node | ☐ |
+| Y1-c | 背景只清理滿一天的孤立照片，不刪有效附件 | Playwright／Node | ☐ |
+| Y1-d | 手動清理顯示張數與容量，確認後才刪除 | Playwright | ☐ |
+| Y1-e | 設定頁顯示附件張數、容量、估算配額及檢查時間 | Playwright | ☐ |
+| Y2-a | 六主題主要／次要文字與警示迴紋針對比皆 ≥ 4.5:1 | Playwright | ☐ |
+| Y2-b | 320×700、375×812、390×844 水平 overflow = 0，點擊高度 ≥ 52px | Playwright | ☐ |
+| Y3-a | v76→v77 後只剩 `okayama-trip-v77`，離線重新啟動正常 | Playwright | ☐ |
+| Y3-b | console error = 0，pageerror = 0 | Playwright | ☐ |
+
+本機自動驗證:Node test files **56／56**、Playwright **13／13**、文件標題檢查、版本一致性檢查與 `git diff --check` 全部通過。真機欄保持未勾選,等待 Bar 驗收。

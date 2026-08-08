@@ -1,6 +1,7 @@
 const assert=require('assert');
 const fs=require('fs');
 const vm=require('vm');
+const TripBuyToLedger=require('../buy-to-ledger.js');
 
 function createStorage(){
   const values={};
@@ -24,6 +25,8 @@ function loadShoppingModule(){
     Date,Math,Promise,JSON,String,Number,Boolean,isFinite,
     setTimeout,clearTimeout,
     timestampDate(value){return new Date(Number(value));},
+    TripBuyToLedger,
+    buyToLedgerRuntimeAdapter:{},
     canonicalMemberName(value){return String(value||'').trim();},
     AppLog:{repo(){},sync(){}},
     fetch(){return Promise.reject(new Error('network disabled'));},
@@ -35,6 +38,7 @@ function loadShoppingModule(){
 }
 
 const mod=loadShoppingModule();
+const buyToLedgerDomain=TripBuyToLedger.createDomain({effectiveRecords(records){return records;}});
 assert.strictEqual(mod.SHOPPING_DEFAULT_UNIT,'個','new Shopping forms have one authoritative default unit');
 assert(mod.SHOPPING_COMMON_UNITS.includes('個'),'the common unit source contains the default unit');
 assert.strictEqual(mod.newShoppingForm({}).quantity,1,'a new Shopping form starts at quantity 1');
@@ -70,7 +74,8 @@ assert.deepStrictEqual(added,{
   done:false,
   createdAt:'2026-07-23T08:00:00.000Z',
   completedAt:'',
-  splitGroupId:''
+  splitGroupId:'',
+  photoId:''
 },'add normalizes and persists the approved local-only fields');
 assert.strictEqual(Object.prototype.hasOwnProperty.call(added,'buyFor'),false);
 assert.strictEqual(Object.prototype.hasOwnProperty.call(added,'quantity'),false);
@@ -114,6 +119,28 @@ assert.strictEqual(mod.buildShoppingTodayReminder([{id:'b',name:'藥妝',stopRef
 assert.strictEqual(mod.buildShoppingTodayReminder([{id:'d',name:'孤兒',stopRef:'10/18_99',done:false}],day),null,'orphan references degrade silently');
 assert.strictEqual(mod.buildShoppingTodayReminder([],null),null,'non-trip days never show the reminder');
 
+/* v86:Today 只排除目前有效下一站的 exact stopRef；同名、日期與位置都不能代替 ID join。 */
+const excludedReminder=plain(mod.buildShoppingTodayReminder([
+  {id:'next-a',name:'下一站一',stopRef:'10/18_0',done:false},
+  {id:'next-b',name:'下一站二',stopRef:'10/18_0',done:false},
+  {id:'other-a',name:'其他站',stopRef:'10/18_1',done:false}
+],day,'10/18_0'));
+assert.strictEqual(excludedReminder.count,1,'v86 exclusion recomputes Today count after removing the next stop');
+assert.deepStrictEqual(excludedReminder.groups,[{
+  stopRef:'10/18_1',stopName:'永旺夢樂城 岡山',items:['其他站']
+}],'v86 excludes only the exact next stopRef');
+assert.strictEqual(mod.buildShoppingTodayReminder([
+  {id:'next-only',name:'下一站獨占',stopRef:'10/18_0',done:false}
+],day,'10/18_0'),null,'all-in-next produces no duplicate Today reminder');
+assert.strictEqual(
+  plain(mod.buildShoppingTodayReminder([
+    {id:'next',name:'下一站',stopRef:'10/18_0',done:false},
+    {id:'other',name:'其他站',stopRef:'10/18_1',done:false}
+  ],day,'')).count,
+  2,
+  'without a valid next stop Today excludes nothing'
+);
+
 const priorityInput=[
   {id:'normal-1',name:'一般一',category:'伴手禮'},
   {id:'required-1',name:'必買一',category:'必買'},
@@ -144,6 +171,9 @@ assert.deepStrictEqual(
 const QNOW='2026-10-20T04:00:00.000Z';
 const q=over=>mod.normalizeShoppingItem(Object.assign({id:'q1',name:'益生菌',createdAt:QNOW},over||{}));
 const allocationQuantity=item=>item.allocations[0].quantity;
+assert.strictEqual(q({photoId:'  shopping-photo-1  '}).photoId,'shopping-photo-1','photo reference is trimmed and preserved locally');
+assert.strictEqual(q({}).photoId,'','legacy items receive an empty photo reference');
+assert.throws(()=>q({photoId:{id:'nested'}}),/照片附件/,'photo references must remain scalar IDs');
 assert.strictEqual(allocationQuantity(q({quantity:5,unit:'罐'})),5,'新項目接受安全正整數');
 assert.strictEqual(q({quantity:5,unit:'罐'}).unit,'罐','單位獨立保存');
 assert.strictEqual(allocationQuantity(q({quantity:1,unit:''})),1,'quantity 1 合法');
@@ -251,6 +281,36 @@ assert.deepStrictEqual(plain(mod.shoppingSelectionToolbarModel('done',2)),{
   label:'已選 2',
   actions:['移回待買','記帳','刪除']
 },'已買多選動作不借用完成 checkbox');
+const visibleSelectionItems=[{id:'pending-1'},{id:'pending-2'}];
+assert.deepStrictEqual(plain(mod.shoppingSelectionControlModel(
+  visibleSelectionItems,
+  {'pending-1':true,'done-1':true,'deleted-id':true}
+)),{
+  ids:['pending-1','pending-2'],
+  allSelected:false,
+  actionLabel:'全選'
+},'selection controls derive state only from current-tab item IDs');
+assert.deepStrictEqual(plain(mod.nextShoppingPageSelection(
+  visibleSelectionItems,
+  {'pending-1':true,'done-1':true,'deleted-id':true}
+)),{
+  'pending-1':true,
+  'pending-2':true
+},'select all rebuilds the map from current-tab IDs and removes stale IDs');
+assert.deepStrictEqual(plain(mod.shoppingSelectionControlModel(
+  visibleSelectionItems,
+  {'pending-1':true,'pending-2':true,'done-1':true}
+)),{
+  ids:['pending-1','pending-2'],
+  allSelected:true,
+  actionLabel:'取消全選'
+},'all visible items switch the control to deselect all');
+assert.deepStrictEqual(plain(mod.nextShoppingPageSelection(
+  visibleSelectionItems,
+  {'pending-1':true,'pending-2':true,'done-1':true}
+)),{},'deselect all keeps multi-select active but clears the map');
+assert.deepStrictEqual(plain(mod.nextShoppingPageSelection([],{'stale':true})),{},
+  'an empty current tab cannot retain stale selection');
 assert.strictEqual(mod.shoppingItemQuantitySummary({
   unit:'盒',
   allocations:[allocation('阿寶',2),allocation('媽媽',2),allocation('小明',2)]
@@ -276,8 +336,12 @@ assert.strictEqual(mod.shoppingQuantityLabel({quantity:3,unit:''}),'3');
 assert.strictEqual(mod.shoppingQuantityLabel({quantity:null,legacyQtyText:'約 3～5 個'}),'約 3～5 個');
 assert.strictEqual(mod.shoppingQuantityLabel({quantity:null,legacyQtyText:''}),'');
 assert.strictEqual(mod.shoppingQuantityLabel(null),'','空輸入安全回傳空字串');
-assert.strictEqual(mod.shoppingLedgerNote({quantity:5,unit:'罐',buyFor:'媽媽'}),'數量：5 罐 · 幫誰買：媽媽','Ledger note 走同一個 helper');
-assert.strictEqual(mod.shoppingLedgerNote({quantity:null,legacyQtyText:'約 3～5 個',buyFor:''}),'數量：約 3～5 個','舊式數量在 Ledger note 仍可顯示');
+assert.strictEqual(buyToLedgerDomain.createDraftPlan([{
+  shoppingItemId:'note-a',allocationId:'',item:{name:'益生菌',quantity:5,unit:'罐',buyFor:'媽媽'},allocation:null
+}]).seed.note,'數量：5 罐 · 幫誰買：媽媽','Ledger note 由正式 draft plan 建立');
+assert.strictEqual(buyToLedgerDomain.createDraftPlan([{
+  shoppingItemId:'note-b',allocationId:'',item:{name:'舊資料',quantity:null,legacyQtyText:'約 3～5 個',buyFor:''},allocation:null
+}]).seed.note,'數量：約 3～5 個','舊式數量在 Ledger note 仍可顯示');
 
 /* 單位長度上限收斂為 6,與設定頁既有的 normalizeLedgerOption 一致 */
 assert.strictEqual(mod.SHOPPING_UNIT_MAX_LENGTH,6,'單位上限與設定頁選項一致');
@@ -303,27 +367,28 @@ assert.strictEqual(mod.shoppingItemLocationLine({stopRef:'x'},null,'pending'),'�
 assert.strictEqual(mod.shoppingItemLocationLine({stopRef:''},null,'unbound'),'','隨時可買不佔一行');
 
 /* 部分購買:只輸入本次買到,剩餘由系統計算 */
-const unlinkedSummary={state:'unlinked'};
-assert.strictEqual(mod.canOfferShoppingPartialPurchase({
+const canOfferPartial=item=>buyToLedgerDomain.inspectItem(item,{}).canOfferPartialPurchase;
+assert.strictEqual(canOfferPartial({
   done:false,allocations:[allocation('',1)]
-},unlinkedSummary),false,'自己的數量 1 不顯示部分購買');
-assert.strictEqual(mod.canOfferShoppingPartialPurchase({
+}),false,'自己的數量 1 不顯示部分購買');
+assert.strictEqual(canOfferPartial({
   done:false,allocations:[allocation('',2)]
-},unlinkedSummary),true,'自己的數量 2 可部分購買');
-assert.strictEqual(mod.canOfferShoppingPartialPurchase({
+}),true,'自己的數量 2 可部分購買');
+assert.strictEqual(canOfferPartial({
   done:false,allocations:[allocation('阿寶',1),allocation('媽媽',1),allocation('小明',1)]
-},unlinkedSummary),true,'三位各 1 份時總需求大於 1，可部分購買');
-assert.strictEqual(mod.canOfferShoppingPartialPurchase({
+}),true,'三位各 1 份時總需求大於 1，可部分購買');
+assert.strictEqual(canOfferPartial({
   done:false,allocations:[allocation('',null)]
-},unlinkedSummary),false,'舊式數量不顯示部分購買');
-['linked','partial','unverified'].forEach(state=>{
-  assert.strictEqual(mod.canOfferShoppingPartialPurchase({
-    done:false,allocations:[allocation('',2)]
-  },{state}),false,state+' 狀態不顯示部分購買');
-});
-assert.strictEqual(mod.canOfferShoppingPartialPurchase({
+}),false,'舊式數量不顯示部分購買');
+assert.strictEqual(canOfferPartial({
+  done:false,allocations:[Object.assign(allocation('',2),{ledgerLinks:[{
+    version:1,track:'personal',testMode:false,recordId:'missing',batchId:'',
+    linkedAt:'2026-08-08T01:00:00.000Z',releasedAt:''
+  }]})]
+}),false,'有待確認的既有記帳關聯不顯示部分購買');
+assert.strictEqual(canOfferPartial({
   done:true,allocations:[allocation('',2)]
-},unlinkedSummary),false,'已買項目不顯示部分購買');
+}),false,'已買項目不顯示部分購買');
 const src=q({id:'s1',quantity:5,unit:'罐'});
 assert.deepStrictEqual(plain(mod.shoppingSplitPlan(src,3)),{ok:true,mode:'split',purchasedQuantity:3,remainingQuantity:2,error:''},'買到 3 剩 2');
 assert.deepStrictEqual(plain(mod.shoppingSplitPlan(src,1)),{ok:true,mode:'split',purchasedQuantity:1,remainingQuantity:4,error:''},'買到 1 剩 4');
@@ -358,6 +423,24 @@ assert.strictEqual(mod.shoppingAllocationSplitPlan(allocationSplitSource,{'split
 assert.strictEqual(mod.shoppingAllocationSplitPlan(allocationSplitSource,{'missing':1}).ok,false,'未知 allocation ID 拒絕');
 assert.strictEqual(mod.shoppingAllocationSplitPlan(allocationSplitSource,{'split-a':3}).ok,false,'單一對象不可買超過需求');
 assert.strictEqual(mod.shoppingAllocationSplitPlan(allocationSplitSource,{'split-a':1.5}).ok,false,'本次買到不得為小數');
+const photoSplit=plain(mod.buildShoppingSplitParts(q({id:'photo-split',quantity:3,unit:'盒',photoId:'shopping-photo-shared'}),{
+  purchasedQuantity:1,remainderStopRef:'next-stop',now:Date.parse(QNOW)
+}));
+assert.strictEqual(photoSplit.purchased.photoId,'shopping-photo-shared','purchased split keeps the attachment reference');
+assert.strictEqual(photoSplit.remainder.photoId,'shopping-photo-shared','remaining split shares the attachment reference');
+assert.deepStrictEqual(
+  plain(mod.shoppingPhotoIdsReleased(
+    [{id:'a',photoId:'shared'},{id:'b',photoId:'shared'}],
+    [{id:'b',photoId:'shared'}]
+  )),
+  [],
+  'removing one shared split does not release its Blob'
+);
+assert.deepStrictEqual(
+  plain(mod.shoppingPhotoIdsReleased([{id:'b',photoId:'shared'}],[])),
+  ['shared'],
+  'the final reference releases exactly one Blob ID'
+);
 assert.strictEqual(mod.shoppingSplitPlan(q({id:'s2',quantity:null,legacyQtyText:'約 3～5 個'}),1).ok,false,'舊式數量不得部分購買');
 assert(/舊式文字數量/.test(mod.shoppingSplitPlan(q({id:'s3',quantity:null,legacyQtyText:'兩盒'}),1).error),'舊式數量提示先轉換');
 
@@ -437,34 +520,37 @@ assert.strictEqual(mod.resolveShoppingStopState('d1_a',null,'authoritative'),'or
 assert.strictEqual(mod.resolveShoppingStopState('d1_a',null,'unverified'),'pending','F1/F2 資料未就緒或身分未知 → 待確認,不是孤兒');
 assert.strictEqual(mod.resolveShoppingStopState('d1_a',stop,'unverified'),'resolved','站點查得到就照常顯示,不因來源降級');
 
-const single=plain(mod.shoppingLedgerSinglePrefill({
-  name:'眼藥水',
-  category:'代購',
-  quantity:2,
-  unit:'',
-  buyFor:'小明'
-}));
+const single=plain(buyToLedgerDomain.createDraftPlan([{
+  shoppingItemId:'legacy-single',allocationId:'',
+  item:{name:'眼藥水',category:'代購',quantity:2,unit:'',buyFor:'小明'},allocation:null
+}]).seed);
 assert.deepStrictEqual(single,{
   detail:'眼藥水',
+  name:'眼藥水',
   amount:'',
   category:'購物',
   note:'數量：2 · 幫誰買：小明',
   isProxy:true,
   proxyTarget:'小明'
 },'single-item loop maps fields without inventing an amount');
-const ordinary=plain(mod.shoppingLedgerSinglePrefill({name:'牙刷',category:'生活用品',qty:'',buyFor:''}));
+const ordinary=plain(buyToLedgerDomain.createDraftPlan([{
+  shoppingItemId:'ordinary',allocationId:'',item:{name:'牙刷',category:'生活用品',qty:'',buyFor:''},allocation:null
+}]).seed);
 assert.strictEqual(ordinary.category,'購物');
 assert.strictEqual(ordinary.amount,'');
 assert.strictEqual(ordinary.isProxy,false);
 
-const multi=plain(mod.shoppingLedgerMultiPrefill([
-  {name:'眼藥水',category:'代購',buyFor:'小明'},
-  {name:'白桃',category:'伴手禮',buyFor:''}
-]));
-assert.deepStrictEqual(multi,[
-  {name:'眼藥水',amount:'',category:'購物',isProxy:true,proxyTarget:'小明'},
-  {name:'白桃',amount:'',category:'購物',isProxy:false,proxyTarget:''}
-],'multi-item loop creates one blank-amount ledger item per shopping item');
+const multi=plain(buyToLedgerDomain.createDraftPlan([
+  {shoppingItemId:'shopping-a',allocationId:'allocation-a',item:{name:'眼藥水',category:'代購',unit:''},allocation:{allocationId:'allocation-a',target:'小明',quantity:1,ledgerLinks:[]}},
+  {shoppingItemId:'shopping-b',allocationId:'allocation-b',item:{name:'白桃',category:'伴手禮',unit:''},allocation:{allocationId:'allocation-b',target:'',quantity:1,ledgerLinks:[]}}
+]).items);
+assert.deepStrictEqual(multi.map(value=>({
+  name:value.name,amount:value.amount,category:value.category,isProxy:value.isProxy,proxyTarget:value.proxyTarget,
+  sourceShoppingItemId:value.sourceShoppingItemId,sourceShoppingAllocationId:value.sourceShoppingAllocationId
+})),[
+  {name:'眼藥水',amount:'',category:'購物',isProxy:true,proxyTarget:'小明',sourceShoppingItemId:'shopping-a',sourceShoppingAllocationId:'allocation-a'},
+  {name:'白桃',amount:'',category:'購物',isProxy:false,proxyTarget:'',sourceShoppingItemId:'shopping-b',sourceShoppingAllocationId:'allocation-b'}
+],'multi-item loop creates one source-addressable blank-amount ledger item per shopping allocation');
 
 const sharedTargets=mod.createLedgerProxyTargetStore({storage:mod.localStorage,key:'trip_ledger_proxy_targets'});
 sharedTargets.add(' 小明 ');
@@ -535,6 +621,7 @@ const commitSandbox={
     formSession:plain(mod.createShoppingFormSession('add',null,'list',640))
   },
   shoppingListStore:{
+    all(){return [];},
     add(payload){
       commitAdds++;
       if(commitAdds===1){
@@ -547,6 +634,9 @@ const commitSandbox={
   setShoppingFormSavePending(pending){
     commitSandbox.shoppingUiState.formSession.savePending=!!pending;
   },
+  shoppingPhotoIdsReleased(){return [];},
+  cleanupShoppingPhotoIds(){return Promise.resolve([]);},
+  refreshShoppingPhotoAudit(){return Promise.resolve();},
   shoppingSaveAnotherForm:mod.shoppingSaveAnotherForm,
   createShoppingFormSession:mod.createShoppingFormSession,
   renderToday(){},
@@ -589,6 +679,8 @@ const groupSandbox={
 };
 vm.createContext(groupSandbox);
 vm.runInContext(extractUiFunction('prioritizeShoppingGroupItems'),groupSandbox);
+/* v84:站點群組加了 id 錨點,讓「下一站待買」能直接捲到對應群組 */
+vm.runInContext(extractUiFunction('cssId'),groupSandbox);
 vm.runInContext(extractUiFunction('renderShoppingGroups'),groupSandbox);
 const groupedHtml=groupSandbox.renderShoppingGroups([
   {id:'resolved-normal',category:'伴手禮',stopRef:'resolved'},
@@ -627,7 +719,7 @@ const reset=plain(mod.shoppingSaveAnotherForm({
 assert.deepStrictEqual(reset,{
   id:'',name:'',category:'伴手禮',quantity:1,unit:'個',
   legacyQtyText:'',targets:[],allocations:[],
-  stopRef:'d2_shop',done:false,createdAt:''
+  stopRef:'d2_shop',done:false,createdAt:'',photoId:''
 });
 assert.deepStrictEqual(
   plain(mod.createShoppingFormSession(
@@ -643,6 +735,8 @@ assert.deepStrictEqual(
     returnScrollTop:840,
     originalCategory:'伴手禮',
     originalStopRef:'stop-a',
+    originalPhotoId:'',
+    temporaryPhotoIds:[],
     savePending:false
   },
   '編輯 Sheet session 保存返回位置與原分類／站點'
@@ -656,6 +750,8 @@ assert.deepStrictEqual(
     returnScrollTop:0,
     originalCategory:'',
     originalStopRef:'',
+    originalPhotoId:'',
+    temporaryPhotoIds:[],
     savePending:false
   },
   '新增 Sheet session 使用安全的清單返回預設值'
@@ -721,8 +817,22 @@ assert(ui.includes('id="shoppingBuyForNew"'));
 assert(ui.includes('>儲存並新增</button>'));
 assert(!ui.includes("SHOPPING_CATEGORIES=['必買','伴手禮','代購'"));
 assert.match(ui,/\.shopping-target-badge\{[^}]*background:var\(--coral-bg\)[^}]*color:var\(--coral\)[^}]*border-radius:6px/);
-assert(ui.includes('--font-ui:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,-apple-system,sans-serif'),
-  '全站字體變數優先使用 Noto Sans TC 並保留繁中系統 fallback');
+assert(ui.includes('--font-ui:"PingFang TC","Microsoft JhengHei",system-ui,-apple-system,sans-serif'),
+  '全站字體變數只使用裝置內建繁中 fallback，不等待遠端字體');
+/* 這裡原本釘住 v77 的使用者版更新說明。但 APP_RELEASE_NOTES 是**刻意**只留五筆的
+   滾動視窗(契約在 theme-system.test.js),歷史條目遲早會被擠掉 —— v82 就擠掉了 v77。
+   釘住會滾掉的東西是時間炸彈,且與本檔要驗的「照片完整性功能是否存在」無關;
+   功能本身由下面三條斷言負責,歷史交付紀錄則在 07_CHANGELOG.md。 */
+assert(ui.includes('var shoppingPhotoAuditState='),'the App owns one attachment audit state');
+assert(ui.includes('function refreshShoppingPhotoAudit('),'the App exposes one audit refresh entry');
+assert(ui.includes('TripShoppingPhotos.auditAttachments('),'the UI delegates integrity rules to the photo module');
+assert(ui.includes("refreshShoppingPhotoAudit({cleanupExpired:true,reason:'startup'})"),'startup schedules one maintenance audit');
+assert(!/cleanupShoppingPhotoIds\(shoppingPhotoIdsReleased\(before,shoppingListStore\.all\(\)\)\)/.test(ui),'saved reference changes wait for orphan maintenance');
+assert(!/cleanupShoppingPhotoIds\(shoppingPhotoIdsReleased\(before,after\)\)/.test(ui),'deleted item photos wait for orphan maintenance');
+assert(ui.includes('function openShoppingPhotoRepair('),'missing attachments expose an in-context repair sheet');
+assert(ui.includes('function repairShoppingPhoto('),'repair stores a replacement photo');
+assert(ui.includes('function removeInvalidShoppingPhotoReference('),'repair can remove only the invalid reference');
+assert(ui.includes('isQuotaExceededError(error)'),'save failures distinguish quota exhaustion');
 assert(ui.includes('font-family:var(--font-ui)'),'body 使用全站字體變數');
 assert(!ui.includes('font-family:"Hiragino Sans","Noto Sans TC","PingFang TC"'),
   '不得再由日文字型逐字 fallback 造成粗細不一致');
@@ -731,17 +841,30 @@ assert(/\.shopping-category-badge\{[^}]*background:#fff7dc;[^}]*color:#8a6416/.t
 assert.match(ui,/class="shopping-item-title-row"/);
 assert(ui.includes('shoppingCardTargetModel(item)'));
 assert(ui.includes('shoppingItemQuantitySummary(item)'));
-assert(ui.includes('shoppingItemLinkSummary(item,shoppingLedgerContext())'));
+assert(ui.includes('buyToLedgerDomain.inspectItem(item,shoppingLedgerContext())'));
 assert(ui.includes("item.done||linkSummary.state!=='unlinked'"));
 assert(ui.includes("linkSummary.state==='partial'"));
 assert(ui.includes('id="shoppingListOverlay"')||ui.includes("overlay.id='shoppingListOverlay'"),'full shopping list opens as an overlay');
-assert(ui.includes('今天有 ')&&ui.includes('項待買'),'Today has the approved reminder copy');
-assert(ui.includes('function renderShoppingTodayEntry(day)'),'Today uses one entry selector to avoid duplicate launchers');
+assert(ui.includes('今天 ')&&ui.includes('項待買'),'Today has the approved compact reminder copy');
+assert(ui.includes('function renderShoppingTodayEntry(day,currentStopRef)'),'Today entry receives the exact active stop ID');
 assert(ui.includes('採買清單 →'),'empty, non-trip, and no-reminder Today states keep a lightweight list entry');
+assert(!ui.includes('class="nx-buy"'),'the old full-width next-stop buy row is removed');
 /* 待買多選工具列:計數與三顆動作同列,320px 也不斷行。 */
 assert(ui.includes('completeSelectedShopping(false)'),'待買多選可只標記已買');
 assert(ui.includes('completeSelectedShopping(true)'),'待買多選可直接建立多品項消費');
 assert(ui.includes('deleteSelectedShoppingItems()'),'待買多選可批次刪除');
+assert(ui.includes('function renderShoppingListSelectionControls(items)'),
+  'the list header owns a dedicated selection control renderer');
+assert(ui.includes('id="shoppingSelectAllButton"'),
+  'multi-select exposes one stable focus target for select all and deselect all');
+assert(ui.includes('id="shoppingCancelSelectionButton"'),
+  'cancel multi-select remains a separate action');
+assert(ui.includes('toggleShoppingPageSelection()'),
+  'select all uses the current-tab selection handler');
+assert(/\.shopping-list-tool-actions\{[^}]*display:flex[^}]*white-space:nowrap/.test(ui),
+  'the two controls share a non-wrapping action group');
+assert(/\.shopping-list-tools button\{[^}]*min-height:44px/.test(ui),
+  'top Shopping controls expose a 44px touch target');
 assert(!ui.includes('建立多品項消費'),'過長的舊按鈕文案已縮短');
 const shoppingToolbarRenderer=ui.slice(
   ui.indexOf('function renderShoppingSelectionToolbar()'),
@@ -788,6 +911,27 @@ assert(ui.includes('ledger-action-popover'),'沿用帳本既有 popover 樣式,�
 assert(!/shopping-item-actions[\s\S]{0,200}>編輯</.test(ui),'編輯不再直接排在列上');
 /* 單筆記帳入口必須接回既有函式,不另造流程 */
 const itemRenderer=extractUiFunction('renderShoppingItem');
+const proxyTargetRenderer=extractUiFunction('renderProxyTargetMarkup');
+const proxyTargetSandbox={
+  escapeHtml(value){
+    return String(value).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+};
+vm.createContext(proxyTargetSandbox);
+vm.runInContext(proxyTargetRenderer,proxyTargetSandbox);
+const escapedTargetMarkup=proxyTargetSandbox.renderProxyTargetMarkup({
+  prefix:'幫',names:['Bar & <Aaron>'],overflow:'+1',suffix:'買',ariaLabel:'幫Bar & <Aaron>等共 3 位買'
+},'shopping-card-target-summary');
+assert(escapedTargetMarkup.includes('aria-label="幫Bar &amp; &lt;Aaron&gt;等共 3 位買"'),'shared target renderer escapes its complete accessible name');
+assert(escapedTargetMarkup.includes('>Bar &amp; &lt;Aaron&gt;</span>'),'shared target renderer escapes visible target names');
+assert(escapedTargetMarkup.includes('class="shopping-target-overflow" aria-hidden="true">+1</span>'),'multi-target overflow remains a distinct unchanged fragment');
+assert.strictEqual((escapedTargetMarkup.match(/aria-hidden="true"/g)||[]).length,4,'all split visual fragments stay hidden from assistive technology');
+assert(/\.shopping-target-badge\{[^}]*font-size:10\.5px/.test(ui),'target name badge remains 10.5px');
+assert(/\.shopping-target-affix\{[^}]*font-size:9\.5px[^}]*line-height:1\.3/.test(ui),'幫／買 affixes are exactly one pixel smaller');
+assert(itemRenderer.includes('shoppingPhotoStatus(item)'),'card rendering consumes the audited photo status');
+assert(itemRenderer.includes('aria-label="附件已遺失"'),'invalid attachment has an accessible name');
+assert(itemRenderer.includes('shopping-photo-indicator-invalid'),'invalid attachment has a dedicated component class');
+assert(!itemRenderer.includes('>附件已遺失<'),'invalid card status has no visible text');
 assert(itemRenderer.includes('selection=shoppingUiState.selectionMode'),
   '待買與已買在多選模式都使用 selection checkbox');
 assert(!itemRenderer.includes('shoppingUiState.selectionMode&&!item.done'),
@@ -797,15 +941,15 @@ assert(itemRenderer.includes("var inlineAction=selection?'':"),
 assert(itemRenderer.includes("var menu=selection?'':"),
   '多選模式隱藏卡片上的操作選單');
 assert(itemRenderer.includes('shoppingCardTargetModel(item)'),'卡片使用結構化 target model');
-assert(itemRenderer.includes('shopping-target-affix'),'幫／買／+N 使用普通文字片段');
-assert(itemRenderer.includes('targetModel.names.map'),'姓名逐一輸出 badge');
+assert(itemRenderer.includes("renderProxyTargetMarkup(targetModel,'shopping-card-target-summary')"),'採買卡使用共用 target renderer');
+assert(!itemRenderer.includes('targetModel.names.map'),'採買卡不再維護另一份 target markup');
 assert(!itemRenderer.includes('escapeHtml(targetSummary)'),'不得再把整句摘要包成單一 badge');
-assert(itemRenderer.includes('canOfferShoppingPartialPurchase(item,linkSummary)'),
-  '卡片部分購買入口使用統一 eligibility helper');
+assert(itemRenderer.includes('linkSummary.canOfferPartialPurchase'),
+  '卡片部分購買入口使用 domain inspection 的統一 eligibility');
 assert(itemRenderer.includes('>部分購買</button>'),'卡片直接顯示部分購買');
 assert(itemRenderer.includes('openShoppingLedgerEntry(')&&itemRenderer.includes('>記帳</button>'),'已買未記帳項目直接呼叫既有的 openShoppingLedgerEntry()');
 assert(ui.includes('releaseShoppingLedgerLink('),'已記帳項目顯示改回未記帳');
-assert(itemRenderer.includes('shoppingItemLinkSummary(item,shoppingLedgerContext())')&&
+assert(itemRenderer.includes('buyToLedgerDomain.inspectItem(item,shoppingLedgerContext())')&&
   itemRenderer.includes("linkSummary.state==='unlinked'")&&
   itemRenderer.includes("linkSummary.state==='partial'"),
   '列上入口顯示一律走共用 resolver 的三態');
@@ -817,17 +961,18 @@ const cardSandbox={
   shoppingUiState:{selected:{},selectionMode:false},
   shoppingStopById(stopRef){return stopRef==='resolved'?{dayIndex:1,name:'岡山站'}:null;},
   shoppingStopStateFor(item){return item.__state;},
-  shoppingItemLinkSummary(){return {state:'unlinked'};},
+  buyToLedgerDomain:{inspectItem(){return {state:'unlinked',canOfferPartialPurchase:false};}},
   shoppingLedgerContext(){return {};},
   shoppingCardLinkBadge(){return '';},
+  shoppingPhotoStatus(){return 'none';},
   shoppingCardTargetModel(){return {prefix:'',names:[],overflow:'',suffix:'',ariaLabel:''};},
   shoppingItemQuantitySummary(){return '1 個';},
   shoppingItemLocationLine:mod.shoppingItemLocationLine,
-  canOfferShoppingPartialPurchase(){return false;},
   escapeHtml(value){return String(value);},
   jsString(value){return String(value);}
 };
 vm.createContext(cardSandbox);
+vm.runInContext(proxyTargetRenderer,cardSandbox);
 vm.runInContext(renderShoppingItemSource,cardSandbox);
 [
   {stopRef:'resolved',__state:'resolved',location:'DAY 2 · 岡山站'},
@@ -893,7 +1038,7 @@ assert(shoppingSource.length>2000,'採買清單區段切片有效');
 /* A:待買頁與 Today 共用同一份排序 helper,不各自實作 */
 assert(shoppingSource.includes('sortShoppingStopGroups('),'A4 待買頁接上共用群組排序 helper');
 assert(shoppingSource.includes('buildShoppingStopOrder('),'A4 待買頁接上共用站點排名');
-const reminderSource=ui.slice(ui.indexOf('function buildShoppingTodayReminder('),ui.indexOf('function shoppingLedgerSinglePrefill('));
+const reminderSource=ui.slice(ui.indexOf('function buildShoppingTodayReminder('),ui.indexOf('function ledgerBooleanValue('));
 assert(reminderSource.includes('sortShoppingStopGroups(')&&reminderSource.includes('buildShoppingStopOrder('),'A4 Today 提醒使用同一組 helper');
 /* A6:已買頁不套用行程排序,維持既有 store order */
 assert(/shoppingUiState\.tab==='done'\)[\s\S]{0,240}renderShoppingItem\(item,\{page:'done'\}\)/.test(shoppingSource),

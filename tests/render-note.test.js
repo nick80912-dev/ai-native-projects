@@ -24,12 +24,24 @@ function extractConst(name){
   return html.slice(start, end + 1);
 }
 
-const sandbox = {};
+/* v84:下一站卡片會問「這站有什麼要買」。本檔驗的是備註／車票渲染,
+   給一個空的採買清單即可 —— 沒有待買項目時該區塊完全不渲染。 */
+let renderedShoppingItems = [];
+const sandbox = {
+  shoppingListStore: { all(){ return renderedShoppingItems; } },
+  /* v85 renderShoppingTodayCard 仍自行建立 model；讓 RED 測試能跑到舊文案而非因缺 helper 例外。
+     v86 改為直接消費 model 後這個相容 stub 不再參與行為。 */
+  buildShoppingTodayReminder(items,day){ return day&&day.groups?day:null; }
+};
 vm.createContext(sandbox);
 vm.runInContext([
   extractConst('TOMORROW_PREVIEW_HOUR'),
   extractFunction('escapeHtml'),
   extractFunction('jsString'),
+  extractFunction('jsHtmlAttrString'),
+  extractFunction('navigationIntent'),
+  extractFunction('navigationDirectionsUrl'),
+  extractFunction('renderTripNavigationLink'),
   extractFunction('highlightNote'),
   extractFunction('parseNoteLine'),
   extractFunction('renderNote'),
@@ -44,14 +56,24 @@ vm.runInContext([
   extractFunction('renderTomorrowPreview'),
   extractFunction('cssId'),
   extractFunction('openShopPlace'),
+  /* v82:定位改由 switchView 的意圖機制執行,注入真實的 applyViewIntent 一起驗 */
+  extractFunction('applyViewIntent'),
   extractFunction('centerShopFilterChip'),
   extractFunction('parkingLines'),
   extractFunction('renderParkingValue'),
   extractFunction('parkingKvRow'),
   extractFunction('renderParkingTicketLine'),
   extractFunction('renderTicketLine'),
+  extractFunction('renderShoppingTodayCard'),
   extractFunction('nextStopMeta'),
   extractFunction('parkingPanel'),
+  /* v84:下一站卡片多了「這站待買」區塊,注入真實實作而非 stub */
+  extractFunction('prioritizeShoppingGroupItems'),
+  extractFunction('nextStopBuyModel'),
+  extractFunction('renderNextStopBuy'),
+  /* v84:付款與提醒收進可展開區塊,展開狀態放在 viewUiState */
+  extractConst('viewUiState'),
+  extractFunction('renderNextStopMore'),
   extractFunction('renderNextStopCard'),
   extractFunction('clusterItemName'),
   extractFunction('clusterTimeRange'),
@@ -59,13 +81,57 @@ vm.runInContext([
   extractFunction('renderClusterNextStopCard')
 ].join('\n'), sandbox);
 
+/* v86 Today render contract:兩列、每列三項、固定文案，以及不增加第三列的地點提示。 */
+const todayShoppingOut=sandbox.renderShoppingTodayCard({
+  count:8,
+  groups:[
+    {stopRef:'a',stopName:'第一航廈一樓',items:['醬油','抹茶','和菓子']},
+    {stopRef:'b',stopName:'第二航廈',items:['咖啡豆','果醬','餅乾','茶葉']},
+    {stopRef:'c',stopName:'第三站',items:['桃子']}
+  ]
+});
+assert(todayShoppingOut.includes('今天 8 項待買'),'v86 title omits the redundant 有');
+assert(todayShoppingOut.includes('查看全部 →'),'v86 action uses the approved copy');
+assert.strictEqual((todayShoppingOut.match(/today-shopping-summary-row/g)||[]).length,2,'Today renders at most two full stop rows');
+assert(todayShoppingOut.includes('醬油、抹茶、和菓子'),'exactly three names remain complete');
+assert(!todayShoppingOut.includes('和菓子...'),'exactly three names do not gain an ellipsis');
+assert(todayShoppingOut.includes('咖啡豆、果醬、餅乾...'),'a fourth item adds ASCII three dots after the first three');
+assert(!todayShoppingOut.includes('茶葉'),'the fourth name is not rendered');
+assert(!todayShoppingOut.includes('第三站'),'the third stop is not rendered as another full row');
+assert(todayShoppingOut.includes('另有 1 個地點'),'the second row carries the compact location overflow marker');
+assert(!todayShoppingOut.includes('等'),'the compact summary no longer uses 等');
+assert.strictEqual((todayShoppingOut.match(/<button/g)||[]).length,1,'the entire Today card remains one button');
+
+/* v86 next-stop entry is a sibling-safe compact button and keeps row-count semantics. */
+renderedShoppingItems=[
+  {id:'buy-a',name:'白桃',stopRef:'10/18_4',done:false,category:'必買'},
+  {id:'buy-b',name:'茶葉',stopRef:'10/18_4',done:false,category:'其他'},
+  {id:'buy-c',name:'完成',stopRef:'10/18_4',done:true,category:'其他'}
+];
+const buyBadgeOut=sandbox.renderNextStopBuy('10/18_4');
+assert(buyBadgeOut.includes('class="nx-buy-badge"'),'pending items render the compact badge class');
+assert(buyBadgeOut.includes('>🛍 2<'),'badge exposes only the icon and pending row count visually');
+assert(buyBadgeOut.includes('aria-label="開啟這一站的 2 項待買"'),'badge has the approved accessible name');
+assert(buyBadgeOut.includes("openShoppingList('10/18_4')"),'badge opens the exact stopRef');
+assert(!buyBadgeOut.includes('白桃'),'badge no longer repeats item names');
+renderedShoppingItems=[];
+assert.strictEqual(sandbox.renderNextStopBuy('10/18_4'),'','a stop without pending items renders no badge');
+
 let switchedView = '';
 let scrolled = false;
 sandbox._shopQ = 'uniqlo';
 sandbox.shopPlaceFilter = 'wants';
 sandbox.shopOpenFloors = { 'P001::1F':true };
 sandbox.shopMalls = function(){ return [{ place:{ placeId:'P001' }, stores:[] }]; };
-sandbox.switchView = function(view){ switchedView = view; };
+/* v82:openShopPlace 不再自己捲動,而是把結構化意圖交給 switchView。
+   這裡照真實流程在 render 之後套用意圖,端到端的斷言才仍然成立。 */
+let passedIntent = null;
+sandbox.switchView = function(view, intent){
+  switchedView = view;
+  passedIntent = intent || null;
+  if(intent) sandbox.applyViewIntent(view, intent);
+};
+sandbox.window = { scrollTo:function(){} };
 sandbox.requestAnimationFrame = function(fn){ fn(); };
 sandbox.document = {
   getElementById:function(id){
@@ -77,6 +143,11 @@ sandbox.openShopPlace('p001');
 assert.strictEqual(sandbox._shopQ, '', 'shopping deep link clears stale search');
 assert.strictEqual(sandbox.shopPlaceFilter, 'P001', 'shopping deep link selects the resolved place');
 assert.strictEqual(switchedView, 'shop', 'shopping deep link opens the Shopping view');
+assert.deepStrictEqual(
+  passedIntent && { type: passedIntent.type, placeId: passedIntent.placeId },
+  { type: 'shop-place', placeId: 'P001' },
+  'shopping deep link hands a structured intent to switchView'
+);
 assert.strictEqual(scrolled, true, 'shopping deep link scrolls to the place card after render');
 assert.strictEqual(sandbox.shopOpenFloors['P001::1F'], true, 'shopping deep link preserves floor state');
 
@@ -266,6 +337,24 @@ const clusterCardSource = extractFunction('renderClusterNextStopCard');
 const parentMainSource = clusterCardSource.slice(0, clusterCardSource.indexOf('nx-cluster-expand'));
 assert(!parentMainSource.includes('openTripItem'), 'cluster parent remains non-navigable');
 assert(clusterCardSource.includes('renderClusterStop(item,checks,progress,dayIndex)'), 'child renderer receives the selected day');
+
+/* cluster badge 必須只跟目前 child 的 stopRef，不可誤用 parent 或整組。 */
+const activeChild={id:'child-current',time:'10:10',act:'',place:'大原美術館',move:'',note:''};
+renderedShoppingItems=[{id:'cluster-buy',name:'明信片',stopRef:'child-current',done:false,category:'其他'}];
+sandbox.homeClusterOpen={};
+sandbox.pickClusterChild=function(){return {item:activeChild,remaining:0};};
+sandbox.getDayProgress=function(){return {done:{},skip:{}};};
+sandbox.DB={shop:[]};
+sandbox.resolveRef=function(){return null;};
+const clusterBuyOut=sandbox.renderClusterNextStopCard(
+  {items:[activeChild]},1,{remaining:0},
+  {parent:{id:'cluster-parent',act:'倉敷美觀地區散策'},items:[activeChild]},
+  {},{done:{},skip:{}},600
+);
+assert(clusterBuyOut.includes('class="nx-ticket nx-cluster-ticket has-next-buy"'),'cluster ticket reserves badge space');
+assert(clusterBuyOut.includes("openShoppingList('child-current')"),'cluster badge targets only the active child stopRef');
+assert(!clusterBuyOut.includes("openShoppingList('cluster-parent')"),'cluster parent never owns the active child badge');
+renderedShoppingItems=[];
 
 const currentNextStopOut = sandbox.renderNextStopCard({}, 0, {
   source:'time',

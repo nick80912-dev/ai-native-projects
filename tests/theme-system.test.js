@@ -74,6 +74,16 @@ function extractThemeIds(html){
   assert.match(html,/\.pc-rest-r\{[^}]*color:var\(--gold-ink\)/);
 
   assert.deepStrictEqual(Array.from(extractThemeIds(html)),themeIds);
+  /* v80:六個主題一律淺色。系統深色外觀不得改寫任何 token —— 六組調色盤是照淺色設計的,
+     而元件層還有約 108 處硬編碼淺色背景,token 級的深色模式永遠對不齊。
+     改以 color-scheme:light 讓原生控制項與捲軸也維持淺色。 */
+  assert(html.indexOf('@media(prefers-color-scheme:dark)')<0,'no automatic dark override remains');
+  assert.match(html,/html\{[^}]*color-scheme:light/,'the document opts out of system dark rendering');
+  const reducedStart=html.indexOf('@media(prefers-reduced-motion:reduce)');
+  assert(reducedStart>=0,'reduced-motion override is defined');
+  const reducedCss=html.slice(reducedStart,html.indexOf('}',reducedStart)+1);
+  assert.match(reducedCss,/scroll-behavior:auto!important/,'reduced motion removes smooth scrolling');
+  assert.match(reducedCss,/animation-duration:\.01ms!important/,'reduced motion collapses animation duration');
   assert.match(html,/var THEME_STORAGE_KEY='trip_theme'/);
   assert.match(html,/function normalizeThemeId\(/);
   assert.match(html,/function applyTheme\(/);
@@ -82,6 +92,29 @@ function extractThemeIds(html){
   assert.match(html,/class="settings-theme-grid"/);
   const themeSheetSource=html.slice(html.indexOf('function renderThemeSettingsSheet('),html.indexOf('function renderSettingsProxyPage('));
   assert.doesNotMatch(themeSheetSource,/只影響這台裝置|成熟俐落|柔和安靜|自然沉穩/);
+
+  /* v74 設定根頁群組列表:六個主題共用同一組語意 token,不得硬編碼任何顏色,
+     否則在非 ocean 主題下分隔線／摘要文字會失去對比。 */
+  const groupCssStart=html.indexOf('.settings-group{');
+  assert(groupCssStart>=0,'grouped Settings CSS is present');
+  const groupCss=html.slice(groupCssStart,html.indexOf('\n',groupCssStart));
+  ['.settings-group-title','.settings-group-card','.settings-row','.settings-row-summary','.settings-testmode-row']
+    .forEach(function(selector){
+      assert(groupCss.includes(selector),'grouped Settings CSS defines '+selector);
+    });
+  assert.doesNotMatch(groupCss,/#[0-9a-fA-F]{3,8}\b/,'grouped Settings CSS declares no literal hex colors');
+  assert.doesNotMatch(groupCss,/rgba?\(/,'grouped Settings CSS declares no literal rgb colors');
+  assert.match(groupCss,/\.settings-row\{[^}]*min-height:52px/,'grouped Settings rows keep a 52px touch target');
+  assert.match(groupCss,/\.settings-testmode-row \.settings-row-main b\{[^}]*var\(--ink\)/,
+    'the warning row uses the high-contrast semantic text color');
+  assert.doesNotMatch(groupCss,/\.settings-testmode-row \.settings-row-main b\{[^}]*var\(--coral\)/,
+    'the warning row does not use coral for its main text');
+  /* 實測過的回歸:.settings-row 的 border:0 與分隔線規則特異性相同,
+     分隔線若寫在前面會被整個蓋掉,群組看起來就是一團沒有分隔的列。 */
+  const dividerAt=html.indexOf('.settings-group-card>*+*{border-top:1px solid var(--line-soft)}');
+  const rowResetAt=html.indexOf('.settings-row{');
+  assert(dividerAt>=0,'the group divider rule is present');
+  assert(dividerAt>rowResetAt,'the group divider rule follows .settings-row so its border:0 cannot erase it');
 
   const moduleStart=html.indexOf("var THEME_STORAGE_KEY='trip_theme'");
   const moduleEnd=html.indexOf('</script>',moduleStart);
@@ -151,7 +184,9 @@ function extractThemeIds(html){
      最新一筆必須是目前版本(推導);其餘為歷史 release note,依裁定保留原字面。 */
   assert.strictEqual(notes.length,5,'Settings exposes exactly five user-facing releases');
   assert.strictEqual(notes[0].version,appVersion(),'the newest release note is the current version');
-  assert.deepStrictEqual(Array.from(notes.slice(1),function(note){return note.version;}),['v72','v71','v70','v69']);
+  /* 滾動的五筆視窗:最新一筆是目前版本,其餘四筆是緊接在後的歷史版本。
+     歷史版本刻意寫死字面值(見 tests/support/version.js 的適用範圍說明)。 */
+  assert.deepStrictEqual(Array.from(notes.slice(1),function(note){return note.version;}),['v95','v94','v93','v92']);
   notes.forEach(note=>{
     assert(note.title&&note.title.length<=24,'release title is short and present');
     assert(Array.isArray(note.items)&&note.items.length>=1,'release has user-readable items');

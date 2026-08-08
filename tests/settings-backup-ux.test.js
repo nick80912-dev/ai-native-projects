@@ -16,10 +16,14 @@ function createStorage(initial){
 
 (async function(){
   const html=fs.readFileSync('index.html','utf8');
+  assert.match(html,/照片附件只保存在本裝置，不包含於備份。/,'data settings disclose that photo attachments are device-local and excluded from backups');
   const start=html.indexOf('function closeSettings()');
   const end=html.indexOf('function setLedgerTestMode(',start);
   assert(start>=0&&end>start,'personal-state helper section is present');
   const helperSource=html.slice(start,end);
+  /* v9 起匯出／還原都會經過想逛 key 轉換,注入 index.html 的真實實作而不是另寫一份 */
+  const shopWantKeySource=html.slice(html.indexOf('function shopWantStoreKey('),html.indexOf('function toggleShopWantList('));
+  assert.match(shopWantKeySource,/function migrateShopWantKeys\(/,'the real want-key migration is injected');
   const settingsSource=html.slice(html.indexOf('function openSettings('),html.indexOf('function mergedLedgerRecords()'));
   const optionStoreSource=html.slice(html.indexOf('function createLedgerOptionStore('),html.indexOf('function normalizeLedgerProxyTarget('));
   assert(optionStoreSource.includes('normalize:normalize'),'the real option store exposes backup normalization');
@@ -40,7 +44,7 @@ function createStorage(initial){
   storage.setItem('trip_shopping_list',JSON.stringify([{
     id:'shopping-1',name:'白桃',category:'伴手禮',unit:'盒',legacyQtyText:'',
     allocations:[{allocationId:'shopping-1-allocation-1',target:'媽媽',quantity:2,ledgerLinks:[]}],
-    stopRef:'10/18_3',done:false,createdAt:'2026-07-23T08:00:00.000Z',completedAt:'',splitGroupId:''
+    stopRef:'10/18_3',done:false,createdAt:'2026-07-23T08:00:00.000Z',completedAt:'',splitGroupId:'',photoId:'shopping-photo-device-only'
   }]));
   const box={value:'',focus(){},select(){}};
   const copied=[];
@@ -65,9 +69,9 @@ function createStorage(initial){
        v7 將對象、數量與 ledgerLinks 收進 allocations[]。
        備份必須連帶升版,否則舊版 App 會把新格式當成相容,還原時靜默丟掉這些欄位:
        已記帳項目會重新顯示成未記帳而重複入帳,數量也會整批消失。 */
-    PERSONAL_STATE_VERSION:8,
-    PERSONAL_STATE_SUPPORTED_VERSIONS:[1,2,3,4,5,6,7,8],
-    isSupportedPersonalStateVersion(version){return typeof version==='number'&&[1,2,3,4,5,6,7,8].indexOf(version)>=0;},
+    PERSONAL_STATE_VERSION:9,
+    PERSONAL_STATE_SUPPORTED_VERSIONS:[1,2,3,4,5,6,7,8,9],
+    isSupportedPersonalStateVersion(version){return typeof version==='number'&&[1,2,3,4,5,6,7,8,9].indexOf(version)>=0;},
     LEDGER_QUEUE_KEY:'trip_ledger_queue',
     PERSONAL_LEDGER_KEY:'trip_personal_ledger',
     LEDGER_CATEGORY_OPTIONS_KEY:'trip_ledger_categories',
@@ -105,6 +109,9 @@ function createStorage(initial){
       }
     },
     currentThemeId(){return storage.getItem('trip_theme')||'ocean';},
+    /* 本檔驗的是備份 UX 流程,不是 key 轉換本身(那在 shop-want-stable-key 與還原矩陣)。
+       空清單即可:非索引型 key(S001／S002)一律原樣通過。 */
+    shopMalls(){return [];},
     isTimeSimulationActive(){return simulationActive;},
     applyTheme(themeId,options){appliedThemes.push({themeId,options});return {id:themeId};},
     timestampDate(value){return new Date(value);},
@@ -131,6 +138,7 @@ function createStorage(initial){
     clearTimeout
   };
   vm.createContext(sandbox);
+  vm.runInContext(shopWantKeySource,sandbox);
   vm.runInContext(helperSource,sandbox);
   sandbox.openPersonalStateCopyFallback=function(text){fallbackText=text;};
   sandbox.closePersonalStateDialog=function(){dialogCloses++;};
@@ -148,7 +156,7 @@ function createStorage(initial){
   await sandbox.exportPersonalState();
   const exported=JSON.parse(copied[0]);
   assert.strictEqual(exported.format,'trip-personal-state');
-  assert.strictEqual(exported.version,8,'新匯出一律使用 v8');
+  assert.strictEqual(exported.version,9,'新匯出一律使用 v9');
   assert.strictEqual(sandbox.PERSONAL_STATE_VERSION,Number(html.match(/var PERSONAL_STATE_VERSION=(\d+);/)[1]),'sandbox 版本常數與 index.html 一致,避免測試與實作漂移');
   assert.strictEqual(exported.themeId,'mist');
   assert.deepStrictEqual(exported.shoppingUnits,['個','盒','袋']);
@@ -159,6 +167,7 @@ function createStorage(initial){
   assert.deepStrictEqual(exported.ledgerPayMethods,['現金','Suica']);
   assert.deepStrictEqual(exported.proxyTargets,['阿芬','阿蓁']);
   assert.strictEqual(exported.shoppingItems[0].name,'白桃');
+  assert.strictEqual(Object.prototype.hasOwnProperty.call(exported.shoppingItems[0],'photoId'),false,'personal backup never carries a device-local photo reference');
   assert.deepStrictEqual(exported.shoppingItems[0].allocations,[{
     allocationId:'shopping-1-allocation-1',target:'媽媽',quantity:2,ledgerLinks:[]
   }],'v7 匯出保留 allocation 資料');
@@ -167,6 +176,10 @@ function createStorage(initial){
   assert.throws(function(){sandbox.validatePersonalStatePayload(Object.assign({},exported,{shoppingUnits:'盒'}));},/採買單位/);
   assert.throws(function(){sandbox.validatePersonalStatePayload(Object.assign({},exported,{travelNotes:'note'}));},/旅途紀錄/);
   assert.throws(function(){sandbox.validatePersonalStatePayload(Object.assign({},exported,{travelNotes:Array.from({length:201},function(){return exported.travelNotes[0];})}));},/旅途紀錄/);
+  const smuggledPhoto=JSON.parse(JSON.stringify(exported));
+  smuggledPhoto.shoppingItems[0].photoId='shopping-photo-from-another-device';
+  const validatedPhoto=sandbox.validatePersonalStatePayload(smuggledPhoto);
+  assert.strictEqual(Object.prototype.hasOwnProperty.call(validatedPhoto.shoppingItems[0],'photoId'),false,'restore strips a manually smuggled device-local photo reference');
   assert.strictEqual(lastToast,'備份 JSON 已複製，請保存到安全位置');
 
   sandbox.navigator.clipboard.writeText=function(){return Promise.reject(new Error('denied'));};

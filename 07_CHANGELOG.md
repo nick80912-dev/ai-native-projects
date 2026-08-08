@@ -1,4 +1,286 @@
 # 07 版本紀錄
+## 2026-08-08｜發布 review 規格補正（SW v96）
+
+- **照片 quota 直接處理**：保留 v78 已核准的 inline failure flow，不恢復獨立錯誤 overlay；quota-like 寫入失敗在原表單／修復 Sheet 內提供 44px「管理儲存空間」按鈕。修復流程會先關閉再進入設定的「照片健康狀態」，原 `photoId` 與採買資料維持不變；表單路徑前往設定時暫時 inert，關閉設定後可繼續原草稿。
+- **等號後百分比**：修正 calculator evaluated-state 分支，讓 `%` 與四則運算子一樣可延續已完成結果；`1000 = %` 會形成 `1000%` 並顯示 10。數字仍在 `=` 後開始新算式，既有購物式 `1000−10%=900`、安全 parser 與套用時無條件捨去不變。
+- **release review 文件收斂**：ADR 0010 依七段格式重整並加入 ADR index；`ledger-ui-state.js` 補入 README、架構、資料夾與 AI manifest 的 runtime／部署清單；真機驗收文件補記 Bar 於 2026-08-08 對 v88–v89、v92–v95 的累積核准。
+- **版本與相容性**：`app-version.js`／`sw.js` 升為 v96，`APP_RELEASE_NOTES` 依五筆規則滾動；未修改 SW install／activate／fetch／skipWaiting／clients.claim、Ledger／Shopping schema、Apps Script、備份格式、同步、`PERSONAL_STATE_VERSION=9` 或 `netlify.toml`。SW 更新提示雙版本驗收順延至 v97／v98。
+- **跨平台 release CI**：GitHub Linux Chromium 揭露購物搜尋框會受字型 metrics 影響量到 45px，而同列採買入口固定為 46px；搜尋框改以 `height:46px; box-sizing:border-box` 明確履行既有等高契約，不靠放寬測試掩蓋 1px 差異。
+- **TDD 與完整 gate**：新增兩個 browser regression assertions，修正前分別因找不到「管理儲存空間」與 `1000 = %` 仍停在 `1000` 而失敗；最小修正後 targeted Playwright 2／2 通過。最終完整 70／70 個 Node test files、Playwright 124／124、`check-doc-titles`、`check-app-version`、兩份 manifest JSON 與 `git diff --check` 全數通過；Standards／Spec 複核確認原 findings 均已關閉。
+
+## 2026-08-08｜Ledger UI 歷史瀏覽 workflow／state seam（SW v95）⭐ 架構變更
+
+- **最小垂直切片**：把帳本軌切換、dashboard／完整紀錄、歷史搜尋／篩選／分組及多選狀態，從分散 direct mutation 收斂到 `ledger-ui-state.js`。entry draft、editing、correction、calendar、calculator、settlement 與 repositories 保留原位，避免大爆炸重構。
+- **深 module interface**：production 與 tests 共用 `createState(seed)`、`transition(state, action)`、`activeHistoryFilterCount(state)` 與 `createWorkflow(adapter)`；transition 以不可變 state + ordered effects 隱藏跨欄位不變量，caller 不再自行記住每條返回／切軌路徑要清哪些欄位。
+- **真實 seam**：production adapter 先 commit `ledgerUiState` 相容物件，再執行 close popover、render、partial filter-panel sync 與 scroll effects；Node recording adapter 透過相同 interface 驗證順序。無效 action fail closed，不 write、不 render。
+- **UI／資料相容**：既有 public handler、inline markup、renderer、文案與手機版面不變；filter panel partial sync 保留搜尋 input DOM 與焦點。狀態仍為 session-only，不進 localStorage、個人備份、Ledger／Shopping schema 或同步 payload；`PERSONAL_STATE_VERSION=9`、`netlify.toml` 不變。
+- **離線與版本**：`index.html` 載入 module，SW SHELL 納入 `ledger-ui-state.js`；SW 只正常升版及增加必要 App Shell asset，install／activate／fetch／skipWaiting／clients.claim 與快取策略未改。SW 更新提示雙版本順延至 v96／v97。
+- **驗證**：完整 70／70 個 Node test files、Playwright 124／124、`check-doc-titles`、`check-app-version`、manifest JSON 與 `git diff --check` 通過；Browser 覆蓋 filter panel DOM／焦點連續性、搜尋／分組／清除、多選／全選、關閉／切軌重設與 320／375／390px 無水平 overflow。
+- **Bar 驗收**：2026-08-08，Bar 確認 v88–v89、v92–v95 的畫面／真機確認皆已完成；此紀錄不代表已核准 merge、部署或建立 production tag。
+
+## 2026-08-08｜Ledger 計算機小數、百分比與即時計算介面（SW v94）
+
+- **參考圖五列四欄介面**：計算 Sheet 改為 `%／AC／退格／÷`、數字與四則運算、`.／0／00／=` 的手機計算機配置；標題列新增 44×44px 明確關閉鈕，底部保留取消與「套用金額」。完整算式與大字結果分層顯示，背景仍不可誤觸關閉。
+- **小數與購物式百分比**：明確 tokenizer／operator stack 支援小數 literal 與 postfix `%`；`1000−10%=900`、`1000＋10%=1100`、`1000×10%=100`、`1000÷10%=10000`，連續加減百分比以當下累計為基準。未使用 `eval()` 或 `Function()`。
+- **等號與套用分工**：`=` 只結算並保留 Sheet；之後輸入數字會開始新算式，輸入運算子則從結果繼續。螢幕按鍵與實體鍵盤共用 reducer，支援 Enter、Backspace、Delete、Escape 與 Tab focus trap。
+- **小數安全套用**：顯示保留原始小數；套用正數金額時才無條件捨去，並先顯示「將套用 ¥N／NT$N」。浮點誤差容限內的近整數先校正，避免 `2.9999999999999996` 少一元；一般金額捨去為 0 時阻止，固定折扣維持可套用 0。
+- **資料與相容範圍**：沿用 single／item／discount data target 與 live draft 寫回；未修改 Ledger／Shopping schema、Apps Script、同步、備份格式、帳務推導、`PERSONAL_STATE_VERSION=9` 或 `netlify.toml`。`sw.js` 只修改版本字串；SW 更新提示雙版本驗收順延至 v95／v96。
+- **驗證**：68／68 個 Node test files、Playwright 123／123 全數通過；SW 更新／離線快取另連跑 10 輪共 20／20 通過。`git diff --check`、文件標題與 App／SW 版本一致性檢查均通過。
+
+## 2026-08-08｜Buy-to-Ledger 垂直切片架構收斂（SW v93）⭐ 架構變更
+
+- **先鎖行為再移動邊界**：新增 Shopping → Ledger → durable commit → Shopping allocation link 原子回寫 → 返回的 characterization 與真實瀏覽器測試，涵蓋單筆／多筆、個人／團體、驗證失敗、保留採買 overlay、再記一筆與 link 回寫失敗降級。使用者可見流程與文案維持不變。
+- **純 domain module**：新增 `buy-to-ledger.js`，以 `createDomain({effectiveRecords})` 集中 linked／partial／unverified 推導、來源準備、draft plan、source-to-record commit plan 與 append-only link history。模組不讀 DOM、localStorage、sessionStorage 或 IndexedDB，輸入資料不就地修改。
+- **workflow coordinator 與正式 seam**：`createWorkflow({domain,adapter})` 以 `start(intent)`／`commit(command)` 協調採買轉記帳；production adapter 仍掌管 DOM、個人 repository、團體 durable queue、Shopping store 與 Toast。一般 Ledger 新增／編輯不經此 seam，既有行為不變。
+- **fail-safe 不變量**：個人帳必須完成本機 repository 寫入、團體帳必須取得 durable queue acknowledgement 後才原子回寫 Shopping link；Ledger 成功但 link 寫入失敗時不回滾、不重送 Ledger，保留既有明確警告。Shopping source ID 只存在草稿／協調命令，不進 21 欄 Ledger record。
+- **離線與資料相容**：`buy-to-ledger.js` 納入 SW App Shell；`PERSONAL_STATE_VERSION` 維持 9，未新增 storage key，未修改 Ledger／Shopping schema、備份格式、Apps Script、`netlify.toml` 或 SW install／activate／fetch 策略。SW 更新提示雙版本驗收順延至 v94／v95。
+- **驗證**：新增 `buy-to-ledger-characterization.test.js`、`buy-to-ledger-module.test.js` 與 `browser/buy-to-ledger.spec.js`；完整 **68／68** Node test files、Playwright **123／123**、`check-doc-titles`、`check-app-version` 與 `git diff --check` 通過。
+
+## 2026-08-06｜Ledger 共用金額計算器（SW v92）
+
+- **一套計算器覆蓋全部可編輯金額**：單品新增、個人／團體帳、編輯／更正、採買轉記帳與「儲存並再記一筆」均沿用同一個 Ledger renderer；多品項每列與優惠券／固定折扣欄亦使用相同計算器。匯率、稅率、日期時間、採買數量、分攤人數與系統推導結清金額不加入入口。
+- **安全四則運算**：支援連續加總與 `＋、−、×、÷` 優先序，使用明確 tokenizer／operator stack，不使用 `eval()` 或 `Function()`。除以零、未完成算式、非法內容與超過 safe integer 的 token／中間結果均阻止套用；記帳金額必須為大於 0 的整數，折扣保留既有可為 0 的規則，任何小數都不四捨五入。
+- **資料 target 而非 DOM target**：單一 `ledgerCalculatorState` 只保存 `{type:'single'}`、`{type:'item',key}` 或 `{type:'discount'}`。套用時重新解析目前草稿及 mounted input，再走既有 `updateLedgerDraftField()`／`updateLedgerDraftItem()`；不存在的 item key fail closed，不會把結果寫到別列。
+- **手機操作脈絡**：44×44px 線條 SVG 入口位於金額 label 右側；底部 sheet 有四欄 keypad、完整算式、即時結果、清除、退格、取消與明確套用。開啟先 blur 原輸入以收起 iPhone 數字鍵盤並將背景 Ledger sheet 設為 inert；關閉恢復 scroll，套用與取消都把焦點送回原欄位，不關閉新增消費表單或清掉其他草稿。
+- **窄螢幕與相容性**：Playwright 驗證 320／375／390px 的單品、多品項與折扣入口皆無水平 overflow，背景點擊不會誤關閉。Ledger schema、同步、備份格式與帳務推導不變；`PERSONAL_STATE_VERSION` 維持 9，`netlify.toml` 未修改。`sw.js` 只修改版本字串；原排定的 SW 更新提示雙版本驗收由 v90／v91 順延為 v93／v94。
+- **測試**：新增 `ledger-calculator.test.js` 與 `browser/ledger-calculator.spec.js`。完整 **66／66** Node test files、Playwright **117／117**、`check-doc-titles`、`check-app-version` 與 `git diff --check` 通過。
+
+## 2026-08-03｜消費與採買代購標記同行（SW v89）
+
+- **消費卡減少一行**：個人帳代購紀錄不再於品名下方另外顯示「代購 姓名」badge，改為緊接品名的「幫 [姓名] 買」。最近消費、完整紀錄與批次展開子項使用同一個 renderer，因此位置與語意一致；批次父卡仍保留「N 項代購」摘要。
+- **與採買卡共用呈現**：抽出 `renderProxyTargetMarkup()`，消費卡與採買卡共用姓名 escape、完整 aria-label、多人採買與 `+N` 片段。姓名 badge 維持 10.5px；「幫／買」固定 9.5px，降低視覺競爭。
+- **窄螢幕安全**：消費品名區改為可換行 flex title row，代購標記只在左側內容欄換行，不侵入右側金額與操作鈕。Playwright 以長品名、長姓名驗證 320／375／390px 的最近消費、完整紀錄、批次子項及採買卡均無水平 overflow。
+- **相容與範圍**：不改明細、篩選、Ledger record、Shopping allocation、同步、備份或 schema；`PERSONAL_STATE_VERSION` 維持 9，`netlify.toml` 未修改。`sw.js` 只變更版本字串，未改生命週期或快取策略。
+- **測試**：Node 鎖定共用 renderer、HTML escape、aria、DOM 位置、舊 badge 移除及 9.5／10.5px 契約；新增 Playwright `proxy-inline.spec.js`。完整 **65／65** Node test files 與 Playwright **115／115** 通過；`check-doc-titles`、`check-app-version`、`git diff --check` 全數通過。
+
+## 2026-08-03｜資料可感知性（SW v88）
+
+- **分帳首頁一眼分清今天與整趟**：沿用單一摘要卡，不增加獨立卡片。大字主值固定為今日支出與筆數，卡片底部顯示旅程累計；個人帳使用「今日支出／旅程累計」，團體帳使用「與我相關 · 今日消費／與我相關旅程累計」，避免把目前成員可見範圍誤讀成全團總額。今日無消費時顯示 `¥0`，不再另疊重複提示。
+- **同步時間與失敗來源可讀**：正常狀態的 header 保持精簡「已同步」，不在旁邊常駐分鐘數；按鈕 aria 仍保留完整更新時間。partial／failed／offline 才在 header 帶相對時間，跨日後回到精確日期時間。同步面板分開呈現本次資料更新時間、最後完整同步時間與未更新來源；partial 顯示人類可讀的「分帳資料」，不再只顯示技術 key。前景每分鐘更新狀態，未改時間模擬或同步觸發頻率。
+- **設定頁資料健康摘要**：`資料與版本` 頂部集中顯示行程資料、團體帳、個人帳與照片四列狀態；根頁摘要顯示「資料狀態正常」或「N 項需注意」。離線本身不列異常；partial／failed、團體帳待送出與照片引用損壞才計入注意項。個人帳明確標示「僅此裝置」。
+- **相容與範圍**：同步快照只新增向後相容的 `lastCompleteAt`／`sourceCreatedAt` metadata，不新增 localStorage key，不升 `PERSONAL_STATE_VERSION`，不改 Sheet schema、資料格式或快取策略。`sw.js` 只變更版本字串；`netlify.toml` 未修改。
+- **文件收斂**：Bar 確認 v74–v87 真機驗收皆正常，Release Gate 已更新；原 backlog #23「12 月東京行接入」因行程已結束而關閉，不實作、不占用版本。
+- **測試**：新增 Node 行為契約與 Playwright `data-observability.spec.js`，涵蓋個人／團體文案、今日／累計、同步相對時間、partial 來源、設定健康摘要及 320／375／390px 無水平溢位。完整 **65／65** Node test files 與 Playwright **114／114** 通過；`check-doc-titles`、`check-app-version`、`git diff --check` 全數通過。
+
+## 2026-08-03｜身分選擇器層級與同分頁回頂（SW v87）
+
+兩個真機回報的 UI 缺陷，先重現查證再修改。
+
+### A. 身分選擇器被設定頁遮住
+
+- **實測根因**：`settingsOverlay` computed `z-index:170`、`memberOverlay` `130`；中心點 `elementFromPoint` 落在 `settingsOverlay`。兩者都是 `body` 直接子節點、`position:fixed`、`display:block`、`visibility:visible`、`opacity:1`、`transform:none` —— **沒有 stacking context 干擾，純粹是 z-index 反了**。來源是共用規則 `.settings-overlay,.member-overlay{z-index:130}` 後又由 `.settings-overlay{z-index:170}` 單獨提高。
+- **修法**：疊層寫成具名 token。**基準層維持 130**，只在「從設定頁叫出」時加 `.over-settings`（180，落在既有 170 與 185 之間）。
+- **為什麼不全域抬高**：第一版直接把 `.member-overlay` 提到 180，**造成 6 個既有 Playwright 測試回歸** —— `.shopping-list-overlay` 是 145，開著的身分選擇器會蓋住整個 App 並攔截採買清單的點擊。基準層低於採買清單是既有且刻意的關係，不該被順手改掉。
+- **背景不可操作**：從設定頁開啟時對 `settingsOverlay` 設 `inert`，關閉即恢復。**注意**：`inert` 只擋真實互動，程式化的 `element.click()` 依規格仍會派送事件，因此測試改用真實指標的 `elementFromPoint` 命中測試與焦點行為驗證，而不是拿 `.click()` 當證明。
+- **焦點**：記住觸發的「切換」／「＋」按鈕，關閉後歸還；設定頁若已重繪則退回同類按鈕，不讓焦點掉回 `body`。
+- **不退化**：非設定頁與 forced 流程維持原本層級與語意；`settingsCurrentMember` 於切換完成後即時更新（既有行為，補測試鎖住）。
+
+### B. 再點目前分頁回頂會閃
+
+- **實測根因**：再點時 `renderCurrent()`／`renderTrip()` 各被呼叫 **1 次**，第一個 `.item` 節點被換掉（**整份重繪**）；捲動由 488 **一步跳到 0**（t=2ms 仍 488、t=10ms 已 0，無中間值）。
+- **修正了一項推測**：原先懷疑 `.view.active` 被移除再加回會重新觸發 fade。實測 **不會** —— remove 與 add 在同一個同步區塊、中間沒有 reflow，`animationstart` 觸發 **0** 次；刻意插入 `void offsetHeight` 才變成 1 次。故閃爍來自「整份重繪 + 瞬間跳頂」，**不是 fade**。
+- **修法**：在 `switchView()` 前段攔截 `v===curView && !intent`，改呼叫共用的 `scrollCurrentViewToTop()` 後直接 return —— 不重繪、不動 `.view.active`、不碰暫態 UI 狀態，只平滑捲動並把 `viewUiState[view].scrollY` 歸零。
+- **reduced motion**：`scrollTo` 的 `behavior:'smooth'` 是明確值，**不會**被 CSS 的 `scroll-behavior` 覆寫，因此自行判斷 `prefers-reduced-motion` 並改用 `instant`。
+- **分帳例外保持**：次層頁再點「分帳」仍先回 dashboard；已在 dashboard 才回頂，並改走同一個共用 helper（`ledger-225.test.js` 原本釘住 `switchView` 內的 `behavior:'smooth'` 字面值，斷言意圖不變，改為檢查新的落點與 helper 行為）。
+- **明確 intent 不受影響**：`trip-item`／`trip-now`／`shop-place` 等程式化跳轉不走此捷徑。
+
+### 共通
+
+- 三個手機寬度（320／375×844／390）實測：選擇器為最上層、輸入框自動聚焦、無水平溢位；再點分頁 0 次重繪、回到頂端。
+- **版本**：`sw.js` diff 只有版本字串一行，install／activate／fetch／skipWaiting／clients.claim／快取策略全未動；`netlify.toml` 未動；`PERSONAL_STATE_VERSION` 維持 9；schema 與資料格式未變。roadmap 原本把 v87 排給 SW 更新提示，已整體順延為 v89／v90，避免同一版號承載不同 runtime。
+- **驗證**：新增 11 個測試（6 個先紅後綠）；完整 **65／65** Node test files 與 Playwright **112／112** 通過。
+## 2026-08-03｜Today 採買提醒精簡（SW v86）
+
+- **消除重複提醒**：Today 待買模型接受目前下一站的 exact `stopRef`，排除後重新計算 count；一般卡使用下一站 id，同區串點只使用目前 child id。若今天全部待買都由有效下一站承擔，Today 不再補回卡片或 generic「採買清單 →」入口；行程尚未開始與沒有有效下一站時則維持原本入口／完整 Today 提醒。
+- **下一站改為 badge**：原本整列 `.nx-buy` 改為右上 `🛍 N`，實際按鈕至少 44×44px，`aria-label` 為「開啟這一站的 N 項待買」。badge 是 `.nx-ticket-main` 的直接 sibling，點擊只執行 `openShoppingList(stopRef)`，不會冒泡觸發 `openTripItem()`；一般卡與 cluster current child 共用同一契約。
+- **Today 卡收斂**：文案改為「今天 N 項待買／查看全部 →」，最多兩個站點、每站前三個品名；第四項起以 ASCII `...` 表示，剛好三項不加。超過兩站時在第二列右側固定顯示「另有 N 個地點」，不增加第三列。站名與品名分配獨立截斷空間，過長站名不會吃掉全部品名或 overflow 標記。
+- **實測高度**：同一組 12 筆待買資料在 v85 HEAD／v86 工作樹對照，375×844 的 Today 卡由 **115.2px → 94.9px**，下一站起點由 **302.3px → 282.8px**；下一站卡由 **263.7px → 209.7px**，合計省 **74.3px**。320px 因舊 `.nx-buy` 會換成兩行，合計省 **97.9px**；390px 省 **74.3px**。三種寬度均無水平 overflow，badge 為 50×44px，移除 badge 前後卡高差為 0。
+- **保留既有天氣修正**：視覺文字縮短為「雨 N%」，`aria-label` 仍保留「現在之後最高降雨機率」，未改 API、TTL、快取、降雨計算或離線策略。
+- **版本邊界**：`app-version.js` 與 `sw.js` 升 v86；`sw.js` 除版本字串外不動生命週期與快取策略；`PERSONAL_STATE_VERSION` 維持 9，`netlify.toml` 未動。
+- **驗證**：依 TDD 先確認 model、render 與 browser 測試在 v85 行為下失敗，再實作；完整 **65／65** Node test files 與 Playwright **101／101** 通過。
+
+## 2026-08-03｜修正「其他資訊」誤觸卡片導覽（SW v85）
+
+- **真機回饋**：在今天的行程卡點「其他資訊」會直接跳進行程分頁。
+- **成因（v84 引入）**：`.nx-ticket-main` 本身是 `role="button"` + `onclick="openTripItem(...)"`，而 v84 把 `<details>` 放進了它內部的 `.nx-ticket-lines`。點 summary 展開之後，click 繼續往上冒泡成整張卡的導覽。這同時也是**語意錯誤** —— 「按鈕裡的按鈕」在 HTML／ARIA 上無效，鍵盤 tab 會落進去、螢幕閱讀器讀不出正確角色。
+- **修法**：把 `<details>` 移出 `.nx-ticket-main`，成為卡片的同層區塊（放在待買區塊之前）。**不用 `stopPropagation` 掩蓋** —— 那只會消掉症狀，留下巢狀互動控制項的語意問題。移出後補回原本繼承自卡片本體的左右內距。
+- **根因層級的保護**：新增結構不變式測試 —— 整張卡的 `role="button"` 內**不得**再有任何可聚焦的互動元素（`a[href]`／`button`／`summary`／`details`／`[tabindex]`／`[role=button]`）。日後若有人再往卡片內塞控制項，這條會直接紅，而不必逐一列舉個案。
+- **一併澄清**：原本懷疑停車 MAPCODE 有同類問題，實測在此卡片中無法重現（該卡的 `role="button"` 內除了新加的 `<details>` 之外沒有其他互動元素），故**不宣稱**、也未做預防性修改；上述結構不變式已涵蓋日後出現的情況。
+- **版本**：依「不得讓同一版號承載兩份不同 runtime」，v84 已推上 `dev`，本次 runtime 變更升 **v85**。`sw.js` diff 只有版本字串一行；`netlify.toml` 未動；`PERSONAL_STATE_VERSION` 維持 9。
+- **驗證**：先寫失敗測試（點展開後 `curView` 由 `today` 變成 `trip`）再修；完整 **65／65** Node test files 與 Playwright **94／94** 通過。
+
+## 2026-08-02｜Today 即時資訊（SW v84）
+
+批次主題：**讓 Today 回答「現在要幹嘛」，而不只是「行程有什麼」。**
+
+- **下一站待買**：卡片顯示「這站待買 N」與前兩項品名，點擊開啟採買清單並直接捲到該站群組（站點群組補上 id 錨點，`openShoppingList()` 接受選填 `focusStopRef`）。這個 join **沒有歧義** —— 採買項目的 `stopRef` 就是站點 id，與行程項目 1:1，不經由商場推導，因此沒有「一個商場對多個不同日期站點」的問題；這正是先前評估「商場內嵌採買呈現」時所擔心的那件事的正確版本。必買優先、已完成不計入、沒有待買時整塊不渲染。
+- **降雨改為「現在之後」**：原本取整天最大值，含已經過去的時段 —— 早上八點下過雨、下午全晴，晚上看到的還是 80%。資料本來就在抓（`hourly=precipitation_probability`），**真正的關鍵是快取**：原本存的是算完的數字、TTL 三小時，沿用的話早上算的「現在之後」到中午就是錯的。改為把原始 hourly 序列存進快取、**讀取時依當下重算**，同一份快取在任何時間點都正確；舊格式安全降級。全部時段過去時退回當日最大值而非空白。文案改為「之後雨 N%」並補 `aria-label`。
+- **同批修掉一個自己造成的違規**：本檔有「只有 `appNow()` 可以直接取得目前時間」的不變式（讓時間模擬全域生效），初版寫的 `appNow?appNow():new Date()` 防禦式寫法破壞了它，已全部改走 `appNow()`。
+- **次要資訊收合**：常駐交通／停車／營業（到得了嗎、開著嗎），付款／提醒收進預設關閉的 `<details>`；兩者皆無時不渲染。展開狀態放進 `viewUiState.today.openMore`，沿用 v82 的暫態 UI 慣例，否則每次重繪都會自己收回去 —— 與 v82 修行程面板時同一個坑。
+- **範圍聲明**：原始需求還有「交通、停車、營業、付款、提醒**依當下情境調整優先順序**」。「當下情境」沒有定義判準（依時間？依距離？依是否已抵達？），不同讀法會做出完全不同的東西，故本批只做可明確驗收的收合，**動態重排不在本批**。
+- **購物搜尋摘要**：結果最前面加「找到 N 家店 · M 個購物地點」。數字取自實際渲染的那一輪（渲染時累加），不另外再算一次 —— 兩份計算遲早會不一致。無命中與非搜尋狀態皆不顯示。
+- **版本**：`sw.js` diff 只有版本字串一行，生命週期與快取策略未動；`netlify.toml` 未動；`PERSONAL_STATE_VERSION` 維持 9。
+- **驗證**：四項皆先寫失敗測試；完整 **65／65** Node test files 與 Playwright **92／92** 通過。
+
+## 2026-08-02｜「回到現在」收斂為跨日專用（SW v83）
+
+- **真機回饋**：v82 剛加的「回到現在」與「隱藏已完成」感覺雷同。實測證實這個懷疑是對的 —— 待在今天那一天時，「隱藏已完成」（預設開）本來就把過去的站點移走了：
+
+  | 情境 | 「現在」在第幾筆 | 距頁面頂端 | 視窗高度 |
+  |---|---|---|---|
+  | 隱藏已完成 | 第 1 筆 | 255px | 844px |
+  | 顯示全部 | 第 2 筆 | 391px | 844px |
+  | 已完成 3 站 | 第 4 筆 | 783px | 844px |
+
+  三種情況「現在」都落在**第一屏之內**，而 v82 同批加入的「再點同一分頁回頂」已能到達 —— 那時這顆按鈕等於捲到頂。**重複某種程度上是同一批造成的**：加了回頂之後沒有回頭檢查它對「回到現在」的稀釋。
+- **收斂為只在跨日時出現**：新增條件 `findToday()!==curDay`。人在 Day 5、今天是 Day 1 時，篩選與回頂都幫不上忙，這才是它無可取代之處；此時一鍵切回今天並定位當下那一站，省去在 daybar 六個 chip 裡辨認今天（其提示只是一圈 2px 金色內框）。
+- **未採用的替代方案**：直接移除並強化今天 chip 的辨識度。可行但跨日返回會變成兩個動作（切天、再自己找現在），故保留按鈕而改收出現條件。
+- **版本**：依「不得讓同一版號承載兩份不同 runtime」，v82 已推上 `dev`，本次 runtime 變更升 **v83**。`sw.js` 的 diff 只有版本字串一行；`netlify.toml` 未動；`PERSONAL_STATE_VERSION` 維持 9。
+- **驗證**：先寫失敗測試（今天那一天仍顯示按鈕）再實作；三種情境分開鎖住（在今天→隱藏、在別天→顯示、今天不在行程內→隱藏）。完整 **64／64** Node test files 與 Playwright **83／83** 通過。
+
+## 2026-08-02｜操作脈絡保存（SW v82）
+
+批次主題：**使用者的操作脈絡不得被導航或重繪無故破壞。** 三個症狀同一個根因 —— 捲動位置、面板展開、操作焦點都只活在 DOM 裡，重繪即消失。
+
+- **暫態 UI 狀態有了落點**：新增 session-only 的 `viewUiState`（四個分頁各自的 `scrollY`，行程頁另有 `openPanels`）。刻意**不**寫 localStorage、**不**進備份：把 A 手機的捲動位置還原到 B 手機毫無意義，而且會讓備份格式再升一版。測試從 key、值、payload 三處鎖住這條邊界。
+- **分頁捲動位置**：`switchView()` 結尾原本無條件 `window.scrollTo({top:0})`；實測更糟 —— 因為 `html{scroll-behavior:smooth}`，那個 scrollTo 是**動畫**的，切換瞬間量到的是滑到一半的 226px。改為離開前記位置（必須在 `curView` 改變之前）、`renderCurrent()` **之後**以 `requestAnimationFrame` 還原，並 clamp 到目前可捲動範圍。還原一律 `behavior:'instant'`，否則會被 CSS 的 smooth 變成動畫。
+- **入口意圖優先**：帶目標的入口（看某個行程、某個購物地點、跳某一天、回到現在）以**結構化資料**傳參 —— `{type:'trip-item',itemId}` 等。參數傳遞天然只消耗一次，沒有殘留旗標要清；結構化比 `skipRestore=true` 好測，日後新增入口不必改判斷邏輯。順帶收掉重複：`openTripItem()` 原本自己複製了一份 `switchView` 的 body，因此完全沒有參與捲動保存。
+- **行程面板展開狀態**：`togglePanel()` 原本只做 `classList.toggle`，而 `onCheck()` 會 `renderTrip()` —— 使用者的實際體驗是「每打一次卡，交通／停車／備註全部收合」。狀態改存進 `viewUiState.trip.openPanels`，並在 `renderTrip()` 依 `visibleItems` GC 掉被篩除者。
+- **打卡改為可鍵盤操作的 checkbox**：與 v81 為 `.store-row` 修掉的是同一個缺陷，沿用同一套樣板。差別在 `.chk` 是獨立小方塊、列內文字不在它裡面，因此**必須**自帶 `aria-label`。鍵盤與滑鼠不能用 `document.activeElement` 反推（`<div tabindex="0">` 被點擊時同樣會取得焦點），改由 keydown handler 明確傳 `fromKeyboard`。
+- **焦點還原的例外處理**：契約寫成「重繪不得**無故**破壞仍然存在的狀態；使用者刻意讓目標離開結果集時，焦點移往下一個合理目標」。`tripHideDone` 預設為 true，打完卡那一筆本來就會離開清單 —— 目標仍在→還原同一元素；已離開→原位置的下一筆；連下一筆都沒有→退到篩選按鈕。實作過程中第一版測試正是把這個例外誤當成缺陷，**實作是對的、預期寫錯了**。
+- **「回到現在」**：`backToNow()` = 今天那一天 + 目前這一站，沿用同一套意圖機制。只有 `findToday()` 不為 null 時才渲染，旅行前後顯示它只會讓人按了沒反應。
+- **版本策略**：依 2026-08-02 裁定，每批鎖定一版；整批完成、測試全綠後才升版。`sw.js` 的 diff **只有版本字串一行**，生命週期與快取策略未動；`netlify.toml` 未動；`PERSONAL_STATE_VERSION` 維持 9。
+- **驗證**：五項皆先寫失敗測試（切分頁量到 226px、面板 3→0、`viewUiState` 不存在、`role` 非 checkbox、按鈕不存在）；完整 **64／64** Node test files 與 Playwright **81／81** 通過。
+
+## 2026-08-02｜完成／跳過改為單行省略號（SW v81）
+
+- **完成鈕也收單行**：v80 只把跳過鈕收成單行省略號（受「一條 CSS 規則」的範圍限制），完成鈕仍會換行，長地點名稱下實測長到 65px。將 `white-space:nowrap` 移到 `.nx-decision-btn` 基底規則，兩顆按鈕一致以省略號收尾，維持 46px 單行高度。
+- **同時把左右內距移到基底規則**：`padding:0 14px` 由 `.nx-decision-btn.skip` 上移到 `.nx-decision-btn`，否則完成鈕沒有內距，省略號會緊貼邊框。跳過鈕的 `max-width:120px` 為 border-box，內距上移不改變其寬度。
+- **範圍**：只動這兩條既有規則，未新增規則；`.nx-ticket-low` 與 `.nx-decision-btn.done` 仍未動。`PERSONAL_STATE_VERSION` 維持 8；schema、localStorage key、備份格式、SW 的 install／fetch／SHELL、`netlify.toml` 與相依套件均未修改。
+- **為何遞增版本而非併入 v80**：v80 已推上 `dev` 並進入真機驗證，折回同一版號會讓已安裝 v80 的裝置拿不到這次修正 —— 正是版本機制要防的靜默過期。
+- **驗證**：先寫失敗測試（完成鈕 `white-space` 實測為 `normal`）再實作；完整 **57／57** Node test files 與 Playwright **31／31** 通過。
+
+### 併入 v81：想逛標記改用穩定 key
+
+- **正確性缺陷**：想逛標記的 key 是 `w_<mallIndex>_<樓層>_<店名>`，而 `mallIndex` 是 `shopMalls()` 的**列舉索引**（依行程出現順序排序）。新增任一購物地點就會位移索引，已存的標記靜默指到別家店。**實測已發生**：加入 P048 後 P007 由索引 1 變 2；且「無印良品 1F」同時存在於 P001 與 P039，位移一格即在兩家不同店之間轉移。
+- **唯一權威 helper**：新增 `shopWantStoreKey(place,index,store)`，格式 `w2:p<placeId>:<樓層>:<店名>`，各段以 `encodeURIComponent()` 編碼（`:` 編成 `%3A`，店名含冒號也不會切斷分隔）。`renderShopResults()` 的六個讀寫點（`wantTotal`／`wanted`／搜尋／想逛清單／樓層計數／樓層列）與 `toggleWant()` 全部改走它，runtime 不再以 `mi` 判斷是否想逛。只負責展開狀態的 `shopWantKey()` 更名為 `shopWantListStateKey()`，避免兩種用途共用含糊名稱。
+- **舊資料轉換**：`migrateShopWantKeys()` 為純函式且冪等。**不**把舊 index 換成「目前同一 index 的 placeId」——順序可能早已改變，那只會把錯誤映射永久固定下來；改以「樓層＋店名」搜尋候選，唯一才轉、0 個或多個一律移除。非 `w_` 開頭的 key 原樣保留。有無法安全轉換的標記時吐一次提示，因轉換冪等故天然不重複，不需額外的 localStorage 旗標。
+- **個人備份升 v9**：`PERSONAL_STATE_VERSION = 9`、`SUPPORTED = [1..9]`。v1–v8 還原時對 `payload.wants` 執行同一套轉換（在寫入前，維持全有或全無）；匯出前亦先轉換，確保 v9 備份不帶出索引型 key。舊版 App 的 `SUPPORTED` 仍是 `[1..8]`，會明確拒絕 v9 而非當成 v8 靜默錯讀。`docs/personal-state-compatibility.md` 與還原矩陣同步更新。
+- **版本策略**：`origin/main` 為 v73（最後正式發布），v81 尚屬未發布的候選版，故本修正**併入 v81 不另跳版**。`sw.js` 與 `app-version.js` 完全未修改（`sw.js` diff 為空），`netlify.toml` 未動。
+- **範圍**：只處理索引型 key 的正確性問題。清單局部更新、搜尋分類與空狀態、debounce、store-row 無障礙、onclick 跳脫整理均未混入，後續另批處理。
+- **驗證**：三組失敗測試先行（key 不存在／還原未轉換／`w_99_` 未被消化）；完整 **58／58** Node test files 與 Playwright **33／33** 通過。
+
+### 併入 v81：想逛切換就地更新
+
+- **現象**：每點一次想逛就整份重繪，實測約 **720 個節點全數換掉**；且 `renderShopResults()` 尾端無條件呼叫 `centerShopFilterChip()`，把篩選列的水平捲動位置歸零（實測 150px → 0）——捲到右邊某個購物地點再開始標記，位置會一直被拉回去。
+- **就地更新**：`storeRow()` 新增 `data-want` 屬性，讓切換時能找出同一家店的所有列（樓層清單與想逛清單可能同時存在）。`toggleWant()` 先試 `applyWantToggleInPlace()`，更新勾選狀態後由 `shopWantCounts()` 從 storage **重算**並寫回三處計數（想逛總數、想逛清單標題、樓層 ⭐N）。計數一律重算而非從 DOM 讀回來加減——DOM 只是投影。
+- **仍應重繪的三種情況**（區塊結構真的改變，不是效能問題，已寫成測試以免日後被誤當成缺陷「修掉」）：想逛篩選下取消標記（成員資格改變）、想逛清單區塊要出現或消失（該地點的第一次標記）、清單展開中需要增減列。
+- **篩選列捲動**：`centerShopFilterChip()` 移出重繪路徑，只在篩選真的改變（`setShopPlaceFilter()`）與首次渲染（`renderShop()`）時呼叫。
+
+### 併入 v81：搜尋不再留空殼、可比對分類
+
+- **空殼**：搜尋 `UNIQLO` 實測渲染 5 個購物地點標題、**2 筆命中、3 塊只寫著「找不到」的空殼**；完全查無結果時是 5 塊空殼，而全域的「目前沒有符合條件」永不出現——搜尋分支的 `rendered++` 是無條件執行的。改為命中數為 0 就整塊 `return`，並讓全域空狀態生效。
+- **空狀態語意**：使用者輸入了字串卻沒結果時顯示「找不到「<查詢>」」，而不是「目前沒有符合條件的購物資料」。
+- **比對範圍**：新增純函式 `shopStoreMatches(store,query)`，同時比對 `name` 與 `cat`。分類本來就顯示在每一列上，搜不到只是介面自己造成的期待落差。殘缺資料（缺欄位／`null`）安全回傳 `false`，不讓搜尋整個炸掉。
+- **debounce**：`shopQ()` 加上具名常數 `SHOP_SEARCH_DEBOUNCE_MS = 120`；`_shopQ` 仍即時更新，只延後重繪。輸入框位於 `#shopResults` 之外，focus 不受影響。
+- **範圍**：#4（store-row 無障礙）與 #5（onclick 跳脫整理）均未混入，後續另批處理。
+- **驗證**：兩批皆先寫失敗測試（節點識別為 `false`、篩選列被歸零、`shopStoreMatches` 不存在、3 塊空殼）；完整 **59／59** Node test files 與 Playwright **41／41** 通過。
+
+### 併入 v81：onclick 屬性跳脫統一
+
+- **潛在缺陷**：購物頁四處 `onclick` 以 `.replace(/'/g,"\\'")` 手工跳脫，只處理單引號。其中兩處內插的值**直接來自 Google 表格**——樓層名稱（`toggleFloor`）與購物地點名稱（篩選 chip）。含 `"` 會直接截斷 `onclick="…"` 屬性，含 `&`、`<` 也不安全；實際店名已經含 `&`（`earth music&ecology`、`H&M`），目前只是碰巧還沒壞。
+- **改用既有 helper**：四處一律改走 `jsHtmlAttrString()`（`jsString()` 再加上 `&`／`"`／`<`／`>` 的實體編碼），該函式早已存在並用在別處。`shop-category-tags` 的 sandbox 補上真實跳脫器實作而非 stub。
+
+### 併入 v81：店家列成為可鍵盤操作的 checkbox
+
+- **現象**：店家列是購物頁最常被點的控制項（實測 101 家店），卻是沒有 `role`、沒有 `tabindex` 的 `<div>`；勾選與否只是 `.st-chk` 裡的一個 ✓ 字元。完全無法以鍵盤操作，螢幕閱讀器也讀不出已勾選。
+- **語意選擇**：採 `role="checkbox"` + `aria-checked`，而非 `role="button"` + `aria-pressed`。這是二元選取、視覺上本來就是核取方塊，語音回報「未勾選／已勾選」比「按鈕」精確。可及名稱取自列內既有文字（店名、分類、必逛／免稅、樓層），不另造 `aria-label`。✓ 字元加 `aria-hidden="true"`，狀態由 `aria-checked` 承載。
+- **鍵盤操作**：`tabindex="0"` + `onkeydown` 沿用既有的 `activateKeyboardButton()`（同時支援 Enter 與 Space）。新增 `.store-row:focus-visible` 外框，沿用既有 `[role="button"]:focus-visible` 的樣式語彙。
+- **實作過程中發現並修掉的第二個缺陷**：需要重繪的那一次（該地點的**第一次**標記）會換掉整個 DOM，鍵盤焦點掉回 `body`——連按第二下 Space 完全沒有作用。新增 `focusShopRow()`，重繪後把焦點放回同一家店；只在焦點原本就在該列時還原，滑鼠點選不搶焦點。
+- **就地更新同步**：`applyWantToggleInPlace()` 一併更新 `aria-checked`，否則畫面打了勾、語音仍說未勾選。
+- **未改動**：觸控區維持現狀（實測 63px，本來就足夠）。
+- **驗證**：兩批皆先寫失敗測試；完整 **61／61** Node test files 與 Playwright **47／47** 通過。
+
+### 併入 v81：想逛改為獨立閱讀模式、一鍵清除、採買清單入口
+
+- **想逛頁籤幾乎失去功能**：實測標記 2 家店時，想逛頁籤仍渲染 **75 列店家與 8 個樓層區塊** —— `wants` 只決定哪些商場出現，商場內照樣攤開全部樓層與全部店家，而唯一只列想逛的 `.want-box` 還預設收合。改為**獨立閱讀版面**：全部＝探索商場需要樓層結構，想逛＝執行既定路線需要快速掃描目標。只留商場標題與想逛店家平鋪，不渲染樓層手風琴、`.want-box` 與營業時間／官網／備註；樓層與櫃位資訊仍在每列右側的 `st-f`。
+- **順序與即時移除是既有正確行為，本批只補測試鎖住**：順序沿用 `wanted`（`m.stores.filter`），天然是「商場行程順序 → 店家原始順序」，實作不另行 `sort()`，以刻意打亂字母序的 fixture 驗證；取消後即時移除則是 `applyWantToggleInPlace()` 既有的 `wants` 回退路徑。
+- **空狀態**：`尚未加入想逛店家，可從「全部」頁籤加入` ＋ 回到全部的按鈕。
+- **一鍵清除**：文案固定為「清除全部想逛」（不寫「清除」，避免誤解為刪除店家或採買資料），只在想逛模式且有資料時渲染，按下即清除不跳確認框。**復原採完整快照**而非逐筆反向切換 —— 逐筆會寫入 N 次、重繪 N 次，且無法還原轉換保留下來、無法辨識的 key。清除與復原**各只寫入一次 storage、各只重繪一次**，以覆寫 `lsSet` 計數驗證；測試刻意混入一筆 `S999` 鎖住快照的完整性。
+- **採買清單入口**：顯示**全清單**未完成數，刻意不同於 Today 卡片的日別語意。**過期問題**：全檔沒有任何採買流程呼叫 `renderAll()`，在 overlay 內完成一項再關閉數字會停在舊值；`closeShoppingList()` 於確實移除 overlay 且 `curView==='shop'` 時就地更新該數字，不整份重繪。
+- **「從哪裡進去就回哪裡」不需實作**：採買清單是疊在 body 上的 overlay，`curView` 從頭到尾不變，使用者根本沒有離開過原頁。首頁與購物頁兩個入口實測皆正確。真正的風險是日後有人為了「實作返回」去動 `curView` 反而改壞，故加原始碼斷言：`open`／`closeShoppingList` 不得出現 `switchView(` 或指派 `curView`。
+- **chip 數量語意**（獨立交付）：同一視覺三種實體（商場數／想逛家數／店家數）。不硬統一資料含義，只讓兩個全域 chip 寫出單位 —— `全部 5 個地點`、`想逛 2 家`；各購物地點 chip 維持純數字。單位置於計數元素**之外**（`<span id="shopWantTotal">`），就地更新才不會把單位一起洗掉。
+- **明文未做**：不改 schema、不升 `PERSONAL_STATE_VERSION`（維持 9）、不建立採買項目到店家的新關係、不做商場內嵌採買呈現。
+- **驗證**：四批皆先寫失敗測試（想逛 28 列 vs 應為 3、清除按鈕不存在、入口不存在、chip 無單位）；完整 **62／62** Node test files 與 Playwright **59／59** 通過。
+
+## 2026-08-02｜六主題固定淺色、設定圖示放大、完成鈕不再被擠掉（SW v80）
+
+- **移除自動暗色**：刪除 v78 加入的 `@media(prefers-color-scheme:dark)` 整段（六組 token 覆寫、`body{color-scheme:dark}` 與四條元件背景覆寫），並在 `html` 加上 `color-scheme:light`。六個主題是照淺色設計的，元件層仍有約 108 處硬編碼淺色背景，token 級暗色永遠對不齊；改為同一主題在 iPhone 淺色／深色外觀下完全一致，原生控制項與捲軸也維持淺色。
+- **設定圖示放大**：`.settings-btn .settings-gear-six` 由 20×20／`stroke-width:2` 改為 24×24／`stroke-width:1.75`。44×44 觸控區、圓形底、`viewBox` 與兩個 `circle` 半徑均未改，放大的是看得見的圖示而不是觸控區。
+- **完成鈕不再被長地點名稱擠掉**：`.nx-ticket-low` 第二軌是 `auto`，跳過鈕的 max-content 會吃掉整列寬度，把 `minmax(0,1fr)` 的完成鈕壓到 2px，標籤於是一個字一行直排。以單一規則為跳過鈕加上 `max-width:120px` 與 `white-space:nowrap`，讓它套用既有 ellipsis 並把寬度還給完成鈕；`.nx-ticket-low`、`.nx-decision-btn` 與 `.nx-decision-btn.done` 均未動。
+- **範圍保護**：`PERSONAL_STATE_VERSION` 維持 8；schema、localStorage key、備份格式、SW 的 install／fetch／SHELL、`netlify.toml` 與相依套件均未修改。`sw.js` 的 diff 只有 `SW_VERSION` 一行。未加入 `night` 主題、未將 108 處硬編碼淺色背景轉為 token、未動 `.day-chip.active`。
+- **驗證**：三個變更皆先寫失敗測試再實作；完整 **57／57** Node test files 與 Playwright **31／31** 通過。`app-version.js` 與 `sw.js` 同步升至 v80。
+
+## 2026-08-02｜設定圖示改為圓角六齒（SW v79）
+
+- **設定入口圖示**：右上角設定按鈕改為 24×24 inline SVG，以六條相隔 60° 的圓頭齒、外圈與中心圓構成；實際圖示為 20×20，沿用 `currentColor`，六個主題與離線環境不需額外資源。
+- **既有契約不變**：設定按鈕維持 44×44 觸控區、`aria-label="設定"` 與原本開啟行為；MAPCODE、資料 schema、同步、照片儲存與部署設定均未修改。
+- **版本換代**：`app-version.js`、`sw.js` 與使用者版更新說明同步升至 v79，確保已安裝 App 取得新版 `index.html`。
+
+## 2026-08-02｜離線、行車操作與夜間可用性（SW v78）
+
+- **離線首屏**：移除 Google Fonts 與兩個 font preconnect，改用裝置內建繁中字體；桃子 header badge、16／32px favicon 與 152／167／180px Apple touch icons 納入原子 SHELL precache。
+- **可恢復錯誤**：視圖渲染失敗不再要求不存在的「下拉重試」，改為 44px「重新整理」按鈕，實際重跑 daybar 與目前 view renderer。
+- **Today 與車上操作**：Day chips 只在行程頁出現；header 改為 flex，不再以固定 `padding-right` 搭配絕對定位。同步、設定、Day chips 與購物 filters 均至少 44px；完成／跳過提高到 16px，完成為主要且較大的操作。
+- **照片健康狀態**：設定入口集中命名為「照片健康狀態」；容量或處理失敗留在目前表單／修復 dialog 的 inline status，不再疊加獨立 storage-failure overlay。照片修復功能本身維持。
+- **夜間與可及性**：六個既有主題新增自動暗色 token；`prefers-reduced-motion` 關閉平滑捲動並壓縮動畫。toast 加入 live-region 語意；下一站可開啟區支援鍵盤 Enter／Space。
+- **範圍保護**：MAPCODE 顯示、點任意處關閉行為、資料 schema、parser、同步資料流與 `netlify.toml` 均未修改。`app-version.js` 與 `sw.js` 同步升至 v78。
+
+## 2026-08-01｜採買多選全選（SW v76）
+
+- **目前分頁全選**：待買／已買進入多選後，可全選或取消目前分頁全部項目；不跨分頁保留選取。
+- **狀態與行動版**：手動取消一項會恢復「全選」，取消全選保留多選模式；頂部控制在 320／375／390px 同列且點擊區至少 44×44px。
+- **回歸保護**：既有已買、記帳、移回待買、刪除與 v75 照片附件流程通過完整 **56／56** Node test files、Playwright **17／17** 驗證。
+- **更新說明視窗**：設定「資料與版本」仍固定只顯示最近五版，v76 加入後淘汰最舊的 v71 顯示項，完整歷史仍保留於本檔。
+- **PWA**：`app-version.js` 與 `sw.js` 同步升至 v76；`sw.js` 除版本字串外未動，`netlify.toml` diff 0；v75→v76 換代與離線重開通過。
+
+## 2026-08-01｜採買照片附件與依目前位置導航（`codex/shopping-photo-navigation-v75`，SW v75）
+
+- **基準與核准範圍**：`origin/dev` 已包含 v74 最終修正 `c51752b`;本批依 Bar 核准實作後推送 `dev`,不動 `main`、不部署正式站、不建立 production tag、不 force push。Tier 2 四段說明、設計規格與兩份實作計畫位於 `docs/superpowers/`。
+- **採買照片只留在拍照裝置**：每筆採買項目可從手機相簿／相機選一張 `image/*`;圖片縮放至最長邊 1600px 並以 JPEG 0.82 儲存於 IndexedDB `trip-local-media/shopping-photos`。卡片只顯示無文字的迴紋針 SVG,不顯示縮圖；詳情可全畫面查看、替換或移除。
+- **引用生命週期**：採買項目在 localStorage 只存 `photoId`;部分購買拆分共用同一引用,安全回併亦保留引用。刪除項目或移除附件時,只有在最後一個引用消失後才刪除 Blob。個人備份維持 v8,匯出剝除 `photoId`,還原也剝除手動夾帶的引用；設定頁明示照片不包含於備份。
+- **導航定位**：具 Places／Restaurants 詳細分點的行程維持精確目的地；只有一般同名地點在點擊導航時請求一次目前位置,以座標作為 Google Maps directions origin 搜尋最近同名目的地。定位被拒、逾時或不可用時退回 `名稱 + 日本`;按鈕仍只顯示「導航」,不增加「精確地點／附近搜尋」標籤。
+- **PWA 升版**：`app-version.js` 與 `sw.js` 同步升至 v75;SHELL 只新增 `shopping-photo-store.js`,install／fetch／fallback 策略完全未動。`schema.js`、`netlify.toml`、Apps Script 與 Google Sheet schema 完全未動。
+- **iPhone 照片檢視器 hotfix**：真機截圖確認頂部 CSS 三值 `padding` 誤把 `safe-area-inset-top` 套在底部,使關閉鈕落入狀態列觸控區；已將安全區移到頂部,並新增單指向下 72px、垂直位移明顯大於水平位移時關閉。兩個真實瀏覽器測試先紅後綠,分別模擬 47px 頂部安全區與 120px 下滑手勢。
+- **自動驗證**：完整 **56／56** Node test files、Playwright **13／13** 通過；照片與定位瀏覽器測試皆維持 console error 0、pageerror 0。Playwright 另確認三個手機 viewport 照片卡與 panel 水平 overflow 0、照片重新載入後仍在、備份不帶引用、移除後 Blob 清理，以及 SW 新世代快取與離線重啟正常。
+
+## 2026-08-01｜設定根頁群組列表與測試模式控制頁（`feat/settings-grouped-v74`，SW v74，後續已推 `dev`）
+
+- **前置:release back-merge 已完成。** `origin/main`(`17c423f`,v73 發布 merge)以 `--no-ff` 回灌 `dev`,merge commit `a930858`。**零內容差異**(`git diff f393256 a930858` 為空),53／53 Node tests、兩個 checker 與遠端 `qa-sanity` 皆通過;`git merge-base --is-ancestor origin/main origin/dev` 退出碼 0,`dev` 不再落後 `main`。v74 分支自 `a930858` 建立。
+- **交付範圍(依 2026-08-01 核准的 Tier 2 四段說明與設計規格 §5)**:設定根頁由 7 張 `.settings-section` 卡片改為**三個常駐群組**(個人／記帳／資料);新增 `renderSettingsTestModePage()` 與 `test-mode` 子頁,團體帳測試模式移出根頁;legacy deep link `ledgerTestModeSection` 由 `{page:'root'}` 改為 `{page:'test-mode'}`;診斷面板新增進入控制頁的入口;版本由 v73 升至 **v74**。
+- **測試模式的入口而非語意改變**:`[TEST]` 前綴、帳本軌道隔離、Apps Script 寫入、`ledgerUniverseMode()` 全部未動。根頁**永遠不放**可直接切換的 checkbox;關閉時該列**完全不渲染**(不是 CSS 隱藏),開啟時才出現在記帳群組底部。三個進入點(診斷面板／根頁警告列／分帳 TEST banner)實測皆有效。
+- **保護項逐項核對(規格 §6.1 因果條件)**:`sw.js` 的 diff 只有 `SW_VERSION` 一行(install／fetch／fallback／SHELL 全未動)、`index.html` 載入 `app-version.js` 的方式未動、`netlify.toml` 完全未動。因此 2026-07-31 的 B2–C3 真機證據**仍可沿用**,不需重跑 v18→v73 升級矩陣。
+- **實作期間 Browser QA 抓到一個真實缺陷並已修**:`.settings-row` 的 `border:0` 與群組分隔線規則 `.settings-group-card>*+*` 特異性相同,分隔線寫在前面會被整個蓋掉(實測 `border-top-width: 0px`,六主題全中)。修法是把分隔線規則移到 `.settings-row` 之後,並在 `theme-system.test.js` 鎖住這個來源順序。
+- **測試契約改為語意契約(規格 §7.1)**:新增 `tests/support/source.js`,依**名稱**擷取 `index.html` 的函式與宣告,取代 `html.slice(indexOf('function openSettings('), indexOf('function mergedLedgerRecords()'))` 這類位置相依 slice —— 舊寫法會讓新增的 render function 落在區間外而靜默通過,也會誘導實作者為配合測試而安排函式位置。TEST banner 的 deep link 改以 `normalizeSettingsTarget()` 的**實際回傳值**斷言。
+- **新增 `tests/settings-grouped-root.test.js`**(執行 `renderSettingsRoot()` 並斷言渲染結果:三群組順序與歸屬、摘要格式、`未設定`／`SW 未知` 降級、測試模式關閉時完全不渲染／開啟時才出現警告列)與 **`tests/browser/settings-grouped-root.spec.js`**(三寬度溢位、測試模式關→開→關完整循環、六主題對比與分隔線、跨頁捲動保存)。
+- **同時修掉兩處硬編碼版本**:`tests/browser/sw-update-cache.spec.js` 寫死 `v73`(升版即全紅)改為取自 `tests/support/version.js`;`theme-system.test.js` 的 release-note 尾段更新為滾動五筆視窗 `['v73','v72','v71','v70']`。`APP_RELEASE_NOTES` 補上 v74 使用者版說明,並依五筆上限移除 v69。
+- **自動驗證**:完整 **54／54** Node test files、Playwright **9／9**、`tools/check-doc-titles.js`、`tools/check-app-version.js`(回報 v74)、`git diff --check` 全部通過。
+- **v73 → v74 換代實測(規格 §6.2)**:以 `a930858`(v73)完整檔案樹起站註冊 SW,再就地換上 v74 檔案。結果:CacheStorage 由 `okayama-trip-v73` 換為**只剩** `okayama-trip-v74`;安裝的 10 個 SHELL 在 App 啟動後另正常快取桃子徽章,穩定狀態共 11 entries。快取中的 `index.html` 含 `.settings-group-card`、`renderSettingsTestModePage` 與本次 `var(--ink)` 對比修正,`app-version.js` 字面為 `v74`(無混版本);關閉伺服器後重載仍完整啟動,`APP_VERSION='v74'`、資料與版本頁顯示 `SW v74`、console error／pageerror 0。
+- **Browser QA 量測**:320／375／390px 下 document／panel／各列水平溢位皆 0;最小列高 52px;身分列在 320px 長名情境維持單列(58px)、名稱 ellipsis 截斷、按鈕 47×38 與 38×38;根頁在 390×844 下 `scrollHeight === clientHeight`(一個畫面看完);console error／warning 0。六主題對比:群組標題 8.00–14.72、列標題 13.31–15.51、摘要 5.43–7.77、圖示 8.73–15.51。
+- **測試模式警告列對比阻斷已修正**:依 Bar 核准只在 `.settings-testmode-row .settings-row-main b` 將主文字由 `var(--coral)` 改為 `var(--ink)`,不修改六主題 token 或其他 coral 元件。Playwright 先啟用測試模式再讀取 computed color／card background,六主題主文字對比分別為 ocean 13.31／ivory 15.51／mist 13.39／cedar 14.71／wisteria 15.18／tea 14.13,次要文字分別為 5.43／7.77／6.30／7.26／7.71／6.99,全部 ≥ 4.5。
+- **後續交付狀態**:`feat/settings-grouped-v74` 最終 SHA `c51752b` 已推送並快轉 `dev`;`main` 與 production tag 未動。v74 delta 驗收清單見 `docs/batch2-device-acceptance.md`(新增區塊,未覆蓋任何 v73 證據)。
+
+## 2026-08-01｜🚀 SW v73 正式發布（main，v18 → v73）
+- **正式站已由 SW v18 升級至 SW v73。** merge commit **`17c423f8ac59328f926973024cb407d5e638f838`**（PR #11，`dev → main`，merge method 為 merge commit，parents `9eefcb0` + `9ec2c21`，非 squash／rebase）。Netlify 正式部署 `6a6d6be3e3dabf00078f284b`，`commit_ref` 與 merge commit 一致，`published_at` 為 `2026-08-01T03:45:48.841Z`。
+- **回滾錨點 tag `production-v73`** 已建立並推送：tag 物件 `64e8d0b`（annotated），peeled `17c423f8...`。**未建立 `production-v72`** —— v72 從未正式發布，v72 與 v73 合併為同一候選版，只做一次 SW 換代。前一版錨點 `production-v18` → `9eefcb0` 保留。
+- **發布內容**：v73 的 SW 更新完整性修正（install 用 `cache:'reload'`、日常 fetch 用 `cache:'no-cache'`、`sw.js` 自帶 `SW_VERSION` 並移除 `importScripts` 版本依賴、離線未命中的子資源不再 fallback 成 `index.html`、`APP_VERSION` 全面改走安全 helper、受保護紀錄文案改為「已鎖帳」），加上 v72 的六組淺色主題、設定頁 2.0、旅途紀錄與個人備份 v8。
+- **G1 真機／PWA 驗收 2026-08-01 全數通過**：P0／P1／A／B／C／D／E／F／G／H／I。其中 C2「先離線、再升級」的一次性過渡窗口在 iPhone 上也通過 —— 該情境原本因競態不一定可重現而標為 best-effort。逐項證據見 `docs/batch2-device-acceptance.md`。
+- **R1 遠端 CI**：真正用於合併的最終 head 為 `9ec2c211932ba0a570e8978ea60b85898c1de6c4`，workflow run `30682429659`，`sanity` 與 `browser-qa` 皆 success，PR 狀態 MERGEABLE／CLEAN，未解決 review thread 0。驗收清單中 R1-c 原記的是中途 head `0fb4a2c`／run `30682328651`；依裁定**不為改這一行再推 pre-merge commit**（那會讓 head 再次改變、R1-c 又要重跑），改於本次 G6 收尾更正。
+- **G5 正式站線上驗證**：`sw.js` `SW_VERSION='v73'`（4,486 bytes，舊 `okayama-trip-v18` 字面 0）、`app-version.js` `v73`、`index.html` 728,196 bytes（含 `APP_VERSION SAFE ACCESS` 區塊與已鎖帳說明句，舊文案「還款確認後保護」殘留 0）、六主題齊全、版本一致性成立、`GET /` HTTP 200。header：`sw.js` 與 **`app-version.js`** 皆 `no-cache,no-store,must-revalidate`（後者為 v73 新增的防禦性規則，線上確認生效）、`index.html` `no-cache`、`manifest.webmanifest` Content-Type 正確。
+- **Bar iPhone smoke test 通過**：PWA 完整關閉重開後已換代至 SW v73、四分頁正常、原有身分與個人資料保留、設定頁與子頁進出正常、飛航模式下可離線重開、恢復網路後正常、無白畫面／崩潰／持續錯誤。
+- **合併安全性（合併前已驗）**：`main` 上沒有任何 `dev` 缺少的非 merge commit；`main` 合併前的 tree 等同 `9abd6a5`（在 `dev` 歷史中）；模擬合併零衝突。合併後 `main` 的 tree 與 PR head tree **完全一致**，合併未引入任何額外變更。
+- 批次一「發布阻斷項」自此結束。下一批為 **v74 設定根頁改版**，設計規格已核准但**尚未實作**，見 `docs/superpowers/specs/2026-08-01-settings-grouped-list-design.md`。
+
 ## 2026-07-30｜測試模式／時間模擬暴露面調查與備份防呆（dev，SW v73）
 - **P5 唯讀調查結論:三條路徑皆判定為「可延後,非發布阻斷」**,但發現一個值得在出發前補的缺口(見下)。調查全程未修改任何檔案。
 - **調查修正了兩個既有假設**:①`trip_ledger_test_mode` **根本不是隱藏的** —— 設定頁有一個明著的「測試模式」區塊,任何人打開設定往下滑就點得到;②「連點標題 5 下」的除錯面板入口**不存在**,`brandTitle` 上沒有任何 listener,診斷面板的真正入口是**桃子徽章 300ms 內連點兩次 `touchend`**,且因為只綁 `touchend`,桌機滑鼠點不開。

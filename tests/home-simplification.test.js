@@ -21,14 +21,19 @@ for (const file of ['index.html']) {
     `${file} places the D-day countdown beside the non-trip title`
   );
   assert(
-    nonTripToday.indexOf('renderShoppingTodayEntry(null)') < nonTripToday.indexOf('renderPreTripBrief()'),
+    nonTripToday.indexOf("renderShoppingTodayEntry(null,'')") < nonTripToday.indexOf('renderPreTripBrief()'),
     `${file} places the non-trip shopping launcher inside Today before the D-day preview`
   );
   const preTripBrief = html.slice(html.indexOf('function renderPreTripBrief'), html.indexOf('var TOMORROW_PREVIEW_HOUR'));
   assert.doesNotMatch(preTripBrief, /pretrip-count/, `${file} renders the countdown only in the title row`);
   assert(
-    renderToday.indexOf('renderShoppingTodayEntry(day)') < renderToday.indexOf('renderClusterNextStopCard'),
+    renderToday.indexOf('renderShoppingTodayEntry(day,currentStopRef)') < renderToday.indexOf('renderClusterNextStopCard'),
     `${file} places the shopping entry immediately below the Today summary and before the next-stop card`
+  );
+  assert.match(
+    renderToday,
+    /var currentStop=clusterPick&&clusterPick\.item\?clusterPick\.item:pick\.item;[\s\S]*var currentStopRef=currentStop&&currentStop\.id\?currentStop\.id:'';/,
+    `${file} excludes the exact regular stop or active cluster child from Today shopping`
   );
   assert.match(html, /\.today-hero\{[^}]*padding:11px 14px 12px/, `${file} trims Today card padding without shrinking its typography`);
   assert.match(html, /\.today-hero \.lbl\{font-size:11px/, `${file} preserves the Today label size`);
@@ -48,8 +53,10 @@ for (const file of ['index.html']) {
   );
   assert.match(html, /class="today-shopping-launcher'\+\(day\?'':' today-hero-action'\)/, `${file} uses the shared action class for non-trip shopping`);
   assert.match(html, /\.today-pretrip-title-row\{[^}]*display:flex[^}]*justify-content:space-between/, `${file} keeps the non-trip title and countdown on one row`);
-  assert.match(html, /想逛<small>/, `${file} preserves the shop wishlist`);
-  assert.match(html, /\.nx-decision-btn\{[^}]*font-size:12px/, `${file} uses compact home decision buttons`);
+  assert.match(html, /想逛<small[^>]*>/, `${file} preserves the shop wishlist`);
+  assert.match(html, /\.nx-ticket-low\{[^}]*grid-template-columns:minmax\(0,1fr\) auto/, `${file} gives completion the flexible primary column`);
+  assert.match(html, /\.nx-decision-btn\{[^}]*font-size:16px/, `${file} keeps home decisions readable in the car`);
+  assert.match(html, /\.nx-decision-btn\.done\{[^}]*background:var\(--green\)[^}]*color:#fff/, `${file} presents completion as the primary decision`);
 }
 
 console.log('home simplification tests passed');

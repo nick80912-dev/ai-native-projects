@@ -1,6 +1,7 @@
 const assert = require('assert');
 const fs = require('fs');
 const vm = require('vm');
+const TripBuyToLedger = require('../buy-to-ledger.js');
 
 function createStorage(initial){
   const values=Object.assign({},initial||{});
@@ -18,6 +19,7 @@ function loadModule(storage){
   assert(start>=0&&end>start,'ledger helper section exists');
   const sandbox={
     console:{log(){},warn(){},error(){}},localStorage:storage,Date,Math,Promise,JSON,String,Number,isFinite,
+    TripBuyToLedger,buyToLedgerRuntimeAdapter:{},
     setTimeout,clearTimeout,fetch(){throw new Error('personal ledger must not call fetch');},
     timestampDate(value){return new Date(Number(value));},AppLog:{repo(){},sync(){}},
     renderSplit(){},updateLedgerPendingStatus(){}

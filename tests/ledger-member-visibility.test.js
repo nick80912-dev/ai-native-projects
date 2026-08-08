@@ -6,6 +6,7 @@ const assert=require('assert');
 const {appVersion,swVersion}=require('./support/version');
 const fs=require('fs');
 const vm=require('vm');
+const TripBuyToLedger=require('../buy-to-ledger.js');
 
 function createStorage(){
   const values={};
@@ -25,6 +26,7 @@ function loadModule(){
     console:{log(){},warn(){},error(){}},localStorage:createStorage(),
     fetch(){return Promise.reject(new Error('network disabled'));},setTimeout,clearTimeout,
     Date,Math,Promise,JSON,String,Number,isFinite,
+    TripBuyToLedger,buyToLedgerRuntimeAdapter:{},
     timestampDate(value){return new Date(Number(value));},AppLog:{repo(){},sync(){},data(){}},
     formatLedgerCurrencyAmount(currency,amount){return (currency==='TWD'?'NT$':'¥')+Math.round(Number(amount||0)).toLocaleString();},
     escapeHtml(value){return String(value);},
@@ -321,7 +323,8 @@ assert(deleteGuardSource.includes('canDeleteLedgerRecord(record,currentMember)')
 
 /* 不新增篩選 UI:本批採全面一致過濾,不做「與我相關／全部」切換。 */
 assert(!html.includes('與我相關／全部')&&!html.includes('setLedgerScopeFilter'),'不新增範圍切換 UI 或設定');
-assert(splitSource.includes("shared?'與我相關 · '+period.count+' 筆紀錄'"),'主卡片文案明確表達這是個人範圍');
+assert(splitSource.includes("ledgerSummaryPresentation(shared?'shared':'personal'"),'主卡片依目前帳本軌選擇摘要脈絡');
+assert(html.includes("todayLabel:(shared?'與我相關 · 今日消費':'今日支出')"),'團體主卡片文案明確表達這是目前成員相關範圍');
 assert(!splitSource.includes('團體總支出'),'主卡片不再暗示為全團總額');
 
 const sw=fs.readFileSync('sw.js','utf8');

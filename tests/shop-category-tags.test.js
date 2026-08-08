@@ -8,6 +8,11 @@ const end=html.indexOf('function renderShop(',start);
 assert(start>=0&&end>start,'storeRow renderer is present');
 const sandbox={escapeHtml(value){return String(value);}};
 vm.createContext(sandbox);
+/* storeRow 的 onclick 走共用的 jsHtmlAttrString(),注入真實實作而不是 stub */
+const escStart=html.indexOf('function jsString(');
+const escEnd=html.indexOf('function timestampDate(',escStart);
+assert(escStart>=0&&escEnd>escStart,'shared attribute escaper is present');
+vm.runInContext(html.slice(escStart,escEnd),sandbox);
 vm.runInContext(html.slice(start,end),sandbox);
 
 const categorized=sandbox.storeRow({name:'UNIQLO',floor:'4F',cat:'服飾',must:'',taxfree:'',note:''},'shop-1',false);
