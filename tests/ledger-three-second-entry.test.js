@@ -18,19 +18,13 @@ function extractFunction(name){
 
 const quickEntrySource=extractFunction('openLedgerQuickEntryFromFab');
 const openEntrySource=extractFunction('openLedgerEntrySheet');
+const focusEntrySource=extractFunction('focusLedgerEntryTarget');
 const splitSource=html.slice(html.indexOf('function renderSplit()'),html.indexOf('/* ================= 撠汗 / ??'));
 
 assert.match(splitSource,/class="ledger-fab"[^>]*onclick="openLedgerQuickEntryFromFab\(\)"/,'the dashboard FAB uses its dedicated quick-entry path');
 assert.match(quickEntrySource,/openLedgerEntrySheet\(true\)/,'the FAB marks its open as a quick entry');
-
-const renderPosition=openEntrySource.indexOf('renderLedgerEntrySheet()');
-const amountLookupPosition=openEntrySource.indexOf("getElementById('ledgerAmount')");
-const amountFocusPosition=openEntrySource.indexOf('amount.focus(');
-const animationPosition=openEntrySource.indexOf('requestAnimationFrame');
-assert(renderPosition>=0&&amountLookupPosition>renderPosition,'the amount is looked up only after the sheet has rendered');
-assert(amountFocusPosition>amountLookupPosition,'the mounted amount input is focused after lookup');
-assert(animationPosition>amountFocusPosition,'the first focus happens before the animation frame');
-assert.doesNotMatch(openEntrySource.slice(0,amountFocusPosition),/(?:Promise|setTimeout)\s*\(/,'the first focus has no Promise or timer delay');
+assert.match(openEntrySource,/focusTarget:focusAmount\?'amount':''/,'quick entry sends an explicit amount focus intent through the workflow');
+assert.match(html,/focusEntry:function\(target,effect\)\{focusLedgerEntryTarget\(target,effect&&effect\.immediate\);\}/,'the production adapter forwards the workflow immediate-focus contract');
 
 const amountNextSource=extractFunction('handleLedgerAmountNext');
 const detailNextSource=extractFunction('handleLedgerDetailNext');
@@ -38,28 +32,19 @@ assert.doesNotMatch(amountNextSource,/renderLedgerEntrySheet|saveLedgerEntry/,'a
 assert.doesNotMatch(detailNextSource,/saveLedgerEntry/,'detail Next moves to the ownership decision and never saves');
 
 const events=[];
-let amountFocusable=false;
 const amount={focus(){events.push('focus');}};
-const overlay={querySelector(){return {scrollTop:0};}};
 const sandbox={
-  isTimeSimulationActive(){return false;},memberIsAllowed(){return true;},getCurrentMember(){return 'Amy';},
-  ledgerUiState:{track:'personal'},ledgerBackgroundScrollY:0,
-  window:{scrollY:120,pageYOffset:120},
-  createLedgerEntryDraft(){return {amount:''};},
-  closeLedgerEntrySheet(){events.push('close');},
-  renderLedgerEntrySheet(){amountFocusable=true;events.push('render');},
   requestAnimationFrame(){events.push('animation scheduled');},
-  document:{
-    createElement(){return overlay;},
-    getElementById(id){return id==='ledgerEntrySheet'?null:(id==='ledgerAmount'&&amountFocusable?amount:null);},
-    body:{appendChild(){events.push('mount');},classList:{add(){}}}
-  },
-  toast(){},Date,Math,Promise,JSON,String,Number,isFinite
+  document:{getElementById(id){events.push('lookup:'+id);return id==='ledgerAmount'?amount:null;}},
+  String
 };
 vm.createContext(sandbox);
-vm.runInContext(quickEntrySource+'\n'+openEntrySource,sandbox);
-sandbox.openLedgerQuickEntryFromFab();
-assert.deepStrictEqual(events,['close','mount','render','focus','animation scheduled'],'the FAB mounts, renders, focuses, then schedules animation in one synchronous event chain');
+vm.runInContext(focusEntrySource,sandbox);
+sandbox.focusLedgerEntryTarget('amount',true);
+assert.deepStrictEqual(events,['lookup:ledgerAmount','focus'],'the FAB amount focus stays in the user gesture event chain without Promise, timer, or animation-frame delay');
+events.length=0;
+sandbox.focusLedgerEntryTarget('amount',false);
+assert.deepStrictEqual(events,['lookup:ledgerAmount','animation scheduled'],'non-immediate validation and workflow focus may still wait for the rendered frame');
 
 const toastSource=extractFunction('toast');
 const clearToastSource=extractFunction('clearToast');

@@ -7812,7 +7812,7 @@ var ledgerUiWorkflow=TripLedgerUiState.createWorkflow({
   unmountEntry:function(){unmountLedgerEntrySheet();},
   renderEntry:function(effect){renderLedgerEntryFromEffect(effect);},
   syncEntryPending:function(){syncLedgerSavePendingButtons();},
-  focusEntry:function(target){focusLedgerEntryTarget(target);},
+  focusEntry:function(target,effect){focusLedgerEntryTarget(target,effect&&effect.immediate);},
   restoreEntryContext:function(context,restoreBackground){restoreLedgerEntryContext(context,restoreBackground);},
   notifyEntryResult:function(notification){applyLedgerEntryNotification(notification);}
 });
@@ -9107,13 +9107,16 @@ function renderLedgerEntryFromEffect(effect){
     requestAnimationFrame(function(){var sheet=document.querySelector('#ledgerEntrySheet .ledger-sheet');if(sheet)sheet.scrollTop=0;});
   }
 }
-function focusLedgerEntryTarget(target){
+function focusLedgerEntryTarget(target,immediate){
   var ids={amount:'ledgerAmount',storeName:'ledgerStoreName',occurredDate:'ledgerOccurredDate',category:'ledgerCategoryField',payMethod:'ledgerPayMethodField'};
   var semantic=ids[target],node=document.getElementById(semantic||target||'');
-  if(node)requestAnimationFrame(function(){
+  if(!node)return;
+  function applyFocus(){
     if(!semantic)try{node.scrollIntoView({block:'center',behavior:'smooth'});}catch(ignoreScroll){node.scrollIntoView();}
     try{node.focus({preventScroll:true});}catch(ignore){node.focus();}
-  });
+  }
+  if(immediate){applyFocus();return;}
+  requestAnimationFrame(applyFocus);
 }
 function restoreLedgerEntryContext(context,restoreBackground){
   if(restoreBackground===false)return;

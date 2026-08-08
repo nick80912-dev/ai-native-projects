@@ -20,7 +20,7 @@ assert.deepStrictEqual(plain(opened.effects),[
   {type:'close-actions'},
   {type:'mount-entry'},
   {type:'render-entry',preservePosition:false},
-  {type:'focus-entry',target:'amount'}
+  {type:'focus-entry',target:'amount',immediate:true}
 ]);
 
 const editing={track:'shared',originals:[{id:'record-1'}]};
@@ -223,7 +223,7 @@ const workflow=TripLedgerUiState.createWorkflow({
   unmountEntry:function(){workflowEvents.push(['unmount-entry',workflowState.sheet]);},
   renderEntry:function(effect,state){workflowEvents.push(['render-entry',effect.preservePosition,state.draft&&state.draft.amount]);},
   syncEntryPending:function(state){workflowEvents.push(['sync-entry-pending',state.savePending]);},
-  focusEntry:function(target){workflowEvents.push(['focus-entry',target]);},
+  focusEntry:function(target,effect){workflowEvents.push(['focus-entry',target,effect.immediate===true]);},
   restoreEntryContext:function(contextValue,restore){workflowEvents.push(['restore-entry-context',contextValue&&contextValue.kind,restore]);},
   notifyEntryResult:function(notification){workflowEvents.push(['notify-entry-result',notification&&notification.message]);},
   renderSplit:function(){workflowEvents.push(['render-split',workflowState.sheet]);}
@@ -234,7 +234,7 @@ workflow.dispatch({
 });
 assert.deepStrictEqual(workflowEvents,[
   ['read'],['write','workflow-session','entry'],['close-actions','workflow-session'],
-  ['mount-entry','workflow-session'],['render-entry',false,'100'],['focus-entry','amount']
+  ['mount-entry','workflow-session'],['render-entry',false,'100'],['focus-entry','amount',true]
 ],'workflow writes entry state before executing ordered open effects');
 workflowEvents.length=0;
 workflow.dispatch({
@@ -242,7 +242,7 @@ workflow.dispatch({
   draft:{track:'personal',amount:'',formErrors:{amount:'請輸入有效金額'}},errorTarget:'amount'
 });
 assert.deepStrictEqual(workflowEvents,[
-  ['read'],['write','workflow-session','entry'],['render-entry',true,''],['focus-entry','amount']
+  ['read'],['write','workflow-session','entry'],['render-entry',true,''],['focus-entry','amount',false]
 ]);
 workflowEvents.length=0;
 workflow.dispatch({type:'close-entry',restoreBackground:true});

@@ -1,7 +1,7 @@
 # Ledger Entry Session Workflow State Design
 
 日期：2026-08-08
-狀態：已實作，待 v97 完整 gate
+狀態：已實作並納入 v97，完整 gate 通過
 基準：`dev` `cb373814dd2fd6520e72810cbc3beea02c82816d`（v96）
 
 ## 1. 背景
@@ -193,7 +193,7 @@ render-split
 
 | Transition | Ordered effects |
 | --- | --- |
-| open create/edit | `close-actions → mount-entry → render-entry → focus-entry` |
+| open create/edit | `close-actions → mount-entry → render-entry → focus-entry`（初始焦點維持同一使用者事件鏈，避免 iPhone 鍵盤不彈出） |
 | track switched | `render-entry`（保留位置） |
 | validation failed | `render-entry`（保留位置）`→ focus-entry(error)` |
 | save requested | `sync-entry-pending` |

@@ -133,7 +133,7 @@
       return result(next,[
         {type:'close-actions'},{type:'mount-entry'},
         {type:'render-entry',preservePosition:false},
-        {type:'focus-entry',target:text(command.focusTarget)}
+        {type:'focus-entry',target:text(command.focusTarget),immediate:true}
       ]);
     case 'entry-track-switched':
       if(state.sheet!=='entry'||state.correction||text(command.sessionId)!==state.entrySessionId||!plainObject(command.draft))return unchanged(state);
@@ -306,7 +306,7 @@
       else if(effect.type==='scroll-top')target[handler](effect.behavior);
       else if(effect.type==='mount-entry'||effect.type==='unmount-entry'||effect.type==='render-entry')target[handler](effect,state);
       else if(effect.type==='sync-entry-pending')target[handler](state);
-      else if(effect.type==='focus-entry')target[handler](effect.target);
+      else if(effect.type==='focus-entry')target[handler](effect.target,effect);
       else if(effect.type==='restore-entry-context')target[handler](effect.context,effect.restoreBackground);
       else if(effect.type==='notify-entry-result')target[handler](effect.notification);
       else target[handler]();
