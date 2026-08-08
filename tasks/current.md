@@ -7,16 +7,16 @@
 
 | 項目 | 值 |
 |---|---|
-| **正式版(`main` / 正式站)** | **SW v73**,merge commit `17c423f`,回滾 tag `production-v73` |
+| **`main` 原始碼** | **SW v96**，PR #13 merge commit `02705c3`；因 Netlify 額度用罄尚未部署／建立 tag |
 | 正式站 | `https://trippilot-jp.netlify.app/` — 2026-08-01 由 SW v18 升級至 v73,G1–G6 全數通過 |
-| **dev 候選版** | **SW v96**,`app-version.js` 與 `sw.js` 均為 v96 |
+| **dev 候選版** | **SW v97**,`app-version.js` 與 `sw.js` 均為 v97 |
 | 個人備份格式 | **v9**(`PERSONAL_STATE_SUPPORTED_VERSIONS = [1..9]`)—— v81 因想逛 key 識別語意變更而升版 |
-| dev 自動驗證 | **70／70** Node test files、Playwright **124／124**、`check-doc-titles` 與 `check-app-version` 通過 |
+| dev 自動驗證 | **71／71** Node test files、Playwright **131／131**、`check-doc-titles` 與 `check-app-version` 通過 |
 | 既有 tag | `production-v18`、`production-v73` |
 
-**`dev` 領先 `main` 二十一個候選版（v74–v89、v92–v96），全部尚未正式發布。** v74–v87 已由 Bar 於 2026-08-03 確認真機驗收皆正常；v88–v89、v92–v95 亦於 2026-08-08 完成 Bar 畫面／真機確認。v96 補齊發布 review 找到的照片容量直接管理入口與等號後百分比，並以自動瀏覽器回歸測試覆蓋。只有 v73 已合併、正式部署並建立 production tag。
+**`main` 已合併 v96，但正式站仍停在 v73；v97 是目前僅存在本機 `dev` 的下一個候選版。** v74–v87 已由 Bar 於 2026-08-03 確認真機驗收皆正常；v88–v89、v92–v95 亦於 2026-08-08 完成 Bar 畫面／真機確認。v96 因 Netlify 額度用罄尚未正式部署，也未建立 `production-v96` tag。
 
-### v74–v96 已折疊的主要能力
+### v74–v97 已折疊的主要能力
 
 | 版本 | 能力 |
 |---|---|
@@ -41,6 +41,7 @@
 | v94 | **計算金額更直覺**：五列四欄計算機支援小數、購物式百分比、等號與實體鍵盤；正數小數在提示後無條件捨去套用 |
 | v95 | **Ledger UI state seam**：帳本軌、完整紀錄、篩選／分組與多選共用不可變 transition + ordered effects workflow；UI／資料語意不變 |
 | v96 | **發布阻斷補正**：照片 quota 失敗提供「管理儲存空間」直接入口；計算機 `=` 後可接 `%`；同步 ADR／runtime 文件索引 |
+| v97 | **Ledger entry session state seam**：同一 module 接管新增／編輯 lifecycle、draft／editing ownership、save pending、calendar 與返回脈絡；以 session／request ID 防重複提交及 stale completion |
 
 > v45–v73 的逐版交付紀錄見 `07_CHANGELOG.md`,不在本檔重述。
 
@@ -60,15 +61,15 @@
 | G5 | Netlify 正式站部署後線上驗證 | ✅ deploy `6a6d6be3`,線上 `sw.js`／`app-version.js` 皆 v73 |
 | G6 | 建立 annotated tag `production-v73` | ✅ tag 物件 `64e8d0b` |
 
-### v74–v96
+### v74–v96（已合併 main，尚未部署）
 
 | # | Gate | 狀態 |
 |---|---|---|
 | G1' | v74–v87 累積 delta 的 Bar 真機／PWA 驗收 | ✅ 2026-08-03，Bar 確認真機驗收皆正常 |
 | G1'' | v88–v89、v92–v95 畫面／真機確認 | ✅ 2026-08-08，Bar 確認皆已完成 |
-| G4' | Bar 核准 PR merge `dev → main` | ⬜ 未開始 |
-| G5' | 正式站部署後線上驗證 | ⬜ 未開始 |
-| G6' | 建立 `production-v96` tag | ⬜ 未開始 |
+| G4' | Bar 核准 PR merge `dev → main` | ✅ PR #13，merge commit `02705c3` |
+| G5' | 正式站部署後線上驗證 | ⏸ Netlify 額度用罄，正式站仍為 v73 |
+| G6' | 建立 `production-v96` tag | ⏸ 等待正式部署與線上驗證 |
 
 > G1／G4／G5 為 Bar 專屬職責;AI 不得以自動驗證全綠為由推進。
 > **測試站驗收前置**:`dev-trippilot-jp.netlify.app` 自動部署已於 2026-07-26 關閉。用它驗收前必須先手動部署到目標 commit,並依 `16_OPS_PLAYBOOK.md` §F5 核對線上 `sw.js`／`app-version.js` 版本與 CacheStorage 實際內容,**不得只看 Git 分支**。
@@ -91,13 +92,14 @@
 | v93 | Buy-to-Ledger 垂直切片：characterization、純 domain、workflow coordinator 與正式 runtime seam | ✅ 已交付至 dev |
 | v94 | Ledger 計算機小數、購物式百分比、等號、實體鍵盤與套用時無條件捨去 | ✅ 已交付至 dev |
 | v95 | Ledger UI 歷史瀏覽 workflow／state seam：帳本軌、完整紀錄、filters、selection 與 ordered UI effects | ✅ 已交付至 dev |
-| v96 | Release review 補正：照片 quota 直接管理入口、`=` 後 `%`、ADR／架構索引同步 | ✅ 完整 gate 通過，待 release PR |
-| v97／v98 | SW 更新提示 —— **需兩個版本才能完成驗收**：v97 加入監聽與提示，v98 作為真實更新目標。不修改 SW 生命週期與快取策略，只做正常版本遞增 | ⬜ 未開始 |
+| v96 | Release review 補正：照片 quota 直接管理入口、`=` 後 `%`、ADR／架構索引同步 | ✅ 已由 PR #13 合併 main；正式部署暫停 |
+| v97 | Ledger create／edit entry session workflow／state seam：lifecycle、draft／editing ownership、save guard、calendar、return context 與 ordered effects | ✅ 已交付至本機 dev，完整 gate 通過 |
+| v98／v99 | SW 更新提示 —— **需兩個版本才能完成驗收**：v98 加入監聽與提示，v99 作為真實更新目標。不修改 SW 生命週期與快取策略，只做正常版本遞增 | ⬜ 未開始 |
 
 **已知未做(需先定判準)**:Today 的「交通／停車／營業／付款／提醒**依當下情境動態調整優先順序**」。v84 只做了可明確驗收的收合(常駐交通／停車／營業,收合付款／提醒);「當下情境」的判準(依時間?依距離?依是否已抵達?)尚未定義,不同讀法會做出完全不同的東西,故未實作。
 
 ## 下一棒
 
-→ **v74–v89、v92–v95 的 Bar 畫面／真機確認已全部完成。** Bar 已核准進入正式發布流程；目前先完成 v96 release-blocker 補正與完整 gate，通過後依 `16_OPS_PLAYBOOK.md` 走 `dev → main` PR、正式站驗證與 `production-v96` tag。SW 更新提示雙版本驗收順延至 v97／v98；下一個架構切片再評估 Ledger entry session lifecycle。
+→ **v97 已完成 Ledger entry session workflow／state seam 與本機完整 gate。** v96 已在 `main`，但因 Netlify 額度用罄，正式站仍為 v73，正式部署驗證與 `production-v96` tag 暫停。下一個預留工作是 v98／v99 的 SW 更新提示雙版本驗收；Shopping UI workflow/state 仍需另行規劃，不在本批擴張。
 
 > **不得**自行動 `main`、部署正式站或建立 production tag。未經 Bar 核准不得 merge `dev → main`。

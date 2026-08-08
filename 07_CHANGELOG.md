@@ -1,4 +1,13 @@
 # 07 版本紀錄
+## 2026-08-08｜Ledger Entry Session workflow／state seam（SW v97）⭐ 架構變更
+
+- **深化同一 module**：`ledger-ui-state.js` 在既有 dashboard／history state seam 上接管 create／edit entry session 的 lifecycle、draft／editing ownership、`savePending`、calendar 與 return context；公開 interface 維持 `createState(seed)`、`transition(state,action)`、`activeHistoryFilterCount(state)` 與 `createWorkflow(adapter)`，沒有建立第二份 entry state 或全域 store。
+- **語意型 action 與 ordered effects**：open／close、切軌、validation、save requested／failed／succeeded 與 calendar 操作都由純 transition 維護 invariants，再由 production adapter 依序 mount、render、同步 pending、聚焦、恢復 context 與通知。save-and-add-another 保留 session／返回脈絡並沿用既有 `renderSplit()` dashboard 更新；save-and-close 完整清除 session。
+- **非同步與回歸保護**：session／request ID 阻止重複 submit 與 stale completion 改寫新表單。Buy-to-Ledger 仍由原 domain／workflow coordinator 負責 commit 與 link 回寫；correction 保留明確 compatibility branch，calculator 仍由 entry unmount adapter 清理。
+- **邊界不擴張**：帳務驗證、repository、record 建立、DOM rendering、同步、settlement、calculator state 與 Shopping UI state 均未移入 module。未修改 Ledger／Shopping schema、Apps Script、備份格式、`PERSONAL_STATE_VERSION=9` 或 `netlify.toml`。
+- **架構與測試證據**：新增 ADR 0011、Node `ledger-entry-ui-state.test.js` 與 Browser `ledger-entry-workflow.spec.js`，並擴充 Buy-to-Ledger／calculator characterization。完整 **71／71** Node test files、Playwright **131／131**、`check-doc-titles`、`check-app-version`、兩份 manifest JSON 與 `git diff --check` 全數通過。
+- **版本邊界**：`app-version.js`／`sw.js` 升為 v97，`APP_RELEASE_NOTES` 依五筆規則滾動；`sw.js` 除版本字串外不變，install／activate／fetch／skipWaiting／clients.claim 與快取策略均未修改。SW 更新提示雙版本驗收順延至 v98／v99。
+
 ## 2026-08-08｜發布 review 規格補正（SW v96）
 
 - **照片 quota 直接處理**：保留 v78 已核准的 inline failure flow，不恢復獨立錯誤 overlay；quota-like 寫入失敗在原表單／修復 Sheet 內提供 44px「管理儲存空間」按鈕。修復流程會先關閉再進入設定的「照片健康狀態」，原 `photoId` 與採買資料維持不變；表單路徑前往設定時暫時 inert，關閉設定後可繼續原草稿。

@@ -8769,11 +8769,11 @@ function renderSettingsDataHealth(){
   return '<div class="settings-section settings-data-health"><h3>資料健康狀態</h3><div class="settings-health-list">'+model.rows.map(function(row){return '<div class="settings-health-row data-health-'+escapeHtml(row.key)+'"><span class="settings-health-main"><b>'+escapeHtml(row.label)+'</b>'+(row.detail?'<span>'+escapeHtml(row.detail)+'</span>':'')+'</span><strong>'+escapeHtml(row.value)+'</strong></div>';}).join('')+'</div></div>';
 }
 var APP_RELEASE_NOTES=[
+  {version:'v97',date:'2026-08-08',title:'新增與編輯記帳流程更穩定',items:['新增、編輯、切換個人或團體帳、選日期與返回現在共用一致的畫面狀態流程','快速重複按儲存只會提交一次，較舊的儲存結果也不會覆蓋新開啟的表單','「儲存並再記一筆」會保留原本返回位置並清理上一筆來源，關閉表單也會一併收起計算機','畫面、記帳規則、既有資料、備份與同步格式皆維持不變']},
   {version:'v96',date:'2026-08-08',title:'照片容量與百分比操作補強',items:['照片儲存空間不足時，錯誤提示會直接提供「管理儲存空間」入口','從照片修復流程前往管理頁時，不會再疊出另一個失敗視窗','計算機按下等號後仍可接百分比，例如 1000 等於後按百分比會得到 10','既有採買資料、照片引用、記帳草稿與同步格式皆維持不變']},
   {version:'v95',date:'2026-08-08',title:'記帳紀錄操作更穩定',items:['個人帳與團體帳切換、完整紀錄、篩選及多選現在共用一致的畫面狀態流程','切換帳本或離開完整紀錄時，搜尋、篩選與選取狀態會依原本規則可靠重設','開關篩選面板不會重建搜尋框，輸入內容與鍵盤焦點維持原位','畫面與資料格式不變，離線 App 外殼已包含新的狀態模組']},
   {version:'v94',date:'2026-08-08',title:'計算金額更直覺',items:['金額計算器改為手機熟悉的四欄按鍵配置，清除、退格、等號與關閉位置更明確','可直接輸入小數與百分比，像 1000 減 10% 會算出 900','等號只顯示結果，不會離開記帳表單或提前改動原金額','結果有小數時會先顯示實際套用值，再無條件捨去寫回整數金額']},
   {version:'v93',date:'2026-08-08',title:'記帳流程底層更穩定',items:['採買轉記帳的個人帳、團體帳與多品項流程現在共用同一條可靠路徑','消費成功後才標記採買項目，失敗時仍保留既有防重複提醒','採買清單返回、再記一筆與既有記帳畫面維持原本操作方式','離線外殼已包含必要模組，既有資料、備份與同步格式不變']},
-  {version:'v92',date:'2026-08-06',title:'記帳金額可直接計算',items:['單品、多品項與折扣金額都可開啟同一套四則計算機','套用後立即更新原欄位與幣別換算，不必離開新增消費表單','取消不會改動原金額，其他明細、代購與分攤草稿也會保留','小數、零或負數等不合法記帳金額會明確阻止套用']},
 ];
 function renderAppReleaseNotes(){
   return '<div class="settings-release-list">'+APP_RELEASE_NOTES.map(function(note){
