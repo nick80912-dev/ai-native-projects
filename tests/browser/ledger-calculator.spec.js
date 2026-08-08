@@ -33,6 +33,18 @@ async function clearAndEnter(page,keys){
   for(const key of keys)await calculator.getByRole('button',{name:keyName(key),exact:true}).click();
 }
 
+test('closing the parent entry cleans up an open calculator overlay',async({page})=>{
+  const errors=collectPageErrors(page);
+  await openEntry(page);
+  await page.evaluate(()=>openLedgerCalculator({type:'single'}));
+  await expect(page.locator('#ledgerCalculatorSheet')).toBeVisible();
+  await page.evaluate(()=>closeLedgerEntrySheet(false));
+  await expect(page.locator('#ledgerCalculatorSheet')).toHaveCount(0);
+  await expect(page.locator('#ledgerEntrySheet')).toHaveCount(0);
+  expect(await page.evaluate(()=>ledgerCalculatorState.open)).toBe(false);
+  expect(errors).toEqual([]);
+});
+
 test('單品計算器支援小數、購物百分比、等號與無條件捨去',async({page})=>{
   const errors=collectPageErrors(page);
   await openEntry(page);

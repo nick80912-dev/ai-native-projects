@@ -154,7 +154,9 @@ test('keepShoppingList returns to the mounted Shopping overlay',async({page})=>{
   await openSingleEntry(page,ITEM_A.id,true);
   await expect(page.locator('#shoppingListOverlay')).toBeVisible();
   await expect(page.locator('#ledgerEntrySheet')).toHaveClass(/shopping-linked-ledger-entry/);
+  expect(await page.evaluate(()=>ledgerUiState.entryReturnContext)).toMatchObject({kind:'shopping',keepMounted:true});
   await fillAndSaveSingle(page,900);
+  await expect(page.locator('#ledgerEntrySheet')).toHaveCount(0);
   await expect(page.locator('#shoppingListOverlay')).toBeVisible();
 });
 
