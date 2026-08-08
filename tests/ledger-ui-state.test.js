@@ -73,6 +73,9 @@ assert.strictEqual(outcome.state.historyQuery,'松屋','opening history preserve
 assert.deepStrictEqual(plain(outcome.effects),[
   {type:'close-actions'},{type:'render-split'},{type:'scroll-top',behavior:'auto'}
 ]);
+outcome=apply(rich,{type:'set-dashboard-filter',value:'all'});
+assert.strictEqual(outcome.state.filter,'all');
+assert.deepStrictEqual(plain(outcome.effects),[{type:'render-split'}]);
 
 outcome=apply(rich,{type:'close-history'});
 assert.strictEqual(outcome.state.page,'dashboard');
@@ -159,6 +162,7 @@ assert.deepStrictEqual(plain(outcome.effects),[],'reset-selection composes with 
   {type:'set-history-proxy',value:'mine'},
   {type:'set-history-tax',value:'yes'},
   {type:'set-history-grouping',value:'merchant'},
+  {type:'set-dashboard-filter',value:'mine'},
   {type:'toggle-record-selection',id:''},
   {type:'unknown'}
 ].forEach(function(action){

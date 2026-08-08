@@ -670,6 +670,7 @@ input:not([type="hidden"]),select,textarea{font-size:16px!important}
 <script src="app-version.js"></script>
 <script src="shopping-photo-store.js"></script>
 <script src="buy-to-ledger.js"></script>
+<script src="ledger-ui-state.js"></script>
 <script>
 /* ---- APP_VERSION SAFE ACCESS (C2) ----
    app-version.js 是獨立外部 script,離線快取未命中或部署缺檔時**會**載不到,
@@ -7785,7 +7786,21 @@ function evaluateLedgerCalculatorExpression(expression){
   return {ok:true,value:finalValue,error:''};
 }
 var legacyExpenseNoticeVisible=false;
-var ledgerUiState={track:'personal',displayCurrency:'',page:'dashboard',filter:'all',sheet:null,selectedRecordId:'',draft:null,editing:null,correction:null,retainedParticipants:null,historyQuery:'',historyCategories:[],historyPayMethods:[],historyProxy:'all',historyTaxExempt:'all',historyFiltersOpen:false,historyGrouping:'date',calendarOpen:false,calendarYear:0,calendarMonth:0,expandedBatches:{},selectionMode:false,selectedRecordIds:{},savePending:false};
+var ledgerUiState=TripLedgerUiState.createState();
+function syncLedgerHistoryFilterPanel(state){
+  var panel=document.getElementById('ledgerHistoryFilterPanel'),button=document.getElementById('ledgerHistoryFilterButton');
+  if(panel)panel.hidden=!state.historyFiltersOpen;
+  if(button)button.setAttribute('aria-expanded',state.historyFiltersOpen?'true':'false');
+}
+var ledgerUiWorkflow=TripLedgerUiState.createWorkflow({
+  readState:function(){return ledgerUiState;},
+  writeState:function(next){ledgerUiState=next;},
+  closeActions:function(){closeLedgerRecordActions();},
+  renderSplit:function(){renderSplit();},
+  renderHistoryResults:function(){renderLedgerHistoryResults();},
+  syncHistoryFilterPanel:function(state){syncLedgerHistoryFilterPanel(state);},
+  scrollTop:function(behavior){window.scrollTo({top:0,behavior:behavior==='smooth'?'smooth':'auto'});}
+});
 var ledgerCalculatorState={open:false,target:null,expression:'',originalValue:'',result:null,error:'',evaluated:false,sheetScrollTop:0};
 function ledgerCalculatorFloorValue(value){
   var epsilon=Number.EPSILON||2.220446049250313e-16,nearest=Math.round(value),tolerance=epsilon*Math.max(1,Math.abs(value))*8;
@@ -8440,7 +8455,7 @@ function restorePersonalState(){
   try{applyPersonalStatePayload(payload);}catch(error){toast('本機資料還原失敗');return;}
   closePersonalStateDialog(); closeSettings(); renderAll(); updateLedgerPendingStatus(); ledgerRepository.flushQueue(); toast('個人狀態已還原');
 }
-function setLedgerTestMode(input){ lsSet('trip_ledger_test_mode',!!input.checked); ledgerUiState.selectionMode=false;ledgerUiState.selectedRecordIds={};closeLedgerRecordActions();renderSplit(); if(!memberIsAllowed(getCurrentMember()))openMemberSelector(true);else refreshMemberSelector(); toast(input.checked?'測試模式已開啟':'測試模式已關閉'); }
+function setLedgerTestMode(input){ lsSet('trip_ledger_test_mode',!!input.checked); ledgerUiWorkflow.dispatch({type:'reset-selection'});closeLedgerRecordActions();renderSplit(); if(!memberIsAllowed(getCurrentMember()))openMemberSelector(true);else refreshMemberSelector(); toast(input.checked?'測試模式已開啟':'測試模式已關閉'); }
 function selectLedgerDefaultCurrency(value){
   value=String(value||'').toUpperCase();
   if(value!=='JPY'&&value!=='TWD')return;
@@ -8903,15 +8918,11 @@ function ledgerVisibilityWarn(message){
 /* 團體帳唯一節流點:最近消費、完整紀錄頁、筆數、總額、查詢、編輯與刪除入口都取這一批。 */
 function ledgerTrackRecords(){return ledgerUiState.track==='shared'?sortLedgerExpenses(memberRelatedLedgerRecords(ledgerUniverseRecords(spendLedgerRecords(mergedLedgerRecords()),ledgerUniverseMode()),getCurrentMember(),ledgerVisibilityWarn)):sortLedgerExpenses(personalLedgerRepository.all());}
 function setLedgerTrack(value){
-  if(value!=='personal'&&value!=='shared')return;
-  ledgerUiState.track=value;ledgerUiState.page='dashboard';ledgerUiState.filter='all';ledgerUiState.displayCurrency='';ledgerUiState.selectionMode=false;ledgerUiState.selectedRecordIds={};closeLedgerRecordActions();
-  if(value==='shared')ledgerUiState.historyProxy='all';
-  renderSplit();
+  ledgerUiWorkflow.dispatch({type:'switch-track',track:value});
 }
 function toggleLedgerDisplayCurrency(){
-  var current=ledgerUiState.displayCurrency;
-  if(current!=='JPY'&&current!=='TWD')try{current=currentLedgerSettings().defaultCurrency;}catch(ignore){current='JPY';}
-  ledgerUiState.displayCurrency=current==='JPY'?'TWD':'JPY';renderSplit();
+  var fallback='JPY';try{fallback=currentLedgerSettings().defaultCurrency;}catch(ignore){}
+  ledgerUiWorkflow.dispatch({type:'toggle-currency',defaultCurrency:fallback});
 }
 function ledgerLocalDateFromParts(year,monthIndex,day,hour,minute){var date=timestampDate(0);date.setFullYear(Number(year),Number(monthIndex),Number(day));date.setHours(Number(hour||0),Number(minute||0),0,0);return date;}
 function formatLedgerDateTyping(value){
@@ -9789,7 +9800,7 @@ function submitSharedLedgerDeletion(){
   catch(error){if(errorNode)errorNode.textContent=error.message||'無法刪除';return Promise.resolve({ok:false});}
   var button=document.getElementById('ledgerDeleteConfirm');if(button)button.disabled=true;
   var result=deletions.length===1?null:ledgerRepository.enqueueBatch(deletions),promise=result?Promise.resolve(result):ledgerRepository.add(deletions[0]);
-  closeSharedLedgerDelete();ledgerUiState.selectionMode=false;ledgerUiState.selectedRecordIds={};renderSplit();
+  closeSharedLedgerDelete();ledgerUiWorkflow.dispatch({type:'reset-selection'});renderSplit();
   return promise.then(function(delivery){renderSplit();toast(delivery.ok?'刪除已同步':'刪除已記錄,待同步');return delivery;},function(error){renderSplit();toast(error.message||'刪除失敗');throw error;});
 }
 function clearLegacyExpenses(){ localStorage.removeItem('trip_expenses'); legacyExpenseNoticeVisible=false; renderSplit(); toast('舊本機紀錄已清除'); }
@@ -9842,26 +9853,23 @@ function ledgerSelectionVisibleRecords(){
   return (ledgerUiState.page==='all'?ledgerHistoryFilteredRecords(records):selectLatestLedgerDateExpenses(records)).filter(isLedgerRecordActionTarget);
 }
 function ledgerSelectedRecords(){var selected=ledgerUiState.selectedRecordIds||{};return ledgerSelectionVisibleRecords().filter(function(record){return !!selected[record.id];});}
-function enterLedgerSelectionMode(){closeLedgerRecordActions();ledgerUiState.selectionMode=true;ledgerUiState.selectedRecordIds={};ledgerUiState.expandedBatches={};renderSplit();}
-function cancelLedgerSelectionMode(){ledgerUiState.selectionMode=false;ledgerUiState.selectedRecordIds={};renderSplit();}
+function enterLedgerSelectionMode(){ledgerUiWorkflow.dispatch({type:'enter-selection'});}
+function cancelLedgerSelectionMode(){ledgerUiWorkflow.dispatch({type:'cancel-selection'});}
 function toggleLedgerRecordSelection(id,event){
   if(event&&event.stopPropagation)event.stopPropagation();
   if(!ledgerUiState.selectionMode)return;
-  var next={};Object.keys(ledgerUiState.selectedRecordIds||{}).forEach(function(key){next[key]=true;});
-  if(next[id])delete next[id];else next[id]=true;ledgerUiState.selectedRecordIds=next;renderSplit();
+  ledgerUiWorkflow.dispatch({type:'toggle-record-selection',id:id});
 }
 function toggleLedgerBatchSelection(ids,event){
   if(event&&event.stopPropagation)event.stopPropagation();
-  var records=(ids||[]).map(function(id){return {id:id};}),state=ledgerBatchSelectionState(records,ledgerUiState.selectedRecordIds||{}),next={};
-  Object.keys(ledgerUiState.selectedRecordIds||{}).forEach(function(key){next[key]=true;});
-  (ids||[]).forEach(function(id){if(state==='all')delete next[id];else next[id]=true;});ledgerUiState.selectedRecordIds=next;renderSplit();
+  var records=(ids||[]).map(function(id){return {id:id};}),state=ledgerBatchSelectionState(records,ledgerUiState.selectedRecordIds||{});
+  ledgerUiWorkflow.dispatch({type:'toggle-batch-selection',ids:ids,allSelected:state==='all'});
 }
 function toggleLedgerSelectAll(){
-  var visible=ledgerSelectionVisibleRecords(),all=visible.length&&visible.every(function(record){return !!ledgerUiState.selectedRecordIds[record.id];}),next={};
-  if(!all)visible.forEach(function(record){next[record.id]=true;});ledgerUiState.selectedRecordIds=next;renderSplit();
+  ledgerUiWorkflow.dispatch({type:'toggle-select-all',ids:ledgerSelectionVisibleRecords().map(function(record){return record.id;})});
 }
 function handleLedgerRecordCardClick(id,event){if(ledgerUiState.selectionMode)toggleLedgerRecordSelection(id,event);else openLedgerRecordDetail(id);}
-function toggleLedgerBatchExpanded(batchId,event){if(event&&event.stopPropagation)event.stopPropagation();ledgerUiState.expandedBatches[batchId]=!ledgerUiState.expandedBatches[batchId];renderSplit();}
+function toggleLedgerBatchExpanded(batchId,event){if(event&&event.stopPropagation)event.stopPropagation();ledgerUiWorkflow.dispatch({type:'toggle-batch-expanded',batchId:batchId});}
 function renderLedgerSelectionControl(records){
   if(!ledgerUiState.selectionMode)return '';
   var ids=(records||[]).map(function(record){return record.id;}),idsArg='['+ids.map(function(id){return '\''+jsHtmlAttrString(id)+'\'';}).join(',')+']',state=ledgerBatchSelectionState(records,ledgerUiState.selectedRecordIds||{});
@@ -10338,16 +10346,14 @@ function openLedgerProxyPanel(){
   var rows=summary.targets.length?summary.targets.map(function(item){return '<div class="ledger-settlement-line"><span>'+escapeHtml(item.target)+' · '+item.count+' 筆</span><span>¥'+Number(item.amountJpy||0).toLocaleString()+' · NT$'+Number(item.amountTwd||0).toLocaleString()+'</span></div>';}).join(''):'<div class="empty-state">目前沒有代購紀錄</div>';
   openLedgerInfoSheet('代購對象彙總','<div class="ledger-settlement-list">'+rows+'</div>');
 }
-function showLedgerFullList(){ledgerUiState.page='all';ledgerUiState.selectedRecordId='';ledgerUiState.selectionMode=false;ledgerUiState.selectedRecordIds={};closeLedgerRecordActions();renderSplit();window.scrollTo({top:0});}
-function resetLedgerHistoryFilters(){ledgerUiState.historyCategories=[];ledgerUiState.historyPayMethods=[];ledgerUiState.historyProxy='all';ledgerUiState.historyTaxExempt='all';ledgerUiState.historyFiltersOpen=false;}
-function clearLedgerHistoryFilters(){resetLedgerHistoryFilters();ledgerUiState.selectionMode=false;ledgerUiState.selectedRecordIds={};closeLedgerRecordActions();renderSplit();}
-function resetLedgerHistoryViewState(){resetLedgerHistoryFilters();ledgerUiState.historyQuery='';ledgerUiState.historyGrouping='date';}
-function closeLedgerFullList(){ledgerUiState.page='dashboard';ledgerUiState.filter='all';resetLedgerHistoryViewState();ledgerUiState.selectionMode=false;ledgerUiState.selectedRecordIds={};closeLedgerRecordActions();renderSplit();window.scrollTo({top:0});}
+function showLedgerFullList(){ledgerUiWorkflow.dispatch({type:'open-history'});}
+function clearLedgerHistoryFilters(){ledgerUiWorkflow.dispatch({type:'clear-history-filters'});}
+function closeLedgerFullList(){ledgerUiWorkflow.dispatch({type:'close-history'});}
 function returnLedgerDashboard(){
   if(document.body.classList.contains('ledger-sheet-open'))return false;
-  ledgerUiState.page='dashboard';ledgerUiState.filter='all';ledgerUiState.selectedRecordId='';resetLedgerHistoryViewState();ledgerUiState.selectionMode=false;ledgerUiState.selectedRecordIds={};closeLedgerRecordActions();renderSplit();window.scrollTo({top:0,behavior:'smooth'});return true;
+  ledgerUiWorkflow.dispatch({type:'return-dashboard'});return true;
 }
-function setLedgerHistoryFilter(value){if(value!=='all'&&value!=='proxy')return;ledgerUiState.filter=value;renderSplit();}
+function setLedgerHistoryFilter(value){ledgerUiWorkflow.dispatch({type:'set-dashboard-filter',value:value});}
 function ledgerHistoryFilteredRecords(records){return filterLedgerHistory(records,ledgerUiState.historyQuery,{categories:ledgerUiState.historyCategories,payMethods:ledgerUiState.historyPayMethods,proxy:ledgerUiState.track==='personal'?ledgerUiState.historyProxy:'all',taxExempt:ledgerUiState.historyTaxExempt});}
 function renderLedgerHistoryGrouped(records,shared,currency){
   if(!records.length)return '<div class="empty-state">沒有符合條件的紀錄</div>';
@@ -10369,17 +10375,17 @@ function renderLedgerHistoryResults(){
   var clear=document.getElementById('ledgerHistoryClearFilters'),toolbar=document.getElementById('ledgerSelectionToolbarHost');
   if(badge){badge.textContent=String(count);badge.hidden=!count;}if(button)button.classList.toggle('on',count>0);if(clear)clear.hidden=!count;if(toolbar)toolbar.innerHTML=renderLedgerSelectionToolbar();
 }
-function setLedgerHistorySearch(value){ledgerUiState.historyQuery=value;renderLedgerHistoryResults();}
+function setLedgerHistorySearch(value){ledgerUiWorkflow.dispatch({type:'set-history-search',value:value});}
 function updateLedgerHistoryPillState(handler,selected){document.querySelectorAll('[data-history-filter="'+handler+'"]').forEach(function(button){var value=button.getAttribute('data-history-value'),on=Array.isArray(selected)?selected.indexOf(value)>=0:selected===value;button.classList.toggle('on',on);button.setAttribute('aria-pressed',on?'true':'false');});}
-function toggleLedgerHistorySelection(field,value,handler){var selected=(ledgerUiState[field]||[]).slice(),index=selected.indexOf(value);if(index>=0)selected.splice(index,1);else selected.push(value);ledgerUiState[field]=selected;updateLedgerHistoryPillState(handler,selected);renderLedgerHistoryResults();}
+function toggleLedgerHistorySelection(field,value,handler){var outcome=ledgerUiWorkflow.dispatch({type:'toggle-history-choice',field:field,value:value});if(outcome.changed)updateLedgerHistoryPillState(handler,outcome.state[field]);}
 function setLedgerHistoryCategory(value){toggleLedgerHistorySelection('historyCategories',value,'setLedgerHistoryCategory');}
 function setLedgerHistoryPayMethod(value){toggleLedgerHistorySelection('historyPayMethods',value,'setLedgerHistoryPayMethod');}
-function setLedgerHistoryProxy(value){if(['all','proxy','non-proxy'].indexOf(value)<0)return;ledgerUiState.historyProxy=value;updateLedgerHistoryPillState('setLedgerHistoryProxy',value);renderLedgerHistoryResults();}
-function setLedgerHistoryTaxExempt(value){if(['all','tax-exempt','non-tax-exempt'].indexOf(value)<0)return;ledgerUiState.historyTaxExempt=value;updateLedgerHistoryPillState('setLedgerHistoryTaxExempt',value);renderLedgerHistoryResults();}
-function setLedgerHistoryGrouping(value){if(value!=='date'&&value!=='category')return;ledgerUiState.historyGrouping=value;document.querySelectorAll('[data-history-group]').forEach(function(button){button.classList.toggle('on',button.getAttribute('data-history-group')===value);});renderLedgerHistoryResults();}
+function setLedgerHistoryProxy(value){var outcome=ledgerUiWorkflow.dispatch({type:'set-history-proxy',value:value});if(outcome.changed)updateLedgerHistoryPillState('setLedgerHistoryProxy',outcome.state.historyProxy);}
+function setLedgerHistoryTaxExempt(value){var outcome=ledgerUiWorkflow.dispatch({type:'set-history-tax',value:value});if(outcome.changed)updateLedgerHistoryPillState('setLedgerHistoryTaxExempt',outcome.state.historyTaxExempt);}
+function setLedgerHistoryGrouping(value){var outcome=ledgerUiWorkflow.dispatch({type:'set-history-grouping',value:value});if(outcome.changed)document.querySelectorAll('[data-history-group]').forEach(function(button){button.classList.toggle('on',button.getAttribute('data-history-group')===outcome.state.historyGrouping);});}
 function ledgerHistoryPills(values,selected,handler){return values.map(function(value){var key=typeof value==='string'?value:value[0],label=typeof value==='string'?(value==='all'?'全部':value):value[1],on=Array.isArray(selected)?selected.indexOf(key)>=0:selected===key;return '<button class="ledger-sheet-choice '+(on?'on':'')+'" aria-pressed="'+(on?'true':'false')+'" data-history-filter="'+handler+'" data-history-value="'+escapeHtml(key)+'" onclick="'+handler+'(\''+jsString(key)+'\')">'+escapeHtml(label)+'</button>';}).join('');}
-function ledgerHistoryActiveFilterCount(){return (ledgerUiState.historyCategories.length?1:0)+(ledgerUiState.historyPayMethods.length?1:0)+(ledgerUiState.track==='personal'&&ledgerUiState.historyProxy!=='all'?1:0)+(ledgerUiState.historyTaxExempt!=='all'?1:0);}
-function toggleLedgerHistoryFilters(){ledgerUiState.historyFiltersOpen=!ledgerUiState.historyFiltersOpen;var panel=document.getElementById('ledgerHistoryFilterPanel'),button=document.getElementById('ledgerHistoryFilterButton');if(panel)panel.hidden=!ledgerUiState.historyFiltersOpen;if(button)button.setAttribute('aria-expanded',ledgerUiState.historyFiltersOpen?'true':'false');}
+function ledgerHistoryActiveFilterCount(){return TripLedgerUiState.activeHistoryFilterCount(ledgerUiState);}
+function toggleLedgerHistoryFilters(){ledgerUiWorkflow.dispatch({type:'toggle-history-panel'});}
 function ledgerHistorySummary(records){records=records||[];return '找到 '+records.length+' 筆 · '+formatLedgerInlineTotals(ledgerAmountTotals(records));}
 function renderLedgerCorrectionHistory(receipt){
   var entries=ledgerCorrectionHistoryModel(receipt);
@@ -10509,7 +10515,7 @@ function switchView(v,intent){
   if(v===curView&&!intent){ scrollCurrentViewToTop(); return; }
   /* 離開前先記住位置 —— 必須在 curView 改變之前 */
   if(v!==curView) captureViewScroll(curView);
-  if(curView==='split'){ledgerUiState.selectionMode=false;ledgerUiState.selectedRecordIds={};closeLedgerRecordActions();}
+  if(curView==='split'){ledgerUiWorkflow.dispatch({type:'reset-selection'});closeLedgerRecordActions();}
   curView=v;
   document.querySelectorAll('.view').forEach(function(el){el.classList.remove('active');});
   var t=document.getElementById('view-'+v); if(t) t.classList.add('active');

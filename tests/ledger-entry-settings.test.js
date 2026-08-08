@@ -2,6 +2,7 @@ const assert = require('assert');
 const fs = require('fs');
 const vm = require('vm');
 const TripBuyToLedger = require('../buy-to-ledger.js');
+const TripLedgerUiState = require('../ledger-ui-state.js');
 
 const {extractFunction,extractDeclaration} = require('./support/source');
 
@@ -52,6 +53,7 @@ function loadModule(fetchImpl){
     Number,
     isFinite,
     TripBuyToLedger,
+    TripLedgerUiState,
     buyToLedgerRuntimeAdapter:{},
     AppLog:{repo(){},sync(){}},
     timestampDate(value){ return new Date(Number(value)); },
@@ -129,7 +131,8 @@ function response(payload){
   assert(settingsRootSource.includes('openMemberSelector(false,false)'),'Settings exposes the existing-identity switch entry');
   assert(settingsRootSource.includes('openMemberSelector(false,true)'),'Settings exposes the new-identity registration entry');
   assert(!splitSource.includes('openMemberSelector(false'),'Split page does not offer identity switching or registration');
-  assert(html.includes("var ledgerUiState={track:'personal'"),'fresh App sessions default to the personal track');
+  assert(html.includes('var ledgerUiState=TripLedgerUiState.createState();'),'fresh App sessions use the canonical Ledger UI state module');
+  assert.strictEqual(TripLedgerUiState.createState().track,'personal','fresh App sessions default to the personal track');
   assert(splitSource.includes('個人帳留在本機；團體帳跨裝置同步。'),'Split uses the fixed dual-track explanation');
   assert(splitSource.includes("setLedgerTrack(\\'personal\\')")&&splitSource.includes("setLedgerTrack(\\'shared\\')"),'Split exposes personal/shared segmented controls');
   assert(entrySource.includes("if(track==='personal')")&&entrySource.includes('personalLedgerRepository.add'),'personal entries use only the personal repository');

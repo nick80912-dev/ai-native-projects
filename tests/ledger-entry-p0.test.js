@@ -1,6 +1,7 @@
 const assert=require('assert');
 const fs=require('fs');
 const vm=require('vm');
+const TripLedgerUiState=require('../ledger-ui-state.js');
 
 const html=fs.readFileSync('index.html','utf8');
 
@@ -203,7 +204,7 @@ assert.match(previewSource,/≈/,'the sticky total shows the converted currency'
 const entryRenderSource=extractFunction('renderLedgerEntrySheet');
 assert.match(entryRenderSource,/ledger-multi-total[\s\S]*id="ledgerBillPreview"/,'the multi-item total is rendered inside the sticky action area');
 
-assert.match(html,/var ledgerUiState=.*savePending:false/,'ledger UI state owns one transient save-in-flight guard');
+assert.strictEqual(TripLedgerUiState.createState().savePending,false,'canonical Ledger UI state owns one transient save-in-flight guard');
 const saveEntrySource=extractFunction('saveLedgerEntry');
 assert.match(saveEntrySource,/if\(ledgerUiState\.savePending\)return Promise\.resolve\(\{ok:false,pending:true\}\)/,'repeat taps and keyboard Done events are ignored while a save is pending');
 assert.match(saveEntrySource,/setLedgerSavePending\(true\)/,'the save guard is raised before any asynchronous confirmation or persistence');

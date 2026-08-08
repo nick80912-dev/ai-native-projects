@@ -101,6 +101,9 @@
     case 'open-history':
       next=createState(state);next.page='all';next.selectedRecordId='';resetSelection(next,false);
       return result(next,[{type:'close-actions'},{type:'render-split'},{type:'scroll-top',behavior:'auto'}]);
+    case 'set-dashboard-filter':
+      if(command.value!=='all'&&command.value!=='proxy')return unchanged(state);
+      next=createState(state);next.filter=command.value;return result(next,[{type:'render-split'}]);
     case 'close-history':
     case 'return-dashboard':
       next=historyExit(createState(state));

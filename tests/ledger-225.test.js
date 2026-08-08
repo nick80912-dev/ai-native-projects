@@ -3,6 +3,7 @@ const {appVersion,swVersion}=require('./support/version');
 const fs=require('fs');
 const vm=require('vm');
 const TripBuyToLedger=require('../buy-to-ledger.js');
+const TripLedgerUiState=require('../ledger-ui-state.js');
 
 const html=fs.readFileSync('index.html','utf8');
 const sw=fs.readFileSync('sw.js','utf8');
@@ -19,6 +20,17 @@ function extractFunction(source,name){
   }
   throw new Error('could not extract '+name);
 }
+function attachLedgerUiWorkflow(sandbox){
+  sandbox.ledgerUiWorkflow=TripLedgerUiState.createWorkflow({
+    readState(){return sandbox.ledgerUiState;},
+    writeState(next){sandbox.ledgerUiState=next;},
+    closeActions(){if(sandbox.closeLedgerRecordActions)sandbox.closeLedgerRecordActions();},
+    renderSplit(){if(sandbox.renderSplit)sandbox.renderSplit();},
+    renderHistoryResults(){if(sandbox.renderLedgerHistoryResults)sandbox.renderLedgerHistoryResults();},
+    syncHistoryFilterPanel(){},scrollTop(){}
+  });
+  return sandbox;
+}
 
 const helperStart=html.indexOf('/* ================= ledgerRepository');
 const helperEnd=html.indexOf('/* ================= 分帳(雲端 Ledger)',helperStart);
@@ -29,7 +41,7 @@ const helperSandbox={
   fetch(){return Promise.reject(new Error('offline'));},setTimeout,clearTimeout,
   Date,Math,Promise,JSON,String,Number,isFinite,
   timestampDate(value){return new Date(Number(value));},
-  TripBuyToLedger,
+  TripBuyToLedger,TripLedgerUiState,
   buyToLedgerRuntimeAdapter:{},
   AppLog:{repo(){},sync(){}},renderSplit(){},updateLedgerPendingStatus(){}
 };
@@ -142,6 +154,12 @@ const batchInteractionSandbox={
   ledgerUiState:{selectionMode:false,selectedRecordIds:{stale:true},expandedBatches:{'batch-a':true}},
   closeLedgerRecordActions(){},renderSplit(){selectionRenders++;}
 };
+batchInteractionSandbox.ledgerUiWorkflow=TripLedgerUiState.createWorkflow({
+  readState(){return batchInteractionSandbox.ledgerUiState;},
+  writeState(next){batchInteractionSandbox.ledgerUiState=next;},
+  closeActions(){batchInteractionSandbox.closeLedgerRecordActions();},
+  renderSplit(){batchInteractionSandbox.renderSplit();}
+});
 vm.createContext(batchInteractionSandbox);
 vm.runInContext(extractFunction(html,'enterLedgerSelectionMode')+'\n'+extractFunction(html,'toggleLedgerBatchExpanded'),batchInteractionSandbox);
 batchInteractionSandbox.enterLedgerSelectionMode();
@@ -167,7 +185,7 @@ assert(fullHistorySource.includes('enterLedgerSelectionMode()'),'full history ca
 assert(fullHistorySource.includes('toggleLedgerSelectAll()'),'full history selection header can select the filtered result set');
 assert(fullHistorySource.includes('cancelLedgerSelectionMode()'),'full history selection header can cancel and clear selection');
 assert(fullHistorySource.includes('renderLedgerSelectionToolbar()')||extractFunction(html,'renderSplit').includes('renderLedgerSelectionToolbar()'),'full history renders the shared deletion toolbar');
-assert(extractFunction(html,'setLedgerTestMode').includes('selectedRecordIds={}'),'TEST/formal switching clears selection');
+assert(extractFunction(html,'setLedgerTestMode').includes("type:'reset-selection'"),'TEST/formal switching clears selection through the state seam');
 const renderSplitSource=extractFunction(html,'renderSplit'),recentGroupsSource=extractFunction(html,'renderLedgerRecentGroups'),historyGroupedSource=extractFunction(html,'renderLedgerHistoryGrouped');
 assert(renderSplitSource.includes('ledgerRecentDateLabel(recent,Date.now())'),'recent heading labels the absolute newest date and uses Today when appropriate');
 assert(renderSplitSource.includes('renderLedgerDateSummary(recentDate,recent,true)'),'dashboard uses the shared latest-day summary');
@@ -182,8 +200,14 @@ const clearSandbox={
   },
   closeLedgerRecordActions(){},renderSplit(){}
 };
+clearSandbox.ledgerUiWorkflow=TripLedgerUiState.createWorkflow({
+  readState(){return clearSandbox.ledgerUiState;},
+  writeState(next){clearSandbox.ledgerUiState=next;},
+  closeActions(){clearSandbox.closeLedgerRecordActions();},
+  renderSplit(){clearSandbox.renderSplit();}
+});
 vm.createContext(clearSandbox);
-vm.runInContext(extractFunction(html,'resetLedgerHistoryFilters')+'\n'+extractFunction(html,'clearLedgerHistoryFilters'),clearSandbox);
+vm.runInContext(extractFunction(html,'clearLedgerHistoryFilters'),clearSandbox);
 clearSandbox.clearLedgerHistoryFilters();
 assert.strictEqual(clearSandbox.ledgerUiState.historyQuery,'松屋','clear filters retains search');
 assert.deepStrictEqual(plain(clearSandbox.ledgerUiState.historyCategories),[]);
@@ -212,6 +236,7 @@ const testSwitchSandbox={
   ledgerUiState:{selectionMode:true,selectedRecordIds:{a:true}},stored:null,
   lsSet(key,value){this.stored=[key,value];},closeLedgerRecordActions(){},renderSplit(){},memberIsAllowed(){return true;},getCurrentMember(){return 'Bar';},refreshMemberSelector(){},openMemberSelector(){},toast(){}
 };
+attachLedgerUiWorkflow(testSwitchSandbox);
 vm.createContext(testSwitchSandbox);
 vm.runInContext(extractFunction(html,'setLedgerTestMode'),testSwitchSandbox);
 testSwitchSandbox.setLedgerTestMode({checked:true});
@@ -255,6 +280,7 @@ assert.doesNotMatch(sw,/importScripts\('\.\/app-version\.js'\)/,'sw.js 不再以
     enqueues:[],ledgerRepository:{enqueueBatch(records){sharedDeleteSandbox.enqueues.push(records);return {ok:true};},add(){throw new Error('batch deletion must not use add');}},
     closeSharedLedgerDelete(){},ledgerUiState:{selectionMode:true,selectedRecordIds:{s1:true,s2:true}},renderSplit(){},toast(){}
   };
+  attachLedgerUiWorkflow(sharedDeleteSandbox);
   vm.createContext(sharedDeleteSandbox);
   vm.runInContext(extractFunction(html,'submitSharedLedgerDeletion'),sharedDeleteSandbox);
   await sharedDeleteSandbox.submitSharedLedgerDeletion();
@@ -275,6 +301,7 @@ assert.doesNotMatch(sw,/importScripts\('\.\/app-version\.js'\)/,'sw.js 不再以
     ledgerRepository:{enqueueBatch(records){mixedDeleteSandbox.enqueues.push(records);return {ok:true};},add(record){mixedDeleteSandbox.enqueues.push([record]);return Promise.resolve({ok:true});}},
     closeSharedLedgerDelete(){},ledgerUiState:{selectionMode:true,selectedRecordIds:{own:true,other:true}},renderSplit(){},toast(message){mixedMessages.push(message);}
   });
+  attachLedgerUiWorkflow(mixedDeleteSandbox);
   vm.createContext(mixedDeleteSandbox);
   vm.runInContext(extractFunction(html,'submitSharedLedgerDeletion'),mixedDeleteSandbox);
   const mixedResult=await mixedDeleteSandbox.submitSharedLedgerDeletion();

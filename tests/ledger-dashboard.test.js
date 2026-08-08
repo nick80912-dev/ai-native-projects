@@ -2,6 +2,7 @@ const assert=require('assert');
 const fs=require('fs');
 const vm=require('vm');
 const TripBuyToLedger=require('../buy-to-ledger.js');
+const TripLedgerUiState=require('../ledger-ui-state.js');
 
 function createStorage(){
   const values={};
@@ -21,7 +22,7 @@ function loadModule(){
     console:{log(){},warn(){},error(){}},localStorage:createStorage(),
     fetch(){return Promise.reject(new Error('network disabled'));},setTimeout,clearTimeout,
     Date,Math,Promise,JSON,String,Number,isFinite,
-    TripBuyToLedger,buyToLedgerRuntimeAdapter:{},
+    TripBuyToLedger,TripLedgerUiState,buyToLedgerRuntimeAdapter:{},
     timestampDate(value){return new Date(Number(value));},AppLog:{repo(){},sync(){}},
     formatLedgerCurrencyAmount(currency,amount){return (currency==='TWD'?'NT$':'¥')+Math.round(Number(amount||0)).toLocaleString();},
     escapeHtml(value){return String(value);},
@@ -117,7 +118,8 @@ const splitSource=html.slice(html.indexOf('function renderSplit()'),html.indexOf
 const ledgerUiSource=html.slice(html.indexOf('function ledgerTrackRecords()'),html.indexOf('/* ================= 導覽 / 啟動'));
 const settlementCardSource=html.slice(html.indexOf('function renderLedgerSettlementCard('),html.indexOf('function ledgerSettlementLines('));
 const settlementProgressSource=html.slice(html.indexOf('function ledgerSettlementCardProgress('),html.indexOf('function postLedgerRecord('));
-assert(html.includes("var ledgerUiState={track:'personal'"),'one ledger UI state defaults to personal');
+assert(html.includes('var ledgerUiState=TripLedgerUiState.createState();'),'one Ledger UI state uses the canonical module defaults');
+assert.strictEqual(TripLedgerUiState.createState().track,'personal','fresh Ledger UI sessions default to personal');
 assert(!html.includes("var ledgerTrack='personal'"),'parallel ledgerTrack state is removed');
 assert(splitSource.includes('ledger-status-pill'),'dashboard renders the sync/rate status pill');
 assert(splitSource.includes('ledger-summary-card'),'dashboard renders the primary summary card');
@@ -153,7 +155,7 @@ assert(ledgerUiSource.includes('groupLedgerExpensesByDate'),'dashboard uses the 
 assert(ledgerUiSource.includes("spendLedgerRecords(mergedLedgerRecords())"),'shared history consumes effective visible expenses');
 assert(ledgerUiSource.includes('memberRelatedLedgerRecords(')&&ledgerUiSource.includes('getCurrentMember(),ledgerVisibilityWarn'),'shared track applies the member-related filter at the single shared choke point');
 assert(ledgerUiSource.includes('ledgerUniverseRecords'),'shared dashboard selects one formal/TEST universe');
-assert(ledgerUiSource.includes("ledgerUiState.page='all'"),'View all switches the single ledger state into history mode');
+assert(ledgerUiSource.includes("ledgerUiWorkflow.dispatch({type:'open-history'})"),'View all switches the single ledger state into history mode through the workflow seam');
 assert(ledgerUiSource.includes("['proxy','代購']")&&ledgerUiSource.includes("['non-proxy','非代購']")&&ledgerUiSource.includes("'setLedgerHistoryProxy'"),'personal history exposes proxy and non-proxy filters');
 const detailSource=html.slice(html.indexOf('function ledgerRecordDetailRows('),html.indexOf('function renderSplit()'));
 assert(detailSource.includes('ledgerTrackRecords().filter'),'detail lookup searches the currently visible track only');
