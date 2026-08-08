@@ -102,8 +102,6 @@ const beforeUpdates=workflowSandbox.itemUpdates.length;
 assert.strictEqual(workflowSandbox.ledgerCalculatorApplyValue({type:'item',key:'missing'},500),false);
 assert.strictEqual(workflowSandbox.itemUpdates.length,beforeUpdates,'a stale item target never writes another item');
 
-assert.match(html,/var ledgerCalculatorState=\{open:false,target:null,expression:'',originalValue:'',result:null,error:'',sheetScrollTop:0\}/,'one transient calculator state owns a data target and no DOM reference');
-
 const triggerSource=extractFunction(html,'renderLedgerCalculatorTrigger');
 const sheetSource=extractFunction(html,'renderLedgerCalculatorSheet');
 const openSource=extractFunction(html,'openLedgerCalculator');
@@ -116,6 +114,36 @@ const singleFieldSource=extractFunction(html,'renderLedgerSingleItemPrimary');
 const multiFieldSource=extractFunction(html,'renderLedgerDraftItem');
 const discountSource=extractFunction(html,'renderLedgerTaxDisclosure');
 
+const inputSandbox={
+  String,Number,Math,isFinite,
+  ledgerCalculatorState:{open:true,target:{type:'single'},expression:'',originalValue:'',result:null,error:'',evaluated:false,sheetScrollTop:0},
+  updateLedgerCalculatorDisplay(){}
+};
+vm.createContext(inputSandbox);
+vm.runInContext(inputSource+'\n'+backspaceSource+'\n'+clearSource,inputSandbox);
+function inputKey(key){inputSandbox.inputLedgerCalculatorKey(key);return inputSandbox.ledgerCalculatorState.expression;}
+function resetInput(){inputSandbox.clearLedgerCalculator();inputSandbox.ledgerCalculatorState.evaluated=false;}
+
+assert.strictEqual(inputKey('.'),'0.','a leading decimal key starts a valid zero decimal');
+assert.strictEqual(inputKey('5'),'0.5');
+assert.strictEqual(inputKey('.'),'0.5','the current operand accepts only one decimal point');
+resetInput();assert.strictEqual(inputKey('00'),'0','double zero does not create a leading zero run');
+resetInput();inputKey('1');inputKey('+');assert.strictEqual(inputKey('.'),'1+0.','a decimal after an operator starts the next operand');
+assert.strictEqual(inputKey('5'),'1+0.5');
+assert.strictEqual(inputKey('%'),'1+0.5%','percent is retained as one postfix input token');
+
+assert.match(html,/var ledgerCalculatorState=\{open:false,target:null,expression:'',originalValue:'',result:null,error:'',evaluated:false,sheetScrollTop:0\}/,'one transient calculator state owns a data target, equals state, and no DOM reference');
+
+const renderedOverlay={innerHTML:''};
+const renderSandbox={
+  document:{getElementById(id){return id==='ledgerCalculatorSheet'?renderedOverlay:null;},createElement(){throw new Error('existing overlay should be reused');},body:{appendChild(){}}},
+  updateLedgerCalculatorDisplay(){}
+};
+vm.createContext(renderSandbox);
+vm.runInContext(sheetSource,renderSandbox);
+renderSandbox.renderLedgerCalculatorSheet();
+const sheetMarkup=renderedOverlay.innerHTML;
+
 assert.match(triggerSource,/type="button"/,'calculator trigger is a formal button');
 assert.match(triggerSource,/aria-label="'\+escapeHtml\(label\|\|'開啟金額計算機'\)/,'calculator trigger escapes a target-specific accessible name with a stable fallback');
 assert.match(triggerSource,/<svg[^>]*aria-hidden="true"/,'calculator trigger uses the shared monochrome line SVG style');
@@ -124,11 +152,14 @@ assert.match(multiFieldSource,/renderLedgerCalculatorTrigger\(\{type:'item',key:
 assert.match(discountSource,/renderLedgerCalculatorTrigger\(\{type:'discount'/,'discount receives the same trigger renderer');
 assert.doesNotMatch(discountSource,/ledgerCustomTaxRate[\s\S]{0,300}renderLedgerCalculatorTrigger/,'tax rate never receives a calculator trigger');
 
-assert.match(sheetSource,/role="dialog"[^>]*aria-modal="true"[^>]*aria-labelledby="ledgerCalculatorTitle"/,'calculator is an accessible modal sheet');
-assert.match(sheetSource,/aria-live="polite"/,'result and validation updates are announced');
-assert.match(sheetSource,/ledger-calculator-result" aria-live="polite"/,'valid result changes have their own polite live region');
-assert.match(sheetSource,/取消[\s\S]*套用/,'calculator offers explicit cancel and apply actions');
-assert.match(sheetSource,/['"]7['"],[\s\S]*['"]8['"],[\s\S]*['"]9['"],[\s\S]*['"]\/["']/,'keypad begins with the approved 7 8 9 divide row');
+assert.match(sheetMarkup,/role="dialog"[^>]*aria-modal="true"[^>]*aria-labelledby="ledgerCalculatorTitle"/,'calculator is an accessible modal sheet');
+assert.match(sheetMarkup,/aria-live="polite"/,'result and validation updates are announced');
+assert.match(sheetMarkup,/ledger-calculator-result" aria-live="polite"/,'valid result changes have their own polite live region');
+assert.match(sheetMarkup,/計算金額/,'calculator uses the approved compact title');
+assert.match(sheetMarkup,/aria-label="關閉金額計算機"/,'calculator has an explicit top-right close control');
+assert.match(sheetMarkup,/取消[\s\S]*套用金額/,'calculator offers explicit cancel and apply actions');
+assert.match(sheetMarkup,/data-calculator-key="%"[\s\S]*>AC<[\s\S]*aria-label="退格"[\s\S]*data-calculator-key="\/"/,'keypad begins with percent, AC, backspace, and divide');
+assert.match(sheetMarkup,/data-calculator-key="\."[\s\S]*data-calculator-key="0"[\s\S]*data-calculator-key="00"[\s\S]*data-calculator-key="="/,'keypad ends with decimal, zero, double-zero, and equals');
 assert.doesNotMatch(sheetSource,/onclick="closeLedgerCalculator\([^)]*\)"[^>]*class="ledger-calculator-overlay/,'the background does not close the calculator');
 assert.match(openSource,/activeElement[\s\S]*\.blur\(/,'opening dismisses the native number keyboard');
 assert.match(openSource,/sheetScrollTop/,'opening stores the mounted Ledger sheet scroll position');
@@ -145,7 +176,20 @@ assert.match(applySource,/closeLedgerCalculator\(true\)/,'successful apply resto
 
 assert.match(html,/\.ledger-calculator-trigger\{[^}]*width:44px[^}]*height:44px/,'calculator trigger has a 44 by 44 CSS touch target');
 assert.match(html,/\.ledger-calculator-key\{[^}]*min-height:48px/,'calculator keys have comfortable touch targets');
+assert.match(html,/\.ledger-calculator-keys\{[^}]*grid-template-columns:repeat\(4,minmax\(0,1fr\)\)/,'calculator uses the approved four-column grid');
+assert.match(html,/\.ledger-calculator-close\{[^}]*width:44px[^}]*height:44px/,'calculator close control has a 44 by 44 touch target');
 assert.match(html,/\.ledger-calculator-overlay\{[^}]*z-index:180/,'calculator sits above the Ledger entry sheet');
 assert.doesNotMatch(html,/\beval\s*\(|\bnew Function\s*\(/,'the full runtime does not introduce dynamic evaluation');
+
+const equalsSource=extractFunction(html,'evaluateLedgerCalculator');
+vm.runInContext(normalizeSource+'\n'+evaluatorSource+'\n'+equalsSource,inputSandbox);
+resetInput();inputKey('1');inputKey('+');inputKey('.');inputKey('5');
+assert.strictEqual(inputSandbox.evaluateLedgerCalculator(),true,'equals accepts a complete expression');
+assert.strictEqual(inputSandbox.ledgerCalculatorState.evaluated,true,'equals records the evaluated transition');
+assert.strictEqual(inputSandbox.ledgerCalculatorState.result,1.5,'equals retains the raw result');
+assert.strictEqual(inputSandbox.ledgerCalculatorState.expression,'1+0.5','equals keeps the expression visible');
+assert.strictEqual(inputKey('2'),'2','a digit after equals starts a new expression');
+assert.strictEqual(inputSandbox.evaluateLedgerCalculator(),true);
+assert.strictEqual(inputKey('+'),'2+','an operator after equals continues from the result');
 
 console.log('ledger calculator tests passed');
