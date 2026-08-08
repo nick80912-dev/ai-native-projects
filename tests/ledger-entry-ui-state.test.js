@@ -163,4 +163,53 @@ const staleSession=TripLedgerUiState.transition(silentPending,{
 });
 assert.strictEqual(staleSession.changed,false,'an old session cannot close the active entry');
 
+let calendarState=TripLedgerUiState.transition(initial,{
+  type:'open-entry-create',draft:{track:'personal',occurredDate:'2026/12/15'},
+  sessionId:'calendar-session',returnContext:null,focusTarget:''
+}).state;
+let calendar=TripLedgerUiState.transition(calendarState,{
+  type:'toggle-entry-calendar',sessionId:'calendar-session',year:2026,month:11
+});
+assert.strictEqual(calendar.state.calendarOpen,true);
+assert.strictEqual(calendar.state.calendarYear,2026);
+assert.strictEqual(calendar.state.calendarMonth,11);
+assert.deepStrictEqual(plain(calendar.effects),[{type:'render-entry',preservePosition:true}]);
+
+calendar=TripLedgerUiState.transition(calendar.state,{
+  type:'shift-entry-calendar',sessionId:'calendar-session',delta:1
+});
+assert.strictEqual(calendar.state.calendarYear,2027,'December advances into January of the next year');
+assert.strictEqual(calendar.state.calendarMonth,0);
+calendar=TripLedgerUiState.transition(calendar.state,{
+  type:'shift-entry-calendar',sessionId:'calendar-session',delta:-1
+});
+assert.strictEqual(calendar.state.calendarYear,2026,'January moves back into December of the previous year');
+assert.strictEqual(calendar.state.calendarMonth,11);
+
+const datedDraft={track:'personal',occurredDate:'2026/12/20',occurredDateError:''};
+calendar=TripLedgerUiState.transition(calendar.state,{
+  type:'select-entry-calendar-date',sessionId:'calendar-session',draft:datedDraft
+});
+assert.strictEqual(calendar.state.draft,datedDraft);
+assert.strictEqual(calendar.state.calendarOpen,false);
+assert.deepStrictEqual(plain(calendar.effects),[{type:'render-entry',preservePosition:true}]);
+
+const reopened=TripLedgerUiState.transition(calendar.state,{
+  type:'toggle-entry-calendar',sessionId:'calendar-session',year:2026,month:11
+});
+const closedCalendar=TripLedgerUiState.transition(reopened.state,{
+  type:'close-entry-calendar',sessionId:'calendar-session'
+});
+assert.strictEqual(closedCalendar.state.calendarOpen,false);
+assert.deepStrictEqual(plain(closedCalendar.effects),[{type:'render-entry',preservePosition:true}]);
+
+[
+  TripLedgerUiState.transition(initial,{type:'toggle-entry-calendar',sessionId:'none',year:2026,month:0}),
+  TripLedgerUiState.transition(reopened.state,{type:'shift-entry-calendar',sessionId:'stale',delta:1}),
+  TripLedgerUiState.transition(calendar.state,{type:'select-entry-calendar-date',sessionId:'calendar-session',draft:datedDraft}),
+  TripLedgerUiState.transition(calendar.state,{type:'close-entry-calendar',sessionId:'calendar-session'})
+].forEach(function(invalidCalendar){
+  assert.strictEqual(invalidCalendar.changed,false,'calendar actions fail closed outside their valid state');
+});
+
 console.log('ledger entry UI state tests passed');

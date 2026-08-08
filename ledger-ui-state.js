@@ -52,6 +52,11 @@
   function matchesSave(state,command){
     return matchesEntry(state,command)&&state.savePending&&text(command.requestId)===state.entrySaveRequestId;
   }
+  function shiftedMonth(year,month,delta){
+    var total=Number(year)*12+Number(month)+Number(delta||0);
+    var nextYear=Math.floor(total/12),nextMonth=total-nextYear*12;
+    return {year:nextYear,month:nextMonth};
+  }
 
   function createState(seed){
     var source=seed&&typeof seed==='object'?seed:{},sheet=source.sheet==='entry'?'entry':null;
@@ -171,6 +176,30 @@
       }
       if(command.notification)savedEffects.push({type:'notify-entry-result',notification:command.notification});
       return result(next,savedEffects);
+    case 'toggle-entry-calendar':
+      if(!matchesEntry(state,command))return unchanged(state);
+      next=createState(state);
+      if(next.calendarOpen)next.calendarOpen=false;
+      else{
+        var openYear=Number(command.year),openMonth=Number(command.month);
+        if(!isFinite(openYear)||Math.floor(openYear)!==openYear||!isFinite(openMonth)||Math.floor(openMonth)!==openMonth||openMonth<0||openMonth>11)return unchanged(state);
+        next.calendarOpen=true;next.calendarYear=openYear;next.calendarMonth=openMonth;
+      }
+      return result(next,[{type:'render-entry',preservePosition:true}]);
+    case 'shift-entry-calendar':
+      var delta=Number(command.delta);
+      if(!matchesEntry(state,command)||!state.calendarOpen||!isFinite(delta)||Math.floor(delta)!==delta||delta===0)return unchanged(state);
+      next=createState(state);var shifted=shiftedMonth(next.calendarYear,next.calendarMonth,delta);
+      next.calendarYear=shifted.year;next.calendarMonth=shifted.month;
+      return result(next,[{type:'render-entry',preservePosition:true}]);
+    case 'select-entry-calendar-date':
+      if(!matchesEntry(state,command)||!state.calendarOpen||!plainObject(command.draft))return unchanged(state);
+      next=createState(state);next.draft=command.draft;next.calendarOpen=false;
+      return result(next,[{type:'render-entry',preservePosition:true}]);
+    case 'close-entry-calendar':
+      if(!matchesEntry(state,command)||!state.calendarOpen)return unchanged(state);
+      next=createState(state);next.calendarOpen=false;
+      return result(next,[{type:'render-entry',preservePosition:true}]);
     case 'close-entry':
       if(state.sheet!=='entry'||state.correction)return unchanged(state);
       next=clearEntrySession(createState(state));
