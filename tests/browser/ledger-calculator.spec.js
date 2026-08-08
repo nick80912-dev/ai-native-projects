@@ -88,6 +88,11 @@ test('單品計算器支援小數、購物百分比、等號與無條件捨去',
   await page.keyboard.press('Enter');
   await expect(page.locator('#ledgerCalculatorResult')).toHaveText('900');
 
+  await clearAndEnter(page,['1','0','0','0','=']);
+  await calculator.getByRole('button',{name:'百分比',exact:true}).click();
+  await expect(page.locator('#ledgerCalculatorExpression')).toHaveText('1000%');
+  await expect(page.locator('#ledgerCalculatorResult')).toHaveText('10');
+
   await calculator.getByRole('button',{name:'關閉金額計算機'}).click();
   await expect(page.locator('#ledgerAmount')).toHaveValue('1512');
   expect(errors).toEqual([]);

@@ -11,7 +11,7 @@ Netlify 靜態託管(HTTPS)+ Service Worker(PWA 離線)
 無自架後端、無額外資料庫伺服器、零前端相依套件。
 ```
 
-`index.html` 是 App 與 Netlify 正式部署入口；裝置照片儲存邊界獨立在 `shopping-photo-store.js`，採買轉記帳的純資料與 workflow 邊界獨立在 `buy-to-ledger.js`。Service Worker、manifest 與 icons 均位於 repo 根目錄並由 GitHub 連動部署。
+`index.html` 是 App 與 Netlify 正式部署入口；裝置照片儲存邊界獨立在 `shopping-photo-store.js`，採買轉記帳的純資料與 workflow 邊界獨立在 `buy-to-ledger.js`，Ledger 歷史瀏覽狀態／effect 邊界獨立在 `ledger-ui-state.js`。Service Worker、manifest 與 icons 均位於 repo 根目錄並由 GitHub 連動部署。
 
 ## 資料流:三層防線(絕不空白頁)
 1. **內建資料**(builtin,建置時寫入 HTML)→ 0.1 秒顯示
@@ -44,11 +44,12 @@ ledgerRepository(add/flushQueue/pendingCount → Apps Script;離線佇列與 ID 
 ledger settings(normalize/convert/post/save → TripConfig兩鍵;確認bridge涵蓋CSV延遲)
 shopping photo store(壓縮／IndexedDB put-get-remove／引用生命週期)
 buy-to-ledger domain/workflow(來源準備／狀態推導／commit plan／流程協調；DOM 與 repository 由 index adapter 注入)
+ledger UI state/workflow(帳本軌／歷史篩選／多選不可變 transition + ordered effects；DOM render 由 index adapter 注入)
 navigation intent(詳細分點直接導航;一般同名地點以目前位置作為 origin,定位失敗退回「名稱 + 日本」)
 ```
 
 ## 部署檔案
-`index.html / shopping-photo-store.js / buy-to-ledger.js / schema.js / validator.js / sw.js / manifest.webmanifest / icon-*.png` 位於 repo 根目錄,由 `main` 的 Bar 核准 Merge 觸發 Netlify 正式部署。
+`index.html / shopping-photo-store.js / buy-to-ledger.js / ledger-ui-state.js / schema.js / validator.js / sw.js / manifest.webmanifest / icon-*.png` 位於 repo 根目錄,由 `main` 的 Bar 核准 Merge 觸發 Netlify 正式部署。
 
 ## 已知環境限制(繞過方案已內建)
 - 部分 WebView 無 console.info → 已 polyfill

@@ -32,6 +32,7 @@
 ## 專案檔案
 - `index.html` — App UI、DOM adapter 與 Netlify 正式入口
 - `buy-to-ledger.js` — 採買轉記帳的純 domain／workflow runtime module
+- `ledger-ui-state.js` — Ledger 歷史瀏覽不可變 state／ordered effects workflow module
 - `schema.js` / `validator.js` — 資料規格 SSoT / 防錯與健康檢查
 - `tests/` / `tools/` — 可重跑測試與文件一致性檢查
 - `tasks/` — 即時工作狀態唯一權威

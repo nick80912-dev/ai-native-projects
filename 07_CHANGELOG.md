@@ -1,4 +1,12 @@
 # 07 版本紀錄
+## 2026-08-08｜發布 review 規格補正（SW v96）
+
+- **照片 quota 直接處理**：保留 v78 已核准的 inline failure flow，不恢復獨立錯誤 overlay；quota-like 寫入失敗在原表單／修復 Sheet 內提供 44px「管理儲存空間」按鈕。修復流程會先關閉再進入設定的「照片健康狀態」，原 `photoId` 與採買資料維持不變；表單路徑前往設定時暫時 inert，關閉設定後可繼續原草稿。
+- **等號後百分比**：修正 calculator evaluated-state 分支，讓 `%` 與四則運算子一樣可延續已完成結果；`1000 = %` 會形成 `1000%` 並顯示 10。數字仍在 `=` 後開始新算式，既有購物式 `1000−10%=900`、安全 parser 與套用時無條件捨去不變。
+- **release review 文件收斂**：ADR 0010 依七段格式重整並加入 ADR index；`ledger-ui-state.js` 補入 README、架構、資料夾與 AI manifest 的 runtime／部署清單；真機驗收文件補記 Bar 於 2026-08-08 對 v88–v89、v92–v95 的累積核准。
+- **版本與相容性**：`app-version.js`／`sw.js` 升為 v96，`APP_RELEASE_NOTES` 依五筆規則滾動；未修改 SW install／activate／fetch／skipWaiting／clients.claim、Ledger／Shopping schema、Apps Script、備份格式、同步、`PERSONAL_STATE_VERSION=9` 或 `netlify.toml`。SW 更新提示雙版本驗收順延至 v97／v98。
+- **TDD 與完整 gate**：新增兩個 browser regression assertions，修正前分別因找不到「管理儲存空間」與 `1000 = %` 仍停在 `1000` 而失敗；最小修正後 targeted Playwright 2／2 通過。最終完整 70／70 個 Node test files、Playwright 124／124、`check-doc-titles`、`check-app-version`、兩份 manifest JSON 與 `git diff --check` 全數通過；Standards／Spec 複核確認原 findings 均已關閉。
+
 ## 2026-08-08｜Ledger UI 歷史瀏覽 workflow／state seam（SW v95）⭐ 架構變更
 
 - **最小垂直切片**：把帳本軌切換、dashboard／完整紀錄、歷史搜尋／篩選／分組及多選狀態，從分散 direct mutation 收斂到 `ledger-ui-state.js`。entry draft、editing、correction、calendar、calculator、settlement 與 repositories 保留原位，避免大爆炸重構。

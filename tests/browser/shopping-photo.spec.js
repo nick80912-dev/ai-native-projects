@@ -253,9 +253,13 @@ test('容量不足時保留原引用並在修復流程顯示 inline 提示',asyn
   await page.locator('.shopping-photo-indicator-invalid').click();
   await page.locator('#shoppingPhotoRepair input[type=file]').setInputFiles({name:'replacement.png',mimeType:'image/png',buffer:PNG});
   await expect(page.locator('#shoppingPhotoRepairStatus')).toContainText('儲存空間不足，照片尚未加入');
-  await expect(page.locator('#shoppingPhotoRepairStatus')).toContainText('照片健康狀態');
+  const manageStorage=page.getByRole('button',{name:'管理儲存空間',exact:true});
+  await expect(manageStorage).toBeVisible();
   await expect(page.locator('.shopping-photo-storage-failure')).toHaveCount(0);
   expect(await page.evaluate(()=>shoppingListStore.all().find(value=>value.id==='photo-item').photoId)).toBe(oldId);
+  await manageStorage.click();
+  await expect(page.locator('#shoppingPhotoRepair')).toHaveCount(0);
+  await expect(page.getByRole('heading',{name:'照片健康狀態',exact:true})).toBeVisible();
 });
 
 test('照片 repository 不可用時停用照片操作但保留一般採買編輯',async({page})=>{

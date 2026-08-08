@@ -1,54 +1,60 @@
 # ADR 0010 — Ledger UI 歷史瀏覽 Workflow／State Seam
 
-> 狀態：Accepted（2026-08-08，依 Bar 核准直接執行）
+> 狀態：Accepted（2026-08-08，由 Bar 核准執行）
 
 ## Decision
 
-以 Ledger 的「帳本軌切換 → 完整紀錄 → 篩選／分組 → 多選」作為 `ledgerUiState` 的第一個垂直切片。新增 ES5-compatible UMD module `ledger-ui-state.js`，外部 interface 僅提供：
+將 Ledger 的帳本軌、dashboard／完整紀錄、歷史搜尋／篩選／分組與多選狀態，收斂到 ES5-compatible UMD module `ledger-ui-state.js` 的單一不可變 transition 介面：
 
-- `createState(seed)`：建立並正規化 session-only UI state。
-- `transition(state, action)`：以不可變方式回傳 `{ state, effects, changed }`。
-- `activeHistoryFilterCount(state)`：回傳目前有效的歷史篩選群組數。
-- `createWorkflow(adapter)`：以 `dispatch(action)` 協調 state commit 與 render／popover／scroll effects。
+- `createState(seed)`：建立 session-only UI state。
+- `transition(state, action)`：回傳 `{ state, effects, changed }`。
+- `activeHistoryFilterCount(state)`：計算目前有效篩選數。
+- `createWorkflow(adapter)`：以 `dispatch(action)` 依序 commit state，再執行 render、popover、scroll effects。
 
-`index.html` 保留 `ledgerUiState` 相容讀取面，既有 renderer、Ledger repositories、entry draft、calculator、settlement 與 Buy-to-Ledger 不移入本 module。production adapter 與 recording test adapter 共同落在同一 seam。
+`index.html` 保留 production DOM adapter、renderers、Ledger repositories、entry draft、calculator、settlement 與 Buy-to-Ledger；module 不直接讀 DOM、storage 或 repository。
 
 ## Context
 
-目前 `ledgerUiState` 有 23 個欄位，混合 dashboard、history、selection、entry draft、calendar、correction 與 save guard。多個 handler 會各自重複清除 `selectionMode`、`selectedRecordIds`、filters 與 page；新增狀態時容易漏掉其中一條返回或切軌路徑。另一方面，entry draft 有 70 次以上讀寫且連動大量表單 rendering，本批若一起搬移會形成高風險大爆炸重構。
+原本 Ledger UI 狀態散落在 dashboard、history、selection、entry draft、calendar、correction 與 save guard 的 handlers。`selectionMode`、`selectedRecordIds`、filters 與 page 由多個 caller 直接 mutation，切軌、返回 dashboard、關閉完整紀錄等路徑各自記住應清除的欄位，容易隨功能增加而分歧。
 
-歷史瀏覽群組的依賴只有 in-process state 與可注入 UI effects，適合先形成深 module：狀態不變量集中在 transition，caller 不再知道各 action 要清哪些欄位；workflow 只需一個 production adapter，測試以 recording adapter 觀察 effect ordering。
-
-## Invariants
-
-- state 永遠是新物件；輸入 state、array、map 不可被 mutation。
-- track 只允許 `personal`／`shared`；page 只允許 `dashboard`／`all`。
-- 切換 track 必須回 dashboard、清 display currency、舊 selection 與 batch expansion；切到 shared 時 proxy filter 強制 `all`。
-- 開啟完整紀錄保留既有搜尋／篩選，但退出 selection。
-- 關閉完整紀錄重設搜尋、篩選、分組與 selection。
-- selection map 只保留 truthy string ID；toggle batch／select all 只接受 caller 提供的目前可見 ID。
-- 無效 action 或無效值 fail closed，不 commit、不 render。
-- 這些 UI state 只存在於記憶體，不進 localStorage、備份、schema 或同步 payload。
-
-## Effects
-
-transition 只描述 effect，不碰 DOM：
-
-- `close-actions`
-- `render-split`
-- `render-history-results`
-- `sync-history-filter-panel`
-- `scroll-top`（`auto` 或 `smooth`）
-
-workflow 先 commit 新 state，再依序執行 effects，確保 renderer 讀到的都是新狀態。
+本批只處理已由 characterization tests 鎖定的歷史瀏覽垂直切片，不搬動 entry draft、repository 或資料 schema。
 
 ## Alternatives Considered
 
-- 一次抽走全部 `ledgerUiState`：拒絕；entry draft／correction／calendar 與 DOM rerender 高度耦合，回歸面過大。
-- 只新增一組 setter helper：拒絕；刪除 module 後複雜度不會回到 caller，屬於淺 pass-through。
-- 導入 event bus 或全 App store：拒絕；interface 過大且目前沒有第二個需要共享的 bounded workflow。
-- 只抽純 reducer、不接 production：拒絕；會形成 hypothetical seam，既有 handler 仍可繼續繞過不變量。
+- 一次抽出全部 `ledgerUiState`，包含 entry draft、correction、calendar 與所有 DOM rerender：改動面過大，難以證明 UI／資料語意不變。
+- 只新增 setter helpers：仍由 caller 決定欄位組合與 effect ordering，無法封裝跨欄位不變量。
+- 導入 event bus 或全 App store：介面超過本次已實證需求，形成 speculative abstraction。
+- 只在測試建立 reducer：會產生 production 不使用的 hypothetical seam，無法約束真實 handlers。
 
-## Consequences
+## Why This Decision
 
-第一批只降低歷史瀏覽與多選的狀態耦合；entry draft 仍留在 `index.html`。後續若 characterization 證明 interface 足夠穩定，可用相同「transition + effects + adapter」模式接續 entry session lifecycle，但不得把 draft schema 或 repository 接口塞進目前 module。
+不可變 transition 把「哪些欄位一起改」與「哪些 effects 依何順序執行」集中在一處；production 與 recording test adapter 共用同一 workflow interface，因此測試直接約束正式執行路徑，而不是複製一套測試專用邏輯。
+
+此邊界維持下列不變量：
+
+- state、陣列與 selection map 不做就地 mutation。
+- track 僅為 `personal`／`shared`；page 僅為 `dashboard`／`all`。
+- 切換 track 回到 dashboard，清除 display currency、selection 與 batch expansion；切至 shared 時 proxy filter 回到 `all`。
+- 離開完整紀錄清除 selection；關閉完整紀錄清除搜尋、篩選、分組與 selection。
+- selection map 只保留 truthy string ID；toggle batch／select all 由 caller 傳入當下可見 ID。
+- 未知 action fail closed，不 commit、也不 render。
+- UI state 只存在 session，不進 localStorage、個人備份、schema 或同步 payload。
+
+## Expected Benefits
+
+- 帳本切換、歷史瀏覽與多選的 reset 規則只有一個權威來源。
+- `transition` 可用純 Node 測試完整驗證，`createWorkflow(adapter)` 可驗證 production effect ordering。
+- filter panel 可走 partial sync，保留搜尋 input DOM、內容與焦點，不必整頁重建。
+- module interface 足夠小，後續能以實證逐步擴展，不迫使其他 Ledger 流程同時重構。
+
+允許的 ordered effects 為 `close-actions`、`render-split`、`render-history-results`、`sync-history-filter-panel` 與 `scroll-top`（`auto`／`smooth`）。Workflow 一律先 commit 新 state，再執行 effects。
+
+## Trade-offs
+
+- `index.html` 仍保留 entry draft、editing、correction、calendar、calculator、settlement 與 DOM render，短期內不是完整獨立 Ledger module。
+- production adapter 仍需把既有 public handlers 轉成 action，並維持 legacy `ledgerUiState` 相容欄位。
+- UMD／ES5 相容寫法比現代 module 語法冗長，但可維持目前無 build step、離線 App Shell 與 Node direct-require 測試。
+
+## Future Impact
+
+後續 Ledger entry session lifecycle 可沿用「純 transition + ordered effects + injected adapter」模式，前提是先補 characterization tests 並證明介面需求。不得僅為追求單一大 store 而移動 draft schema、repository、sync 或 settlement；正式 runtime interface 應按已實證的垂直切片逐步深化。
