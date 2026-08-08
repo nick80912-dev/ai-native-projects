@@ -46,6 +46,12 @@
     state.entryReturnContext=null;state.entrySessionId='';state.entrySaveRequestId='';
     return state;
   }
+  function matchesEntry(state,command){
+    return state.sheet==='entry'&&!state.correction&&!!state.entrySessionId&&text(command.sessionId)===state.entrySessionId;
+  }
+  function matchesSave(state,command){
+    return matchesEntry(state,command)&&state.savePending&&text(command.requestId)===state.entrySaveRequestId;
+  }
 
   function createState(seed){
     var source=seed&&typeof seed==='object'?seed:{},sheet=source.sheet==='entry'?'entry':null;
@@ -128,6 +134,43 @@
       if(state.sheet!=='entry'||state.correction||text(command.sessionId)!==state.entrySessionId||!plainObject(command.draft))return unchanged(state);
       next=createState(state);next.draft=command.draft;next.track=oneOf(command.draft.track,TRACKS,next.track);
       return result(next,[{type:'render-entry',preservePosition:true}]);
+    case 'entry-validation-failed':
+      if(!matchesEntry(state,command)||!plainObject(command.draft))return unchanged(state);
+      next=createState(state);next.draft=command.draft;
+      return result(next,[
+        {type:'render-entry',preservePosition:true},
+        {type:'focus-entry',target:text(command.errorTarget)}
+      ]);
+    case 'entry-save-requested':
+      id=text(command.requestId).trim();
+      if(!matchesEntry(state,command)||state.savePending||!id)return unchanged(state);
+      next=createState(state);next.savePending=true;next.entrySaveRequestId=id;
+      return result(next,[{type:'sync-entry-pending'}]);
+    case 'entry-save-failed':
+      if(!matchesSave(state,command))return unchanged(state);
+      next=createState(state);next.savePending=false;next.entrySaveRequestId='';
+      var failedEffects=[{type:'sync-entry-pending'}];
+      if(command.notification)failedEffects.push({type:'notify-entry-result',notification:command.notification});
+      return result(next,failedEffects);
+    case 'entry-save-succeeded':
+      if(!matchesSave(state,command))return unchanged(state);
+      var savedEffects=[{type:'sync-entry-pending'}];
+      if(command.addAnother===true){
+        if(!plainObject(command.nextDraft))return unchanged(state);
+        next=createState(state);next.draft=command.nextDraft;next.editing=null;
+        next.track=oneOf(command.nextDraft.track,TRACKS,next.track);next.savePending=false;next.entrySaveRequestId='';
+        next.calendarOpen=false;next.calendarYear=0;next.calendarMonth=0;
+        savedEffects.push({type:'render-entry',preservePosition:false},{type:'focus-entry',target:'amount'});
+      }else{
+        var savedContext=cloneContext(state.entryReturnContext);
+        next=clearEntrySession(createState(state));
+        savedEffects.push(
+          {type:'unmount-entry'},{type:'render-split'},
+          {type:'restore-entry-context',context:savedContext,restoreBackground:true}
+        );
+      }
+      if(command.notification)savedEffects.push({type:'notify-entry-result',notification:command.notification});
+      return result(next,savedEffects);
     case 'close-entry':
       if(state.sheet!=='entry'||state.correction)return unchanged(state);
       next=clearEntrySession(createState(state));
