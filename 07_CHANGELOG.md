@@ -7,6 +7,7 @@
 - **UI／資料相容**：既有 public handler、inline markup、renderer、文案與手機版面不變；filter panel partial sync 保留搜尋 input DOM 與焦點。狀態仍為 session-only，不進 localStorage、個人備份、Ledger／Shopping schema 或同步 payload；`PERSONAL_STATE_VERSION=9`、`netlify.toml` 不變。
 - **離線與版本**：`index.html` 載入 module，SW SHELL 納入 `ledger-ui-state.js`；SW 只正常升版及增加必要 App Shell asset，install／activate／fetch／skipWaiting／clients.claim 與快取策略未改。SW 更新提示雙版本順延至 v96／v97。
 - **驗證**：完整 70／70 個 Node test files、Playwright 124／124、`check-doc-titles`、`check-app-version`、manifest JSON 與 `git diff --check` 通過；Browser 覆蓋 filter panel DOM／焦點連續性、搜尋／分組／清除、多選／全選、關閉／切軌重設與 320／375／390px 無水平 overflow。
+- **Bar 驗收**：2026-08-08，Bar 確認 v88–v89、v92–v95 的畫面／真機確認皆已完成；此紀錄不代表已核准 merge、部署或建立 production tag。
 
 ## 2026-08-08｜Ledger 計算機小數、百分比與即時計算介面（SW v94）
 

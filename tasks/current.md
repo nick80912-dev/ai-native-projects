@@ -14,7 +14,7 @@
 | dev 自動驗證 | **70／70** Node test files、Playwright **124／124**、`check-doc-titles` 與 `check-app-version` 通過 |
 | 既有 tag | `production-v18`、`production-v73` |
 
-**`dev` 領先 `main` 二十個候選版（v74–v89、v92–v95），全部尚未正式發布。** v74–v87 已由 Bar 於 2026-08-03 確認真機驗收皆正常；v88–v89 與 v92–v95 已通過完整自動驗證。只有 v73 已合併、正式部署並建立 production tag。
+**`dev` 領先 `main` 二十個候選版（v74–v89、v92–v95），全部尚未正式發布。** v74–v87 已由 Bar 於 2026-08-03 確認真機驗收皆正常；v88–v89、v92–v95 亦於 2026-08-08 完成 Bar 畫面／真機確認，且完整自動驗證全數通過。只有 v73 已合併、正式部署並建立 production tag。
 
 ### v74–v95 已折疊的主要能力
 
@@ -64,7 +64,7 @@
 | # | Gate | 狀態 |
 |---|---|---|
 | G1' | v74–v87 累積 delta 的 Bar 真機／PWA 驗收 | ✅ 2026-08-03，Bar 確認真機驗收皆正常 |
-| G1'' | v88–v89、v92–v95 畫面／真機確認 | ⬜ dev 候選版待 Bar 後續檢視 |
+| G1'' | v88–v89、v92–v95 畫面／真機確認 | ✅ 2026-08-08，Bar 確認皆已完成 |
 | G4' | Bar 核准 PR merge `dev → main` | ⬜ 未開始 |
 | G5' | 正式站部署後線上驗證 | ⬜ 未開始 |
 | G6' | 建立 `production-v95`(或屆時版本)tag | ⬜ 未開始 |
@@ -96,6 +96,6 @@
 
 ## 下一棒
 
-→ **請 Bar 檢視 v95「Ledger UI 歷史瀏覽 workflow／state seam」候選版。** v74–v87 真機驗收已確認正常；v88–v89 與 v92–v95 已通過完整自動驗證。後續可依同一模式評估 entry session lifecycle；SW 更新提示雙版本驗收順延至 v96／v97。
+→ **v74–v89、v92–v95 的 Bar 畫面／真機確認已全部完成。** 下一步可評估 Ledger entry session lifecycle，或依排程執行 v96／v97 的 SW 更新提示雙版本驗收；仍須由 Bar 明確核准後才可 merge `dev → main`。
 
 > **不得**自行動 `main`、部署正式站或建立 production tag。未經 Bar 核准不得 merge `dev → main`。
