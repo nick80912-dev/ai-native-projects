@@ -1,4 +1,13 @@
 # 07 版本紀錄
+## 2026-08-08｜Ledger UI 歷史瀏覽 workflow／state seam（SW v95）⭐ 架構變更
+
+- **最小垂直切片**：把帳本軌切換、dashboard／完整紀錄、歷史搜尋／篩選／分組及多選狀態，從分散 direct mutation 收斂到 `ledger-ui-state.js`。entry draft、editing、correction、calendar、calculator、settlement 與 repositories 保留原位，避免大爆炸重構。
+- **深 module interface**：production 與 tests 共用 `createState(seed)`、`transition(state, action)`、`activeHistoryFilterCount(state)` 與 `createWorkflow(adapter)`；transition 以不可變 state + ordered effects 隱藏跨欄位不變量，caller 不再自行記住每條返回／切軌路徑要清哪些欄位。
+- **真實 seam**：production adapter 先 commit `ledgerUiState` 相容物件，再執行 close popover、render、partial filter-panel sync 與 scroll effects；Node recording adapter 透過相同 interface 驗證順序。無效 action fail closed，不 write、不 render。
+- **UI／資料相容**：既有 public handler、inline markup、renderer、文案與手機版面不變；filter panel partial sync 保留搜尋 input DOM 與焦點。狀態仍為 session-only，不進 localStorage、個人備份、Ledger／Shopping schema 或同步 payload；`PERSONAL_STATE_VERSION=9`、`netlify.toml` 不變。
+- **離線與版本**：`index.html` 載入 module，SW SHELL 納入 `ledger-ui-state.js`；SW 只正常升版及增加必要 App Shell asset，install／activate／fetch／skipWaiting／clients.claim 與快取策略未改。SW 更新提示雙版本順延至 v96／v97。
+- **驗證**：完整 70／70 個 Node test files、Playwright 124／124、`check-doc-titles`、`check-app-version`、manifest JSON 與 `git diff --check` 通過；Browser 覆蓋 filter panel DOM／焦點連續性、搜尋／分組／清除、多選／全選、關閉／切軌重設與 320／375／390px 無水平 overflow。
+
 ## 2026-08-08｜Ledger 計算機小數、百分比與即時計算介面（SW v94）
 
 - **參考圖五列四欄介面**：計算 Sheet 改為 `%／AC／退格／÷`、數字與四則運算、`.／0／00／=` 的手機計算機配置；標題列新增 44×44px 明確關閉鈕，底部保留取消與「套用金額」。完整算式與大字結果分層顯示，背景仍不可誤觸關閉。

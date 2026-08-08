@@ -147,8 +147,9 @@
       ids.forEach(function(recordId){if(allSelected)delete map[recordId];else map[recordId]=true;});next.selectedRecordIds=map;
       return result(next,[{type:'render-split'}]);
     case 'toggle-select-all':
-      ids=uniqueStrings(command.ids);if(!ids.length)return unchanged(state);
-      next=createState(state);allSelected=ids.every(function(recordId){return !!next.selectedRecordIds[recordId];});map={};
+      ids=uniqueStrings(command.ids);next=createState(state);map={};
+      if(!ids.length){next.selectedRecordIds=map;return result(next,[{type:'render-split'}]);}
+      allSelected=ids.every(function(recordId){return !!next.selectedRecordIds[recordId];});
       if(!allSelected)ids.forEach(function(recordId){map[recordId]=true;});next.selectedRecordIds=map;
       return result(next,[{type:'render-split'}]);
     case 'toggle-batch-expanded':

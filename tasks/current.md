@@ -9,14 +9,14 @@
 |---|---|
 | **正式版(`main` / 正式站)** | **SW v73**,merge commit `17c423f`,回滾 tag `production-v73` |
 | 正式站 | `https://trippilot-jp.netlify.app/` — 2026-08-01 由 SW v18 升級至 v73,G1–G6 全數通過 |
-| **dev 候選版** | **SW v94**,`app-version.js` 與 `sw.js` 均為 v94 |
+| **dev 候選版** | **SW v95**,`app-version.js` 與 `sw.js` 均為 v95 |
 | 個人備份格式 | **v9**(`PERSONAL_STATE_SUPPORTED_VERSIONS = [1..9]`)—— v81 因想逛 key 識別語意變更而升版 |
-| dev 自動驗證 | **68／68** Node test files、Playwright **123／123**、`check-doc-titles` 與 `check-app-version` 通過 |
+| dev 自動驗證 | **70／70** Node test files、Playwright **124／124**、`check-doc-titles` 與 `check-app-version` 通過 |
 | 既有 tag | `production-v18`、`production-v73` |
 
-**`dev` 領先 `main` 十九個候選版（v74–v89、v92–v94），全部尚未正式發布。** v74–v87 已由 Bar 於 2026-08-03 確認真機驗收皆正常；v88–v89 與 v92–v94 已通過完整自動驗證。只有 v73 已合併、正式部署並建立 production tag。
+**`dev` 領先 `main` 二十個候選版（v74–v89、v92–v95），全部尚未正式發布。** v74–v87 已由 Bar 於 2026-08-03 確認真機驗收皆正常；v88–v89 與 v92–v95 已通過完整自動驗證。只有 v73 已合併、正式部署並建立 production tag。
 
-### v74–v94 已折疊的主要能力
+### v74–v95 已折疊的主要能力
 
 | 版本 | 能力 |
 |---|---|
@@ -39,6 +39,7 @@
 | v92 | **Ledger 共用金額計算器**：單品、多品項與折扣共用安全四則 parser 與底部 sheet；資料 target 套用、即時換算、取消不改值、inert／焦點／scroll 還原 |
 | v93 | **Buy-to-Ledger 架構收斂**：採買轉記帳以純 domain module 與 workflow coordinator 統一路徑；保留既有 UI／資料格式與 Ledger 成功後 link 失敗的防重複降級語意 |
 | v94 | **計算金額更直覺**：五列四欄計算機支援小數、購物式百分比、等號與實體鍵盤；正數小數在提示後無條件捨去套用 |
+| v95 | **Ledger UI state seam**：帳本軌、完整紀錄、篩選／分組與多選共用不可變 transition + ordered effects workflow；UI／資料語意不變 |
 
 > v45–v73 的逐版交付紀錄見 `07_CHANGELOG.md`,不在本檔重述。
 
@@ -58,15 +59,15 @@
 | G5 | Netlify 正式站部署後線上驗證 | ✅ deploy `6a6d6be3`,線上 `sw.js`／`app-version.js` 皆 v73 |
 | G6 | 建立 annotated tag `production-v73` | ✅ tag 物件 `64e8d0b` |
 
-### v74–v94
+### v74–v95
 
 | # | Gate | 狀態 |
 |---|---|---|
 | G1' | v74–v87 累積 delta 的 Bar 真機／PWA 驗收 | ✅ 2026-08-03，Bar 確認真機驗收皆正常 |
-| G1'' | v88–v89、v92–v94 畫面／真機確認 | ⬜ dev 候選版待 Bar 後續檢視 |
+| G1'' | v88–v89、v92–v95 畫面／真機確認 | ⬜ dev 候選版待 Bar 後續檢視 |
 | G4' | Bar 核准 PR merge `dev → main` | ⬜ 未開始 |
 | G5' | 正式站部署後線上驗證 | ⬜ 未開始 |
-| G6' | 建立 `production-v94`(或屆時版本)tag | ⬜ 未開始 |
+| G6' | 建立 `production-v95`(或屆時版本)tag | ⬜ 未開始 |
 
 > G1／G4／G5 為 Bar 專屬職責;AI 不得以自動驗證全綠為由推進。
 > **測試站驗收前置**:`dev-trippilot-jp.netlify.app` 自動部署已於 2026-07-26 關閉。用它驗收前必須先手動部署到目標 commit,並依 `16_OPS_PLAYBOOK.md` §F5 核對線上 `sw.js`／`app-version.js` 版本與 CacheStorage 實際內容,**不得只看 Git 分支**。
@@ -88,12 +89,13 @@
 | v92 | Ledger 共用金額計算器：單品、多品項、折扣、安全 parser、資料 target 與手機操作脈絡 | ✅ 已交付至 dev |
 | v93 | Buy-to-Ledger 垂直切片：characterization、純 domain、workflow coordinator 與正式 runtime seam | ✅ 已交付至 dev |
 | v94 | Ledger 計算機小數、購物式百分比、等號、實體鍵盤與套用時無條件捨去 | ✅ 已交付至 dev |
-| v95／v96 | SW 更新提示 —— **需兩個版本才能完成驗收**：v95 加入監聽與提示，v96 作為真實更新目標。不修改 SW 生命週期與快取策略，只做正常版本遞增 | ⬜ 未開始 |
+| v95 | Ledger UI 歷史瀏覽 workflow／state seam：帳本軌、完整紀錄、filters、selection 與 ordered UI effects | ✅ 已交付至 dev |
+| v96／v97 | SW 更新提示 —— **需兩個版本才能完成驗收**：v96 加入監聽與提示，v97 作為真實更新目標。不修改 SW 生命週期與快取策略，只做正常版本遞增 | ⬜ 未開始 |
 
 **已知未做(需先定判準)**:Today 的「交通／停車／營業／付款／提醒**依當下情境動態調整優先順序**」。v84 只做了可明確驗收的收合(常駐交通／停車／營業,收合付款／提醒);「當下情境」的判準(依時間?依距離?依是否已抵達?)尚未定義,不同讀法會做出完全不同的東西,故未實作。
 
 ## 下一棒
 
-→ **請 Bar 檢視 v94「計算金額更直覺」候選版。** v74–v87 真機驗收已確認正常；v88–v89 與 v92–v94 已通過完整自動驗證。下一個獨立架構切片為 Ledger UI workflow/state；SW 更新提示雙版本驗收順延至 v95／v96。
+→ **請 Bar 檢視 v95「Ledger UI 歷史瀏覽 workflow／state seam」候選版。** v74–v87 真機驗收已確認正常；v88–v89 與 v92–v95 已通過完整自動驗證。後續可依同一模式評估 entry session lifecycle；SW 更新提示雙版本驗收順延至 v96／v97。
 
 > **不得**自行動 `main`、部署正式站或建立 production tag。未經 Bar 核准不得 merge `dev → main`。

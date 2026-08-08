@@ -144,6 +144,8 @@ selection=apply(selection.state,{type:'toggle-select-all',ids:['a','b']});
 assert.deepStrictEqual(plain(selection.state.selectedRecordIds),{a:true,b:true});
 selection=apply(selection.state,{type:'toggle-select-all',ids:['a','b']});
 assert.deepStrictEqual(plain(selection.state.selectedRecordIds),{});
+selection=apply(Object.assign({},selection.state,{selectedRecordIds:{stale:true}}),{type:'toggle-select-all',ids:[]});
+assert.deepStrictEqual(plain(selection.state.selectedRecordIds),{},'an empty visible set clears stale selection instead of retaining hidden IDs');
 selection=apply(selection.state,{type:'toggle-batch-expanded',batchId:'batch-a'});
 assert.deepStrictEqual(plain(selection.state.expandedBatches),{'batch-a':true});
 selection=apply(selection.state,{type:'cancel-selection'});

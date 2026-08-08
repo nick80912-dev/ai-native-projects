@@ -49,3 +49,12 @@
 
 - 依 logical slice 建立本機 commits。
 - 未取得新的 push 指示前不 push；本批不 deploy、不 tag、不修改 main。
+
+## 執行結果
+
+- ✅ Task 1：先取得 module missing 與 production wiring 紅燈。
+- ✅ Task 2：完成 canonical state、不可變 transition、filter projection 與 invalid action fail closed。
+- ✅ Task 3：完成 production workflow adapter、既有 handlers dispatch 接線與 SW App Shell 納入。
+- ✅ Task 4：完成真實 Browser workflow，含 filter panel DOM／焦點連續性、filters、selection、track／history reset 與三種手機寬度。
+- ✅ Task 5：v95 文件與版本同步；70／70 Node、124／124 Playwright、靜態 gates 全綠。
+- ✅ Task 6：建立本機 commits；依規格保留在本機 `dev`，未 push、未 deploy、未 tag、未修改 main。
