@@ -165,7 +165,7 @@
         next=createState(state);next.draft=command.nextDraft;next.editing=null;
         next.track=oneOf(command.nextDraft.track,TRACKS,next.track);next.savePending=false;next.entrySaveRequestId='';
         next.calendarOpen=false;next.calendarYear=0;next.calendarMonth=0;
-        savedEffects.push({type:'render-entry',preservePosition:false},{type:'focus-entry',target:'amount'});
+        savedEffects.push({type:'render-split'},{type:'render-entry',preservePosition:false},{type:'focus-entry',target:'amount'});
       }else{
         var savedContext=cloneContext(state.entryReturnContext);
         next=clearEntrySession(createState(state));

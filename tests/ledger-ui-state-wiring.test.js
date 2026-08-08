@@ -80,6 +80,20 @@ assert.match(closeCalendarSource,/type:'close-entry-calendar'/);
 const correctionSource=extractFunction(html,'openLedgerCorrectionSheet');
 assert.match(correctionSource,/ledgerUiState\.correction\s*=/,'correction remains on the documented compatibility path');
 
+const saveEntrySource=extractFunction(html,'saveLedgerEntry');
+const commitEntrySource=extractFunction(html,'commitLedgerEntrySave');
+const finishEntrySource=extractFunction(html,'finishLedgerEntrySaveUi');
+const failEntrySource=extractFunction(html,'failLedgerEntrySaveUi');
+const correctionSaveSource=extractFunction(html,'saveLedgerCorrection');
+assert.match(saveEntrySource,/type:'entry-save-requested'/,'create/edit save starts through the workflow');
+assert.match(finishEntrySource,/type:'entry-save-succeeded'/,'create/edit success finishes through the workflow');
+assert.match(failEntrySource,/type:'entry-save-failed'/,'create/edit failure finishes through the workflow');
+[saveEntrySource,commitEntrySource,finishEntrySource,failEntrySource].forEach(function(source){
+  assert.doesNotMatch(source,/ledgerUiState\.(?:draft|editing|sheet|savePending)\s*=/,'migrated save paths do not directly mutate owned session boundaries');
+  assert.doesNotMatch(source,/syncLegacyCorrectionSavePending\(/,'migrated save paths do not call the correction-only pending helper');
+});
+assert.match(correctionSaveSource,/syncLegacyCorrectionSavePending\(/,'correction alone retains the explicitly named pending compatibility helper');
+
 assert.doesNotMatch(html,/localStorage\.(?:setItem|getItem)\([^)]*ledgerUiState/,'Ledger UI workflow state remains session-only');
 assert.doesNotMatch(extractFunction(html,'exportPersonalState'),/ledgerUiState/,'personal backups do not include Ledger UI state');
 assert.doesNotMatch(extractFunction(html,'applyPersonalStatePayload'),/ledgerUiState/,'personal restores do not write Ledger UI state');

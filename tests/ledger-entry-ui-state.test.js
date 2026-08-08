@@ -127,6 +127,7 @@ assert.strictEqual(addAnother.state.savePending,false);
 assert.strictEqual(addAnother.state.entrySaveRequestId,'');
 assert.deepStrictEqual(plain(addAnother.effects),[
   {type:'sync-entry-pending'},
+  {type:'render-split'},
   {type:'render-entry',preservePosition:false},
   {type:'focus-entry',target:'amount'},
   {type:'notify-entry-result',notification:{message:'已儲存'}}

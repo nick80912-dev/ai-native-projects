@@ -2,6 +2,7 @@ const assert=require('assert');
 const fs=require('fs');
 const vm=require('vm');
 const TripBuyToLedger=require('../buy-to-ledger.js');
+const TripLedgerUiState=require('../ledger-ui-state.js');
 
 const html=fs.readFileSync('index.html','utf8');
 const DEGRADED_MESSAGE='消費已建立，但採買項目的記帳標記更新失敗。請避免再次記帳，並重新開啟採買清單確認。';
@@ -23,6 +24,7 @@ function plain(value){return JSON.parse(JSON.stringify(value));}
 const workflowSource=[
   extractFunction('createBuyToLedgerRuntimeAdapter'),
   extractFunction('persistLedgerExpenseRecords'),
+  extractFunction('ledgerEntrySaveNotification'),
   extractFunction('finishLedgerEntrySaveUi'),
   extractFunction('failLedgerEntrySaveUi'),
   extractFunction('commitLedgerEntrySave')
@@ -64,7 +66,7 @@ function createHarness(options){
   const cleanDraft={track:'personal',multi:false,amount:'',sourceShoppingItemId:'',sourceShoppingAllocationId:''};
   const sandbox={
     SHOPPING_LEDGER_LINK_VERSION:1,
-    ledgerUiState:{track:'personal',draft:null},
+    ledgerUiState:TripLedgerUiState.createState(),
     normalizePersonalLedgerRecord(record){return Object.assign({},record);},
     validateLedgerRecord(){return true;},
     validateProxyDraft(flag,target){return flag?target:'';},
@@ -94,15 +96,12 @@ function createHarness(options){
         return plannedLinks.length;
       }
     },
-    setLedgerSavePending(pending){events.push(pending?'pending:on':'pending:off');},
     persistLedgerEditedRecords(records){
       events.push('persist:edit');
       editPersistCount++;
       return Promise.resolve({ok:true,personal:true,edited:true,records:records});
     },
     renderSplit(){events.push('render');renderCount++;},
-    renderLedgerEntrySheet(){events.push('render:sheet');},
-    closeLedgerEntrySheet(){events.push('finish:close');closeCount++;},
     resetLedgerDraftAfterSave(){events.push('finish:reset');resetCount++;return Object.assign({},cleanDraft);},
     undoPersonalLedgerSave(){return true;},
     formatLedgerPrimaryTotal(){return '¥100';},
@@ -116,6 +115,25 @@ function createHarness(options){
   sandbox.buyToLedgerDomain=TripBuyToLedger.createDomain({effectiveRecords(records){return records;}});
   vm.createContext(sandbox);
   vm.runInContext(workflowSource,sandbox);
+  sandbox.ledgerUiWorkflow=TripLedgerUiState.createWorkflow({
+    readState(){return sandbox.ledgerUiState;},
+    writeState(next){sandbox.ledgerUiState=next;},
+    syncEntryPending(state){events.push(state.savePending?'pending:on':'pending:off');},
+    unmountEntry(){events.push('finish:close');closeCount++;},
+    renderSplit(){events.push('render');renderCount++;},
+    renderEntry(){events.push('render:sheet');},
+    focusEntry(){},restoreEntryContext(){},
+    notifyEntryResult(notification){if(notification&&notification.message){events.push('notify');messages.push(notification.message);}}
+  });
+  const rawCommit=sandbox.commitLedgerEntrySave;
+  let requestSequence=0;
+  sandbox.commitLedgerEntrySave=function(draft,editing,records,addAnother,possibleDuplicate,submissionDraft){
+    requestSequence++;
+    const sessionId='characterization-session-'+requestSequence,requestId='characterization-request-'+requestSequence;
+    sandbox.ledgerUiState=TripLedgerUiState.createState({sheet:'entry',track:draft.track,draft:draft,editing:editing,entrySessionId:sessionId});
+    sandbox.ledgerUiWorkflow.dispatch({type:'entry-save-requested',sessionId:sessionId,requestId:requestId});
+    return rawCommit(draft,editing,records,addAnother,possibleDuplicate,submissionDraft,{sessionId:sessionId,requestId:requestId});
+  };
   sandbox.buyToLedgerRuntimeAdapter=sandbox.createBuyToLedgerRuntimeAdapter({
     finishLedger(command,outcome){events.push('finish:adapter');return sandbox.finishLedgerEntrySaveUi(command,outcome&&outcome.result);},
     failLedger(command,error){events.push('fail:adapter');return sandbox.failLedgerEntrySaveUi(command,error);}

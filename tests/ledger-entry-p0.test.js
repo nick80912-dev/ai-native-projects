@@ -207,15 +207,20 @@ assert.match(entryRenderSource,/ledger-multi-total[\s\S]*id="ledgerBillPreview"/
 assert.strictEqual(TripLedgerUiState.createState().savePending,false,'canonical Ledger UI state owns one transient save-in-flight guard');
 const saveEntrySource=extractFunction('saveLedgerEntry');
 assert.match(saveEntrySource,/if\(ledgerUiState\.savePending\)return Promise\.resolve\(\{ok:false,pending:true\}\)/,'repeat taps and keyboard Done events are ignored while a save is pending');
-assert.match(saveEntrySource,/setLedgerSavePending\(true\)/,'the save guard is raised before any asynchronous confirmation or persistence');
-const pendingSource=extractFunction('setLedgerSavePending');
+assert.match(saveEntrySource,/type:'entry-validation-failed'/,'invalid create/edit drafts return through the state workflow');
+assert.match(saveEntrySource,/type:'entry-save-requested'/,'the save guard is raised through the state workflow before confirmation or persistence');
+assert.doesNotMatch(saveEntrySource,/syncLegacyCorrectionSavePending\(/,'create/edit save never mutates pending state through the correction compatibility helper');
+const pendingSource=extractFunction('syncLedgerSavePendingButtons');
 assert.match(pendingSource,/button-spinner/,'pending save buttons expose the existing spinner');
 assert.match(pendingSource,/button\.disabled=ledgerUiState\.savePending/,'both save buttons follow the same disabled state');
 const commitSource=extractFunction('commitLedgerEntrySave');
 const finishSaveSource=extractFunction('finishLedgerEntrySaveUi');
 const failSaveSource=extractFunction('failLedgerEntrySaveUi');
-assert.match(finishSaveSource,/setLedgerSavePending\(false\)/,'successful saves release the transient guard in the UI adapter boundary');
-assert.match(failSaveSource,/setLedgerSavePending\(false\)/,'failed saves release the transient guard in the UI adapter boundary');
+assert.match(finishSaveSource,/type:'entry-save-succeeded'/,'successful saves release the transient guard through a semantic result action');
+assert.match(failSaveSource,/type:'entry-save-failed'/,'failed saves release the transient guard through a semantic result action');
+assert.doesNotMatch(commitSource,/syncLegacyCorrectionSavePending\(/,'commit receives an accepted request instead of mutating UI state');
+assert.doesNotMatch(finishSaveSource,/syncLegacyCorrectionSavePending\(/,'successful create/edit saves do not use the correction compatibility helper');
+assert.doesNotMatch(failSaveSource,/syncLegacyCorrectionSavePending\(/,'failed create/edit saves do not use the correction compatibility helper');
 assert.match(commitSource,/finishLedgerEntrySaveUi\(command,result\)/,'generic Ledger success delegates to the shared UI finish boundary');
 assert.match(commitSource,/failLedgerEntrySaveUi\(command,error\)/,'generic Ledger failure delegates to the shared UI failure boundary');
 
