@@ -1,6 +1,7 @@
 const assert=require('assert');
 const fs=require('fs');
 const vm=require('vm');
+const TripBuyToLedger=require('../buy-to-ledger.js');
 
 const html=fs.readFileSync('index.html','utf8');
 const DEGRADED_MESSAGE='消費已建立，但採買項目的記帳標記更新失敗。請避免再次記帳，並重新開啟採買清單確認。';
@@ -115,6 +116,7 @@ function createHarness(options){
     navigator:{onLine:true},
     Object,Array,String,Boolean,Number,RegExp,Date,Math,Promise,JSON,isFinite
   };
+  sandbox.buyToLedgerDomain=TripBuyToLedger.createDomain({effectiveRecords(records){return records;}});
   vm.createContext(sandbox);
   vm.runInContext(workflowSource,sandbox);
   sandbox.buyToLedgerRuntimeAdapter=sandbox.createBuyToLedgerRuntimeAdapter({

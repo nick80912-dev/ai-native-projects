@@ -1,6 +1,7 @@
 const assert=require('assert');
 const fs=require('fs');
 const vm=require('vm');
+const TripBuyToLedger=require('../buy-to-ledger.js');
 
 const html=fs.readFileSync('index.html','utf8');
 
@@ -216,6 +217,7 @@ const saveMessages=[],preparedIds=[],submittedIds=[],duplicateLookupIds=[];
 let buildCalls=0,enqueueCalls=0,closeCalls=0,renderCalls=0,confirmationResolve=null;
 const preparedSharedRecord={id:'1784512809000-new1',member:'Bar',category:'餐飲',detail:'Dinner',inputCurrency:'JPY',amountJpy:500,amountTwd:110,batchId:''};
 const saveSandbox={
+  buyToLedgerDomain:TripBuyToLedger.createDomain({effectiveRecords(records){return records;}}),
   ledgerUiState:{track:'personal',draft:{track:'shared',currency:'JPY',multi:false},editing:null},
   isTimeSimulationActive(){return false;},memberIsAllowed(){return true;},getCurrentMember(){return 'Bar';},openMemberSelector(){throw new Error('shared member is available');},
   validateLedgerEntryDraft(){return {valid:true,errors:{}};},

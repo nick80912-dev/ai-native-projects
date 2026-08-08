@@ -5,6 +5,7 @@ const assert=require('assert');
 const {appVersion,swVersion}=require('./support/version');
 const fs=require('fs');
 const vm=require('vm');
+const TripBuyToLedger=require('../buy-to-ledger.js');
 
 function createStorage(){
   const values={};
@@ -29,6 +30,7 @@ function loadModule(){
     console:{log(){},warn(){},error(){}},localStorage:createStorage(),
     Date,Math,Promise,JSON,String,Number,Boolean,isFinite,setTimeout,clearTimeout,
     timestampDate(value){return new Date(Number(value));},
+    TripBuyToLedger,
     canonicalMemberName(value){return String(value==null?'':value).replace(/　/g,' ').replace(/\s+/g,' ').trim();},
     AppLog:{repo(){},sync(){},data(){}},
     fetch(){return Promise.reject(new Error('network disabled'));},
@@ -542,7 +544,7 @@ assert(!/parseInt|parseFloat|Number\(form\.(purchasedQty|remainderQty)/.test(sho
 assert(shoppingSource.includes('shoppingListStore.split('),'拆分走 store 的原子操作');
 /* 交握與回寫 */
 const handoff=html.slice(html.indexOf('function shoppingLinkSourceRefs('),html.indexOf('function commitLedgerEntrySave('));
-assert(handoff.includes('submissionDraft.items'),'多品項以送出用 items 對應,不用 UI index');
+assert(handoff.includes('buyToLedgerDomain.sourceRefs(submissionDraft)'),'多品項來源改由 domain 依送出用 draft 對應,不用 UI index');
 assert(handoff.includes('buyToLedgerRuntimeAdapter.applyLinks(plan.links)'),'回寫透過 runtime seam 走單次原子 store write');
 assert(/消費已建立，但採買項目的記帳標記更新失敗。請避免再次記帳，並重新開啟採買清單確認。/.test(handoff),'回寫失敗顯示核准降級文案');
 assert(!/persistLedger|ledgerRepository\.(add|enqueueBatch)/.test(handoff),'回寫失敗不得自動再建立一次消費');

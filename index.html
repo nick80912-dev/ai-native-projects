@@ -669,6 +669,7 @@ input:not([type="hidden"]),select,textarea{font-size:16px!important}
 </style>
 <script src="app-version.js"></script>
 <script src="shopping-photo-store.js"></script>
+<script src="buy-to-ledger.js"></script>
 <script>
 /* ---- APP_VERSION SAFE ACCESS (C2) ----
    app-version.js 是獨立外部 script,離線快取未命中或部署缺檔時**會**載不到,
@@ -4665,6 +4666,9 @@ var ledgerIdSeen={};
    舊 link 永遠只是歷史、不會復活。用陣列而非單一物件,是因為「解除後再記一次」需要保留
    原本解除過哪一筆的稽核線索;單一物件會被第二次記帳覆蓋掉。
    已記帳／待確認／未記帳一律動態推導,不落地任何 status 字串。 */
+var buyToLedgerDomain=TripBuyToLedger.createDomain({
+  effectiveRecords:function(records){return effectiveLedgerRecords(records,function(){});}
+});
 var SHOPPING_LEDGER_LINK_VERSION=1;
 function shoppingTimestampField(value,label,required){
   var text=String(value==null?'':value).trim();
@@ -4676,20 +4680,7 @@ function shoppingTimestampField(value,label,required){
   return text;
 }
 function normalizeShoppingLedgerLink(source){
-  var link=source&&typeof source==='object'?source:{};
-  var track=String(link.track||'').trim();
-  if(track!=='personal'&&track!=='shared')throw new Error('記帳關聯軌別錯誤');
-  var recordId=String(link.recordId==null?'':link.recordId).trim();
-  if(!recordId)throw new Error('記帳關聯缺少紀錄 ID');
-  return {
-    version:SHOPPING_LEDGER_LINK_VERSION,
-    track:track,
-    testMode:link.testMode===true,
-    recordId:recordId,
-    batchId:String(link.batchId==null?'':link.batchId).trim(),
-    linkedAt:shoppingTimestampField(link.linkedAt,'記帳關聯建立',true),
-    releasedAt:shoppingTimestampField(link.releasedAt,'記帳關聯解除',false)
-  };
+  return buyToLedgerDomain.normalizeLink(source);
 }
 function activeShoppingLedgerLink(item){
   var links=item&&Array.isArray(item.ledgerLinks)?item.ledgerLinks:[];
@@ -4699,63 +4690,19 @@ function activeShoppingLedgerLink(item){
 /* 解除只更新最後一個 active link 的 releasedAt —— 不刪 link、不清 recordId／batchId／linkedAt。
    沒有 active link 或已解除時回 null,呼叫端據此不提供入口、也不重複寫入。 */
 function releaseShoppingLedgerLinks(links,at){
-  var list=Array.isArray(links)?links:[];
-  if(!activeShoppingLedgerLink({ledgerLinks:list}))return null;
-  var stamp=shoppingTimestampField(at,'記帳關聯解除',true);
-  return list.map(function(link,index){
-    if(index!==list.length-1)return normalizeShoppingLedgerLink(link);
-    var next={};Object.keys(link).forEach(function(key){next[key]=link[key];});
-    next.releasedAt=stamp;return normalizeShoppingLedgerLink(next);
-  });
+  return buyToLedgerDomain.releaseLink(links,at);
 }
 function appendShoppingLedgerLink(links,link){
-  return (Array.isArray(links)?links:[]).map(normalizeShoppingLedgerLink).concat([normalizeShoppingLedgerLink(link)]);
+  return buyToLedgerDomain.appendLink(links,link);
 }
 /* ---- 三態動態推導 ----
    context = {testMode, personal:{ready,records}, shared:{ready,records}}
    shared.records 必須是 mergedLedgerRecords()(雲端＋queue＋bridge),不是畫面過濾後的清單 ——
    自 SW v58 起 ledgerTrackRecords() 有「與我相關」過濾,拿它推導會把可見性差異誤判成紀錄消失。
    有效性一律沿用既有的 effectiveLedgerRecords／tombstone／replacement 語意,不另造簡化版。 */
-function shoppingLedgerReplacementFor(records,effective,recordId){
-  var direct=effective.filter(function(record){return String(record&&record.replacesRecordId||'')===recordId;})[0];
-  if(direct)return direct;
-  /* 團體批次編輯只把 replacesRecordId 指向該批根紀錄,批內其他 record 靠 batchId 追。 */
-  var raw=records.filter(function(record){return String(record&&record.id||'')===recordId;})[0];
-  var batchId=String(raw&&raw.batchId||'').trim();
-  if(!batchId)return null;
-  var siblings={};
-  records.forEach(function(record){if(record&&String(record.batchId||'').trim()===batchId&&record.id)siblings[record.id]=true;});
-  return effective.filter(function(record){var ref=String(record&&record.replacesRecordId||'');return ref&&siblings[ref];})[0]||null;
-}
 function resolveShoppingLedgerLinkState(item,context){
-  var ctx=context||{};
-  var link=activeShoppingLedgerLink(item);
-  if(!link){
-    var links=item&&Array.isArray(item.ledgerLinks)?item.ledgerLinks:[];
-    return {state:'unlinked',reason:links.length?'released':'no-link',activeLink:null,record:null};
-  }
-  if(!!link.testMode!==!!ctx.testMode)return {state:'unverified',reason:'universe-mismatch',activeLink:link,record:null};
-  var scope=link.track==='personal'?ctx.personal:ctx.shared;
-  if(!scope)return {state:'unverified',reason:'no-context',activeLink:link,record:null};
-  var records=Array.isArray(scope.records)?scope.records:[];
-  var raw=records.filter(function(record){return String(record&&record.id||'')===link.recordId;})[0]||null;
-  if(link.track==='personal'){
-    /* 個人帳是本機同步資料:讀得到就是權威,讀取失敗(ready:false)才可能只是暫時看不到。
-       個人編輯走 replaceSelection 且沿用原 record.id,因此 id 通常不會改變。 */
-    if(raw)return {state:'linked',reason:'record-found',activeLink:link,record:raw};
-    var personalReplacement=records.filter(function(record){return String(record&&record.replacesRecordId||'')===link.recordId;})[0];
-    if(personalReplacement)return {state:'linked',reason:'replaced',activeLink:link,record:personalReplacement};
-    if(!scope.ready)return {state:'unverified',reason:'not-ready',activeLink:link,record:null};
-    return {state:'unlinked',reason:'personal-record-missing',activeLink:link,record:null};
-  }
-  var effective=effectiveLedgerRecords(records,function(){});
-  var live=effective.filter(function(record){return String(record&&record.id||'')===link.recordId;})[0];
-  if(live)return {state:'linked',reason:'record-found',activeLink:link,record:live};
-  var replacement=shoppingLedgerReplacementFor(records,effective,link.recordId);
-  if(replacement)return {state:'linked',reason:'replaced',activeLink:link,record:replacement};
-  /* 只有「原紀錄還在事件流裡、但已被有效墓碑刪除」才算確定失效;單純找不到一律待確認。 */
-  if(raw)return {state:'unlinked',reason:'tombstoned',activeLink:link,record:null};
-  return {state:'unverified',reason:scope.ready?'record-missing':'not-ready',activeLink:link,record:null};
+  var inspection=buyToLedgerDomain.inspectItem({allocations:[item]},context);
+  return inspection.allocationStates[0]||{state:inspection.state,reason:'no-link',activeLink:null,record:null};
 }
 /* ---- 多品項 source → record 一一對應 ----
    對應依「送出用 draft items 的順序」,不是可能被過濾或重排的 UI index:
@@ -4781,57 +4728,21 @@ function buildShoppingLedgerLinkPlan(shoppingItemIds,records,context){
   return {ok:true,links:links,error:''};
 }
 function planShoppingLedgerLinks(sourceRefs,records,submissionDraft,now){
-  var ctx=submissionDraft||{},sources=(sourceRefs||[]).map(function(source){
-    return {
-      shoppingItemId:String(source&&source.shoppingItemId||'').trim(),
-      allocationId:String(source&&source.allocationId||'').trim()
-    };
+  var ctx=submissionDraft||{};
+  return buyToLedgerDomain.planCommit({
+    draft:{track:ctx.track,batchId:ctx.batchId},
+    submissionDraft:{multi:true,items:(sourceRefs||[]).map(function(source){return {
+      sourceShoppingItemId:source&&source.shoppingItemId,
+      sourceShoppingAllocationId:source&&source.allocationId
+    };})},
+    records:records||[],testMode:ctx.testMode===true,nowIso:now
   });
-  var list=records||[],seen={},invalid=false;
-  sources.forEach(function(source){
-    var key=source.shoppingItemId+'\n'+source.allocationId;
-    if(!source.shoppingItemId||!source.allocationId||seen[key])invalid=true;
-    seen[key]=true;
-  });
-  if(!sources.length||!list.length)return {ok:false,links:[],error:'沒有可對應的採買來源'};
-  if(invalid||sources.length!==list.length)return {ok:false,links:[],error:'採買來源與消費紀錄無法一一對應'};
-  var linkedAt=shoppingTimestampField(now,'記帳關聯',true),links;
-  try{
-    links=sources.map(function(source,index){
-      var record=list[index]||{};
-      return {
-        shoppingItemId:source.shoppingItemId,
-        allocationId:source.allocationId,
-        link:normalizeShoppingLedgerLink({
-          track:ctx.track,
-          testMode:ctx.testMode===true,
-          recordId:record.id,
-          batchId:record.batchId||ctx.batchId||'',
-          linkedAt:linkedAt
-        })
-      };
-    });
-  }catch(error){return {ok:false,links:[],error:error.message||'記帳關聯格式錯誤'};}
-  return {ok:true,links:links,error:''};
 }
 function shoppingLedgerSources(items,context){
-  var sources=[],linked=0,unverified=0;
-  (items||[]).forEach(function(item){
-    shoppingItemAllocations(item).forEach(function(allocation){
-      var state=resolveShoppingLedgerLinkState(allocation,context).state;
-      if(state==='linked'){linked++;return;}
-      if(state==='unverified'){unverified++;return;}
-      sources.push({
-        shoppingItemId:item.id,
-        allocationId:allocation.allocationId,
-        item:item,
-        allocation:allocation
-      });
-    });
-  });
-  sources.linkedCount=linked;
-  sources.unverifiedCount=unverified;
-  sources.total=sources.length+linked+unverified;
+  var prepared=buyToLedgerDomain.prepare(items,context),sources=prepared.sources;
+  sources.linkedCount=prepared.linkedCount;
+  sources.unverifiedCount=prepared.unverifiedCount;
+  sources.total=prepared.total;
   return sources;
 }
 /* 已買頁多選 preflight:整批全 unlinked 才放行,不得自動略過或縮小使用者的選取範圍。 */
@@ -4850,17 +4761,8 @@ function shoppingBatchLedgerPreflight(items,context){
 }
 /* 拆分前置檢查:已記帳或狀態待確認都不得拆分 —— 拆完後那筆 link 該歸哪一半無法界定。 */
 function canSplitShoppingItem(item,context){
-  if(!item)return {ok:false,error:'找不到採買項目'};
-  if(item.done===true)return {ok:false,error:'已買項目請先移回待買，再進行部分購買'};
-  var allocationStates=shoppingItemAllocations(item).map(function(allocation){
-    return resolveShoppingLedgerLinkState(allocation,context).state;
-  });
-  var state=allocationStates.indexOf('unverified')>=0?'unverified':
-    allocationStates.indexOf('linked')>=0?'linked':
-    resolveShoppingLedgerLinkState(item,context).state;
-  if(state==='linked')return {ok:false,error:'這筆已建立消費紀錄，無法再拆分'};
-  if(state==='unverified')return {ok:false,error:'記帳狀態尚待確認，請先完成同步再拆分'};
-  return {ok:true,error:''};
+  var inspection=buyToLedgerDomain.inspectItem(item,context);
+  return {ok:inspection.canSplit,error:inspection.splitError};
 }
 function shoppingAllocationSplitPlan(item,purchasedByAllocationId,context){
   var allocations=shoppingItemAllocations(item),input=purchasedByAllocationId||{};
@@ -5176,13 +5078,8 @@ function nextShoppingPageSelection(items,selected){
   return next;
 }
 function canOfferShoppingPartialPurchase(item,linkSummary){
-  if(!item||item.done||!linkSummary||linkSummary.state!=='unlinked')return false;
-  var allocations=shoppingItemAllocations(item);
-  if(!allocations.length||!allocations.every(function(allocation){
-    return isSafeShoppingQuantity(allocation.quantity);
-  }))return false;
-  var total=shoppingAllocationTotal(allocations);
-  return total!==null&&total>1;
+  if(!item||!linkSummary||linkSummary.state!=='unlinked')return false;
+  return buyToLedgerDomain.inspectItem(item,{}).canOfferPartialPurchase;
 }
 function shoppingItemTargetSummary(item){
   var targets=shoppingTargetAllocations(item).map(function(allocation){return allocation.target;});
@@ -5221,34 +5118,10 @@ function shoppingItemQuantitySummary(item){
   return '共 '+amount(total)+' · '+targetCount+' 位';
 }
 function shoppingItemLinkSummary(item,context){
-  var allocationStates=shoppingItemAllocations(item).map(function(allocation){
-    var resolved=resolveShoppingLedgerLinkState(allocation,context);
-    return {
-      allocationId:allocation.allocationId,
-      target:allocation.target,
-      state:resolved.state,
-      reason:resolved.reason,
-      activeLink:resolved.activeLink,
-      record:resolved.record
-    };
-  });
-  var total=allocationStates.length;
-  var linked=allocationStates.filter(function(value){return value.state==='linked';}).length;
-  var unverified=allocationStates.filter(function(value){return value.state==='unverified';}).length;
-  if(unverified)return {state:'unverified',label:'狀態待確認',linked:linked,total:total,allocationStates:allocationStates};
-  if(total&&linked===total)return {state:'linked',label:'已記帳',linked:linked,total:total,allocationStates:allocationStates};
-  if(linked)return {state:'partial',label:'記帳 '+linked+'／'+total,linked:linked,total:total,allocationStates:allocationStates};
-  return {state:'unlinked',label:'未記帳',linked:0,total:total,allocationStates:allocationStates};
+  return buyToLedgerDomain.inspectItem(item,context);
 }
 function shoppingAllocationEditPolicy(item,context){
-  return {allocations:shoppingItemLinkSummary(item,context).allocationStates.map(function(value){
-    var locked=value.state==='linked'||value.state==='unverified';
-    return {
-      allocationId:value.allocationId,
-      canEdit:!locked,
-      reason:value.state==='linked'?'已記帳':value.state==='unverified'?'狀態待確認':''
-    };
-  })};
+  return buyToLedgerDomain.inspectItem(item,context).editPolicy;
 }
 function shoppingDeleteWarning(items,context){
   var linked=0,unverified=0;
@@ -5866,21 +5739,9 @@ function shoppingLedgerNote(item){
   return parts.join(' · ');
 }
 function shoppingLedgerPrefillForAllocation(item,allocation){
-  var target=String(allocation&&allocation.target||'').trim();
-  var amount=shoppingQuantityLabel({
-    quantity:allocation&&allocation.quantity,
-    unit:item&&item.unit,
-    legacyQtyText:item&&item.legacyQtyText
-  });
-  return {
-    detail:String(item&&item.name||'').trim(),
-    name:String(item&&item.name||'').trim(),
-    amount:'',
-    category:'購物',
-    note:amount?'數量：'+amount:'',
-    isProxy:!!target,
-    proxyTarget:target
-  };
+  return buyToLedgerDomain.createDraftPlan([{
+    shoppingItemId:item&&item.id,allocationId:allocation&&allocation.allocationId,item:item,allocation:allocation
+  }]).seed;
 }
 function shoppingLedgerSinglePrefill(item,allocation){
   var selected=allocation||shoppingItemAllocations(item)[0];
@@ -5897,9 +5758,12 @@ function shoppingLedgerMultiPrefill(sources){
     else expanded.push({item:source,allocation:null});
   });
   return expanded.map(function(source){
-    var single=shoppingLedgerSinglePrefill(source.item,source.allocation);
-    var result={name:single.detail,amount:'',category:single.category,isProxy:single.isProxy,proxyTarget:single.proxyTarget};
-    if(source.allocation)result.note=single.note;
+    var plan=buyToLedgerDomain.createDraftPlan([{
+      shoppingItemId:source.shoppingItemId||source.item&&source.item.id,
+      allocationId:source.allocationId||source.allocation&&source.allocation.allocationId,
+      item:source.item,allocation:source.allocation
+    }]),item=plan.seed,result={name:item.detail,amount:item.amount,category:item.category,isProxy:item.isProxy,proxyTarget:item.proxyTarget};
+    if(source.allocation)result.note=item.note;
     return result;
   });
 }
@@ -9805,28 +9669,15 @@ function focusLedgerValidationError(validation){
    回寫是單次原子 store write:全部成功或全部不動 —— 一半標成已記帳正是重複入帳的溫床。
    Ledger 已存的事實不回滾,失敗只降級提示,絕不自動再建立一次消費。 */
 function shoppingLinkSourceRefs(submissionDraft){
-  if(!submissionDraft)return [];
-  /* 多品項以「送出用 items」為準:使用者在表單裡刪掉的列不會產生 record,也不該被標成已記帳。
-     若使用者另外新增了不屬於採買清單的品項,該列沒有完整 composite source,
-     交握即視為不一致而整批不回寫。 */
-  if(submissionDraft.multi)return (submissionDraft.items||[]).map(function(item){
-    return {
-      shoppingItemId:String(item&&item.sourceShoppingItemId||''),
-      allocationId:String(item&&item.sourceShoppingAllocationId||'')
-    };
-  });
-  var itemId=String(submissionDraft.sourceShoppingItemId||''),allocationId=String(submissionDraft.sourceShoppingAllocationId||'');
-  return itemId||allocationId?[{shoppingItemId:itemId,allocationId:allocationId}]:[];
+  return buyToLedgerDomain.sourceRefs(submissionDraft);
 }
 function writeShoppingLedgerLinks(draft,submissionDraft,records,result){
   var sourceRefs=shoppingLinkSourceRefs(submissionDraft);
   if(!sourceRefs.length)return;
-  var saved=(result&&Array.isArray(result.records)&&result.records.length?result.records:records)||[];
-  var plan=planShoppingLedgerLinks(sourceRefs,saved,{
-    track:draft.track,
-    testMode:draft.track==='shared'&&ledgerUniverseMode()==='test',
-    batchId:saved[0]&&saved[0].batchId
-  },buyToLedgerRuntimeAdapter.nowIso());
+  var plan=buyToLedgerDomain.planCommit({
+    draft:draft,submissionDraft:submissionDraft,records:records,result:result,
+    testMode:draft.track==='shared'&&ledgerUniverseMode()==='test',nowIso:buyToLedgerRuntimeAdapter.nowIso()
+  }),saved=plan.records||[];
   if(!plan.ok){
     buyToLedgerRuntimeAdapter.log('採買記帳關聯交握失敗：'+plan.error+'（來源 '+sourceRefs.length+' 筆、紀錄 '+saved.length+' 筆）');
     buyToLedgerRuntimeAdapter.notify('消費已建立，但採買項目的記帳標記更新失敗。請避免再次記帳，並重新開啟採買清單確認。');

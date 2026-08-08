@@ -15,6 +15,7 @@
 const assert = require('assert');
 const fs = require('fs');
 const vm = require('vm');
+const TripBuyToLedger = require('../buy-to-ledger.js');
 
 const html = fs.readFileSync('index.html', 'utf8');
 
@@ -94,6 +95,7 @@ function createSandbox() {
   const sandbox = {
     console, JSON, Date, Math, Promise, String, Number, Boolean, Array, Object, RegExp, Error,
     isFinite, parseInt, parseFloat, setTimeout, clearTimeout,
+    buyToLedgerDomain: TripBuyToLedger.createDomain({effectiveRecords(records){return records;}}),
     localStorage: storage,
     navigator: { clipboard: { writeText() { return Promise.resolve(); } } },
     document: { getElementById(id) { return id === 'personalStateBox' ? box : null; } },
