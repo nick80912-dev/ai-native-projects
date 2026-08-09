@@ -19,10 +19,10 @@ assert(detailStart>=0&&detailEnd>detailStart,'detail-row renderer exists');
 const recent=html.slice(recentStart,recentEnd),detail=html.slice(detailStart,detailEnd);
 
 assert(recent.includes('record.storeName'),'recent rows show store name when it exists');
-assert(recent.includes("renderProxyTargetMarkup(proxyTargetModel,'ledger-proxy-target-summary')"),'personal proxy records use the shared target renderer');
-assert(recent.includes('class="ledger-item-title-row"'),'the proxy target sits in the same title row as the item name');
+assert(recent.includes("renderProxyTargetMarkup(proxyTargetModel,'ledger-proxy-target-summary ledger-recent-context')"),'personal proxy records use the shared target renderer inside the compact context seam');
+assert(recent.includes('ledger-recent-primary-line'),'the proxy target sits in the strict first row with item and payment');
 assert(!recent.includes("badges.push('<span class=\"ledger-recent-badge\">代購 "),'the old lower proxy badge is removed');
-assert(/\.ledger-item-title-row\{[^}]*display:flex[^}]*flex-wrap:wrap[^}]*min-width:0/.test(html),'long item and target names can wrap inside the ledger left column');
+assert(/\.ledger-recent-line\{[^}]*white-space:nowrap[^}]*overflow:hidden/.test(html),'long recent-card content truncates instead of creating a third visual line');
 assert(recent.includes('ledger-record-menu-button'),'each recent row has a separate ellipsis action button');
 assert(recent.includes("ledgerUiState.selectionMode?'':'<button class=\"ledger-record-menu-button\""),'selection mode still omits the ellipsis DOM instead of hiding it visually');
 assert(recent.includes('openLedgerRecordActions'),'ellipsis opens the record action menu');
