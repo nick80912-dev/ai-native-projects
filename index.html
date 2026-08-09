@@ -566,6 +566,7 @@ input,select,textarea{font-size:16px}
 .diag-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}.diag-head h2{font-size:17px}.diag-close{border:0;background:none;font-size:24px;color:var(--ink-soft)}
 .diag-section{border-top:1px solid var(--line);padding:12px 0}.diag-section h3{font-size:13px;margin-bottom:6px}.diag-row{font-size:12px;color:var(--ink-soft);margin:3px 0}.diag-actions{display:flex;gap:8px;flex-wrap:wrap}.diag-actions button{min-height:40px;padding:7px 10px;border:1px solid var(--line);border-radius:8px;background:#fff;font:inherit;font-size:12px}.diag-actions .primary{background:var(--sea);color:#fff;border-color:var(--sea)}
 .diag-help{font-size:11px;color:var(--ink-faint);margin:4px 0 8px}.diag-shortcuts{display:flex;gap:5px;flex-wrap:wrap;margin:8px 0}
+.diag-log{max-height:180px;overflow:auto;white-space:pre-wrap;overflow-wrap:anywhere;font-family:ui-monospace,SFMono-Regular,Consolas,monospace}
 .diag-panel button[onclick^="endTimeSimulation"]{min-height:44px;font-size:15px;width:100%;margin-top:6px}.diag-panel button[onclick="resetTripProgress()"]{min-height:44px;font-size:15px;width:100%;margin-top:6px;border:1px solid var(--coral);border-radius:10px;background:var(--coral);color:#fff;font-weight:800}
 .diag-panel input{font-size:16px}
 .travel-note-kind,.travel-note-filters{display:flex;gap:6px;flex-wrap:wrap;margin:7px 0}.travel-note-kind button,.travel-note-filters button{min-height:36px;border:1px solid var(--line);border-radius:999px;background:#fff;color:var(--ink-soft);padding:6px 11px;font:inherit;font-size:12px;font-weight:800}.travel-note-kind button.on,.travel-note-filters button.on{background:var(--sea);border-color:var(--sea);color:#fff}.travel-note-editor{width:100%;min-height:92px;border:1px solid var(--line);border-radius:9px;background:#fff;padding:9px 10px;font:inherit;font-size:16px;resize:vertical}.travel-note-list{display:grid;gap:8px;margin-top:10px}.travel-note-card{border:1px solid var(--line);border-radius:9px;background:#fff;padding:10px}.travel-note-card-head{display:flex;align-items:center;justify-content:space-between;gap:8px}.travel-note-card-head strong{font-size:12px;color:var(--sea-deep)}.travel-note-status{font-size:10px;font-weight:900;color:var(--ink-faint)}.travel-note-card p{margin:6px 0;color:var(--ink);font-size:13px;line-height:1.5;white-space:pre-wrap;overflow-wrap:anywhere}.travel-note-meta{color:var(--ink-faint);font-size:10px;line-height:1.45}.travel-note-card .diag-actions{margin-top:7px}.travel-note-empty{padding:12px 0;color:var(--ink-faint);font-size:12px;text-align:center}
@@ -10723,9 +10724,7 @@ function endTimeSimulation(restore){
   localStorage.removeItem('trip_time_simulation'); localStorage.removeItem('trip_time_simulation_snapshot'); updateSimulationMarker(); renderAll(); closeDiagnostics(); toast(restore?'已回復模擬前狀態':'已回復手機時間');
 }
 function closeDiagnostics(){ var el=document.getElementById('diagnosticOverlay'); if(el) el.remove(); }
-/* 測試模式關閉時,診斷面板是唯一的啟用入口(設計規格 §2.4)。
-   刻意不在此直接呼叫 setLedgerTestMode() —— 它會 renderSplit() 並可能開啟身分選擇器,
-   不該從診斷面板 overlay 內觸發;一律改走 Settings router 進入控制頁。 */
+/* 保留既有測試模式控制頁 helper 與 Settings router；診斷面板不再顯示此入口。 */
 function openTestModeSettings(){ closeDiagnostics(); openSettings('test-mode'); }
 /* 真機驗收用:回報「這台裝置實際啟用的外殼版本」,不是伺服器上有什麼。
    sw.js 的 activate 會刪掉所有非當前 CACHE_NAME 的快取,所以 Cache Storage 裡
@@ -10746,9 +10745,38 @@ function fillDiagnosticShellVersion(){
     if(node)node.textContent=version||'無法讀取（瀏覽器未提供 Cache Storage）';
   });
 }
+/* ---- DIAGNOSTIC APPLOG START ---- */
+function formatDiagnosticsReport(findings,entries){
+  var lines=['Trip Pilot 除錯報告','建立時間：'+new Date().toISOString(),'','Health Check'];
+  lines=lines.concat(findings.length?findings.map(function(item){return '- '+item;}):['- 正常']);
+  lines.push('','AppLog（'+entries.length+' 筆）');
+  lines=lines.concat(entries.length?entries.map(function(entry){
+    return (entry.at||'')+' ['+(entry.category||'unknown')+'] '+String(entry.message||'');
+  }):['- 尚無紀錄']);
+  return lines.join('\n');
+}
+function renderDiagnosticAppLogSection(entries){
+  var rows=entries.map(function(entry){
+    return escapeHtml((entry.at||'')+' ['+(entry.category||'unknown')+'] '+String(entry.message||''));
+  }).join('\n');
+  return '<div class="diag-section" id="diagAppLogSection"><h3>AppLog</h3><div class="diag-row">'+entries.length+' 筆（本次開啟 App 期間）</div><div class="diag-row diag-log" id="diagAppLogList">'+(rows||'尚無紀錄')+'</div><div class="diag-actions"><button onclick="copyDiagnosticsReport()">複製除錯報告</button><button onclick="clearDiagnosticAppLog()">清除紀錄</button></div></div>';
+}
+function refreshDiagnosticAppLog(){
+  var section=document.getElementById('diagAppLogSection');
+  if(section)section.outerHTML=renderDiagnosticAppLogSection(AppLog.snapshot());
+}
+function copyDiagnosticsReport(){
+  copyText(formatDiagnosticsReport(currentHealthFindings(),AppLog.snapshot()),'除錯報告');
+}
+function clearDiagnosticAppLog(){
+  AppLog.clear();
+  refreshDiagnosticAppLog();
+  toast('AppLog 已清除');
+}
+/* ---- DIAGNOSTIC APPLOG END ---- */
 function openDiagnostics(){
   closeDiagnostics();
-  var sim=lsGet('trip_time_simulation',null), findings=healthCheck()||[], el=document.createElement('div');
+  var sim=lsGet('trip_time_simulation',null), findings=currentHealthFindings(), el=document.createElement('div');
   el.id='diagnosticOverlay';
   el.className='diag-overlay';
   var simValue=sim&&sim.mode==='custom'?sim.value:'';
@@ -10758,7 +10786,7 @@ function openDiagnostics(){
   el.innerHTML='<div class="diag-panel"><div class="diag-head"><h2>診斷面板</h2><button class="diag-close" onclick="closeDiagnostics()">×</button></div>'+
     '<div class="diag-section"><h3>App 版本</h3><div class="diag-row" id="diagShellVersion">讀取中…</div><div class="diag-help">本機實際啟用的外殼版本；滑除 PWA 重開兩次才會換版。</div></div>'+
     '<div class="diag-section"><h3>健康檢查</h3><div class="diag-row">'+(findings.length?escapeHtml(findings.join('；')):'正常')+'</div></div>'+
-    '<div class="diag-section"><h3>團體帳測試模式</h3><div class="diag-row">'+(lsGet('trip_ledger_test_mode',false)?'已開啟':'已關閉')+'</div><button onclick="openTestModeSettings()">開啟測試模式控制頁</button><div class="diag-help">只影響團體帳,個人帳不受影響;開關在控制頁上。</div></div>'+
+    renderDiagnosticAppLogSection(AppLog.snapshot())+
     renderTravelNotesSection()+
     '<div class="diag-section"><h3>時間模擬</h3><div class="diag-row">'+(isTimeSimulationActive()?'模擬中：目前模擬時間 '+appNow().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})+'（行走中）':'依手機時間')+'</div><input id="diagTime" type="datetime-local" value="'+escapeHtml(simValue||'')+'"><div class="diag-shortcuts">'+days+'</div><div class="diag-actions"><button class="primary" onclick="setTimeSimulation()">套用並開始模擬</button></div><button onclick="endTimeSimulation(true)">結束模擬——還原測試前狀態</button><div class="diag-help">還原進入模擬前的打卡與略過狀態。</div><button onclick="endTimeSimulation(false)">結束模擬——保留測試變更</button><div class="diag-help">保留模擬期間的打卡與略過狀態。</div></div>'+
     '<div class="diag-section"><h3>行程進度</h3><button onclick="resetTripProgress()">重置行程進度</button><div class="diag-help">僅清除打卡與略過，需雙重確認。</div></div></div>';

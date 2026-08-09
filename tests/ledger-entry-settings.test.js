@@ -192,10 +192,10 @@ function response(payload){
   assert(settingsDispatchSource.includes("page==='test-mode'")&&settingsDispatchSource.includes('renderSettingsTestModePage()'),
     'the Settings dispatcher routes test-mode to its control page');
 
-  /* 規則 8:測試模式關閉時,診斷面板是唯一的啟用入口 */
-  assert(diagnosticsSource.includes('openTestModeSettings()'),'diagnostics can reach the test-mode control page');
+  /* 2026-08-09：診斷面板移除測試模式區塊，但控制頁與 router 保留。 */
+  assert(!diagnosticsSource.includes('openTestModeSettings()'),'diagnostics no longer links to the test-mode control page');
   assert(html.includes("function openTestModeSettings(){")&&html.includes("openSettings('test-mode')"),
-    'the diagnostics entry navigates through the Settings router');
+    'the retained compatibility helper still navigates through the Settings router');
 
   /* 根頁不再常駐測試模式,也不得帶任何可直接切換的控制項(§2.2.5／§3.4) */
   assert(!settingsRootSource.includes('setLedgerTestMode'),'the Settings root never carries a test-mode toggle');

@@ -93,22 +93,20 @@ test('測試模式關→開→關的完整循環,根頁警告列即時同步且�
   expect(off.mentionsTestMode).toBe(false);
   expect(off.anyToggle).toBe(false);
 
-  /* 診斷面板是關閉狀態下唯一的啟用入口 */
-  const diag=await page.evaluate(()=>{
-    openDiagnostics();
-    const hasEntry=!!document.querySelector('#diagnosticOverlay button[onclick="openTestModeSettings()"]');
-    openTestModeSettings();
+  /* 診斷面板不再承擔測試模式入口；控制頁與 TEST universe 本身仍保留。 */
+  await page.evaluate(()=>openDiagnostics());
+  await expect(page.locator('#diagnosticOverlay')).not.toContainText('團體帳測試模式');
+  await expect(page.locator('#diagnosticOverlay button[onclick="openTestModeSettings()"]')).toHaveCount(0);
+  const controlPage=await page.evaluate(()=>{
+    closeDiagnostics();
+    openSettings('test-mode');
     return {
-      hasEntry,
-      diagnosticsClosed:!document.getElementById('diagnosticOverlay'),
       page:settingsUiState.page,
       hasCheckbox:!!document.querySelector('#settingsOverlay #ledgerTestModeSection input[type=checkbox]')
     };
   });
-  expect(diag.hasEntry).toBe(true);
-  expect(diag.diagnosticsClosed).toBe(true);
-  expect(diag.page).toBe('test-mode');
-  expect(diag.hasCheckbox).toBe(true);
+  expect(controlPage.page).toBe('test-mode');
+  expect(controlPage.hasCheckbox).toBe(true);
 
   /* 開啟後:根頁底部出現條件式警告列,且仍然沒有可直接切換的控制項 */
   await setTestMode(page,true);
