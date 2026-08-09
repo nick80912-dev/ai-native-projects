@@ -33,6 +33,7 @@ var SHELL = [
   './shopping-photo-store.js',
   './buy-to-ledger.js',
   './ledger-ui-state.js',
+  './shopping-ui-state.js',
   './schema.js',
   './validator.js',
   './manifest.webmanifest',

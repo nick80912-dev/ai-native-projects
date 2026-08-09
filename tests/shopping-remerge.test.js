@@ -424,10 +424,18 @@ uiBatchStorage.seed(uiBatchKey,[
 const uiBatchStore=mod.createShoppingListStore({storage:uiBatchStorage,key:uiBatchKey,now(){return Date.parse(DONE);}});
 const uiBatchMove=wrapMoveBack(uiBatchStore);
 const uiBatchToasts=[];
+const uiBatchActions=[];
 const uiBatchSandbox={
   shoppingListStore:uiBatchStore,
   shoppingMoveBackFeedback:mod.shoppingMoveBackFeedback,
   shoppingUiState:{selectionMode:true,selected:{'group-1':true,'group-2':true}},
+  shoppingUiWorkflow:{dispatch(action){
+    uiBatchActions.push(action);
+    if(action.type==='reset-selection'){
+      uiBatchSandbox.shoppingUiState.selectionMode=false;
+      uiBatchSandbox.shoppingUiState.selected={};
+    }
+  }},
   toast(message){uiBatchToasts.push(message);},
   renderToday(){},
   renderShoppingListOverlay(){}
@@ -438,6 +446,8 @@ uiBatchSandbox.moveSelectedShoppingBackToPending();
 assert.strictEqual(uiBatchMove.calls,1,'批次 UI 只呼叫一次 moveBackToPending');
 assert.deepStrictEqual(plain(uiBatchMove.ids),['group-1','group-2']);
 assert.deepStrictEqual(plain(uiBatchStore.all()).map(value=>value.id),['group-1','group-2']);
+assert.deepStrictEqual(plain(uiBatchActions),[{type:'reset-selection'}],'成功後透過 Shopping UI workflow 清除 selection');
+assert.deepStrictEqual(plain(uiBatchSandbox.shoppingUiState),{selectionMode:false,selected:{}});
 assert.strictEqual(uiBatchToasts.length,1,'跨 group 批次只顯示一個 Toast');
 assert.strictEqual(uiBatchToasts[0],'已將 2 項移回待買，並合併 2 組');
 
