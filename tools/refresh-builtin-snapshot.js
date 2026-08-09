@@ -191,6 +191,7 @@ async function runRefresh(options={}){
     const changedKeys=SNAPSHOT_KEYS.filter(key=>embedded.snapshot[key]!==candidate[key]);
     if(!changedKeys.length){writeLine(stdout,'BUILTIN snapshot already matches the approved Sheet data');return {exitCode:0,changedKeys,candidate};}
     writeLine(stdout,'BUILTIN drift: '+changedKeys.join(', '));
+    changedKeys.forEach(key=>writeLine(stdout,key+': '+embedded.snapshot[key].length+' -> '+candidate[key].length+' chars'));
     writeLine(stdout,'legacy Tokyo in current='+String(embedded.snapshot.itin.includes('東京')||embedded.snapshot.itin.includes('新宿'))+', candidate='+String(candidate.itin.includes('東京')||candidate.itin.includes('新宿')));
     if(!options.write)return {exitCode:2,changedKeys,candidate};
     const timestamp=Number((options.now||Date.now)());

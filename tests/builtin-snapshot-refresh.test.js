@@ -92,15 +92,17 @@ function capture(){
   const stale=Object.assign({},candidate,{itin:candidate.itin+'東京舊資料\n'});
   const previewRoot=makeRoot(stale);
   const previewBefore=fs.readFileSync(path.join(previewRoot,'index.html'),'utf8');
+  const previewStdout=capture();
   const preview=await tool.runRefresh({
     rootDir:previewRoot,
     write:false,
     fetchCsv:async key=>csv[key],
     now:()=>1234,
-    stdout:capture(),stderr:capture()
+    stdout:previewStdout,stderr:capture()
   });
   assert.strictEqual(preview.exitCode,2,'preview reports drift');
   assert.deepStrictEqual(preview.changedKeys,['itin','ledger','cfg']);
+  assert(previewStdout.lines.some(line=>/^itin: \d+ -> \d+ chars$/.test(line.trim())),'preview reports old and new character counts');
   assert.strictEqual(fs.readFileSync(path.join(previewRoot,'index.html'),'utf8'),previewBefore,'preview never writes');
 
   const currentRoot=makeRoot(candidate,false);
