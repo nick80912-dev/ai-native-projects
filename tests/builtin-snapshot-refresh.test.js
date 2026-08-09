@@ -124,6 +124,12 @@ function capture(){
   assert.strictEqual(embedded.timestamp,1234);
   assert.deepStrictEqual(embedded.snapshot,candidate);
 
+  const aliasSchema=schemaFixture();
+  aliasSchema.sheets.places.columns[1].aliases=['Place alias'];
+  const aliasCsv=Object.assign({},csv,{places:'PID,Place alias\nP001,Sample place\n'});
+  const aliasCandidate=await tool.buildBuiltinCandidate({schema:aliasSchema,fetchCsv:async key=>aliasCsv[key]});
+  assert.strictEqual(aliasCandidate.places,aliasCsv.places,'approved schema aliases remain valid snapshot headers');
+
   const invalidHeader=Object.assign({},csv,{places:'WRONG,地點\nP001,岡山機場\n'});
   await assert.rejects(()=>tool.buildBuiltinCandidate({schema,fetchCsv:async key=>invalidHeader[key]}),/places.*header/i);
 

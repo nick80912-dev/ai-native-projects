@@ -47,8 +47,12 @@ function headersFor(sheet){
   return (sheet.columns||[]).map(column=>String(column.header||''));
 }
 
-function rowsEqual(actual,expected){
-  return actual.length===expected.length&&actual.every((value,index)=>value===expected[index]);
+function rowMatchesSchema(actual,sheet){
+  const columns=sheet.columns||[];
+  return actual.length===columns.length&&actual.every((value,index)=>{
+    const column=columns[index];
+    return [column.header].concat(column.aliases||[]).some(header=>String(header||'')===value);
+  });
 }
 
 function cfgValues(rows){
@@ -73,12 +77,11 @@ function validateBuiltinCandidate(options){
 
   ['places','rest','shop','hotels'].forEach(key=>{
     const rows=parseCsv(candidate[key]);
-    if(!rows.length||!rowsEqual(rows[0],headersFor(schema.sheets[key])))throw new Error(key+' CSV header does not match schema.js');
+    if(!rows.length||!rowMatchesSchema(rows[0],schema.sheets[key]))throw new Error(key+' CSV header does not match schema.js');
   });
 
   const itinRows=parseCsv(candidate.itin);
-  const itinHeaders=headersFor(schema.sheets.itin);
-  const itinHeaderCount=itinRows.filter(row=>rowsEqual(row,itinHeaders)).length;
+  const itinHeaderCount=itinRows.filter(row=>rowMatchesSchema(row,schema.sheets.itin)).length;
   if(itinHeaderCount!==1)throw new Error('itin CSV must contain exactly one schema header row');
 
   const expenseMark=String(schema.sheets.exp.layout&&schema.sheets.exp.layout.membersRowMark||'').replace(/[：:]$/,'').trim();
