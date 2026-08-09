@@ -65,8 +65,9 @@
 - `toast()` 是非必要呈現效果；`#toast` 不存在時必須在改動 `toastAction`／`toastTimer` 前安全返回，不得讓提示失敗中斷同步、儲存或其他業務流程。
 
 ## 現行 Ledger 近期消費卡契約（2026-08-09）
-- 個人代購與團體付款／分攤摘要都位於品項名稱同行；團體摘要不得再於下方 badge 重複，其他狀態 badge 不受影響。
-- 個人與團體卡的店家列順序都是「店家 · [emoji] 類別」，支付方式獨立在下一列；無店家仍須保留類別，無支付方式不得輸出空白 metadata。
+- 個人與團體卡嚴格只有兩個 single-line content row；第一行順序固定為「品項名稱 → 付款方式 → 個人代購／團體付款與分攤」，第二行固定為「店家 → 類別 → 免稅品 → TEST → 待同步 → 已鎖帳／已更正 N 次」。
+- 兩行都不得換行；長品項、店家／類別、代購／付款分攤與狀態必須以 ellipsis 截斷，不能產生第三行、水平 overflow 或與右側金額重疊。缺店家仍保留類別，缺付款方式只省略該欄，兩個 row 容器仍存在。
+- 個人代購保留 coral 配色但使用 compact 字級；團體付款／分攤、鎖帳與更正使用 neutral `line-soft`／`ink-soft`，待同步使用既有黃色。不得改變任何狀態條件、文案或鎖帳／更正互斥規則。
 - 這只是 `renderLedgerRecentRecord()` presentation contract；不得藉此改動 participant parsing、付款／分攤計算、Ledger repository 或資料格式。
 
 ## 關鍵資源

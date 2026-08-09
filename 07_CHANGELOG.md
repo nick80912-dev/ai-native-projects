@@ -1,4 +1,11 @@
 # 07 版本紀錄
+## 2026-08-09｜Ledger 近期消費卡嚴格兩行收斂（dev，SW v98 未升版）
+
+- **固定資訊順序**：個人與團體近期消費卡統一為兩行；第一行依序為「品項名稱 → 付款方式 → 個人代購／團體付款與分攤」，第二行依序為「店家 → 類別 → 免稅品 → TEST → 待同步 → 已鎖帳／已更正 N 次」。批次父卡不變，展開子項沿用同一 recent-record renderer。
+- **嚴格兩行與截斷**：renderer 改為明確的 primary／secondary row；兩行皆禁止換行，長品項、店家／類別、代購／付款分攤與狀態以 ellipsis 截斷，不產生第三行或水平 overflow。右側雙幣金額與操作選單維持原欄位。
+- **字級與配色**：個人代購保留原 coral 語意但縮為 compact 字級；團體付款／分攤、已鎖帳與已更正維持原 neutral `line-soft`／`ink-soft` 配色；待同步維持原黃色。鎖帳與更正的既有互斥條件、所有狀態文案與資料判定均未改。
+- **TDD 與邊界**：Node renderer／mobile contract 與 Browser 測試先因缺少兩行 DOM／CSS 正確失敗，最小實作後 focused Node 與 Playwright 3／3 通過；320／375／390px 驗證 exactly-two rows、single-line、ellipsis、緊湊高度、無文字／金額重疊與配色一致。未修改 Ledger domain、repository、Queue、Apps Script、settlement、correction、schema、CSV、localStorage、備份格式或 Shopping UI；維持 v98，只 push `dev`。
+
 ## 2026-08-09｜Ledger 近期消費卡資訊階層微調（dev，SW v98 未升版）
 
 - **團體資訊同行**：團體近期消費卡沿用既有「我／姓名付款 · 全員／N 人分攤」計算與文案，但由下方 badge 移到品項名稱旁，視覺權重比照個人卡既有「幫 [姓名] 買」標記；舊位置不再重複。待同步、TEST、已更正、已鎖帳與免稅 badge 維持原位。
