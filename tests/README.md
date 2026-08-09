@@ -13,7 +13,7 @@
 - `ios-zoom-guard.test.js`:驗證 iOS 16px 字級、Scroll-only／viewport 還原、SW 版次，以及最小 no-op 雙擊相容性監聽器不復活舊雙擊 guard 或 APP build metadata。執行:`node tests/ios-zoom-guard.test.js`。
 - `preview-date.test.js`:驗證預覽日期參數與 `todayMD()` 使用同一模擬時間來源。執行:`node tests/preview-date.test.js`。
 - `pwa-shell.test.js`:驗證 PWA 入口、manifest、Service Worker、Netlify 設定與圖示資產完整性;2026-07-30 起改鎖新版 SW 契約(頂層 `SW_VERSION`、`CACHE_NAME` 由它推導、不得 importScripts、install 用 `cache:'reload'`、fetch 用 `cache:'no-cache'`、只有 navigation 才 fallback `index.html`)；另鎖 `buy-to-ledger.js`、`ledger-ui-state.js` 與 `shopping-ui-state.js` 同時由頁面載入並納入離線 App Shell。執行:`node tests/pwa-shell.test.js`。
-- `sw-update-prompt.test.js`：直接執行 `index.html` 的正式 SW prompt functions，驗證首次安裝不提示、既有 controller 的 activated／controllerchange 共用一次性 guard、事件不自動 reload、明確更新動作只 reload 一次，以及缺少 prompt DOM 安全降級。執行：`node tests/sw-update-prompt.test.js`。
+- `sw-update-prompt.test.js`：直接執行 `index.html` 的正式 SW prompt functions，驗證首次安裝不提示、既有 controller 的 activated／controllerchange 共用一次性 guard、既有 active registration 在 controller 暫晚時仍屬更新、事件不自動 reload、明確更新動作只 reload 一次，以及缺少 prompt DOM 安全降級。執行：`node tests/sw-update-prompt.test.js`。
 - `app-version-fallback.test.js`:`app-version.js` 載不到時的降級契約。涵蓋 `appVersion()`／`appVersionLabel()` 的回退值、`renderSettingsDataPage()` 在無 `APP_VERSION` 時仍可算出資料健康區塊與 HTML(顯示「SW 未知」而非 ReferenceError),以及 `index.html` 不得在安全取值區塊外裸讀 `APP_VERSION`。執行:`node tests/app-version-fallback.test.js`。
 - `trip-presentation.test.js`:驗證行程類型標籤與行程頁呈現規則。執行:`node tests/trip-presentation.test.js`。
 - `schema-types.test.js`:驗證 Places.Type 必要中文輸入值的正規化結果,並確認 `index.html` 內嵌 Schema 已同步。執行:`node tests/schema-types.test.js`。

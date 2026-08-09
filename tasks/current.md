@@ -9,12 +9,12 @@
 |---|---|
 | **`main` 原始碼** | **SW v96**，PR #13 merge commit `02705c3`；因 Netlify 額度用罄尚未部署／建立 tag |
 | 正式站 | `https://trippilot-jp.netlify.app/` — 2026-08-01 由 SW v18 升級至 v73,G1–G6 全數通過 |
-| **dev 候選版** | **SW v99**＋常駐「新版已就緒／立即更新」提示；首次安裝不誤報、只在新版 activated／接管後提示、絕不自動 reload。v100 尚未建立，等待 Bar 實機先載入 v99 |
+| **dev 候選版** | **SW v100**，作為已由實機載入 v99 後的真實換版目標；常駐「新版已就緒／立即更新」提示、首次安裝抑制與 explicit-only reload 契約不變，另補既有 active registration／controller 暫晚競態 |
 | 個人備份格式 | **v9**(`PERSONAL_STATE_SUPPORTED_VERSIONS = [1..9]`)—— v81 因想逛 key 識別語意變更而升版 |
 | dev 自動驗證 | **83／83** Node test files、Playwright **147／147**、runtime asset CLI、`check-doc-titles`、`check-app-version`、manifest JSON 與 `git diff --check` 通過 |
 | 既有 tag | `production-v18`、`production-v73` |
 
-**`main` 已合併 v96，但正式站仍停在 v73；v99 是目前 `dev` 的下一個候選版。** v74–v87 已由 Bar 於 2026-08-03 確認真機驗收皆正常；v88–v89、v92–v95 亦於 2026-08-08 完成 Bar 畫面／真機確認。v96 因 Netlify 額度用罄尚未正式部署，也未建立 `production-v96` tag。v99 必須先由目標裝置載入，才能建立 v100 驗收真正的更新提示。
+**`main` 已合併 v96，但正式站仍停在 v73；v100 是目前 `dev` 的下一個候選版。** v74–v87 已由 Bar 於 2026-08-03 確認真機驗收皆正常；v88–v89、v92–v95 亦於 2026-08-08 完成 Bar 畫面／真機確認。v96 因 Netlify 額度用罄尚未正式部署，也未建立 `production-v96` tag。Bar 已於 2026-08-09 確認目標裝置載入 v99，現以 v100 驗收真正的更新提示。
 
 ### v74–v98 已折疊的主要能力
 
@@ -97,12 +97,12 @@
 | v96 | Release review 補正：照片 quota 直接管理入口、`=` 後 `%`、ADR／架構索引同步 | ✅ 已由 PR #13 合併 main；正式部署暫停 |
 | v97 | Ledger create／edit entry session workflow／state seam：lifecycle、draft／editing ownership、save guard、calendar、return context 與 ordered effects | ✅ 已交付至本機 dev，完整 gate 通過 |
 | v98 | 更正收據 sticky 操作列遮罩：捲動時不再浮出品項金額計算機入口 | ✅ 已完成，完整 gate 通過 |
-| v99／v100 | SW 更新提示 —— v99 已加入監聽與常駐提示；v100 作為真實更新目標。不修改 SW 生命週期與快取策略，只做正常版本遞增 | 🟡 v99 完成；等待實機載入後才建立 v100 |
+| v99／v100 | SW 更新提示 —— v99 加入監聽與常駐提示；v100 作為真實更新目標，另補既有 active registration／controller 暫晚競態。不修改 SW 生命週期與快取策略 | 🟡 v99 已由實機載入；v100 等待真實換版驗收 |
 
 **已知未做(需先定判準)**:Today 的「交通／停車／營業／付款／提醒**依當下情境動態調整優先順序**」。v84 只做了可明確驗收的收合(常駐交通／停車／營業,收合付款／提醒);「當下情境」的判準(依時間?依距離?依是否已抵達?)尚未定義,不同讀法會做出完全不同的東西,故未實作。
 
 ## 下一棒
 
-→ **SW v99 更新提示功能已完成。下一步只能由 Bar 在目標實機／PWA 開啟 dev 站，接受可能出現的 v98→v99「立即更新」，並確認診斷版本／Cache Storage 已是 v99。** 收到 Bar 明確確認後才可另行建立與 push v100；在真實 v99→v100 驗收完成前，backlog #24 維持未完成。不得自行 merge `main`、部署正式站或建立 production tag。
+→ **目標實機已由 v99 接管；下一步是開啟 dev PWA 驗收 v99→v100。** 必須看到「新版已就緒／立即更新」、點擊前頁面不自動 reload，點擊後診斷版本與 Cache Storage 收斂至 v100。在 Bar 明確確認前，backlog #24 維持未完成；不得自行 merge `main`、部署正式站或建立 production tag。
 
 > **不得**自行動 `main`、部署正式站或建立 production tag。未經 Bar 核准不得 merge `dev → main`。

@@ -1,4 +1,11 @@
 # 07 版本紀錄
+## 2026-08-09｜Service Worker 真實換版驗收目標（dev，SW v100）
+
+- **雙版本第二階段**：Bar 已確認目標實機由 v99 controller／cache 接管，因此依既定閘門另建 v100，作為 v99→v100 真實更新提示目標。`sw.js` 與 `app-version.js` 只做正常版本遞增，最近更新維持五筆。
+- **接管競態補強**：完整 gate 的重複瀏覽器基線發現低頻時序：既有 registration 已有 active worker，但 reload 新文件在 `load` 當下 controller 暫晚，舊 guard 會誤當首次安裝。eligibility 現在同時辨識初始／目前 controller 與既有 active registration；真正首次安裝沒有 active worker，仍不提示。
+- **生命週期與資料邊界不變**：未修改 `skipWaiting()`、`clients.claim()`、SHELL、install／activate／fetch handler、HTTP cache bypass、離線 fallback、reload 觸發條件、Ledger／Shopping、repository、schema、資料格式或備份。只有使用者點擊「立即更新」才 reload。
+- **驗收閘門**：Node 新增 active-registration／late-controller 回歸；同一真實瀏覽器案例修正前 20 次可穩定重現 1 次失敗，修正後連續 30／30 通過。v100 只 push `dev`；backlog #24 在 Bar 實機確認提示、點擊前不自動 reload、點擊後版本／cache 為 v100 前維持未完成。
+
 ## 2026-08-09｜Service Worker 新版就緒提示（dev，SW v99）
 
 - **常駐更新提示**：新版 Service Worker 完成啟用並接管既有頁面後，底部導覽上方顯示「新版已就緒／立即更新」。提示獨立於短暫 Toast，不會自動消失或被一般操作訊息永久取代；z-index 低於表單／明細 overlay，使用者可先完成輸入再更新。
