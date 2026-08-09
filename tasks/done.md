@@ -3,6 +3,7 @@
 > 更新於 2026-08-09。完成事項來自 `.ai-manifest.json` status.done、既有 CHANGELOG 與 Bar 驗收確認；細節仍以 07_CHANGELOG.md 為準。
 
 ## 已完成
+- 2026-08-09：backlog #4 與 #11 完成；BUILTIN 已由東京／新宿舊資料刷新為現行岡山四國六天五夜，Ledger 種子改為 schema 推導的 21 欄空 header、TripConfig 八 key 各一次。新增預設只讀、明確 `--write`、不抓 live Ledger、原子替換與回讀驗證的刷新工具，完整操作與權責 SOP 見 `16_OPS_PLAYBOOK.md` §G；維持 SW v98。
 - 2026-08-09：backlog #3 的採買明細回饋完成；記帳摘要以「筆」計算並合併到既有「狀態」列，footer 依未開始／部分完成／待確認切換為「記帳」／「繼續記帳（剩 N 筆）」／disabled「等待狀態確認」。逐 allocation 記帳紀錄與 Buy-to-Ledger domain／workflow 不變。
 - 2026-08-09：Bar 裁定關閉 backlog #2 最後一項「未來 TEST 模擬版 localStorage 前綴隔離」，不實作。現行正式站與 dev 測試站分屬不同 origin，自動測試使用隔離環境，診斷時間模擬已有快照／還原與備份防呆；repo 亦禁止提交同源 TEST HTML，因此目前沒有需要前綴隔離的實際執行路徑。未來若重新引入同源、可寫入狀態的 TEST 模擬版，須作為新需求重新評估。
 - 2026-08-09：Ledger 個人／團體所有清單卡隱藏付款方式，消費明細與支付方式篩選仍保留；單筆第一行只留品項與代購／付款分攤。多品項父卡改為嚴格兩行，團體顯示「付款人 · 分攤依品項」，展開子項保留精確分攤與狀態；內容靠左、垂直置中，金額固定右側。

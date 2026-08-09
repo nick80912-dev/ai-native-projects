@@ -9,9 +9,9 @@
 |---|---|
 | **`main` 原始碼** | **SW v96**，PR #13 merge commit `02705c3`；因 Netlify 額度用罄尚未部署／建立 tag |
 | 正式站 | `https://trippilot-jp.netlify.app/` — 2026-08-01 由 SW v18 升級至 v73,G1–G6 全數通過 |
-| **dev 候選版** | **SW v98**＋UI workflow/state 1→4 架構模組化、AppLog／網路降級強化、Ledger 清單卡付款資訊降階與嚴格兩行，以及 Shopping 明細記帳狀態／按鈕收斂（皆未另占版本），`app-version.js` 與 `sw.js` 仍為 v98 |
+| **dev 候選版** | **SW v98**＋UI workflow/state 1→4 架構模組化、AppLog／網路降級強化、Ledger／Shopping UI 收斂，以及岡山 BUILTIN 離線快照＋刷新 SOP（皆未另占版本），`app-version.js` 與 `sw.js` 仍為 v98 |
 | 個人備份格式 | **v9**(`PERSONAL_STATE_SUPPORTED_VERSIONS = [1..9]`)—— v81 因想逛 key 識別語意變更而升版 |
-| dev 自動驗證 | **80／80** Node test files、Playwright **145／145**、runtime asset CLI、`check-doc-titles`、`check-app-version`、manifest JSON 與 `git diff --check` 通過 |
+| dev 自動驗證 | **82／82** Node test files、Playwright **145／145**、runtime asset CLI、`check-doc-titles`、`check-app-version`、manifest JSON 與 `git diff --check` 通過 |
 | 既有 tag | `production-v18`、`production-v73` |
 
 **`main` 已合併 v96，但正式站仍停在 v73；v98 是目前 `dev` 的下一個候選版。** v74–v87 已由 Bar 於 2026-08-03 確認真機驗收皆正常；v88–v89、v92–v95 亦於 2026-08-08 完成 Bar 畫面／真機確認。v96 因 Netlify 額度用罄尚未正式部署，也未建立 `production-v96` tag。
@@ -103,6 +103,6 @@
 
 ## 下一棒
 
-→ **品質批 #2 已收斂；最後一項「未來 TEST 模擬版 localStorage 前綴隔離」於 2026-08-09 由 Bar 裁定因目前沒有實際執行路徑而關閉、不實作。** backlog #3 為收到具體回饋時才進行的 UI／內容微調；下一個可直接執行的正式項目為 #4「BUILTIN 快照更新 SOP 文件化」。v96 已在 `main`，但因 Netlify 額度用罄，正式站仍為 v73，正式部署驗證與 `production-v96` tag 暫停；v99／v100 仍保留給 SW 更新提示雙版本驗收。
+→ **BUILTIN 已刷新為岡山四國六天五夜，backlog #4／#11 完成並有可重複 SOP。下一個優先項目是 #24「新版提示立即刷新」。** 依已核准驗收順序，先以 v99 部署提示監聽，再以 v100 作為真實更新目標，兩版不可一起推送。v96 已在 `main`，但正式站仍為 v73；不得自行 merge `main`、部署正式站或建立 production tag。
 
 > **不得**自行動 `main`、部署正式站或建立 production tag。未經 Bar 核准不得 merge `dev → main`。

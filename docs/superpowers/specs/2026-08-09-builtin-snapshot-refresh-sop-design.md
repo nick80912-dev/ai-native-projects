@@ -65,7 +65,7 @@ node tools/refresh-builtin-snapshot.js --write
 候選資料必須同時通過以下條件才可寫入：
 
 1. 七個非 Ledger endpoint 全部回傳 HTTP 2xx 且非空文字。
-2. table sheet 的首列必須符合 `schema.js` 現行 header 順序；itinerary 允許既有旅程標題與飯店摘要前置列，但必須找到唯一且精確符合 Schema 的 7 欄 header row；key-value 與 freeform sheet 必須具備其 Schema 定義的識別列。
+2. table sheet 的首列必須依序符合 `schema.js` 現行 primary header 或已登記 alias；itinerary 允許既有旅程標題與飯店摘要前置列，但必須找到唯一且符合相同規則的 7 欄 header row；key-value 與 freeform sheet 必須具備其 Schema 定義的識別列。
 3. `itin` 必須包含目前 `cfg` 宣告日期範圍內的 Day 1–6 換日標記，且不得再含已知舊資料「東京」或「新宿」。
 4. `cfg` 必須包含 `Trip Name`、`Start Date`、`End Date`、`Travel Mode`、`Currency`、`Home Page`、`Exchange Rate` 與 `Ledger Default Currency`。
 5. 產生的 `ledger` 必須只有表頭，不能包含第二列。
@@ -75,7 +75,7 @@ CLI 先在記憶體完成抓取、驗證與序列化，再以同目錄暫存檔�
 
 ## Tests
 
-新增 Node 測試，以受控本機 HTTP server 提供完整 CSV fixture，直接執行真實刷新模組：
+新增 Node 測試，以受控本機 CSV fixture 與注入式 fetch adapter 直接執行真實刷新模組：
 
 - 預覽模式偵測 drift 且不寫檔。
 - `--write` 更新 timestamp 與八個固定 key。

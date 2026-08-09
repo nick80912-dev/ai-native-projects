@@ -9,6 +9,7 @@
 - **身分註冊紀錄**：明細為 `[身分註冊]`、用來建立團體成員名單來源的專用 Ledger 紀錄；不等同一般消費。
 - **最大餘數法**：分攤整數金額時先取各份額整數，再依小數餘額由大到小補足差額，確保分攤總和等於原金額。
 - **原子快照**：多份 Google Sheet 資料須通過同一批驗證後才整批替換；任一必要資料失敗時不發布混合版本。
+- **BUILTIN 離線種子**：`index.html` 內的完整八 key 啟動快照，只在沒有可用持久化快照／線上同步時兜底；不是第二份 CMS。七張非 Ledger 資料由 `tools/refresh-builtin-snapshot.js` 依 `schema.js` 的公開 CSV 一次刷新，Ledger 永遠只放 schema 推導的 21 欄空 header，禁止抓取 live Ledger 紀錄。預設 preview 只讀，經 Bar 核准才可 `--write`；完整 SOP 見 `16_OPS_PLAYBOOK.md` §G。
 - **觀測者效應（no-op dblclick）**：iPhone 相容性 workaround；保留 passive、無副作用的 `dblclick` 監聽器，避免診斷或阻擋手勢本身改變問題。
 - **父子行程卡**：父站點統整其連續子站點的行程呈現與完成狀態，Today 與行程頁需沿用同一群組關係。
 - **下一站調和（next-stop reconciliation）**：以同一份當日行程、既有完成／略過進度與明確傳入的目前分鐘，一次決定下一站並找出 cutoff 前尚未確認的超時項目；同一輪最多形成一筆進度保存與一則自動略過通知。父子行程卡的第一個 blocking controller 會截斷自動略過範圍；已完成項目不重寫 checks。Trip、Today 與 cluster 不得各自實作不同判斷。

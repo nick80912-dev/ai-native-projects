@@ -1,4 +1,11 @@
 # 07 版本紀錄
+## 2026-08-09｜BUILTIN 岡山快照刷新與可重複 SOP（dev，SW v98 未升版）
+
+- **離線種子更正**：`index.html` 的 BUILTIN 已由東京／新宿舊資料刷新為目前公開的岡山四國六天五夜；現行 runtime 可解析 Day 1–6，places／restaurants／shopping 均非空。移除 BUILTIN 後方的 legacy cfg append 與 8 欄 Ledger overwrite，現在只有一個完整八 key 快照。
+- **Ledger／cfg 安全契約**：刷新工具永不請求 live Ledger；Ledger 只由 `schema.js` 產生 21 欄 header 且沒有紀錄。TripConfig 八個必要 key 各出現一次，不再以後置 append 補欄。公開 Sheet 使用 schema 已登記 alias（目前 Places `交通時間`）仍可通過，其餘欄位數量與順序維持 fail closed。
+- **安全工具與 SOP**：新增 `tools/refresh-builtin-snapshot.js`；預設只讀 preview，有漂移以 exit code 2 回報，只有明確 `--write` 才經同目錄暫存檔、原子替換與回讀驗證更新。抓取、schema 或內容驗證任一失敗都不改原檔。完整觸發時機、權責、指令與回滾邊界寫入 `16_OPS_PLAYBOOK.md` §G。
+- **TDD 與邊界**：工具測試鎖定不抓 Ledger、preview no-write、invalid source 保留 bytes、aliases、legacy mutation 移除與參數契約；正式 characterization test 直接執行 `index.html` 最終 BUILTIN 並沿用 runtime parser。旅程三情境 Browser 回歸 3／3 通過。未修改 Google Sheet、schema、資料格式、parser、renderer、SW 或版本號；只 push `dev`，不 merge／deploy／tag。
+
 ## 2026-08-09｜採買明細記帳狀態與按鈕收斂（dev，SW v98 未升版）
 
 - **進度語意修正**：採買清單仍是個人、本機資料；明細的記帳進度改以 allocation 對應的 Ledger「筆」計算，不再以「位／對象」暗示付款人或團體成員。付款人與分攤仍只在 Ledger 表單決定。

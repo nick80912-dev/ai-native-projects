@@ -32,6 +32,7 @@
 ## 絕不可改變(除非 Bar 明確要求)
 - CMS 八表結構、Schema 2.9 欄位語意、既有 PID/RID/SID/HID 的意義；Ledger 固定 21 欄，`time` 為消費發生時間，末五欄為輸入幣別、免稅品、價格方式、稅率與優惠券金額
 - 三層防線(內建→快取→背景同步)與「絕不空白頁」原則
+- BUILTIN 是目前旅程的離線啟動種子，不得手改 JSON 或抓取 live Ledger；刷新一律依 `16_OPS_PLAYBOOK.md` §G 先 preview，Bar 核准後才 `--write`，Ledger 只保留 `schema.js` 推導的 21 欄空 header
 - 卡片型別由 Places.Type 明確決定,**禁止 AI 猜測型別**
 - WebView 相容碼:console polyfill、fetch 相容模式(禁 AbortController)、單一吸頂容器
 - 停車 MAP CODE 純顯示(無複製鈕)、「停車同Pxxx」繼承機制

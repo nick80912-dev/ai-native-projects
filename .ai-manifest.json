@@ -33,6 +33,7 @@
     "ledger-ui-state.js": "Ledger history、entry 與 correction session 不可變 state transition 與 ordered effects workflow；DOM adapter 位於 index.html",
     "shopping-ui-state.js": "Shopping list selection 與 form session 不可變 state transition 與 ordered effects workflow；DOM adapter 位於 index.html",
     "trip-progression.js": "下一站選擇、cluster blocker 與一次性 auto-skip reconciliation runtime module",
+    "tools/refresh-builtin-snapshot.js": "BUILTIN 離線種子安全刷新 CLI；預設只讀 preview、明確 --write、七張公開 CSV 原子驗證，Ledger 只由 schema 產生空 header",
     "index.html": "App 與正式部署入口:UI殼+CSS+內嵌JS(區塊分層見10_FOLDER_STRUCTURE)",
     "shopping-photo-store.js": "採買照片縮放壓縮與IndexedDB put/get/remove邊界;Blob只存在目前裝置,不進備份或同步",
     "buy-to-ledger.js": "採買轉記帳純domain與workflow coordinator;dependency adapter留在index.html,模組不直接讀DOM或storage",
@@ -135,13 +136,13 @@
   },
   "status": {
     "production": "main 維持 production-v73，直到已核准的 release PR 合併並完成線上驗證",
-    "dev_candidate": "v98（UI workflow/state 1→4 架構模組化＋AppLog／網路降級強化＋Ledger 清單卡嚴格兩行／付款方式降至明細＋Shopping 明細記帳狀態與按鈕收斂完成，未另占 runtime 版本）",
+    "dev_candidate": "v98（UI workflow/state 1→4 架構模組化＋AppLog／網路降級強化＋Ledger／Shopping UI 收斂＋岡山 BUILTIN 離線快照與刷新 SOP，未另占 runtime 版本）",
     "device_acceptance": "Bar 已完成 v74–v89、v92–v95 畫面／真機驗收；v96 兩項補正由瀏覽器回歸測試覆蓋",
-    "automated_validation": "完整基準為 80 個 Node test files 與 145 個 Playwright tests，另含 runtime asset CLI",
+    "automated_validation": "完整基準為 82 個 Node test files 與 145 個 Playwright tests，另含 runtime asset CLI",
     "pending_in_order": [
       "完成受保護的 dev → main 發布流程並驗證正式站",
       "線上驗證成功後才建立 annotated production-v96 tag",
-      "backlog #3 等待具體 UI／內容回饋；下一個可直接執行項目為 #4 BUILTIN 快照更新 SOP 文件化；v99/v100保留SW更新提示雙版本驗收"
+      "backlog #3 等待具體 UI／內容回饋；下一個優先項目為 #24 SW 更新提示，依序以 v99 功能版與 v100 真實更新目標雙版本驗收"
     ]
   },
   "after_every_delivery": "跑 window.healthCheck() + 輸出健康報告 + 更新 07_CHANGELOG(建新檔) + 必要時更新本 manifest",
