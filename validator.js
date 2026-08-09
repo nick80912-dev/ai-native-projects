@@ -10,14 +10,40 @@
    ============================================================ */
 
 /* ---- 六類錯誤日誌 ---- */
-var AppLog = {
-  schema: function(msg){ console.warn('[Schema Error] ' + msg); },
-  parser: function(msg){ console.warn('[Parser Error] ' + msg); },
-  data:   function(msg){ console.warn('[Data Error] ' + msg); },
-  repo:   function(msg){ console.warn('[Repository Error] ' + msg); },
-  render: function(msg){ console.error('[Render Error] ' + msg); },
-  sync:   function(msg){ console.warn('[Sync Error] ' + msg); }
-};
+var APP_LOG_LIMIT=100;
+var APP_LOG_MESSAGE_LIMIT=1000;
+var AppLog=(function(){
+  var entries=[];
+  function safeText(value){
+    try{return String(value===undefined?'':value);}
+    catch(error){return '[無法讀取診斷訊息]';}
+  }
+  function timestamp(){
+    try{return new Date().toISOString();}
+    catch(error){return '';}
+  }
+  function write(category,level,prefix,message){
+    var text=safeText(message);
+    console[level](prefix+text);
+    entries.push({at:timestamp(),category:category,level:level,message:text.slice(0,APP_LOG_MESSAGE_LIMIT)});
+    if(entries.length>APP_LOG_LIMIT)entries.splice(0,entries.length-APP_LOG_LIMIT);
+  }
+  function snapshot(){
+    return entries.map(function(entry){
+      return {at:entry.at,category:entry.category,level:entry.level,message:entry.message};
+    });
+  }
+  return {
+    schema:function(message){write('schema','warn','[Schema Error] ',message);},
+    parser:function(message){write('parser','warn','[Parser Error] ',message);},
+    data:function(message){write('data','warn','[Data Error] ',message);},
+    repo:function(message){write('repository','warn','[Repository Error] ',message);},
+    render:function(message){write('render','error','[Render Error] ',message);},
+    sync:function(message){write('sync','warn','[Sync Error] ',message);},
+    snapshot:snapshot,
+    clear:function(){entries.length=0;}
+  };
+})();
 
 /* ---- 表頭正規化 ---- */
 function normH(h){ return String(h||'').trim().toLowerCase().replace(/\s+/g,''); }
@@ -227,16 +253,20 @@ function validateSnapshotData(db,raw,schema){
 
 /* ---- 專案健康檢查(資料一致性) ----
    回傳 findings 陣列並輸出報告;AI 每次交付前必跑 */
-function healthCheck(){
+function currentHealthFindings(){
   var validation = validateSnapshotData(DB,RAW,SCHEMA);
   var findings = validation.blockers.concat(validation.warnings);
+  return findings.map(function(f){ return f.message; });
+}
+function healthCheck(){
+  var findings = currentHealthFindings();
   /* 輸出報告 */
   if(findings.length){
     console.warn('━━ Project Health Check:發現 ' + findings.length + ' 項 ━━');
-    findings.forEach(function(f){ AppLog.data(f.message); });
+    findings.forEach(function(message){ AppLog.data(message); });
   }else{
     console.log('━━ Project Health Check:PASS(資料一致性無異常)━━');
   }
-  return findings.map(function(f){ return f.message; });
+  return findings;
 }
 if(typeof window !== 'undefined') window.healthCheck = healthCheck;
