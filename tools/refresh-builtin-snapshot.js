@@ -114,13 +114,15 @@ async function buildBuiltinCandidate(options){
 }
 
 function builtinPattern(){
-  return /var BUILTIN_TS\s*=\s*(\d+);\s*\r?\nvar BUILTIN\s*=\s*(\{[\s\S]*?\});\s*\r?\n/;
+  return /var BUILTIN_TS\s*=\s*(\d+);\s*\r?\nvar BUILTIN\s*=\s*(\{[\s\S]*?\});\s*\r?\n(?:BUILTIN\.cfg\s*\+=[^\r\n]*;\s*\r?\n)?(?:BUILTIN\.ledger\s*=[^\r\n]*;\s*\r?\n)?/;
 }
 
 function readEmbeddedBuiltin(indexSource){
   const match=builtinPattern().exec(indexSource);
   if(!match)throw new Error('index.html BUILTIN declarations are missing or ambiguous');
-  return {timestamp:Number(match[1]),snapshot:JSON.parse(match[2])};
+  const sandbox=Object.create(null);
+  vm.runInNewContext(match[0],sandbox,{filename:'index.html BUILTIN block',timeout:1000});
+  return {timestamp:Number(sandbox.BUILTIN_TS),snapshot:JSON.parse(JSON.stringify(sandbox.BUILTIN))};
 }
 
 function orderedSnapshot(candidate){

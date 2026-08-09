@@ -15,7 +15,7 @@ function schemaFixture(pubBase='https://example.test/?gid='){
       shop:{gid:'4',kind:'table',columns:['SID','PID','品牌名稱'].map(header=>({header}))},
       hotels:{gid:'5',kind:'table',columns:['HID','名稱'].map(header=>({header}))},
       exp:{gid:'6',kind:'freeform-expense',layout:{membersRowMark:'同行成員'}},
-      ledger:{gid:'7',kind:'table',columns:['紀錄ID','時間','成員'].map(header=>({header}))},
+      ledger:{gid:'7',kind:'table',columns:['紀錄ID','時間','成員','類別'].map(header=>({header}))},
       cfg:{gid:'8',kind:'keyvalue',keys:[
         ['tripname','Trip Name'],['startdate','Start Date'],['enddate','End Date'],
         ['travelmode','Travel Mode'],['currency','Currency'],['homepage','Home Page'],
@@ -51,14 +51,16 @@ function csvFixture(){
   };
 }
 
-function indexSource(snapshot,timestamp=1){
-  return '<script>\nvar BUILTIN_TS = '+timestamp+';\nvar BUILTIN = '+JSON.stringify(snapshot)+';\n</script>\n';
+function indexSource(snapshot,timestamp=1,legacyMutations=true){
+  return '<script>\nvar BUILTIN_TS = '+timestamp+';\nvar BUILTIN = '+JSON.stringify(snapshot)+';\n'+
+    (legacyMutations?"BUILTIN.cfg+='Exchange Rate,0.2\\nLedger Default Currency,JPY\\n';\nBUILTIN.ledger='紀錄ID,時間,成員\\n';\n":'')+
+    '</script>\n';
 }
 
-function makeRoot(snapshot){
+function makeRoot(snapshot,legacyMutations=true){
   const root=fs.mkdtempSync(path.join(os.tmpdir(),'trip-builtin-refresh-'));
   fs.writeFileSync(path.join(root,'schema.js'),'var SCHEMA='+JSON.stringify(schemaFixture())+';\n');
-  fs.writeFileSync(path.join(root,'index.html'),indexSource(snapshot));
+  fs.writeFileSync(path.join(root,'index.html'),indexSource(snapshot,1,legacyMutations));
   return root;
 }
 
@@ -81,7 +83,7 @@ function capture(){
   });
   assert.deepStrictEqual(requested,['itin','places','rest','shop','hotels','exp','cfg']);
   assert.deepStrictEqual(Object.keys(candidate),['itin','places','rest','shop','hotels','exp','ledger','cfg']);
-  assert.strictEqual(candidate.ledger,'紀錄ID,時間,成員\n');
+  assert.strictEqual(candidate.ledger,'紀錄ID,時間,成員,類別\n');
   assert.strictEqual(candidate.itin.includes('東京'),false);
 
   const parsed=tool.parseCsv('A,B\r\n"含,逗號","含""引號"\r\n"跨\n列",值\r\n');
@@ -98,10 +100,10 @@ function capture(){
     stdout:capture(),stderr:capture()
   });
   assert.strictEqual(preview.exitCode,2,'preview reports drift');
-  assert.deepStrictEqual(preview.changedKeys,['itin']);
+  assert.deepStrictEqual(preview.changedKeys,['itin','ledger','cfg']);
   assert.strictEqual(fs.readFileSync(path.join(previewRoot,'index.html'),'utf8'),previewBefore,'preview never writes');
 
-  const currentRoot=makeRoot(candidate);
+  const currentRoot=makeRoot(candidate,false);
   const current=await tool.runRefresh({
     rootDir:currentRoot,write:false,fetchCsv:async key=>csv[key],now:()=>1234,
     stdout:capture(),stderr:capture()
@@ -115,7 +117,10 @@ function capture(){
     stdout:capture(),stderr:capture()
   });
   assert.strictEqual(written.exitCode,0);
-  const embedded=tool.readEmbeddedBuiltin(fs.readFileSync(path.join(writeRoot,'index.html'),'utf8'));
+  const writtenSource=fs.readFileSync(path.join(writeRoot,'index.html'),'utf8');
+  assert.strictEqual(writtenSource.includes('BUILTIN.cfg+='),false,'write removes the legacy cfg append');
+  assert.strictEqual(writtenSource.includes('BUILTIN.ledger='),false,'write removes the legacy Ledger overwrite');
+  const embedded=tool.readEmbeddedBuiltin(writtenSource);
   assert.strictEqual(embedded.timestamp,1234);
   assert.deepStrictEqual(embedded.snapshot,candidate);
 
