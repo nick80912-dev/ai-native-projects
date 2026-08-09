@@ -2,9 +2,9 @@
   "$comment": "AI 導航檔 — 任何 AI 接手第一步只讀這份即可掌握全貌。這是 13 步流程的第 1 步。",
   "project": "japan-travel-pwa(日本旅遊行程 App)",
   "owner": "Bar(產品負責人,非工程師,繁中溝通,要直接執行不要教學;AI=全職工程團隊)",
-  "version": "2.16-ui-workflow-modularization-v98",
+  "version": "2.17-applog-diagnostics-v98",
   "framework": "ai-native-framework@pending(尚未抽取;見 FUTURE_PLAN_framework-extraction.md)",
-  "updated": "2026-08-08",
+  "updated": "2026-08-09",
   "live": "https://trippilot-jp.netlify.app/",
   "start_here": "先讀本檔 → PROJECT_CONSTITUTION.md(憲章/流程/禁令)→ 08_AI_HANDOVER.md → 15_AI_EXECUTION_RULES.md(決策權限/任務分級,必讀)→ 相關 adr/ → 依任務讀 03_DATABASE/09_SCHEMA_MAPPING(資料與欄位)、05_CODING_RULES/11_CODING_CONVENTION(程式)、12_DEV_WORKFLOW(步驟)",
   "governance": {
@@ -38,7 +38,7 @@
     "buy-to-ledger.js": "採買轉記帳純domain與workflow coordinator;dependency adapter留在index.html,模組不直接讀DOM或storage",
     "app-version.js": "App端版本來源(供顯示與旅途紀錄);sw.js 另自帶 SW_VERSION,兩者必須相等,由 tools/check-app-version.js 守住。2026-07-30 起 sw.js 不再 importScripts 本檔取版本——imported script 會經 HTTP cache,GitHub Pages 的 max-age=600 會讓版本升級靜默失效",
     "schema.js": "唯一資料規格SSoT:欄位/gid/型別值/發布URL;schemaDoc()自動產09文件",
-    "validator.js": "防錯防線:AppLog六類([Schema/Parser/Data/Repository/Render/Sync Error])+buildHeaderMap+window.healthCheck()",
+    "validator.js": "防錯防線:AppLog六類([Schema/Parser/Data/Repository/Render/Sync Error])+session-only 100筆緩衝+buildHeaderMap+無副作用currentHealthFindings()+window.healthCheck()",
     "apps-script/ledger-sync.gs": "Apps Script部署唯一維護來源:分帳append-only與TripConfig兩鍵白名單更新",
     "docs/personal-state-compatibility.md": "個人狀態備份 v1–v8 相容策略契約(向後／向前相容、缺欄位預設值、採買單位規則、失敗語意);可執行契約=tests/personal-state-restore-matrix.test.js,兩者不一致即為缺陷",
     "docs/batch2-device-acceptance.md": "批次二真機／PWA 驗收清單;保留v73/v74證據並附v75採買照片與定位導航delta"
@@ -135,13 +135,13 @@
   },
   "status": {
     "production": "main 維持 production-v73，直到已核准的 release PR 合併並完成線上驗證",
-    "dev_candidate": "v98（UI workflow/state 1→4 架構模組化完成，未另占 runtime 版本）",
+    "dev_candidate": "v98（UI workflow/state 1→4 架構模組化＋AppLog session診斷／面板精簡完成，未另占 runtime 版本）",
     "device_acceptance": "Bar 已完成 v74–v89、v92–v95 畫面／真機驗收；v96 兩項補正由瀏覽器回歸測試覆蓋",
-    "automated_validation": "完整基準為 77 個 Node test files 與 143 個 Playwright tests，另含 runtime asset CLI",
+    "automated_validation": "完整基準為 79 個 Node test files 與 144 個 Playwright tests，另含 runtime asset CLI",
     "pending_in_order": [
       "完成受保護的 dev → main 發布流程並驗證正式站",
       "線上驗證成功後才建立 annotated production-v96 tag",
-      "由 Bar 進行後續 UI/UX 優化；v99/v100 保留 SW 更新提示雙版本驗收"
+      "品質批 #2 下一項：fetchSheet 800ms退避＋toast null guard；v99/v100保留SW更新提示雙版本驗收"
     ]
   },
   "after_every_delivery": "跑 window.healthCheck() + 輸出健康報告 + 更新 07_CHANGELOG(建新檔) + 必要時更新本 manifest",

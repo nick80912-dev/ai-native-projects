@@ -1,12 +1,11 @@
 # BACKLOG(待辦,依優先序)
 
-> 更新於 2026-08-03。做完或經 Bar 裁定不再需要的項目移到 done.md,正在做的移到 current.md。
+> 更新於 2026-08-09。做完或經 Bar 裁定不再需要的項目移到 done.md,正在做的移到 current.md。
 
 > **編號刻意不連續,不得重排**:`tasks/current.md`、`tasks/done.md` 與 `07_CHANGELOG.md` 都以編號互相引用,重排會打斷既有交叉引用。已歸檔項目的編號一律**留空不回收**(目前缺號:1、3b、5、6–10、13–19、21、23);新項目接在現有最大號之後。
 
 ## 中優先(已核准正式待辦)
 2. **品質批**(2026-07-10 彙整,Bar 已核准方向):
-   - 隱藏除錯面板後續評估(AppLog 環形緩衝 + healthCheck);iOS 手勢診斷已退役，保留 no-op `dblclick` 相容性監聽器
    - fetchSheet 重試加 800ms 退避;toast() null guard
    - 未來測試模擬版:localStorage 前綴隔離(TEST 版不再污染正式狀態)
 3. **驗收後 UI/內容微調**(最小修改,不動 schema)。

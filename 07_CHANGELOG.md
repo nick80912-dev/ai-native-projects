@@ -1,4 +1,13 @@
 # 07 版本紀錄
+## 2026-08-09｜AppLog session 診斷與面板精簡（dev，SW v98 未升版）
+
+- **有界診斷能力**：`validator.js` 的 Schema／Parser／Data／Repository／Render／Sync 六類 `AppLog` 保留原 console level、前綴與完整訊息，同時保存本次 App session 最新 100 筆（FIFO、單筆最多 1,000 字）。`snapshot()` 回傳 defensive copy，`clear()` 只清記憶體，不寫 localStorage、IndexedDB、備份或遠端。
+- **觀察不製造事件**：抽出無副作用 `currentHealthFindings()`；公開 `window.healthCheck()` 仍照常輸出 console 並經 `AppLog.data()` 報告，但開啟診斷面板只讀當下 findings，不再因查看面板重複加入 health log。
+- **面板收斂**：桃子入口、App 版本、健康檢查、旅途紀錄、時間模擬與行程進度不變；新增 AppLog 筆數、最近紀錄、複製完整除錯報告與清除操作。所有畫面訊息經 HTML escaping，複製沿用既有 clipboard fallback。
+- **移除測試模式區塊**：依 Bar 要求，診斷面板不再顯示「團體帳測試模式」或入口；`openTestModeSettings()`、設定控制頁、TEST 前綴、正式／TEST universe 隔離與 Ledger 行為全部保留並由 Node／Browser 回歸覆蓋。
+- **TDD 與完整 gate**：新增 AppLog buffer、診斷報告 Node 契約及真實 Browser 互動；完整 **79／79** Node test files、Playwright **144／144** 通過。完整 Node gate 額外抓到新 timestamp 違反 `appNow()` 單一時鐘，修正為共用 app clock、standalone validator 無時鐘時安全留空後重新全綠。
+- **邊界**：未恢復 iOS 手勢診斷，既有 passive no-op `dblclick` 相容監聽器保留；未修改 schema、資料格式、renderer、SW lifecycle／cache strategy、`app-version.js` 或 `SW_VERSION`，維持 v98。本批只 push `dev`，不 merge `main`、不 deploy、不建立 production tag。
+
 ## 2026-08-09｜UI workflow/state 1→4 架構模組化（dev，SW v98 未升版）⭐ 架構變更
 
 - **1｜Shopping form session**：深化既有 `shopping-ui-state.js`，接管 `form`／`formSession`／`photoError` lifecycle；production adapter 成為唯一寫入點。Save、save-another 與 photo Promise 以 runtime session/request ID 防止 stale completion；validation/store/photo failure 保留 Sheet，store、IndexedDB photo repository、Buy-to-Ledger、資料格式、split 與 renderer 均留在原邊界。

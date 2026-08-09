@@ -15,7 +15,7 @@ shopping-ui-state.js    Shopping list selection／form session state 與 ordered
 trip-progression.js     下一站選擇、cluster blocker 與一次性進度調和（UMD/CommonJS）
 runtime-assets.json     八個 JavaScript runtime assets 的 build-time inventory
 schema.js               唯一資料規格(SSoT):欄位/gid/型別值/發布URL
-validator.js            防錯防線:AppLog 六類 + buildHeaderMap + healthCheck
+validator.js            防錯防線:AppLog 六類 + session-only 100 筆緩衝 + buildHeaderMap + healthCheck
 sw.js                   Service Worker:離線快取(改版 bump VERSION)
 manifest.webmanifest    PWA 安裝資訊
 icon-16.png             瀏覽器小圖示
@@ -39,7 +39,7 @@ netlify.toml            Netlify 快取 header 設定
 SCHEMA        來自 schema.js(pubBase + sheets.*.gid + 欄位/型別規格)
 BUILTIN       7 表內建快照(離線後備)
 UTILS         storage / toast / CSV parser / copyText / date
-VALIDATOR     來自 validator.js(表頭驗證 + 六類日誌)
+VALIDATOR     來自 validator.js(表頭驗證 + 六類日誌 + session-only 診斷緩衝)
 PARSER        parseTable / parseKeyValue / parseExpensesFree(Schema 驅動)
 DATABASE      buildDB → DB{ places, rest, shop, hotels, expCMS, cfg, trip }
 REPOSITORY    resolveRef / restaurantsOf / hotelOf / resolveParking(查詢)

@@ -54,6 +54,12 @@
 - Google 試算表 `/edit` 連結讀不到,必須用「發布到網路」CSV;web_fetch 可能被 robots 擋,改走 Drive 連接或由使用者瀏覽器端抓
 - item id 含「/」(如 10/19_2),CSS selector 需 escape,DOM 查找用 getElementById
 
+## 現行診斷契約（2026-08-09）
+- `AppLog` 六類方法仍輸出既有 console level／前綴，並只在記憶體保存本次 session 最新 100 筆；每筆訊息最多 1,000 字，`snapshot()` 不暴露內部可變狀態。
+- `currentHealthFindings()` 是診斷面板的無副作用讀取；`window.healthCheck()` 才會輸出健康報告並寫入 AppLog。單純開啟面板不得製造新紀錄。
+- 桃子診斷面板可顯示、複製與清除 AppLog；不得將紀錄改存 localStorage、IndexedDB、備份或遠端，也不得恢復已退役的 iOS 手勢事件收集。
+- 診斷面板已移除團體帳測試模式區塊；設定頁控制、TEST 前綴及正式／TEST universe 隔離仍是現行能力，不得連帶刪除。
+
 ## 關鍵資源
 - 正式站:https://trippilot-jp.netlify.app/
 - 測試站:https://dev-trippilot-jp.netlify.app/
