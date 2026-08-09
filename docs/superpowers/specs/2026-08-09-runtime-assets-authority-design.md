@@ -42,7 +42,7 @@ CLI 在一致時 exit 0 並輸出檢查數量；缺檔、重複、非 `.js`、in
 ## Source Matching Rules
 
 - `runtime-assets.json` 必須是 UTF-8 JSON object，含唯一的 `assets` string array。
-- `index.html` 以外部 `<script src="...">` basename 配對；inline script 不納入。
+- `index.html` 以外部 `<script src="...">` basename 配對；`schema.js`／`validator.js` 依既有 parity 契約仍內嵌於入口，因此以明確的檔名 section marker 配對，不改成重複載入外部 script。
 - `sw.js` 只在 `SHELL` array 內配對，其他字串不算登錄。
 - `README.md` 必須以 code-formatted basename 明列每個 module。
 - `.ai-manifest.json.files` 必須有每一個 basename key；`deploy_files` 可用精確 key或已存在的 `schema.js + validator.js` group key涵蓋，但新檔優先精確列出。

@@ -15,6 +15,7 @@
 - `schema-types.test.js`:驗證 Places.Type 必要中文輸入值的正規化結果,並確認 `index.html` 內嵌 Schema 已同步。執行:`node tests/schema-types.test.js`。
 - `render-note.test.js`:備註條列渲染、下一站卡、MAPCODE、明日預告等元件渲染回歸測試(Node 內建 assert,從預覽 HTML 抽函式驗證)。執行:`node tests/render-note.test.js`(於 repo 根目錄)。
 - `pick-next-stop.test.js`:下一站時間判斷與自動略過過期項目的邏輯回歸測試(2026-07-09 新增,涵蓋「今天按過任一完成後就卡住不推進」的修復)。執行:`node tests/pick-next-stop.test.js`
+- `trip-progression.test.js`：驗證下一站選擇、cluster blocker、一次性 auto-skip progress 調和、通知與 input immutability。執行：`node tests/trip-progression.test.js`。
 - `parent-first-stop-cluster.test.js`:驗證父列地點納入第一站、兩站成卡、controller ID，以及 Day 1–6 共 12 組已知父子行程的引用順序。執行:`node tests/parent-first-stop-cluster.test.js`。
 - `data-reference-consistency.test.js`:驗證行程餐廳顯示名稱與 RID 指向餐廳不一致時 health check 會告警。執行:`node tests/data-reference-consistency.test.js`。
 - `ios-viewport-resume.test.js`:驗證 iOS 回前景時還原 viewport、清除舊 transform 並保留捲動位置。執行:`node tests/ios-viewport-resume.test.js`。
@@ -28,6 +29,8 @@
 
 - `ledger-settlement-reliability.test.js`:結算可靠性總測試。涵蓋 durable delivery bridge(原子交接、持久性、只在遠端讀回同一 `record.id` 才清除、不自動過期)、事件全序與同毫秒競態、跨裝置 confirm／reject 收斂與 losing response inert、狀態機文案與按鈕不復原、退回後重新付款開新 generation、已確認收款的 10 秒一次性復原（資格六項條件、9,999／10,000／10,001ms 邊界、無效或未來 `response.time`、已復原、後續 generation、連點五次只一筆 deletion、歷史不得輸出永久撤銷／復原按鈕）、ledger fast pull 增量與非 JSON 降級、polling 兩層退避與生命週期、待處理徽章、簡易結算模式與時鐘偏移。執行:`node tests/ledger-settlement-reliability.test.js`。
 - `ledger-settlement-correction.test.js`：結算後不可改寫與引導式更正總測試。涵蓋 claim／canonical confirm 建立位置保護切點、正式／TEST 隔離、confirm 復原、多人收據、永久保護、完整版本投影、commit-last 缺件 inert、重複更正、整張作廢、跨裝置 canonical／losing conflict、不合法 ID／時間事件 fail-closed 與分類診斷、付款人／原因守門、刪改阻擋、action model、品項變更揭露，以及已全數還款後更正產生的新餘額差。一般編輯 stale-DOM 與更正預覽事件 fingerprint 的 UI 守門另由 `ledger-list-actions.test.js` 鎖定。執行：`node tests/ledger-settlement-correction.test.js`。
+- `ledger-correction-ui-state.test.js`：驗證 correction session 的 open/close、reason、preview、calendar、pending、request stale guard 與 ordered effects。執行：`node tests/ledger-correction-ui-state.test.js`。
+- `runtime-assets.test.js`：驗證八個 JavaScript runtime assets 在入口、SW SHELL、README 與 `.ai-manifest.json` 的 build-time 登錄一致性。執行：`node tests/runtime-assets.test.js`；repo gate 亦可直接執行 `node tools/check-runtime-assets.js`。
 - `ledger-list-actions.test.js`：除清單卡片、明細與操作選單外，驗證受保護收據只顯示「更正收據」、引導式更正 Sheet／預覽入口、整張作廢預覽後只保留單一最終確認、更正次數 badge、不可改寫歷史入口，以及完整紀錄保留作廢收據歷史；v89 另鎖定個人代購標記移至品名同行、使用共用 renderer，並移除下方舊 badge。執行：`node tests/ledger-list-actions.test.js`。
 - `ledger-entry-p0.test.js`／`ledger-three-second-entry.test.js`／`browser/ledger-entry-quick-layout.spec.js`:驗證單品項新增消費的快速版面階層、`其他資訊（選填）` 單一入口與日期／類別／支付／備註摘要、團體分攤成員按需展開、個人代購欄位位置、個人／團體鍵盤 Next 聚焦、六主題次要底色的「儲存並再記一筆」及既有儲存 guard；Browser 另以真實 renderer 驗證代購／分攤展開與 320／375／390px 無水平 overflow。執行:`node tests/ledger-entry-p0.test.js`、`node tests/ledger-three-second-entry.test.js`、`npx playwright test tests/browser/ledger-entry-quick-layout.spec.js`。
 - `ledger-calculator.test.js`／`browser/ledger-calculator.spec.js`：驗證 Ledger 共用金額計算器的安全四則 parser、優先序、除零／非法／safe integer 守門、single／item／discount 資料 target、既有 draft 更新入口；v94 另涵蓋小數 token、購物式 contextual percent、等號後續輸入、正數小數無條件捨去、浮點近整數校正、一般金額／折扣零值差異、五列四欄按鍵、44×44px 關閉／trigger、實體鍵盤、inert／焦點／scroll、取消不改值、即時換算，以及 320／375／390px 無水平 overflow。執行：`node tests/ledger-calculator.test.js`、`npx playwright test tests/browser/ledger-calculator.spec.js`。

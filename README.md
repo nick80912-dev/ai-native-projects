@@ -31,9 +31,12 @@
 
 ## 專案檔案
 - `index.html` — App UI、DOM adapter 與 Netlify 正式入口
+- `app-version.js` — App runtime 顯示版本來源；與 `sw.js` 的 SW 版本由一致性工具驗證
+- `shopping-photo-store.js` — 裝置本機採買照片壓縮與 IndexedDB repository boundary
 - `buy-to-ledger.js` — 採買轉記帳的純 domain／workflow runtime module
-- `ledger-ui-state.js` — Ledger 歷史瀏覽不可變 state／ordered effects workflow module
-- `shopping-ui-state.js` — Shopping list tab／selection 不可變 state／ordered effects workflow module
+- `ledger-ui-state.js` — Ledger history、entry 與 correction session 的不可變 state／ordered effects workflow module
+- `shopping-ui-state.js` — Shopping list selection 與 form session 的不可變 state／ordered effects workflow module
+- `trip-progression.js` — 下一站選擇、cluster blocker 與一次性 auto-skip reconciliation module
 - `schema.js` / `validator.js` — 資料規格 SSoT / 防錯與健康檢查
 - `tests/` / `tools/` — 可重跑測試與文件一致性檢查
 - `tasks/` — 即時工作狀態唯一權威

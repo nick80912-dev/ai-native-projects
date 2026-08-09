@@ -1,0 +1,12 @@
+{
+  "assets": [
+    "app-version.js",
+    "shopping-photo-store.js",
+    "buy-to-ledger.js",
+    "ledger-ui-state.js",
+    "shopping-ui-state.js",
+    "trip-progression.js",
+    "schema.js",
+    "validator.js"
+  ]
+}
