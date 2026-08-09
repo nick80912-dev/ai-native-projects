@@ -72,6 +72,65 @@ async function waitForShellCached(page) {
   }, null, { timeout: 20000 });
 }
 
+test('existing controller shows one prompt and reloads only after the explicit action', async ({ page }) => {
+  await page.addInitScript(()=>localStorage.setItem('trip_member','Bar'));
+  server.setGeneration(1);
+  await page.goto(ORIGIN + '/index.html');
+  await waitForActiveWorker(page);
+  await expect(page.locator('#swUpdatePrompt')).toBeHidden();
+  await expect.poll(() => page.evaluate(() => QA_INDEX_GEN)).toBe('QAGEN1');
+  await page.reload();
+  await waitForActiveWorker(page);
+  await expect(page.locator('#swUpdatePrompt')).toBeHidden();
+
+  server.setGeneration(2);
+  await page.evaluate(async () => {
+    const registration=await navigator.serviceWorker.getRegistration();
+    await registration.update();
+  });
+
+  const prompt=page.locator('#swUpdatePrompt');
+  await expect(prompt).toBeVisible({timeout:20000});
+  await expect(prompt).toContainText('新版已就緒');
+  await expect.poll(() => page.evaluate(() => QA_INDEX_GEN)).toBe('QAGEN1');
+  await page.evaluate(() => {if(typeof closeMemberSelector==='function')closeMemberSelector();});
+  await expect(page.locator('#memberOverlay')).toHaveCount(0);
+
+  await page.getByRole('button',{name:'立即更新'}).click();
+  await expect.poll(() => page.evaluate(() => typeof QA_INDEX_GEN==='undefined'?null:QA_INDEX_GEN),{timeout:20000}).toBe('QAGEN2');
+  await waitForActiveWorker(page);
+  await expect(page.locator('#swUpdatePrompt')).toBeHidden();
+  await expect.poll(() => page.evaluate(() => typeof APP_VERSION==='undefined'?null:APP_VERSION)).toBe(VERSION+'-QAGEN2');
+});
+
+test('update prompt fits phone widths above the tabbar with a 44px action', async ({ page }) => {
+  server.setGeneration(1);
+  await page.goto(ORIGIN + '/index.html');
+  await waitForActiveWorker(page);
+  await page.evaluate(() => showServiceWorkerUpdatePrompt());
+
+  for(const width of [320,375,390]){
+    await page.setViewportSize({width,height:800});
+    const layout=await page.evaluate(() => {
+      const prompt=document.getElementById('swUpdatePrompt');
+      const button=prompt.querySelector('button');
+      const tabbar=document.querySelector('.tabbar');
+      const box=prompt.getBoundingClientRect();
+      return {
+        left:box.left,right:box.right,bottom:box.bottom,
+        tabbarTop:tabbar.getBoundingClientRect().top,
+        buttonHeight:button.getBoundingClientRect().height,
+        overflow:document.documentElement.scrollWidth-document.documentElement.clientWidth
+      };
+    });
+    expect(layout.left).toBeGreaterThanOrEqual(0);
+    expect(layout.right).toBeLessThanOrEqual(width);
+    expect(layout.bottom).toBeLessThanOrEqual(layout.tabbarTop);
+    expect(layout.buttonHeight).toBeGreaterThanOrEqual(44);
+    expect(layout.overflow).toBeLessThanOrEqual(0);
+  }
+});
+
 test('SW 更新後新快取實際裝入新版資源,且 index／版本檔／schema 不混版本', async ({ page }) => {
   server.setGeneration(1);
   await page.goto(ORIGIN + '/index.html');
@@ -134,10 +193,14 @@ test('斷網後仍可完整離線載入,且未快取的子資源不得收到 ind
   await waitForActiveWorker(page);
 
   await waitForShellCached(page);
+  await page.reload();
+  await waitForActiveWorker(page);
+  await waitForShellCached(page);
 
   /* 用瀏覽器原生離線模式讓頁面與 SW 的 network fetch 一起失敗；
      直接關 socket 會讓 Chromium 偶發在導覽進入 SW 前先回 ERR_CONNECTION_REFUSED。 */
   await context.setOffline(true);
+  await page.waitForFunction(() => navigator.onLine === false);
 
   /* page.reload() 走 CDP Page.reload,在伺服器剛關閉時偶發直接回 ERR_CONNECTION_REFUSED、
      未形成這裡真正要驗證的正常 navigation request。明確 goto 與下方 deep-link 驗證同路徑。 */
@@ -154,13 +217,17 @@ test('斷網後仍可完整離線載入,且未快取的子資源不得收到 ind
       appVersion: typeof APP_VERSION === 'undefined' ? null : APP_VERSION,
       indexGen: typeof QA_INDEX_GEN === 'undefined' ? null : QA_INDEX_GEN,
       schemaGen: found ? found[0] : null,
+      schemaCached: !!schemaResponse,
+      schemaLength: schema.length,
+      schemaTail: schema.slice(-80),
+      cacheKeys: await caches.keys(),
       hasApp: !!document.getElementById('tripTabs'),
       hasBuyToLedger: typeof TripBuyToLedger !== 'undefined',
     };
   });
   expect(offline.appVersion).toBe(VERSION+'-QAGEN2');
   expect(offline.indexGen).toBe('QAGEN2');
-  expect(offline.schemaGen).toBe('QAGEN2');
+  expect(offline.schemaGen,JSON.stringify(offline)).toBe('QAGEN2');
   expect(offline.hasApp).toBe(true);
   expect(offline.hasBuyToLedger).toBe(true);
 

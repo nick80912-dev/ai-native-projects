@@ -358,6 +358,11 @@ input,select,textarea{font-size:16px}
 .toast.has-action{pointer-events:auto;display:flex;align-items:center;gap:12px}
 .toast-action{border:0;background:rgba(255,255,255,.16);color:#fff;border-radius:999px;padding:4px 9px;font-size:13px;font-weight:800;font-family:inherit;cursor:pointer}
 .toast-action:active{transform:scale(.96)}
+.sw-update-prompt{position:fixed;z-index:110;left:12px;right:12px;bottom:calc(var(--tabbar-height) + env(safe-area-inset-bottom) + 10px);max-width:596px;margin:0 auto;display:flex;align-items:center;gap:12px;box-sizing:border-box;padding:9px 10px 9px 14px;border-radius:14px;background:var(--sea-deep);color:#fff;box-shadow:var(--shadow-lg)}
+.sw-update-prompt[hidden]{display:none}
+.sw-update-prompt span{flex:1;min-width:0;font-size:13px;font-weight:900;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sw-update-prompt button{flex:0 0 auto;min-height:44px;border:0;border-radius:999px;background:#fff;color:var(--sea-deep);padding:7px 13px;font:inherit;font-size:12px;font-weight:900}
+.sw-update-prompt button:focus-visible{outline:2px solid #fff;outline-offset:2px}
 
 .loading{text-align:center;padding:50px 20px;color:var(--ink-faint)}
 .spinner{width:34px;height:34px;border:3px solid var(--line);border-top-color:var(--sea);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 14px}
@@ -782,6 +787,7 @@ function selectTheme(themeId){
 
 <button class="totop" id="totop" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑</button>
 <div class="toast" id="toast" role="status" aria-live="polite" aria-atomic="true"></div>
+<div class="sw-update-prompt" id="swUpdatePrompt" role="status" aria-live="polite" aria-atomic="true" hidden><span>新版已就緒</span><button type="button" onclick="reloadForServiceWorkerUpdate()">立即更新</button></div>
 
 <div class="tabbar">
   <button class="tabbar-btn active" data-view="today" onclick="switchView('today')">
@@ -8829,6 +8835,7 @@ function renderSettingsDataHealth(){
   return '<div class="settings-section settings-data-health"><h3>資料健康狀態</h3><div class="settings-health-list">'+model.rows.map(function(row){return '<div class="settings-health-row data-health-'+escapeHtml(row.key)+'"><span class="settings-health-main"><b>'+escapeHtml(row.label)+'</b>'+(row.detail?'<span>'+escapeHtml(row.detail)+'</span>':'')+'</span><strong>'+escapeHtml(row.value)+'</strong></div>';}).join('')+'</div></div>';
 }
 var APP_RELEASE_NOTES=[
+  {version:'v99',date:'2026-08-09',title:'新版可直接重新載入',items:['新版準備完成後，畫面會顯示「新版已就緒」與「立即更新」按鈕，不必再自行開啟兩次','系統不會自動重新整理；可先完成正在輸入的採買或記帳內容，再自行按下更新','離線快取、同步方式、既有資料與記帳格式皆維持不變']},
   {version:'v98',date:'2026-08-08',title:'更正操作列不再浮出計算機',items:['捲動更正收據時，品項金額的計算機圖示不再穿透顯示於預覽、作廢或取消操作列','計算機入口仍保留在可編輯的品項金額欄旁，捲回該欄位即可正常使用','更正內容、帳務計算、結算歷史與資料格式皆維持不變']},
   {version:'v97',date:'2026-08-08',title:'新增與編輯記帳流程更穩定',items:['新增、編輯、切換個人或團體帳、選日期與返回現在共用一致的畫面狀態流程','快速重複按儲存只會提交一次，較舊的儲存結果也不會覆蓋新開啟的表單','「儲存並再記一筆」會保留原本返回位置並清理上一筆來源，關閉表單也會一併收起計算機','畫面、記帳規則、既有資料、備份與同步格式皆維持不變']},
   {version:'v96',date:'2026-08-08',title:'照片容量與百分比操作補強',items:['照片儲存空間不足時，錯誤提示會直接提供「管理儲存空間」入口','從照片修復流程前往管理頁時，不會再疊出另一個失敗視窗','計算機按下等號後仍可接百分比，例如 1000 等於後按百分比會得到 10','既有採買資料、照片引用、記帳草稿與同步格式皆維持不變']},
@@ -10874,9 +10881,32 @@ init();
 </script>
 <script>
 /* SW 註冊:外殼離線防線(策略見 sw.js 檔頭) */
+var swUpdatePromptShown=false;
+function showServiceWorkerUpdatePrompt(){
+  if(swUpdatePromptShown)return false;
+  var prompt=document.getElementById('swUpdatePrompt');
+  if(!prompt)return false;
+  swUpdatePromptShown=true;
+  prompt.hidden=false;
+  return true;
+}
+function reloadForServiceWorkerUpdate(){window.location.reload();}
+function setupServiceWorkerUpdatePrompt(serviceWorker,hadController){
+  function ready(){if(hadController)showServiceWorkerUpdatePrompt();}
+  serviceWorker.addEventListener('controllerchange',ready);
+  return function(registration){
+    registration.addEventListener('updatefound',function(){
+      var worker=registration.installing;
+      if(!worker)return;
+      worker.addEventListener('statechange',function(){if(worker.state==='activated')ready();});
+    });
+  };
+}
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function(){
-    navigator.serviceWorker.register('sw.js').catch(function(e){
+    var serviceWorker=navigator.serviceWorker;
+    var observeRegistration=setupServiceWorkerUpdatePrompt(serviceWorker,!!serviceWorker.controller);
+    navigator.serviceWorker.register('sw.js').then(observeRegistration).catch(function(e){
       if (window.AppLog) AppLog.sync('SW 註冊失敗:' + (e && e.message ? e.message : e));
     });
   });
