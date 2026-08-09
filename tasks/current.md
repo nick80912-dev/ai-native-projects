@@ -1,6 +1,6 @@
 # CURRENT(現在正在做的)
 
-> 更新於 2026-08-08。細任務層;里程碑看 `06_ROADMAP.md`,**逐版交付紀錄一律看 `07_CHANGELOG.md`**,正式待辦看 `tasks/backlog.md`。
+> 更新於 2026-08-09。細任務層;里程碑看 `06_ROADMAP.md`,**逐版交付紀錄一律看 `07_CHANGELOG.md`**,正式待辦看 `tasks/backlog.md`。
 > 本檔只回答三件事:**現在線上是什麼、dev 上是什麼、下一批要做什麼**。歷史流水帳不放這裡。
 
 ## 📌 現況
@@ -9,9 +9,9 @@
 |---|---|
 | **`main` 原始碼** | **SW v96**，PR #13 merge commit `02705c3`；因 Netlify 額度用罄尚未部署／建立 tag |
 | 正式站 | `https://trippilot-jp.netlify.app/` — 2026-08-01 由 SW v18 升級至 v73,G1–G6 全數通過 |
-| **dev 候選版** | **SW v98**＋Ledger 新增消費快速版面，`app-version.js` 與 `sw.js` 仍為 v98 |
+| **dev 候選版** | **SW v98**＋Ledger 新增消費快速版面＋Shopping list tab／selection state seam（未另占版本），`app-version.js` 與 `sw.js` 仍為 v98 |
 | 個人備份格式 | **v9**(`PERSONAL_STATE_SUPPORTED_VERSIONS = [1..9]`)—— v81 因想逛 key 識別語意變更而升版 |
-| dev 自動驗證 | **71／71** Node test files、Playwright **140／140**、`check-doc-titles` 與 `check-app-version` 通過 |
+| dev 自動驗證 | Shopping UI focused Node gates 與 Playwright **30／30** 已通過；完整 suite push 前 fresh run，最終數字待補 |
 | 既有 tag | `production-v18`、`production-v73` |
 
 **`main` 已合併 v96，但正式站仍停在 v73；v98 是目前僅存在本機 `dev` 的下一個候選版。** v74–v87 已由 Bar 於 2026-08-03 確認真機驗收皆正常；v88–v89、v92–v95 亦於 2026-08-08 完成 Bar 畫面／真機確認。v96 因 Netlify 額度用罄尚未正式部署，也未建立 `production-v96` tag。
@@ -43,6 +43,7 @@
 | v96 | **發布阻斷補正**：照片 quota 失敗提供「管理儲存空間」直接入口；計算機 `=` 後可接 `%`；同步 ADR／runtime 文件索引 |
 | v97 | **Ledger entry session state seam**：同一 module 接管新增／編輯 lifecycle、draft／editing ownership、save pending、calendar 與返回脈絡；以 session／request ID 防重複提交及 stale completion |
 | v98 | **更正操作列遮罩修正**：更正多品項收據捲動時，金額計算機入口不再穿透顯示於 sticky 預覽／作廢／取消操作列；後續 dev UI delta 將單品新增消費收斂為分攤按需展開與單一其他資訊入口，未再升 SW 版次 |
+| v98 後續 dev delta | **Shopping UI P0 list tab＋selection seam**：純 transition＋ordered-effects workflow 接管 tab／selection，store／photo／Buy-to-Ledger／資料／renderer 不變；未另占 runtime 版本 |
 
 > v45–v73 的逐版交付紀錄見 `07_CHANGELOG.md`,不在本檔重述。
 
@@ -102,6 +103,6 @@
 
 ## 下一棒
 
-→ **dev 已在 SW v98 上加入 Ledger 單品新增消費快速版面，等待 Bar 畫面／真機驗收。** v96 已在 `main`，但因 Netlify 額度用罄，正式站仍為 v73，正式部署驗證與 `production-v96` tag 暫停。v99／v100 仍保留給 SW 更新提示雙版本驗收；Shopping UI workflow/state 仍需另行規劃，不在本批擴張。
+→ **Shopping UI P0 的 list tab＋selection seam 已在 SW v98 dev delta 完成 focused 驗證，待完整 gate 後 push `dev`；runtime 版本仍未另行決定。** 下一個 Shopping UI slice 只可在獨立 characterization 後評估 form session 或 detail／return context，不碰 store、photo repository、Buy-to-Ledger domain、資料格式或 renderer。v96 已在 `main`，但因 Netlify 額度用罄，正式站仍為 v73，正式部署驗證與 `production-v96` tag 暫停；v99／v100 仍保留給 SW 更新提示雙版本驗收。
 
 > **不得**自行動 `main`、部署正式站或建立 production tag。未經 Bar 核准不得 merge `dev → main`。

@@ -24,5 +24,6 @@ Decision · Context · Alternatives Considered · Why This Decision · Expected 
 | 0009 | Buy-to-Ledger 垂直切片與 Runtime Seam | Accepted |
 | 0010 | Ledger UI 歷史瀏覽 Workflow／State Seam | Accepted |
 | 0011 | Ledger Entry Session Workflow／State Seam | Accepted |
+| 0012 | Shopping UI List Tab／Selection Workflow／State Seam | Accepted |
 
 新增 ADR:複製格式、編號遞增、更新本索引。
