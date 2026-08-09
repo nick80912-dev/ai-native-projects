@@ -31,6 +31,7 @@
   "data_flow": "GoogleSheets(8表)→發布CSV→手機瀏覽器fetch→validator.js(防錯)→parser(Schema驅動)→DB→renderers→UI；個人帳、代購對象、主題與旅途紀錄→localStorage only(不進Queue/CMS)，並由個人備份v8原子匯出／還原；採買照片→shopping-photo-store.js壓縮→IndexedDB trip-local-media/shopping-photos,採買項目localStorage只存photoId且備份剝除；團體帳→enqueueBatch一次寫入localStorage佇列→立即UI完成→ledgerRepository背景送達Apps Script→分帳紀錄表(append-only,Schema 2.9固定21欄,time=消費發生時間,末五欄=輸入幣別/免稅/價格方式/稅率/優惠券)；未受還款確認保護的團體編輯=舊筆墓碑+replacesRecordId替代筆；canonical還款確認切點前的收據永久禁止直接改寫，只能由原付款人以commit-last事件整張更正或作廢；共用分帳設定:Settings→Apps Script→TripConfig兩個固定鍵→發布CSV,確認後以本機bridge涵蓋1–5分鐘延遲；離線三層:BUILTIN內建→localStorage快取→背景同步",
   "files": {
     "ledger-ui-state.js": "Ledger 歷史瀏覽不可變 state transition 與 ordered effects workflow；DOM adapter 位於 index.html",
+    "shopping-ui-state.js": "Shopping list tab／selection 不可變 state transition 與 ordered effects workflow；DOM adapter 位於 index.html",
     "index.html": "App 與正式部署入口:UI殼+CSS+內嵌JS(區塊分層見10_FOLDER_STRUCTURE)",
     "shopping-photo-store.js": "採買照片縮放壓縮與IndexedDB put/get/remove邊界;Blob只存在目前裝置,不進備份或同步",
     "buy-to-ledger.js": "採買轉記帳純domain與workflow coordinator;dependency adapter留在index.html,模組不直接讀DOM或storage",
@@ -43,6 +44,7 @@
   },
   "deploy_files": {
     "ledger-ui-state.js": "Ledger 歷史瀏覽 state／workflow runtime module",
+    "shopping-ui-state.js": "Shopping list tab／selection state／workflow runtime module",
     "index.html": "App UI、DOM adapter與正式入口",
     "buy-to-ledger.js": "採買轉記帳純domain／workflow runtime module",
     "schema.js + validator.js": "資料規格與防錯來源",
