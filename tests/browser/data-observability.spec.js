@@ -35,6 +35,25 @@ async function recentCardLayout(page,detail){
   });
 }
 
+async function batchCardLayout(page,title){
+  return page.locator('.ledger-batch-card').filter({hasText:title}).first().evaluate(row=>{
+    const body=row.querySelector('.ledger-batch-body'),main=row.querySelector('.ledger-recent-main');
+    const primary=row.querySelector('.ledger-recent-primary-line'),secondary=row.querySelector('.ledger-recent-secondary-line');
+    const amounts=row.querySelector('.ledger-dual-amounts'),mainRect=main.getBoundingClientRect();
+    return {
+      documentOverflow:document.documentElement.scrollWidth>document.documentElement.clientWidth,
+      rowOverflow:row.scrollWidth>row.clientWidth,
+      bodyOverflow:body.scrollWidth>body.clientWidth,
+      mainRows:main.children.length,
+      primaryNoWrap:getComputedStyle(primary).whiteSpace==='nowrap',
+      secondaryNoWrap:getComputedStyle(secondary).whiteSpace==='nowrap',
+      bodyCentered:getComputedStyle(body).alignItems==='center',
+      leftAligned:getComputedStyle(primary).textAlign==='left'&&getComputedStyle(secondary).textAlign==='left',
+      amountClear:mainRect.right<=amounts.getBoundingClientRect().left+.5
+    };
+  });
+}
+
 async function installLedgerFixture(page){
   await page.addInitScript(()=>{
     localStorage.setItem('trip_personal_ledger',JSON.stringify([
@@ -51,7 +70,7 @@ test('個人與團體摘要以今日為主、旅程累計為次，三種手機�
   await installLedgerFixture(page);
   await openApp(page);
   await waitForSyncToSettle(page);
-  await page.evaluate(()=>switchView('split'));
+  await page.evaluate(()=>{closeMemberSelector();switchView('split');});
 
   await expect(page.locator('.ledger-summary-count')).toHaveText('今日支出 · 1 筆');
   await expect(page.locator('.ledger-summary-amount strong')).toHaveText('¥700');
@@ -60,9 +79,15 @@ test('個人與團體摘要以今日為主、旅程累計為次，三種手機�
   await expect(page.locator('.ledger-today-hint')).toHaveCount(0);
 
   const personal=page.locator('.ledger-recent-row').filter({hasText:'早餐超長品項'}).first();
-  await expect(personal.locator('.ledger-recent-primary-line')).toContainText(/早餐超長品項名稱用來驗證手機省略號.*現金.*幫.*Amy 長名稱.*買/);
+  await expect(personal.locator('.ledger-recent-primary-line')).toContainText(/早餐超長品項名稱用來驗證手機省略號.*幫.*Amy 長名稱.*買/);
+  await expect(personal.locator('.ledger-recent-payment')).toHaveCount(0);
+  await expect(personal).not.toContainText('現金');
   await expect(personal.locator('.ledger-recent-secondary-line')).toHaveText(/早餐店超長分店名稱用來驗證手機省略號.*🍜 餐飲/);
   await expect(personal.locator('.ledger-recent-badges')).toHaveCount(0);
+  await personal.locator('.ledger-recent-body').click();
+  const detail=page.getByRole('dialog',{name:'消費明細'});
+  await expect(detail.locator('.ledger-detail-row').filter({hasText:'支付方式'})).toContainText('現金');
+  await detail.getByRole('button',{name:'關閉'}).click();
   for(const size of WIDTHS){
     await page.setViewportSize(size);
     expect(await recentCardLayout(page,'早餐超長品項'),`personal recent card @${size.width}`).toEqual({
@@ -84,7 +109,9 @@ test('個人與團體摘要以今日為主、旅程累計為次，三種手機�
   await expect(page.locator('.ledger-summary-card')).not.toContainText('我的支出');
 
   const shared=page.locator('.ledger-recent-row').filter({hasText:'團體早餐超長品項'}).first();
-  await expect(shared.locator('.ledger-recent-primary-line')).toContainText(/團體早餐超長品項名稱用來驗證手機省略號.*現金.*Amy付款.*2 人分攤/);
+  await expect(shared.locator('.ledger-recent-primary-line')).toContainText(/團體早餐超長品項名稱用來驗證手機省略號.*Amy付款.*2 人分攤/);
+  await expect(shared.locator('.ledger-recent-payment')).toHaveCount(0);
+  await expect(shared).not.toContainText('現金');
   await expect(shared.locator('.ledger-shared-participant-summary')).toContainText(/Amy付款.*2 人分攤/);
   await expect(shared.locator('.ledger-recent-badges')).toHaveCount(0);
   await expect(shared.locator('.ledger-recent-secondary-line')).toContainText(/團體早餐店超長分店名稱用來驗證手機省略號.*🍜 餐飲.*免稅品.*待同步.*已鎖帳/);
@@ -119,6 +146,27 @@ test('個人與團體摘要以今日為主、旅程累計為次，三種手機�
       detailEllipsis:true,locationEllipsis:true,amountClear:true,compact:true
     });
   }
+
+  await page.evaluate(()=>{
+    DB.ledger=[
+      {id:'g-batch-a',batchId:'g-breakfast',time:'2026-08-03T02:00:00.000Z',member:'Amy',category:'餐飲',detail:'早餐套餐',storeName:'團體早餐批次店超長名稱',amountJpy:900,amountTwd:180,participants:'["Bar","Amy"]',payMethod:'現金',recordType:'',pending:true},
+      {id:'g-batch-b',batchId:'g-breakfast',time:'2026-08-03T02:00:01.000Z',member:'Amy',category:'飲品',detail:'咖啡',storeName:'團體早餐批次店超長名稱',amountJpy:600,amountTwd:120,participants:'["Bar","Amy"]',payMethod:'現金',recordType:'',_correctionProtected:true}
+    ];
+    renderSplit();
+  });
+  const sharedBatch=page.locator('.ledger-batch-card').filter({hasText:'團體早餐批次店'}).first();
+  await expect(sharedBatch.locator('.ledger-batch-body')).toContainText('Amy付款 · 分攤依品項');
+  await expect(sharedBatch.locator('.ledger-batch-body')).not.toContainText('現金');
+  for(const size of WIDTHS){
+    await page.setViewportSize(size);
+    expect(await batchCardLayout(page,'團體早餐批次店'),`shared batch @${size.width}`).toEqual({
+      documentOverflow:false,rowOverflow:false,bodyOverflow:false,mainRows:2,
+      primaryNoWrap:true,secondaryNoWrap:true,bodyCentered:true,leftAligned:true,amountClear:true
+    });
+  }
+  await sharedBatch.locator('.ledger-batch-body').click();
+  await expect(sharedBatch.locator('.ledger-batch-children .ledger-recent-row')).toHaveCount(2);
+  await expect(sharedBatch.locator('.ledger-batch-children .ledger-shared-participant-summary')).toHaveCount(2);
   expect(errors).toEqual([]);
 });
 

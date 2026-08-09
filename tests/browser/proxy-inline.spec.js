@@ -90,6 +90,10 @@ test('消費與採買卡同行顯示共用代購標記，消費卡窄螢幕維�
 
   const batch=page.locator('.ledger-batch-card').first();
   await expect(batch.locator('.ledger-batch-body')).toContainText('2 項代購');
+  await expect(batch.locator('.ledger-batch-body')).not.toContainText('現金');
+  await expect(batch.locator('.ledger-batch-body .ledger-recent-main')).toHaveCount(1);
+  await expect(batch.locator('.ledger-batch-body .ledger-recent-primary-line')).toHaveCount(1);
+  await expect(batch.locator('.ledger-batch-body .ledger-recent-secondary-line')).toHaveCount(1);
   await batch.locator('.ledger-batch-body').click();
   await expect(batch.locator('.ledger-batch-children .ledger-proxy-target-summary')).toHaveCount(2);
 
