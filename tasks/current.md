@@ -103,6 +103,6 @@
 
 ## 下一棒
 
-→ **品質批 #2 的 AppLog／healthCheck、`fetchSheet` 800ms 退避與 `toast()` null guard 已在 SW v98 dev delta 完成完整 gate；runtime 版本未另行配置。** 依正式 backlog，下一個最高優先未完成切片是未來 TEST 模擬版的 localStorage 前綴隔離。v96 已在 `main`，但因 Netlify 額度用罄，正式站仍為 v73，正式部署驗證與 `production-v96` tag 暫停；v99／v100 仍保留給 SW 更新提示雙版本驗收。
+→ **品質批 #2 已收斂；最後一項「未來 TEST 模擬版 localStorage 前綴隔離」於 2026-08-09 由 Bar 裁定因目前沒有實際執行路徑而關閉、不實作。** backlog #3 為收到具體回饋時才進行的 UI／內容微調；下一個可直接執行的正式項目為 #4「BUILTIN 快照更新 SOP 文件化」。v96 已在 `main`，但因 Netlify 額度用罄，正式站仍為 v73，正式部署驗證與 `production-v96` tag 暫停；v99／v100 仍保留給 SW 更新提示雙版本驗收。
 
 > **不得**自行動 `main`、部署正式站或建立 production tag。未經 Bar 核准不得 merge `dev → main`。

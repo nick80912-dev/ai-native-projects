@@ -141,7 +141,7 @@
     "pending_in_order": [
       "完成受保護的 dev → main 發布流程並驗證正式站",
       "線上驗證成功後才建立 annotated production-v96 tag",
-      "品質批 #2 下一項：TEST 模擬版 localStorage 前綴隔離；v99/v100保留SW更新提示雙版本驗收"
+      "backlog #3 等待具體 UI／內容回饋；下一個可直接執行項目為 #4 BUILTIN 快照更新 SOP 文件化；v99/v100保留SW更新提示雙版本驗收"
     ]
   },
   "after_every_delivery": "跑 window.healthCheck() + 輸出健康報告 + 更新 07_CHANGELOG(建新檔) + 必要時更新本 manifest",

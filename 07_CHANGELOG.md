@@ -1,4 +1,11 @@
 # 07 版本紀錄
+## 2026-08-09｜關閉未來 TEST 模擬版 localStorage 前綴隔離待辦（文件治理）
+
+- Bar 裁定從正式 backlog 移除品質批 #2 最後一項「未來 TEST 模擬版 localStorage 前綴隔離」，不實作。
+- 現行正式站與 dev 測試站分屬不同 origin，自動測試使用隔離環境，診斷時間模擬已有快照／還原與備份防呆；repo 亦禁止提交同源 TEST HTML，因此目前沒有需要前綴隔離的實際執行路徑。
+- 同步更新 `tasks/backlog.md`、`tasks/current.md`、`tasks/done.md` 與 `.ai-manifest.json`；未修改 runtime、localStorage key、資料格式、SW 或版本號。
+- Breaking Change：無。
+
 ## 2026-08-09｜Ledger 清單隱藏付款方式與多品項兩行摘要（dev，SW v98 未升版）
 
 - **付款方式降至明細**：個人／團體 dashboard、完整紀錄、單筆卡、批次父卡與展開子項皆不再顯示付款方式；`record.payMethod`、消費明細「支付方式」、完整紀錄支付方式篩選、表單、匯出與儲存完全保留。

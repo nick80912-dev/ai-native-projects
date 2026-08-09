@@ -3,6 +3,7 @@
 > 更新於 2026-08-09。完成事項來自 `.ai-manifest.json` status.done、既有 CHANGELOG 與 Bar 驗收確認；細節仍以 07_CHANGELOG.md 為準。
 
 ## 已完成
+- 2026-08-09：Bar 裁定關閉 backlog #2 最後一項「未來 TEST 模擬版 localStorage 前綴隔離」，不實作。現行正式站與 dev 測試站分屬不同 origin，自動測試使用隔離環境，診斷時間模擬已有快照／還原與備份防呆；repo 亦禁止提交同源 TEST HTML，因此目前沒有需要前綴隔離的實際執行路徑。未來若重新引入同源、可寫入狀態的 TEST 模擬版，須作為新需求重新評估。
 - 2026-08-09：Ledger 個人／團體所有清單卡隱藏付款方式，消費明細與支付方式篩選仍保留；單筆第一行只留品項與代購／付款分攤。多品項父卡改為嚴格兩行，團體顯示「付款人 · 分攤依品項」，展開子項保留精確分攤與狀態；內容靠左、垂直置中，金額固定右側。
 - 2026-08-09：Ledger 個人／團體近期消費卡嚴格收斂為兩行；第一行「品項／付款方式／代購或付款分攤」，第二行「店家／類別／免稅／TEST／待同步／鎖帳或更正」，320／375／390px 一律 single-line ellipsis。團體付款分攤與鎖帳／更正使用原 neutral 配色，待同步保留原黃色，個人代購保留 coral；右側金額、所有狀態判定及帳務／資料層不變。
 - 2026-08-09：Ledger 近期消費卡資訊階層微調完成；團體付款／分攤摘要由下方 badge 移到品項旁，個人與團體類別統一接在店家後，支付方式獨立留在下一列；缺店家仍保留類別，缺支付方式不產生空白列。只改 presentation renderer／CSS，帳務與資料層不變。
@@ -67,10 +68,10 @@
 
 - **#2 的子項「隱藏『重置今日進度』」** — 2026-07-30 由 P5 調查發現**早已實作完成**,只是 backlog 未歸位。實作為 `resetTripProgress()`(`index.html`),位於診斷面板「行程進度」區,附雙重 `confirm()`,只清除 `trip_checks` 與 `trip_next_stop_progress`。
   - **與原文的差異(如實記錄)**:backlog 原文寫入口是「連點標題 5 下」,實際入口是**桃子診斷徽章 300ms 內連點兩次 `touchend`**(`setupDiagnostics()`);`brandTitle` 上沒有任何 listener。因為只綁 `touchend`,桌機滑鼠點擊打不開,實際上比原構想更難誤觸。經 Bar 2026-07-30 裁定移出 #2。
-  - #2 的其餘子項中，下一站 reconciliation、AppLog 環形緩衝、fetchSheet 退避與 toast() null guard 已於 2026-08-09 完成；目前只剩 localStorage 前綴隔離維持在 backlog #2。
+  - #2 的其餘子項中，下一站 reconciliation、AppLog 環形緩衝、fetchSheet 退避與 toast() null guard 已於 2026-08-09 完成；最後一項 localStorage 前綴隔離亦於 2026-08-09 由 Bar 裁定因目前沒有實際執行路徑而關閉、不實作。
 
 - **#23 12 月東京行接入** — Bar 於 2026-08-03 確認該行程已結束,因此不新增行程分頁、不擴充 `TripConfig transport=transit`、不新增 SHEETS gid。本項是需求失效後關閉,**不是功能交付**；編號永久保留不回收。
-- **#2 已由後續版本完成的子項** — 行程面板展開狀態於 v82 完成；天氣改取「現在之後」最大值於 v84 完成；同步徽章相對時間與 partial 失敗來源於 v88 完成；下一站 reconciliation、AppLog／healthCheck 診斷能力、fetchSheet 退避與 toast() null guard 於 2026-08-09 完成。backlog #2 現只保留測試資料隔離。
+- **#2 已由後續版本完成或關閉** — 行程面板展開狀態於 v82 完成；天氣改取「現在之後」最大值於 v84 完成；同步徽章相對時間與 partial 失敗來源於 v88 完成；下一站 reconciliation、AppLog／healthCheck 診斷能力、fetchSheet 退避與 toast() null guard 於 2026-08-09 完成。最後一項 TEST 模擬版 localStorage 前綴隔離由 Bar 於 2026-08-09 裁定關閉、不實作；backlog #2 已完全收斂。
 ## 文件治理
 - 2026-07-13:Netlify 雙站架構上線(`main`=正式站、`dev`=測試站)，兩站部署與瀏覽器狀態完全隔離。
 - 2026-07-10:修復批交付(事故處理規範 §C、雙通道 SOP §D、檢查器三新規則、CI 全測試涵蓋、測試檔治理)。
