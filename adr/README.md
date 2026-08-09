@@ -25,5 +25,9 @@ Decision · Context · Alternatives Considered · Why This Decision · Expected 
 | 0010 | Ledger UI 歷史瀏覽 Workflow／State Seam | Accepted |
 | 0011 | Ledger Entry Session Workflow／State Seam | Accepted |
 | 0012 | Shopping UI List Tab／Selection Workflow／State Seam | Accepted |
+| 0013 | Shopping Form Session Workflow／State Deepening | Accepted |
+| 0014 | Trip Progression Reconciliation Module | Accepted |
+| 0015 | Ledger Correction Workflow／State Deepening | Accepted |
+| 0016 | Runtime JavaScript Asset Authority | Accepted |
 
 新增 ADR:複製格式、編號遞增、更新本索引。

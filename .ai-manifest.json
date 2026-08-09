@@ -2,7 +2,7 @@
   "$comment": "AI 導航檔 — 任何 AI 接手第一步只讀這份即可掌握全貌。這是 13 步流程的第 1 步。",
   "project": "japan-travel-pwa(日本旅遊行程 App)",
   "owner": "Bar(產品負責人,非工程師,繁中溝通,要直接執行不要教學;AI=全職工程團隊)",
-  "version": "2.15-ledger-ui-state-v96",
+  "version": "2.16-ui-workflow-modularization-v98",
   "framework": "ai-native-framework@pending(尚未抽取;見 FUTURE_PLAN_framework-extraction.md)",
   "updated": "2026-08-08",
   "live": "https://trippilot-jp.netlify.app/",
@@ -135,13 +135,13 @@
   },
   "status": {
     "production": "main 維持 production-v73，直到已核准的 release PR 合併並完成線上驗證",
-    "dev_candidate": "v96（v74–v95 已驗收能力，加上兩項 release-blocker 規格補正）",
+    "dev_candidate": "v98（UI workflow/state 1→4 架構模組化完成，未另占 runtime 版本）",
     "device_acceptance": "Bar 已完成 v74–v89、v92–v95 畫面／真機驗收；v96 兩項補正由瀏覽器回歸測試覆蓋",
-    "automated_validation": "完整基準為 70 個 Node test files 與 124 個 Playwright tests",
+    "automated_validation": "完整基準為 77 個 Node test files 與 143 個 Playwright tests，另含 runtime asset CLI",
     "pending_in_order": [
       "完成受保護的 dev → main 發布流程並驗證正式站",
       "線上驗證成功後才建立 annotated production-v96 tag",
-      "下一個架構切片評估 Ledger entry session lifecycle"
+      "由 Bar 進行後續 UI/UX 優化；v99/v100 保留 SW 更新提示雙版本驗收"
     ]
   },
   "after_every_delivery": "跑 window.healthCheck() + 輸出健康報告 + 更新 07_CHANGELOG(建新檔) + 必要時更新本 manifest",

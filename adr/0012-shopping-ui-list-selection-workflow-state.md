@@ -2,6 +2,8 @@
 
 > 狀態：Accepted（2026-08-09，由 Bar 核准 spec 後直接執行並 push `dev`）
 
+> 後續深化：ADR 0013 已在相同 module 接管 form session lifecycle；本 ADR 的 list tab／selection 邊界仍有效。
+
 ## Decision
 
 新增 ES5-compatible UMD module `shopping-ui-state.js`，以 `createState(seed)`、`transition(state, action)` 與 `createWorkflow(adapter)` 管理 Shopping list 的 `tab`、`selectionMode` 與 `selected`。Production 保留既有 `shoppingUiState` 作 compatibility projection，但只有 workflow adapter 可直接回寫這三個欄位。

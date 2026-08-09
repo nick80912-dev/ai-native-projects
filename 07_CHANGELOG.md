@@ -1,4 +1,13 @@
 # 07 版本紀錄
+## 2026-08-09｜UI workflow/state 1→4 架構模組化（dev，SW v98 未升版）⭐ 架構變更
+
+- **1｜Shopping form session**：深化既有 `shopping-ui-state.js`，接管 `form`／`formSession`／`photoError` lifecycle；production adapter 成為唯一寫入點。Save、save-another 與 photo Promise 以 runtime session/request ID 防止 stale completion；validation/store/photo failure 保留 Sheet，store、IndexedDB photo repository、Buy-to-Ledger、資料格式、split 與 renderer 均留在原邊界。
+- **2｜下一站一次性調和**：新增純 `trip-progression.js`，集中時間選擇、cluster blocker、stale classification 與 auto-skip next progress。`pickNextStop()` 只作 production adapter，同輪多項超時最多保存一次 `trip_next_stop_progress`、顯示一次 Toast，不重寫 checks 或既有 storage 格式。
+- **3｜Ledger correction session**：深化既有 `ledger-ui-state.js`，讓 correction 與 create/edit 共用 session/request、calendar、mount/render/pending/return effects；open/close/reason/preview/save 全部走 semantic actions，刪除舊 `syncLegacyCorrectionSavePending` compatibility helper。Eligibility、receipt freshness、preview/domain builders、commit-last batch、repository、settlement、Apps Script 與 schema 未移入 UI module。
+- **4｜Runtime asset authority**：新增 build-time-only `runtime-assets.json` 與 `tools/check-runtime-assets.js`，對八個 JS runtime assets 同時驗證實體檔、入口（`schema.js`／`validator.js` 沿用內嵌 exact-parity marker）、SW `SHELL`、README 與 `.ai-manifest.json`。未導入 bundler／generator／browser loader，未改 SW lifecycle、cache strategy 或 script order。
+- **決策與測試替換**：新增 ADR 0013–0016 與四份設計／實作計畫；source-extraction／substring locks 只在正式 module interface、wiring 或 browser seam完整取代後移除。Fresh full gate 為 **77／77** Node test files、Playwright **143／143**，另通過 runtime asset CLI、App/SW v98 一致性、文件標題、manifest JSON 與 `git diff --check`。
+- **版本與發布邊界**：`app-version.js`、`SW_VERSION`、`CACHE_NAME` 仍為 v98；v99／v100 繼續保留給 SW 更新提示雙版本驗收。本批只 push `dev`，不 merge `main`、不 deploy Netlify、不建立 production tag。
+
 ## 2026-08-09｜Shopping list tab／selection workflow／state seam（dev，SW v98 未升版）⭐ 架構變更
 
 - **先 characterization 再抽 seam**：先只讀盤點 Shopping page filters、list tab、selection、批次操作、form、detail、photo 與返回脈絡；第一個垂直切片只涵蓋 list tab＋selection。新增 Node legacy characterization 與真實瀏覽器回歸，鎖定卡片 body 多選語意、批次 store failure 與刪除取消時保留 selection。

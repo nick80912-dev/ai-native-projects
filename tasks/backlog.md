@@ -6,7 +6,6 @@
 
 ## 中優先(已核准正式待辦)
 2. **品質批**(2026-07-10 彙整,Bar 已核准方向):
-   - reconcileDayProgress 重構:把自動略過的寫入從 pickNextStop 抽出,恢復純函式(消除渲染副作用)
    - 隱藏除錯面板後續評估(AppLog 環形緩衝 + healthCheck);iOS 手勢診斷已退役，保留 no-op `dblclick` 相容性監聽器
    - fetchSheet 重試加 800ms 退避;toast() null guard
    - 未來測試模擬版:localStorage 前綴隔離(TEST 版不再污染正式狀態)
