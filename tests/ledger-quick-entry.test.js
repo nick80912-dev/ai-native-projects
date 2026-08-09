@@ -71,7 +71,7 @@ assert.strictEqual(resetPersonal.isProxy,false,'save-and-add-another uses the sa
 assert.strictEqual(resetPersonal.proxyTarget,'','proxy target never carries into the next personal record');
 
 // formatLedgerCurrencyAmount 已移入結算區段(供結算狀態機共用),改以下一個穩定邊界收尾。
-const stateSource=extract('function createLedgerEntryDraft(','function syncLegacyCorrectionSavePending(');
+const stateSource=extract('function createLedgerEntryDraft(','function ledgerDuplicateCandidateRecords(');
 const stateSandbox={
   ledgerUiState:{draft:null},
   appNow(){return new Date();},
@@ -128,7 +128,7 @@ vm.runInContext(persistSource,persistSandbox);
   assert.strictEqual(sharedResult.queued,true,'shared persistence resolves from local queue acknowledgement');
   assert.strictEqual(personalAdds,1,'shared saves never call the personal repository');
 
-  const sheetSource=extract('var ledgerBackgroundScrollY=0;','function syncLegacyCorrectionSavePending(');
+  const sheetSource=extract('var ledgerBackgroundScrollY=0;','function ledgerDuplicateCandidateRecords(');
   const builderSource=extract('function buildLedgerExpenseRecords(','function buildMemberBalances(');
   assert(sheetSource.includes("document.body.classList.add('ledger-sheet-open')"),'opening sheet locks background scrolling');
   assert(sheetSource.includes("document.body.classList.remove('ledger-sheet-open')"),'closing sheet restores background scrolling');
@@ -158,9 +158,9 @@ vm.runInContext(persistSource,persistSandbox);
   assert(!/addEventListener\(['"](?:touchstart|touchmove|touchend|gesturestart)/.test(sheetSource),'sheet adds no JavaScript gesture interceptor');
   assert(!/addEventListener\(['"](?:touchstart|touchmove|touchend|gesturestart)[\s\S]{0,320}preventDefault\(/.test(sheetSource),'sheet never blocks a touch or gesture default action');
   assert(sheetSource.includes("result.queued?'已儲存，待同步':'已儲存'"),'shared optimistic save reports pending background delivery');
-  assert(sheetSource.includes('ledgerBackgroundScrollY=window.scrollY'),'opening captures the background scroll position');
+  assert(sheetSource.includes('captureLedgerEntryReturnContext()')&&sheetSource.includes('ledgerBackgroundScrollY=returnContext.scrollY'),'opening captures the background return context');
   assert(sheetSource.includes('sheet.scrollTop=0'),'new sheets start at the top');
-  assert(sheetSource.includes('window.scrollTo({top:ledgerBackgroundScrollY'),'closing restores the background scroll position');
+  assert(sheetSource.includes('function restoreLedgerEntryContext(')&&sheetSource.includes('top=ledgerBackgroundScrollY'),'closing restores the captured background scroll position');
   assert(sheetSource.includes('function withLedgerSheetPosition('),'structural rerenders preserve internal sheet position');
 
   assert(/\.ledger-sheet\{[^}]*overflow-y:auto[^}]*touch-action:pan-y/.test(html),'sheet scroll surface is pan-y only');

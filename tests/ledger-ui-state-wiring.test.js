@@ -68,7 +68,7 @@ const closeCalendarSource=extractFunction(html,'closeLedgerCalendar');
 assert.match(openCreateSource,/ledgerUiWorkflow\.dispatch\(\{type:'open-entry-create'/,'create entry opens through the workflow');
 assert.match(openEditSource,/ledgerUiWorkflow\.dispatch\(\{type:'open-entry-edit'/,'edit entry opens through the workflow');
 assert.match(closeEntrySource,/ledgerUiWorkflow\.dispatch\(\{type:'close-entry'/,'ordinary entry close goes through the workflow');
-assert.match(closeEntrySource,/ledgerUiState\.correction/,'correction retains an explicit compatibility close branch');
+assert.match(closeEntrySource,/ledgerUiWorkflow\.dispatch\(\{type:'close-correction'/,'correction close goes through the same workflow');
 assert.doesNotMatch(openCreateSource,/ledgerUiState\.(?:draft|editing|sheet|savePending)\s*=/,'create no longer mutates owned session boundaries');
 assert.doesNotMatch(openEditSource,/ledgerUiState\.(?:draft|editing|sheet|savePending)\s*=/,'edit no longer mutates owned session boundaries');
 assert.match(trackEntrySource,/type:'entry-track-switched'/,'entry track switching installs its planned draft through the workflow');
@@ -78,7 +78,9 @@ assert.match(selectCalendarSource,/type:'select-entry-calendar-date'/);
 assert.match(closeCalendarSource,/type:'close-entry-calendar'/);
 
 const correctionSource=extractFunction(html,'openLedgerCorrectionSheet');
-assert.match(correctionSource,/ledgerUiState\.correction\s*=/,'correction remains on the documented compatibility path');
+assert.match(correctionSource,/ledgerUiWorkflow\.dispatch\(\{\s*type:'open-correction'/,'correction opens through the existing Ledger workflow');
+assert.doesNotMatch(correctionSource,/ledgerUiState\.(?:track|draft|editing|correction|sheet|savePending)\s*=/,'correction open no longer mutates workflow-owned state');
+assert.match(extractFunction(html,'updateLedgerCorrectionReason'),/type:'update-correction-reason'/,'correction reason updates through the workflow');
 
 const saveEntrySource=extractFunction(html,'saveLedgerEntry');
 const commitEntrySource=extractFunction(html,'commitLedgerEntrySave');
@@ -90,9 +92,16 @@ assert.match(finishEntrySource,/type:'entry-save-succeeded'/,'create/edit succes
 assert.match(failEntrySource,/type:'entry-save-failed'/,'create/edit failure finishes through the workflow');
 [saveEntrySource,commitEntrySource,finishEntrySource,failEntrySource].forEach(function(source){
   assert.doesNotMatch(source,/ledgerUiState\.(?:draft|editing|sheet|savePending)\s*=/,'migrated save paths do not directly mutate owned session boundaries');
-  assert.doesNotMatch(source,/syncLegacyCorrectionSavePending\(/,'migrated save paths do not call the correction-only pending helper');
 });
-assert.match(correctionSaveSource,/syncLegacyCorrectionSavePending\(/,'correction alone retains the explicitly named pending compatibility helper');
+assert.match(correctionSaveSource,/type:'correction-preview-installed'/,'correction preview installation uses a semantic workflow action');
+assert.match(correctionSaveSource,/type:'correction-save-requested'/,'correction persistence is request guarded');
+assert.match(correctionSaveSource,/type:'correction-save-succeeded'/,'correction success closes through the workflow');
+assert.match(correctionSaveSource,/type:'correction-save-failed'/,'correction failure unlocks through the workflow');
+assert.doesNotMatch(html,/function syncLegacyCorrectionSavePending\(/,'the compatibility pending helper is deleted');
+assert.doesNotMatch(toggleCalendarSource,/if\(ledgerUiState\.correction\)/,'calendar toggle has no correction-only direct mutation branch');
+assert.doesNotMatch(shiftCalendarSource,/if\(ledgerUiState\.correction\)/,'calendar shift has no correction-only direct mutation branch');
+assert.doesNotMatch(selectCalendarSource,/if\(ledgerUiState\.correction\)/,'calendar selection has no correction-only direct mutation branch');
+assert.doesNotMatch(closeCalendarSource,/if\(ledgerUiState\.correction\)/,'calendar close has no correction-only direct mutation branch');
 
 assert.doesNotMatch(html,/localStorage\.(?:setItem|getItem)\([^)]*ledgerUiState/,'Ledger UI workflow state remains session-only');
 assert.doesNotMatch(extractFunction(html,'exportPersonalState'),/ledgerUiState/,'personal backups do not include Ledger UI state');

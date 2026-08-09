@@ -40,8 +40,14 @@
     });
     return next;
   }
+  function cloneOpaque(value){
+    var source=plainObject(value),next={};
+    if(!source)return null;
+    Object.keys(source).forEach(function(key){next[key]=source[key];});
+    return next;
+  }
   function clearEntrySession(state){
-    state.sheet=null;state.draft=null;state.editing=null;state.savePending=false;
+    state.sheet=null;state.draft=null;state.editing=null;state.correction=null;state.savePending=false;
     state.calendarOpen=false;state.calendarYear=0;state.calendarMonth=0;
     state.entryReturnContext=null;state.entrySessionId='';state.entrySaveRequestId='';
     return state;
@@ -49,8 +55,15 @@
   function matchesEntry(state,command){
     return state.sheet==='entry'&&!state.correction&&!!state.entrySessionId&&text(command.sessionId)===state.entrySessionId;
   }
+  function matchesEntrySession(state,command){
+    return state.sheet==='entry'&&!!state.entrySessionId&&text(command.sessionId)===state.entrySessionId;
+  }
+  function matchesCorrection(state,command){return matchesEntrySession(state,command)&&!!state.correction;}
   function matchesSave(state,command){
     return matchesEntry(state,command)&&state.savePending&&text(command.requestId)===state.entrySaveRequestId;
+  }
+  function matchesCorrectionSave(state,command){
+    return matchesCorrection(state,command)&&state.savePending&&text(command.requestId)===state.entrySaveRequestId;
   }
   function shiftedMonth(year,month,delta){
     var total=Number(year)*12+Number(month)+Number(delta||0);
@@ -62,7 +75,7 @@
     var source=seed&&typeof seed==='object'?seed:{},sheet=source.sheet==='entry'?'entry':null;
     var correction=source.correction==null?null:source.correction;
     var sessionId=text(source.entrySessionId).trim();
-    var entryActive=sheet==='entry'&&(!!sessionId||!!correction);
+    var entryActive=sheet==='entry'&&!!sessionId;
     return {
       track:oneOf(source.track,TRACKS,'personal'),
       displayCurrency:oneOf(source.displayCurrency,['','JPY','TWD'],''),
@@ -72,7 +85,7 @@
       selectedRecordId:text(source.selectedRecordId),
       draft:entryActive&&source.draft!=null?source.draft:null,
       editing:entryActive&&sessionId&&source.editing!=null?source.editing:null,
-      correction:entryActive?correction:null,
+      correction:entryActive?cloneOpaque(correction):null,
       retainedParticipants:source.retainedParticipants==null?null:source.retainedParticipants,
       historyQuery:text(source.historyQuery),
       historyCategories:uniqueStrings(source.historyCategories),
@@ -135,6 +148,13 @@
         {type:'render-entry',preservePosition:false},
         {type:'focus-entry',target:text(command.focusTarget),immediate:true}
       ]);
+    case 'open-correction':
+      if(!plainObject(command.draft)||!plainObject(command.correction)||!text(command.sessionId).trim())return unchanged(state);
+      next=createState(state);next.sheet='entry';next.track='shared';next.draft=command.draft;next.editing=null;
+      next.correction=cloneOpaque(command.correction);next.savePending=false;next.calendarOpen=false;
+      next.calendarYear=0;next.calendarMonth=0;next.entrySaveRequestId='';
+      next.entrySessionId=text(command.sessionId).trim();next.entryReturnContext=cloneContext(command.returnContext);
+      return result(next,[{type:'close-actions'},{type:'mount-entry'},{type:'render-entry',preservePosition:false}]);
     case 'entry-track-switched':
       if(state.sheet!=='entry'||state.correction||text(command.sessionId)!==state.entrySessionId||!plainObject(command.draft))return unchanged(state);
       next=createState(state);next.draft=command.draft;next.track=oneOf(command.draft.track,TRACKS,next.track);
@@ -176,8 +196,49 @@
       }
       if(command.notification)savedEffects.push({type:'notify-entry-result',notification:command.notification});
       return result(next,savedEffects);
+    case 'update-correction-reason':
+      if(!matchesCorrection(state,command))return unchanged(state);
+      next=createState(state);next.correction.reason=text(command.reason);
+      next.correction.preview=null;next.correction.previewSignature='';next.correction.previewKind='';
+      return result(next,[{type:'clear-correction-reason-error'}]);
+    case 'correction-validation-failed':
+      if(!matchesCorrection(state,command)||!plainObject(command.draft))return unchanged(state);
+      next=createState(state);next.draft=command.draft;
+      return result(next,[{type:'render-entry',preservePosition:true},{type:'focus-entry',target:text(command.errorTarget)}]);
+    case 'correction-preview-installed':
+      if(!matchesCorrection(state,command)||!plainObject(command.preview)||!text(command.signature).trim()||['correction','void'].indexOf(command.kind)<0)return unchanged(state);
+      next=createState(state);next.correction.preview=command.preview;
+      next.correction.previewSignature=text(command.signature);next.correction.previewKind=command.kind;
+      return result(next,[{type:'render-entry',preservePosition:true}]);
+    case 'correction-preview-invalidated':
+      if(!matchesCorrection(state,command))return unchanged(state);
+      next=createState(state);next.correction.preview=null;next.correction.previewSignature='';next.correction.previewKind='';
+      var invalidatedEffects=[{type:'render-entry',preservePosition:true}];
+      if(command.notification)invalidatedEffects.push({type:'notify-entry-result',notification:command.notification});
+      return result(next,invalidatedEffects);
+    case 'correction-save-requested':
+      id=text(command.requestId).trim();
+      if(!matchesCorrection(state,command)||state.savePending||!id)return unchanged(state);
+      next=createState(state);next.savePending=true;next.entrySaveRequestId=id;
+      return result(next,[{type:'sync-entry-pending'}]);
+    case 'correction-save-failed':
+      if(!matchesCorrectionSave(state,command))return unchanged(state);
+      next=createState(state);next.savePending=false;next.entrySaveRequestId='';
+      var correctionFailedEffects=[{type:'sync-entry-pending'}];
+      if(command.notification)correctionFailedEffects.push({type:'notify-entry-result',notification:command.notification});
+      return result(next,correctionFailedEffects);
+    case 'correction-save-succeeded':
+      if(!matchesCorrectionSave(state,command))return unchanged(state);
+      var correctionContext=cloneContext(state.entryReturnContext);
+      next=clearEntrySession(createState(state));
+      var correctionSavedEffects=[
+        {type:'sync-entry-pending'},{type:'unmount-entry'},{type:'render-split'},
+        {type:'restore-entry-context',context:correctionContext,restoreBackground:true}
+      ];
+      if(command.notification)correctionSavedEffects.push({type:'notify-entry-result',notification:command.notification});
+      return result(next,correctionSavedEffects);
     case 'toggle-entry-calendar':
-      if(!matchesEntry(state,command))return unchanged(state);
+      if(!matchesEntrySession(state,command))return unchanged(state);
       next=createState(state);
       if(next.calendarOpen)next.calendarOpen=false;
       else{
@@ -188,20 +249,27 @@
       return result(next,[{type:'render-entry',preservePosition:true}]);
     case 'shift-entry-calendar':
       var delta=Number(command.delta);
-      if(!matchesEntry(state,command)||!state.calendarOpen||!isFinite(delta)||Math.floor(delta)!==delta||delta===0)return unchanged(state);
+      if(!matchesEntrySession(state,command)||!state.calendarOpen||!isFinite(delta)||Math.floor(delta)!==delta||delta===0)return unchanged(state);
       next=createState(state);var shifted=shiftedMonth(next.calendarYear,next.calendarMonth,delta);
       next.calendarYear=shifted.year;next.calendarMonth=shifted.month;
       return result(next,[{type:'render-entry',preservePosition:true}]);
     case 'select-entry-calendar-date':
-      if(!matchesEntry(state,command)||!state.calendarOpen||!plainObject(command.draft))return unchanged(state);
+      if(!matchesEntrySession(state,command)||!state.calendarOpen||!plainObject(command.draft))return unchanged(state);
       next=createState(state);next.draft=command.draft;next.calendarOpen=false;
       return result(next,[{type:'render-entry',preservePosition:true}]);
     case 'close-entry-calendar':
-      if(!matchesEntry(state,command)||!state.calendarOpen)return unchanged(state);
+      if(!matchesEntrySession(state,command)||!state.calendarOpen)return unchanged(state);
       next=createState(state);next.calendarOpen=false;
       return result(next,[{type:'render-entry',preservePosition:true}]);
     case 'close-entry':
       if(state.sheet!=='entry'||state.correction)return unchanged(state);
+      next=clearEntrySession(createState(state));
+      return result(next,[
+        {type:'unmount-entry'},
+        {type:'restore-entry-context',context:cloneContext(state.entryReturnContext),restoreBackground:command.restoreBackground!==false}
+      ]);
+    case 'close-correction':
+      if(!matchesCorrection(state,command)||state.savePending)return unchanged(state);
       next=clearEntrySession(createState(state));
       return result(next,[
         {type:'unmount-entry'},
@@ -299,7 +367,8 @@
         'sync-history-filter-panel':'syncHistoryFilterPanel','scroll-top':'scrollTop',
         'mount-entry':'mountEntry','unmount-entry':'unmountEntry','render-entry':'renderEntry',
         'sync-entry-pending':'syncEntryPending','focus-entry':'focusEntry',
-        'restore-entry-context':'restoreEntryContext','notify-entry-result':'notifyEntryResult'
+        'restore-entry-context':'restoreEntryContext','notify-entry-result':'notifyEntryResult',
+        'clear-correction-reason-error':'clearCorrectionReasonError'
       }[effect.type];
       if(!handler||typeof target[handler]!=='function')throw new Error('Ledger UI workflow missing effect adapter: '+effect.type);
       if(effect.type==='sync-history-filter-panel')target[handler](state);

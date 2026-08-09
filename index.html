@@ -7809,7 +7809,8 @@ var ledgerUiWorkflow=TripLedgerUiState.createWorkflow({
   syncEntryPending:function(){syncLedgerSavePendingButtons();},
   focusEntry:function(target,effect){focusLedgerEntryTarget(target,effect&&effect.immediate);},
   restoreEntryContext:function(context,restoreBackground){restoreLedgerEntryContext(context,restoreBackground);},
-  notifyEntryResult:function(notification){applyLedgerEntryNotification(notification);}
+  notifyEntryResult:function(notification){applyLedgerEntryNotification(notification);},
+  clearCorrectionReasonError:function(){var error=document.getElementById('ledgerCorrectionReasonError');if(error)error.textContent='';}
 });
 var ledgerCalculatorState={open:false,target:null,expression:'',originalValue:'',result:null,error:'',evaluated:false,sheetScrollTop:0};
 function ledgerCalculatorFloorValue(value){
@@ -9153,21 +9154,16 @@ function openLedgerCorrectionSheet(recordId){
   var member=getCurrentMember(),records=mergedLedgerRecords(),model=ledgerRecordActionModel(records,recordId,member,true);
   if(!model.canCorrect||!model.receipt){toast(model.message||'這筆收據目前不可更正');return;}
   var receipt=model.receipt;
-  ledgerBackgroundScrollY=window.scrollY||window.pageYOffset||0;closeLedgerRecordActions();closeLedgerRecordDetail();closeLedgerEntrySheet(false);
-  ledgerUiState.track='shared';ledgerUiState.draft=ledgerCorrectionDraftFromReceipt(receipt);ledgerUiState.editing=null;
-  ledgerUiState.correction={rootId:receipt.rootId,anchorId:receipt.anchorId,owner:receipt.owner,reason:'',preview:null,previewSignature:'',previewKind:''};
-  ledgerUiState.sheet='entry';ledgerUiState.savePending=false;
-  var overlay=document.createElement('div');overlay.id='ledgerEntrySheet';overlay.className='ledger-sheet-overlay';
-  document.body.appendChild(overlay);document.body.classList.add('ledger-sheet-open');renderLedgerEntrySheet();
-  requestAnimationFrame(function(){var sheet=overlay.querySelector('.ledger-sheet');if(sheet)sheet.scrollTop=0;});
+  var returnContext=captureLedgerEntryReturnContext();ledgerBackgroundScrollY=returnContext.scrollY;
+  closeLedgerRecordActions();closeLedgerRecordDetail();closeLedgerEntrySheet(false);
+  return ledgerUiWorkflow.dispatch({
+    type:'open-correction',draft:ledgerCorrectionDraftFromReceipt(receipt),sessionId:createLedgerEntrySessionId(),returnContext:returnContext,
+    correction:{rootId:receipt.rootId,anchorId:receipt.anchorId,owner:receipt.owner,reason:'',preview:null,previewSignature:'',previewKind:''}
+  });
 }
 function closeLedgerEntrySheet(restoreBackground){
   if(ledgerUiState.correction){
-    if(ledgerCalculatorState.open)closeLedgerCalculator(false);
-    var overlay=document.getElementById('ledgerEntrySheet');if(overlay)overlay.remove();
-    document.body.classList.remove('ledger-sheet-open');ledgerUiState.sheet=null;ledgerUiState.draft=null;ledgerUiState.editing=null;ledgerUiState.correction=null;ledgerUiState.calendarOpen=false;ledgerUiState.savePending=false;
-    if(restoreBackground!==false)requestAnimationFrame(function(){window.scrollTo({top:ledgerBackgroundScrollY,left:0,behavior:'auto'});});
-    return;
+    return ledgerUiWorkflow.dispatch({type:'close-correction',sessionId:ledgerUiState.entrySessionId,restoreBackground:restoreBackground!==false});
   }
   return ledgerUiWorkflow.dispatch({type:'close-entry',restoreBackground:restoreBackground!==false});
 }
@@ -9178,8 +9174,7 @@ function updateLedgerDraftField(field,value){
 }
 function updateLedgerCorrectionReason(value){
   var correction=ledgerUiState.correction;if(!correction)return;
-  correction.reason=String(value||'');
-  var error=document.getElementById('ledgerCorrectionReasonError');if(error)error.textContent='';
+  ledgerUiWorkflow.dispatch({type:'update-correction-reason',sessionId:ledgerUiState.entrySessionId,reason:String(value||'')});
 }
 function formatLedgerDateField(input){
   var draft=ledgerUiState.draft;if(!draft||!input)return;
@@ -9200,21 +9195,18 @@ function toggleLedgerCalendar(){
   var draft=ledgerUiState.draft;if(!draft)return;
   var selected;try{selected=parseLedgerDateInput(draft.occurredDate);}catch(ignore){selected=ledgerDateInputValue(appNow());}
   var parts=selected.split('/').map(Number);
-  if(ledgerUiState.correction){ledgerUiState.calendarOpen=!ledgerUiState.calendarOpen;if(ledgerUiState.calendarOpen){ledgerUiState.calendarYear=parts[0];ledgerUiState.calendarMonth=parts[1]-1;}withLedgerSheetPosition(renderLedgerEntrySheet);return;}
   ledgerUiWorkflow.dispatch({type:'toggle-entry-calendar',sessionId:ledgerUiState.entrySessionId,year:parts[0],month:parts[1]-1});
 }
 function shiftLedgerCalendar(delta){
-  if(ledgerUiState.correction){var date=ledgerLocalDateFromParts(ledgerUiState.calendarYear,ledgerUiState.calendarMonth+Number(delta||0),1,0,0);ledgerUiState.calendarYear=date.getFullYear();ledgerUiState.calendarMonth=date.getMonth();withLedgerSheetPosition(renderLedgerEntrySheet);return;}
   ledgerUiWorkflow.dispatch({type:'shift-entry-calendar',sessionId:ledgerUiState.entrySessionId,delta:Number(delta||0)});
 }
 function selectLedgerCalendarDate(year,month,day){
   var draft=ledgerUiState.draft;if(!draft)return;
-  if(ledgerUiState.correction){draft.occurredDate=ledgerDateInputValue(ledgerLocalDateFromParts(year,month,day,0,0));draft.occurredDateError='';ledgerUiState.calendarOpen=false;withLedgerSheetPosition(renderLedgerEntrySheet);return;}
   var next=Object.assign({},draft,{occurredDate:ledgerDateInputValue(ledgerLocalDateFromParts(year,month,day,0,0)),occurredDateError:''});
   ledgerUiWorkflow.dispatch({type:'select-entry-calendar-date',sessionId:ledgerUiState.entrySessionId,draft:next});
 }
 function selectLedgerCalendarToday(){var today=appNow();selectLedgerCalendarDate(today.getFullYear(),today.getMonth(),today.getDate());}
-function closeLedgerCalendar(){if(ledgerUiState.correction){if(!ledgerUiState.calendarOpen)return;ledgerUiState.calendarOpen=false;withLedgerSheetPosition(renderLedgerEntrySheet);return;}ledgerUiWorkflow.dispatch({type:'close-entry-calendar',sessionId:ledgerUiState.entrySessionId});}
+function closeLedgerCalendar(){ledgerUiWorkflow.dispatch({type:'close-entry-calendar',sessionId:ledgerUiState.entrySessionId});}
 function renderLedgerCalendarPopover(draft){
   if(!ledgerUiState.calendarOpen)return '';
   var year=ledgerUiState.calendarYear,month=ledgerUiState.calendarMonth,first=ledgerLocalDateFromParts(year,month,1,0,0),start=ledgerLocalDateFromParts(year,month,1-first.getDay(),0,0),selected='';try{selected=parseLedgerDateInput(draft.occurredDate);}catch(ignore){}var today=ledgerDateInputValue(appNow()),days='',week=['日','一','二','三','四','五','六'];
@@ -9771,7 +9763,6 @@ function syncLedgerSavePendingButtons(){
     button.disabled=ledgerUiState.savePending;
   });
 }
-function syncLegacyCorrectionSavePending(pending){ledgerUiState.savePending=!!pending;syncLedgerSavePendingButtons();}
 function ledgerDuplicateCandidateRecords(track){
   if(track==='personal')return personalLedgerRepository.all();
   return sortLedgerExpenses(ledgerUniverseRecords(spendLedgerRecords(mergedLedgerRecords()),ledgerUniverseMode()));
@@ -9818,13 +9809,13 @@ function saveLedgerCorrection(voidReceipt){
   }
   var source=mergedLedgerRecords(),receipt=ledgerReceiptForRecord(source,correction.rootId,function(){});
   if(!receipt||receipt.voided||receipt.anchorId!==correction.anchorId){
-    correction.preview=null;correction.previewSignature='';toast('收據已在其他裝置更新，請關閉後重新開啟');return Promise.resolve({ok:false,stale:true});
+    ledgerUiWorkflow.dispatch({type:'correction-preview-invalidated',sessionId:ledgerUiState.entrySessionId,notification:{message:'收據已在其他裝置更新，請關閉後重新開啟'}});return Promise.resolve({ok:false,stale:true});
   }
   var replacements=[],submissionDraft=draft;
   if(!voidReceipt){
-    var validation=validateLedgerEntryDraft(draft);draft.formErrors=validation.errors;
+    var validation=validateLedgerEntryDraft(draft);
     if(!validation.valid){
-      withLedgerSheetPosition(renderLedgerEntrySheet);focusLedgerValidationError(validation);return Promise.resolve({ok:false,validation:true});
+      ledgerUiWorkflow.dispatch({type:'correction-validation-failed',sessionId:ledgerUiState.entrySessionId,draft:Object.assign({},draft,{formErrors:validation.errors}),errorTarget:ledgerValidationErrorTarget(validation)});return Promise.resolve({ok:false,validation:true});
     }
     submissionDraft=Object.assign({},draft,{items:validation.submissionItems});
     try{
@@ -9843,22 +9834,23 @@ function saveLedgerCorrection(voidReceipt){
   if(!correction.preview||correction.previewSignature!==signature||correction.previewKind!==(voidReceipt?'void':'correction')){
     try{
       var context={member:member,reason:reason,now:Date.now(),random:Math.random,currency:draft.currency};
-      correction.preview=voidReceipt?buildLedgerVoidCorrectionPreview(receipt,source,context):buildLedgerCorrectionPreview(receipt,replacements,source,context);
-      correction.preview.currency=draft.currency;correction.previewSignature=signature;correction.previewKind=voidReceipt?'void':'correction';
-      withLedgerSheetPosition(renderLedgerEntrySheet);
+      var preview=voidReceipt?buildLedgerVoidCorrectionPreview(receipt,source,context):buildLedgerCorrectionPreview(receipt,replacements,source,context);
+      preview.currency=draft.currency;
+      ledgerUiWorkflow.dispatch({type:'correction-preview-installed',sessionId:ledgerUiState.entrySessionId,preview:preview,signature:signature,kind:voidReceipt?'void':'correction'});
       return Promise.resolve({ok:false,preview:true});
     }catch(error){
-      correction.preview=null;correction.previewSignature='';toast(error.message||'無法建立更正預覽');return Promise.resolve({ok:false,error:error});
+      ledgerUiWorkflow.dispatch({type:'correction-preview-invalidated',sessionId:ledgerUiState.entrySessionId,notification:{message:error.message||'無法建立更正預覽'}});return Promise.resolve({ok:false,error:error});
     }
   }
-  syncLegacyCorrectionSavePending(true);
+  var saveContext={sessionId:ledgerUiState.entrySessionId,requestId:createLedgerEntryRequestId()};
+  var requested=ledgerUiWorkflow.dispatch({type:'correction-save-requested',sessionId:saveContext.sessionId,requestId:saveContext.requestId});
+  if(!requested.changed)return Promise.resolve({ok:false,pending:true});
   try{
     var delivery=ledgerRepository.enqueueBatch(correction.preview.batch);
-    syncLegacyCorrectionSavePending(false);closeLedgerEntrySheet();renderSplit();
-    toast(delivery&&delivery.ok?'更正已儲存，正在同步':'更正已儲存，等待同步');
+    ledgerUiWorkflow.dispatch({type:'correction-save-succeeded',sessionId:saveContext.sessionId,requestId:saveContext.requestId,notification:{message:delivery&&delivery.ok?'更正已儲存，正在同步':'更正已儲存，等待同步'}});
     return Promise.resolve(delivery||{ok:true,queued:true});
   }catch(error){
-    syncLegacyCorrectionSavePending(false);toast(error.message||'更正儲存失敗');return Promise.resolve({ok:false,error:error});
+    ledgerUiWorkflow.dispatch({type:'correction-save-failed',sessionId:saveContext.sessionId,requestId:saveContext.requestId,notification:{message:error.message||'更正儲存失敗'}});return Promise.resolve({ok:false,error:error});
   }
 }
 function deletePersonalLedgerRecord(id){

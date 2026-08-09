@@ -181,12 +181,10 @@ test('更正收據的操作層不會被金額計算機入口穿透',async({page}
     })];
     draft.items[0].participants=['Bar','Jane','Mark','David'];
     draft.items[0].participantMode='custom';
-    ledgerUiState.track='shared';
-    ledgerUiState.correction={
-      rootId:'receipt-root',anchorId:'receipt-root',owner:'Bar',reason:'',
-      preview:null,previewSignature:'',previewKind:''
-    };
-    renderLedgerEntrySheet();
+    ledgerUiWorkflow.dispatch({
+      type:'open-correction',draft:draft,sessionId:createLedgerEntrySessionId(),returnContext:captureLedgerEntryReturnContext(),
+      correction:{rootId:'receipt-root',anchorId:'receipt-root',owner:'Bar',reason:'',preview:null,previewSignature:'',previewKind:''}
+    });
   });
 
   await expect(page.getByRole('heading',{name:'更正收據'})).toBeVisible();

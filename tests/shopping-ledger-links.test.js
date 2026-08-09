@@ -486,7 +486,7 @@ assert(!/系統不會自動計算剩餘數量/.test(shoppingSource),'舊的「�
 assert(!/parseInt|parseFloat|Number\(form\.(purchasedQty|remainderQty)/.test(shoppingSource),'不解析自由文字數量');
 assert(shoppingSource.includes('shoppingListStore.split('),'拆分走 store 的原子操作');
 /* 交握與回寫 */
-const commit=html.slice(html.indexOf('function commitLedgerEntrySave('),html.indexOf('function syncLegacyCorrectionSavePending('));
+const commit=html.slice(html.indexOf('function commitLedgerEntrySave('),html.indexOf('function ledgerDuplicateCandidateRecords('));
 assert(commit.includes('buyToLedgerDomain.sourceRefs(sourceDraft)'),'多品項來源由 domain 依送出用 draft 對應,不用 UI index');
 assert(commit.includes('buyToLedgerWorkflow.commit(command)'),'只有具備完整 Shopping source 的新增消費交由 coordinator commit');
 assert(!html.includes('function writeShoppingLedgerLinks('),'舊的 inline workflow 已移除');
