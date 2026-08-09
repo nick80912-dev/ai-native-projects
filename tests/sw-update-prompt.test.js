@@ -79,6 +79,24 @@ assert.strictEqual(existing.reveals,1,'duplicate controller changes do not revea
 existing.sandbox.reloadForServiceWorkerUpdate();
 assert.strictEqual(existing.reloads,1,'the explicit update action reloads exactly once');
 
+const lateControlled=harness();
+const lateServiceWorker=Object.assign(eventTarget(),{controller:null});
+const lateWorker=Object.assign(eventTarget(),{state:'installing'});
+const lateRegistration=Object.assign(eventTarget(),{
+  active:{state:'activated'},
+  installing:lateWorker
+});
+const observeLate=lateControlled.sandbox.setupServiceWorkerUpdatePrompt(lateServiceWorker,false);
+observeLate(lateRegistration);
+lateRegistration.emit('updatefound');
+lateWorker.state='activated';
+lateWorker.emit('statechange');
+assert.strictEqual(
+  lateControlled.prompt.hidden,
+  false,
+  'an existing active registration remains update-eligible while controller acquisition is briefly late'
+);
+
 const missingDom=harness({missingDom:true});
 assert.doesNotThrow(()=>missingDom.sandbox.showServiceWorkerUpdatePrompt());
 assert.strictEqual(missingDom.sandbox.showServiceWorkerUpdatePrompt(),false,'missing optional prompt DOM degrades safely');

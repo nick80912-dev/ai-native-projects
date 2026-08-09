@@ -59,6 +59,22 @@ async function waitForActiveWorker(page) {
   }, null, { timeout: 20000 });
 }
 
+async function serviceWorkerUpdateReport(page) {
+  return page.evaluate(async () => {
+    const registration = await navigator.serviceWorker.getRegistration();
+    const prompt = document.getElementById('swUpdatePrompt');
+    return {
+      controller: !!navigator.serviceWorker.controller,
+      installing: registration && registration.installing ? registration.installing.state : null,
+      waiting: registration && registration.waiting ? registration.waiting.state : null,
+      active: registration && registration.active ? registration.active.state : null,
+      promptHidden: !prompt || prompt.hidden,
+      promptShownGuard: typeof swUpdatePromptShown === 'boolean' ? swUpdatePromptShown : null,
+      events: window.__swPromptEvents || [],
+    };
+  });
+}
+
 /* 在「關掉伺服器模擬斷網」之前必須確定 SHELL 真的已經落進 CacheStorage。
    只等 registration.active 不夠保險 —— 一旦搶在 install 完成前斷網,
    失敗原因會長得像產品缺陷,其實是測試自己的競態。 */
@@ -73,7 +89,16 @@ async function waitForShellCached(page) {
 }
 
 test('existing controller shows one prompt and reloads only after the explicit action', async ({ page }) => {
-  await page.addInitScript(()=>localStorage.setItem('trip_member','Bar'));
+  await page.addInitScript(() => {
+    localStorage.setItem('trip_member','Bar');
+    window.__swPromptEvents=[['init',!!navigator.serviceWorker.controller]];
+    navigator.serviceWorker.addEventListener('controllerchange',() => {
+      window.__swPromptEvents.push(['controllerchange',!!navigator.serviceWorker.controller]);
+    });
+    window.addEventListener('load',() => {
+      window.__swPromptEvents.push(['load',!!navigator.serviceWorker.controller]);
+    });
+  });
   server.setGeneration(1);
   await page.goto(ORIGIN + '/index.html');
   await waitForActiveWorker(page);
@@ -86,11 +111,22 @@ test('existing controller shows one prompt and reloads only after the explicit a
   server.setGeneration(2);
   await page.evaluate(async () => {
     const registration=await navigator.serviceWorker.getRegistration();
+    registration.addEventListener('updatefound',() => {
+      const worker=registration.installing;
+      window.__swPromptEvents.push(['updatefound',worker&&worker.state]);
+      if(worker)worker.addEventListener('statechange',() => {
+        window.__swPromptEvents.push(['statechange',worker.state]);
+      });
+    });
+  });
+  await page.evaluate(async () => {
+    const registration=await navigator.serviceWorker.getRegistration();
     await registration.update();
   });
 
   const prompt=page.locator('#swUpdatePrompt');
-  await expect(prompt).toBeVisible({timeout:20000});
+  await expect.poll(async () => JSON.stringify(await serviceWorkerUpdateReport(page)), {timeout:20000})
+    .toContain('"promptHidden":false');
   await expect(prompt).toContainText('新版已就緒');
   await expect.poll(() => page.evaluate(() => QA_INDEX_GEN)).toBe('QAGEN1');
   await page.evaluate(() => {if(typeof closeMemberSelector==='function')closeMemberSelector();});
@@ -138,9 +174,13 @@ test('SW 更新後新快取實際裝入新版資源,且 index／版本檔／sche
   await waitForShellCached(page);
 
   /* 第 1 步:舊版資源先進入 HTTP cache(max-age=600),並確認 gen1 已落在 CacheStorage */
-  const first = await activeCacheReport(page);
+  const expectedFirstKey='okayama-trip-'+PREVIOUS_VERSION+'-QAGEN1';
+  let first={};
+  await expect.poll(async () => {
+    first=await activeCacheReport(page);
+    return Object.keys(first);
+  }, {timeout:20000}).toEqual([expectedFirstKey]);
   const firstKey = Object.keys(first)[0];
-  expect(firstKey).toBe('okayama-trip-'+PREVIOUS_VERSION+'-QAGEN1');
   for (const [pathname, marker] of Object.entries(first[firstKey])) {
     expect(marker, pathname + ' 應為 gen1').toBe('QAGEN1');
   }
