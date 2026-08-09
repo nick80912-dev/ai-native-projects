@@ -17,7 +17,7 @@
 
 ## Chosen Approach
 
-新增 build-time CLI `tools/refresh-builtin-snapshot.js`。CLI 從 `schema.js` 載入 `SCHEMA.pubBase`、sheet gid、kind 與欄位定義，抓取七張非 Ledger CSV，驗證整組資料後組成新的 `BUILTIN`。只有 `--write` 會原子更新 `index.html`；無參數執行只輸出差異摘要。
+新增 build-time CLI `tools/refresh-builtin-snapshot.js`。CLI 從 `schema.js` 載入 `SCHEMA.pubBase`、sheet gid、kind 與欄位定義，抓取七張非 Ledger CSV，驗證整組資料後組成新的 `BUILTIN`。只有 `--write` 會原子更新 `index.html`；無參數執行只輸出差異摘要。刷新時同時移除既有 `BUILTIN.cfg += ...` 與舊 8 欄 `BUILTIN.ledger = ...` 後置 patch，使完整 `BUILTIN` 成為唯一離線種子權威。
 
 不採手工複製 CSV，避免欄位遺漏、JSON 轉義錯誤與 Ledger 洩漏；不在 runtime 自動刷新 BUILTIN，避免混淆編譯時離線種子與線上 snapshot orchestration。
 
@@ -41,7 +41,7 @@ node tools/refresh-builtin-snapshot.js --write
 - 使用同一套抓取與驗證流程。
 - 全部成功後才更新 `index.html` 的 `BUILTIN_TS` 與 `BUILTIN`。
 - `BUILTIN_TS` 使用本次成功刷新時的 Unix epoch milliseconds。
-- 寫入後重新解析檔案，確認產物與記憶體中的候選快照完全一致。
+- 寫入後重新解析並執行完整 BUILTIN injection block，確認產物與記憶體中的候選快照完全一致，且不存在後置 cfg／Ledger mutation。
 - 成功時 exit 0；任一步驟失敗時不得留下半寫入內容。
 
 未知參數必須 exit 1 並顯示合法用法。
@@ -56,6 +56,7 @@ node tools/refresh-builtin-snapshot.js --write
 
 - `itin`、`places`、`rest`、`shop`、`hotels`、`exp`、`cfg`：取自本次成功抓取的公開 CSV，保留來源文字的列與欄位內容。
 - `ledger`：不得呼叫公開 Ledger gid；只由 `SCHEMA.sheets.ledger.columns[].header` 依順序產生 CSV 表頭與結尾換行。
+- `cfg`：直接保存公開 TripConfig 的八個核准 key；不得再由後置程式追加 Exchange Rate 或 Ledger Default Currency。
 - JSON 序列化使用穩定 key 順序，避免無意義 diff。
 - 工具不得改寫 `schema.js`、Sheet、runtime snapshot、localStorage 或任何 repository。
 
@@ -78,6 +79,7 @@ CLI 先在記憶體完成抓取、驗證與序列化，再以同目錄暫存檔�
 
 - 預覽模式偵測 drift 且不寫檔。
 - `--write` 更新 timestamp 與八個固定 key。
+- 寫入後移除舊 cfg append 與 8 欄 Ledger overwrite；最終 runtime cfg 八個 key 各一次，Ledger 精確 21 欄且零資料列。
 - live Ledger fixture 即使含消費紀錄也不被請求或注入。
 - 任一 endpoint 失敗、表頭錯誤、必需設定缺漏或 itinerary 含東京舊資料時，目標檔案位元內容保持不變。
 - 未知參數與無差異情境回傳約定 exit code。

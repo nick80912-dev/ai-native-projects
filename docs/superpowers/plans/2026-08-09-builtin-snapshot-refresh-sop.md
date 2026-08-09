@@ -15,6 +15,7 @@
 - Live Ledger CSV must never be requested or embedded; BUILTIN Ledger contains only Schema-derived headers plus one trailing newline.
 - CLI without `--write` is read-only; candidate drift returns exit 2, source or validation failure returns exit 1, and no drift returns exit 0.
 - Any failed fetch, validation, serialization, or replacement leaves `index.html` byte-for-byte unchanged.
+- A successful write removes the legacy `BUILTIN.cfg += ...` and 8-column `BUILTIN.ledger = ...` post-mutations; the complete object is the only seed authority.
 - Do not change runtime synchronization, localStorage, IndexedDB, data formats, SW lifecycle, cache strategy, `main`, deployment, or production tags.
 - Execute inline in the existing clean `dev` checkout; do not create a parallel subagent or worktree.
 
@@ -56,7 +57,7 @@ assert.strictEqual(candidate.ledger,'紀錄ID,時間,成員\n');
 assert.strictEqual(candidate.itin.includes('東京'),false);
 ```
 
-Add cases for preview drift/no write, no-drift exit 0, `--write`, invalid header, missing cfg key, stale Tokyo itinerary, unknown option, and failed source preserving the target bytes.
+Add cases for preview drift/no write, no-drift exit 0, `--write`, legacy post-mutation removal, invalid header, missing cfg key, stale Tokyo itinerary, unknown option, and failed source preserving the target bytes.
 
 - [ ] **Step 2: Run the test and verify RED**
 
@@ -103,7 +104,7 @@ var BUILTIN_TS = 1783297150977;
 var BUILTIN = { ... };
 ```
 
-Serialize candidate keys in `SNAPSHOT_KEYS` order. For `--write`, write a same-directory temporary file, rename it over `index.html`, re-read and compare the embedded timestamp/snapshot, and remove only that known temporary path on failure. Do not use recursive deletion or workspace globs.
+Serialize candidate keys in `SNAPSHOT_KEYS` order and replace the whole injection block, including either legacy post-mutation line when present. For `--write`, write a same-directory temporary file, rename it over `index.html`, re-read and compare the executed final timestamp/snapshot, and remove only that known temporary path on failure. Do not use recursive deletion or workspace globs.
 
 The native fetch adapter must use `AbortController` with the existing Schema timeout, require HTTP 2xx, and normalize only a possible UTF-8 BOM; it must not trim CSV bodies.
 
@@ -182,7 +183,7 @@ Run:
 node tools/refresh-builtin-snapshot.js --write
 ```
 
-Expected: exit 0 and only the two BUILTIN declarations in `index.html` change. Inspect `git diff -- index.html`; confirm `app-version.js` and `sw.js` remain v98 and no live Ledger record appears.
+Expected: exit 0; the two BUILTIN declarations change and both legacy post-mutation lines disappear. Inspect `git diff -- index.html`; confirm `app-version.js` and `sw.js` remain v98, cfg has eight unique keys, Ledger has 21 headers, and no live Ledger record appears.
 
 - [ ] **Step 5: Verify GREEN and offline startup**
 
