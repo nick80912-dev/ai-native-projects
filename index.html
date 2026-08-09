@@ -1358,6 +1358,7 @@ function runToastAction(){
 }
 function toast(msg,actionText,actionFn,durationMs){
   var el=document.getElementById('toast');
+  if(!el)return;
   toastAction=typeof actionFn==='function'?actionFn:null;
   if(toastAction){
     el.innerHTML='<span>'+escapeHtml(msg)+'</span><button class="toast-action" onclick="runToastAction()">'+escapeHtml(actionText||'復原')+'</button>';
@@ -1519,7 +1520,7 @@ function fetchSheet(s){
   };
   return tryOnce().catch(function(e){
     AppLog.sync(s.key+' 第1次抓取失敗:'+(e.message||e)+' — 自動重試');
-    return tryOnce();
+    return new Promise(function(resolve){setTimeout(resolve,800);}).then(tryOnce);
   });
 }
 

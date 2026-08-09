@@ -4,6 +4,7 @@
 
 ## 現有測試
 - `atomic-sheet-sync.test.js`:驗證七張 Sheet 候選資料需整批驗證後一次啟用、舊快取遷移、失敗候選保留與同步狀態面板；v88 另鎖定健康 header 只顯示「已同步」但 aria 保留更新時間、其他狀態相對時間、最後完整同步時間、partial 失敗來源的人類可讀文案，以及舊快照 metadata 相容。執行:`node tests/atomic-sheet-sync.test.js`。
+- `network-retry-toast-guard.test.js`：驗證 Sheet 首次抓取失敗後精確退避 800ms 且只重試一次、第二次錯誤維持可觀察，以及缺少 Toast DOM 節點時不拋錯、不改 action／timer，正常 Toast 行為不變。執行：`node tests/network-retry-toast-guard.test.js`。
 - `app-now.test.js`:驗證正式時間、offset/custom 時間模擬與共用 `appNow()` 時鐘。執行:`node tests/app-now.test.js`。
 - `app-log-buffer.test.js`：驗證 AppLog 六分類的 console 相容性、session-only FIFO 100 筆、單筆 1,000 字限制、defensive snapshot、clear，以及不寫入 AppLog 的 health finding 讀取路徑。執行：`node tests/app-log-buffer.test.js`。
 - `diagnostics-app-log.test.js`／`browser/diagnostics-app-log.spec.js`：驗證診斷面板以靜默 health snapshot 顯示、複製及清除本次 session 的 AppLog，訊息無法注入 HTML；Browser 另鎖定團體帳測試模式區塊已移除，而設定控制頁與 TEST universe 保持可用。執行：`node tests/diagnostics-app-log.test.js`、`npx playwright test tests/browser/diagnostics-app-log.spec.js`。
