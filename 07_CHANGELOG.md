@@ -5,7 +5,7 @@
 - **最小 production-used module**：新增 `shopping-ui-state.js`，公開 `createState(seed)`、`transition(state, action)` 與 `createWorkflow(adapter)`；唯一擁有 `tab`、`selectionMode`、`selected` 的 transition。Production adapter 先回寫既有 compatibility projection，再依序 clear split、render list、restore focus；public handlers 維持原名稱與 renderer markup。
 - **成功／失敗邊界**：目前分頁全選只接受 caller 提供的 visible IDs，會去重並移除 hidden／stale selection。批次完成、移回、刪除與成功開啟 Ledger draft 後才 reset；store failure、preflight 阻擋與取消不 dispatch。Store、photo repository、Buy-to-Ledger domain、Ledger repository、資料格式、備份與 DOM renderer 均未移入 module。
 - **離線與版本**：頁面載入新 module，SW `SHELL` 只新增 `./shopping-ui-state.js`；`app-version.js`、`SW_VERSION` 與 `CACHE_NAME` 維持 v98，未修改 SW lifecycle／cache strategy、`netlify.toml` 或 `PERSONAL_STATE_VERSION=9`。v99／v100 仍保留給 SW 更新提示雙版本驗收。
-- **目前證據**：focused Node gates 全數通過；Shopping selection／list entry／Buy-to-Ledger／photo Playwright **30／30** 通過。完整 Node／Playwright suite 將於 push 前 fresh run，最終數字待補。
+- **驗證**：focused Node gates 與 Shopping selection／list entry／Buy-to-Ledger／photo Playwright **30／30** 通過；最終 fresh full gate 為 **74／74** Node test files、Playwright **143／143**，另通過文件標題、App／SW v98 一致性、manifest JSON 與 `git diff --check`。
 
 ## 2026-08-08｜Ledger 新增消費快速版面（dev，SW v98）
 

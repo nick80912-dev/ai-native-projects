@@ -11,7 +11,7 @@
 | 正式站 | `https://trippilot-jp.netlify.app/` — 2026-08-01 由 SW v18 升級至 v73,G1–G6 全數通過 |
 | **dev 候選版** | **SW v98**＋Ledger 新增消費快速版面＋Shopping list tab／selection state seam（未另占版本），`app-version.js` 與 `sw.js` 仍為 v98 |
 | 個人備份格式 | **v9**(`PERSONAL_STATE_SUPPORTED_VERSIONS = [1..9]`)—— v81 因想逛 key 識別語意變更而升版 |
-| dev 自動驗證 | Shopping UI focused Node gates 與 Playwright **30／30** 已通過；完整 suite push 前 fresh run，最終數字待補 |
+| dev 自動驗證 | **74／74** Node test files、Playwright **143／143**、`check-doc-titles`、`check-app-version`、manifest JSON 與 `git diff --check` 通過 |
 | 既有 tag | `production-v18`、`production-v73` |
 
 **`main` 已合併 v96，但正式站仍停在 v73；v98 是目前僅存在本機 `dev` 的下一個候選版。** v74–v87 已由 Bar 於 2026-08-03 確認真機驗收皆正常；v88–v89、v92–v95 亦於 2026-08-08 完成 Bar 畫面／真機確認。v96 因 Netlify 額度用罄尚未正式部署，也未建立 `production-v96` tag。
@@ -103,6 +103,6 @@
 
 ## 下一棒
 
-→ **Shopping UI P0 的 list tab＋selection seam 已在 SW v98 dev delta 完成 focused 驗證，待完整 gate 後 push `dev`；runtime 版本仍未另行決定。** 下一個 Shopping UI slice 只可在獨立 characterization 後評估 form session 或 detail／return context，不碰 store、photo repository、Buy-to-Ledger domain、資料格式或 renderer。v96 已在 `main`，但因 Netlify 額度用罄，正式站仍為 v73，正式部署驗證與 `production-v96` tag 暫停；v99／v100 仍保留給 SW 更新提示雙版本驗收。
+→ **Shopping UI P0 的 list tab＋selection seam 已在 SW v98 dev delta 完成完整 gate 並交付 `dev`；runtime 版本仍未另行決定。** 下一個 Shopping UI slice 只可在獨立 characterization 後評估 form session 或 detail／return context，不碰 store、photo repository、Buy-to-Ledger domain、資料格式或 renderer。v96 已在 `main`，但因 Netlify 額度用罄，正式站仍為 v73，正式部署驗證與 `production-v96` tag 暫停；v99／v100 仍保留給 SW 更新提示雙版本驗收。
 
 > **不得**自行動 `main`、部署正式站或建立 production tag。未經 Bar 核准不得 merge `dev → main`。
