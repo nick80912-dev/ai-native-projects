@@ -16,6 +16,7 @@ const sandbox={
     log(message){consoleCalls.push({level:'log',message:String(message)});}
   },
   Date:TestDate,
+  appNow(){return new TestDate();},
   String,Number,Boolean,Array,Object,Math,JSON,isFinite,
   SCHEMA:{sheets:{places:{label:'Places',columns:[],idField:'placeId'}}},
   RAW:{},
@@ -52,6 +53,11 @@ assert.strictEqual(entries[99].message,'entry-100','the newest entry is retained
 assert.deepStrictEqual(entries[0],{
   at:'2026-08-09T01:02:03.000Z',category:'repository',level:'warn',message:'entry-1'
 },'entries expose the stable diagnostic shape');
+
+delete sandbox.appNow;
+sandbox.AppLog.repo('clock unavailable');
+assert.strictEqual(plain(sandbox.AppLog.snapshot()).slice(-1)[0].at,'','a missing shared clock degrades to an empty timestamp');
+sandbox.appNow=function(){return new TestDate();};
 
 const longMessage='x'.repeat(1001);
 sandbox.AppLog.render(longMessage);

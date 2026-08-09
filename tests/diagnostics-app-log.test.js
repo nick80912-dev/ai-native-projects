@@ -19,6 +19,7 @@ class TestDate extends Date{
 }
 const sandbox={
   Date:TestDate,String,Array,Object,JSON,
+  appNow(){return new TestDate();},
   escapeHtml(value){return String(value).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');},
   currentHealthFindings(){return ['懸空引用'];},
   AppLog:{

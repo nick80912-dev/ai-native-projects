@@ -19,7 +19,7 @@ var AppLog=(function(){
     catch(error){return '[無法讀取診斷訊息]';}
   }
   function timestamp(){
-    try{return new Date().toISOString();}
+    try{return typeof appNow==='function'?appNow().toISOString():'';}
     catch(error){return '';}
   }
   function write(category,level,prefix,message){

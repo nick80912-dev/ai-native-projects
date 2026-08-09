@@ -1026,7 +1026,7 @@ var AppLog=(function(){
     catch(error){return '[無法讀取診斷訊息]';}
   }
   function timestamp(){
-    try{return new Date().toISOString();}
+    try{return typeof appNow==='function'?appNow().toISOString():'';}
     catch(error){return '';}
   }
   function write(category,level,prefix,message){
@@ -10747,7 +10747,7 @@ function fillDiagnosticShellVersion(){
 }
 /* ---- DIAGNOSTIC APPLOG START ---- */
 function formatDiagnosticsReport(findings,entries){
-  var lines=['Trip Pilot 除錯報告','建立時間：'+new Date().toISOString(),'','Health Check'];
+  var lines=['Trip Pilot 除錯報告','建立時間：'+appNow().toISOString(),'','Health Check'];
   lines=lines.concat(findings.length?findings.map(function(item){return '- '+item;}):['- 正常']);
   lines.push('','AppLog（'+entries.length+' 筆）');
   lines=lines.concat(entries.length?entries.map(function(entry){
