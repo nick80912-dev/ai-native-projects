@@ -2,7 +2,7 @@
   "$comment": "AI 導航檔 — 任何 AI 接手第一步只讀這份即可掌握全貌。這是 13 步流程的第 1 步。",
   "project": "japan-travel-pwa(日本旅遊行程 App)",
   "owner": "Bar(產品負責人,非工程師,繁中溝通,要直接執行不要教學;AI=全職工程團隊)",
-  "version": "2.20-ledger-two-line-cards-v98",
+  "version": "2.21-ledger-payment-free-cards-v98",
   "framework": "ai-native-framework@pending(尚未抽取;見 FUTURE_PLAN_framework-extraction.md)",
   "updated": "2026-08-09",
   "live": "https://trippilot-jp.netlify.app/",
@@ -135,7 +135,7 @@
   },
   "status": {
     "production": "main 維持 production-v73，直到已核准的 release PR 合併並完成線上驗證",
-    "dev_candidate": "v98（UI workflow/state 1→4 架構模組化＋AppLog／網路降級強化＋Ledger 近期消費卡嚴格兩行收斂完成，未另占 runtime 版本）",
+    "dev_candidate": "v98（UI workflow/state 1→4 架構模組化＋AppLog／網路降級強化＋Ledger 付款方式降至明細與單筆／批次父卡嚴格兩行收斂完成，未另占 runtime 版本）",
     "device_acceptance": "Bar 已完成 v74–v89、v92–v95 畫面／真機驗收；v96 兩項補正由瀏覽器回歸測試覆蓋",
     "automated_validation": "完整基準為 80 個 Node test files 與 144 個 Playwright tests，另含 runtime asset CLI",
     "pending_in_order": [
