@@ -173,7 +173,7 @@ const pendingPhoto=apply(formState,{type:'photo-save-requested',sessionId:'shopp
 outcome=apply(pendingPhoto,{type:'photo-save-failed',sessionId:'shopping-form-1',requestId:'shopping-photo-2',message:'儲存空間不足'});
 assert.strictEqual(outcome.state.formSession.savePending,false);
 assert.strictEqual(outcome.state.photoError,'儲存空間不足');
-assert.deepStrictEqual(plain(outcome.effects),[{type:'sync-form-pending'},{type:'render-form'}]);
+assert.deepStrictEqual(plain(outcome.effects),[{type:'sync-form-pending'}]);
 
 const saving=apply(formState,{type:'form-save-requested',sessionId:'shopping-form-1',requestId:'shopping-save-2'}).state;
 const nextForm={id:'',name:'',category:'必買',stopRef:'stop-a',photoId:''};

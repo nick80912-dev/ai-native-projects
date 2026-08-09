@@ -189,7 +189,7 @@
     case 'photo-save-failed':
       if(!matchesPhotoSave(state,command))return unchanged(state);
       next=createState(state);next.formSession.savePending=false;next.formSession.photoRequestId='';next.photoError=text(command.message);
-      return result(next,[{type:'sync-form-pending'},{type:'render-form'}]);
+      return result(next,[{type:'sync-form-pending'}]);
     case 'remove-form-photo':
       if(!matchesForm(state,command)||state.formSession.savePending)return unchanged(state);
       next=createState(state);next.form.photoId='';next.photoError='';

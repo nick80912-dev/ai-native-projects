@@ -1,6 +1,7 @@
 const assert = require('assert');
 const vm = require('vm');
 const { readIndexHtml, extractFunction } = require('./support/source');
+const TripShoppingUiState=require('../shopping-ui-state.js');
 
 const html = readIndexHtml();
 
@@ -70,13 +71,21 @@ const showFailureSource = extractFunction(html, 'showShoppingPhotoSaveFailure');
 const failureCalls = { rendered: 0, toasted: 0 };
 const failureSandbox = {
   TripShoppingPhotos: { isQuotaExceededError() { return true; } },
-  shoppingUiState: { form: {}, photoError: '' },
+  shoppingUiState: TripShoppingUiState.createState({
+    form:{},photoError:'',
+    formSession:{sessionId:'photo-session',mode:'add',savePending:true,photoRequestId:'photo-request'}
+  }),
   shoppingPhotoRepairState: { error: '' },
   document: { getElementById() { return null; } },
   renderShoppingFormSheet() { failureCalls.rendered++; },
   toast() { failureCalls.toasted++; },
   String,
 };
+failureSandbox.shoppingUiWorkflow=TripShoppingUiState.createWorkflow({
+  readState(){return failureSandbox.shoppingUiState;},
+  writeState(next){failureSandbox.shoppingUiState=next;},
+  syncFormPending(){failureCalls.rendered++;}
+});
 vm.createContext(failureSandbox);
 vm.runInContext(failureMessageSource + '\n' + showFailureSource, failureSandbox);
 assert.strictEqual(failureSandbox.showShoppingPhotoSaveFailure({ name: 'QuotaExceededError' }), '儲存空間不足，照片尚未加入');
