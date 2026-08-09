@@ -3,6 +3,7 @@
 > 更新於 2026-08-09。完成事項來自 `.ai-manifest.json` status.done、既有 CHANGELOG 與 Bar 驗收確認；細節仍以 07_CHANGELOG.md 為準。
 
 ## 已完成
+- 2026-08-09：品質批 #2 網路／呈現降級強化完成；`fetchSheet()` 第一次失敗保留既有 Sync log，精確等待 800ms 後只重試一次，第二次失敗仍將第二次錯誤交回 snapshot orchestration；`toast()` 在 `#toast` 不存在時於任何 action／timer 狀態變更前安全返回。未改抓取 timeout、CSV 驗證、同步資料語意、renderer、SW 或版本。
 - 2026-08-09：品質批 #2 的 AppLog／healthCheck 子項完成；六類 AppLog 保留 console 相容輸出並增加 session-only 100 筆環形緩衝（單筆 1,000 字），診斷面板可查看、複製及清除，開啟面板不會製造 health log。依 Bar 要求移除面板內的團體帳測試模式區塊；設定控制頁與 TEST universe 保留。
 - 2026-08-09：品質批 #2 的下一站副作用子項完成；`trip-progression.js` 純 reconciliation 集中時間／cluster／stale policy，render path 同輪最多保存一次 progress並通知一次。
 - V2 Schema 驅動 CMS:7 張 Google Sheets、ID 引用、Restaurants/Shopping/Hotels/Expenses/TripConfig。
@@ -63,10 +64,10 @@
 
 - **#2 的子項「隱藏『重置今日進度』」** — 2026-07-30 由 P5 調查發現**早已實作完成**,只是 backlog 未歸位。實作為 `resetTripProgress()`(`index.html`),位於診斷面板「行程進度」區,附雙重 `confirm()`,只清除 `trip_checks` 與 `trip_next_stop_progress`。
   - **與原文的差異(如實記錄)**:backlog 原文寫入口是「連點標題 5 下」,實際入口是**桃子診斷徽章 300ms 內連點兩次 `touchend`**(`setupDiagnostics()`);`brandTitle` 上沒有任何 listener。因為只綁 `touchend`,桌機滑鼠點擊打不開,實際上比原構想更難誤觸。經 Bar 2026-07-30 裁定移出 #2。
-  - #2 的其餘子項中，下一站 reconciliation 與 AppLog 環形緩衝已於 2026-08-09 完成；目前只剩 fetchSheet 退避、toast() null guard、localStorage 前綴隔離維持在 backlog #2。
+  - #2 的其餘子項中，下一站 reconciliation、AppLog 環形緩衝、fetchSheet 退避與 toast() null guard 已於 2026-08-09 完成；目前只剩 localStorage 前綴隔離維持在 backlog #2。
 
 - **#23 12 月東京行接入** — Bar 於 2026-08-03 確認該行程已結束,因此不新增行程分頁、不擴充 `TripConfig transport=transit`、不新增 SHEETS gid。本項是需求失效後關閉,**不是功能交付**；編號永久保留不回收。
-- **#2 已由後續版本完成的子項** — 行程面板展開狀態於 v82 完成；天氣改取「現在之後」最大值於 v84 完成；同步徽章相對時間與 partial 失敗來源於 v88 完成；下一站 reconciliation 與 AppLog／healthCheck 診斷能力於 2026-08-09 完成。backlog #2 現只保留退避／null guard 與測試資料隔離。
+- **#2 已由後續版本完成的子項** — 行程面板展開狀態於 v82 完成；天氣改取「現在之後」最大值於 v84 完成；同步徽章相對時間與 partial 失敗來源於 v88 完成；下一站 reconciliation、AppLog／healthCheck 診斷能力、fetchSheet 退避與 toast() null guard 於 2026-08-09 完成。backlog #2 現只保留測試資料隔離。
 ## 文件治理
 - 2026-07-13:Netlify 雙站架構上線(`main`=正式站、`dev`=測試站)，兩站部署與瀏覽器狀態完全隔離。
 - 2026-07-10:修復批交付(事故處理規範 §C、雙通道 SOP §D、檢查器三新規則、CI 全測試涵蓋、測試檔治理)。

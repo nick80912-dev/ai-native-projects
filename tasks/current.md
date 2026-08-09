@@ -9,9 +9,9 @@
 |---|---|
 | **`main` 原始碼** | **SW v96**，PR #13 merge commit `02705c3`；因 Netlify 額度用罄尚未部署／建立 tag |
 | 正式站 | `https://trippilot-jp.netlify.app/` — 2026-08-01 由 SW v18 升級至 v73,G1–G6 全數通過 |
-| **dev 候選版** | **SW v98**＋UI workflow/state 1→4 架構模組化，以及 AppLog session 診斷／面板精簡（未另占版本），`app-version.js` 與 `sw.js` 仍為 v98 |
+| **dev 候選版** | **SW v98**＋UI workflow/state 1→4 架構模組化、AppLog session 診斷／面板精簡，以及 `fetchSheet` 800ms 退避／Toast null fallback（皆未另占版本），`app-version.js` 與 `sw.js` 仍為 v98 |
 | 個人備份格式 | **v9**(`PERSONAL_STATE_SUPPORTED_VERSIONS = [1..9]`)—— v81 因想逛 key 識別語意變更而升版 |
-| dev 自動驗證 | **79／79** Node test files、Playwright **144／144**、runtime asset CLI、`check-doc-titles`、`check-app-version`、manifest JSON 與 `git diff --check` 通過 |
+| dev 自動驗證 | **80／80** Node test files、Playwright **144／144**、runtime asset CLI、`check-doc-titles`、`check-app-version`、manifest JSON 與 `git diff --check` 通過 |
 | 既有 tag | `production-v18`、`production-v73` |
 
 **`main` 已合併 v96，但正式站仍停在 v73；v98 是目前僅存在本機 `dev` 的下一個候選版。** v74–v87 已由 Bar 於 2026-08-03 確認真機驗收皆正常；v88–v89、v92–v95 亦於 2026-08-08 完成 Bar 畫面／真機確認。v96 因 Netlify 額度用罄尚未正式部署，也未建立 `production-v96` tag。
@@ -43,7 +43,7 @@
 | v96 | **發布阻斷補正**：照片 quota 失敗提供「管理儲存空間」直接入口；計算機 `=` 後可接 `%`；同步 ADR／runtime 文件索引 |
 | v97 | **Ledger entry session state seam**：同一 module 接管新增／編輯 lifecycle、draft／editing ownership、save pending、calendar 與返回脈絡；以 session／request ID 防重複提交及 stale completion |
 | v98 | **更正操作列遮罩修正**：更正多品項收據捲動時，金額計算機入口不再穿透顯示於 sticky 預覽／作廢／取消操作列；後續 dev UI delta 將單品新增消費收斂為分攤按需展開與單一其他資訊入口，未再升 SW 版次 |
-| v98 後續 dev delta | **UI workflow/state 架構模組化＋AppLog 診斷**：Shopping form session、下一站一次性 reconciliation、Ledger correction、runtime asset inventory；AppLog 增加 session-only 100 筆緩衝與診斷報告，面板移除團體帳測試模式入口但保留設定控制與 TEST universe。未另占 runtime 版本 |
+| v98 後續 dev delta | **UI workflow/state 架構模組化＋品質強化**：Shopping form session、下一站一次性 reconciliation、Ledger correction、runtime asset inventory；AppLog 增加 session-only 100 筆緩衝與診斷報告，面板移除團體帳測試模式入口但保留設定控制與 TEST universe；Sheet 首次失敗會退避 800ms 再重試一次，Toast 節點不存在時安全返回。未另占 runtime 版本 |
 
 > v45–v73 的逐版交付紀錄見 `07_CHANGELOG.md`,不在本檔重述。
 
@@ -103,6 +103,6 @@
 
 ## 下一棒
 
-→ **品質批 #2 的 AppLog／healthCheck 子項已在 SW v98 dev delta 完成完整 gate；runtime 版本未另行配置。** 依正式 backlog，下一個最高優先未完成切片是 `fetchSheet` 第一次失敗後 800ms 退避＋`toast()` null guard；其後是未來 TEST 模擬版的 localStorage 前綴隔離。v96 已在 `main`，但因 Netlify 額度用罄，正式站仍為 v73，正式部署驗證與 `production-v96` tag 暫停；v99／v100 仍保留給 SW 更新提示雙版本驗收。
+→ **品質批 #2 的 AppLog／healthCheck、`fetchSheet` 800ms 退避與 `toast()` null guard 已在 SW v98 dev delta 完成完整 gate；runtime 版本未另行配置。** 依正式 backlog，下一個最高優先未完成切片是未來 TEST 模擬版的 localStorage 前綴隔離。v96 已在 `main`，但因 Netlify 額度用罄，正式站仍為 v73，正式部署驗證與 `production-v96` tag 暫停；v99／v100 仍保留給 SW 更新提示雙版本驗收。
 
 > **不得**自行動 `main`、部署正式站或建立 production tag。未經 Bar 核准不得 merge `dev → main`。

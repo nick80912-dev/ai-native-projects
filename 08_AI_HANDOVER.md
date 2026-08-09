@@ -60,6 +60,10 @@
 - 桃子診斷面板可顯示、複製與清除 AppLog；不得將紀錄改存 localStorage、IndexedDB、備份或遠端，也不得恢復已退役的 iOS 手勢事件收集。
 - 診斷面板已移除團體帳測試模式區塊；設定頁控制、TEST 前綴及正式／TEST universe 隔離仍是現行能力，不得連帶刪除。
 
+## 現行網路／呈現降級契約（2026-08-09）
+- `fetchSheet()` 第一次失敗後必須等待 800ms 才執行唯一一次重試；第一次成功不得等待，第二次失敗不得再重試，且最終錯誤必須維持可供 snapshot orchestration 判斷。
+- `toast()` 是非必要呈現效果；`#toast` 不存在時必須在改動 `toastAction`／`toastTimer` 前安全返回，不得讓提示失敗中斷同步、儲存或其他業務流程。
+
 ## 關鍵資源
 - 正式站:https://trippilot-jp.netlify.app/
 - 測試站:https://dev-trippilot-jp.netlify.app/

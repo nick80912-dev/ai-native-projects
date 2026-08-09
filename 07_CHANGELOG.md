@@ -1,4 +1,11 @@
 # 07 版本紀錄
+## 2026-08-09｜Sheet 重試退避與 Toast 降級保護（dev，SW v98 未升版）
+
+- **短暫網路故障緩衝**：`fetchSheet()` 第一次失敗仍寫入既有 Sync log，之後精確等待 800ms 才執行原本唯一一次重試；首次成功不安排 timer，第二次失敗仍直接向 snapshot orchestration 拋出第二次錯誤，不新增第三次嘗試。
+- **呈現層安全降級**：`toast()` 找不到 `#toast` 時立即返回，不改動 `toastAction`、`toastTimer` 或呼叫其他 presentation effects，避免缺少非必要提示節點時中斷同步／儲存等業務流程；節點存在時的訊息、class、action 與 duration 行為不變。
+- **TDD 與邊界**：新增正式函式 characterization tests，先分別重現缺少 800ms delay 與 null dereference，再做兩行最小修正；相鄰同步、Ledger Toast 與 Browser 11／11 回歸通過。未修改 `FETCH_TIMEOUT`、CSV 驗證、snapshot orchestration、資料格式、renderer、schema、SW lifecycle／cache strategy 或 runtime 版本。
+- **交付狀態**：完整 gate 為 **80／80** Node test files、Playwright **144／144**，另通過 runtime asset、文件標題、App／SW v98 一致性、manifest JSON 與 `git diff --check`。本批只 push `dev`，不 merge `main`、不 deploy、不建立 production tag；v99／v100 仍保留給 SW 更新提示雙版本驗收。
+
 ## 2026-08-09｜AppLog session 診斷與面板精簡（dev，SW v98 未升版）
 
 - **有界診斷能力**：`validator.js` 的 Schema／Parser／Data／Repository／Render／Sync 六類 `AppLog` 保留原 console level、前綴與完整訊息，同時保存本次 App session 最新 100 筆（FIFO、單筆最多 1,000 字）。`snapshot()` 回傳 defensive copy，`clear()` 只清記憶體，不寫 localStorage、IndexedDB、備份或遠端。
