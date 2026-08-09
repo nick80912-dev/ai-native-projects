@@ -11,6 +11,7 @@
 const assert = require('assert');
 const fs = require('fs');
 const vm = require('vm');
+const TripProgression = require('../trip-progression.js');
 
 const html = fs.readFileSync('index.html', 'utf8');
 
@@ -29,9 +30,11 @@ function extractFunction(name){
 
 function makeSandbox(){
   const store = {};
+  const writes = {};
   const sandbox = {
+    TripProgression,
     lsGet: function(k, f){ return Object.prototype.hasOwnProperty.call(store, k) ? store[k] : f; },
-    lsSet: function(k, v){ store[k] = v; },
+    lsSet: function(k, v){ store[k] = v; writes[k]=(writes[k]||0)+1; },
     toast: function(){ sandbox._lastToast = Array.prototype.slice.call(arguments); },
     AppLog: { repo:function(){}, sync:function(){}, schema:function(){}, parser:function(){}, data:function(){}, render:function(){} }
   };
@@ -60,6 +63,7 @@ function makeSandbox(){
     extractFunction('reconcileClusterController')
   ].join('\n'), sandbox);
   sandbox._store = store;
+  sandbox._writes = writes;
   return sandbox;
 }
 
@@ -98,6 +102,7 @@ assert.strictEqual(makeSandbox().parseStartMinutes(''), null, '未填時間不�
   assert.strictEqual(!!p2.skip['a'], true, '9:00 那項(較早的已過項目)應被自動略過');
   assert.strictEqual(!!p2.autoSkip['a'], true, '自動略過要記錄 autoSkip 標記,供 UI 顯示與一鍵修正');
   assert.strictEqual(!!p2.skip['b'], false, '保留待確認的那項不能被自動略過');
+  assert.strictEqual(sb._writes.trip_next_stop_progress,1,'同一輪多項超時只保存一次 progress');
 }
 
 /* ---- 情境2:今天已手動完成早上那項,現在 21:00,11:00 項目仍未清 ---- */
@@ -230,5 +235,10 @@ assert.strictEqual(makeSandbox().parseStartMinutes(''), null, '未填時間不�
 }
 
 assert(html.includes('展開該區串點'), 'cluster ticket exposes the approved expand label');
+const pickSource=extractFunction('pickNextStop');
+assert(pickSource.includes('TripProgression.reconcile'),'production next-stop wrapper uses the pure reconciliation module');
+assert(!pickSource.includes('autoSkipStaleItem'),'render-path selection no longer persists one stale item at a time');
+assert(html.includes('<script src="trip-progression.js"></script>'),'trip progression module is loaded by the runtime');
+assert(fs.readFileSync('sw.js','utf8').includes("'./trip-progression.js'"),'trip progression module belongs to the offline shell');
 
 console.log('pickNextStop / auto-skip tests passed');

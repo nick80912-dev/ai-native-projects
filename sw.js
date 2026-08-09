@@ -34,6 +34,7 @@ var SHELL = [
   './buy-to-ledger.js',
   './ledger-ui-state.js',
   './shopping-ui-state.js',
+  './trip-progression.js',
   './schema.js',
   './validator.js',
   './manifest.webmanifest',

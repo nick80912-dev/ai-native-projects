@@ -674,6 +674,7 @@ input:not([type="hidden"]),select,textarea{font-size:16px!important}
 <script src="buy-to-ledger.js"></script>
 <script src="ledger-ui-state.js"></script>
 <script src="shopping-ui-state.js"></script>
+<script src="trip-progression.js"></script>
 <script>
 /* ---- APP_VERSION SAFE ACCESS (C2) ----
    app-version.js 是獨立外部 script,離線快取未命中或部署缺檔時**會**載不到,
@@ -2770,48 +2771,18 @@ function loadWeatherForCity(city){
   });
 }
 function pickNextStop(items,progress,checks,nowMinutes,dayRef){
-  items=(items||[]).filter(function(it){ return it&&it.act; });
-  progress=normalizeDayProgress(progress);
-  checks=checks||{};
-  var remaining=items.filter(function(it){ return !isNextStopCleared(it,progress,checks); });
-  if(!remaining.length) return { item:null, remaining:0, source:'complete' };
-  function resultFor(item,source){
-    var itemIndex=items.indexOf(item);
-    var after=remaining.filter(function(it){ return items.indexOf(it)>itemIndex; }).length;
-    return { item:item, remaining:after, source:source };
-  }
-  /* 統一以「時間」判斷下一站,不再依「今天是否已手動清過任一項」切換邏輯(舊版在此分岔會卡住不推進)。
-     在 remaining(未清項目)裡,由前到後找「最後一個時間已過」的位置 cutoffIdx:
-     - cutoffIdx 之前(含無時間欄位、夾在中間的項目)一律視為過期:時間不能重來、行程不會同天回訪,自動標記略過。
-     - cutoffIdx 該項保留下來當「下一站」,待使用者手動確認完成/跳過。 */
-  var cutoffIdx=-1;
-  remaining.forEach(function(it,i){
-    var m=parseStartMinutes(it.time);
-    if(m!==null && m<=nowMinutes) cutoffIdx=i;
+  var canReconcile=!!(dayRef&&dayRef.day)&&
+    (typeof findToday!=='function'||findToday()===dayRef.dayIndex);
+  var outcome=TripProgression.reconcile({
+    items:items,progress:progress,checks:checks,nowMinutes:nowMinutes,isToday:canReconcile
   });
-  if(cutoffIdx>=0){
-    var blockingClusterIdx=remaining.findIndex(function(it,i){
-      return i<=cutoffIdx&&it.clusterController;
-    });
-    if(blockingClusterIdx>=0) cutoffIdx=blockingClusterIdx;
-    var stale=remaining.slice(0,cutoffIdx);
-    if(stale.length && dayRef&&dayRef.day){
-      var newlySkipped=[];
-      stale.forEach(function(it){
-        if(autoSkipStaleItem(dayRef.day,dayRef.dayIndex,it.id)) newlySkipped.push(it);
-      });
-      if(newlySkipped.length){
-        var names=newlySkipped.map(function(it){ return it.act||it.place||''; }).filter(Boolean).slice(0,2);
-        toast('已自動略過 '+newlySkipped.length+' 項超時未確認行程'+(names.length?'：'+names.join('、')+(newlySkipped.length>2?' 等':''):''));
-      }
-    }
-    return resultFor(remaining[cutoffIdx],'time-stale');
+  if(outcome.changed&&dayRef&&dayRef.day){
+    var all=getNextStopProgress();
+    all[dayProgressKey(dayRef.day,dayRef.dayIndex)]=outcome.progress;
+    saveNextStopProgress(all);
   }
-  var future=remaining.find(function(it){
-    var m=parseStartMinutes(it.time);
-    return m!==null && m>=nowMinutes;
-  });
-  return resultFor(future||remaining[0],future?'time':'order');
+  if(outcome.notification)toast(outcome.notification);
+  return outcome.pick;
 }
 function clusterControllerId(parent){
   return parent&&parent.id?parent.id+'__cluster':'';
