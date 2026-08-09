@@ -64,6 +64,11 @@
 - `fetchSheet()` 第一次失敗後必須等待 800ms 才執行唯一一次重試；第一次成功不得等待，第二次失敗不得再重試，且最終錯誤必須維持可供 snapshot orchestration 判斷。
 - `toast()` 是非必要呈現效果；`#toast` 不存在時必須在改動 `toastAction`／`toastTimer` 前安全返回，不得讓提示失敗中斷同步、儲存或其他業務流程。
 
+## 現行 Ledger 近期消費卡契約（2026-08-09）
+- 個人代購與團體付款／分攤摘要都位於品項名稱同行；團體摘要不得再於下方 badge 重複，其他狀態 badge 不受影響。
+- 個人與團體卡的店家列順序都是「店家 · [emoji] 類別」，支付方式獨立在下一列；無店家仍須保留類別，無支付方式不得輸出空白 metadata。
+- 這只是 `renderLedgerRecentRecord()` presentation contract；不得藉此改動 participant parsing、付款／分攤計算、Ledger repository 或資料格式。
+
 ## 關鍵資源
 - 正式站:https://trippilot-jp.netlify.app/
 - 測試站:https://dev-trippilot-jp.netlify.app/

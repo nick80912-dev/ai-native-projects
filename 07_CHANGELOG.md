@@ -1,4 +1,11 @@
 # 07 版本紀錄
+## 2026-08-09｜Ledger 近期消費卡資訊階層微調（dev，SW v98 未升版）
+
+- **團體資訊同行**：團體近期消費卡沿用既有「我／姓名付款 · 全員／N 人分攤」計算與文案，但由下方 badge 移到品項名稱旁，視覺權重比照個人卡既有「幫 [姓名] 買」標記；舊位置不再重複。待同步、TEST、已更正、已鎖帳與免稅 badge 維持原位。
+- **店家與類別同列**：個人與團體卡統一顯示「店家 · [emoji] 類別」，支付方式獨立留在下一列；沒有店家仍顯示類別，沒有支付方式不輸出空白列。批次展開子項沿用同一 renderer，因此同步套用。
+- **TDD 與手機版面**：Node 真實 renderer 先因舊店家／類別順序失敗，Browser 再以真實卡片重現；最小 markup／CSS 修改後，Ledger focused Node tests 與 Browser 3／3 通過，並於 320／375／390px 驗證個人／團體卡沒有文件、卡片、body 溢位或文字／金額重疊。
+- **邊界與交付**：未修改付款／分攤計算、participant parsing、Ledger domain、repository、Queue、Apps Script、settlement、correction、schema、CSV、localStorage、備份格式或 Shopping 卡片。完整 gate 為 **80／80** Node test files、Playwright **144／144**；維持 v98，只 push `dev`，不 merge `main`、不 deploy、不建立 production tag。
+
 ## 2026-08-09｜Sheet 重試退避與 Toast 降級保護（dev，SW v98 未升版）
 
 - **短暫網路故障緩衝**：`fetchSheet()` 第一次失敗仍寫入既有 Sync log，之後精確等待 800ms 才執行原本唯一一次重試；首次成功不安排 timer，第二次失敗仍直接向 snapshot orchestration 拋出第二次錯誤，不新增第三次嘗試。
