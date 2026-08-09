@@ -3231,10 +3231,19 @@ function renderToday(){
 /* ================= 採買清單(純 localStorage) ================= */
 var shoppingUiState={tab:'pending',form:null,formSession:null,split:null,selectionMode:false,selected:{},photoError:''};
 var shoppingUiWorkflow=TripShoppingUiState.createWorkflow({
-  readState:function(){return {tab:shoppingUiState.tab,selectionMode:shoppingUiState.selectionMode,selected:shoppingUiState.selected};},
-  writeState:function(next){shoppingUiState.tab=next.tab;shoppingUiState.selectionMode=next.selectionMode;shoppingUiState.selected=next.selected;},
+  readState:function(){return {tab:shoppingUiState.tab,selectionMode:shoppingUiState.selectionMode,selected:shoppingUiState.selected,form:shoppingUiState.form,formSession:shoppingUiState.formSession,photoError:shoppingUiState.photoError};},
+  writeState:function(next){shoppingUiState.tab=next.tab;shoppingUiState.selectionMode=next.selectionMode;shoppingUiState.selected=next.selected;shoppingUiState.form=next.form;shoppingUiState.formSession=next.formSession;shoppingUiState.photoError=next.photoError;},
   clearSplit:function(){shoppingUiState.split=null;},
   renderList:function(){renderShoppingListOverlay();},
+  renderForm:function(){renderShoppingFormSheet();},
+  focusForm:function(){focusShoppingNameInput();},
+  focusFormError:function(state,effect){focusShoppingFormError(effect.error);},
+  syncFormPending:function(){renderShoppingFormSheet();},
+  unmountForm:function(){closeShoppingFormSheet();},
+  restoreFormContext:function(state,effect){restoreShoppingFormReturn(effect.session,effect.item,effect.cancelled);},
+  renderToday:function(){renderToday();},
+  cleanupPhotoIds:function(state,effect){cleanupShoppingPhotoIds(effect.ids||[]);},
+  notifyFormResult:function(state,effect){if(effect.notification)toast(effect.notification);},
   focusSelectionControl:function(){
     requestAnimationFrame(function(){
       var button=document.getElementById('shoppingSelectAllButton');
@@ -3294,7 +3303,7 @@ function renderShoppingTodayEntry(day,currentStopRef){
    刻意不動 curView —— 這是疊上去的 overlay,使用者沒有離開原本的頁面。 */
 function openShoppingList(focusStopRef){
   closeShoppingList();
-  shoppingUiState.form=null;shoppingUiState.formSession=null;shoppingUiState.split=null;
+  shoppingUiState.split=null;
   var overlay=document.createElement('div');overlay.id='shoppingListOverlay';overlay.className='shopping-list-overlay';
   overlay.innerHTML='<section class="shopping-list-panel" role="dialog" aria-modal="true" aria-labelledby="shoppingListTitle"></section>';
   document.body.appendChild(overlay);document.body.classList.add('shopping-list-open');shoppingUiWorkflow.dispatch({type:'open-list'});
@@ -3318,7 +3327,7 @@ function updateShopListCount(){
 }
 function closeShoppingList(){
   closeShoppingItemActions();closeShoppingReleaseConfirm();closeShoppingCompletedEditConfirm();closeShoppingPhotoViewer();closeShoppingItemDetail();
-  closeShoppingFormSheet();shoppingUiState.form=null;shoppingUiState.formSession=null;
+  shoppingUiWorkflow.dispatch({type:'clear-form',cleanup:true});
   var overlay=document.getElementById('shoppingListOverlay'),removed=!!overlay;
   if(overlay)overlay.remove();
   document.body.classList.remove('shopping-list-open');
@@ -3358,10 +3367,6 @@ function restoreShoppingFormReturn(session,item,cancelled){
   var fallback=document.getElementById('shoppingListTitle');
   if(fallback){fallback.setAttribute('tabindex','-1');fallback.focus();}
 }
-function setShoppingFormSavePending(pending){
-  if(!shoppingUiState.formSession)return;
-  shoppingUiState.formSession.savePending=!!pending;renderShoppingFormSheet();
-}
 function focusShoppingFormError(error){
   var quantityError=/數量|單位/.test(String(error&&error.message||''));
   var input=document.getElementById(quantityError?'shoppingQuantity':'shoppingName');
@@ -3386,12 +3391,10 @@ function renderShoppingFormSheet(){
 function openShoppingForm(mode,id,returnContext){
   var item=mode==='edit'?shoppingListStore.all().filter(function(value){return value.id===String(id);})[0]:null;
   if(mode==='edit'&&!item){toast('找不到採買項目');return;}
-  shoppingUiState.split=null;shoppingUiState.photoError='';
-  shoppingUiState.form=mode==='edit'?newShoppingForm(item):newShoppingForm();
-  if(item)shoppingUiState.form.allocationEditPolicy=buyToLedgerDomain.inspectItem(item,shoppingLedgerContext()).editPolicy;
-  shoppingUiState.formSession=createShoppingFormSession(mode,item,returnContext,shoppingListScrollTop());
-  renderShoppingFormSheet();
-  focusShoppingNameInput();
+  var form=mode==='edit'?newShoppingForm(item):newShoppingForm();
+  if(item)form.allocationEditPolicy=buyToLedgerDomain.inspectItem(item,shoppingLedgerContext()).editPolicy;
+  var session=createShoppingFormSession(mode,item,returnContext,shoppingListScrollTop(),createShoppingFormSessionId());
+  return shoppingUiWorkflow.dispatch({type:'open-form',form:form,session:session});
 }
 function startShoppingAdd(){openShoppingForm('add','','list');}
 function startShoppingEdit(id,returnContext){openShoppingForm('edit',id,returnContext||'list');}
@@ -3399,13 +3402,15 @@ function cancelShoppingForm(){
   var session=shoppingUiState.formSession;
   if(session&&session.savePending)return;
   var item=session&&session.itemId?shoppingListStore.all().filter(function(value){return value.id===session.itemId;})[0]:null;
-  cleanupShoppingPhotoIds(session&&session.temporaryPhotoIds||[]);
-  shoppingUiState.form=null;shoppingUiState.formSession=null;closeShoppingFormSheet();
-  restoreShoppingFormReturn(session,item,true);
+  return shoppingUiWorkflow.dispatch({type:'close-form',sessionId:session&&session.sessionId,item:item,cancelled:true});
 }
 /* 清除綁定只在使用者明確按下時發生;系統任何時候都不自動清空 stopRef。 */
-function clearShoppingStopBinding(){if(!shoppingUiState.form)return;shoppingUiState.form.stopRef='';renderShoppingFormSheet();}
-function updateShoppingFormField(field,value,rerender){if(!shoppingUiState.form)return;shoppingUiState.form[field]=value;if(rerender)renderShoppingFormSheet();}
+function replaceShoppingForm(next,render){
+  var session=shoppingUiState.formSession;if(!session)return;
+  shoppingUiWorkflow.dispatch({type:'replace-form',sessionId:session.sessionId,form:next,render:render!==false});
+}
+function clearShoppingStopBinding(){if(!shoppingUiState.form)return;var next=Object.assign({},shoppingUiState.form,{stopRef:''});replaceShoppingForm(next,true);}
+function updateShoppingFormField(field,value,rerender){if(!shoppingUiState.form)return;var next=Object.assign({},shoppingUiState.form);next[field]=value;replaceShoppingForm(next,rerender===true);}
 function toggleShoppingFormTarget(value,forceOn){
   if(!shoppingUiState.form)return;
   var target=normalizeLedgerProxyTarget(value),key=canonicalMemberName(target);
@@ -3415,7 +3420,7 @@ function toggleShoppingFormTarget(value,forceOn){
   if(found&&forceOn!==true&&policy&&!policy.canEdit){toast(policy.reason+'，目前無法移除這位對象');return;}
   if(forceOn===true&&!found)targets.push(target);
   else if(forceOn!==true)targets=found?targets.filter(function(current){return canonicalMemberName(current)!==key;}):targets.concat([target]);
-  shoppingUiState.form.targets=targets;renderShoppingFormSheet();
+  replaceShoppingForm(Object.assign({},shoppingUiState.form,{targets:targets}),true);
 }
 function addShoppingBuyFor(){
   var input=document.getElementById('shoppingBuyForNew'),value=input&&input.value;
@@ -3448,26 +3453,26 @@ function openShoppingCompletedEditConfirm(form,payload){
 function commitShoppingFormPayload(form,payload,saveAnother){
   var session=shoppingUiState.formSession;
   if(!session||session.savePending)return null;
-  setShoppingFormSavePending(true);
+  var requestId=createShoppingFormRequestId();
+  var requested=shoppingUiWorkflow.dispatch({type:'form-save-requested',sessionId:session.sessionId,requestId:requestId});
+  if(!requested.changed)return null;
   try{
     var before=shoppingListStore.all();
     var saved=form.id?shoppingListStore.update(form.id,payload):shoppingListStore.add(payload);
     refreshShoppingPhotoAudit({force:true,reason:'shopping-mutation'});
-    session.temporaryPhotoIds=[];
     if(!form.id&&saveAnother===true){
-      shoppingUiState.form=shoppingSaveAnotherForm(form);
-      shoppingUiState.formSession=createShoppingFormSession('add',null,'list',session.returnScrollTop);
-      renderToday();renderShoppingListOverlay();renderShoppingFormSheet();
-      focusShoppingNameInput();toast('採買項目已新增');
+      shoppingUiWorkflow.dispatch({
+        type:'form-save-succeeded',sessionId:session.sessionId,requestId:requestId,saveAnother:true,
+        nextForm:shoppingSaveAnotherForm(form),
+        nextSession:createShoppingFormSession('add',null,'list',session.returnScrollTop,createShoppingFormSessionId()),
+        notification:'採買項目已新增'
+      });
       return saved;
     }
-    shoppingUiState.form=null;shoppingUiState.formSession=null;closeShoppingFormSheet();
-    renderToday();renderShoppingListOverlay();
-    toast(form.id?'採買項目已更新':'採買項目已新增');
-    restoreShoppingFormReturn(session,saved,false);
+    shoppingUiWorkflow.dispatch({type:'form-save-succeeded',sessionId:session.sessionId,requestId:requestId,item:saved,notification:form.id?'採買項目已更新':'採買項目已新增'});
     return saved;
   }catch(error){
-    setShoppingFormSavePending(false);focusShoppingFormError(error);throw error;
+    shoppingUiWorkflow.dispatch({type:'form-save-failed',sessionId:session.sessionId,requestId:requestId,focusError:error});throw error;
   }
 }
 function confirmShoppingCompletedEdit(){
@@ -3496,7 +3501,7 @@ function saveShoppingForm(saveAnother){
     }
     commitShoppingFormPayload(form,payload,saveAnother);
   }catch(error){
-    setShoppingFormSavePending(false);toast(error.message||'採買項目儲存失敗');focusShoppingFormError(error);
+    toast(error.message||'採買項目儲存失敗');focusShoppingFormError(error);
   }
 }
 function deleteShoppingItem(id){
@@ -3580,20 +3585,20 @@ function renderShoppingPhotoField(form,pending){
     '<p class="shopping-photo-note'+(error||unavailable?' shopping-photo-inline-error':'')+'" role="status" aria-live="polite">'+escapeHtml(message)+'</p>'+
     (error==='儲存空間不足，照片尚未加入'?shoppingPhotoManageStorageButton():'')+'</div>';
 }
-function removeShoppingFormPhoto(){if(!shoppingUiState.form||shoppingUiState.formSession&&shoppingUiState.formSession.savePending)return;shoppingUiState.form.photoId='';renderShoppingFormSheet();}
+function removeShoppingFormPhoto(){var session=shoppingUiState.formSession;if(!shoppingUiState.form||!session)return;shoppingUiWorkflow.dispatch({type:'remove-form-photo',sessionId:session.sessionId});}
 function selectShoppingPhoto(input){
-  var file=input&&input.files&&input.files[0],session=shoppingUiState.formSession,form=shoppingUiState.form;
-  if(!file||!session||!form||session.savePending||shoppingPhotoAuditState.unavailable)return Promise.resolve(false);
-  shoppingUiState.photoError='';setShoppingFormSavePending(true);
+  var file=input&&input.files&&input.files[0],session=shoppingUiState.formSession;
+  var requestId=createShoppingPhotoRequestId();
+  if(!file||!session||!shoppingUiState.form||session.savePending||shoppingPhotoAuditState.unavailable)return Promise.resolve(false);
+  var requested=shoppingUiWorkflow.dispatch({type:'photo-save-requested',sessionId:session.sessionId,requestId:requestId});
+  if(!requested.changed)return Promise.resolve(false);
   return TripShoppingPhotos.compressImage(file).then(function(blob){return shoppingPhotoStore.put(blob);}).then(function(photoId){
-    if(shoppingUiState.formSession!==session||shoppingUiState.form!==form){cleanupShoppingPhotoIds([photoId]);return false;}
-    var previous=String(form.photoId||'');
-    form.photoId=photoId;session.temporaryPhotoIds.push(photoId);
-    if(previous&&session.temporaryPhotoIds.indexOf(previous)>=0){session.temporaryPhotoIds=session.temporaryPhotoIds.filter(function(id){return id!==previous;});cleanupShoppingPhotoIds([previous]);}
-    shoppingUiState.photoError='';setShoppingFormSavePending(false);toast('照片附件已加入');return true;
+    var completed=shoppingUiWorkflow.dispatch({type:'photo-save-succeeded',sessionId:session.sessionId,requestId:requestId,photoId:photoId,notification:'照片附件已加入'});
+    if(!completed.changed){cleanupShoppingPhotoIds([photoId]);return false;}
+    return true;
   }).catch(function(error){
-    if(shoppingUiState.formSession===session)setShoppingFormSavePending(false);
-    showShoppingPhotoSaveFailure(error);return false;
+    var message=shoppingPhotoFailureMessage(error);
+    shoppingUiWorkflow.dispatch({type:'photo-save-failed',sessionId:session.sessionId,requestId:requestId,message:message});return false;
   });
 }
 function shoppingCardLinkBadge(item,linkSummary){
@@ -3813,7 +3818,10 @@ function showShoppingPhotoSaveFailure(error){
   if(repairStatus){
     shoppingPhotoRepairState.error=message;repairStatus.innerHTML=escapeHtml(message)+(message==='儲存空間不足，照片尚未加入'?shoppingPhotoManageStorageButton():'');repairStatus.hidden=false;return message;
   }
-  if(shoppingUiState.form){shoppingUiState.photoError=message;renderShoppingFormSheet();return message;}
+  if(shoppingUiState.form&&shoppingUiState.formSession){
+    var failed=shoppingUiWorkflow.dispatch({type:'photo-save-failed',sessionId:shoppingUiState.formSession.sessionId,requestId:shoppingUiState.formSession.photoRequestId,message:message});
+    if(failed.changed)return message;
+  }
   toast(message);return message;
 }
 var shoppingPhotoViewerObjectUrl='';
@@ -3924,7 +3932,7 @@ function startShoppingSplit(id){
   if(shoppingItemAllocations(item).some(function(allocation){return allocation.quantity==null;})){toast('此項目仍使用舊式文字數量。請先編輯為數字與單位，再使用部分購買');startShoppingEdit(item.id);return;}
   var purchasedByAllocationId={};
   shoppingItemAllocations(item).forEach(function(allocation){purchasedByAllocationId[allocation.allocationId]='0';});
-  shoppingUiState.form=null;
+  shoppingUiWorkflow.dispatch({type:'clear-form',cleanup:true});
   shoppingUiState.split={
     id:item.id,name:item.name,unit:item.unit,legacyQtyText:item.legacyQtyText,
     allocations:shoppingItemAllocations(item).map(function(allocation){return Object.assign({},allocation);}),
@@ -4912,10 +4920,16 @@ function newShoppingForm(seed){
     photoId:String(seed.photoId||'')
   };
 }
-function createShoppingFormSession(mode,item,returnContext,scrollTop){
+var shoppingFormSessionSequence=0,shoppingFormRequestSequence=0,shoppingPhotoRequestSequence=0;
+function createShoppingFormSessionId(){shoppingFormSessionSequence++;return 'shopping-form-'+Date.now().toString(36)+'-'+shoppingFormSessionSequence.toString(36);}
+function createShoppingFormRequestId(){shoppingFormRequestSequence++;return 'shopping-save-'+Date.now().toString(36)+'-'+shoppingFormRequestSequence.toString(36);}
+function createShoppingPhotoRequestId(){shoppingPhotoRequestSequence++;return 'shopping-photo-request-'+Date.now().toString(36)+'-'+shoppingPhotoRequestSequence.toString(36);}
+function createShoppingFormSession(mode,item,returnContext,scrollTop,sessionId){
   mode=mode==='edit'?'edit':'add';
   if(mode==='edit'&&(!item||!String(item.id||'')))throw new Error('找不到採買項目');
+  sessionId=String(sessionId||'').trim();if(!sessionId)throw new Error('採買表單缺少 session ID');
   return {
+    sessionId:sessionId,
     mode:mode,
     itemId:mode==='edit'?String(item.id):'',
     returnContext:returnContext==='detail'?'detail':'list',
@@ -4924,7 +4938,9 @@ function createShoppingFormSession(mode,item,returnContext,scrollTop){
     originalStopRef:mode==='edit'?String(item.stopRef||''):'',
     originalPhotoId:mode==='edit'?String(item.photoId||''):'',
     temporaryPhotoIds:[],
-    savePending:false
+    savePending:false,
+    saveRequestId:'',
+    photoRequestId:''
   };
 }
 function shoppingFormReturnPlan(session,item,cancelled){

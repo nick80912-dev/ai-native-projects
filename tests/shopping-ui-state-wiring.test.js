@@ -26,8 +26,8 @@ const adapterStart=html.indexOf('var shoppingUiWorkflow=');
 const adapterEnd=html.indexOf('var shoppingPhotoStore=',adapterStart);
 assert(adapterStart>=0&&adapterEnd>adapterStart,'Shopping UI projection adapter has a bounded production section');
 const adapter=html.slice(adapterStart,adapterEnd);
-assert.match(adapter,/readState:function\(\)\{return \{tab:shoppingUiState\.tab,selectionMode:shoppingUiState\.selectionMode,selected:shoppingUiState\.selected\};\}/,'adapter reads exactly the owned projection');
-assert.match(adapter,/writeState:function\(next\)\{shoppingUiState\.tab=next\.tab;shoppingUiState\.selectionMode=next\.selectionMode;shoppingUiState\.selected=next\.selected;\}/,'adapter writes exactly the owned projection');
+assert.match(adapter,/readState:function\(\)\{return \{tab:shoppingUiState\.tab,selectionMode:shoppingUiState\.selectionMode,selected:shoppingUiState\.selected,form:shoppingUiState\.form,formSession:shoppingUiState\.formSession,photoError:shoppingUiState\.photoError\};\}/,'adapter reads the complete Shopping workflow projection');
+assert.match(adapter,/writeState:function\(next\)\{shoppingUiState\.tab=next\.tab;shoppingUiState\.selectionMode=next\.selectionMode;shoppingUiState\.selected=next\.selected;shoppingUiState\.form=next\.form;shoppingUiState\.formSession=next\.formSession;shoppingUiState\.photoError=next\.photoError;\}/,'adapter alone writes the complete Shopping workflow projection');
 assert.doesNotMatch(adapter,/shoppingListStore|shoppingPhotoStore|buyToLedger|localStorage/,'adapter does not absorb repositories or domain decisions');
 
 const expectedActions={
@@ -57,14 +57,22 @@ const deleteSource=extractFunction(html,'deleteShoppingItem');
 assert.match(deleteSource,/shoppingUiWorkflow\.dispatch\(\{type:'prune-selection',ids:\[id\]\}\)/,'single delete prunes selection through the seam');
 assert.doesNotMatch(deleteSource,/delete shoppingUiState\.selected/,'single delete does not directly mutate the selection map');
 
-['startShoppingAdd','openShoppingItemDetail','openShoppingPhotoViewer','openShoppingPhotoRepair'].forEach(function(name){
+['openShoppingItemDetail','openShoppingPhotoViewer','openShoppingPhotoRepair'].forEach(function(name){
   assert.doesNotMatch(extractFunction(html,name),/shoppingUiWorkflow/,'unowned '+name+' remains outside the list selection seam');
 });
+assert.match(extractFunction(html,'openShoppingForm'),/shoppingUiWorkflow\.dispatch\(\{type:'open-form'/,'form open uses the shared Shopping workflow');
+assert.match(extractFunction(html,'cancelShoppingForm'),/shoppingUiWorkflow\.dispatch\(\{type:'close-form'/,'form cancel uses the shared Shopping workflow');
+assert.match(extractFunction(html,'commitShoppingFormPayload'),/type:'form-save-requested'/,'form persistence is guarded by a workflow request');
+assert.match(extractFunction(html,'commitShoppingFormPayload'),/type:'form-save-succeeded'/,'form success returns through the workflow');
+assert.match(extractFunction(html,'selectShoppingPhoto'),/type:'photo-save-requested'/,'photo persistence is guarded by a workflow request');
+assert.match(extractFunction(html,'selectShoppingPhoto'),/type:'photo-save-succeeded'/,'photo completion returns through the workflow');
 assert.doesNotMatch(extractFunction(html,'personalStateJson'),/shoppingUiState|shoppingUiWorkflow/,'personal backups exclude Shopping UI state');
 assert.doesNotMatch(extractFunction(html,'applyPersonalStatePayload'),/shoppingUiState|shoppingUiWorkflow/,'personal restores exclude Shopping UI state');
 
 const ownedAssignments=html.match(/shoppingUiState\.(?:tab|selectionMode|selected)\s*=(?!=)/g)||[];
 assert.strictEqual(ownedAssignments.length,3,'only the projection adapter directly assigns the three owned fields');
+const formOwnedAssignments=html.match(/shoppingUiState\.(?:form|formSession|photoError)\s*=(?!=)/g)||[];
+assert.strictEqual(formOwnedAssignments.length,3,'only the projection adapter directly assigns form-owned fields');
 assert.doesNotMatch(html,/delete shoppingUiState\.selected/,'owned selection maps are never mutated outside the module projection');
 
 console.log('shopping UI state wiring tests passed');
