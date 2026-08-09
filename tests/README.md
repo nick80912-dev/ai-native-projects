@@ -13,6 +13,7 @@
 - `ios-zoom-guard.test.js`:驗證 iOS 16px 字級、Scroll-only／viewport 還原、SW 版次，以及最小 no-op 雙擊相容性監聽器不復活舊雙擊 guard 或 APP build metadata。執行:`node tests/ios-zoom-guard.test.js`。
 - `preview-date.test.js`:驗證預覽日期參數與 `todayMD()` 使用同一模擬時間來源。執行:`node tests/preview-date.test.js`。
 - `pwa-shell.test.js`:驗證 PWA 入口、manifest、Service Worker、Netlify 設定與圖示資產完整性;2026-07-30 起改鎖新版 SW 契約(頂層 `SW_VERSION`、`CACHE_NAME` 由它推導、不得 importScripts、install 用 `cache:'reload'`、fetch 用 `cache:'no-cache'`、只有 navigation 才 fallback `index.html`)；另鎖 `buy-to-ledger.js`、`ledger-ui-state.js` 與 `shopping-ui-state.js` 同時由頁面載入並納入離線 App Shell。執行:`node tests/pwa-shell.test.js`。
+- `sw-update-prompt.test.js`：直接執行 `index.html` 的正式 SW prompt functions，驗證首次安裝不提示、既有 controller 的 activated／controllerchange 共用一次性 guard、事件不自動 reload、明確更新動作只 reload 一次，以及缺少 prompt DOM 安全降級。執行：`node tests/sw-update-prompt.test.js`。
 - `app-version-fallback.test.js`:`app-version.js` 載不到時的降級契約。涵蓋 `appVersion()`／`appVersionLabel()` 的回退值、`renderSettingsDataPage()` 在無 `APP_VERSION` 時仍可算出資料健康區塊與 HTML(顯示「SW 未知」而非 ReferenceError),以及 `index.html` 不得在安全取值區塊外裸讀 `APP_VERSION`。執行:`node tests/app-version-fallback.test.js`。
 - `trip-presentation.test.js`:驗證行程類型標籤與行程頁呈現規則。執行:`node tests/trip-presentation.test.js`。
 - `schema-types.test.js`:驗證 Places.Type 必要中文輸入值的正規化結果,並確認 `index.html` 內嵌 Schema 已同步。執行:`node tests/schema-types.test.js`。
@@ -79,6 +80,6 @@
 - 測試只依賴 Node 內建模組或 devDependency 明列的工具;引入新測試框架屬技術棧變更,走五段提案。
 - 測試檔命名:`<對象>.test.js` / `<情境>.spec.js`;測試不得修改任何來源檔。
 - **目前版本一律由 `tests/support/version.js` 推導,不得在測試檔硬編碼**。歷史 release note、migration fixture 與已淘汰 cache 名稱的負向斷言例外,保留原字面。
-- Playwright:`tests/browser/trip-three-scenarios.spec.js`(斷網內建／連網同步／旅行日 mock Date)與 `tests/browser/sw-update-cache.spec.js`(SW 更新後快取內容正確性、無混版本、離線完整載入、子資源未命中不得收到 `index.html`;後者自帶 `support/versioned-server.js`,刻意送 `max-age=600` 模擬 GitHub Pages,用 `no-store` 的 `static-server.js` 測不出該缺陷)。執行:`npm run test:browser`。
+- Playwright:`tests/browser/trip-three-scenarios.spec.js`(斷網內建／連網同步／旅行日 mock Date)與 `tests/browser/sw-update-cache.spec.js`(SW 更新後快取內容正確性、無混版本、離線完整載入、子資源未命中不得收到 `index.html`，以及既有 controller 的提示→不自動 reload→點擊後載入新世代、320／375／390px 版面；後者自帶 `support/versioned-server.js`,刻意送 `max-age=600` 模擬 GitHub Pages,用 `no-store` 的 `static-server.js` 測不出該缺陷)。執行:`npm run test:browser`。
 - `browser/shopping-select-all.spec.js`：驗證採買多選只全選目前待買／已買分頁、全選／取消全選文字與焦點、切頁清理、卡片 body 只切 selection、批次成功沿用既有操作，以及 store failure／刪除取消保留 selection；另涵蓋 320／375／390px 單列觸控控制。執行：`npx playwright test tests/browser/shopping-select-all.spec.js`。
 - `browser/buy-to-ledger.spec.js`：以真實 App、個人 repository、團體 durable queue 與 Shopping store 驗證單筆／多筆記帳閉環、驗證失敗、保留採買 overlay、link 回寫失敗不重複建立消費，以及 linked／unverified／unlinked 混合明細在點擊前即顯示合併狀態、原因與 disabled 等待按鈕。執行：`npx playwright test tests/browser/buy-to-ledger.spec.js`。

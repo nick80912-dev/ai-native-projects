@@ -1,4 +1,11 @@
 # 07 版本紀錄
+## 2026-08-09｜Service Worker 新版就緒提示（dev，SW v99）
+
+- **常駐更新提示**：新版 Service Worker 完成啟用並接管既有頁面後，底部導覽上方顯示「新版已就緒／立即更新」。提示獨立於短暫 Toast，不會自動消失或被一般操作訊息永久取代；z-index 低於表單／明細 overlay，使用者可先完成輸入再更新。
+- **不強制刷新**：`updatefound` 只用來追蹤 installing worker，必須等到 `activated` 或 `controllerchange` 才提示；只有點擊「立即更新」才呼叫 reload。首次安裝、安裝失敗、重複 state／controller 事件與缺少提示 DOM 都不刷新、不阻斷 App。
+- **快取策略不變**：`skipWaiting()`、`clients.claim()`、SHELL、install／activate／fetch handler、HTTP cache bypass 與離線 fallback 完全不變；`sw.js` 與 `app-version.js` 同步升為 v99。
+- **TDD 與兩世代驗證**：Node 行為測試鎖定 first-install suppression、一次性提示與 explicit-only reload；versioned-server Browser 測試實際完成 gen1→gen2 更新，確認點擊前頁面仍是 gen1、點擊後 App／schema／cache 收斂至 gen2，並驗證 320／375／390px 與既有離線契約。v99 只 push `dev`；必須等 Bar 實機載入並確認 v99 controller 後，才能另建 v100 真實更新目標。
+
 ## 2026-08-09｜BUILTIN 岡山快照刷新與可重複 SOP（dev，SW v98 未升版）
 
 - **離線種子更正**：`index.html` 的 BUILTIN 已由東京／新宿舊資料刷新為目前公開的岡山四國六天五夜；現行 runtime 可解析 Day 1–6，places／restaurants／shopping 均非空。移除 BUILTIN 後方的 legacy cfg append 與 8 欄 Ledger overwrite，現在只有一個完整八 key 快照。

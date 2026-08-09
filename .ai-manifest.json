@@ -2,7 +2,7 @@
   "$comment": "AI 導航檔 — 任何 AI 接手第一步只讀這份即可掌握全貌。這是 13 步流程的第 1 步。",
   "project": "japan-travel-pwa(日本旅遊行程 App)",
   "owner": "Bar(產品負責人,非工程師,繁中溝通,要直接執行不要教學;AI=全職工程團隊)",
-  "version": "2.22-shopping-ledger-status-actions-v98",
+  "version": "2.23-sw-update-prompt-v99",
   "framework": "ai-native-framework@pending(尚未抽取;見 FUTURE_PLAN_framework-extraction.md)",
   "updated": "2026-08-09",
   "live": "https://trippilot-jp.netlify.app/",
@@ -136,13 +136,14 @@
   },
   "status": {
     "production": "main 維持 production-v73，直到已核准的 release PR 合併並完成線上驗證",
-    "dev_candidate": "v98（UI workflow/state 1→4 架構模組化＋AppLog／網路降級強化＋Ledger／Shopping UI 收斂＋岡山 BUILTIN 離線快照與刷新 SOP，未另占 runtime 版本）",
+    "dev_candidate": "v99（Service Worker 新版 activated／接管後顯示常駐更新提示；首次安裝不誤報、只由使用者點擊 reload；快取與 lifecycle 不變）",
     "device_acceptance": "Bar 已完成 v74–v89、v92–v95 畫面／真機驗收；v96 兩項補正由瀏覽器回歸測試覆蓋",
-    "automated_validation": "完整基準為 82 個 Node test files 與 145 個 Playwright tests，另含 runtime asset CLI",
+    "automated_validation": "完整基準為 83 個 Node test files 與 147 個 Playwright tests，另含 runtime asset CLI",
     "pending_in_order": [
+      "Bar 先在目標實機／PWA 載入並確認 dev 的 v99 controller／cache",
+      "確認 v99 後才另建 v100，真實驗證提示、不自動 reload 與立即更新",
       "完成受保護的 dev → main 發布流程並驗證正式站",
-      "線上驗證成功後才建立 annotated production-v96 tag",
-      "backlog #3 等待具體 UI／內容回饋；下一個優先項目為 #24 SW 更新提示，依序以 v99 功能版與 v100 真實更新目標雙版本驗收"
+      "線上驗證成功後才建立 annotated production tag；backlog #24 在 v99→v100 實機驗收完成前維持未完成"
     ]
   },
   "after_every_delivery": "跑 window.healthCheck() + 輸出健康報告 + 更新 07_CHANGELOG(建新檔) + 必要時更新本 manifest",
