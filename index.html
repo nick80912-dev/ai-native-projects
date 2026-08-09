@@ -666,7 +666,7 @@ body.shopping-list-open{overflow:hidden}.shopping-list-overlay{position:fixed;in
 input:not([type="hidden"]),select,textarea{font-size:16px!important}
 .ledger-sheet #ledgerAmount{font-size:30px!important}
 .ledger-item-title-row{display:flex;align-items:center;flex-wrap:wrap;gap:4px 6px;min-width:0;overflow-wrap:anywhere}
-.shopping-card-target-summary,.ledger-proxy-target-summary{display:inline-flex;align-items:center;flex-wrap:wrap;gap:3px;font-weight:400}
+.shopping-card-target-summary,.ledger-proxy-target-summary,.ledger-shared-participant-summary{display:inline-flex;align-items:center;flex-wrap:wrap;gap:3px;font-weight:400}
 .shopping-target-affix{font-size:9.5px;line-height:1.3}
 .shopping-target-overflow{color:var(--ink-soft);font-weight:400}
 </style>
@@ -10010,16 +10010,17 @@ function renderLedgerRecentRecord(record,shared,currency){
   var proxyTarget=meta.proxyTarget||'未指定';
   var proxyTargetModel={prefix:'幫',names:[proxyTarget],overflow:'',suffix:'買',ariaLabel:'幫'+proxyTarget+'買'};
   var proxyTargetMarkup=!shared&&meta.isProxy?renderProxyTargetMarkup(proxyTargetModel,'ledger-proxy-target-summary'):'';
+  var sharedParticipantMarkup=shared?'<span class="ledger-shared-participant-summary"><span class="shopping-target-badge">'+escapeHtml(ledgerSharedRecordParticipantLabel(record,getCurrentMember(),registeredMembersForCurrentMode()))+'</span></span>':'';
   if(record.pending)badges.push('<span class="ledger-recent-badge pending">待同步</span>');
   if(shared&&isTestLedgerRecord(record))badges.push('<span class="ledger-recent-badge">TEST</span>');
   if(shared&&Number(record._correctionVersionCount||0)>0)badges.push('<span class="ledger-recent-badge">已更正 '+Number(record._correctionVersionCount)+' 次</span>');
   else if(shared&&record._correctionProtected)badges.push('<span class="ledger-recent-badge">已鎖帳</span>');
-  if(shared)badges.push('<span class="ledger-recent-badge">'+escapeHtml(ledgerSharedRecordParticipantLabel(record,getCurrentMember(),registeredMembersForCurrentMode()))+'</span>');
   if(meta.isTaxFree)badges.push('<span class="ledger-recent-badge">免稅品</span>');
-  var store=record.storeName?'<span class="ledger-recent-store">'+escapeHtml(record.storeName)+'</span>':'';
-  var metaText=[ledgerCategoryEmoji(record.category)+' '+record.category,record.payMethod].filter(Boolean).join(' · ');
+  var storeCategory=[record.storeName,record.category?ledgerCategoryEmoji(record.category)+' '+record.category:''].filter(Boolean).join(' · ');
+  var store=storeCategory?'<span class="ledger-recent-store">'+escapeHtml(storeCategory)+'</span>':'';
+  var metaText=[record.payMethod].filter(Boolean).join(' · '),metaMarkup=metaText?'<span class="ledger-recent-meta">'+escapeHtml(metaText)+'</span>':'';
   var modeClass=ledgerUiState.selectionMode?'ledger-selection-card ':'',menu=ledgerUiState.selectionMode?'':'<button class="ledger-record-menu-button" aria-label="消費操作" onclick="openLedgerRecordActions(\''+jsHtmlAttrString(record.id)+'\',event)">⋯</button>';
-  return '<article class="ledger-recent-row '+modeClass+(selected?'selected':'')+'">'+renderLedgerSelectionControl([record])+'<button class="ledger-recent-body '+(badges.length?'has-badges':'')+'" onclick="handleLedgerRecordCardClick(\''+jsHtmlAttrString(record.id)+'\',event)"><span class="ledger-recent-main"><span class="ledger-item-title-row"><strong>'+escapeHtml(record.detail||'未命名')+'</strong>'+proxyTargetMarkup+'</span>'+store+'<span class="ledger-recent-meta">'+escapeHtml(metaText)+'</span></span>'+formatLedgerDualAmounts(record)+(badges.length?'<span class="ledger-recent-badges">'+badges.join('')+'</span>':'')+'</button>'+menu+'</article>';
+  return '<article class="ledger-recent-row '+modeClass+(selected?'selected':'')+'">'+renderLedgerSelectionControl([record])+'<button class="ledger-recent-body '+(badges.length?'has-badges':'')+'" onclick="handleLedgerRecordCardClick(\''+jsHtmlAttrString(record.id)+'\',event)"><span class="ledger-recent-main"><span class="ledger-item-title-row"><strong>'+escapeHtml(record.detail||'未命名')+'</strong>'+proxyTargetMarkup+sharedParticipantMarkup+'</span>'+store+metaMarkup+'</span>'+formatLedgerDualAmounts(record)+(badges.length?'<span class="ledger-recent-badges">'+badges.join('')+'</span>':'')+'</button>'+menu+'</article>';
 }
 function renderLedgerBatchCard(records,shared,currency){
   var first=records[0],batchId=String(first.batchId||''),expanded=!!ledgerUiState.expandedBatches[batchId],selection=ledgerBatchSelectionState(records,ledgerUiState.selectedRecordIds||{}),totals=records.reduce(function(sum,record){sum.amountJpy+=Number(record.amountJpy||0);sum.amountTwd+=Number(record.amountTwd||0);return sum;},{amountJpy:0,amountTwd:0});

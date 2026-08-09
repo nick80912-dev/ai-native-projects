@@ -129,10 +129,19 @@ const dateSummary=rendererSandbox.renderLedgerDateSummary('2026/07/20',[
 assert(dateSummary.includes('2026/07/20 · 2 筆紀錄'),'latest-day summary includes the physical record count');
 assert(dateSummary.includes('¥3,500 ≈ NT$770'),'latest-day summary includes fixed dual-currency totals');
 vm.runInContext(extractFunction(html,'ledgerBatchSelectionState')+'\n'+extractFunction(html,'renderLedgerRecentRecord')+'\n'+extractFunction(html,'renderLedgerBatchCard'),rendererSandbox);
-const renderedRecord=rendererSandbox.renderLedgerRecentRecord({id:'a',detail:'A',category:'餐飲',payMethod:'現金'},false,'JPY');
+const renderedRecord=rendererSandbox.renderLedgerRecentRecord({id:'a',detail:'A',storeName:'丸五市場',category:'餐飲',payMethod:'現金'},false,'JPY');
 assert(!renderedRecord.includes('ledger-record-menu-button'),'selection-mode record renderer omits the ellipsis DOM');
-const renderedSharedRecord=rendererSandbox.renderLedgerRecentRecord({id:'shared-a',member:'Bar',detail:'A',category:'餐飲',payMethod:'現金'},true,'JPY');
+assert(renderedRecord.includes('<span class="ledger-recent-store">丸五市場 · 🍜 餐飲</span>'),'personal cards place category immediately after the store');
+assert(renderedRecord.includes('<span class="ledger-recent-meta">現金</span>'),'payment method remains in the lower metadata row');
+assert(!renderedRecord.includes('餐飲 · 現金'),'category is no longer repeated with payment metadata');
+const renderedCategoryOnly=rendererSandbox.renderLedgerRecentRecord({id:'category-only',detail:'B',category:'餐飲',payMethod:''},false,'JPY');
+assert(renderedCategoryOnly.includes('<span class="ledger-recent-store">🍜 餐飲</span>'),'a missing store does not hide category');
+assert(!renderedCategoryOnly.includes('class="ledger-recent-meta"'),'a missing payment method does not render empty metadata');
+const renderedSharedRecord=rendererSandbox.renderLedgerRecentRecord({id:'shared-a',member:'Bar',detail:'A',storeName:'團體餐廳',category:'餐飲',payMethod:'現金',participants:'["Bar","Amy"]'},true,'JPY');
 assert(renderedSharedRecord.includes('我付款 · 全員分攤'),'shared record cards render payer and split context together');
+assert(renderedSharedRecord.includes('class="ledger-shared-participant-summary"'),'shared payer and split context sits beside the item title');
+assert(!renderedSharedRecord.includes('class="ledger-recent-badges"'),'shared payer and split context is not repeated in lower badges');
+assert(renderedSharedRecord.includes('<span class="ledger-recent-store">團體餐廳 · 🍜 餐飲</span>'),'shared cards use the same store and category order');
 assert(!renderedSharedRecord.includes('現金 · Bar'),'shared payer is not duplicated in the metadata row');
 const renderedBatch=rendererSandbox.renderLedgerBatchCard([
   {id:'a',batchId:'batch-a',detail:'A',category:'餐飲',payMethod:'現金',amountJpy:1,amountTwd:1},

@@ -6,11 +6,28 @@ test.describe.configure({mode:'serial'});
 const WIDTHS=[{width:320,height:700},{width:375,height:844},{width:390,height:844}];
 const NOW='2026-08-03T10:00:00+08:00';
 
+async function recentCardLayout(page,detail){
+  return page.locator('.ledger-recent-row').filter({hasText:detail}).first().evaluate(row=>{
+    const body=row.querySelector('.ledger-recent-body');
+    const main=row.querySelector('.ledger-recent-main');
+    const title=row.querySelector('.ledger-item-title-row');
+    const amounts=row.querySelector('.ledger-dual-amounts');
+    const mainRect=main.getBoundingClientRect();
+    return {
+      documentOverflow:document.documentElement.scrollWidth>document.documentElement.clientWidth,
+      rowOverflow:row.scrollWidth>row.clientWidth,
+      bodyOverflow:body.scrollWidth>body.clientWidth,
+      titleInside:title.getBoundingClientRect().right<=mainRect.right+.5,
+      amountClear:mainRect.right<=amounts.getBoundingClientRect().left+.5
+    };
+  });
+}
+
 async function installLedgerFixture(page){
   await page.addInitScript(()=>{
     localStorage.setItem('trip_personal_ledger',JSON.stringify([
-      {id:'p-today',time:'2026-08-03T01:00:00.000Z',member:'Bar',category:'餐飲',detail:'早餐',amountJpy:700,amountTwd:140,note:'',payMethod:'現金'},
-      {id:'p-old',time:'2026-08-02T01:00:00.000Z',member:'Bar',category:'交通',detail:'車資',amountJpy:1100,amountTwd:220,note:'',payMethod:'現金'}
+      {id:'p-today',time:'2026-08-03T01:00:00.000Z',member:'Bar',category:'餐飲',detail:'早餐',storeName:'早餐店',amountJpy:700,amountTwd:140,note:'',payMethod:'現金'},
+      {id:'p-old',time:'2026-08-02T01:00:00.000Z',member:'Bar',category:'交通',detail:'車資',storeName:'車站',amountJpy:1100,amountTwd:220,note:'',payMethod:'現金'}
     ]));
   });
 }
@@ -30,16 +47,35 @@ test('個人與團體摘要以今日為主、旅程累計為次，三種手機�
   await expect(page.locator('.ledger-summary-trip strong')).toHaveText('¥1,800');
   await expect(page.locator('.ledger-today-hint')).toHaveCount(0);
 
+  const personal=page.locator('.ledger-recent-row').filter({hasText:'早餐'}).first();
+  await expect(personal.locator('.ledger-recent-store')).toHaveText('早餐店 · 🍜 餐飲');
+  await expect(personal.locator('.ledger-recent-meta')).toHaveText('現金');
+  await expect(personal.locator('.ledger-recent-meta')).not.toContainText('餐飲');
+  for(const size of WIDTHS){
+    await page.setViewportSize(size);
+    expect(await recentCardLayout(page,'早餐'),`personal recent card @${size.width}`).toEqual({
+      documentOverflow:false,rowOverflow:false,bodyOverflow:false,titleInside:true,amountClear:true
+    });
+  }
+
   await page.evaluate(()=>{
     DB.ledger=[
-      {id:'g-today',time:'2026-08-03T02:00:00.000Z',member:'Amy',category:'餐飲',detail:'團體早餐',amountJpy:900,amountTwd:180,participants:'["Bar","Amy"]',payMethod:'現金',recordType:''},
-      {id:'g-old',time:'2026-08-02T02:00:00.000Z',member:'Bar',category:'交通',detail:'團體車資',amountJpy:1500,amountTwd:300,participants:'["Bar","Amy"]',payMethod:'現金',recordType:''}
+      {id:'g-today',time:'2026-08-03T02:00:00.000Z',member:'Amy',category:'餐飲',detail:'團體早餐',storeName:'團體早餐店',amountJpy:900,amountTwd:180,participants:'["Bar","Amy"]',payMethod:'現金',recordType:''},
+      {id:'g-old',time:'2026-08-02T02:00:00.000Z',member:'Bar',category:'交通',detail:'團體車資',storeName:'巴士公司',amountJpy:1500,amountTwd:300,participants:'["Bar","Amy"]',payMethod:'現金',recordType:''}
     ];
     setLedgerTrack('shared');
   });
   await expect(page.locator('.ledger-summary-count')).toHaveText('與我相關 · 今日消費 · 1 筆');
   await expect(page.locator('.ledger-summary-trip')).toContainText('與我相關旅程累計 · 2 筆');
   await expect(page.locator('.ledger-summary-card')).not.toContainText('我的支出');
+
+  const shared=page.locator('.ledger-recent-row').filter({hasText:'團體早餐'}).first();
+  await expect(shared.locator('.ledger-item-title-row')).toContainText(/Amy付款.*2 人分攤/);
+  await expect(shared.locator('.ledger-shared-participant-summary')).toContainText(/Amy付款.*2 人分攤/);
+  await expect(shared.locator('.ledger-recent-badges')).toHaveCount(0);
+  await expect(shared.locator('.ledger-recent-store')).toHaveText('團體早餐店 · 🍜 餐飲');
+  await expect(shared.locator('.ledger-recent-meta')).toHaveText('現金');
+  await expect(shared.locator('.ledger-recent-meta')).not.toContainText('餐飲');
 
   for(const size of WIDTHS){
     await page.setViewportSize(size);
@@ -56,6 +92,9 @@ test('個人與團體摘要以今日為主、旅程累計為次，三種手機�
     expect(layout.cardOverflow,`summary card overflow @${size.width}`).toBe(false);
     expect(layout.tripOverflow,`trip footer overflow @${size.width}`).toBe(false);
     expect(layout.cardHeight,`summary card content height @${size.width}`).toBeGreaterThan(150);
+    expect(await recentCardLayout(page,'團體早餐'),`shared recent card @${size.width}`).toEqual({
+      documentOverflow:false,rowOverflow:false,bodyOverflow:false,titleInside:true,amountClear:true
+    });
   }
   expect(errors).toEqual([]);
 });
