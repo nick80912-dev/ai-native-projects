@@ -71,6 +71,11 @@
 - 個人代購保留 coral 配色但使用 compact 字級；團體付款／分攤、鎖帳與更正使用 neutral `line-soft`／`ink-soft`，待同步使用既有黃色。不得改變任何狀態條件、文案或鎖帳／更正互斥規則。
 - 這只是 `renderLedgerRecentRecord()` presentation contract；不得藉此改動 participant parsing、付款／分攤計算、Ledger repository 或資料格式。
 
+## 現行 Shopping 明細記帳狀態契約（2026-08-09）
+- Shopping 清單仍是個人、本機資料；明細記帳進度計算的是 allocation 對應 Ledger 品項「筆數」，不是付款人、團體成員或分攤人數。付款人／分攤只在 Ledger 表單決定。
+- 明細不再有獨立「記帳進度」列；既有「狀態」列先顯示待買／已買，再以 ` · ` 接未記帳、已記帳 N／總數筆，或 linked／unverified／unlinked 混合筆數。逐 allocation 紀錄、已記帳明細導航與解除關聯維持原行為。
+- 無待確認時，footer 依進度顯示「記帳」或「繼續記帳（剩 N 筆）」；任何 allocation 為 unverified 時，顯示原生 disabled「等待狀態確認」與同步原因，不提供 callable 記帳入口。三態與 preflight 仍由 `buy-to-ledger.js` 決定，renderer 不另造 domain 規則。
+
 ## 關鍵資源
 - 正式站:https://trippilot-jp.netlify.app/
 - 測試站:https://dev-trippilot-jp.netlify.app/

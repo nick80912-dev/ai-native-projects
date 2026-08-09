@@ -1,4 +1,11 @@
 # 07 版本紀錄
+## 2026-08-09｜採買明細記帳狀態與按鈕收斂（dev，SW v98 未升版）
+
+- **進度語意修正**：採買清單仍是個人、本機資料；明細的記帳進度改以 allocation 對應的 Ledger「筆」計算，不再以「位／對象」暗示付款人或團體成員。付款人與分攤仍只在 Ledger 表單決定。
+- **狀態欄合併**：移除獨立「記帳進度」列，既有「狀態」改為「採買狀態 · 記帳摘要」，單筆顯示 `已買 · 未記帳／已記帳／待確認`，多筆顯示 `已買 · 已記帳 N／總數 筆`；含待確認時列出各類筆數。逐 allocation 紀錄、明細導航與「改回未記帳」不變。
+- **動作與 preflight 一致**：未開始使用「記帳」，部分完成使用「繼續記帳（剩 N 筆）」；任何 allocation 待確認時，改在點擊前顯示原生 disabled「等待狀態確認」及同步原因，不再出現可點擊但隨後被 workflow 阻擋的矛盾入口。
+- **TDD 與邊界**：Node 真實 model／renderer 與 Browser 混合狀態測試先讀到舊 `已買` 而正確失敗，最小 presentation seam 修改後 focused Node 及 Playwright 7／7 通過。未修改 Shopping store、照片 repository、Buy-to-Ledger domain／workflow、Ledger repository、schema、localStorage、備份、SW 或版本號；只 push `dev`，不 merge／deploy／tag。
+
 ## 2026-08-09｜關閉未來 TEST 模擬版 localStorage 前綴隔離待辦（文件治理）
 
 - Bar 裁定從正式 backlog 移除品質批 #2 最後一項「未來 TEST 模擬版 localStorage 前綴隔離」，不實作。

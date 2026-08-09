@@ -15,6 +15,27 @@ const ITEM_B={
   allocations:[{allocationId:'allocation-b',target:'Amy',quantity:2,ledgerLinks:[]}],
   stopRef:'',done:true,createdAt:'2026-08-08T01:30:00.000Z',completedAt:'2026-08-08T02:30:00.000Z',splitGroupId:'',photoId:''
 };
+const MIXED_DETAIL_ITEM={
+  id:'buy-ledger-mixed',name:'混合記帳狀態',category:'必買',unit:'盒',legacyQtyText:'',
+  allocations:[
+    {allocationId:'mixed-linked',target:'阿寶',quantity:1,ledgerLinks:[{
+      version:1,track:'personal',testMode:false,recordId:'mixed-personal-record',batchId:'',
+      linkedAt:'2026-08-08T02:10:00.000Z',releasedAt:''
+    }]},
+    {allocationId:'mixed-waiting',target:'媽媽',quantity:1,ledgerLinks:[{
+      version:1,track:'shared',testMode:false,recordId:'mixed-shared-missing',batchId:'',
+      linkedAt:'2026-08-08T02:20:00.000Z',releasedAt:''
+    }]},
+    {allocationId:'mixed-open',target:'小明',quantity:1,ledgerLinks:[]}
+  ],
+  stopRef:'',done:true,createdAt:'2026-08-08T01:40:00.000Z',completedAt:'2026-08-08T02:40:00.000Z',splitGroupId:'',photoId:''
+};
+const MIXED_PERSONAL_RECORD={
+  id:'mixed-personal-record',time:'2026-08-08T02:10:00.000Z',member:'Bar',store:'岡山伴手禮店',
+  category:'購物',detail:'混合記帳狀態',amountJpy:1200,amountTwd:260,note:'',participants:'',payMethod:'現金',
+  recordType:'expense',targetRecordId:'',deleteReason:'',batchId:'',replacesRecordId:'',inputCurrency:'JPY',
+  isTaxFree:false,priceMode:'tax-included',taxRate:10,couponInput:0
+};
 const DEGRADED_MESSAGE='消費已建立，但採買項目的記帳標記更新失敗。請避免再次記帳，並重新開啟採買清單確認。';
 
 async function openApp(page){
@@ -51,7 +72,7 @@ async function openSingleEntry(page,id,keepShoppingList){
     if(!keep){openShoppingLedgerEntry(itemId);return;}
     return buyToLedgerWorkflow.start({
       itemIds:[itemId],keepShoppingList:true,
-      messages:{unverified:'記帳狀態尚待確認，請先完成同步或重新確認',alreadyLinked:'這筆採買目前沒有未記帳對象'}
+      messages:{unverified:'記帳狀態尚待確認，請先完成同步或重新確認',alreadyLinked:'這筆採買目前沒有未記帳項目'}
     });
   },{itemId:id,keep:!!keepShoppingList});
   await expect(page.locator('#ledgerEntrySheet')).toBeVisible();
@@ -158,6 +179,23 @@ test('keepShoppingList returns to the mounted Shopping overlay',async({page})=>{
   await fillAndSaveSingle(page,900);
   await expect(page.locator('#ledgerEntrySheet')).toHaveCount(0);
   await expect(page.locator('#shoppingListOverlay')).toBeVisible();
+});
+
+test('mixed unverified Shopping detail disables duplicate ledger entry before click',async({page})=>{
+  const pageErrors=collectPageErrors(page);
+  await seedShopping(page,[MIXED_DETAIL_ITEM]);
+  await page.evaluate(({itemId,record})=>{
+    localStorage.setItem('trip_personal_ledger',JSON.stringify([record]));
+    openShoppingItemDetail(itemId);
+  },{itemId:MIXED_DETAIL_ITEM.id,record:MIXED_PERSONAL_RECORD});
+
+  const statusRow=page.locator('#shoppingItemDetail .ledger-detail-row').filter({has:page.locator('dt',{hasText:'狀態'})});
+  await expect(statusRow.locator('dd')).toHaveText('已買 · 已記帳 1 · 待確認 1 · 未記帳 1');
+  await expect(page.getByRole('button',{name:'等待狀態確認'})).toBeDisabled();
+  await expect(page.getByText('有 1 筆仍在確認同步狀態，完成後才能繼續，避免重複記帳。')).toBeVisible();
+  await expect(page.getByText('記帳進度',{exact:true})).toHaveCount(0);
+  await expect(page.getByRole('button',{name:'記帳未完成對象'})).toHaveCount(0);
+  expect(pageErrors).toEqual([]);
 });
 
 test('Shopping link write failure preserves one Ledger record and shows degraded warning',async({page})=>{
