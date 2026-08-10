@@ -358,11 +358,6 @@ input,select,textarea{font-size:16px}
 .toast.has-action{pointer-events:auto;display:flex;align-items:center;gap:12px}
 .toast-action{border:0;background:rgba(255,255,255,.16);color:#fff;border-radius:999px;padding:4px 9px;font-size:13px;font-weight:800;font-family:inherit;cursor:pointer}
 .toast-action:active{transform:scale(.96)}
-.sw-update-prompt{position:fixed;z-index:110;left:12px;right:12px;bottom:calc(var(--tabbar-height) + env(safe-area-inset-bottom) + 10px);max-width:596px;margin:0 auto;display:flex;align-items:center;gap:12px;box-sizing:border-box;padding:9px 10px 9px 14px;border-radius:14px;background:var(--sea-deep);color:#fff;box-shadow:var(--shadow-lg)}
-.sw-update-prompt[hidden]{display:none}
-.sw-update-prompt span{flex:1;min-width:0;font-size:13px;font-weight:900;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.sw-update-prompt button{flex:0 0 auto;min-height:44px;border:0;border-radius:999px;background:#fff;color:var(--sea-deep);padding:7px 13px;font:inherit;font-size:12px;font-weight:900}
-.sw-update-prompt button:focus-visible{outline:2px solid #fff;outline-offset:2px}
 
 .loading{text-align:center;padding:50px 20px;color:var(--ink-faint)}
 .spinner{width:34px;height:34px;border:3px solid var(--line);border-top-color:var(--sea);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 14px}
@@ -787,7 +782,6 @@ function selectTheme(themeId){
 
 <button class="totop" id="totop" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑</button>
 <div class="toast" id="toast" role="status" aria-live="polite" aria-atomic="true"></div>
-<div class="sw-update-prompt" id="swUpdatePrompt" role="status" aria-live="polite" aria-atomic="true" hidden><span>新版已就緒</span><button type="button" onclick="reloadForServiceWorkerUpdate()">立即更新</button></div>
 
 <div class="tabbar">
   <button class="tabbar-btn active" data-view="today" onclick="switchView('today')">
@@ -10880,33 +10874,9 @@ init();
 </script>
 <script>
 /* SW 註冊:外殼離線防線(策略見 sw.js 檔頭) */
-var swUpdatePromptShown=false;
-function showServiceWorkerUpdatePrompt(){
-  if(swUpdatePromptShown)return false;
-  var prompt=document.getElementById('swUpdatePrompt');
-  if(!prompt)return false;
-  swUpdatePromptShown=true;
-  prompt.hidden=false;
-  return true;
-}
-function reloadForServiceWorkerUpdate(){window.location.reload();}
-function setupServiceWorkerUpdatePrompt(serviceWorker,hadController){
-  function ready(eligible){if(eligible)showServiceWorkerUpdatePrompt();}
-  serviceWorker.addEventListener('controllerchange',function(){ready(hadController);});
-  return function(registration){
-    registration.addEventListener('updatefound',function(){
-      var worker=registration.installing;
-      if(!worker)return;
-      var eligible=hadController||!!serviceWorker.controller||!!registration.active;
-      worker.addEventListener('statechange',function(){if(worker.state==='activated')ready(eligible);});
-    });
-  };
-}
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function(){
-    var serviceWorker=navigator.serviceWorker;
-    var observeRegistration=setupServiceWorkerUpdatePrompt(serviceWorker,!!serviceWorker.controller);
-    navigator.serviceWorker.register('sw.js').then(observeRegistration).catch(function(e){
+    navigator.serviceWorker.register('sw.js').catch(function(e){
       if (window.AppLog) AppLog.sync('SW 註冊失敗:' + (e && e.message ? e.message : e));
     });
   });

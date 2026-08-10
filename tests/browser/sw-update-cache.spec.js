@@ -59,22 +59,6 @@ async function waitForActiveWorker(page) {
   }, null, { timeout: 20000 });
 }
 
-async function serviceWorkerUpdateReport(page) {
-  return page.evaluate(async () => {
-    const registration = await navigator.serviceWorker.getRegistration();
-    const prompt = document.getElementById('swUpdatePrompt');
-    return {
-      controller: !!navigator.serviceWorker.controller,
-      installing: registration && registration.installing ? registration.installing.state : null,
-      waiting: registration && registration.waiting ? registration.waiting.state : null,
-      active: registration && registration.active ? registration.active.state : null,
-      promptHidden: !prompt || prompt.hidden,
-      promptShownGuard: typeof swUpdatePromptShown === 'boolean' ? swUpdatePromptShown : null,
-      events: window.__swPromptEvents || [],
-    };
-  });
-}
-
 /* 在「關掉伺服器模擬斷網」之前必須確定 SHELL 真的已經落進 CacheStorage。
    只等 registration.active 不夠保險 —— 一旦搶在 install 完成前斷網,
    失敗原因會長得像產品缺陷,其實是測試自己的競態。 */
@@ -87,85 +71,6 @@ async function waitForShellCached(page) {
     return ['/index.html', '/app-version.js', '/shopping-photo-store.js', '/buy-to-ledger.js', '/schema.js'].every((p) => cached.includes(p));
   }, null, { timeout: 20000 });
 }
-
-test('existing controller shows one prompt and reloads only after the explicit action', async ({ page }) => {
-  await page.addInitScript(() => {
-    localStorage.setItem('trip_member','Bar');
-    window.__swPromptEvents=[['init',!!navigator.serviceWorker.controller]];
-    navigator.serviceWorker.addEventListener('controllerchange',() => {
-      window.__swPromptEvents.push(['controllerchange',!!navigator.serviceWorker.controller]);
-    });
-    window.addEventListener('load',() => {
-      window.__swPromptEvents.push(['load',!!navigator.serviceWorker.controller]);
-    });
-  });
-  server.setGeneration(1);
-  await page.goto(ORIGIN + '/index.html');
-  await waitForActiveWorker(page);
-  await expect(page.locator('#swUpdatePrompt')).toBeHidden();
-  await expect.poll(() => page.evaluate(() => QA_INDEX_GEN)).toBe('QAGEN1');
-  await page.reload();
-  await waitForActiveWorker(page);
-  await expect(page.locator('#swUpdatePrompt')).toBeHidden();
-
-  server.setGeneration(2);
-  await page.evaluate(async () => {
-    const registration=await navigator.serviceWorker.getRegistration();
-    registration.addEventListener('updatefound',() => {
-      const worker=registration.installing;
-      window.__swPromptEvents.push(['updatefound',worker&&worker.state]);
-      if(worker)worker.addEventListener('statechange',() => {
-        window.__swPromptEvents.push(['statechange',worker.state]);
-      });
-    });
-  });
-  await page.evaluate(async () => {
-    const registration=await navigator.serviceWorker.getRegistration();
-    await registration.update();
-  });
-
-  const prompt=page.locator('#swUpdatePrompt');
-  await expect.poll(async () => JSON.stringify(await serviceWorkerUpdateReport(page)), {timeout:20000})
-    .toContain('"promptHidden":false');
-  await expect(prompt).toContainText('新版已就緒');
-  await expect.poll(() => page.evaluate(() => QA_INDEX_GEN)).toBe('QAGEN1');
-  await page.evaluate(() => {if(typeof closeMemberSelector==='function')closeMemberSelector();});
-  await expect(page.locator('#memberOverlay')).toHaveCount(0);
-
-  await page.getByRole('button',{name:'立即更新'}).click();
-  await expect.poll(() => page.evaluate(() => typeof QA_INDEX_GEN==='undefined'?null:QA_INDEX_GEN),{timeout:20000}).toBe('QAGEN2');
-  await waitForActiveWorker(page);
-  await expect(page.locator('#swUpdatePrompt')).toBeHidden();
-  await expect.poll(() => page.evaluate(() => typeof APP_VERSION==='undefined'?null:APP_VERSION)).toBe(VERSION+'-QAGEN2');
-});
-
-test('update prompt fits phone widths above the tabbar with a 44px action', async ({ page }) => {
-  server.setGeneration(1);
-  await page.goto(ORIGIN + '/index.html');
-  await waitForActiveWorker(page);
-  await page.evaluate(() => showServiceWorkerUpdatePrompt());
-
-  for(const width of [320,375,390]){
-    await page.setViewportSize({width,height:800});
-    const layout=await page.evaluate(() => {
-      const prompt=document.getElementById('swUpdatePrompt');
-      const button=prompt.querySelector('button');
-      const tabbar=document.querySelector('.tabbar');
-      const box=prompt.getBoundingClientRect();
-      return {
-        left:box.left,right:box.right,bottom:box.bottom,
-        tabbarTop:tabbar.getBoundingClientRect().top,
-        buttonHeight:button.getBoundingClientRect().height,
-        overflow:document.documentElement.scrollWidth-document.documentElement.clientWidth
-      };
-    });
-    expect(layout.left).toBeGreaterThanOrEqual(0);
-    expect(layout.right).toBeLessThanOrEqual(width);
-    expect(layout.bottom).toBeLessThanOrEqual(layout.tabbarTop);
-    expect(layout.buttonHeight).toBeGreaterThanOrEqual(44);
-    expect(layout.overflow).toBeLessThanOrEqual(0);
-  }
-});
 
 test('SW 更新後新快取實際裝入新版資源,且 index／版本檔／schema 不混版本', async ({ page }) => {
   server.setGeneration(1);
