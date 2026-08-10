@@ -56,6 +56,9 @@ function extractThemeIds(html){
     assert(contrastRatio(cssValue(block,'--t-ink-soft'),paper)>=4.5,id+' soft ink contrast');
     assert(contrastRatio('#ffffff',cssValue(block,'--t-chrome'))>=4.5,id+' chrome contrast');
   });
+  const cedarBlock=themeBlock(html,'cedar');
+  assert.strictEqual(cssValue(cedarBlock,'--t-action'),'#2f6b4f');
+  assert(contrastRatio('#ffffff',cssValue(cedarBlock,'--t-action'))>=4.5,'cedar action supports white text');
   assert.strictEqual(cssValue(themeBlock(html,'tea'),'--t-action'),'#896748');
 
   const baseBlock=themeBlock(html,'ocean');

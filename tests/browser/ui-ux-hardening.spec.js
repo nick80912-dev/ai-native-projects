@@ -109,6 +109,7 @@ test('all six themes preserve sliders currentColor and compact header chrome',as
     const settings=document.querySelector('.settings-btn'),sync=document.getElementById('syncBtn'),icon=settings.querySelector('.settings-sliders');
     return {
       id,
+      action:getComputedStyle(document.documentElement).getPropertyValue('--t-action').trim(),
       iconStroke:icon&&getComputedStyle(icon).stroke,
       buttonColor:getComputedStyle(settings).color,
       settingsChrome:getComputedStyle(settings,'::before').backgroundColor,
@@ -120,6 +121,8 @@ test('all six themes preserve sliders currentColor and compact header chrome',as
     expect(theme.settingsChrome,theme.id+' settings chrome').not.toBe('rgba(0, 0, 0, 0)');
     expect(theme.syncChrome,theme.id+' sync chrome').not.toBe('rgba(0, 0, 0, 0)');
   }
+  expect(themes.find(theme=>theme.id==='cedar').action).toBe('#2f6b4f');
+  expect(themes.find(theme=>theme.id==='tea').action).toBe('#896748');
 });
 
 test('trip and shopping controls keep car-friendly targets and decision text', async ({ page }) => {
