@@ -1,4 +1,11 @@
 # 07 版本紀錄
+## 2026-08-10｜移除 SW 更新提示與杉綠配色區隔（dev，SW v101）
+
+- **產品決策**：v99／v100 雙版本實驗後，Bar 確認「新版已就緒」事件與使用者已看到新版內容的時機可能不同步，且必要性不足；v101 完整移除常駐提示、observer、一次性 guard 與明確 reload action，不以 Toast、banner、badge 或自動 reload 取代。backlog #24 以取消而非完成功能歸檔。
+- **杉綠區隔**：杉綠只把第一層 `--t-action` 由棕色 `#7A4F24` 改為林下青 `#2F6B4F`；chrome、accent、其餘 12 個 token、焙茶 `#896748`、其他主題、語意角色與元件 CSS 不變。白字對 action 對比 6.29:1。
+- **PWA 與資料邊界**：`app-version.js`／`sw.js` 同步升 v101；`sw.js` diff 僅版本一行，`skipWaiting()`、`clients.claim()`、SHELL、install／activate／fetch、cache mode、offline fallback 全部不變。未修改 Ledger／Shopping、repository、schema、資料／備份格式、`PERSONAL_STATE_VERSION=9` 或 `netlify.toml`。
+- **驗證與交付**：完整 gate 為 **82／82** Node test files、Playwright **145／145**；另通過 runtime asset、文件標題、App／SW v101 一致性、manifest JSON 與 `git diff --check`。本批只 push `dev`，不 merge `main`、不 deploy、不建立 tag。
+
 ## 2026-08-09｜Service Worker 真實換版驗收目標（dev，SW v100）
 
 - **雙版本第二階段**：Bar 已確認目標實機由 v99 controller／cache 接管，因此依既定閘門另建 v100，作為 v99→v100 真實更新提示目標。`sw.js` 與 `app-version.js` 只做正常版本遞增，最近更新維持五筆。

@@ -13,7 +13,6 @@
 - `ios-zoom-guard.test.js`:驗證 iOS 16px 字級、Scroll-only／viewport 還原、SW 版次，以及最小 no-op 雙擊相容性監聽器不復活舊雙擊 guard 或 APP build metadata。執行:`node tests/ios-zoom-guard.test.js`。
 - `preview-date.test.js`:驗證預覽日期參數與 `todayMD()` 使用同一模擬時間來源。執行:`node tests/preview-date.test.js`。
 - `pwa-shell.test.js`:驗證 PWA 入口、manifest、Service Worker、Netlify 設定與圖示資產完整性;2026-07-30 起改鎖新版 SW 契約(頂層 `SW_VERSION`、`CACHE_NAME` 由它推導、不得 importScripts、install 用 `cache:'reload'`、fetch 用 `cache:'no-cache'`、只有 navigation 才 fallback `index.html`)；另鎖 `buy-to-ledger.js`、`ledger-ui-state.js` 與 `shopping-ui-state.js` 同時由頁面載入並納入離線 App Shell。執行:`node tests/pwa-shell.test.js`。
-- `sw-update-prompt.test.js`：直接執行 `index.html` 的正式 SW prompt functions，驗證首次安裝不提示、既有 controller 的 activated／controllerchange 共用一次性 guard、既有 active registration 在 controller 暫晚時仍屬更新、事件不自動 reload、明確更新動作只 reload 一次，以及缺少 prompt DOM 安全降級。執行：`node tests/sw-update-prompt.test.js`。
 - `app-version-fallback.test.js`:`app-version.js` 載不到時的降級契約。涵蓋 `appVersion()`／`appVersionLabel()` 的回退值、`renderSettingsDataPage()` 在無 `APP_VERSION` 時仍可算出資料健康區塊與 HTML(顯示「SW 未知」而非 ReferenceError),以及 `index.html` 不得在安全取值區塊外裸讀 `APP_VERSION`。執行:`node tests/app-version-fallback.test.js`。
 - `trip-presentation.test.js`:驗證行程類型標籤與行程頁呈現規則。執行:`node tests/trip-presentation.test.js`。
 - `schema-types.test.js`:驗證 Places.Type 必要中文輸入值的正規化結果,並確認 `index.html` 內嵌 Schema 已同步。執行:`node tests/schema-types.test.js`。
@@ -25,7 +24,7 @@
 - `ios-viewport-resume.test.js`:驗證 iOS 回前景時還原 viewport、清除舊 transform 並保留捲動位置。執行:`node tests/ios-viewport-resume.test.js`。
 - `ios-gesture-diagnostics.test.js`:驗證 document 僅註冊一個 passive no-op `dblclick` 相容性監聽器、舊手勢診斷識別字已退役，並保留桃子診斷入口、健康檢查、時間模擬、viewport recovery 與重置行程進度；另驗證診斷面板「App 版本」列讀自真實 Cache Storage（`index.html` 不得寫死版本號，讀不到須顯示「無法讀取」）。執行:`node tests/ios-gesture-diagnostics.test.js`。
 - `travel-notes.test.js`：驗證診斷面板內的本機旅途紀錄新增、編輯、狀態、確認刪除、200 筆上限、寫入失敗回滾、文字／JSON 複製匯出、健康摘要脈絡，以及舊版 WebKit 無 `crypto.randomUUID()` 時的唯一 ID fallback。執行：`node tests/travel-notes.test.js`。
-- `theme-system.test.js`：驗證六組主題的 13-token、亮色對比率、六組自動暗色 token、reduced-motion、舊變數角色對映、未知 ID 回退、原子切換、迷你介面卡，以及五個功能 Emoji 精準替換為 SVG。執行：`node tests/theme-system.test.js`。
+- `theme-system.test.js`：驗證六組主題的 13-token、亮色對比率、杉綠 action 精確為 `#2F6B4F` 且白字達 AA、焙茶維持 `#896748`、reduced-motion、舊變數角色對映、未知 ID 回退、原子切換、迷你介面卡，以及五個功能 Emoji 精準替換為 SVG。執行：`node tests/theme-system.test.js`。
 - `ui-ux-hardening.test.js`：驗證渲染失敗的可執行重試、Today daybar 隱藏、flex header、44px 觸控目標、照片失敗 inline status／單一健康入口、toast live region，以及下一站 Enter／Space 鍵盤啟動。執行：`node tests/ui-ux-hardening.test.js`。
 - `settings-grouped-root.test.js`：驗證設定根頁三個常駐群組（個人／記帳／資料）的順序與歸屬、各列摘要格式與降級、既有子頁入口、身分列可存取名稱，以及測試模式條件列；v88 另鎖定行程、團體帳、個人本機帳與照片的集中健康摘要及注意項目計數。執行：`node tests/settings-grouped-root.test.js`。
 
@@ -57,7 +56,7 @@
 - `navigation-location.test.js`:行程導航純函式契約。驗證 Places／Restaurants 明確目的地不帶 origin、一般名稱帶有效目前座標、無效／缺少座標退回「名稱＋日本」、drive／transit URL 與缺失 day／item 安全降級。執行:`node tests/navigation-location.test.js`。
 - `browser/navigation-location.spec.js`:驗證既有單一導航按鈕的點擊行為；一般名稱只在點擊時請求一次定位並帶入 origin、拒絕定位退回日本搜尋、明確 reference 不掛定位 handler，且不新增「精確地點／附近搜尋」可見文字。執行:`npx playwright test tests/browser/navigation-location.spec.js`。
 - `ui-font.test.js`:驗證首屏不載入或 preconnect Google Fonts，全站使用裝置內建繁中 font stack，且不含 Hiragino／Noto Sans JP／Yu Gothic。執行:`node tests/ui-font.test.js`。
-- `browser/ui-ux-hardening.spec.js`：以 Chromium 驗證 Today 隱藏 daybar、header flex、同步／設定／Day chip／購物 filter 的 44px 實際高度、16px 完成／跳過、六主題暗色亮度與文字對比，以及 reduced-motion 的 computed behavior。執行：`npx playwright test tests/browser/ui-ux-hardening.spec.js`。
+- `browser/ui-ux-hardening.spec.js`：以 Chromium 驗證 Today 隱藏 daybar、header flex、同步／設定／Day chip／購物 filter 的 44px 實際高度、16px 完成／跳過、六主題亮色與文字對比、杉綠／焙茶 computed action 色，以及 reduced-motion behavior。執行：`npx playwright test tests/browser/ui-ux-hardening.spec.js`。
 - `browser/today-live-info.spec.js`：驗證 Today 採買卡精確排除目前下一站、兩列／三品名／更多地點提示、all-in-next 不補 fallback，以及一般下一站 badge 的 stopRef、sibling DOM、aria、Enter／Space、focus-visible、採買錨點與不誤觸導覽；cluster current child 的 stopRef 由 `render-note.test.js` 補足。另以 320／375／390px 驗證 44px 觸控區、單行摘要、無重疊與水平 overflow。執行：`npx playwright test tests/browser/today-live-info.spec.js`。
 - `browser/data-observability.spec.js`：以 320／375／390px 驗證個人／團體單筆與團體批次父卡只有兩個 left-aligned single-line row、垂直置中、長內容 ellipsis 且不與右側金額重疊；清單隱藏付款方式但消費明細仍顯示，團體父卡顯示「付款人 · 分攤依品項」，子項保留精確分攤與狀態。另覆蓋狀態配色、健康同步 header、partial 來源與設定頁資料健康摘要。執行：`npx playwright test tests/browser/data-observability.spec.js`。
 - `browser/proxy-inline.spec.js`：以長品名、長代購姓名驗證最近消費、完整紀錄、個人批次父卡／展開子項與採買卡均保留正確代購語意；Ledger 單筆與批次卡隱藏付款方式、嚴格維持兩行截斷及 compact 字級，Shopping 卡維持原樣，兩者皆不與金額／操作欄重疊且無水平 overflow。執行：`npx playwright test tests/browser/proxy-inline.spec.js`。
@@ -80,6 +79,6 @@
 - 測試只依賴 Node 內建模組或 devDependency 明列的工具;引入新測試框架屬技術棧變更,走五段提案。
 - 測試檔命名:`<對象>.test.js` / `<情境>.spec.js`;測試不得修改任何來源檔。
 - **目前版本一律由 `tests/support/version.js` 推導,不得在測試檔硬編碼**。歷史 release note、migration fixture 與已淘汰 cache 名稱的負向斷言例外,保留原字面。
-- Playwright:`tests/browser/trip-three-scenarios.spec.js`(斷網內建／連網同步／旅行日 mock Date)與 `tests/browser/sw-update-cache.spec.js`(SW 更新後快取內容正確性、無混版本、離線完整載入、子資源未命中不得收到 `index.html`，以及既有 controller 的提示→不自動 reload→點擊後載入新世代、320／375／390px 版面；後者自帶 `support/versioned-server.js`,刻意送 `max-age=600` 模擬 GitHub Pages,用 `no-store` 的 `static-server.js` 測不出該缺陷)。執行:`npm run test:browser`。
+- Playwright:`tests/browser/trip-three-scenarios.spec.js`(斷網內建／連網同步／旅行日 mock Date)與 `tests/browser/sw-update-cache.spec.js`(SW 更新後快取內容正確性、無混版本、離線完整載入、子資源未命中不得收到 `index.html`；後者自帶 `support/versioned-server.js`,刻意送 `max-age=600` 模擬 GitHub Pages,用 `no-store` 的 `static-server.js` 測不出該缺陷)。執行:`npm run test:browser`。
 - `browser/shopping-select-all.spec.js`：驗證採買多選只全選目前待買／已買分頁、全選／取消全選文字與焦點、切頁清理、卡片 body 只切 selection、批次成功沿用既有操作，以及 store failure／刪除取消保留 selection；另涵蓋 320／375／390px 單列觸控控制。執行：`npx playwright test tests/browser/shopping-select-all.spec.js`。
 - `browser/buy-to-ledger.spec.js`：以真實 App、個人 repository、團體 durable queue 與 Shopping store 驗證單筆／多筆記帳閉環、驗證失敗、保留採買 overlay、link 回寫失敗不重複建立消費，以及 linked／unverified／unlinked 混合明細在點擊前即顯示合併狀態、原因與 disabled 等待按鈕。執行：`npx playwright test tests/browser/buy-to-ledger.spec.js`。

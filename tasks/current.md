@@ -1,6 +1,6 @@
 # CURRENT(現在正在做的)
 
-> 更新於 2026-08-09。細任務層;里程碑看 `06_ROADMAP.md`,**逐版交付紀錄一律看 `07_CHANGELOG.md`**,正式待辦看 `tasks/backlog.md`。
+> 更新於 2026-08-10。細任務層;里程碑看 `06_ROADMAP.md`,**逐版交付紀錄一律看 `07_CHANGELOG.md`**,正式待辦看 `tasks/backlog.md`。
 > 本檔只回答三件事:**現在線上是什麼、dev 上是什麼、下一批要做什麼**。歷史流水帳不放這裡。
 
 ## 📌 現況
@@ -9,12 +9,12 @@
 |---|---|
 | **`main` 原始碼** | **SW v96**，PR #13 merge commit `02705c3`；因 Netlify 額度用罄尚未部署／建立 tag |
 | 正式站 | `https://trippilot-jp.netlify.app/` — 2026-08-01 由 SW v18 升級至 v73,G1–G6 全數通過 |
-| **dev 候選版** | **SW v100**，作為已由實機載入 v99 後的真實換版目標；常駐「新版已就緒／立即更新」提示、首次安裝抑制與 explicit-only reload 契約不變，另補既有 active registration／controller 暫晚競態 |
+| **dev 候選版** | **SW v101**；移除時機與畫面內容不同步的全域更新提示，不新增替代提示／自動 reload；杉綠 action 改為林下青 `#2F6B4F`，焙茶維持棕色 |
 | 個人備份格式 | **v9**(`PERSONAL_STATE_SUPPORTED_VERSIONS = [1..9]`)—— v81 因想逛 key 識別語意變更而升版 |
-| dev 自動驗證 | **83／83** Node test files、Playwright **147／147**、runtime asset CLI、`check-doc-titles`、`check-app-version`、manifest JSON 與 `git diff --check` 通過 |
+| dev 自動驗證 | **82／82** Node test files、Playwright **145／145**、runtime asset CLI、`check-doc-titles`、`check-app-version`、manifest JSON 與 `git diff --check` 通過 |
 | 既有 tag | `production-v18`、`production-v73` |
 
-**`main` 已合併 v96，但正式站仍停在 v73；v100 是目前 `dev` 的下一個候選版。** v74–v87 已由 Bar 於 2026-08-03 確認真機驗收皆正常；v88–v89、v92–v95 亦於 2026-08-08 完成 Bar 畫面／真機確認。v96 因 Netlify 額度用罄尚未正式部署，也未建立 `production-v96` tag。Bar 已於 2026-08-09 確認目標裝置載入 v99，現以 v100 驗收真正的更新提示。
+**`main` 已合併 v96，但正式站仍停在 v73；v101 是目前 `dev` 的下一個候選版。** v74–v87 已由 Bar 於 2026-08-03 確認真機驗收皆正常；v88–v89、v92–v95 亦於 2026-08-08 完成 Bar 畫面／真機確認。v96 因 Netlify 額度用罄尚未正式部署，也未建立 `production-v96` tag。Bar 於 v99／v100 實驗後決定取消全域 SW 更新提示；v101 交付其移除與杉綠配色調整。
 
 ### v74–v98 已折疊的主要能力
 
@@ -97,12 +97,13 @@
 | v96 | Release review 補正：照片 quota 直接管理入口、`=` 後 `%`、ADR／架構索引同步 | ✅ 已由 PR #13 合併 main；正式部署暫停 |
 | v97 | Ledger create／edit entry session workflow／state seam：lifecycle、draft／editing ownership、save guard、calendar、return context 與 ordered effects | ✅ 已交付至本機 dev，完整 gate 通過 |
 | v98 | 更正收據 sticky 操作列遮罩：捲動時不再浮出品項金額計算機入口 | ✅ 已完成，完整 gate 通過 |
-| v99／v100 | SW 更新提示 —— v99 加入監聽與常駐提示；v100 作為真實更新目標，另補既有 active registration／controller 暫晚競態。不修改 SW 生命週期與快取策略 | 🟡 v99 已由實機載入；v100 等待真實換版驗收 |
+| v99／v100 | SW 更新提示雙版本實驗；實機確認事件時機與已顯示內容不同步，產品必要性不足 | ⛔ 實驗結束；由 Bar 取消，不列為完成功能 |
+| v101 | 移除全域 SW 更新提示；杉綠 action 改為林下青 `#2F6B4F`，SW lifecycle／cache／offline 與資料不變 | ✅ 完整自動 gate 通過；待 Bar 實機外觀驗收 |
 
 **已知未做(需先定判準)**:Today 的「交通／停車／營業／付款／提醒**依當下情境動態調整優先順序**」。v84 只做了可明確驗收的收合(常駐交通／停車／營業,收合付款／提醒);「當下情境」的判準(依時間?依距離?依是否已抵達?)尚未定義,不同讀法會做出完全不同的東西,故未實作。
 
 ## 下一棒
 
-→ **目標實機已由 v99 接管；下一步是開啟 dev PWA 驗收 v99→v100。** 必須看到「新版已就緒／立即更新」、點擊前頁面不自動 reload，點擊後診斷版本與 Cache Storage 收斂至 v100。在 Bar 明確確認前，backlog #24 維持未完成；不得自行 merge `main`、部署正式站或建立 production tag。
+→ **完整 gate 與 `dev` push 後，由 Bar 開啟 dev PWA 驗收 v101。** 確認不再出現更新提示或自動 reload、杉綠按鈕／連結／hero action 使用林下青、焙茶仍為棕色，且既有資料存在。不得自行 merge `main`、部署正式站或建立 production tag。
 
 > **不得**自行動 `main`、部署正式站或建立 production tag。未經 Bar 核准不得 merge `dev → main`。
