@@ -2733,6 +2733,31 @@ function weatherIcon(code){
   if(code>=95) return '⛈️';
   return '☁️';
 }
+function weatherTravelHint(weather){
+  if(!weather||typeof weather.temp!=='number'||!isFinite(weather.temp))return '';
+  var code=Number(weather.code),rain=Number(weather.rain),temp=Number(weather.temp);
+  if(isFinite(code)&&code>=95)return '???琿';
+  if(isFinite(code)&&code>=71&&code<=77)return '瘜冽?頝舀?';
+  if((isFinite(code)&&((code>=51&&code<=67)||(code>=80&&code<=82)))||
+      (isFinite(rain)&&rain>=40))return '閮?撣嗅?';
+  if(isFinite(code)&&(code===45||code===48))return '銵???瞈';
+  if(temp<=12)return '瘜冽?靽?';
+  if(temp>=30)return '閮?鋆偌';
+  return '?拙??箇';
+}
+function renderTodayWeatherArt(weather){
+  if(!weather)return '';
+  return '<div class="today-weather-art" aria-hidden="true">'+escapeHtml(weather.icon||'??')+'</div>';
+}
+function renderTodayWeatherSummary(weather){
+  var hint=weatherTravelHint(weather);
+  if(!hint)return '';
+  var rain=typeof weather.rain==='number'&&isFinite(weather.rain)?Math.round(weather.rain):0;
+  var label=String(weather.city||'隞')+' '+Math.round(weather.temp)+' 摨佗??曉銋??擃??冽???'+rain+'%嚗?敺葆??'+hint;
+  return '<div class="today-hero-summary-item today-hero-weather-summary" role="group" aria-label="'+escapeHtml(label)+'">'+
+    '<span class="today-hero-summary-label" aria-hidden="true">憭??</span>'+
+    '<span class="today-hero-summary-value" aria-hidden="true">'+Math.round(weather.temp)+'簞 繚 '+escapeHtml(hint)+'</span></div>';
+}
 function weatherCacheKey(city){ return 'trip_weather_'+city.key; }
 /* 「現在之後」的最高降雨機率。原本取整天最大值,包含已經過去的時段 ——
    早上下過雨、下午全晴,晚上看到的還是 80%,對「等一下要不要帶傘」毫無幫助。

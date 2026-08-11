@@ -20,12 +20,32 @@ const { rainChanceFromNow } = sandbox;
 
 /* 這是 Bar 已核准且在本批動工前就存在的工作區差異，禁止為了製造 RED 而回復它。 */
 vm.runInContext(extractFunction(html, 'escapeHtml'), sandbox);
-vm.runInContext(extractFunction(html, 'renderWeatherChip'), sandbox);
-const weatherChip=sandbox.renderWeatherChip({city:'岡山',icon:'☔',temp:21,rain:30});
-assert(weatherChip.includes('21° 雨30%'),'weather visual copy stays compact');
-assert(!weatherChip.includes('之後雨'),'weather visual copy no longer says 之後');
-assert(weatherChip.includes('aria-label="岡山 21 度，現在之後最高降雨機率 30%"'),
-  'weather aria-label keeps the complete future-window meaning');
+vm.runInContext(extractFunction(html, 'weatherTravelHint'), sandbox);
+vm.runInContext(extractFunction(html, 'renderTodayWeatherArt'), sandbox);
+vm.runInContext(extractFunction(html, 'renderTodayWeatherSummary'), sandbox);
+
+assert.strictEqual(sandbox.weatherTravelHint({temp:21,rain:10,code:95}),'???琿');
+assert.strictEqual(sandbox.weatherTravelHint({temp:-2,rain:80,code:71}),'瘜冽?頝舀?');
+assert.strictEqual(sandbox.weatherTravelHint({temp:21,rain:10,code:61}),'閮?撣嗅?');
+assert.strictEqual(sandbox.weatherTravelHint({temp:21,rain:40,code:1}),'閮?撣嗅?');
+assert.strictEqual(sandbox.weatherTravelHint({temp:21,rain:10,code:45}),'銵???瞈');
+assert.strictEqual(sandbox.weatherTravelHint({temp:12,rain:10,code:1}),'瘜冽?靽?');
+assert.strictEqual(sandbox.weatherTravelHint({temp:30,rain:10,code:1}),'閮?鋆偌');
+assert.strictEqual(sandbox.weatherTravelHint({temp:21,rain:10,code:1}),'?拙??箇');
+assert.strictEqual(sandbox.weatherTravelHint(null),'');
+assert.strictEqual(sandbox.weatherTravelHint({temp:null,rain:40,code:61}),'' );
+
+const weather={city:'撱?雀',icon:'?儭?',temp:21,rain:40,code:61};
+const art=sandbox.renderTodayWeatherArt(weather);
+assert(art.includes('class="today-weather-art"'));
+assert(art.includes('aria-hidden="true"'));
+assert(art.includes('?儭?'));
+const summary=sandbox.renderTodayWeatherSummary(weather);
+assert(summary.includes('憭??'));
+assert(summary.includes('21簞 繚 閮?撣嗅?'));
+assert(summary.includes('aria-label="撱?雀 21 摨佗??曉銋??擃??冽???40%嚗?敺葆??'));
+assert.strictEqual(sandbox.renderTodayWeatherArt(null),'');
+assert.strictEqual(sandbox.renderTodayWeatherSummary(null),'');
 
 const H = (hour) => '2026-10-18T' + String(hour).padStart(2, '0') + ':00';
 const series = {
