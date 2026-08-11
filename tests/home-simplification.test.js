@@ -41,6 +41,11 @@ for (const file of ['index.html']) {
   assert.match(html, /\.today-weather-art\{[^}]*font-size:46px/, `${file} gives weather mood visual weight`);
   assert.match(html, /\.today-hero-summary\{[^}]*display:grid/, `${file} keeps Hero information in one row`);
   assert.match(html, /\.today-hero-shopping-summary\{[^}]*min-height:44px/, `${file} keeps Hero Shopping tappable`);
+  assert.match(
+    html,
+    /\.today-hero-shopping-generic \.today-hero-summary-value\{[^}]*justify-content:flex-end/,
+    `${file} right-aligns the generic Shopping action without changing resolved stop layout`
+  );
   assert.doesNotMatch(html, /\.weather-chip\{/, `${file} removes legacy weather pill CSS`);
   assert.doesNotMatch(html, /function renderWeatherChip\(/, `${file} removes the dead legacy weather renderer`);
   assert.doesNotMatch(html, /\.today-shopping-card\{/, `${file} removes legacy Shopping card CSS`);

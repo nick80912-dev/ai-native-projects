@@ -4,6 +4,7 @@
 
 - Active trips show a small `completed / total` value, a date with decorative weather art, and one row containing the outing hint and Shopping summary.
 - Shopping location is the primary summary copy. Its action remains at least 44px tall, keyboard-focusable, and safely ellipsizes long names.
+- 通用採買狀態的 `開啟查看 →` 與右側欄位右緣對齊；具體站點摘要仍保留「站點名稱可省略、`N 項 →` 固定可見」的配置。
 - The existing next-stop badge owns the exact next Shopping stop; the Hero projects the first eligible future group and never duplicates that badge.
 - This contract is active-trip only. Pre-trip views, data contracts, and storage behavior remain unchanged.
 

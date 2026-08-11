@@ -214,6 +214,19 @@ test('weather failure keeps generic Shopping entry usable', async ({ page }) => 
   await expect(summary).toHaveAttribute('aria-label','開啟採買清單');
   await expect(summary.locator('.today-hero-summary-label')).toHaveText('採買清單');
   await expect(summary.locator('.today-hero-summary-value')).toHaveText('開啟查看 →');
+  const genericValue=summary.locator('.today-hero-summary-value');
+  const genericLayout=await genericValue.evaluate((element)=>{
+    const box=element.getBoundingClientRect();
+    const range=document.createRange();
+    range.selectNodeContents(element);
+    const text=range.getBoundingClientRect();
+    return {
+      justifyContent:getComputedStyle(element).justifyContent,
+      rightGap:Math.round(box.right-text.right)
+    };
+  });
+  expect(genericLayout.justifyContent).toBe('flex-end');
+  expect(Math.abs(genericLayout.rightGap)).toBeLessThanOrEqual(1);
   await summary.evaluate((element)=>element.click());
   await expect(page.locator('#shoppingListOverlay')).toBeVisible();
 });
