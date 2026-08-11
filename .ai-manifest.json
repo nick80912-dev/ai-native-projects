@@ -2,7 +2,7 @@
   "$comment": "AI 導航檔 — 任何 AI 接手第一步只讀這份即可掌握全貌。這是 13 步流程的第 1 步。",
   "project": "japan-travel-pwa(日本旅遊行程 App)",
   "owner": "Bar(產品負責人,非工程師,繁中溝通,要直接執行不要教學;AI=全職工程團隊)",
-  "version": "2.26-hotel-hid-linkage-v102",
+  "version": "2.27-today-actionable-summary-v103",
   "framework": "ai-native-framework@pending(尚未抽取;見 FUTURE_PLAN_framework-extraction.md)",
   "updated": "2026-08-11",
   "live": "https://trippilot-jp.netlify.app/",
@@ -138,9 +138,9 @@
   },
   "status": {
     "production": "main 原始碼維持 v96；正式站與 production tag 維持 v73，直到已核准的 release PR、部署與線上驗證完成",
-    "dev_candidate": "v102（Places尾端HID→Hotels.HID N→1；Schema 3.0條件驗證、BUILTIN與exact runtime resolver同步；名稱只供顯示）",
-    "device_acceptance": "Bar 已完成 v74–v89、v92–v95；v101裝置／PWA外觀驗收於2026-08-11確認完成。v99／v100更新提示實驗已取消；v102已通過最終 whole-branch review並由controller推送dev，待Bar裝置／PWA驗收",
-    "automated_validation": "v102最終fresh gate為83/83個Node test files、完整Playwright 148/148（0 skipped、0 failed；住宿HID 320/375/390px為3/3）；runtime asset、文件標題、App／SW v102一致性、BUILTIN no-drift、manifest JSON與diff check全部通過",
+    "dev_candidate": "v103 active-trip Today Hero actionable summary: itinerary-date weather hint and the next eligible Shopping location share one compact row; the exact next stop remains owned by its existing badge",
+    "device_acceptance": "v102 device/PWA acceptance complete; v103 awaits dev-candidate device/PWA appearance and interaction acceptance",
+    "automated_validation": "v103 fresh release gate: 83/83 Node test files and 149/149 Playwright cases passed; document-title, app-version, runtime-assets, BUILTIN no-drift, manifest JSON, and diff checks passed",
     "pending_in_order": [
       "Bar於目標裝置／PWA驗證已推送dev的v102：五個住宿停靠點共用H001 profile、各自travel不變、不再出現Places.HID未知欄位警告，且無錯誤或水平overflow",
       "完成受保護的 dev → main 發布流程並驗證正式站",

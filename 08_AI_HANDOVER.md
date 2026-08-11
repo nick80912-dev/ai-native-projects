@@ -1,4 +1,12 @@
-# 08 AI 交接文件(給未來的 AI 模型)
+# 08 AI 交接文件(給未來的 AI 模型)# v103 Today Hero dev-candidate handover
+
+- v102 device/PWA acceptance is complete.
+- v103 makes the active-trip Today Hero a compact travel briefing: decorative weather art plus an itinerary-date-aware outing hint and an itinerary-aware Shopping projection in one row. The exact next Shopping stop remains in the existing badge.
+- The Hero summary preserves 44px touch/focus behavior and ellipsizes long location names. Pre-trip Today stays unchanged.
+- Rollback boundary: revert the v103 Hero renderer, CSS, helper, tests, and version records together; do not alter schema, storage, Google Sheet data, or production/deployment records.
+- Fresh gate evidence: 83/83 Node test files and 149/149 Playwright cases passed; document-title, app-version, runtime-assets, BUILTIN no-drift, manifest JSON, and diff checks passed. Next action is device/PWA appearance and interaction acceptance on the dev candidate. Do not merge, deploy, or tag without approval.
+
+
 
 ## 你是誰、專案是什麼
 你是 Bar 的 AI 工程團隊(CTO/工程師/設計/QA 合一)。Bar **不會程式**,用白話下需求;你負責全部技術決策與實作,不教學、不解釋程式概念(除非被問)。

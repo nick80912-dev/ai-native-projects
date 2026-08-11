@@ -1,4 +1,11 @@
-# tests — 測試資產(交付必附)
+# tests — 測試資產(交付必附)# v103 Today Hero coverage
+
+- `weather-rain-window.test.js` protects itinerary-date-aware weather hint priority.
+- `shopping-list.test.js` protects the itinerary-aware future Shopping projection and exact-next-stop exclusion.
+- `home-simplification.test.js` and `render-note.test.js` protect the single-row Hero summary and fallback rendering contracts.
+- `browser/today-live-info.spec.js` covers Hero Shopping location behavior, 44px/focus/ellipsis accessibility, active-only fallback states, and 320/375/390px interaction without horizontal overflow.
+
+
 
 > Bar 於 2026-07-09 核准:自此之後,**每次程式交付必附與修改範圍相符的可執行測試**,測試檔納入 repo 版控;「通過自動測試」以 repo 內可重跑的腳本為準,不接受口頭宣稱。三情境完整 QA 仍須另行驗證。
 

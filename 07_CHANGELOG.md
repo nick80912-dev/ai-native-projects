@@ -1,4 +1,11 @@
-# 07 版本紀錄
+# 07 版本紀錄## 2026-08-11 — v103 Today Hero actionable summary (dev candidate)
+
+- Today is a calm travel briefing rather than a KPI panel: weather uses an itinerary-date-aware outing hint, and the next eligible Shopping stop is the actionable primary copy.
+- `順路採買` projects the first future eligible Shopping group while `今日採買` remains the general fallback; the exact next stop remains owned by its existing badge.
+- The scope is active-trip Today only. v102 device/PWA acceptance is complete; data, schema, storage, Service Worker behavior, deployment authority, and production state are unchanged.
+- Automated evidence: fresh v103 gate passed 83/83 Node test files and 149/149 Playwright cases; document-title, app-version, runtime-assets, BUILTIN no-drift, manifest JSON, and diff checks passed.
+
+
 ## 2026-08-11｜住宿停靠點改以 HID 精確關聯 Hotel profile（dev，SW v102）⭐ 架構變更
 
 - **Sheet migration**：公開 Places 尾端 L 欄新增 `HID`；`L4／L15／L24／L33／L42` 讓 P002／P013／P022／P031／P040 各引用 H001,其餘 HID 儲存格皆空。五筆 travel 原樣保留為開車30分鐘／開車2小時／開車3分鐘／開車50分鐘／步行3分鐘；五個 PID 不能合併,因為其行程位置與交通脈絡不同。
