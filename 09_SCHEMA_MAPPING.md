@@ -25,7 +25,6 @@
 | PID(別名:placeid/地點id) | placeId | ✅ | 地點唯一ID(P001…),不得重複 |
 | 地點(別名:名稱) | name | ✅ | 地點名稱(同時作為導航關鍵字) |
 | Type(別名:類型) | type | ✅ | 決定卡片型別,禁止程式猜測。值:購物/美食區/住宿/景點/機場/纜車/渡船口/渡輪/租車點/加油站 |
-| HID(別名:hotelid/住宿id) | hotelId |  | 住宿型地點連到 Hotels.HID；僅允許 Type=住宿 使用 |
 | MAPCODE | mapcode |  | 車用導航輸入碼(大字純顯示) |
 | 交通/交通時間(別名:交通時間) | travel |  | 開車X分鐘/步行X分鐘;行程交通欄空值時顯示 |
 | 停車(別名:停車備註/停車場) | pnote |  | 停車資訊單欄;「停車同Pxxx」可繼承 |
@@ -34,6 +33,7 @@
 | 官網(別名:網站/網址) | web |  |  |
 | 時刻表連結(別名:時刻表) | ttl |  | 渡輪等官方時刻表 URL |
 | 備註 | note |  |  |
+| HID(別名:hotelid/住宿id) | hotelId |  | 住宿型地點連到 Hotels.HID；僅允許 Type=住宿 使用 |
 
 ## Restaurants(gid=1421821084,kind=table)
 | Google Sheet 欄位 | App Property | 必填 | 說明 |

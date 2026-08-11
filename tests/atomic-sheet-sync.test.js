@@ -15,7 +15,8 @@ function schema(){
     places:{label:'Places',kind:'table',idField:'placeId',columns:[
       {field:'placeId',header:'PID',required:true},
       {field:'name',header:'Place Name',required:true},
-      {field:'type',header:'Type',required:true,values:{attraction:'attraction',ferry:'ferry'}}
+      {field:'type',header:'Type',required:true,values:{attraction:'attraction',ferry:'ferry',hotel:'hotel'}},
+      {field:'hotelId',header:'HID'}
     ]},
     rest:{label:'Restaurants',kind:'table',idField:'restId',columns:[
       {field:'restId',header:'RID',required:true},
@@ -49,6 +50,16 @@ function validDb(){
     shop:[], hotels:[], cfg:{tripname:'Trip',startdate:'2026-10-18',enddate:'2026-10-23',travelmode:'drive',exchangeRate:'0.2',ledgerDefaultCurrency:'JPY'},
     trip:{days:[{date:'10/18',items:[{act:'Dinner',place:'Musashi',ref:'R012'}]}]}
   };
+}
+
+function sharedHotelDb(){
+  const db=validDb();
+  db.hotels=[{hotelId:'H001',name:'Hotel Profile'}];
+  db.placeList.push(
+    {placeId:'P002',name:'Arrival A',type:'hotel',tnorm:'hotel',hotelId:'H001'},
+    {placeId:'P013',name:'Arrival B',type:'hotel',tnorm:'hotel',hotelId:' h001 '}
+  );
+  return db;
 }
 
 const sb = loadValidator();
@@ -137,6 +148,23 @@ assert(sb.validateSnapshotData(invalidCfg,validRaw(),schema()).blockers.some(fun
 function hasFinding(result,code,sheet){
   return result.blockers.some(function(f){ return f.code===code&&f.sheet===sheet; });
 }
+
+assert.deepStrictEqual(Array.from(sb.validateSnapshotData(sharedHotelDb(),validRaw(),schema()).blockers), []);
+
+const missingHotelRef=sharedHotelDb();
+missingHotelRef.placeList.find(function(place){ return place.placeId==='P002'; }).hotelId='';
+assert(hasFinding(sb.validateSnapshotData(missingHotelRef,validRaw(),schema()),'HOTEL_REF_REQUIRED','places'));
+
+const brokenHotelRef=sharedHotelDb();
+brokenHotelRef.placeList.find(function(place){ return place.placeId==='P002'; }).hotelId='H999';
+const brokenResult=sb.validateSnapshotData(brokenHotelRef,validRaw(),schema());
+assert(hasFinding(brokenResult,'BROKEN_REF','places'));
+assert(brokenResult.blockers.some(function(f){ return /P002/.test(f.message)&&/H999/.test(f.message); }));
+
+const wrongScope=validDb();
+wrongScope.placeList[0].hotelId='H001';
+wrongScope.hotels=[{hotelId:'H001',name:'Hotel Profile'}];
+assert(hasFinding(sb.validateSnapshotData(wrongScope,validRaw(),schema()),'HOTEL_REF_SCOPE','places'));
 
 const missingStructures = validDb();
 delete missingStructures.placeList;

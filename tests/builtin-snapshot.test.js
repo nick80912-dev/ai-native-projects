@@ -76,6 +76,12 @@ assert(loaded.db.placeList.length>0,'runtime places must not be empty');
 assert(loaded.db.rest.length>0,'runtime restaurants must not be empty');
 assert(loaded.db.shop.length>0,'runtime shopping data must not be empty');
 
+const approved=['P002','P013','P022','P031','P040'];
+const lodgingStops=loaded.db.placeList.filter(function(place){ return approved.indexOf(place.placeId)>=0; });
+assert.strictEqual(lodgingStops.length,5);
+assert.deepStrictEqual(lodgingStops.map(function(place){ return place.hotelId; }),['H001','H001','H001','H001','H001']);
+assert.strictEqual(new Set(lodgingStops.map(function(place){ return place.travel; })).size,5,'route-specific travel remains distinct');
+
 const cfgKeys=loaded.schema.sheets.cfg.keys.map(item=>item.header);
 const cfgRows=builtin.cfg.trim().split(/\r?\n/).slice(1).map(line=>line.split(',')[0]);
 cfgKeys.forEach(key=>{

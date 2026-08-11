@@ -184,7 +184,7 @@ function validateSnapshotData(db,raw,schema){
   var pids=ids(placeList,'placeId','places');
   var rids=ids(restList,'restId','rest');
   ids(shopList,'shopId','shop');
-  ids(hotelList,'hotelId','hotels');
+  var hids=ids(hotelList,'hotelId','hotels');
   var typeColumn=null;
   ((sheets.places&&sheets.places.columns)||[]).forEach(function(column){ if(column.field==='type') typeColumn=column; });
   var typeValues=typeColumn&&typeColumn.values||{};
@@ -192,6 +192,16 @@ function validateSnapshotData(db,raw,schema){
     var rawType=String(place.type||'').trim();
     if(rawType&&!typeValues[rawType]&&!typeValues[rawType.toLowerCase()]){
       block('UNKNOWN_PLACE_TYPE','places','未註冊型別:' + place.placeId + ' 型別「' + rawType + '」無對應卡片渲染');
+    }
+    var hotelId=String(place.hotelId||'').toUpperCase().trim();
+    var normalizedType=typeValues[rawType]||typeValues[rawType.toLowerCase()]||String(place.tnorm||'').toLowerCase();
+    if(normalizedType==='hotel'&&!hotelId){
+      block('HOTEL_REF_REQUIRED','places','住宿停靠點 ' + place.placeId + ' 缺少 HID');
+    }else if(normalizedType!=='hotel'&&hotelId){
+      block('HOTEL_REF_SCOPE','places','非住宿地點 ' + place.placeId + ' 不得引用 Hotels ' + hotelId);
+    }
+    if(hotelId&&!hids[hotelId]){
+      block('BROKEN_REF','places','懸空引用:Places ' + place.placeId + ' → ' + hotelId + ' 不存在於 Hotels');
     }
   });
   restList.forEach(function(rest){

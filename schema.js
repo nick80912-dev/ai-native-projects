@@ -46,8 +46,6 @@ var SCHEMA = {
         { field:'type',    header:'Type',           aliases:['類型'],            required:true, desc:'決定卡片型別,禁止程式猜測。值:購物/美食區/住宿/景點/機場/纜車/渡船口/渡輪/租車點/加油站',
           values:{ '購物':'shopping','美食區':'restarea','住宿':'hotel','景點':'attraction','機場':'attraction','纜車':'attraction','渡船口':'ferry','渡輪':'ferry','租車點':'parking','加油站':'fuel',
                    'shopping':'shopping','restaurantarea':'restarea','hotel':'hotel','attraction':'attraction','ferryterminal':'ferry','parking':'parking','fuel':'fuel' } },
-        { field:'hotelId', header:'HID', aliases:['hotelid','住宿id'],
-          desc:'住宿型地點連到 Hotels.HID；僅允許 Type=住宿 使用' },
         { field:'mapcode', header:'MAPCODE',        desc:'車用導航輸入碼(大字純顯示)' },
         { field:'travel',  header:'交通/交通時間',  aliases:['交通時間'], desc:'開車X分鐘/步行X分鐘;行程交通欄空值時顯示' },
         { field:'pnote',   header:'停車',           aliases:['停車備註','停車場'], desc:'停車資訊單欄;「停車同Pxxx」可繼承' },
@@ -55,7 +53,9 @@ var SCHEMA = {
         { field:'ticket',  header:'門票',           desc:'門票或船票資訊' },
         { field:'web',     header:'官網',           aliases:['網站','網址'] },
         { field:'ttl',     header:'時刻表連結',     aliases:['時刻表'], desc:'渡輪等官方時刻表 URL' },
-        { field:'note',    header:'備註' }
+        { field:'note',    header:'備註' },
+        { field:'hotelId', header:'HID', aliases:['hotelid','住宿id'],
+          desc:'住宿型地點連到 Hotels.HID；僅允許 Type=住宿 使用' }
       ]
     },
 

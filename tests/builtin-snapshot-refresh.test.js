@@ -10,7 +10,7 @@ function schemaFixture(pubBase='https://example.test/?gid='){
     fetchTimeoutMs:1000,
     sheets:{
       itin:{gid:'1',kind:'itinerary',columns:['日期','時間','行程','地點','ID','交通','備註'].map(header=>({header}))},
-      places:{gid:'2',kind:'table',columns:['PID','地點'].map(header=>({header}))},
+      places:{gid:'2',kind:'table',columns:['PID','地點','HID'].map(header=>({header}))},
       rest:{gid:'3',kind:'table',columns:['RID','餐廳名稱'].map(header=>({header}))},
       shop:{gid:'4',kind:'table',columns:['SID','PID','品牌名稱'].map(header=>({header}))},
       hotels:{gid:'5',kind:'table',columns:['HID','名稱'].map(header=>({header}))},
@@ -38,7 +38,7 @@ function csvFixture(){
       '第五天10/22(四),,直島,直島,P005,,',
       '第六天10/23(五),,返程,岡山機場,P001,,'
     ].join('\n')+'\n',
-    places:'PID,地點\nP001,岡山機場\n',
+    places:'PID,地點,HID\nP001,岡山機場,\nP002,岡山住宿,H001\n',
     rest:'RID,餐廳名稱\nR001,烏龍麵\n',
     shop:'SID,PID,品牌名稱\nS001,P001,伴手禮店\n',
     hotels:'HID,名稱\nH001,岡山住宿\n',
@@ -85,6 +85,7 @@ function capture(){
   assert.deepStrictEqual(Object.keys(candidate),['itin','places','rest','shop','hotels','exp','ledger','cfg']);
   assert.strictEqual(candidate.ledger,'紀錄ID,時間,成員,類別\n');
   assert.strictEqual(candidate.itin.includes('東京'),false);
+  assert(candidate.places.includes('P002,岡山住宿,H001'));
 
   const parsed=tool.parseCsv('A,B\r\n"含,逗號","含""引號"\r\n"跨\n列",值\r\n');
   assert.deepStrictEqual(parsed,[['A','B'],['含,逗號','含"引號'],['跨\n列','值']]);
@@ -128,7 +129,7 @@ function capture(){
 
   const aliasSchema=schemaFixture();
   aliasSchema.sheets.places.columns[1].aliases=['Place alias'];
-  const aliasCsv=Object.assign({},csv,{places:'PID,Place alias\nP001,Sample place\n'});
+  const aliasCsv=Object.assign({},csv,{places:'PID,Place alias,HID\nP001,Sample place,\n'});
   const aliasCandidate=await tool.buildBuiltinCandidate({schema:aliasSchema,fetchCsv:async key=>aliasCsv[key]});
   assert.strictEqual(aliasCandidate.places,aliasCsv.places,'approved schema aliases remain valid snapshot headers');
 

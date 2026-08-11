@@ -56,6 +56,19 @@ assert.strictEqual(typeColumn.values['加油站'], 'fuel');
 assert.strictEqual(typeColumn.values.fuel, 'fuel');
 
 const html = fs.readFileSync('index.html', 'utf8');
+const embeddedSchemaStart = html.indexOf('var SCHEMA =');
+const embeddedSchemaSource = html.slice(embeddedSchemaStart, html.indexOf('</script>',embeddedSchemaStart));
+const embeddedSchema = loadSchema(embeddedSchemaSource);
+assert.deepStrictEqual(
+  JSON.parse(JSON.stringify(embeddedSchema)),
+  JSON.parse(JSON.stringify(schema)),
+  'embedded fallback Schema stays in exact object parity with schema.js'
+);
+assert.strictEqual(
+  schema.sheets.places.columns[schema.sheets.places.columns.length-1].field,
+  'hotelId',
+  'Places.HID remains the trailing physical Sheet column'
+);
 assert(html.includes("'機場':'attraction'"), 'embedded schema includes 機場');
 assert(html.includes("'纜車':'attraction'"), 'embedded schema includes 纜車');
 assert(html.includes("'加油站':'fuel'"), 'embedded schema includes 加油站');
