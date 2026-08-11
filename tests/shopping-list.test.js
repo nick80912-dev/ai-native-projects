@@ -884,7 +884,28 @@ assert(!quantityFields.includes('<option value="">'),'單位下拉不提供空�
 assert(!quantityFields.includes('不指定'),'單位下拉不提供「不指定」選項');
 assert(quantityFields.includes('shoppingUnitStore.all()'),'單位選項來自可管理的 store');
 assert(quantityFields.includes('unitMissing'),'目前單位不在清單時仍以自身成為選中的 option,不得靜默改掉既有資料');
-assert(ui.includes("renderLedgerOptionManager('shoppingUnit','採買單位')"),'設定頁可管理採買單位');
+const unitSettingsSandbox={
+  ledgerCategoryStore:{all(){return ['餐飲'];}},
+  ledgerPayMethodStore:{all(){return ['現金'];}},
+  shoppingUnitStore:{all(){return ['個','盒'];}}
+};
+vm.createContext(unitSettingsSandbox);
+vm.runInContext(
+  "var SHOPPING_DEFAULT_UNIT='個';\n"+
+  extractUiFunction('escapeHtml')+'\n'+
+  extractUiFunction('jsString')+'\n'+
+  extractUiFunction('renderSettingsHeader')+'\n'+
+  extractUiFunction('ledgerOptionStoreForKind')+'\n'+
+  extractUiFunction('renderLedgerOptionManager')+'\n'+
+  extractUiFunction('settingsOptionDefinitionForPage')+'\n'+
+  extractUiFunction('renderSettingsOptionEditorPage'),
+  unitSettingsSandbox
+);
+const unitSettingsHtml=unitSettingsSandbox.renderSettingsOptionEditorPage('options-shopping-unit');
+assert(unitSettingsHtml.includes('data-option-kind="shoppingUnit"')&&unitSettingsHtml.includes('ledgerOptionInput_shoppingUnit'),
+  '採買單位專屬設定頁執行既有泛用管理器');
+assert(unitSettingsHtml.includes('>個<small class="ledger-option-default">預設</small>')&&unitSettingsHtml.includes('>盒<'),
+  '採買單位專屬設定頁顯示 store 內容與預設單位標示');
 assert(ui.includes("kind==='shoppingUnit'?shoppingUnitStore"),'選項管理器沿用既有泛用 store 分派');
 assert(mod.shoppingUnitStore.all().includes('個'),'the Shopping unit Store always exposes 個');
 const removeOptionSource=extractUiFunction('removeLedgerOptionFromSettings');
