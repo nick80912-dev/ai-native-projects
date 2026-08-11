@@ -11,7 +11,7 @@
 | 正式站 | `https://trippilot-jp.netlify.app/` — 2026-08-01 由 SW v18 升級至 v73,G1–G6 全數通過 |
 | **dev 候選版** | **SW v102**；住宿停靠點以 Places.HID 精確連到 Hotels.HID，Schema 3.0 條件驗證、BUILTIN 與 runtime resolver 已同步；名稱只供顯示 |
 | 個人備份格式 | **v9**(`PERSONAL_STATE_SUPPORTED_VERSIONS = [1..9]`)—— v81 因想逛 key 識別語意變更而升版 |
-| dev 自動驗證 | **83／83** Node test files；住宿 HID focused Playwright **3／3**（320／375／390px）。完整 Playwright 數量留待 v102 最終 gate fresh run 後記錄；另含 runtime asset CLI、`check-doc-titles`、`check-app-version`、manifest JSON 與 `git diff --check` |
+| dev 自動驗證 | v102 最終 fresh gate：**83／83** Node test files、完整 Playwright **148／148**（0 skipped、0 failed；住宿 HID 320／375／390px **3／3**）；runtime asset CLI、`check-doc-titles`、`check-app-version`、BUILTIN no-drift、manifest JSON 與 `git diff --check` 全部通過 |
 | 既有 tag | `production-v18`、`production-v73` |
 
 **`main` 已合併 v96，但正式站仍停在 v73；v102 是目前 `dev` 的下一個候選版。** v74–v87 已由 Bar 於 2026-08-03 確認真機驗收皆正常；v88–v89、v92–v95 亦於 2026-08-08 完成 Bar 畫面／真機確認。v96 因 Netlify 額度用罄尚未正式部署，也未建立 `production-v96` tag。Bar 於 2026-08-11 明確確認 v101 裝置／PWA 外觀驗收完成；v102 接續交付住宿 HID 精確關聯,不改既有發布缺口。
@@ -105,6 +105,6 @@
 
 ## 下一棒
 
-→ **完成 v102 最終 gate 與 `dev` push 後，由 Bar 開啟 dev PWA 驗收 v102。** 確認五個住宿停靠點都顯示 H001 profile、各自交通時間不變、無錯誤或水平 overflow，且既有資料存在。不得自行 merge `main`、部署正式站或建立 production tag。
+→ **v102 最終 gate 已完成；controller push `dev` 後，由 Bar 開啟 dev PWA 驗收 v102。** 確認五個住宿停靠點都顯示 H001 profile、各自交通時間不變、無錯誤或水平 overflow，且既有資料存在。不得自行 merge `main`、部署正式站或建立 production tag。
 
 > **不得**自行動 `main`、部署正式站或建立 production tag。未經 Bar 核准不得 merge `dev → main`。

@@ -6,7 +6,7 @@
 - **條件驗證與離線種子**：Validator 在七表原子候選快照中要求住宿必填 HID、非住宿禁止 HID、任何 HID 必須存在於 Hotels；違規時 fail closed。BUILTIN 由已核准公開 Sheet 刷新,五個住宿 PID 都帶 H001 並保留各自 travel；Ledger 種子仍只有 schema 推導的 21 欄空 header。
 - **單一 runtime resolver**：`hotelOf(place)` 對 Places／Hotels 的 HID 去空白並轉大寫後精確解析；缺失或懸空 HID 回傳 `null`,不再以住宿名稱、子字串或 `DB.hotels[0]` fallback。天氣住宿解析亦委派同一 resolver；不同 PID 可共用同一 H001 profile object。
 - **v101 驗收與 v102 世代**：Bar 已於 2026-08-11 明確確認 v101 裝置／PWA 外觀驗收完成。`app-version.js` 與 `sw.js` 原子升至 v102,`sw.js` 除版本行外不變；App 最近更新維持五筆,加入 v102 並只移除最舊顯示的 v97。
-- **驗證與非目標**：截至 resolver 交付的 fresh Node suite 為 **83／83** test files；住宿 focused Playwright 為 **3／3**（320／375／390px）。完整 Playwright 總數留待 v102 最終 gate fresh run 後記錄,不沿用或推算。本批不改 Ledger 位置式 Schema 2.9／21 欄、Apps Script、個人備份 v9、SW lifecycle／cache／offline fallback、`netlify.toml`、`main`、Netlify 部署或 production tag。
+- **驗證與非目標**：v102 最終 fresh gate 為 **83／83** Node test files、完整 Playwright **148／148**（0 skipped、0 failed；含住宿 320／375／390px 的 **3／3**）；runtime asset、文件標題、App／SW v102 一致性、BUILTIN no-drift、manifest JSON 與 `git diff --check` 亦通過。本批不改 Ledger 位置式 Schema 2.9／21 欄、Apps Script、個人備份 v9、SW lifecycle／cache／offline fallback、`netlify.toml`、`main`、Netlify 部署或 production tag。
 
 ## 2026-08-10｜移除 SW 更新提示與杉綠配色區隔（dev，SW v101）
 
