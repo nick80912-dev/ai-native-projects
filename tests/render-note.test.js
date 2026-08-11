@@ -37,6 +37,7 @@ vm.createContext(sandbox);
 vm.runInContext([
   extractConst('TOMORROW_PREVIEW_HOUR'),
   extractFunction('escapeHtml'),
+  extractFunction('escapeHtmlAttr'),
   extractFunction('jsString'),
   extractFunction('jsHtmlAttrString'),
   extractFunction('navigationIntent'),
@@ -64,7 +65,11 @@ vm.runInContext([
   extractFunction('parkingKvRow'),
   extractFunction('renderParkingTicketLine'),
   extractFunction('renderTicketLine'),
-  extractFunction('renderShoppingTodayCard'),
+  extractFunction('todayShoppingHeroModel'),
+  extractFunction('renderTodayShoppingSummary'),
+  extractFunction('weatherTravelHint'),
+  extractFunction('renderTodayWeatherSummary'),
+  extractFunction('renderTodayHeroSummary'),
   extractFunction('nextStopMeta'),
   extractFunction('parkingPanel'),
   /* v84:下一站卡片多了「這站待買」區塊,注入真實實作而非 stub */
@@ -82,7 +87,8 @@ vm.runInContext([
 ].join('\n'), sandbox);
 
 /* v86 Today render contract:兩列、每列三項、固定文案，以及不增加第三列的地點提示。 */
-const todayShoppingOut=sandbox.renderShoppingTodayCard({
+/* Legacy card assertions are retained for history only; the Hero contract follows. */
+/* const todayShoppingOut=sandbox.renderShoppingTodayCard({
   count:8,
   groups:[
     {stopRef:'a',stopName:'第一航廈一樓',items:['醬油','抹茶','和菓子']},
@@ -100,7 +106,26 @@ assert(!todayShoppingOut.includes('茶葉'),'the fourth name is not rendered');
 assert(!todayShoppingOut.includes('第三站'),'the third stop is not rendered as another full row');
 assert(todayShoppingOut.includes('另有 1 個地點'),'the second row carries the compact location overflow marker');
 assert(!todayShoppingOut.includes('等'),'the compact summary no longer uses 等');
-assert.strictEqual((todayShoppingOut.match(/<button/g)||[]).length,1,'the entire Today card remains one button');
+assert.strictEqual((todayShoppingOut.match(/<button/g)||[]).length,1,'the entire Today card remains one button'); */
+
+const heroShoppingOut=sandbox.renderTodayShoppingSummary({
+  items:[{id:'current',place:'Current stop'},{id:'future',place:'Future stop'}],
+  groups:[{stopRef:'future',stopName:'Future stop',items:['one','two','three']}]
+},'current');
+assert(heroShoppingOut.includes('class="today-hero-summary-item today-hero-shopping-summary"'));
+assert(heroShoppingOut.includes('Future stop'));
+assert(heroShoppingOut.includes('3 '));
+assert(heroShoppingOut.includes("openShoppingList('future')"));
+assert.strictEqual((heroShoppingOut.match(/<button/g)||[]).length,1);
+assert(!heroShoppingOut.includes('<script>'));
+
+const heroSummaryOut=sandbox.renderTodayHeroSummary(
+  {city:'Hiroshima',temp:21,rain:40,icon:'rain',code:61}, heroShoppingOut
+);
+assert(heroSummaryOut.includes('class="today-hero-summary"'));
+assert(heroSummaryOut.includes('class="today-hero-summary-divider"'));
+assert(heroSummaryOut.indexOf('today-hero-weather-summary')<heroSummaryOut.indexOf('today-hero-shopping-summary'));
+assert.strictEqual((heroSummaryOut.match(/today-hero-summary-divider/g)||[]).length,1);
 
 /* v86 next-stop entry is a sibling-safe compact button and keeps row-count semantics. */
 renderedShoppingItems=[

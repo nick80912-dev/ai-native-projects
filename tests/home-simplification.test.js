@@ -26,10 +26,8 @@ for (const file of ['index.html']) {
   );
   const preTripBrief = html.slice(html.indexOf('function renderPreTripBrief'), html.indexOf('var TOMORROW_PREVIEW_HOUR'));
   assert.doesNotMatch(preTripBrief, /pretrip-count/, `${file} renders the countdown only in the title row`);
-  assert(
-    renderToday.indexOf('renderShoppingTodayEntry(day,currentStopRef)') < renderToday.indexOf('renderClusterNextStopCard'),
-    `${file} places the shopping entry immediately below the Today summary and before the next-stop card`
-  );
+  assert.match(renderToday, /renderTodayWeatherArt\(weather\)[\s\S]*renderTodayHeroSummary\(weather,renderShoppingTodayEntry\(day,currentStopRef\)\)/, `${file} composes weather and Shopping inside the active Hero`);
+  assert.doesNotMatch(renderToday, /h\+=renderShoppingTodayEntry\(day,currentStopRef\)/, `${file} no longer renders active Shopping below the Hero`);
   assert.match(
     renderToday,
     /var currentStop=clusterPick&&clusterPick\.item\?clusterPick\.item:pick\.item;[\s\S]*var currentStopRef=currentStop&&currentStop\.id\?currentStop\.id:'';/,
@@ -39,7 +37,11 @@ for (const file of ['index.html']) {
   assert.match(html, /\.today-hero \.lbl\{font-size:11px/, `${file} preserves the Today label size`);
   assert.match(html, /\.today-hero \.date\{font-size:24px/, `${file} preserves the Today date size`);
   assert.match(html, /\.today-hero \.loc\{font-size:13px/, `${file} preserves the progress size`);
-  assert.match(html, /\.weather-chip\{[^}]*font-size:13px/, `${file} preserves the weather size`);
+  assert.match(html, /\.today-weather-art\{[^}]*font-size:46px/, `${file} gives weather mood visual weight`);
+  assert.match(html, /\.today-hero-summary\{[^}]*display:grid/, `${file} keeps Hero information in one row`);
+  assert.match(html, /\.today-hero-shopping-summary\{[^}]*min-height:44px/, `${file} keeps Hero Shopping tappable`);
+  assert.doesNotMatch(html, /\.weather-chip\{/, `${file} removes legacy weather pill CSS`);
+  assert.doesNotMatch(html, /\.today-shopping-card\{/, `${file} removes legacy Shopping card CSS`);
   assert.match(html, /\.today-hero-action\{[^}]*width:auto[^}]*color:#fff/, `${file} keeps the non-trip launcher compact inside the dark Today card`);
   assert.match(
     html,
@@ -51,7 +53,7 @@ for (const file of ['index.html']) {
     /class="today-jump today-hero-action"/,
     `${file} uses the shared action class for full itinerary`
   );
-  assert.match(html, /class="today-shopping-launcher'\+\(day\?'':' today-hero-action'\)/, `${file} uses the shared action class for non-trip shopping`);
+  assert.match(nonTripToday, /renderShoppingTodayEntry\(null,''\)[\s\S]*renderPreTripBrief\(\)/, `${file} keeps the pre-trip Shopping launcher in place`);
   assert.match(html, /\.today-pretrip-title-row\{[^}]*display:flex[^}]*justify-content:space-between/, `${file} keeps the non-trip title and countdown on one row`);
   assert.match(html, /想逛<small[^>]*>/, `${file} preserves the shop wishlist`);
   assert.match(html, /\.nx-ticket-low\{[^}]*grid-template-columns:minmax\(0,1fr\) auto/, `${file} gives completion the flexible primary column`);

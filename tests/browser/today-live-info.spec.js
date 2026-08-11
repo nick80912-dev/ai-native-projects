@@ -139,7 +139,63 @@ async function seedTodayShoppingGroups(page, groupNames) {
   }, groupNames);
 }
 
-test('Today excludes the exact next stop and renders two compact other-stop rows', async ({ page }) => {
+test('Today Hero excludes the exact next stop and shows the first future Shopping group', async ({ page }) => {
+  const seeded=await seedTodayShoppingGroups(page,[['current one','current two'],['one','two','three']]);
+  const expected=await page.evaluate((ref)=>shoppingStopById(ref).name,seeded.otherRefs[0]);
+  const summary=page.locator('#view-today .today-hero-shopping-summary');
+  await expect(summary.locator('.today-hero-shopping-stop')).toHaveText(expected);
+  await expect(summary.locator('small')).toContainText('3');
+  await expect(page.locator('#view-today .today-shopping-card')).toHaveCount(0);
+  await expect(page.locator('#view-today .today-shopping-launcher')).toHaveCount(0);
+});
+
+test('Today weather uses a decorative mood and actionable accessible summary', async ({ page }) => {
+  await page.evaluate(()=>{
+    requestHomeWeather=function(){};
+    homeWeatherFor=function(){return {city:'Hiroshima',temp:21,rain:40,icon:'rain',code:61};};
+    renderToday();
+  });
+  await expect(page.locator('#view-today .today-weather-art')).toHaveText('rain');
+  await expect(page.locator('#view-today .today-weather-art')).toHaveAttribute('aria-hidden','true');
+  await expect(page.locator('#view-today .today-hero-weather-summary')).toContainText('21');
+  await expect(page.locator('#view-today .today-hero-top .loc')).toHaveText(/^\d+\s*\/\s*\d+$/);
+});
+
+test('all Shopping at the current next stop leaves only the existing badge', async ({ page }) => {
+  await seedTodayShoppingGroups(page,[['one','two']]);
+  await expect(page.locator('#view-today .nx-buy-badge')).toHaveText(/2/);
+  await expect(page.locator('#view-today .today-hero-shopping-summary')).toHaveCount(0);
+});
+
+test('Hero Shopping supports keyboard activation', async ({ page }) => {
+  const seeded=await seedTodayShoppingGroups(page,[[],['one','two']]);
+  const expectedId=await page.evaluate((ref)=>'shopgroup_'+cssId(ref),seeded.otherRefs[0]);
+  await page.evaluate(()=>{
+    const original=Element.prototype.scrollIntoView;
+    window.__todayHeroScrollTarget='';
+    Element.prototype.scrollIntoView=function(options){window.__todayHeroScrollTarget=this.id||'';return original.call(this,options);};
+  });
+  const summary=page.locator('#view-today .today-hero-shopping-summary');
+  await summary.focus();
+  await summary.press('Enter');
+  await expect(page.locator('#shoppingListOverlay')).toBeVisible();
+  await expect.poll(()=>page.evaluate(()=>window.__todayHeroScrollTarget)).toBe(expectedId);
+  expect(await page.evaluate(()=>curView)).toBe('today');
+});
+
+test('weather failure keeps generic Shopping entry usable', async ({ page }) => {
+  await page.evaluate(()=>{
+    requestHomeWeather=function(){}; homeWeatherFor=function(){return null;};
+    shoppingListStore.removeMany(shoppingListStore.all().map((item)=>item.id)); renderToday();
+  });
+  await expect(page.locator('#view-today .today-weather-art')).toHaveCount(0);
+  const summary=page.locator('#view-today .today-hero-shopping-summary');
+  await expect(summary).toBeVisible();
+  await summary.evaluate((element)=>element.click());
+  await expect(page.locator('#shoppingListOverlay')).toBeVisible();
+});
+
+test.skip('legacy: Today excludes the exact next stop and renders two compact other-stop rows', async ({ page }) => {
   await seedTodayShoppingGroups(page,[
     ['下一站一','下一站二'],
     ['醬油','抹茶','和菓子'],
@@ -158,20 +214,20 @@ test('Today excludes the exact next stop and renders two compact other-stop rows
   await expect(card).not.toContainText('等');
 });
 
-test('all shopping at the valid next stop leaves only the badge, never a fallback launcher', async ({ page }) => {
+test.skip('legacy: all shopping at the valid next stop leaves only the badge, never a fallback launcher', async ({ page }) => {
   await seedTodayShoppingGroups(page,[['下一站一','下一站二']]);
   await expect(page.locator('#view-today .nx-buy-badge')).toHaveText('🛍 2');
   await expect(page.locator('#view-today .today-shopping-card')).toHaveCount(0);
   await expect(page.locator('#view-today .today-shopping-launcher')).toHaveCount(0);
 });
 
-test('other-stop shopping remains visible when the next stop has nothing to buy', async ({ page }) => {
+test.skip('legacy: other-stop shopping remains visible when the next stop has nothing to buy', async ({ page }) => {
   await seedTodayShoppingGroups(page,[[],['其他站一','其他站二']]);
   await expect(page.locator('#view-today .nx-buy-badge')).toHaveCount(0);
   await expect(page.locator('#view-today .today-shopping-card')).toContainText('今天 2 項待買');
 });
 
-test('the Today shopping card remains one button and opens the full list without navigation', async ({ page }) => {
+test.skip('legacy: the Today shopping card remains one button and opens the full list without navigation', async ({ page }) => {
   await seedTodayShoppingGroups(page,[[],['醬油']]);
   const card=page.locator('#view-today .today-shopping-card');
   await expect(card.locator('button,a,[role="button"],[tabindex]')).toHaveCount(0);
@@ -216,7 +272,32 @@ test('the badge supports Tab, Enter, Space and a visible keyboard focus ring', a
   await expect(page.locator('#shoppingListOverlay')).toBeVisible();
 });
 
-test('320, 375 and 390px keep the badge clear and Today rows on one line', async ({ page }) => {
+test('320, 375 and 390px keep the merged Hero summary on one row', async ({ page }) => {
+  const seeded=await seedTodayShoppingGroups(page,[['current'],['future']]);
+  await page.evaluate((ref)=>{DB.trip.days.forEach((day)=>day.items.forEach((item)=>{if(item.id===ref){item.place='A deliberately very long future stop name for ellipsis '.repeat(12);item.act='';}}));},seeded.otherRefs[0]);
+  await page.evaluate(()=>{requestHomeWeather=function(){};homeWeatherFor=function(){return {city:'Hiroshima',temp:21,rain:40,icon:'rain',code:61};};renderToday();document.querySelector('#view-today .today-hero-shopping-stop').textContent='Long future stop '.repeat(20);});
+  for(const width of [320,375,390]){
+    await page.setViewportSize({width,height:844});
+    const layout=await page.evaluate(()=>{
+      const hero=document.querySelector('#view-today .today-hero');
+      const summary=document.querySelector('#view-today .today-hero-summary');
+      const shopping=document.querySelector('#view-today .today-hero-shopping-summary');
+      const stop=document.querySelector('#view-today .today-hero-shopping-stop');
+      const ticket=document.querySelector('#view-today .nx-ticket');
+      const s=shopping.getBoundingClientRect(),h=hero.getBoundingClientRect(),t=ticket.getBoundingClientRect();
+      return {overflow:document.documentElement.scrollWidth>window.innerWidth,summaryRows:getComputedStyle(summary).gridTemplateRows.split(' ').length,shoppingHeight:Math.round(s.height),stopOverflow:stop.scrollWidth>stop.clientWidth,stopWhiteSpace:getComputedStyle(stop).whiteSpace,heroHeight:Math.round(h.height),ticketTop:Math.round(t.top)};
+    });
+    expect(layout.overflow).toBe(false);
+    expect(layout.summaryRows).toBe(1);
+    expect(layout.shoppingHeight).toBeGreaterThanOrEqual(44);
+    expect(layout.stopOverflow).toBe(true);
+    expect(layout.stopWhiteSpace).toBe('nowrap');
+    expect(layout.heroHeight).toBeLessThanOrEqual(190);
+    expect(layout.ticketTop).toBeLessThan(300);
+  }
+});
+
+test.skip('legacy: 320, 375 and 390px keep the badge clear and Today rows on one line', async ({ page }) => {
   await seedTodayShoppingGroups(page,[
     ['下一站一','下一站二','下一站三'],
     ['這是一個非常非常長的岡山車站伴手禮樓層名稱','抹茶','和菓子','柚子胡椒'],
