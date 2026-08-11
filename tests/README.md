@@ -1,4 +1,6 @@
-# tests — 測試資產(交付必附)# v103 Today Hero coverage
+# tests — 測試資產(交付必附)
+
+## v103 Today Hero coverage
 
 - `weather-rain-window.test.js` protects itinerary-date-aware weather hint priority.
 - `shopping-list.test.js` protects the itinerary-aware future Shopping projection and exact-next-stop exclusion.

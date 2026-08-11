@@ -140,9 +140,10 @@
     "production": "main 原始碼維持 v96；正式站與 production tag 維持 v73，直到已核准的 release PR、部署與線上驗證完成",
     "dev_candidate": "v103 active-trip Today Hero actionable summary: itinerary-date weather hint and the next eligible Shopping location share one compact row; the exact next stop remains owned by its existing badge",
     "device_acceptance": "v102 device/PWA acceptance complete; v103 awaits dev-candidate device/PWA appearance and interaction acceptance",
+    "next_action": "Bar validates the v103 dev-candidate Today Hero appearance and interaction in the device/PWA; no merge, deployment, or production tag without approval",
     "automated_validation": "v103 fresh release gate: 83/83 Node test files and 149/149 Playwright cases passed; document-title, app-version, runtime-assets, BUILTIN no-drift, manifest JSON, and diff checks passed",
     "pending_in_order": [
-      "Bar於目標裝置／PWA驗證已推送dev的v102：五個住宿停靠點共用H001 profile、各自travel不變、不再出現Places.HID未知欄位警告，且無錯誤或水平overflow",
+      "Bar於目標裝置／PWA驗證 v103 dev candidate：Today Hero 的天氣旅行提示、次要 completed / total、順路採買入口、精確下一站不重複、長站名安全截斷，以及無錯誤或水平 overflow",
       "完成受保護的 dev → main 發布流程並驗證正式站",
       "線上驗證成功後才建立 annotated production tag；backlog #22已完成且#24已以實驗後取消歸檔"
     ]

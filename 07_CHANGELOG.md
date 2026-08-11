@@ -1,4 +1,6 @@
-# 07 版本紀錄## 2026-08-11 — v103 Today Hero actionable summary (dev candidate)
+# 07 版本紀錄
+
+## 2026-08-11 — v103 Today Hero actionable summary (dev candidate)
 
 - Today is a calm travel briefing rather than a KPI panel: weather uses an itinerary-date-aware outing hint, and the next eligible Shopping stop is the actionable primary copy.
 - `順路採買` projects the first future eligible Shopping group while `今日採買` remains the general fallback; the exact next stop remains owned by its existing badge.

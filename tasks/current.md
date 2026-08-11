@@ -1,4 +1,8 @@
-# CURRENT(現在正在做的)# v103 current dev candidate
+# CURRENT(現在正在做的)
+
+## v103 current dev candidate
+
+
 
 - v102 Bar device/PWA acceptance is complete.
 - v103 is the current dev candidate: the active-trip Today Hero combines a weather outing hint and itinerary-aware Shopping summary; the exact next Shopping stop remains in its existing badge.
@@ -16,12 +20,11 @@
 | 項目 | 值 |
 |---|---|
 
-| v103 | Active-trip Today Hero actionable summary: itinerary-date weather hint and next eligible Shopping location in one compact row; exact next stop remains in its existing badge | Current dev candidate; device/PWA appearance and interaction acceptance is next |
 | **`main` 原始碼** | **SW v96**，PR #13 merge commit `02705c3`；因 Netlify 額度用罄尚未部署／建立 tag |
 | 正式站 | `https://trippilot-jp.netlify.app/` — 2026-08-01 由 SW v18 升級至 v73,G1–G6 全數通過 |
-| **dev 候選版** | **SW v102**；住宿停靠點以 Places.HID 精確連到 Hotels.HID，Schema 3.0 條件驗證、BUILTIN 與 runtime resolver 已同步；名稱只供顯示 |
+| **dev candidate** | **SW v103**; active-trip Today Hero is a compact itinerary-date weather hint plus next eligible Shopping location, while the exact next stop remains in the existing badge |
 | 個人備份格式 | **v9**(`PERSONAL_STATE_SUPPORTED_VERSIONS = [1..9]`)—— v81 因想逛 key 識別語意變更而升版 |
-| dev 自動驗證 | v102 最終 fresh gate：**83／83** Node test files、完整 Playwright **148／148**（0 skipped、0 failed；住宿 HID 320／375／390px **3／3**）；runtime asset CLI、`check-doc-titles`、`check-app-version`、BUILTIN no-drift、manifest JSON 與 `git diff --check` 全部通過 |
+| dev automated validation | v103 fresh gate: **83/83** Node test files and **149/149** Playwright cases (0 failed); document-title, app-version, runtime-assets, BUILTIN no-drift, manifest JSON, and diff checks all passed |
 | 既有 tag | `production-v18`、`production-v73` |
 
 **`main` 已合併 v96，但正式站仍停在 v73；v102 是目前 `dev` 的下一個候選版。** v74–v87 已由 Bar 於 2026-08-03 確認真機驗收皆正常；v88–v89、v92–v95 亦於 2026-08-08 完成 Bar 畫面／真機確認。v96 因 Netlify 額度用罄尚未正式部署，也未建立 `production-v96` tag。Bar 於 2026-08-11 明確確認 v101 裝置／PWA 外觀驗收完成；v102 接續交付住宿 HID 精確關聯,不改既有發布缺口。

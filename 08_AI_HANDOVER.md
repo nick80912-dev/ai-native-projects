@@ -1,4 +1,6 @@
-# 08 AI 交接文件(給未來的 AI 模型)# v103 Today Hero dev-candidate handover
+# 08 AI 交接文件(給未來的 AI 模型)
+
+## v103 Today Hero dev-candidate handover
 
 - v102 device/PWA acceptance is complete.
 - v103 makes the active-trip Today Hero a compact travel briefing: decorative weather art plus an itinerary-date-aware outing hint and an itinerary-aware Shopping projection in one row. The exact next Shopping stop remains in the existing badge.

@@ -1,4 +1,6 @@
-# 04 UI 準則# v103 Today Hero actionable-summary contract
+# 04 UI 準則
+
+## v103 Today Hero actionable-summary contract
 
 - Active trips show a small `completed / total` value, a date with decorative weather art, and one row containing the outing hint and Shopping summary.
 - Shopping location is the primary summary copy. Its action remains at least 44px tall, keyboard-focusable, and safely ellipsizes long names.
@@ -16,11 +18,6 @@
 | 主題 | paper | card | chrome | action | accent | accent-bg | ink | ink-soft | ink-faint | line | line-soft | tabbar | secondary |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|
 
-## v103 Today Hero actionable-summary contract
-
-- Active trips show a small completed / total progress value, a date with decorative weather art, and one summary row for the outing hint and Shopping projection.
-- The Shopping location is the primary summary copy; its action remains at least 44px tall, keyboard-focusable, and safely ellipsizes long names.
-- The existing next-stop badge owns the exact next Shopping stop. The Hero projects the first eligible future group and never duplicates that badge.
 | 海洋／岡山 | `#f5f1e8` | `#fffdf8` | `#0e3a44` | `#12707f` | `#df5f3a` | `#fbeee7` | `#22303a` | `#5c6b73` | `#7c8a90` | `#e5ddcd` | `#eee8db` | `rgba(255,253,248,.96)` | `#7659a0` |
 | 象牙／靛藍 | `#faf9f5` | `#ffffff` | `#16243d` | `#800000` | `#e25a0f` | `#fdece2` | `#16243d` | `#4a5361` | `#727c8c` | `#dcd8cc` | `#e8e5dc` | `rgba(255,255,255,.96)` | `#7659a0` |
 | 藤紫／夜櫻 | `#f6f3f7` | `#ffffff` | `#3b2d4d` | `#6a3d7d` | `#c0416e` | `#fae9ef` | `#2a2331` | `#575061` | `#7e7689` | `#e6dee9` | `#efe9f2` | `rgba(255,255,255,.96)` | `#2f6f6a` |
