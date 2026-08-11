@@ -114,13 +114,18 @@ async function seedTodayShoppingGroups(page, groupNames) {
     switchView('today');
     const dayIndex=findToday();
     const day=DB.trip.days[dayIndex];
-    const checkable=(day.items||[]).filter(isTripCheckableItem);
-    const pick=pickNextStop(checkable,getDayProgress(day,dayIndex),getChecks(),currentMinutes(),{day,dayIndex});
-    const current=pick.item;
+    const items=homeNextStopItems(day.items);
+    const progress=getDayProgress(day,dayIndex),checks=getChecks(),nowMinutes=currentMinutes();
+    const pick=pickNextStop(items,progress,checks,nowMinutes,{day,dayIndex});
+    const clusterParent=clusterParentForPick(day.items,pick.item);
+    const cluster=getChildStopCluster(day.items,clusterParent);
+    const clusterPick=cluster?pickClusterChild(cluster,progress,checks,nowMinutes,{day,dayIndex}):null;
+    const current=clusterPick&&clusterPick.item?clusterPick.item:pick.item;
     const seen={};
     if(current)seen[String(current.id)]=true;
     const others=[];
-    checkable.forEach((item)=>{
+    const currentIndex=(day.items||[]).indexOf(current);
+    (day.items||[]).slice(currentIndex+1).filter(isTripCheckableItem).forEach((item)=>{
       const id=String(item&&item.id||'');
       if(!id||seen[id]||others.length>=3)return;
       seen[id]=true;others.push(item);
@@ -139,12 +144,12 @@ async function seedTodayShoppingGroups(page, groupNames) {
   }, groupNames);
 }
 
-test('Today Hero excludes the exact next stop and shows the first eligible Shopping group', async ({ page }) => {
+test('Today Hero excludes the exact next stop and shows the first future Shopping group', async ({ page }) => {
   const seeded=await seedTodayShoppingGroups(page,[['current one','current two'],['one','two','three']]);
   const expected=await page.evaluate((ref)=>shoppingStopById(ref).name,seeded.otherRefs[0]);
   const summary=page.locator('#view-today .today-hero-shopping-summary');
   await expect(summary).toHaveAttribute('aria-label',`開啟${expected}的 3 項待買`);
-  await expect(summary.locator('.today-hero-summary-label')).toHaveText('今日採買');
+  await expect(summary.locator('.today-hero-summary-label')).toHaveText('順路採買');
   await expect(summary.locator('.today-hero-shopping-stop')).toHaveText(expected);
   await expect(summary.locator('small')).toHaveText('3 項 →');
   await expect(page.locator('#view-today .today-shopping-card')).toHaveCount(0);
@@ -272,13 +277,14 @@ test('320, 375 and 390px keep the merged Hero summary on one row', async ({ page
       return {
         overflow:document.documentElement.scrollWidth>window.innerWidth,
         summaryRows:getComputedStyle(summary).gridTemplateRows.split(' ').length,
-        shoppingHeight:Math.round(s.height),stopOverflow:stop.scrollWidth>stop.clientWidth,
+        shoppingWidth:Math.round(s.width),shoppingHeight:Math.round(s.height),stopOverflow:stop.scrollWidth>stop.clientWidth,
         stopWhiteSpace:getComputedStyle(stop).whiteSpace,heroHeight:Math.round(h.height),ticketTop:Math.round(t.top),
         badgeWidth:Math.round(b.width),badgeHeight:Math.round(b.height),badgeOverlaps
       };
     });
     expect(layout.overflow).toBe(false);
     expect(layout.summaryRows).toBe(1);
+    expect(layout.shoppingWidth).toBeGreaterThanOrEqual(44);
     expect(layout.shoppingHeight).toBeGreaterThanOrEqual(44);
     expect(layout.stopOverflow).toBe(true);
     expect(layout.stopWhiteSpace).toBe('nowrap');
