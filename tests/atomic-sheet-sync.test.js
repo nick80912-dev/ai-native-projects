@@ -57,7 +57,7 @@ const htmlSource = fs.readFileSync('index.html','utf8').replace(/\r\n/g,'\n');
 const schemaSandbox = {};
 vm.createContext(schemaSandbox);
 vm.runInContext(fs.readFileSync('schema.js','utf8'),schemaSandbox);
-assert.strictEqual(schemaSandbox.SCHEMA.version,'2.9 (2026-07-29)','production Schema version identifies the append-only correction contract');
+assert.strictEqual(schemaSandbox.SCHEMA.version,'3.0 (2026-08-11)','production Schema version identifies the HID linkage contract');
 assert.strictEqual(schemaSandbox.SCHEMA.sheets.ledger.columns.length,21,'Ledger 2.2 appends five structured UX fields');
 assert.strictEqual(schemaSandbox.SCHEMA.sheets.ledger.columns[14].field,'storeName');
 assert.strictEqual(schemaSandbox.SCHEMA.sheets.ledger.columns[15].field,'replacesRecordId');
@@ -67,7 +67,7 @@ assert(cfgKeys.some(function(key){return key.field==='ledgerDefaultCurrency'&&ke
 const itineraryActColumn = schemaSandbox.SCHEMA.sheets.itin.columns.find(function(column){ return column.field==='act'; });
 assert.strictEqual(itineraryActColumn.header,'行程','production Schema uses the confirmed itinerary Header');
 assert.strictEqual((itineraryActColumn.aliases||[]).indexOf('詳細行程'),-1,'obsolete Header is not retained as an alias');
-assert.match(htmlSource,/version:\s*'2\.9 \(2026-07-29\)'/,'inline fallback Schema version identifies the append-only correction contract');
+assert.match(htmlSource,/version:\s*'3\.0 \(2026-08-11\)'/,'inline fallback Schema version identifies the HID linkage contract');
 assert(htmlSource.includes('Exchange Rate,0.2'),'BUILTIN TripConfig contains the initial exchange rate');
 assert(htmlSource.includes('Ledger Default Currency,JPY'),'BUILTIN TripConfig contains the initial ledger currency');
 assert.match(htmlSource,/field:'act',\s*header:'行程'/,'inline fallback Schema uses the confirmed itinerary Header');

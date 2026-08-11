@@ -16,7 +16,18 @@ const typeColumn = schema.sheets.places.columns.find(function(column) {
   return column.field === 'type';
 });
 
-assert.strictEqual(schema.version, '2.9 (2026-07-29)');
+assert.strictEqual(schema.version, '3.0 (2026-08-11)');
+const hotelIdColumn = schema.sheets.places.columns.find(function(column) {
+  return column.field === 'hotelId';
+});
+assert(hotelIdColumn, 'Places.HID schema exists');
+assert.strictEqual(hotelIdColumn.header, 'HID');
+assert.deepStrictEqual(Array.from(hotelIdColumn.aliases), ['hotelid','住宿id']);
+assert.notStrictEqual(hotelIdColumn.required, true, 'HID is conditionally required only for hotel rows');
+const hotelNameColumn = schema.sheets.hotels.columns.find(function(column) {
+  return column.field === 'name';
+});
+assert.doesNotMatch(hotelNameColumn.desc || '', /名稱比對|match/i);
 assert.strictEqual(
   schema.sheets.exp.desc,
   '行前團費僅存於試算表；App 不渲染，也不從 Exp 推導同行成員。'

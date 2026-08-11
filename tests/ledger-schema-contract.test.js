@@ -10,7 +10,7 @@ vm.createContext(sandbox);
 vm.runInContext(fs.readFileSync('schema.js','utf8'), sandbox);
 vm.runInContext(fs.readFileSync('validator.js','utf8'), sandbox);
 
-assert.strictEqual(sandbox.SCHEMA.version,'2.9 (2026-07-29)','Ledger Schema version is 2.9');
+assert.strictEqual(sandbox.SCHEMA.version,'3.0 (2026-08-11)','global Schema version is 3.0 while Ledger retains its 2.9 contract');
 assert.deepStrictEqual(
   Array.from(sandbox.SCHEMA.sheets.ledger.columns,function(column){return column.field;}),
   ['id','time','member','category','detail','amountJpy','amountTwd','note','participants','payMethod','recordType','targetRecordId','deleteReason','batchId','storeName','replacesRecordId','inputCurrency','isTaxFree','priceMode','taxRate','couponAmount'],
@@ -25,7 +25,7 @@ assert.deepStrictEqual(
 );
 
 const html = fs.readFileSync('index.html','utf8');
-assert.match(html,/version:\s*'2\.9 \(2026-07-29\)'/,'inline fallback Schema version is 2.9');
+assert.match(html,/version:\s*'3\.0 \(2026-08-11\)'/,'inline fallback Schema version is 3.0');
 ['expense_correction_item','expense_correction_commit','expense_void_commit'].forEach(function(type){
   assert.match(html,new RegExp("'"+type+"':'"+type+"'"),'inline fallback contains '+type);
 });
