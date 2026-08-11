@@ -3324,6 +3324,23 @@ function renderShoppingTodayCard(model){
   }).join('');
   return '<button type="button" class="today-shopping-card" onclick="openShoppingList()"><span class="today-shopping-card-head"><strong>今天 '+model.count+' 項待買</strong><span>查看全部 →</span></span><span class="today-shopping-summary">'+summary+'</span></button>';
 }
+function renderTodayShoppingSummary(day,currentStopRef){
+  var items=shoppingListStore.all();
+  var reminder=buildShoppingTodayReminder(items,day,currentStopRef);
+  var model=todayShoppingHeroModel(reminder,day,currentStopRef);
+  if(model){
+    var accessible='前往'+model.stopName+'的 '+model.count+' 項待買';
+    return '<button type="button" class="today-hero-summary-item today-hero-shopping-summary"'+
+      ' onclick="openShoppingList(\''+jsHtmlAttrString(model.stopRef)+'\')" aria-label="'+escapeHtml(accessible)+'">'+
+      '<span class="today-hero-summary-label">'+escapeHtml(model.label)+'</span>'+
+      '<span class="today-hero-summary-value"><span class="today-hero-shopping-stop">'+escapeHtml(model.stopName)+'</span>'+
+      '<small>'+model.count+' 項待買</small></span></button>';
+  }
+  if(day&&currentStopRef&&nextStopBuyModel(currentStopRef,items))return '';
+  return '<button type="button" class="today-hero-summary-item today-hero-shopping-summary today-hero-shopping-generic"'+
+    ' onclick="openShoppingList()" aria-label="前往採買清單"><span class="today-hero-summary-label">採買清單</span>'+
+    '<span class="today-hero-summary-value">前往查看 →</span></button>';
+}
 function renderShoppingTodayEntry(day,currentStopRef){
   var items=shoppingListStore.all();
   var model=buildShoppingTodayReminder(items,day,currentStopRef);
@@ -5751,6 +5768,31 @@ function buildShoppingTodayReminder(items,day,excludedStopRef){
   });
   /* 群組依當日行程順序；組內必買優先，必買與非必買各自維持 store order。 */
   return count?{count:count,groups:sortShoppingStopGroups(groups,buildShoppingStopOrder([day]))}:null;
+}
+function todayShoppingHeroModel(model,day,currentStopRef){
+  if(!model||!Array.isArray(model.groups)||!model.groups.length||!day||!Array.isArray(day.items))return null;
+  var order={},current=String(currentStopRef||''),currentIndex=-1,valid=[],i,group,ref;
+  day.items.forEach(function(item,index){
+    var id=String(item&&item.id||'');
+    if(id&&!Object.prototype.hasOwnProperty.call(order,id))order[id]=index;
+  });
+  if(Object.prototype.hasOwnProperty.call(order,current))currentIndex=order[current];
+  for(i=0;i<model.groups.length;i++){
+    group=model.groups[i]||{};ref=String(group.stopRef||'');
+    if(!ref||!String(group.stopName||'').trim()||!Array.isArray(group.items)||!group.items.length)continue;
+    valid.push(group);
+  }
+  if(!valid.length)return null;
+  group=null;
+  if(currentIndex>=0){
+    for(i=0;i<valid.length;i++){
+      ref=String(valid[i].stopRef||'');
+      if(Object.prototype.hasOwnProperty.call(order,ref)&&order[ref]>currentIndex){group=valid[i];break;}
+    }
+  }
+  var label=group?'順路採買':'今天待買';
+  group=group||valid[0];
+  return {label:label,stopRef:String(group.stopRef),stopName:String(group.stopName).trim(),count:group.items.length};
 }
 function ledgerBooleanValue(value){return value===true||value===1||String(value||'').trim().toLowerCase()==='true'||String(value||'').trim()==='1';}
 function ledgerRecordMetadata(record){

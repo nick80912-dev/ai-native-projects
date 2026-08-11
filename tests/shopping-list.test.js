@@ -119,6 +119,37 @@ assert.strictEqual(mod.buildShoppingTodayReminder([{id:'b',name:'藥妝',stopRef
 assert.strictEqual(mod.buildShoppingTodayReminder([{id:'d',name:'孤兒',stopRef:'10/18_99',done:false}],day),null,'orphan references degrade silently');
 assert.strictEqual(mod.buildShoppingTodayReminder([],null),null,'non-trip days never show the reminder');
 
+const heroDay={items:[
+  {id:'past',place:'過去站'},
+  {id:'current',place:'目前站'},
+  {id:'future-a',place:'未來第一站'},
+  {id:'future-b',place:'未來第二站'}
+]};
+const heroReminder={count:9,groups:[
+  {stopRef:'past',stopName:'過去站',items:['咖啡']},
+  {stopRef:'future-a',stopName:'未來第一站',items:['藥妝','零食','伴手禮']},
+  {stopRef:'future-b',stopName:'未來第二站',items:['雨傘','襪子','牙刷','電池']}
+]};
+const heroSnapshot=plain(heroReminder);
+assert.deepStrictEqual(
+  plain(mod.todayShoppingHeroModel(heroReminder,heroDay,'current')),
+  {label:'順路採買',stopRef:'future-a',stopName:'未來第一站',count:3},
+  'Hero chooses the first resolved group after the current stop and uses that group count'
+);
+assert.deepStrictEqual(
+  plain(mod.todayShoppingHeroModel({count:1,groups:[heroReminder.groups[0]]},heroDay,'current')),
+  {label:'今天待買',stopRef:'past',stopName:'過去站',count:1},
+  'past-only shopping never claims to be on the way'
+);
+assert.deepStrictEqual(
+  plain(mod.todayShoppingHeroModel(heroReminder,heroDay,'missing-current')),
+  {label:'今天待買',stopRef:'past',stopName:'過去站',count:1},
+  'an unresolved current stop uses neutral copy'
+);
+assert.strictEqual(mod.todayShoppingHeroModel(null,heroDay,'current'),null);
+assert.strictEqual(mod.todayShoppingHeroModel({count:0,groups:[]},heroDay,'current'),null);
+assert.deepStrictEqual(heroReminder,heroSnapshot,'Hero projection does not mutate reminder input');
+
 /* v86:Today 只排除目前有效下一站的 exact stopRef；同名、日期與位置都不能代替 ID join。 */
 const excludedReminder=plain(mod.buildShoppingTodayReminder([
   {id:'next-a',name:'下一站一',stopRef:'10/18_0',done:false},
