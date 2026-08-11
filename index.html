@@ -8643,7 +8643,7 @@ function renderLedgerOptionManager(kind,title){
 }
 function addLedgerOptionFromSettings(kind){
   var input=document.getElementById('ledgerOptionInput_'+kind);
-  try{ledgerOptionStoreForKind(kind).add(input&&input.value);openSettings('ledgerOptionSettingsSection');toast('選項已新增');}
+  try{ledgerOptionStoreForKind(kind).add(input&&input.value);openSettings(settingsOptionPageForKind(kind));toast('選項已新增');}
   catch(error){toast(error.message||'無法新增選項');if(input)input.focus();}
 }
 function removeLedgerOptionFromSettings(kind,value){
@@ -8651,9 +8651,9 @@ function removeLedgerOptionFromSettings(kind,value){
   ledgerOptionStoreForKind(kind).remove(value);
   if(ledgerUiState.draft&&kind==='category'&&ledgerUiState.draft.category===value)ledgerUiState.draft.category=ledgerCategoryStore.all()[0]||'';
   if(ledgerUiState.draft&&kind==='payMethod'&&ledgerUiState.draft.payMethod===value)ledgerUiState.draft.payMethod=ledgerPayMethodStore.all()[0]||'';
-  openSettings('ledgerOptionSettingsSection');toast('選項已刪除');
+  openSettings(settingsOptionPageForKind(kind));toast('選項已刪除');
 }
-function moveLedgerOptionFromSettings(kind,value,direction){ledgerOptionStoreForKind(kind).move(value,direction);openSettings('ledgerOptionSettingsSection');}
+function moveLedgerOptionFromSettings(kind,value,direction){ledgerOptionStoreForKind(kind).move(value,direction);openSettings(settingsOptionPageForKind(kind));}
 function renderLedgerProxyTargetManager(){
   var rows=ledgerProxyTargetStore.all().map(function(value){return '<div class="ledger-option-row"><span>'+escapeHtml(value)+'</span><button class="remove" aria-label="刪除 '+escapeHtml(value)+'" onclick="removeLedgerProxyTargetFromSettings(\''+jsString(value)+'\')">×</button></div>';}).join('');
   return (rows||'<div class="settings-help">尚未建立代購對象</div>')+'<div class="ledger-option-add"><input id="ledgerProxyTargetInput" maxlength="12" placeholder="姓名或稱呼"><button class="btn" onclick="addLedgerProxyTargetFromSettings()">新增</button></div>';
@@ -8692,7 +8692,19 @@ function openSettings(targetId){
   if(settingsUiState.page==='storage')setTimeout(enterShoppingPhotoSettings,0);
 }
 var settingsUiState={page:'root',scrollTopByPage:{},anchorId:''};
-var SETTINGS_PAGE_IDS=['root','theme','proxy','ledger','options','storage','data','test-mode'];
+var SETTINGS_PAGE_IDS=['root','theme','proxy','ledger','options','options-category','options-pay-method','options-shopping-unit','storage','data','test-mode'];
+function settingsOptionPageForKind(kind){
+  if(kind==='category')return 'options-category';
+  if(kind==='payMethod')return 'options-pay-method';
+  if(kind==='shoppingUnit')return 'options-shopping-unit';
+  return 'options';
+}
+function settingsOptionDefinitionForPage(page){
+  if(page==='options-category')return {kind:'category',title:'記帳類別'};
+  if(page==='options-pay-method')return {kind:'payMethod',title:'支付方式'};
+  if(page==='options-shopping-unit')return {kind:'shoppingUnit',title:'採買單位'};
+  return null;
+}
 /* ledgerTestModeSection 於 v74 由根頁改指專屬控制頁(設計規格 §2.5)。
    anchorId 保留:同名節點搬到 test-mode 頁,既有 anchor 捲動／聚焦邏輯照舊生效。
    這個 legacy target 不得落到根頁 —— 使用者正在 TEST 模式中按「前往設定關閉」,
@@ -8714,8 +8726,11 @@ function captureSettingsScroll(){
 }
 function openSettingsPage(pageId){openSettings(pageId);}
 function backToSettingsRoot(){openSettings('root');}
-function renderSettingsHeader(title,isRoot){
-  return '<div class="settings-head"><div class="settings-title-wrap">'+(isRoot?'':'<button class="settings-back" onclick="backToSettingsRoot()">‹ 返回</button>')+'<h2 id="settingsTitle">'+escapeHtml(title)+'</h2></div><button class="settings-close" aria-label="關閉" onclick="closeSettings()">×</button></div>';
+function renderSettingsHeader(title,isRoot,backPage,backLabel){
+  var target=backPage||'root';
+  var label=backLabel||'設定';
+  var back=isRoot?'':'<button class="settings-back" aria-label="返回'+escapeHtml(label)+'" onclick="openSettingsPage(\''+jsString(target)+'\')">‹ 返回</button>';
+  return '<div class="settings-head"><div class="settings-title-wrap">'+back+'<h2 id="settingsTitle">'+escapeHtml(title)+'</h2></div><button class="settings-close" aria-label="關閉" onclick="closeSettings()">×</button></div>';
 }
 /* v74 設定根頁列圖示。一律沿用既有 .app-icon inline SVG(stroke:currentColor),
    不加 Emoji、不引入圖示套件、不載入外部資源。 */
@@ -8790,7 +8805,16 @@ function renderSettingsLedgerPage(ledgerSettings,settingsError){
   return renderSettingsHeader('帳務',false)+'<div class="settings-section"><h3>匯率與預設幣別</h3><div class="settings-current">目前匯率：<b>1 JPY = NT$'+escapeHtml(ledgerSettings.exchangeRate||'未設定')+'</b></div><div class="settings-rate-row"><label class="settings-help" for="ledgerExchangeRate"><b>匯率</b><br>1 日幣可換算多少台幣</label><input id="ledgerExchangeRate" type="number" inputmode="decimal" min="0.000001" step="any" value="'+escapeHtml(ledgerSettings.exchangeRate)+'"></div><div class="settings-help"><b>預設輸入幣別</b><br>新增記帳時預先選擇的幣別</div><div class="ledger-currency-grid" style="margin-top:8px"><button class="ledger-choice settings-currency-option '+(ledgerSettings.defaultCurrency==='JPY'?'on':'')+'" data-currency="JPY" aria-pressed="'+(ledgerSettings.defaultCurrency==='JPY'?'true':'false')+'" onclick="selectLedgerDefaultCurrency(\'JPY\')">JPY 日幣</button><button class="ledger-choice settings-currency-option '+(ledgerSettings.defaultCurrency==='TWD'?'on':'')+'" data-currency="TWD" aria-pressed="'+(ledgerSettings.defaultCurrency==='TWD'?'true':'false')+'" onclick="selectLedgerDefaultCurrency(\'TWD\')">TWD 台幣</button></div>'+(settingsError?'<div class="settings-help" style="color:var(--coral)">'+escapeHtml(settingsError)+'</div>':'')+'<div class="settings-help">儲存後跨裝置共用；CSV 發布可能延遲 1–5 分鐘。</div><button class="btn block" style="margin-top:10px" onclick="saveLedgerSettingsFromForm(this)">儲存共用設定</button></div>';
 }
 function renderSettingsOptionsPage(){
-  return renderSettingsHeader('自訂項目',false)+'<div class="settings-section" id="ledgerOptionSettingsSection"><h3>類別、支付方式與採買單位</h3><div class="settings-help">可新增、刪除或排序；刪除選項不影響既有紀錄。</div>'+renderLedgerOptionManager('category','類別')+renderLedgerOptionManager('payMethod','支付方式')+renderLedgerOptionManager('shoppingUnit','採買單位')+'</div>';
+  var rows=settingsNavRow('options-category','options','記帳類別',ledgerCategoryStore.all().length+' 項')+
+    settingsNavRow('options-pay-method','options','支付方式',ledgerPayMethodStore.all().length+' 項')+
+    settingsNavRow('options-shopping-unit','options','採買單位',shoppingUnitStore.all().length+' 項');
+  return renderSettingsHeader('自訂項目',false)+'<div class="settings-options-hub" id="ledgerOptionSettingsSection"><div class="settings-help">依用途選擇要管理的項目。</div><div class="settings-group-card">'+rows+'</div></div>';
+}
+function renderSettingsOptionEditorPage(page){
+  var definition=settingsOptionDefinitionForPage(page);
+  if(!definition)return renderSettingsOptionsPage();
+  return renderSettingsHeader(definition.title,false,'options','自訂項目')+
+    '<div class="settings-section settings-option-editor" data-option-kind="'+definition.kind+'"><div class="settings-help">可新增、刪除或排序；刪除選項不影響既有紀錄。</div>'+renderLedgerOptionManager(definition.kind,'')+'</div>';
 }
 function formatShoppingPhotoBytes(value){
   var bytes=Math.max(0,Number(value)||0);
@@ -8931,6 +8955,7 @@ function renderSettingsPage(page,ledgerSettings,settingsError){
   if(page==='proxy')return renderSettingsProxyPage();
   if(page==='ledger')return renderSettingsLedgerPage(ledgerSettings,settingsError);
   if(page==='options')return renderSettingsOptionsPage();
+  if(page==='options-category'||page==='options-pay-method'||page==='options-shopping-unit')return renderSettingsOptionEditorPage(page);
   if(page==='storage')return renderSettingsStoragePage();
   if(page==='data')return renderSettingsDataPage();
   if(page==='test-mode')return renderSettingsTestModePage();
