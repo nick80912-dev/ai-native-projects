@@ -99,12 +99,12 @@
 | v98 | 更正收據 sticky 操作列遮罩：捲動時不再浮出品項金額計算機入口 | ✅ 已完成，完整 gate 通過 |
 | v99／v100 | SW 更新提示雙版本實驗；實機確認事件時機與已顯示內容不同步，產品必要性不足 | ⛔ 實驗結束；由 Bar 取消，不列為完成功能 |
 | v101 | 移除全域 SW 更新提示；杉綠 action 改為林下青 `#2F6B4F`，SW lifecycle／cache／offline 與資料不變 | ✅ 2026-08-11 Bar 裝置／PWA 外觀驗收完成 |
-| v102 | 住宿停靠點改以 Places.HID 精確關聯 Hotels.HID；Schema 3.0、條件驗證、BUILTIN 與 exact resolver 同步 | ✅ 本機候選版與完整 gate 完成；待最終 whole-branch review 核准 → controller fast-forward/push dev → Bar 裝置驗收 |
+| v102 | 住宿停靠點改以 Places.HID 精確關聯 Hotels.HID；Schema 3.0、條件驗證、BUILTIN 與 exact resolver 同步 | ✅ 最終 whole-branch review、完整 gate 與 dev push（`ffc9aae`）完成；待 Bar 裝置驗收 |
 
 **已知未做(需先定判準)**:Today 的「交通／停車／營業／付款／提醒**依當下情境動態調整優先順序**」。v84 只做了可明確驗收的收合(常駐交通／停車／營業,收合付款／提醒);「當下情境」的判準(依時間?依距離?依是否已抵達?)尚未定義,不同讀法會做出完全不同的東西,故未實作。
 
 ## 下一棒
 
-→ **v102 最終 gate 已完成；下一步先取得最終 whole-branch review 核准，核准後由 controller fast-forward／push `dev`，完成後才由 Bar 開啟 dev PWA 驗收 v102。** 確認五個住宿停靠點都顯示 H001 profile、各自交通時間不變、無錯誤或水平 overflow，且既有資料存在。不得自行 merge `main`、部署正式站或建立 production tag。
+→ **v102 已通過最終 whole-branch review 並推送 `dev`（`ffc9aae`）；下一步由 Bar 開啟 dev PWA 驗收 v102。** 確認五個住宿停靠點都顯示 H001 profile、各自交通時間不變、不再出現 Places.HID 未知欄位警告、無錯誤或水平 overflow，且既有資料存在。不得自行 merge `main`、部署正式站或建立 production tag。
 
 > **不得**自行動 `main`、部署正式站或建立 production tag。未經 Bar 核准不得 merge `dev → main`。
