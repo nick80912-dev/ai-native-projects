@@ -1328,6 +1328,7 @@ var BUILTIN = {"itin":"2026.10.18-10.23岡山四國六天五夜,,,,,,\r\n飯店,
 function lsGet(k,f){ try{ var v=localStorage.getItem(k); return v?JSON.parse(v):f; }catch(e){ AppLog.repo('讀取 '+k+' 失敗:'+(e.message||e)+' — 使用預設值'); return f; } }
 function lsSet(k,v){ try{ localStorage.setItem(k,JSON.stringify(v)); }catch(e){ AppLog.repo('寫入 '+k+' 失敗:'+(e.message||e)+' — 個人狀態可能未保存'); } }
 function escapeHtml(s){ return (s==null?'':String(s)).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function escapeHtmlAttr(s){return escapeHtml(s).replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
 function jsString(s){ return String(s==null?'':s).replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/\n/g,'\\n').replace(/\r/g,''); }
 function jsHtmlAttrString(s){return jsString(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 function timestampDate(value){ return new Date(Number(value)); }
@@ -3331,7 +3332,7 @@ function renderTodayShoppingSummary(day,currentStopRef){
   if(model){
     var accessible='前往'+model.stopName+'的 '+model.count+' 項待買';
     return '<button type="button" class="today-hero-summary-item today-hero-shopping-summary"'+
-      ' onclick="openShoppingList(\''+jsHtmlAttrString(model.stopRef)+'\')" aria-label="'+escapeHtml(accessible)+'">'+
+      ' onclick="openShoppingList(\''+jsHtmlAttrString(model.stopRef)+'\')" aria-label="'+escapeHtmlAttr(accessible)+'">'+
       '<span class="today-hero-summary-label">'+escapeHtml(model.label)+'</span>'+
       '<span class="today-hero-summary-value"><span class="today-hero-shopping-stop">'+escapeHtml(model.stopName)+'</span>'+
       '<small>'+model.count+' 項待買</small></span></button>';

@@ -16,9 +16,14 @@ function plain(value){return JSON.parse(JSON.stringify(value));}
 
 function loadShoppingModule(){
   const html=fs.readFileSync('index.html','utf8');
+  const helpersStart=html.indexOf('function escapeHtml(');
+  const helpersEnd=html.indexOf('function timestampDate(',helpersStart);
+  const rendererStart=html.indexOf('function renderTodayShoppingSummary(');
+  const rendererEnd=html.indexOf('function renderShoppingTodayEntry(',rendererStart);
   const start=html.indexOf('/* ================= ledgerRepository');
   const end=html.indexOf('/* ================= 分帳',start);
-  assert(start>=0&&end>start,'shopping helpers live beside the local ledger repositories');
+  assert(helpersStart>=0&&helpersEnd>helpersStart&&rendererStart>=0&&rendererEnd>rendererStart&&start>=0&&end>start,
+    'shopping helpers and renderer have executable source slices');
   const sandbox={
     console:{log(){},warn(){},error(){}},
     localStorage:createStorage(),
@@ -33,7 +38,7 @@ function loadShoppingModule(){
     renderSplit(){},updateLedgerPendingStatus(){}
   };
   vm.createContext(sandbox);
-  vm.runInContext(html.slice(start,end),sandbox);
+  vm.runInContext(html.slice(helpersStart,helpersEnd)+html.slice(rendererStart,rendererEnd)+html.slice(start,end),sandbox);
   return sandbox;
 }
 
@@ -149,6 +154,17 @@ assert.deepStrictEqual(
 assert.strictEqual(mod.todayShoppingHeroModel(null,heroDay,'current'),null);
 assert.strictEqual(mod.todayShoppingHeroModel({count:0,groups:[]},heroDay,'current'),null);
 assert.deepStrictEqual(heroReminder,heroSnapshot,'Hero projection does not mutate reminder input');
+
+mod.shoppingListStore.add({name:'測試商品',stopRef:'quoted-stop'});
+const quotedSummary=mod.renderTodayShoppingSummary({items:[
+  {id:'quoted-stop',place:'Quoted "Stop" <svg/onload=alert(1)>'}
+]},'');
+assert(
+  quotedSummary.includes('aria-label="前往Quoted &quot;Stop&quot; &lt;svg/onload=alert(1)&gt;的 1 項待買"'),
+  'Shopping summary escapes a quoted itinerary stop name in attribute context'
+);
+assert.strictEqual((quotedSummary.match(/\saria-label=/g)||[]).length,1,'Shopping summary keeps one aria-label attribute');
+assert(!quotedSummary.includes('<svg'),'Shopping summary exposes no injectable stop-name markup');
 
 /* v86:Today 只排除目前有效下一站的 exact stopRef；同名、日期與位置都不能代替 ID join。 */
 const excludedReminder=plain(mod.buildShoppingTodayReminder([
