@@ -263,6 +263,7 @@ function response(payload){
   const categoryEditor=renderCustomOptionEditor(html,'options-category');
   assert(categoryEditor.includes('<h2 id="settingsTitle">記帳類別</h2>'),
     'category editor has a focused page title');
+  assert(!categoryEditor.includes('<h4></h4>'),'focused option editor does not emit an unnamed heading');
   assert(categoryEditor.includes('data-option-kind="category"')&&categoryEditor.includes('餐飲')&&categoryEditor.includes('交通'),
     'category editor renders the category manager');
   assert(!categoryEditor.includes('ledgerOptionInput_payMethod')&&!categoryEditor.includes('ledgerOptionInput_shoppingUnit'),
