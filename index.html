@@ -41,6 +41,11 @@
   --warning-ink:#75530b;
   --correction-border:#b9d7d2;
   --green:#367055;
+  --today-hero-text:#fff;
+  --today-hero-emphasis:#fff3b5;
+  --today-hero-summary-border:rgba(255,255,255,.22);
+  --today-hero-summary-divider:rgba(255,255,255,.25);
+  --today-hero-weather-shadow:rgba(8,36,27,.2);
   --shadow:0 2px 12px rgba(24,44,52,.08);
   --shadow-lg:0 8px 28px rgba(24,44,52,.16);
 }
@@ -165,16 +170,16 @@ input,select,textarea{font-size:16px}
 .today-hero-top{grid-area:top;display:flex;align-items:center;justify-content:space-between;gap:10px;min-width:0;position:relative}
 .today-hero-top .lbl{min-width:0}.today-hero-top .loc{flex:0 0 auto;text-align:right;white-space:nowrap}
 .today-hero-main{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:66px;position:relative}
-.today-weather-art{flex:0 0 76px;text-align:center;font-size:46px;line-height:1;filter:drop-shadow(0 5px 8px rgba(8,36,27,.2));position:relative}
-.today-hero-summary{display:grid;grid-template-columns:minmax(0,.9fr) 1px minmax(0,1.1fr);gap:10px;align-items:center;padding-top:9px;border-top:1px solid rgba(255,255,255,.22);position:relative}
+.today-weather-art{flex:0 0 76px;text-align:center;font-size:46px;line-height:1;filter:drop-shadow(0 5px 8px var(--today-hero-weather-shadow));position:relative}
+.today-hero-summary{display:grid;grid-template-columns:minmax(0,.9fr) 1px minmax(0,1.1fr);gap:10px;align-items:center;padding-top:9px;border-top:1px solid var(--today-hero-summary-border);position:relative}
 .today-hero-summary.single{grid-template-columns:minmax(0,1fr)}
-.today-hero-summary-divider{width:1px;height:32px;background:rgba(255,255,255,.25)}
-.today-hero-summary-item{min-width:0;min-height:44px;display:flex;flex-direction:column;justify-content:center;color:#fff}
+.today-hero-summary-divider{width:1px;height:32px;background:var(--today-hero-summary-divider)}
+.today-hero-summary-item{min-width:0;min-height:44px;display:flex;flex-direction:column;justify-content:center;color:var(--today-hero-text)}
 .today-hero-summary-label{font-size:9px;letter-spacing:.08em;opacity:.74;font-weight:800;white-space:nowrap}
 .today-hero-summary-value{display:flex;align-items:baseline;gap:4px;width:100%;min-width:0;overflow:hidden;margin-top:2px;font-size:13px;font-weight:900;white-space:nowrap}
-.today-hero-summary-value small{flex:0 0 auto;font-size:10px;color:#fff3b5}
+.today-hero-summary-value small{flex:0 0 auto;font-size:10px;color:var(--today-hero-emphasis)}
 .today-hero-shopping-summary{appearance:none;width:100%;min-height:44px;border:0;background:transparent;padding:0;text-align:right;font:inherit;align-items:flex-end;cursor:pointer}
-.today-hero-shopping-summary:focus-visible{outline:2px solid #fff;outline-offset:3px;border-radius:7px}
+.today-hero-shopping-summary:focus-visible{outline:2px solid var(--today-hero-text);outline-offset:3px;border-radius:7px}
 .today-hero-shopping-stop{flex:1 1 0;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .mini-tl{margin-top:14px;position:relative}
 .mini-item{display:flex;gap:11px;align-items:flex-start;padding:6px 0}
@@ -3329,17 +3334,6 @@ function shoppingStopStateFor(item){
   return resolveShoppingStopState(ref,shoppingStopById(ref),shoppingTripAuthority());
 }
 var SHOPPING_STOP_STATE_LABEL={pending:'行程站點待確認',orphan:'原行程站點已不存在'};
-function renderShoppingTodayCard(model){
-  if(!model)return '';
-  var visibleGroups=model.groups.slice(0,2);
-  var summary=visibleGroups.map(function(group,index){
-    var names=group.items.slice(0,3).join('、')+(group.items.length>3?'...':'');
-    var copy='<span class="today-shopping-summary-copy"><b class="today-shopping-stop">'+escapeHtml(group.stopName)+'</b><span class="today-shopping-separator" aria-hidden="true"> · </span><span class="today-shopping-items">'+escapeHtml(names)+'</span></span>';
-    var overflow=index===visibleGroups.length-1&&model.groups.length>2?'<span class="today-shopping-location-overflow">另有 '+(model.groups.length-2)+' 個地點</span>':'';
-    return '<span class="today-shopping-summary-row'+(overflow?' has-location-overflow':'')+'">'+copy+overflow+'</span>';
-  }).join('');
-  return '<button type="button" class="today-shopping-card" onclick="openShoppingList()"><span class="today-shopping-card-head"><strong>今天 '+model.count+' 項待買</strong><span>查看全部 →</span></span><span class="today-shopping-summary">'+summary+'</span></button>';
-}
 function renderTodayShoppingSummary(day,currentStopRef){
   var items=shoppingListStore.all();
   var reminder=buildShoppingTodayReminder(items,day,currentStopRef);
@@ -3359,11 +3353,7 @@ function renderTodayShoppingSummary(day,currentStopRef){
 }
 function renderShoppingTodayEntry(day,currentStopRef){
   if(day)return renderTodayShoppingSummary(day,currentStopRef);
-  var items=shoppingListStore.all();
-  var model=buildShoppingTodayReminder(items,day,currentStopRef);
-  if(model)return renderShoppingTodayCard(model);
-  if(day&&currentStopRef&&nextStopBuyModel(currentStopRef,items))return '';
-  return '<button type="button" class="today-shopping-launcher'+(day?'':' today-hero-action')+'" onclick="openShoppingList()">採買清單 →</button>';
+  return '<button type="button" class="today-shopping-launcher today-hero-action" onclick="openShoppingList()">採買清單 →</button>';
 }
 /* 數量不再選填:每個新項目都給 quantity 1,才能可靠支援部分購買的減法。 */
 /* focusStopRef 選填:從「下一站待買」進來時捲到該站群組,省去自己找。

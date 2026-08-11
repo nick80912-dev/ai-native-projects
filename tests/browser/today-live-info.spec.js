@@ -157,7 +157,9 @@ test('Today weather uses a decorative mood and actionable accessible summary', a
   });
   await expect(page.locator('#view-today .today-weather-art')).toHaveText('rain');
   await expect(page.locator('#view-today .today-weather-art')).toHaveAttribute('aria-hidden','true');
-  await expect(page.locator('#view-today .today-hero-weather-summary')).toContainText('21');
+  const weather=page.locator('#view-today .today-hero-weather-summary');
+  await expect(weather).toContainText('21');
+  await expect(weather).toHaveAttribute('aria-label','Hiroshima 21 度，現在之後最高降雨機率 40%，記得帶傘');
   await expect(page.locator('#view-today .today-hero-top .loc')).toHaveText(/^\d+\s*\/\s*\d+$/);
 });
 
@@ -177,10 +179,20 @@ test('Hero Shopping supports keyboard activation', async ({ page }) => {
   });
   const summary=page.locator('#view-today .today-hero-shopping-summary');
   await summary.focus();
+  const focusStyle=await summary.evaluate((element)=>{
+    const style=getComputedStyle(element);
+    return {outlineStyle:style.outlineStyle,outlineWidth:parseFloat(style.outlineWidth)||0};
+  });
+  expect(focusStyle.outlineStyle).not.toBe('none');
+  expect(focusStyle.outlineWidth).toBeGreaterThanOrEqual(2);
   await summary.press('Enter');
   await expect(page.locator('#shoppingListOverlay')).toBeVisible();
   await expect.poll(()=>page.evaluate(()=>window.__todayHeroScrollTarget)).toBe(expectedId);
   expect(await page.evaluate(()=>curView)).toBe('today');
+  await page.evaluate(()=>closeShoppingList());
+  await summary.focus();
+  await summary.press('Space');
+  await expect(page.locator('#shoppingListOverlay')).toBeVisible();
 });
 
 test('weather failure keeps generic Shopping entry usable', async ({ page }) => {
@@ -193,47 +205,6 @@ test('weather failure keeps generic Shopping entry usable', async ({ page }) => 
   await expect(summary).toBeVisible();
   await summary.evaluate((element)=>element.click());
   await expect(page.locator('#shoppingListOverlay')).toBeVisible();
-});
-
-test.skip('legacy: Today excludes the exact next stop and renders two compact other-stop rows', async ({ page }) => {
-  await seedTodayShoppingGroups(page,[
-    ['下一站一','下一站二'],
-    ['醬油','抹茶','和菓子'],
-    ['咖啡豆','果醬','餅乾','茶葉'],
-    ['桃子果凍']
-  ]);
-  const card=page.locator('#view-today .today-shopping-card');
-  await expect(card.locator('.today-shopping-card-head strong')).toHaveText('今天 8 項待買');
-  await expect(card.locator('.today-shopping-card-head span')).toHaveText('查看全部 →');
-  await expect(card.locator('.today-shopping-summary-row')).toHaveCount(2);
-  await expect(card).not.toContainText('下一站一');
-  await expect(card).toContainText('醬油、抹茶、和菓子');
-  await expect(card).toContainText('咖啡豆、果醬、餅乾...');
-  await expect(card).not.toContainText('茶葉');
-  await expect(card).toContainText('另有 1 個地點');
-  await expect(card).not.toContainText('等');
-});
-
-test.skip('legacy: all shopping at the valid next stop leaves only the badge, never a fallback launcher', async ({ page }) => {
-  await seedTodayShoppingGroups(page,[['下一站一','下一站二']]);
-  await expect(page.locator('#view-today .nx-buy-badge')).toHaveText('🛍 2');
-  await expect(page.locator('#view-today .today-shopping-card')).toHaveCount(0);
-  await expect(page.locator('#view-today .today-shopping-launcher')).toHaveCount(0);
-});
-
-test.skip('legacy: other-stop shopping remains visible when the next stop has nothing to buy', async ({ page }) => {
-  await seedTodayShoppingGroups(page,[[],['其他站一','其他站二']]);
-  await expect(page.locator('#view-today .nx-buy-badge')).toHaveCount(0);
-  await expect(page.locator('#view-today .today-shopping-card')).toContainText('今天 2 項待買');
-});
-
-test.skip('legacy: the Today shopping card remains one button and opens the full list without navigation', async ({ page }) => {
-  await seedTodayShoppingGroups(page,[[],['醬油']]);
-  const card=page.locator('#view-today .today-shopping-card');
-  await expect(card.locator('button,a,[role="button"],[tabindex]')).toHaveCount(0);
-  await card.evaluate((element)=>element.click());
-  await expect(page.locator('#shoppingListOverlay')).toBeVisible();
-  expect(await page.evaluate(()=>curView)).toBe('today');
 });
 
 test('the badge is a direct sibling and keeps the openable card free of nested controls', async ({ page }) => {
@@ -273,9 +244,9 @@ test('the badge supports Tab, Enter, Space and a visible keyboard focus ring', a
 });
 
 test('320, 375 and 390px keep the merged Hero summary on one row', async ({ page }) => {
-  const seeded=await seedTodayShoppingGroups(page,[['current'],['future']]);
+  const seeded=await seedTodayShoppingGroups(page,[['current one','current two','current three'],['future']]);
   await page.evaluate((ref)=>{DB.trip.days.forEach((day)=>day.items.forEach((item)=>{if(item.id===ref){item.place='A deliberately very long future stop name for ellipsis '.repeat(12);item.act='';}}));},seeded.otherRefs[0]);
-  await page.evaluate(()=>{requestHomeWeather=function(){};homeWeatherFor=function(){return {city:'Hiroshima',temp:21,rain:40,icon:'rain',code:61};};renderToday();document.querySelector('#view-today .today-hero-shopping-stop').textContent='Long future stop '.repeat(20);});
+  await page.evaluate(()=>{requestHomeWeather=function(){};homeWeatherFor=function(){return {city:'Hiroshima',temp:21,rain:40,icon:'rain',code:61};};renderToday();});
   for(const width of [320,375,390]){
     await page.setViewportSize({width,height:844});
     const layout=await page.evaluate(()=>{
@@ -284,8 +255,21 @@ test('320, 375 and 390px keep the merged Hero summary on one row', async ({ page
       const shopping=document.querySelector('#view-today .today-hero-shopping-summary');
       const stop=document.querySelector('#view-today .today-hero-shopping-stop');
       const ticket=document.querySelector('#view-today .nx-ticket');
-      const s=shopping.getBoundingClientRect(),h=hero.getBoundingClientRect(),t=ticket.getBoundingClientRect();
-      return {overflow:document.documentElement.scrollWidth>window.innerWidth,summaryRows:getComputedStyle(summary).gridTemplateRows.split(' ').length,shoppingHeight:Math.round(s.height),stopOverflow:stop.scrollWidth>stop.clientWidth,stopWhiteSpace:getComputedStyle(stop).whiteSpace,heroHeight:Math.round(h.height),ticketTop:Math.round(t.top)};
+      const badge=document.querySelector('#view-today .nx-buy-badge');
+      const targets=['.nx-ticket-kicker','.nx-ticket-time','.nx-ticket-title']
+        .map((selector)=>ticket.querySelector(selector)).filter(Boolean);
+      const s=shopping.getBoundingClientRect(),h=hero.getBoundingClientRect(),t=ticket.getBoundingClientRect(),b=badge.getBoundingClientRect();
+      const badgeOverlaps=targets.some((element)=>{
+        const r=element.getBoundingClientRect();
+        return b.left<r.right&&b.right>r.left&&b.top<r.bottom&&b.bottom>r.top;
+      });
+      return {
+        overflow:document.documentElement.scrollWidth>window.innerWidth,
+        summaryRows:getComputedStyle(summary).gridTemplateRows.split(' ').length,
+        shoppingHeight:Math.round(s.height),stopOverflow:stop.scrollWidth>stop.clientWidth,
+        stopWhiteSpace:getComputedStyle(stop).whiteSpace,heroHeight:Math.round(h.height),ticketTop:Math.round(t.top),
+        badgeWidth:Math.round(b.width),badgeHeight:Math.round(b.height),badgeOverlaps
+      };
     });
     expect(layout.overflow).toBe(false);
     expect(layout.summaryRows).toBe(1);
@@ -294,47 +278,9 @@ test('320, 375 and 390px keep the merged Hero summary on one row', async ({ page
     expect(layout.stopWhiteSpace).toBe('nowrap');
     expect(layout.heroHeight).toBeLessThanOrEqual(190);
     expect(layout.ticketTop).toBeLessThan(300);
-  }
-});
-
-test.skip('legacy: 320, 375 and 390px keep the badge clear and Today rows on one line', async ({ page }) => {
-  await seedTodayShoppingGroups(page,[
-    ['下一站一','下一站二','下一站三'],
-    ['這是一個非常非常長的岡山車站伴手禮樓層名稱','抹茶','和菓子','柚子胡椒'],
-    ['咖啡豆','果醬','餅乾'],
-    ['桃子果凍']
-  ]);
-  for(const width of [320,375,390]){
-    await page.setViewportSize({width,height:844});
-    const layout=await page.evaluate(()=>{
-      const badge=document.querySelector('#view-today .nx-buy-badge');
-      const ticket=document.querySelector('#view-today .nx-ticket');
-      const targets=['.nx-ticket-kicker','.nx-ticket-time','.nx-ticket-title']
-        .map((selector)=>ticket.querySelector(selector)).filter(Boolean);
-      const b=badge.getBoundingClientRect();
-      const overlaps=targets.some((element)=>{
-        const r=element.getBoundingClientRect();
-        return b.left<r.right&&b.right>r.left&&b.top<r.bottom&&b.bottom>r.top;
-      });
-      const rows=Array.from(document.querySelectorAll('#view-today .today-shopping-summary-row'));
-      return {
-        overflow:document.documentElement.scrollWidth>window.innerWidth,
-        /* Chromium 可能把 44 CSS px 回報為 43.999969；以 CSS pixel 取整驗收觸控區。 */
-        badgeWidth:Math.round(b.width),badgeHeight:Math.round(b.height),overlaps,
-        rows:rows.length,
-        multiline:rows.some((row)=>row.getBoundingClientRect().height>22),
-        oldBuy:!!document.querySelector('#view-today .nx-buy'),
-        badgePosition:getComputedStyle(badge).position
-      };
-    });
-    expect(layout.overflow,`${width}px horizontal overflow`).toBe(false);
     expect(layout.badgeWidth).toBeGreaterThanOrEqual(44);
     expect(layout.badgeHeight).toBeGreaterThanOrEqual(44);
-    expect(layout.overlaps,`${width}px badge overlap`).toBe(false);
-    expect(layout.rows).toBe(2);
-    expect(layout.multiline,`${width}px summary wraps`).toBe(false);
-    expect(layout.oldBuy).toBe(false);
-    expect(layout.badgePosition).toBe('absolute');
+    expect(layout.badgeOverlaps,`${width}px badge overlap`).toBe(false);
   }
 });
 

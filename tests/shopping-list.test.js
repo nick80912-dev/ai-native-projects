@@ -832,9 +832,9 @@ assert(ui.includes('buyToLedgerDomain.inspectItem(item,shoppingLedgerContext())'
 assert(ui.includes("item.done||linkSummary.state!=='unlinked'"));
 assert(ui.includes("linkSummary.state==='partial'"));
 assert(ui.includes('id="shoppingListOverlay"')||ui.includes("overlay.id='shoppingListOverlay'"),'full shopping list opens as an overlay');
-assert(ui.includes('今天 ')&&ui.includes('項待買'),'Today has the approved compact reminder copy');
+assert(ui.includes('renderTodayShoppingSummary(day,currentStopRef)')&&ui.includes('項待買'),'active Today uses the approved Hero reminder');
 assert(ui.includes('function renderShoppingTodayEntry(day,currentStopRef)'),'Today entry receives the exact active stop ID');
-assert(ui.includes('採買清單 →'),'empty, non-trip, and no-reminder Today states keep a lightweight list entry');
+assert(ui.includes('today-shopping-launcher today-hero-action')&&ui.includes('採買清單 →'),'pre-trip Today keeps the unchanged lightweight list entry');
 assert(!ui.includes('class="nx-buy"'),'the old full-width next-stop buy row is removed');
 /* 待買多選工具列:計數與三顆動作同列,320px 也不斷行。 */
 assert(ui.includes('completeSelectedShopping(false)'),'待買多選可只標記已買');

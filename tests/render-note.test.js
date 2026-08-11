@@ -29,8 +29,6 @@ function extractConst(name){
 let renderedShoppingItems = [];
 const sandbox = {
   shoppingListStore: { all(){ return renderedShoppingItems; } },
-  /* v85 renderShoppingTodayCard 仍自行建立 model；讓 RED 測試能跑到舊文案而非因缺 helper 例外。
-     v86 改為直接消費 model 後這個相容 stub 不再參與行為。 */
   buildShoppingTodayReminder(items,day){ return day&&day.groups?day:null; }
 };
 vm.createContext(sandbox);
@@ -85,28 +83,6 @@ vm.runInContext([
   extractFunction('renderClusterStop'),
   extractFunction('renderClusterNextStopCard')
 ].join('\n'), sandbox);
-
-/* v86 Today render contract:兩列、每列三項、固定文案，以及不增加第三列的地點提示。 */
-/* Legacy card assertions are retained for history only; the Hero contract follows. */
-/* const todayShoppingOut=sandbox.renderShoppingTodayCard({
-  count:8,
-  groups:[
-    {stopRef:'a',stopName:'第一航廈一樓',items:['醬油','抹茶','和菓子']},
-    {stopRef:'b',stopName:'第二航廈',items:['咖啡豆','果醬','餅乾','茶葉']},
-    {stopRef:'c',stopName:'第三站',items:['桃子']}
-  ]
-});
-assert(todayShoppingOut.includes('今天 8 項待買'),'v86 title omits the redundant 有');
-assert(todayShoppingOut.includes('查看全部 →'),'v86 action uses the approved copy');
-assert.strictEqual((todayShoppingOut.match(/today-shopping-summary-row/g)||[]).length,2,'Today renders at most two full stop rows');
-assert(todayShoppingOut.includes('醬油、抹茶、和菓子'),'exactly three names remain complete');
-assert(!todayShoppingOut.includes('和菓子...'),'exactly three names do not gain an ellipsis');
-assert(todayShoppingOut.includes('咖啡豆、果醬、餅乾...'),'a fourth item adds ASCII three dots after the first three');
-assert(!todayShoppingOut.includes('茶葉'),'the fourth name is not rendered');
-assert(!todayShoppingOut.includes('第三站'),'the third stop is not rendered as another full row');
-assert(todayShoppingOut.includes('另有 1 個地點'),'the second row carries the compact location overflow marker');
-assert(!todayShoppingOut.includes('等'),'the compact summary no longer uses 等');
-assert.strictEqual((todayShoppingOut.match(/<button/g)||[]).length,1,'the entire Today card remains one button'); */
 
 const heroShoppingOut=sandbox.renderTodayShoppingSummary({
   items:[{id:'current',place:'Current stop'},{id:'future',place:'Future stop'}],
