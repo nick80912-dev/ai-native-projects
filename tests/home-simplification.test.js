@@ -10,7 +10,7 @@ for (const file of ['index.html']) {
   assert.match(html, /已取消,該行程時間已過,列於已略過/, `${file} explains past-time cancellation`);
   const clusterStop = html.slice(html.indexOf('function renderClusterStop'), html.indexOf('function renderClusterNextStopCard'));
   assert.doesNotMatch(clusterStop, /qa-btn|pn_pk_|pn_nf_/, `${file} keeps cluster child stops action-free on home`);
-  const renderToday = html.slice(html.indexOf('function renderToday'), html.indexOf('/* ================= 購物模式'));
+  const renderToday = html.slice(html.indexOf('function renderToday(){'), html.indexOf('/* ================= 購物模式'));
   assert.match(renderToday, /var items=homeNextStopItems\(day\.items\)/, `${file} routes Today through cluster controllers`);
   assert.match(renderToday, /clusterParentForPick\(day\.items,pick\.item\)/, `${file} resolves the original parent before rendering a cluster`);
   assert.match(renderToday, /today-hero-top[\s\S]*TODAY · DAY[\s\S]*class="loc"/, `${file} keeps Today and progress on the same top row`);

@@ -2736,27 +2736,27 @@ function weatherIcon(code){
 function weatherTravelHint(weather){
   if(!weather||typeof weather.temp!=='number'||!isFinite(weather.temp))return '';
   var code=Number(weather.code),rain=Number(weather.rain),temp=Number(weather.temp);
-  if(isFinite(code)&&code>=95)return '???琿';
-  if(isFinite(code)&&code>=71&&code<=77)return '瘜冽?頝舀?';
+  if(isFinite(code)&&code>=95)return '留意雷雨';
+  if(isFinite(code)&&code>=71&&code<=77)return '注意路滑';
   if((isFinite(code)&&((code>=51&&code<=67)||(code>=80&&code<=82)))||
-      (isFinite(rain)&&rain>=40))return '閮?撣嗅?';
-  if(isFinite(code)&&(code===45||code===48))return '銵???瞈';
-  if(temp<=12)return '瘜冽?靽?';
-  if(temp>=30)return '閮?鋆偌';
-  return '?拙??箇';
+      (isFinite(rain)&&rain>=40))return '記得帶傘';
+  if(isFinite(code)&&(code===45||code===48))return '行車留意濃霧';
+  if(temp<=12)return '注意保暖';
+  if(temp>=30)return '記得補水';
+  return '適合出發';
 }
 function renderTodayWeatherArt(weather){
   if(!weather)return '';
-  return '<div class="today-weather-art" aria-hidden="true">'+escapeHtml(weather.icon||'??')+'</div>';
+  return '<div class="today-weather-art" aria-hidden="true">'+escapeHtml(weather.icon||'☁️')+'</div>';
 }
 function renderTodayWeatherSummary(weather){
   var hint=weatherTravelHint(weather);
   if(!hint)return '';
   var rain=typeof weather.rain==='number'&&isFinite(weather.rain)?Math.round(weather.rain):0;
-  var label=String(weather.city||'隞')+' '+Math.round(weather.temp)+' 摨佗??曉銋??擃??冽???'+rain+'%嚗?敺葆??'+hint;
+  var label=String(weather.city||'廣島')+' '+Math.round(weather.temp)+' 度，現在之後最高降雨機率 '+rain+'%，'+hint;
   return '<div class="today-hero-summary-item today-hero-weather-summary" role="group" aria-label="'+escapeHtml(label)+'">'+
-    '<span class="today-hero-summary-label" aria-hidden="true">憭??</span>'+
-    '<span class="today-hero-summary-value" aria-hidden="true">'+Math.round(weather.temp)+'簞 繚 '+escapeHtml(hint)+'</span></div>';
+    '<span class="today-hero-summary-label" aria-hidden="true">外出提醒</span>'+
+    '<span class="today-hero-summary-value" aria-hidden="true">'+Math.round(weather.temp)+'° · '+escapeHtml(hint)+'</span></div>';
 }
 function weatherCacheKey(city){ return 'trip_weather_'+city.key; }
 /* 「現在之後」的最高降雨機率。原本取整天最大值,包含已經過去的時段 ——
