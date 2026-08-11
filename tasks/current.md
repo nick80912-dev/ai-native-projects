@@ -27,7 +27,7 @@
 | dev automated validation | v103 fresh gate: **83/83** Node test files and **149/149** Playwright cases (0 failed); document-title, app-version, runtime-assets, BUILTIN no-drift, manifest JSON, and diff checks all passed |
 | 既有 tag | `production-v18`、`production-v73` |
 
-**`main` 已合併 v96，但正式站仍停在 v73；v102 是目前 `dev` 的下一個候選版。** v74–v87 已由 Bar 於 2026-08-03 確認真機驗收皆正常；v88–v89、v92–v95 亦於 2026-08-08 完成 Bar 畫面／真機確認。v96 因 Netlify 額度用罄尚未正式部署，也未建立 `production-v96` tag。Bar 於 2026-08-11 明確確認 v101 裝置／PWA 外觀驗收完成；v102 接續交付住宿 HID 精確關聯,不改既有發布缺口。
+**`main` 已合併 v96，但正式站仍停在 v73；v103 是目前 `dev` 的候選版。** v74–v87 已由 Bar 於 2026-08-03 確認真機驗收皆正常；v88–v89、v92–v95 亦於 2026-08-08 完成 Bar 畫面／真機確認。v96 因 Netlify 額度用罄尚未正式部署，也未建立 `production-v96` tag。Bar 已完成 v101／v102 裝置／PWA驗收；v103 接續交付 Today Hero 可行動摘要,不改既有發布缺口。
 
 ### v74–v98 已折疊的主要能力
 
@@ -112,12 +112,12 @@
 | v98 | 更正收據 sticky 操作列遮罩：捲動時不再浮出品項金額計算機入口 | ✅ 已完成，完整 gate 通過 |
 | v99／v100 | SW 更新提示雙版本實驗；實機確認事件時機與已顯示內容不同步，產品必要性不足 | ⛔ 實驗結束；由 Bar 取消，不列為完成功能 |
 | v101 | 移除全域 SW 更新提示；杉綠 action 改為林下青 `#2F6B4F`，SW lifecycle／cache／offline 與資料不變 | ✅ 2026-08-11 Bar 裝置／PWA 外觀驗收完成 |
-| v102 | 住宿停靠點改以 Places.HID 精確關聯 Hotels.HID；Schema 3.0、條件驗證、BUILTIN 與 exact resolver 同步 | ✅ 最終 whole-branch review、完整 gate 與 dev push（`ffc9aae`）完成；待 Bar 裝置驗收 |
+| v102 | 住宿停靠點改以 Places.HID 精確關聯 Hotels.HID；Schema 3.0、條件驗證、BUILTIN 與 exact resolver 同步 | ✅ 最終 whole-branch review、完整 gate、dev push（`ffc9aae`）與 Bar 裝置／PWA驗收完成 |
 
 **已知未做(需先定判準)**:Today 的「交通／停車／營業／付款／提醒**依當下情境動態調整優先順序**」。v84 只做了可明確驗收的收合(常駐交通／停車／營業,收合付款／提醒);「當下情境」的判準(依時間?依距離?依是否已抵達?)尚未定義,不同讀法會做出完全不同的東西,故未實作。
 
 ## 下一棒
 
-→ **v102 已通過最終 whole-branch review 並推送 `dev`（`ffc9aae`）；下一步由 Bar 開啟 dev PWA 驗收 v102。** 確認五個住宿停靠點都顯示 H001 profile、各自交通時間不變、不再出現 Places.HID 未知欄位警告、無錯誤或水平 overflow，且既有資料存在。不得自行 merge `main`、部署正式站或建立 production tag。
+→ **v103 是目前 dev candidate；下一步由 Bar 開啟 dev PWA 驗收 v103 的 Today Hero 外觀與互動。** 確認天氣是旅行提示、completed / total 維持次要、順路採買入口可用、精確下一站不重複、長站名安全截斷，且無錯誤或水平 overflow。不得自行 merge `main`、部署正式站或建立 production tag。
 
 > **不得**自行動 `main`、部署正式站或建立 production tag。未經 Bar 核准不得 merge `dev → main`。
