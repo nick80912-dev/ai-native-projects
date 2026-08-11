@@ -8,6 +8,8 @@
 
 **Tech Stack:** Single-file HTML/CSS/JavaScript, Node.js `assert` source/behavior characterization tests, Playwright browser tests, existing Settings router and theme tokens.
 
+> **Execution refinement (2026-08-11):** Task 1 executes the real hub/editor renderers, router, and mutation navigation in a VM sandbox rather than treating source substrings as proof. This follows `writing-good-tests.md`; the production interfaces and acceptance requirements below are unchanged.
+
 ## Global Constraints
 
 - `options` remains the Settings-root and `ledgerOptionSettingsSection` legacy destination.

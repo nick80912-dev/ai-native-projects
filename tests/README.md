@@ -36,7 +36,7 @@
 - `travel-notes.test.js`：驗證診斷面板內的本機旅途紀錄新增、編輯、狀態、確認刪除、200 筆上限、寫入失敗回滾、文字／JSON 複製匯出、健康摘要脈絡，以及舊版 WebKit 無 `crypto.randomUUID()` 時的唯一 ID fallback。執行：`node tests/travel-notes.test.js`。
 - `theme-system.test.js`：驗證六組主題的 13-token、亮色對比率、杉綠 action 精確為 `#2F6B4F` 且白字達 AA、焙茶維持 `#896748`、reduced-motion、舊變數角色對映、未知 ID 回退、原子切換、迷你介面卡，以及五個功能 Emoji 精準替換為 SVG。執行：`node tests/theme-system.test.js`。
 - `ui-ux-hardening.test.js`：驗證渲染失敗的可執行重試、Today daybar 隱藏、flex header、44px 觸控目標、照片失敗 inline status／單一健康入口、toast live region，以及下一站 Enter／Space 鍵盤啟動。執行：`node tests/ui-ux-hardening.test.js`。
-- `settings-grouped-root.test.js`：驗證設定根頁三個常駐群組（個人／記帳／資料）的順序與歸屬、各列摘要格式與降級、既有子頁入口、身分列可存取名稱，以及測試模式條件列；v88 另鎖定行程、團體帳、個人本機帳與照片的集中健康摘要及注意項目計數。執行：`node tests/settings-grouped-root.test.js`。
+- `settings-grouped-root.test.js`／`browser/settings-grouped-root.spec.js`：驗證設定根頁三個常駐群組（個人／記帳／資料）的順序與歸屬、各列摘要格式與降級、既有子頁入口、身分列可存取名稱，以及測試模式條件列；v88 另鎖定行程、團體帳、個人本機帳與照片的集中健康摘要及注意項目計數。Browser 另驗證「自訂項目」三類即時數量入口、單類管理頁、兩層返回、鍵盤 Enter／Space、CRUD 後留在原頁、`個` 的預設／不可刪除契約，以及六主題與 320／375／390px 無溢位或控制重疊。執行：`node tests/settings-grouped-root.test.js`、`npx playwright test tests/browser/settings-grouped-root.spec.js`。
 
 - `ledger-dashboard.test.js`：驗證分帳首頁摘要、個人／團體軌與期間切換；v88 鎖定今日支出為主值、旅程累計為次值，並確認團體帳使用「與我相關」脈絡而非全團誤導文案。執行：`node tests/ledger-dashboard.test.js`。
 - `ledger-225.test.js`：驗證 Ledger 日期群組、顯示單元、選取／批次展開與最近消費 renderer；v98 後續鎖定個人／團體單筆卡第一行「品項／代購或付款分攤」、第二行「店家／類別／免稅／TEST／待同步／鎖帳或更正」，所有清單卡隱藏付款方式；另覆蓋個人／團體批次父卡嚴格兩行、品項／免稅／代購數、單一／多位／缺少付款人的「分攤依品項」摘要及展開子項。執行：`node tests/ledger-225.test.js`。

@@ -1,5 +1,11 @@
 # 04 UI 準則
 
+## v103 設定「自訂項目」資訊架構
+
+- `自訂項目` 先顯示記帳類別、支付方式、採買單位三個摘要入口與即時數量；一次只進入並管理一種清單。
+- 單類管理頁保留新增、刪除、排序與既有資料規則，返回鍵先回 `自訂項目`，再回設定根頁。
+- `個` 顯示為預設採買單位並沿用不可刪除防護；320／375／390px 不得讓名稱、標籤與三個排序／刪除控制重疊。
+
 ## v103 Today Hero actionable-summary contract
 
 - Active trips show a small `completed / total` value, a date with decorative weather art, and one row containing the outing hint and Shopping summary.
