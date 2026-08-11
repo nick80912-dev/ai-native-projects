@@ -47,6 +47,7 @@
 - Schema authority 是外部 `schema.js`,inline Schema 必須 exact parity；`09_SCHEMA_MAPPING.md` 表格只能由 `schemaDoc()` 重生。公開 Places 的 HID 是尾端物理欄,刷新工具依位置 authority 驗證,不得擅自移到 Type 後方。
 - Validator 條件式要求：住宿必須有 HID、非住宿不得帶 HID、任何 HID 都必須存在於 Hotels；七表候選快照任一違反即 fail closed。Runtime `hotelOf()` 對兩端 HID 去空白／轉大寫後精確解析,天氣住宿共用同一 resolver；未解析時回傳 `null`。
 - 這次 migration 不改 Ledger Schema 2.9／21 欄、Apps Script、個人備份 v9、SW lifecycle／cache strategy 或發布權限。v101 裝置／PWA 外觀驗收已由 Bar 於 2026-08-11 確認；v102 dev push 後下一步是 Bar 裝置驗收。
+- **Tier 2 復原**：若 v102 已推送並由裝置接管後需要退回內容,依 `16_OPS_PLAYBOOK.md` §A2 採 forward bump：以最後正常內容建立下一個未使用版本,並讓 `app-version.js`／`sw.js` 同步升版以觸發清除壞快取；不得把版本倒退覆寫,**絕不刪除 `sw.js`**。
 
 ## Ledger Schema 2.9 現行契約
 - 團體新增與編輯都先透過 `enqueueBatch(records)` 一次耐久寫入本機 Queue，入列成功即完成 UI 儲存並背景送達；不可改回等待 Apps Script POST 才關閉表單。公開 CSV 跨裝置可見延遲 1–5 分鐘是已接受取捨。

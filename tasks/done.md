@@ -31,9 +31,19 @@
 - 2026-07-30：Bar 完成 SW v69–v71 真機／PWA 驗收；涵蓋結算一致性、分攤成員選取色差與整張作廢預覽動作去重。`dev → main` 與正式部署仍須另行核准。
 - 2026-07-30：backlog #1 Playwright 三情境 QA 入版控並掛入 `qa.yml`；斷網內建、連網同步與旅行日 mock Date 三情境均以真實 App 啟動流程驗證，通過標準為 `pageerror=0`。
 
-## 已歸檔的 backlog 編號項目
+## 2026-08-11 新歸檔：backlog #22
 
-> 2026-07-30 依 Bar 裁定第 4 項歸檔。**編號保留不回收**(見 `tasks/backlog.md` 檔頭)。歸檔判準為「程式與文件證據足以證明已完成」,**不以真機／PWA 驗收為條件** — 驗收已另列為 release gate,見 `tasks/current.md`。以下每項均於批次一 P0／P1 逐項複驗程式碼與 `07_CHANGELOG.md`,非僅採信任務板文字。
+> 本節是 v102 HID migration 完成後的當代歸檔,不屬於 2026-07-30 批次一 P0／P1 複驗。
+
+| 編號 | 完成日 | 對應 SW 版本 | 狀態 |
+|---|---|---|---|
+| #22 | 2026-08-11 | SW v102 | 完成；以 HID 落實 N→1 Hotel profile 精確關聯 |
+
+- **#22 Hotels profile 精確關聯** — 原 backlog 原文（verbatim）：`22. **Hotels 名稱比對改良評估**:現以名稱掛 Places,名稱異動會懸空;評估改 PID 引用(涉及 schema,需五段提案)。` 執行時選擇 HID 而非 PID,因為多個帶不同交通脈絡的 Places 停靠點可共用一個 Hotel profile。遷移證據：公開 Sheet 的 `地點!L1` 為 HID；`L4/L15/L24/L33/L42` 均為 H001,分別對應 P002／P013／P022／P031／P040,且 travel 仍為開車30分鐘／開車2小時／開車3分鐘／開車50分鐘／步行3分鐘；其餘 HID 儲存格皆空。程式證據：`schema.js` Schema 3.0、`09_SCHEMA_MAPPING.md` 產物、BUILTIN、`validator.js` 條件驗證、`hotelOf()` exact HID resolver 與 focused Node／Browser tests。
+
+## 已歸檔的 backlog 編號項目（2026-07-30 起）
+
+> 2026-07-30 依 Bar 裁定第 4 項建立本表。**編號保留不回收**(見 `tasks/backlog.md` 檔頭)。歸檔判準為「程式與文件證據足以證明已完成」,**不以真機／PWA 驗收為條件** — 驗收已另列為 release gate,見 `tasks/current.md`。#1／#3b／#6–#10／#21 於批次一 P0／P1 逐項複驗；#23 與 #24 分別於表列完成日依當時決策與證據後續補入,不宣稱經過 2026-07-30 批次一複驗。
 
 | 編號 | 完成日 | 對應 SW 版本 | 狀態 |
 |---|---|---|---|
@@ -45,12 +55,10 @@
 | #9 | 2026-07-30 | SW v72 | 完成,兩項以不同形式交付,**已由 Bar 追認為等價** |
 | #10 | 2026-07-30 | SW v73 | 如原裁定完成(顯示層) |
 | #21 | 2026-07-30 | SW v73 | 完成,**範圍如實記錄於下** |
-| #22 | 2026-08-11 | SW v102 | 完成；以 HID 落實 N→1 Hotel profile 精確關聯 |
 | #23 | 2026-08-03 | 不涉 SW 版本 | **關閉,不實作**:12 月東京行程已結束,不再需要接入 |
 | #24 | 2026-08-10 | SW v99／v100 實驗；v101 移除 | **取消,非完成功能**:提示時機與已顯示內容不同步,不再維護 |
 
 - **#1 QA 腳本入版控** — 證據:`tests/browser/trip-three-scenarios.spec.js` 三個 `test()`(斷網內建 / 連網同步 / 旅行日 mock Date)、`tests/browser/support/qa-fixture.js`、`static-server.js`、`.github/workflows/qa.yml` 的 `browser-qa` job。只新增測試資產、無 runtime 變更,故不對應 SW 版本。
-- **#22 Hotels profile 精確關聯** — 原 backlog 原文（verbatim）：`22. **Hotels 名稱比對改良評估**:現以名稱掛 Places,名稱異動會懸空;評估改 PID 引用(涉及 schema,需五段提案)。` 執行時選擇 HID 而非 PID,因為多個帶不同交通脈絡的 Places 停靠點可共用一個 Hotel profile。遷移證據：公開 Sheet 的 `地點!L1` 為 HID；`L4/L15/L24/L33/L42` 均為 H001,分別對應 P002／P013／P022／P031／P040,且 travel 仍為開車30分鐘／開車2小時／開車3分鐘／開車50分鐘／步行3分鐘；其餘 HID 儲存格皆空。程式證據：`schema.js` Schema 3.0、`09_SCHEMA_MAPPING.md` 產物、BUILTIN、`validator.js` 條件驗證、`hotelOf()` exact HID resolver 與 focused Node／Browser tests。
 - **#3b 採買單位納入個人狀態備份** — 證據:`index.html:7421` `personalStateJson()` payload 含 `shoppingUnits:shoppingUnitStore.all()`;`index.html:7497` 還原寫回 `SHOPPING_UNIT_OPTIONS_KEY`,且列於原子回滾 keys;`index.html:3815` `PERSONAL_STATE_VERSION=8`,註解明載「v8 起加入本機主題、採買單位與旅途紀錄」;`tests/settings-backup-ux.test.js:145` 斷言 v8 匯出鍵含 `shoppingUnits`;`07_CHANGELOG.md` 2026-07-30 條目。
   - **原 backlog 敘述過期**:原文寫「目前不在備份 payload 內」與「目前 v7」,兩者在 v72 交付後均已不成立。歸檔而非重寫,是因為需求本體已滿足。
   - **殘留缺口(不回填 backlog,已列入批次一 P3)**:`tests/settings-backup-ux.test.js` 只覆蓋 v1／v2／v4／v8 還原,**v3／v5／v6／v7 無任何還原測試**。依 Bar 裁定第 2 項,不升 v9、維持 `PERSONAL_STATE_VERSION=8`,改補 v1–v8 還原矩陣測試與相容策略文件化。

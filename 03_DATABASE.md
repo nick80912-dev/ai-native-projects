@@ -52,7 +52,7 @@
 - 新增欄位:先改 Google Sheet,再改 `schema.js`;Parser 不需修改。
 - 一般資料表 ID 格式:Places=`P###`、Restaurants=`R###`、Shopping=`S###`、Hotels=`H###`;不需連號,但不得重複、不得改變既有 ID 意義。
 - Expenses 是自由格式,沒有 `E###` ID;行程總表目前只使用 `P###` / `R###` 引用地點或餐廳。
-- 同一地點多次造訪使用同一 PID。
+- 一般非住宿地點多次造訪使用同一 PID。住宿是明確例外：同一間住宿若位於不同路段、travel 脈絡不同,可保留多個 route-stop PID,但都必須引用同一個 Hotels.HID。
 - 住宿關係為 `Places(Type=住宿).HID → Hotels.HID` 的 **N→1**：PID 是帶交通脈絡的停靠點,HID 是 Hotel profile 唯一 join key；Places／Hotels 名稱都只供顯示,不得作比對或關聯。
 - 現行 P002／P013／P022／P031／P040 分別保留「開車30分鐘／開車2小時／開車3分鐘／開車50分鐘／步行3分鐘」,但都引用 H001。五個 PID 不得合併,因為其行程位置與交通脈絡不同；入住、退房、地址、停車與備註則由 H001 共用。
 - Validator 條件式要求：`Type=住宿` 必須有 HID；其他 Type 不得填 HID；任何非空 HID 必須精確對應 Hotels.HID。任一違反都讓七表候選快照 fail closed；Runtime 缺失／懸空 HID 回傳 `null`,不以名稱或 Hotels 第一筆 fallback。
