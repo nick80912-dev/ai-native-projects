@@ -857,7 +857,7 @@ var SCHEMA = {
         { field:'ttl',     header:'時刻表連結',     aliases:['時刻表'], desc:'渡輪等官方時刻表 URL' },
         { field:'note',    header:'備註' },
         { field:'hotelId', header:'HID', aliases:['hotelid','住宿id'],
-          desc:'住宿型地點連到 Hotels.HID；僅允許 Type=住宿 使用' }
+          desc:'住宿停靠點引用 Hotels.HID；只供 Type=住宿 使用' }
       ]
     },
 
@@ -8838,11 +8838,11 @@ function renderSettingsDataHealth(){
   return '<div class="settings-section settings-data-health"><h3>資料健康狀態</h3><div class="settings-health-list">'+model.rows.map(function(row){return '<div class="settings-health-row data-health-'+escapeHtml(row.key)+'"><span class="settings-health-main"><b>'+escapeHtml(row.label)+'</b>'+(row.detail?'<span>'+escapeHtml(row.detail)+'</span>':'')+'</span><strong>'+escapeHtml(row.value)+'</strong></div>';}).join('')+'</div></div>';
 }
 var APP_RELEASE_NOTES=[
+  {version:'v102',date:'2026-08-11',title:'住宿資訊改用 HID 精確連結',items:['五個住宿停靠點改以 HID 精確連到住宿資料，住宿顯示名稱日後調整也不會讓資料失去連結','不同路段的住宿停靠點仍各自保留交通時間，同一間住宿可共用入住、地址、停車與備註資料','同步會攔下住宿缺少 HID、非住宿誤填 HID 或找不到住宿資料的錯誤；記帳、個人備份與離線策略皆維持不變']},
   {version:'v101',date:'2026-08-10',title:'更新方式與杉綠配色調整',items:['移除顯示時機與實際新版內容不同步的「新版已就緒」提示，App 仍會依原有方式在背景更新，不會自動重新整理','杉綠主題的按鈕、連結與主要操作改用較清楚的林下青，與焙茶主題的棕色更容易區分','離線快取、同步方式、既有資料與記帳格式皆維持不變']},
   {version:'v100',date:'2026-08-09',title:'更新提示可直接套用新版',items:['從前一版開啟時，會在新版準備完成後顯示「新版已就緒」與「立即更新」','點擊前不會自動重新整理，可先完成正在輸入的採買或記帳內容','點擊「立即更新」後會重新載入並套用本版本；離線快取、同步方式與既有資料格式皆維持不變']},
   {version:'v99',date:'2026-08-09',title:'新版可直接重新載入',items:['新版準備完成後，畫面會顯示「新版已就緒」與「立即更新」按鈕，不必再自行開啟兩次','系統不會自動重新整理；可先完成正在輸入的採買或記帳內容，再自行按下更新','離線快取、同步方式、既有資料與記帳格式皆維持不變']},
   {version:'v98',date:'2026-08-08',title:'更正操作列不再浮出計算機',items:['捲動更正收據時，品項金額的計算機圖示不再穿透顯示於預覽、作廢或取消操作列','計算機入口仍保留在可編輯的品項金額欄旁，捲回該欄位即可正常使用','更正內容、帳務計算、結算歷史與資料格式皆維持不變']},
-  {version:'v97',date:'2026-08-08',title:'新增與編輯記帳流程更穩定',items:['新增、編輯、切換個人或團體帳、選日期與返回現在共用一致的畫面狀態流程','快速重複按儲存只會提交一次，較舊的儲存結果也不會覆蓋新開啟的表單','「儲存並再記一筆」會保留原本返回位置並清理上一筆來源，關閉表單也會一併收起計算機','畫面、記帳規則、既有資料、備份與同步格式皆維持不變']},
 ];
 function renderAppReleaseNotes(){
   return '<div class="settings-release-list">'+APP_RELEASE_NOTES.map(function(note){

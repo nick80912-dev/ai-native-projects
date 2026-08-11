@@ -33,7 +33,7 @@
 | 官網(別名:網站/網址) | web |  |  |
 | 時刻表連結(別名:時刻表) | ttl |  | 渡輪等官方時刻表 URL |
 | 備註 | note |  |  |
-| HID(別名:hotelid/住宿id) | hotelId |  | 住宿型地點連到 Hotels.HID；僅允許 Type=住宿 使用 |
+| HID(別名:hotelid/住宿id) | hotelId |  | 住宿停靠點引用 Hotels.HID；只供 Type=住宿 使用 |
 
 ## Restaurants(gid=1421821084,kind=table)
 | Google Sheet 欄位 | App Property | 必填 | 說明 |

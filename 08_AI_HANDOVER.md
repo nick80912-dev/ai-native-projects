@@ -2,7 +2,7 @@
 
 ## 你是誰、專案是什麼
 你是 Bar 的 AI 工程團隊(CTO/工程師/設計/QA 合一)。Bar **不會程式**,用白話下需求;你負責全部技術決策與實作,不教學、不解釋程式概念(除非被問)。
-專案:日本旅遊 PWA。Google Sheets 是 CMS,vanilla JS App 在使用者手機端抓 8 張公開 CSV 渲染,Netlify 託管。`index.html` 是 UI、DOM adapter 與正式部署入口；獨立 runtime modules 由 `runtime-assets.json` 登錄，包含 Buy-to-Ledger、Ledger/Shopping UI state 與 Trip progression。`schema.js`、`validator.js`、`sw.js` 等部署檔均在 repo 根目錄,經 GitHub 連動由 Netlify 部署(流程見 16 §E)。
+專案:日本旅遊 PWA。Google Sheets 是 CMS,vanilla JS App 在使用者手機端抓 8 張公開 CSV 渲染,Netlify 託管。CMS 現行 Schema 3.0 以 Places.HID 精確關聯 Hotels.HID；住宿名稱只供顯示。`index.html` 是 UI、DOM adapter 與正式部署入口；獨立 runtime modules 由 `runtime-assets.json` 登錄，包含 Buy-to-Ledger、Ledger/Shopping UI state 與 Trip progression。`schema.js`、`validator.js`、`sw.js` 等部署檔均在 repo 根目錄,經 GitHub 連動由 Netlify 部署(流程見 16 §E)。
 
 ## 接手第一步:Project Understanding Report(先說理解,再動手)
 任何 AI 首次接手本專案、或在無既有專案脈絡的新對話/新環境開工時,完成下方閱讀順序後**不得直接修改任何檔案**,必須先輸出理解報告並等 Bar 核准(例:「確認,可以開始實作」)。此要求是「每個 AI 接手時做一次」,不是每個任務都做;同一脈絡內的後續任務依 15 的任務分級與 14 的 Tier 規則執行。
@@ -30,7 +30,7 @@
 4. 更新 `07_CHANGELOG.md`(有架構變更標 ⭐),必要時更新 06/03
 
 ## 絕不可改變(除非 Bar 明確要求)
-- CMS 八表結構、Schema 2.9 欄位語意、既有 PID/RID/SID/HID 的意義；Ledger 固定 21 欄，`time` 為消費發生時間，末五欄為輸入幣別、免稅品、價格方式、稅率與優惠券金額
+- CMS 八表結構、CMS Schema 3.0 欄位語意、既有 PID／RID／SID／HID 的意義；Ledger 仍沿用 Schema 2.9 固定 21 欄，`time` 為消費發生時間，末五欄為輸入幣別、免稅品、價格方式、稅率與優惠券金額
 - 三層防線(內建→快取→背景同步)與「絕不空白頁」原則
 - BUILTIN 是目前旅程的離線啟動種子，不得手改 JSON 或抓取 live Ledger；刷新一律依 `16_OPS_PLAYBOOK.md` §G 先 preview，Bar 核准後才 `--write`，Ledger 只保留 `schema.js` 推導的 21 欄空 header
 - 卡片型別由 Places.Type 明確決定,**禁止 AI 猜測型別**
@@ -40,6 +40,13 @@
 - UI 的語意角色與今天／行程／購物／分帳四分頁結構不可任意改變；主題只可透過 `data-theme` 覆寫 13 個第一層 `--t-*` token，第二層 `--paper`／`--card`／`--sea-deep`／`--sea`／`--coral` 等角色名稱維持不變。主導覽與設定入口用 inline SVG，內容 Emoji 與桃子診斷徽章保留，不引入 icon font。
 - 個人狀態（打卡／想逛／成員身分）、個人帳、代購對象、`themeId` 與 `travelNotes` 只存 localStorage、不進 Queue、CMS 或雲端 Schema；主題、採買單位與旅途紀錄自個人備份 v8 起一併匯出／還原。團體帳一律走 Ledger Repository 跨裝置同步，兩軌資料與統計不得混用。依 ADR 0006，App 只可 append「分帳紀錄」並更新 TripConfig 的 `Exchange Rate` / `Ledger Default Currency`，其餘 CMS 欄位維持 Bar 手動管理且 App 唯讀
 - 產品哲學:3 秒原則、不過度工程化(能給連結就不硬轉結構化資料)
+
+## 住宿 HID 關聯現行契約（Schema 3.0，SW v102）
+- 關係固定為 `Places(Type=住宿).HID → Hotels.HID` 的 N→1。PID 代表帶有行程與 travel 脈絡的停靠點,HID 才是 Hotel profile join key；Places／Hotels 名稱只供顯示,不得用名稱、子字串或首筆 Hotel fallback 關聯。
+- 現行 P002／P013／P022／P031／P040 都引用 H001,但五個 PID 必須保持分離：其 travel 分別為開車30分鐘／開車2小時／開車3分鐘／開車50分鐘／步行3分鐘。入住、退房、地址、停車與備註才由 H001 共用。
+- Schema authority 是外部 `schema.js`,inline Schema 必須 exact parity；`09_SCHEMA_MAPPING.md` 表格只能由 `schemaDoc()` 重生。公開 Places 的 HID 是尾端物理欄,刷新工具依位置 authority 驗證,不得擅自移到 Type 後方。
+- Validator 條件式要求：住宿必須有 HID、非住宿不得帶 HID、任何 HID 都必須存在於 Hotels；七表候選快照任一違反即 fail closed。Runtime `hotelOf()` 對兩端 HID 去空白／轉大寫後精確解析,天氣住宿共用同一 resolver；未解析時回傳 `null`。
+- 這次 migration 不改 Ledger Schema 2.9／21 欄、Apps Script、個人備份 v9、SW lifecycle／cache strategy 或發布權限。v101 裝置／PWA 外觀驗收已由 Bar 於 2026-08-11 確認；v102 dev push 後下一步是 Bar 裝置驗收。
 
 ## Ledger Schema 2.9 現行契約
 - 團體新增與編輯都先透過 `enqueueBatch(records)` 一次耐久寫入本機 Queue，入列成功即完成 UI 儲存並背景送達；不可改回等待 Apps Script POST 才關閉表單。公開 CSV 跨裝置可見延遲 1–5 分鐘是已接受取捨。

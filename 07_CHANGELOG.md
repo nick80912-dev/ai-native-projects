@@ -1,4 +1,13 @@
 # 07 版本紀錄
+## 2026-08-11｜住宿停靠點改以 HID 精確關聯 Hotel profile（dev，SW v102）⭐ 架構變更
+
+- **Sheet migration**：公開 Places 尾端 L 欄新增 `HID`；`L4／L15／L24／L33／L42` 讓 P002／P013／P022／P031／P040 各引用 H001,其餘 HID 儲存格皆空。五筆 travel 原樣保留為開車30分鐘／開車2小時／開車3分鐘／開車50分鐘／步行3分鐘；五個 PID 不能合併,因為其行程位置與交通脈絡不同。
+- **Schema 3.0 與資料關係**：`schema.js` 及 inline Schema 同步為 `3.0 (2026-08-11)`,Places 尾端 `HID` 映射 `hotelId` 並以 `hotelid／住宿id` 容錯；Hotels 名稱明定只供顯示。`09_SCHEMA_MAPPING.md` 由 `schemaDoc()` authority 重生。關係是 `Places(Type=住宿).HID → Hotels.HID` 的 N→1,不是名稱 join,也不是 PID join。
+- **條件驗證與離線種子**：Validator 在七表原子候選快照中要求住宿必填 HID、非住宿禁止 HID、任何 HID 必須存在於 Hotels；違規時 fail closed。BUILTIN 由已核准公開 Sheet 刷新,五個住宿 PID 都帶 H001 並保留各自 travel；Ledger 種子仍只有 schema 推導的 21 欄空 header。
+- **單一 runtime resolver**：`hotelOf(place)` 對 Places／Hotels 的 HID 去空白並轉大寫後精確解析；缺失或懸空 HID 回傳 `null`,不再以住宿名稱、子字串或 `DB.hotels[0]` fallback。天氣住宿解析亦委派同一 resolver；不同 PID 可共用同一 H001 profile object。
+- **v101 驗收與 v102 世代**：Bar 已於 2026-08-11 明確確認 v101 裝置／PWA 外觀驗收完成。`app-version.js` 與 `sw.js` 原子升至 v102,`sw.js` 除版本行外不變；App 最近更新維持五筆,加入 v102 並只移除最舊顯示的 v97。
+- **驗證與非目標**：截至 resolver 交付的 fresh Node suite 為 **83／83** test files；住宿 focused Playwright 為 **3／3**（320／375／390px）。完整 Playwright 總數留待 v102 最終 gate fresh run 後記錄,不沿用或推算。本批不改 Ledger 位置式 Schema 2.9／21 欄、Apps Script、個人備份 v9、SW lifecycle／cache／offline fallback、`netlify.toml`、`main`、Netlify 部署或 production tag。
+
 ## 2026-08-10｜移除 SW 更新提示與杉綠配色區隔（dev，SW v101）
 
 - **產品決策**：v99／v100 雙版本實驗後，Bar 確認「新版已就緒」事件與使用者已看到新版內容的時機可能不同步，且必要性不足；v101 完整移除常駐提示、observer、一次性 guard 與明確 reload action，不以 Toast、banner、badge 或自動 reload 取代。backlog #24 以取消而非完成功能歸檔。

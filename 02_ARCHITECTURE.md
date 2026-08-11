@@ -25,6 +25,8 @@ Netlify 靜態託管(HTTPS)+ Service Worker(PWA 離線)
 
 共用分帳設定以 TripConfig 的 `Exchange Rate` 與 `Ledger Default Currency` 為 SSoT。設定頁只在連網時 POST `updateSettings`；伺服器確認後寫入 `trip_ledger_settings_bridge`,讓目前裝置在公開 CSV 的 1–5 分鐘延遲期間立即使用新值。後續同步讀到相同兩值才移除 bridge。Apps Script 原始碼權威為 `apps-script/ledger-sync.gs`。
 
+住宿資料是 `Places(Type=住宿).HID → Hotels.HID` 的 **N→1** 關係。PID 表示帶有自身交通脈絡的行程停靠點,HID 才是 Hotel profile 的 join key；名稱只供顯示,不得比對或關聯。現行 P002／P013／P022／P031／P040 都引用 H001,但五個 PID 必須保持分離,因為各路段的開車／步行時間不同。Validator 會在七表原子快照 Gate 內條件式檢查：住宿必須有 HID、非住宿不得帶 HID、任何 HID 都必須精確存在於 Hotels；任一違反都阻止候選快照生效。Runtime `hotelOf()` 對兩端 HID 做去空白與大小寫正規化後精確解析,天氣住宿亦共用同一 resolver；缺失或懸空引用安全回傳 `null`,不做名稱或第一筆 fallback。
+
 ## 快取(sw.js)
 - App Shell(HTML/圖示):Cache First + 背景更新(SWR)
 - CSV 資料:網路優先,離線回退快取(App 層另有 localStorage)
@@ -37,6 +39,7 @@ BUILTIN(8張表內建快照,建置時注入;ledger 至少含表頭)
 utils(storage/toast/CSV parser/copyText)
 parseTable / buildHeaderMap(依 SCHEMA header + aliases 容錯解析,欄位順序無關)
 buildDB(CSV → DB{places,rest,shop,hotels,expCMS,expMembers,ledger,cfg,trip})
+hotelOf(Places.hotelId → Hotels.hotelId exact N→1;名稱僅顯示)
 resolveRef(行程ID欄 Pxxx/Rxxx → 地點/餐廳;名稱備援)
 renderers(today/trip/shop/split + 型別卡片面板)
 sync engine(fetchWithTimeout 相容模式,無 AbortController)

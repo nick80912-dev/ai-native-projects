@@ -55,7 +55,7 @@ var SCHEMA = {
         { field:'ttl',     header:'時刻表連結',     aliases:['時刻表'], desc:'渡輪等官方時刻表 URL' },
         { field:'note',    header:'備註' },
         { field:'hotelId', header:'HID', aliases:['hotelid','住宿id'],
-          desc:'住宿型地點連到 Hotels.HID；僅允許 Type=住宿 使用' }
+          desc:'住宿停靠點引用 Hotels.HID；只供 Type=住宿 使用' }
       ]
     },
 

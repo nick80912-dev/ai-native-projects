@@ -2,9 +2,9 @@
   "$comment": "AI 導航檔 — 任何 AI 接手第一步只讀這份即可掌握全貌。這是 13 步流程的第 1 步。",
   "project": "japan-travel-pwa(日本旅遊行程 App)",
   "owner": "Bar(產品負責人,非工程師,繁中溝通,要直接執行不要教學;AI=全職工程團隊)",
-  "version": "2.25-sw-prompt-removal-cedar-v101",
+  "version": "2.26-hotel-hid-linkage-v102",
   "framework": "ai-native-framework@pending(尚未抽取;見 FUTURE_PLAN_framework-extraction.md)",
-  "updated": "2026-08-10",
+  "updated": "2026-08-11",
   "live": "https://trippilot-jp.netlify.app/",
   "start_here": "先讀本檔 → PROJECT_CONSTITUTION.md(憲章/流程/禁令)→ 08_AI_HANDOVER.md → 15_AI_EXECUTION_RULES.md(決策權限/任務分級,必讀)→ 相關 adr/ → 依任務讀 03_DATABASE/09_SCHEMA_MAPPING(資料與欄位)、05_CODING_RULES/11_CODING_CONVENTION(程式)、12_DEV_WORKFLOW(步驟)",
   "governance": {
@@ -28,17 +28,17 @@
     "ops_playbook": "16_OPS_PLAYBOOK.md:Netlify回滾/以tag回滾至v18(§A5)/SW快取災難/Sheet版本還原/清理排程安全/測試站驗收前置核對(§F5)",
     "status_authority": "即時狀態唯一權威=tasks/(current/backlog/done);13_PROJECT_STATUS與本manifest.status為快照;00_CONTEXT_HANDOVER為歷史快照不參與"
   },
-  "data_flow": "GoogleSheets(8表)→發布CSV→手機瀏覽器fetch→validator.js(防錯)→parser(Schema驅動)→DB→renderers→UI；個人帳、代購對象、主題與旅途紀錄→localStorage only(不進Queue/CMS)，並由個人備份v8原子匯出／還原；採買照片→shopping-photo-store.js壓縮→IndexedDB trip-local-media/shopping-photos,採買項目localStorage只存photoId且備份剝除；團體帳→enqueueBatch一次寫入localStorage佇列→立即UI完成→ledgerRepository背景送達Apps Script→分帳紀錄表(append-only,Schema 2.9固定21欄,time=消費發生時間,末五欄=輸入幣別/免稅/價格方式/稅率/優惠券)；未受還款確認保護的團體編輯=舊筆墓碑+replacesRecordId替代筆；canonical還款確認切點前的收據永久禁止直接改寫，只能由原付款人以commit-last事件整張更正或作廢；共用分帳設定:Settings→Apps Script→TripConfig兩個固定鍵→發布CSV,確認後以本機bridge涵蓋1–5分鐘延遲；離線三層:BUILTIN內建→localStorage快取→背景同步",
+  "data_flow": "GoogleSheets(8表)→發布CSV→手機瀏覽器fetch→validator.js(防錯)→parser(Schema驅動)→DB→renderers→UI；住宿關聯=Places(Type=住宿).HID→Hotels.HID(N→1 exact resolver,名稱只供顯示)，五個不同travel脈絡PID可共用H001；個人帳、代購對象、主題與旅途紀錄→localStorage only(不進Queue/CMS)，並由個人備份v8原子匯出／還原；採買照片→shopping-photo-store.js壓縮→IndexedDB trip-local-media/shopping-photos,採買項目localStorage只存photoId且備份剝除；團體帳→enqueueBatch一次寫入localStorage佇列→立即UI完成→ledgerRepository背景送達Apps Script→分帳紀錄表(append-only,Schema 2.9固定21欄,time=消費發生時間,末五欄=輸入幣別/免稅/價格方式/稅率/優惠券)；未受還款確認保護的團體編輯=舊筆墓碑+replacesRecordId替代筆；canonical還款確認切點前的收據永久禁止直接改寫，只能由原付款人以commit-last事件整張更正或作廢；共用分帳設定:Settings→Apps Script→TripConfig兩個固定鍵→發布CSV,確認後以本機bridge涵蓋1–5分鐘延遲；離線三層:BUILTIN內建→localStorage快取→背景同步",
   "files": {
     "ledger-ui-state.js": "Ledger history、entry 與 correction session 不可變 state transition 與 ordered effects workflow；DOM adapter 位於 index.html",
     "shopping-ui-state.js": "Shopping list selection 與 form session 不可變 state transition 與 ordered effects workflow；DOM adapter 位於 index.html",
     "trip-progression.js": "下一站選擇、cluster blocker 與一次性 auto-skip reconciliation runtime module",
     "tools/refresh-builtin-snapshot.js": "BUILTIN 離線種子安全刷新 CLI；預設只讀 preview、明確 --write、七張公開 CSV 原子驗證，Ledger 只由 schema 產生空 header",
-    "index.html": "App 與正式部署入口:UI殼+CSS+內嵌JS(區塊分層見10_FOLDER_STRUCTURE)",
+    "index.html": "App 與正式部署入口:UI殼+CSS+內嵌JS；住宿 profile 只由正規化 HID exact resolver 解析(區塊分層見10_FOLDER_STRUCTURE)",
     "shopping-photo-store.js": "採買照片縮放壓縮與IndexedDB put/get/remove邊界;Blob只存在目前裝置,不進備份或同步",
     "buy-to-ledger.js": "採買轉記帳純domain與workflow coordinator;dependency adapter留在index.html,模組不直接讀DOM或storage",
     "app-version.js": "App端版本來源(供顯示與旅途紀錄);sw.js 另自帶 SW_VERSION,兩者必須相等,由 tools/check-app-version.js 守住。2026-07-30 起 sw.js 不再 importScripts 本檔取版本——imported script 會經 HTTP cache,GitHub Pages 的 max-age=600 會讓版本升級靜默失效",
-    "schema.js": "唯一資料規格SSoT:欄位/gid/型別值/發布URL;schemaDoc()自動產09文件",
+    "schema.js": "唯一資料規格SSoT:CMS Schema 3.0欄位/gid/型別值/發布URL；Places尾端HID→Hotels.HID，名稱只供顯示；schemaDoc()自動產09文件",
     "validator.js": "防錯防線:AppLog六類([Schema/Parser/Data/Repository/Render/Sync Error])+session-only 100筆緩衝+buildHeaderMap+無副作用currentHealthFindings()+window.healthCheck()",
     "apps-script/ledger-sync.gs": "Apps Script部署唯一維護來源:分帳append-only與TripConfig兩鍵白名單更新",
     "docs/personal-state-compatibility.md": "個人狀態備份 v1–v8 相容策略契約(向後／向前相容、缺欄位預設值、採買單位規則、失敗語意);可執行契約=tests/personal-state-restore-matrix.test.js,兩者不一致即為缺陷",
@@ -68,11 +68,13 @@
       "cfg": "1070234314",
       "ledger": "896856089"
     },
-    "type_values": "購物→shopping / 美食區→restarea / 住宿→hotel / 景點·機場·纜車→attraction / 渡船口·渡輪→ferry / 租車點→parking(禁 AI 猜測)"
+    "type_values": "購物→shopping / 美食區→restarea / 住宿→hotel / 景點·機場·纜車→attraction / 渡船口·渡輪→ferry / 租車點→parking(禁 AI 猜測)",
+    "hotel_relationship": "Places(Type=住宿).HID→Hotels.HID 的 N→1；住宿必須有HID、非住宿不得帶HID、引用必須存在；名稱只供顯示"
   },
   "invariants_never_break": [
     "三層防線與『絕不空白頁』",
     "卡片型別由 Places.Type 明確決定,禁猜測",
+    "Hotel profile只以Places.HID→Hotels.HID精確關聯；PID保留停靠點travel脈絡,名稱只供顯示；禁止名稱/子字串/首筆fallback",
     "WebView 相容:console polyfill、禁 AbortController(clone錯)、fetch 相容退回、單一吸頂容器.hdr",
     "viewport meta 不得常駐 maximum-scale 或 user-scalable=no;只允許輸入 focus 縮放殘留時瞬鎖約100ms,並原樣還原啟動時字串",
     "停車 MAP CODE 純顯示無複製鈕、『停車同Pxxx』繼承",
@@ -135,14 +137,14 @@
     ]
   },
   "status": {
-    "production": "main 維持 production-v73，直到已核准的 release PR 合併並完成線上驗證",
-    "dev_candidate": "v101（移除時機與畫面內容不同步的全域 SW 更新提示，不新增替代提示或自動 reload；杉綠 action 改為 #2F6B4F；SW lifecycle、cache 與資料不變）",
-    "device_acceptance": "Bar 已完成 v74–v89、v92–v95 畫面／真機驗收；v99／v100 更新提示實驗已由 Bar 裁定取消，v101 等待杉綠外觀與無提示行為實機驗收",
-    "automated_validation": "完整 gate 為 82 個 Node test files 與 145 個 Playwright tests，另含 runtime asset、文件標題、App／SW v101 一致性、manifest JSON 與 diff check",
+    "production": "main 原始碼維持 v96；正式站與 production tag 維持 v73，直到已核准的 release PR、部署與線上驗證完成",
+    "dev_candidate": "v102（Places尾端HID→Hotels.HID N→1；Schema 3.0條件驗證、BUILTIN與exact runtime resolver同步；名稱只供顯示）",
+    "device_acceptance": "Bar 已完成 v74–v89、v92–v95；v101裝置／PWA外觀驗收於2026-08-11確認完成。v99／v100更新提示實驗已取消；v102待dev push後驗收",
+    "automated_validation": "截至resolver交付為83個Node test files；住宿HID focused Playwright為3/3(320/375/390px)。完整Playwright數量不推算，待v102最終gate fresh run後記錄；另含runtime asset、文件標題、App／SW v102一致性、manifest JSON與diff check",
     "pending_in_order": [
-      "Bar 在目標實機／PWA 驗證 v101 不顯示更新提示、不自動 reload，杉綠為 #2F6B4F 且焙茶維持棕色",
+      "完整v102 gate與dev push後，由Bar在目標裝置／PWA驗證五個住宿停靠點共用H001 profile且各自travel不變",
       "完成受保護的 dev → main 發布流程並驗證正式站",
-      "線上驗證成功後才建立 annotated production tag；backlog #24 已以實驗後取消而非功能完成歸檔"
+      "線上驗證成功後才建立 annotated production tag；backlog #22已完成且#24已以實驗後取消歸檔"
     ]
   },
   "after_every_delivery": "跑 window.healthCheck() + 輸出健康報告 + 更新 07_CHANGELOG(建新檔) + 必要時更新本 manifest",
