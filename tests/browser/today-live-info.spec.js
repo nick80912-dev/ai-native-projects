@@ -139,12 +139,14 @@ async function seedTodayShoppingGroups(page, groupNames) {
   }, groupNames);
 }
 
-test('Today Hero excludes the exact next stop and shows the first future Shopping group', async ({ page }) => {
+test('Today Hero excludes the exact next stop and shows the first eligible Shopping group', async ({ page }) => {
   const seeded=await seedTodayShoppingGroups(page,[['current one','current two'],['one','two','three']]);
   const expected=await page.evaluate((ref)=>shoppingStopById(ref).name,seeded.otherRefs[0]);
   const summary=page.locator('#view-today .today-hero-shopping-summary');
+  await expect(summary).toHaveAttribute('aria-label',`開啟${expected}的 3 項待買`);
+  await expect(summary.locator('.today-hero-summary-label')).toHaveText('今日採買');
   await expect(summary.locator('.today-hero-shopping-stop')).toHaveText(expected);
-  await expect(summary.locator('small')).toContainText('3');
+  await expect(summary.locator('small')).toHaveText('3 項 →');
   await expect(page.locator('#view-today .today-shopping-card')).toHaveCount(0);
   await expect(page.locator('#view-today .today-shopping-launcher')).toHaveCount(0);
 });
@@ -160,7 +162,9 @@ test('Today weather uses a decorative mood and actionable accessible summary', a
   const weather=page.locator('#view-today .today-hero-weather-summary');
   await expect(weather).toContainText('21');
   await expect(weather).toHaveAttribute('aria-label','Hiroshima 21 度，現在之後最高降雨機率 40%，記得帶傘');
-  await expect(page.locator('#view-today .today-hero-top .loc')).toHaveText(/^\d+\s*\/\s*\d+$/);
+  const progress=page.locator('#view-today .today-hero-top .loc');
+  await expect(progress).toHaveText(/^\d+\s*\/\s*\d+$/);
+  await expect(progress).toHaveAttribute('aria-label',/^今日已處理 \d+ 站，共 \d+ 站$/);
 });
 
 test('all Shopping at the current next stop leaves only the existing badge', async ({ page }) => {
@@ -202,7 +206,9 @@ test('weather failure keeps generic Shopping entry usable', async ({ page }) => 
   });
   await expect(page.locator('#view-today .today-weather-art')).toHaveCount(0);
   const summary=page.locator('#view-today .today-hero-shopping-summary');
-  await expect(summary).toBeVisible();
+  await expect(summary).toHaveAttribute('aria-label','開啟採買清單');
+  await expect(summary.locator('.today-hero-summary-label')).toHaveText('採買清單');
+  await expect(summary.locator('.today-hero-summary-value')).toHaveText('開啟查看 →');
   await summary.evaluate((element)=>element.click());
   await expect(page.locator('#shoppingListOverlay')).toBeVisible();
 });

@@ -28,6 +28,7 @@ for (const file of ['index.html']) {
   assert.doesNotMatch(preTripBrief, /pretrip-count/, `${file} renders the countdown only in the title row`);
   assert.match(renderToday, /renderTodayWeatherArt\(weather\)[\s\S]*renderTodayHeroSummary\(weather,renderShoppingTodayEntry\(day,currentStopRef\)\)/, `${file} composes weather and Shopping inside the active Hero`);
   assert.doesNotMatch(renderToday, /h\+=renderShoppingTodayEntry\(day,currentStopRef\)/, `${file} no longer renders active Shopping below the Hero`);
+  assert.match(renderToday, /var progressLabel='今日已處理 '\+completed\+' 站，共 '\+items\.length\+' 站';/, `${file} gives active progress the approved accessible name`);
   assert.match(
     renderToday,
     /var currentStop=clusterPick&&clusterPick\.item\?clusterPick\.item:pick\.item;[\s\S]*var currentStopRef=currentStop&&currentStop\.id\?currentStop\.id:'';/,
@@ -41,6 +42,7 @@ for (const file of ['index.html']) {
   assert.match(html, /\.today-hero-summary\{[^}]*display:grid/, `${file} keeps Hero information in one row`);
   assert.match(html, /\.today-hero-shopping-summary\{[^}]*min-height:44px/, `${file} keeps Hero Shopping tappable`);
   assert.doesNotMatch(html, /\.weather-chip\{/, `${file} removes legacy weather pill CSS`);
+  assert.doesNotMatch(html, /function renderWeatherChip\(/, `${file} removes the dead legacy weather renderer`);
   assert.doesNotMatch(html, /\.today-shopping-card\{/, `${file} removes legacy Shopping card CSS`);
   assert.match(html, /\.today-hero-action\{[^}]*width:auto[^}]*color:#fff/, `${file} keeps the non-trip launcher compact inside the dark Today card`);
   assert.match(

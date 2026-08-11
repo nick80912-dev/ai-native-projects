@@ -20,6 +20,7 @@ const { rainChanceFromNow } = sandbox;
 
 /* 這是 Bar 已核准且在本批動工前就存在的工作區差異，禁止為了製造 RED 而回復它。 */
 vm.runInContext(extractFunction(html, 'escapeHtml'), sandbox);
+vm.runInContext(extractFunction(html, 'escapeHtmlAttr'), sandbox);
 vm.runInContext(extractFunction(html, 'weatherTravelHint'), sandbox);
 vm.runInContext(extractFunction(html, 'renderTodayWeatherArt'), sandbox);
 vm.runInContext(extractFunction(html, 'renderTodayWeatherSummary'), sandbox);

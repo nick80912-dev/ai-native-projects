@@ -89,8 +89,10 @@ const heroShoppingOut=sandbox.renderTodayShoppingSummary({
   groups:[{stopRef:'future',stopName:'Future stop',items:['one','two','three']}]
 },'current');
 assert(heroShoppingOut.includes('class="today-hero-summary-item today-hero-shopping-summary"'));
-assert(heroShoppingOut.includes('Future stop'));
-assert(heroShoppingOut.includes('3 '));
+assert(heroShoppingOut.includes('aria-label="開啟Future stop的 3 項待買"'));
+assert(heroShoppingOut.includes('<span class="today-hero-summary-label">順路採買</span>'));
+assert(heroShoppingOut.includes('<span class="today-hero-shopping-stop">Future stop</span>'));
+assert(heroShoppingOut.includes('<small>3 項 →</small>'));
 assert(heroShoppingOut.includes("openShoppingList('future')"));
 assert.strictEqual((heroShoppingOut.match(/<button/g)||[]).length,1);
 assert(!heroShoppingOut.includes('<script>'));
@@ -102,6 +104,10 @@ assert(heroSummaryOut.includes('class="today-hero-summary"'));
 assert(heroSummaryOut.includes('class="today-hero-summary-divider"'));
 assert(heroSummaryOut.indexOf('today-hero-weather-summary')<heroSummaryOut.indexOf('today-hero-shopping-summary'));
 assert.strictEqual((heroSummaryOut.match(/today-hero-summary-divider/g)||[]).length,1);
+
+const quotedWeatherOut=sandbox.renderTodayWeatherSummary({city:'Quoted "City"',temp:21,rain:40,code:61});
+assert(quotedWeatherOut.includes('aria-label="Quoted &quot;City&quot; 21 度，現在之後最高降雨機率 40%，記得帶傘"'),'weather accessible name escapes quoted cities in attribute context');
+assert.strictEqual((quotedWeatherOut.match(/\saria-label=/g)||[]).length,1,'weather summary keeps one aria-label attribute');
 
 /* v86 next-stop entry is a sibling-safe compact button and keeps row-count semantics. */
 renderedShoppingItems=[

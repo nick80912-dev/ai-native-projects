@@ -143,12 +143,12 @@ assert.deepStrictEqual(
 );
 assert.deepStrictEqual(
   plain(mod.todayShoppingHeroModel({count:1,groups:[heroReminder.groups[0]]},heroDay,'current')),
-  {label:'今天待買',stopRef:'past',stopName:'過去站',count:1},
+  {label:'今日採買',stopRef:'past',stopName:'過去站',count:1},
   'past-only shopping never claims to be on the way'
 );
 assert.deepStrictEqual(
   plain(mod.todayShoppingHeroModel(heroReminder,heroDay,'missing-current')),
-  {label:'今天待買',stopRef:'past',stopName:'過去站',count:1},
+  {label:'今日採買',stopRef:'past',stopName:'過去站',count:1},
   'an unresolved current stop uses neutral copy'
 );
 assert.strictEqual(mod.todayShoppingHeroModel(null,heroDay,'current'),null);
@@ -160,11 +160,22 @@ const quotedSummary=mod.renderTodayShoppingSummary({items:[
   {id:'quoted-stop',place:'Quoted "Stop" <svg/onload=alert(1)>'}
 ]},'');
 assert(
-  quotedSummary.includes('aria-label="前往Quoted &quot;Stop&quot; &lt;svg/onload=alert(1)&gt;的 1 項待買"'),
+  quotedSummary.includes('aria-label="開啟Quoted &quot;Stop&quot; &lt;svg/onload=alert(1)&gt;的 1 項待買"'),
   'Shopping summary escapes a quoted itinerary stop name in attribute context'
 );
 assert.strictEqual((quotedSummary.match(/\saria-label=/g)||[]).length,1,'Shopping summary keeps one aria-label attribute');
 assert(!quotedSummary.includes('<svg'),'Shopping summary exposes no injectable stop-name markup');
+
+mod.shoppingListStore.removeMany(mod.shoppingListStore.all().map(function(item){return item.id;}));
+var exactCurrent=mod.shoppingListStore.add({name:'下一站商品',stopRef:'10/18_0'});
+var unboundPending=mod.shoppingListStore.add({name:'未綁定商品'});
+var orphanPending=mod.shoppingListStore.add({name:'孤兒商品',stopRef:'10/18_99'});
+const mixedCurrentSummary=mod.renderTodayShoppingSummary(day,'10/18_0');
+assert(mixedCurrentSummary.includes('class="today-hero-summary-item today-hero-shopping-summary today-hero-shopping-generic"'),'mixed unresolved pending items keep the generic Hero entry');
+assert(mixedCurrentSummary.includes('aria-label="開啟採買清單"'),'generic Hero entry restores the approved accessible name');
+assert(mixedCurrentSummary.includes('<span class="today-hero-summary-label">採買清單</span>'),'generic Hero entry restores the approved label');
+assert(mixedCurrentSummary.includes('<span class="today-hero-summary-value">開啟查看 →</span>'),'generic Hero entry restores the approved action copy');
+mod.shoppingListStore.removeMany([exactCurrent.id,unboundPending.id,orphanPending.id]);
 
 /* v86:Today 只排除目前有效下一站的 exact stopRef；同名、日期與位置都不能代替 ID join。 */
 const excludedReminder=plain(mod.buildShoppingTodayReminder([

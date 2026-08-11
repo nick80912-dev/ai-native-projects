@@ -2768,7 +2768,7 @@ function renderTodayWeatherSummary(weather){
   if(!hint)return '';
   var rain=typeof weather.rain==='number'&&isFinite(weather.rain)?Math.round(weather.rain):0;
   var label=String(weather.city||'廣島')+' '+Math.round(weather.temp)+' 度，現在之後最高降雨機率 '+rain+'%，'+hint;
-  return '<div class="today-hero-summary-item today-hero-weather-summary" role="group" aria-label="'+escapeHtml(label)+'">'+
+  return '<div class="today-hero-summary-item today-hero-weather-summary" role="group" aria-label="'+escapeHtmlAttr(label)+'">'+
     '<span class="today-hero-summary-label" aria-hidden="true">外出提醒</span>'+
     '<span class="today-hero-summary-value" aria-hidden="true">'+Math.round(weather.temp)+'° · '+escapeHtml(hint)+'</span></div>';
 }
@@ -3159,13 +3159,6 @@ function onNextStopSkip(dayIndex,itemId){
   toast('已跳過這站','復原',undoNextStopAction);
 }
 var homeWeatherState={};
-function renderWeatherChip(weather){
-  if(!weather) return '';
-  /* 顯示文字維持精簡的「雨 N%」;完整語意(現在之後的最高降雨機率)留在 aria-label,
-     螢幕閱讀器仍讀得到,視覺上不佔寬度。 */
-  return '<div class="weather-chip" aria-label="'+escapeHtml(weather.city+' '+weather.temp+' 度，現在之後最高降雨機率 '+weather.rain+'%')+'">'+
-    '<span class="city">'+escapeHtml(weather.city)+'</span>'+escapeHtml(' '+weather.icon+' '+weather.temp+'° 雨'+weather.rain+'%')+'</div>';
-}
 function requestHomeWeather(dayIndex,item){
   if(!item) return;
   var day=DB.trip&&DB.trip.days?DB.trip.days[dayIndex]:null;
@@ -3268,7 +3261,7 @@ function renderToday(){
   var weatherItem=currentStop;
   requestHomeWeather(ti,weatherItem);
   var weather=homeWeatherFor(ti,weatherItem);
-  var progressLabel='Progress '+completed+' / '+items.length;
+  var progressLabel='今日已處理 '+completed+' 站，共 '+items.length+' 站';
   var h='<div class="today-hero today-hero-trip'+(weather?' weather-on':'')+'"><div class="today-hero-top"><div class="lbl">TODAY · DAY '+(ti+1)+'</div>'+
     '<div class="loc" aria-label="'+escapeHtml(progressLabel)+'">'+completed+' / '+items.length+'</div></div>'+
     '<div class="today-hero-main"><div class="date">'+day.date+(day.dow?' ('+day.dow+')':'')+'</div>'+renderTodayWeatherArt(weather)+'</div>'+
@@ -3339,17 +3332,19 @@ function renderTodayShoppingSummary(day,currentStopRef){
   var reminder=buildShoppingTodayReminder(items,day,currentStopRef);
   var model=todayShoppingHeroModel(reminder,day,currentStopRef);
   if(model){
-    var accessible='前往'+model.stopName+'的 '+model.count+' 項待買';
+    var accessible='開啟'+model.stopName+'的 '+model.count+' 項待買';
     return '<button type="button" class="today-hero-summary-item today-hero-shopping-summary"'+
       ' onclick="openShoppingList(\''+jsHtmlAttrString(model.stopRef)+'\')" aria-label="'+escapeHtmlAttr(accessible)+'">'+
       '<span class="today-hero-summary-label">'+escapeHtml(model.label)+'</span>'+
       '<span class="today-hero-summary-value"><span class="today-hero-shopping-stop">'+escapeHtml(model.stopName)+'</span>'+
-      '<small>'+model.count+' 項待買</small></span></button>';
+      '<small>'+model.count+' 項 →</small></span></button>';
   }
-  if(day&&currentStopRef&&nextStopBuyModel(currentStopRef,items))return '';
+  var pending=items.filter(function(item){return item&&!item.done;}),current=String(currentStopRef||'');
+  var currentResolves=!!(day&&Array.isArray(day.items)&&day.items.some(function(item){return String(item&&item.id||'')===current;}));
+  if(pending.length&&current&&currentResolves&&pending.every(function(item){return String(item.stopRef||'')===current;}))return '';
   return '<button type="button" class="today-hero-summary-item today-hero-shopping-summary today-hero-shopping-generic"'+
-    ' onclick="openShoppingList()" aria-label="前往採買清單"><span class="today-hero-summary-label">採買清單</span>'+
-    '<span class="today-hero-summary-value">前往查看 →</span></button>';
+    ' onclick="openShoppingList()" aria-label="開啟採買清單"><span class="today-hero-summary-label">採買清單</span>'+
+    '<span class="today-hero-summary-value">開啟查看 →</span></button>';
 }
 function renderShoppingTodayEntry(day,currentStopRef){
   if(day)return renderTodayShoppingSummary(day,currentStopRef);
@@ -5797,7 +5792,7 @@ function todayShoppingHeroModel(model,day,currentStopRef){
       if(Object.prototype.hasOwnProperty.call(order,ref)&&order[ref]>currentIndex){group=valid[i];break;}
     }
   }
-  var label=group?'順路採買':'今天待買';
+  var label=group?'順路採買':'今日採買';
   group=group||valid[0];
   return {label:label,stopRef:String(group.stopRef),stopName:String(group.stopName).trim(),count:group.items.length};
 }
@@ -8913,9 +8908,9 @@ function renderSettingsDataHealth(){
 }
 var APP_RELEASE_NOTES=[
   {version:'v103',date:'2026-08-11',title:'今天首頁更像旅行提示',items:[
-    '天氣會依據行程日期，下一站資訊改為快訊提示',
-    '天氣改為記得帶傘等外出建議，資訊優先顯示下一個順路地點',
-    '行程站點保留車程但改為摘要，不加入完成率、回顧或公里數'
+    '今天首頁整合行程日期、天氣圖示與外出提醒',
+    '採買清單會顯示第一個順路地點，下一站待買仍保留原本徽章',
+    '主畫面維持日期與站點進度，不加入完成率、回顧或公里數'
   ]},
   {version:'v102',date:'2026-08-11',title:'住宿資訊改用 HID 精確連結',items:['五個住宿停靠點改以 HID 精確連到住宿資料，住宿顯示名稱日後調整也不會讓資料失去連結','不同路段的住宿停靠點仍各自保留交通時間，同一間住宿可共用入住、地址、停車與備註資料','同步會攔下住宿缺少 HID、非住宿誤填 HID 或找不到住宿資料的錯誤；記帳、個人備份與離線策略皆維持不變']},
   {version:'v101',date:'2026-08-10',title:'更新方式與杉綠配色調整',items:['移除顯示時機與實際新版內容不同步的「新版已就緒」提示，App 仍會依原有方式在背景更新，不會自動重新整理','杉綠主題的按鈕、連結與主要操作改用較清楚的林下青，與焙茶主題的棕色更容易區分','離線快取、同步方式、既有資料與記帳格式皆維持不變']},
