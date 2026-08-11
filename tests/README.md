@@ -15,6 +15,7 @@
 - `pwa-shell.test.js`:驗證 PWA 入口、manifest、Service Worker、Netlify 設定與圖示資產完整性;2026-07-30 起改鎖新版 SW 契約(頂層 `SW_VERSION`、`CACHE_NAME` 由它推導、不得 importScripts、install 用 `cache:'reload'`、fetch 用 `cache:'no-cache'`、只有 navigation 才 fallback `index.html`)；另鎖 `buy-to-ledger.js`、`ledger-ui-state.js` 與 `shopping-ui-state.js` 同時由頁面載入並納入離線 App Shell。執行:`node tests/pwa-shell.test.js`。
 - `app-version-fallback.test.js`:`app-version.js` 載不到時的降級契約。涵蓋 `appVersion()`／`appVersionLabel()` 的回退值、`renderSettingsDataPage()` 在無 `APP_VERSION` 時仍可算出資料健康區塊與 HTML(顯示「SW 未知」而非 ReferenceError),以及 `index.html` 不得在安全取值區塊外裸讀 `APP_VERSION`。執行:`node tests/app-version-fallback.test.js`。
 - `trip-presentation.test.js`:驗證行程類型標籤與行程頁呈現規則。執行:`node tests/trip-presentation.test.js`。
+- `hotel-hid-linkage.test.js`／`browser/hotel-hid-linkage.spec.js`：驗證住宿停靠點只以正規化 HID 精確解析 Hotel profile、缺失或懸空 HID 安全退回 `null`、天氣住宿解析共用同一 resolver，以及兩個不同交通時間的 PID 可共用同一 Hotel profile；Browser 另以 320／375／390px 真實渲染住宿資訊面板並鎖定無水平 overflow。執行：`node tests/hotel-hid-linkage.test.js`、`npx playwright test tests/browser/hotel-hid-linkage.spec.js`。
 - `schema-types.test.js`:驗證 Places.Type 必要中文輸入值的正規化結果,並確認 `index.html` 內嵌 Schema 已同步。執行:`node tests/schema-types.test.js`。
 - `render-note.test.js`:備註條列渲染、下一站卡、MAPCODE、明日預告等元件渲染回歸測試(Node 內建 assert,從預覽 HTML 抽函式驗證)。執行:`node tests/render-note.test.js`(於 repo 根目錄)。
 - `pick-next-stop.test.js`:下一站時間判斷與自動略過過期項目的邏輯回歸測試(2026-07-09 新增,涵蓋「今天按過任一完成後就卡住不推進」的修復)。執行:`node tests/pick-next-stop.test.js`

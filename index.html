@@ -2021,9 +2021,11 @@ function restaurantsOf(placeId){
   return DB.rest.filter(function(r){ return (r.placeId||'').toUpperCase()===String(placeId).toUpperCase(); });
 }
 function hotelOf(place){
-  if(!DB.hotels.length) return null;
-  var flat=(place.name||'').replace(/\s+/g,'');
-  return DB.hotels.find(function(h){ return h.name && (flat.indexOf(h.name.replace(/\s+/g,''))>=0 || h.name.replace(/\s+/g,'').indexOf(flat)>=0); }) || DB.hotels[0];
+  var hotelId=String(place&&place.hotelId||'').toUpperCase().trim();
+  if(!hotelId) return null;
+  return DB.hotels.find(function(h){
+    return String(h&&h.hotelId||'').toUpperCase().trim()===hotelId;
+  })||null;
 }
 function transport(){
   return DB.cfg.travelmode || 'drive';   // 值已由 Schema(cfg.keys.values)正規化為 drive/transit
@@ -2652,12 +2654,7 @@ function weatherCityFromText(text){
 }
 function weatherHotelForItem(item,res){
   var p=res&&res.kind==='place'?res.p:null;
-  var candidates=[item&&item.place,item&&item.act,p&&p.name].filter(Boolean).map(function(v){ return String(v).replace(/\s+/g,''); });
-  if(!candidates.length||!DB.hotels||!DB.hotels.length) return null;
-  return DB.hotels.find(function(h){
-    var name=(h.name||'').replace(/\s+/g,'');
-    return name && candidates.some(function(flat){ return flat && (flat.indexOf(name)>=0 || name.indexOf(flat)>=0); });
-  }) || null;
+  return p&&String(p.tnorm||'').toLowerCase()==='hotel'?hotelOf(p):null;
 }
 function weatherTextForItem(item,res){
   var p=res&&res.kind==='place'?res.p:null;
