@@ -8965,6 +8965,11 @@ function renderSettingsDataHealth(){
   return '<div class="settings-section settings-data-health"><h3>資料健康狀態</h3><div class="settings-health-list">'+model.rows.map(function(row){return '<div class="settings-health-row data-health-'+escapeHtml(row.key)+'"><span class="settings-health-main"><b>'+escapeHtml(row.label)+'</b>'+(row.detail?'<span>'+escapeHtml(row.detail)+'</span>':'')+'</span><strong>'+escapeHtml(row.value)+'</strong></div>';}).join('')+'</div></div>';
 }
 var APP_RELEASE_NOTES=[
+  {version:'v107',date:'2026-08-12',title:'未分類採買提示更明確',items:[
+    '今天首頁遇到尚未選分類的採買項目時，會在地點後明確顯示「未分類」',
+    '多項採買仍以 +N 顯示其餘數量，並維持緊湊靠右與地點定位',
+    '未分類只用於畫面提示，不會改寫採買資料、分類選項、備份或同步內容'
+  ]},
   {version:'v106',date:'2026-08-12',title:'順路採買資訊靠右更緊湊',items:[
     '今天首頁的採買地點、分類與 +N 改為緊湊排列並整組靠右，不再出現過大的中間空白',
     '地點超過六字會顯示前六字與省略符號，分類與 +N 保持完整顯示',
@@ -8984,8 +8989,7 @@ var APP_RELEASE_NOTES=[
     '今天首頁整合行程日期、天氣圖示與外出提醒',
     '採買清單會顯示第一個順路地點，下一站待買仍保留原本徽章',
     '主畫面維持日期與站點進度，不加入完成率、回顧或公里數'
-  ]},
-  {version:'v102',date:'2026-08-11',title:'住宿資訊改用 HID 精確連結',items:['五個住宿停靠點改以 HID 精確連到住宿資料，住宿顯示名稱日後調整也不會讓資料失去連結','不同路段的住宿停靠點仍各自保留交通時間，同一間住宿可共用入住、地址、停車與備註資料','同步會攔下住宿缺少 HID、非住宿誤填 HID 或找不到住宿資料的錯誤；記帳、個人備份與離線策略皆維持不變']}
+  ]}
 ];
 function renderAppReleaseNotes(){
   return '<div class="settings-release-list">'+APP_RELEASE_NOTES.map(function(note){

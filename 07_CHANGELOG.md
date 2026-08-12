@@ -1,5 +1,13 @@
 # 07 版本紀錄
 
+## 2026-08-12 — v107 Today Hero 未分類提示（dev candidate）
+
+- Today Hero 遇到空白採買分類時，明確顯示 `未分類`；多項採買仍顯示 `+N`，可見與無障礙文字皆不包含品名。
+- `未分類` 僅是 renderer 顯示 fallback，不加入分類選項，也不改寫 reminder/model、Shopping store、表單、備份、還原或同步資料；原始 `category: ''` 保持不變。
+- v106 的地點六字截斷、分類與數量完整顯示、4px 緊湊靠右、44px 點擊區、鍵盤／觸控操作與對應地點定位均維持不變。
+- App Shell 由 v106 forward bump 至 **v107**；未修改 Schema、Ledger、Apps Script、Google Sheet、`netlify.toml`、`main`、正式部署或 production tag。
+- TDD renderer RED→GREEN；focused Node 3／3、Chromium Today suite 18／18、WebKit touch case 1／1 已通過。Release 前 fresh full gate 為 **83／83** Node test files、Playwright **150／150**（0 failed），另通過 v107 版本、8 runtime assets、BUILTIN no-drift、文件標題、manifest JSON、offline `healthCheck(): []`、`pageErrors: []` 與 `git diff --check`。
+
 ## 2026-08-12 — v106 Today Hero 採買摘要緊湊靠右（dev candidate）
 
 - 依 Bar 裁定，Hero 採買下排由比例分欄改為單一緊湊右對齊群組；地點、分隔點、第一優先分類與 `+N` 以 4px 間距排列，不再產生過大的中間空白。

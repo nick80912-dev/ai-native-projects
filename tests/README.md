@@ -1,11 +1,11 @@
 # tests — 測試資產(交付必附)
 
-## v106 Today Hero coverage
+## v107 Today Hero coverage
 
 - `weather-rain-window.test.js` protects itinerary-date-aware weather hint priority.
-- `shopping-list.test.js` protects the itinerary-aware future-stop projection, first prioritized category, remaining item count, input immutability, neutral `今日採買` model, exact-next-stop exclusion, category-only accessibility, and generic fallback.
-- `home-simplification.test.js` and `render-note.test.js` protect the compact right-aligned `地點 · 分類 +N` group, six-code-point visible stop cap, full accessible stop, complete category/count, quoted-category escaping, no product-name output, and blank-category fallback.
-- `browser/today-live-info.spec.js` makes the next-stop badge authoritative and verifies at 320／375／390px that adjacent parts keep a 4px gap, the group reaches the right edge, only the location may ellipsize, category／`+N` stay complete, the target remains 44px, and Hero／badge geometry has no overlap or horizontal overflow.
+- `shopping-list.test.js` protects the itinerary-aware future-stop projection, raw blank-category preservation, first prioritized category, remaining item count, input immutability, neutral `今日採買` model, exact-next-stop exclusion, category-only accessibility, generic fallback, and ensures `未分類` is not added to `SHOPPING_CATEGORIES`.
+- `home-simplification.test.js` and `render-note.test.js` protect the compact right-aligned `地點 · 分類 +N` group, six-code-point visible stop cap, full accessible stop, complete category/count, quoted-category escaping, no product-name output, renderer-only `未分類`, `+N`, aria text, and input immutability.
+- `browser/today-live-info.spec.js` makes the next-stop badge authoritative and verifies at 320／375／390px that adjacent parts keep a 4px gap, the group reaches the right edge, only the location may ellipsize, category／`+N` stay complete, the target remains 44px, and Hero／badge geometry has no overlap or horizontal overflow. Its v107 Chromium/WebKit touch case confirms a blank category displays `未分類` and still scrolls to the corresponding Shopping group.
 
 
 

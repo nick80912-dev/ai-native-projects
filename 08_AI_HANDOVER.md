@@ -1,12 +1,13 @@
 # 08 AI 交接文件(給未來的 AI 模型)
 
-## v106 Today Hero dev-candidate handover
+## v107 Today Hero dev-candidate handover
 
 - v102 device/PWA acceptance is complete.
-- v106 keeps `地點 · 第一個優先分類 +N` but renders it as one compact right-aligned group with a 4px gap; Hero visible and accessible output still contains no product name. The exact next Shopping stop remains in the existing badge.
+- v107 renders `未分類` whenever the selected Shopping category is blank. This fallback exists only in `renderTodayShoppingSummary()`; raw reminder/model/store/form/backup/restore/sync data remains blank, and `未分類` is not a Shopping category option.
+- The Hero keeps `地點 · 第一個優先分類 +N` as one compact right-aligned group with a 4px gap; visible and accessible output contains no product name. The exact next Shopping stop remains in the existing badge.
 - Visible locations longer than six Unicode code points become the first six plus `…`; at constrained widths only the location may shrink further. Category and `+N` remain complete, while `aria-label` retains the full location.
-- The Hero summary preserves 44px touch/focus behavior, one-row geometry, navigation and pre-trip behavior. Roll back by forward-bumping and reverting the v106 helper, CSS, tests, and version records together; do not alter schema, storage, Google Sheet data, or deployment records.
-- Fresh evidence: **83/83** Node test files and **149/149** Playwright cases pass; document-title, app-version, 8 runtime assets, BUILTIN no-drift, manifest JSON, offline Health Check, pageerror, and diff checks also pass. Next action after dev push is Bar's device/PWA appearance and interaction acceptance. Do not merge, deploy, or tag without approval.
+- The Hero summary preserves 44px touch/focus behavior, one-row geometry, location targeting, navigation and pre-trip behavior. Roll back by forward-bumping and reverting the v107 renderer fallback, tests, and version records together; do not alter schema, storage, Google Sheet data, or deployment records.
+- Fresh evidence: focused 3/3 Node tests, 18/18 Chromium Today cases, and 1/1 WebKit touch case pass; the release gate passes **83/83** Node test files and **150/150** Playwright cases. Document-title, app-version, 8 runtime assets, BUILTIN no-drift, manifest JSON, offline `healthCheck(): []`, `pageErrors: []`, and diff checks also pass. Next action after dev push is Bar's device/PWA appearance and interaction acceptance. Do not merge, deploy, or tag without approval.
 
 
 

@@ -30,7 +30,7 @@
 - Consumes: `todayShoppingHeroModel()` output with raw `firstCategory: string`.
 - Produces: visible/accessibility category string `String(model.firstCategory || '').trim() || '未分類'`; no model mutation.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 Replace the existing blank-category fallback assertions with a two-item fixture and require:
 
@@ -50,13 +50,13 @@ assert.deepStrictEqual(blankCategoryReminder,snapshot);
 
 In `tests/shopping-list.test.js`, retain the existing `firstCategory: ''` projection assertion and add a source assertion that `SHOPPING_CATEGORIES` does not contain `未分類`.
 
-- [ ] **Step 2: Run RED**
+- [x] **Step 2: Run RED**
 
 Run: `node --test tests/render-note.test.js tests/shopping-list.test.js`
 
 Expected: FAIL because the current renderer omits separator/category/count for a blank category.
 
-- [ ] **Step 3: Implement the minimal renderer fallback**
+- [x] **Step 3: Implement the minimal renderer fallback**
 
 In `renderTodayShoppingSummary()` change only the display category derivation:
 
@@ -66,13 +66,13 @@ var category=String(model.firstCategory||'').trim()||'未分類';
 
 Keep the model, reminder, store, category choices, payload, and renderer markup structure unchanged.
 
-- [ ] **Step 4: Run GREEN**
+- [x] **Step 4: Run GREEN**
 
 Run: `node --test tests/render-note.test.js tests/shopping-list.test.js tests/home-simplification.test.js`
 
 Expected: all tests PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```powershell
 git add -- index.html tests/render-note.test.js tests/shopping-list.test.js
@@ -88,11 +88,11 @@ git commit -m "fix(today): label blank Shopping categories"
 - Consumes: Task 1 renderer fallback and existing `openShoppingList(stopRef)` behavior.
 - Produces: 320／375／390px and WebKit-touch evidence that blank-category Hero summaries show `未分類` and still target the same group.
 
-- [ ] **Step 1: Add a real blank-category browser fixture**
+- [x] **Step 1: Add a real blank-category browser fixture**
 
 Add one pending item with `category: ''` at a deterministic future stop. Assert visible `未分類`, full aria, absent product name, non-shrinking category, compact right alignment, and no horizontal overflow at 320／375／390px. Activate the Hero button and assert the corresponding `shopgroup_<stopRef>` exists and is visible.
 
-- [ ] **Step 2: Run Chromium and WebKit focused tests**
+- [x] **Step 2: Run Chromium and WebKit focused tests**
 
 ```powershell
 npx playwright test tests/browser/today-live-info.spec.js
@@ -101,7 +101,7 @@ npx playwright test tests/browser/today-live-info.spec.js --browser=webkit --gre
 
 Expected: Chromium Today suite and the WebKit touch-focused case PASS.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```powershell
 git add -- tests/browser/today-live-info.spec.js
@@ -126,11 +126,11 @@ git commit -m "test(today): cover uncategorized Hero targeting"
 - Consumes: verified v107 renderer/browser contract.
 - Produces: consistent v107 app/cache identity, five-entry release window, documentation, full regression evidence, and aligned `origin/dev`.
 
-- [ ] **Step 1: Forward bump and document v107**
+- [x] **Step 1: Forward bump and document v107**
 
 Set `APP_VERSION` and `SW_VERSION` to `v107`. Add a v107 release note, retain `v106` through `v103`, and change the historical release assertion to `['v106','v105','v104','v103']`. Document that `未分類` is display-only and data/storage remain unchanged.
 
-- [ ] **Step 2: Run static checks**
+- [x] **Step 2: Run static checks**
 
 ```powershell
 node tools/check-app-version.js
@@ -143,11 +143,11 @@ git diff --check
 
 Expected: v107 consistency, document titles, eight runtime assets, BUILTIN no-drift, manifest parsing, and diff checks pass.
 
-- [ ] **Step 3: Run full regression and health gate**
+- [x] **Step 3: Run full regression and health gate**
 
 Run every `tests/*.test.js`, then `npx playwright test`, then the repository offline Chromium health probe. Expected: all 83 Node files, all 150 Playwright cases after the new browser test, `healthCheck: []`, and `pageErrors: []`.
 
-- [ ] **Step 4: Commit release metadata**
+- [x] **Step 4: Commit release metadata**
 
 ```powershell
 git add -- app-version.js sw.js index.html tests/theme-system.test.js 04_UI_GUIDELINES.md 07_CHANGELOG.md 08_AI_HANDOVER.md tasks/current.md tests/README.md docs/superpowers/plans/2026-08-12-today-hero-uncategorized-fallback-v107.md

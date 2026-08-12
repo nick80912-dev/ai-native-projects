@@ -1,14 +1,14 @@
 # CURRENT(現在正在做的)
 
-## v106 current dev candidate
+## v107 current dev candidate
 
 
 
 - v102 Bar device/PWA acceptance is complete.
-- v106 is the current dev candidate: the active-trip Today Hero Shopping summary keeps `地點 · 第一個優先分類 +N`, renders the parts as one compact right-aligned group, caps visible locations at six Unicode code points plus `…`, and never exposes product names; category and `+N` remain complete.
+- v107 is the current dev candidate: blank Shopping categories render as `未分類` only in the active-trip Today Hero. Raw Shopping data remains blank, and the compact right-aligned `地點 · 分類 +N` layout, six-code-point location cap, complete category/count, product-name privacy, and location targeting remain intact.
 - Optimization roadmap: retain the Today Hero single-row briefing contract, including 44px/focus/ellipsis behavior and no duplicate next-stop reminder.
 - Next action: push `dev`, then perform device/PWA appearance and interaction verification. Do not merge main, deploy production, or create a production tag.
-- Automated evidence: v106 fresh gate passed 83/83 Node test files and 149/149 Playwright cases; document-title, app-version, 8 runtime assets, BUILTIN no-drift, manifest JSON, offline Health Check, pageerror, and diff checks passed.
+- Automated evidence: v107 fresh gate passed 83/83 Node test files and 150/150 Playwright cases; focused Chromium Today 18/18 and WebKit touch 1/1 also pass. Document-title, app-version, 8 runtime assets, BUILTIN no-drift, manifest JSON, offline Health Check, pageerror, and diff checks passed.
 
 
 
@@ -22,12 +22,12 @@
 
 | **`main` 原始碼** | **SW v96**，PR #13 merge commit `02705c3`；因 Netlify 額度用罄尚未部署／建立 tag |
 | 正式站 | `https://trippilot-jp.netlify.app/` — 2026-08-01 由 SW v18 升級至 v73,G1–G6 全數通過 |
-| **dev candidate** | **SW v106**; active-trip Today Hero keeps category preview complete in a compact right-aligned group and truncates only long locations |
+| **dev candidate** | **SW v107**; blank Hero Shopping categories display `未分類` without changing stored data |
 | 個人備份格式 | **v9**(`PERSONAL_STATE_SUPPORTED_VERSIONS = [1..9]`)—— v81 因想逛 key 識別語意變更而升版 |
-| dev automated validation | v106 fresh gate: **83/83** Node test files and **149/149** Playwright cases (0 failed); document-title, app-version, 8 runtime assets, BUILTIN no-drift, manifest JSON, offline Health Check, pageerror, and diff checks passed |
+| dev automated validation | v107 fresh gate: **83/83** Node test files and **150/150** Playwright cases (0 failed); focused Chromium Today 18/18 and WebKit touch 1/1; document-title, app-version, 8 runtime assets, BUILTIN no-drift, manifest JSON, offline Health Check, pageerror, and diff checks passed |
 | 既有 tag | `production-v18`、`production-v73` |
 
-**`main` 已合併 v96，但正式站仍停在 v73；v106 是目前 `dev` 的候選版。** v74–v87 已由 Bar 於 2026-08-03 確認真機驗收皆正常；v88–v89、v92–v95 亦於 2026-08-08 完成 Bar 畫面／真機確認。v96 因 Netlify 額度用罄尚未正式部署，也未建立 `production-v96` tag。Bar 已完成 v101／v102 裝置／PWA驗收；v106 只收斂 v105 Hero 分類摘要的對齊與截字，不改既有發布缺口。
+**`main` 已合併 v96，但正式站仍停在 v73；v107 是目前 `dev` 的候選版。** v74–v87 已由 Bar 於 2026-08-03 確認真機驗收皆正常；v88–v89、v92–v95 亦於 2026-08-08 完成 Bar 畫面／真機確認。v96 因 Netlify 額度用罄尚未正式部署，也未建立 `production-v96` tag。Bar 已完成 v101／v102 裝置／PWA驗收；v107 只為 Hero 空白分類補上顯示用 `未分類`，不改既有發布缺口。
 
 ### v74–v98 已折疊的主要能力
 
