@@ -44,7 +44,7 @@ Expected: FAIL because the current model does not expose `firstItemName` or `rem
 
 - [ ] **Step 3: Implement the minimal projection**
 
-Return the first trimmed group item and `Math.max(group.items.length - 1, 0)`, setting the remaining count to zero when the first name is empty.
+Return the first trimmed group item and `Math.max(group.items.length - 1, 0)`. The renderer, rather than the model, suppresses the separator and count when the first name is empty.
 
 - [ ] **Step 4: Run the model test and verify GREEN**
 
@@ -117,6 +117,9 @@ Run: `git add index.html tests/browser/today-live-info.spec.js && git commit -m 
 - Modify: `sw.js`
 - Modify: `07_CHANGELOG.md`
 - Modify: `tasks/current.md`
+- Modify: `04_UI_GUIDELINES.md`
+- Modify: `08_AI_HANDOVER.md`
+- Modify: `tests/README.md`
 
 **Interfaces:**
 - Consumes: completed Hero behavior and responsive verification.

@@ -1,5 +1,13 @@
 # 07 版本紀錄
 
+## 2026-08-12 — v104 Today Hero 採買品名預覽（dev candidate）
+
+- Active-trip Today Hero 的採買摘要改為 `地點 · 第一個優先品名 +N`；單一品項不顯示 `+N`，空白品名安全退回只顯示地點。
+- 第一個品名沿用既有 exact `必買` 穩定置頂與 store order，不新增排序；`順路採買`／`今日採買`、exact-next-stop 排除、通用入口、點擊錨點與鍵盤操作均維持不變。
+- 地點維持主要資訊，品名為次要資訊；兩者在 320／375／390px 都保持單行 ellipsis、44px 點擊區與無水平 overflow。Accessible name 同時包含地點、第一品名與總待買數。
+- App Shell 由 v103 forward bump 至 **v104**；`app-version.js`／`sw.js` 同步，未修改 Schema、Shopping store、Ledger、Apps Script、`netlify.toml`、`main`、正式部署或 production tag。
+- TDD 先驗證 model／renderer／responsive RED，再完成 GREEN。Fresh gate 通過 **83／83** Node test files、Playwright **149／149**（0 failed），另通過版本一致性、5 筆 release-note 視窗、8 個 runtime assets、BUILTIN no-drift、文件標題、manifest JSON、production-data `healthCheck()` 與 `git diff --check`。
+
 ## 2026-08-12｜Ledger 更正診斷去重（dev，SW v103 未升版）
 
 - **根因**：2026-08-11 除錯報告中的資料問題只有四種唯一訊息，但 Ledger 更正投影會被摘要、餘額與畫面重繪路徑反覆呼叫，四則訊息因此各寫入 25 次並填滿 100 筆 session AppLog。

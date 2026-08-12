@@ -1,12 +1,12 @@
 # 08 AI 交接文件(給未來的 AI 模型)
 
-## v103 Today Hero dev-candidate handover
+## v104 Today Hero dev-candidate handover
 
 - v102 device/PWA acceptance is complete.
-- v103 makes the active-trip Today Hero a compact travel briefing: decorative weather art plus an itinerary-date-aware outing hint and an itinerary-aware Shopping projection in one row. The exact next Shopping stop remains in the existing badge.
-- The Hero summary preserves 44px touch/focus behavior and ellipsizes long location names. Pre-trip Today stays unchanged.
-- Rollback boundary: revert the v103 Hero renderer, CSS, helper, tests, and version records together; do not alter schema, storage, Google Sheet data, or production/deployment records.
-- Fresh gate evidence: 83/83 Node test files and 149/149 Playwright cases passed; document-title, app-version, runtime-assets, BUILTIN no-drift, manifest JSON, and diff checks passed. Next action is device/PWA appearance and interaction acceptance on the dev candidate. Do not merge, deploy, or tag without approval.
+- v104 keeps the v103 compact travel briefing and changes the active-trip Shopping projection to `地點 · 第一個優先品名 +N`. The exact next Shopping stop remains in the existing badge.
+- The Hero summary preserves 44px touch/focus behavior and independently ellipsizes long location and item names. Pre-trip Today stays unchanged.
+- Rollback boundary: forward-bump and revert the v104 Hero model, renderer, CSS, tests, and version records together; do not alter schema, storage, Google Sheet data, or production/deployment records.
+- Fresh gate evidence: 83/83 Node test files and 149/149 Playwright cases passed; document-title, app-version, runtime-assets, BUILTIN no-drift, manifest JSON, production-data health, and diff checks passed. Next action is device/PWA appearance and interaction acceptance on the dev candidate. Do not merge, deploy, or tag without approval.
 
 
 
@@ -56,7 +56,7 @@
 - 現行 P002／P013／P022／P031／P040 都引用 H001,但五個 PID 必須保持分離：其 travel 分別為開車30分鐘／開車2小時／開車3分鐘／開車50分鐘／步行3分鐘。入住、退房、地址、停車與備註才由 H001 共用。
 - Schema authority 是外部 `schema.js`,inline Schema 必須 exact parity；`09_SCHEMA_MAPPING.md` 表格只能由 `schemaDoc()` 重生。公開 Places 的 HID 是尾端物理欄,刷新工具依位置 authority 驗證,不得擅自移到 Type 後方。
 - Validator 條件式要求：住宿必須有 HID、非住宿不得帶 HID、任何 HID 都必須存在於 Hotels；七表候選快照任一違反即 fail closed。Runtime `hotelOf()` 對兩端 HID 去空白／轉大寫後精確解析,天氣住宿共用同一 resolver；未解析時回傳 `null`。
-- 這次 migration 不改 Ledger Schema 2.9／21 欄、Apps Script、個人備份 v9、SW lifecycle／cache strategy 或發布權限。v101／v102 裝置／PWA 外觀驗收均已由 Bar 完成；v102 的 HID facts 保留為歷史驗收紀錄。下一步由 Bar 在裝置／PWA驗收 v103 dev candidate 的 Today Hero 外觀與互動：天氣旅行提示、次要 completed / total、順路採買入口、精確下一站不重複、長站名安全截斷，且無錯誤或水平 overflow。
+- 這次 migration 不改 Ledger Schema 2.9／21 欄、Apps Script、個人備份 v9、SW lifecycle／cache strategy 或發布權限。v101／v102 裝置／PWA 外觀驗收均已由 Bar 完成；v102 的 HID facts 保留為歷史驗收紀錄。下一步由 Bar 在裝置／PWA驗收 v104 dev candidate 的 Today Hero 外觀與互動：採買地點後顯示第一優先品名與 +N、精確下一站不重複、長站名與品名安全截斷，且無錯誤或水平 overflow。
 - **Tier 2 復原**：若 v102 已推送並由裝置接管後需要退回內容,依 `16_OPS_PLAYBOOK.md` §A2 採 forward bump：以最後正常內容建立下一個未使用版本,並讓 `app-version.js`／`sw.js` 同步升版以觸發清除壞快取；不得把版本倒退覆寫,**絕不刪除 `sw.js`**。
 
 ## Ledger Schema 2.9 現行契約

@@ -1,11 +1,11 @@
 # tests — 測試資產(交付必附)
 
-## v103 Today Hero coverage
+## v104 Today Hero coverage
 
 - `weather-rain-window.test.js` protects itinerary-date-aware weather hint priority.
-- `shopping-list.test.js` protects the itinerary-aware future-stop/count projection, neutral `今日採買` model, exact-next-stop exclusion, and generic fallback for unbound or orphan pending items.
-- `home-simplification.test.js` and `render-note.test.js` protect the single-row weather + Shopping Hero, exact accessible copy, quoted-city escaping, and generic fallback rendering contracts.
-- `browser/today-live-info.spec.js` makes the next-stop badge authoritative, verifies a deterministic future `順路採買` stop/count plus generic fallback, and covers accessible names, Enter／Space, focus-visible, 44px controls, ellipsis, badge overlap, Hero geometry, and horizontal overflow at 320／375／390px.
+- `shopping-list.test.js` protects the itinerary-aware future-stop projection, first prioritized item, remaining count, input immutability, neutral `今日採買` model, exact-next-stop exclusion, escaping, empty-item degradation, and generic fallback.
+- `home-simplification.test.js` and `render-note.test.js` protect the single-row weather + Shopping Hero, `地點 · 品名 +N`, accessible stop/item/count copy, quoted-value escaping, and generic fallback rendering contracts.
+- `browser/today-live-info.spec.js` makes the next-stop badge authoritative, verifies a deterministic future `順路採買` stop/item/count plus generic fallback, and covers accessible names, Enter／Space, focus-visible, 44px controls, dual ellipsis, badge overlap, Hero geometry, and horizontal overflow at 320／375／390px.
 
 
 
@@ -67,7 +67,7 @@
 - `browser/navigation-location.spec.js`:驗證既有單一導航按鈕的點擊行為；一般名稱只在點擊時請求一次定位並帶入 origin、拒絕定位退回日本搜尋、明確 reference 不掛定位 handler，且不新增「精確地點／附近搜尋」可見文字。執行:`npx playwright test tests/browser/navigation-location.spec.js`。
 - `ui-font.test.js`:驗證首屏不載入或 preconnect Google Fonts，全站使用裝置內建繁中 font stack，且不含 Hiragino／Noto Sans JP／Yu Gothic。執行:`node tests/ui-font.test.js`。
 - `browser/ui-ux-hardening.spec.js`：以 Chromium 驗證 Today 隱藏 daybar、header flex、同步／設定／Day chip／購物 filter 的 44px 實際高度、16px 完成／跳過、六主題亮色與文字對比、杉綠／焙茶 computed action 色，以及 reduced-motion behavior。執行：`npx playwright test tests/browser/ui-ux-hardening.spec.js`。
-- `browser/today-live-info.spec.js`：驗證 Today Hero 精確排除目前下一站或 cluster child，由下一站 badge 獨占該站待買；Hero 顯示第一個 future `順路採買` 地點與數量，unbound／orphan 混合狀態保留通用採買入口，並覆蓋 stopRef、aria、Enter／Space、focus-visible、採買錨點與不誤觸導覽。另以 320／375／390px 驗證 Hero Shopping 寬高至少 44px、長地點單行 ellipsis、下一站 badge 44×44、無重疊、Hero／ticket 幾何與水平 overflow。執行：`npx playwright test tests/browser/today-live-info.spec.js`。
+- `browser/today-live-info.spec.js`：驗證 Today Hero 精確排除目前下一站或 cluster child，由下一站 badge 獨占該站待買；Hero 顯示第一個 future `順路採買` 的地點、第一優先品名與 +N，unbound／orphan 混合狀態保留通用採買入口，並覆蓋 stopRef、aria、Enter／Space、focus-visible、採買錨點與不誤觸導覽。另以 320／375／390px 驗證 Hero Shopping 寬高至少 44px、長地點與長品名各自單行 ellipsis、下一站 badge 44×44、無重疊、Hero／ticket 幾何與水平 overflow。執行：`npx playwright test tests/browser/today-live-info.spec.js`。
 - `browser/data-observability.spec.js`：以 320／375／390px 驗證個人／團體單筆與團體批次父卡只有兩個 left-aligned single-line row、垂直置中、長內容 ellipsis 且不與右側金額重疊；清單隱藏付款方式但消費明細仍顯示，團體父卡顯示「付款人 · 分攤依品項」，子項保留精確分攤與狀態。另覆蓋狀態配色、健康同步 header、partial 來源與設定頁資料健康摘要。執行：`npx playwright test tests/browser/data-observability.spec.js`。
 - `browser/proxy-inline.spec.js`：以長品名、長代購姓名驗證最近消費、完整紀錄、個人批次父卡／展開子項與採買卡均保留正確代購語意；Ledger 單筆與批次卡隱藏付款方式、嚴格維持兩行截斷及 compact 字級，Shopping 卡維持原樣，兩者皆不與金額／操作欄重疊且無水平 overflow。執行：`npx playwright test tests/browser/proxy-inline.spec.js`。
 - `browser/trip-three-scenarios.spec.js`：Playwright 三情境 QA。以真實 App 啟動流程驗證①斷網時採用內建快照、②完整 mock Sheet 連網同步產生 online 快照、③固定旅行日 `Date` 後今天頁落在 Day 1；三情境皆要求 `pageerror=0`。執行：先 `npm ci`、`npx playwright install chromium`，再 `npm run test:browser`。
