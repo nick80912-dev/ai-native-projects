@@ -43,6 +43,16 @@ for (const file of ['index.html']) {
   assert.match(html, /\.today-hero-shopping-summary\{[^}]*min-height:44px/, `${file} keeps Hero Shopping tappable`);
   assert.match(
     html,
+    /\.today-hero-shopping-summary \.today-hero-summary-value\{[^}]*justify-content:flex-end/,
+    `${file} right-aligns the resolved Shopping value as one group`
+  );
+  assert.match(html, /\.today-hero-shopping-stop\{[^}]*flex:0 1 auto[^}]*max-width:7em/, `${file} lets only the stop shrink`);
+  assert.match(html, /\.today-hero-shopping-category\{[^}]*flex:0 0 auto/, `${file} preserves the complete Shopping category`);
+  assert.match(html, /\.today-hero-shopping-separator,\.today-hero-shopping-count\{[^}]*flex:0 0 auto/, `${file} preserves separator and count widths`);
+  assert.doesNotMatch(html, /today-hero-shopping-stop\{[^}]*1\.15/, `${file} removes proportional stop allocation`);
+  assert.doesNotMatch(html, /today-hero-shopping-category\{[^}]*\.85/, `${file} removes proportional category allocation`);
+  assert.match(
+    html,
     /\.today-hero-shopping-generic \.today-hero-summary-value\{[^}]*justify-content:flex-end/,
     `${file} right-aligns the generic Shopping action without changing resolved stop layout`
   );

@@ -179,12 +179,13 @@ input,select,textarea{font-size:16px}
 .today-hero-summary-value{display:flex;align-items:baseline;gap:4px;width:100%;min-width:0;overflow:hidden;margin-top:2px;font-size:13px;font-weight:900;white-space:nowrap}
 .today-hero-summary-value small{flex:0 0 auto;font-size:10px;color:var(--today-hero-emphasis)}
 .today-hero-shopping-summary{appearance:none;width:100%;min-height:44px;border:0;background:transparent;padding:0;text-align:right;font:inherit;align-items:flex-end;cursor:pointer}
+.today-hero-shopping-summary .today-hero-summary-value{justify-content:flex-end}
 .today-hero-shopping-generic .today-hero-summary-value{justify-content:flex-end}
 .today-hero-shopping-summary:focus-visible{outline:2px solid var(--today-hero-text);outline-offset:3px;border-radius:7px}
-.today-hero-shopping-stop{flex:1.15 1 0;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.today-hero-shopping-stop{flex:0 1 auto;max-width:7em;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .today-hero-shopping-separator,.today-hero-shopping-count{flex:0 0 auto}
 .today-hero-shopping-separator{opacity:.58}
-.today-hero-shopping-category{flex:.85 1 0;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:700;opacity:.8}
+.today-hero-shopping-category{flex:0 0 auto;min-width:0;white-space:nowrap;font-weight:700;opacity:.8}
 .mini-tl{margin-top:14px;position:relative}
 .mini-item{display:flex;gap:11px;align-items:flex-start;padding:6px 0}
 .mini-item .mt{font-size:12.5px;font-weight:700;color:#ffd98a;min-width:46px;padding-top:1px}
@@ -3332,12 +3333,17 @@ function shoppingStopStateFor(item){
   return resolveShoppingStopState(ref,shoppingStopById(ref),shoppingTripAuthority());
 }
 var SHOPPING_STOP_STATE_LABEL={pending:'行程站點待確認',orphan:'原行程站點已不存在'};
+function todayHeroShoppingStopText(stopName){
+  var chars=Array.from(String(stopName||'').trim());
+  return chars.length>6?chars.slice(0,6).join('')+'…':chars.join('');
+}
 function renderTodayShoppingSummary(day,currentStopRef){
   var items=shoppingListStore.all();
   var reminder=buildShoppingTodayReminder(items,day,currentStopRef);
   var model=todayShoppingHeroModel(reminder,day,currentStopRef);
   if(model){
     var category=String(model.firstCategory||'');
+    var visibleStopName=todayHeroShoppingStopText(model.stopName);
     var accessible=category
       ?'開啟'+model.stopName+'採買：'+category+'，共 '+model.count+' 項待買'
       :'開啟'+model.stopName+'的 '+model.count+' 項待買';
@@ -3348,7 +3354,7 @@ function renderTodayShoppingSummary(day,currentStopRef){
     return '<button type="button" class="today-hero-summary-item today-hero-shopping-summary"'+
       ' onclick="openShoppingList(\''+jsHtmlAttrString(model.stopRef)+'\')" aria-label="'+escapeHtmlAttr(accessible)+'">'+
       '<span class="today-hero-summary-label">'+escapeHtml(model.label)+'</span>'+
-      '<span class="today-hero-summary-value"><span class="today-hero-shopping-stop">'+escapeHtml(model.stopName)+'</span>'+
+      '<span class="today-hero-summary-value"><span class="today-hero-shopping-stop">'+escapeHtml(visibleStopName)+'</span>'+
       categoryPreview+'</span></button>';
   }
   var pending=items.filter(function(item){return item&&!item.done;}),current=String(currentStopRef||'');
