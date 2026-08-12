@@ -822,6 +822,7 @@ assert(ui.includes('toggleShoppingFormTarget('));
 assert(ui.includes('id="shoppingBuyForNew"'));
 assert(ui.includes('>儲存並新增</button>'));
 assert(!ui.includes("SHOPPING_CATEGORIES=['必買','伴手禮','代購'"));
+assert(!ui.includes("SHOPPING_CATEGORIES=['必買','伴手禮','生活用品','其他','未分類'"),'未分類 remains a display fallback, not stored category data');
 assert.match(ui,/\.shopping-target-badge\{[^}]*background:var\(--coral-bg\)[^}]*color:var\(--coral\)[^}]*border-radius:6px/);
 assert(ui.includes('--font-ui:"PingFang TC","Microsoft JhengHei",system-ui,-apple-system,sans-serif'),
   '全站字體變數只使用裝置內建繁中 fallback，不等待遠端字體');

@@ -119,16 +119,19 @@ assert(longStopHeroOut.includes('<span class="today-hero-shopping-category">生�
 assert(longStopHeroOut.includes('<small class="today-hero-shopping-count">+2</small>'));
 assert(!longStopHeroOut.includes('SECRET_ONE'),'compact Hero summary still excludes product names');
 
-const emptyItemHeroOut=sandbox.renderTodayShoppingSummary({
-  items:[{id:'future',place:'Future stop'}],
-  groups:[{stopRef:'future',stopName:'Future stop',items:['SECRET_PRODUCT'],firstCategory:''}]
-},'');
-assert(emptyItemHeroOut.includes('<span class="today-hero-shopping-stop">Future…</span>'));
-assert(emptyItemHeroOut.includes('aria-label="開啟Future stop的 1 項待買"'));
-assert(!emptyItemHeroOut.includes('today-hero-shopping-separator'),'empty categories omit the separator');
-assert(!emptyItemHeroOut.includes('today-hero-shopping-category'),'empty categories omit the category span');
-assert(!emptyItemHeroOut.includes('today-hero-shopping-count'),'empty categories omit the remaining count');
-assert(!emptyItemHeroOut.includes('SECRET_PRODUCT'),'blank-category fallback excludes product names');
+const blankCategoryReminder={
+  items:[{id:'future',place:'Nakayama Farm Heart Sakazu'}],
+  groups:[{stopRef:'future',stopName:'Nakayama Farm Heart Sakazu',items:['SECRET_ONE','SECRET_TWO'],firstCategory:''}]
+};
+const blankCategorySnapshot=JSON.parse(JSON.stringify(blankCategoryReminder));
+const emptyItemHeroOut=sandbox.renderTodayShoppingSummary(blankCategoryReminder,'');
+assert(emptyItemHeroOut.includes('<span class="today-hero-shopping-stop">Nakaya…</span>'));
+assert(emptyItemHeroOut.includes('aria-label="開啟Nakayama Farm Heart Sakazu採買：未分類，共 2 項待買"'));
+assert(emptyItemHeroOut.includes('<span class="today-hero-shopping-separator">·</span>'));
+assert(emptyItemHeroOut.includes('<span class="today-hero-shopping-category">未分類</span>'));
+assert(emptyItemHeroOut.includes('<small class="today-hero-shopping-count">+1</small>'));
+assert(!emptyItemHeroOut.includes('SECRET_ONE'),'blank-category fallback excludes product names');
+assert.deepStrictEqual(blankCategoryReminder,blankCategorySnapshot,'display fallback does not mutate reminder input');
 
 const quotedCategoryHeroOut=sandbox.renderTodayShoppingSummary({
   items:[{id:'future',place:'Future stop'}],

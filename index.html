@@ -3342,7 +3342,7 @@ function renderTodayShoppingSummary(day,currentStopRef){
   var reminder=buildShoppingTodayReminder(items,day,currentStopRef);
   var model=todayShoppingHeroModel(reminder,day,currentStopRef);
   if(model){
-    var category=String(model.firstCategory||'');
+    var category=String(model.firstCategory||'').trim()||'未分類';
     var visibleStopName=todayHeroShoppingStopText(model.stopName);
     var accessible=category
       ?'開啟'+model.stopName+'採買：'+category+'，共 '+model.count+' 項待買'
