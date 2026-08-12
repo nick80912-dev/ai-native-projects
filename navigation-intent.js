@@ -17,9 +17,16 @@
     var token=Math.floor(Number(value));
     return isFinite(token)&&token>0&&token<=MAX_SAFE_TOKEN?token:1;
   }
+  function retainedToken(intent){
+    var token=Number(intent&&intent.token);
+    return isFinite(token)&&token>0&&token<=MAX_SAFE_TOKEN&&Math.floor(token)===token?token:0;
+  }
   function create(initial){
     initial=initial||{};
-    return {nextToken:nextToken(initial.nextToken),pending:initial.pending||null,active:initial.active||null};
+    var pending=initial.pending||null,active=initial.active||null,token=nextToken(initial.nextToken);
+    var retained=Math.max(retainedToken(pending),retainedToken(active));
+    if(retained>=token)token=retained>=MAX_SAFE_TOKEN?MAX_SAFE_TOKEN:retained+1;
+    return {nextToken:token,pending:pending,active:active};
   }
   function request(state,intent){
     state=create(state);var token=state.nextToken;
