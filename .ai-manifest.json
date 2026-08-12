@@ -2,9 +2,10 @@
   "$comment": "AI 導航檔 — 任何 AI 接手第一步只讀這份即可掌握全貌。這是 13 步流程的第 1 步。",
   "project": "japan-travel-pwa(日本旅遊行程 App)",
   "owner": "Bar(產品負責人,非工程師,繁中溝通,要直接執行不要教學;AI=全職工程團隊)",
-  "version": "2.28-ledger-warning-dedup-v103",
+  "manifest_format": "2.29",
   "framework": "ai-native-framework@pending(尚未抽取;見 FUTURE_PLAN_framework-extraction.md)",
   "updated": "2026-08-12",
+  "current_status": { "authority": "tasks/current.md" },
   "live": "https://trippilot-jp.netlify.app/",
   "start_here": "先讀本檔 → PROJECT_CONSTITUTION.md(憲章/流程/禁令)→ 08_AI_HANDOVER.md → 15_AI_EXECUTION_RULES.md(決策權限/任務分級,必讀)→ 相關 adr/ → 依任務讀 03_DATABASE/09_SCHEMA_MAPPING(資料與欄位)、05_CODING_RULES/11_CODING_CONVENTION(程式)、12_DEV_WORKFLOW(步驟)",
   "governance": {
@@ -90,64 +91,6 @@
     "item id 含「/」→ DOM 查找用 getElementById 勿用 CSS selector【環境陷阱,一律適用】",
     "iOS WebKit 雙擊縮放仲裁會受 document dblclick listener 存在性影響(目標機三次開關對照的觀測者效應);勿移除 passive no-op iosDoubleTapZoomSuppressor,大版本再現時優先複驗【環境陷阱】"
   ],
-  "historical_status_snapshot_2026_08_01": {
-    "done": [
-      "V2 Schema驅動CMS",
-      "AI Harness治理層(憲章/10-16/ADR×5/健康檢查)",
-      "停車引用繼承",
-      "PWA離線",
-      "首頁下一站模式",
-      "首頁天氣摘要",
-      "R001/R006 餐廳欄位補齊",
-      "購物頁多地點切換",
-      "六天行程大方向資料補完(2026-07-09)",
-      "治理層v2:狀態收斂/檔案分級14/執行規範15/OpsPlaybook16/00定位為歷史快照",
-      "iOS 手勢政策收斂:Scroll-only(pan-x pan-y)+表單16px+focus瞬鎖還原+回前景恢復(v4→v9 歷程見 07)",
-      "Netlify 雙站架構(main=正式/dev=測試)",
-      "行程表頭契約 行程(Schema 2.3)與 fuel 型別",
-      "父子行程卡(synthetic controller,12 組稽核)",
-      "7 表原子快照同步",
-      "診斷面板與同步狀態精簡;iOS手勢診斷退役,保留單一passive no-op dblclick相容性監聽器(不攔截)",
-      "Dev PWA 圖示更新(SW cache v13)",
-      "分帳跨裝置同步(Schema 2.4/ADR 0006/Apps Script repository/SW v14)",
-      "分帳單幣輸入換算與共用設定(Schema 2.5/Apps Script版本控管/SW v16;新版端點/TripConfig CSV/ledger dup已驗證)",
-      "分帳安全與設定備份UX(中文標籤/TEST頂部警示/行內身分切換/類別session沿用/JSON剪貼簿與按需還原/SW v17)",
-      "Ledger 2.0契約完成(Schema 2.6/Apps Script 14欄/舊payload相容/真實端點與CSV回讀驗證)",
-      "分帳2.0雙軌資料層(個人localStorage/團體Repository/自訂類別與支付方式/備份v2/SW v19)",
-      "分帳2.0刪除語意(個人真刪/團體墓碑/有效紀錄冪等解析/舊負數相容)",
-      "分帳2.0結算核心(participants快照/最大餘數整數分配/雙幣餘額/確定性貪婪轉帳)",
-      "分帳2.0手機UI(PR5:雙軌儀表板/Bottom Sheet快速記帳/多品項稅折與覆寫/代購彙總/團體結算/完整歷史與明細/SW v20)",
-      "分帳2.1(Schema 2.7固定16欄/time消費時間/queue-first樂觀儲存/TEST平行帳本/店名與搜尋/代購對象v3備份/個人原地編輯/團體墓碑替代編輯/SW v21)",
-      "分帳2.2(Schema 2.8固定21欄/Apps Script真實端點與CSV落位驗證/日期時間拆欄與月曆/篩選面板與元件一致性/結構化稅券資料/近期明細操作入口/SW v22)",
-      "結算一致性(Schema 2.9固定21欄/還款確認切點永久保護/原付款人引導式整張更正與作廢/commit-last版本投影/正式與TEST隔離/SW v69)",
-      "真機驗收回饋(新增消費分攤成員選取改中度青綠底#d6e8e4/不改資料與權限/SW v70)",
-      "作廢預覽動作去重(預覽後只留確認整張作廢/不改append-only作廢語意/SW v71/Bar真機驗收通過)",
-      "Playwright三情境QA入版控(斷網內建/連網同步/旅行日mock Date/pageerror=0/qa.yml)",
-      "SW v72開發完成(六組主題/設定頁2.0/inline SVG/個人備份v8/旅途紀錄/app-version單一來源/使用者版更新日誌；Bar真機驗收待辦)",
-      "SW更新完整性修正(sw.js自帶SW_VERSION/移除importScripts版本依賴/install用reload、fetch用no-cache避免HTTP cache汙染SHELL/子資源不再fallback成index.html/APP_VERSION安全取值/tools一致性檢查/qa.yml sanity支援dev push；SW v73)",
-      "批次一發布阻斷項全數交付(任務板歸位/ADR 0008 六主題追認/production-v18 回滾錨點/SW 更新完整性修正 v73/備份 v1-v8 還原矩陣與相容契約/已鎖帳文案/測試模式與時間模擬暴露面調查與備份防呆)",
-      "SW v73 正式發布(2026-08-01;v18→v73,merge commit 17c423f,tag production-v73;G1 真機驗收全數通過;未建 production-v72 因 v72 未曾正式發布)",
-      "Release back-merge main→dev(2026-08-01;merge commit a930858,零內容差異;origin/main 已是 origin/dev 的 ancestor)",
-      "SW v74設定根頁三群組與測試模式控制頁已推送dev(c51752b;含警告列AA對比修正;main未動)",
-      "SW v75採買照片與定位導航完成(裝置本機IndexedDB照片/無文字迴紋針/照片檢視器頂部safe-area與下滑關閉/備份剝除photoId/一般同名地點依目前位置導航/詳細分點精確導航;56/56 Node + Playwright 13/13)"
-    ],
-    "pending_in_order": [
-      "v75採買照片與定位導航:自動驗證完成,依Bar指令交付dev;待Bar真機/PWA驗收,不得動main或production tag",
-      "框架抽取(FUTURE_PLAN)"
-    ]
-  },
-  "status": {
-    "production": "main 原始碼維持 v96；正式站與 production tag 維持 v73，直到已核准的 release PR、部署與線上驗證完成",
-    "dev_candidate": "v103 active-trip Today Hero actionable summary plus Ledger correction diagnostic warn-once: distinct invalid events remain visible and fail closed, while repeated projections no longer fill AppLog",
-    "device_acceptance": "v102 device/PWA acceptance complete; v103 awaits dev-candidate device/PWA appearance and interaction acceptance",
-    "next_action": "Bar validates the v103 dev-candidate Today Hero appearance and interaction in the device/PWA; no merge, deployment, or production tag without approval",
-    "automated_validation": "v103 fresh release gate after Ledger diagnostic deduplication: 83/83 Node test files and 149/149 Playwright cases passed; document-title, app-version, 8 runtime assets, BUILTIN no-drift, manifest JSON, and diff checks passed",
-    "pending_in_order": [
-      "Bar於目標裝置／PWA驗證 v103 dev candidate：Today Hero 的天氣旅行提示、次要 completed / total、順路採買入口、精確下一站不重複、長站名安全截斷，以及無錯誤或水平 overflow",
-      "完成受保護的 dev → main 發布流程並驗證正式站",
-      "線上驗證成功後才建立 annotated production tag；backlog #22已完成且#24已以實驗後取消歸檔"
-    ]
-  },
   "after_every_delivery": "跑 window.healthCheck() + 輸出健康報告 + 更新 07_CHANGELOG(建新檔) + 必要時更新本 manifest",
   "doc_authority": "GitHub 本 repo 為程式與文件唯一權威;Drive 為備份;內容資料來源=Drive 試算表「261018-261023岡山四國六天五夜」發布 CSV"
 }

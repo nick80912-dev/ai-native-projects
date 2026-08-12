@@ -12,6 +12,7 @@
 > Bar 於 2026-07-09 核准:自此之後,**每次程式交付必附與修改範圍相符的可執行測試**,測試檔納入 repo 版控;「通過自動測試」以 repo 內可重跑的腳本為準,不接受口頭宣稱。三情境完整 QA 仍須另行驗證。
 
 ## 現有測試
+- `manifest-status-authority.test.js`：驗證 `.ai-manifest.json` 僅宣告 `tasks/current.md` 為目前產品狀態權威，且不保留易過時的開發候選、下一步或自動驗證快照。執行：`node tests/manifest-status-authority.test.js`；repo gate：`node tools/check-doc-titles.js`。
 - `atomic-sheet-sync.test.js`:驗證七張 Sheet 候選資料需整批驗證後一次啟用、舊快取遷移、失敗候選保留與同步狀態面板；v88 另鎖定健康 header 只顯示「已同步」但 aria 保留更新時間、其他狀態相對時間、最後完整同步時間、partial 失敗來源的人類可讀文案，以及舊快照 metadata 相容。執行:`node tests/atomic-sheet-sync.test.js`。
 - `network-retry-toast-guard.test.js`：驗證 Sheet 首次抓取失敗後精確退避 800ms 且只重試一次、第二次錯誤維持可觀察，以及缺少 Toast DOM 節點時不拋錯、不改 action／timer，正常 Toast 行為不變。執行：`node tests/network-retry-toast-guard.test.js`。
 - `app-now.test.js`:驗證正式時間、offset/custom 時間模擬與共用 `appNow()` 時鐘。執行:`node tests/app-now.test.js`。

@@ -52,6 +52,15 @@ for (const f of Object.keys(MAP)) {
 try {
   const m = JSON.parse(fs.readFileSync('.ai-manifest.json', 'utf8'));
   if (!m.project) errors.push('.ai-manifest.json 缺少 project 欄位');
+  if (m.manifest_format !== '2.29') errors.push('.ai-manifest.json manifest_format 應為 2.29');
+  if (!m.current_status || m.current_status.authority !== 'tasks/current.md') {
+    errors.push('.ai-manifest.json current_status.authority 應指向 tasks/current.md');
+  } else if (!fs.existsSync(m.current_status.authority)) {
+    errors.push('.ai-manifest.json current_status.authority 指向不存在的檔案');
+  }
+  ['status', 'historical_status_snapshot_2026_08_01'].forEach(function(key) {
+    if (Object.prototype.hasOwnProperty.call(m, key)) errors.push('.ai-manifest.json 不得保留過時狀態欄位:' + key);
+  });
 } catch (e) {
   errors.push('.ai-manifest.json 不是有效 JSON:' + e.message);
 }
