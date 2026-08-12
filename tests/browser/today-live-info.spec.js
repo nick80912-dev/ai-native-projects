@@ -152,13 +152,14 @@ test('Today Hero excludes the exact next stop and shows the first future Shoppin
     renderToday();
   },seeded.otherRefs[0]);
   const expected=await page.evaluate((ref)=>shoppingStopById(ref).name,seeded.otherRefs[0]);
+  const visibleExpected=await page.evaluate((name)=>todayHeroShoppingStopText(name),expected);
   const summary=page.locator('#view-today .today-hero-shopping-summary');
   await expect(summary).toHaveAttribute('aria-label',`開啟${expected}採買：必買，共 3 項待買`);
   await expect(summary.locator('.today-hero-summary-label')).toHaveText('順路採買');
-  await expect(summary.locator('.today-hero-shopping-stop')).toHaveText(expected);
+  await expect(summary.locator('.today-hero-shopping-stop')).toHaveText(visibleExpected);
   await expect(summary.locator('.today-hero-shopping-category')).toHaveText('必買');
   await expect(summary.locator('.today-hero-shopping-count')).toHaveText('+2');
-  await expect(summary.locator('.today-hero-summary-value')).toHaveText(`${expected}·必買+2`);
+  await expect(summary.locator('.today-hero-summary-value')).toHaveText(`${visibleExpected}·必買+2`);
   await expect(summary).not.toContainText('one');
   await expect(summary).not.toContainText('two');
   await expect(summary).not.toContainText('three');
@@ -278,20 +279,18 @@ test('the badge supports Tab, Enter, Space and a visible keyboard focus ring', a
 });
 
 test('320, 375 and 390px keep the merged Hero summary on one row', async ({ page }) => {
-  const longCategory='A deliberately very long shopping category for ellipsis '.repeat(10);
   const seeded=await seedTodayShoppingGroups(page,[['current one','current two','current three'],['secret product','second','third']]);
-  await page.evaluate((ref)=>{DB.trip.days.forEach((day)=>day.items.forEach((item)=>{if(item.id===ref){item.place='A deliberately very long future stop name for ellipsis '.repeat(12);item.act='';}}));},seeded.otherRefs[0]);
-  await page.evaluate(({ref,longCategory})=>{
-    const originalBuild=buildShoppingTodayReminder;
-    buildShoppingTodayReminder=function(items,day,excludedStopRef){
-      const reminder=originalBuild(items,day,excludedStopRef);
-      if(reminder)reminder.groups.forEach((group)=>{if(group.stopRef===ref)group.firstCategory=longCategory;});
-      return reminder;
-    };
+  await page.evaluate((ref)=>{
+    DB.trip.days.forEach((day)=>day.items.forEach((item)=>{
+      if(item.id===ref){item.place='廣島和平紀念資料館';item.act='';}
+    }));
+    shoppingListStore.all().filter((item)=>item.stopRef===ref).forEach((item)=>{
+      shoppingListStore.update(item.id,{category:'生活用品'});
+    });
     requestHomeWeather=function(){};
     homeWeatherFor=function(){return {city:'Hiroshima',temp:21,rain:40,icon:'rain',code:61};};
     renderToday();
-  },{ref:seeded.otherRefs[0],longCategory});
+  },seeded.otherRefs[0]);
   for(const width of [320,375,390]){
     await page.setViewportSize({width,height:844});
     const layout=await page.evaluate(()=>{
@@ -300,7 +299,9 @@ test('320, 375 and 390px keep the merged Hero summary on one row', async ({ page
       const shopping=document.querySelector('#view-today .today-hero-shopping-summary');
       const value=document.querySelector('#view-today .today-hero-shopping-summary .today-hero-summary-value');
       const stop=document.querySelector('#view-today .today-hero-shopping-stop');
+      const separator=document.querySelector('#view-today .today-hero-shopping-separator');
       const category=document.querySelector('#view-today .today-hero-shopping-category');
+      const count=document.querySelector('#view-today .today-hero-shopping-count');
       const ticket=document.querySelector('#view-today .nx-ticket');
       const badge=document.querySelector('#view-today .nx-buy-badge');
       const targets=['.nx-ticket-kicker','.nx-ticket-time','.nx-ticket-title']
@@ -310,16 +311,23 @@ test('320, 375 and 390px keep the merged Hero summary on one row', async ({ page
         const r=element.getBoundingClientRect();
         return b.left<r.right&&b.right>r.left&&b.top<r.bottom&&b.bottom>r.top;
       });
+      const parts=[stop,separator,category,count].filter(Boolean);
+      const gaps=parts.slice(1).map((part,index)=>
+        part.getBoundingClientRect().left-parts[index].getBoundingClientRect().right
+      );
+      const last=parts[parts.length-1].getBoundingClientRect();
       return {
         overflow:document.documentElement.scrollWidth>window.innerWidth,
         summaryRows:getComputedStyle(summary).gridTemplateRows.split(' ').length,
         shoppingWidth:Math.round(s.width),shoppingHeight:Math.round(s.height),
         valueHeight:Math.round(value.getBoundingClientRect().height),valueLineHeight:parseFloat(getComputedStyle(value).lineHeight),
         valueWhiteSpace:getComputedStyle(value).whiteSpace,valueGap:parseFloat(getComputedStyle(value).columnGap),
+        stopText:stop.textContent,rightDelta:Math.abs(last.right-value.getBoundingClientRect().right),gaps,
         stopOverflow:stop.scrollWidth>stop.clientWidth,stopWhiteSpace:getComputedStyle(stop).whiteSpace,
         stopTextOverflow:getComputedStyle(stop).textOverflow,
-        categoryOverflow:category.scrollWidth>category.clientWidth,categoryWhiteSpace:getComputedStyle(category).whiteSpace,
-        categoryTextOverflow:getComputedStyle(category).textOverflow,
+        categoryText:category.textContent,categoryOverflow:category.scrollWidth>category.clientWidth,
+        categoryWhiteSpace:getComputedStyle(category).whiteSpace,categoryShrink:getComputedStyle(category).flexShrink,
+        countText:count.textContent,countOverflow:count.scrollWidth>count.clientWidth,countShrink:getComputedStyle(count).flexShrink,
         heroHeight:Math.round(h.height),ticketTop:Math.round(t.top),
         badgeWidth:Math.round(b.width),badgeHeight:Math.round(b.height),badgeOverlaps
       };
@@ -329,14 +337,21 @@ test('320, 375 and 390px keep the merged Hero summary on one row', async ({ page
     expect(layout.shoppingWidth).toBeGreaterThanOrEqual(44);
     expect(layout.shoppingHeight).toBeGreaterThanOrEqual(44);
     expect(layout.valueWhiteSpace).toBe('nowrap');
-    expect(layout.valueGap).toBeGreaterThanOrEqual(4);
+    expect(layout.valueGap).toBe(4);
     expect(layout.valueHeight).toBeLessThanOrEqual(Math.ceil(layout.valueLineHeight)+1);
-    expect(layout.stopOverflow).toBe(true);
+    expect(layout.stopText).toBe('廣島和平紀念…');
+    expect(layout.rightDelta).toBeLessThanOrEqual(1);
+    layout.gaps.forEach((gap)=>expect(gap).toBeGreaterThanOrEqual(3));
+    layout.gaps.forEach((gap)=>expect(gap).toBeLessThanOrEqual(5));
     expect(layout.stopWhiteSpace).toBe('nowrap');
     expect(layout.stopTextOverflow).toBe('ellipsis');
-    expect(layout.categoryOverflow).toBe(true);
+    expect(layout.categoryText).toBe('生活用品');
+    expect(layout.categoryOverflow).toBe(false);
     expect(layout.categoryWhiteSpace).toBe('nowrap');
-    expect(layout.categoryTextOverflow).toBe('ellipsis');
+    expect(layout.categoryShrink).toBe('0');
+    expect(layout.countText).toBe('+2');
+    expect(layout.countOverflow).toBe(false);
+    expect(layout.countShrink).toBe('0');
     expect(layout.heroHeight).toBeLessThanOrEqual(190);
     expect(layout.ticketTop).toBeLessThan(300);
     expect(layout.badgeWidth).toBeGreaterThanOrEqual(44);
