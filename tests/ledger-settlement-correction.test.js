@@ -235,6 +235,34 @@ assert(
   mod.__dataWarnings.some(message=>message.includes('忽略更正版本')),
   'projection diagnostics use the categorized data logger when no explicit warning sink is supplied'
 );
+const reportedInvalidCorrections=[
+  correctionCommit('1785378016083-pklg','1785376977160-cmlj','1785376977160-cmlj',['missing-item-a']),
+  correctionCommit('1785373447574-lxr9','1785246915539-nu0d','1785246915539-nu0d',['missing-item-b']),
+  correctionItem('1785373399333-asor','1785373399334-l3ac','1785251556577-ha18','缺少完整 commit'),
+  correctionCommit('1785373399334-l3ac','1785251556577-ha18','1785251556577-ha18',['1785373399333-asor'])
+];
+const expectedReportedWarnings=[
+  '忽略更正版本 1785378016083-pklg:找不到 root 收據 1785376977160-cmlj',
+  '忽略更正版本 1785373447574-lxr9:找不到 root 收據 1785246915539-nu0d',
+  '忽略更正版本 1785373399334-l3ac:找不到 root 收據 1785251556577-ha18',
+  '忽略更正品項 1785373399333-asor:找不到完整 commit'
+];
+const warningStart=mod.__dataWarnings.length;
+mod.deriveLedgerCorrectionProjection(reportedInvalidCorrections);
+mod.deriveLedgerCorrectionProjection(reportedInvalidCorrections);
+assert.deepStrictEqual(
+  plain(mod.__dataWarnings.slice(warningStart)),
+  expectedReportedWarnings,
+  'repeated default projections record each distinct correction warning only once per page session'
+);
+const explicitWarnings=[];
+mod.deriveLedgerCorrectionProjection(reportedInvalidCorrections,message=>explicitWarnings.push(String(message)));
+mod.deriveLedgerCorrectionProjection(reportedInvalidCorrections,message=>explicitWarnings.push(String(message)));
+assert.deepStrictEqual(
+  explicitWarnings,
+  expectedReportedWarnings.concat(expectedReportedWarnings),
+  'an explicit projection warning sink receives complete diagnostics on every invocation'
+);
 const invalidTimeCommit=correctionCommit(
   '1784429020000-0001',
   malformedRoot,

@@ -6290,7 +6290,11 @@ function ledgerCorrectionItemChanges(beforeRecords,afterRecords){
   }
   return {added:added,removed:removed,modified:modified};
 }
+var _ledgerCorrectionDataWarned=Object.create(null);
 function ledgerCorrectionDataWarning(message){
+  message=String(message||'');
+  if(_ledgerCorrectionDataWarned[message])return;
+  _ledgerCorrectionDataWarned[message]=true;
   if(typeof AppLog!=='undefined'&&AppLog&&typeof AppLog.data==='function')AppLog.data(message);
   else if(typeof console!=='undefined'&&console.warn)console.warn(message);
 }
