@@ -1,5 +1,13 @@
 # 07 版本紀錄
 
+## 2026-08-12｜Ledger 更正診斷去重（dev，SW v103 未升版）
+
+- **根因**：2026-08-11 除錯報告中的資料問題只有四種唯一訊息，但 Ledger 更正投影會被摘要、餘額與畫面重繪路徑反覆呼叫，四則訊息因此各寫入 25 次並填滿 100 筆 session AppLog。
+- **最小修正**：只在 `ledgerCorrectionDataWarning()` 的隱式 AppLog 出口以完整訊息做 session warn-once；不同 record ID／root／原因仍各留一筆。清除 AppLog 不重設去重集合，重新載入 App 後才重新開始記錄。
+- **資料與診斷邊界**：無效更正仍 fail-closed，不進有效收據、餘額或歷史；顯式傳入 projection 的 warning callback 仍在每次呼叫取得完整訊息。通用 AppLog、Queue、delivery bridge、settlement、correction projection、Schema、Apps Script 與 Ledger 資料均未修改。
+- **外部核對**：2026-08-12 重新讀取公開 Ledger CSV 與 Apps Script `GET ?action=ledger&after=0`，兩者皆為 17 筆且均不含報告中的七個 ID；因此沒有改寫 live Sheet。附件事件屬當時／裝置事件集合，本批只修正重複診斷。
+- **TDD 與完整 Gate**：附件四種事件的測試先以實際八筆、預期四筆正確失敗；最小修正後 focused tests 全綠。Fresh gate 通過 **83／83** Node test files、Playwright **149／149**（0 failed），並通過文件標題、App／SW v103 一致性、8 個 runtime assets、BUILTIN no-drift、manifest JSON 與 `git diff --check`。維持 v103，不動 `app-version.js`、`sw.js`、`netlify.toml`、`main`、部署或 production tag。
+
 ## 2026-08-11 — v103 Today Hero actionable summary (dev candidate)
 
 - Today is a calm travel briefing rather than a KPI panel: weather uses an itinerary-date-aware outing hint, and the next eligible Shopping stop is the actionable primary copy.

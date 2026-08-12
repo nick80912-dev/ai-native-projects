@@ -5,14 +5,14 @@
 
 
 - v102 Bar device/PWA acceptance is complete.
-- v103 is the current dev candidate: the active-trip Today Hero combines a weather outing hint and itinerary-aware Shopping summary; the exact next Shopping stop remains in its existing badge.
+- v103 is the current dev candidate: the active-trip Today Hero combines a weather outing hint and itinerary-aware Shopping summary; the exact next Shopping stop remains in its existing badge. Ledger correction diagnostics now keep each distinct invalid event once per session instead of filling AppLog during repeated projections.
 - Optimization roadmap: retain the Today Hero single-row briefing contract, including 44px/focus/ellipsis behavior and no duplicate next-stop reminder.
 - Next action: device/PWA appearance and interaction verification on the v103 dev candidate. Do not merge main, deploy production, or create a production tag.
-- Automated evidence: fresh v103 gate passed 83/83 Node test files and 149/149 Playwright cases; document-title, app-version, runtime-assets, BUILTIN no-drift, manifest JSON, and diff checks passed.
+- Automated evidence: fresh v103 gate after Ledger diagnostic deduplication passed 83/83 Node test files and 149/149 Playwright cases; document-title, app-version, 8 runtime assets, BUILTIN no-drift, manifest JSON, and diff checks passed.
 
 
 
-> 更新於 2026-08-11。細任務層;里程碑看 `06_ROADMAP.md`,**逐版交付紀錄一律看 `07_CHANGELOG.md`**,正式待辦看 `tasks/backlog.md`。
+> 更新於 2026-08-12。細任務層;里程碑看 `06_ROADMAP.md`,**逐版交付紀錄一律看 `07_CHANGELOG.md`**,正式待辦看 `tasks/backlog.md`。
 > 本檔只回答三件事:**現在線上是什麼、dev 上是什麼、下一批要做什麼**。歷史流水帳不放這裡。
 
 ## 📌 現況
@@ -22,12 +22,12 @@
 
 | **`main` 原始碼** | **SW v96**，PR #13 merge commit `02705c3`；因 Netlify 額度用罄尚未部署／建立 tag |
 | 正式站 | `https://trippilot-jp.netlify.app/` — 2026-08-01 由 SW v18 升級至 v73,G1–G6 全數通過 |
-| **dev candidate** | **SW v103**; active-trip Today Hero is a compact itinerary-date weather hint plus next eligible Shopping location, while the exact next stop remains in the existing badge |
+| **dev candidate** | **SW v103**; active-trip Today Hero remains the visual candidate, with Ledger correction AppLog exact-message warn-once added as a diagnostic-only delta |
 | 個人備份格式 | **v9**(`PERSONAL_STATE_SUPPORTED_VERSIONS = [1..9]`)—— v81 因想逛 key 識別語意變更而升版 |
-| dev automated validation | v103 fresh gate: **83/83** Node test files and **149/149** Playwright cases (0 failed); document-title, app-version, runtime-assets, BUILTIN no-drift, manifest JSON, and diff checks all passed |
+| dev automated validation | v103 fresh gate after Ledger diagnostic deduplication: **83/83** Node test files and **149/149** Playwright cases (0 failed); document-title, app-version, 8 runtime assets, BUILTIN no-drift, manifest JSON, and diff checks all passed |
 | 既有 tag | `production-v18`、`production-v73` |
 
-**`main` 已合併 v96，但正式站仍停在 v73；v103 是目前 `dev` 的候選版。** v74–v87 已由 Bar 於 2026-08-03 確認真機驗收皆正常；v88–v89、v92–v95 亦於 2026-08-08 完成 Bar 畫面／真機確認。v96 因 Netlify 額度用罄尚未正式部署，也未建立 `production-v96` tag。Bar 已完成 v101／v102 裝置／PWA驗收；v103 接續交付 Today Hero 可行動摘要,不改既有發布缺口。
+**`main` 已合併 v96，但正式站仍停在 v73；v103 是目前 `dev` 的候選版。** v74–v87 已由 Bar 於 2026-08-03 確認真機驗收皆正常；v88–v89、v92–v95 亦於 2026-08-08 完成 Bar 畫面／真機確認。v96 因 Netlify 額度用罄尚未正式部署，也未建立 `production-v96` tag。Bar 已完成 v101／v102 裝置／PWA驗收；v103 接續交付 Today Hero 可行動摘要及 Ledger 診斷去重，不改既有發布缺口。
 
 ### v74–v98 已折疊的主要能力
 

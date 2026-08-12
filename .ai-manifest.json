@@ -2,9 +2,9 @@
   "$comment": "AI 導航檔 — 任何 AI 接手第一步只讀這份即可掌握全貌。這是 13 步流程的第 1 步。",
   "project": "japan-travel-pwa(日本旅遊行程 App)",
   "owner": "Bar(產品負責人,非工程師,繁中溝通,要直接執行不要教學;AI=全職工程團隊)",
-  "version": "2.27-today-actionable-summary-v103",
+  "version": "2.28-ledger-warning-dedup-v103",
   "framework": "ai-native-framework@pending(尚未抽取;見 FUTURE_PLAN_framework-extraction.md)",
-  "updated": "2026-08-11",
+  "updated": "2026-08-12",
   "live": "https://trippilot-jp.netlify.app/",
   "start_here": "先讀本檔 → PROJECT_CONSTITUTION.md(憲章/流程/禁令)→ 08_AI_HANDOVER.md → 15_AI_EXECUTION_RULES.md(決策權限/任務分級,必讀)→ 相關 adr/ → 依任務讀 03_DATABASE/09_SCHEMA_MAPPING(資料與欄位)、05_CODING_RULES/11_CODING_CONVENTION(程式)、12_DEV_WORKFLOW(步驟)",
   "governance": {
@@ -138,10 +138,10 @@
   },
   "status": {
     "production": "main 原始碼維持 v96；正式站與 production tag 維持 v73，直到已核准的 release PR、部署與線上驗證完成",
-    "dev_candidate": "v103 active-trip Today Hero actionable summary: itinerary-date weather hint and the next eligible Shopping location share one compact row; the exact next stop remains owned by its existing badge",
+    "dev_candidate": "v103 active-trip Today Hero actionable summary plus Ledger correction diagnostic warn-once: distinct invalid events remain visible and fail closed, while repeated projections no longer fill AppLog",
     "device_acceptance": "v102 device/PWA acceptance complete; v103 awaits dev-candidate device/PWA appearance and interaction acceptance",
     "next_action": "Bar validates the v103 dev-candidate Today Hero appearance and interaction in the device/PWA; no merge, deployment, or production tag without approval",
-    "automated_validation": "v103 fresh release gate: 83/83 Node test files and 149/149 Playwright cases passed; document-title, app-version, runtime-assets, BUILTIN no-drift, manifest JSON, and diff checks passed",
+    "automated_validation": "v103 fresh release gate after Ledger diagnostic deduplication: 83/83 Node test files and 149/149 Playwright cases passed; document-title, app-version, 8 runtime assets, BUILTIN no-drift, manifest JSON, and diff checks passed",
     "pending_in_order": [
       "Bar於目標裝置／PWA驗證 v103 dev candidate：Today Hero 的天氣旅行提示、次要 completed / total、順路採買入口、精確下一站不重複、長站名安全截斷，以及無錯誤或水平 overflow",
       "完成受保護的 dev → main 發布流程並驗證正式站",
