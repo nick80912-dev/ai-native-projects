@@ -56,6 +56,11 @@ assert(result.errors.includes('.ai-manifest.json deploy_files does not cover run
 
 const realRoot=path.resolve(__dirname,'..');
 const realInventory=JSON.parse(fs.readFileSync(path.join(realRoot,'runtime-assets.json'),'utf8'));
+const indexHtml=fs.readFileSync(path.join(realRoot,'index.html'),'utf8');
+const swSource=fs.readFileSync(path.join(realRoot,'sw.js'),'utf8');
+assert(realInventory.assets.includes('navigation-intent.js'),'the runtime inventory includes navigation-intent.js');
+assert(indexHtml.includes('<script src="navigation-intent.js"></script>'),'index.html loads navigation-intent.js');
+assert(swSource.includes("'./navigation-intent.js'"),'the offline shell includes navigation-intent.js');
 result=validateRuntimeAssets({rootDir:realRoot,inventory:realInventory});
 assert.deepStrictEqual(result.errors,[],'the repository runtime inventory is fully registered');
 

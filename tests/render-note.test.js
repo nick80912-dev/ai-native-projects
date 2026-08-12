@@ -54,9 +54,8 @@ vm.runInContext([
   extractFunction('shouldShowCompactTomorrowPreview'),
   extractFunction('renderTomorrowPreview'),
   extractFunction('cssId'),
+  extractFunction('navigationIntentSourceView'),
   extractFunction('openShopPlace'),
-  /* v82:定位改由 switchView 的意圖機制執行,注入真實的 applyViewIntent 一起驗 */
-  extractFunction('applyViewIntent'),
   extractFunction('centerShopFilterChip'),
   extractFunction('parkingLines'),
   extractFunction('renderParkingValue'),
@@ -170,7 +169,6 @@ renderedShoppingItems=[];
 assert.strictEqual(sandbox.renderNextStopBuy('10/18_4'),'','a stop without pending items renders no badge');
 
 let switchedView = '';
-let scrolled = false;
 sandbox._shopQ = 'uniqlo';
 sandbox.shopPlaceFilter = 'wants';
 sandbox.shopOpenFloors = { 'P001::1F':true };
@@ -181,35 +179,28 @@ let passedIntent = null;
 sandbox.switchView = function(view, intent){
   switchedView = view;
   passedIntent = intent || null;
-  if(intent) sandbox.applyViewIntent(view, intent);
-};
-sandbox.window = { scrollTo:function(){} };
-sandbox.requestAnimationFrame = function(fn){ fn(); };
-sandbox.document = {
-  getElementById:function(id){
-    if(id !== 'shopmall_P001') return null;
-    return { scrollIntoView:function(){ scrolled = true; } };
-  }
 };
 sandbox.openShopPlace('p001');
 assert.strictEqual(sandbox._shopQ, '', 'shopping deep link clears stale search');
 assert.strictEqual(sandbox.shopPlaceFilter, 'P001', 'shopping deep link selects the resolved place');
 assert.strictEqual(switchedView, 'shop', 'shopping deep link opens the Shopping view');
 assert.deepStrictEqual(
-  passedIntent && { type: passedIntent.type, placeId: passedIntent.placeId },
-  { type: 'shop-place', placeId: 'P001' },
-  'shopping deep link hands a structured intent to switchView'
+  passedIntent && {
+    view:passedIntent.view,targetId:passedIntent.targetId,sourceView:passedIntent.sourceView,
+    sourceId:passedIntent.sourceId,align:passedIntent.align
+  },
+  { view:'shop',targetId:'shopmall_P001',sourceView:'',sourceId:'P001',align:'start' },
+  'shopping deep link hands the exact mall target to switchView'
 );
-assert.strictEqual(scrolled, true, 'shopping deep link scrolls to the place card after render');
+assert.match(passedIntent.announce,/^已定位：/,'shopping deep link provides an accessible destination confirmation');
 assert.strictEqual(sandbox.shopOpenFloors['P001::1F'], true, 'shopping deep link preserves floor state');
 
 sandbox._shopQ = 'daiso';
 sandbox.shopPlaceFilter = 'P001';
-scrolled = false;
 sandbox.openShopPlace('P999');
 assert.strictEqual(sandbox._shopQ, '', 'unknown place still clears stale search');
 assert.strictEqual(sandbox.shopPlaceFilter, 'all', 'unknown place safely falls back to all');
-assert.strictEqual(scrolled, false, 'unknown place does not attempt a target scroll');
+assert.strictEqual(passedIntent.targetId, 'shopmall_P999', 'unknown places still request their exact target so failure is reported');
 
 let horizontalScroll = null;
 let activeChip = { offsetLeft:530, offsetWidth:120 };

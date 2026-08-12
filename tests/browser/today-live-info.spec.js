@@ -80,7 +80,7 @@ test('completed items do not count toward the next stop', async ({ page }) => {
   expect(after).toBe('🛍 1');
 });
 
-test('tapping the badge opens the shopping list at that stop without navigating', async ({ page }) => {
+test('tapping the badge confirms the exact target without navigating', async ({ page }) => {
   const seeded = await seedForNextStop(page, ['白桃果凍', '桃子酒']);
 
   const result = await page.evaluate(async (stopRef) => {
@@ -91,6 +91,7 @@ test('tapping the badge opens the shopping list at that stop without navigating'
     await new Promise((r) => setTimeout(r, 400));
     const overlay = document.getElementById('shoppingListOverlay');
     const group = document.getElementById('shopgroup_' + cssId(stopRef));
+    const status=overlay&&overlay.querySelector('.navigation-target-status');
     return {
       missing:false,
       before,
@@ -98,6 +99,13 @@ test('tapping the badge opens the shopping list at that stop without navigating'
       overlayOpen: !!overlay,
       groupExists: !!group,
       groupText: group ? group.textContent.replace(/\s+/g, ' ').trim().slice(0, 60) : null,
+      targetId:group&&group.id,
+      highlighted:!!(group&&group.classList.contains('is-navigation-target')),
+      statusCount:overlay?overlay.querySelectorAll('.navigation-target-status').length:0,
+      statusRole:status&&status.getAttribute('role'),
+      statusLive:status&&status.getAttribute('aria-live'),
+      statusText:status&&status.textContent,
+      stopName:shoppingStopById(stopRef).name
     };
   }, seeded.stopRef);
 
@@ -107,6 +115,14 @@ test('tapping the badge opens the shopping list at that stop without navigating'
   expect(result.overlayOpen).toBe(true);
   expect(result.groupExists).toBe(true);
   expect(result.groupText).toContain('白桃果凍');
+  expect(result.targetId).toBe(`shopgroup_${await page.evaluate((ref)=>cssId(ref),seeded.stopRef)}`);
+  expect(result.highlighted).toBe(true);
+  expect(result.statusCount).toBe(1);
+  expect(result.statusRole).toBe('status');
+  expect(result.statusLive).toBe('polite');
+  expect(result.statusText).toBe(`已定位：${result.stopName}`);
+  await page.evaluate(()=>closeShoppingList());
+  expect(await page.evaluate(()=>curView)).toBe('today');
 });
 
 async function seedTodayShoppingGroups(page, groupNames) {
@@ -245,9 +261,10 @@ test('all Shopping at the current next stop leaves only the existing badge', asy
   await expect(page.locator('#view-today .today-hero-shopping-summary')).toHaveCount(0);
 });
 
-test('Hero Shopping supports keyboard activation', async ({ page }) => {
+test('Hero Shopping target supports keyboard activation and clears its confirmation', async ({ page }) => {
   const seeded=await seedTodayShoppingGroups(page,[[],['one','two']]);
   const expectedId=await page.evaluate((ref)=>'shopgroup_'+cssId(ref),seeded.otherRefs[0]);
+  const expectedName=await page.evaluate((ref)=>shoppingStopById(ref).name,seeded.otherRefs[0]);
   await page.evaluate(()=>{
     const original=Element.prototype.scrollIntoView;
     window.__todayHeroScrollTarget='';
@@ -264,11 +281,53 @@ test('Hero Shopping supports keyboard activation', async ({ page }) => {
   await summary.press('Enter');
   await expect(page.locator('#shoppingListOverlay')).toBeVisible();
   await expect.poll(()=>page.evaluate(()=>window.__todayHeroScrollTarget)).toBe(expectedId);
+  const target=page.locator(`#${expectedId}`);
+  await expect(target).toHaveClass(/is-navigation-target/);
+  await expect(page.locator('#shoppingListOverlay .navigation-target-status')).toHaveText(`已定位：${expectedName}`);
   expect(await page.evaluate(()=>curView)).toBe('today');
+  await page.waitForTimeout(1300);
+  await expect(target).not.toHaveClass(/is-navigation-target/);
   await page.evaluate(()=>closeShoppingList());
   await summary.focus();
   await summary.press('Space');
   await expect(page.locator('#shoppingListOverlay')).toBeVisible();
+});
+
+test('navigation target disables transition under reduced motion', async ({ page }) => {
+  await page.emulateMedia({reducedMotion:'reduce'});
+  const seeded=await seedForNextStop(page,['白桃']);
+  await page.evaluate(()=>closeMemberSelector());
+  await page.locator('#view-today .nx-buy-badge').click();
+  const target=page.locator(`#shopgroup_${await page.evaluate((ref)=>cssId(ref),seeded.stopRef)}`);
+  await expect(target).toHaveClass(/is-navigation-target/);
+  expect(await target.evaluate((element)=>getComputedStyle(element).transitionDuration)).toBe('0s');
+});
+
+test('stale navigation target completion cannot clear a newer destination', async ({ page }) => {
+  const seeded=await seedTodayShoppingGroups(page,[['current'],['future']]);
+  const result=await page.evaluate(async(refs)=>{
+    document.querySelector('#view-today .today-hero-shopping-summary').click();
+    await new Promise((resolve)=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
+    const firstToken=navigationIntentState.active.token;
+    closeShoppingList();
+    openShoppingList(refs.currentRef);
+    await new Promise((resolve)=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
+    const secondToken=navigationIntentState.active.token;
+    const second=document.getElementById('shopgroup_'+cssId(refs.currentRef));
+    clearNavigationTarget(firstToken);
+    const staleResult={
+      firstToken,secondToken,
+      highlighted:second.classList.contains('is-navigation-target'),
+      activeToken:navigationIntentState.active&&navigationIntentState.active.token
+    };
+    clearNavigationTarget(secondToken);
+    staleResult.cleared=!second.classList.contains('is-navigation-target')&&navigationIntentState.active===null;
+    return staleResult;
+  },seeded);
+  expect(result.secondToken).toBeGreaterThan(result.firstToken);
+  expect(result.highlighted).toBe(true);
+  expect(result.activeToken).toBe(result.secondToken);
+  expect(result.cleared).toBe(true);
 });
 
 test('weather failure keeps generic Shopping entry usable', async ({ page }) => {
