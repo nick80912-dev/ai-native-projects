@@ -167,6 +167,62 @@ test('Today Hero excludes the exact next stop and shows the first future Shoppin
   await expect(page.locator('#view-today .today-shopping-launcher')).toHaveCount(0);
 });
 
+test.describe('blank category Hero fallback',()=>{
+  test.use({hasTouch:true,isMobile:true,viewport:{width:390,height:844}});
+
+  test('blank category shows 未分類 and keeps touch targeting at mobile widths',async({page})=>{
+    const seeded=await seedTodayShoppingGroups(page,[[],['SECRET_UNCATEGORIZED','SECRET_SECOND']]);
+    await page.evaluate((ref)=>{
+      shoppingListStore.all().filter((item)=>item.stopRef===ref).forEach((item)=>{
+        shoppingListStore.update(item.id,{category:''});
+      });
+      renderToday();
+    },seeded.otherRefs[0]);
+    const expected=await page.evaluate((ref)=>shoppingStopById(ref).name,seeded.otherRefs[0]);
+    const summary=page.locator('#view-today .today-hero-shopping-summary');
+    await expect(summary).toHaveAttribute('aria-label',`開啟${expected}採買：未分類，共 2 項待買`);
+    await expect(summary.locator('.today-hero-shopping-category')).toHaveText('未分類');
+    await expect(summary.locator('.today-hero-shopping-count')).toHaveText('+1');
+    await expect(summary).not.toContainText('SECRET_UNCATEGORIZED');
+
+    for(const width of [320,375,390]){
+      await page.setViewportSize({width,height:844});
+      const layout=await summary.evaluate((element)=>{
+        const value=element.querySelector('.today-hero-summary-value');
+        const category=element.querySelector('.today-hero-shopping-category');
+        const count=element.querySelector('.today-hero-shopping-count');
+        const parts=Array.from(value.children),last=parts[parts.length-1].getBoundingClientRect();
+        return {
+          overflow:document.documentElement.scrollWidth>window.innerWidth,
+          rightDelta:Math.abs(last.right-value.getBoundingClientRect().right),
+          categoryOverflow:category.scrollWidth>category.clientWidth,
+          categoryShrink:getComputedStyle(category).flexShrink,
+          countOverflow:count.scrollWidth>count.clientWidth,
+          countShrink:getComputedStyle(count).flexShrink
+        };
+      });
+      expect(layout.overflow).toBe(false);
+      expect(layout.rightDelta).toBeLessThanOrEqual(1);
+      expect(layout.categoryOverflow).toBe(false);
+      expect(layout.categoryShrink).toBe('0');
+      expect(layout.countOverflow).toBe(false);
+      expect(layout.countShrink).toBe('0');
+    }
+
+    const expectedId=await page.evaluate((ref)=>'shopgroup_'+cssId(ref),seeded.otherRefs[0]);
+    await page.evaluate(()=>closeMemberSelector());
+    await summary.tap();
+    await expect(page.locator('#shoppingListOverlay')).toBeVisible();
+    await expect.poll(()=>page.evaluate((id)=>{
+      const panel=document.querySelector('#shoppingListOverlay .shopping-list-panel');
+      const group=document.getElementById(id);
+      if(!panel||!group)return false;
+      const p=panel.getBoundingClientRect(),g=group.getBoundingClientRect();
+      return g.bottom>p.top&&g.top<p.bottom;
+    },expectedId)).toBe(true);
+  });
+});
+
 test('Today weather uses a decorative mood and actionable accessible summary', async ({ page }) => {
   await page.evaluate(()=>{
     requestHomeWeather=function(){};
