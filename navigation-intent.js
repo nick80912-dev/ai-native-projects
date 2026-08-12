@@ -6,7 +6,7 @@
   var VIEWS={'shopping-list':1,shop:1,today:1,trip:1,split:1};
   function cloneIntent(intent,token){
     var view=String(intent&&intent.view||'');
-    if(!VIEWS[view])throw new Error('navigation intent view is invalid:'+view);
+    if(!Object.prototype.hasOwnProperty.call(VIEWS,view))throw new Error('navigation intent view is invalid:'+view);
     return {
       token:token,view:view,targetId:String(intent.targetId||''),sourceView:String(intent.sourceView||''),
       sourceId:String(intent.sourceId||''),align:intent.align==='center'?'center':'start',announce:String(intent.announce||'')

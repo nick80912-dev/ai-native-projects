@@ -30,6 +30,10 @@ assert.strictEqual(secondMonotonic.pending.token,8,'request tokens remain strict
   assert.strictEqual(state.pending.targetId,String(index+1),view+' keeps a string target ID');
 });
 
+['toString','constructor','__proto__','valueOf','hasOwnProperty'].forEach(function(view){
+  assert.throws(function(){nav.request(empty,{view:view});},/view/,view+' is not an allowed navigation view');
+});
+
 const requested=nav.request(empty,{
   view:'shopping-list',targetId:'shopgroup_stop-1',sourceView:'today',sourceId:'hero',align:'center',announce:'Scroll to shopping group'
 });
