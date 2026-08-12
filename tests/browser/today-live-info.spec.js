@@ -146,14 +146,22 @@ async function seedTodayShoppingGroups(page, groupNames) {
 
 test('Today Hero excludes the exact next stop and shows the first future Shopping group', async ({ page }) => {
   const seeded=await seedTodayShoppingGroups(page,[['current one','current two'],['one','two','three']]);
+  await page.evaluate((ref)=>{
+    const futureItems=shoppingListStore.all().filter((item)=>item.stopRef===ref);
+    futureItems.forEach((item,index)=>shoppingListStore.update(item.id,{category:index===1?'必買':'伴手禮'}));
+    renderToday();
+  },seeded.otherRefs[0]);
   const expected=await page.evaluate((ref)=>shoppingStopById(ref).name,seeded.otherRefs[0]);
   const summary=page.locator('#view-today .today-hero-shopping-summary');
-  await expect(summary).toHaveAttribute('aria-label',`開啟${expected}採買：one，共 3 項待買`);
+  await expect(summary).toHaveAttribute('aria-label',`開啟${expected}採買：必買，共 3 項待買`);
   await expect(summary.locator('.today-hero-summary-label')).toHaveText('順路採買');
   await expect(summary.locator('.today-hero-shopping-stop')).toHaveText(expected);
-  await expect(summary.locator('.today-hero-shopping-item')).toHaveText('one');
+  await expect(summary.locator('.today-hero-shopping-category')).toHaveText('必買');
   await expect(summary.locator('.today-hero-shopping-count')).toHaveText('+2');
-  await expect(summary.locator('.today-hero-summary-value')).toHaveText(`${expected}·one+2`);
+  await expect(summary.locator('.today-hero-summary-value')).toHaveText(`${expected}·必買+2`);
+  await expect(summary).not.toContainText('one');
+  await expect(summary).not.toContainText('two');
+  await expect(summary).not.toContainText('three');
   await expect(page.locator('#view-today .today-shopping-card')).toHaveCount(0);
   await expect(page.locator('#view-today .today-shopping-launcher')).toHaveCount(0);
 });
@@ -270,10 +278,20 @@ test('the badge supports Tab, Enter, Space and a visible keyboard focus ring', a
 });
 
 test('320, 375 and 390px keep the merged Hero summary on one row', async ({ page }) => {
-  const longItem='A deliberately very long shopping item name for ellipsis '.repeat(10);
-  const seeded=await seedTodayShoppingGroups(page,[['current one','current two','current three'],[longItem,'second','third']]);
+  const longCategory='A deliberately very long shopping category for ellipsis '.repeat(10);
+  const seeded=await seedTodayShoppingGroups(page,[['current one','current two','current three'],['secret product','second','third']]);
   await page.evaluate((ref)=>{DB.trip.days.forEach((day)=>day.items.forEach((item)=>{if(item.id===ref){item.place='A deliberately very long future stop name for ellipsis '.repeat(12);item.act='';}}));},seeded.otherRefs[0]);
-  await page.evaluate(()=>{requestHomeWeather=function(){};homeWeatherFor=function(){return {city:'Hiroshima',temp:21,rain:40,icon:'rain',code:61};};renderToday();});
+  await page.evaluate(({ref,longCategory})=>{
+    const originalBuild=buildShoppingTodayReminder;
+    buildShoppingTodayReminder=function(items,day,excludedStopRef){
+      const reminder=originalBuild(items,day,excludedStopRef);
+      if(reminder)reminder.groups.forEach((group)=>{if(group.stopRef===ref)group.firstCategory=longCategory;});
+      return reminder;
+    };
+    requestHomeWeather=function(){};
+    homeWeatherFor=function(){return {city:'Hiroshima',temp:21,rain:40,icon:'rain',code:61};};
+    renderToday();
+  },{ref:seeded.otherRefs[0],longCategory});
   for(const width of [320,375,390]){
     await page.setViewportSize({width,height:844});
     const layout=await page.evaluate(()=>{
@@ -282,7 +300,7 @@ test('320, 375 and 390px keep the merged Hero summary on one row', async ({ page
       const shopping=document.querySelector('#view-today .today-hero-shopping-summary');
       const value=document.querySelector('#view-today .today-hero-shopping-summary .today-hero-summary-value');
       const stop=document.querySelector('#view-today .today-hero-shopping-stop');
-      const item=document.querySelector('#view-today .today-hero-shopping-item');
+      const category=document.querySelector('#view-today .today-hero-shopping-category');
       const ticket=document.querySelector('#view-today .nx-ticket');
       const badge=document.querySelector('#view-today .nx-buy-badge');
       const targets=['.nx-ticket-kicker','.nx-ticket-time','.nx-ticket-title']
@@ -300,8 +318,8 @@ test('320, 375 and 390px keep the merged Hero summary on one row', async ({ page
         valueWhiteSpace:getComputedStyle(value).whiteSpace,valueGap:parseFloat(getComputedStyle(value).columnGap),
         stopOverflow:stop.scrollWidth>stop.clientWidth,stopWhiteSpace:getComputedStyle(stop).whiteSpace,
         stopTextOverflow:getComputedStyle(stop).textOverflow,
-        itemOverflow:item.scrollWidth>item.clientWidth,itemWhiteSpace:getComputedStyle(item).whiteSpace,
-        itemTextOverflow:getComputedStyle(item).textOverflow,
+        categoryOverflow:category.scrollWidth>category.clientWidth,categoryWhiteSpace:getComputedStyle(category).whiteSpace,
+        categoryTextOverflow:getComputedStyle(category).textOverflow,
         heroHeight:Math.round(h.height),ticketTop:Math.round(t.top),
         badgeWidth:Math.round(b.width),badgeHeight:Math.round(b.height),badgeOverlaps
       };
@@ -316,9 +334,9 @@ test('320, 375 and 390px keep the merged Hero summary on one row', async ({ page
     expect(layout.stopOverflow).toBe(true);
     expect(layout.stopWhiteSpace).toBe('nowrap');
     expect(layout.stopTextOverflow).toBe('ellipsis');
-    expect(layout.itemOverflow).toBe(true);
-    expect(layout.itemWhiteSpace).toBe('nowrap');
-    expect(layout.itemTextOverflow).toBe('ellipsis');
+    expect(layout.categoryOverflow).toBe(true);
+    expect(layout.categoryWhiteSpace).toBe('nowrap');
+    expect(layout.categoryTextOverflow).toBe('ellipsis');
     expect(layout.heroHeight).toBeLessThanOrEqual(190);
     expect(layout.ticketTop).toBeLessThan(300);
     expect(layout.badgeWidth).toBeGreaterThanOrEqual(44);
