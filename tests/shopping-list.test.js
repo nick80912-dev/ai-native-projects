@@ -138,33 +138,39 @@ const heroReminder={count:9,groups:[
 const heroSnapshot=plain(heroReminder);
 assert.deepStrictEqual(
   plain(mod.todayShoppingHeroModel(heroReminder,heroDay,'current')),
-  {label:'順路採買',stopRef:'future-a',stopName:'未來第一站',count:3},
+  {label:'順路採買',stopRef:'future-a',stopName:'未來第一站',count:3,firstItemName:'藥妝',remainingCount:2},
   'Hero chooses the first resolved group after the current stop and uses that group count'
 );
 assert.deepStrictEqual(
   plain(mod.todayShoppingHeroModel({count:1,groups:[heroReminder.groups[0]]},heroDay,'current')),
-  {label:'今日採買',stopRef:'past',stopName:'過去站',count:1},
+  {label:'今日採買',stopRef:'past',stopName:'過去站',count:1,firstItemName:'咖啡',remainingCount:0},
   'past-only shopping never claims to be on the way'
 );
 assert.deepStrictEqual(
   plain(mod.todayShoppingHeroModel(heroReminder,heroDay,'missing-current')),
-  {label:'今日採買',stopRef:'past',stopName:'過去站',count:1},
+  {label:'今日採買',stopRef:'past',stopName:'過去站',count:1,firstItemName:'咖啡',remainingCount:0},
   'an unresolved current stop uses neutral copy'
 );
 assert.strictEqual(mod.todayShoppingHeroModel(null,heroDay,'current'),null);
 assert.strictEqual(mod.todayShoppingHeroModel({count:0,groups:[]},heroDay,'current'),null);
+assert.deepStrictEqual(
+  plain(mod.todayShoppingHeroModel({count:2,groups:[{stopRef:'future-a',stopName:'未來第一站',items:['','藥妝']}]},heroDay,'current')),
+  {label:'順路採買',stopRef:'future-a',stopName:'未來第一站',count:2,firstItemName:'',remainingCount:1},
+  'Hero projection preserves count metadata while an empty first item can degrade visually to the stop name'
+);
 assert.deepStrictEqual(heroReminder,heroSnapshot,'Hero projection does not mutate reminder input');
 
-mod.shoppingListStore.add({name:'測試商品',stopRef:'quoted-stop'});
+mod.shoppingListStore.add({name:'Quoted "Item" <img/onerror=alert(1)>',stopRef:'quoted-stop'});
 const quotedSummary=mod.renderTodayShoppingSummary({items:[
   {id:'quoted-stop',place:'Quoted "Stop" <svg/onload=alert(1)>'}
 ]},'');
 assert(
-  quotedSummary.includes('aria-label="開啟Quoted &quot;Stop&quot; &lt;svg/onload=alert(1)&gt;的 1 項待買"'),
-  'Shopping summary escapes a quoted itinerary stop name in attribute context'
+  quotedSummary.includes('aria-label="開啟Quoted &quot;Stop&quot; &lt;svg/onload=alert(1)&gt;採買：Quoted &quot;Item&quot; &lt;img/onerror=alert(1)&gt;，共 1 項待買"'),
+  'Shopping summary escapes quoted itinerary stop and item names in attribute context'
 );
 assert.strictEqual((quotedSummary.match(/\saria-label=/g)||[]).length,1,'Shopping summary keeps one aria-label attribute');
 assert(!quotedSummary.includes('<svg'),'Shopping summary exposes no injectable stop-name markup');
+assert(!quotedSummary.includes('<img'),'Shopping summary exposes no injectable item-name markup');
 
 mod.shoppingListStore.removeMany(mod.shoppingListStore.all().map(function(item){return item.id;}));
 var exactCurrent=mod.shoppingListStore.add({name:'下一站商品',stopRef:'10/18_0'});

@@ -89,13 +89,25 @@ const heroShoppingOut=sandbox.renderTodayShoppingSummary({
   groups:[{stopRef:'future',stopName:'Future stop',items:['one','two','three']}]
 },'current');
 assert(heroShoppingOut.includes('class="today-hero-summary-item today-hero-shopping-summary"'));
-assert(heroShoppingOut.includes('aria-label="開啟Future stop的 3 項待買"'));
+assert(heroShoppingOut.includes('aria-label="開啟Future stop採買：one，共 3 項待買"'));
 assert(heroShoppingOut.includes('<span class="today-hero-summary-label">順路採買</span>'));
 assert(heroShoppingOut.includes('<span class="today-hero-shopping-stop">Future stop</span>'));
-assert(heroShoppingOut.includes('<small>3 項 →</small>'));
+assert(heroShoppingOut.includes('<span class="today-hero-shopping-separator">·</span>'));
+assert(heroShoppingOut.includes('<span class="today-hero-shopping-item">one</span>'));
+assert(heroShoppingOut.includes('<small class="today-hero-shopping-count">+2</small>'));
+assert(!heroShoppingOut.includes('3 項 →'));
 assert(heroShoppingOut.includes("openShoppingList('future')"));
 assert.strictEqual((heroShoppingOut.match(/<button/g)||[]).length,1);
 assert(!heroShoppingOut.includes('<script>'));
+
+const emptyItemHeroOut=sandbox.renderTodayShoppingSummary({
+  items:[{id:'future',place:'Future stop'}],
+  groups:[{stopRef:'future',stopName:'Future stop',items:['']}]
+},'');
+assert(emptyItemHeroOut.includes('<span class="today-hero-shopping-stop">Future stop</span>'));
+assert(!emptyItemHeroOut.includes('today-hero-shopping-separator'),'empty item names omit the separator');
+assert(!emptyItemHeroOut.includes('today-hero-shopping-item'),'empty item names omit the item span');
+assert(!emptyItemHeroOut.includes('today-hero-shopping-count'),'empty item names omit the remaining count');
 
 const heroSummaryOut=sandbox.renderTodayHeroSummary(
   {city:'Hiroshima',temp:21,rain:40,icon:'rain',code:61}, heroShoppingOut

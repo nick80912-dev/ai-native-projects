@@ -3334,12 +3334,19 @@ function renderTodayShoppingSummary(day,currentStopRef){
   var reminder=buildShoppingTodayReminder(items,day,currentStopRef);
   var model=todayShoppingHeroModel(reminder,day,currentStopRef);
   if(model){
-    var accessible='開啟'+model.stopName+'的 '+model.count+' 項待買';
+    var itemName=String(model.firstItemName||'');
+    var accessible=itemName
+      ?'開啟'+model.stopName+'採買：'+itemName+'，共 '+model.count+' 項待買'
+      :'開啟'+model.stopName+'的 '+model.count+' 項待買';
+    var itemPreview=itemName
+      ?'<span class="today-hero-shopping-separator">·</span><span class="today-hero-shopping-item">'+escapeHtml(itemName)+'</span>'+
+        (model.remainingCount?'<small class="today-hero-shopping-count">+'+model.remainingCount+'</small>':'')
+      :'';
     return '<button type="button" class="today-hero-summary-item today-hero-shopping-summary"'+
       ' onclick="openShoppingList(\''+jsHtmlAttrString(model.stopRef)+'\')" aria-label="'+escapeHtmlAttr(accessible)+'">'+
       '<span class="today-hero-summary-label">'+escapeHtml(model.label)+'</span>'+
       '<span class="today-hero-summary-value"><span class="today-hero-shopping-stop">'+escapeHtml(model.stopName)+'</span>'+
-      '<small>'+model.count+' 項 →</small></span></button>';
+      itemPreview+'</span></button>';
   }
   var pending=items.filter(function(item){return item&&!item.done;}),current=String(currentStopRef||'');
   var currentResolves=!!(day&&Array.isArray(day.items)&&day.items.some(function(item){return String(item&&item.id||'')===current;}));
@@ -5796,7 +5803,14 @@ function todayShoppingHeroModel(model,day,currentStopRef){
   }
   var label=group?'順路採買':'今日採買';
   group=group||valid[0];
-  return {label:label,stopRef:String(group.stopRef),stopName:String(group.stopName).trim(),count:group.items.length};
+  return {
+    label:label,
+    stopRef:String(group.stopRef),
+    stopName:String(group.stopName).trim(),
+    count:group.items.length,
+    firstItemName:String(group.items[0]||'').trim(),
+    remainingCount:Math.max(group.items.length-1,0)
+  };
 }
 function ledgerBooleanValue(value){return value===true||value===1||String(value||'').trim().toLowerCase()==='true'||String(value||'').trim()==='1';}
 function ledgerRecordMetadata(record){
