@@ -86,15 +86,17 @@ vm.runInContext([
 
 const heroShoppingOut=sandbox.renderTodayShoppingSummary({
   items:[{id:'current',place:'Current stop'},{id:'future',place:'Future stop'}],
-  groups:[{stopRef:'future',stopName:'Future stop',items:['one','two','three']}]
+  groups:[{stopRef:'future',stopName:'Future stop',items:['SECRET_ONE','SECRET_TWO','SECRET_THREE'],firstCategory:'必買'}]
 },'current');
 assert(heroShoppingOut.includes('class="today-hero-summary-item today-hero-shopping-summary"'));
-assert(heroShoppingOut.includes('aria-label="開啟Future stop採買：one，共 3 項待買"'));
+assert(heroShoppingOut.includes('aria-label="開啟Future stop採買：必買，共 3 項待買"'));
 assert(heroShoppingOut.includes('<span class="today-hero-summary-label">順路採買</span>'));
 assert(heroShoppingOut.includes('<span class="today-hero-shopping-stop">Future stop</span>'));
 assert(heroShoppingOut.includes('<span class="today-hero-shopping-separator">·</span>'));
-assert(heroShoppingOut.includes('<span class="today-hero-shopping-item">one</span>'));
+assert(heroShoppingOut.includes('<span class="today-hero-shopping-category">必買</span>'));
 assert(heroShoppingOut.includes('<small class="today-hero-shopping-count">+2</small>'));
+assert(!heroShoppingOut.includes('today-hero-shopping-item'));
+assert(!heroShoppingOut.includes('SECRET_ONE'),'Hero visible markup excludes product names');
 assert(!heroShoppingOut.includes('3 項 →'));
 assert(heroShoppingOut.includes("openShoppingList('future')"));
 assert.strictEqual((heroShoppingOut.match(/<button/g)||[]).length,1);
@@ -102,12 +104,23 @@ assert(!heroShoppingOut.includes('<script>'));
 
 const emptyItemHeroOut=sandbox.renderTodayShoppingSummary({
   items:[{id:'future',place:'Future stop'}],
-  groups:[{stopRef:'future',stopName:'Future stop',items:['']}]
+  groups:[{stopRef:'future',stopName:'Future stop',items:['SECRET_PRODUCT'],firstCategory:''}]
 },'');
 assert(emptyItemHeroOut.includes('<span class="today-hero-shopping-stop">Future stop</span>'));
-assert(!emptyItemHeroOut.includes('today-hero-shopping-separator'),'empty item names omit the separator');
-assert(!emptyItemHeroOut.includes('today-hero-shopping-item'),'empty item names omit the item span');
-assert(!emptyItemHeroOut.includes('today-hero-shopping-count'),'empty item names omit the remaining count');
+assert(emptyItemHeroOut.includes('aria-label="開啟Future stop的 1 項待買"'));
+assert(!emptyItemHeroOut.includes('today-hero-shopping-separator'),'empty categories omit the separator');
+assert(!emptyItemHeroOut.includes('today-hero-shopping-category'),'empty categories omit the category span');
+assert(!emptyItemHeroOut.includes('today-hero-shopping-count'),'empty categories omit the remaining count');
+assert(!emptyItemHeroOut.includes('SECRET_PRODUCT'),'blank-category fallback excludes product names');
+
+const quotedCategoryHeroOut=sandbox.renderTodayShoppingSummary({
+  items:[{id:'future',place:'Future stop'}],
+  groups:[{stopRef:'future',stopName:'Future stop',items:['SECRET_PRODUCT'],firstCategory:'Quoted "Category" <svg/onload=alert(1)>'}]
+},'');
+assert(quotedCategoryHeroOut.includes('aria-label="開啟Future stop採買：Quoted &quot;Category&quot; &lt;svg/onload=alert(1)&gt;，共 1 項待買"'));
+assert(quotedCategoryHeroOut.includes('<span class="today-hero-shopping-category">Quoted "Category" &lt;svg/onload=alert(1)&gt;</span>'));
+assert(!quotedCategoryHeroOut.includes('<svg'),'category values cannot inject markup');
+assert(!quotedCategoryHeroOut.includes('SECRET_PRODUCT'),'category output excludes product names');
 
 const heroSummaryOut=sandbox.renderTodayHeroSummary(
   {city:'Hiroshima',temp:21,rain:40,icon:'rain',code:61}, heroShoppingOut

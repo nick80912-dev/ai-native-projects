@@ -184,7 +184,7 @@ input,select,textarea{font-size:16px}
 .today-hero-shopping-stop{flex:1.15 1 0;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .today-hero-shopping-separator,.today-hero-shopping-count{flex:0 0 auto}
 .today-hero-shopping-separator{opacity:.58}
-.today-hero-shopping-item{flex:.85 1 0;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:700;opacity:.8}
+.today-hero-shopping-category{flex:.85 1 0;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:700;opacity:.8}
 .mini-tl{margin-top:14px;position:relative}
 .mini-item{display:flex;gap:11px;align-items:flex-start;padding:6px 0}
 .mini-item .mt{font-size:12.5px;font-weight:700;color:#ffd98a;min-width:46px;padding-top:1px}
@@ -3337,19 +3337,19 @@ function renderTodayShoppingSummary(day,currentStopRef){
   var reminder=buildShoppingTodayReminder(items,day,currentStopRef);
   var model=todayShoppingHeroModel(reminder,day,currentStopRef);
   if(model){
-    var itemName=String(model.firstItemName||'');
-    var accessible=itemName
-      ?'開啟'+model.stopName+'採買：'+itemName+'，共 '+model.count+' 項待買'
+    var category=String(model.firstCategory||'');
+    var accessible=category
+      ?'開啟'+model.stopName+'採買：'+category+'，共 '+model.count+' 項待買'
       :'開啟'+model.stopName+'的 '+model.count+' 項待買';
-    var itemPreview=itemName
-      ?'<span class="today-hero-shopping-separator">·</span><span class="today-hero-shopping-item">'+escapeHtml(itemName)+'</span>'+
+    var categoryPreview=category
+      ?'<span class="today-hero-shopping-separator">·</span><span class="today-hero-shopping-category">'+escapeHtml(category)+'</span>'+
         (model.remainingCount?'<small class="today-hero-shopping-count">+'+model.remainingCount+'</small>':'')
       :'';
     return '<button type="button" class="today-hero-summary-item today-hero-shopping-summary"'+
       ' onclick="openShoppingList(\''+jsHtmlAttrString(model.stopRef)+'\')" aria-label="'+escapeHtmlAttr(accessible)+'">'+
       '<span class="today-hero-summary-label">'+escapeHtml(model.label)+'</span>'+
       '<span class="today-hero-summary-value"><span class="today-hero-shopping-stop">'+escapeHtml(model.stopName)+'</span>'+
-      itemPreview+'</span></button>';
+      categoryPreview+'</span></button>';
   }
   var pending=items.filter(function(item){return item&&!item.done;}),current=String(currentStopRef||'');
   var currentResolves=!!(day&&Array.isArray(day.items)&&day.items.some(function(item){return String(item&&item.id||'')===current;}));
@@ -5778,7 +5778,9 @@ function buildShoppingTodayReminder(items,day,excludedStopRef){
   });
   var count=groups.reduce(function(sum,group){return sum+group.items.length;},0);
   groups.forEach(function(group){
-    group.items=prioritizeShoppingGroupItems(group.items).map(function(item){return String(item.name||'').trim();});
+    var prioritized=prioritizeShoppingGroupItems(group.items);
+    group.firstCategory=String(prioritized[0]&&prioritized[0].category||'').trim();
+    group.items=prioritized.map(function(item){return String(item.name||'').trim();});
   });
   /* 群組依當日行程順序；組內必買優先，必買與非必買各自維持 store order。 */
   return count?{count:count,groups:sortShoppingStopGroups(groups,buildShoppingStopOrder([day]))}:null;
@@ -5811,7 +5813,7 @@ function todayShoppingHeroModel(model,day,currentStopRef){
     stopRef:String(group.stopRef),
     stopName:String(group.stopName).trim(),
     count:group.items.length,
-    firstItemName:String(group.items[0]||'').trim(),
+    firstCategory:String(group.firstCategory||'').trim(),
     remainingCount:Math.max(group.items.length-1,0)
   };
 }

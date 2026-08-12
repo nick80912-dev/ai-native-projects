@@ -119,7 +119,7 @@ const reminder=plain(mod.buildShoppingTodayReminder([
   {id:'d',name:'孤兒',stopRef:'10/18_99',done:false}
 ],day));
 assert.strictEqual(reminder.count,1,'Today reminder includes only unfinished items bound to a current stop');
-assert.deepStrictEqual(reminder.groups,[{stopRef:'10/18_1',stopName:'永旺夢樂城 岡山',items:['白桃']}]);
+assert.deepStrictEqual(reminder.groups,[{stopRef:'10/18_1',stopName:'永旺夢樂城 岡山',items:['白桃'],firstCategory:''}]);
 assert.strictEqual(mod.buildShoppingTodayReminder([{id:'b',name:'藥妝',stopRef:'',done:false}],day),null,'unknown-location items stay off Today');
 assert.strictEqual(mod.buildShoppingTodayReminder([{id:'d',name:'孤兒',stopRef:'10/18_99',done:false}],day),null,'orphan references degrade silently');
 assert.strictEqual(mod.buildShoppingTodayReminder([],null),null,'non-trip days never show the reminder');
@@ -131,46 +131,47 @@ const heroDay={items:[
   {id:'future-b',place:'未來第二站'}
 ]};
 const heroReminder={count:9,groups:[
-  {stopRef:'past',stopName:'過去站',items:['咖啡']},
-  {stopRef:'future-a',stopName:'未來第一站',items:['藥妝','零食','伴手禮']},
-  {stopRef:'future-b',stopName:'未來第二站',items:['雨傘','襪子','牙刷','電池']}
+  {stopRef:'past',stopName:'過去站',items:['咖啡'],firstCategory:'飲品'},
+  {stopRef:'future-a',stopName:'未來第一站',items:['藥妝','零食','伴手禮'],firstCategory:'必買'},
+  {stopRef:'future-b',stopName:'未來第二站',items:['雨傘','襪子','牙刷','電池'],firstCategory:'生活用品'}
 ]};
 const heroSnapshot=plain(heroReminder);
 assert.deepStrictEqual(
   plain(mod.todayShoppingHeroModel(heroReminder,heroDay,'current')),
-  {label:'順路採買',stopRef:'future-a',stopName:'未來第一站',count:3,firstItemName:'藥妝',remainingCount:2},
+  {label:'順路採買',stopRef:'future-a',stopName:'未來第一站',count:3,firstCategory:'必買',remainingCount:2},
   'Hero chooses the first resolved group after the current stop and uses that group count'
 );
 assert.deepStrictEqual(
   plain(mod.todayShoppingHeroModel({count:1,groups:[heroReminder.groups[0]]},heroDay,'current')),
-  {label:'今日採買',stopRef:'past',stopName:'過去站',count:1,firstItemName:'咖啡',remainingCount:0},
+  {label:'今日採買',stopRef:'past',stopName:'過去站',count:1,firstCategory:'飲品',remainingCount:0},
   'past-only shopping never claims to be on the way'
 );
 assert.deepStrictEqual(
   plain(mod.todayShoppingHeroModel(heroReminder,heroDay,'missing-current')),
-  {label:'今日採買',stopRef:'past',stopName:'過去站',count:1,firstItemName:'咖啡',remainingCount:0},
+  {label:'今日採買',stopRef:'past',stopName:'過去站',count:1,firstCategory:'飲品',remainingCount:0},
   'an unresolved current stop uses neutral copy'
 );
 assert.strictEqual(mod.todayShoppingHeroModel(null,heroDay,'current'),null);
 assert.strictEqual(mod.todayShoppingHeroModel({count:0,groups:[]},heroDay,'current'),null);
 assert.deepStrictEqual(
-  plain(mod.todayShoppingHeroModel({count:2,groups:[{stopRef:'future-a',stopName:'未來第一站',items:['','藥妝']}]},heroDay,'current')),
-  {label:'順路採買',stopRef:'future-a',stopName:'未來第一站',count:2,firstItemName:'',remainingCount:1},
-  'Hero projection preserves count metadata while an empty first item can degrade visually to the stop name'
+  plain(mod.todayShoppingHeroModel({count:2,groups:[{stopRef:'future-a',stopName:'未來第一站',items:['商品一','商品二'],firstCategory:''}]},heroDay,'current')),
+  {label:'順路採買',stopRef:'future-a',stopName:'未來第一站',count:2,firstCategory:'',remainingCount:1},
+  'Hero projection preserves count metadata while an empty first category can degrade visually to the stop name'
 );
 assert.deepStrictEqual(heroReminder,heroSnapshot,'Hero projection does not mutate reminder input');
 
-mod.shoppingListStore.add({name:'Quoted "Item" <img/onerror=alert(1)>',stopRef:'quoted-stop'});
+mod.shoppingListStore.add({name:'SECRET_PRODUCT <img/onerror=alert(1)>',category:'必買',stopRef:'quoted-stop'});
 const quotedSummary=mod.renderTodayShoppingSummary({items:[
   {id:'quoted-stop',place:'Quoted "Stop" <svg/onload=alert(1)>'}
 ]},'');
 assert(
-  quotedSummary.includes('aria-label="開啟Quoted &quot;Stop&quot; &lt;svg/onload=alert(1)&gt;採買：Quoted &quot;Item&quot; &lt;img/onerror=alert(1)&gt;，共 1 項待買"'),
-  'Shopping summary escapes quoted itinerary stop and item names in attribute context'
+  quotedSummary.includes('aria-label="開啟Quoted &quot;Stop&quot; &lt;svg/onload=alert(1)&gt;採買：必買，共 1 項待買"'),
+  'Shopping summary escapes the itinerary stop and uses category-only accessible copy'
 );
 assert.strictEqual((quotedSummary.match(/\saria-label=/g)||[]).length,1,'Shopping summary keeps one aria-label attribute');
 assert(!quotedSummary.includes('<svg'),'Shopping summary exposes no injectable stop-name markup');
-assert(!quotedSummary.includes('<img'),'Shopping summary exposes no injectable item-name markup');
+assert(!quotedSummary.includes('SECRET_PRODUCT'),'Shopping summary exposes no product name');
+assert(quotedSummary.includes('<span class="today-hero-shopping-category">必買</span>'),'Shopping summary renders the first prioritized category');
 
 mod.shoppingListStore.removeMany(mod.shoppingListStore.all().map(function(item){return item.id;}));
 var exactCurrent=mod.shoppingListStore.add({name:'下一站商品',stopRef:'10/18_0'});
@@ -191,7 +192,7 @@ const excludedReminder=plain(mod.buildShoppingTodayReminder([
 ],day,'10/18_0'));
 assert.strictEqual(excludedReminder.count,1,'v86 exclusion recomputes Today count after removing the next stop');
 assert.deepStrictEqual(excludedReminder.groups,[{
-  stopRef:'10/18_1',stopName:'永旺夢樂城 岡山',items:['其他站']
+  stopRef:'10/18_1',stopName:'永旺夢樂城 岡山',items:['其他站'],firstCategory:''
 }],'v86 excludes only the exact next stopRef');
 assert.strictEqual(mod.buildShoppingTodayReminder([
   {id:'next-only',name:'下一站獨占',stopRef:'10/18_0',done:false}
@@ -230,6 +231,7 @@ assert.deepStrictEqual(
   ['必買一','必買二','一般一','一般二'],
   'Today 站點摘要與待買群組共用必買穩定置頂規則'
 );
+assert.strictEqual(priorityReminder.groups[0].firstCategory,'必買','Hero category comes from the first item after exact 必買 stable priority');
 
 /* ================= 結構化數量:quantity／unit／legacyQtyText ================= */
 const QNOW='2026-10-20T04:00:00.000Z';
