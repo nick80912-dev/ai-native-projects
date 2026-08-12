@@ -24,6 +24,13 @@ const secondMonotonic=nav.request(firstMonotonic,{view:'today'});
 assert.strictEqual(firstMonotonic.pending.token,7,'request starts from the normalized integer token');
 assert.strictEqual(secondMonotonic.pending.token,8,'request tokens remain strictly monotonic and unique');
 
+assert.strictEqual(nav.create({nextToken:Number.MAX_VALUE}).nextToken,1,'Number.MAX_VALUE is not a safe token');
+assert.strictEqual(nav.create({nextToken:9007199254740992}).nextToken,1,'unsafe finite integers reset to token one');
+const safeBoundary=nav.request(nav.create({nextToken:9007199254740990}),{view:'today'});
+assert.strictEqual(safeBoundary.pending.token,9007199254740990,'the last incrementable safe token is issued once');
+assert.strictEqual(safeBoundary.nextToken,9007199254740991,'the next token reaches the safe integer limit');
+assert.throws(function(){nav.request(safeBoundary,{view:'today'});},/token/,'the exhausted safe token cannot be issued twice');
+
 ['shopping-list','shop','today','trip','split'].forEach(function(view,index){
   const state=nav.request(empty,{view:view,targetId:index+1});
   assert.strictEqual(state.pending.view,view,view+' is an allowed navigation view');

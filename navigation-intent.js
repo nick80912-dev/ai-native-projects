@@ -4,6 +4,7 @@
   else root.TripNavigationIntent=moduleValue;
 })(this,function(){
   var VIEWS={'shopping-list':1,shop:1,today:1,trip:1,split:1};
+  var MAX_SAFE_TOKEN=9007199254740991;
   function cloneIntent(intent,token){
     var view=String(intent&&intent.view||'');
     if(!Object.prototype.hasOwnProperty.call(VIEWS,view))throw new Error('navigation intent view is invalid:'+view);
@@ -14,7 +15,7 @@
   }
   function nextToken(value){
     var token=Math.floor(Number(value));
-    return isFinite(token)&&token>0?token:1;
+    return isFinite(token)&&token>0&&token<=MAX_SAFE_TOKEN?token:1;
   }
   function create(initial){
     initial=initial||{};
@@ -22,6 +23,7 @@
   }
   function request(state,intent){
     state=create(state);var token=state.nextToken;
+    if(token>=MAX_SAFE_TOKEN)throw new Error('navigation intent token is exhausted');
     return {nextToken:token+1,pending:cloneIntent(intent,token),active:state.active};
   }
   function consume(state,view){
