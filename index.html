@@ -8965,6 +8965,11 @@ function renderSettingsDataHealth(){
   return '<div class="settings-section settings-data-health"><h3>資料健康狀態</h3><div class="settings-health-list">'+model.rows.map(function(row){return '<div class="settings-health-row data-health-'+escapeHtml(row.key)+'"><span class="settings-health-main"><b>'+escapeHtml(row.label)+'</b>'+(row.detail?'<span>'+escapeHtml(row.detail)+'</span>':'')+'</span><strong>'+escapeHtml(row.value)+'</strong></div>';}).join('')+'</div></div>';
 }
 var APP_RELEASE_NOTES=[
+  {version:'v106',date:'2026-08-12',title:'順路採買資訊靠右更緊湊',items:[
+    '今天首頁的採買地點、分類與 +N 改為緊湊排列並整組靠右，不再出現過大的中間空白',
+    '地點超過六字會顯示前六字與省略符號，分類與 +N 保持完整顯示',
+    '完整地點仍提供給輔助科技；採買排序、操作、資料與同步方式皆維持不變'
+  ]},
   {version:'v105',date:'2026-08-12',title:'順路採買改顯示分類',items:[
     '今天首頁會在採買地點後顯示第一個優先分類，多項時以 +N 提示其餘數量',
     'Hero 不再顯示品名，地點與分類在窄螢幕維持單行安全省略',
@@ -8980,8 +8985,7 @@ var APP_RELEASE_NOTES=[
     '採買清單會顯示第一個順路地點，下一站待買仍保留原本徽章',
     '主畫面維持日期與站點進度，不加入完成率、回顧或公里數'
   ]},
-  {version:'v102',date:'2026-08-11',title:'住宿資訊改用 HID 精確連結',items:['五個住宿停靠點改以 HID 精確連到住宿資料，住宿顯示名稱日後調整也不會讓資料失去連結','不同路段的住宿停靠點仍各自保留交通時間，同一間住宿可共用入住、地址、停車與備註資料','同步會攔下住宿缺少 HID、非住宿誤填 HID 或找不到住宿資料的錯誤；記帳、個人備份與離線策略皆維持不變']},
-  {version:'v101',date:'2026-08-10',title:'更新方式與杉綠配色調整',items:['移除顯示時機與實際新版內容不同步的「新版已就緒」提示，App 仍會依原有方式在背景更新，不會自動重新整理','杉綠主題的按鈕、連結與主要操作改用較清楚的林下青，與焙茶主題的棕色更容易區分','離線快取、同步方式與既有資料與記帳格式皆維持不變']},
+  {version:'v102',date:'2026-08-11',title:'住宿資訊改用 HID 精確連結',items:['五個住宿停靠點改以 HID 精確連到住宿資料，住宿顯示名稱日後調整也不會讓資料失去連結','不同路段的住宿停靠點仍各自保留交通時間，同一間住宿可共用入住、地址、停車與備註資料','同步會攔下住宿缺少 HID、非住宿誤填 HID 或找不到住宿資料的錯誤；記帳、個人備份與離線策略皆維持不變']}
 ];
 function renderAppReleaseNotes(){
   return '<div class="settings-release-list">'+APP_RELEASE_NOTES.map(function(note){

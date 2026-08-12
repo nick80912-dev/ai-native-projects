@@ -1,5 +1,13 @@
 # 07 版本紀錄
 
+## 2026-08-12 — v106 Today Hero 採買摘要緊湊靠右（dev candidate）
+
+- 依 Bar 裁定，Hero 採買下排由比例分欄改為單一緊湊右對齊群組；地點、分隔點、第一優先分類與 `+N` 以 4px 間距排列，不再產生過大的中間空白。
+- 地點超過六個 Unicode code point 時顯示前六字加 `…`；320px 若仍不足可再縮短地點。分類與 `+N` 不縮排、不省略，完整地點仍保留在 `aria-label`。
+- `順路採買`／`今日採買`、分類選擇、品名隱私、exact-next-stop 排除、通用入口、44px 點擊區、鍵盤操作與 Shopping 錨點均維持不變。
+- App Shell 由 v105 forward bump 至 **v106**；未修改 Schema、Shopping store、Ledger、Apps Script、Google Sheet、`netlify.toml`、`main`、正式部署或 production tag。
+- TDD renderer／CSS RED→GREEN 與 focused browser 17／17 已通過；fresh full gate 為 **83／83** Node test files、Playwright **149／149**（0 failed），另通過版本、8 runtime assets、BUILTIN no-drift、文件標題、manifest JSON、offline `healthCheck()`、pageerror 與 `git diff --check`。
+
 ## 2026-08-12 — v105 Today Hero 採買分類預覽（dev candidate）
 
 - 依 Bar 裁定，v104 的品名預覽改為 `地點 · 第一個優先分類 +N`；`+N` 仍代表其餘待買品項數，不是分類數，單一品項不顯示 `+N`。

@@ -1,11 +1,11 @@
 # tests — 測試資產(交付必附)
 
-## v105 Today Hero coverage
+## v106 Today Hero coverage
 
 - `weather-rain-window.test.js` protects itinerary-date-aware weather hint priority.
 - `shopping-list.test.js` protects the itinerary-aware future-stop projection, first prioritized category, remaining item count, input immutability, neutral `今日採買` model, exact-next-stop exclusion, category-only accessibility, and generic fallback.
-- `home-simplification.test.js` and `render-note.test.js` protect the single-row weather + Shopping Hero, `地點 · 分類 +N`, accessible stop/category/count copy, quoted-category escaping, no product-name output, and blank-category fallback.
-- `browser/today-live-info.spec.js` makes the next-stop badge authoritative, verifies a deterministic future `順路採買` stop/category/count with no product names, and covers accessible names, Enter／Space, focus-visible, 44px controls, location/category ellipsis, badge overlap, Hero geometry, and horizontal overflow at 320／375／390px.
+- `home-simplification.test.js` and `render-note.test.js` protect the compact right-aligned `地點 · 分類 +N` group, six-code-point visible stop cap, full accessible stop, complete category/count, quoted-category escaping, no product-name output, and blank-category fallback.
+- `browser/today-live-info.spec.js` makes the next-stop badge authoritative and verifies at 320／375／390px that adjacent parts keep a 4px gap, the group reaches the right edge, only the location may ellipsize, category／`+N` stay complete, the target remains 44px, and Hero／badge geometry has no overlap or horizontal overflow.
 
 
 

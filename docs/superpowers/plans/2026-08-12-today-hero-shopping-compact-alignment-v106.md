@@ -41,7 +41,7 @@
 - Consumes: `todayShoppingHeroModel()` output `{stopName, firstCategory, remainingCount, count}`.
 - Produces: `todayHeroShoppingStopText(stopName: unknown): string` and compact `.today-hero-shopping-summary .today-hero-summary-value` layout.
 
-- [ ] **Step 1: Write failing renderer tests**
+- [x] **Step 1: Write failing renderer tests**
 
 Add `extractFunction('todayHeroShoppingStopText')` immediately before `extractFunction('renderTodayShoppingSummary')`. Add fixtures asserting exact boundary behavior and accessibility:
 
@@ -73,13 +73,13 @@ assert.doesNotMatch(html,/today-hero-shopping-stop\{[^}]*1\.15/);
 assert.doesNotMatch(html,/today-hero-shopping-category\{[^}]*\.85/);
 ```
 
-- [ ] **Step 2: Run focused Node tests and verify RED**
+- [x] **Step 2: Run focused Node tests and verify RED**
 
 Run: `node --test tests/render-note.test.js tests/home-simplification.test.js`
 
 Expected: FAIL because `todayHeroShoppingStopText()` and the compact CSS contract do not exist.
 
-- [ ] **Step 3: Implement the minimal helper and renderer change**
+- [x] **Step 3: Implement the minimal helper and renderer change**
 
 Add before `renderTodayShoppingSummary()`:
 
@@ -109,13 +109,13 @@ Replace the proportional CSS with:
 
 Retain `.today-hero-summary-value{gap:4px}` as the sole spacing rule.
 
-- [ ] **Step 4: Run focused Node tests and verify GREEN**
+- [x] **Step 4: Run focused Node tests and verify GREEN**
 
 Run: `node --test tests/render-note.test.js tests/home-simplification.test.js tests/shopping-list.test.js`
 
 Expected: all tests PASS; renderer visible copy is shortened while its aria copy remains complete.
 
-- [ ] **Step 5: Commit the renderer unit**
+- [x] **Step 5: Commit the renderer unit**
 
 ```powershell
 git add -- index.html tests/render-note.test.js tests/home-simplification.test.js
@@ -131,7 +131,7 @@ git commit -m "fix(today): compact Hero shopping summary"
 - Consumes: Task 1's helper output and compact flex contract.
 - Produces: browser guarantees for right alignment, `4px` gaps, stop-only truncation, and complete category/count at 320／375／390px.
 
-- [ ] **Step 1: Replace the obsolete dual-ellipsis browser assertions**
+- [x] **Step 1: Replace the obsolete dual-ellipsis browser assertions**
 
 Seed the resolved future group with category `生活用品`, set its stop to `廣島和平紀念資料館`, and remove the artificial long-category override. For every viewport, collect:
 
@@ -173,13 +173,13 @@ expect(layout.countShrink).toBe('0');
 
 Retain the existing one-row, no-horizontal-overflow, minimum target, Hero height, ticket position, badge size, and overlap assertions.
 
-- [ ] **Step 2: Run the focused browser spec**
+- [x] **Step 2: Run the focused browser spec**
 
 Run: `npx playwright test tests/browser/today-live-info.spec.js`
 
 Expected: all Today live-info tests PASS at 320／375／390px.
 
-- [ ] **Step 3: Commit the mobile layout regression coverage**
+- [x] **Step 3: Commit the mobile layout regression coverage**
 
 ```powershell
 git add -- tests/browser/today-live-info.spec.js
@@ -204,7 +204,7 @@ git commit -m "test(today): protect compact shopping alignment"
 - Consumes: completed v106 renderer and browser contract.
 - Produces: consistent `v106` application/cache identity and user/developer documentation.
 
-- [ ] **Step 1: Update forward-only version expectations**
+- [x] **Step 1: Update forward-only version expectations**
 
 Change runtime versions from `v105` to `v106`. Add v106 as the newest release note and retain exactly the preceding four releases `v105`, `v104`, `v103`, `v102`; update `tests/theme-system.test.js` expected historical list to:
 
@@ -212,11 +212,11 @@ Change runtime versions from `v105` to `v106`. Add v106 as the newest release no
 ['v105','v104','v103','v102']
 ```
 
-- [ ] **Step 2: Document the exact v106 behavior**
+- [x] **Step 2: Document the exact v106 behavior**
 
 Record that the resolved Hero Shopping value is a compact right-aligned group, stop names are capped at six Unicode code points plus `…`, categories/counts remain complete, and the full stop name remains accessible. State that navigation, storage, sync, offline data, and Ledger are unchanged.
 
-- [ ] **Step 3: Run version and static checks**
+- [x] **Step 3: Run version and static checks**
 
 Run:
 
@@ -231,7 +231,7 @@ git diff --check
 
 Expected: v106 consistency passes, document titles pass, eight runtime assets validate, BUILTIN reports no drift, manifest parses, and diff check emits nothing.
 
-- [ ] **Step 4: Commit the v106 release metadata**
+- [x] **Step 4: Commit the v106 release metadata**
 
 ```powershell
 git add -- app-version.js sw.js index.html tests/theme-system.test.js 04_UI_GUIDELINES.md 07_CHANGELOG.md 08_AI_HANDOVER.md tasks/current.md tests/README.md docs/superpowers/plans/2026-08-12-today-hero-shopping-compact-alignment-v106.md
