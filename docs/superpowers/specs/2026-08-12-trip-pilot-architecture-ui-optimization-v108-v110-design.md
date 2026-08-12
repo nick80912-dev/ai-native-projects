@@ -1,8 +1,10 @@
 # Trip Pilot Architecture and UI Optimization v108–v110 Design
 
-**Date:** 2026-08-12  
-**Status:** Approved direction; written specification awaiting Bar review  
-**Task class:** C — architecture / Tier 2  
+**Date:** 2026-08-12
+
+**Status:** Approved for implementation by Bar
+
+**Task class:** C — architecture / Tier 2
 
 ## 1. Objective
 
@@ -57,7 +59,7 @@ An intent contains only serializable transient UI information:
 
 ```js
 {
-  view: 'shop' | 'today' | 'trip' | 'split',
+  view: 'shopping-list' | 'shop' | 'today' | 'trip' | 'split',
   targetId: string,
   sourceView: string,
   sourceId: string,
@@ -66,7 +68,7 @@ An intent contains only serializable transient UI information:
 }
 ```
 
-The module does not read the DOM, storage, Sheet data, or navigation history. The `index.html` adapter owns view switching, element lookup, scrolling, focus restoration, and announcements. Navigation intent state is session-only and must never enter localStorage, backup, Queue, CMS, or Ledger.
+The module does not read the DOM, storage, Sheet data, or navigation history. The `index.html` adapter owns view or overlay opening, element lookup, scrolling, focus restoration, and announcements. `shopping-list` identifies the existing overlay and must not change `curView`. Navigation intent state is session-only and must never enter localStorage, backup, Queue, CMS, or Ledger.
 
 All explicit target flows must use the same seam:
 
@@ -252,4 +254,3 @@ Every behavioral change follows RED → GREEN. Required coverage includes:
 3. Execute v108 and push `dev`; Bar performs device/PWA verification.
 4. After v108 verification, execute v109 and push `dev`.
 5. After v109 verification, execute the v110 spike and ship only the portions that meet its kill criteria.
-
