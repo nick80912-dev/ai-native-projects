@@ -12,9 +12,13 @@
       sourceId:String(intent.sourceId||''),align:intent.align==='center'?'center':'start',announce:String(intent.announce||'')
     };
   }
+  function nextToken(value){
+    var token=Math.floor(Number(value));
+    return isFinite(token)&&token>0?token:1;
+  }
   function create(initial){
     initial=initial||{};
-    return {nextToken:Math.max(1,Number(initial.nextToken)||1),pending:initial.pending||null,active:initial.active||null};
+    return {nextToken:nextToken(initial.nextToken),pending:initial.pending||null,active:initial.active||null};
   }
   function request(state,intent){
     state=create(state);var token=state.nextToken;
