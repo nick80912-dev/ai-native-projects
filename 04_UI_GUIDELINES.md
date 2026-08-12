@@ -6,11 +6,11 @@
 - 單類管理頁保留新增、刪除、排序與既有資料規則，返回鍵先回 `自訂項目`，再回設定根頁。
 - `個` 顯示為預設採買單位並沿用不可刪除防護；320／375／390px 不得讓名稱、標籤與三個排序／刪除控制重疊。
 
-## v104 Today Hero actionable-summary contract
+## v105 Today Hero actionable-summary contract
 
 - Active trips show a small `completed / total` value, a date with decorative weather art, and one row containing the outing hint and Shopping summary.
 - Shopping location is the primary summary copy. Its action remains at least 44px tall, keyboard-focusable, and safely ellipsizes long names.
-- 通用採買狀態的 `開啟查看 →` 與右側欄位右緣對齊；具體站點摘要顯示 `地點 · 第一個優先品名 +N`，地點與品名皆可各自單行省略，數量保持可見。
+- 通用採買狀態的 `開啟查看 →` 與右側欄位右緣對齊；具體站點摘要顯示 `地點 · 第一個優先分類 +N`，Hero 不顯示品名，地點與分類皆可各自單行省略，數量保持可見。
 - The existing next-stop badge owns the exact next Shopping stop; the Hero projects the first eligible future group and never duplicates that badge.
 - This contract is active-trip only. Pre-trip views, data contracts, and storage behavior remain unchanged.
 

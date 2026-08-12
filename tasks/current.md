@@ -1,14 +1,14 @@
 # CURRENT(現在正在做的)
 
-## v104 current dev candidate
+## v105 current dev candidate
 
 
 
 - v102 Bar device/PWA acceptance is complete.
-- v104 is the current dev candidate: the active-trip Today Hero Shopping summary now shows `地點 · 第一個優先品名 +N`; the exact next Shopping stop remains in its existing badge. Ledger correction diagnostics still keep each distinct invalid event once per session instead of filling AppLog during repeated projections.
+- v105 is the current dev candidate: the active-trip Today Hero Shopping summary shows `地點 · 第一個優先分類 +N` and never exposes product names; the exact next Shopping stop remains in its existing badge. Ledger correction diagnostics still keep each distinct invalid event once per session instead of filling AppLog during repeated projections.
 - Optimization roadmap: retain the Today Hero single-row briefing contract, including 44px/focus/ellipsis behavior and no duplicate next-stop reminder.
-- Next action: device/PWA appearance and interaction verification on the v104 dev candidate. Do not merge main, deploy production, or create a production tag.
-- Automated evidence: fresh v104 gate passed 83/83 Node test files and 149/149 Playwright cases; document-title, app-version, 8 runtime assets, BUILTIN no-drift, manifest JSON, production-data health, and diff checks passed.
+- Next action: device/PWA appearance and interaction verification on the v105 dev candidate. Do not merge main, deploy production, or create a production tag.
+- Automated evidence: fresh v105 gate passed 83/83 Node test files and 149/149 Playwright cases; document-title, app-version, 8 runtime assets, BUILTIN no-drift, manifest JSON, production-data health, and diff checks passed.
 
 
 
@@ -22,12 +22,12 @@
 
 | **`main` 原始碼** | **SW v96**，PR #13 merge commit `02705c3`；因 Netlify 額度用罄尚未部署／建立 tag |
 | 正式站 | `https://trippilot-jp.netlify.app/` — 2026-08-01 由 SW v18 升級至 v73,G1–G6 全數通過 |
-| **dev candidate** | **SW v104**; active-trip Today Hero now previews the first prioritized Shopping item after its location, while retaining the v103 briefing and Ledger diagnostic behavior |
+| **dev candidate** | **SW v105**; active-trip Today Hero previews the first prioritized Shopping category after its location and exposes no product name |
 | 個人備份格式 | **v9**(`PERSONAL_STATE_SUPPORTED_VERSIONS = [1..9]`)—— v81 因想逛 key 識別語意變更而升版 |
-| dev automated validation | v104 fresh gate: **83/83** Node test files and **149/149** Playwright cases (0 failed); document-title, app-version, 8 runtime assets, BUILTIN no-drift, manifest JSON, production-data health, and diff checks all passed |
+| dev automated validation | v105 fresh gate: **83/83** Node test files and **149/149** Playwright cases (0 failed); document-title, app-version, 8 runtime assets, BUILTIN no-drift, manifest JSON, production-data health, and diff checks all passed |
 | 既有 tag | `production-v18`、`production-v73` |
 
-**`main` 已合併 v96，但正式站仍停在 v73；v104 是目前 `dev` 的候選版。** v74–v87 已由 Bar 於 2026-08-03 確認真機驗收皆正常；v88–v89、v92–v95 亦於 2026-08-08 完成 Bar 畫面／真機確認。v96 因 Netlify 額度用罄尚未正式部署，也未建立 `production-v96` tag。Bar 已完成 v101／v102 裝置／PWA驗收；v104 在 v103 Today Hero 與 Ledger 診斷基礎上補入採買品名預覽，不改既有發布缺口。
+**`main` 已合併 v96，但正式站仍停在 v73；v105 是目前 `dev` 的候選版。** v74–v87 已由 Bar 於 2026-08-03 確認真機驗收皆正常；v88–v89、v92–v95 亦於 2026-08-08 完成 Bar 畫面／真機確認。v96 因 Netlify 額度用罄尚未正式部署，也未建立 `production-v96` tag。Bar 已完成 v101／v102 裝置／PWA驗收；v105 在 v103 Today Hero 與 Ledger 診斷基礎上以分類取代 v104 品名預覽，不改既有發布缺口。
 
 ### v74–v98 已折疊的主要能力
 
@@ -118,6 +118,6 @@
 
 ## 下一棒
 
-→ **v104 是目前 dev candidate；下一步由 Bar 開啟 dev PWA 驗收 v104 的 Today Hero 外觀與互動。** 確認採買顯示 `地點 · 第一品名 +N`、地點仍是主資訊、精確下一站不重複、長站名與品名安全截斷，且無錯誤或水平 overflow。不得自行 merge `main`、部署正式站或建立 production tag。
+→ **v105 是目前 dev candidate；下一步由 Bar 開啟 dev PWA 驗收 v105 的 Today Hero 外觀與互動。** 確認採買顯示 `地點 · 第一分類 +N`、Hero 不顯示品名、地點仍是主資訊、精確下一站不重複、長站名與分類安全截斷，且無錯誤或水平 overflow。不得自行 merge `main`、部署正式站或建立 production tag。
 
 > **不得**自行動 `main`、部署正式站或建立 production tag。未經 Bar 核准不得 merge `dev → main`。

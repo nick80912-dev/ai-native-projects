@@ -1,5 +1,13 @@
 # 07 版本紀錄
 
+## 2026-08-12 — v105 Today Hero 採買分類預覽（dev candidate）
+
+- 依 Bar 裁定，v104 的品名預覽改為 `地點 · 第一個優先分類 +N`；`+N` 仍代表其餘待買品項數，不是分類數，單一品項不顯示 `+N`。
+- 分類來自既有 exact `必買` 穩定置頂後的第一筆；Hero visible markup 與 accessible name 均不再包含品名。空白分類安全退回只顯示地點，無多餘分隔符或數量。
+- 地點維持主要資訊，分類為次要資訊；320／375／390px 保持雙 ellipsis、單行、44px 點擊區與無水平 overflow。`順路採買`／`今日採買`、exact-next-stop 排除、通用入口、錨點與鍵盤操作不變。
+- App Shell 由 v104 forward bump 至 **v105**；未修改 Schema、Shopping store、Ledger、Apps Script、Google Sheet、`netlify.toml`、`main`、正式部署或 production tag。
+- TDD 的 model／renderer RED→GREEN 與 focused browser 17／17 已通過；Fresh full gate 為 **83／83** Node test files、Playwright **149／149**（0 failed），另通過版本、release-note 五筆視窗、8 runtime assets、BUILTIN no-drift、文件標題、manifest JSON、production-data `healthCheck()`、pageerror 與 `git diff --check`。
+
 ## 2026-08-12 — v104 Today Hero 採買品名預覽（dev candidate）
 
 - Active-trip Today Hero 的採買摘要改為 `地點 · 第一個優先品名 +N`；單一品項不顯示 `+N`，空白品名安全退回只顯示地點。
