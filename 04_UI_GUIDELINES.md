@@ -1,9 +1,17 @@
 # 04 UI 準則
 
+## v110 呈現 token 與 Today view 邊界
+
+- 非主題呈現尺度只有五級字級 `11／12／14／20／24px`、五級間距 `4／8／12／16／24px`、四級圓角 `6／10／14／999px`；只在觸及的 Today、導覽回饋、診斷與共用操作元件採用，不作全站機械式改寫。
+- 操作以 `primary／secondary／quiet／destructive` 角色 token 表達，診斷以 `info／success／warning／degraded／error` 角色 token 表達。這些 token 只能引用既有語意色，不新增第七組配色，也不得改動六組主題各自的 13 個 `--t-*` 值。
+- `today-view.js` 只接收已選好的採買摘要資料並產生純 model、既有 HTML 與宣告式 action；`index.html` 保留 reminder 選取、目前站排除、store／clock／repository 存取與 DOM effect。不得讓 view module 變成全域 store。
+- Today Hero 的可見文案、六字截斷、完整 accessible name、44px 操作區、鍵盤行為與 Shopping 定位均維持 v109 行為；模組拆分不是重新設計。
+- Ledger 只在真實重複規則能由一個深 seam 移除時才拆 adapter。v110 的 history candidate 未通過刪除測試，因此保留既有 `ledger-ui-state.js` 與 `index.html` 局部 DOM adapter，不新增 `ledger-history-view.js`、store、controller、event bus 或框架。
+
 ## v108 明確導覽與診斷呈現契約
 
 - Today Hero、下一站 Shopping badge、Shopping mall 與既有精確 day／item 入口共用同一 navigation-intent seam；一般切 tab 或重點目前 tab 不建立 target intent。
-- 成功抵達後，目標必須捲到有效 sticky header 下方並套用單一 `.is-navigation-target` 樣式 1.2 秒；目的地容器內以 `role="status" aria-live="polite"` 顯示完整「已定位：…」文案。`prefers-reduced-motion: reduce` 保留靜態標示但不得播放 transition。
+- 成功抵達後，目標必須捲到有效 sticky header 下方並套用單一 `.is-navigation-target` 樣式 1000ms，再以 `.is-navigation-target-fading` 淡出 200ms；完整「已定位：…」只存在 visually-hidden `role="status" aria-live="polite"`。`prefers-reduced-motion: reduce` 在 1000ms 後直接清除，不播放 transition。
 - `shopping-list` 只開啟既有 overlay，不改 `curView`。關閉後依序回復仍存在的原 launcher、同一穩定身分的 replacement launcher，或來源 tab，並明確回復來源捲動位置；focus options 不支援或被忽略時也不得讓頁面跳位。
 - 找不到目標時仍開啟目的 view 的正常位置，顯示不阻擋操作的「找不到對應地點」、記錄 Render diagnostic 並安全結束 intent；不得 throw 或錯誤套用其他頁面的舊捲動位置。
 - 診斷面板可將原始 AppLog 顯示為 `info`、`degraded` 或 `action-required`，並補上當前影響與可用 fallback；已知 Ledger 增量讀取逾時必須說明目前仍可使用一般 CSV 同步。原始技術 message 必須仍可見、正確 escape，複製報告不得混入投影文案。

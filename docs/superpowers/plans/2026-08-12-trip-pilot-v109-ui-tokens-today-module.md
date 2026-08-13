@@ -33,7 +33,7 @@
 - Consumes: existing `--t-*` theme tokens and semantic color roles.
 - Produces: stable `--font-*`, `--space-*`, `--radius-*`, and action-role custom properties used by Today/navigation/diagnostics.
 
-- [ ] **Step 1: Write RED token and computed-style assertions**
+- [x] **Step 1: Write RED token and computed-style assertions**
 
 Require these exact properties on `:root`:
 
@@ -60,11 +60,11 @@ Run: `node tests/theme-system.test.js tests/ui-ux-hardening.test.js`
 
 Expected: FAIL because the presentation tokens do not exist.
 
-- [ ] **Step 2: Add tokens without palette changes**
+- [x] **Step 2: Add tokens without palette changes**
 
 Define tokens once outside theme selectors. Replace literal sizes/radii only in Today Hero, v109 navigation confirmation, diagnostics impact, `.btn`, and the matching shared action variants. Keep all six `--t-*` maps byte-for-byte unchanged.
 
-- [ ] **Step 3: Run GREEN across themes and mobile widths**
+- [x] **Step 3: Run GREEN across themes and mobile widths**
 
 ```powershell
 node tests/theme-system.test.js tests/ui-ux-hardening.test.js
@@ -73,7 +73,7 @@ npx playwright test tests/browser/ui-ux-hardening.spec.js tests/browser/today-li
 
 Expected: PASS at 320, 375, and 390px with no intentional visual delta beyond using shared variables.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```powershell
 git add -- index.html tests/theme-system.test.js tests/ui-ux-hardening.test.js tests/browser/ui-ux-hardening.spec.js tests/browser/today-live-info.spec.js
@@ -91,7 +91,7 @@ git commit -m "refactor(ui): consolidate presentation semantics"
 - Consumes: prepared Today input and helper functions.
 - Produces: executable characterization for `TripTodayView.buildModel(input)`, `.render(model,helpers)`, and `.actionFor(target)`.
 
-- [ ] **Step 1: Define input/output fixtures before extraction**
+- [x] **Step 1: Define input/output fixtures before extraction**
 
 Use fixtures for:
 
@@ -120,13 +120,13 @@ Define the target model shape:
 
 Require `actionFor(model)` to return `{type:'open-shopping-list',stopRef:'future'}` and generic fallback to return `{type:'open-shopping-list',stopRef:''}`.
 
-- [ ] **Step 2: Run RED**
+- [x] **Step 2: Run RED**
 
 Run: `node tests/today-view-module.test.js`
 
 Expected: FAIL because `today-view.js` does not exist.
 
-- [ ] **Step 3: Commit characterization only**
+- [x] **Step 3: Commit characterization only**
 
 ```powershell
 git add -- tests/today-view-module.test.js tests/render-note.test.js tests/home-simplification.test.js
@@ -149,7 +149,7 @@ git commit -m "test(today): define view module contract"
 - Consumes: Task 2 fixtures plus helpers `{escapeHtml,escapeHtmlAttr,jsHtmlAttrString}`.
 - Produces: global `TripTodayView` with the exact three-method interface from Task 2.
 
-- [ ] **Step 1: Implement minimal pure model and renderer**
+- [x] **Step 1: Implement minimal pure model and renderer**
 
 `buildModel(input)` receives an already selected reminder/model projection and returns either a normalized `shopping-summary`, a `shopping-generic`, or `null`. It performs the blank-category display fallback and six-code-point visible name cap but never mutates input.
 
@@ -157,13 +157,13 @@ git commit -m "test(today): define view module contract"
 
 Use a CommonJS/global wrapper matching other runtime modules and ES5 syntax except `Array.from`, which is already a supported current runtime dependency for Unicode code-point truncation.
 
-- [ ] **Step 2: Run module GREEN**
+- [x] **Step 2: Run module GREEN**
 
 Run: `node tests/today-view-module.test.js`
 
 Expected: PASS for all characterized cases.
 
-- [ ] **Step 3: Register and replace inline implementation**
+- [x] **Step 3: Register and replace inline implementation**
 
 - Register `today-view.js` in all runtime-asset locations and SW SHELL.
 - Keep DB lookup, `shoppingListStore`, reminder selection, and current-stop resolution in `index.html`.
@@ -171,7 +171,7 @@ Expected: PASS for all characterized cases.
 - Delete the replaced inline helper/markup implementation in the same commit; do not retain a second production renderer.
 - Convert the declarative action to the existing `openShoppingList(stopRef)` inline handler through the adapter helper.
 
-- [ ] **Step 4: Run focused production wiring gates**
+- [x] **Step 4: Run focused production wiring gates**
 
 ```powershell
 node tests/today-view-module.test.js
@@ -184,7 +184,7 @@ npx playwright test tests/browser/today-live-info.spec.js --browser=webkit --gre
 
 Expected: exact accepted v109 output and targeting remain intact.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```powershell
 git add -- today-view.js index.html runtime-assets.json sw.js .ai-manifest.json README.md tests/runtime-assets.test.js tests/today-view-module.test.js tests/render-note.test.js tests/home-simplification.test.js
@@ -202,11 +202,11 @@ git commit -m "refactor(today): extract Hero view module"
 - Consumes: existing `LedgerUiState` public interface and current history DOM adapter.
 - Produces: a written accept/reject decision for one `ledger-history-view.js` seam; no runtime file is created when leverage is insufficient.
 
-- [ ] **Step 1: Inventory caller knowledge**
+- [x] **Step 1: Inventory caller knowledge**
 
 Record the functions that independently know history filter, selection, empty-state, row-action, and render ordering. For each, list its direct DOM, storage, repository, and module dependencies.
 
-- [ ] **Step 2: Design one candidate interface**
+- [x] **Step 2: Design one candidate interface**
 
 The only accepted candidate shape is:
 
@@ -218,11 +218,11 @@ LedgerHistoryView.actionFor(target)
 
 Reject the seam if callers would still need to know filtering, selection, ordering, and action availability individually, or if the module would directly read DOM/storage/repository globals.
 
-- [ ] **Step 3: Run the deletion test and record the decision**
+- [x] **Step 3: Run the deletion test and record the decision**
 
 If deleting the candidate would redistribute at least two independent rules across at least two callers, add a separately approved follow-on plan. Otherwise record `rejected` with evidence and leave runtime code unchanged. Entry, settlement, calculator, and correction are not extracted.
 
-- [ ] **Step 4: Commit the decision**
+- [x] **Step 4: Commit the decision**
 
 ```powershell
 git add -- docs/architecture/ledger-history-deletion-test-v110.md
@@ -238,11 +238,11 @@ git commit -m "docs(architecture): evaluate Ledger history seam"
 - Consumes: Tasks 1–4.
 - Produces: verified v110 `dev` candidate.
 
-- [ ] **Step 1: Forward-bump to v110 and document actual decisions**
+- [x] **Step 1: Forward-bump to v110 and document actual decisions**
 
 Record token adoption, Today module ownership, and the Ledger seam accept/reject result. Do not claim a Ledger extraction if only the decision document exists.
 
-- [ ] **Step 2: Run static, focused, full, WebKit, and offline Health gates**
+- [x] **Step 2: Run static, focused, full, WebKit, and offline Health gates**
 
 Use the same static/full gate set as v109 plus `today-view-module.test.js`, six-theme browser coverage, and exact output tests.
 

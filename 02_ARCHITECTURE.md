@@ -11,7 +11,7 @@ Netlify 靜態託管(HTTPS)+ Service Worker(PWA 離線)
 無自架後端、無額外資料庫伺服器、零前端相依套件。
 ```
 
-`index.html` 是 App、DOM effect adapter 與 Netlify 正式部署入口；`navigation-intent.js` 只管理 session-only 明確目的地 intent，`diagnostic-impact.js` 只把原始 AppLog entry 投影為顯示用影響說明。裝置照片儲存邊界獨立在 `shopping-photo-store.js`，採買轉記帳的純資料與 workflow 邊界獨立在 `buy-to-ledger.js`，Ledger 歷史瀏覽與 create／edit entry session 的 UI state／effect 邊界獨立在 `ledger-ui-state.js`。Service Worker、manifest 與 icons 均位於 repo 根目錄並由 GitHub 連動部署。
+`index.html` 是 App、DOM effect adapter 與 Netlify 正式部署入口；`navigation-intent.js` 只管理 session-only 明確目的地 intent，`diagnostic-impact.js` 只把原始 AppLog entry 投影為顯示用影響說明，`today-view.js` 只建立與渲染 Today Hero 採買摘要。裝置照片儲存邊界獨立在 `shopping-photo-store.js`，採買轉記帳的純資料與 workflow 邊界獨立在 `buy-to-ledger.js`，Ledger 歷史瀏覽與 create／edit entry session 的 UI state／effect 邊界獨立在 `ledger-ui-state.js`。Service Worker、manifest 與 icons 均位於 repo 根目錄並由 GitHub 連動部署。
 
 ## 資料流:三層防線(絕不空白頁)
 1. **內建資料**(builtin,建置時寫入 HTML)→ 0.1 秒顯示
@@ -19,7 +19,9 @@ Netlify 靜態託管(HTTPS)+ Service Worker(PWA 離線)
 3. **背景同步** 8 張 CSV:原有 7 表維持原子快照 Gate;ledger 失敗時沿用目前 ledger 快照,其餘 7 表仍可更新
 同步狀態徽章:已是最新 / 部分更新 / 離線版 / 內建版。
 
-明確頁面／overlay 導覽另外走 transient intent：純 module 只保存序號、目標 view／ID、來源與對齊資訊；`index.html` 才負責開啟 view、解析 DOM target、避開 sticky header 捲動、1.2 秒可見標示、live status、遺失目標降級，以及關閉 Shopping overlay 後回復來源捲動與 focus。intent 不進 localStorage、備份、Queue、CMS 或 Ledger；`shopping-list` 仍是 overlay，不改 `curView`。
+明確頁面／overlay 導覽另外走 transient intent：純 module 只保存序號、目標 view／ID、來源與對齊資訊；`index.html` 才負責開啟 view、解析 DOM target、避開 sticky header 捲動、1 秒醒目加 0.2 秒淡出、visually-hidden live status、遺失目標降級，以及關閉 Shopping overlay 後回復來源捲動與 focus。intent 不進 localStorage、備份、Queue、CMS 或 Ledger；`shopping-list` 仍是 overlay，不改 `curView`。
+
+Today Hero 的 reminder 選取、目前站排除、Shopping store 與 DOM effect 仍由 `index.html` adapter 負責；`today-view.js` 只接收已準備的資料，正規化 `未分類` 與六個 Unicode code point 的可見地點名稱，產生既有 HTML 及宣告式 `open-shopping-list` action。module 不讀 DOM、storage、clock 或 repository，也不成為跨頁 store。
 
 AppLog 與 `healthCheck()` 的原始 entry／finding 保持權威且不變；`diagnostic-impact.js` 只在診斷面板投影 `info`／`degraded`／`action-required`、影響與 fallback，複製報告仍逐字使用 raw message。投影不參與 Health Check 判定、同步重試、Queue 或資料保存。
 
@@ -55,6 +57,7 @@ ledger UI state/workflow(帳本軌／歷史篩選／多選／create-edit entry s
 navigation location(外部地圖詳細分點直接導航;一般同名地點以目前位置作為 origin,定位失敗退回「名稱 + 日本」)
 navigation intent(session-only request／consume／complete；DOM、scroll、focus、status 與 overlay lifecycle 留在 index adapter)
 diagnostic impact(raw AppLog → display-only severity／impact／fallback；raw copy、Health Check 與同步語意不變)
+today view(已準備 Today Hero 採買資料 → 純 model／HTML／declarative action；資料選取與 DOM effect 留在 index adapter)
 ```
 
 `ledger-ui-state.js` 只擁有 session-only UI workflow state。entry draft 內容與 return context 對 module 不透明；session／request ID 用來阻止重複儲存與過期非同步結果。correction、settlement、calculator 內容、record 建立、同步及 Shopping UI state 仍在既有邊界，不屬於此 module。
@@ -62,7 +65,7 @@ diagnostic impact(raw AppLog → display-only severity／impact／fallback；raw
 `.ai-manifest.json` 的 `manifest_format` 只表示 manifest schema，不是 App 版號；其 `current_status.authority` 必須精確指向 `tasks/current.md`。manifest 不保存 `dev_candidate`、`next_action` 或 automated-test-result snapshot；App／SW 版號只由 `app-version.js` 與 `sw.js` 管理，歷史狀態看 `07_CHANGELOG.md`。
 
 ## 部署檔案
-`index.html / navigation-intent.js / diagnostic-impact.js / shopping-photo-store.js / buy-to-ledger.js / ledger-ui-state.js / shopping-ui-state.js / trip-progression.js / schema.js / validator.js / app-version.js / sw.js / manifest.webmanifest / icon-*.png` 位於 repo 根目錄,由 `main` 的 Bar 核准 Merge 觸發 Netlify 正式部署。
+`index.html / navigation-intent.js / diagnostic-impact.js / today-view.js / shopping-photo-store.js / buy-to-ledger.js / ledger-ui-state.js / shopping-ui-state.js / trip-progression.js / schema.js / validator.js / app-version.js / sw.js / manifest.webmanifest / icon-*.png` 位於 repo 根目錄,由 `main` 的 Bar 核准 Merge 觸發 Netlify 正式部署。
 
 ## 已知環境限制(繞過方案已內建)
 - 部分 WebView 無 console.info → 已 polyfill

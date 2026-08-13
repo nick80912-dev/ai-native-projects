@@ -1,5 +1,12 @@
 # tests — 測試資產(交付必附)
 
+## v110 presentation-token and Today-module coverage
+
+- `theme-system.test.js`, `ui-ux-hardening.test.js`, `browser/ui-ux-hardening.spec.js`, and `browser/today-live-info.spec.js` protect the compact typography／spacing／radius／action-role tokens, exact six-theme palette values, and unchanged computed presentation at 320／375／390px.
+- `today-view-module.test.js` directly protects `TripTodayView.buildModel()`／`render()`／`actionFor()`: immutable input, blank category → `未分類`, six-Unicode-code-point visible cap, full accessible stop name, product-name privacy, generic fallback, and the no-DOM／storage／clock／repository boundary.
+- Production wiring tests require `today-view.js` in the page and eleven-asset offline shell inventory, remove the former inline Hero helper／markup authority, and retain exact Today Shopping targeting and interaction behavior in Chromium and WebKit.
+- `ledger-ui-state.test.js` remains the executable Ledger boundary. The v110 deletion-test decision is documented at `docs/architecture/ledger-history-deletion-test-v110.md`; no new Ledger runtime module or global store is expected.
+
 ## v109 navigation-feedback acceptance-fix coverage
 
 - Successful exact-target announcements remain in a visually hidden polite live region, so no 「已定位」 row or layout gap appears. Missing-target feedback retains the visible modifier and Render diagnostic.
@@ -52,7 +59,7 @@
 - `ledger-settlement-reliability.test.js`:結算可靠性總測試。涵蓋 durable delivery bridge(原子交接、持久性、只在遠端讀回同一 `record.id` 才清除、不自動過期)、事件全序與同毫秒競態、跨裝置 confirm／reject 收斂與 losing response inert、狀態機文案與按鈕不復原、退回後重新付款開新 generation、已確認收款的 10 秒一次性復原（資格六項條件、9,999／10,000／10,001ms 邊界、無效或未來 `response.time`、已復原、後續 generation、連點五次只一筆 deletion、歷史不得輸出永久撤銷／復原按鈕）、ledger fast pull 增量與非 JSON 降級、polling 兩層退避與生命週期、待處理徽章、簡易結算模式與時鐘偏移。執行:`node tests/ledger-settlement-reliability.test.js`。
 - `ledger-settlement-correction.test.js`：結算後不可改寫與引導式更正總測試。涵蓋 claim／canonical confirm 建立位置保護切點、正式／TEST 隔離、confirm 復原、多人收據、永久保護、完整版本投影、commit-last 缺件 inert、重複更正、整張作廢、跨裝置 canonical／losing conflict、不合法 ID／時間事件 fail-closed 與分類診斷、付款人／原因守門、刪改阻擋、action model、品項變更揭露，以及已全數還款後更正產生的新餘額差；v103 後續另鎖定相同無效更正事件在重複投影時只寫入一次 session AppLog，而顯式 warning sink 仍逐次收到完整診斷。一般編輯 stale-DOM 與更正預覽事件 fingerprint 的 UI 守門另由 `ledger-list-actions.test.js` 鎖定。執行：`node tests/ledger-settlement-correction.test.js`。
 - `ledger-correction-ui-state.test.js`：驗證 correction session 的 open/close、reason、preview、calendar、pending、request stale guard 與 ordered effects。執行：`node tests/ledger-correction-ui-state.test.js`。
-- `runtime-assets.test.js`：驗證十個 JavaScript runtime assets（含 navigation intent 與 diagnostic impact）在入口、SW SHELL、README 與 `.ai-manifest.json` 的 build-time 登錄一致性。執行：`node tests/runtime-assets.test.js`；repo gate 亦可直接執行 `node tools/check-runtime-assets.js`。
+- `runtime-assets.test.js`：驗證十一個 JavaScript runtime assets（含 navigation intent、diagnostic impact 與 Today view）在入口、SW SHELL、README 與 `.ai-manifest.json` 的 build-time 登錄一致性。執行：`node tests/runtime-assets.test.js`；repo gate 亦可直接執行 `node tools/check-runtime-assets.js`。
 - `ledger-list-actions.test.js`：除清單卡片、明細與操作選單外，驗證受保護收據只顯示「更正收據」、引導式更正 Sheet／預覽入口、整張作廢預覽後只保留單一最終確認、更正次數 badge、不可改寫歷史入口，以及完整紀錄保留作廢收據歷史；並鎖定個人代購沿用共用 renderer、位於近期消費第一行的 compact context seam，長內容只能截斷而不另起一行。執行：`node tests/ledger-list-actions.test.js`。
 - `ledger-entry-p0.test.js`／`ledger-three-second-entry.test.js`／`browser/ledger-entry-quick-layout.spec.js`:驗證單品項新增消費的快速版面階層、`其他資訊（選填）` 單一入口與日期／類別／支付／備註摘要、團體分攤成員按需展開、個人代購欄位位置、個人／團體鍵盤 Next 聚焦、六主題次要底色的「儲存並再記一筆」及既有儲存 guard；Browser 另以真實 renderer 驗證代購／分攤展開與 320／375／390px 無水平 overflow。執行:`node tests/ledger-entry-p0.test.js`、`node tests/ledger-three-second-entry.test.js`、`npx playwright test tests/browser/ledger-entry-quick-layout.spec.js`。
 - `ledger-calculator.test.js`／`browser/ledger-calculator.spec.js`：驗證 Ledger 共用金額計算器的安全四則 parser、優先序、除零／非法／safe integer 守門、single／item／discount 資料 target、既有 draft 更新入口；v94 另涵蓋小數 token、購物式 contextual percent、等號後續輸入、正數小數無條件捨去、浮點近整數校正、一般金額／折扣零值差異、五列四欄按鍵、44×44px 關閉／trigger、實體鍵盤、inert／焦點／scroll、取消不改值、即時換算，以及 320／375／390px 無水平 overflow。執行：`node tests/ledger-calculator.test.js`、`npx playwright test tests/browser/ledger-calculator.spec.js`。

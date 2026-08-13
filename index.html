@@ -9140,6 +9140,11 @@ function renderSettingsDataHealth(){
   return '<div class="settings-section settings-data-health"><h3>資料健康狀態</h3><div class="settings-health-list">'+model.rows.map(function(row){return '<div class="settings-health-row data-health-'+escapeHtml(row.key)+'"><span class="settings-health-main"><b>'+escapeHtml(row.label)+'</b>'+(row.detail?'<span>'+escapeHtml(row.detail)+'</span>':'')+'</span><strong>'+escapeHtml(row.value)+'</strong></div>';}).join('')+'</div></div>';
 }
 var APP_RELEASE_NOTES=[
+  {version:'v110',date:'2026-08-13',title:'畫面細節更一致',items:[
+    '今天首頁的字級、間距、圓角與操作層級改用一致規則，六組主題與原有視覺方向保持不變',
+    '順路採買摘要的地點、分類、數量、鍵盤操作與輔助科技文字維持原本行為',
+    '分帳資料、記帳流程、同步、備份與離線使用方式皆未改變'
+  ]},
   {version:'v109',date:'2026-08-13',title:'定位提示更精簡',items:[
     '前往指定行程或採買地點時，只短暫醒目目標，不再多顯示一列「已定位」文字',
     '醒目效果會在一秒後自然淡去；使用減少動態效果時則直接恢復原樣',
@@ -9159,11 +9164,6 @@ var APP_RELEASE_NOTES=[
     '今天首頁的採買地點、分類與 +N 改為緊湊排列並整組靠右，不再出現過大的中間空白',
     '地點超過六字會顯示前六字與省略符號，分類與 +N 保持完整顯示',
     '完整地點仍提供給輔助科技；採買排序、操作、資料與同步方式皆維持不變'
-  ]},
-  {version:'v105',date:'2026-08-12',title:'順路採買改顯示分類',items:[
-    '今天首頁會在採買地點後顯示第一個優先分類，多項時以 +N 提示其餘數量',
-    'Hero 不再顯示品名，地點與分類在窄螢幕維持單行安全省略',
-    '採買排序、下一站徽章、資料格式、記帳與同步方式皆維持不變'
   ]}
 ];
 function renderAppReleaseNotes(){

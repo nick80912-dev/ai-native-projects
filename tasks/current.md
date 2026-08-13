@@ -1,15 +1,14 @@
 # CURRENT(現在正在做的)
 
-## v109 delivered to dev; awaiting Bar device/PWA verification
+## v110 UI consistency and Today module candidate
 
 
 
-- v102 Bar device/PWA acceptance is complete.
-- v109 is the current candidate: explicit Today／Shopping／Trip targeting still reaches the exact destination and restores Shopping overlay scroll/focus context, but successful targeting no longer inserts a visible 「已定位」 row. The target stays highlighted for 1000ms, fades for 200ms, and retains an accessible polite announcement; missing-target feedback remains visible.
-- `.ai-manifest.json` delegates current product status to this file and no longer embeds volatile candidate, next-action, or automated-test snapshots.
-- v108 passed final whole-branch review and was delivered to `dev`. During Bar's device acceptance, exact-target behavior worked but the successful 「已定位」 row was judged redundant. Bar approved the simplified feedback and required forward-bump to v109; reviewed v109 candidate `ea1e91a` is now on `dev` and awaits the same device/PWA acceptance. Do not merge main, deploy production, or create a production tag.
-- The v109 behavior is intentionally narrow: no data, Schema, Apps Script, synchronization, backup, navigation-intent state, diagnostic raw-copy, SW lifecycle, or cache-strategy change. The previously reserved UI semantic-token/Today-module batch is v110; the BUILTIN/test-throughput spike is v111.
-- Fresh committed-tree evidence: top-level Node **86/86**, full Playwright **175/175**, focused WebKit **25/25**, App／SW v109, document titles, 10 runtime assets, BUILTIN no-drift, manifest JSON, diff checks, and offline Chromium `{"source":"builtin","healthCheck":[],"appLogCount":10,"pageErrors":[]}` all pass; merged-`dev` Node is also **86/86**. Push equality was `origin/dev...dev = 0 0`; only Bar device/PWA acceptance remains.
+- v109 Bar device/PWA acceptance is complete; Bar authorized the reserved v110 batch.
+- v110 adds compact non-theme typography, spacing, radius, action-level, and diagnostic-role tokens only on touched surfaces. All six theme palettes and the existing visual direction remain unchanged.
+- `today-view.js` now owns the pure Today Hero Shopping model／renderer／declarative action. `index.html` retains reminder selection, current-stop exclusion, store／clock access and DOM effects; accepted copy, targeting, keyboard, accessibility and responsive behavior remain unchanged.
+- The Ledger history candidate failed its deletion test, so v110 does not add `ledger-history-view.js`, a global store, controller, event bus or framework. Existing Ledger state, data and workflow semantics remain untouched.
+- App／SW are forward-bumped to v110. Fresh pre-commit validation passes Node **87/87**, full Playwright **176/176**, focused WebKit **39/39**, static／BUILTIN gates and offline Health; the committed-tree rerun remains before `dev` delivery.
 
 
 
@@ -23,12 +22,12 @@
 
 | **`main` 原始碼** | **SW v96**，PR #13 merge commit `02705c3`；因 Netlify 額度用罄尚未部署／建立 tag |
 | 正式站 | `https://trippilot-jp.netlify.app/` — 2026-08-01 由 SW v18 升級至 v73,G1–G6 全數通過 |
-| **`dev` candidate** | **SW v109** at reviewed product candidate `ea1e91a`; exact-target confirmation without the visible successful status row, awaiting Bar device/PWA verification |
+| **`dev` candidate** | **SW v110** local candidate; UI presentation tokens plus production-used Today view module, committed-tree verification pending |
 | 個人備份格式 | **v9**(`PERSONAL_STATE_SUPPORTED_VERSIONS = [1..9]`)—— v81 因想逛 key 識別語意變更而升版 |
-| candidate automated validation | Committed tree: Node **86/86**, Playwright **175/175**, focused WebKit **25/25**, static／BUILTIN／offline Health all pass; merged-`dev` Node **86/86** |
+| candidate automated validation | Pre-commit: Node **87/87**, Playwright **176/176**, focused WebKit **39/39**, static／BUILTIN checks pass; offline Chromium `{"source":"builtin","healthCheck":[],"appLogCount":9,"pageErrors":[]}` |
 | 既有 tag | `production-v18`、`production-v73` |
 
-**`main` 已合併 v96，但正式站仍停在 v73；v109 是目前的 `dev` 候選修正版。** v74–v87 已由 Bar 於 2026-08-03 確認真機驗收皆正常；v88–v89、v92–v95 亦於 2026-08-08 完成 Bar 畫面／真機確認。v96 因 Netlify 額度用罄尚未正式部署，也未建立 `production-v96` tag。Bar 已完成 v101／v102 裝置／PWA驗收；v109 已完成 release gate 與 `dev` delivery，只待 Bar device／PWA 驗收。
+**`main` 已合併 v96，但正式站仍停在 v73；v110 是目前的本機候選。** v74–v87 已由 Bar 於 2026-08-03 確認真機驗收皆正常；v88–v89、v92–v95 亦於 2026-08-08 完成 Bar 畫面／真機確認。v96 因 Netlify 額度用罄尚未正式部署，也未建立 `production-v96` tag。Bar 已完成 v101／v102／v109 裝置／PWA 驗收；v110 完成 committed-tree gates 與 `dev` delivery 後再交由 Bar 驗收。
 
 ### v74–v98 已折疊的主要能力
 
@@ -116,14 +115,14 @@
 | v102 | 住宿停靠點改以 Places.HID 精確關聯 Hotels.HID；Schema 3.0、條件驗證、BUILTIN 與 exact resolver 同步 | ✅ 最終 whole-branch review、完整 gate、dev push（`ffc9aae`）與 Bar 裝置／PWA驗收完成 |
 | v103–v107 | Today Hero 旅行提示、採買摘要分類／對齊／未分類 fallback；原始採買資料與既有 next-stop authority 不變 | ✅ 已完成自動驗證；歷史細節見 `07_CHANGELOG.md` |
 | v108 | transient exact-target navigation、可見定位／scroll／focus return、display-only diagnostic impact、manifest status authority | ✅ final review／完整 gate／dev delivery；Bar 驗收中提出成功提示列精簡修正 |
-| v109 | 成功定位提示列移除、1 秒醒目＋0.2 秒淡出、失敗提示保留 | ⏳ candidate；完整 gate 與 Bar device／PWA verification 待完成 |
-| v110 | UI semantic tokens 與 Today deep-module extraction（原 v109） | 🔒 gated；只可在 Bar 接受 v109 後開始 |
+| v109 | 成功定位提示列移除、1 秒醒目＋0.2 秒淡出、失敗提示保留 | ✅ Bar device／PWA acceptance complete |
+| v110 | UI semantic tokens 與 Today deep-module extraction（原 v109） | 🧪 implementation complete；release gates in progress |
 | v111 | BUILTIN asset spike 與 test throughput（原 v110） | 🔒 gated；只可在 Bar 接受 v110 後開始 |
 
 **已知未做(需先定判準)**:Today 的「交通／停車／營業／付款／提醒**依當下情境動態調整優先順序**」。v84 只做了可明確驗收的收合(常駐交通／停車／營業,收合付款／提醒);「當下情境」的判準(依時間?依距離?依是否已抵達?)尚未定義,不同讀法會做出完全不同的東西,故未實作。
 
 ## 下一棒
 
-→ **完成 v109 release gate 與 `dev` delivery 後，由 Bar 在手機／PWA 驗收。** 確認 320／375／390px exact target、成功時沒有可見「已定位」列、目標醒目約一秒後淡出、reduced motion 直接清除、overlay return scroll／focus、找不到目標仍可見、診斷 raw／projection 邊界與離線啟動。v110 在 Bar 接受 v109 前不得開始；不得自行 merge `main`、部署正式站或建立 production tag。
+→ **完成 v110 committed-tree release gate 並推送 `dev` 後，由 Bar 在手機／PWA 驗收。** 確認六主題視覺方向不變、Today Hero 採買摘要與 320／375／390px 幾何、exact target、overlay return scroll／focus、診斷與離線啟動。v111 在 Bar 接受 v110 前不得開始；不得自行 merge `main`、部署正式站或建立 production tag。
 
 > **不得**自行動 `main`、部署正式站或建立 production tag。未經 Bar 核准不得 merge `dev → main`。

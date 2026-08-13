@@ -1,15 +1,15 @@
 # 08 AI 交接文件(給未來的 AI 模型)
 
-## v109 navigation-feedback acceptance-fix handover
+## v110 UI consistency and Today-module handover
 
-- v102 device/PWA acceptance is complete. v108 passed final whole-branch review and reached `dev`; during device acceptance Bar confirmed the target worked but asked to remove the redundant visible successful 「已定位」 row. The approved fix forward-bumps the App Shell to v109; candidate `ea1e91a` has passed committed-tree gates and reached `dev`, and now awaits Bar device/PWA verification. No `main` merge, production deployment, or production tag is claimed.
-- v109 keeps successful destination text in a visually hidden polite live region, highlights the exact target for 1000ms, then fades for 200ms. Reduced motion clears after 1000ms without fading. Missing-target feedback stays visible and continues writing the same Render diagnostic.
-- `navigation-intent.js` owns only immutable, session-only request／consume／complete state. `index.html` owns view／overlay opening, target lookup, sticky-safe scroll, the 1000ms active plus 200ms fading phases, live status, missing-target diagnostics, and completion. Plain tab switching creates no intent; `shopping-list` remains an overlay and never changes `curView`.
-- Closing Shopping restores the source scroll and focuses the connected launcher, a stable replacement launcher, or the source tab. The return descriptor and intent never enter localStorage, personal backup, Queue, CMS, Ledger, or navigation history.
-- `diagnostic-impact.js` projects raw AppLog entries for display only. The panel shows impact and fallback while retaining escaped raw text; `formatDiagnosticsReport()` copies the original timestamp／category／message bytes without projected copy. Projection does not change stored AppLog, `healthCheck()`, retry, Queue, or sync behavior.
-- `.ai-manifest.json` uses `manifest_format: "2.29"` and points `current_status.authority` to `tasks/current.md`; it no longer stores volatile dev-candidate, next-action, or automated-test snapshots. App/SW identity remains authoritative in `app-version.js` and `sw.js` and is guarded by `tools/check-app-version.js`.
-- Final review fixes make expanded cluster stops and pre-trip day cards native keyboard controls, give `gotoDay` an exact highlighted day-heading target, and clone／normalize pending and active intents across create／request／consume／complete without shared caller references. Manifest governance names `tasks/current.md` as the sole current-status authority; `runtime-assets.json` is the ADR-authoritative asset list without a fixed count.
-- Fresh committed-tree v109 evidence passes top-level Node **86/86**, full Playwright **175/175**, focused WebKit **25/25**, all version／document／runtime／BUILTIN／manifest／diff gates, and offline Chromium Health with `source:"builtin"`, `healthCheck:[]`, `appLogCount:10`, and `pageErrors:[]`; merged-`dev` Node is also **86/86**. The reviewed candidate `ea1e91a` was fast-forwarded and pushed with `origin/dev...dev = 0 0`. Bar's device/PWA verification is the only remaining v109 acceptance step. The previously reserved UI semantic-token/Today-module batch is now v110; the BUILTIN/test-throughput spike is v111.
+- Bar accepted v109 and authorized the reserved v110 batch. v110 adds a compact non-theme presentation scale for typography, spacing, radius, action hierarchy, and diagnostic roles while preserving all six `--t-*` palettes and the approved visual direction.
+- Token adoption is deliberately scoped to touched Today Hero, navigation-feedback, diagnostics, and shared button surfaces. It is not a mechanical whole-app rewrite; browser assertions preserve computed colors, geometry, target sizes, overflow, and reduced-motion behavior across all six themes.
+- `today-view.js` is the production-used ES5 UMD seam for Today Hero Shopping presentation. It exposes only `buildModel(input)`, `render(model,helpers)`, and `actionFor(target)`; it owns blank-category display fallback, six-code-point visible stop names, accessible summary wording, existing markup, and declarative `open-shopping-list` intent.
+- `index.html` remains the thin adapter for reminder selection, exact-current-stop exclusion, Shopping store and clock access, escaping helpers, `openShoppingList(stopRef)`, and DOM effects. The removed inline helper/renderer has no second production implementation.
+- The Ledger history candidate failed its deletion test: filtering, grouping, selection/effect ordering, action availability, and focus-preserving partial DOM updates are already centralized at the accepted seams. No `ledger-history-view.js`, global store, controller, event bus, framework, Schema, repository, record, settlement, correction, backup, synchronization, or storage change was made. See `docs/architecture/ledger-history-deletion-test-v110.md`.
+- `navigation-intent.js` remains the v108 module and is unchanged in this batch. v109's 1000ms target highlight, 200ms fade, visually-hidden success announcement, visible missing-target feedback, and Shopping scroll/focus return remain the accepted behavior.
+- App and Service Worker forward-bump together to v110; `today-view.js` is registered in `index.html`, `runtime-assets.json`, SW SHELL, README, and `.ai-manifest.json`. SW lifecycle and cache strategy are unchanged.
+- Fresh pre-commit v110 evidence passes Node **87/87**, full Playwright **176/176**, focused WebKit **39/39**, version／document／runtime／BUILTIN／manifest／diff gates, and offline Chromium Health with `source:"builtin"`, `healthCheck:[]`, `appLogCount:9`, and `pageErrors:[]`. The committed-tree rerun and `dev` push are the remaining delivery steps; Bar device/PWA verification remains required before v111. No `main` merge, production deployment, or production tag is claimed.
 
 
 
@@ -33,7 +33,7 @@
 
 ## 閱讀順序(最省 token)
 1. `.ai-manifest.json` → 2. `PROJECT_CONSTITUTION.md` → 3. 本文件 → 4. 相關 `adr/` → 5. **必讀** `15_AI_EXECUTION_RULES.md`(決策權限/指令效力/任務分級)→ 6. 依任務讀 `03_DATABASE.md` / `09_SCHEMA_MAPPING.md` / `05_CODING_RULES.md` / `11_CODING_CONVENTION.md` / `12_DEV_WORKFLOW.md` / `14_FILE_TIERS_AND_GATE.md` / `16_OPS_PLAYBOOK.md`
-程式碼本體主要在 `index.html` 內嵌 JS(區塊順序見 02)；`navigation-intent.js`、`diagnostic-impact.js`、`buy-to-ledger.js`、`ledger-ui-state.js`、`shopping-ui-state.js`、`trip-progression.js` 是 production-used module seams，`schema.js` / `validator.js` 是獨立權威來源。
+程式碼本體主要在 `index.html` 內嵌 JS(區塊順序見 02)；`navigation-intent.js`、`diagnostic-impact.js`、`today-view.js`、`buy-to-ledger.js`、`ledger-ui-state.js`、`shopping-ui-state.js`、`trip-progression.js` 是 production-used module seams，`schema.js` / `validator.js` 是獨立權威來源。
 
 ## 工作流程(必守)
 0. 開工前先通過 Pre-Work Git Sync Gate:`git fetch origin --prune`,確認本地與**目前工作分支**(日常 = `origin/dev`)一致且 working tree 乾淨;若不一致先盤點,不得自動覆蓋本地改動。
@@ -59,7 +59,7 @@
 - 現行 P002／P013／P022／P031／P040 都引用 H001,但五個 PID 必須保持分離：其 travel 分別為開車30分鐘／開車2小時／開車3分鐘／開車50分鐘／步行3分鐘。入住、退房、地址、停車與備註才由 H001 共用。
 - Schema authority 是外部 `schema.js`,inline Schema 必須 exact parity；`09_SCHEMA_MAPPING.md` 表格只能由 `schemaDoc()` 重生。公開 Places 的 HID 是尾端物理欄,刷新工具依位置 authority 驗證,不得擅自移到 Type 後方。
 - Validator 條件式要求：住宿必須有 HID、非住宿不得帶 HID、任何 HID 都必須存在於 Hotels；七表候選快照任一違反即 fail closed。Runtime `hotelOf()` 對兩端 HID 去空白／轉大寫後精確解析,天氣住宿共用同一 resolver；未解析時回傳 `null`。
-- 這次 migration 不改 Ledger Schema 2.9／21 欄、Apps Script、個人備份 v9、SW lifecycle／cache strategy 或發布權限。v101／v102 裝置／PWA 外觀驗收均已由 Bar 完成；v102 的 HID facts 保留為歷史驗收紀錄。目前交付順序以本文件頂部 v109 handover 為準：完成 v109 gate 與 `dev` delivery → Bar 驗收 exact target、成功提示無可見列、1 秒醒目＋淡出、scroll／focus return、診斷 raw／projection 邊界與離線 PWA → 驗收完成後才解除 v110 gate。
+- 這次 migration 不改 Ledger Schema 2.9／21 欄、Apps Script、個人備份 v9、SW lifecycle／cache strategy 或發布權限。v101／v102／v109 裝置／PWA 驗收均已由 Bar 完成；v102 的 HID facts 保留為歷史驗收紀錄。目前交付順序以本文件頂部 v110 handover 為準：完成 v110 gate 與 `dev` delivery → Bar 驗收六主題呈現一致性、Today 採買摘要、exact target、scroll／focus return、診斷與離線 PWA → 驗收完成後才開始 v111。
 - **Tier 2 復原**：若 v102 已推送並由裝置接管後需要退回內容,依 `16_OPS_PLAYBOOK.md` §A2 採 forward bump：以最後正常內容建立下一個未使用版本,並讓 `app-version.js`／`sw.js` 同步升版以觸發清除壞快取；不得把版本倒退覆寫,**絕不刪除 `sw.js`**。
 
 ## Ledger Schema 2.9 現行契約

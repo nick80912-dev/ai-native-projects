@@ -1,5 +1,13 @@
 # 07 版本紀錄
 
+## 2026-08-13 — v110 UI 一致性與 Today 模組拆分（candidate）⭐ 架構變更
+
+- 在六組主題之外新增精簡的呈現 token：字級 `11／12／14／20／24px`、間距 `4／8／12／16／24px`、圓角 `6／10／14／999px`，以及 primary／secondary／quiet／destructive 操作角色與 diagnostic 狀態角色。只替換 Today、導覽回饋、診斷及共用按鈕的等值 literal；六組 13-token palette 與既有 computed 視覺方向不變。
+- 新增 production-used ES5 UMD `today-view.js`，以 `buildModel()`／`render()`／`actionFor()` 統一 Today Hero 採買摘要的 `未分類` 顯示 fallback、Unicode 六字可見截斷、完整 accessible name、既有 markup 與宣告式開啟採買行為。`index.html` 保留 reminder 選取、目前站排除、Shopping store／clock／repository 與 DOM effect，並刪除被取代的 inline helper／renderer，沒有第二份 production authority。
+- Ledger history candidate 依刪除測試否決：filter、group、selection effect ordering、row action policy 與 focus-preserving partial DOM patch 已分別集中於既有 seam；另建 `ledger-history-view.js` 只會增加 pass-through interface。v110 因此不新增全域 store、controller、event bus 或框架，也不改 Ledger entry、settlement、calculator、correction、Schema、record、repository 或同步語意。
+- `today-view.js` 已登錄 page、十一項 runtime asset inventory、SW SHELL、README 與 manifest；App／SW forward-bump 至 **v110**，cache strategy 與 lifecycle 不變。最近更新維持 v110–v106 恰好五筆。
+- TDD 證據包含 token RED→GREEN、Today module missing-file RED→GREEN，以及 production wiring 的 exact-output 回歸。Fresh pre-commit gate 通過 Node **87/87**、完整 Playwright **176/176**、focused WebKit **39/39**、App／SW v110、文件標題、11 項 runtime assets、BUILTIN no-drift、manifest JSON 與 diff checks；離線 Chromium 為 `{"source":"builtin","healthCheck":[],"appLogCount":9,"pageErrors":[]}`。focused WebKit 首輪曾有一筆 reduced-motion timer 序列波動；單獨 1/1、連跑 10/10 與原樣整組重跑 39/39 均通過，未放寬 assertion、未加 retry、未改產品碼。committed-tree 與 `dev` 推送證據待後續 gate；不合併 `main`、不部署 production、不建立 tag。
+
 ## 2026-08-13 — v109 定位成功提示精簡（candidate）
 
 - v108 真機驗收時，Bar 確認 exact-target 定位本身正確，但成功後插入的「已定位：地點」灰底列與已醒目的目的地重複。v109 移除這個可見成功列及其布局空間；成功文字仍保留在 visually-hidden `role="status" aria-live="polite"`，找不到目標的提示與 Render diagnostic 仍可見／可追蹤。
