@@ -125,6 +125,51 @@ test('all six themes preserve sliders currentColor and compact header chrome',as
   expect(themes.find(theme=>theme.id==='tea').action).toBe('#896748');
 });
 
+test('presentation tokens preserve touched component geometry across all six themes',async({page})=>{
+  const themes=await page.evaluate(()=>THEME_IDS.map(id=>{
+    document.documentElement.dataset.theme=id;
+    const fixture=document.createElement('div');
+    fixture.innerHTML='<div class="navigation-target-status navigation-target-status-visible">找不到對應地點</div>'+
+      '<div class="diag-log-entry diag-impact-degraded"><b>診斷</b><span>目前仍可使用</span></div>'+
+      '<button class="btn">主要操作</button><button class="ledger-sheet-back">安靜操作</button>';
+    document.body.appendChild(fixture);
+    const root=getComputedStyle(document.documentElement),hero=document.querySelector('.today-hero'),heroDate=hero.querySelector('.date');
+    const navigation=fixture.querySelector('.navigation-target-status-visible'),diagnostic=fixture.querySelector('.diag-log-entry');
+    const primary=fixture.querySelector('.btn'),quiet=fixture.querySelector('.ledger-sheet-back');
+    const read=element=>{
+      const style=getComputedStyle(element);
+      return {background:style.backgroundColor,color:style.color,fontSize:style.fontSize,radius:style.borderRadius,minHeight:style.minHeight};
+    };
+    const result={
+      id,
+      tokens:['--font-caption','--font-meta','--font-body','--font-title','--font-display','--space-1','--space-2','--space-3','--space-4','--space-5','--radius-sm','--radius-control','--radius-card','--radius-pill']
+        .map(name=>root.getPropertyValue(name).trim()),
+      roles:{sea:root.getPropertyValue('--sea').trim(),lineSoft:root.getPropertyValue('--line-soft').trim(),seaDeep:root.getPropertyValue('--sea-deep').trim()},
+      hero:read(hero),heroDate:read(heroDate),navigation:read(navigation),diagnostic:read(diagnostic),
+      diagnosticTitle:read(diagnostic.querySelector('b')),primary:read(primary),quiet:read(quiet),
+      overflow:document.documentElement.scrollWidth>document.documentElement.clientWidth
+    };
+    fixture.remove();
+    return result;
+  }));
+  const expectedTokens=['11px','12px','14px','20px','24px','4px','8px','12px','16px','24px','6px','10px','14px','999px'];
+  for(const theme of themes){
+    expect(theme.tokens,theme.id+' token scale').toEqual(expectedTokens);
+    expect(theme.hero.radius,theme.id+' Today Hero radius').toBe('16px');
+    expect(theme.heroDate.fontSize,theme.id+' Today display size').toBe('24px');
+    expect(theme.navigation.fontSize,theme.id+' navigation meta size').toBe('12px');
+    expect(theme.navigation.radius,theme.id+' navigation status radius').toBe('8px');
+    expect(theme.diagnostic.radius,theme.id+' diagnostic radius').toBe('7px');
+    expect(theme.diagnosticTitle.fontSize,theme.id+' diagnostic title size').toBe('12px');
+    expect(theme.primary.fontSize,theme.id+' primary action size').toBe('13.5px');
+    expect(theme.primary.radius,theme.id+' primary action radius').toBe('9px');
+    expect(theme.quiet.fontSize,theme.id+' quiet action size').toBe('14px');
+    expect(theme.quiet.radius,theme.id+' quiet action radius').toBe('999px');
+    expect(parseFloat(theme.quiet.minHeight),theme.id+' quiet target size').toBeGreaterThanOrEqual(44);
+    expect(theme.overflow,theme.id+' overflow').toBe(false);
+  }
+});
+
 test('trip and shopping controls keep car-friendly targets and decision text', async ({ page }) => {
   await page.evaluate(() => switchView('trip'));
   await expect(page.locator('#daybar')).toBeVisible();

@@ -17,6 +17,11 @@ function cssValue(block,name){
   assert(match,'CSS value exists: '+name);
   return match[1].trim();
 }
+function presentationBlock(html){
+  const start=html.indexOf(':root{');
+  assert(start>=0,'non-theme presentation token block exists');
+  return html.slice(start+6,html.indexOf('}',start));
+}
 function hexToRgb(hex){
   const value=hex.replace('#','');
   return [0,2,4].map(index=>parseInt(value.slice(index,index+2),16));
@@ -62,6 +67,20 @@ function extractThemeIds(html){
   assert.strictEqual(cssValue(themeBlock(html,'tea'),'--t-action'),'#896748');
 
   const baseBlock=themeBlock(html,'ocean');
+  const sharedPresentation=presentationBlock(html);
+  const presentationTokens={
+    '--font-caption':'11px','--font-meta':'12px','--font-body':'14px','--font-title':'20px','--font-display':'24px',
+    '--space-1':'4px','--space-2':'8px','--space-3':'12px','--space-4':'16px','--space-5':'24px',
+    '--radius-sm':'6px','--radius-control':'10px','--radius-card':'14px','--radius-pill':'999px'
+  };
+  Object.keys(presentationTokens).forEach(name=>{
+    assert.strictEqual(cssValue(sharedPresentation,name),presentationTokens[name],name+' keeps the approved non-theme scale');
+  });
+  [
+    '--action-primary-bg','--action-primary-ink','--action-secondary-bg','--action-secondary-ink',
+    '--action-secondary-border','--action-quiet-bg','--action-quiet-ink','--action-destructive-bg',
+    '--action-destructive-ink','--diagnostic-success','--diagnostic-warning','--diagnostic-degraded','--diagnostic-error'
+  ].forEach(name=>assert(sharedPresentation.includes(name+':'),name+' defines the shared presentation role'));
   [
     ['--paper','--t-paper'],['--card','--t-card'],['--sea-deep','--t-chrome'],
     ['--sea','--t-action'],['--coral','--t-accent'],['--coral-bg','--t-accent-bg'],
@@ -70,6 +89,12 @@ function extractThemeIds(html){
   ].forEach(([legacy,token])=>{
     assert.match(baseBlock,new RegExp(escapeRegExp(legacy)+':var\\('+escapeRegExp(token)+'\\)'));
   });
+  assert.match(html,/\.btn\{[^}]*background:var\(--action-primary-bg\)[^}]*color:var\(--action-primary-ink\)/,
+    'shared primary buttons consume action-role tokens');
+  assert.match(html,/\.btn\.ghost\{[^}]*background:var\(--action-secondary-bg\)[^}]*color:var\(--action-secondary-ink\)[^}]*border:1px solid var\(--action-secondary-border\)/,
+    'shared secondary buttons consume action-role tokens');
+  assert.match(html,/\.btn\.coral\{[^}]*background:var\(--action-destructive-bg\)/,
+    'shared destructive buttons consume the destructive action role');
   assert.match(html,/--green:#367055/);
   assert.match(html,/--gold-ink:#85661c/);
   assert.match(html,/\.hotel \.h-lbl\{[^}]*color:var\(--gold-ink\)/);
