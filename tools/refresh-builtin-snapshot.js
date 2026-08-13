@@ -130,8 +130,42 @@ function readEmbeddedBuiltin(indexSource){
 
 function orderedSnapshot(candidate){
   const ordered={};
-  SNAPSHOT_KEYS.forEach(key=>{ordered[key]=candidate[key];});
+  SNAPSHOT_KEYS.forEach(key=>{
+    if(Object.prototype.hasOwnProperty.call(candidate,key))ordered[key]=candidate[key];
+  });
   return ordered;
+}
+
+function serializeBuiltinAsset(candidate,appVersion){
+  const timestamp=Number(candidate&&candidate.timestamp);
+  const snapshot=candidate&&candidate.snapshot;
+  const version=String(appVersion||'');
+  if(!Number.isSafeInteger(timestamp)||timestamp<0)throw new Error('BUILTIN asset timestamp must be a non-negative safe integer');
+  if(!snapshot||typeof snapshot!=='object'||Array.isArray(snapshot))throw new Error('BUILTIN asset snapshot is missing');
+  if(!/^[0-9A-Za-z._-]+$/.test(version))throw new Error('BUILTIN asset version is invalid');
+  return 'var BUILTIN_TS='+timestamp+';\n'+
+    'var BUILTIN_ASSET_VERSION='+JSON.stringify(version).replace(/^"|"$/g,"'")+';\n'+
+    'var BUILTIN='+JSON.stringify(orderedSnapshot(snapshot))+';\n';
+}
+
+function readBuiltinAsset(source){
+  const match=/^var BUILTIN_TS=(\d+);\r?\nvar BUILTIN_ASSET_VERSION='([0-9A-Za-z._-]+)';\r?\nvar BUILTIN=(\{[^\r\n]*\});\r?\n?$/.exec(String(source||''));
+  if(!match)throw new Error('BUILTIN asset format or version declaration is invalid');
+  const timestamp=Number(match[1]);
+  if(!Number.isSafeInteger(timestamp))throw new Error('BUILTIN asset timestamp is invalid');
+  let snapshot;
+  try{snapshot=JSON.parse(match[3]);}
+  catch(error){throw new Error('BUILTIN asset snapshot JSON is invalid');}
+  if(!snapshot||typeof snapshot!=='object'||Array.isArray(snapshot))throw new Error('BUILTIN asset snapshot is invalid');
+  SNAPSHOT_KEYS.forEach(key=>{
+    if(!Object.prototype.hasOwnProperty.call(snapshot,key))throw new Error('BUILTIN asset is missing sheet: '+key);
+    if(typeof snapshot[key]!=='string'||!snapshot[key].length)throw new Error('BUILTIN asset sheet is empty: '+key);
+  });
+  Object.keys(snapshot).forEach(key=>{
+    if(!SNAPSHOT_KEYS.includes(key))throw new Error('BUILTIN asset has unexpected sheet: '+key);
+  });
+  if(snapshot.ledger.trim().split(/\r?\n/).length!==1)throw new Error('BUILTIN asset Ledger must be header-only');
+  return {timestamp:timestamp,appVersion:match[2],snapshot:orderedSnapshot(snapshot)};
 }
 
 function replaceEmbeddedBuiltin(indexSource,timestamp,candidate){
@@ -226,6 +260,8 @@ module.exports={
   buildLedgerHeader,
   buildBuiltinCandidate,
   validateBuiltinCandidate,
+  serializeBuiltinAsset,
+  readBuiltinAsset,
   readEmbeddedBuiltin,
   replaceEmbeddedBuiltin,
   runRefresh,
