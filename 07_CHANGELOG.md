@@ -1,5 +1,13 @@
 # 07 版本紀錄
 
+## 2026-08-13 — v108 到站定位、診斷影響與狀態權威（candidate）⭐ 架構變更
+
+- 新增 ES5 `navigation-intent.js` session-only state seam；Today Hero、下一站 Shopping badge、Shopping mall 與既有 day／item 精確入口共用 request／consume／complete。Shopping list 維持 overlay 且不改 `curView`，intent 不進 storage、備份、Queue、CMS 或 Ledger。
+- `index.html` adapter 負責把明確目的地捲到 sticky header 下方、顯示 1.2 秒 `.is-navigation-target` 與 polite live status。採買 overlay 關閉後回復來源 scroll 與 launcher／replacement／來源 tab focus；目標遺失則開啟正常位置、顯示非阻擋提示、寫入 Render diagnostic 且不 throw。
+- 新增 ES5 `diagnostic-impact.js` display-only projection；診斷面板補上 `info`／`degraded`／`action-required`、影響與 fallback，且只把精確的 Ledger 增量 timeout 說明為 CSV 降級。stored AppLog、複製 raw report、Health Check、retry、Queue 與同步語意均不變。
+- `.ai-manifest.json` 改以 `manifest_format: "2.29"` 表示格式並只用 `current_status.authority` 指向 `tasks/current.md`；移除易過期的產品狀態 snapshot。App Shell 由 v107 forward-bump 至 **v108**，最近更新維持 v108–v104 恰好五筆；未加入新版提示，未修改 Schema、Google Sheet、Apps Script、Ledger／Shopping 資料語意、`main`、部署或 production tag。
+- Fresh pre-commit release gate passed **86／86** top-level Node tests, full Playwright **163／163**, and focused WebKit **9／9**. App／SW v108, document titles, 10 runtime assets, BUILTIN no-drift, manifest JSON, `git diff --check`, and the established offline Chromium probe also passed with `healthCheck: []` and `pageErrors: []`. Task 5 re-runs the committed-tree gates before handoff; push／origin sync and Bar device／PWA acceptance remain outside this implementation handoff.
+
 ## 2026-08-12 — v107 Today Hero 未分類提示（dev candidate）
 
 - Today Hero 遇到空白採買分類時，明確顯示 `未分類`；多項採買仍顯示 `+N`，可見與無障礙文字皆不包含品名。

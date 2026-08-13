@@ -1,11 +1,12 @@
 # tests — 測試資產(交付必附)
 
-## v107 Today Hero coverage
+## v108 navigation／diagnostics／status-authority coverage
 
-- `weather-rain-window.test.js` protects itinerary-date-aware weather hint priority.
-- `shopping-list.test.js` protects the itinerary-aware future-stop projection, raw blank-category preservation, first prioritized category, remaining item count, input immutability, neutral `今日採買` model, exact-next-stop exclusion, category-only accessibility, generic fallback, and ensures `未分類` is not added to `SHOPPING_CATEGORIES`.
-- `home-simplification.test.js` and `render-note.test.js` protect the compact right-aligned `地點 · 分類 +N` group, six-code-point visible stop cap, full accessible stop, complete category/count, quoted-category escaping, no product-name output, renderer-only `未分類`, `+N`, aria text, and input immutability.
-- `browser/today-live-info.spec.js` makes the next-stop badge authoritative and verifies at 320／375／390px that adjacent parts keep a 4px gap, the group reaches the right edge, only the location may ellipsize, category／`+N` stay complete, the target remains 44px, and Hero／badge geometry has no overlap or horizontal overflow. Its v107 Chromium/WebKit touch case confirms a blank category displays `未分類` and still scrolls to the corresponding Shopping group.
+- `navigation-intent-module.test.js` directly protects the ES5 immutable create／request／consume／complete contract, exact five-view allowlist, safe unique tokens, stale completion, normalization, and pending／active preservation.
+- `view-ui-state.test.js` and `render-note.test.js` protect the production DOM seam: explicit intent dispatch／consume, exact Shopping list／mall／Trip targets, missing-target Render diagnostics, token-guarded 1.2-second cleanup, and overlay-only `curView` behavior.
+- `browser/today-live-info.spec.js` exercises Hero／badge target confirmation at 320／375／390px with tap／Enter／Space, sticky-safe geometry, live status, reduced motion, missing targets, stale timers, source scroll, connected／replacement／fallback focus, and blank-category behavior. Focused WebKit uses `--grep "target|定位|blank category"`.
+- `diagnostic-impact-module.test.js` and `diagnostics-app-log.test.js` protect exact timeout classification, conservative unknown handling, input immutability, escaped raw／projected output, and byte-for-byte raw copied reports; `browser/diagnostics-app-log.spec.js` verifies the same boundary in Chromium.
+- `manifest-status-authority.test.js` plus `tools/check-doc-titles.js` require `.ai-manifest.json` to point to `tasks/current.md` without volatile candidate／next-action／automated-test snapshots. Version authority remains `app-version.js`／`sw.js` via `tools/check-app-version.js`.
 
 
 
@@ -17,7 +18,7 @@
 - `network-retry-toast-guard.test.js`：驗證 Sheet 首次抓取失敗後精確退避 800ms 且只重試一次、第二次錯誤維持可觀察，以及缺少 Toast DOM 節點時不拋錯、不改 action／timer，正常 Toast 行為不變。執行：`node tests/network-retry-toast-guard.test.js`。
 - `app-now.test.js`:驗證正式時間、offset/custom 時間模擬與共用 `appNow()` 時鐘。執行:`node tests/app-now.test.js`。
 - `app-log-buffer.test.js`：驗證 AppLog 六分類的 console 相容性、session-only FIFO 100 筆、單筆 1,000 字限制、defensive snapshot、clear，以及不寫入 AppLog 的 health finding 讀取路徑。執行：`node tests/app-log-buffer.test.js`。
-- `diagnostics-app-log.test.js`／`browser/diagnostics-app-log.spec.js`：驗證診斷面板以靜默 health snapshot 顯示、複製及清除本次 session 的 AppLog，訊息無法注入 HTML；Browser 另鎖定團體帳測試模式區塊已移除，而設定控制頁與 TEST universe 保持可用。執行：`node tests/diagnostics-app-log.test.js`、`npx playwright test tests/browser/diagnostics-app-log.spec.js`。
+- `diagnostic-impact-module.test.js`／`diagnostics-app-log.test.js`／`browser/diagnostics-app-log.spec.js`：驗證診斷面板以 display-only impact projection 顯示 raw session AppLog，精確 Ledger timeout 才採 degraded／CSV fallback，其他 warning 保守顯示；raw 與投影皆 escape，複製報告保持原始 bytes。Browser 另鎖定清除、stored entry 不變、團體帳測試模式區塊已移除，而設定控制頁與 TEST universe 保持可用。執行：`node tests/diagnostic-impact-module.test.js tests/diagnostics-app-log.test.js`、`npx playwright test tests/browser/diagnostics-app-log.spec.js`。
 - `home-safety.test.js`:驗證首頁行程日完整顯示、Scroll-only 政策與高風險清除操作的確認防線。執行:`node tests/home-safety.test.js`。
 - `home-simplification.test.js`:驗證首頁版面高度、下一站取消邏輯、串點子卡簡化與購物清單保留。執行:`node tests/home-simplification.test.js`。
 - `ios-zoom-guard.test.js`:驗證 iOS 16px 字級、Scroll-only／viewport 還原、SW 版次，以及最小 no-op 雙擊相容性監聽器不復活舊雙擊 guard 或 APP build metadata。執行:`node tests/ios-zoom-guard.test.js`。
@@ -35,7 +36,7 @@
 - `ios-viewport-resume.test.js`:驗證 iOS 回前景時還原 viewport、清除舊 transform 並保留捲動位置。執行:`node tests/ios-viewport-resume.test.js`。
 - `ios-gesture-diagnostics.test.js`:驗證 document 僅註冊一個 passive no-op `dblclick` 相容性監聽器、舊手勢診斷識別字已退役，並保留桃子診斷入口、健康檢查、時間模擬、viewport recovery 與重置行程進度；另驗證診斷面板「App 版本」列讀自真實 Cache Storage（`index.html` 不得寫死版本號，讀不到須顯示「無法讀取」）。執行:`node tests/ios-gesture-diagnostics.test.js`。
 - `travel-notes.test.js`：驗證診斷面板內的本機旅途紀錄新增、編輯、狀態、確認刪除、200 筆上限、寫入失敗回滾、文字／JSON 複製匯出、健康摘要脈絡，以及舊版 WebKit 無 `crypto.randomUUID()` 時的唯一 ID fallback。執行：`node tests/travel-notes.test.js`。
-- `theme-system.test.js`：驗證六組主題的 13-token、亮色對比率、杉綠 action 精確為 `#2F6B4F` 且白字達 AA、焙茶維持 `#896748`、reduced-motion、舊變數角色對映、未知 ID 回退、原子切換、迷你介面卡，以及五個功能 Emoji 精準替換為 SVG。執行：`node tests/theme-system.test.js`。
+- `theme-system.test.js`：驗證六組主題的 13-token、亮色對比率、杉綠 action 精確為 `#2F6B4F` 且白字達 AA、焙茶維持 `#896748`、reduced-motion、舊變數角色對映、未知 ID 回退、原子切換、迷你介面卡、五個功能 Emoji 精準替換為 SVG，以及目前版本加前四版的恰好五筆 release-note 視窗。執行：`node tests/theme-system.test.js`。
 - `ui-ux-hardening.test.js`：驗證渲染失敗的可執行重試、Today daybar 隱藏、flex header、44px 觸控目標、照片失敗 inline status／單一健康入口、toast live region，以及下一站 Enter／Space 鍵盤啟動。執行：`node tests/ui-ux-hardening.test.js`。
 - `settings-grouped-root.test.js`／`browser/settings-grouped-root.spec.js`：驗證設定根頁三個常駐群組（個人／記帳／資料）的順序與歸屬、各列摘要格式與降級、既有子頁入口、身分列可存取名稱，以及測試模式條件列；v88 另鎖定行程、團體帳、個人本機帳與照片的集中健康摘要及注意項目計數。Browser 另驗證「自訂項目」三類即時數量入口、單類管理頁、兩層返回、鍵盤 Enter／Space、CRUD 後留在原頁、`個` 的預設／不可刪除契約，以及六主題與 320／375／390px 無溢位或控制重疊。執行：`node tests/settings-grouped-root.test.js`、`npx playwright test tests/browser/settings-grouped-root.spec.js`。
 
@@ -45,7 +46,7 @@
 - `ledger-settlement-reliability.test.js`:結算可靠性總測試。涵蓋 durable delivery bridge(原子交接、持久性、只在遠端讀回同一 `record.id` 才清除、不自動過期)、事件全序與同毫秒競態、跨裝置 confirm／reject 收斂與 losing response inert、狀態機文案與按鈕不復原、退回後重新付款開新 generation、已確認收款的 10 秒一次性復原（資格六項條件、9,999／10,000／10,001ms 邊界、無效或未來 `response.time`、已復原、後續 generation、連點五次只一筆 deletion、歷史不得輸出永久撤銷／復原按鈕）、ledger fast pull 增量與非 JSON 降級、polling 兩層退避與生命週期、待處理徽章、簡易結算模式與時鐘偏移。執行:`node tests/ledger-settlement-reliability.test.js`。
 - `ledger-settlement-correction.test.js`：結算後不可改寫與引導式更正總測試。涵蓋 claim／canonical confirm 建立位置保護切點、正式／TEST 隔離、confirm 復原、多人收據、永久保護、完整版本投影、commit-last 缺件 inert、重複更正、整張作廢、跨裝置 canonical／losing conflict、不合法 ID／時間事件 fail-closed 與分類診斷、付款人／原因守門、刪改阻擋、action model、品項變更揭露，以及已全數還款後更正產生的新餘額差；v103 後續另鎖定相同無效更正事件在重複投影時只寫入一次 session AppLog，而顯式 warning sink 仍逐次收到完整診斷。一般編輯 stale-DOM 與更正預覽事件 fingerprint 的 UI 守門另由 `ledger-list-actions.test.js` 鎖定。執行：`node tests/ledger-settlement-correction.test.js`。
 - `ledger-correction-ui-state.test.js`：驗證 correction session 的 open/close、reason、preview、calendar、pending、request stale guard 與 ordered effects。執行：`node tests/ledger-correction-ui-state.test.js`。
-- `runtime-assets.test.js`：驗證八個 JavaScript runtime assets 在入口、SW SHELL、README 與 `.ai-manifest.json` 的 build-time 登錄一致性。執行：`node tests/runtime-assets.test.js`；repo gate 亦可直接執行 `node tools/check-runtime-assets.js`。
+- `runtime-assets.test.js`：驗證十個 JavaScript runtime assets（含 navigation intent 與 diagnostic impact）在入口、SW SHELL、README 與 `.ai-manifest.json` 的 build-time 登錄一致性。執行：`node tests/runtime-assets.test.js`；repo gate 亦可直接執行 `node tools/check-runtime-assets.js`。
 - `ledger-list-actions.test.js`：除清單卡片、明細與操作選單外，驗證受保護收據只顯示「更正收據」、引導式更正 Sheet／預覽入口、整張作廢預覽後只保留單一最終確認、更正次數 badge、不可改寫歷史入口，以及完整紀錄保留作廢收據歷史；並鎖定個人代購沿用共用 renderer、位於近期消費第一行的 compact context seam，長內容只能截斷而不另起一行。執行：`node tests/ledger-list-actions.test.js`。
 - `ledger-entry-p0.test.js`／`ledger-three-second-entry.test.js`／`browser/ledger-entry-quick-layout.spec.js`:驗證單品項新增消費的快速版面階層、`其他資訊（選填）` 單一入口與日期／類別／支付／備註摘要、團體分攤成員按需展開、個人代購欄位位置、個人／團體鍵盤 Next 聚焦、六主題次要底色的「儲存並再記一筆」及既有儲存 guard；Browser 另以真實 renderer 驗證代購／分攤展開與 320／375／390px 無水平 overflow。執行:`node tests/ledger-entry-p0.test.js`、`node tests/ledger-three-second-entry.test.js`、`npx playwright test tests/browser/ledger-entry-quick-layout.spec.js`。
 - `ledger-calculator.test.js`／`browser/ledger-calculator.spec.js`：驗證 Ledger 共用金額計算器的安全四則 parser、優先序、除零／非法／safe integer 守門、single／item／discount 資料 target、既有 draft 更新入口；v94 另涵蓋小數 token、購物式 contextual percent、等號後續輸入、正數小數無條件捨去、浮點近整數校正、一般金額／折扣零值差異、五列四欄按鍵、44×44px 關閉／trigger、實體鍵盤、inert／焦點／scroll、取消不改值、即時換算，以及 320／375／390px 無水平 overflow。執行：`node tests/ledger-calculator.test.js`、`npx playwright test tests/browser/ledger-calculator.spec.js`。

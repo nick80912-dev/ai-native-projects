@@ -1,5 +1,14 @@
 # 04 UI 準則
 
+## v108 明確導覽與診斷呈現契約
+
+- Today Hero、下一站 Shopping badge、Shopping mall 與既有精確 day／item 入口共用同一 navigation-intent seam；一般切 tab 或重點目前 tab 不建立 target intent。
+- 成功抵達後，目標必須捲到有效 sticky header 下方並套用單一 `.is-navigation-target` 樣式 1.2 秒；目的地容器內以 `role="status" aria-live="polite"` 顯示完整「已定位：…」文案。`prefers-reduced-motion: reduce` 保留靜態標示但不得播放 transition。
+- `shopping-list` 只開啟既有 overlay，不改 `curView`。關閉後依序回復仍存在的原 launcher、同一穩定身分的 replacement launcher，或來源 tab，並明確回復來源捲動位置；focus options 不支援或被忽略時也不得讓頁面跳位。
+- 找不到目標時仍開啟目的 view 的正常位置，顯示不阻擋操作的「找不到對應地點」、記錄 Render diagnostic 並安全結束 intent；不得 throw 或錯誤套用其他頁面的舊捲動位置。
+- 診斷面板可將原始 AppLog 顯示為 `info`、`degraded` 或 `action-required`，並補上當前影響與可用 fallback；已知 Ledger 增量讀取逾時必須說明目前仍可使用一般 CSV 同步。原始技術 message 必須仍可見、正確 escape，複製報告不得混入投影文案。
+- navigation intent 與 diagnostic projection 都只存在目前 session／render；不得寫入 localStorage、個人備份、Queue、CMS、Ledger，亦不得改變 Health Check、retry 或 sync 判定。
+
 ## v103 設定「自訂項目」資訊架構
 
 - `自訂項目` 先顯示記帳類別、支付方式、採買單位三個摘要入口與即時數量；一次只進入並管理一種清單。

@@ -1,19 +1,19 @@
 # 08 AI 交接文件(給未來的 AI 模型)
 
-## v107 Today Hero dev-candidate handover
+## v108 navigation／diagnostics candidate handover
 
-- v102 device/PWA acceptance is complete.
-- v107 renders `未分類` whenever the selected Shopping category is blank. This fallback exists only in `renderTodayShoppingSummary()`; raw reminder/model/store/form/backup/restore/sync data remains blank, and `未分類` is not a Shopping category option.
-- The Hero keeps `地點 · 第一個優先分類 +N` as one compact right-aligned group with a 4px gap; visible and accessible output contains no product name. The exact next Shopping stop remains in the existing badge.
-- Visible locations longer than six Unicode code points become the first six plus `…`; at constrained widths only the location may shrink further. Category and `+N` remain complete, while `aria-label` retains the full location.
-- The Hero summary preserves 44px touch/focus behavior, one-row geometry, location targeting, navigation and pre-trip behavior. Roll back by forward-bumping and reverting the v107 renderer fallback, tests, and version records together; do not alter schema, storage, Google Sheet data, or deployment records.
-- Fresh evidence: focused 3/3 Node tests, 18/18 Chromium Today cases, and 1/1 WebKit touch case pass; the release gate passes **83/83** Node test files and **150/150** Playwright cases. Document-title, app-version, 8 runtime assets, BUILTIN no-drift, manifest JSON, offline `healthCheck(): []`, `pageErrors: []`, and diff checks also pass. Next action after dev push is Bar's device/PWA appearance and interaction acceptance. Do not merge, deploy, or tag without approval.
+- v102 device/PWA acceptance is complete. v108 is the current candidate and remains awaiting Bar device/PWA verification; v109 must not start until that acceptance is recorded. This task does not claim `dev` push, origin synchronization, merge, deployment, or tag.
+- `navigation-intent.js` owns only immutable, session-only request／consume／complete state. `index.html` owns view／overlay opening, target lookup, sticky-safe scroll, 1.2-second `.is-navigation-target`, live status, missing-target diagnostics, and completion. Plain tab switching creates no intent; `shopping-list` remains an overlay and never changes `curView`.
+- Closing Shopping restores the source scroll and focuses the connected launcher, a stable replacement launcher, or the source tab. The return descriptor and intent never enter localStorage, personal backup, Queue, CMS, Ledger, or navigation history.
+- `diagnostic-impact.js` projects raw AppLog entries for display only. The panel shows impact and fallback while retaining escaped raw text; `formatDiagnosticsReport()` copies the original timestamp／category／message bytes without projected copy. Projection does not change stored AppLog, `healthCheck()`, retry, Queue, or sync behavior.
+- `.ai-manifest.json` uses `manifest_format: "2.29"` and points `current_status.authority` to `tasks/current.md`; it no longer stores volatile dev-candidate, next-action, or automated-test snapshots. App/SW identity remains authoritative in `app-version.js` and `sw.js` and is guarded by `tools/check-app-version.js`.
+- Fresh pre-commit evidence: **86/86** top-level Node tests, full Playwright **163/163**, focused WebKit **9/9**, App／SW v108, document titles, 10 runtime assets, BUILTIN no-drift, manifest JSON, diff check, and offline Chromium `healthCheck: []`／`pageErrors: []` all pass. Task 5 must still re-run the committed-tree gates before handoff. Roll back with a forward version bump plus revert of v108 runtime registration, adapters, docs, tests, and version records together; never delete `sw.js` or change schema/data to roll back UI behavior.
 
 
 
 ## 你是誰、專案是什麼
 你是 Bar 的 AI 工程團隊(CTO/工程師/設計/QA 合一)。Bar **不會程式**,用白話下需求;你負責全部技術決策與實作,不教學、不解釋程式概念(除非被問)。
-專案:日本旅遊 PWA。Google Sheets 是 CMS,vanilla JS App 在使用者手機端抓 8 張公開 CSV 渲染,Netlify 託管。CMS 現行 Schema 3.0 以 Places.HID 精確關聯 Hotels.HID；住宿名稱只供顯示。`index.html` 是 UI、DOM adapter 與正式部署入口；獨立 runtime modules 由 `runtime-assets.json` 登錄，包含 Buy-to-Ledger、Ledger/Shopping UI state 與 Trip progression。`schema.js`、`validator.js`、`sw.js` 等部署檔均在 repo 根目錄,經 GitHub 連動由 Netlify 部署(流程見 16 §E)。
+專案:日本旅遊 PWA。Google Sheets 是 CMS,vanilla JS App 在使用者手機端抓 8 張公開 CSV 渲染,Netlify 託管。CMS 現行 Schema 3.0 以 Places.HID 精確關聯 Hotels.HID；住宿名稱只供顯示。`index.html` 是 UI、DOM adapter 與正式部署入口；獨立 runtime modules 由 `runtime-assets.json` 登錄，包含 Navigation Intent、Diagnostic Impact、Buy-to-Ledger、Ledger/Shopping UI state 與 Trip progression。`schema.js`、`validator.js`、`sw.js` 等部署檔均在 repo 根目錄,經 GitHub 連動由 Netlify 部署(流程見 16 §E)。
 
 ## 接手第一步:Project Understanding Report(先說理解,再動手)
 任何 AI 首次接手本專案、或在無既有專案脈絡的新對話/新環境開工時,完成下方閱讀順序後**不得直接修改任何檔案**,必須先輸出理解報告並等 Bar 核准(例:「確認,可以開始實作」)。此要求是「每個 AI 接手時做一次」,不是每個任務都做;同一脈絡內的後續任務依 15 的任務分級與 14 的 Tier 規則執行。
@@ -31,7 +31,7 @@
 
 ## 閱讀順序(最省 token)
 1. `.ai-manifest.json` → 2. `PROJECT_CONSTITUTION.md` → 3. 本文件 → 4. 相關 `adr/` → 5. **必讀** `15_AI_EXECUTION_RULES.md`(決策權限/指令效力/任務分級)→ 6. 依任務讀 `03_DATABASE.md` / `09_SCHEMA_MAPPING.md` / `05_CODING_RULES.md` / `11_CODING_CONVENTION.md` / `12_DEV_WORKFLOW.md` / `14_FILE_TIERS_AND_GATE.md` / `16_OPS_PLAYBOOK.md`
-程式碼本體主要在 `index.html` 內嵌 JS(區塊順序見 02)；`buy-to-ledger.js`、`ledger-ui-state.js`、`shopping-ui-state.js`、`trip-progression.js` 是 production-used module seams，`schema.js` / `validator.js` 是獨立權威來源。
+程式碼本體主要在 `index.html` 內嵌 JS(區塊順序見 02)；`navigation-intent.js`、`diagnostic-impact.js`、`buy-to-ledger.js`、`ledger-ui-state.js`、`shopping-ui-state.js`、`trip-progression.js` 是 production-used module seams，`schema.js` / `validator.js` 是獨立權威來源。
 
 ## 工作流程(必守)
 0. 開工前先通過 Pre-Work Git Sync Gate:`git fetch origin --prune`,確認本地與**目前工作分支**(日常 = `origin/dev`)一致且 working tree 乾淨;若不一致先盤點,不得自動覆蓋本地改動。

@@ -32,7 +32,7 @@
 - Consumes: `.ai-manifest.json` JSON and `tasks/current.md`.
 - Produces: `manifest_format: "2.29"` and `current_status: { "authority": "tasks/current.md" }`; the manifest contains no volatile `dev_candidate`, `next_action`, or `automated_validation` snapshot.
 
-- [ ] **Step 1: Write the failing manifest authority test**
+- [x] **Step 1: Write the failing manifest authority test**
 
 Create `tests/manifest-status-authority.test.js` with assertions equivalent to:
 
@@ -53,13 +53,13 @@ const raw=JSON.stringify(manifest);
 console.log('manifest status authority tests passed');
 ```
 
-- [ ] **Step 2: Run RED**
+- [x] **Step 2: Run RED**
 
 Run: `node tests/manifest-status-authority.test.js`
 
 Expected: FAIL because the current manifest has the old `version`, `status`, and historical status snapshot fields.
 
-- [ ] **Step 3: Replace volatile manifest fields**
+- [x] **Step 3: Replace volatile manifest fields**
 
 In `.ai-manifest.json`:
 
@@ -82,7 +82,7 @@ if(!m.current_status||m.current_status.authority!=='tasks/current.md'){
 });
 ```
 
-- [ ] **Step 4: Run GREEN and document the test**
+- [x] **Step 4: Run GREEN and document the test**
 
 Run:
 
@@ -93,7 +93,7 @@ node tools/check-doc-titles.js
 
 Expected: both commands PASS. Add the new test and command to `tests/README.md`.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```powershell
 git add -- .ai-manifest.json tools/check-doc-titles.js tests/manifest-status-authority.test.js tests/README.md
@@ -110,7 +110,7 @@ git commit -m "docs: make task board the status authority"
 - Consumes: plain state and intent objects.
 - Produces: global `TripNavigationIntent` with `create(initialState?)`, `request(state,intent)`, `consume(state,view)`, and `complete(state,token)`.
 
-- [ ] **Step 1: Write the failing module contract test**
+- [x] **Step 1: Write the failing module contract test**
 
 Cover:
 
@@ -141,13 +141,13 @@ assert.throws(function(){nav.request(empty,{view:'unknown'});},/view/);
 
 Also assert allowed views are exactly `shopping-list`, `shop`, `today`, `trip`, and `split`; `targetId`, `sourceView`, `sourceId`, `align`, and `announce` normalize to strings; `align` defaults to `start`.
 
-- [ ] **Step 2: Run RED**
+- [x] **Step 2: Run RED**
 
 Run: `node tests/navigation-intent-module.test.js`
 
 Expected: FAIL because `navigation-intent.js` does not exist.
 
-- [ ] **Step 3: Implement the pure ES5 module**
+- [x] **Step 3: Implement the pure ES5 module**
 
 Use the existing UMD-style global/CommonJS pattern:
 
@@ -185,13 +185,13 @@ Use the existing UMD-style global/CommonJS pattern:
 });
 ```
 
-- [ ] **Step 4: Run GREEN**
+- [x] **Step 4: Run GREEN**
 
 Run: `node tests/navigation-intent-module.test.js`
 
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```powershell
 git add -- navigation-intent.js tests/navigation-intent-module.test.js
@@ -216,7 +216,7 @@ git commit -m "feat(navigation): add transient intent module"
 - Consumes: `TripNavigationIntent` from Task 2.
 - Produces: `requestNavigationIntent(intent)`, `consumeNavigationIntent(view)`, `applyNavigationTarget(element,intent)`, and `clearNavigationTarget(token)` DOM-adapter helpers.
 
-- [ ] **Step 1: Extend runtime and wiring tests to RED**
+- [x] **Step 1: Extend runtime and wiring tests to RED**
 
 Add `navigation-intent.js` to the real runtime inventory expectation and assert:
 
@@ -243,13 +243,13 @@ node tests/render-note.test.js
 
 Expected: FAIL on missing registration and module wiring.
 
-- [ ] **Step 2: Register `navigation-intent.js` everywhere**
+- [x] **Step 2: Register `navigation-intent.js` everywhere**
 
 - Add `<script src="navigation-intent.js"></script>` after `app-version.js` and before modules that may dispatch navigation.
 - Add it to `runtime-assets.json`, `sw.js` SHELL, `.ai-manifest.json` `files` and `deploy_files`, README runtime module documentation, and runtime-asset fixtures.
 - Keep schema/validator embedding unchanged.
 
-- [ ] **Step 3: Implement the DOM adapter**
+- [x] **Step 3: Implement the DOM adapter**
 
 Initialize:
 
@@ -281,7 +281,7 @@ Target IDs:
 - Trip item: `it_` + item ID.
 - Trip day/top: empty `targetId` and explicit top behavior retained in the adapter.
 
-- [ ] **Step 4: Add visible and accessible destination confirmation**
+- [x] **Step 4: Add visible and accessible destination confirmation**
 
 Add CSS using existing theme roles:
 
@@ -300,7 +300,7 @@ Add CSS using existing theme roles:
 - remove the class and complete the matching token after 1,200ms;
 - on a missing target, announce `找不到對應地點`, call `AppLog.render(...)`, complete the token, and never throw.
 
-- [ ] **Step 5: Run focused Node and browser GREEN**
+- [x] **Step 5: Run focused Node and browser GREEN**
 
 Run:
 
@@ -315,7 +315,7 @@ npx playwright test tests/browser/today-live-info.spec.js --browser=webkit --gre
 
 Expected: all PASS; the overlay target is visible, receives `is-navigation-target`, announces the full destination, clears after 1.2 seconds, preserves `curView`, and restores origin context on close.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```powershell
 git add -- navigation-intent.js index.html runtime-assets.json sw.js .ai-manifest.json README.md tests/runtime-assets.test.js tests/view-ui-state.test.js tests/render-note.test.js tests/browser/view-context.spec.js tests/browser/today-live-info.spec.js
@@ -340,7 +340,7 @@ git commit -m "feat(navigation): confirm explicit destinations"
 - Consumes: raw AppLog entry `{at,category,level,message}`.
 - Produces: global `TripDiagnosticImpact.project(entry)` returning `{severity,title,impact,fallback,raw}` without mutating the entry.
 
-- [ ] **Step 1: Write RED module and renderer tests**
+- [x] **Step 1: Write RED module and renderer tests**
 
 Require exact known-timeout output:
 
@@ -369,7 +369,7 @@ Run: `node tests/diagnostic-impact-module.test.js tests/diagnostics-app-log.test
 
 Expected: FAIL because the module and projected markup are absent.
 
-- [ ] **Step 2: Implement and register `diagnostic-impact.js`**
+- [x] **Step 2: Implement and register `diagnostic-impact.js`**
 
 Use pure ordered rules:
 
@@ -385,7 +385,7 @@ function project(entry){
 
 Register the asset in the same six runtime locations as Task 3.
 
-- [ ] **Step 3: Render projected impact without changing copied reports**
+- [x] **Step 3: Render projected impact without changing copied reports**
 
 Keep `formatDiagnosticsReport()` unchanged. In `renderDiagnosticAppLogSection()` map each entry through `TripDiagnosticImpact.project(entry)` and render semantic rows:
 
@@ -400,7 +400,7 @@ Keep `formatDiagnosticsReport()` unchanged. In `renderDiagnosticAppLogSection()`
 
 Use CSS variables for severity colors; retain raw text in the DOM and copied report. Do not deduplicate, suppress, retry, or reclassify the stored AppLog entry.
 
-- [ ] **Step 4: Run focused GREEN**
+- [x] **Step 4: Run focused GREEN**
 
 Run:
 
@@ -413,7 +413,7 @@ npx playwright test tests/browser/diagnostics-app-log.spec.js
 
 Expected: all PASS with raw AppLog unchanged and projected impact visible.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```powershell
 git add -- diagnostic-impact.js index.html runtime-assets.json sw.js .ai-manifest.json README.md tests/diagnostic-impact-module.test.js tests/runtime-assets.test.js tests/diagnostics-app-log.test.js tests/browser/diagnostics-app-log.spec.js
@@ -439,14 +439,14 @@ git commit -m "feat(diagnostics): explain fallback impact"
 - Consumes: Tasks 1–4.
 - Produces: v108 App/SW identity, five-note release window, current architecture/status documentation, verified `origin/dev` delivery.
 
-- [ ] **Step 1: Forward-bump and document**
+- [x] **Step 1: Forward-bump and document**
 
 - Set `APP_VERSION` and `SW_VERSION` to `v108`.
 - Add v108 release notes; retain the prior four versions in the five-entry window.
 - Document transient navigation state, target confirmation, raw-versus-projected diagnostics, and `tasks/current.md` status authority.
 - Mark completed plan steps only after their evidence exists.
 
-- [ ] **Step 2: Run static and focused gates**
+- [x] **Step 2: Run static and focused gates**
 
 ```powershell
 node tools/check-app-version.js
@@ -460,7 +460,7 @@ node --test tests/navigation-intent-module.test.js tests/diagnostic-impact-modul
 
 Expected: all PASS and BUILTIN no-drift.
 
-- [ ] **Step 3: Run full regression and health gate**
+- [x] **Step 3: Run full regression and health gate**
 
 ```powershell
 node --test tests/*.test.js
@@ -470,7 +470,7 @@ npx playwright test tests/browser/today-live-info.spec.js --browser=webkit --gre
 
 Then run the repository offline Chromium Health probe and require `healthCheck: []` and `pageErrors: []`.
 
-- [ ] **Step 4: Commit release metadata**
+- [x] **Step 4: Commit release metadata**
 
 ```powershell
 git add -- app-version.js sw.js index.html tests/theme-system.test.js 02_ARCHITECTURE.md 04_UI_GUIDELINES.md 07_CHANGELOG.md 08_AI_HANDOVER.md tasks/current.md tests/README.md docs/superpowers/plans/2026-08-12-trip-pilot-v108-navigation-diagnostics-status.md
@@ -480,4 +480,6 @@ git commit -m "docs: release navigation feedback v108"
 - [ ] **Step 5: Verify committed tree and push `dev`**
 
 Re-run full Node, Playwright, focused WebKit, static, BUILTIN, and offline Health gates. Fetch `origin`; require zero remote-only commits; push `dev`; require `origin/dev...dev` = `0 0` and identical SHAs. Stop for Bar's v108 device/PWA verification before starting v109.
+
+> Task 5 implementer scope stops after committed-tree verification and report. Controller owns final branch review, fetch／remote-divergence check, and push; this step remains unchecked until those remote operations and Bar's device／PWA acceptance actually occur.
 

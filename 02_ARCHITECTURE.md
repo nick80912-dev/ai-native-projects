@@ -11,13 +11,17 @@ Netlify 靜態託管(HTTPS)+ Service Worker(PWA 離線)
 無自架後端、無額外資料庫伺服器、零前端相依套件。
 ```
 
-`index.html` 是 App 與 Netlify 正式部署入口；裝置照片儲存邊界獨立在 `shopping-photo-store.js`，採買轉記帳的純資料與 workflow 邊界獨立在 `buy-to-ledger.js`，Ledger 歷史瀏覽與 create／edit entry session 的 UI state／effect 邊界獨立在 `ledger-ui-state.js`。Service Worker、manifest 與 icons 均位於 repo 根目錄並由 GitHub 連動部署。
+`index.html` 是 App、DOM effect adapter 與 Netlify 正式部署入口；`navigation-intent.js` 只管理 session-only 明確目的地 intent，`diagnostic-impact.js` 只把原始 AppLog entry 投影為顯示用影響說明。裝置照片儲存邊界獨立在 `shopping-photo-store.js`，採買轉記帳的純資料與 workflow 邊界獨立在 `buy-to-ledger.js`，Ledger 歷史瀏覽與 create／edit entry session 的 UI state／effect 邊界獨立在 `ledger-ui-state.js`。Service Worker、manifest 與 icons 均位於 repo 根目錄並由 GitHub 連動部署。
 
 ## 資料流:三層防線(絕不空白頁)
 1. **內建資料**(builtin,建置時寫入 HTML)→ 0.1 秒顯示
 2. **localStorage 快取**(上次成功同步版,較新則覆蓋)
 3. **背景同步** 8 張 CSV:原有 7 表維持原子快照 Gate;ledger 失敗時沿用目前 ledger 快照,其餘 7 表仍可更新
 同步狀態徽章:已是最新 / 部分更新 / 離線版 / 內建版。
+
+明確頁面／overlay 導覽另外走 transient intent：純 module 只保存序號、目標 view／ID、來源與對齊資訊；`index.html` 才負責開啟 view、解析 DOM target、避開 sticky header 捲動、1.2 秒可見標示、live status、遺失目標降級，以及關閉 Shopping overlay 後回復來源捲動與 focus。intent 不進 localStorage、備份、Queue、CMS 或 Ledger；`shopping-list` 仍是 overlay，不改 `curView`。
+
+AppLog 與 `healthCheck()` 的原始 entry／finding 保持權威且不變；`diagnostic-impact.js` 只在診斷面板投影 `info`／`degraded`／`action-required`、影響與 fallback，複製報告仍逐字使用 raw message。投影不參與 Health Check 判定、同步重試、Queue 或資料保存。
 
 分帳寫入先進 `trip_ledger_queue`,再由 `ledgerRepository` POST Apps Script；只有伺服器回覆 `ok:true` 或 `ok:true,dup:true` 才移出佇列。開 App 與恢復連網時自動補送。
 
@@ -28,9 +32,9 @@ Netlify 靜態託管(HTTPS)+ Service Worker(PWA 離線)
 住宿資料是 `Places(Type=住宿).HID → Hotels.HID` 的 **N→1** 關係。PID 表示帶有自身交通脈絡的行程停靠點,HID 才是 Hotel profile 的 join key；名稱只供顯示,不得比對或關聯。現行 P002／P013／P022／P031／P040 都引用 H001,但五個 PID 必須保持分離,因為各路段的開車／步行時間不同。Validator 會在七表原子快照 Gate 內條件式檢查：住宿必須有 HID、非住宿不得帶 HID、任何 HID 都必須精確存在於 Hotels；任一違反都阻止候選快照生效。Runtime `hotelOf()` 對兩端 HID 做去空白與大小寫正規化後精確解析,天氣住宿亦共用同一 resolver；缺失或懸空引用安全回傳 `null`,不做名稱或第一筆 fallback。
 
 ## 快取(sw.js)
-- App Shell(HTML/圖示):Cache First + 背景更新(SWR)
-- CSV 資料:網路優先,離線回退快取(App 層另有 localStorage)
-- 改版:bump `VERSION` 字串 → 自動清舊快取,使用者開兩次生效
+- 同源 App Shell:network-first，install 用 `cache:'reload'`，日常 fetch 用 `cache:'no-cache'`；失敗才退 Cache Storage。
+- 跨域 CSV 不由 SW 攔截；App 資料層維持 BUILTIN／localStorage／背景同步三層防線。
+- 改版同步 forward-bump `sw.js` 的 `SW_VERSION` 與 `app-version.js` 的 `APP_VERSION`，activate 清除其他 App cache；版本一致性由 `tools/check-app-version.js` 守住。
 
 ## 應用結構(`index.html` UI／adapter + 外部純 module)
 ```
@@ -48,13 +52,17 @@ ledger settings(normalize/convert/post/save → TripConfig兩鍵;確認bridge涵
 shopping photo store(壓縮／IndexedDB put-get-remove／引用生命週期)
 buy-to-ledger domain/workflow(來源準備／狀態推導／commit plan／流程協調；DOM 與 repository 由 index adapter 注入)
 ledger UI state/workflow(帳本軌／歷史篩選／多選／create-edit entry session 的不可變 transition + ordered effects；DOM render、帳務驗證與 repository 由 index adapter 注入)
-navigation intent(詳細分點直接導航;一般同名地點以目前位置作為 origin,定位失敗退回「名稱 + 日本」)
+navigation location(外部地圖詳細分點直接導航;一般同名地點以目前位置作為 origin,定位失敗退回「名稱 + 日本」)
+navigation intent(session-only request／consume／complete；DOM、scroll、focus、status 與 overlay lifecycle 留在 index adapter)
+diagnostic impact(raw AppLog → display-only severity／impact／fallback；raw copy、Health Check 與同步語意不變)
 ```
 
 `ledger-ui-state.js` 只擁有 session-only UI workflow state。entry draft 內容與 return context 對 module 不透明；session／request ID 用來阻止重複儲存與過期非同步結果。correction、settlement、calculator 內容、record 建立、同步及 Shopping UI state 仍在既有邊界，不屬於此 module。
 
+`.ai-manifest.json` 的 `manifest_format` 只表示 manifest schema，不是 App 版號；其 `current_status.authority` 必須精確指向 `tasks/current.md`。manifest 不保存 `dev_candidate`、`next_action` 或 automated-test-result snapshot；App／SW 版號只由 `app-version.js` 與 `sw.js` 管理，歷史狀態看 `07_CHANGELOG.md`。
+
 ## 部署檔案
-`index.html / shopping-photo-store.js / buy-to-ledger.js / ledger-ui-state.js / schema.js / validator.js / sw.js / manifest.webmanifest / icon-*.png` 位於 repo 根目錄,由 `main` 的 Bar 核准 Merge 觸發 Netlify 正式部署。
+`index.html / navigation-intent.js / diagnostic-impact.js / shopping-photo-store.js / buy-to-ledger.js / ledger-ui-state.js / shopping-ui-state.js / trip-progression.js / schema.js / validator.js / app-version.js / sw.js / manifest.webmanifest / icon-*.png` 位於 repo 根目錄,由 `main` 的 Bar 核准 Merge 觸發 Netlify 正式部署。
 
 ## 已知環境限制(繞過方案已內建)
 - 部分 WebView 無 console.info → 已 polyfill

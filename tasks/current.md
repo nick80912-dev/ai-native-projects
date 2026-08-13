@@ -1,14 +1,14 @@
 # CURRENT(現在正在做的)
 
-## v107 current dev candidate
+## v108 candidate awaiting Bar device/PWA verification
 
 
 
 - v102 Bar device/PWA acceptance is complete.
-- v107 is the current dev candidate: blank Shopping categories render as `未分類` only in the active-trip Today Hero. Raw Shopping data remains blank, and the compact right-aligned `地點 · 分類 +N` layout, six-code-point location cap, complete category/count, product-name privacy, and location targeting remain intact.
-- Optimization roadmap: retain the Today Hero single-row briefing contract, including 44px/focus/ellipsis behavior and no duplicate next-stop reminder.
-- Next action: push `dev`, then perform device/PWA appearance and interaction verification. Do not merge main, deploy production, or create a production tag.
-- Automated evidence: v107 fresh gate passed 83/83 Node test files and 150/150 Playwright cases; focused Chromium Today 18/18 and WebKit touch 1/1 also pass. Document-title, app-version, 8 runtime assets, BUILTIN no-drift, manifest JSON, offline Health Check, pageerror, and diff checks passed.
+- v108 is the current candidate: explicit Today／Shopping／Trip targeting uses transient navigation intent, visibly confirms the exact destination, and restores Shopping overlay scroll/focus context. Diagnostic impact copy is display-only; stored/copied raw AppLog and Health Check behavior stay unchanged.
+- `.ai-manifest.json` delegates current product status to this file and no longer embeds volatile candidate, next-action, or automated-test snapshots.
+- Next action: controller completes final branch review and `dev` delivery, then Bar performs device/PWA appearance, interaction, return-focus, and offline verification. **v109 is gated until Bar accepts v108.** Do not merge main, deploy production, or create a production tag.
+- Automated evidence: fresh pre-commit gate passed **86/86** top-level Node tests, full Playwright **163/163**, focused WebKit **9/9**, App／SW v108, document titles, 10 runtime assets, BUILTIN no-drift, manifest JSON, diff check, and offline Chromium `healthCheck: []`／`pageErrors: []`. Task 5 re-runs the committed tree before handoff; no push or origin-synchronization claim is made here.
 
 
 
@@ -22,12 +22,12 @@
 
 | **`main` 原始碼** | **SW v96**，PR #13 merge commit `02705c3`；因 Netlify 額度用罄尚未部署／建立 tag |
 | 正式站 | `https://trippilot-jp.netlify.app/` — 2026-08-01 由 SW v18 升級至 v73,G1–G6 全數通過 |
-| **dev candidate** | **SW v107**; blank Hero Shopping categories display `未分類` without changing stored data |
+| **candidate** | **SW v108**; transient exact-target confirmation plus display-only diagnostic impact; awaiting controller delivery and Bar device/PWA verification |
 | 個人備份格式 | **v9**(`PERSONAL_STATE_SUPPORTED_VERSIONS = [1..9]`)—— v81 因想逛 key 識別語意變更而升版 |
-| dev automated validation | v107 fresh gate: **83/83** Node test files and **150/150** Playwright cases (0 failed); focused Chromium Today 18/18 and WebKit touch 1/1; document-title, app-version, 8 runtime assets, BUILTIN no-drift, manifest JSON, offline Health Check, pageerror, and diff checks passed |
+| candidate automated validation | Fresh pre-commit: **86/86** Node, **163/163** full Playwright, **9/9** focused WebKit; static/BUILTIN/manifest/offline Health/pageerror gates pass. Committed-tree rerun is required before handoff; no remote or device acceptance is claimed |
 | 既有 tag | `production-v18`、`production-v73` |
 
-**`main` 已合併 v96，但正式站仍停在 v73；v107 是目前 `dev` 的候選版。** v74–v87 已由 Bar 於 2026-08-03 確認真機驗收皆正常；v88–v89、v92–v95 亦於 2026-08-08 完成 Bar 畫面／真機確認。v96 因 Netlify 額度用罄尚未正式部署，也未建立 `production-v96` tag。Bar 已完成 v101／v102 裝置／PWA驗收；v107 只為 Hero 空白分類補上顯示用 `未分類`，不改既有發布缺口。
+**`main` 已合併 v96，但正式站仍停在 v73；v108 是目前待交付與驗收的候選版。** v74–v87 已由 Bar 於 2026-08-03 確認真機驗收皆正常；v88–v89、v92–v95 亦於 2026-08-08 完成 Bar 畫面／真機確認。v96 因 Netlify 額度用罄尚未正式部署，也未建立 `production-v96` tag。Bar 已完成 v101／v102 裝置／PWA驗收；v108 尚未完成 Bar device／PWA 驗收，v109 因此維持 gated。
 
 ### v74–v98 已折疊的主要能力
 
@@ -113,11 +113,14 @@
 | v99／v100 | SW 更新提示雙版本實驗；實機確認事件時機與已顯示內容不同步，產品必要性不足 | ⛔ 實驗結束；由 Bar 取消，不列為完成功能 |
 | v101 | 移除全域 SW 更新提示；杉綠 action 改為林下青 `#2F6B4F`，SW lifecycle／cache／offline 與資料不變 | ✅ 2026-08-11 Bar 裝置／PWA 外觀驗收完成 |
 | v102 | 住宿停靠點改以 Places.HID 精確關聯 Hotels.HID；Schema 3.0、條件驗證、BUILTIN 與 exact resolver 同步 | ✅ 最終 whole-branch review、完整 gate、dev push（`ffc9aae`）與 Bar 裝置／PWA驗收完成 |
+| v103–v107 | Today Hero 旅行提示、採買摘要分類／對齊／未分類 fallback；原始採買資料與既有 next-stop authority 不變 | ✅ 已完成自動驗證；歷史細節見 `07_CHANGELOG.md` |
+| v108 | transient exact-target navigation、可見定位／scroll／focus return、display-only diagnostic impact、manifest status authority | ⏳ candidate；等待 controller final review／delivery 與 Bar device／PWA verification |
+| v109 | UI semantic tokens 與 Today deep-module extraction | 🔒 gated；只可在 Bar 接受 v108 後開始 |
 
 **已知未做(需先定判準)**:Today 的「交通／停車／營業／付款／提醒**依當下情境動態調整優先順序**」。v84 只做了可明確驗收的收合(常駐交通／停車／營業,收合付款／提醒);「當下情境」的判準(依時間?依距離?依是否已抵達?)尚未定義,不同讀法會做出完全不同的東西,故未實作。
 
 ## 下一棒
 
-→ **v106 是目前 dev candidate；完整 gate 與 dev push 後，由 Bar 開啟 dev PWA 驗收 Today Hero 外觀與互動。** 確認採買下排整組靠右、間距緊湊、長地點顯示六字加省略符號、分類與 `+N` 完整、精確下一站不重複，且無錯誤或水平 overflow。不得自行 merge `main`、部署正式站或建立 production tag。
+→ **v108 是目前 candidate；controller 完成 final branch review 與 `dev` delivery 後，由 Bar 開啟 device／PWA 驗收。** 確認 320／375／390px 的 exact target、1.2 秒可見標示、live status、reduced motion、overlay return scroll／focus、找不到目標的安全降級、診斷 raw／projection 邊界與離線啟動。v109 在 Bar 接受 v108 前不得開始；不得自行 merge `main`、部署正式站或建立 production tag。
 
 > **不得**自行動 `main`、部署正式站或建立 production tag。未經 Bar 核准不得 merge `dev → main`。
