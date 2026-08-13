@@ -2,11 +2,12 @@
 
 ## v108 navigation／diagnostics／status-authority coverage
 
-- `navigation-intent-module.test.js` directly protects the ES5 immutable create／request／consume／complete contract, exact five-view allowlist, safe unique tokens, stale completion, normalization, and pending／active preservation.
+- `navigation-intent-module.test.js` directly protects the ES5 immutable create／request／consume／complete contract, exact five-view allowlist, safe unique tokens, stale completion, normalization, pending／active preservation, caller-mutation isolation, canonical retained shapes, and a separately owned consumed intent snapshot.
 - `view-ui-state.test.js` and `render-note.test.js` protect the production DOM seam: explicit intent dispatch／consume, exact Shopping list／mall／Trip targets, missing-target Render diagnostics, token-guarded 1.2-second cleanup, and overlay-only `curView` behavior.
 - `browser/today-live-info.spec.js` exercises Hero／badge target confirmation at 320／375／390px with tap／Enter／Space, sticky-safe geometry, live status, reduced motion, missing targets, stale timers, source scroll, connected／replacement／fallback focus, and blank-category behavior. Focused WebKit uses `--grep "target|定位|blank category"`.
+- `browser/navigation-target-matrix.spec.js` exercises the actual expanded cluster-stop, pre-trip day, mall-floor, and back-to-now controls at 320／375／390px with rotating Tap／Enter／Space. It asserts exact target and live status, native keyboard focus, sticky-header-safe target／status geometry, 1.2-second clear, reduced-motion static treatment, zero horizontal overflow, and current-day return behavior. Run focused WebKit together with the existing Today target selection.
 - `diagnostic-impact-module.test.js` and `diagnostics-app-log.test.js` protect exact timeout classification, conservative unknown handling, input immutability, escaped raw／projected output, and byte-for-byte raw copied reports; `browser/diagnostics-app-log.spec.js` verifies the same boundary in Chromium.
-- `manifest-status-authority.test.js` plus `tools/check-doc-titles.js` require `.ai-manifest.json` to point to `tasks/current.md` without volatile candidate／next-action／automated-test snapshots. Version authority remains `app-version.js`／`sw.js` via `tools/check-app-version.js`.
+- `manifest-status-authority.test.js` plus `tools/check-doc-titles.js` require `.ai-manifest.json` to name `tasks/current.md` as the sole current-status authority, identify changelog／task archives only as history, reject stale `tasks/(current/backlog/done)`／`manifest.status` prose, and omit volatile candidate／next-action／automated-test snapshots. Version authority remains `app-version.js`／`sw.js` via `tools/check-app-version.js`.
 
 
 

@@ -13,18 +13,22 @@
       sourceId:String(intent.sourceId||''),align:intent.align==='center'?'center':'start',announce:String(intent.announce||'')
     };
   }
-  function nextToken(value){
+  function normalizeNextToken(value){
     var token=Math.floor(Number(value));
     return isFinite(token)&&token>0&&token<=MAX_SAFE_TOKEN?token:1;
   }
-  function retainedToken(intent){
+  function readRetainedToken(intent){
     var token=Number(intent&&intent.token);
     return isFinite(token)&&token>0&&token<=MAX_SAFE_TOKEN&&Math.floor(token)===token?token:0;
   }
+  function cloneRetainedIntent(intent){
+    var token=readRetainedToken(intent);
+    return token?cloneIntent(intent,token):null;
+  }
   function create(initial){
     initial=initial||{};
-    var pending=initial.pending||null,active=initial.active||null,token=nextToken(initial.nextToken);
-    var retained=Math.max(retainedToken(pending),retainedToken(active));
+    var pending=cloneRetainedIntent(initial.pending),active=cloneRetainedIntent(initial.active),token=normalizeNextToken(initial.nextToken);
+    var retained=Math.max(readRetainedToken(pending),readRetainedToken(active));
     if(retained>=token)token=retained>=MAX_SAFE_TOKEN?MAX_SAFE_TOKEN:retained+1;
     return {nextToken:token,pending:pending,active:active};
   }
@@ -36,7 +40,8 @@
   function consume(state,view){
     state=create(state);
     if(!state.pending||state.pending.view!==String(view||''))return {state:state,intent:null};
-    return {state:{nextToken:state.nextToken,pending:null,active:state.pending},intent:state.pending};
+    var active=cloneRetainedIntent(state.pending);
+    return {state:{nextToken:state.nextToken,pending:null,active:active},intent:cloneRetainedIntent(active)};
   }
   function complete(state,token){
     state=create(state);

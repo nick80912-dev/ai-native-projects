@@ -27,7 +27,7 @@
     "file_tiers": "14_FILE_TIERS_AND_GATE.md:Tier1一般開發/Tier2高風險(改前過原因-影響-風險-回滾確認)/Tier3產生產物禁手改",
     "ai_execution_rules": "15_AI_EXECUTION_RULES.md:指令預設非覆寫、不確定性三分法、檔案增刪權限、任務分級A/B/C、文件vs現實衝突協議",
     "ops_playbook": "16_OPS_PLAYBOOK.md:Netlify回滾/以tag回滾至v18(§A5)/SW快取災難/Sheet版本還原/清理排程安全/測試站驗收前置核對(§F5)",
-    "status_authority": "即時狀態唯一權威=tasks/(current/backlog/done);13_PROJECT_STATUS與本manifest.status為快照;00_CONTEXT_HANDOVER為歷史快照不參與"
+    "status_authority": "Current status authority: tasks/current.md. Historical status: 07_CHANGELOG.md and task archives."
   },
   "data_flow": "GoogleSheets(8表)→發布CSV→手機瀏覽器fetch→validator.js(防錯)→parser(Schema驅動)→DB→renderers→UI；住宿關聯=Places(Type=住宿).HID→Hotels.HID(N→1 exact resolver,名稱只供顯示)，五個不同travel脈絡PID可共用H001；個人帳、代購對象、主題與旅途紀錄→localStorage only(不進Queue/CMS)，並由個人備份v1–v9原子匯出／還原；採買照片→shopping-photo-store.js壓縮→IndexedDB trip-local-media/shopping-photos,採買項目localStorage只存photoId且備份剝除；團體帳→enqueueBatch一次寫入localStorage佇列→立即UI完成→ledgerRepository背景送達Apps Script→分帳紀錄表(append-only,Schema 2.9固定21欄,time=消費發生時間,末五欄=輸入幣別/免稅/價格方式/稅率/優惠券)；未受還款確認保護的團體編輯=舊筆墓碑+replacesRecordId替代筆；canonical還款確認切點前的收據永久禁止直接改寫，只能由原付款人以commit-last事件整張更正或作廢；共用分帳設定:Settings→Apps Script→TripConfig兩個固定鍵→發布CSV,確認後以本機bridge涵蓋1–5分鐘延遲；離線三層:BUILTIN內建→localStorage快取→背景同步",
   "files": {

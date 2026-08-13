@@ -4,7 +4,7 @@
 
 ## Decision
 
-以 build-time-only `runtime-assets.json` 管理八個 JavaScript runtime assets，並由 `tools/check-runtime-assets.js` 驗證實體檔、`index.html`、SW `SHELL`、README 與 `.ai-manifest.json` 一致。
+以 build-time-only `runtime-assets.json` 作為 JavaScript runtime asset 清單的唯一權威，並由 `tools/check-runtime-assets.js` 驗證清單中的實體檔、`index.html`、SW `SHELL`、README 與 `.ai-manifest.json` 一致。2026-08-12 v108 補充：資產數量隨清單演進，不再於 ADR 固定記錄數量。
 
 ## Context
 

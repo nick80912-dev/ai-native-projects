@@ -479,6 +479,10 @@ git add -- app-version.js sw.js index.html tests/theme-system.test.js 02_ARCHITE
 git commit -m "docs: release navigation feedback v108"
 ```
 
+- [x] **Step 4a: Resolve final whole-branch review findings and run the fresh local release gate**
+
+Converted the expanded cluster-stop and pre-trip day launchers to native buttons, removed Navigation Intent aliasing at all state boundaries, added the remaining 12-case real-control navigation matrix, corrected manifest／ADR authorities, and renamed new helpers to verb-led forms. Fresh pre-commit evidence: Node **86/86**, Playwright **175/175**, focused WebKit **21/21**, static／version／documents／runtime／manifest／BUILTIN／diff gates pass, and offline Chromium reports `healthCheck: []`／`pageErrors: []`. The committed-tree rerun is performed by the final-fix implementer and recorded in its report; no fetch／push／device acceptance is claimed here.
+
 - [ ] **Step 5: Verify committed tree and push `dev`**
 
 Re-run full Node, Playwright, focused WebKit, static, BUILTIN, and offline Health gates. Fetch `origin`; require zero remote-only commits; push `dev`; require `origin/dev...dev` = `0 0` and identical SHAs. Stop for Bar's v108 device/PWA verification before starting v109.

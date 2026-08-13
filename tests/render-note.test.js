@@ -394,7 +394,12 @@ const clusterChildOut = sandbox.renderClusterStop({
   note:''
 }, {}, {done:{},skip:{},autoSkip:{}}, 1);
 assert(clusterChildOut.includes('class="nx-cluster-stop'));
+assert(clusterChildOut.includes('<button type="button" class="nx-cluster-stop'),'expanded cluster stops are native keyboard controls');
+assert(clusterChildOut.includes('</button>'),'expanded cluster stop buttons close with button semantics');
 assert(clusterChildOut.includes('onclick="openTripItem(1,\'10/19_2\')"'), 'expanded child opens the exact Trip item');
+assert(html.includes('<button type="button" class="hotel today-pretrip-day"'),'pre-trip day launchers are native keyboard controls');
+assert.match(html,/\.nx-cluster-stop:focus-visible[^}]*outline:/,'expanded cluster stop exposes a visible keyboard focus ring');
+assert.match(html,/\.today-pretrip-day:focus-visible[^}]*outline:/,'pre-trip day launcher exposes a visible keyboard focus ring');
 
 const clusterCardSource = extractFunction('renderClusterNextStopCard');
 const parentMainSource = clusterCardSource.slice(0, clusterCardSource.indexOf('nx-cluster-expand'));

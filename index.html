@@ -204,12 +204,14 @@ input,select,textarea{font-size:16px}
   background:var(--card);border-left:4px solid var(--gold);border-radius:12px;
   padding:13px 15px;margin-bottom:16px;box-shadow:var(--shadow);
 }
+.today-pretrip-day{display:block;width:100%;font:inherit;color:inherit;text-align:left;border-top:0;border-right:0;border-bottom:0;cursor:pointer}
+.today-pretrip-day:focus-visible{outline:2px solid var(--sea);outline-offset:3px}
 .hotel .h-lbl{font-size:10.5px;letter-spacing:.1em;color:var(--gold-ink);font-weight:700;margin-bottom:4px}
 .hotel .h-name{font-size:15.5px;font-weight:700;margin-bottom:5px}
 .hotel .h-meta{font-size:12.5px;color:var(--ink-soft);line-height:1.65;white-space:pre-line}
 
 /* 日標題 */
-.day-head{display:flex;align-items:baseline;gap:10px;margin:4px 2px 14px;padding-bottom:9px;border-bottom:2px solid var(--line)}
+.day-head{display:flex;align-items:baseline;gap:10px;margin:4px 2px 14px;padding-bottom:9px;border-bottom:2px solid var(--line);scroll-margin-top:130px}
 .day-head .num{font-size:12px;font-weight:800;color:#fff;background:var(--coral);border-radius:7px;padding:3px 9px;letter-spacing:.03em}
 .day-head .date{font-size:19px;font-weight:800;color:var(--sea-deep)}
 .day-head .prog{margin-left:auto;font-size:12px;color:var(--ink-faint);font-weight:600}
@@ -478,8 +480,9 @@ input,select,textarea{font-size:16px}
 .nx-cluster-expand{width:100%;border:1px solid var(--line);background:#fff;border-radius:9px;color:var(--sea-deep);font:inherit;font-size:13px;font-weight:800;padding:10px;margin-top:10px;cursor:pointer}
 .nx-cluster-expand.on{background:#f1f8f8;border-color:var(--sea)}
 .nx-cluster-list{display:grid;gap:0;margin-top:10px;border-top:1px solid var(--line)}
-.nx-cluster-stop{display:grid;grid-template-columns:52px 1fr;gap:8px;padding:12px 0;border-bottom:1px solid var(--line);cursor:pointer;transition:background .15s,transform .15s}
+.nx-cluster-stop{display:grid;width:100%;grid-template-columns:52px 1fr;gap:8px;padding:12px 0;border:0;border-bottom:1px solid var(--line);background:transparent;color:inherit;font:inherit;text-align:left;cursor:pointer;transition:background .15s,transform .15s}
 .nx-cluster-stop:active{background:#f7f3ea;transform:scale(.99)}
+.nx-cluster-stop:focus-visible{outline:2px solid var(--sea);outline-offset:2px}
 .nx-cluster-stop.auto{opacity:.58}
 .nx-cluster-time{color:var(--coral);font-size:12px;font-weight:900;padding-top:2px}
 .nx-cluster-name{font-size:14px;font-weight:900;color:var(--ink);line-height:1.4}
@@ -2429,7 +2432,7 @@ function normalizeNavigationIntent(view,intent){
     sourceId:String(intent.placeId||'').toUpperCase(),align:'start',announce:'已定位：'+getNavigationShopPlaceName(intent.placeId)
   };
   if(intent.type==='trip-day')return {
-    view:view,targetId:'',sourceView:sourceView,sourceId:'day-'+String(intent.dayIndex),align:'start',
+    view:view,targetId:'tripday_'+String(intent.dayIndex),sourceView:sourceView,sourceId:'day-'+String(intent.dayIndex),align:'start',
     announce:'已定位：Day '+(Number(intent.dayIndex)+1)
   };
   if(intent.type==='top')return {
@@ -2715,7 +2718,7 @@ function renderTrip(){
   var visibleItems=tripHideDone?day.items.filter(function(it){return !isTripCheckableItem(it) || !isTripItemCleared(it,day,curDay,checks);}):day.items;
   var visibleActs=visibleItems.filter(isTripCheckableItem);
   pruneTripPanelState(visibleItems.map(function(it){ return it.id; }));
-  view.innerHTML='<div class="day-head"><span class="num">DAY '+(curDay+1)+'</span>'+
+  view.innerHTML='<div class="day-head" id="tripday_'+curDay+'"><span class="num">DAY '+(curDay+1)+'</span>'+
     '<span class="date">'+day.date+(day.dow?' ('+day.dow+')':'')+'</span>'+
     '<span class="prog">完成 '+doneN+' · 略過 '+skipN+' / 共 '+acts.length+'</span></div>'+
     '<div class="trip-filter"><button class="trip-filter-btn '+(!tripHideDone?'on':'')+'" onclick="setTripHideDone(false)">顯示全部</button>'+
@@ -3092,12 +3095,12 @@ function renderClusterStop(item,checks,progress,dayIndex){
   var res=resolveRef(item);
   var meta=nextStopMeta(item,res);
   var auto=isAutoSkipped(item.id,progress);
-  return '<div class="nx-cluster-stop '+(auto?'auto':'')+'" onclick="openTripItem('+dayIndex+',\''+jsString(item.id)+'\')">'+
+  return '<button type="button" class="nx-cluster-stop '+(auto?'auto':'')+'" onclick="openTripItem('+dayIndex+',\''+jsString(item.id)+'\')">'+
     '<div class="nx-cluster-time">'+escapeHtml(item.time||'·')+'</div>'+
     '<div><div class="nx-cluster-name">'+escapeHtml(clusterItemName(item))+'</div>'+
       '<div class="nx-cluster-meta">'+(meta.cat?escapeHtml(meta.cat.label):'')+(meta.drive?' · '+escapeHtml(meta.drive):'')+'</div>'+
       (auto?'<span class="nx-cluster-status">⏱ 自動略過</span>':'')+
-    '</div></div>';
+    '</div></button>';
 }
 function renderClusterNextStopCard(day,dayIndex,pick,cluster,checks,progress,nowMinutes){
   var childPick=pickClusterChild(cluster,progress,checks,nowMinutes,{day:day,dayIndex:dayIndex});
@@ -3344,7 +3347,7 @@ function renderToday(){
       (days.length?'<div class="seg">行程重點</div>':'')+
       days.map(function(d,i){
         var hl=d.items.filter(function(it){return it.act;}).slice(0,3).map(function(it){return it.act;}).join('、');
-        return '<div class="hotel" style="border-left-color:var(--sea);cursor:pointer" onclick="gotoDay('+i+')"><div class="h-lbl" style="color:var(--sea)">DAY '+(i+1)+' · '+d.date+'</div><div class="h-name" style="font-size:14px">'+escapeHtml(hl)+'</div></div>';
+        return '<button type="button" class="hotel today-pretrip-day" style="border-left-color:var(--sea)" onclick="gotoDay('+i+')"><div class="h-lbl" style="color:var(--sea)">DAY '+(i+1)+' · '+d.date+'</div><div class="h-name" style="font-size:14px">'+escapeHtml(hl)+'</div></button>';
       }).join('');
     return;
   }

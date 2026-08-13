@@ -61,6 +61,13 @@ try {
   ['status', 'historical_status_snapshot_2026_08_01'].forEach(function(key) {
     if (Object.prototype.hasOwnProperty.call(m, key)) errors.push('.ai-manifest.json 不得保留過時狀態欄位:' + key);
   });
+  const expectedStatusAuthority = 'Current status authority: tasks/current.md. Historical status: 07_CHANGELOG.md and task archives.';
+  if (!m.governance || m.governance.status_authority !== expectedStatusAuthority) {
+    errors.push('.ai-manifest.json governance.status_authority 必須以 tasks/current.md 為唯一即時權威,並只把 changelog/task archives 視為歷史');
+  }
+  ['tasks/(current/backlog/done)', 'manifest.status', '13_PROJECT_STATUS'].forEach(function(staleText) {
+    if (JSON.stringify(m).indexOf(staleText) !== -1) errors.push('.ai-manifest.json 含過時狀態權威文字:' + staleText);
+  });
 } catch (e) {
   errors.push('.ai-manifest.json 不是有效 JSON:' + e.message);
 }
