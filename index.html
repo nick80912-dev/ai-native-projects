@@ -2580,8 +2580,16 @@ function renderDaybar(){
   bar.style.display='flex';
   var md=todayMD();
   bar.innerHTML=t.days.map(function(d,i){
-    return '<button class="day-chip '+(i===curDay&&curView==='trip'?'active':'')+' '+(d.date===md?'today-chip':'')+'" onclick="gotoDay('+i+')">Day '+(i+1)+'<span class="dow">'+d.date+(d.dow?'·'+d.dow:'')+'</span></button>';
+    return '<button class="day-chip '+(i===curDay&&curView==='trip'?'active':'')+' '+(d.date===md?'today-chip':'')+'" onclick="selectTripDay('+i+')">Day '+(i+1)+'<span class="dow">'+d.date+(d.dow?'·'+d.dow:'')+'</span></button>';
   }).join('');
+}
+function selectTripDay(i){
+  if(navigationIntentState.active)clearNavigationTarget(navigationIntentState.active.token);
+  curDay=i;
+  renderDaybar();
+  renderTrip();
+  if(viewUiState.trip)viewUiState.trip.scrollY=0;
+  requestAnimationFrame(function(){window.scrollTo({top:0,behavior:'instant'});});
 }
 function gotoDay(i){
   curDay=i;

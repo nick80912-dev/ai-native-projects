@@ -1,6 +1,7 @@
 # 07 版本紀錄
 
 ## 2026-08-13 — v110 UI 一致性與 Today 模組拆分（candidate）⭐ 架構變更
+- PR #14 發布門檻補強：行程分頁上方 Day chip 改走頁內 `selectTripDay()`，切日後於重繪完成的 animation frame 回到該日頂端，不再建立定位高亮或 live-status；Today 跨頁 `gotoDay()`、exact item、Shopping 與回到現在的定位提示維持不變。Linux Chromium 對 1px 隱藏狀態框的 sub-pixel 計算與 reduced-motion scheduler margin 僅放寬測試容差，產品 CSS 與 1000ms hold 不變。
 
 - 在六組主題之外新增精簡的呈現 token：字級 `11／12／14／20／24px`、間距 `4／8／12／16／24px`、圓角 `6／10／14／999px`，以及 primary／secondary／quiet／destructive 操作角色與 diagnostic 狀態角色。只替換 Today、導覽回饋、診斷及共用按鈕的等值 literal；六組 13-token palette 與既有 computed 視覺方向不變。
 - 新增 production-used ES5 UMD `today-view.js`，以 `buildModel()`／`render()`／`actionFor()` 統一 Today Hero 採買摘要的 `未分類` 顯示 fallback、Unicode 六字可見截斷、完整 accessible name、既有 markup 與宣告式開啟採買行為。`index.html` 保留 reminder 選取、目前站排除、Shopping store／clock／repository 與 DOM effect，並刪除被取代的 inline helper／renderer，沒有第二份 production authority。

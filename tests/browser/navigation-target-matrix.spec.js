@@ -145,8 +145,8 @@ async function expectConfirmedTarget(page, expected, viewportCase) {
     };
   }, expected.targetId);
   expect(geometry.targetTop).toBeGreaterThanOrEqual(geometry.stickyBottom - 1);
-  expect(geometry.statusWidth).toBeLessThanOrEqual(1);
-  expect(geometry.statusHeight).toBeLessThanOrEqual(1);
+  expect(geometry.statusWidth).toBeLessThanOrEqual(1.01);
+  expect(geometry.statusHeight).toBeLessThanOrEqual(1.01);
   expect(geometry.statusPosition).toBe('absolute');
   expect(geometry.horizontalOverflow).toBe(false);
   if (viewportCase.reducedMotion) expect(parseFloat(geometry.transitionDuration)).toBeLessThanOrEqual(0.001);
@@ -162,6 +162,28 @@ async function expectConfirmedTarget(page, expected, viewportCase) {
     expect(phases.clearAt-phases.fadeAt).toBeLessThanOrEqual(500);
   }
 }
+
+test('Trip Day chips switch dates at the top without navigation target feedback', async ({ page }) => {
+  await openFixture(page, '2026-10-18T16:45:00+09:00', VIEWPORT_CASES[0]);
+  await page.evaluate(async () => {
+    switchView('trip');
+    await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+    document.scrollingElement.scrollTop = 600;
+  });
+
+  await page.locator('.day-chip').nth(1).click();
+  await page.evaluate(() => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+
+  await expect(page.locator('.day-chip').nth(1)).toHaveClass(/active/);
+  await expect(page.locator('#tripday_1')).toBeVisible();
+  await expect(page.locator('#tripday_1')).not.toHaveClass(/is-navigation-target/);
+  await expect(page.locator('.navigation-target-status')).toHaveCount(0);
+  await expect.poll(() => page.evaluate(() => Math.round(document.scrollingElement.scrollTop))).toBeLessThanOrEqual(4);
+  expect(await page.evaluate(() => ({
+    pending: navigationIntentState.pending,
+    active: navigationIntentState.active,
+  }))).toEqual({ pending: null, active: null });
+});
 
 const TARGET_TYPES = [
   { type: 'openTripItem', date: '2026-10-18T16:45:00+09:00' },

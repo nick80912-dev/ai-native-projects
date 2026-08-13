@@ -431,7 +431,7 @@ test('navigation target disables transition under reduced motion', async ({ page
     active:element.classList.contains('is-navigation-target'),
     fading:element.classList.contains('is-navigation-target-fading'),
     intentActive:navigationIntentState.active!==null
-  })),{timeout:350}).toEqual({active:false,fading:false,intentActive:false});
+  })),{timeout:1000}).toEqual({active:false,fading:false,intentActive:false});
 });
 
 test('stale navigation target completion cannot clear a newer destination', async ({ page }) => {

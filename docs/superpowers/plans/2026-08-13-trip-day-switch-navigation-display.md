@@ -121,11 +121,13 @@ function selectTripDay(i) {
   renderDaybar();
   renderTrip();
   if (viewUiState.trip) viewUiState.trip.scrollY = 0;
-  window.scrollTo({ top: 0, behavior: 'instant' });
+  requestAnimationFrame(function () {
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  });
 }
 ```
 
-Do not change `gotoDay()`; Today launchers must continue to call it.
+The animation-frame boundary runs after the Day bar and Trip content layout, so browser scroll anchoring cannot move the page away from zero after the explicit Day-chip selection. Do not change `gotoDay()`; Today launchers must continue to call it.
 
 - [ ] **Step 4: Verify GREEN and preserved cross-view behavior**
 
