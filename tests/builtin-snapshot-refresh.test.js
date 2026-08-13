@@ -52,8 +52,9 @@ function csvFixture(){
 }
 
 function indexSource(snapshot,timestamp=1,legacyMutations=true,appVersion='v110'){
-  return '<!-- BUILTIN_SNAPSHOT app='+appVersion+' ts='+timestamp+' -->\n<script>\nvar BUILTIN_TS = '+timestamp+';\nvar BUILTIN = '+JSON.stringify(snapshot)+';\n'+
-    (legacyMutations?"BUILTIN.cfg+='Exchange Rate,0.2\\nLedger Default Currency,JPY\\n';\nBUILTIN.ledger='紀錄ID,時間,成員\\n';\n":'')+
+  var embedded=snapshot?('var BUILTIN_TS = '+timestamp+';\nvar BUILTIN = '+JSON.stringify(snapshot)+';\n'+
+    (legacyMutations?"BUILTIN.cfg+='Exchange Rate,0.2\\nLedger Default Currency,JPY\\n';\nBUILTIN.ledger='紀錄ID,時間,成員\\n';\n":'')):'/* generated asset only */\n';
+  return '<!-- BUILTIN_SNAPSHOT app='+appVersion+' ts='+timestamp+' -->\n<script>\n'+embedded+
     '</script>\n';
 }
 
@@ -61,7 +62,7 @@ function makeRoot(snapshot,legacyMutations=true,options={}){
   const root=fs.mkdtempSync(path.join(os.tmpdir(),'trip-builtin-refresh-'));
   fs.writeFileSync(path.join(root,'schema.js'),'var SCHEMA='+JSON.stringify(schemaFixture())+';\n');
   fs.writeFileSync(path.join(root,'app-version.js'),"var APP_VERSION='"+(options.appVersion||'v110')+"';\n");
-  fs.writeFileSync(path.join(root,'index.html'),indexSource(snapshot,1,legacyMutations,options.markerVersion||options.appVersion||'v110'));
+  fs.writeFileSync(path.join(root,'index.html'),indexSource(options.inline===false?null:snapshot,1,legacyMutations,options.markerVersion||options.appVersion||'v110'));
   if(options.asset!==null){
     const asset=options.asset||tool.serializeBuiltinAsset({timestamp:1,snapshot:snapshot},options.assetVersion||options.appVersion||'v110');
     fs.writeFileSync(path.join(root,'builtin-snapshot.js'),asset);
@@ -107,11 +108,11 @@ function capture(){
     stdout:previewStdout,stderr:capture()
   });
   assert.strictEqual(preview.exitCode,2,'preview reports drift');
-  assert.deepStrictEqual(preview.changedKeys,['itin','ledger','cfg']);
+  assert.deepStrictEqual(preview.changedKeys,['itin']);
   assert(previewStdout.lines.some(line=>/^itin: \d+ -> \d+ chars$/.test(line.trim())),'preview reports old and new character counts');
   assert.strictEqual(fs.readFileSync(path.join(previewRoot,'index.html'),'utf8'),previewBefore,'preview never writes');
 
-  const currentRoot=makeRoot(candidate,false);
+  const currentRoot=makeRoot(candidate,false,{inline:false});
   const current=await tool.runRefresh({
     rootDir:currentRoot,write:false,fetchCsv:async key=>csv[key],now:()=>1234,
     stdout:capture(),stderr:capture()
@@ -128,9 +129,7 @@ function capture(){
   const writtenSource=fs.readFileSync(path.join(writeRoot,'index.html'),'utf8');
   assert.strictEqual(writtenSource.includes('BUILTIN.cfg+='),false,'write removes the legacy cfg append');
   assert.strictEqual(writtenSource.includes('BUILTIN.ledger='),false,'write removes the legacy Ledger overwrite');
-  const embedded=tool.readEmbeddedBuiltin(writtenSource);
-  assert.strictEqual(embedded.timestamp,1234);
-  assert.deepStrictEqual(embedded.snapshot,candidate);
+  assert.throws(()=>tool.readEmbeddedBuiltin(writtenSource),/missing or ambiguous/,'write removes the duplicate inline payload');
   const writtenAsset=tool.readBuiltinAsset(fs.readFileSync(path.join(writeRoot,'builtin-snapshot.js'),'utf8'));
   assert.deepStrictEqual(writtenAsset,{timestamp:1234,appVersion:'v110',snapshot:candidate});
   assert(writtenSource.includes('<!-- BUILTIN_SNAPSHOT app=v110 ts=1234 -->'),'HTML marker is updated with the generated asset');
@@ -141,7 +140,7 @@ function capture(){
   });
   assert.strictEqual(finalPreview.exitCode,0,'final preview reports no drift');
 
-  const missingAssetRoot=makeRoot(candidate,false,{asset:null});
+  const missingAssetRoot=makeRoot(candidate,false,{asset:null,inline:false});
   const missingAssetIndex=fs.readFileSync(path.join(missingAssetRoot,'index.html'));
   const missingAsset=await tool.runRefresh({
     rootDir:missingAssetRoot,write:false,fetchCsv:async key=>csv[key],now:()=>1234,
@@ -151,7 +150,7 @@ function capture(){
   assert.strictEqual(fs.existsSync(path.join(missingAssetRoot,'builtin-snapshot.js')),false,'preview does not create a missing asset');
   assert.deepStrictEqual(fs.readFileSync(path.join(missingAssetRoot,'index.html')),missingAssetIndex,'preview preserves HTML bytes');
 
-  const mismatchedAssetRoot=makeRoot(candidate,false,{assetVersion:'v109'});
+  const mismatchedAssetRoot=makeRoot(candidate,false,{assetVersion:'v109',inline:false});
   const mismatchedAsset=await tool.runRefresh({
     rootDir:mismatchedAssetRoot,write:false,fetchCsv:async key=>csv[key],now:()=>1234,
     stdout:capture(),stderr:capture()

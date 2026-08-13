@@ -7,6 +7,16 @@ const {
   openApp,
   waitForSyncToSettle
 }=require('./support/qa-fixture');
+const fs=require('fs');
+const path=require('path');
+const vm=require('vm');
+
+function generatedBuiltin(){
+  const source=fs.readFileSync(path.resolve(__dirname,'../../builtin-snapshot.js'),'utf8');
+  const sandbox={};
+  vm.runInNewContext(source,sandbox,{filename:'builtin-snapshot.js'});
+  return JSON.parse(JSON.stringify(sandbox.BUILTIN));
+}
 
 test.describe.configure({mode:'serial'});
 
@@ -73,5 +83,34 @@ test('旅行日 mock Date 讓今天頁落在 Day 1 且沒有 pageerror',async({p
   expect(state.appNow).toBe('2026-10-18T00:30:00.000Z');
   await expect(page.locator('#view-today .today-hero .lbl')).toHaveText('TODAY · DAY 1');
   await expect(page.locator('#view-today .today-hero .date')).toContainText('10/18');
+  expect(pageErrors).toEqual([]);
+});
+
+test('BUILTIN asset 載入失敗時以有效本機快照降級啟動',async({page})=>{
+  const pageErrors=collectPageErrors(page),builtin=generatedBuiltin();
+  await installOfflineAppNetwork(page);
+  await page.addInitScript((sheets)=>localStorage.setItem('trip_data_snapshot_state',JSON.stringify({
+    formatVersion:1,
+    active:{formatVersion:1,generationId:'local-safe',createdAt:1234,source:'online',sheets, sheetMeta:{},validation:{warnings:[]}},
+    previous:null
+  })),builtin);
+  await page.route('**/builtin-snapshot.js',route=>route.abort('failed'));
+  await openApp(page);
+  const state=await page.evaluate(()=>({source:CURRENT_SNAPSHOT&&CURRENT_SNAPSHOT.source,days:DB.trip.days.length,logs:AppLog.snapshot().map(entry=>entry.message)}));
+  expect(state.source).toBe('online');
+  expect(state.days).toBe(6);
+  expect(state.logs.some(message=>message.includes('BUILTIN')&&message.includes('本機快照'))).toBe(true);
+  expect(pageErrors).toEqual([]);
+});
+
+test('BUILTIN asset 載入失敗且無本機快照時顯示可操作復原頁',async({page})=>{
+  const pageErrors=collectPageErrors(page);
+  await page.route('**/builtin-snapshot.js',route=>route.abort('failed'));
+  await installOfflineAppNetwork(page);
+  await openApp(page);
+  await expect(page.locator('#builtinRecovery')).toBeVisible();
+  await expect(page.locator('#builtinRecovery')).toContainText('資料資產無法載入');
+  await expect(page.locator('#builtinRecovery button')).toHaveCount(2);
+  expect(await page.evaluate(()=>CURRENT_SNAPSHOT)).toBeNull();
   expect(pageErrors).toEqual([]);
 });

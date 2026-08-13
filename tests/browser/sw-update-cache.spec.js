@@ -42,7 +42,7 @@ async function activeCacheReport(page) {
       report[key] = {};
       for (const request of await cache.keys()) {
         const pathname = new URL(request.url).pathname;
-        if (!/(^\/$|index\.html$|app-version\.js$|schema\.js$)/.test(pathname)) continue;
+        if (!/(^\/$|index\.html$|app-version\.js$|builtin-snapshot\.js$|schema\.js$)/.test(pathname)) continue;
         const body = await (await cache.match(request)).text();
         const found = /QAGEN\d+/.exec(body);
         report[key][pathname] = found ? found[0] : '(no marker)';
@@ -68,7 +68,7 @@ async function waitForShellCached(page) {
     if (!keys.length) return false;
     const cache = await caches.open(keys[0]);
     const cached = (await cache.keys()).map((request) => new URL(request.url).pathname);
-    return ['/index.html', '/app-version.js', '/shopping-photo-store.js', '/buy-to-ledger.js', '/schema.js'].every((p) => cached.includes(p));
+    return ['/index.html', '/app-version.js', '/builtin-snapshot.js', '/shopping-photo-store.js', '/buy-to-ledger.js', '/schema.js'].every((p) => cached.includes(p));
   }, null, { timeout: 20000 });
 }
 
@@ -121,11 +121,13 @@ test('SW 更新後新快取實際裝入新版資源,且 index／版本檔／sche
     const found = /QAGEN\d+/.exec(schema);
     return {
       appVersion: typeof APP_VERSION === 'undefined' ? null : APP_VERSION,
+      builtinVersion: typeof BUILTIN_ASSET_VERSION === 'undefined' ? null : BUILTIN_ASSET_VERSION,
       indexGen: typeof QA_INDEX_GEN === 'undefined' ? null : QA_INDEX_GEN,
       schemaGen: found ? found[0] : null,
     };
   });
   expect(runtime.appVersion).toBe(VERSION+'-QAGEN2');
+  expect(runtime.builtinVersion).toBe(VERSION+'-QAGEN2');
   expect(runtime.indexGen).toBe('QAGEN2');
   expect(runtime.schemaGen).toBe('QAGEN2');
   /* 三者同世代 = 沒有混版本 */
@@ -160,6 +162,7 @@ test('斷網後仍可完整離線載入,且未快取的子資源不得收到 ind
     const found = /QAGEN\d+/.exec(schema);
     return {
       appVersion: typeof APP_VERSION === 'undefined' ? null : APP_VERSION,
+      builtinVersion: typeof BUILTIN_ASSET_VERSION === 'undefined' ? null : BUILTIN_ASSET_VERSION,
       indexGen: typeof QA_INDEX_GEN === 'undefined' ? null : QA_INDEX_GEN,
       schemaGen: found ? found[0] : null,
       schemaCached: !!schemaResponse,
@@ -171,6 +174,7 @@ test('斷網後仍可完整離線載入,且未快取的子資源不得收到 ind
     };
   });
   expect(offline.appVersion).toBe(VERSION+'-QAGEN2');
+  expect(offline.builtinVersion).toBe(VERSION+'-QAGEN2');
   expect(offline.indexGen).toBe('QAGEN2');
   expect(offline.schemaGen,JSON.stringify(offline)).toBe('QAGEN2');
   expect(offline.hasApp).toBe(true);

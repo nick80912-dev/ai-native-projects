@@ -175,6 +175,12 @@ function replaceEmbeddedBuiltin(indexSource,timestamp,candidate){
   return indexSource.replace(pattern,replacement);
 }
 
+function stripEmbeddedBuiltin(indexSource){
+  return builtinPattern().test(indexSource)
+    ? indexSource.replace(builtinPattern(),'/* BUILTIN payload is generated in builtin-snapshot.js. */\n')
+    : indexSource;
+}
+
 function readAppVersion(source){
   const match=/var\s+APP_VERSION\s*=\s*'([0-9A-Za-z._-]+)'\s*;/.exec(String(source||''));
   if(!match)throw new Error('app-version.js does not expose a valid APP_VERSION');
@@ -282,13 +288,14 @@ async function runRefresh(options={}){
     const assetPath=path.join(rootDir,'builtin-snapshot.js');
     const indexSource=fs.readFileSync(indexPath,'utf8');
     const appVersion=readAppVersion(fs.readFileSync(path.join(rootDir,'app-version.js'),'utf8'));
-    const embedded=readEmbeddedBuiltin(indexSource);
+    const embedded=builtinPattern().test(indexSource)?readEmbeddedBuiltin(indexSource):null;
     let asset=null,assetError=null,marker=null,markerError=null;
     try{asset=readBuiltinAsset(fs.readFileSync(assetPath,'utf8'));}
     catch(error){assetError=error;}
     try{marker=readBuiltinMarker(indexSource);}
     catch(error){markerError=error;}
-    const changedKeys=SNAPSHOT_KEYS.filter(key=>embedded.snapshot[key]!==candidate[key]);
+    const currentSnapshot=asset&&asset.snapshot||embedded&&embedded.snapshot||{};
+    const changedKeys=SNAPSHOT_KEYS.filter(key=>currentSnapshot[key]!==candidate[key]);
     const assetSnapshotMatches=!!asset&&SNAPSHOT_KEYS.every(key=>asset.snapshot[key]===candidate[key]);
     const structuralDrift=[];
     if(assetError)structuralDrift.push(fs.existsSync(assetPath)?'generated asset invalid':'generated asset missing');
@@ -301,14 +308,15 @@ async function runRefresh(options={}){
       if(marker.appVersion!==appVersion)structuralDrift.push('HTML marker version mismatch');
       if(asset&&marker.timestamp!==asset.timestamp)structuralDrift.push('HTML marker timestamp mismatch');
     }
+    if(embedded)structuralDrift.push('duplicate inline payload');
     if(!changedKeys.length&&!structuralDrift.length){writeLine(stdout,'BUILTIN snapshot already matches the approved Sheet data');return {exitCode:0,changedKeys,candidate};}
     writeLine(stdout,'BUILTIN drift: '+(changedKeys.length?changedKeys.join(', '):structuralDrift.join(', ')));
-    changedKeys.forEach(key=>writeLine(stdout,key+': '+embedded.snapshot[key].length+' -> '+candidate[key].length+' chars'));
+    changedKeys.forEach(key=>writeLine(stdout,key+': '+String(currentSnapshot[key]||'').length+' -> '+candidate[key].length+' chars'));
     structuralDrift.forEach(reason=>writeLine(stdout,'structure: '+reason));
-    writeLine(stdout,'legacy Tokyo in current='+String(embedded.snapshot.itin.includes('東京')||embedded.snapshot.itin.includes('新宿'))+', candidate='+String(candidate.itin.includes('東京')||candidate.itin.includes('新宿')));
+    writeLine(stdout,'legacy Tokyo in current='+String(String(currentSnapshot.itin||'').includes('東京')||String(currentSnapshot.itin||'').includes('新宿'))+', candidate='+String(candidate.itin.includes('東京')||candidate.itin.includes('新宿')));
     if(!options.write)return {exitCode:2,changedKeys,candidate};
-    const timestamp=!changedKeys.length&&embedded.timestamp?embedded.timestamp:Number((options.now||Date.now)());
-    const nextSource=replaceBuiltinMarker(replaceEmbeddedBuiltin(indexSource,timestamp,candidate),appVersion,timestamp);
+    const timestamp=!changedKeys.length&&asset&&asset.timestamp?asset.timestamp:Number((options.now||Date.now)());
+    const nextSource=replaceBuiltinMarker(stripEmbeddedBuiltin(indexSource),appVersion,timestamp);
     const nextAsset=serializeBuiltinAsset({timestamp:timestamp,snapshot:candidate},appVersion);
     function verifyAsset(source){
       const verified=readBuiltinAsset(source);
@@ -317,9 +325,9 @@ async function runRefresh(options={}){
       if(verified.appVersion!==appVersion)throw new Error('BUILTIN asset version verification failed');
     }
     function verifyIndex(source){
-      const verified=readEmbeddedBuiltin(source),verifiedMarker=readBuiltinMarker(source);
-      assertSnapshotsEqual(verified.snapshot,candidate);
-      if(verified.timestamp!==timestamp||verifiedMarker.timestamp!==timestamp)throw new Error('BUILTIN timestamp verification failed');
+      const verifiedMarker=readBuiltinMarker(source);
+      if(builtinPattern().test(source))throw new Error('index.html still contains a duplicate BUILTIN payload');
+      if(verifiedMarker.timestamp!==timestamp)throw new Error('BUILTIN timestamp verification failed');
       if(verifiedMarker.appVersion!==appVersion)throw new Error('BUILTIN marker version verification failed');
     }
     atomicReplacePair({indexPath:indexPath,assetPath:assetPath,indexSource:nextSource,assetSource:nextAsset,verifyIndex:verifyIndex,verifyAsset:verifyAsset,beforeSecondRename:options.beforeSecondRename});
@@ -356,6 +364,7 @@ module.exports={
   readBuiltinAsset,
   readEmbeddedBuiltin,
   replaceEmbeddedBuiltin,
+  stripEmbeddedBuiltin,
   readAppVersion,
   readBuiltinMarker,
   replaceBuiltinMarker,

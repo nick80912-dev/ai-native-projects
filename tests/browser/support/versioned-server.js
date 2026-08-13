@@ -43,6 +43,9 @@ function createVersionedServer(options) {
     if (relativePath === 'app-version.js') {
       return Buffer.from(String(buffer).replace(/var APP_VERSION='([^']+)';/, (_, current) => "var APP_VERSION='" + (configuredVersion || current) + '-' + tag + "';"));
     }
+    if (relativePath === 'builtin-snapshot.js') {
+      return Buffer.from(String(buffer).replace(/var BUILTIN_ASSET_VERSION='([^']+)';/, (_, current) => "var BUILTIN_ASSET_VERSION='" + (configuredVersion || current) + '-' + tag + "';"));
+    }
     if (relativePath === 'index.html') {
       return Buffer.from(String(buffer).replace('</body>', "<script>var QA_INDEX_GEN='" + tag + "';</script>\n</body>"));
     }

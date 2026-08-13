@@ -20,6 +20,7 @@ const indexPath = path.join(root, 'index.html');
 const manifestPath = path.join(root, 'manifest.webmanifest');
 const serviceWorkerPath = path.join(root, 'sw.js');
 const versionPath = path.join(root, 'app-version.js');
+const builtinAssetPath = path.join(root, 'builtin-snapshot.js');
 const netlifyPath = path.join(root, 'netlify.toml');
 const peachBadgePath = path.join(root, 'okayama-peach-badge.png');
 
@@ -27,6 +28,7 @@ assert.ok(fs.existsSync(indexPath), 'PWA entrypoint index.html exists');
 assert.ok(fs.existsSync(manifestPath), 'web app manifest exists');
 assert.ok(fs.existsSync(serviceWorkerPath), 'service worker exists');
 assert.ok(fs.existsSync(versionPath), 'shared app-version.js exists');
+assert.ok(fs.existsSync(builtinAssetPath), 'generated BUILTIN asset exists');
 assert.ok(fs.existsSync(netlifyPath), 'Netlify configuration exists');
 assert.ok(fs.existsSync(peachBadgePath), 'header peach badge exists');
 const peachBadge = fs.readFileSync(peachBadgePath);
@@ -44,6 +46,8 @@ const versionSource = fs.readFileSync(versionPath, 'utf8');
 assert.match(versionSource, /^var APP_VERSION='v\d+';\s*$/, 'app-version.js keeps its single-line contract');
 assert.strictEqual(appVersion(), swVersion(), 'app-version.js and the sw.js version marker agree');
 assert.match(index, /<script src="app-version\.js"><\/script>/, 'index loads the shared version before the inline app');
+assert.match(index, /<script src="app-version\.js"><\/script>\s*<script src="builtin-snapshot\.js"><\/script>/, 'generated BUILTIN loads immediately after the App version and before boot');
+assert.doesNotMatch(index, /var BUILTIN\s*=\s*\{/, 'index does not retain a duplicate inline BUILTIN payload');
 assert.match(index, /<title>TripPilot<\/title>/, 'index uses the TripPilot browser title');
 assert.match(index, /<link rel="manifest" href="manifest\.webmanifest">/, 'index links the manifest');
 assert.match(index, /<link rel="icon" type="image\/png" sizes="32x32" href="icon-32\.png">/, 'index links the favicon');
@@ -74,6 +78,7 @@ assert.doesNotMatch(serviceWorker, /importScripts\(/, 'service worker no longer 
 const swCode = serviceWorker.replace(/\/\*[\s\S]*?\*\//g, '');
 assert.doesNotMatch(swCode, /\bAPP_VERSION\b/, 'service worker code never references the imported APP_VERSION');
 assert.match(serviceWorker, /'\.\/app-version\.js'/, 'App Shell still caches the version file for the App and offline use');
+assert.match(serviceWorker, /'\.\/builtin-snapshot\.js'/, 'App Shell caches the generated BUILTIN asset');
 for (const asset of [
   'okayama-peach-badge.png',
   'icon-16.png',
@@ -106,6 +111,7 @@ const netlify = fs.readFileSync(netlifyPath, 'utf8');
 assert.match(netlify, /for = "\/sw\.js"/, 'Netlify disables caching for the service worker');
 assert.match(netlify, /for = "\/index\.html"/, 'Netlify disables stale entrypoint caching');
 assert.match(netlify, /for = "\/app-version\.js"/, 'Netlify pins the version file header as a defensive measure');
+assert.match(netlify, /for = "\/builtin-snapshot\.js"/, 'Netlify prevents a stale generated BUILTIN asset from mixing with new HTML');
 
 /* ---- index.html:APP_VERSION 一律走安全 helper(缺檔時不得 ReferenceError)---- */
 assert.match(index, /function appVersion\(\)\{/, 'index defines the safe version accessor');

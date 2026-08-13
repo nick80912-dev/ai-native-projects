@@ -31,6 +31,7 @@
   },
   "data_flow": "GoogleSheets(8表)→發布CSV→手機瀏覽器fetch→validator.js(防錯)→parser(Schema驅動)→DB→renderers→UI；住宿關聯=Places(Type=住宿).HID→Hotels.HID(N→1 exact resolver,名稱只供顯示)，五個不同travel脈絡PID可共用H001；個人帳、代購對象、主題與旅途紀錄→localStorage only(不進Queue/CMS)，並由個人備份v1–v9原子匯出／還原；採買照片→shopping-photo-store.js壓縮→IndexedDB trip-local-media/shopping-photos,採買項目localStorage只存photoId且備份剝除；團體帳→enqueueBatch一次寫入localStorage佇列→立即UI完成→ledgerRepository背景送達Apps Script→分帳紀錄表(append-only,Schema 2.9固定21欄,time=消費發生時間,末五欄=輸入幣別/免稅/價格方式/稅率/優惠券)；未受還款確認保護的團體編輯=舊筆墓碑+replacesRecordId替代筆；canonical還款確認切點前的收據永久禁止直接改寫，只能由原付款人以commit-last事件整張更正或作廢；共用分帳設定:Settings→Apps Script→TripConfig兩個固定鍵→發布CSV,確認後以本機bridge涵蓋1–5分鐘延遲；離線三層:BUILTIN內建→localStorage快取→背景同步",
   "files": {
+    "builtin-snapshot.js": "由 tools/refresh-builtin-snapshot.js 產生的版本綁定離線資料資產；禁止手動修改",
     "navigation-intent.js": "明確導覽目的地的不可變 session-only state module；不讀 DOM、storage 或 navigation history，DOM adapter 位於 index.html",
     "diagnostic-impact.js": "AppLog 原始紀錄的 display-only impact projection；不改寫、隱藏或重新分類儲存內容，DOM adapter 位於 index.html",
     "today-view.js": "Today Hero 採買摘要的純 model／renderer module；不讀 DOM、storage、clock 或 repository，資料與 effect adapter 位於 index.html",
@@ -49,6 +50,7 @@
     "docs/batch2-device-acceptance.md": "批次二真機／PWA 驗收清單;保留v73/v74證據並附v75採買照片與定位導航delta"
   },
   "deploy_files": {
+    "builtin-snapshot.js": "版本綁定的 generated BUILTIN offline runtime asset",
     "navigation-intent.js": "明確導覽目的地的 session-only runtime module",
     "diagnostic-impact.js": "AppLog display-only impact projection runtime module",
     "today-view.js": "Today Hero 採買摘要的純 model／renderer runtime module",

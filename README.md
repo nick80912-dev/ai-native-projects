@@ -32,6 +32,7 @@
 ## 專案檔案
 - `index.html` — App UI、DOM adapter 與 Netlify 正式入口
 - `app-version.js` — App runtime 顯示版本來源；與 `sw.js` 的 SW 版本由一致性工具驗證
+- `builtin-snapshot.js` — 由刷新工具產生的版本綁定離線資料資產；禁止手動修改
 - `navigation-intent.js` — 明確導覽目的地的 session-only state module；DOM 定位與回饋 adapter 位於 `index.html`
 - `diagnostic-impact.js` — AppLog 原始紀錄的 display-only impact projection；顯示 adapter 位於 `index.html`
 - `today-view.js` — Today Hero 採買摘要的純 model／renderer module；資料選擇與 DOM effects 留在 `index.html`
