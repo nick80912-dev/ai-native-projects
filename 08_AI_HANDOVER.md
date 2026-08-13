@@ -57,7 +57,7 @@
 - 現行 P002／P013／P022／P031／P040 都引用 H001,但五個 PID 必須保持分離：其 travel 分別為開車30分鐘／開車2小時／開車3分鐘／開車50分鐘／步行3分鐘。入住、退房、地址、停車與備註才由 H001 共用。
 - Schema authority 是外部 `schema.js`,inline Schema 必須 exact parity；`09_SCHEMA_MAPPING.md` 表格只能由 `schemaDoc()` 重生。公開 Places 的 HID 是尾端物理欄,刷新工具依位置 authority 驗證,不得擅自移到 Type 後方。
 - Validator 條件式要求：住宿必須有 HID、非住宿不得帶 HID、任何 HID 都必須存在於 Hotels；七表候選快照任一違反即 fail closed。Runtime `hotelOf()` 對兩端 HID 去空白／轉大寫後精確解析,天氣住宿共用同一 resolver；未解析時回傳 `null`。
-- 這次 migration 不改 Ledger Schema 2.9／21 欄、Apps Script、個人備份 v9、SW lifecycle／cache strategy 或發布權限。v101／v102 裝置／PWA 外觀驗收均已由 Bar 完成；v102 的 HID facts 保留為歷史驗收紀錄。下一步由 Bar 在裝置／PWA驗收 v106 dev candidate：採買摘要整組靠右、間距緊湊、長地點顯示六字加省略符號、分類與 `+N` 完整、精確下一站不重複，且無錯誤或水平 overflow。
+- 這次 migration 不改 Ledger Schema 2.9／21 欄、Apps Script、個人備份 v9、SW lifecycle／cache strategy 或發布權限。v101／v102 裝置／PWA 外觀驗收均已由 Bar 完成；v102 的 HID facts 保留為歷史驗收紀錄。目前交付順序以本文件頂部 v108 handover 為準：controller 完成 final branch review 與 `dev` delivery → Bar 驗收 v108 的 exact target、可見定位、scroll／focus return、診斷 raw／projection 邊界與離線 PWA → 驗收完成後才解除 v109 gate。
 - **Tier 2 復原**：若 v102 已推送並由裝置接管後需要退回內容,依 `16_OPS_PLAYBOOK.md` §A2 採 forward bump：以最後正常內容建立下一個未使用版本,並讓 `app-version.js`／`sw.js` 同步升版以觸發清除壞快取；不得把版本倒退覆寫,**絕不刪除 `sw.js`**。
 
 ## Ledger Schema 2.9 現行契約
