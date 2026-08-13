@@ -71,7 +71,12 @@ function extractThemeIds(html){
   const presentationTokens={
     '--font-caption':'11px','--font-meta':'12px','--font-body':'14px','--font-title':'20px','--font-display':'24px',
     '--space-1':'4px','--space-2':'8px','--space-3':'12px','--space-4':'16px','--space-5':'24px',
-    '--radius-sm':'6px','--radius-control':'10px','--radius-card':'14px','--radius-pill':'999px'
+    '--radius-sm':'6px','--radius-control':'10px','--radius-card':'14px','--radius-pill':'999px',
+    '--status-pending-bg':'#fff3cf','--status-pending-ink':'#80600d',
+    '--entry-secondary-border':'#cfe0dd','--entry-secondary-bg':'#f3f8f6',
+    '--shopping-category-bg':'#fff7dc','--shopping-category-ink':'#8a6416',
+    '--status-partial-bg':'#e8f0f2','--status-unverified-bg':'#fdf0e2',
+    '--status-unverified-ink':'#9a5b18','--status-wait-ink':'#8b531a'
   };
   Object.keys(presentationTokens).forEach(name=>{
     assert.strictEqual(cssValue(sharedPresentation,name),presentationTokens[name],name+' keeps the approved non-theme scale');
@@ -95,6 +100,22 @@ function extractThemeIds(html){
     'shared secondary buttons consume action-role tokens');
   assert.match(html,/\.btn\.coral\{[^}]*background:var\(--action-destructive-bg\)/,
     'shared destructive buttons consume the destructive action role');
+  assert.match(html,/\.ledger-sheet-back\{[^}]*border-radius:var\(--radius-pill\)[^}]*background:var\(--action-quiet-bg\)[^}]*color:var\(--action-quiet-ink\)[^}]*font-size:var\(--font-body\)/,
+    'quiet sheet action consumes the shared quiet, radius, and typography roles');
+  assert.match(html,/\.ledger-recent-badge\.pending\{background:var\(--status-pending-bg\);color:var\(--status-pending-ink\)\}/,
+    'new Ledger pending badges consume fixed semantic status colors');
+  assert.match(html,/\.ledger-entry-summary\{[^}]*border:1px solid var\(--entry-secondary-border\)[^}]*background:var\(--entry-secondary-bg\)/,
+    'new Ledger entry disclosure consumes semantic surface colors');
+  assert.match(html,/\.ledger-entry-secondary\{[^}]*border:1px solid var\(--entry-secondary-border\)[^}]*background:var\(--entry-secondary-bg\)/,
+    'new Ledger entry disclosure body consumes semantic surface colors');
+  assert.match(html,/\.shopping-category-badge\{[^}]*background:var\(--shopping-category-bg\)[^}]*color:var\(--shopping-category-ink\)/,
+    'new Shopping category badge consumes semantic colors');
+  assert.match(html,/\.shopping-link-partial\{background:var\(--status-partial-bg\)/,
+    'new Shopping partial status consumes its semantic surface');
+  assert.match(html,/\.shopping-link-unverified\{background:var\(--status-unverified-bg\);color:var\(--status-unverified-ink\)\}/,
+    'new Shopping unverified status consumes semantic colors');
+  assert.match(html,/\.shopping-detail-ledger-wait-note\{[^}]*background:var\(--status-unverified-bg\)[^}]*color:var\(--status-wait-ink\)/,
+    'new Shopping wait note consumes semantic colors');
   assert.match(html,/--green:#367055/);
   assert.match(html,/--gold-ink:#85661c/);
   assert.match(html,/\.hotel \.h-lbl\{[^}]*color:var\(--gold-ink\)/);

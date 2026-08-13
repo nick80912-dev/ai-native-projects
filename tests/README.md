@@ -2,7 +2,7 @@
 
 ## v110 presentation-token and Today-module coverage
 
-- `theme-system.test.js`, `ui-ux-hardening.test.js`, `browser/ui-ux-hardening.spec.js`, and `browser/today-live-info.spec.js` protect the compact typography／spacing／radius／action-role tokens, exact six-theme palette values, and unchanged computed presentation at 320／375／390px.
+- `theme-system.test.js`, `ui-ux-hardening.test.js`, `browser/ui-ux-hardening.spec.js`, and `browser/today-live-info.spec.js` protect the compact typography／spacing／radius／action-role tokens, fixed pending／entry／Shopping status color roles, exact six-theme palette values, and unchanged computed presentation at 320／375／390px.
 - `today-view-module.test.js` directly protects `TripTodayView.buildModel()`／`render()`／`actionFor()`: immutable input, blank category → `未分類`, six-Unicode-code-point visible cap, full accessible stop name, product-name privacy, generic fallback, and the no-DOM／storage／clock／repository boundary.
 - Production wiring tests require `today-view.js` in the page and eleven-asset offline shell inventory, remove the former inline Hero helper／markup authority, and retain exact Today Shopping targeting and interaction behavior in Chromium and WebKit.
 - `ledger-ui-state.test.js` remains the executable Ledger boundary. The v110 deletion-test decision is documented at `docs/architecture/ledger-history-deletion-test-v110.md`; no new Ledger runtime module or global store is expected.

@@ -3,7 +3,7 @@
 ## v110 呈現 token 與 Today view 邊界
 
 - 非主題呈現尺度只有五級字級 `11／12／14／20／24px`、五級間距 `4／8／12／16／24px`、四級圓角 `6／10／14／999px`；只在觸及的 Today、導覽回饋、診斷與共用操作元件採用，不作全站機械式改寫。
-- 操作以 `primary／secondary／quiet／destructive` 角色 token 表達，診斷以 `info／success／warning／degraded／error` 角色 token 表達。這些 token 只能引用既有語意色，不新增第七組配色，也不得改動六組主題各自的 13 個 `--t-*` 值。
+- 操作以 `primary／secondary／quiet／destructive` 角色 token 表達，診斷以 `info／success／warning／degraded／error` 角色 token 表達；跨主題固定的 pending、entry-secondary、Shopping category／link status 亦須先定義 `:root` 語意 token，元件不得直接寫色碼。這些 token 不新增第七組配色，也不得改動六組主題各自的 13 個 `--t-*` 值。
 - `today-view.js` 只接收已選好的採買摘要資料並產生純 model、既有 HTML 與宣告式 action；`index.html` 保留 reminder 選取、目前站排除、store／clock／repository 存取與 DOM effect。不得讓 view module 變成全域 store。
 - Today Hero 的可見文案、六字截斷、完整 accessible name、44px 操作區、鍵盤行為與 Shopping 定位均維持 v109 行為；模組拆分不是重新設計。
 - Ledger 只在真實重複規則能由一個深 seam 移除時才拆 adapter。v110 的 history candidate 未通過刪除測試，因此保留既有 `ledger-ui-state.js` 與 `index.html` 局部 DOM adapter，不新增 `ledger-history-view.js`、store、controller、event bus 或框架。

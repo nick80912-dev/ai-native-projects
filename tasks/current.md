@@ -1,6 +1,6 @@
 # CURRENT(現在正在做的)
 
-## v110 delivered to dev; awaiting Bar device/PWA verification
+## v110 main release authorized; production verification pending
 
 
 
@@ -8,6 +8,7 @@
 - v110 adds compact non-theme typography, spacing, radius, action-level, and diagnostic-role tokens only on touched surfaces. All six theme palettes and the existing visual direction remain unchanged.
 - `today-view.js` now owns the pure Today Hero Shopping model／renderer／declarative action. `index.html` retains reminder selection, current-stop exclusion, store／clock access and DOM effects; accepted copy, targeting, keyboard, accessibility and responsive behavior remain unchanged.
 - The Ledger history candidate failed its deletion test, so v110 does not add `ledger-history-view.js`, a global store, controller, event bus or framework. Existing Ledger state, data and workflow semantics remain untouched.
+- Netlify quota reset on 2026-08-13; Bar authorized the accumulated `dev` candidate to merge into `main`. Release review remediation adds ADR 0018, aligns the Today ownership spec with the approved implementation plan, and wires quiet／fixed status colors through semantic tokens before the release PR.
 - App／SW are forward-bumped to v110. Fresh pre-commit and committed-tree validation passes Node **87/87**, full Playwright **176/176**, focused WebKit **39/39**, static／BUILTIN gates and offline Health; runtime／release commit `49f8e8c` reached `dev` with local／remote equality, followed by this evidence-only status update.
 
 
@@ -22,12 +23,12 @@
 
 | **`main` 原始碼** | **SW v96**，PR #13 merge commit `02705c3`；因 Netlify 額度用罄尚未部署／建立 tag |
 | 正式站 | `https://trippilot-jp.netlify.app/` — 2026-08-01 由 SW v18 升級至 v73,G1–G6 全數通過 |
-| **`dev` candidate** | **SW v110**; UI presentation tokens plus production-used Today view module, awaiting Bar device/PWA verification |
+| **`dev` candidate** | **SW v110**; UI presentation tokens plus production-used Today view module, Bar-authorized for `main` release |
 | 個人備份格式 | **v9**(`PERSONAL_STATE_SUPPORTED_VERSIONS = [1..9]`)—— v81 因想逛 key 識別語意變更而升版 |
 | candidate automated validation | Committed tree: Node **87/87**, Playwright **176/176**, focused WebKit **39/39**, static／BUILTIN checks pass; offline Chromium `{"source":"builtin","healthCheck":[],"appLogCount":9,"pageErrors":[]}` |
 | 既有 tag | `production-v18`、`production-v73` |
 
-**`main` 已合併 v96，但正式站仍停在 v73；v110 是目前的 `dev` 候選。** v74–v87 已由 Bar 於 2026-08-03 確認真機驗收皆正常；v88–v89、v92–v95 亦於 2026-08-08 完成 Bar 畫面／真機確認。v96 因 Netlify 額度用罄尚未正式部署，也未建立 `production-v96` tag。Bar 已完成 v101／v102／v109 裝置／PWA 驗收；v110 已完成 committed-tree gates 與 `dev` delivery，現交由 Bar 驗收。
+**`main` 已合併 v96，但正式站仍停在 v73；v110 是目前已獲 Bar 發布授權的 `dev` 候選。** v74–v87 已由 Bar 於 2026-08-03 確認真機驗收皆正常；v88–v89、v92–v95 亦於 2026-08-08 完成 Bar 畫面／真機確認。v96 因 Netlify 額度用罄尚未正式部署，也未建立 `production-v96` tag。Bar 已完成 v101／v102／v109 裝置／PWA 驗收；v110 已完成 committed-tree gates、`dev` delivery 與 device／PWA acceptance，現在依 §E 執行 PR、`main` merge、Netlify production verification 與 `production-v110` tag。
 
 ### v74–v98 已折疊的主要能力
 
@@ -123,6 +124,6 @@
 
 ## 下一棒
 
-→ **完成 v110 committed-tree release gate 並推送 `dev` 後，由 Bar 在手機／PWA 驗收。** 確認六主題視覺方向不變、Today Hero 採買摘要與 320／375／390px 幾何、exact target、overlay return scroll／focus、診斷與離線啟動。v111 在 Bar 接受 v110 前不得開始；不得自行 merge `main`、部署正式站或建立 production tag。
+→ **v110 committed-tree release gate、`dev` delivery 與 Bar 手機／PWA 驗收已完成，正式發布已獲授權。** 依 §E 執行 `dev → main` PR、Actions 綠燈、merge、Netlify production verification；線上 v110 驗證通過後才建立 `production-v110` tag。
 
-> **不得**自行動 `main`、部署正式站或建立 production tag。未經 Bar 核准不得 merge `dev → main`。
+> 正式發布仍必須遵守 §E：PR 與 Actions 通過後才能 merge；Netlify 線上驗證通過後才能建立 production tag。

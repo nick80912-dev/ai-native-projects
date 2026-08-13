@@ -4,6 +4,8 @@
 
 **Status:** Approved for implementation by Bar
 
+**Execution clarification (2026-08-13):** The later approved v110 implementation plan narrows `today-view.js` to the Today Hero Shopping presentation branch. Hero composition, weather, and the next-stop card remain in the `index.html` adapter. This clarification supersedes the broader wording originally used in §5.2 and §5.4; it does not change visible behavior or acceptance criteria.
+
 **Task class:** C — architecture / Tier 2
 
 ## 1. Objective
@@ -155,7 +157,7 @@ TodayView.render(model, helpers)
 TodayView.actionFor(target)
 ```
 
-The module owns Today-specific presentation decisions, including Hero summary, next-stop projection, generic fallbacks, and action description. The adapter owns DB lookup, current time, weather acquisition, navigation effects, DOM mounting, and persistence.
+The module owns the Today Hero Shopping presentation decisions: resolved summary, generic fallback, blank-category display fallback, visible stop-name truncation, accessible wording, markup, and declarative action description. The adapter owns Hero composition, next-stop projection／card rendering, DB lookup, current time, weather acquisition, navigation effects, DOM mounting, and persistence.
 
 Extraction proceeds by replacement, not layering: after tests use the new interface, the corresponding production implementation moves out of `index.html`; duplicate legacy functions are removed in the same commit. Existing renderer escaping, next-stop authority, product-name privacy, blank-category `未分類`, and exact target behavior remain unchanged.
 
@@ -171,7 +173,7 @@ The first allowed candidate is Ledger history presentation because `ledger-ui-st
 - Six themes retain their accepted colors and AA contrast checks.
 - 320, 375, and 390px have zero horizontal overflow.
 - Module tests exercise the same interface used by production.
-- No duplicated Today implementation remains in `index.html`.
+- No duplicated Today Hero Shopping summary／generic implementation remains in `index.html`; next-stop and weather presentation remain deliberate adapter responsibilities.
 - Full Node, Chromium, focused WebKit, offline boot, Health Check, pageerror, document, runtime-asset, and diff gates pass.
 
 ## 6. Batch v111 — BUILTIN Asset Spike and Test Throughput

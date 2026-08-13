@@ -845,8 +845,8 @@ assert(ui.includes('isQuotaExceededError(error)'),'save failures distinguish quo
 assert(ui.includes('font-family:var(--font-ui)'),'body 使用全站字體變數');
 assert(!ui.includes('font-family:"Hiragino Sans","Noto Sans TC","PingFang TC"'),
   '不得再由日文字型逐字 fallback 造成粗細不一致');
-assert(/\.shopping-category-badge\{[^}]*background:#fff7dc;[^}]*color:#8a6416/.test(ui),
-  '類別使用淡金底與深金字');
+assert(/\.shopping-category-badge\{[^}]*background:var\(--shopping-category-bg\);[^}]*color:var\(--shopping-category-ink\)/.test(ui),
+  '類別使用固定語意 token 的淡金底與深金字');
 assert.match(ui,/class="shopping-item-title-row"/);
 assert(ui.includes('shoppingCardTargetModel(item)'));
 assert(ui.includes('shoppingItemQuantitySummary(item)'));

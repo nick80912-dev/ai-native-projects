@@ -11,7 +11,7 @@ Netlify 靜態託管(HTTPS)+ Service Worker(PWA 離線)
 無自架後端、無額外資料庫伺服器、零前端相依套件。
 ```
 
-`index.html` 是 App、DOM effect adapter 與 Netlify 正式部署入口；`navigation-intent.js` 只管理 session-only 明確目的地 intent，`diagnostic-impact.js` 只把原始 AppLog entry 投影為顯示用影響說明，`today-view.js` 只建立與渲染 Today Hero 採買摘要。裝置照片儲存邊界獨立在 `shopping-photo-store.js`，採買轉記帳的純資料與 workflow 邊界獨立在 `buy-to-ledger.js`，Ledger 歷史瀏覽與 create／edit entry session 的 UI state／effect 邊界獨立在 `ledger-ui-state.js`。Service Worker、manifest 與 icons 均位於 repo 根目錄並由 GitHub 連動部署。
+`index.html` 是 App、DOM effect adapter 與 Netlify 正式部署入口；依 ADR 0018，`navigation-intent.js` 只管理 session-only 明確目的地 intent，`diagnostic-impact.js` 只把原始 AppLog entry 投影為顯示用影響說明，`today-view.js` 只建立與渲染 Today Hero 採買摘要。裝置照片儲存邊界獨立在 `shopping-photo-store.js`，採買轉記帳的純資料與 workflow 邊界獨立在 `buy-to-ledger.js`，Ledger 歷史瀏覽與 create／edit entry session 的 UI state／effect 邊界獨立在 `ledger-ui-state.js`。Service Worker、manifest 與 icons 均位於 repo 根目錄並由 GitHub 連動部署。
 
 ## 資料流:三層防線(絕不空白頁)
 1. **內建資料**(builtin,建置時寫入 HTML)→ 0.1 秒顯示
