@@ -2391,8 +2391,8 @@ function consumeNavigationIntent(view){
   navigationIntentState=result.state;
   return result.intent;
 }
-function navigationIntentSourceView(){return typeof curView==='string'?curView:'';}
-function navigationTripItemName(itemId){
+function getNavigationIntentSourceView(){return typeof curView==='string'?curView:'';}
+function getNavigationTripItemName(itemId){
   var name='';
   (DB.trip&&DB.trip.days||[]).some(function(day){
     return (day.items||[]).some(function(item){
@@ -2402,7 +2402,7 @@ function navigationTripItemName(itemId){
   });
   return name||'行程項目';
 }
-function shopMallByPlaceId(placeId){
+function findShopMallByPlaceId(placeId){
   var key=String(placeId||'').trim().toUpperCase(),match=null;
   shopMalls().some(function(mall){
     if(String(mall.place&&mall.place.placeId||'').toUpperCase()!==key)return false;
@@ -2410,21 +2410,21 @@ function shopMallByPlaceId(placeId){
   });
   return match;
 }
-function navigationShopPlaceName(placeId){
-  var key=String(placeId||'').trim().toUpperCase(),mall=shopMallByPlaceId(key);
+function getNavigationShopPlaceName(placeId){
+  var key=String(placeId||'').trim().toUpperCase(),mall=findShopMallByPlaceId(key);
   return String(mall&&mall.place&&mall.place.name||key||'購物地點');
 }
 function normalizeNavigationIntent(view,intent){
   if(!intent)return null;
   if(intent.view&&Object.prototype.hasOwnProperty.call(intent,'targetId'))return intent;
-  var sourceView=navigationIntentSourceView();
+  var sourceView=getNavigationIntentSourceView();
   if(intent.type==='trip-item'||intent.type==='trip-now')return {
     view:view,targetId:intent.itemId?'it_'+intent.itemId:'',sourceView:sourceView,
-    sourceId:String(intent.itemId||''),align:'center',announce:'已定位：'+navigationTripItemName(intent.itemId)
+    sourceId:String(intent.itemId||''),align:'center',announce:'已定位：'+getNavigationTripItemName(intent.itemId)
   };
   if(intent.type==='shop-place')return {
     view:view,targetId:'shopmall_'+cssId(String(intent.placeId||'').toUpperCase()),sourceView:sourceView,
-    sourceId:String(intent.placeId||'').toUpperCase(),align:'start',announce:'已定位：'+navigationShopPlaceName(intent.placeId)
+    sourceId:String(intent.placeId||'').toUpperCase(),align:'start',announce:'已定位：'+getNavigationShopPlaceName(intent.placeId)
   };
   if(intent.type==='trip-day')return {
     view:view,targetId:'',sourceView:sourceView,sourceId:'day-'+String(intent.dayIndex),align:'start',
@@ -2435,7 +2435,7 @@ function normalizeNavigationIntent(view,intent){
   };
   return null;
 }
-function navigationDestinationContainer(element,intent){
+function resolveNavigationDestinationContainer(element,intent){
   if(element)return element;
   if(intent&&intent.view==='shopping-list')return document.querySelector('#shoppingListOverlay .shopping-list-panel');
   return document.getElementById('view-'+String(intent&&intent.view||''))||document.body;
@@ -2469,7 +2469,7 @@ function clearNavigationTarget(token){
 }
 function applyNavigationTarget(element,intent){
   resetNavigationTargetVisual();
-  var container=navigationDestinationContainer(element,intent);
+  var container=resolveNavigationDestinationContainer(element,intent);
   if(intent.targetId&&!element){
     window.scrollTo({top:0,behavior:'instant'});
     writeNavigationTargetStatus(container,'找不到對應地點');
@@ -3146,7 +3146,7 @@ function nextStopBuyModel(stopRef,sourceItems){
 function renderNextStopBuy(stopRef){
   var model=nextStopBuyModel(stopRef);
   if(!model) return '';
-  return '<button type="button" class="nx-buy-badge" onclick="openShoppingList(\''+jsHtmlAttrString(stopRef)+'\',this)"'+
+  return '<button type="button" class="nx-buy-badge" data-shopping-launcher="badge" data-shopping-stop-ref="'+escapeHtmlAttr(stopRef)+'" onclick="openShoppingList(\''+jsHtmlAttrString(stopRef)+'\',this)"'+
     ' aria-label="'+escapeHtml('開啟這一站的 '+model.count+' 項待買')+'">'+
     '<span class="nx-buy-badge-visual" aria-hidden="true">🛍 '+model.count+'</span></button>';
 }
@@ -3446,7 +3446,7 @@ function renderTodayShoppingSummary(day,currentStopRef){
       ?'<span class="today-hero-shopping-separator">·</span><span class="today-hero-shopping-category">'+escapeHtml(category)+'</span>'+
         (model.remainingCount?'<small class="today-hero-shopping-count">+'+model.remainingCount+'</small>':'')
       :'';
-    return '<button type="button" class="today-hero-summary-item today-hero-shopping-summary"'+
+    return '<button type="button" class="today-hero-summary-item today-hero-shopping-summary" data-shopping-launcher="hero" data-shopping-stop-ref="'+escapeHtmlAttr(model.stopRef)+'"'+
       ' onclick="openShoppingList(\''+jsHtmlAttrString(model.stopRef)+'\',this)" aria-label="'+escapeHtmlAttr(accessible)+'">'+
       '<span class="today-hero-summary-label">'+escapeHtml(model.label)+'</span>'+
       '<span class="today-hero-summary-value"><span class="today-hero-shopping-stop">'+escapeHtml(visibleStopName)+'</span>'+
@@ -3466,10 +3466,52 @@ function renderShoppingTodayEntry(day,currentStopRef){
 /* 數量不再選填:每個新項目都給 quantity 1,才能可靠支援部分購買的減法。 */
 /* focusStopRef 選填:從「下一站待買」進來時捲到該站群組,省去自己找。
    刻意不動 curView —— 這是疊上去的 overlay,使用者沒有離開原本的頁面。 */
-var shoppingListReturnFocus=null;
+var shoppingListOrigin=null;
+function createShoppingListOrigin(focusStopRef,returnFocus){
+  if(!returnFocus||typeof returnFocus.focus!=='function')return null;
+  return {
+    element:returnFocus,
+    launcherKind:String(returnFocus.getAttribute&&returnFocus.getAttribute('data-shopping-launcher')||''),
+    sourceId:String(returnFocus.id||focusStopRef||returnFocus.getAttribute&&returnFocus.getAttribute('data-shopping-stop-ref')||''),
+    stopRef:String(focusStopRef||returnFocus.getAttribute&&returnFocus.getAttribute('data-shopping-stop-ref')||''),
+    sourceView:getNavigationIntentSourceView(),
+    scrollY:Math.max(0,Math.round(Number(viewScrollElement().scrollTop)||0))
+  };
+}
+function findShoppingListOriginLauncher(origin){
+  if(!origin)return null;
+  if(origin.element&&document.documentElement.contains(origin.element))return origin.element;
+  if(!origin.launcherKind)return null;
+  var source=document.getElementById('view-'+origin.sourceView)||document;
+  var launchers=source.querySelectorAll('[data-shopping-launcher]'),index,launcher;
+  for(index=0;index<launchers.length;index++){
+    launcher=launchers[index];
+    if(launcher.getAttribute('data-shopping-launcher')===origin.launcherKind&&
+       launcher.getAttribute('data-shopping-stop-ref')===origin.stopRef)return launcher;
+  }
+  return null;
+}
+function findShoppingListSourceFallback(origin){
+  var buttons=document.querySelectorAll('.tabbar-btn'),index;
+  for(index=0;index<buttons.length;index++){
+    if(buttons[index].getAttribute('data-view')===String(origin&&origin.sourceView||''))return buttons[index];
+  }
+  return null;
+}
+function restoreShoppingListOrigin(origin){
+  if(!origin)return;
+  var target=findShoppingListOriginLauncher(origin)||findShoppingListSourceFallback(origin);
+  if(target&&typeof target.focus==='function'){
+    try{target.focus({preventScroll:true});}
+    catch(ignoreOptions){try{target.focus();}catch(ignoreFocus){}}
+  }
+  var scroll=viewScrollElement();
+  var maximum=Math.max(0,Number(scroll.scrollHeight||0)-Number(scroll.clientHeight||0));
+  scroll.scrollTop=Math.min(Math.max(0,Number(origin.scrollY)||0),maximum);
+}
 function openShoppingList(focusStopRef,returnFocus){
   closeShoppingList();
-  shoppingListReturnFocus=returnFocus&&returnFocus.focus?returnFocus:null;
+  shoppingListOrigin=createShoppingListOrigin(focusStopRef,returnFocus);
   shoppingUiState.split=null;
   var overlay=document.createElement('div');overlay.id='shoppingListOverlay';overlay.className='shopping-list-overlay';
   overlay.innerHTML='<section class="shopping-list-panel" role="dialog" aria-modal="true" aria-labelledby="shoppingListTitle"></section>';
@@ -3477,7 +3519,7 @@ function openShoppingList(focusStopRef,returnFocus){
   if(focusStopRef){
     var stop=shoppingStopById(focusStopRef),targetId='shopgroup_'+cssId(focusStopRef);
     requestNavigationIntent({
-      view:'shopping-list',targetId:targetId,sourceView:navigationIntentSourceView(),sourceId:String(focusStopRef),
+      view:'shopping-list',targetId:targetId,sourceView:getNavigationIntentSourceView(),sourceId:String(focusStopRef),
       align:'start',announce:'已定位：'+String(stop&&stop.name||focusStopRef)
     });
     requestAnimationFrame(function(){
@@ -3498,17 +3540,15 @@ function updateShopListCount(){
   el.hidden=!n;
 }
 function closeShoppingList(){
+  var origin=shoppingListOrigin;
   closeShoppingItemActions();closeShoppingReleaseConfirm();closeShoppingCompletedEditConfirm();closeShoppingPhotoViewer();closeShoppingItemDetail();
   shoppingUiWorkflow.dispatch({type:'clear-form',cleanup:true});
   var overlay=document.getElementById('shoppingListOverlay'),removed=!!overlay;
-  var returnFocus=shoppingListReturnFocus;shoppingListReturnFocus=null;
   if(navigationIntentState.active&&navigationIntentState.active.view==='shopping-list')clearNavigationTarget(navigationIntentState.active.token);
   if(navigationTargetStatusElement&&overlay&&overlay.contains(navigationTargetStatusElement))navigationTargetStatusElement=null;
   if(overlay)overlay.remove();
   document.body.classList.remove('shopping-list-open');
-  if(returnFocus&&document.documentElement.contains(returnFocus)){
-    try{returnFocus.focus({preventScroll:true});}catch(ignore){returnFocus.focus();}
-  }
+  restoreShoppingListOrigin(origin);shoppingListOrigin=null;
   /* 全檔沒有任何採買流程呼叫 renderAll() —— 不在這裡更新,購物頁的數字會停在舊值。
      只改一個數字,不整份重繪(比照 applyWantToggleInPlace 的作法)。
      刻意不動 curView 或 switchView:採買清單是疊上去的 overlay,使用者從未離開原頁,
@@ -4544,11 +4584,11 @@ function clearShopSearch(){
 }
 function openShopPlace(placeId){
   var key=String(placeId||'').trim().toUpperCase();
-  var mall=shopMallByPlaceId(key);
+  var mall=findShopMallByPlaceId(key);
   _shopQ='';
   shopPlaceFilter=mall?key:'all';
   switchView('shop',{
-    view:'shop',targetId:'shopmall_'+cssId(key),sourceView:navigationIntentSourceView(),sourceId:key,
+    view:'shop',targetId:'shopmall_'+cssId(key),sourceView:getNavigationIntentSourceView(),sourceId:key,
     align:'start',announce:'已定位：'+String(mall&&mall.place&&mall.place.name||key||'購物地點')
   });
 }

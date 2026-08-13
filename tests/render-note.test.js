@@ -54,9 +54,11 @@ vm.runInContext([
   extractFunction('shouldShowCompactTomorrowPreview'),
   extractFunction('renderTomorrowPreview'),
   extractFunction('cssId'),
-  extractFunction('navigationIntentSourceView'),
-  extractFunction('shopMallByPlaceId'),
-  extractFunction('navigationShopPlaceName'),
+  extractFunction('getNavigationIntentSourceView'),
+  extractFunction('getNavigationTripItemName'),
+  extractFunction('findShopMallByPlaceId'),
+  extractFunction('getNavigationShopPlaceName'),
+  extractFunction('resolveNavigationDestinationContainer'),
   extractFunction('openShopPlace'),
   extractFunction('centerShopFilterChip'),
   extractFunction('parkingLines'),
@@ -86,6 +88,10 @@ vm.runInContext([
   extractFunction('renderClusterNextStopCard')
 ].join('\n'), sandbox);
 
+['navigationIntentSourceView','navigationTripItemName','shopMallByPlaceId','navigationShopPlaceName','navigationDestinationContainer'].forEach((name)=>{
+  assert(!html.includes('function '+name+'('),name+' is replaced by a verb-led helper name');
+});
+
 const heroShoppingOut=sandbox.renderTodayShoppingSummary({
   items:[{id:'current',place:'Current stop'},{id:'future',place:'Future stop'}],
   groups:[{stopRef:'future',stopName:'Future stop',items:['SECRET_ONE','SECRET_TWO','SECRET_THREE'],firstCategory:'必買'}]
@@ -101,6 +107,8 @@ assert(!heroShoppingOut.includes('today-hero-shopping-item'));
 assert(!heroShoppingOut.includes('SECRET_ONE'),'Hero visible markup excludes product names');
 assert(!heroShoppingOut.includes('3 項 →'));
 assert(heroShoppingOut.includes("openShoppingList('future',this)"));
+assert(heroShoppingOut.includes('data-shopping-launcher="hero"'));
+assert(heroShoppingOut.includes('data-shopping-stop-ref="future"'));
 assert.strictEqual((heroShoppingOut.match(/<button/g)||[]).length,1);
 assert(!heroShoppingOut.includes('<script>'));
 
@@ -166,6 +174,8 @@ assert(buyBadgeOut.includes('class="nx-buy-badge"'),'pending items render the co
 assert(buyBadgeOut.includes('>🛍 2<'),'badge exposes only the icon and pending row count visually');
 assert(buyBadgeOut.includes('aria-label="開啟這一站的 2 項待買"'),'badge has the approved accessible name');
 assert(buyBadgeOut.includes("openShoppingList('10/18_4',this)"),'badge opens the exact stopRef and carries its return-focus origin');
+assert(buyBadgeOut.includes('data-shopping-launcher="badge"'),'badge identifies its stable origin kind');
+assert(buyBadgeOut.includes('data-shopping-stop-ref="10/18_4"'),'badge identifies its stable target stop');
 assert(!buyBadgeOut.includes('白桃'),'badge no longer repeats item names');
 renderedShoppingItems=[];
 assert.strictEqual(sandbox.renderNextStopBuy('10/18_4'),'','a stop without pending items renders no badge');
@@ -175,12 +185,12 @@ sandbox._shopQ = 'uniqlo';
 sandbox.shopPlaceFilter = 'wants';
 sandbox.shopOpenFloors = { 'P001::1F':true };
 sandbox.shopMalls = function(){ return [{ place:{ placeId:'P001' }, stores:[] }]; };
-assert.strictEqual(sandbox.shopMallByPlaceId('p001').place.placeId,'P001','one case-insensitive resolver owns shopping-place lookup');
-assert.strictEqual(sandbox.navigationShopPlaceName('p001'),'P001','navigation naming reuses the shared resolved mall');
-const navigationShopPlaceNameSource=extractFunction('navigationShopPlaceName');
+assert.strictEqual(sandbox.findShopMallByPlaceId('p001').place.placeId,'P001','one case-insensitive resolver owns shopping-place lookup');
+assert.strictEqual(sandbox.getNavigationShopPlaceName('p001'),'P001','navigation naming reuses the shared resolved mall');
+const navigationShopPlaceNameSource=extractFunction('getNavigationShopPlaceName');
 const openShopPlaceSource=extractFunction('openShopPlace');
-assert(navigationShopPlaceNameSource.includes('shopMallByPlaceId('),'navigation naming uses the single shopping-place resolver');
-assert(openShopPlaceSource.includes('shopMallByPlaceId('),'shopping deep links use the single shopping-place resolver');
+assert(navigationShopPlaceNameSource.includes('findShopMallByPlaceId('),'navigation naming uses the single shopping-place resolver');
+assert(openShopPlaceSource.includes('findShopMallByPlaceId('),'shopping deep links use the single shopping-place resolver');
 assert(!navigationShopPlaceNameSource.includes('shopMalls().some'),'navigation naming has no duplicate mall scan');
 assert(!openShopPlaceSource.includes('shopMalls().some'),'shopping deep links have no duplicate mall scan');
 /* v82:openShopPlace 不再自己捲動,而是把結構化意圖交給 switchView。

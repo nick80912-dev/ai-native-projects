@@ -22,20 +22,32 @@ test.beforeEach(async ({ page }) => {
 });
 
 /* 在「下一站」那個站點上掛幾筆待買 */
-async function seedForNextStop(page, names) {
-  return page.evaluate((names) => {
+async function getTodayShoppingStops(page) {
+  return page.evaluate(() => {
     switchView('today');
-    const day = DB.trip.days[findToday()];
-    const pick = pickNextStop((day.items || []).filter(isTripCheckableItem),
-      getDayProgress(day, findToday()), getChecks(), currentMinutes(), { day, dayIndex: findToday() });
-    const stopRef = pick.item.id;
+    const dayIndex=findToday(),day=DB.trip.days[dayIndex];
+    const items=homeNextStopItems(day.items),progress=getDayProgress(day,dayIndex),checks=getChecks(),nowMinutes=currentMinutes();
+    const pick=pickNextStop(items,progress,checks,nowMinutes,{day,dayIndex});
+    const clusterParent=clusterParentForPick(day.items,pick.item),cluster=getChildStopCluster(day.items,clusterParent);
+    const clusterPick=cluster?pickClusterChild(cluster,progress,checks,nowMinutes,{day,dayIndex}):null;
+    const current=clusterPick&&clusterPick.item?clusterPick.item:pick.item;
+    const currentIndex=(day.items||[]).indexOf(current);
+    const future=(day.items||[]).slice(currentIndex+1).filter(isTripCheckableItem);
+    return {currentRef:current&&current.id,currentName:current&&(current.place||current.act),futureRefs:future.map((item)=>item.id)};
+  });
+}
+
+async function seedForNextStop(page, names) {
+  const stops=await getTodayShoppingStops(page);
+  return page.evaluate(({names,stops}) => {
+    const stopRef = stops.currentRef;
     names.forEach((name) => {
       const item = shoppingListStore.add({ name, category: '其他', quantity: 1, unit: '個' });
       shoppingListStore.update(item.id, { stopRef });
     });
     renderToday();
-    return { stopRef, stopName: pick.item.place || pick.item.act };
-  }, names);
+    return { stopRef, stopName: stops.currentName };
+  }, {names,stops});
 }
 
 test('the next-stop card shows a compact accessible shopping badge', async ({ page }) => {
@@ -81,53 +93,30 @@ test('completed items do not count toward the next stop', async ({ page }) => {
 });
 
 async function seedTodayShoppingGroups(page, groupNames) {
-  return page.evaluate((groupNames) => {
-    switchView('today');
-    const dayIndex=findToday();
-    const day=DB.trip.days[dayIndex];
-    const items=homeNextStopItems(day.items);
-    const progress=getDayProgress(day,dayIndex),checks=getChecks(),nowMinutes=currentMinutes();
-    const pick=pickNextStop(items,progress,checks,nowMinutes,{day,dayIndex});
-    const clusterParent=clusterParentForPick(day.items,pick.item);
-    const cluster=getChildStopCluster(day.items,clusterParent);
-    const clusterPick=cluster?pickClusterChild(cluster,progress,checks,nowMinutes,{day,dayIndex}):null;
-    const current=clusterPick&&clusterPick.item?clusterPick.item:pick.item;
-    const seen={};
-    if(current)seen[String(current.id)]=true;
-    const others=[];
-    const currentIndex=(day.items||[]).indexOf(current);
-    (day.items||[]).slice(currentIndex+1).filter(isTripCheckableItem).forEach((item)=>{
-      const id=String(item&&item.id||'');
-      if(!id||seen[id]||others.length>=3)return;
-      seen[id]=true;others.push(item);
-    });
-    const stops=[current].concat(others);
+  const resolved=await getTodayShoppingStops(page);
+  return page.evaluate(({groupNames,resolved}) => {
+    const stops=[resolved.currentRef].concat(resolved.futureRefs.slice(0,3));
     groupNames.forEach((names,index)=>{
-      const stop=stops[index];
-      if(!stop)return;
+      const stopRef=stops[index];
+      if(!stopRef)return;
       names.forEach((name)=>{
         const item=shoppingListStore.add({name,category:'其他',quantity:1,unit:'個'});
-        shoppingListStore.update(item.id,{stopRef:stop.id});
+        shoppingListStore.update(item.id,{stopRef});
       });
     });
     renderToday();
-    return {currentRef:current&&current.id,otherRefs:others.map((item)=>item.id)};
-  }, groupNames);
+    return {currentRef:resolved.currentRef,otherRefs:resolved.futureRefs.slice(0,3)};
+  }, {groupNames,resolved});
 }
 
 async function seedShoppingDestinationCase(page,testCase){
-  return page.evaluate(({launcher,longLabel,blankCategory})=>{
+  const resolved=await getTodayShoppingStops(page);
+  return page.evaluate(({testCase,resolved})=>{
+    const {launcher,longLabel,blankCategory}=testCase;
     switchView('today');
     shoppingListStore.removeMany(shoppingListStore.all().map((item)=>item.id));
-    const dayIndex=findToday(),day=DB.trip.days[dayIndex];
-    const items=homeNextStopItems(day.items),progress=getDayProgress(day,dayIndex),checks=getChecks(),nowMinutes=currentMinutes();
-    const pick=pickNextStop(items,progress,checks,nowMinutes,{day,dayIndex});
-    const clusterParent=clusterParentForPick(day.items,pick.item),cluster=getChildStopCluster(day.items,clusterParent);
-    const clusterPick=cluster?pickClusterChild(cluster,progress,checks,nowMinutes,{day,dayIndex}):null;
-    const current=clusterPick&&clusterPick.item?clusterPick.item:pick.item;
-    const currentIndex=(day.items||[]).indexOf(current);
-    const future=(day.items||[]).slice(currentIndex+1).filter(isTripCheckableItem)[0];
-    const target=launcher==='badge'?current:future;
+    const targetRef=launcher==='badge'?resolved.currentRef:resolved.futureRefs[0];
+    const day=DB.trip.days[findToday()],target=(day.items||[]).filter((item)=>String(item&&item.id||'')===String(targetRef))[0];
     if(longLabel)target.place='廣島和平紀念資料館超長導航目的地名稱';
     const targetItem=shoppingListStore.add({name:'TARGET_PRODUCT',category:blankCategory?'':'必買',quantity:1,unit:'個'});
     shoppingListStore.update(targetItem.id,{stopRef:target.id});
@@ -138,7 +127,7 @@ async function seedShoppingDestinationCase(page,testCase){
       stopRef:target.id,stopName:stop.name,targetId:'shopgroup_'+cssId(target.id),
       launcherSelector:launcher==='badge'?'#view-today .nx-buy-badge':'#view-today .today-hero-shopping-summary'
     };
-  },testCase);
+  },{testCase,resolved});
 }
 
 async function activateShoppingLauncher(locator,activation){
@@ -196,6 +185,106 @@ test.describe('Shopping target acceptance matrix',()=>{
       expect(returned.scrollY).toBe(source.scrollY);
       expect(source.focused).toBe(true);
       expect(returned.focused).toBe(true);
+    });
+  });
+});
+
+const shoppingOriginReplacementCases=[
+  {launcher:'badge',refresh:'mutation',disappear:false},
+  {launcher:'hero',refresh:'mutation',disappear:false},
+  {launcher:'badge',refresh:'async',disappear:true},
+  {launcher:'hero',refresh:'async',disappear:true}
+];
+
+test.describe('Shopping overlay origin restoration',()=>{
+  test.use({viewport:{width:390,height:844}});
+
+  shoppingOriginReplacementCases.forEach((testCase)=>{
+    test(`${testCase.launcher} restores ${testCase.disappear?'Today fallback':'replacement launcher'} after ${testCase.refresh} render`,async({page})=>{
+      const seeded=await seedShoppingDestinationCase(page,testCase);
+      if(!testCase.disappear){
+        await page.evaluate((stopRef)=>{
+          const sample=shoppingListStore.all()[0];
+          const item=shoppingListStore.add({name:'SECOND_TARGET',category:sample.category,quantity:1,unit:sample.unit});
+          shoppingListStore.update(item.id,{stopRef});
+          renderToday();
+        },seeded.stopRef);
+      }
+      await page.evaluate(()=>closeMemberSelector());
+      const source=await page.evaluate((selector)=>{
+        const launcher=document.querySelector(selector),scroll=document.scrollingElement;
+        document.body.style.paddingBottom='2000px';
+        document.documentElement.style.scrollBehavior='auto';
+        launcher.focus({preventScroll:true});
+        scroll.scrollTop=240;
+        const scrollY=Math.round(scroll.scrollTop);
+        window.__shoppingOriginLauncher=launcher;
+        launcher.click();
+        return {scrollY,curView};
+      },seeded.launcherSelector);
+      expect(source.scrollY).toBe(240);
+      await expect(page.locator('#shoppingListOverlay')).toBeVisible();
+
+      const refresh=()=>page.evaluate(({stopRef,disappear,isAsync})=>new Promise((resolve)=>{
+        const run=()=>{
+          const targetItems=shoppingListStore.all().filter((item)=>String(item.stopRef||'')===String(stopRef));
+          if(disappear)shoppingListStore.removeMany(targetItems.map((item)=>item.id));
+          else shoppingListStore.update(targetItems[0].id,{done:true,completedAt:'2026-10-18T05:30:00.000Z'});
+          renderToday();
+          resolve({oldConnected:document.documentElement.contains(window.__shoppingOriginLauncher)});
+        };
+        if(isAsync)setTimeout(run,0);else run();
+      }),{stopRef:seeded.stopRef,disappear:testCase.disappear,isAsync:testCase.refresh==='async'});
+      expect((await refresh()).oldConnected).toBe(false);
+
+      await page.evaluate(()=>closeShoppingList());
+      const returned=await page.evaluate(({stopRef,launcher,disappear})=>({
+        scrollY:Math.round(document.scrollingElement.scrollTop),
+        curView,
+        focusedFallback:document.activeElement===document.querySelector('.tabbar-btn[data-view="today"]'),
+        focusedLauncher:document.activeElement&&document.activeElement.getAttribute('data-shopping-launcher')===launcher&&
+          document.activeElement.getAttribute('data-shopping-stop-ref')===String(stopRef),
+        matchingLaunchers:document.querySelectorAll('[data-shopping-launcher="'+launcher+'"][data-shopping-stop-ref="'+String(stopRef).replace(/"/g,'\\"')+'"]').length,
+        disappear
+      }),{stopRef:seeded.stopRef,launcher:testCase.launcher,disappear:testCase.disappear});
+      expect(returned.curView).toBe(source.curView);
+      expect(returned.scrollY).toBe(source.scrollY);
+      expect(returned.matchingLaunchers).toBe(testCase.disappear?0:1);
+      expect(returned.focusedLauncher).toBe(!testCase.disappear);
+      expect(returned.focusedFallback).toBe(testCase.disappear);
+    });
+  });
+
+  [
+    {mode:'throws on focus options',throws:true},
+    {mode:'ignores preventScroll',throws:false}
+  ].forEach((focusCase)=>{
+    test(`close restores exact source scroll when launcher ${focusCase.mode}`,async({page})=>{
+      const seeded=await seedShoppingDestinationCase(page,{launcher:'badge'});
+      await page.evaluate(()=>closeMemberSelector());
+      const sourceY=await page.evaluate(({selector,throws})=>{
+        const launcher=document.querySelector(selector),nativeFocus=HTMLElement.prototype.focus,scroll=document.scrollingElement;
+        document.body.style.paddingBottom='2000px';
+        document.documentElement.style.scrollBehavior='auto';
+        scroll.scrollTop=260;
+        const sourceY=Math.round(scroll.scrollTop);
+        launcher.click();
+        launcher.focus=function(options){
+          if(options&&throws)throw new Error('focus options unsupported');
+          nativeFocus.call(this);
+          scroll.scrollTop=0;
+        };
+        return sourceY;
+      },{selector:seeded.launcherSelector,throws:focusCase.throws});
+      await expect(page.locator('#shoppingListOverlay')).toBeVisible();
+      await page.evaluate(()=>closeShoppingList());
+      const returned=await page.evaluate((selector)=>({
+        focused:document.activeElement===document.querySelector(selector),
+        scrollY:Math.round(document.scrollingElement.scrollTop),curView
+      }),seeded.launcherSelector);
+      expect(returned.focused).toBe(true);
+      expect(returned.scrollY).toBe(sourceY);
+      expect(returned.curView).toBe('today');
     });
   });
 });
