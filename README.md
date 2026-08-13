@@ -34,6 +34,7 @@
 - `app-version.js` — App runtime 顯示版本來源；與 `sw.js` 的 SW 版本由一致性工具驗證
 - `navigation-intent.js` — 明確導覽目的地的 session-only state module；DOM 定位與回饋 adapter 位於 `index.html`
 - `diagnostic-impact.js` — AppLog 原始紀錄的 display-only impact projection；顯示 adapter 位於 `index.html`
+- `today-view.js` — Today Hero 採買摘要的純 model／renderer module；資料選擇與 DOM effects 留在 `index.html`
 - `shopping-photo-store.js` — 裝置本機採買照片壓縮與 IndexedDB repository boundary
 - `buy-to-ledger.js` — 採買轉記帳的純 domain／workflow runtime module
 - `ledger-ui-state.js` — Ledger history、entry 與 correction session 的不可變 state／ordered effects workflow module

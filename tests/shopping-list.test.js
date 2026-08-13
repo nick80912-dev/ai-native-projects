@@ -2,6 +2,7 @@ const assert=require('assert');
 const fs=require('fs');
 const vm=require('vm');
 const TripBuyToLedger=require('../buy-to-ledger.js');
+const TripTodayView=require('../today-view.js');
 
 function createStorage(){
   const values={};
@@ -18,7 +19,7 @@ function loadShoppingModule(){
   const html=fs.readFileSync('index.html','utf8');
   const helpersStart=html.indexOf('function escapeHtml(');
   const helpersEnd=html.indexOf('function timestampDate(',helpersStart);
-  const rendererStart=html.indexOf('function todayHeroShoppingStopText(');
+  const rendererStart=html.indexOf('function todayViewActionAttribute(');
   const rendererEnd=html.indexOf('function renderShoppingTodayEntry(',rendererStart);
   const start=html.indexOf('/* ================= ledgerRepository');
   const end=html.indexOf('/* ================= 分帳',start);
@@ -31,6 +32,7 @@ function loadShoppingModule(){
     setTimeout,clearTimeout,
     timestampDate(value){return new Date(Number(value));},
     TripBuyToLedger,
+    TripTodayView,
     buyToLedgerRuntimeAdapter:{},
     canonicalMemberName(value){return String(value||'').trim();},
     AppLog:{repo(){},sync(){}},

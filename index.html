@@ -708,6 +708,7 @@ input:not([type="hidden"]),select,textarea{font-size:16px!important}
 <script src="app-version.js"></script>
 <script src="navigation-intent.js"></script>
 <script src="diagnostic-impact.js"></script>
+<script src="today-view.js"></script>
 <script src="shopping-photo-store.js"></script>
 <script src="buy-to-ledger.js"></script>
 <script src="ledger-ui-state.js"></script>
@@ -3462,36 +3463,27 @@ function shoppingStopStateFor(item){
   return resolveShoppingStopState(ref,shoppingStopById(ref),shoppingTripAuthority());
 }
 var SHOPPING_STOP_STATE_LABEL={pending:'行程站點待確認',orphan:'原行程站點已不存在'};
-function todayHeroShoppingStopText(stopName){
-  var chars=Array.from(String(stopName||'').trim());
-  return chars.length>6?chars.slice(0,6).join('')+'…':chars.join('');
+function todayViewActionAttribute(action){
+  if(!action||action.type!=='open-shopping-list')return '';
+  return action.stopRef
+    ?' onclick="openShoppingList(\''+jsHtmlAttrString(action.stopRef)+'\',this)"'
+    :' onclick="openShoppingList()"';
 }
 function renderTodayShoppingSummary(day,currentStopRef){
   var items=shoppingListStore.all();
   var reminder=buildShoppingTodayReminder(items,day,currentStopRef);
-  var model=todayShoppingHeroModel(reminder,day,currentStopRef);
-  if(model){
-    var category=String(model.firstCategory||'').trim()||'未分類';
-    var visibleStopName=todayHeroShoppingStopText(model.stopName);
-    var accessible=category
-      ?'開啟'+model.stopName+'採買：'+category+'，共 '+model.count+' 項待買'
-      :'開啟'+model.stopName+'的 '+model.count+' 項待買';
-    var categoryPreview=category
-      ?'<span class="today-hero-shopping-separator">·</span><span class="today-hero-shopping-category">'+escapeHtml(category)+'</span>'+
-        (model.remainingCount?'<small class="today-hero-shopping-count">+'+model.remainingCount+'</small>':'')
-      :'';
-    return '<button type="button" class="today-hero-summary-item today-hero-shopping-summary" data-shopping-launcher="hero" data-shopping-stop-ref="'+escapeHtmlAttr(model.stopRef)+'"'+
-      ' onclick="openShoppingList(\''+jsHtmlAttrString(model.stopRef)+'\',this)" aria-label="'+escapeHtmlAttr(accessible)+'">'+
-      '<span class="today-hero-summary-label">'+escapeHtml(model.label)+'</span>'+
-      '<span class="today-hero-summary-value"><span class="today-hero-shopping-stop">'+escapeHtml(visibleStopName)+'</span>'+
-      categoryPreview+'</span></button>';
+  var summary=todayShoppingHeroModel(reminder,day,currentStopRef),generic=false;
+  if(!summary){
+    var pending=items.filter(function(item){return item&&!item.done;}),current=String(currentStopRef||'');
+    var currentResolves=!!(day&&Array.isArray(day.items)&&day.items.some(function(item){return String(item&&item.id||'')===current;}));
+    if(pending.length&&current&&currentResolves&&pending.every(function(item){return String(item.stopRef||'')===current;}))return '';
+    generic=true;
   }
-  var pending=items.filter(function(item){return item&&!item.done;}),current=String(currentStopRef||'');
-  var currentResolves=!!(day&&Array.isArray(day.items)&&day.items.some(function(item){return String(item&&item.id||'')===current;}));
-  if(pending.length&&current&&currentResolves&&pending.every(function(item){return String(item.stopRef||'')===current;}))return '';
-  return '<button type="button" class="today-hero-summary-item today-hero-shopping-summary today-hero-shopping-generic"'+
-    ' onclick="openShoppingList()" aria-label="開啟採買清單"><span class="today-hero-summary-label">採買清單</span>'+
-    '<span class="today-hero-summary-value">開啟查看 →</span></button>';
+  var model=TripTodayView.buildModel({summary:summary,generic:generic});
+  return TripTodayView.render(model,{
+    escapeHtml:escapeHtml,escapeHtmlAttr:escapeHtmlAttr,jsHtmlAttrString:jsHtmlAttrString,
+    actionAttribute:todayViewActionAttribute
+  });
 }
 function renderShoppingTodayEntry(day,currentStopRef){
   if(day)return renderTodayShoppingSummary(day,currentStopRef);

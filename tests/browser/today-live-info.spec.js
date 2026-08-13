@@ -321,7 +321,9 @@ test('Today Hero excludes the exact next stop and shows the first future Shoppin
     renderToday();
   },seeded.otherRefs[0]);
   const expected=await page.evaluate((ref)=>shoppingStopById(ref).name,seeded.otherRefs[0]);
-  const visibleExpected=await page.evaluate((name)=>todayHeroShoppingStopText(name),expected);
+  const visibleExpected=await page.evaluate((name)=>TripTodayView.buildModel({summary:{
+    label:'順路採買',stopRef:'fixture',stopName:name,count:1,firstCategory:'必買',remainingCount:0
+  }}).visibleStopName,expected);
   const summary=page.locator('#view-today .today-hero-shopping-summary');
   await expect(summary).toHaveAttribute('aria-label',`開啟${expected}採買：必買，共 3 項待買`);
   await expect(summary.locator('.today-hero-summary-label')).toHaveText('順路採買');

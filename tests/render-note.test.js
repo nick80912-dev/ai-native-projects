@@ -1,6 +1,7 @@
 const assert = require('assert');
 const fs = require('fs');
 const vm = require('vm');
+const TripTodayView = require('../today-view.js');
 
 const html = fs.readFileSync('index.html', 'utf8');
 
@@ -28,6 +29,7 @@ function extractConst(name){
    給一個空的採買清單即可 —— 沒有待買項目時該區塊完全不渲染。 */
 let renderedShoppingItems = [];
 const sandbox = {
+  TripTodayView,
   shoppingListStore: { all(){ return renderedShoppingItems; } },
   buildShoppingTodayReminder(items,day){ return day&&day.groups?day:null; }
 };
@@ -67,7 +69,7 @@ vm.runInContext([
   extractFunction('renderParkingTicketLine'),
   extractFunction('renderTicketLine'),
   extractFunction('todayShoppingHeroModel'),
-  extractFunction('todayHeroShoppingStopText'),
+  extractFunction('todayViewActionAttribute'),
   extractFunction('renderTodayShoppingSummary'),
   extractFunction('weatherTravelHint'),
   extractFunction('renderTodayWeatherSummary'),
@@ -112,9 +114,6 @@ assert(heroShoppingOut.includes('data-shopping-stop-ref="future"'));
 assert.strictEqual((heroShoppingOut.match(/<button/g)||[]).length,1);
 assert(!heroShoppingOut.includes('<script>'));
 
-assert.strictEqual(sandbox.todayHeroShoppingStopText('原爆圓頂館'),'原爆圓頂館');
-assert.strictEqual(sandbox.todayHeroShoppingStopText('廣島和平紀念資料館'),'廣島和平紀念…');
-
 const longStopHeroOut=sandbox.renderTodayShoppingSummary({
   items:[{id:'future',place:'廣島和平紀念資料館'}],
   groups:[{
@@ -144,8 +143,12 @@ assert.deepStrictEqual(blankCategoryReminder,blankCategorySnapshot,'display fall
 
 /* Break caught: extraction drops the already-proven selection boundary or the all-current-stop duplicate guard. */
 const todayShoppingRendererSource=extractFunction('renderTodayShoppingSummary');
-assert.match(todayShoppingRendererSource,/todayShoppingHeroModel\(reminder,day,currentStopRef\)/,
+assert.match(todayShoppingRendererSource,/summary=todayShoppingHeroModel\(reminder,day,currentStopRef\)/,
   'the adapter prepares one selected Today Shopping projection');
+assert.match(todayShoppingRendererSource,/TripTodayView\.buildModel\(\{summary:summary,generic:generic\}\)/,
+  'production consumes the same Today view model interface as module tests');
+assert.match(todayShoppingRendererSource,/TripTodayView\.render\(model,/,
+  'production consumes the same Today renderer interface as module tests');
 assert.match(todayShoppingRendererSource,/pending\.every\(function\(item\)\{return String\(item\.stopRef\|\|''\)===current;\}\)\)return ''/,
   'the adapter suppresses a duplicate generic entry when every pending item belongs to the exact next stop');
 

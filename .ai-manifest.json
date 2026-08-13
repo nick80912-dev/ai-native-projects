@@ -33,6 +33,7 @@
   "files": {
     "navigation-intent.js": "明確導覽目的地的不可變 session-only state module；不讀 DOM、storage 或 navigation history，DOM adapter 位於 index.html",
     "diagnostic-impact.js": "AppLog 原始紀錄的 display-only impact projection；不改寫、隱藏或重新分類儲存內容，DOM adapter 位於 index.html",
+    "today-view.js": "Today Hero 採買摘要的純 model／renderer module；不讀 DOM、storage、clock 或 repository，資料與 effect adapter 位於 index.html",
     "ledger-ui-state.js": "Ledger history、entry 與 correction session 不可變 state transition 與 ordered effects workflow；DOM adapter 位於 index.html",
     "shopping-ui-state.js": "Shopping list selection 與 form session 不可變 state transition 與 ordered effects workflow；DOM adapter 位於 index.html",
     "trip-progression.js": "下一站選擇、cluster blocker 與一次性 auto-skip reconciliation runtime module",
@@ -50,6 +51,7 @@
   "deploy_files": {
     "navigation-intent.js": "明確導覽目的地的 session-only runtime module",
     "diagnostic-impact.js": "AppLog display-only impact projection runtime module",
+    "today-view.js": "Today Hero 採買摘要的純 model／renderer runtime module",
     "ledger-ui-state.js": "Ledger 歷史瀏覽 state／workflow runtime module",
     "shopping-ui-state.js": "Shopping list selection 與 form session state／workflow runtime module",
     "shopping-photo-store.js": "採買照片壓縮與裝置本機 IndexedDB runtime module",

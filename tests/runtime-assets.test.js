@@ -64,6 +64,9 @@ assert(swSource.includes("'./navigation-intent.js'"),'the offline shell includes
 assert(realInventory.assets.includes('diagnostic-impact.js'),'the runtime inventory includes diagnostic-impact.js');
 assert(indexHtml.includes('<script src="diagnostic-impact.js"></script>'),'index.html loads diagnostic-impact.js');
 assert(swSource.includes("'./diagnostic-impact.js'"),'the offline shell includes diagnostic-impact.js');
+assert(realInventory.assets.includes('today-view.js'),'the runtime inventory includes today-view.js');
+assert(indexHtml.includes('<script src="today-view.js"></script>'),'index.html loads today-view.js');
+assert(swSource.includes("'./today-view.js'"),'the offline shell includes today-view.js');
 result=validateRuntimeAssets({rootDir:realRoot,inventory:realInventory});
 assert.deepStrictEqual(result.errors,[],'the repository runtime inventory is fully registered');
 

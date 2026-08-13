@@ -32,6 +32,7 @@ var SHELL = [
   './app-version.js',
   './navigation-intent.js',
   './diagnostic-impact.js',
+  './today-view.js',
   './shopping-photo-store.js',
   './buy-to-ledger.js',
   './ledger-ui-state.js',

@@ -7,14 +7,16 @@ assert(fs.existsSync(modulePath),'today-view.js exists as the production Today p
 const TripTodayView=require(modulePath);
 
 function escapeHtml(value){
-  return String(value==null?'':value).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  return String(value==null?'':value).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
-function escapeHtmlAttr(value){return escapeHtml(value);}
+function escapeHtmlAttr(value){return escapeHtml(value).replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
 function jsHtmlAttrString(value){
-  return escapeHtmlAttr(String(value==null?'':value).replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/\r/g,'\\r').replace(/\n/g,'\\n'));
+  return String(value==null?'':value).replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/\n/g,'\\n').replace(/\r/g,'')
+    .replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
 function actionAttribute(action){
   if(!action||action.type!=='open-shopping-list')return '';
+  if(!action.stopRef)return ' onclick="openShoppingList()"';
   return ' onclick="openShoppingList(\''+jsHtmlAttrString(action.stopRef)+'\',this)"';
 }
 const helpers={escapeHtml,escapeHtmlAttr,jsHtmlAttrString,actionAttribute};
@@ -58,7 +60,7 @@ assert.deepStrictEqual(genericModel,{
 });
 assert.deepStrictEqual(TripTodayView.actionFor(genericModel),{type:'open-shopping-list',stopRef:''});
 assert.strictEqual(TripTodayView.render(genericModel,helpers),
-  '<button type="button" class="today-hero-summary-item today-hero-shopping-summary today-hero-shopping-generic" onclick="openShoppingList(\'\',this)" aria-label="開啟採買清單">'+
+  '<button type="button" class="today-hero-summary-item today-hero-shopping-summary today-hero-shopping-generic" onclick="openShoppingList()" aria-label="開啟採買清單">'+
   '<span class="today-hero-summary-label">採買清單</span><span class="today-hero-summary-value">開啟查看 →</span></button>'
 );
 assert.strictEqual(TripTodayView.buildModel({generic:false}),null);
@@ -74,7 +76,7 @@ const escapedModel=TripTodayView.buildModel({summary:{
 const escapedHtml=TripTodayView.render(escapedModel,helpers);
 assert(escapedHtml.includes('data-shopping-stop-ref="stop\'quoted"')===false,'attribute text is escaped');
 assert(escapedHtml.includes('data-shopping-stop-ref="stop&#39;quoted"'));
-assert(escapedHtml.includes("openShoppingList('stop\\&#39;quoted',this)"));
+assert(escapedHtml.includes("onclick=\"openShoppingList('stop\\'quoted',this)\""));
 assert(!escapedHtml.includes('<script>'));
 assert(!escapedHtml.includes('<svg'));
 assert(escapedHtml.includes('&lt;script&gt;alert(1)&lt;/script&gt;'));
