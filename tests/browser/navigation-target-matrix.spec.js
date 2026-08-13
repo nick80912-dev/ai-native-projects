@@ -98,9 +98,11 @@ async function prepareLauncher(page, type) {
 }
 
 async function expectConfirmedTarget(page, expected, viewportCase) {
-  const target = page.locator(`[id="${expected.targetId}"]`);
   const status = page.locator('.navigation-target-status');
-  await expect(target).toHaveClass(/is-navigation-target/);
+  await expect.poll(() => page.evaluate((targetId) => {
+    const targetElement = document.getElementById(targetId);
+    return targetElement ? targetElement.classList.contains('is-navigation-target') : null;
+  }, expected.targetId)).toBe(true);
   await expect(status).toHaveCount(1);
   await expect(status).toHaveAttribute('role', 'status');
   await expect(status).toHaveAttribute('aria-live', 'polite');
@@ -126,7 +128,10 @@ async function expectConfirmedTarget(page, expected, viewportCase) {
   if (viewportCase.reducedMotion) expect(geometry.transitionDuration).toBe('0s');
 
   await page.waitForTimeout(1300);
-  await expect(target).not.toHaveClass(/is-navigation-target/);
+  await expect.poll(() => page.evaluate((targetId) => {
+    const targetElement = document.getElementById(targetId);
+    return targetElement ? targetElement.classList.contains('is-navigation-target') : null;
+  }, expected.targetId)).toBe(false);
 }
 
 const TARGET_TYPES = [
