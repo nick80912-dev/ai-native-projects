@@ -1,4 +1,209 @@
 # 07 版本紀錄
+
+## 2026-08-13 — v110 UI 一致性與 Today 模組拆分（candidate）⭐ 架構變更
+- PR #14 發布門檻補強：行程分頁上方 Day chip 改走頁內 `selectTripDay()`，切日後於重繪完成的 animation frame 回到該日頂端，不再建立定位高亮或 live-status；Today 跨頁 `gotoDay()`、exact item、Shopping 與回到現在的定位提示維持不變。Linux Chromium 對 1px 隱藏狀態框的 sub-pixel 計算與 reduced-motion scheduler margin 僅放寬測試容差，產品 CSS 與 1000ms hold 不變。
+
+- 在六組主題之外新增精簡的呈現 token：字級 `11／12／14／20／24px`、間距 `4／8／12／16／24px`、圓角 `6／10／14／999px`，以及 primary／secondary／quiet／destructive 操作角色與 diagnostic 狀態角色。只替換 Today、導覽回饋、診斷及共用按鈕的等值 literal；六組 13-token palette 與既有 computed 視覺方向不變。
+- 新增 production-used ES5 UMD `today-view.js`，以 `buildModel()`／`render()`／`actionFor()` 統一 Today Hero 採買摘要的 `未分類` 顯示 fallback、Unicode 六字可見截斷、完整 accessible name、既有 markup 與宣告式開啟採買行為。`index.html` 保留 reminder 選取、目前站排除、Shopping store／clock／repository 與 DOM effect，並刪除被取代的 inline helper／renderer，沒有第二份 production authority。
+- Ledger history candidate 依刪除測試否決：filter、group、selection effect ordering、row action policy 與 focus-preserving partial DOM patch 已分別集中於既有 seam；另建 `ledger-history-view.js` 只會增加 pass-through interface。v110 因此不新增全域 store、controller、event bus 或框架，也不改 Ledger entry、settlement、calculator、correction、Schema、record、repository 或同步語意。
+- 正式 release review 補上 ADR 0018，永久記錄 Navigation Intent、Diagnostic Impact 與 Today Hero Shopping seam；同時修訂較早設計文件中過寬的 Today ownership 文字，使其與後續核准實作計畫一致。quiet action 與本批新增的固定狀態色改由 `:root` 語意 token 接線，computed 色彩、字級與圓角保持等值，六組 theme palette 未改。
+- `today-view.js` 已登錄 page、十一項 runtime asset inventory、SW SHELL、README 與 manifest；App／SW forward-bump 至 **v110**，cache strategy 與 lifecycle 不變。最近更新維持 v110–v106 恰好五筆。
+- TDD 證據包含 token RED→GREEN、Today module missing-file RED→GREEN，以及 production wiring 的 exact-output 回歸。Fresh pre-commit 與 committed-tree gates 均通過 Node **87/87**、完整 Playwright **176/176**、focused WebKit **39/39**、App／SW v110、文件標題、11 項 runtime assets、BUILTIN no-drift、manifest JSON 與 diff checks；committed-tree 離線 Chromium 為 `{"source":"builtin","healthCheck":[],"appLogCount":9,"pageErrors":[]}`。focused WebKit 首輪曾有一筆 reduced-motion timer 序列波動；單獨 1/1、連跑 10/10 與原樣整組重跑 39/39 均通過，未放寬 assertion、未加 retry、未改產品碼。fresh fetch 證明 `origin/dev` 無 remote-only commit，v110 runtime／release commit `49f8e8c` 已推送且當時 `origin/dev...dev = 0 0`；本節交付證據提交後再次同步 `dev`。不合併 `main`、不部署 production、不建立 tag。
+
+## 2026-08-13 — v109 定位成功提示精簡（candidate）
+
+- v108 真機驗收時，Bar 確認 exact-target 定位本身正確，但成功後插入的「已定位：地點」灰底列與已醒目的目的地重複。v109 移除這個可見成功列及其布局空間；成功文字仍保留在 visually-hidden `role="status" aria-live="polite"`，找不到目標的提示與 Render diagnostic 仍可見／可追蹤。
+- 目標立即醒目並完整維持 1000ms，再以 200ms 淡化回各自原本的卡片／群組樣式；`prefers-reduced-motion: reduce` 在 1000ms 後直接清除。exact target、sticky-safe geometry、Shopping overlay 的 scroll／focus return、stale token 防護與 session-only intent state 不變。
+- 先確認 RED：成功提示仍佔 294–349px、缺少 fade phase、reduced motion 仍等到 1200ms、失敗提示無獨立可見狀態。GREEN 後 `render-note` **1/1**、focused Chromium **25/25**、focused WebKit **25/25**。新鮮的交付前 gate 通過 top-level Node **86/86**、完整 Playwright **175/175**、focused WebKit **25/25**；App／SW v109、文件標題、10 個 runtime assets、BUILTIN no-drift、manifest JSON 與 diff checks 均通過，離線 Chromium probe 為 `{"source":"builtin","healthCheck":[],"appLogCount":10,"pageErrors":[]}`。提交後仍須重跑 committed-tree gate，再交付 `dev`；Bar device／PWA 驗收仍待進行。
+- App／SW 依 forward-bump 契約同步升至 **v109**，更新說明維持 v109–v105 恰好五筆；SW lifecycle／cache strategy 不變。原排定 v109 的 UI semantic tokens／Today module 順延為 v110，原 v110 BUILTIN／test-throughput spike 順延為 v111；兩批功能均未混入本修正。
+- Committed-tree 再驗證通過 Node **86/86**、完整 Playwright **175/175**、focused WebKit **25/25** 與離線 Health；合併後 Node 亦為 **86/86**。fresh fetch 證明 `origin/dev` 無 remote-only commit，v109 候選 `ea1e91a` 已 fast-forward 推送至 `dev`，推送後 `origin/dev...dev = 0 0`。尚未合併 `main`、部署 production 或建立 tag；只待 Bar 手機／PWA 驗收。
+
+## 2026-08-13 — v108 到站定位、診斷影響與狀態權威（candidate）⭐ 架構變更
+
+- 新增 ES5 `navigation-intent.js` session-only state seam；Today Hero、下一站 Shopping badge、Shopping mall 與既有 day／item 精確入口共用 request／consume／complete。Shopping list 維持 overlay 且不改 `curView`，intent 不進 storage、備份、Queue、CMS 或 Ledger。
+- `index.html` adapter 負責把明確目的地捲到 sticky header 下方、顯示 1.2 秒 `.is-navigation-target` 與 polite live status。採買 overlay 關閉後回復來源 scroll 與 launcher／replacement／來源 tab focus；目標遺失則開啟正常位置、顯示非阻擋提示、寫入 Render diagnostic 且不 throw。
+- 新增 ES5 `diagnostic-impact.js` display-only projection；診斷面板補上 `info`／`degraded`／`action-required`、影響與 fallback，且只把精確的 Ledger 增量 timeout 說明為 CSV 降級。stored AppLog、複製 raw report、Health Check、retry、Queue 與同步語意均不變。
+- `.ai-manifest.json` 改以 `manifest_format: "2.29"` 表示格式並只用 `current_status.authority` 指向 `tasks/current.md`；移除易過期的產品狀態 snapshot。App Shell 由 v107 forward-bump 至 **v108**，最近更新維持 v108–v104 恰好五筆；未加入新版提示，未修改 Schema、Google Sheet、Apps Script、Ledger／Shopping 資料語意、`main`、部署或 production tag。
+- Final whole-branch review remediation converts expanded cluster stops and pre-trip day cards to native buttons with visible focus rings; every remaining explicit target now has a 320／375／390px Tap／Enter／Space acceptance matrix. Navigation Intent clones and normalizes retained state at every transition and returns a non-aliased consumed snapshot. Manifest governance now names `tasks/current.md` alone as current authority, while changelog／task archives remain history; ADR 0016 delegates asset count entirely to `runtime-assets.json`.
+- Fresh final-fix pre-commit release gate passed **86／86** top-level Node tests, full Playwright **175／175**, and focused WebKit **21／21**. App／SW v108, document titles, 10 runtime assets, BUILTIN no-drift, manifest JSON, `git diff --check`, and the established offline Chromium probe also passed with `healthCheck: []` and `pageErrors: []`. The final-fix implementer re-runs these gates on the committed tree; push／origin sync and Bar device／PWA acceptance remain outside this implementation handoff.
+- Final whole-branch review returned strict PASS. After a fresh fetch confirmed zero remote-only commits, the reviewed candidate fast-forwarded and pushed to `dev`; `origin/dev` and local `dev` matched at `c5e9ad2` immediately after delivery. Bar device／PWA acceptance remains pending, and v109 stays gated.
+
+## 2026-08-12 — v107 Today Hero 未分類提示（dev candidate）
+
+- Today Hero 遇到空白採買分類時，明確顯示 `未分類`；多項採買仍顯示 `+N`，可見與無障礙文字皆不包含品名。
+- `未分類` 僅是 renderer 顯示 fallback，不加入分類選項，也不改寫 reminder/model、Shopping store、表單、備份、還原或同步資料；原始 `category: ''` 保持不變。
+- v106 的地點六字截斷、分類與數量完整顯示、4px 緊湊靠右、44px 點擊區、鍵盤／觸控操作與對應地點定位均維持不變。
+- App Shell 由 v106 forward bump 至 **v107**；未修改 Schema、Ledger、Apps Script、Google Sheet、`netlify.toml`、`main`、正式部署或 production tag。
+- TDD renderer RED→GREEN；focused Node 3／3、Chromium Today suite 18／18、WebKit touch case 1／1 已通過。Release 前 fresh full gate 為 **83／83** Node test files、Playwright **150／150**（0 failed），另通過 v107 版本、8 runtime assets、BUILTIN no-drift、文件標題、manifest JSON、offline `healthCheck(): []`、`pageErrors: []` 與 `git diff --check`。
+
+## 2026-08-12 — v106 Today Hero 採買摘要緊湊靠右（dev candidate）
+
+- 依 Bar 裁定，Hero 採買下排由比例分欄改為單一緊湊右對齊群組；地點、分隔點、第一優先分類與 `+N` 以 4px 間距排列，不再產生過大的中間空白。
+- 地點超過六個 Unicode code point 時顯示前六字加 `…`；320px 若仍不足可再縮短地點。分類與 `+N` 不縮排、不省略，完整地點仍保留在 `aria-label`。
+- `順路採買`／`今日採買`、分類選擇、品名隱私、exact-next-stop 排除、通用入口、44px 點擊區、鍵盤操作與 Shopping 錨點均維持不變。
+- App Shell 由 v105 forward bump 至 **v106**；未修改 Schema、Shopping store、Ledger、Apps Script、Google Sheet、`netlify.toml`、`main`、正式部署或 production tag。
+- TDD renderer／CSS RED→GREEN 與 focused browser 17／17 已通過；fresh full gate 為 **83／83** Node test files、Playwright **149／149**（0 failed），另通過版本、8 runtime assets、BUILTIN no-drift、文件標題、manifest JSON、offline `healthCheck()`、pageerror 與 `git diff --check`。
+
+## 2026-08-12 — v105 Today Hero 採買分類預覽（dev candidate）
+
+- 依 Bar 裁定，v104 的品名預覽改為 `地點 · 第一個優先分類 +N`；`+N` 仍代表其餘待買品項數，不是分類數，單一品項不顯示 `+N`。
+- 分類來自既有 exact `必買` 穩定置頂後的第一筆；Hero visible markup 與 accessible name 均不再包含品名。空白分類安全退回只顯示地點，無多餘分隔符或數量。
+- 地點維持主要資訊，分類為次要資訊；320／375／390px 保持雙 ellipsis、單行、44px 點擊區與無水平 overflow。`順路採買`／`今日採買`、exact-next-stop 排除、通用入口、錨點與鍵盤操作不變。
+- App Shell 由 v104 forward bump 至 **v105**；未修改 Schema、Shopping store、Ledger、Apps Script、Google Sheet、`netlify.toml`、`main`、正式部署或 production tag。
+- TDD 的 model／renderer RED→GREEN 與 focused browser 17／17 已通過；Fresh full gate 為 **83／83** Node test files、Playwright **149／149**（0 failed），另通過版本、release-note 五筆視窗、8 runtime assets、BUILTIN no-drift、文件標題、manifest JSON、production-data `healthCheck()`、pageerror 與 `git diff --check`。
+
+## 2026-08-12 — v104 Today Hero 採買品名預覽（dev candidate）
+
+- Active-trip Today Hero 的採買摘要改為 `地點 · 第一個優先品名 +N`；單一品項不顯示 `+N`，空白品名安全退回只顯示地點。
+- 第一個品名沿用既有 exact `必買` 穩定置頂與 store order，不新增排序；`順路採買`／`今日採買`、exact-next-stop 排除、通用入口、點擊錨點與鍵盤操作均維持不變。
+- 地點維持主要資訊，品名為次要資訊；兩者在 320／375／390px 都保持單行 ellipsis、44px 點擊區與無水平 overflow。Accessible name 同時包含地點、第一品名與總待買數。
+- App Shell 由 v103 forward bump 至 **v104**；`app-version.js`／`sw.js` 同步，未修改 Schema、Shopping store、Ledger、Apps Script、`netlify.toml`、`main`、正式部署或 production tag。
+- TDD 先驗證 model／renderer／responsive RED，再完成 GREEN。Fresh gate 通過 **83／83** Node test files、Playwright **149／149**（0 failed），另通過版本一致性、5 筆 release-note 視窗、8 個 runtime assets、BUILTIN no-drift、文件標題、manifest JSON、production-data `healthCheck()` 與 `git diff --check`。
+
+## 2026-08-12｜Ledger 更正診斷去重（dev，SW v103 未升版）
+
+- **根因**：2026-08-11 除錯報告中的資料問題只有四種唯一訊息，但 Ledger 更正投影會被摘要、餘額與畫面重繪路徑反覆呼叫，四則訊息因此各寫入 25 次並填滿 100 筆 session AppLog。
+- **最小修正**：只在 `ledgerCorrectionDataWarning()` 的隱式 AppLog 出口以完整訊息做 session warn-once；不同 record ID／root／原因仍各留一筆。清除 AppLog 不重設去重集合，重新載入 App 後才重新開始記錄。
+- **資料與診斷邊界**：無效更正仍 fail-closed，不進有效收據、餘額或歷史；顯式傳入 projection 的 warning callback 仍在每次呼叫取得完整訊息。通用 AppLog、Queue、delivery bridge、settlement、correction projection、Schema、Apps Script 與 Ledger 資料均未修改。
+- **外部核對**：2026-08-12 重新讀取公開 Ledger CSV 與 Apps Script `GET ?action=ledger&after=0`，兩者皆為 17 筆且均不含報告中的七個 ID；因此沒有改寫 live Sheet。附件事件屬當時／裝置事件集合，本批只修正重複診斷。
+- **TDD 與完整 Gate**：附件四種事件的測試先以實際八筆、預期四筆正確失敗；最小修正後 focused tests 全綠。Fresh gate 通過 **83／83** Node test files、Playwright **149／149**（0 failed），並通過文件標題、App／SW v103 一致性、8 個 runtime assets、BUILTIN no-drift、manifest JSON 與 `git diff --check`。維持 v103，不動 `app-version.js`、`sw.js`、`netlify.toml`、`main`、部署或 production tag。
+
+## 2026-08-11 — v103 Today Hero actionable summary (dev candidate)
+
+- Today is a calm travel briefing rather than a KPI panel: weather uses an itinerary-date-aware outing hint, and the next eligible Shopping stop is the actionable primary copy.
+- `順路採買` projects the first future eligible Shopping group while `今日採買` remains the general fallback; the exact next stop remains owned by its existing badge.
+- The scope is active-trip Today only. v102 device/PWA acceptance is complete; data, schema, storage, Service Worker behavior, deployment authority, and production state are unchanged.
+- Automated evidence: fresh v103 gate passed 83/83 Node test files and 149/149 Playwright cases; document-title, app-version, runtime-assets, BUILTIN no-drift, manifest JSON, and diff checks passed.
+
+
+## 2026-08-11｜住宿停靠點改以 HID 精確關聯 Hotel profile（dev，SW v102）⭐ 架構變更
+
+- **Sheet migration**：公開 Places 尾端 L 欄新增 `HID`；`L4／L15／L24／L33／L42` 讓 P002／P013／P022／P031／P040 各引用 H001,其餘 HID 儲存格皆空。五筆 travel 原樣保留為開車30分鐘／開車2小時／開車3分鐘／開車50分鐘／步行3分鐘；五個 PID 不能合併,因為其行程位置與交通脈絡不同。
+- **Schema 3.0 與資料關係**：`schema.js` 及 inline Schema 同步為 `3.0 (2026-08-11)`,Places 尾端 `HID` 映射 `hotelId` 並以 `hotelid／住宿id` 容錯；Hotels 名稱明定只供顯示。`09_SCHEMA_MAPPING.md` 由 `schemaDoc()` authority 重生。關係是 `Places(Type=住宿).HID → Hotels.HID` 的 N→1,不是名稱 join,也不是 PID join。
+- **條件驗證與離線種子**：Validator 在七表原子候選快照中要求住宿必填 HID、非住宿禁止 HID、任何 HID 必須存在於 Hotels；違規時 fail closed。BUILTIN 由已核准公開 Sheet 刷新,五個住宿 PID 都帶 H001 並保留各自 travel；Ledger 種子仍只有 schema 推導的 21 欄空 header。
+- **單一 runtime resolver**：`hotelOf(place)` 對 Places／Hotels 的 HID 去空白並轉大寫後精確解析；缺失或懸空 HID 回傳 `null`,不再以住宿名稱、子字串或 `DB.hotels[0]` fallback。天氣住宿解析亦委派同一 resolver；不同 PID 可共用同一 H001 profile object。
+- **v101 驗收與 v102 世代**：Bar 已於 2026-08-11 明確確認 v101 裝置／PWA 外觀驗收完成。`app-version.js` 與 `sw.js` 原子升至 v102,`sw.js` 除版本行外不變；App 最近更新維持五筆,加入 v102 並只移除最舊顯示的 v97。
+- **驗證與非目標**：v102 最終 fresh gate 為 **83／83** Node test files、完整 Playwright **148／148**（0 skipped、0 failed；含住宿 320／375／390px 的 **3／3**）；runtime asset、文件標題、App／SW v102 一致性、BUILTIN no-drift、manifest JSON 與 `git diff --check` 亦通過。本批不改 Ledger 位置式 Schema 2.9／21 欄、Apps Script、個人備份 v9、SW lifecycle／cache／offline fallback、`netlify.toml`、`main`、Netlify 部署或 production tag。
+
+## 2026-08-10｜移除 SW 更新提示與杉綠配色區隔（dev，SW v101）
+
+- **產品決策**：v99／v100 雙版本實驗後，Bar 確認「新版已就緒」事件與使用者已看到新版內容的時機可能不同步，且必要性不足；v101 完整移除常駐提示、observer、一次性 guard 與明確 reload action，不以 Toast、banner、badge 或自動 reload 取代。backlog #24 以取消而非完成功能歸檔。
+- **杉綠區隔**：杉綠只把第一層 `--t-action` 由棕色 `#7A4F24` 改為林下青 `#2F6B4F`；chrome、accent、其餘 12 個 token、焙茶 `#896748`、其他主題、語意角色與元件 CSS 不變。白字對 action 對比 6.29:1。
+- **PWA 與資料邊界**：`app-version.js`／`sw.js` 同步升 v101；`sw.js` diff 僅版本一行，`skipWaiting()`、`clients.claim()`、SHELL、install／activate／fetch、cache mode、offline fallback 全部不變。未修改 Ledger／Shopping、repository、schema、資料／備份格式、`PERSONAL_STATE_VERSION=9` 或 `netlify.toml`。
+- **驗證與交付**：完整 gate 為 **82／82** Node test files、Playwright **145／145**；另通過 runtime asset、文件標題、App／SW v101 一致性、manifest JSON 與 `git diff --check`。本批只 push `dev`，不 merge `main`、不 deploy、不建立 tag。
+
+## 2026-08-09｜Service Worker 真實換版驗收目標（dev，SW v100）
+
+- **雙版本第二階段**：Bar 已確認目標實機由 v99 controller／cache 接管，因此依既定閘門另建 v100，作為 v99→v100 真實更新提示目標。`sw.js` 與 `app-version.js` 只做正常版本遞增，最近更新維持五筆。
+- **接管競態補強**：完整 gate 的重複瀏覽器基線發現低頻時序：既有 registration 已有 active worker，但 reload 新文件在 `load` 當下 controller 暫晚，舊 guard 會誤當首次安裝。eligibility 現在同時辨識初始／目前 controller 與既有 active registration；真正首次安裝沒有 active worker，仍不提示。
+- **生命週期與資料邊界不變**：未修改 `skipWaiting()`、`clients.claim()`、SHELL、install／activate／fetch handler、HTTP cache bypass、離線 fallback、reload 觸發條件、Ledger／Shopping、repository、schema、資料格式或備份。只有使用者點擊「立即更新」才 reload。
+- **驗收閘門**：Node 新增 active-registration／late-controller 回歸；同一真實瀏覽器案例修正前 20 次可穩定重現 1 次失敗，修正後連續 30／30 通過。v100 只 push `dev`；backlog #24 在 Bar 實機確認提示、點擊前不自動 reload、點擊後版本／cache 為 v100 前維持未完成。
+
+## 2026-08-09｜Service Worker 新版就緒提示（dev，SW v99）
+
+- **常駐更新提示**：新版 Service Worker 完成啟用並接管既有頁面後，底部導覽上方顯示「新版已就緒／立即更新」。提示獨立於短暫 Toast，不會自動消失或被一般操作訊息永久取代；z-index 低於表單／明細 overlay，使用者可先完成輸入再更新。
+- **不強制刷新**：`updatefound` 只用來追蹤 installing worker，必須等到 `activated` 或 `controllerchange` 才提示；只有點擊「立即更新」才呼叫 reload。首次安裝、安裝失敗、重複 state／controller 事件與缺少提示 DOM 都不刷新、不阻斷 App。
+- **快取策略不變**：`skipWaiting()`、`clients.claim()`、SHELL、install／activate／fetch handler、HTTP cache bypass 與離線 fallback 完全不變；`sw.js` 與 `app-version.js` 同步升為 v99。
+- **TDD 與兩世代驗證**：Node 行為測試鎖定 first-install suppression、一次性提示與 explicit-only reload；versioned-server Browser 測試實際完成 gen1→gen2 更新，確認點擊前頁面仍是 gen1、點擊後 App／schema／cache 收斂至 gen2，並驗證 320／375／390px 與既有離線契約。v99 只 push `dev`；必須等 Bar 實機載入並確認 v99 controller 後，才能另建 v100 真實更新目標。
+
+## 2026-08-09｜BUILTIN 岡山快照刷新與可重複 SOP（dev，SW v98 未升版）
+
+- **離線種子更正**：`index.html` 的 BUILTIN 已由東京／新宿舊資料刷新為目前公開的岡山四國六天五夜；現行 runtime 可解析 Day 1–6，places／restaurants／shopping 均非空。移除 BUILTIN 後方的 legacy cfg append 與 8 欄 Ledger overwrite，現在只有一個完整八 key 快照。
+- **Ledger／cfg 安全契約**：刷新工具永不請求 live Ledger；Ledger 只由 `schema.js` 產生 21 欄 header 且沒有紀錄。TripConfig 八個必要 key 各出現一次，不再以後置 append 補欄。公開 Sheet 使用 schema 已登記 alias（目前 Places `交通時間`）仍可通過，其餘欄位數量與順序維持 fail closed。
+- **安全工具與 SOP**：新增 `tools/refresh-builtin-snapshot.js`；預設只讀 preview，有漂移以 exit code 2 回報，只有明確 `--write` 才經同目錄暫存檔、原子替換與回讀驗證更新。抓取、schema 或內容驗證任一失敗都不改原檔。完整觸發時機、權責、指令與回滾邊界寫入 `16_OPS_PLAYBOOK.md` §G。
+- **TDD 與邊界**：工具測試鎖定不抓 Ledger、preview no-write、invalid source 保留 bytes、aliases、legacy mutation 移除與參數契約；正式 characterization test 直接執行 `index.html` 最終 BUILTIN 並沿用 runtime parser。旅程三情境 Browser 回歸 3／3 通過。未修改 Google Sheet、schema、資料格式、parser、renderer、SW 或版本號；只 push `dev`，不 merge／deploy／tag。
+
+## 2026-08-09｜採買明細記帳狀態與按鈕收斂（dev，SW v98 未升版）
+
+- **進度語意修正**：採買清單仍是個人、本機資料；明細的記帳進度改以 allocation 對應的 Ledger「筆」計算，不再以「位／對象」暗示付款人或團體成員。付款人與分攤仍只在 Ledger 表單決定。
+- **狀態欄合併**：移除獨立「記帳進度」列，既有「狀態」改為「採買狀態 · 記帳摘要」，單筆顯示 `已買 · 未記帳／已記帳／待確認`，多筆顯示 `已買 · 已記帳 N／總數 筆`；含待確認時列出各類筆數。逐 allocation 紀錄、明細導航與「改回未記帳」不變。
+- **動作與 preflight 一致**：未開始使用「記帳」，部分完成使用「繼續記帳（剩 N 筆）」；任何 allocation 待確認時，改在點擊前顯示原生 disabled「等待狀態確認」及同步原因，不再出現可點擊但隨後被 workflow 阻擋的矛盾入口。
+- **TDD 與邊界**：Node 真實 model／renderer 與 Browser 混合狀態測試先讀到舊 `已買` 而正確失敗，最小 presentation seam 修改後 focused Node 及 Playwright 7／7 通過。未修改 Shopping store、照片 repository、Buy-to-Ledger domain／workflow、Ledger repository、schema、localStorage、備份、SW 或版本號；只 push `dev`，不 merge／deploy／tag。
+
+## 2026-08-09｜關閉未來 TEST 模擬版 localStorage 前綴隔離待辦（文件治理）
+
+- Bar 裁定從正式 backlog 移除品質批 #2 最後一項「未來 TEST 模擬版 localStorage 前綴隔離」，不實作。
+- 現行正式站與 dev 測試站分屬不同 origin，自動測試使用隔離環境，診斷時間模擬已有快照／還原與備份防呆；repo 亦禁止提交同源 TEST HTML，因此目前沒有需要前綴隔離的實際執行路徑。
+- 同步更新 `tasks/backlog.md`、`tasks/current.md`、`tasks/done.md` 與 `.ai-manifest.json`；未修改 runtime、localStorage key、資料格式、SW 或版本號。
+- Breaking Change：無。
+
+## 2026-08-09｜Ledger 清單隱藏付款方式與多品項兩行摘要（dev，SW v98 未升版）
+
+- **付款方式降至明細**：個人／團體 dashboard、完整紀錄、單筆卡、批次父卡與展開子項皆不再顯示付款方式；`record.payMethod`、消費明細「支付方式」、完整紀錄支付方式篩選、表單、匯出與儲存完全保留。
+- **單筆兩行不變**：第一行收斂為「品項名稱 → 個人代購／團體付款與分攤」，第二行維持「店家 → 類別 → 免稅品 → TEST → 待同步 → 已鎖帳／已更正 N 次」。內容靠左、行內與整個兩行區塊垂直置中，右側雙幣金額維持固定。
+- **多品項父子層級**：個人父卡兩行顯示收據標題與品項／免稅／代購數；團體父卡另以 neutral compact tag 顯示「[付款人]付款 · 分攤依品項」，多人依 encounter order 去重、缺付款人不虛構姓名。展開後子項保留各自代購／分攤與狀態。
+- **TDD 與邊界**：Node／Browser 先分別因單筆 `現金`、批次 `現金` 與舊三列父卡正確失敗；最小 renderer／CSS 修改後 focused Node 與 Playwright 3／3 通過，320／375／390px 驗證兩行、靠左、垂直置中、ellipsis、子項縮排及金額無重疊。未修改 Ledger domain、repository、Queue、Apps Script、settlement、correction、schema、CSV、localStorage、備份或 Shopping UI；維持 v98。
+
+## 2026-08-09｜Ledger 近期消費卡嚴格兩行收斂（dev，SW v98 未升版）
+
+- **固定資訊順序**：個人與團體近期消費卡統一為兩行；第一行依序為「品項名稱 → 付款方式 → 個人代購／團體付款與分攤」，第二行依序為「店家 → 類別 → 免稅品 → TEST → 待同步 → 已鎖帳／已更正 N 次」。批次父卡不變，展開子項沿用同一 recent-record renderer。
+- **嚴格兩行與截斷**：renderer 改為明確的 primary／secondary row；兩行皆禁止換行，長品項、店家／類別、代購／付款分攤與狀態以 ellipsis 截斷，不產生第三行或水平 overflow。右側雙幣金額與操作選單維持原欄位。
+- **字級與配色**：個人代購保留原 coral 語意但縮為 compact 字級；團體付款／分攤、已鎖帳與已更正維持原 neutral `line-soft`／`ink-soft` 配色；待同步維持原黃色。鎖帳與更正的既有互斥條件、所有狀態文案與資料判定均未改。
+- **TDD 與邊界**：Node renderer／mobile contract 與 Browser 測試先因缺少兩行 DOM／CSS 正確失敗，最小實作後 focused Node 與 Playwright 3／3 通過；320／375／390px 驗證 exactly-two rows、single-line、ellipsis、緊湊高度、無文字／金額重疊與配色一致。未修改 Ledger domain、repository、Queue、Apps Script、settlement、correction、schema、CSV、localStorage、備份格式或 Shopping UI；維持 v98，只 push `dev`。
+
+## 2026-08-09｜Ledger 近期消費卡資訊階層微調（dev，SW v98 未升版）
+
+- **團體資訊同行**：團體近期消費卡沿用既有「我／姓名付款 · 全員／N 人分攤」計算與文案，但由下方 badge 移到品項名稱旁，視覺權重比照個人卡既有「幫 [姓名] 買」標記；舊位置不再重複。待同步、TEST、已更正、已鎖帳與免稅 badge 維持原位。
+- **店家與類別同列**：個人與團體卡統一顯示「店家 · [emoji] 類別」，支付方式獨立留在下一列；沒有店家仍顯示類別，沒有支付方式不輸出空白列。批次展開子項沿用同一 renderer，因此同步套用。
+- **TDD 與手機版面**：Node 真實 renderer 先因舊店家／類別順序失敗，Browser 再以真實卡片重現；最小 markup／CSS 修改後，Ledger focused Node tests 與 Browser 3／3 通過，並於 320／375／390px 驗證個人／團體卡沒有文件、卡片、body 溢位或文字／金額重疊。
+- **邊界與交付**：未修改付款／分攤計算、participant parsing、Ledger domain、repository、Queue、Apps Script、settlement、correction、schema、CSV、localStorage、備份格式或 Shopping 卡片。完整 gate 為 **80／80** Node test files、Playwright **144／144**；維持 v98，只 push `dev`，不 merge `main`、不 deploy、不建立 production tag。
+
+## 2026-08-09｜Sheet 重試退避與 Toast 降級保護（dev，SW v98 未升版）
+
+- **短暫網路故障緩衝**：`fetchSheet()` 第一次失敗仍寫入既有 Sync log，之後精確等待 800ms 才執行原本唯一一次重試；首次成功不安排 timer，第二次失敗仍直接向 snapshot orchestration 拋出第二次錯誤，不新增第三次嘗試。
+- **呈現層安全降級**：`toast()` 找不到 `#toast` 時立即返回，不改動 `toastAction`、`toastTimer` 或呼叫其他 presentation effects，避免缺少非必要提示節點時中斷同步／儲存等業務流程；節點存在時的訊息、class、action 與 duration 行為不變。
+- **TDD 與邊界**：新增正式函式 characterization tests，先分別重現缺少 800ms delay 與 null dereference，再做兩行最小修正；相鄰同步、Ledger Toast 與 Browser 11／11 回歸通過。未修改 `FETCH_TIMEOUT`、CSV 驗證、snapshot orchestration、資料格式、renderer、schema、SW lifecycle／cache strategy 或 runtime 版本。
+- **交付狀態**：完整 gate 為 **80／80** Node test files、Playwright **144／144**，另通過 runtime asset、文件標題、App／SW v98 一致性、manifest JSON 與 `git diff --check`。本批只 push `dev`，不 merge `main`、不 deploy、不建立 production tag；v99／v100 仍保留給 SW 更新提示雙版本驗收。
+
+## 2026-08-09｜AppLog session 診斷與面板精簡（dev，SW v98 未升版）
+
+- **有界診斷能力**：`validator.js` 的 Schema／Parser／Data／Repository／Render／Sync 六類 `AppLog` 保留原 console level、前綴與完整訊息，同時保存本次 App session 最新 100 筆（FIFO、單筆最多 1,000 字）。`snapshot()` 回傳 defensive copy，`clear()` 只清記憶體，不寫 localStorage、IndexedDB、備份或遠端。
+- **觀察不製造事件**：抽出無副作用 `currentHealthFindings()`；公開 `window.healthCheck()` 仍照常輸出 console 並經 `AppLog.data()` 報告，但開啟診斷面板只讀當下 findings，不再因查看面板重複加入 health log。
+- **面板收斂**：桃子入口、App 版本、健康檢查、旅途紀錄、時間模擬與行程進度不變；新增 AppLog 筆數、最近紀錄、複製完整除錯報告與清除操作。所有畫面訊息經 HTML escaping，複製沿用既有 clipboard fallback。
+- **移除測試模式區塊**：依 Bar 要求，診斷面板不再顯示「團體帳測試模式」或入口；`openTestModeSettings()`、設定控制頁、TEST 前綴、正式／TEST universe 隔離與 Ledger 行為全部保留並由 Node／Browser 回歸覆蓋。
+- **TDD 與完整 gate**：新增 AppLog buffer、診斷報告 Node 契約及真實 Browser 互動；完整 **79／79** Node test files、Playwright **144／144** 通過。完整 Node gate 額外抓到新 timestamp 違反 `appNow()` 單一時鐘，修正為共用 app clock、standalone validator 無時鐘時安全留空後重新全綠。
+- **邊界**：未恢復 iOS 手勢診斷，既有 passive no-op `dblclick` 相容監聽器保留；未修改 schema、資料格式、renderer、SW lifecycle／cache strategy、`app-version.js` 或 `SW_VERSION`，維持 v98。本批只 push `dev`，不 merge `main`、不 deploy、不建立 production tag。
+
+## 2026-08-09｜UI workflow/state 1→4 架構模組化（dev，SW v98 未升版）⭐ 架構變更
+
+- **1｜Shopping form session**：深化既有 `shopping-ui-state.js`，接管 `form`／`formSession`／`photoError` lifecycle；production adapter 成為唯一寫入點。Save、save-another 與 photo Promise 以 runtime session/request ID 防止 stale completion；validation/store/photo failure 保留 Sheet，store、IndexedDB photo repository、Buy-to-Ledger、資料格式、split 與 renderer 均留在原邊界。
+- **2｜下一站一次性調和**：新增純 `trip-progression.js`，集中時間選擇、cluster blocker、stale classification 與 auto-skip next progress。`pickNextStop()` 只作 production adapter，同輪多項超時最多保存一次 `trip_next_stop_progress`、顯示一次 Toast，不重寫 checks 或既有 storage 格式。
+- **3｜Ledger correction session**：深化既有 `ledger-ui-state.js`，讓 correction 與 create/edit 共用 session/request、calendar、mount/render/pending/return effects；open/close/reason/preview/save 全部走 semantic actions，刪除舊 `syncLegacyCorrectionSavePending` compatibility helper。Eligibility、receipt freshness、preview/domain builders、commit-last batch、repository、settlement、Apps Script 與 schema 未移入 UI module。
+- **4｜Runtime asset authority**：新增 build-time-only `runtime-assets.json` 與 `tools/check-runtime-assets.js`，對八個 JS runtime assets 同時驗證實體檔、入口（`schema.js`／`validator.js` 沿用內嵌 exact-parity marker）、SW `SHELL`、README 與 `.ai-manifest.json`。未導入 bundler／generator／browser loader，未改 SW lifecycle、cache strategy 或 script order。
+- **決策與測試替換**：新增 ADR 0013–0016 與四份設計／實作計畫；source-extraction／substring locks 只在正式 module interface、wiring 或 browser seam完整取代後移除。Fresh full gate 為 **77／77** Node test files、Playwright **143／143**，另通過 runtime asset CLI、App/SW v98 一致性、文件標題、manifest JSON 與 `git diff --check`。
+- **版本與發布邊界**：`app-version.js`、`SW_VERSION`、`CACHE_NAME` 仍為 v98；v99／v100 繼續保留給 SW 更新提示雙版本驗收。本批只 push `dev`，不 merge `main`、不 deploy Netlify、不建立 production tag。
+
+## 2026-08-09｜Shopping list tab／selection workflow／state seam（dev，SW v98 未升版）⭐ 架構變更
+
+- **先 characterization 再抽 seam**：先只讀盤點 Shopping page filters、list tab、selection、批次操作、form、detail、photo 與返回脈絡；第一個垂直切片只涵蓋 list tab＋selection。新增 Node legacy characterization 與真實瀏覽器回歸，鎖定卡片 body 多選語意、批次 store failure 與刪除取消時保留 selection。
+- **最小 production-used module**：新增 `shopping-ui-state.js`，公開 `createState(seed)`、`transition(state, action)` 與 `createWorkflow(adapter)`；唯一擁有 `tab`、`selectionMode`、`selected` 的 transition。Production adapter 先回寫既有 compatibility projection，再依序 clear split、render list、restore focus；public handlers 維持原名稱與 renderer markup。
+- **成功／失敗邊界**：目前分頁全選只接受 caller 提供的 visible IDs，會去重並移除 hidden／stale selection。批次完成、移回、刪除與成功開啟 Ledger draft 後才 reset；store failure、preflight 阻擋與取消不 dispatch。Store、photo repository、Buy-to-Ledger domain、Ledger repository、資料格式、備份與 DOM renderer 均未移入 module。
+- **離線與版本**：頁面載入新 module，SW `SHELL` 只新增 `./shopping-ui-state.js`；`app-version.js`、`SW_VERSION` 與 `CACHE_NAME` 維持 v98，未修改 SW lifecycle／cache strategy、`netlify.toml` 或 `PERSONAL_STATE_VERSION=9`。v99／v100 仍保留給 SW 更新提示雙版本驗收。
+- **驗證**：focused Node gates 與 Shopping selection／list entry／Buy-to-Ledger／photo Playwright **30／30** 通過；最終 fresh full gate 為 **74／74** Node test files、Playwright **143／143**，另通過文件標題、App／SW v98 一致性、manifest JSON 與 `git diff --check`。
+
+## 2026-08-08｜Ledger 新增消費快速版面（dev，SW v98）
+
+- **方案 A 落地**：單品新增消費維持「金額 → 明細 → 代購／分攤 → 其他資訊 → 儲存」；團體帳的成員 chips 預設收成「全員 N 人／已選 N 人」摘要，點擊才展開既有選擇器。個人帳仍使用既有代購開關，只有啟用後才顯示對象。
+- **選填資訊收斂**：原本分散的「其他資訊」「稅與優惠券」「更多細節」合併為單一入口，摘要改為「日期 · 類別 · 支付方式 · 有／無備註」；展開後仍保留店家、日期、時間、分類、支付、價格方式、稅率、優惠券與備註全部欄位及原計算語意。
+- **操作權重**：「儲存」維持主要按鈕，單品「儲存並再記一筆」使用由各主題 action／card token 混合出的低彩度次要底色，保留 44px 觸控區、原 ID、pending guard 與 save workflow；多品項的操作樣式與欄位結構不變。
+- **範圍與驗證**：未修改 Ledger schema、備份、repository、同步、分攤／代購計算、calculator、Service Worker 或版本字串。新增 Browser regression 覆蓋個人／團體、鍵盤焦點、分攤／代購／其他資訊展開、六主題次要按鈕底色及 320／375／390px 水平 overflow；完整 gate 為 **71／71** Node test files、Playwright **140／140**、文件／版本檢查、manifest JSON 與 `git diff --check` 通過。
+
+## 2026-08-08｜更正收據操作列遮罩修正（SW v98）
+
+- **真機回報**：更正多品項收據並展開收據資訊後，捲動內容會讓品項金額旁的計算機圖示穿透顯示在底部「預覽更正／整張收據作廢／取消」操作列上，容易被誤認為操作列的一部分。
+- **最小修正**：根因是金額計算機入口具有局部 `z-index:1`，而 sticky Ledger 操作列沒有建立較高堆疊層。操作列改為 `z-index:2`，確保所有 Ledger sticky footer 都完整遮住捲過其下的表單內容；計算機入口本身、44px 觸控區與可編輯欄位位置不變。
+- **TDD 與完整 gate**：新增 390×844 真實 renderer regression，建立多品項 correction、展開收據資訊並將計算機入口捲到操作列下方；修正前 hit-test 仍取得「開啟第 1 項金額計算機」，修正後操作列成為最上層且入口不再穿透。計算器與 correction 的針對性 Node tests 及 Playwright 4／4 通過；最終完整 **71／71** Node test files、Playwright **132／132**、文件／版本檢查、manifest JSON 與 `git diff --check` 全數通過。
+- **相容與版本**：未修改更正內容、Ledger 計算、repository、settlement、同步、備份格式、schema、`PERSONAL_STATE_VERSION=9` 或 `netlify.toml`。`app-version.js`／`sw.js` 升為 v98，SW 僅修改版本字串；更新提示雙版本驗收順延至 v99／v100。
+
+## 2026-08-08｜Ledger Entry Session workflow／state seam（SW v97）⭐ 架構變更
+
+- **深化同一 module**：`ledger-ui-state.js` 在既有 dashboard／history state seam 上接管 create／edit entry session 的 lifecycle、draft／editing ownership、`savePending`、calendar 與 return context；公開 interface 維持 `createState(seed)`、`transition(state,action)`、`activeHistoryFilterCount(state)` 與 `createWorkflow(adapter)`，沒有建立第二份 entry state 或全域 store。
+- **語意型 action 與 ordered effects**：open／close、切軌、validation、save requested／failed／succeeded 與 calendar 操作都由純 transition 維護 invariants，再由 production adapter 依序 mount、render、同步 pending、聚焦、恢復 context 與通知。save-and-add-another 保留 session／返回脈絡並沿用既有 `renderSplit()` dashboard 更新；save-and-close 完整清除 session。
+- **非同步與回歸保護**：session／request ID 阻止重複 submit 與 stale completion 改寫新表單。Buy-to-Ledger 仍由原 domain／workflow coordinator 負責 commit 與 link 回寫；correction 保留明確 compatibility branch，calculator 仍由 entry unmount adapter 清理。
+- **邊界不擴張**：帳務驗證、repository、record 建立、DOM rendering、同步、settlement、calculator state 與 Shopping UI state 均未移入 module。未修改 Ledger／Shopping schema、Apps Script、備份格式、`PERSONAL_STATE_VERSION=9` 或 `netlify.toml`。
+- **架構與測試證據**：新增 ADR 0011、Node `ledger-entry-ui-state.test.js` 與 Browser `ledger-entry-workflow.spec.js`，並擴充 Buy-to-Ledger／calculator characterization。完整 **71／71** Node test files、Playwright **131／131**、`check-doc-titles`、`check-app-version`、兩份 manifest JSON 與 `git diff --check` 全數通過。
+- **版本邊界**：`app-version.js`／`sw.js` 升為 v97，`APP_RELEASE_NOTES` 依五筆規則滾動；`sw.js` 除版本字串外不變，install／activate／fetch／skipWaiting／clients.claim 與快取策略均未修改。SW 更新提示雙版本驗收順延至 v98／v99。
+
 ## 2026-08-08｜發布 review 規格補正（SW v96）
 
 - **照片 quota 直接處理**：保留 v78 已核准的 inline failure flow，不恢復獨立錯誤 overlay；quota-like 寫入失敗在原表單／修復 Sheet 內提供 44px「管理儲存空間」按鈕。修復流程會先關閉再進入設定的「照片健康狀態」，原 `photoId` 與採買資料維持不變；表單路徑前往設定時暫時 inert，關閉設定後可繼續原草稿。

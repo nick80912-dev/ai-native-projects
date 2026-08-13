@@ -1,22 +1,36 @@
 # CURRENT(現在正在做的)
 
-> 更新於 2026-08-08。細任務層;里程碑看 `06_ROADMAP.md`,**逐版交付紀錄一律看 `07_CHANGELOG.md`**,正式待辦看 `tasks/backlog.md`。
+## v110 main release authorized; production verification pending
+
+
+
+- v109 Bar device/PWA acceptance is complete; Bar authorized the reserved v110 batch.
+- v110 adds compact non-theme typography, spacing, radius, action-level, and diagnostic-role tokens only on touched surfaces. All six theme palettes and the existing visual direction remain unchanged.
+- `today-view.js` now owns the pure Today Hero Shopping model／renderer／declarative action. `index.html` retains reminder selection, current-stop exclusion, store／clock access and DOM effects; accepted copy, targeting, keyboard, accessibility and responsive behavior remain unchanged.
+- The Ledger history candidate failed its deletion test, so v110 does not add `ledger-history-view.js`, a global store, controller, event bus or framework. Existing Ledger state, data and workflow semantics remain untouched.
+- Netlify quota reset on 2026-08-13; Bar authorized the accumulated `dev` candidate to merge into `main`. Release review remediation adds ADR 0018, aligns the Today ownership spec with the approved implementation plan, and wires quiet／fixed status colors through semantic tokens before the release PR.
+- App／SW are forward-bumped to v110. Fresh pre-commit and committed-tree validation passes Node **87/87**, full Playwright **176/176**, focused WebKit **39/39**, static／BUILTIN gates and offline Health; runtime／release commit `49f8e8c` reached `dev` with local／remote equality, followed by this evidence-only status update.
+
+
+
+> 更新於 2026-08-13。細任務層;里程碑看 `06_ROADMAP.md`,**逐版交付紀錄一律看 `07_CHANGELOG.md`**,正式待辦看 `tasks/backlog.md`。
 > 本檔只回答三件事:**現在線上是什麼、dev 上是什麼、下一批要做什麼**。歷史流水帳不放這裡。
 
 ## 📌 現況
 
 | 項目 | 值 |
 |---|---|
-| **正式版(`main` / 正式站)** | **SW v73**,merge commit `17c423f`,回滾 tag `production-v73` |
+
+| **`main` 原始碼** | **SW v96**，PR #13 merge commit `02705c3`；因 Netlify 額度用罄尚未部署／建立 tag |
 | 正式站 | `https://trippilot-jp.netlify.app/` — 2026-08-01 由 SW v18 升級至 v73,G1–G6 全數通過 |
-| **dev 候選版** | **SW v96**,`app-version.js` 與 `sw.js` 均為 v96 |
+| **`dev` candidate** | **SW v110**; UI presentation tokens plus production-used Today view module, Bar-authorized for `main` release |
 | 個人備份格式 | **v9**(`PERSONAL_STATE_SUPPORTED_VERSIONS = [1..9]`)—— v81 因想逛 key 識別語意變更而升版 |
-| dev 自動驗證 | **70／70** Node test files、Playwright **124／124**、`check-doc-titles` 與 `check-app-version` 通過 |
+| candidate automated validation | Committed tree: Node **87/87**, Playwright **176/176**, focused WebKit **39/39**, static／BUILTIN checks pass; offline Chromium `{"source":"builtin","healthCheck":[],"appLogCount":9,"pageErrors":[]}` |
 | 既有 tag | `production-v18`、`production-v73` |
 
-**`dev` 領先 `main` 二十一個候選版（v74–v89、v92–v96），全部尚未正式發布。** v74–v87 已由 Bar 於 2026-08-03 確認真機驗收皆正常；v88–v89、v92–v95 亦於 2026-08-08 完成 Bar 畫面／真機確認。v96 補齊發布 review 找到的照片容量直接管理入口與等號後百分比，並以自動瀏覽器回歸測試覆蓋。只有 v73 已合併、正式部署並建立 production tag。
+**`main` 已合併 v96，但正式站仍停在 v73；v110 是目前已獲 Bar 發布授權的 `dev` 候選。** v74–v87 已由 Bar 於 2026-08-03 確認真機驗收皆正常；v88–v89、v92–v95 亦於 2026-08-08 完成 Bar 畫面／真機確認。v96 因 Netlify 額度用罄尚未正式部署，也未建立 `production-v96` tag。Bar 已完成 v101／v102／v109 裝置／PWA 驗收；v110 已完成 committed-tree gates、`dev` delivery 與 device／PWA acceptance，現在依 §E 執行 PR、`main` merge、Netlify production verification 與 `production-v110` tag。
 
-### v74–v96 已折疊的主要能力
+### v74–v98 已折疊的主要能力
 
 | 版本 | 能力 |
 |---|---|
@@ -41,6 +55,9 @@
 | v94 | **計算金額更直覺**：五列四欄計算機支援小數、購物式百分比、等號與實體鍵盤；正數小數在提示後無條件捨去套用 |
 | v95 | **Ledger UI state seam**：帳本軌、完整紀錄、篩選／分組與多選共用不可變 transition + ordered effects workflow；UI／資料語意不變 |
 | v96 | **發布阻斷補正**：照片 quota 失敗提供「管理儲存空間」直接入口；計算機 `=` 後可接 `%`；同步 ADR／runtime 文件索引 |
+| v97 | **Ledger entry session state seam**：同一 module 接管新增／編輯 lifecycle、draft／editing ownership、save pending、calendar 與返回脈絡；以 session／request ID 防重複提交及 stale completion |
+| v98 | **更正操作列遮罩修正**：更正多品項收據捲動時，金額計算機入口不再穿透顯示於 sticky 預覽／作廢／取消操作列；後續 dev UI delta 將單品新增消費收斂為分攤按需展開與單一其他資訊入口，未再升 SW 版次 |
+| v98 後續 dev delta | **UI workflow/state 架構模組化＋品質／呈現強化**：Shopping form session、下一站 reconciliation、Ledger correction、runtime asset inventory、AppLog session 診斷、Sheet 800ms 退避與 Toast null fallback；Ledger 清單卡固定兩行並隱藏付款方式；Shopping 明細以「筆」合併記帳狀態，待確認時預先停用重複記帳入口。未另占 runtime 版本 |
 
 > v45–v73 的逐版交付紀錄見 `07_CHANGELOG.md`,不在本檔重述。
 
@@ -60,15 +77,15 @@
 | G5 | Netlify 正式站部署後線上驗證 | ✅ deploy `6a6d6be3`,線上 `sw.js`／`app-version.js` 皆 v73 |
 | G6 | 建立 annotated tag `production-v73` | ✅ tag 物件 `64e8d0b` |
 
-### v74–v96
+### v74–v96（已合併 main，尚未部署）
 
 | # | Gate | 狀態 |
 |---|---|---|
 | G1' | v74–v87 累積 delta 的 Bar 真機／PWA 驗收 | ✅ 2026-08-03，Bar 確認真機驗收皆正常 |
 | G1'' | v88–v89、v92–v95 畫面／真機確認 | ✅ 2026-08-08，Bar 確認皆已完成 |
-| G4' | Bar 核准 PR merge `dev → main` | ⬜ 未開始 |
-| G5' | 正式站部署後線上驗證 | ⬜ 未開始 |
-| G6' | 建立 `production-v96` tag | ⬜ 未開始 |
+| G4' | Bar 核准 PR merge `dev → main` | ✅ PR #13，merge commit `02705c3` |
+| G5' | 正式站部署後線上驗證 | ⏸ Netlify 額度用罄，正式站仍為 v73 |
+| G6' | 建立 `production-v96` tag | ⏸ 等待正式部署與線上驗證 |
 
 > G1／G4／G5 為 Bar 專屬職責;AI 不得以自動驗證全綠為由推進。
 > **測試站驗收前置**:`dev-trippilot-jp.netlify.app` 自動部署已於 2026-07-26 關閉。用它驗收前必須先手動部署到目標 commit,並依 `16_OPS_PLAYBOOK.md` §F5 核對線上 `sw.js`／`app-version.js` 版本與 CacheStorage 實際內容,**不得只看 Git 分支**。
@@ -91,13 +108,22 @@
 | v93 | Buy-to-Ledger 垂直切片：characterization、純 domain、workflow coordinator 與正式 runtime seam | ✅ 已交付至 dev |
 | v94 | Ledger 計算機小數、購物式百分比、等號、實體鍵盤與套用時無條件捨去 | ✅ 已交付至 dev |
 | v95 | Ledger UI 歷史瀏覽 workflow／state seam：帳本軌、完整紀錄、filters、selection 與 ordered UI effects | ✅ 已交付至 dev |
-| v96 | Release review 補正：照片 quota 直接管理入口、`=` 後 `%`、ADR／架構索引同步 | ✅ 完整 gate 通過，待 release PR |
-| v97／v98 | SW 更新提示 —— **需兩個版本才能完成驗收**：v97 加入監聽與提示，v98 作為真實更新目標。不修改 SW 生命週期與快取策略，只做正常版本遞增 | ⬜ 未開始 |
+| v96 | Release review 補正：照片 quota 直接管理入口、`=` 後 `%`、ADR／架構索引同步 | ✅ 已由 PR #13 合併 main；正式部署暫停 |
+| v97 | Ledger create／edit entry session workflow／state seam：lifecycle、draft／editing ownership、save guard、calendar、return context 與 ordered effects | ✅ 已交付至本機 dev，完整 gate 通過 |
+| v98 | 更正收據 sticky 操作列遮罩：捲動時不再浮出品項金額計算機入口 | ✅ 已完成，完整 gate 通過 |
+| v99／v100 | SW 更新提示雙版本實驗；實機確認事件時機與已顯示內容不同步，產品必要性不足 | ⛔ 實驗結束；由 Bar 取消，不列為完成功能 |
+| v101 | 移除全域 SW 更新提示；杉綠 action 改為林下青 `#2F6B4F`，SW lifecycle／cache／offline 與資料不變 | ✅ 2026-08-11 Bar 裝置／PWA 外觀驗收完成 |
+| v102 | 住宿停靠點改以 Places.HID 精確關聯 Hotels.HID；Schema 3.0、條件驗證、BUILTIN 與 exact resolver 同步 | ✅ 最終 whole-branch review、完整 gate、dev push（`ffc9aae`）與 Bar 裝置／PWA驗收完成 |
+| v103–v107 | Today Hero 旅行提示、採買摘要分類／對齊／未分類 fallback；原始採買資料與既有 next-stop authority 不變 | ✅ 已完成自動驗證；歷史細節見 `07_CHANGELOG.md` |
+| v108 | transient exact-target navigation、可見定位／scroll／focus return、display-only diagnostic impact、manifest status authority | ✅ final review／完整 gate／dev delivery；Bar 驗收中提出成功提示列精簡修正 |
+| v109 | 成功定位提示列移除、1 秒醒目＋0.2 秒淡出、失敗提示保留 | ✅ Bar device／PWA acceptance complete |
+| v110 | UI semantic tokens 與 Today deep-module extraction（原 v109） | ⏳ committed-tree gates 與 dev delivery 完成；等待 Bar device／PWA verification |
+| v111 | BUILTIN asset spike 與 test throughput（原 v110） | 🔒 gated；只可在 Bar 接受 v110 後開始 |
 
 **已知未做(需先定判準)**:Today 的「交通／停車／營業／付款／提醒**依當下情境動態調整優先順序**」。v84 只做了可明確驗收的收合(常駐交通／停車／營業,收合付款／提醒);「當下情境」的判準(依時間?依距離?依是否已抵達?)尚未定義,不同讀法會做出完全不同的東西,故未實作。
 
 ## 下一棒
 
-→ **v74–v89、v92–v95 的 Bar 畫面／真機確認已全部完成。** Bar 已核准進入正式發布流程；目前先完成 v96 release-blocker 補正與完整 gate，通過後依 `16_OPS_PLAYBOOK.md` 走 `dev → main` PR、正式站驗證與 `production-v96` tag。SW 更新提示雙版本驗收順延至 v97／v98；下一個架構切片再評估 Ledger entry session lifecycle。
+→ **v110 committed-tree release gate、`dev` delivery 與 Bar 手機／PWA 驗收已完成，正式發布已獲授權。** 依 §E 執行 `dev → main` PR、Actions 綠燈、merge、Netlify production verification；線上 v110 驗證通過後才建立 `production-v110` tag。
 
-> **不得**自行動 `main`、部署正式站或建立 production tag。未經 Bar 核准不得 merge `dev → main`。
+> 正式發布仍必須遵守 §E：PR 與 Actions 通過後才能 merge；Netlify 線上驗證通過後才能建立 production tag。

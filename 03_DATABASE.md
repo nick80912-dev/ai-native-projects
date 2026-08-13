@@ -15,10 +15,10 @@
 | Sheet | gid | kind | 用途 |
 |---|---:|---|---|
 | 行程總表 | 1169222358 | itinerary | 行程骨架(天/時間/活動),使用 ID 引用 Places 或 Restaurants |
-| Places | 1089684162 | table | 地點主表,地點資料的單一來源 |
+| Places | 1089684162 | table | 地點主表；住宿型列以 HID 引用 Hotels profile |
 | Restaurants | 1421821084 | table | 餐廳資料,可用 PID 掛到 Place 卡片 |
 | Shopping | 1182059264 | table | 商場店家資料,驅動購物頁樓層/必逛/免稅顯示 |
-| Hotels | 792115203 | table | 住宿細節,以名稱比對 Places 住宿型地點 |
+| Hotels | 792115203 | table | 住宿 profile；以 HID 被一或多個住宿型 Places 精確引用 |
 | Expenses | 1354339857 | freeform-expense | 行前團費自由格式;同行成員名單來源 |
 | 分帳紀錄 | 896856089 | table | 跨裝置旅途記帳;Apps Script append-only 回寫 |
 | TripConfig | 1070234314 | keyvalue | 旅程名稱、起訖、交通模式、幣別等設定 |
@@ -37,22 +37,25 @@
 | Sheet | 用途 | 維護方式 |
 |---|---|---|
 | 行程總表 | 排列每日行程與引用 ID | 新增行程列;ID 使用 Pxxx 或 Rxxx |
-| Places | 維護地點、交通、停車、營業、官網等資訊 | 新地點只新增資料列;欄位異動先改 Sheet 再改 `schema.js` |
+| Places | 維護地點、交通、停車、營業、官網等資訊 | 住宿型列另填 HID；欄位異動先改 Sheet 再改 `schema.js` |
 | Restaurants | 維護餐廳資料 | 新餐廳只新增資料列;可填 PID 掛到 Place |
 | Shopping | 維護店家、樓層、必逛、免稅等資料 | 新店家只新增資料列;PID 指向商場 Place |
-| Hotels | 維護住宿細節 | 新住宿只新增資料列;住宿地點仍需在 Places 有對應資料 |
+| Hotels | 維護住宿 profile | 新住宿建立唯一 HID；各住宿停靠點在 Places 以 HID 引用 |
 | Expenses | 維護行前團費 | 依 `schema.js` 的 freeform layout 維護,不是一般資料列表 |
 | 分帳紀錄 | 保存旅途記帳 | 只由 Apps Script append;團體刪帳新增墓碑列,不得修改原列 |
 | TripConfig | 維護 key/value 設定 | `Exchange Rate` / `Ledger Default Currency` 可由 App 設定頁更新；其餘鍵由 Bar 手動管理 |
 
 ## 重要資料規則
-- 新增景點/商場/住宿地點:只新增 Places 資料列,Type 必填。
+- 新增景點／商場只新增 Places 資料列,Type 必填；新增住宿停靠點另須填入存在於 Hotels 的 HID。
 - 新增餐廳:新增 Restaurants 資料列;填 PID 後會掛到對應 Place 卡片。
 - 新增店家:新增 Shopping 資料列;PID 指向對應商場。
 - 新增欄位:先改 Google Sheet,再改 `schema.js`;Parser 不需修改。
 - 一般資料表 ID 格式:Places=`P###`、Restaurants=`R###`、Shopping=`S###`、Hotels=`H###`;不需連號,但不得重複、不得改變既有 ID 意義。
 - Expenses 是自由格式,沒有 `E###` ID;行程總表目前只使用 `P###` / `R###` 引用地點或餐廳。
-- 同一地點多次造訪使用同一 PID。
+- 一般非住宿地點多次造訪使用同一 PID。住宿是明確例外：同一間住宿若位於不同路段、travel 脈絡不同,可保留多個 route-stop PID,但都必須引用同一個 Hotels.HID。
+- 住宿關係為 `Places(Type=住宿).HID → Hotels.HID` 的 **N→1**：PID 是帶交通脈絡的停靠點,HID 是 Hotel profile 唯一 join key；Places／Hotels 名稱都只供顯示,不得作比對或關聯。
+- 現行 P002／P013／P022／P031／P040 分別保留「開車30分鐘／開車2小時／開車3分鐘／開車50分鐘／步行3分鐘」,但都引用 H001。五個 PID 不得合併,因為其行程位置與交通脈絡不同；入住、退房、地址、停車與備註則由 H001 共用。
+- Validator 條件式要求：`Type=住宿` 必須有 HID；其他 Type 不得填 HID；任何非空 HID 必須精確對應 Hotels.HID。任一違反都讓七表候選快照 fail closed；Runtime 缺失／懸空 HID 回傳 `null`,不以名稱或 Hotels 第一筆 fallback。
 - 個人狀態(打卡/想逛/成員身分)與個人帳存 localStorage,不進 CMS。採買照片 Blob 存 IndexedDB `trip-local-media/shopping-photos`,採買項目只保存 `photoId` 引用；照片不進 CMS、Ledger、個人備份或跨裝置同步。依 ADR 0006,App 只可 append「分帳紀錄」及更新 TripConfig 的 `Exchange Rate` / `Ledger Default Currency`；其餘 CMS 欄位由 Bar 手動管理且 App 唯讀。
 
 ## 採買照片本機資料規則

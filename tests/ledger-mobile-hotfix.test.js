@@ -35,9 +35,12 @@ assert(html.includes("var DEFAULT_LEDGER_CATEGORIES=['餐飲','交通','票券',
 assert(html.includes('.ledger-dual-amounts span{font-size:10px'),'secondary TWD amount is compact but remains at the 10px floor');
 assert(/\.ledger-dual-amounts\{[^}]*align-content:center/.test(html),'dual-currency amounts are vertically centered in every record card');
 assert(/\.ledger-dual-amounts\{[^}]*align-self:center/.test(html),'personal and shared record amounts use the same self-centering rule');
-assert(/\.ledger-recent-body\.has-badges \.ledger-dual-amounts\{[^}]*grid-column:2[^}]*grid-row:1\/3/.test(html),'an amount beside badges spans both content rows');
-assert(/\.ledger-recent-body\.has-badges \.ledger-recent-badges\{[^}]*grid-column:1[^}]*grid-row:2/.test(html),'badges remain in the left column below record metadata');
-assert(html.includes("ledger-recent-body '+(badges.length?'has-badges':'')"),'the shared record renderer marks any badge-bearing card with the common layout state');
+assert(/\.ledger-recent-body \.ledger-recent-main,\.ledger-batch-body \.ledger-recent-main\{[^}]*display:grid[^}]*grid-template-rows:repeat\(2,minmax\(0,auto\)\)[^}]*overflow:hidden/.test(html),'recent and batch card main content each own exactly two bounded rows');
+assert(/\.ledger-recent-body,\.ledger-batch-body\{[^}]*align-items:center/.test(html),'both two-row content blocks align vertically beside right-side amounts');
+assert(/\.ledger-recent-line\{[^}]*white-space:nowrap[^}]*overflow:hidden/.test(html),'both recent-card rows stay single-line at mobile widths');
+assert(/\.ledger-recent-detail,\.ledger-recent-location\{[^}]*overflow:hidden[^}]*text-overflow:ellipsis[^}]*white-space:nowrap/.test(html),'flexible recent-card text truncates instead of wrapping');
+assert(html.includes('ledger-recent-primary-line')&&html.includes('ledger-recent-secondary-line'),'the recent-record renderer exposes the strict two-row presentation seam');
+assert(!html.includes("ledger-recent-body '+(badges.length?'has-badges':'')"),'the retired third-row layout state is absent');
 assert(/\.ledger-record-menu-button\{[^}]*align-self:center/.test(html),'ellipsis action is vertically centered beside the card amount');
 assert(/\.ledger-date-summary\{[^}]*grid-template-columns:minmax\(0,1fr\) auto[^}]*font-size:11px/.test(html),'date summary uses a compact two-column mobile layout');
 assert(/\.ledger-date-total\{[^}]*font-size:9px[^}]*white-space:nowrap/.test(html),'daily total alone is reduced to 9px and stays on one line');

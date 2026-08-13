@@ -114,6 +114,51 @@ test('切換分頁清空選取且已買分頁只全選已買項目',async({page}
   expect(await page.evaluate(()=>Object.keys(shoppingUiState.selected).sort())).toEqual(['done-1','done-2']);
 });
 
+test('多選時點卡片只切換 selection，不改完成狀態或開啟明細',async({page})=>{
+  await openSeededShopping(page);
+  await page.getByRole('button',{name:'多選',exact:true}).click();
+  await page.locator('[data-shopping-item-id="pending-1"] .shopping-item-body').click();
+  expect(await page.evaluate(()=>(
+    {
+      selected:!!shoppingUiState.selected['pending-1'],
+      done:shoppingListStore.all().find(item=>item.id==='pending-1').done,
+      detail:!!document.getElementById('shoppingItemDetail')
+    }
+  ))).toEqual({selected:true,done:false,detail:false});
+});
+
+test('批次完成失敗時保留多選模式與原選取',async({page})=>{
+  await openSeededShopping(page);
+  await page.getByRole('button',{name:'多選',exact:true}).click();
+  await page.getByRole('button',{name:'全選',exact:true}).click();
+  await page.evaluate(()=>{
+    shoppingListStore.patchMany=function(){throw new Error('forced patchMany failure');};
+  });
+  await page.locator('.shopping-selection-toolbar').getByRole('button',{name:'已買',exact:true}).click();
+  expect(await page.evaluate(()=>(
+    {
+      mode:shoppingUiState.selectionMode,
+      selected:Object.keys(shoppingUiState.selected).filter(id=>shoppingUiState.selected[id]).sort(),
+      pending:shoppingListStore.all().filter(item=>!item.done).length
+    }
+  ))).toEqual({mode:true,selected:['pending-1','pending-2'],pending:2});
+});
+
+test('取消批次刪除確認時保留多選模式與原選取',async({page})=>{
+  await openSeededShopping(page);
+  await page.getByRole('button',{name:'多選',exact:true}).click();
+  await page.getByRole('button',{name:'全選',exact:true}).click();
+  page.once('dialog',dialog=>dialog.dismiss());
+  await page.locator('.shopping-selection-toolbar').getByRole('button',{name:'刪除',exact:true}).click();
+  expect(await page.evaluate(()=>(
+    {
+      mode:shoppingUiState.selectionMode,
+      selected:Object.keys(shoppingUiState.selected).filter(id=>shoppingUiState.selected[id]).sort(),
+      count:shoppingListStore.all().length
+    }
+  ))).toEqual({mode:true,selected:['pending-1','pending-2'],count:4});
+});
+
 test('全選沿用既有完成、移回待買與刪除批次處理',async({page})=>{
   await openSeededShopping(page);
   await page.getByRole('button',{name:'多選',exact:true}).click();

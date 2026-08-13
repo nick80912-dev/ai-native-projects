@@ -56,6 +56,53 @@ assert.match(countSource,/TripLedgerUiState\.activeHistoryFilterCount\(ledgerUiS
 const productionSection=html.slice(html.indexOf('var ledgerUiState='),html.indexOf('function ledgerTrackRecords'));
 assert(productionSection.includes('syncHistoryFilterPanel:function(state){syncLedgerHistoryFilterPanel(state);}'),'production adapter supports the partial filter-panel effect without rebuilding search DOM');
 
+const openCreateSource=extractFunction(html,'openLedgerEntrySheet');
+const openEditSource=extractFunction(html,'editLedgerRecord');
+const closeEntrySource=extractFunction(html,'closeLedgerEntrySheet');
+const trackEntrySource=extractFunction(html,'setLedgerDraftTrack');
+const toggleCalendarSource=extractFunction(html,'toggleLedgerCalendar');
+const shiftCalendarSource=extractFunction(html,'shiftLedgerCalendar');
+const selectCalendarSource=extractFunction(html,'selectLedgerCalendarDate');
+const closeCalendarSource=extractFunction(html,'closeLedgerCalendar');
+
+assert.match(openCreateSource,/ledgerUiWorkflow\.dispatch\(\{type:'open-entry-create'/,'create entry opens through the workflow');
+assert.match(openEditSource,/ledgerUiWorkflow\.dispatch\(\{type:'open-entry-edit'/,'edit entry opens through the workflow');
+assert.match(closeEntrySource,/ledgerUiWorkflow\.dispatch\(\{type:'close-entry'/,'ordinary entry close goes through the workflow');
+assert.match(closeEntrySource,/ledgerUiWorkflow\.dispatch\(\{type:'close-correction'/,'correction close goes through the same workflow');
+assert.doesNotMatch(openCreateSource,/ledgerUiState\.(?:draft|editing|sheet|savePending)\s*=/,'create no longer mutates owned session boundaries');
+assert.doesNotMatch(openEditSource,/ledgerUiState\.(?:draft|editing|sheet|savePending)\s*=/,'edit no longer mutates owned session boundaries');
+assert.match(trackEntrySource,/type:'entry-track-switched'/,'entry track switching installs its planned draft through the workflow');
+assert.match(toggleCalendarSource,/type:'toggle-entry-calendar'/);
+assert.match(shiftCalendarSource,/type:'shift-entry-calendar'/);
+assert.match(selectCalendarSource,/type:'select-entry-calendar-date'/);
+assert.match(closeCalendarSource,/type:'close-entry-calendar'/);
+
+const correctionSource=extractFunction(html,'openLedgerCorrectionSheet');
+assert.match(correctionSource,/ledgerUiWorkflow\.dispatch\(\{\s*type:'open-correction'/,'correction opens through the existing Ledger workflow');
+assert.doesNotMatch(correctionSource,/ledgerUiState\.(?:track|draft|editing|correction|sheet|savePending)\s*=/,'correction open no longer mutates workflow-owned state');
+assert.match(extractFunction(html,'updateLedgerCorrectionReason'),/type:'update-correction-reason'/,'correction reason updates through the workflow');
+
+const saveEntrySource=extractFunction(html,'saveLedgerEntry');
+const commitEntrySource=extractFunction(html,'commitLedgerEntrySave');
+const finishEntrySource=extractFunction(html,'finishLedgerEntrySaveUi');
+const failEntrySource=extractFunction(html,'failLedgerEntrySaveUi');
+const correctionSaveSource=extractFunction(html,'saveLedgerCorrection');
+assert.match(saveEntrySource,/type:'entry-save-requested'/,'create/edit save starts through the workflow');
+assert.match(finishEntrySource,/type:'entry-save-succeeded'/,'create/edit success finishes through the workflow');
+assert.match(failEntrySource,/type:'entry-save-failed'/,'create/edit failure finishes through the workflow');
+[saveEntrySource,commitEntrySource,finishEntrySource,failEntrySource].forEach(function(source){
+  assert.doesNotMatch(source,/ledgerUiState\.(?:draft|editing|sheet|savePending)\s*=/,'migrated save paths do not directly mutate owned session boundaries');
+});
+assert.match(correctionSaveSource,/type:'correction-preview-installed'/,'correction preview installation uses a semantic workflow action');
+assert.match(correctionSaveSource,/type:'correction-save-requested'/,'correction persistence is request guarded');
+assert.match(correctionSaveSource,/type:'correction-save-succeeded'/,'correction success closes through the workflow');
+assert.match(correctionSaveSource,/type:'correction-save-failed'/,'correction failure unlocks through the workflow');
+assert.doesNotMatch(html,/function syncLegacyCorrectionSavePending\(/,'the compatibility pending helper is deleted');
+assert.doesNotMatch(toggleCalendarSource,/if\(ledgerUiState\.correction\)/,'calendar toggle has no correction-only direct mutation branch');
+assert.doesNotMatch(shiftCalendarSource,/if\(ledgerUiState\.correction\)/,'calendar shift has no correction-only direct mutation branch');
+assert.doesNotMatch(selectCalendarSource,/if\(ledgerUiState\.correction\)/,'calendar selection has no correction-only direct mutation branch');
+assert.doesNotMatch(closeCalendarSource,/if\(ledgerUiState\.correction\)/,'calendar close has no correction-only direct mutation branch');
+
 assert.doesNotMatch(html,/localStorage\.(?:setItem|getItem)\([^)]*ledgerUiState/,'Ledger UI workflow state remains session-only');
 assert.doesNotMatch(extractFunction(html,'exportPersonalState'),/ledgerUiState/,'personal backups do not include Ledger UI state');
 assert.doesNotMatch(extractFunction(html,'applyPersonalStatePayload'),/ledgerUiState/,'personal restores do not write Ledger UI state');

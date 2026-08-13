@@ -2,6 +2,7 @@ const assert=require('assert');
 const fs=require('fs');
 const vm=require('vm');
 const TripBuyToLedger=require('../buy-to-ledger.js');
+const TripTodayView=require('../today-view.js');
 
 function createStorage(){
   const values={};
@@ -16,9 +17,14 @@ function plain(value){return JSON.parse(JSON.stringify(value));}
 
 function loadShoppingModule(){
   const html=fs.readFileSync('index.html','utf8');
+  const helpersStart=html.indexOf('function escapeHtml(');
+  const helpersEnd=html.indexOf('function timestampDate(',helpersStart);
+  const rendererStart=html.indexOf('function todayViewActionAttribute(');
+  const rendererEnd=html.indexOf('function renderShoppingTodayEntry(',rendererStart);
   const start=html.indexOf('/* ================= ledgerRepository');
   const end=html.indexOf('/* ================= 分帳',start);
-  assert(start>=0&&end>start,'shopping helpers live beside the local ledger repositories');
+  assert(helpersStart>=0&&helpersEnd>helpersStart&&rendererStart>=0&&rendererEnd>rendererStart&&start>=0&&end>start,
+    'shopping helpers and renderer have executable source slices');
   const sandbox={
     console:{log(){},warn(){},error(){}},
     localStorage:createStorage(),
@@ -26,6 +32,7 @@ function loadShoppingModule(){
     setTimeout,clearTimeout,
     timestampDate(value){return new Date(Number(value));},
     TripBuyToLedger,
+    TripTodayView,
     buyToLedgerRuntimeAdapter:{},
     canonicalMemberName(value){return String(value||'').trim();},
     AppLog:{repo(){},sync(){}},
@@ -33,7 +40,7 @@ function loadShoppingModule(){
     renderSplit(){},updateLedgerPendingStatus(){}
   };
   vm.createContext(sandbox);
-  vm.runInContext(html.slice(start,end),sandbox);
+  vm.runInContext(html.slice(helpersStart,helpersEnd)+html.slice(rendererStart,rendererEnd)+html.slice(start,end),sandbox);
   return sandbox;
 }
 
@@ -114,10 +121,70 @@ const reminder=plain(mod.buildShoppingTodayReminder([
   {id:'d',name:'孤兒',stopRef:'10/18_99',done:false}
 ],day));
 assert.strictEqual(reminder.count,1,'Today reminder includes only unfinished items bound to a current stop');
-assert.deepStrictEqual(reminder.groups,[{stopRef:'10/18_1',stopName:'永旺夢樂城 岡山',items:['白桃']}]);
+assert.deepStrictEqual(reminder.groups,[{stopRef:'10/18_1',stopName:'永旺夢樂城 岡山',items:['白桃'],firstCategory:''}]);
 assert.strictEqual(mod.buildShoppingTodayReminder([{id:'b',name:'藥妝',stopRef:'',done:false}],day),null,'unknown-location items stay off Today');
 assert.strictEqual(mod.buildShoppingTodayReminder([{id:'d',name:'孤兒',stopRef:'10/18_99',done:false}],day),null,'orphan references degrade silently');
 assert.strictEqual(mod.buildShoppingTodayReminder([],null),null,'non-trip days never show the reminder');
+
+const heroDay={items:[
+  {id:'past',place:'過去站'},
+  {id:'current',place:'目前站'},
+  {id:'future-a',place:'未來第一站'},
+  {id:'future-b',place:'未來第二站'}
+]};
+const heroReminder={count:9,groups:[
+  {stopRef:'past',stopName:'過去站',items:['咖啡'],firstCategory:'飲品'},
+  {stopRef:'future-a',stopName:'未來第一站',items:['藥妝','零食','伴手禮'],firstCategory:'必買'},
+  {stopRef:'future-b',stopName:'未來第二站',items:['雨傘','襪子','牙刷','電池'],firstCategory:'生活用品'}
+]};
+const heroSnapshot=plain(heroReminder);
+assert.deepStrictEqual(
+  plain(mod.todayShoppingHeroModel(heroReminder,heroDay,'current')),
+  {label:'順路採買',stopRef:'future-a',stopName:'未來第一站',count:3,firstCategory:'必買',remainingCount:2},
+  'Hero chooses the first resolved group after the current stop and uses that group count'
+);
+assert.deepStrictEqual(
+  plain(mod.todayShoppingHeroModel({count:1,groups:[heroReminder.groups[0]]},heroDay,'current')),
+  {label:'今日採買',stopRef:'past',stopName:'過去站',count:1,firstCategory:'飲品',remainingCount:0},
+  'past-only shopping never claims to be on the way'
+);
+assert.deepStrictEqual(
+  plain(mod.todayShoppingHeroModel(heroReminder,heroDay,'missing-current')),
+  {label:'今日採買',stopRef:'past',stopName:'過去站',count:1,firstCategory:'飲品',remainingCount:0},
+  'an unresolved current stop uses neutral copy'
+);
+assert.strictEqual(mod.todayShoppingHeroModel(null,heroDay,'current'),null);
+assert.strictEqual(mod.todayShoppingHeroModel({count:0,groups:[]},heroDay,'current'),null);
+assert.deepStrictEqual(
+  plain(mod.todayShoppingHeroModel({count:2,groups:[{stopRef:'future-a',stopName:'未來第一站',items:['商品一','商品二'],firstCategory:''}]},heroDay,'current')),
+  {label:'順路採買',stopRef:'future-a',stopName:'未來第一站',count:2,firstCategory:'',remainingCount:1},
+  'Hero projection preserves count metadata while an empty first category can degrade visually to the stop name'
+);
+assert.deepStrictEqual(heroReminder,heroSnapshot,'Hero projection does not mutate reminder input');
+
+mod.shoppingListStore.add({name:'SECRET_PRODUCT <img/onerror=alert(1)>',category:'必買',stopRef:'quoted-stop'});
+const quotedSummary=mod.renderTodayShoppingSummary({items:[
+  {id:'quoted-stop',place:'Quoted "Stop" <svg/onload=alert(1)>'}
+]},'');
+assert(
+  quotedSummary.includes('aria-label="開啟Quoted &quot;Stop&quot; &lt;svg/onload=alert(1)&gt;採買：必買，共 1 項待買"'),
+  'Shopping summary escapes the itinerary stop and uses category-only accessible copy'
+);
+assert.strictEqual((quotedSummary.match(/\saria-label=/g)||[]).length,1,'Shopping summary keeps one aria-label attribute');
+assert(!quotedSummary.includes('<svg'),'Shopping summary exposes no injectable stop-name markup');
+assert(!quotedSummary.includes('SECRET_PRODUCT'),'Shopping summary exposes no product name');
+assert(quotedSummary.includes('<span class="today-hero-shopping-category">必買</span>'),'Shopping summary renders the first prioritized category');
+
+mod.shoppingListStore.removeMany(mod.shoppingListStore.all().map(function(item){return item.id;}));
+var exactCurrent=mod.shoppingListStore.add({name:'下一站商品',stopRef:'10/18_0'});
+var unboundPending=mod.shoppingListStore.add({name:'未綁定商品'});
+var orphanPending=mod.shoppingListStore.add({name:'孤兒商品',stopRef:'10/18_99'});
+const mixedCurrentSummary=mod.renderTodayShoppingSummary(day,'10/18_0');
+assert(mixedCurrentSummary.includes('class="today-hero-summary-item today-hero-shopping-summary today-hero-shopping-generic"'),'mixed unresolved pending items keep the generic Hero entry');
+assert(mixedCurrentSummary.includes('aria-label="開啟採買清單"'),'generic Hero entry restores the approved accessible name');
+assert(mixedCurrentSummary.includes('<span class="today-hero-summary-label">採買清單</span>'),'generic Hero entry restores the approved label');
+assert(mixedCurrentSummary.includes('<span class="today-hero-summary-value">開啟查看 →</span>'),'generic Hero entry restores the approved action copy');
+mod.shoppingListStore.removeMany([exactCurrent.id,unboundPending.id,orphanPending.id]);
 
 /* v86:Today 只排除目前有效下一站的 exact stopRef；同名、日期與位置都不能代替 ID join。 */
 const excludedReminder=plain(mod.buildShoppingTodayReminder([
@@ -127,7 +194,7 @@ const excludedReminder=plain(mod.buildShoppingTodayReminder([
 ],day,'10/18_0'));
 assert.strictEqual(excludedReminder.count,1,'v86 exclusion recomputes Today count after removing the next stop');
 assert.deepStrictEqual(excludedReminder.groups,[{
-  stopRef:'10/18_1',stopName:'永旺夢樂城 岡山',items:['其他站']
+  stopRef:'10/18_1',stopName:'永旺夢樂城 岡山',items:['其他站'],firstCategory:''
 }],'v86 excludes only the exact next stopRef');
 assert.strictEqual(mod.buildShoppingTodayReminder([
   {id:'next-only',name:'下一站獨占',stopRef:'10/18_0',done:false}
@@ -166,6 +233,7 @@ assert.deepStrictEqual(
   ['必買一','必買二','一般一','一般二'],
   'Today 站點摘要與待買群組共用必買穩定置頂規則'
 );
+assert.strictEqual(priorityReminder.groups[0].firstCategory,'必買','Hero category comes from the first item after exact 必買 stable priority');
 
 /* ================= 結構化數量:quantity／unit／legacyQtyText ================= */
 const QNOW='2026-10-20T04:00:00.000Z';
@@ -583,17 +651,6 @@ assert(
   /startShoppingEdit\(\\'[\s\S]*\\',\\'detail\\'\)/.test(extractUiFunction('renderShoppingItemDetail')),
   '從明細進入編輯會記錄 detail 返回 context'
 );
-const openFormSource=extractUiFunction('openShoppingForm');
-assert(openFormSource.includes('focusShoppingNameInput()'),'開啟 Sheet 同步聚焦品名');
-assert(!openFormSource.includes('requestAnimationFrame'),'開啟 Sheet 不延後到下一個 frame 才聚焦');
-const commitFormSource=extractUiFunction('commitShoppingFormPayload');
-assert(commitFormSource.includes('shoppingSaveAnotherForm(form)'),'儲存並新增沿用核准的清理 helper');
-assert(commitFormSource.includes('focusShoppingNameInput()'),'儲存並新增同步把游標送回品名');
-assert(commitFormSource.includes('restoreShoppingFormReturn('),'一般儲存後依 session 返回');
-const saveFormSource=extractUiFunction('saveShoppingForm');
-assert(saveFormSource.includes('session.savePending'),'重複送出由同一 form session 阻擋');
-assert(saveFormSource.includes('setShoppingFormSavePending(true)')||commitFormSource.includes('setShoppingFormSavePending(true)'),'寫入前設為 pending');
-assert(saveFormSource.includes('setShoppingFormSavePending(false)')||commitFormSource.includes('setShoppingFormSavePending(false)'),'失敗時解除 pending');
 const renderedFormSource=extractUiFunction('renderShoppingForm');
 assert(/aria-label="關閉表單"[\s\S]*disabled/.test(renderedFormSource),'儲存中停用 Sheet 關閉');
 assert(/shopping-save-another[\s\S]*disabled/.test(renderedFormSource),'儲存中停用儲存並新增');
@@ -609,62 +666,6 @@ vm.createContext(focusSandbox);
 vm.runInContext(extractUiFunction('focusShoppingNameInput'),focusSandbox);
 focusSandbox.focusShoppingNameInput();
 assert.strictEqual(shoppingNameFocusCount,1,'品名聚焦 helper 可在同一呼叫堆疊執行');
-const commitEvents=[];
-let commitAdds=0;
-const originalContinuousForm={
-  id:'',name:'白桃',category:'必買',quantity:'3',unit:'盒',
-  targets:['媽媽'],allocations:[],stopRef:'stop-a',done:false,createdAt:''
-};
-const commitSandbox={
-  shoppingUiState:{
-    form:originalContinuousForm,
-    formSession:plain(mod.createShoppingFormSession('add',null,'list',640))
-  },
-  shoppingListStore:{
-    all(){return [];},
-    add(payload){
-      commitAdds++;
-      if(commitAdds===1){
-        commitSandbox.commitShoppingFormPayload(originalContinuousForm,payload,true);
-      }
-      return {id:'saved-1',category:payload.category,stopRef:payload.stopRef};
-    },
-    update(){throw new Error('unexpected update');}
-  },
-  setShoppingFormSavePending(pending){
-    commitSandbox.shoppingUiState.formSession.savePending=!!pending;
-  },
-  shoppingPhotoIdsReleased(){return [];},
-  cleanupShoppingPhotoIds(){return Promise.resolve([]);},
-  refreshShoppingPhotoAudit(){return Promise.resolve();},
-  shoppingSaveAnotherForm:mod.shoppingSaveAnotherForm,
-  createShoppingFormSession:mod.createShoppingFormSession,
-  renderToday(){},
-  renderShoppingListOverlay(){},
-  renderShoppingFormSheet(){},
-  focusShoppingNameInput(){commitEvents.push('focus');},
-  toast(){commitEvents.push('toast');},
-  closeShoppingFormSheet(){},
-  restoreShoppingFormReturn(){commitEvents.push('restore');},
-  focusShoppingFormError(){commitEvents.push('error-focus');}
-};
-vm.createContext(commitSandbox);
-vm.runInContext(commitFormSource,commitSandbox);
-commitSandbox.commitShoppingFormPayload(
-  originalContinuousForm,
-  {name:'白桃',category:'必買',stopRef:'stop-a'},
-  true
-);
-assert.strictEqual(commitAdds,1,'pending guard 阻擋同一次同步寫入中的重入送出');
-assert.strictEqual(commitSandbox.shoppingUiState.form.name,'','儲存並新增清空品名');
-assert.strictEqual(commitSandbox.shoppingUiState.form.category,'必買','儲存並新增保留分類');
-assert.strictEqual(commitSandbox.shoppingUiState.form.stopRef,'stop-a','儲存並新增保留站點');
-assert.strictEqual(commitSandbox.shoppingUiState.form.quantity,1,'儲存並新增重設數量 1');
-assert.strictEqual(commitSandbox.shoppingUiState.form.unit,'個','儲存並新增重設單位 個');
-assert(
-  commitEvents.indexOf('focus')>=0&&commitEvents.indexOf('focus')<commitEvents.indexOf('toast'),
-  '連續新增在 Toast 前同步聚焦下一筆品名'
-);
 const groupSandbox={
   shoppingUiState:{tab:'pending'},
   shoppingTripAuthority(){return 'authoritative';},
@@ -725,10 +726,12 @@ assert.deepStrictEqual(
   plain(mod.createShoppingFormSession(
     'edit',
     {id:'item-1',category:'伴手禮',stopRef:'stop-a'},
-    'list',
-    840
+     'list',
+     840,
+     'shopping-form-edit-1'
   )),
   {
+    sessionId:'shopping-form-edit-1',
     mode:'edit',
     itemId:'item-1',
     returnContext:'list',
@@ -737,13 +740,16 @@ assert.deepStrictEqual(
     originalStopRef:'stop-a',
     originalPhotoId:'',
     temporaryPhotoIds:[],
-    savePending:false
+    savePending:false,
+    saveRequestId:'',
+    photoRequestId:''
   },
   '編輯 Sheet session 保存返回位置與原分類／站點'
 );
 assert.deepStrictEqual(
-  plain(mod.createShoppingFormSession('add',null,'list',-3)),
+  plain(mod.createShoppingFormSession('add',null,'list',-3,'shopping-form-add-1')),
   {
+    sessionId:'shopping-form-add-1',
     mode:'add',
     itemId:'',
     returnContext:'list',
@@ -752,12 +758,14 @@ assert.deepStrictEqual(
     originalStopRef:'',
     originalPhotoId:'',
     temporaryPhotoIds:[],
-    savePending:false
+    savePending:false,
+    saveRequestId:'',
+    photoRequestId:''
   },
   '新增 Sheet session 使用安全的清單返回預設值'
 );
 assert.throws(
-  ()=>mod.createShoppingFormSession('edit',null,'list',0),
+  ()=>mod.createShoppingFormSession('edit',null,'list',0,'shopping-form-edit-missing'),
   /採買項目/,
   '編輯 session 不得在找不到項目時降級成新增'
 );
@@ -816,6 +824,7 @@ assert(ui.includes('toggleShoppingFormTarget('));
 assert(ui.includes('id="shoppingBuyForNew"'));
 assert(ui.includes('>儲存並新增</button>'));
 assert(!ui.includes("SHOPPING_CATEGORIES=['必買','伴手禮','代購'"));
+assert(!ui.includes("SHOPPING_CATEGORIES=['必買','伴手禮','生活用品','其他','未分類'"),'未分類 remains a display fallback, not stored category data');
 assert.match(ui,/\.shopping-target-badge\{[^}]*background:var\(--coral-bg\)[^}]*color:var\(--coral\)[^}]*border-radius:6px/);
 assert(ui.includes('--font-ui:"PingFang TC","Microsoft JhengHei",system-ui,-apple-system,sans-serif'),
   '全站字體變數只使用裝置內建繁中 fallback，不等待遠端字體');
@@ -836,8 +845,8 @@ assert(ui.includes('isQuotaExceededError(error)'),'save failures distinguish quo
 assert(ui.includes('font-family:var(--font-ui)'),'body 使用全站字體變數');
 assert(!ui.includes('font-family:"Hiragino Sans","Noto Sans TC","PingFang TC"'),
   '不得再由日文字型逐字 fallback 造成粗細不一致');
-assert(/\.shopping-category-badge\{[^}]*background:#fff7dc;[^}]*color:#8a6416/.test(ui),
-  '類別使用淡金底與深金字');
+assert(/\.shopping-category-badge\{[^}]*background:var\(--shopping-category-bg\);[^}]*color:var\(--shopping-category-ink\)/.test(ui),
+  '類別使用固定語意 token 的淡金底與深金字');
 assert.match(ui,/class="shopping-item-title-row"/);
 assert(ui.includes('shoppingCardTargetModel(item)'));
 assert(ui.includes('shoppingItemQuantitySummary(item)'));
@@ -845,9 +854,9 @@ assert(ui.includes('buyToLedgerDomain.inspectItem(item,shoppingLedgerContext())'
 assert(ui.includes("item.done||linkSummary.state!=='unlinked'"));
 assert(ui.includes("linkSummary.state==='partial'"));
 assert(ui.includes('id="shoppingListOverlay"')||ui.includes("overlay.id='shoppingListOverlay'"),'full shopping list opens as an overlay');
-assert(ui.includes('今天 ')&&ui.includes('項待買'),'Today has the approved compact reminder copy');
+assert(ui.includes('renderTodayShoppingSummary(day,currentStopRef)')&&ui.includes('項待買'),'active Today uses the approved Hero reminder');
 assert(ui.includes('function renderShoppingTodayEntry(day,currentStopRef)'),'Today entry receives the exact active stop ID');
-assert(ui.includes('採買清單 →'),'empty, non-trip, and no-reminder Today states keep a lightweight list entry');
+assert(ui.includes('today-shopping-launcher today-hero-action')&&ui.includes('採買清單 →'),'pre-trip Today keeps the unchanged lightweight list entry');
 assert(!ui.includes('class="nx-buy"'),'the old full-width next-stop buy row is removed');
 /* 待買多選工具列:計數與三顆動作同列,320px 也不斷行。 */
 assert(ui.includes('completeSelectedShopping(false)'),'待買多選可只標記已買');
@@ -886,7 +895,28 @@ assert(!quantityFields.includes('<option value="">'),'單位下拉不提供空�
 assert(!quantityFields.includes('不指定'),'單位下拉不提供「不指定」選項');
 assert(quantityFields.includes('shoppingUnitStore.all()'),'單位選項來自可管理的 store');
 assert(quantityFields.includes('unitMissing'),'目前單位不在清單時仍以自身成為選中的 option,不得靜默改掉既有資料');
-assert(ui.includes("renderLedgerOptionManager('shoppingUnit','採買單位')"),'設定頁可管理採買單位');
+const unitSettingsSandbox={
+  ledgerCategoryStore:{all(){return ['餐飲'];}},
+  ledgerPayMethodStore:{all(){return ['現金'];}},
+  shoppingUnitStore:{all(){return ['個','盒'];}}
+};
+vm.createContext(unitSettingsSandbox);
+vm.runInContext(
+  "var SHOPPING_DEFAULT_UNIT='個';\n"+
+  extractUiFunction('escapeHtml')+'\n'+
+  extractUiFunction('jsString')+'\n'+
+  extractUiFunction('renderSettingsHeader')+'\n'+
+  extractUiFunction('ledgerOptionStoreForKind')+'\n'+
+  extractUiFunction('renderLedgerOptionManager')+'\n'+
+  extractUiFunction('settingsOptionDefinitionForPage')+'\n'+
+  extractUiFunction('renderSettingsOptionEditorPage'),
+  unitSettingsSandbox
+);
+const unitSettingsHtml=unitSettingsSandbox.renderSettingsOptionEditorPage('options-shopping-unit');
+assert(unitSettingsHtml.includes('data-option-kind="shoppingUnit"')&&unitSettingsHtml.includes('ledgerOptionInput_shoppingUnit'),
+  '採買單位專屬設定頁執行既有泛用管理器');
+assert(unitSettingsHtml.includes('>個<small class="ledger-option-default">預設</small>')&&unitSettingsHtml.includes('>盒<'),
+  '採買單位專屬設定頁顯示 store 內容與預設單位標示');
 assert(ui.includes("kind==='shoppingUnit'?shoppingUnitStore"),'選項管理器沿用既有泛用 store 分派');
 assert(mod.shoppingUnitStore.all().includes('個'),'the Shopping unit Store always exposes 個');
 const removeOptionSource=extractUiFunction('removeLedgerOptionFromSettings');

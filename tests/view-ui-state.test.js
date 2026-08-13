@@ -8,6 +8,7 @@
    而且會讓備份格式再升一版。
    ============================================================ */
 const assert = require('assert');
+const vm = require('vm');
 const { readIndexHtml, extractDeclaration, extractFunction } = require('./support/source');
 
 const html = readIndexHtml();
@@ -52,5 +53,32 @@ const applyAt = switchSource.indexOf('applyViewPosition(');
 assert(renderAt >= 0 && applyAt > renderAt, '位置還原必須排在 renderCurrent 之後');
 assert(switchSource.indexOf('window.scrollTo({top:0})') < 0,
   'switchView 不得再無條件捲到頂 —— 那正是本批要修的缺陷');
+
+/* ---- v108 navigation intent: adapter state is transient and uses the real module ---- */
+assert.match(html,/var navigationIntentState\s*=/,'navigation intent adapter state is initialized');
+const navigationDecl=extractDeclaration(html,'navigationIntentState');
+assert(!/lsGet|localStorage/.test(navigationDecl),'navigation intent state is session-only');
+assert(!exportSource.includes('navigationIntentState'),'backup export excludes navigation intent state');
+assert(!applySource.includes('navigationIntentState'),'backup restore excludes navigation intent state');
+
+const navigationSandbox={TripNavigationIntent:require('../navigation-intent.js')};
+vm.createContext(navigationSandbox);
+vm.runInContext([
+  navigationDecl,
+  extractFunction(html,'requestNavigationIntent'),
+  extractFunction(html,'consumeNavigationIntent')
+].join('\n'),navigationSandbox);
+const requested=navigationSandbox.requestNavigationIntent({
+  view:'shop',targetId:'shopmall_P001',sourceView:'today',sourceId:'hero',align:'start',announce:'已定位：永旺夢樂城岡山'
+});
+assert.strictEqual(requested.targetId,'shopmall_P001','adapter preserves the exact requested target');
+assert.strictEqual(navigationSandbox.consumeNavigationIntent('trip'),null,'a different view cannot consume the target');
+assert.strictEqual(navigationSandbox.consumeNavigationIntent('shop').token,requested.token,'the rendered destination consumes the target once');
+assert.strictEqual(navigationSandbox.consumeNavigationIntent('shop'),null,'a consumed target cannot run again');
+
+assert(switchSource.includes('requestNavigationIntent('),'switchView sends explicit entries through the navigation module');
+assert(switchSource.includes('applyViewPosition(v)'),'switchView lets applyViewPosition consume the rendered destination');
+assert(extractFunction(html,'gotoDay').includes("switchView('trip'"),'gotoDay keeps using the shared switchView seam');
+assert(extractFunction(html,'backToNow').includes("switchView('trip'"),'backToNow keeps using the shared switchView seam');
 
 console.log('view UI state tests passed');

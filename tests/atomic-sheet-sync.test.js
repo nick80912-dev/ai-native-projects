@@ -15,7 +15,8 @@ function schema(){
     places:{label:'Places',kind:'table',idField:'placeId',columns:[
       {field:'placeId',header:'PID',required:true},
       {field:'name',header:'Place Name',required:true},
-      {field:'type',header:'Type',required:true,values:{attraction:'attraction',ferry:'ferry'}}
+      {field:'type',header:'Type',required:true,values:{attraction:'attraction',ferry:'ferry',hotel:'hotel'}},
+      {field:'hotelId',header:'HID'}
     ]},
     rest:{label:'Restaurants',kind:'table',idField:'restId',columns:[
       {field:'restId',header:'RID',required:true},
@@ -51,13 +52,23 @@ function validDb(){
   };
 }
 
+function sharedHotelDb(){
+  const db=validDb();
+  db.hotels=[{hotelId:'H001',name:'Hotel Profile'}];
+  db.placeList.push(
+    {placeId:'P002',name:'Arrival A',type:'hotel',tnorm:'hotel',hotelId:'H001'},
+    {placeId:'P013',name:'Arrival B',type:'hotel',tnorm:'hotel',hotelId:' h001 '}
+  );
+  return db;
+}
+
 const sb = loadValidator();
 const standaloneSource = fs.readFileSync('validator.js','utf8').replace(/\r\n/g,'\n').trim();
 const htmlSource = fs.readFileSync('index.html','utf8').replace(/\r\n/g,'\n');
 const schemaSandbox = {};
 vm.createContext(schemaSandbox);
 vm.runInContext(fs.readFileSync('schema.js','utf8'),schemaSandbox);
-assert.strictEqual(schemaSandbox.SCHEMA.version,'2.9 (2026-07-29)','production Schema version identifies the append-only correction contract');
+assert.strictEqual(schemaSandbox.SCHEMA.version,'3.0 (2026-08-11)','production Schema version identifies the HID linkage contract');
 assert.strictEqual(schemaSandbox.SCHEMA.sheets.ledger.columns.length,21,'Ledger 2.2 appends five structured UX fields');
 assert.strictEqual(schemaSandbox.SCHEMA.sheets.ledger.columns[14].field,'storeName');
 assert.strictEqual(schemaSandbox.SCHEMA.sheets.ledger.columns[15].field,'replacesRecordId');
@@ -67,7 +78,7 @@ assert(cfgKeys.some(function(key){return key.field==='ledgerDefaultCurrency'&&ke
 const itineraryActColumn = schemaSandbox.SCHEMA.sheets.itin.columns.find(function(column){ return column.field==='act'; });
 assert.strictEqual(itineraryActColumn.header,'行程','production Schema uses the confirmed itinerary Header');
 assert.strictEqual((itineraryActColumn.aliases||[]).indexOf('詳細行程'),-1,'obsolete Header is not retained as an alias');
-assert.match(htmlSource,/version:\s*'2\.9 \(2026-07-29\)'/,'inline fallback Schema version identifies the append-only correction contract');
+assert.match(htmlSource,/version:\s*'3\.0 \(2026-08-11\)'/,'inline fallback Schema version identifies the HID linkage contract');
 assert(htmlSource.includes('Exchange Rate,0.2'),'BUILTIN TripConfig contains the initial exchange rate');
 assert(htmlSource.includes('Ledger Default Currency,JPY'),'BUILTIN TripConfig contains the initial ledger currency');
 assert.match(htmlSource,/field:'act',\s*header:'行程'/,'inline fallback Schema uses the confirmed itinerary Header');
@@ -137,6 +148,23 @@ assert(sb.validateSnapshotData(invalidCfg,validRaw(),schema()).blockers.some(fun
 function hasFinding(result,code,sheet){
   return result.blockers.some(function(f){ return f.code===code&&f.sheet===sheet; });
 }
+
+assert.deepStrictEqual(Array.from(sb.validateSnapshotData(sharedHotelDb(),validRaw(),schema()).blockers), []);
+
+const missingHotelRef=sharedHotelDb();
+missingHotelRef.placeList.find(function(place){ return place.placeId==='P002'; }).hotelId='';
+assert(hasFinding(sb.validateSnapshotData(missingHotelRef,validRaw(),schema()),'HOTEL_REF_REQUIRED','places'));
+
+const brokenHotelRef=sharedHotelDb();
+brokenHotelRef.placeList.find(function(place){ return place.placeId==='P002'; }).hotelId='H999';
+const brokenResult=sb.validateSnapshotData(brokenHotelRef,validRaw(),schema());
+assert(hasFinding(brokenResult,'BROKEN_REF','places'));
+assert(brokenResult.blockers.some(function(f){ return /P002/.test(f.message)&&/H999/.test(f.message); }));
+
+const wrongScope=validDb();
+wrongScope.placeList[0].hotelId='H001';
+wrongScope.hotels=[{hotelId:'H001',name:'Hotel Profile'}];
+assert(hasFinding(sb.validateSnapshotData(wrongScope,validRaw(),schema()),'HOTEL_REF_SCOPE','places'));
 
 const missingStructures = validDb();
 delete missingStructures.placeList;

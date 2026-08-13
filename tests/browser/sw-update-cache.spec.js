@@ -76,11 +76,16 @@ test('SW 更新後新快取實際裝入新版資源,且 index／版本檔／sche
   server.setGeneration(1);
   await page.goto(ORIGIN + '/index.html');
   await waitForActiveWorker(page);
+  await waitForShellCached(page);
 
   /* 第 1 步:舊版資源先進入 HTTP cache(max-age=600),並確認 gen1 已落在 CacheStorage */
-  const first = await activeCacheReport(page);
+  const expectedFirstKey='okayama-trip-'+PREVIOUS_VERSION+'-QAGEN1';
+  let first={};
+  await expect.poll(async () => {
+    first=await activeCacheReport(page);
+    return Object.keys(first);
+  }, {timeout:20000}).toEqual([expectedFirstKey]);
   const firstKey = Object.keys(first)[0];
-  expect(firstKey).toBe('okayama-trip-'+PREVIOUS_VERSION+'-QAGEN1');
   for (const [pathname, marker] of Object.entries(first[firstKey])) {
     expect(marker, pathname + ' 應為 gen1').toBe('QAGEN1');
   }
@@ -133,10 +138,14 @@ test('斷網後仍可完整離線載入,且未快取的子資源不得收到 ind
   await waitForActiveWorker(page);
 
   await waitForShellCached(page);
+  await page.reload();
+  await waitForActiveWorker(page);
+  await waitForShellCached(page);
 
   /* 用瀏覽器原生離線模式讓頁面與 SW 的 network fetch 一起失敗；
      直接關 socket 會讓 Chromium 偶發在導覽進入 SW 前先回 ERR_CONNECTION_REFUSED。 */
   await context.setOffline(true);
+  await page.waitForFunction(() => navigator.onLine === false);
 
   /* page.reload() 走 CDP Page.reload,在伺服器剛關閉時偶發直接回 ERR_CONNECTION_REFUSED、
      未形成這裡真正要驗證的正常 navigation request。明確 goto 與下方 deep-link 驗證同路徑。 */
@@ -153,13 +162,17 @@ test('斷網後仍可完整離線載入,且未快取的子資源不得收到 ind
       appVersion: typeof APP_VERSION === 'undefined' ? null : APP_VERSION,
       indexGen: typeof QA_INDEX_GEN === 'undefined' ? null : QA_INDEX_GEN,
       schemaGen: found ? found[0] : null,
+      schemaCached: !!schemaResponse,
+      schemaLength: schema.length,
+      schemaTail: schema.slice(-80),
+      cacheKeys: await caches.keys(),
       hasApp: !!document.getElementById('tripTabs'),
       hasBuyToLedger: typeof TripBuyToLedger !== 'undefined',
     };
   });
   expect(offline.appVersion).toBe(VERSION+'-QAGEN2');
   expect(offline.indexGen).toBe('QAGEN2');
-  expect(offline.schemaGen).toBe('QAGEN2');
+  expect(offline.schemaGen,JSON.stringify(offline)).toBe('QAGEN2');
   expect(offline.hasApp).toBe(true);
   expect(offline.hasBuyToLedger).toBe(true);
 

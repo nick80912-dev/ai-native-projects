@@ -2,6 +2,7 @@ const assert=require('assert');
 const fs=require('fs');
 const vm=require('vm');
 const TripBuyToLedger=require('../buy-to-ledger.js');
+const TripLedgerUiState=require('../ledger-ui-state.js');
 
 const html=fs.readFileSync('index.html','utf8');
 
@@ -70,7 +71,7 @@ assert.strictEqual(resetPersonal.isProxy,false,'save-and-add-another uses the sa
 assert.strictEqual(resetPersonal.proxyTarget,'','proxy target never carries into the next personal record');
 
 // formatLedgerCurrencyAmount 已移入結算區段(供結算狀態機共用),改以下一個穩定邊界收尾。
-const stateSource=extract('function createLedgerEntryDraft(','function setLedgerSavePending(');
+const stateSource=extract('function createLedgerEntryDraft(','function ledgerDuplicateCandidateRecords(');
 const stateSandbox={
   ledgerUiState:{draft:null},
   appNow(){return new Date();},
@@ -127,7 +128,7 @@ vm.runInContext(persistSource,persistSandbox);
   assert.strictEqual(sharedResult.queued,true,'shared persistence resolves from local queue acknowledgement');
   assert.strictEqual(personalAdds,1,'shared saves never call the personal repository');
 
-  const sheetSource=extract('var ledgerBackgroundScrollY=0;','function setLedgerSavePending(');
+  const sheetSource=extract('var ledgerBackgroundScrollY=0;','function ledgerDuplicateCandidateRecords(');
   const builderSource=extract('function buildLedgerExpenseRecords(','function buildMemberBalances(');
   assert(sheetSource.includes("document.body.classList.add('ledger-sheet-open')"),'opening sheet locks background scrolling');
   assert(sheetSource.includes("document.body.classList.remove('ledger-sheet-open')"),'closing sheet restores background scrolling');
@@ -157,9 +158,9 @@ vm.runInContext(persistSource,persistSandbox);
   assert(!/addEventListener\(['"](?:touchstart|touchmove|touchend|gesturestart)/.test(sheetSource),'sheet adds no JavaScript gesture interceptor');
   assert(!/addEventListener\(['"](?:touchstart|touchmove|touchend|gesturestart)[\s\S]{0,320}preventDefault\(/.test(sheetSource),'sheet never blocks a touch or gesture default action');
   assert(sheetSource.includes("result.queued?'已儲存，待同步':'已儲存'"),'shared optimistic save reports pending background delivery');
-  assert(sheetSource.includes('ledgerBackgroundScrollY=window.scrollY'),'opening captures the background scroll position');
+  assert(sheetSource.includes('captureLedgerEntryReturnContext()')&&sheetSource.includes('ledgerBackgroundScrollY=returnContext.scrollY'),'opening captures the background return context');
   assert(sheetSource.includes('sheet.scrollTop=0'),'new sheets start at the top');
-  assert(sheetSource.includes('window.scrollTo({top:ledgerBackgroundScrollY'),'closing restores the background scroll position');
+  assert(sheetSource.includes('function restoreLedgerEntryContext(')&&sheetSource.includes('top=ledgerBackgroundScrollY'),'closing restores the captured background scroll position');
   assert(sheetSource.includes('function withLedgerSheetPosition('),'structural rerenders preserve internal sheet position');
 
   assert(/\.ledger-sheet\{[^}]*overflow-y:auto[^}]*touch-action:pan-y/.test(html),'sheet scroll surface is pan-y only');
@@ -211,14 +212,17 @@ assert.strictEqual(helperRecords.length,1,'a refused undo keeps the edited perso
 
 /* 儲存成功後的 Shopping link 回寫接真實實作,不用放行樁:本測試的 draft 沒有採買來源,
    因此必須完全不觸發回寫。回寫本身的契約由 tests/shopping-ledger-links.test.js 覆蓋。 */
-const saveFlowSource=extract('function finishLedgerEntrySaveUi(','function deletePersonalLedgerRecord(');
+const saveFlowSource=extract('function ledgerEntrySaveNotification(','function deletePersonalLedgerRecord(');
 const saveButtons={ledgerSave:{disabled:false},ledgerSaveAnother:{disabled:false}};
 const saveMessages=[],preparedIds=[],submittedIds=[],duplicateLookupIds=[];
 let buildCalls=0,enqueueCalls=0,closeCalls=0,renderCalls=0,confirmationResolve=null;
+let requestSequence=0;
 const preparedSharedRecord={id:'1784512809000-new1',member:'Bar',category:'餐飲',detail:'Dinner',inputCurrency:'JPY',amountJpy:500,amountTwd:110,batchId:''};
 const saveSandbox={
   buyToLedgerDomain:TripBuyToLedger.createDomain({effectiveRecords(records){return records;}}),
-  ledgerUiState:{track:'personal',draft:{track:'shared',currency:'JPY',multi:false},editing:null},
+  ledgerUiState:TripLedgerUiState.createState({sheet:'entry',track:'shared',draft:{track:'shared',currency:'JPY',multi:false},entrySessionId:'quick-session'}),
+  createLedgerEntryRequestId(){requestSequence++;return 'quick-request-'+requestSequence;},
+  ledgerValidationErrorTarget(){return '';},
   isTimeSimulationActive(){return false;},memberIsAllowed(){return true;},getCurrentMember(){return 'Bar';},openMemberSelector(){throw new Error('shared member is available');},
   validateLedgerEntryDraft(){return {valid:true,errors:{}};},
   buildLedgerExpenseRecords(){buildCalls++;preparedIds.push(preparedSharedRecord.id);return [preparedSharedRecord];},
@@ -233,13 +237,22 @@ const saveSandbox={
   persistLedgerExpenseRecords(records,track){enqueueCalls++;submittedIds.push(records.map(function(record){return record.id;}));return Promise.resolve({ok:true,queued:true,records:records,pending:1});},
   persistLedgerEditedRecords(){throw new Error('editing path is not under test');},
   formatLedgerPrimaryTotal(currency,records){return currency==='TWD'?'NT$'+records[0].amountTwd:'¥'+records[0].amountJpy;},
-  renderSplit(){renderCalls++;},closeLedgerEntrySheet(){closeCalls++;},resetLedgerDraftAfterSave(){throw new Error('add another is not under test');},
+  renderSplit(){renderCalls++;},resetLedgerDraftAfterSave(){throw new Error('add another is not under test');},
   undoPersonalLedgerSave(){throw new Error('personal undo must remain nonblocking and untouched');},toast(message){saveMessages.push(message);},
   document:{getElementById(id){return saveButtons[id]||null;}},navigator:{onLine:true},
   timestampDate(value){return new Date(Number(value));},AppLog:{repo(){},sync(){}},
   shoppingListStore:{applyLedgerLinks(){throw new Error('沒有採買來源時不得回寫 link');}},
   Date,Math,Promise,JSON,String,Number,isFinite
 };
+saveSandbox.ledgerUiWorkflow=TripLedgerUiState.createWorkflow({
+  readState(){return saveSandbox.ledgerUiState;},
+  writeState(next){saveSandbox.ledgerUiState=next;},
+  syncEntryPending(){},
+  unmountEntry(){closeCalls++;},
+  renderSplit(){renderCalls++;},
+  restoreEntryContext(){},
+  notifyEntryResult(notification){if(notification&&notification.message)saveMessages.push(notification.message);}
+});
 vm.createContext(saveSandbox);
 vm.runInContext(saveFlowSource,saveSandbox);
 (async function(){
@@ -270,6 +283,9 @@ vm.runInContext(saveFlowSource,saveSandbox);
   assert.match(saveMessages.pop(),/^已儲存 ¥500 · 餐飲，將自動同步$/,'online shared save uses the automatic-sync Toast copy');
 
   saveSandbox.navigator.onLine=false;
-  await saveSandbox.commitLedgerEntrySave(saveSandbox.ledgerUiState.draft,null,[preparedSharedRecord],false,null);
+  saveSandbox.ledgerUiState=TripLedgerUiState.createState({sheet:'entry',track:'shared',draft:{track:'shared',currency:'JPY',multi:false},entrySessionId:'quick-offline-session'});
+  const offlineContext={sessionId:saveSandbox.ledgerUiState.entrySessionId,requestId:'quick-offline-request'};
+  saveSandbox.ledgerUiWorkflow.dispatch({type:'entry-save-requested',sessionId:offlineContext.sessionId,requestId:offlineContext.requestId});
+  await saveSandbox.commitLedgerEntrySave(saveSandbox.ledgerUiState.draft,null,[preparedSharedRecord],false,null,saveSandbox.ledgerUiState.draft,offlineContext);
   assert.match(saveMessages.pop(),/^尚未同步，連線恢復後將自動重試$/,'known offline shared save uses the retry Toast copy');
 })().catch(function(error){console.error(error);process.exitCode=1;});

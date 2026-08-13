@@ -36,7 +36,7 @@
 ## Google Sheet 命名規則
 - 一般資料表 ID:Places=`P###`、Restaurants=`R###`、Shopping=`S###`、Hotels=`H###`;不需連號,但**不得重複、不得改變既有 ID 意義**。
 - Expenses 是自由格式,沒有 `E###` ID;行程總表引用限使用 Schema 支援的 `P###` / `R###`。
-- 同一地點多次造訪用同一 PID;Type 為必填(限 Schema 定義值)。
+- 一般非住宿地點多次造訪用同一 PID；住宿是例外：同一間住宿若 travel 脈絡不同,可使用多個 route-stop PID,但都引用同一個 Hotels.HID。Type 為必填(限 Schema 定義值)。
 - 欄位標題應與 Schema header 或 aliases 一致。
 
 ## Commit / 版本規則

@@ -14,7 +14,7 @@
    ============================================================ */
 
 var SCHEMA = {
-  version: '2.9 (2026-07-29)',
+  version: '3.0 (2026-08-11)',
 
   /* 發布來源(換試算表只改這裡) */
   pubBase: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRenmV8UxEzWbzSjKJKi4rSpYt63geBqhEkKsl1GemWVPmFKTcvv3Uk71Hjla3TGBpGIjC7bQDDdI00/pub?single=true&output=csv&gid=',
@@ -53,7 +53,9 @@ var SCHEMA = {
         { field:'ticket',  header:'門票',           desc:'門票或船票資訊' },
         { field:'web',     header:'官網',           aliases:['網站','網址'] },
         { field:'ttl',     header:'時刻表連結',     aliases:['時刻表'], desc:'渡輪等官方時刻表 URL' },
-        { field:'note',    header:'備註' }
+        { field:'note',    header:'備註' },
+        { field:'hotelId', header:'HID', aliases:['hotelid','住宿id'],
+          desc:'住宿停靠點引用 Hotels.HID；只供 Type=住宿 使用' }
       ]
     },
 
@@ -94,7 +96,7 @@ var SCHEMA = {
       gid: '792115203', label: 'Hotels', kind: 'table', idField: 'hotelId',
       columns: [
         { field:'hotelId', header:'HID', aliases:['hotelid','住宿id'], required:true },
-        { field:'name',    header:'名稱', required:true, desc:'以名稱比對 Places 住宿型地點' },
+        { field:'name',    header:'名稱', required:true, desc:'住宿資料顯示用名稱；不得作為比對或關聯 HID' },
         { field:'checkin', header:'入住' },
         { field:'checkout',header:'退房' },
         { field:'addr',    header:'地址' },

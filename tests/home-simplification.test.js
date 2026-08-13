@@ -10,7 +10,7 @@ for (const file of ['index.html']) {
   assert.match(html, /已取消,該行程時間已過,列於已略過/, `${file} explains past-time cancellation`);
   const clusterStop = html.slice(html.indexOf('function renderClusterStop'), html.indexOf('function renderClusterNextStopCard'));
   assert.doesNotMatch(clusterStop, /qa-btn|pn_pk_|pn_nf_/, `${file} keeps cluster child stops action-free on home`);
-  const renderToday = html.slice(html.indexOf('function renderToday'), html.indexOf('/* ================= 購物模式'));
+  const renderToday = html.slice(html.indexOf('function renderToday(){'), html.indexOf('/* ================= 購物模式'));
   assert.match(renderToday, /var items=homeNextStopItems\(day\.items\)/, `${file} routes Today through cluster controllers`);
   assert.match(renderToday, /clusterParentForPick\(day\.items,pick\.item\)/, `${file} resolves the original parent before rendering a cluster`);
   assert.match(renderToday, /today-hero-top[\s\S]*TODAY · DAY[\s\S]*class="loc"/, `${file} keeps Today and progress on the same top row`);
@@ -26,24 +26,43 @@ for (const file of ['index.html']) {
   );
   const preTripBrief = html.slice(html.indexOf('function renderPreTripBrief'), html.indexOf('var TOMORROW_PREVIEW_HOUR'));
   assert.doesNotMatch(preTripBrief, /pretrip-count/, `${file} renders the countdown only in the title row`);
-  assert(
-    renderToday.indexOf('renderShoppingTodayEntry(day,currentStopRef)') < renderToday.indexOf('renderClusterNextStopCard'),
-    `${file} places the shopping entry immediately below the Today summary and before the next-stop card`
-  );
+  assert.match(renderToday, /renderTodayWeatherArt\(weather\)[\s\S]*renderTodayHeroSummary\(weather,renderShoppingTodayEntry\(day,currentStopRef\)\)/, `${file} composes weather and Shopping inside the active Hero`);
+  assert.doesNotMatch(renderToday, /h\+=renderShoppingTodayEntry\(day,currentStopRef\)/, `${file} no longer renders active Shopping below the Hero`);
+  assert.match(renderToday, /var progressLabel='今日已處理 '\+completed\+' 站，共 '\+items\.length\+' 站';/, `${file} gives active progress the approved accessible name`);
   assert.match(
     renderToday,
     /var currentStop=clusterPick&&clusterPick\.item\?clusterPick\.item:pick\.item;[\s\S]*var currentStopRef=currentStop&&currentStop\.id\?currentStop\.id:'';/,
     `${file} excludes the exact regular stop or active cluster child from Today shopping`
   );
   assert.match(html, /\.today-hero\{[^}]*padding:11px 14px 12px/, `${file} trims Today card padding without shrinking its typography`);
-  assert.match(html, /\.today-hero \.lbl\{font-size:11px/, `${file} preserves the Today label size`);
-  assert.match(html, /\.today-hero \.date\{font-size:24px/, `${file} preserves the Today date size`);
+  assert.match(html, /\.today-hero \.lbl\{font-size:var\(--font-caption\)/, `${file} preserves the Today label size through the shared token`);
+  assert.match(html, /\.today-hero \.date\{font-size:var\(--font-display\)/, `${file} preserves the Today date size through the shared token`);
   assert.match(html, /\.today-hero \.loc\{font-size:13px/, `${file} preserves the progress size`);
-  assert.match(html, /\.weather-chip\{[^}]*font-size:13px/, `${file} preserves the weather size`);
+  assert.match(html, /\.today-weather-art\{[^}]*font-size:46px/, `${file} gives weather mood visual weight`);
+  assert.match(html, /\.today-hero-summary\{[^}]*display:grid/, `${file} keeps Hero information in one row`);
+  assert.match(html, /\.today-hero-shopping-summary\{[^}]*min-height:44px/, `${file} keeps Hero Shopping tappable`);
+  assert.match(
+    html,
+    /\.today-hero-shopping-summary \.today-hero-summary-value\{[^}]*justify-content:flex-end/,
+    `${file} right-aligns the resolved Shopping value as one group`
+  );
+  assert.match(html, /\.today-hero-shopping-stop\{[^}]*flex:0 1 auto[^}]*max-width:7em/, `${file} lets only the stop shrink`);
+  assert.match(html, /\.today-hero-shopping-category\{[^}]*flex:0 0 auto/, `${file} preserves the complete Shopping category`);
+  assert.match(html, /\.today-hero-shopping-separator,\.today-hero-shopping-count\{[^}]*flex:0 0 auto/, `${file} preserves separator and count widths`);
+  assert.doesNotMatch(html, /today-hero-shopping-stop\{[^}]*1\.15/, `${file} removes proportional stop allocation`);
+  assert.doesNotMatch(html, /today-hero-shopping-category\{[^}]*\.85/, `${file} removes proportional category allocation`);
+  assert.match(
+    html,
+    /\.today-hero-shopping-generic \.today-hero-summary-value\{[^}]*justify-content:flex-end/,
+    `${file} right-aligns the generic Shopping action without changing resolved stop layout`
+  );
+  assert.doesNotMatch(html, /\.weather-chip\{/, `${file} removes legacy weather pill CSS`);
+  assert.doesNotMatch(html, /function renderWeatherChip\(/, `${file} removes the dead legacy weather renderer`);
+  assert.doesNotMatch(html, /\.today-shopping-card\{/, `${file} removes legacy Shopping card CSS`);
   assert.match(html, /\.today-hero-action\{[^}]*width:auto[^}]*color:#fff/, `${file} keeps the non-trip launcher compact inside the dark Today card`);
   assert.match(
     html,
-    /\.today-hero-action\{[^}]*display:inline-flex[^}]*min-height:44px[^}]*background:rgba\(255,255,255,\.16\)[^}]*border:none[^}]*border-radius:10px/,
+    /\.today-hero-action\{[^}]*display:inline-flex[^}]*min-height:44px[^}]*background:rgba\(255,255,255,\.16\)[^}]*border:none[^}]*border-radius:var\(--radius-control\)/,
     `${file} gives shopping and itinerary actions one shared visual treatment`
   );
   assert.match(
@@ -51,7 +70,7 @@ for (const file of ['index.html']) {
     /class="today-jump today-hero-action"/,
     `${file} uses the shared action class for full itinerary`
   );
-  assert.match(html, /class="today-shopping-launcher'\+\(day\?'':' today-hero-action'\)/, `${file} uses the shared action class for non-trip shopping`);
+  assert.match(nonTripToday, /renderShoppingTodayEntry\(null,''\)[\s\S]*renderPreTripBrief\(\)/, `${file} keeps the pre-trip Shopping launcher in place`);
   assert.match(html, /\.today-pretrip-title-row\{[^}]*display:flex[^}]*justify-content:space-between/, `${file} keeps the non-trip title and countdown on one row`);
   assert.match(html, /想逛<small[^>]*>/, `${file} preserves the shop wishlist`);
   assert.match(html, /\.nx-ticket-low\{[^}]*grid-template-columns:minmax\(0,1fr\) auto/, `${file} gives completion the flexible primary column`);

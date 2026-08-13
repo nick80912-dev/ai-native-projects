@@ -6,7 +6,7 @@
 > 同步時 Validator 會在 console 以 `[Schema Error]` 前綴警告(六類日誌定義見 `validator.js`):缺少必要欄位/未知欄位/未知型別值/未知設定鍵,一律不崩潰。
 > 檔頭註解為手寫維護;下方表格區由 `schemaDoc()` 產生,**禁止手改表格**(見 14 的 Tier 3 規則)。
 
-版本:2.9 (2026-07-29)
+版本:3.0 (2026-08-11)
 
 ## 行程總表(gid=1169222358,kind=itinerary)
 | Google Sheet 欄位 | App Property | 必填 | 說明 |
@@ -33,6 +33,7 @@
 | 官網(別名:網站/網址) | web |  |  |
 | 時刻表連結(別名:時刻表) | ttl |  | 渡輪等官方時刻表 URL |
 | 備註 | note |  |  |
+| HID(別名:hotelid/住宿id) | hotelId |  | 住宿停靠點引用 Hotels.HID；只供 Type=住宿 使用 |
 
 ## Restaurants(gid=1421821084,kind=table)
 | Google Sheet 欄位 | App Property | 必填 | 說明 |
@@ -64,7 +65,7 @@
 | Google Sheet 欄位 | App Property | 必填 | 說明 |
 |---|---|---|---|
 | HID(別名:hotelid/住宿id) | hotelId | ✅ |  |
-| 名稱 | name | ✅ | 以名稱比對 Places 住宿型地點 |
+| 名稱 | name | ✅ | 住宿資料顯示用名稱；不得作為比對或關聯 HID |
 | 入住 | checkin |  |  |
 | 退房 | checkout |  |  |
 | 地址 | addr |  |  |

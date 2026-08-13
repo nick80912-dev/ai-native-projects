@@ -6,6 +6,7 @@ const {appVersion,swVersion}=require('./support/version');
 const fs=require('fs');
 const vm=require('vm');
 const TripBuyToLedger=require('../buy-to-ledger.js');
+const {extractFunction}=require('./support/source.js');
 
 function createStorage(){
   const values={};
@@ -32,6 +33,8 @@ function loadModule(){
     timestampDate(value){return new Date(Number(value));},
     TripBuyToLedger,
     buyToLedgerRuntimeAdapter:{},
+    escapeHtml(value){return String(value==null?'':value);},
+    jsHtmlAttrString(value){return String(value==null?'':value);},
     canonicalMemberName(value){return String(value==null?'':value).replace(/　/g,' ').replace(/\s+/g,' ').trim();},
     AppLog:{repo(){},sync(){},data(){}},
     fetch(){return Promise.reject(new Error('network disabled'));},
@@ -39,6 +42,7 @@ function loadModule(){
   };
   vm.createContext(sandbox);
   vm.runInContext(html.slice(start,end),sandbox);
+  vm.runInContext(extractFunction(html,'renderShoppingItemDetail'),sandbox);
   sandbox.__html=html;
   return sandbox;
 }
@@ -179,8 +183,8 @@ const warning=mod.shoppingDeleteWarning([guardedItem],ctx({
   personal:{ready:true,records:[expense({id:'r-a'})]},
   shared:{ready:false,records:[]}
 }));
-assert.match(warning,/已有 1 位建立消費紀錄/);
-assert.match(warning,/有 1 位記帳狀態待確認/);
+assert.match(warning,/已有 1 筆建立消費紀錄/);
+assert.match(warning,/有 1 筆記帳狀態待確認/);
 const linkedSplitItem={
   allocations:[{allocationId:'linked',target:'阿寶',quantity:2,ledgerLinks:[link({recordId:'r-a'})]}]
 };
@@ -228,6 +232,110 @@ assert.strictEqual(mod.shoppingDetailAllocationQuantityText(
   {originalQuantity:3,currentQuantity:1},
   '包'
 ),'需求 3 包 · 待買 1 包','待買明細使用需求與待買文案');
+
+/* ================= detail 狀態摘要與 footer action ================= */
+const singleUnlinkedDetail={
+  id:'shopping-detail-single',name:'單筆未記帳',category:'必買',unit:'盒',done:true,
+  allocations:[{allocationId:'single-open',target:'阿寶',quantity:1,ledgerLinks:[]}]
+};
+const singleUnlinkedModel=plain(mod.shoppingItemDetailModel(singleUnlinkedDetail,[singleUnlinkedDetail],ctx()));
+assert.strictEqual(singleUnlinkedModel.statusText,'已買 · 未記帳','單筆把採買與記帳狀態合併在同一欄');
+assert.deepStrictEqual(singleUnlinkedModel.ledgerAction,{kind:'entry',label:'記帳',disabled:false,note:''},'單筆未記帳顯示簡短入口');
+
+const singleLinkedDetail={
+  id:'shopping-detail-single-linked',name:'單筆已記帳',category:'必買',unit:'盒',done:true,
+  allocations:[{allocationId:'single-linked',target:'阿寶',quantity:1,ledgerLinks:[link({recordId:'r-single-linked'})]}]
+};
+const singleLinkedModel=plain(mod.shoppingItemDetailModel(
+  singleLinkedDetail,[singleLinkedDetail],ctx({personal:{ready:true,records:[expense({id:'r-single-linked'})]}})
+));
+assert.strictEqual(singleLinkedModel.statusText,'已買 · 已記帳','單筆已記帳使用短文案');
+assert.deepStrictEqual(singleLinkedModel.ledgerAction,{kind:'none',label:'',disabled:false,note:''},'全部已記帳只保留編輯 action');
+
+const singleUnverifiedDetail={
+  id:'shopping-detail-single-waiting',name:'單筆待確認',category:'必買',unit:'盒',done:true,
+  allocations:[{allocationId:'single-waiting',target:'阿寶',quantity:1,ledgerLinks:[link({recordId:'r-single-missing',track:'shared'})]}]
+};
+const singleUnverifiedModel=plain(mod.shoppingItemDetailModel(
+  singleUnverifiedDetail,[singleUnverifiedDetail],ctx({shared:{ready:false,records:[]}})
+));
+assert.strictEqual(singleUnverifiedModel.statusText,'已買 · 待確認','單筆待確認使用短文案');
+assert.deepStrictEqual(singleUnverifiedModel.ledgerAction,{
+  kind:'waiting',label:'等待狀態確認',disabled:true,
+  note:'有 1 筆仍在確認同步狀態，完成後才能繼續，避免重複記帳。'
+},'沒有未記帳 allocation 時仍明確顯示等待狀態');
+
+const allUnlinkedDetail={
+  id:'shopping-detail-all-open',name:'全部未記帳',category:'必買',unit:'盒',done:true,
+  allocations:[
+    {allocationId:'all-open-a',target:'阿寶',quantity:1,ledgerLinks:[]},
+    {allocationId:'all-open-b',target:'媽媽',quantity:1,ledgerLinks:[]}
+  ]
+};
+const allUnlinkedModel=plain(mod.shoppingItemDetailModel(allUnlinkedDetail,[allUnlinkedDetail],ctx()));
+assert.strictEqual(allUnlinkedModel.statusText,'已買 · 已記帳 0／2 筆','多筆全未開始仍使用一致進度格式');
+assert.deepStrictEqual(allUnlinkedModel.ledgerAction,{kind:'entry',label:'記帳',disabled:false,note:''},'多筆全未開始使用記帳入口');
+
+const allLinkedDetail={
+  id:'shopping-detail-all-linked',name:'全部已記帳',category:'必買',unit:'盒',done:true,
+  allocations:[
+    {allocationId:'all-linked-a',target:'阿寶',quantity:1,ledgerLinks:[link({recordId:'r-all-linked-a'})]},
+    {allocationId:'all-linked-b',target:'媽媽',quantity:1,ledgerLinks:[link({recordId:'r-all-linked-b'})]}
+  ]
+};
+const allLinkedModel=plain(mod.shoppingItemDetailModel(allLinkedDetail,[allLinkedDetail],ctx({
+  personal:{ready:true,records:[expense({id:'r-all-linked-a'}),expense({id:'r-all-linked-b'})]}
+})));
+assert.strictEqual(allLinkedModel.statusText,'已買 · 已記帳 2／2 筆','多筆全部完成保留完整進度');
+assert.deepStrictEqual(allLinkedModel.ledgerAction,{kind:'none',label:'',disabled:false,note:''},'多筆全部已記帳不顯示第二 action');
+
+const partialDetail={
+  id:'shopping-detail-partial',name:'部分記帳',category:'必買',unit:'盒',done:true,
+  allocations:[
+    {allocationId:'partial-linked',target:'阿寶',quantity:1,ledgerLinks:[link({recordId:'r-detail-linked'})]},
+    {allocationId:'partial-open-a',target:'媽媽',quantity:1,ledgerLinks:[]},
+    {allocationId:'partial-open-b',target:'小明',quantity:1,ledgerLinks:[]}
+  ]
+};
+const partialDetailContext=ctx({personal:{ready:true,records:[expense({id:'r-detail-linked'})]}});
+const partialDetailModel=plain(mod.shoppingItemDetailModel(partialDetail,[partialDetail],partialDetailContext));
+assert.strictEqual(partialDetailModel.statusText,'已買 · 已記帳 1／3 筆','多筆以筆顯示合併進度');
+assert.deepStrictEqual(partialDetailModel.ledgerAction,{kind:'entry',label:'繼續記帳（剩 2 筆）',disabled:false,note:''},'部分完成顯示剩餘筆數');
+
+const mixedDetail={
+  id:'shopping-detail-mixed',name:'混合狀態',category:'必買',unit:'盒',done:true,
+  allocations:[
+    {allocationId:'mixed-linked',target:'阿寶',quantity:1,ledgerLinks:[link({recordId:'r-detail-linked'})]},
+    {allocationId:'mixed-waiting',target:'媽媽',quantity:1,ledgerLinks:[link({recordId:'r-detail-missing',track:'shared'})]},
+    {allocationId:'mixed-open',target:'小明',quantity:1,ledgerLinks:[]}
+  ]
+};
+const mixedDetailContext=ctx({
+  personal:{ready:true,records:[expense({id:'r-detail-linked'})]},
+  shared:{ready:false,records:[]}
+});
+const mixedDetailModel=plain(mod.shoppingItemDetailModel(mixedDetail,[mixedDetail],mixedDetailContext));
+assert.strictEqual(mixedDetailModel.statusText,'已買 · 已記帳 1 · 待確認 1 · 未記帳 1','混合狀態逐類顯示筆數');
+assert.deepStrictEqual(mixedDetailModel.ledgerAction,{
+  kind:'waiting',label:'等待狀態確認',disabled:true,
+  note:'有 1 筆仍在確認同步狀態，完成後才能繼續，避免重複記帳。'
+},'待確認存在時預先阻擋重複記帳');
+
+function renderShoppingDetail(itemValue,context){
+  mod.shoppingListStore={all(){return [itemValue];}};
+  mod.shoppingLedgerContext=function(){return context;};
+  mod.shoppingStopById=function(){return null;};
+  mod.shoppingStopStateFor=function(){return {state:'none'};};
+  mod.shoppingItemLocationLine=function(){return '';};
+  mod.shoppingPhotoStatus=function(){return 'none';};
+  return mod.renderShoppingItemDetail(itemValue);
+}
+const mixedDetailHtml=renderShoppingDetail(mixedDetail,mixedDetailContext);
+assert(!mixedDetailHtml.includes('<dt>記帳進度</dt>'),'明細不再另列記帳進度');
+assert(mixedDetailHtml.includes('<dt>狀態</dt><dd>已買 · 已記帳 1 · 待確認 1 · 未記帳 1</dd>'),'合併狀態由真實 renderer 輸出');
+assert(mixedDetailHtml.includes('disabled>等待狀態確認</button>'),'待確認 action 使用原生 disabled');
+assert(!mixedDetailHtml.includes('onclick="openShoppingIncompleteLedgerEntry'),'待確認 action 不暴露可呼叫的記帳入口');
+assert(!mixedDetailHtml.includes('記帳未完成對象'),'明細不再以對象描述記帳進度');
 
 /* ================= store:原子 link 回寫 ================= */
 function freshStore(){
@@ -427,8 +535,8 @@ assert((shoppingSource.match(/shoppingListStore\.moveBackToPending\(\[id\]\)/g)|
   'checkbox 取消與完成 Toast 復原也使用同一 Store 操作');
 assert(/刪除採買項目不會刪除原本的消費紀錄/.test(html),'刪除已記帳項目時說明 Ledger 紀錄仍保留');
 assert(/刪除採買項目不會嘗試修改或刪除帳本紀錄/.test(html),'待確認項目有獨立提醒');
-assert(html.includes("已有 '+linked+' 位建立消費紀錄"));
-assert(html.includes("有 '+unverified+' 位記帳狀態待確認"));
+assert(html.includes("已有 '+linked+' 筆建立消費紀錄"));
+assert(html.includes("有 '+unverified+' 筆記帳狀態待確認"));
 assert(/if\(value\.state==='linked'\)linked\+\+;[\s\S]{0,80}else if\(value\.state==='unverified'\)unverified\+\+/.test(html),'linked 與 unverified 依 allocation 分別計數');
 assert(shoppingSource.includes('removeMany('),'批次刪除走原子整批路徑');
 assert(!shoppingSource.includes('清空所有已買'),'本批不新增清空已買的危險入口');
@@ -441,7 +549,12 @@ assert(html.includes('function openShoppingItemDetail('));
 assert(html.includes('function renderShoppingItemDetail('));
 assert(html.includes('代購對象與記帳紀錄'));
 assert(!html.includes('代購對象與帳本紀錄'));
-assert(html.includes('記帳未完成對象'));
+assert(!html.includes('記帳未完成對象'));
+assert(!shoppingSource.includes('沒有未記帳對象'),'記帳 fallback 不再把 allocation 說成對象');
+assert(shoppingSource.includes('沒有未記帳項目'),'記帳 fallback 以項目描述來源');
+assert(!shoppingSource.includes('仍有對象的記帳狀態待確認'),'待確認 fallback 不再暗示團體成員');
+assert(!shoppingSource.includes('位對象的記帳狀態'),'多選 preflight 不再以人數計記帳進度');
+assert(shoppingSource.includes("其中 '+prepared.unverifiedCount+' 筆記帳狀態尚待確認"),'多選 preflight 以筆數說明待確認來源');
 assert(html.includes('openShoppingLinkedLedgerRecord('));
 assert(html.includes('shoppingDetailReturnItemId'));
 assert(html.includes('handleShoppingItemBodyClick('));
@@ -486,7 +599,7 @@ assert(!/系統不會自動計算剩餘數量/.test(shoppingSource),'舊的「�
 assert(!/parseInt|parseFloat|Number\(form\.(purchasedQty|remainderQty)/.test(shoppingSource),'不解析自由文字數量');
 assert(shoppingSource.includes('shoppingListStore.split('),'拆分走 store 的原子操作');
 /* 交握與回寫 */
-const commit=html.slice(html.indexOf('function commitLedgerEntrySave('),html.indexOf('function setLedgerSavePending('));
+const commit=html.slice(html.indexOf('function commitLedgerEntrySave('),html.indexOf('function ledgerDuplicateCandidateRecords('));
 assert(commit.includes('buyToLedgerDomain.sourceRefs(sourceDraft)'),'多品項來源由 domain 依送出用 draft 對應,不用 UI index');
 assert(commit.includes('buyToLedgerWorkflow.commit(command)'),'只有具備完整 Shopping source 的新增消費交由 coordinator commit');
 assert(!html.includes('function writeShoppingLedgerLinks('),'舊的 inline workflow 已移除');

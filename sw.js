@@ -24,15 +24,20 @@
      日常 fetch 用 no-cache —— 允許 304,省行動網路流量(index.html 約 726KB)
    兩者都不影響離線 fallback:網路失敗仍會 reject 進 catch(已實測關閉伺服器後完整離線載入)。
 */
-var SW_VERSION='v96';
+var SW_VERSION='v110';
 var CACHE_NAME='okayama-trip-'+SW_VERSION;
 var SHELL = [
   './',
   './index.html',
   './app-version.js',
+  './navigation-intent.js',
+  './diagnostic-impact.js',
+  './today-view.js',
   './shopping-photo-store.js',
   './buy-to-ledger.js',
   './ledger-ui-state.js',
+  './shopping-ui-state.js',
+  './trip-progression.js',
   './schema.js',
   './validator.js',
   './manifest.webmanifest',

@@ -22,6 +22,93 @@ function loadSettingsRouting(source){
   return sandbox.normalizeSettingsTarget;
 }
 
+function renderCustomOptionsHub(source){
+  const sandbox = {
+    ledgerCategoryStore:{all(){return ['餐飲','交通','票券'];}},
+    ledgerPayMethodStore:{all(){return ['現金','信用卡'];}},
+    shoppingUnitStore:{all(){return ['個','件','盒','包'];}}
+  };
+  vm.createContext(sandbox);
+  vm.runInContext(
+    "var SHOPPING_DEFAULT_UNIT='個';\n"+
+    extractFunction(source,'escapeHtml')+'\n'+
+    extractFunction(source,'jsString')+'\n'+
+    extractDeclaration(source,'SETTINGS_ROW_ICONS')+'\n'+
+    extractFunction(source,'settingsNavRow')+'\n'+
+    extractFunction(source,'renderSettingsHeader')+'\n'+
+    extractFunction(source,'ledgerOptionStoreForKind')+'\n'+
+    extractFunction(source,'renderLedgerOptionManager')+'\n'+
+    extractFunction(source,'renderSettingsOptionsPage'),
+    sandbox
+  );
+  return sandbox.renderSettingsOptionsPage();
+}
+
+function renderCustomOptionEditor(source,page){
+  if(!source.includes('function renderSettingsOptionEditorPage('))return '';
+  const sandbox = {
+    ledgerCategoryStore:{all(){return ['餐飲','交通'];}},
+    ledgerPayMethodStore:{all(){return ['現金'];}},
+    shoppingUnitStore:{all(){return ['個','件'];}}
+  };
+  vm.createContext(sandbox);
+  vm.runInContext(
+    "var SHOPPING_DEFAULT_UNIT='個';\n"+
+    extractFunction(source,'escapeHtml')+'\n'+
+    extractFunction(source,'jsString')+'\n'+
+    extractFunction(source,'renderSettingsHeader')+'\n'+
+    extractFunction(source,'ledgerOptionStoreForKind')+'\n'+
+    extractFunction(source,'renderLedgerOptionManager')+'\n'+
+    extractFunction(source,'settingsOptionDefinitionForPage')+'\n'+
+    extractFunction(source,'renderSettingsOptionsPage')+'\n'+
+    extractFunction(source,'renderSettingsOptionEditorPage'),
+    sandbox
+  );
+  return sandbox.renderSettingsOptionEditorPage(page);
+}
+
+function loadOptionSettingsActions(source){
+  const values={category:['餐飲','交通'],payMethod:['現金'],shoppingUnit:['個','件']};
+  function store(kind){
+    return {
+      all(){return values[kind].slice();},
+      add(value){values[kind].push(String(value));},
+      remove(value){values[kind]=values[kind].filter(item=>item!==value);},
+      move(value,direction){
+        const from=values[kind].indexOf(value),to=from+direction;
+        if(from<0||to<0||to>=values[kind].length)return;
+        const next=values[kind].slice();
+        next.splice(to,0,next.splice(from,1)[0]);
+        values[kind]=next;
+      }
+    };
+  }
+  const routes=[];
+  const input={value:'旅費',focus(){}};
+  const sandbox={
+    SHOPPING_DEFAULT_UNIT:'個',
+    ledgerCategoryStore:store('category'),
+    ledgerPayMethodStore:store('payMethod'),
+    shoppingUnitStore:store('shoppingUnit'),
+    ledgerUiState:{draft:null},
+    document:{getElementById(){return input;}},
+    openSettings(target){routes.push(target);},
+    toast(){},
+    routes,
+    values
+  };
+  vm.createContext(sandbox);
+  vm.runInContext(
+    extractFunction(source,'settingsOptionPageForKind')+'\n'+
+    extractFunction(source,'ledgerOptionStoreForKind')+'\n'+
+    extractFunction(source,'addLedgerOptionFromSettings')+'\n'+
+    extractFunction(source,'removeLedgerOptionFromSettings')+'\n'+
+    extractFunction(source,'moveLedgerOptionFromSettings'),
+    sandbox
+  );
+  return sandbox;
+}
+
 function createStorage(){
   const values = {};
   return {
@@ -164,7 +251,31 @@ function response(payload){
   assert(html.includes('scrollTopByPage'),'root and every subpage preserve independent scroll positions');
   assert(settingsNavSource.includes('captureSettingsScroll'),'Settings captures scroll before rerender or navigation');
   assert(html.includes('function backToSettingsRoot('),'Settings subpages return to the root context');
-  assert(settingsOptionsPageSource.includes('類別、支付方式與採買單位'),'Settings exposes custom ledger option management');
+  const optionsHub=renderCustomOptionsHub(html);
+  const hubLabels=['記帳類別','支付方式','採買單位'];
+  hubLabels.forEach(function(label){assert(optionsHub.includes('>'+label+'<'),'custom-options hub includes '+label);});
+  assert(optionsHub.indexOf('記帳類別')<optionsHub.indexOf('支付方式')&&optionsHub.indexOf('支付方式')<optionsHub.indexOf('採買單位'),
+    'custom-options hub keeps the confirmed option-kind order');
+  assert(optionsHub.includes('3 項')&&optionsHub.includes('2 項')&&optionsHub.includes('4 項'),
+    'custom-options hub renders live counts from all three stores');
+  assert(!optionsHub.includes('ledger-option-row')&&!optionsHub.includes('ledgerOptionInput_'),
+    'custom-options hub does not expand option managers');
+  const categoryEditor=renderCustomOptionEditor(html,'options-category');
+  assert(categoryEditor.includes('<h2 id="settingsTitle">記帳類別</h2>'),
+    'category editor has a focused page title');
+  assert(!categoryEditor.includes('<h4></h4>'),'focused option editor does not emit an unnamed heading');
+  assert(categoryEditor.includes('data-option-kind="category"')&&categoryEditor.includes('餐飲')&&categoryEditor.includes('交通'),
+    'category editor renders the category manager');
+  assert(!categoryEditor.includes('ledgerOptionInput_payMethod')&&!categoryEditor.includes('ledgerOptionInput_shoppingUnit'),
+    'category editor does not render payment methods or shopping units');
+  assert(categoryEditor.includes('aria-label="返回自訂項目"')&&categoryEditor.includes("openSettingsPage('options')"),
+    'focused option editor returns to the custom-options hub');
+  const paymentEditor=renderCustomOptionEditor(html,'options-pay-method');
+  assert(paymentEditor.includes('data-option-kind="payMethod"')&&paymentEditor.includes('現金')&&!paymentEditor.includes('餐飲'),
+    'payment editor renders only payment methods');
+  const unitEditor=renderCustomOptionEditor(html,'options-shopping-unit');
+  assert(unitEditor.includes('data-option-kind="shoppingUnit"')&&unitEditor.includes('個')&&!unitEditor.includes('餐飲'),
+    'shopping-unit editor renders only shopping units');
 
   /* ---- v74 測試模式控制頁與 legacy deep link(設計規格 §2.4／§2.5／§7.1) ---- */
   /* 規則 5:斷言 normalizeSettingsTarget() 的實際回傳值,不是原始碼字串。
@@ -179,6 +290,9 @@ function response(payload){
   assert.strictEqual(resolveSettingsTarget('ledgerProxyTargetSettingsSection').page,'proxy',
     'legacy proxy-target target remains mapped');
   assert.strictEqual(resolveSettingsTarget('test-mode').page,'test-mode','test-mode is a first-class page id');
+  assert.strictEqual(resolveSettingsTarget('options-category').page,'options-category','category editor is a first-class page id');
+  assert.strictEqual(resolveSettingsTarget('options-pay-method').page,'options-pay-method','payment editor is a first-class page id');
+  assert.strictEqual(resolveSettingsTarget('options-shopping-unit').page,'options-shopping-unit','shopping-unit editor is a first-class page id');
   assert.strictEqual(resolveSettingsTarget('nonsense').page,'root','unknown targets still fall back to root');
   assert.strictEqual(resolveSettingsTarget('root').page,'root','the root page id still resolves to itself');
 
@@ -192,10 +306,10 @@ function response(payload){
   assert(settingsDispatchSource.includes("page==='test-mode'")&&settingsDispatchSource.includes('renderSettingsTestModePage()'),
     'the Settings dispatcher routes test-mode to its control page');
 
-  /* 規則 8:測試模式關閉時,診斷面板是唯一的啟用入口 */
-  assert(diagnosticsSource.includes('openTestModeSettings()'),'diagnostics can reach the test-mode control page');
+  /* 2026-08-09：診斷面板移除測試模式區塊，但控制頁與 router 保留。 */
+  assert(!diagnosticsSource.includes('openTestModeSettings()'),'diagnostics no longer links to the test-mode control page');
   assert(html.includes("function openTestModeSettings(){")&&html.includes("openSettings('test-mode')"),
-    'the diagnostics entry navigates through the Settings router');
+    'the retained compatibility helper still navigates through the Settings router');
 
   /* 根頁不再常駐測試模式,也不得帶任何可直接切換的控制項(§2.2.5／§3.4) */
   assert(!settingsRootSource.includes('setLedgerTestMode'),'the Settings root never carries a test-mode toggle');
@@ -204,6 +318,13 @@ function response(payload){
   assert(html.includes('addLedgerOptionFromSettings'),'Settings can add custom options');
   assert(html.includes('moveLedgerOptionFromSettings'),'Settings can reorder custom options');
   assert(html.includes('removeLedgerOptionFromSettings'),'Settings can remove default or custom options');
+  const optionActions=loadOptionSettingsActions(html);
+  optionActions.addLedgerOptionFromSettings('category');
+  assert.strictEqual(optionActions.routes.pop(),'options-category','adding a category stays on its focused editor');
+  optionActions.removeLedgerOptionFromSettings('payMethod','現金');
+  assert.strictEqual(optionActions.routes.pop(),'options-pay-method','removing a payment method stays on its focused editor');
+  optionActions.moveLedgerOptionFromSettings('shoppingUnit','件',-1);
+  assert.strictEqual(optionActions.routes.pop(),'options-shopping-unit','moving a shopping unit stays on its focused editor');
   assert(splitSource.includes('⚠ 目前顯示測試帳本'),'Split renders the test-universe warning');
   assert(splitSource.includes('不影響正式分帳'),'Split explains that the active test universe is isolated');
   /* Retired pre-universe warning copy assertions:

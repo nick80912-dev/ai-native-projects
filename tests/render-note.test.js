@@ -1,6 +1,7 @@
 const assert = require('assert');
 const fs = require('fs');
 const vm = require('vm');
+const TripTodayView = require('../today-view.js');
 
 const html = fs.readFileSync('index.html', 'utf8');
 
@@ -28,15 +29,15 @@ function extractConst(name){
    給一個空的採買清單即可 —— 沒有待買項目時該區塊完全不渲染。 */
 let renderedShoppingItems = [];
 const sandbox = {
+  TripTodayView,
   shoppingListStore: { all(){ return renderedShoppingItems; } },
-  /* v85 renderShoppingTodayCard 仍自行建立 model；讓 RED 測試能跑到舊文案而非因缺 helper 例外。
-     v86 改為直接消費 model 後這個相容 stub 不再參與行為。 */
   buildShoppingTodayReminder(items,day){ return day&&day.groups?day:null; }
 };
 vm.createContext(sandbox);
 vm.runInContext([
   extractConst('TOMORROW_PREVIEW_HOUR'),
   extractFunction('escapeHtml'),
+  extractFunction('escapeHtmlAttr'),
   extractFunction('jsString'),
   extractFunction('jsHtmlAttrString'),
   extractFunction('navigationIntent'),
@@ -55,16 +56,24 @@ vm.runInContext([
   extractFunction('shouldShowCompactTomorrowPreview'),
   extractFunction('renderTomorrowPreview'),
   extractFunction('cssId'),
+  extractFunction('getNavigationIntentSourceView'),
+  extractFunction('getNavigationTripItemName'),
+  extractFunction('findShopMallByPlaceId'),
+  extractFunction('getNavigationShopPlaceName'),
+  extractFunction('resolveNavigationDestinationContainer'),
   extractFunction('openShopPlace'),
-  /* v82:定位改由 switchView 的意圖機制執行,注入真實的 applyViewIntent 一起驗 */
-  extractFunction('applyViewIntent'),
   extractFunction('centerShopFilterChip'),
   extractFunction('parkingLines'),
   extractFunction('renderParkingValue'),
   extractFunction('parkingKvRow'),
   extractFunction('renderParkingTicketLine'),
   extractFunction('renderTicketLine'),
-  extractFunction('renderShoppingTodayCard'),
+  extractFunction('todayShoppingHeroModel'),
+  extractFunction('todayViewActionAttribute'),
+  extractFunction('renderTodayShoppingSummary'),
+  extractFunction('weatherTravelHint'),
+  extractFunction('renderTodayWeatherSummary'),
+  extractFunction('renderTodayHeroSummary'),
   extractFunction('nextStopMeta'),
   extractFunction('parkingPanel'),
   /* v84:下一站卡片多了「這站待買」區塊,注入真實實作而非 stub */
@@ -81,26 +90,88 @@ vm.runInContext([
   extractFunction('renderClusterNextStopCard')
 ].join('\n'), sandbox);
 
-/* v86 Today render contract:兩列、每列三項、固定文案，以及不增加第三列的地點提示。 */
-const todayShoppingOut=sandbox.renderShoppingTodayCard({
-  count:8,
-  groups:[
-    {stopRef:'a',stopName:'第一航廈一樓',items:['醬油','抹茶','和菓子']},
-    {stopRef:'b',stopName:'第二航廈',items:['咖啡豆','果醬','餅乾','茶葉']},
-    {stopRef:'c',stopName:'第三站',items:['桃子']}
-  ]
+['navigationIntentSourceView','navigationTripItemName','shopMallByPlaceId','navigationShopPlaceName','navigationDestinationContainer'].forEach((name)=>{
+  assert(!html.includes('function '+name+'('),name+' is replaced by a verb-led helper name');
 });
-assert(todayShoppingOut.includes('今天 8 項待買'),'v86 title omits the redundant 有');
-assert(todayShoppingOut.includes('查看全部 →'),'v86 action uses the approved copy');
-assert.strictEqual((todayShoppingOut.match(/today-shopping-summary-row/g)||[]).length,2,'Today renders at most two full stop rows');
-assert(todayShoppingOut.includes('醬油、抹茶、和菓子'),'exactly three names remain complete');
-assert(!todayShoppingOut.includes('和菓子...'),'exactly three names do not gain an ellipsis');
-assert(todayShoppingOut.includes('咖啡豆、果醬、餅乾...'),'a fourth item adds ASCII three dots after the first three');
-assert(!todayShoppingOut.includes('茶葉'),'the fourth name is not rendered');
-assert(!todayShoppingOut.includes('第三站'),'the third stop is not rendered as another full row');
-assert(todayShoppingOut.includes('另有 1 個地點'),'the second row carries the compact location overflow marker');
-assert(!todayShoppingOut.includes('等'),'the compact summary no longer uses 等');
-assert.strictEqual((todayShoppingOut.match(/<button/g)||[]).length,1,'the entire Today card remains one button');
+
+const heroShoppingOut=sandbox.renderTodayShoppingSummary({
+  items:[{id:'current',place:'Current stop'},{id:'future',place:'Future stop'}],
+  groups:[{stopRef:'future',stopName:'Future stop',items:['SECRET_ONE','SECRET_TWO','SECRET_THREE'],firstCategory:'必買'}]
+},'current');
+assert(heroShoppingOut.includes('class="today-hero-summary-item today-hero-shopping-summary"'));
+assert(heroShoppingOut.includes('aria-label="開啟Future stop採買：必買，共 3 項待買"'));
+assert(heroShoppingOut.includes('<span class="today-hero-summary-label">順路採買</span>'));
+assert(heroShoppingOut.includes('<span class="today-hero-shopping-stop">Future…</span>'));
+assert(heroShoppingOut.includes('<span class="today-hero-shopping-separator">·</span>'));
+assert(heroShoppingOut.includes('<span class="today-hero-shopping-category">必買</span>'));
+assert(heroShoppingOut.includes('<small class="today-hero-shopping-count">+2</small>'));
+assert(!heroShoppingOut.includes('today-hero-shopping-item'));
+assert(!heroShoppingOut.includes('SECRET_ONE'),'Hero visible markup excludes product names');
+assert(!heroShoppingOut.includes('3 項 →'));
+assert(heroShoppingOut.includes("openShoppingList('future',this)"));
+assert(heroShoppingOut.includes('data-shopping-launcher="hero"'));
+assert(heroShoppingOut.includes('data-shopping-stop-ref="future"'));
+assert.strictEqual((heroShoppingOut.match(/<button/g)||[]).length,1);
+assert(!heroShoppingOut.includes('<script>'));
+
+const longStopHeroOut=sandbox.renderTodayShoppingSummary({
+  items:[{id:'future',place:'廣島和平紀念資料館'}],
+  groups:[{
+    stopRef:'future',stopName:'廣島和平紀念資料館',
+    items:['SECRET_ONE','SECRET_TWO','SECRET_THREE'],firstCategory:'生活用品'
+  }]
+},'');
+assert(longStopHeroOut.includes('<span class="today-hero-shopping-stop">廣島和平紀念…</span>'));
+assert(longStopHeroOut.includes('aria-label="開啟廣島和平紀念資料館採買：生活用品，共 3 項待買"'));
+assert(longStopHeroOut.includes('<span class="today-hero-shopping-category">生活用品</span>'));
+assert(longStopHeroOut.includes('<small class="today-hero-shopping-count">+2</small>'));
+assert(!longStopHeroOut.includes('SECRET_ONE'),'compact Hero summary still excludes product names');
+
+const blankCategoryReminder={
+  items:[{id:'future',place:'Nakayama Farm Heart Sakazu'}],
+  groups:[{stopRef:'future',stopName:'Nakayama Farm Heart Sakazu',items:['SECRET_ONE','SECRET_TWO'],firstCategory:''}]
+};
+const blankCategorySnapshot=JSON.parse(JSON.stringify(blankCategoryReminder));
+const emptyItemHeroOut=sandbox.renderTodayShoppingSummary(blankCategoryReminder,'');
+assert(emptyItemHeroOut.includes('<span class="today-hero-shopping-stop">Nakaya…</span>'));
+assert(emptyItemHeroOut.includes('aria-label="開啟Nakayama Farm Heart Sakazu採買：未分類，共 2 項待買"'));
+assert(emptyItemHeroOut.includes('<span class="today-hero-shopping-separator">·</span>'));
+assert(emptyItemHeroOut.includes('<span class="today-hero-shopping-category">未分類</span>'));
+assert(emptyItemHeroOut.includes('<small class="today-hero-shopping-count">+1</small>'));
+assert(!emptyItemHeroOut.includes('SECRET_ONE'),'blank-category fallback excludes product names');
+assert.deepStrictEqual(blankCategoryReminder,blankCategorySnapshot,'display fallback does not mutate reminder input');
+
+/* Break caught: extraction drops the already-proven selection boundary or the all-current-stop duplicate guard. */
+const todayShoppingRendererSource=extractFunction('renderTodayShoppingSummary');
+assert.match(todayShoppingRendererSource,/summary=todayShoppingHeroModel\(reminder,day,currentStopRef\)/,
+  'the adapter prepares one selected Today Shopping projection');
+assert.match(todayShoppingRendererSource,/TripTodayView\.buildModel\(\{summary:summary,generic:generic\}\)/,
+  'production consumes the same Today view model interface as module tests');
+assert.match(todayShoppingRendererSource,/TripTodayView\.render\(model,/,
+  'production consumes the same Today renderer interface as module tests');
+assert.match(todayShoppingRendererSource,/pending\.every\(function\(item\)\{return String\(item\.stopRef\|\|''\)===current;\}\)\)return ''/,
+  'the adapter suppresses a duplicate generic entry when every pending item belongs to the exact next stop');
+
+const quotedCategoryHeroOut=sandbox.renderTodayShoppingSummary({
+  items:[{id:'future',place:'Future stop'}],
+  groups:[{stopRef:'future',stopName:'Future stop',items:['SECRET_PRODUCT'],firstCategory:'Quoted "Category" <svg/onload=alert(1)>'}]
+},'');
+assert(quotedCategoryHeroOut.includes('aria-label="開啟Future stop採買：Quoted &quot;Category&quot; &lt;svg/onload=alert(1)&gt;，共 1 項待買"'));
+assert(quotedCategoryHeroOut.includes('<span class="today-hero-shopping-category">Quoted "Category" &lt;svg/onload=alert(1)&gt;</span>'));
+assert(!quotedCategoryHeroOut.includes('<svg'),'category values cannot inject markup');
+assert(!quotedCategoryHeroOut.includes('SECRET_PRODUCT'),'category output excludes product names');
+
+const heroSummaryOut=sandbox.renderTodayHeroSummary(
+  {city:'Hiroshima',temp:21,rain:40,icon:'rain',code:61}, heroShoppingOut
+);
+assert(heroSummaryOut.includes('class="today-hero-summary"'));
+assert(heroSummaryOut.includes('class="today-hero-summary-divider"'));
+assert(heroSummaryOut.indexOf('today-hero-weather-summary')<heroSummaryOut.indexOf('today-hero-shopping-summary'));
+assert.strictEqual((heroSummaryOut.match(/today-hero-summary-divider/g)||[]).length,1);
+
+const quotedWeatherOut=sandbox.renderTodayWeatherSummary({city:'Quoted "City"',temp:21,rain:40,code:61});
+assert(quotedWeatherOut.includes('aria-label="Quoted &quot;City&quot; 21 度，現在之後最高降雨機率 40%，記得帶傘"'),'weather accessible name escapes quoted cities in attribute context');
+assert.strictEqual((quotedWeatherOut.match(/\saria-label=/g)||[]).length,1,'weather summary keeps one aria-label attribute');
 
 /* v86 next-stop entry is a sibling-safe compact button and keeps row-count semantics. */
 renderedShoppingItems=[
@@ -112,52 +183,65 @@ const buyBadgeOut=sandbox.renderNextStopBuy('10/18_4');
 assert(buyBadgeOut.includes('class="nx-buy-badge"'),'pending items render the compact badge class');
 assert(buyBadgeOut.includes('>🛍 2<'),'badge exposes only the icon and pending row count visually');
 assert(buyBadgeOut.includes('aria-label="開啟這一站的 2 項待買"'),'badge has the approved accessible name');
-assert(buyBadgeOut.includes("openShoppingList('10/18_4')"),'badge opens the exact stopRef');
+assert(buyBadgeOut.includes("openShoppingList('10/18_4',this)"),'badge opens the exact stopRef and carries its return-focus origin');
+assert(buyBadgeOut.includes('data-shopping-launcher="badge"'),'badge identifies its stable origin kind');
+assert(buyBadgeOut.includes('data-shopping-stop-ref="10/18_4"'),'badge identifies its stable target stop');
 assert(!buyBadgeOut.includes('白桃'),'badge no longer repeats item names');
 renderedShoppingItems=[];
 assert.strictEqual(sandbox.renderNextStopBuy('10/18_4'),'','a stop without pending items renders no badge');
 
 let switchedView = '';
-let scrolled = false;
 sandbox._shopQ = 'uniqlo';
 sandbox.shopPlaceFilter = 'wants';
 sandbox.shopOpenFloors = { 'P001::1F':true };
 sandbox.shopMalls = function(){ return [{ place:{ placeId:'P001' }, stores:[] }]; };
+assert.strictEqual(sandbox.findShopMallByPlaceId('p001').place.placeId,'P001','one case-insensitive resolver owns shopping-place lookup');
+assert.strictEqual(sandbox.getNavigationShopPlaceName('p001'),'P001','navigation naming reuses the shared resolved mall');
+const navigationShopPlaceNameSource=extractFunction('getNavigationShopPlaceName');
+const openShopPlaceSource=extractFunction('openShopPlace');
+assert(navigationShopPlaceNameSource.includes('findShopMallByPlaceId('),'navigation naming uses the single shopping-place resolver');
+assert(openShopPlaceSource.includes('findShopMallByPlaceId('),'shopping deep links use the single shopping-place resolver');
+assert(!navigationShopPlaceNameSource.includes('shopMalls().some'),'navigation naming has no duplicate mall scan');
+assert(!openShopPlaceSource.includes('shopMalls().some'),'shopping deep links have no duplicate mall scan');
 /* v82:openShopPlace 不再自己捲動,而是把結構化意圖交給 switchView。
    這裡照真實流程在 render 之後套用意圖,端到端的斷言才仍然成立。 */
 let passedIntent = null;
 sandbox.switchView = function(view, intent){
   switchedView = view;
   passedIntent = intent || null;
-  if(intent) sandbox.applyViewIntent(view, intent);
-};
-sandbox.window = { scrollTo:function(){} };
-sandbox.requestAnimationFrame = function(fn){ fn(); };
-sandbox.document = {
-  getElementById:function(id){
-    if(id !== 'shopmall_P001') return null;
-    return { scrollIntoView:function(){ scrolled = true; } };
-  }
 };
 sandbox.openShopPlace('p001');
 assert.strictEqual(sandbox._shopQ, '', 'shopping deep link clears stale search');
 assert.strictEqual(sandbox.shopPlaceFilter, 'P001', 'shopping deep link selects the resolved place');
 assert.strictEqual(switchedView, 'shop', 'shopping deep link opens the Shopping view');
 assert.deepStrictEqual(
-  passedIntent && { type: passedIntent.type, placeId: passedIntent.placeId },
-  { type: 'shop-place', placeId: 'P001' },
-  'shopping deep link hands a structured intent to switchView'
+  passedIntent && {
+    view:passedIntent.view,targetId:passedIntent.targetId,sourceView:passedIntent.sourceView,
+    sourceId:passedIntent.sourceId,align:passedIntent.align
+  },
+  { view:'shop',targetId:'shopmall_P001',sourceView:'',sourceId:'P001',align:'start' },
+  'shopping deep link hands the exact mall target to switchView'
 );
-assert.strictEqual(scrolled, true, 'shopping deep link scrolls to the place card after render');
+assert.match(passedIntent.announce,/^已定位：/,'shopping deep link provides an accessible destination confirmation');
 assert.strictEqual(sandbox.shopOpenFloors['P001::1F'], true, 'shopping deep link preserves floor state');
 
 sandbox._shopQ = 'daiso';
 sandbox.shopPlaceFilter = 'P001';
-scrolled = false;
 sandbox.openShopPlace('P999');
 assert.strictEqual(sandbox._shopQ, '', 'unknown place still clears stale search');
 assert.strictEqual(sandbox.shopPlaceFilter, 'all', 'unknown place safely falls back to all');
-assert.strictEqual(scrolled, false, 'unknown place does not attempt a target scroll');
+assert.strictEqual(passedIntent.targetId, 'shopmall_P999', 'unknown places still request their exact target so failure is reported');
+
+const navigationStatusSource=extractFunction('writeNavigationTargetStatus');
+const applyNavigationTargetSource=extractFunction('applyNavigationTarget');
+assert.match(navigationStatusSource,/visible/,'navigation status accepts an explicit visible mode');
+assert.match(navigationStatusSource,/navigation-target-status-visible/,'only the visible mode receives the layout class');
+assert.match(applyNavigationTargetSource,/writeNavigationTargetStatus\(container,'找不到對應地點',true\)/,'missing targets keep visible feedback');
+assert.match(applyNavigationTargetSource,/writeNavigationTargetStatus\(container,intent\.announce,false\)/,'successful targets keep only an accessible hidden announcement');
+assert.match(applyNavigationTargetSource,/setTimeout\(function\(\)\{beginNavigationTargetFade\(intent\.token\);\},1000\)/,'successful targets keep the full highlight for one second');
+const navigationFadeSource=extractFunction('beginNavigationTargetFade');
+assert.match(navigationFadeSource,/setTimeout\(function\(\)\{clearNavigationTarget\(token\);\},200\)/,'normal motion fades for two hundred milliseconds');
+assert.match(navigationFadeSource,/prefers-reduced-motion: reduce/,'reduced motion clears without entering the fade phase');
 
 let horizontalScroll = null;
 let activeChip = { offsetLeft:530, offsetWidth:120 };
@@ -331,7 +415,12 @@ const clusterChildOut = sandbox.renderClusterStop({
   note:''
 }, {}, {done:{},skip:{},autoSkip:{}}, 1);
 assert(clusterChildOut.includes('class="nx-cluster-stop'));
+assert(clusterChildOut.includes('<button type="button" class="nx-cluster-stop'),'expanded cluster stops are native keyboard controls');
+assert(clusterChildOut.includes('</button>'),'expanded cluster stop buttons close with button semantics');
 assert(clusterChildOut.includes('onclick="openTripItem(1,\'10/19_2\')"'), 'expanded child opens the exact Trip item');
+assert(html.includes('<button type="button" class="hotel today-pretrip-day"'),'pre-trip day launchers are native keyboard controls');
+assert.match(html,/\.nx-cluster-stop:focus-visible[^}]*outline:/,'expanded cluster stop exposes a visible keyboard focus ring');
+assert.match(html,/\.today-pretrip-day:focus-visible[^}]*outline:/,'pre-trip day launcher exposes a visible keyboard focus ring');
 
 const clusterCardSource = extractFunction('renderClusterNextStopCard');
 const parentMainSource = clusterCardSource.slice(0, clusterCardSource.indexOf('nx-cluster-expand'));
@@ -352,8 +441,8 @@ const clusterBuyOut=sandbox.renderClusterNextStopCard(
   {},{done:{},skip:{}},600
 );
 assert(clusterBuyOut.includes('class="nx-ticket nx-cluster-ticket has-next-buy"'),'cluster ticket reserves badge space');
-assert(clusterBuyOut.includes("openShoppingList('child-current')"),'cluster badge targets only the active child stopRef');
-assert(!clusterBuyOut.includes("openShoppingList('cluster-parent')"),'cluster parent never owns the active child badge');
+assert(clusterBuyOut.includes("openShoppingList('child-current',this)"),'cluster badge targets only the active child stopRef');
+assert(!clusterBuyOut.includes("openShoppingList('cluster-parent',this)"),'cluster parent never owns the active child badge');
 renderedShoppingItems=[];
 
 const currentNextStopOut = sandbox.renderNextStopCard({}, 0, {

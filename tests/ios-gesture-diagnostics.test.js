@@ -21,7 +21,9 @@ assert.doesNotMatch(suppressors[0], /preventDefault/, 'the compatibility suppres
 
 assert.match(html, /function setupDiagnostics\(/, 'the peach diagnostics entry remains');
 assert.match(html, /function openDiagnostics\(/, 'the diagnostics panel remains');
-assert.match(html, /healthCheck\(\)/, 'health check remains in the diagnostics panel');
+assert.match(html, /healthCheck\(\)/, 'the public reporting health check remains available');
+assert.match(html, /function currentHealthFindings\(/, 'diagnostics can read health without adding AppLog entries');
+assert.match(html, /id="diagAppLogSection"/, 'the diagnostics panel exposes the bounded AppLog session buffer');
 assert.match(html, /function setTimeSimulationDay\(/, 'travel-day shortcuts remain');
 assert.match(html, /function resetTripProgress\(/, 'trip progress reset remains');
 /* 真機驗收需要知道「這台裝置實際啟用的是哪一版 SW」——

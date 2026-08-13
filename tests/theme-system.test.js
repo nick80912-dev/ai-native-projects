@@ -17,6 +17,11 @@ function cssValue(block,name){
   assert(match,'CSS value exists: '+name);
   return match[1].trim();
 }
+function presentationBlock(html){
+  const start=html.indexOf(':root{');
+  assert(start>=0,'non-theme presentation token block exists');
+  return html.slice(start+6,html.indexOf('}',start));
+}
 function hexToRgb(hex){
   const value=hex.replace('#','');
   return [0,2,4].map(index=>parseInt(value.slice(index,index+2),16));
@@ -56,9 +61,31 @@ function extractThemeIds(html){
     assert(contrastRatio(cssValue(block,'--t-ink-soft'),paper)>=4.5,id+' soft ink contrast');
     assert(contrastRatio('#ffffff',cssValue(block,'--t-chrome'))>=4.5,id+' chrome contrast');
   });
+  const cedarBlock=themeBlock(html,'cedar');
+  assert.strictEqual(cssValue(cedarBlock,'--t-action'),'#2f6b4f');
+  assert(contrastRatio('#ffffff',cssValue(cedarBlock,'--t-action'))>=4.5,'cedar action supports white text');
   assert.strictEqual(cssValue(themeBlock(html,'tea'),'--t-action'),'#896748');
 
   const baseBlock=themeBlock(html,'ocean');
+  const sharedPresentation=presentationBlock(html);
+  const presentationTokens={
+    '--font-caption':'11px','--font-meta':'12px','--font-body':'14px','--font-title':'20px','--font-display':'24px',
+    '--space-1':'4px','--space-2':'8px','--space-3':'12px','--space-4':'16px','--space-5':'24px',
+    '--radius-sm':'6px','--radius-control':'10px','--radius-card':'14px','--radius-pill':'999px',
+    '--status-pending-bg':'#fff3cf','--status-pending-ink':'#80600d',
+    '--entry-secondary-border':'#cfe0dd','--entry-secondary-bg':'#f3f8f6',
+    '--shopping-category-bg':'#fff7dc','--shopping-category-ink':'#8a6416',
+    '--status-partial-bg':'#e8f0f2','--status-unverified-bg':'#fdf0e2',
+    '--status-unverified-ink':'#9a5b18','--status-wait-ink':'#8b531a'
+  };
+  Object.keys(presentationTokens).forEach(name=>{
+    assert.strictEqual(cssValue(sharedPresentation,name),presentationTokens[name],name+' keeps the approved non-theme scale');
+  });
+  [
+    '--action-primary-bg','--action-primary-ink','--action-secondary-bg','--action-secondary-ink',
+    '--action-secondary-border','--action-quiet-bg','--action-quiet-ink','--action-destructive-bg',
+    '--action-destructive-ink','--diagnostic-success','--diagnostic-warning','--diagnostic-degraded','--diagnostic-error'
+  ].forEach(name=>assert(sharedPresentation.includes(name+':'),name+' defines the shared presentation role'));
   [
     ['--paper','--t-paper'],['--card','--t-card'],['--sea-deep','--t-chrome'],
     ['--sea','--t-action'],['--coral','--t-accent'],['--coral-bg','--t-accent-bg'],
@@ -67,6 +94,28 @@ function extractThemeIds(html){
   ].forEach(([legacy,token])=>{
     assert.match(baseBlock,new RegExp(escapeRegExp(legacy)+':var\\('+escapeRegExp(token)+'\\)'));
   });
+  assert.match(html,/\.btn\{[^}]*background:var\(--action-primary-bg\)[^}]*color:var\(--action-primary-ink\)/,
+    'shared primary buttons consume action-role tokens');
+  assert.match(html,/\.btn\.ghost\{[^}]*background:var\(--action-secondary-bg\)[^}]*color:var\(--action-secondary-ink\)[^}]*border:1px solid var\(--action-secondary-border\)/,
+    'shared secondary buttons consume action-role tokens');
+  assert.match(html,/\.btn\.coral\{[^}]*background:var\(--action-destructive-bg\)/,
+    'shared destructive buttons consume the destructive action role');
+  assert.match(html,/\.ledger-sheet-back\{[^}]*border-radius:var\(--radius-pill\)[^}]*background:var\(--action-quiet-bg\)[^}]*color:var\(--action-quiet-ink\)[^}]*font-size:var\(--font-body\)/,
+    'quiet sheet action consumes the shared quiet, radius, and typography roles');
+  assert.match(html,/\.ledger-recent-badge\.pending\{background:var\(--status-pending-bg\);color:var\(--status-pending-ink\)\}/,
+    'new Ledger pending badges consume fixed semantic status colors');
+  assert.match(html,/\.ledger-entry-summary\{[^}]*border:1px solid var\(--entry-secondary-border\)[^}]*background:var\(--entry-secondary-bg\)/,
+    'new Ledger entry disclosure consumes semantic surface colors');
+  assert.match(html,/\.ledger-entry-secondary\{[^}]*border:1px solid var\(--entry-secondary-border\)[^}]*background:var\(--entry-secondary-bg\)/,
+    'new Ledger entry disclosure body consumes semantic surface colors');
+  assert.match(html,/\.shopping-category-badge\{[^}]*background:var\(--shopping-category-bg\)[^}]*color:var\(--shopping-category-ink\)/,
+    'new Shopping category badge consumes semantic colors');
+  assert.match(html,/\.shopping-link-partial\{background:var\(--status-partial-bg\)/,
+    'new Shopping partial status consumes its semantic surface');
+  assert.match(html,/\.shopping-link-unverified\{background:var\(--status-unverified-bg\);color:var\(--status-unverified-ink\)\}/,
+    'new Shopping unverified status consumes semantic colors');
+  assert.match(html,/\.shopping-detail-ledger-wait-note\{[^}]*background:var\(--status-unverified-bg\)[^}]*color:var\(--status-wait-ink\)/,
+    'new Shopping wait note consumes semantic colors');
   assert.match(html,/--green:#367055/);
   assert.match(html,/--gold-ink:#85661c/);
   assert.match(html,/\.hotel \.h-lbl\{[^}]*color:var\(--gold-ink\)/);
@@ -186,7 +235,11 @@ function extractThemeIds(html){
   assert.strictEqual(notes[0].version,appVersion(),'the newest release note is the current version');
   /* 滾動的五筆視窗:最新一筆是目前版本,其餘四筆是緊接在後的歷史版本。
      歷史版本刻意寫死字面值(見 tests/support/version.js 的適用範圍說明)。 */
-  assert.deepStrictEqual(Array.from(notes.slice(1),function(note){return note.version;}),['v95','v94','v93','v92']);
+  assert.deepStrictEqual(Array.from(notes.slice(1),function(note){return note.version;}),['v109','v108','v107','v106']);
+  assert.match(notes[0].title,/一致/,'v110 release note describes the presentation consistency work');
+  assert(JSON.stringify(notes[0]).includes('六組主題'),'v110 release note preserves all approved themes');
+  assert(JSON.stringify(notes[0]).includes('原本行為'),'v110 release note promises unchanged Today behavior');
+  assert(JSON.stringify(notes[0]).includes('分帳資料'),'v110 release note names the unchanged Ledger boundary');
   notes.forEach(note=>{
     assert(note.title&&note.title.length<=24,'release title is short and present');
     assert(Array.isArray(note.items)&&note.items.length>=1,'release has user-readable items');

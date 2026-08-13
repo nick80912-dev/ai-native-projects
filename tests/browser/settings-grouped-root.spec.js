@@ -69,6 +69,30 @@ test('三群組根頁在 320／375／390px 下沒有水平溢位,列高與觸控
     expect(state.identityWhiteSpace,`身分名稱不換行 @${size.w}px`).toBe('nowrap');
     expect(state.identityOverflowX,`身分名稱隱藏溢位 @${size.w}px`).toBe('hidden');
     expect(state.identityClearOfActions,`身分名稱不覆蓋動作按鈕 @${size.w}px`).toBe(true);
+
+    for(const pageId of ['options','options-category','options-pay-method','options-shopping-unit']){
+      await page.evaluate(id=>openSettings(id),pageId);
+      const customLayout=await page.evaluate(()=>{
+        const panel=document.querySelector('#settingsOverlay .settings-panel');
+        const rows=Array.from(panel.querySelectorAll('.ledger-option-row'));
+        return {
+          page:settingsUiState.page,
+          panelOverflow:panel.scrollWidth>panel.clientWidth,
+          missingNamedRows:rows.filter(row=>!row.querySelector('.ledger-option-name')).length,
+          overlappingRows:rows.filter(row=>{
+            const name=row.querySelector('.ledger-option-name');
+            const actions=row.querySelector(':scope>div');
+            return name&&actions&&name.getBoundingClientRect().right>actions.getBoundingClientRect().left;
+          }).length,
+          tooShort:Array.from(panel.querySelectorAll('button,input')).filter(control=>control.getBoundingClientRect().height<36).length
+        };
+      });
+      expect(customLayout.page).toBe(pageId);
+      expect(customLayout.panelOverflow,`${pageId} panel overflow @${size.w}px`).toBe(false);
+      expect(customLayout.missingNamedRows,`${pageId} option names use the layout contract @${size.w}px`).toBe(0);
+      expect(customLayout.overlappingRows,`${pageId} option controls do not cover names @${size.w}px`).toBe(0);
+      expect(customLayout.tooShort,`${pageId} controls retain touch height @${size.w}px`).toBe(0);
+    }
   }
   expect(pageErrors).toEqual([]);
 });
@@ -93,22 +117,20 @@ test('測試模式關→開→關的完整循環,根頁警告列即時同步且�
   expect(off.mentionsTestMode).toBe(false);
   expect(off.anyToggle).toBe(false);
 
-  /* 診斷面板是關閉狀態下唯一的啟用入口 */
-  const diag=await page.evaluate(()=>{
-    openDiagnostics();
-    const hasEntry=!!document.querySelector('#diagnosticOverlay button[onclick="openTestModeSettings()"]');
-    openTestModeSettings();
+  /* 診斷面板不再承擔測試模式入口；控制頁與 TEST universe 本身仍保留。 */
+  await page.evaluate(()=>openDiagnostics());
+  await expect(page.locator('#diagnosticOverlay')).not.toContainText('團體帳測試模式');
+  await expect(page.locator('#diagnosticOverlay button[onclick="openTestModeSettings()"]')).toHaveCount(0);
+  const controlPage=await page.evaluate(()=>{
+    closeDiagnostics();
+    openSettings('test-mode');
     return {
-      hasEntry,
-      diagnosticsClosed:!document.getElementById('diagnosticOverlay'),
       page:settingsUiState.page,
       hasCheckbox:!!document.querySelector('#settingsOverlay #ledgerTestModeSection input[type=checkbox]')
     };
   });
-  expect(diag.hasEntry).toBe(true);
-  expect(diag.diagnosticsClosed).toBe(true);
-  expect(diag.page).toBe('test-mode');
-  expect(diag.hasCheckbox).toBe(true);
+  expect(controlPage.page).toBe('test-mode');
+  expect(controlPage.hasCheckbox).toBe(true);
 
   /* 開啟後:根頁底部出現條件式警告列,且仍然沒有可直接切換的控制項 */
   await setTestMode(page,true);
@@ -209,6 +231,15 @@ test('六個主題下群組卡片、分隔線與文字都保持可讀',async({pa
         warningSummaryColor,
         warningSummary:contrast(warningSummaryColor,cardBg)
       };
+      openSettings('options');
+      const hub=document.querySelector('#settingsOverlay .settings-options-hub');
+      const hubCard=hub.querySelector('.settings-group-card');
+      const hubCardBg=getComputedStyle(hubCard).backgroundColor;
+      result[id].hubHelp=contrast(getComputedStyle(hub.querySelector('.settings-help')).color,getComputedStyle(document.body).backgroundColor);
+      result[id].hubTitle=contrast(getComputedStyle(hub.querySelector('.settings-row-main b')).color,hubCardBg);
+      result[id].hubSummary=contrast(getComputedStyle(hub.querySelector('.settings-row-summary')).color,hubCardBg);
+      openSettings('options-shopping-unit');
+      result[id].defaultVisible=!!document.querySelector('#settingsOverlay .ledger-option-default');
     });
     applyTheme('ocean',{persist:false});
     return result;
@@ -226,6 +257,10 @@ test('六個主題下群組卡片、分隔線與文字都保持可讀',async({pa
     expect(reading.rowTitle,`${id} 列標題對比`).toBeGreaterThanOrEqual(4.5);
     expect(reading.summary,`${id} 摘要對比`).toBeGreaterThanOrEqual(4.5);
     expect(reading.icon,`${id} 圖示對比`).toBeGreaterThanOrEqual(3);
+    expect(reading.hubHelp,`${id} 自訂項目說明對比`).toBeGreaterThanOrEqual(4.5);
+    expect(reading.hubTitle,`${id} 自訂項目標題對比`).toBeGreaterThanOrEqual(4.5);
+    expect(reading.hubSummary,`${id} 自訂項目數量對比`).toBeGreaterThanOrEqual(4.5);
+    expect(reading.defaultVisible,`${id} 預設採買單位標示`).toBe(true);
   }
   expect(pageErrors).toEqual([]);
 });
@@ -267,6 +302,40 @@ test('根頁與各子頁(含 test-mode)各自保存捲動位置',async({page})=>
   expect(state.rootRestored,'返回根頁恢復根頁捲動位置').toBe(state.rootScroll);
   expect(state.dataRestored,'重新進入子頁恢復子頁捲動位置').toBe(state.dataScroll);
   expect(state.slots).toContain('test-mode');
+
+  await page.evaluate(()=>openSettings('options'));
+  const categoryCount=await page.evaluate(()=>ledgerCategoryStore.all().length);
+  await expect(page.getByRole('button',{name:new RegExp('記帳類別.*'+categoryCount+' 項')})).toBeVisible();
+  await expect(page.getByRole('button',{name:/支付方式.*\d+ 項/})).toBeVisible();
+  await expect(page.getByRole('button',{name:/採買單位.*\d+ 項/})).toBeVisible();
+
+  await page.getByRole('button',{name:/記帳類別/}).focus();
+  await page.keyboard.press('Enter');
+  await expect(page.getByRole('heading',{name:'記帳類別'})).toBeVisible();
+  await page.locator('#ledgerOptionInput_category').fill('旅費');
+  await page.getByRole('button',{name:'新增'}).click();
+  await expect(page.locator('.ledger-option-row',{hasText:'旅費'})).toBeVisible();
+  expect(await page.evaluate(()=>settingsUiState.page)).toBe('options-category');
+  await page.getByRole('button',{name:'上移 旅費'}).click();
+  expect(await page.evaluate(()=>settingsUiState.page)).toBe('options-category');
+  await page.getByRole('button',{name:'刪除 旅費'}).click();
+  await expect(page.locator('.ledger-option-row',{hasText:'旅費'})).toHaveCount(0);
+
+  await page.getByRole('button',{name:'返回自訂項目'}).click();
+  await expect(page.getByRole('heading',{name:'自訂項目'})).toBeVisible();
+  expect(await page.evaluate(()=>ledgerCategoryStore.all().length)).toBe(categoryCount);
+  await page.getByRole('button',{name:/支付方式/}).focus();
+  await page.keyboard.press('Space');
+  await expect(page.getByRole('heading',{name:'支付方式'})).toBeVisible();
+  expect(await page.evaluate(()=>settingsUiState.page)).toBe('options-pay-method');
+
+  await page.getByRole('button',{name:'返回自訂項目'}).click();
+  await page.getByRole('button',{name:/採買單位/}).click();
+  const defaultUnitRow=page.locator('.ledger-option-row').filter({has:page.locator('.ledger-option-name',{hasText:'個'})}).first();
+  await expect(defaultUnitRow.locator('.ledger-option-default')).toHaveText('預設');
+  await defaultUnitRow.getByRole('button',{name:'刪除 個'}).click();
+  await expect(page.locator('#toast')).toContainText('無法刪除');
+  expect(await page.evaluate(()=>({page:settingsUiState.page,hasDefault:shoppingUnitStore.all().includes('個')}))).toEqual({page:'options-shopping-unit',hasDefault:true});
   expect(pageErrors).toEqual([]);
 });
 

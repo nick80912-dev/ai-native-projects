@@ -226,3 +226,49 @@ curl -sI https://dev-trippilot-jp.netlify.app/app-version.js | grep -i cache-con
 **任何一項不符 → 停止驗收,先重新手動部署。**在錯的版本上驗收出來的結論沒有意義,而且會誤導後續判斷。
 
 > GitHub Pages(`https://nick80912-dev.github.io/ai-native-projects/`)追蹤 `dev` 且每次推送自動發布,不需要本節的手動部署步驟;但它固定送 `Cache-Control: max-age=600`,**不讀 `netlify.toml`**,所以驗不了 header 行為 —— 兩個通道各驗各的,見 §E。
+
+## G. BUILTIN 離線快照刷新
+
+### G1. 何時刷新
+
+BUILTIN 是 Google Sheet 尚未連線或同步失敗時的離線啟動種子，不是另一份可人工維護的 CMS。遇到以下任一情況才刷新：
+
+- Bar 已核准新的旅程資料成為目前正式 Sheet 內容；
+- `node tools/refresh-builtin-snapshot.js` preview 回報漂移，且漂移是預期的公開 CMS 更新；
+- schema 的非 Ledger 表頭或 Ledger 21 欄 header 已經核准變更，需同步離線種子。
+
+不得用手工複製貼上修改 `index.html` 的 BUILTIN JSON，也不得從公開 Ledger CSV 抓取任何消費紀錄。Ledger 種子永遠只由 `schema.js` 產生一列空 header。
+
+### G2. Preview（預設只讀）
+
+在 repo 根目錄執行：
+
+```powershell
+node tools/refresh-builtin-snapshot.js
+```
+
+- 無漂移：exit code `0`，不寫檔。
+- 有漂移：列出變動 sheet keys，exit code `2`，仍不寫檔。
+- 抓取或驗證失敗：exit code `1`，不寫檔；先處理原因，不得跳過驗證。
+
+preview 必須確認候選資料沒有東京／新宿舊行程、含 Day 1–6、TripConfig 八個必要 key，並通過 schema primary header 或已登記 alias。任何一張公開來源失敗時整批停止。
+
+### G3. Write、驗證與提交
+
+Bar 核准 preview 後才執行：
+
+```powershell
+node tools/refresh-builtin-snapshot.js --write
+node tests/builtin-snapshot.test.js
+node tests/builtin-snapshot-refresh.test.js
+node tools/refresh-builtin-snapshot.js
+npx playwright test tests/browser/trip-three-scenarios.spec.js
+```
+
+`--write` 會在同目錄建立暫存檔、原子替換 `index.html` 並回讀驗證；失敗時保留原檔。最後一次 preview 必須顯示已一致。提交前另跑完整 repo gate。
+
+### G4. 權責與邊界
+
+- 觸發與候選資料內容由 Bar 核准；AI／維護者執行 preview、write、測試與差異盤點。
+- 工具只讀取 `schema.js` 登記的 `itin`、`places`、`rest`、`shop`、`hotels`、`exp`、`cfg` 七張公開 CSV；永不請求 live Ledger。
+- 刷新不修改 Google Sheet、schema、資料格式、runtime parser、renderer、SW 或版本號。若上述任一項也需要改動，必須拆成獨立提案與核准。

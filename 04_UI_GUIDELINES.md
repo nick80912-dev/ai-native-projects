@@ -1,5 +1,41 @@
 # 04 UI 準則
 
+## v110 呈現 token 與 Today view 邊界
+
+- 非主題呈現尺度只有五級字級 `11／12／14／20／24px`、五級間距 `4／8／12／16／24px`、四級圓角 `6／10／14／999px`；只在觸及的 Today、導覽回饋、診斷與共用操作元件採用，不作全站機械式改寫。
+- 操作以 `primary／secondary／quiet／destructive` 角色 token 表達，診斷以 `info／success／warning／degraded／error` 角色 token 表達；跨主題固定的 pending、entry-secondary、Shopping category／link status 亦須先定義 `:root` 語意 token，元件不得直接寫色碼。這些 token 不新增第七組配色，也不得改動六組主題各自的 13 個 `--t-*` 值。
+- `today-view.js` 只接收已選好的採買摘要資料並產生純 model、既有 HTML 與宣告式 action；`index.html` 保留 reminder 選取、目前站排除、store／clock／repository 存取與 DOM effect。不得讓 view module 變成全域 store。
+- Today Hero 的可見文案、六字截斷、完整 accessible name、44px 操作區、鍵盤行為與 Shopping 定位均維持 v109 行為；模組拆分不是重新設計。
+- Ledger 只在真實重複規則能由一個深 seam 移除時才拆 adapter。v110 的 history candidate 未通過刪除測試，因此保留既有 `ledger-ui-state.js` 與 `index.html` 局部 DOM adapter，不新增 `ledger-history-view.js`、store、controller、event bus 或框架。
+
+## v108 明確導覽與診斷呈現契約
+
+- Today Hero、下一站 Shopping badge、Shopping mall 與既有精確 day／item 入口共用同一 navigation-intent seam；一般切 tab 或重點目前 tab 不建立 target intent。
+- 成功抵達後，目標必須捲到有效 sticky header 下方並套用單一 `.is-navigation-target` 樣式 1000ms，再以 `.is-navigation-target-fading` 淡出 200ms；完整「已定位：…」只存在 visually-hidden `role="status" aria-live="polite"`。`prefers-reduced-motion: reduce` 在 1000ms 後直接清除，不播放 transition。
+- `shopping-list` 只開啟既有 overlay，不改 `curView`。關閉後依序回復仍存在的原 launcher、同一穩定身分的 replacement launcher，或來源 tab，並明確回復來源捲動位置；focus options 不支援或被忽略時也不得讓頁面跳位。
+- 找不到目標時仍開啟目的 view 的正常位置，顯示不阻擋操作的「找不到對應地點」、記錄 Render diagnostic 並安全結束 intent；不得 throw 或錯誤套用其他頁面的舊捲動位置。
+- 診斷面板可將原始 AppLog 顯示為 `info`、`degraded` 或 `action-required`，並補上當前影響與可用 fallback；已知 Ledger 增量讀取逾時必須說明目前仍可使用一般 CSV 同步。原始技術 message 必須仍可見、正確 escape，複製報告不得混入投影文案。
+- navigation intent 與 diagnostic projection 都只存在目前 session／render；不得寫入 localStorage、個人備份、Queue、CMS、Ledger，亦不得改變 Health Check、retry 或 sync 判定。
+
+## v103 設定「自訂項目」資訊架構
+
+- `自訂項目` 先顯示記帳類別、支付方式、採買單位三個摘要入口與即時數量；一次只進入並管理一種清單。
+- 單類管理頁保留新增、刪除、排序與既有資料規則，返回鍵先回 `自訂項目`，再回設定根頁。
+- `個` 顯示為預設採買單位並沿用不可刪除防護；320／375／390px 不得讓名稱、標籤與三個排序／刪除控制重疊。
+
+## v107 Today Hero actionable-summary contract
+
+- Active trips show a small `completed / total` value, a date with decorative weather art, and one row containing the outing hint and Shopping summary.
+- The resolved Shopping value is one compact right-aligned group with a 4px gap: `地點 · 第一優先分類 +N`.
+- When the selected item's category is blank, the Hero renders `未分類` as the complete category label. This is a display-only fallback: the reminder model, Shopping store, form, backup, restore, and sync payload keep the original blank value.
+- A location of seven or more Unicode code points renders its first six plus `…`; CSS may shorten it further on constrained widths. Category and `+N` remain complete and do not flex-shrink.
+- The full location remains in the accessible name. The action stays at least 44px tall, keyboard-focusable, and contains no product name.
+- 通用採買狀態的 `開啟查看 →` 與右側欄位右緣對齊；具體站點摘要顯示 `地點 · 第一個優先分類 +N`，Hero 不顯示品名，地點與分類皆可各自單行省略，數量保持可見。
+- The existing next-stop badge owns the exact next Shopping stop; the Hero projects the first eligible future group and never duplicates that badge.
+- This contract is active-trip only. Pre-trip views, data contracts, and storage behavior remain unchanged.
+
+
+
 ## 哲學
 手機優先(iPhone 390px)。每個畫面只回答一個問題,3 秒找到資訊。卡片+摺疊面板收納細節,點了才展開,避免長文牆。
 
@@ -8,10 +44,11 @@
 
 | 主題 | paper | card | chrome | action | accent | accent-bg | ink | ink-soft | ink-faint | line | line-soft | tabbar | secondary |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+
 | 海洋／岡山 | `#f5f1e8` | `#fffdf8` | `#0e3a44` | `#12707f` | `#df5f3a` | `#fbeee7` | `#22303a` | `#5c6b73` | `#7c8a90` | `#e5ddcd` | `#eee8db` | `rgba(255,253,248,.96)` | `#7659a0` |
 | 象牙／靛藍 | `#faf9f5` | `#ffffff` | `#16243d` | `#800000` | `#e25a0f` | `#fdece2` | `#16243d` | `#4a5361` | `#727c8c` | `#dcd8cc` | `#e8e5dc` | `rgba(255,255,255,.96)` | `#7659a0` |
 | 藤紫／夜櫻 | `#f6f3f7` | `#ffffff` | `#3b2d4d` | `#6a3d7d` | `#c0416e` | `#fae9ef` | `#2a2331` | `#575061` | `#7e7689` | `#e6dee9` | `#efe9f2` | `rgba(255,255,255,.96)` | `#2f6f6a` |
-| 杉綠／宮島 | `#f3f5f0` | `#ffffff` | `#23402f` | `#7a4f24` | `#d2622c` | `#fbeadf` | `#1f2b23` | `#4d5a50` | `#79857c` | `#dfe5da` | `#eaefe6` | `rgba(255,255,255,.96)` | `#7659a0` |
+| 杉綠／宮島 | `#f3f5f0` | `#ffffff` | `#23402f` | `#2f6b4f` | `#d2622c` | `#fbeadf` | `#1f2b23` | `#4d5a50` | `#79857c` | `#dfe5da` | `#eaefe6` | `rgba(255,255,255,.96)` | `#7659a0` |
 | 霧藍／瀨戶 | `#f4f5f7` | `#ffffff` | `#3f4c5e` | `#416b8a` | `#c86d4e` | `#f8eae4` | `#25303d` | `#56616f` | `#747f8c` | `#dce0e5` | `#e9ecef` | `rgba(255,255,255,.96)` | `#7659a0` |
 | 焙茶／倉敷 | `#f7f2ed` | `#fffdfb` | `#4e3d32` | `#896748` | `#b64f5c` | `#f8e7e9` | `#332820` | `#62564e` | `#81756d` | `#e5d9ce` | `#efe7df` | `rgba(255,253,251,.96)` | `#7659a0` |
 

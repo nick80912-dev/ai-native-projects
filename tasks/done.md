@@ -1,8 +1,19 @@
 # DONE(已完成)
 
-> 更新於 2026-08-03。完成事項來自 `.ai-manifest.json` status.done、既有 CHANGELOG 與 Bar 驗收確認；細節仍以 07_CHANGELOG.md 為準。
+> 更新於 2026-08-11。完成事項來自 `.ai-manifest.json` status.done、既有 CHANGELOG 與 Bar 驗收確認；細節仍以 07_CHANGELOG.md 為準。
 
 ## 已完成
+- 2026-08-11：backlog #22 完成。採用專用 HID 而非 PID 作為 Hotel profile join key：公開 Places L1 新增 `HID`,L4／L15／L24／L33／L42 分別讓 P002／P013／P022／P031／P040 引用 H001；五筆 travel 值原樣保留。Schema 3.0、BUILTIN、條件式 Validator 與 runtime exact resolver 已同步,住宿／Hotels 名稱改為只供顯示；Ledger 維持位置式 21 欄 Schema 2.9,個人備份維持 v9。
+- 2026-08-10：backlog #24 於 v99／v100 完成雙版本實驗後，由 Bar 裁定取消而非功能完成。實機顯示時機與使用者已看到新版內容的時間軸不一致，必要性不足以支持跨資源 generation 協議；v101 完整移除全域更新提示與明確 reload action，保留原 SW lifecycle、cache strategy、離線 fallback 與設定頁版本資訊。未來若重啟須視為新需求重新設計。
+- 2026-08-09：backlog #4 與 #11 完成；BUILTIN 已由東京／新宿舊資料刷新為現行岡山四國六天五夜，Ledger 種子改為 schema 推導的 21 欄空 header、TripConfig 八 key 各一次。新增預設只讀、明確 `--write`、不抓 live Ledger、原子替換與回讀驗證的刷新工具，完整操作與權責 SOP 見 `16_OPS_PLAYBOOK.md` §G；維持 SW v98。
+- 2026-08-09：backlog #3 的採買明細回饋完成；記帳摘要以「筆」計算並合併到既有「狀態」列，footer 依未開始／部分完成／待確認切換為「記帳」／「繼續記帳（剩 N 筆）」／disabled「等待狀態確認」。逐 allocation 記帳紀錄與 Buy-to-Ledger domain／workflow 不變。
+- 2026-08-09：Bar 裁定關閉 backlog #2 最後一項「未來 TEST 模擬版 localStorage 前綴隔離」，不實作。現行正式站與 dev 測試站分屬不同 origin，自動測試使用隔離環境，診斷時間模擬已有快照／還原與備份防呆；repo 亦禁止提交同源 TEST HTML，因此目前沒有需要前綴隔離的實際執行路徑。未來若重新引入同源、可寫入狀態的 TEST 模擬版，須作為新需求重新評估。
+- 2026-08-09：Ledger 個人／團體所有清單卡隱藏付款方式，消費明細與支付方式篩選仍保留；單筆第一行只留品項與代購／付款分攤。多品項父卡改為嚴格兩行，團體顯示「付款人 · 分攤依品項」，展開子項保留精確分攤與狀態；內容靠左、垂直置中，金額固定右側。
+- 2026-08-09：Ledger 個人／團體近期消費卡嚴格收斂為兩行；第一行「品項／付款方式／代購或付款分攤」，第二行「店家／類別／免稅／TEST／待同步／鎖帳或更正」，320／375／390px 一律 single-line ellipsis。團體付款分攤與鎖帳／更正使用原 neutral 配色，待同步保留原黃色，個人代購保留 coral；右側金額、所有狀態判定及帳務／資料層不變。
+- 2026-08-09：Ledger 近期消費卡資訊階層微調完成；團體付款／分攤摘要由下方 badge 移到品項旁，個人與團體類別統一接在店家後，支付方式獨立留在下一列；缺店家仍保留類別，缺支付方式不產生空白列。只改 presentation renderer／CSS，帳務與資料層不變。
+- 2026-08-09：品質批 #2 網路／呈現降級強化完成；`fetchSheet()` 第一次失敗保留既有 Sync log，精確等待 800ms 後只重試一次，第二次失敗仍將第二次錯誤交回 snapshot orchestration；`toast()` 在 `#toast` 不存在時於任何 action／timer 狀態變更前安全返回。未改抓取 timeout、CSV 驗證、同步資料語意、renderer、SW 或版本。
+- 2026-08-09：品質批 #2 的 AppLog／healthCheck 子項完成；六類 AppLog 保留 console 相容輸出並增加 session-only 100 筆環形緩衝（單筆 1,000 字），診斷面板可查看、複製及清除，開啟面板不會製造 health log。依 Bar 要求移除面板內的團體帳測試模式區塊；設定控制頁與 TEST universe 保留。
+- 2026-08-09：品質批 #2 的下一站副作用子項完成；`trip-progression.js` 純 reconciliation 集中時間／cluster／stale policy，render path 同輪最多保存一次 progress並通知一次。
 - V2 Schema 驅動 CMS:7 張 Google Sheets、ID 引用、Restaurants/Shopping/Hotels/Expenses/TripConfig。
 - AI Harness 治理層:PROJECT_CONSTITUTION、10_FOLDER_STRUCTURE、11_CODING_CONVENTION、12_DEV_WORKFLOW、adr/0001-0005、健康檢查規範。
 - 停車引用繼承:「停車同Pxxx」完整繼承與 MAP CODE 純顯示。
@@ -20,9 +31,19 @@
 - 2026-07-30：Bar 完成 SW v69–v71 真機／PWA 驗收；涵蓋結算一致性、分攤成員選取色差與整張作廢預覽動作去重。`dev → main` 與正式部署仍須另行核准。
 - 2026-07-30：backlog #1 Playwright 三情境 QA 入版控並掛入 `qa.yml`；斷網內建、連網同步與旅行日 mock Date 三情境均以真實 App 啟動流程驗證，通過標準為 `pageerror=0`。
 
-## 已歸檔的 backlog 編號項目
+## 2026-08-11 新歸檔：backlog #22
 
-> 2026-07-30 依 Bar 裁定第 4 項歸檔。**編號保留不回收**(見 `tasks/backlog.md` 檔頭)。歸檔判準為「程式與文件證據足以證明已完成」,**不以真機／PWA 驗收為條件** — 驗收已另列為 release gate,見 `tasks/current.md`。以下每項均於批次一 P0／P1 逐項複驗程式碼與 `07_CHANGELOG.md`,非僅採信任務板文字。
+> 本節是 v102 HID migration 完成後的當代歸檔,不屬於 2026-07-30 批次一 P0／P1 複驗。
+
+| 編號 | 完成日 | 對應 SW 版本 | 狀態 |
+|---|---|---|---|
+| #22 | 2026-08-11 | SW v102 | 完成；以 HID 落實 N→1 Hotel profile 精確關聯 |
+
+- **#22 Hotels profile 精確關聯** — 原 backlog 原文（verbatim）：`22. **Hotels 名稱比對改良評估**:現以名稱掛 Places,名稱異動會懸空;評估改 PID 引用(涉及 schema,需五段提案)。` 執行時選擇 HID 而非 PID,因為多個帶不同交通脈絡的 Places 停靠點可共用一個 Hotel profile。遷移證據：公開 Sheet 的 `地點!L1` 為 HID；`L4/L15/L24/L33/L42` 均為 H001,分別對應 P002／P013／P022／P031／P040,且 travel 仍為開車30分鐘／開車2小時／開車3分鐘／開車50分鐘／步行3分鐘；其餘 HID 儲存格皆空。程式證據：`schema.js` Schema 3.0、`09_SCHEMA_MAPPING.md` 產物、BUILTIN、`validator.js` 條件驗證、`hotelOf()` exact HID resolver 與 focused Node／Browser tests。
+
+## 已歸檔的 backlog 編號項目（2026-07-30 起）
+
+> 2026-07-30 依 Bar 裁定第 4 項建立本表。**編號保留不回收**(見 `tasks/backlog.md` 檔頭)。歸檔判準為「程式與文件證據足以證明已完成」,**不以真機／PWA 驗收為條件** — 驗收已另列為 release gate,見 `tasks/current.md`。#1／#3b／#6–#10／#21 於批次一 P0／P1 逐項複驗；#23 與 #24 分別於表列完成日依當時決策與證據後續補入,不宣稱經過 2026-07-30 批次一複驗。
 
 | 編號 | 完成日 | 對應 SW 版本 | 狀態 |
 |---|---|---|---|
@@ -35,6 +56,7 @@
 | #10 | 2026-07-30 | SW v73 | 如原裁定完成(顯示層) |
 | #21 | 2026-07-30 | SW v73 | 完成,**範圍如實記錄於下** |
 | #23 | 2026-08-03 | 不涉 SW 版本 | **關閉,不實作**:12 月東京行程已結束,不再需要接入 |
+| #24 | 2026-08-10 | SW v99／v100 實驗；v101 移除 | **取消,非完成功能**:提示時機與已顯示內容不同步,不再維護 |
 
 - **#1 QA 腳本入版控** — 證據:`tests/browser/trip-three-scenarios.spec.js` 三個 `test()`(斷網內建 / 連網同步 / 旅行日 mock Date)、`tests/browser/support/qa-fixture.js`、`static-server.js`、`.github/workflows/qa.yml` 的 `browser-qa` job。只新增測試資產、無 runtime 變更,故不對應 SW 版本。
 - **#3b 採買單位納入個人狀態備份** — 證據:`index.html:7421` `personalStateJson()` payload 含 `shoppingUnits:shoppingUnitStore.all()`;`index.html:7497` 還原寫回 `SHOPPING_UNIT_OPTIONS_KEY`,且列於原子回滾 keys;`index.html:3815` `PERSONAL_STATE_VERSION=8`,註解明載「v8 起加入本機主題、採買單位與旅途紀錄」;`tests/settings-backup-ux.test.js:145` 斷言 v8 匯出鍵含 `shoppingUnits`;`07_CHANGELOG.md` 2026-07-30 條目。
@@ -61,10 +83,10 @@
 
 - **#2 的子項「隱藏『重置今日進度』」** — 2026-07-30 由 P5 調查發現**早已實作完成**,只是 backlog 未歸位。實作為 `resetTripProgress()`(`index.html`),位於診斷面板「行程進度」區,附雙重 `confirm()`,只清除 `trip_checks` 與 `trip_next_stop_progress`。
   - **與原文的差異(如實記錄)**:backlog 原文寫入口是「連點標題 5 下」,實際入口是**桃子診斷徽章 300ms 內連點兩次 `touchend`**(`setupDiagnostics()`);`brandTitle` 上沒有任何 listener。因為只綁 `touchend`,桌機滑鼠點擊打不開,實際上比原構想更難誤觸。經 Bar 2026-07-30 裁定移出 #2。
-  - #2 的其餘子項(reconcileDayProgress 重構、AppLog 環形緩衝評估、fetchSheet 退避、toast() null guard、localStorage 前綴隔離)**維持在 backlog #2**,不受本次影響。
+  - #2 的其餘子項中，下一站 reconciliation、AppLog 環形緩衝、fetchSheet 退避與 toast() null guard 已於 2026-08-09 完成；最後一項 localStorage 前綴隔離亦於 2026-08-09 由 Bar 裁定因目前沒有實際執行路徑而關閉、不實作。
 
 - **#23 12 月東京行接入** — Bar 於 2026-08-03 確認該行程已結束,因此不新增行程分頁、不擴充 `TripConfig transport=transit`、不新增 SHEETS gid。本項是需求失效後關閉,**不是功能交付**；編號永久保留不回收。
-- **#2 已由後續版本完成的子項** — 行程面板展開狀態於 v82 完成；天氣改取「現在之後」最大值於 v84 完成；同步徽章相對時間與 partial 失敗來源於 v88 完成。backlog #2 現只保留仍未完成的重構、診斷、退避／null guard 與測試資料隔離。
+- **#2 已由後續版本完成或關閉** — 行程面板展開狀態於 v82 完成；天氣改取「現在之後」最大值於 v84 完成；同步徽章相對時間與 partial 失敗來源於 v88 完成；下一站 reconciliation、AppLog／healthCheck 診斷能力、fetchSheet 退避與 toast() null guard 於 2026-08-09 完成。最後一項 TEST 模擬版 localStorage 前綴隔離由 Bar 於 2026-08-09 裁定關閉、不實作；backlog #2 已完全收斂。
 ## 文件治理
 - 2026-07-13:Netlify 雙站架構上線(`main`=正式站、`dev`=測試站)，兩站部署與瀏覽器狀態完全隔離。
 - 2026-07-10:修復批交付(事故處理規範 §C、雙通道 SOP §D、檢查器三新規則、CI 全測試涵蓋、測試檔治理)。

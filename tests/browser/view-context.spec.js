@@ -96,9 +96,9 @@ test('the transient UI state never reaches localStorage or the backup', async ({
     const keys = Object.keys(localStorage);
     const dump = keys.map((k) => localStorage.getItem(k) || '').join('|');
     return {
-      keyLeak: keys.filter((k) => /viewUi|scroll/i.test(k)),
-      valueLeak: /scrollY/.test(dump),
-      backupLeak: /scrollY|viewUiState/.test(personalStateJson()),
+      keyLeak: keys.filter((k) => /viewUi|scroll|navigationIntent/i.test(k)),
+      valueLeak: /scrollY|navigationIntentState/.test(dump),
+      backupLeak: /scrollY|viewUiState|navigationIntentState/.test(personalStateJson()),
     };
   });
   expect(leaked.keyLeak).toEqual([]);
@@ -127,12 +127,18 @@ test('an explicit entry positions its target instead of restoring the old scroll
       itemId: target.id,
       inViewport: box.top >= -10 && box.top <= window.innerHeight,
       scrollTop: Math.round(document.scrollingElement.scrollTop),
+      highlighted: el.classList.contains('is-navigation-target'),
+      status: document.querySelector('#view-trip .navigation-target-status')?.textContent || '',
+      statusVisible: document.querySelector('#view-trip .navigation-target-status')?.classList.contains('navigation-target-status-visible') || false,
       curView,
     };
   });
 
   expect(result.curView).toBe('trip');
   expect(result.inViewport).toBe(true);
+  expect(result.highlighted).toBe(true);
+  expect(result.status).toMatch(/^已定位：/);
+  expect(result.statusVisible).toBe(false);
 });
 
 test('the intent is consumed once — later plain switches restore again', async ({ page }) => {
@@ -181,10 +187,49 @@ test('gotoDay and openShopPlace position their targets rather than restoring', a
     const pid = shopMalls()[0].place.placeId;
     openShopPlace(pid);
     await new Promise((r) => setTimeout(r, 500));
-    return { curView, filter: shopPlaceFilter, pid };
+    const targetId='shopmall_'+cssId(pid.toUpperCase());
+    const target=document.getElementById(targetId);
+    return {
+      curView,filter:shopPlaceFilter,pid,targetId,
+      highlighted:!!(target&&target.classList.contains('is-navigation-target')),
+      status:document.querySelector('#view-shop .navigation-target-status')?.textContent||'',
+      statusVisible:document.querySelector('#view-shop .navigation-target-status')?.classList.contains('navigation-target-status-visible')||false
+    };
   });
   expect(shopResult.curView).toBe('shop');
   expect(shopResult.filter).toBe(shopResult.pid.toUpperCase());
+  expect(shopResult.targetId).toBe(`shopmall_${shopResult.pid.toUpperCase()}`);
+  expect(shopResult.highlighted).toBe(true);
+  expect(shopResult.status).toMatch(/^已定位：/);
+  expect(shopResult.statusVisible).toBe(false);
+});
+
+test('a missing navigation target reports failure without restoring unrelated old scroll', async ({ page }) => {
+  const result=await page.evaluate(async()=>{
+    switchView('shop');
+    document.scrollingElement.scrollTop=300;
+    captureViewScroll('shop');
+    switchView('today');
+    AppLog.clear();
+    switchView('shop',{
+      view:'shop',targetId:'shopmall_DOES_NOT_EXIST',sourceView:'today',sourceId:'test',
+      align:'start',announce:'已定位：不存在的地點'
+    });
+    await new Promise((resolve)=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
+    const logs=AppLog.snapshot();
+    return {
+      scrollTop:Math.round(document.scrollingElement.scrollTop),
+      status:document.querySelector('#view-shop .navigation-target-status')?.textContent||'',
+      statusVisible:document.querySelector('#view-shop .navigation-target-status')?.classList.contains('navigation-target-status-visible')||false,
+      renderLogged:logs.some((entry)=>entry.category==='render'&&entry.message.includes('shopmall_DOES_NOT_EXIST')),
+      active:navigationIntentState.active
+    };
+  });
+  expect(result.scrollTop).toBe(0);
+  expect(result.status).toBe('找不到對應地點');
+  expect(result.statusVisible).toBe(true);
+  expect(result.renderLogged).toBe(true);
+  expect(result.active).toBeNull();
 });
 
 /* ---------- 行程面板展開狀態 ---------- */

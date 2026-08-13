@@ -11,7 +11,8 @@ assert.deepStrictEqual(plain(initial),{
   historyQuery:'',historyCategories:[],historyPayMethods:[],historyProxy:'all',
   historyTaxExempt:'all',historyFiltersOpen:false,historyGrouping:'date',
   calendarOpen:false,calendarYear:0,calendarMonth:0,expandedBatches:{},
-  selectionMode:false,selectedRecordIds:{},savePending:false
+  selectionMode:false,selectedRecordIds:{},savePending:false,
+  entryReturnContext:null,entrySessionId:'',entrySaveRequestId:''
 },'fresh sessions keep the v94 canonical Ledger UI defaults');
 
 const seededInput={
@@ -19,7 +20,9 @@ const seededInput={
   historyCategories:['採買','採買',''],historyPayMethods:['現金',null],
   historyProxy:'proxy',historyTaxExempt:'tax-exempt',historyGrouping:'category',
   selectedRecordIds:{a:true,b:false,'':true},expandedBatches:{batch:true,closed:false},
-  selectionMode:true,draft:{amount:'500'},savePending:true
+  selectionMode:true,sheet:'entry',draft:{amount:'500'},savePending:true,
+  entrySessionId:'seed-session',entrySaveRequestId:'seed-request',
+  entryReturnContext:{kind:'ledger',scrollY:120}
 };
 const seededBefore=plain(seededInput);
 const seeded=TripLedgerUiState.createState(seededInput);
@@ -29,6 +32,12 @@ assert.deepStrictEqual(plain(seeded.historyPayMethods),['現金']);
 assert.deepStrictEqual(plain(seeded.selectedRecordIds),{a:true});
 assert.deepStrictEqual(plain(seeded.expandedBatches),{batch:true});
 assert.strictEqual(seeded.draft,seededInput.draft,'unowned entry draft data remains an opaque reference');
+assert.deepStrictEqual(plain(seeded.entryReturnContext),{kind:'ledger',scrollY:120});
+
+const closedSeed=TripLedgerUiState.createState({sheet:null,draft:{amount:'500'},editing:{track:'personal'},savePending:true});
+assert.strictEqual(closedSeed.draft,null,'closed create/edit state cannot retain an orphan draft');
+assert.strictEqual(closedSeed.editing,null,'closed create/edit state cannot retain an edit descriptor');
+assert.strictEqual(closedSeed.savePending,false,'closed create/edit state cannot remain pending');
 
 const invalidSeed=TripLedgerUiState.createState({track:'team',page:'history',historyProxy:'mine',historyTaxExempt:'yes',historyGrouping:'merchant'});
 assert.strictEqual(invalidSeed.track,'personal');
@@ -41,7 +50,8 @@ const rich=TripLedgerUiState.createState({
   track:'personal',page:'all',displayCurrency:'TWD',filter:'proxy',historyQuery:'松屋',
   historyCategories:['餐飲'],historyPayMethods:['現金'],historyProxy:'proxy',
   historyTaxExempt:'tax-exempt',historyFiltersOpen:true,historyGrouping:'category',
-  selectionMode:true,selectedRecordIds:{a:true},expandedBatches:{batch:true},draft:{amount:'500'}
+  selectionMode:true,selectedRecordIds:{a:true},expandedBatches:{batch:true},sheet:'entry',
+  draft:{amount:'500'},entrySessionId:'history-session'
 });
 const richBefore=plain(rich);
 let outcome=apply(rich,{type:'switch-track',track:'shared'});

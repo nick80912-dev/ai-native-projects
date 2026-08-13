@@ -1,8 +1,19 @@
 const assert = require('assert');
 const vm = require('vm');
 const { readIndexHtml, extractFunction } = require('./support/source');
+const TripShoppingUiState=require('../shopping-ui-state.js');
 
 const html = readIndexHtml();
+
+/* Break caught: presentation values drift back into one-off declarations instead of the approved small scale. */
+assert.match(html,/--font-caption:11px;--font-meta:12px;--font-body:14px;--font-title:20px;--font-display:24px/);
+assert.match(html,/--space-1:4px;--space-2:8px;--space-3:12px;--space-4:16px;--space-5:24px/);
+assert.match(html,/--radius-sm:6px;--radius-control:10px;--radius-card:14px;--radius-pill:999px/);
+assert.match(html,/\.today-hero \.lbl\{[^}]*font-size:var\(--font-caption\)/);
+assert.match(html,/\.today-hero \.date\{[^}]*font-size:var\(--font-display\)/);
+assert.match(html,/\.navigation-target-status-visible\{[^}]*margin:0 0 var\(--space-2\)[^}]*font-size:var\(--font-meta\)/);
+assert.match(html,/\.diag-log-entry b\{[^}]*font-size:var\(--font-meta\)/);
+assert.match(html,/\.diag-log-entry span\{[^}]*font-size:var\(--font-caption\)/);
 
 /* Break caught: a render exception again tells users to perform an unsupported pull gesture. */
 const renderCurrent = extractFunction(html, 'renderCurrent');
@@ -70,13 +81,21 @@ const showFailureSource = extractFunction(html, 'showShoppingPhotoSaveFailure');
 const failureCalls = { rendered: 0, toasted: 0 };
 const failureSandbox = {
   TripShoppingPhotos: { isQuotaExceededError() { return true; } },
-  shoppingUiState: { form: {}, photoError: '' },
+  shoppingUiState: TripShoppingUiState.createState({
+    form:{},photoError:'',
+    formSession:{sessionId:'photo-session',mode:'add',savePending:true,photoRequestId:'photo-request'}
+  }),
   shoppingPhotoRepairState: { error: '' },
   document: { getElementById() { return null; } },
   renderShoppingFormSheet() { failureCalls.rendered++; },
   toast() { failureCalls.toasted++; },
   String,
 };
+failureSandbox.shoppingUiWorkflow=TripShoppingUiState.createWorkflow({
+  readState(){return failureSandbox.shoppingUiState;},
+  writeState(next){failureSandbox.shoppingUiState=next;},
+  syncFormPending(){failureCalls.rendered++;}
+});
 vm.createContext(failureSandbox);
 vm.runInContext(failureMessageSource + '\n' + showFailureSource, failureSandbox);
 assert.strictEqual(failureSandbox.showShoppingPhotoSaveFailure({ name: 'QuotaExceededError' }), '儲存空間不足，照片尚未加入');

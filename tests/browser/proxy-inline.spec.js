@@ -38,7 +38,7 @@ async function ledgerGeometry(page,selector){
     const main=row.querySelector('.ledger-recent-main');
     const amount=row.querySelector('.ledger-dual-amounts');
     const menu=row.querySelector('.ledger-record-menu-button');
-    const title=row.querySelector('.ledger-item-title-row');
+    const title=row.querySelector('.ledger-recent-primary-line');
     const summary=row.querySelector('.ledger-proxy-target-summary');
     const mr=main.getBoundingClientRect(),ar=amount.getBoundingClientRect(),rr=row.getBoundingClientRect();
     return {
@@ -73,7 +73,7 @@ async function shoppingGeometry(page){
   });
 }
 
-test('消費與採買卡同行顯示共用代購標記，窄螢幕可安全換行',async({page})=>{
+test('消費與採買卡同行顯示共用代購標記，消費卡窄螢幕維持兩行截斷',async({page})=>{
   const errors=collectPageErrors(page);
   await installOfflineAppNetwork(page);
   await installFixedDate(page,NOW);
@@ -83,13 +83,17 @@ test('消費與採買卡同行顯示共用代購標記，窄螢幕可安全換�
   await page.evaluate(()=>{closeMemberSelector();switchView('split');});
 
   const recent=page.locator('.ledger-recent-row').filter({hasText:DETAIL}).first();
-  await expect(recent.locator('.ledger-item-title-row')).toContainText(DETAIL);
+  await expect(recent.locator('.ledger-recent-primary-line')).toContainText(DETAIL);
   await expect(recent.locator('.ledger-proxy-target-summary')).toHaveText(`幫${TARGET}買`);
   await expect(recent.locator('.ledger-proxy-target-summary')).toHaveAttribute('aria-label',`幫${TARGET}買`);
   await expect(recent.locator('.ledger-recent-badges')).toHaveCount(0);
 
   const batch=page.locator('.ledger-batch-card').first();
   await expect(batch.locator('.ledger-batch-body')).toContainText('2 項代購');
+  await expect(batch.locator('.ledger-batch-body')).not.toContainText('現金');
+  await expect(batch.locator('.ledger-batch-body .ledger-recent-main')).toHaveCount(1);
+  await expect(batch.locator('.ledger-batch-body .ledger-recent-primary-line')).toHaveCount(1);
+  await expect(batch.locator('.ledger-batch-body .ledger-recent-secondary-line')).toHaveCount(1);
   await batch.locator('.ledger-batch-body').click();
   await expect(batch.locator('.ledger-batch-children .ledger-proxy-target-summary')).toHaveCount(2);
 
@@ -102,7 +106,7 @@ test('消費與採買卡同行顯示共用代購標記，窄螢幕可安全換�
     const ledger=await ledgerGeometry(page,'#ledgerHistoryResults .ledger-recent-row');
     expect(ledger,`ledger @${viewport.width}`).toEqual({
       documentOverflow:false,rowOverflow:false,bodyOverflow:false,titleInside:true,summaryInside:true,
-      amountClear:true,menuInside:true,affixSize:'9.5px',badgeSize:'10.5px'
+      amountClear:true,menuInside:true,affixSize:'8.5px',badgeSize:'9px'
     });
 
     await page.evaluate(()=>openShoppingList());
