@@ -235,11 +235,11 @@ function extractThemeIds(html){
   assert.strictEqual(notes[0].version,appVersion(),'the newest release note is the current version');
   /* 滾動的五筆視窗:最新一筆是目前版本,其餘四筆是緊接在後的歷史版本。
      歷史版本刻意寫死字面值(見 tests/support/version.js 的適用範圍說明)。 */
-  assert.deepStrictEqual(Array.from(notes.slice(1),function(note){return note.version;}),['v109','v108','v107','v106']);
-  assert.match(notes[0].title,/一致/,'v110 release note describes the presentation consistency work');
-  assert(JSON.stringify(notes[0]).includes('六組主題'),'v110 release note preserves all approved themes');
-  assert(JSON.stringify(notes[0]).includes('原本行為'),'v110 release note promises unchanged Today behavior');
-  assert(JSON.stringify(notes[0]).includes('分帳資料'),'v110 release note names the unchanged Ledger boundary');
+  assert.deepStrictEqual(Array.from(notes.slice(1),function(note){return note.version;}),['v110','v109','v108','v107']);
+  assert.match(notes[0].title,/離線/,'v111 release note describes the offline boot work');
+  assert(JSON.stringify(notes[0]).includes('版本綁定'),'v111 release note explains the atomic version boundary');
+  assert(JSON.stringify(notes[0]).includes('本機完整快照'),'v111 release note explains the safe local fallback');
+  assert(JSON.stringify(notes[0]).includes('空白頁'),'v111 release note explains the actionable recovery state');
   notes.forEach(note=>{
     assert(note.title&&note.title.length<=24,'release title is short and present');
     assert(Array.isArray(note.items)&&note.items.length>=1,'release has user-readable items');

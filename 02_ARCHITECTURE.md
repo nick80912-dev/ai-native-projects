@@ -14,10 +14,12 @@ Netlify 靜態託管(HTTPS)+ Service Worker(PWA 離線)
 `index.html` 是 App、DOM effect adapter 與 Netlify 正式部署入口；依 ADR 0018，`navigation-intent.js` 只管理 session-only 明確目的地 intent，`diagnostic-impact.js` 只把原始 AppLog entry 投影為顯示用影響說明，`today-view.js` 只建立與渲染 Today Hero 採買摘要。裝置照片儲存邊界獨立在 `shopping-photo-store.js`，採買轉記帳的純資料與 workflow 邊界獨立在 `buy-to-ledger.js`，Ledger 歷史瀏覽與 create／edit entry session 的 UI state／effect 邊界獨立在 `ledger-ui-state.js`。Service Worker、manifest 與 icons 均位於 repo 根目錄並由 GitHub 連動部署。
 
 ## 資料流:三層防線(絕不空白頁)
-1. **內建資料**(builtin,建置時寫入 HTML)→ 0.1 秒顯示
+1. **內建資料**(`builtin-snapshot.js`,由工具產生並與 App／SW 同版)→ 版本一致才啟用
 2. **localStorage 快取**(上次成功同步版,較新則覆蓋)
 3. **背景同步** 8 張 CSV:原有 7 表維持原子快照 Gate;ledger 失敗時沿用目前 ledger 快照,其餘 7 表仍可更新
 同步狀態徽章:已是最新 / 部分更新 / 離線版 / 內建版。
+
+`builtin-snapshot.js` 是 Tier 3 generated asset，唯一內容 authority 是 `tools/refresh-builtin-snapshot.js`。HTML 只保留版本／timestamp marker 與安全 boot guard，不複製資料 payload。asset 缺失或 `BUILTIN_ASSET_VERSION !== APP_VERSION` 時，App 只接受已通過完整 shape／validation 的 local active／previous snapshot；若本機也沒有有效資料，顯示可重新載入與複製診斷的復原頁，且不建立空 DB、不啟動背景同步。SW 以同一版本 cache generation 將 HTML、App version 與 asset 一起納入 App Shell。
 
 明確頁面／overlay 導覽另外走 transient intent：純 module 只保存序號、目標 view／ID、來源與對齊資訊；`index.html` 才負責開啟 view、解析 DOM target、避開 sticky header 捲動、1 秒醒目加 0.2 秒淡出、visually-hidden live status、遺失目標降級，以及關閉 Shopping overlay 後回復來源捲動與 focus。intent 不進 localStorage、備份、Queue、CMS 或 Ledger；`shopping-list` 仍是 overlay，不改 `curView`。
 
@@ -41,7 +43,7 @@ AppLog 與 `healthCheck()` 的原始 entry／finding 保持權威且不變；`di
 ## 應用結構(`index.html` UI／adapter + 外部純 module)
 ```
 SCHEMA(pubBase + sheets.*.gid + 欄位/型別規格)→ 唯一資料設定點
-BUILTIN(8張表內建快照,建置時注入;ledger 至少含表頭)
+BUILTIN(`builtin-snapshot.js` generated asset；8 表，ledger 只有 schema header)
 utils(storage/toast/CSV parser/copyText)
 parseTable / buildHeaderMap(依 SCHEMA header + aliases 容錯解析,欄位順序無關)
 buildDB(CSV → DB{places,rest,shop,hotels,expCMS,expMembers,ledger,cfg,trip})
@@ -65,7 +67,7 @@ today view(已準備 Today Hero 採買資料 → 純 model／HTML／declarative 
 `.ai-manifest.json` 的 `manifest_format` 只表示 manifest schema，不是 App 版號；其 `current_status.authority` 必須精確指向 `tasks/current.md`。manifest 不保存 `dev_candidate`、`next_action` 或 automated-test-result snapshot；App／SW 版號只由 `app-version.js` 與 `sw.js` 管理，歷史狀態看 `07_CHANGELOG.md`。
 
 ## 部署檔案
-`index.html / navigation-intent.js / diagnostic-impact.js / today-view.js / shopping-photo-store.js / buy-to-ledger.js / ledger-ui-state.js / shopping-ui-state.js / trip-progression.js / schema.js / validator.js / app-version.js / sw.js / manifest.webmanifest / icon-*.png` 位於 repo 根目錄,由 `main` 的 Bar 核准 Merge 觸發 Netlify 正式部署。
+`index.html / builtin-snapshot.js / navigation-intent.js / diagnostic-impact.js / today-view.js / shopping-photo-store.js / buy-to-ledger.js / ledger-ui-state.js / shopping-ui-state.js / trip-progression.js / schema.js / validator.js / app-version.js / sw.js / manifest.webmanifest / icon-*.png` 位於 repo 根目錄,由 `main` 的 Bar 核准 Merge 觸發 Netlify 正式部署。
 
 ## 已知環境限制(繞過方案已內建)
 - 部分 WebView 無 console.info → 已 polyfill

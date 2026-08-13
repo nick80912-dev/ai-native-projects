@@ -1,6 +1,15 @@
 # 07 版本紀錄
 
-## 2026-08-13 — v110 UI 一致性與 Today 模組拆分（candidate）⭐ 架構變更
+## 2026-08-13 — v111 產生式 BUILTIN 與測試吞吐（candidate）⭐ 架構變更
+
+- BUILTIN 改為由 `tools/refresh-builtin-snapshot.js` 產生的 `builtin-snapshot.js`；HTML 只保留原子 marker／boot guard，App／SW／asset 同步 v111 並納入 App Shell、runtime inventory、manifest 與 Netlify no-cache header。
+- preview-first 工具新增 deterministic serializer／parser、版本錯配與 stale 偵測、HTML＋asset 雙檔 fsync／read-back／rename transaction，以及跨 rename failure 的 byte-for-byte rollback。Ledger 不抓 live CSV，維持 schema 21 欄 header。
+- asset 缺失／錯版時，valid local active／previous snapshot 可 degraded boot；沒有有效 local snapshot 時顯示非空白 recovery（重新載入／複製診斷），不建立空 DB、不啟動背景同步。mixed-version、installed offline reopen 與 Pages-style cache generation focused Playwright 7/7 通過。
+- 外部化十次冷啟動中位數 Today 382.9 → 374.8 ms（-2.1%）、DOMContentLoaded 400.4 → 396.0 ms（-1.1%），無 blank／mixed；通過 ≤10% kill gate。
+- Playwright worker 實驗：1 worker 180/180（410.9 s）；2 workers 連續三輪 180/180（239.7／234.4／181.8 s），0 retry／pageerror／port conflict。採用 CI=2、本機=1，完整證據見 `docs/qa/playwright-worker-experiment-v111.md`。
+- 本批只交付 `dev` candidate，不合併 `main`、不部署 production、不建立 tag。
+
+## 2026-08-13 — v110 UI 一致性與 Today 模組拆分（released）⭐ 架構變更
 - PR #14 發布門檻補強：行程分頁上方 Day chip 改走頁內 `selectTripDay()`，切日後於重繪完成的 animation frame 回到該日頂端，不再建立定位高亮或 live-status；Today 跨頁 `gotoDay()`、exact item、Shopping 與回到現在的定位提示維持不變。Linux Chromium 對 1px 隱藏狀態框的 sub-pixel 計算與 reduced-motion scheduler margin 僅放寬測試容差，產品 CSS 與 1000ms hold 不變。
 
 - 在六組主題之外新增精簡的呈現 token：字級 `11／12／14／20／24px`、間距 `4／8／12／16／24px`、圓角 `6／10／14／999px`，以及 primary／secondary／quiet／destructive 操作角色與 diagnostic 狀態角色。只替換 Today、導覽回饋、診斷及共用按鈕的等值 literal；六組 13-token palette 與既有 computed 視覺方向不變。

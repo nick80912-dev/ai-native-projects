@@ -237,7 +237,7 @@ BUILTIN 是 Google Sheet 尚未連線或同步失敗時的離線啟動種子，�
 - `node tools/refresh-builtin-snapshot.js` preview 回報漂移，且漂移是預期的公開 CMS 更新；
 - schema 的非 Ledger 表頭或 Ledger 21 欄 header 已經核准變更，需同步離線種子。
 
-不得用手工複製貼上修改 `index.html` 的 BUILTIN JSON，也不得從公開 Ledger CSV 抓取任何消費紀錄。Ledger 種子永遠只由 `schema.js` 產生一列空 header。
+不得手動修改 Tier 3 的 `builtin-snapshot.js`，也不得在 `index.html` 複製 BUILTIN JSON，或從公開 Ledger CSV 抓取任何消費紀錄。Ledger 種子永遠只由 `schema.js` 產生一列空 header。
 
 ### G2. Preview（預設只讀）
 
@@ -265,7 +265,7 @@ node tools/refresh-builtin-snapshot.js
 npx playwright test tests/browser/trip-three-scenarios.spec.js
 ```
 
-`--write` 會在同目錄建立暫存檔、原子替換 `index.html` 並回讀驗證；失敗時保留原檔。最後一次 preview 必須顯示已一致。提交前另跑完整 repo gate。
+`--write` 會在同目錄 staging `index.html` marker 與 `builtin-snapshot.js`，fsync／close／回讀後才進行雙檔替換；任一步失敗都將兩個 target 回復為原始 bytes。App、SW 或 asset 升版時也必須透過本工具更新 marker／asset 版本。最後一次 preview 必須顯示已一致。提交前另跑完整 repo gate。
 
 ### G4. 權責與邊界
 

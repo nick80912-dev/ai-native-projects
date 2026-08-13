@@ -8,12 +8,13 @@
 ```
 index.html              App 本體:UI殼 + CSS + 內嵌 JS(依區塊分層,見下)
 app-version.js          App 顯示版本(必須與 sw.js 的 SW_VERSION 一致)
+builtin-snapshot.js     工具產生、與 App／SW 同版的 BUILTIN 離線資產(Tier 3，禁手改)
 shopping-photo-store.js 採買照片壓縮與 IndexedDB put/get/remove 邊界
 buy-to-ledger.js        採買轉記帳的純 domain 與 workflow coordinator（UMD/CommonJS）
 ledger-ui-state.js      Ledger history／entry／correction state 與 ordered effects workflow（UMD/CommonJS）
 shopping-ui-state.js    Shopping list selection／form session state 與 ordered effects workflow（UMD/CommonJS）
 trip-progression.js     下一站選擇、cluster blocker 與一次性進度調和（UMD/CommonJS）
-runtime-assets.json     八個 JavaScript runtime assets 的 build-time inventory
+runtime-assets.json     十二個 JavaScript runtime assets 的 build-time inventory
 schema.js               唯一資料規格(SSoT):欄位/gid/型別值/發布URL
 validator.js            防錯防線:AppLog 六類 + session-only 100 筆緩衝 + buildHeaderMap + healthCheck
 sw.js                   Service Worker:離線快取(改版 bump VERSION)
@@ -37,7 +38,7 @@ netlify.toml            Netlify 快取 header 設定
 ## App HTML 內部分層(區塊順序,即邏輯模組)
 ```
 SCHEMA        來自 schema.js(pubBase + sheets.*.gid + 欄位/型別規格)
-BUILTIN       7 表內建快照(離線後備)
+BUILTIN       由 builtin-snapshot.js 載入的 8 表離線後備；HTML 只留安全 guard
 UTILS         storage / toast / CSV parser / copyText / date
 VALIDATOR     來自 validator.js(表頭驗證 + 六類日誌 + session-only 診斷緩衝)
 PARSER        parseTable / parseKeyValue / parseExpensesFree(Schema 驅動)

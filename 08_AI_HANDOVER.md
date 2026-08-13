@@ -1,6 +1,16 @@
 # 08 AI 交接文件(給未來的 AI 模型)
 
-## v110 UI consistency and Today-module handover
+## v111 generated BUILTIN asset and test-throughput handover
+
+- v110 已完成 Bar device/PWA acceptance、main merge、Netlify production verification 與 `production-v110` tag。v111 依核准 plan 執行，僅交付 `dev`。
+- `builtin-snapshot.js` 現由 `tools/refresh-builtin-snapshot.js` 產生；asset、HTML marker、`app-version.js` 與 `sw.js` 同為 v111，並由 runtime inventory／SW SHELL／manifest／Netlify no-cache header 登錄。`index.html` 不保留 duplicate BUILTIN payload。
+- refresh preview 會偵測缺檔、stale、App version mismatch 與 marker mismatch；`--write` 以 sibling temp、fsync／close／read-back／雙 rename 更新 HTML＋asset，任一步失敗回復兩個 target 原始 bytes。Ledger 仍只用 schema 21 欄 header，從不請求 live CSV。
+- runtime asset 缺失或錯版時，先驗證 local active／previous snapshot；有效即 degraded boot，無有效 local data 才顯示含重新載入與複製診斷的 recovery，且不建立空 DB／不啟動 sync。
+- 十次 cold-navigation 前後中位數為 Today 382.9 → 374.8 ms、DOMContentLoaded 400.4 → 396.0 ms，所有樣本無 blank／mixed version，外部化通過 kill gate。
+- worker 實驗固定在 clean commit `2a7611a`：1 worker 180/180（410.9 s），2 workers 三輪 180/180（239.7／234.4／181.8 s），0 retry／pageerror／port conflict；因此 `CI ? 2 : 1`，紀錄見 `docs/qa/playwright-worker-experiment-v111.md`。
+- final committed-tree gates 與 `dev` push 尚待本次收尾；不合併 main、不部署 production、不建 tag。
+
+## v110 UI consistency and Today-module handover (released)
 
 - Bar accepted v109 and authorized the reserved v110 batch. v110 adds a compact non-theme presentation scale for typography, spacing, radius, action hierarchy, and diagnostic roles while preserving all six `--t-*` palettes and the approved visual direction.
 - Token adoption is deliberately scoped to touched Today Hero, navigation-feedback, diagnostics, and shared button surfaces. It is not a mechanical whole-app rewrite; browser assertions preserve computed colors, geometry, target sizes, overflow, and reduced-motion behavior across all six themes.
