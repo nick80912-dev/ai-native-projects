@@ -483,9 +483,9 @@ git commit -m "docs: release navigation feedback v108"
 
 Converted the expanded cluster-stop and pre-trip day launchers to native buttons, removed Navigation Intent aliasing at all state boundaries, added the remaining 12-case real-control navigation matrix, corrected manifest／ADR authorities, and renamed new helpers to verb-led forms. Fresh pre-commit evidence: Node **86/86**, Playwright **175/175**, focused WebKit **21/21**, static／version／documents／runtime／manifest／BUILTIN／diff gates pass, and offline Chromium reports `healthCheck: []`／`pageErrors: []`. The committed-tree rerun is performed by the final-fix implementer and recorded in its report; no fetch／push／device acceptance is claimed here.
 
-- [ ] **Step 5: Verify committed tree and push `dev`**
+- [x] **Step 5: Verify committed tree and push `dev`**
 
 Re-run full Node, Playwright, focused WebKit, static, BUILTIN, and offline Health gates. Fetch `origin`; require zero remote-only commits; push `dev`; require `origin/dev...dev` = `0 0` and identical SHAs. Stop for Bar's v108 device/PWA verification before starting v109.
 
-> Task 5 implementer scope stops after committed-tree verification and report. Controller owns final branch review, fetch／remote-divergence check, and push; this step remains unchecked until those remote operations and Bar's device／PWA acceptance actually occur.
+> Completed 2026-08-13: final whole-branch review returned strict PASS; fresh committed-candidate gates passed Node **86/86**, Playwright **175/175**, focused WebKit **21/21**, static／BUILTIN／manifest and offline Health (`healthCheck: []`, `pageErrors: []`). A fresh fetch found zero remote-only commits, `dev` fast-forwarded to the reviewed candidate, merged-`dev` Node tests passed **86/86**, and the release push produced `origin/dev...dev = 0 0` with both SHAs at `c5e9ad2`. Bar device／PWA acceptance remains pending, so v109 stays gated.
 
