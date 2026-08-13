@@ -1,14 +1,15 @@
 # 08 AI 交接文件(給未來的 AI 模型)
 
-## v108 navigation／diagnostics candidate handover
+## v109 navigation-feedback acceptance-fix handover
 
-- v102 device/PWA acceptance is complete. v108 passed final whole-branch review and was delivered to `dev`; local `dev` and `origin/dev` matched at `c5e9ad2` immediately after the release push. Bar device/PWA verification remains pending, and v109 must not start until that acceptance is recorded. No `main` merge, production deployment, or production tag is claimed.
+- v102 device/PWA acceptance is complete. v108 passed final whole-branch review and reached `dev`; during device acceptance Bar confirmed the target worked but asked to remove the redundant visible successful 「已定位」 row. The approved fix forward-bumps the App Shell to v109 and now awaits full gates, `dev` delivery, and Bar device/PWA verification. No `main` merge, production deployment, or production tag is claimed.
+- v109 keeps successful destination text in a visually hidden polite live region, highlights the exact target for 1000ms, then fades for 200ms. Reduced motion clears after 1000ms without fading. Missing-target feedback stays visible and continues writing the same Render diagnostic.
 - `navigation-intent.js` owns only immutable, session-only request／consume／complete state. `index.html` owns view／overlay opening, target lookup, sticky-safe scroll, 1.2-second `.is-navigation-target`, live status, missing-target diagnostics, and completion. Plain tab switching creates no intent; `shopping-list` remains an overlay and never changes `curView`.
 - Closing Shopping restores the source scroll and focuses the connected launcher, a stable replacement launcher, or the source tab. The return descriptor and intent never enter localStorage, personal backup, Queue, CMS, Ledger, or navigation history.
 - `diagnostic-impact.js` projects raw AppLog entries for display only. The panel shows impact and fallback while retaining escaped raw text; `formatDiagnosticsReport()` copies the original timestamp／category／message bytes without projected copy. Projection does not change stored AppLog, `healthCheck()`, retry, Queue, or sync behavior.
 - `.ai-manifest.json` uses `manifest_format: "2.29"` and points `current_status.authority` to `tasks/current.md`; it no longer stores volatile dev-candidate, next-action, or automated-test snapshots. App/SW identity remains authoritative in `app-version.js` and `sw.js` and is guarded by `tools/check-app-version.js`.
 - Final review fixes make expanded cluster stops and pre-trip day cards native keyboard controls, give `gotoDay` an exact highlighted day-heading target, and clone／normalize pending and active intents across create／request／consume／complete without shared caller references. Manifest governance names `tasks/current.md` as the sole current-status authority; `runtime-assets.json` is the ADR-authoritative asset list without a fixed count.
-- Fresh committed-candidate evidence: **86/86** top-level Node tests, full Playwright **175/175**, focused WebKit **21/21**, App／SW v108, document titles, 10 runtime assets, BUILTIN no-drift, manifest JSON, diff check, and offline Chromium `healthCheck: []`／`pageErrors: []` all pass. Final whole-branch review is strict PASS; after fast-forward merge, merged `dev` Node tests also passed 86/86. Roll back with a forward version bump plus revert of v108 runtime registration, adapters, docs, tests, and version records together; never delete `sw.js` or change schema/data to roll back UI behavior.
+- Focused v109 GREEN evidence: `render-note` **1/1**, Chromium **25/25**, and WebKit **25/25**. Full committed-tree Node／Playwright／static／BUILTIN／offline Health evidence is recorded before delivery. The previously reserved UI semantic-token/Today-module batch is now v110; the BUILTIN/test-throughput spike is v111.
 
 
 
@@ -58,7 +59,7 @@
 - 現行 P002／P013／P022／P031／P040 都引用 H001,但五個 PID 必須保持分離：其 travel 分別為開車30分鐘／開車2小時／開車3分鐘／開車50分鐘／步行3分鐘。入住、退房、地址、停車與備註才由 H001 共用。
 - Schema authority 是外部 `schema.js`,inline Schema 必須 exact parity；`09_SCHEMA_MAPPING.md` 表格只能由 `schemaDoc()` 重生。公開 Places 的 HID 是尾端物理欄,刷新工具依位置 authority 驗證,不得擅自移到 Type 後方。
 - Validator 條件式要求：住宿必須有 HID、非住宿不得帶 HID、任何 HID 都必須存在於 Hotels；七表候選快照任一違反即 fail closed。Runtime `hotelOf()` 對兩端 HID 去空白／轉大寫後精確解析,天氣住宿共用同一 resolver；未解析時回傳 `null`。
-- 這次 migration 不改 Ledger Schema 2.9／21 欄、Apps Script、個人備份 v9、SW lifecycle／cache strategy 或發布權限。v101／v102 裝置／PWA 外觀驗收均已由 Bar 完成；v102 的 HID facts 保留為歷史驗收紀錄。目前交付順序以本文件頂部 v108 handover 為準：controller 完成 final branch review 與 `dev` delivery → Bar 驗收 v108 的 exact target、可見定位、scroll／focus return、診斷 raw／projection 邊界與離線 PWA → 驗收完成後才解除 v109 gate。
+- 這次 migration 不改 Ledger Schema 2.9／21 欄、Apps Script、個人備份 v9、SW lifecycle／cache strategy 或發布權限。v101／v102 裝置／PWA 外觀驗收均已由 Bar 完成；v102 的 HID facts 保留為歷史驗收紀錄。目前交付順序以本文件頂部 v109 handover 為準：完成 v109 gate 與 `dev` delivery → Bar 驗收 exact target、成功提示無可見列、1 秒醒目＋淡出、scroll／focus return、診斷 raw／projection 邊界與離線 PWA → 驗收完成後才解除 v110 gate。
 - **Tier 2 復原**：若 v102 已推送並由裝置接管後需要退回內容,依 `16_OPS_PLAYBOOK.md` §A2 採 forward bump：以最後正常內容建立下一個未使用版本,並讓 `app-version.js`／`sw.js` 同步升版以觸發清除壞快取；不得把版本倒退覆寫,**絕不刪除 `sw.js`**。
 
 ## Ledger Schema 2.9 現行契約

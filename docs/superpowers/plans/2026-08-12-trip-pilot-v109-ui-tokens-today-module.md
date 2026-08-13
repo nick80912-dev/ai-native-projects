@@ -1,4 +1,6 @@
-# Trip Pilot v109 UI Tokens and Today Module Implementation Plan
+# Trip Pilot v110 UI Tokens and Today Module Implementation Plan
+
+> **Version reassignment:** The filename records the original reservation. After the approved v109 navigation-feedback acceptance fix, this plan's authoritative execution version is **v110**.
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
@@ -10,9 +12,9 @@
 
 ## Global Constraints
 
-- Start only after Bar accepts v108 on the target device/PWA.
+- Start only after Bar accepts v109 on the target device/PWA.
 - Do not change six theme palettes, four tabs, Schema, storage, backup, synchronization, Ledger semantics, App update UX, or production release state.
-- Exact v108 visible copy and behavior are the default; only token substitution and module ownership change.
+- Exact v109 visible copy and behavior are the default; only token substitution and module ownership change.
 - Module tests and production must use the same `TripTodayView` interface.
 - Do not create a Ledger module unless its deletion test demonstrates real complexity reduction.
 
@@ -52,7 +54,7 @@ Require these exact properties on `:root`:
 --radius-pill:999px;
 ```
 
-Add browser assertions across all six themes that Today Hero, navigation status, diagnostics impact rows, primary actions, and quiet actions preserve their pre-v109 computed color, font size, radius, minimum target size, and overflow behavior.
+Add browser assertions across all six themes that Today Hero, navigation status, diagnostics impact rows, primary actions, and quiet actions preserve their pre-v110 computed color, font size, radius, minimum target size, and overflow behavior.
 
 Run: `node tests/theme-system.test.js tests/ui-ux-hardening.test.js`
 
@@ -60,7 +62,7 @@ Expected: FAIL because the presentation tokens do not exist.
 
 - [ ] **Step 2: Add tokens without palette changes**
 
-Define tokens once outside theme selectors. Replace literal sizes/radii only in Today Hero, v108 navigation confirmation, diagnostics impact, `.btn`, and the matching shared action variants. Keep all six `--t-*` maps byte-for-byte unchanged.
+Define tokens once outside theme selectors. Replace literal sizes/radii only in Today Hero, v109 navigation confirmation, diagnostics impact, `.btn`, and the matching shared action variants. Keep all six `--t-*` maps byte-for-byte unchanged.
 
 - [ ] **Step 3: Run GREEN across themes and mobile widths**
 
@@ -180,7 +182,7 @@ npx playwright test tests/browser/today-live-info.spec.js tests/browser/view-con
 npx playwright test tests/browser/today-live-info.spec.js --browser=webkit --grep "Shopping|target|blank category"
 ```
 
-Expected: exact v108 output and targeting remain intact.
+Expected: exact accepted v109 output and targeting remain intact.
 
 - [ ] **Step 5: Commit**
 
@@ -192,7 +194,7 @@ git commit -m "refactor(today): extract Hero view module"
 ### Task 4: Apply the Ledger deletion test
 
 **Files:**
-- Create: `docs/architecture/ledger-history-deletion-test-v109.md`
+- Create: `docs/architecture/ledger-history-deletion-test-v110.md`
 - Test: `tests/ledger-ui-state.test.js`
 - Inspect: `index.html` Ledger history adapter functions
 
@@ -223,32 +225,32 @@ If deleting the candidate would redistribute at least two independent rules acro
 - [ ] **Step 4: Commit the decision**
 
 ```powershell
-git add -- docs/architecture/ledger-history-deletion-test-v109.md
+git add -- docs/architecture/ledger-history-deletion-test-v110.md
 git commit -m "docs(architecture): evaluate Ledger history seam"
 ```
 
-### Task 5: Release and deliver v109
+### Task 5: Release and deliver v110
 
 **Files:**
 - Modify: version, release-note, architecture, UI, changelog, handover, task, test, and plan documents required by the repository release contract.
 
 **Interfaces:**
 - Consumes: Tasks 1–4.
-- Produces: verified v109 `dev` candidate.
+- Produces: verified v110 `dev` candidate.
 
-- [ ] **Step 1: Forward-bump to v109 and document actual decisions**
+- [ ] **Step 1: Forward-bump to v110 and document actual decisions**
 
 Record token adoption, Today module ownership, and the Ledger seam accept/reject result. Do not claim a Ledger extraction if only the decision document exists.
 
 - [ ] **Step 2: Run static, focused, full, WebKit, and offline Health gates**
 
-Use the same static/full gate set as v108 plus `today-view-module.test.js`, six-theme browser coverage, and exact output tests.
+Use the same static/full gate set as v109 plus `today-view-module.test.js`, six-theme browser coverage, and exact output tests.
 
 - [ ] **Step 3: Commit release metadata**
 
-Commit with: `docs: release Today view module v109`.
+Commit with: `docs: release Today view module v110`.
 
 - [ ] **Step 4: Verify committed tree and push `dev`**
 
-Require zero remote-only commits and identical local/remote SHAs. Stop for Bar's v109 device/PWA verification before starting v110.
+Require zero remote-only commits and identical local/remote SHAs. Stop for Bar's v110 device/PWA verification before starting v111.
 

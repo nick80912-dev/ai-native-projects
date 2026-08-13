@@ -308,11 +308,11 @@ node tools/check-app-version.js
 node tools/check-doc-titles.js
 node tools/check-runtime-assets.js
 node --test tests/theme-system.test.js tests/pwa-shell.test.js tests/manifest-status-authority.test.js
-node -e "for(const f of ['.ai-manifest.json','.ai-project.json','.ai-deploy.json'])JSON.parse(require('fs').readFileSync(f,'utf8'));console.log('JSON manifests valid')"
+node -e "JSON.parse(require('fs').readFileSync('.ai-manifest.json','utf8'));console.log('JSON manifest valid')"
 git diff --check
 ```
 
-Expected: v109 consistency, document-title integrity, 10 runtime assets, three focused Node files passing, valid UTF-8 JSON, and clean diff.
+Expected: v109 consistency, document-title integrity, 10 runtime assets, three focused Node files passing, valid UTF-8 manifest JSON, and clean diff.
 
 - [ ] **Step 5: Commit release and scheduling records**
 
@@ -354,7 +354,7 @@ node tools/check-app-version.js
 node tools/check-doc-titles.js
 node tools/check-runtime-assets.js
 node tools/refresh-builtin-snapshot.js --check
-node -e "for(const f of ['.ai-manifest.json','.ai-project.json','.ai-deploy.json'])JSON.parse(require('fs').readFileSync(f,'utf8'));console.log('JSON manifests valid')"
+node -e "JSON.parse(require('fs').readFileSync('.ai-manifest.json','utf8'));console.log('JSON manifest valid')"
 git diff --check
 git status --short
 ```

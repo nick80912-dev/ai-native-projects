@@ -9137,6 +9137,11 @@ function renderSettingsDataHealth(){
   return '<div class="settings-section settings-data-health"><h3>資料健康狀態</h3><div class="settings-health-list">'+model.rows.map(function(row){return '<div class="settings-health-row data-health-'+escapeHtml(row.key)+'"><span class="settings-health-main"><b>'+escapeHtml(row.label)+'</b>'+(row.detail?'<span>'+escapeHtml(row.detail)+'</span>':'')+'</span><strong>'+escapeHtml(row.value)+'</strong></div>';}).join('')+'</div></div>';
 }
 var APP_RELEASE_NOTES=[
+  {version:'v109',date:'2026-08-13',title:'定位提示更精簡',items:[
+    '前往指定行程或採買地點時，只短暫醒目目標，不再多顯示一列「已定位」文字',
+    '醒目效果會在一秒後自然淡去；使用減少動態效果時則直接恢復原樣',
+    '輔助科技通知、找不到目標的提示、返回原畫面與離線資料行為保持不變'
+  ]},
   {version:'v108',date:'2026-08-13',title:'到站定位與診斷提示更清楚',items:[
     '從今天首頁、下一站或購物地點前往時，會直接捲到指定位置並短暫標示目標',
     '關閉採買清單後會回到原本的畫面、捲動位置與操作按鈕；找不到目標時也會安靜提示',
@@ -9155,11 +9160,6 @@ var APP_RELEASE_NOTES=[
   {version:'v105',date:'2026-08-12',title:'順路採買改顯示分類',items:[
     '今天首頁會在採買地點後顯示第一個優先分類，多項時以 +N 提示其餘數量',
     'Hero 不再顯示品名，地點與分類在窄螢幕維持單行安全省略',
-    '採買排序、下一站徽章、資料格式、記帳與同步方式皆維持不變'
-  ]},
-  {version:'v104',date:'2026-08-12',title:'順路採買直接顯示品名',items:[
-    '今天首頁會在採買地點後顯示第一個優先待買品名，多項時以 +N 提示其餘數量',
-    '地點仍是主要資訊，長地點與長品名會在同一行安全省略',
     '採買排序、下一站徽章、資料格式、記帳與同步方式皆維持不變'
   ]}
 ];

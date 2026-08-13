@@ -1,15 +1,15 @@
 # CURRENT(現在正在做的)
 
-## v108 candidate awaiting Bar device/PWA verification
+## v109 candidate awaiting Bar device/PWA verification
 
 
 
 - v102 Bar device/PWA acceptance is complete.
-- v108 is the current candidate: explicit Today／Shopping／Trip targeting uses transient navigation intent, visibly confirms the exact destination, and restores Shopping overlay scroll/focus context. Diagnostic impact copy is display-only; stored/copied raw AppLog and Health Check behavior stay unchanged.
+- v109 is the current candidate: explicit Today／Shopping／Trip targeting still reaches the exact destination and restores Shopping overlay scroll/focus context, but successful targeting no longer inserts a visible 「已定位」 row. The target stays highlighted for 1000ms, fades for 200ms, and retains an accessible polite announcement; missing-target feedback remains visible.
 - `.ai-manifest.json` delegates current product status to this file and no longer embeds volatile candidate, next-action, or automated-test snapshots.
-- v108 has passed final whole-branch review and is delivered to `dev`; `origin/dev` and local `dev` matched at `c5e9ad2` immediately after the release push. Bar now performs device/PWA appearance, interaction, return-focus, and offline verification. **v109 is gated until Bar accepts v108.** Do not merge main, deploy production, or create a production tag.
-- Final-review fixes are delivered on `dev`: cluster-stop and pre-trip day launchers are native keyboard controls; all four remaining explicit target types have real-control 320／375／390px Tap／Enter／Space coverage; Navigation Intent transitions own cloned canonical values; manifest／ADR authorities no longer contain stale status or asset counts.
-- Automated evidence on the committed release candidate: **86/86** top-level Node tests, full Playwright **175/175**, focused WebKit **21/21**, App／SW v108, document titles, 10 runtime assets, BUILTIN no-drift, manifest JSON, diff check, and offline Chromium `healthCheck: []`／`pageErrors: []`. Final review is strict PASS; device/PWA acceptance remains external and pending.
+- v108 passed final whole-branch review and was delivered to `dev`. During Bar's device acceptance, exact-target behavior worked but the successful 「已定位」 row was judged redundant. Bar approved the simplified feedback and required forward-bump to v109; v109 now awaits full gates, `dev` delivery, and the same device/PWA acceptance. Do not merge main, deploy production, or create a production tag.
+- The v109 behavior is intentionally narrow: no data, Schema, Apps Script, synchronization, backup, navigation-intent state, diagnostic raw-copy, SW lifecycle, or cache-strategy change. The previously reserved UI semantic-token/Today-module batch is v110; the BUILTIN/test-throughput spike is v111.
+- Focused implementer evidence so far: successful/failed feedback RED was observed; `render-note` is **1/1**, focused Chromium is **25/25**, and focused WebKit is **25/25** after GREEN. Full committed-tree release evidence is recorded only after Task 3 completes.
 
 
 
@@ -23,12 +23,12 @@
 
 | **`main` 原始碼** | **SW v96**，PR #13 merge commit `02705c3`；因 Netlify 額度用罄尚未部署／建立 tag |
 | 正式站 | `https://trippilot-jp.netlify.app/` — 2026-08-01 由 SW v18 升級至 v73,G1–G6 全數通過 |
-| **`dev` candidate** | **SW v108** at `c5e9ad2`; transient exact-target confirmation plus display-only diagnostic impact; awaiting Bar device/PWA verification |
+| **`dev` candidate** | **SW v109**; exact-target confirmation without the visible successful status row; awaiting full release gates and Bar device/PWA verification |
 | 個人備份格式 | **v9**(`PERSONAL_STATE_SUPPORTED_VERSIONS = [1..9]`)—— v81 因想逛 key 識別語意變更而升版 |
-| candidate automated validation | Committed-tree and merged-`dev` gates: **86/86** Node, **175/175** full Playwright, **21/21** focused WebKit; static/BUILTIN/manifest/offline Health/pageerror gates pass. Final review strict PASS; Bar device acceptance remains pending |
+| candidate automated validation | Focused GREEN: `render-note` **1/1**, Chromium **25/25**, WebKit **25/25**. Full Node/Playwright/static/BUILTIN/offline Health evidence follows before delivery |
 | 既有 tag | `production-v18`、`production-v73` |
 
-**`main` 已合併 v96，但正式站仍停在 v73；v108 已交付 `dev`，目前等待 Bar 驗收。** v74–v87 已由 Bar 於 2026-08-03 確認真機驗收皆正常；v88–v89、v92–v95 亦於 2026-08-08 完成 Bar 畫面／真機確認。v96 因 Netlify 額度用罄尚未正式部署，也未建立 `production-v96` tag。Bar 已完成 v101／v102 裝置／PWA驗收；v108 尚未完成 Bar device／PWA 驗收，v109 因此維持 gated。
+**`main` 已合併 v96，但正式站仍停在 v73；v109 是目前的 `dev` 候選修正版。** v74–v87 已由 Bar 於 2026-08-03 確認真機驗收皆正常；v88–v89、v92–v95 亦於 2026-08-08 完成 Bar 畫面／真機確認。v96 因 Netlify 額度用罄尚未正式部署，也未建立 `production-v96` tag。Bar 已完成 v101／v102 裝置／PWA驗收；v109 尚待完整 release gate、`dev` delivery 與 Bar device／PWA 驗收。
 
 ### v74–v98 已折疊的主要能力
 
@@ -115,13 +115,15 @@
 | v101 | 移除全域 SW 更新提示；杉綠 action 改為林下青 `#2F6B4F`，SW lifecycle／cache／offline 與資料不變 | ✅ 2026-08-11 Bar 裝置／PWA 外觀驗收完成 |
 | v102 | 住宿停靠點改以 Places.HID 精確關聯 Hotels.HID；Schema 3.0、條件驗證、BUILTIN 與 exact resolver 同步 | ✅ 最終 whole-branch review、完整 gate、dev push（`ffc9aae`）與 Bar 裝置／PWA驗收完成 |
 | v103–v107 | Today Hero 旅行提示、採買摘要分類／對齊／未分類 fallback；原始採買資料與既有 next-stop authority 不變 | ✅ 已完成自動驗證；歷史細節見 `07_CHANGELOG.md` |
-| v108 | transient exact-target navigation、可見定位／scroll／focus return、display-only diagnostic impact、manifest status authority | ⏳ candidate；等待 controller final review／delivery 與 Bar device／PWA verification |
-| v109 | UI semantic tokens 與 Today deep-module extraction | 🔒 gated；只可在 Bar 接受 v108 後開始 |
+| v108 | transient exact-target navigation、可見定位／scroll／focus return、display-only diagnostic impact、manifest status authority | ✅ final review／完整 gate／dev delivery；Bar 驗收中提出成功提示列精簡修正 |
+| v109 | 成功定位提示列移除、1 秒醒目＋0.2 秒淡出、失敗提示保留 | ⏳ candidate；完整 gate 與 Bar device／PWA verification 待完成 |
+| v110 | UI semantic tokens 與 Today deep-module extraction（原 v109） | 🔒 gated；只可在 Bar 接受 v109 後開始 |
+| v111 | BUILTIN asset spike 與 test throughput（原 v110） | 🔒 gated；只可在 Bar 接受 v110 後開始 |
 
 **已知未做(需先定判準)**:Today 的「交通／停車／營業／付款／提醒**依當下情境動態調整優先順序**」。v84 只做了可明確驗收的收合(常駐交通／停車／營業,收合付款／提醒);「當下情境」的判準(依時間?依距離?依是否已抵達?)尚未定義,不同讀法會做出完全不同的東西,故未實作。
 
 ## 下一棒
 
-→ **v108 是目前 candidate；controller 完成 final branch review 與 `dev` delivery 後，由 Bar 開啟 device／PWA 驗收。** 確認 320／375／390px 的 exact target、1.2 秒可見標示、live status、reduced motion、overlay return scroll／focus、找不到目標的安全降級、診斷 raw／projection 邊界與離線啟動。v109 在 Bar 接受 v108 前不得開始；不得自行 merge `main`、部署正式站或建立 production tag。
+→ **完成 v109 release gate 與 `dev` delivery 後，由 Bar 在手機／PWA 驗收。** 確認 320／375／390px exact target、成功時沒有可見「已定位」列、目標醒目約一秒後淡出、reduced motion 直接清除、overlay return scroll／focus、找不到目標仍可見、診斷 raw／projection 邊界與離線啟動。v110 在 Bar 接受 v109 前不得開始；不得自行 merge `main`、部署正式站或建立 production tag。
 
 > **不得**自行動 `main`、部署正式站或建立 production tag。未經 Bar 核准不得 merge `dev → main`。

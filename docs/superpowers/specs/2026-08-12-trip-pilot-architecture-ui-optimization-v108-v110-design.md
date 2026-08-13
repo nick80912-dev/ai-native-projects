@@ -1,4 +1,4 @@
-# Trip Pilot Architecture and UI Optimization v108–v110 Design
+# Trip Pilot Architecture and UI Optimization v108–v111 Design
 
 **Date:** 2026-08-12
 
@@ -127,7 +127,7 @@ Historical product status remains available through changelog and task archives;
 - No target intent or diagnostic display projection enters persistent data.
 - Runtime asset, SW cache, version, offline boot, Health Check, pageerror, Node, Chromium, and focused WebKit gates pass.
 
-## 5. Batch v109 — UI Semantics and Today Module Extraction
+## 5. Batch v110 — UI Semantics and Today Module Extraction
 
 ### 5.1 Semantic presentation scales
 
@@ -145,7 +145,7 @@ No seventh theme, dark mode, tab reorganization, or new design language is inclu
 
 ### 5.2 Today view module
 
-Extract a `today-view.js` deep module only after v108 navigation behavior is stable. Its interface accepts prepared data and helper functions, then returns view models or HTML; it never reads storage, performs synchronization, or owns global DOM events.
+Extract a `today-view.js` deep module only after v109 navigation feedback is accepted. Its interface accepts prepared data and helper functions, then returns view models or HTML; it never reads storage, performs synchronization, or owns global DOM events.
 
 The intended interface is:
 
@@ -161,20 +161,20 @@ Extraction proceeds by replacement, not layering: after tests use the new interf
 
 ### 5.3 Ledger extraction decision gate
 
-Do not split all Ledger DOM code during v109. After Today extraction, record the interface and test leverage achieved. A Ledger adapter is extracted only if one independently testable seam can replace duplicated caller knowledge without changing settlement, correction, Queue, or record semantics.
+Do not split all Ledger DOM code during v110. After Today extraction, record the interface and test leverage achieved. A Ledger adapter is extracted only if one independently testable seam can replace duplicated caller knowledge without changing settlement, correction, Queue, or record semantics.
 
 The first allowed candidate is Ledger history presentation because `ledger-ui-state.js` already owns its state transitions. Entry, settlement, calculator, and correction are explicitly excluded from opportunistic extraction. If the deletion test shows no meaningful complexity reduction, record the finding and leave the production code in place.
 
-### 5.4 v109 acceptance
+### 5.4 v110 acceptance
 
-- Today behavior, visible copy, accessibility names, and navigation are unchanged except for the approved v108 target feedback.
+- Today behavior, visible copy, accessibility names, and navigation are unchanged from the accepted v109 target feedback.
 - Six themes retain their accepted colors and AA contrast checks.
 - 320, 375, and 390px have zero horizontal overflow.
 - Module tests exercise the same interface used by production.
 - No duplicated Today implementation remains in `index.html`.
 - Full Node, Chromium, focused WebKit, offline boot, Health Check, pageerror, document, runtime-asset, and diff gates pass.
 
-## 6. Batch v110 — BUILTIN Asset Spike and Test Throughput
+## 6. Batch v111 — BUILTIN Asset Spike and Test Throughput
 
 ### 6.1 Generated BUILTIN asset
 
@@ -210,7 +210,7 @@ Run the full browser suite with two workers at least three consecutive times on 
 - If any unexplained flake appears, keep one worker and record the evidence; speed is not allowed to weaken determinism.
 - Focused development tests remain scoped and fast regardless of the full-gate worker decision.
 
-### 6.3 v110 acceptance
+### 6.3 v111 acceptance
 
 - No hand editing of generated BUILTIN content.
 - Snapshot refresh preview/write/no-drift contracts pass.
@@ -252,5 +252,6 @@ Every behavioral change follows RED → GREEN. Required coverage includes:
 1. Bar reviews and approves this written specification.
 2. Produce a detailed implementation plan with exact files, interfaces, RED/GREEN tests, commits, and per-batch gates.
 3. Execute v108 and push `dev`; Bar performs device/PWA verification.
-4. After v108 verification, execute v109 and push `dev`.
-5. After v109 verification, execute the v110 spike and ship only the portions that meet its kill criteria.
+4. Ship the approved v109 navigation-feedback acceptance fix; Bar verifies it on the target device/PWA.
+5. After v109 verification, execute the UI semantics/Today module batch as v110 and push `dev`.
+6. After v110 verification, execute the v111 spike and ship only the portions that meet its kill criteria.

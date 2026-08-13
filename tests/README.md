@@ -1,5 +1,10 @@
 # tests — 測試資產(交付必附)
 
+## v109 navigation-feedback acceptance-fix coverage
+
+- Successful exact-target announcements remain in a visually hidden polite live region, so no 「已定位」 row or layout gap appears. Missing-target feedback retains the visible modifier and Render diagnostic.
+- Real launcher coverage records the 1000ms active phase, 200ms fading phase, final intent cleanup, and reduced-motion direct clear at 320／375／390px with Tap／Enter／Space in Chromium and WebKit.
+
 ## v108 navigation／diagnostics／status-authority coverage
 
 - `navigation-intent-module.test.js` directly protects the ES5 immutable create／request／consume／complete contract, exact five-view allowlist, safe unique tokens, stale completion, normalization, pending／active preservation, caller-mutation isolation, canonical retained shapes, and a separately owned consumed intent snapshot.
