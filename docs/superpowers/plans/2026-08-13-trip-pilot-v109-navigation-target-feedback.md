@@ -383,7 +383,7 @@ git diff --check
 
 Expected: all pass.
 
-- [ ] **Step 5: Commit evidence records**
+- [x] **Step 5: Commit evidence records**
 
 ```powershell
 git add -- 07_CHANGELOG.md 08_AI_HANDOVER.md tasks/current.md docs/superpowers/plans/2026-08-13-trip-pilot-v109-navigation-target-feedback.md
@@ -393,11 +393,11 @@ git commit -m "docs: record v109 release evidence"
 
 If Step 4 did not require any evidence edit, skip this commit rather than creating an empty commit.
 
-- [ ] **Step 6: Re-run committed-tree release gates**
+- [x] **Step 6: Re-run committed-tree release gates**
 
 After the final commit, re-run Steps 1–3 without editing files. Require the same zero-failure/static/offline results and `git status --short` with no tracked changes.
 
-- [ ] **Step 7: Fetch, require no remote-only commits, and push dev**
+- [x] **Step 7: Fetch, require no remote-only commits, and push dev**
 
 Run:
 
@@ -413,7 +413,7 @@ git rev-parse origin/dev
 
 Before push, the left count must be `0`; stop if origin has remote-only commits. After push, require `0 0` and identical SHAs. Do not force-push.
 
-- [ ] **Step 8: Hand off Bar device/PWA acceptance**
+- [x] **Step 8: Hand off Bar device/PWA acceptance**
 
 Ask Bar to verify on the target phone/PWA:
 
@@ -425,3 +425,5 @@ Ask Bar to verify on the target phone/PWA:
 6. Offline restart reports normal Health Check.
 
 Do not begin v110 until this acceptance is recorded.
+
+> Delivered 2026-08-13: committed-tree gates passed Node **86/86**, Playwright **175/175**, focused WebKit **25/25**, static／BUILTIN／manifest checks, and offline Health (`source:"builtin"`, `healthCheck:[]`, `appLogCount:10`, `pageErrors:[]`). Merged-`dev` Node passed **86/86**; fresh fetch found zero remote-only commits; reviewed candidate `ea1e91a` was pushed with `origin/dev...dev = 0 0`. This handoff requests Bar's device／PWA verification; acceptance itself remains pending and v110 stays gated.

@@ -1,15 +1,15 @@
 # CURRENT(現在正在做的)
 
-## v109 candidate awaiting Bar device/PWA verification
+## v109 delivered to dev; awaiting Bar device/PWA verification
 
 
 
 - v102 Bar device/PWA acceptance is complete.
 - v109 is the current candidate: explicit Today／Shopping／Trip targeting still reaches the exact destination and restores Shopping overlay scroll/focus context, but successful targeting no longer inserts a visible 「已定位」 row. The target stays highlighted for 1000ms, fades for 200ms, and retains an accessible polite announcement; missing-target feedback remains visible.
 - `.ai-manifest.json` delegates current product status to this file and no longer embeds volatile candidate, next-action, or automated-test snapshots.
-- v108 passed final whole-branch review and was delivered to `dev`. During Bar's device acceptance, exact-target behavior worked but the successful 「已定位」 row was judged redundant. Bar approved the simplified feedback and required forward-bump to v109; v109 now awaits the committed-tree gate re-run, `dev` delivery, and the same device/PWA acceptance. Do not merge main, deploy production, or create a production tag.
+- v108 passed final whole-branch review and was delivered to `dev`. During Bar's device acceptance, exact-target behavior worked but the successful 「已定位」 row was judged redundant. Bar approved the simplified feedback and required forward-bump to v109; reviewed v109 candidate `ea1e91a` is now on `dev` and awaits the same device/PWA acceptance. Do not merge main, deploy production, or create a production tag.
 - The v109 behavior is intentionally narrow: no data, Schema, Apps Script, synchronization, backup, navigation-intent state, diagnostic raw-copy, SW lifecycle, or cache-strategy change. The previously reserved UI semantic-token/Today-module batch is v110; the BUILTIN/test-throughput spike is v111.
-- Fresh pre-delivery evidence: top-level Node **86/86**, full Playwright **175/175**, focused WebKit **25/25**, App／SW v109, document titles, 10 runtime assets, BUILTIN no-drift, manifest JSON, diff checks, and offline Chromium `{"source":"builtin","healthCheck":[],"appLogCount":10,"pageErrors":[]}` all pass. The committed-tree re-run and `dev` delivery remain before Bar device/PWA acceptance.
+- Fresh committed-tree evidence: top-level Node **86/86**, full Playwright **175/175**, focused WebKit **25/25**, App／SW v109, document titles, 10 runtime assets, BUILTIN no-drift, manifest JSON, diff checks, and offline Chromium `{"source":"builtin","healthCheck":[],"appLogCount":10,"pageErrors":[]}` all pass; merged-`dev` Node is also **86/86**. Push equality was `origin/dev...dev = 0 0`; only Bar device/PWA acceptance remains.
 
 
 
@@ -23,12 +23,12 @@
 
 | **`main` 原始碼** | **SW v96**，PR #13 merge commit `02705c3`；因 Netlify 額度用罄尚未部署／建立 tag |
 | 正式站 | `https://trippilot-jp.netlify.app/` — 2026-08-01 由 SW v18 升級至 v73,G1–G6 全數通過 |
-| **`dev` candidate** | **SW v109**; exact-target confirmation without the visible successful status row; pre-delivery gates pass, awaiting committed-tree re-run／delivery and Bar device/PWA verification |
+| **`dev` candidate** | **SW v109** at reviewed product candidate `ea1e91a`; exact-target confirmation without the visible successful status row, awaiting Bar device/PWA verification |
 | 個人備份格式 | **v9**(`PERSONAL_STATE_SUPPORTED_VERSIONS = [1..9]`)—— v81 因想逛 key 識別語意變更而升版 |
-| candidate automated validation | Fresh pre-delivery: Node **86/86**, Playwright **175/175**, focused WebKit **25/25**, static／BUILTIN／offline Health all pass |
+| candidate automated validation | Committed tree: Node **86/86**, Playwright **175/175**, focused WebKit **25/25**, static／BUILTIN／offline Health all pass; merged-`dev` Node **86/86** |
 | 既有 tag | `production-v18`、`production-v73` |
 
-**`main` 已合併 v96，但正式站仍停在 v73；v109 是目前的 `dev` 候選修正版。** v74–v87 已由 Bar 於 2026-08-03 確認真機驗收皆正常；v88–v89、v92–v95 亦於 2026-08-08 完成 Bar 畫面／真機確認。v96 因 Netlify 額度用罄尚未正式部署，也未建立 `production-v96` tag。Bar 已完成 v101／v102 裝置／PWA驗收；v109 尚待完整 release gate、`dev` delivery 與 Bar device／PWA 驗收。
+**`main` 已合併 v96，但正式站仍停在 v73；v109 是目前的 `dev` 候選修正版。** v74–v87 已由 Bar 於 2026-08-03 確認真機驗收皆正常；v88–v89、v92–v95 亦於 2026-08-08 完成 Bar 畫面／真機確認。v96 因 Netlify 額度用罄尚未正式部署，也未建立 `production-v96` tag。Bar 已完成 v101／v102 裝置／PWA驗收；v109 已完成 release gate 與 `dev` delivery，只待 Bar device／PWA 驗收。
 
 ### v74–v98 已折疊的主要能力
 
