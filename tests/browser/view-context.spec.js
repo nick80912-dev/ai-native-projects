@@ -129,6 +129,7 @@ test('an explicit entry positions its target instead of restoring the old scroll
       scrollTop: Math.round(document.scrollingElement.scrollTop),
       highlighted: el.classList.contains('is-navigation-target'),
       status: document.querySelector('#view-trip .navigation-target-status')?.textContent || '',
+      statusVisible: document.querySelector('#view-trip .navigation-target-status')?.classList.contains('navigation-target-status-visible') || false,
       curView,
     };
   });
@@ -137,6 +138,7 @@ test('an explicit entry positions its target instead of restoring the old scroll
   expect(result.inViewport).toBe(true);
   expect(result.highlighted).toBe(true);
   expect(result.status).toMatch(/^已定位：/);
+  expect(result.statusVisible).toBe(false);
 });
 
 test('the intent is consumed once — later plain switches restore again', async ({ page }) => {
@@ -190,7 +192,8 @@ test('gotoDay and openShopPlace position their targets rather than restoring', a
     return {
       curView,filter:shopPlaceFilter,pid,targetId,
       highlighted:!!(target&&target.classList.contains('is-navigation-target')),
-      status:document.querySelector('#view-shop .navigation-target-status')?.textContent||''
+      status:document.querySelector('#view-shop .navigation-target-status')?.textContent||'',
+      statusVisible:document.querySelector('#view-shop .navigation-target-status')?.classList.contains('navigation-target-status-visible')||false
     };
   });
   expect(shopResult.curView).toBe('shop');
@@ -198,6 +201,7 @@ test('gotoDay and openShopPlace position their targets rather than restoring', a
   expect(shopResult.targetId).toBe(`shopmall_${shopResult.pid.toUpperCase()}`);
   expect(shopResult.highlighted).toBe(true);
   expect(shopResult.status).toMatch(/^已定位：/);
+  expect(shopResult.statusVisible).toBe(false);
 });
 
 test('a missing navigation target reports failure without restoring unrelated old scroll', async ({ page }) => {
@@ -216,12 +220,14 @@ test('a missing navigation target reports failure without restoring unrelated ol
     return {
       scrollTop:Math.round(document.scrollingElement.scrollTop),
       status:document.querySelector('#view-shop .navigation-target-status')?.textContent||'',
+      statusVisible:document.querySelector('#view-shop .navigation-target-status')?.classList.contains('navigation-target-status-visible')||false,
       renderLogged:logs.some((entry)=>entry.category==='render'&&entry.message.includes('shopmall_DOES_NOT_EXIST')),
       active:navigationIntentState.active
     };
   });
   expect(result.scrollTop).toBe(0);
   expect(result.status).toBe('找不到對應地點');
+  expect(result.statusVisible).toBe(true);
   expect(result.renderLogged).toBe(true);
   expect(result.active).toBeNull();
 });

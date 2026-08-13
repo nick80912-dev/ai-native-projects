@@ -222,6 +222,17 @@ assert.strictEqual(sandbox._shopQ, '', 'unknown place still clears stale search'
 assert.strictEqual(sandbox.shopPlaceFilter, 'all', 'unknown place safely falls back to all');
 assert.strictEqual(passedIntent.targetId, 'shopmall_P999', 'unknown places still request their exact target so failure is reported');
 
+const navigationStatusSource=extractFunction('writeNavigationTargetStatus');
+const applyNavigationTargetSource=extractFunction('applyNavigationTarget');
+assert.match(navigationStatusSource,/visible/,'navigation status accepts an explicit visible mode');
+assert.match(navigationStatusSource,/navigation-target-status-visible/,'only the visible mode receives the layout class');
+assert.match(applyNavigationTargetSource,/writeNavigationTargetStatus\(container,'找不到對應地點',true\)/,'missing targets keep visible feedback');
+assert.match(applyNavigationTargetSource,/writeNavigationTargetStatus\(container,intent\.announce,false\)/,'successful targets keep only an accessible hidden announcement');
+assert.match(applyNavigationTargetSource,/setTimeout\(function\(\)\{beginNavigationTargetFade\(intent\.token\);\},1000\)/,'successful targets keep the full highlight for one second');
+const navigationFadeSource=extractFunction('beginNavigationTargetFade');
+assert.match(navigationFadeSource,/setTimeout\(function\(\)\{clearNavigationTarget\(token\);\},200\)/,'normal motion fades for two hundred milliseconds');
+assert.match(navigationFadeSource,/prefers-reduced-motion: reduce/,'reduced motion clears without entering the fade phase');
+
 let horizontalScroll = null;
 let activeChip = { offsetLeft:530, offsetWidth:120 };
 let filterBar = {

@@ -103,10 +103,30 @@ async function expectConfirmedTarget(page, expected, viewportCase) {
     const targetElement = document.getElementById(targetId);
     return targetElement ? targetElement.classList.contains('is-navigation-target') : null;
   }, expected.targetId)).toBe(true);
+  const phasesPromise=page.evaluate(({targetId,reducedMotion})=>new Promise((resolve,reject)=>{
+    const targetElement=document.getElementById(targetId);
+    const started=performance.now();
+    let fadeAt=null;
+    const observer=new MutationObserver(()=>{
+      const active=targetElement.classList.contains('is-navigation-target');
+      const fading=targetElement.classList.contains('is-navigation-target-fading');
+      if(fading&&fadeAt===null)fadeAt=performance.now()-started;
+      if(!active&&!fading&&navigationIntentState.active===null){
+        observer.disconnect();clearTimeout(timeoutId);
+        resolve({fadeAt,clearAt:performance.now()-started,reducedMotion});
+      }
+    });
+    observer.observe(targetElement,{attributes:true,attributeFilter:['class']});
+    const timeoutId=setTimeout(()=>{
+      observer.disconnect();
+      reject(new Error('navigation target phases did not complete'));
+    },1800);
+  }),{targetId:expected.targetId,reducedMotion:!!viewportCase.reducedMotion});
   await expect(status).toHaveCount(1);
   await expect(status).toHaveAttribute('role', 'status');
   await expect(status).toHaveAttribute('aria-live', 'polite');
   await expect(status).toHaveText(expected.status);
+  await expect(status).not.toHaveClass(/navigation-target-status-visible/);
 
   const geometry = await page.evaluate((targetId) => {
     const targetElement = document.getElementById(targetId);
@@ -116,22 +136,31 @@ async function expectConfirmedTarget(page, expected, viewportCase) {
     const statusBox = statusElement.getBoundingClientRect();
     return {
       targetTop: targetBox.top,
-      statusTop: statusBox.top,
+      statusWidth: statusBox.width,
+      statusHeight: statusBox.height,
+      statusPosition: getComputedStyle(statusElement).position,
       stickyBottom: header.getBoundingClientRect().bottom,
       horizontalOverflow: document.documentElement.scrollWidth > window.innerWidth,
       transitionDuration: getComputedStyle(targetElement).transitionDuration,
     };
   }, expected.targetId);
   expect(geometry.targetTop).toBeGreaterThanOrEqual(geometry.stickyBottom - 1);
-  expect(geometry.statusTop).toBeGreaterThanOrEqual(geometry.stickyBottom - 1);
+  expect(geometry.statusWidth).toBeLessThanOrEqual(1);
+  expect(geometry.statusHeight).toBeLessThanOrEqual(1);
+  expect(geometry.statusPosition).toBe('absolute');
   expect(geometry.horizontalOverflow).toBe(false);
-  if (viewportCase.reducedMotion) expect(geometry.transitionDuration).toBe('0s');
+  if (viewportCase.reducedMotion) expect(parseFloat(geometry.transitionDuration)).toBeLessThanOrEqual(0.001);
 
-  await page.waitForTimeout(1300);
-  await expect.poll(() => page.evaluate((targetId) => {
-    const targetElement = document.getElementById(targetId);
-    return targetElement ? targetElement.classList.contains('is-navigation-target') : null;
-  }, expected.targetId)).toBe(false);
+  const phases=await phasesPromise;
+  expect(phases.clearAt).toBeGreaterThanOrEqual(700);
+  expect(phases.clearAt).toBeLessThanOrEqual(1600);
+  if(viewportCase.reducedMotion)expect(phases.fadeAt).toBeNull();
+  else{
+    expect(phases.fadeAt).toBeGreaterThanOrEqual(700);
+    expect(phases.fadeAt).toBeLessThan(phases.clearAt);
+    expect(phases.clearAt-phases.fadeAt).toBeGreaterThanOrEqual(100);
+    expect(phases.clearAt-phases.fadeAt).toBeLessThanOrEqual(500);
+  }
 }
 
 const TARGET_TYPES = [

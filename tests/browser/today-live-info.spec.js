@@ -160,24 +160,48 @@ test.describe('Shopping target acceptance matrix',()=>{
       await expect(page.locator('#shoppingListOverlay')).toBeVisible();
       const target=page.locator(`#${seeded.targetId}`),status=page.locator('#shoppingListOverlay .navigation-target-status');
       await expect(target).toHaveClass(/is-navigation-target/);
+      const phasesPromise=page.evaluate((targetId)=>new Promise((resolve,reject)=>{
+        const targetElement=document.getElementById(targetId),started=performance.now();
+        let fadeAt=null;
+        const observer=new MutationObserver(()=>{
+          const active=targetElement.classList.contains('is-navigation-target');
+          const fading=targetElement.classList.contains('is-navigation-target-fading');
+          if(fading&&fadeAt===null)fadeAt=performance.now()-started;
+          if(!active&&!fading&&navigationIntentState.active===null){
+            observer.disconnect();clearTimeout(timeoutId);
+            resolve({fadeAt,clearAt:performance.now()-started});
+          }
+        });
+        observer.observe(targetElement,{attributes:true,attributeFilter:['class']});
+        const timeoutId=setTimeout(()=>{
+          observer.disconnect();reject(new Error('navigation target phases did not complete'));
+        },1800);
+      }),seeded.targetId);
       await expect(status).toHaveCount(1);
       await expect(status).toHaveAttribute('role','status');
       await expect(status).toHaveAttribute('aria-live','polite');
       await expect(status).toHaveText(`已定位：${seeded.stopName}`);
+      await expect(status).not.toHaveClass(/navigation-target-status-visible/);
       const geometry=await page.evaluate((targetId)=>{
         const target=document.getElementById(targetId),status=document.querySelector('#shoppingListOverlay .navigation-target-status');
         const segment=document.querySelector('#shoppingListOverlay .shopping-list-segment');
         return {
-          targetTop:target.getBoundingClientRect().top,statusTop:status.getBoundingClientRect().top,
+          targetTop:target.getBoundingClientRect().top,
+          statusWidth:status.getBoundingClientRect().width,statusHeight:status.getBoundingClientRect().height,
+          statusPosition:getComputedStyle(status).position,
           stickyBottom:segment.getBoundingClientRect().bottom,
-          statusHit:document.elementFromPoint(status.getBoundingClientRect().left+2,status.getBoundingClientRect().top+2)===status
         };
       },seeded.targetId);
       expect(geometry.targetTop).toBeGreaterThanOrEqual(geometry.stickyBottom-1);
-      expect(geometry.statusTop).toBeGreaterThanOrEqual(geometry.stickyBottom-1);
-      expect(geometry.statusHit).toBe(true);
+      expect(geometry.statusWidth).toBeLessThanOrEqual(1);
+      expect(geometry.statusHeight).toBeLessThanOrEqual(1);
+      expect(geometry.statusPosition).toBe('absolute');
       expect(await page.evaluate(()=>curView)).toBe(source.curView);
-      await page.waitForTimeout(1300);
+      const phases=await phasesPromise;
+      expect(phases.fadeAt).toBeGreaterThanOrEqual(700);
+      expect(phases.fadeAt).toBeLessThan(phases.clearAt);
+      expect(phases.clearAt-phases.fadeAt).toBeGreaterThanOrEqual(100);
+      expect(phases.clearAt-phases.fadeAt).toBeLessThanOrEqual(500);
       await expect(target).not.toHaveClass(/is-navigation-target/);
       await page.evaluate(()=>closeShoppingList());
       const returned=await page.evaluate((selector)=>({scrollY:Math.round(document.scrollingElement.scrollTop),curView,focused:document.activeElement===document.querySelector(selector)}),seeded.launcherSelector);
@@ -397,7 +421,15 @@ test('navigation target disables transition under reduced motion', async ({ page
   await page.locator('#view-today .nx-buy-badge').click();
   const target=page.locator(`#shopgroup_${await page.evaluate((ref)=>cssId(ref),seeded.stopRef)}`);
   await expect(target).toHaveClass(/is-navigation-target/);
-  expect(await target.evaluate((element)=>getComputedStyle(element).transitionDuration)).toBe('0s');
+  expect(parseFloat(await target.evaluate((element)=>getComputedStyle(element).transitionDuration))).toBeLessThanOrEqual(0.001);
+  await page.waitForTimeout(800);
+  await expect(target).toHaveClass(/is-navigation-target/);
+  await expect(target).not.toHaveClass(/is-navigation-target-fading/);
+  await expect.poll(()=>target.evaluate((element)=>({
+    active:element.classList.contains('is-navigation-target'),
+    fading:element.classList.contains('is-navigation-target-fading'),
+    intentActive:navigationIntentState.active!==null
+  })),{timeout:350}).toEqual({active:false,fading:false,intentActive:false});
 });
 
 test('stale navigation target completion cannot clear a newer destination', async ({ page }) => {
