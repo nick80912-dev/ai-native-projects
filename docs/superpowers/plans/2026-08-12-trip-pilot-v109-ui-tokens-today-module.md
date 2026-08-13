@@ -246,11 +246,13 @@ Record token adoption, Today module ownership, and the Ledger seam accept/reject
 
 Use the same static/full gate set as v109 plus `today-view-module.test.js`, six-theme browser coverage, and exact output tests.
 
-- [ ] **Step 3: Commit release metadata**
+- [x] **Step 3: Commit release metadata**
 
 Commit with: `docs: release Today view module v110`.
 
-- [ ] **Step 4: Verify committed tree and push `dev`**
+- [x] **Step 4: Verify committed tree and push `dev`**
 
 Require zero remote-only commits and identical local/remote SHAs. Stop for Bar's v110 device/PWA verification before starting v111.
+
+> Delivered 2026-08-13: fresh committed-tree gates passed Node **87/87**, Playwright **176/176**, focused WebKit **39/39**, static／BUILTIN／manifest checks, and offline Chromium Health (`source:"builtin"`, `healthCheck:[]`, `appLogCount:9`, `pageErrors:[]`). Fresh fetch found zero remote-only commits; runtime／release commit `49f8e8c` reached `dev` with `origin/dev...dev = 0 0`, followed by the evidence-only status commit. Bar device/PWA verification is the only remaining v110 acceptance step; v111 stays gated.
 
