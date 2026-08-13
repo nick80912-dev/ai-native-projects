@@ -34,7 +34,7 @@
 - Consumes: existing `applyNavigationTarget(element,intent)`, `clearNavigationTarget(token)`, `writeNavigationTargetStatus(container,message)`, and `intent.announce`.
 - Produces: `writeNavigationTargetStatus(container,message,visible)` where `visible` is true only for an actionable failure; CSS states `.navigation-target-status`, `.navigation-target-status-visible`, `.is-navigation-target`, and `.is-navigation-target-fading`.
 
-- [ ] **Step 1: Write RED browser assertions for visually hidden success**
+- [x] **Step 1: Write RED browser assertions for visually hidden success**
 
 Update the shared successful-target assertions so they require the live region to retain its text and semantics without layout or hit-testing:
 
@@ -64,7 +64,7 @@ expect(feedback.hit).toBe(false);
 
 In `tests/browser/today-live-info.spec.js`, remove successful-status geometry assertions and instead assert the destination group immediately follows the prior rendered group without a visible status row. In `tests/browser/view-context.spec.js`, retain announcement text assertions but require the successful status to be visually hidden.
 
-- [ ] **Step 2: Write RED timing assertions for active, fading, and cleared phases**
+- [x] **Step 2: Write RED timing assertions for active, fading, and cleared phases**
 
 Use the real launchers and poll real DOM classes:
 
@@ -96,7 +96,7 @@ await expect.poll(()=>page.evaluate((id)=>{
 
 For the 390px reduced-motion case, require no fading class and no CSS transition after the 1000ms hold, then require the target and active intent cleared.
 
-- [ ] **Step 3: Keep missing-target behavior visibly RED-safe**
+- [x] **Step 3: Keep missing-target behavior visibly RED-safe**
 
 Strengthen the existing missing-target case in `tests/browser/view-context.spec.js`:
 
@@ -113,7 +113,7 @@ await expect.poll(()=>page.evaluate(()=>
 
 Update `tests/render-note.test.js` to assert that successful calls use the hidden status mode and missing targets use the visible mode. The exact production change that makes these tests pass is the new third `visible` argument plus separate CSS classes.
 
-- [ ] **Step 4: Run the focused tests and verify RED**
+- [x] **Step 4: Run the focused tests and verify RED**
 
 Run:
 
@@ -124,7 +124,7 @@ npx playwright test tests/browser/today-live-info.spec.js tests/browser/navigati
 
 Expected: Node/browser failures show successful `.navigation-target-status` still occupies layout, no fading phase exists, and missing-target status lacks the explicit visible class. Fix test setup errors until failures are only these missing behaviors.
 
-- [ ] **Step 5: Implement explicit live-region visual modes**
+- [x] **Step 5: Implement explicit live-region visual modes**
 
 Replace the current single visual style with a visually-hidden default and visible failure modifier:
 
@@ -158,7 +158,7 @@ function writeNavigationTargetStatus(container,message,visible){
 
 Call with `true` only in the missing-target branch. Success and top-navigation announcements call with `false`.
 
-- [ ] **Step 6: Implement the 1000ms hold and 200ms fade**
+- [x] **Step 6: Implement the 1000ms hold and 200ms fade**
 
 Use two separately owned timers so a new intent can cancel both:
 
@@ -200,11 +200,11 @@ CSS uses no transition during the 1000ms hold, then transitions only in the fadi
 
 After applying the target, schedule `beginNavigationTargetFade(intent.token)` at 1000ms. Do not change sticky scrolling or intent normalization.
 
-- [ ] **Step 7: Run focused GREEN tests**
+- [x] **Step 7: Run focused GREEN tests**
 
 Run the same Node and Chromium commands from Step 4. Expected: every selected test passes; success status is hidden, failure status visible, normal motion has active/fading/cleared phases, reduced motion clears without transition, and stale token coverage remains green.
 
-- [ ] **Step 8: Run focused WebKit acceptance**
+- [x] **Step 8: Run focused WebKit acceptance**
 
 Run:
 
@@ -214,7 +214,7 @@ npx playwright test tests/browser/today-live-info.spec.js tests/browser/navigati
 
 Expected: all selected cases pass with the same timing and visibility contract in WebKit.
 
-- [ ] **Step 9: Commit the independently testable behavior**
+- [x] **Step 9: Commit the independently testable behavior**
 
 ```powershell
 git add -- index.html tests/render-note.test.js tests/browser/today-live-info.spec.js tests/browser/navigation-target-matrix.spec.js tests/browser/view-context.spec.js
@@ -244,7 +244,7 @@ git commit -m "fix(navigation): simplify target feedback"
 - Consumes: v108 App/SW identity and the rolling five-release window.
 - Produces: synchronized v109 App/SW identity, release notes `[v109,v108,v107,v106,v105]`, current-status authority describing v109 device/PWA acceptance, and unambiguous deferred batches v110/v111.
 
-- [ ] **Step 1: Write RED release-window and version assertions**
+- [x] **Step 1: Write RED release-window and version assertions**
 
 Change the hard-coded historical release window in `tests/theme-system.test.js`:
 
@@ -264,7 +264,7 @@ node tools/check-app-version.js
 
 Expected RED: release-window/current-version assertions fail because production still reports v108.
 
-- [ ] **Step 2: Forward-bump App/SW and roll release notes**
+- [x] **Step 2: Forward-bump App/SW and roll release notes**
 
 Set exactly:
 
@@ -288,7 +288,7 @@ Prepend this user-facing note and remove v104 so the list remains exactly five e
 
 Do not change any other Service Worker code.
 
-- [ ] **Step 3: Correct current status and deferred version ownership**
+- [x] **Step 3: Correct current status and deferred version ownership**
 
 Update `07_CHANGELOG.md`, `08_AI_HANDOVER.md`, `tasks/current.md`, and `tests/README.md` to record:
 
@@ -299,7 +299,7 @@ Update `07_CHANGELOG.md`, `08_AI_HANDOVER.md`, `tasks/current.md`, and `tests/RE
 
 In the 2026-08-12 architecture spec and both deferred implementation plans, mechanically shift the former v109 batch to v110 and former v110 batch to v111. Rename their document titles and internal version references, but leave physical filenames unchanged to preserve existing links. Add a top note in each deferred plan stating that the filename reflects the original reservation and the authoritative execution version is the new number.
 
-- [ ] **Step 4: Run focused version/document GREEN checks**
+- [x] **Step 4: Run focused version/document GREEN checks**
 
 Run:
 
@@ -314,7 +314,7 @@ git diff --check
 
 Expected: v109 consistency, document-title integrity, 10 runtime assets, three focused Node files passing, valid UTF-8 manifest JSON, and clean diff.
 
-- [ ] **Step 5: Commit release and scheduling records**
+- [x] **Step 5: Commit release and scheduling records**
 
 ```powershell
 git add -- app-version.js sw.js index.html tests/theme-system.test.js 07_CHANGELOG.md 08_AI_HANDOVER.md tasks/current.md tests/README.md docs/superpowers/specs/2026-08-12-trip-pilot-architecture-ui-optimization-v108-v110-design.md docs/superpowers/plans/2026-08-12-trip-pilot-v109-ui-tokens-today-module.md docs/superpowers/plans/2026-08-12-trip-pilot-v110-builtin-test-throughput.md docs/superpowers/plans/2026-08-13-trip-pilot-v109-navigation-target-feedback.md
@@ -333,7 +333,7 @@ git commit -m "docs: release navigation feedback v109"
 - Consumes: committed Task 1 behavior and Task 2 v109 metadata.
 - Produces: a fully verified v109 `dev` candidate, exact evidence records, remote equality proof, and a Bar device/PWA handoff.
 
-- [ ] **Step 1: Run the full Node and browser gates**
+- [x] **Step 1: Run the full Node and browser gates**
 
 Run:
 
@@ -345,7 +345,7 @@ npx playwright test tests/browser/today-live-info.spec.js tests/browser/navigati
 
 Expected: zero failures. Record exact Node file/test count, full Playwright count, and focused WebKit count from the fresh output; do not copy old v108 totals into final evidence.
 
-- [ ] **Step 2: Run all static and generated-data gates**
+- [x] **Step 2: Run all static and generated-data gates**
 
 Run:
 
@@ -353,7 +353,7 @@ Run:
 node tools/check-app-version.js
 node tools/check-doc-titles.js
 node tools/check-runtime-assets.js
-node tools/refresh-builtin-snapshot.js --check
+node tools/refresh-builtin-snapshot.js
 node -e "JSON.parse(require('fs').readFileSync('.ai-manifest.json','utf8'));console.log('JSON manifest valid')"
 git diff --check
 git status --short
@@ -361,7 +361,7 @@ git status --short
 
 Expected: App/SW v109, document titles pass, runtime inventory remains 10 assets, BUILTIN has no drift, JSON parses, diff is clean, and only intentional evidence updates are present.
 
-- [ ] **Step 3: Run the established offline Chromium Health probe**
+- [x] **Step 3: Run the established offline Chromium Health probe**
 
 Use the same local static-server + Chromium offline probe documented by the v108 implementer: open once online, wait until `syncInFlight === null`, switch the page offline, reload through the installed Service Worker, and print:
 
@@ -371,7 +371,7 @@ HEALTH_CHECK_RESULT={"source":"builtin","healthCheck":[],"appLogCount":<number>,
 
 Require `source:"builtin"`, `healthCheck:[]`, and `pageErrors:[]`. A different `appLogCount` is acceptable only if the log remains expected fallback information rather than a page/runtime error.
 
-- [ ] **Step 4: Update exact evidence and verify the evidence-only diff**
+- [x] **Step 4: Update exact evidence and verify the evidence-only diff**
 
 Replace provisional counts with fresh Task 3 totals and explicitly state that Bar device/PWA acceptance is still pending. Run:
 

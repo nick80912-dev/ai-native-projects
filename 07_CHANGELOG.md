@@ -4,7 +4,7 @@
 
 - v108 真機驗收時，Bar 確認 exact-target 定位本身正確，但成功後插入的「已定位：地點」灰底列與已醒目的目的地重複。v109 移除這個可見成功列及其布局空間；成功文字仍保留在 visually-hidden `role="status" aria-live="polite"`，找不到目標的提示與 Render diagnostic 仍可見／可追蹤。
 - 目標立即醒目並完整維持 1000ms，再以 200ms 淡化回各自原本的卡片／群組樣式；`prefers-reduced-motion: reduce` 在 1000ms 後直接清除。exact target、sticky-safe geometry、Shopping overlay 的 scroll／focus return、stale token 防護與 session-only intent state 不變。
-- 先確認 RED：成功提示仍佔 294–349px、缺少 fade phase、reduced motion 仍等到 1200ms、失敗提示無獨立可見狀態。GREEN 後 `render-note` **1/1**、focused Chromium **25/25**、focused WebKit **25/25**。完整 committed-tree gate 與離線 Health evidence 在交付前補記。
+- 先確認 RED：成功提示仍佔 294–349px、缺少 fade phase、reduced motion 仍等到 1200ms、失敗提示無獨立可見狀態。GREEN 後 `render-note` **1/1**、focused Chromium **25/25**、focused WebKit **25/25**。新鮮的交付前 gate 通過 top-level Node **86/86**、完整 Playwright **175/175**、focused WebKit **25/25**；App／SW v109、文件標題、10 個 runtime assets、BUILTIN no-drift、manifest JSON 與 diff checks 均通過，離線 Chromium probe 為 `{"source":"builtin","healthCheck":[],"appLogCount":10,"pageErrors":[]}`。提交後仍須重跑 committed-tree gate，再交付 `dev`；Bar device／PWA 驗收仍待進行。
 - App／SW 依 forward-bump 契約同步升至 **v109**，更新說明維持 v109–v105 恰好五筆；SW lifecycle／cache strategy 不變。原排定 v109 的 UI semantic tokens／Today module 順延為 v110，原 v110 BUILTIN／test-throughput spike 順延為 v111；兩批功能均未混入本修正。
 
 ## 2026-08-13 — v108 到站定位、診斷影響與狀態權威（candidate）⭐ 架構變更
