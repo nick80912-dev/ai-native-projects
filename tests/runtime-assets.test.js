@@ -61,6 +61,9 @@ const swSource=fs.readFileSync(path.join(realRoot,'sw.js'),'utf8');
 assert(realInventory.assets.includes('navigation-intent.js'),'the runtime inventory includes navigation-intent.js');
 assert(indexHtml.includes('<script src="navigation-intent.js"></script>'),'index.html loads navigation-intent.js');
 assert(swSource.includes("'./navigation-intent.js'"),'the offline shell includes navigation-intent.js');
+assert(realInventory.assets.includes('diagnostic-impact.js'),'the runtime inventory includes diagnostic-impact.js');
+assert(indexHtml.includes('<script src="diagnostic-impact.js"></script>'),'index.html loads diagnostic-impact.js');
+assert(swSource.includes("'./diagnostic-impact.js'"),'the offline shell includes diagnostic-impact.js');
 result=validateRuntimeAssets({rootDir:realRoot,inventory:realInventory});
 assert.deepStrictEqual(result.errors,[],'the repository runtime inventory is fully registered');
 

@@ -31,6 +31,7 @@ var SHELL = [
   './index.html',
   './app-version.js',
   './navigation-intent.js',
+  './diagnostic-impact.js',
   './shopping-photo-store.js',
   './buy-to-ledger.js',
   './ledger-ui-state.js',

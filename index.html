@@ -585,7 +585,8 @@ input,select,textarea{font-size:16px}
 .diag-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}.diag-head h2{font-size:17px}.diag-close{border:0;background:none;font-size:24px;color:var(--ink-soft)}
 .diag-section{border-top:1px solid var(--line);padding:12px 0}.diag-section h3{font-size:13px;margin-bottom:6px}.diag-row{font-size:12px;color:var(--ink-soft);margin:3px 0}.diag-actions{display:flex;gap:8px;flex-wrap:wrap}.diag-actions button{min-height:40px;padding:7px 10px;border:1px solid var(--line);border-radius:8px;background:#fff;font:inherit;font-size:12px}.diag-actions .primary{background:var(--sea);color:#fff;border-color:var(--sea)}
 .diag-help{font-size:11px;color:var(--ink-faint);margin:4px 0 8px}.diag-shortcuts{display:flex;gap:5px;flex-wrap:wrap;margin:8px 0}
-.diag-log{max-height:180px;overflow:auto;white-space:pre-wrap;overflow-wrap:anywhere;font-family:ui-monospace,SFMono-Regular,Consolas,monospace}
+.diag-log{--diag-impact-info:var(--sea);--diag-impact-degraded:var(--gold-ink);--diag-impact-action:var(--coral);max-height:240px;overflow:auto;overflow-wrap:anywhere;display:grid;gap:8px}
+.diag-log-entry{display:grid;gap:3px;border-left:3px solid var(--diag-impact-degraded);border-radius:7px;background:var(--line-soft);padding:8px 9px}.diag-log-entry b{font-size:12px;color:var(--ink)}.diag-log-entry span{font-size:11px;color:var(--ink-soft)}.diag-log-entry small{font-size:11px;color:var(--ink-soft)}.diag-log-entry em{font-size:10px;color:var(--ink-faint);font-style:normal}.diag-log-entry code{white-space:pre-wrap;overflow-wrap:anywhere;color:var(--ink-faint);font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:10px}.diag-impact-info{border-left-color:var(--diag-impact-info)}.diag-impact-degraded{border-left-color:var(--diag-impact-degraded)}.diag-impact-action-required{border-left-color:var(--diag-impact-action)}
 .diag-panel button[onclick^="endTimeSimulation"]{min-height:44px;font-size:15px;width:100%;margin-top:6px}.diag-panel button[onclick="resetTripProgress()"]{min-height:44px;font-size:15px;width:100%;margin-top:6px;border:1px solid var(--coral);border-radius:10px;background:var(--coral);color:#fff;font-weight:800}
 .diag-panel input{font-size:16px}
 .travel-note-kind,.travel-note-filters{display:flex;gap:6px;flex-wrap:wrap;margin:7px 0}.travel-note-kind button,.travel-note-filters button{min-height:36px;border:1px solid var(--line);border-radius:999px;background:#fff;color:var(--ink-soft);padding:6px 11px;font:inherit;font-size:12px;font-weight:800}.travel-note-kind button.on,.travel-note-filters button.on{background:var(--sea);border-color:var(--sea);color:#fff}.travel-note-editor{width:100%;min-height:92px;border:1px solid var(--line);border-radius:9px;background:#fff;padding:9px 10px;font:inherit;font-size:16px;resize:vertical}.travel-note-list{display:grid;gap:8px;margin-top:10px}.travel-note-card{border:1px solid var(--line);border-radius:9px;background:#fff;padding:10px}.travel-note-card-head{display:flex;align-items:center;justify-content:space-between;gap:8px}.travel-note-card-head strong{font-size:12px;color:var(--sea-deep)}.travel-note-status{font-size:10px;font-weight:900;color:var(--ink-faint)}.travel-note-card p{margin:6px 0;color:var(--ink);font-size:13px;line-height:1.5;white-space:pre-wrap;overflow-wrap:anywhere}.travel-note-meta{color:var(--ink-faint);font-size:10px;line-height:1.45}.travel-note-card .diag-actions{margin-top:7px}.travel-note-empty{padding:12px 0;color:var(--ink-faint);font-size:12px;text-align:center}
@@ -692,6 +693,7 @@ input:not([type="hidden"]),select,textarea{font-size:16px!important}
 </style>
 <script src="app-version.js"></script>
 <script src="navigation-intent.js"></script>
+<script src="diagnostic-impact.js"></script>
 <script src="shopping-photo-store.js"></script>
 <script src="buy-to-ledger.js"></script>
 <script src="ledger-ui-state.js"></script>
@@ -11100,8 +11102,9 @@ function formatDiagnosticsReport(findings,entries){
 }
 function renderDiagnosticAppLogSection(entries){
   var rows=entries.map(function(entry){
-    return escapeHtml((entry.at||'')+' ['+(entry.category||'unknown')+'] '+String(entry.message||''));
-  }).join('\n');
+    var projected=TripDiagnosticImpact.project(entry);
+    return '<div class="diag-log-entry diag-impact-'+projected.severity+'"><b>'+escapeHtml(projected.title)+'</b><span>'+escapeHtml(projected.impact)+'</span>'+(projected.fallback?'<small>'+escapeHtml(projected.fallback)+'</small>':'')+'<em>'+escapeHtml((entry.at||'')+' ['+(entry.category||'unknown')+']')+'</em><code>原始：'+escapeHtml(projected.raw)+'</code></div>';
+  }).join('');
   return '<div class="diag-section" id="diagAppLogSection"><h3>AppLog</h3><div class="diag-row">'+entries.length+' 筆（本次開啟 App 期間）</div><div class="diag-row diag-log" id="diagAppLogList">'+(rows||'尚無紀錄')+'</div><div class="diag-actions"><button onclick="copyDiagnosticsReport()">複製除錯報告</button><button onclick="clearDiagnosticAppLog()">清除紀錄</button></div></div>';
 }
 function refreshDiagnosticAppLog(){
