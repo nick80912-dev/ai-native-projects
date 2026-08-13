@@ -80,51 +80,6 @@ test('completed items do not count toward the next stop', async ({ page }) => {
   expect(after).toBe('🛍 1');
 });
 
-test('tapping the badge confirms the exact target without navigating', async ({ page }) => {
-  const seeded = await seedForNextStop(page, ['白桃果凍', '桃子酒']);
-
-  const result = await page.evaluate(async (stopRef) => {
-    const badge=document.querySelector('#view-today .nx-buy-badge');
-    if(!badge)return {missing:true};
-    const before=curView;
-    badge.click();
-    await new Promise((r) => setTimeout(r, 400));
-    const overlay = document.getElementById('shoppingListOverlay');
-    const group = document.getElementById('shopgroup_' + cssId(stopRef));
-    const status=overlay&&overlay.querySelector('.navigation-target-status');
-    return {
-      missing:false,
-      before,
-      after:curView,
-      overlayOpen: !!overlay,
-      groupExists: !!group,
-      groupText: group ? group.textContent.replace(/\s+/g, ' ').trim().slice(0, 60) : null,
-      targetId:group&&group.id,
-      highlighted:!!(group&&group.classList.contains('is-navigation-target')),
-      statusCount:overlay?overlay.querySelectorAll('.navigation-target-status').length:0,
-      statusRole:status&&status.getAttribute('role'),
-      statusLive:status&&status.getAttribute('aria-live'),
-      statusText:status&&status.textContent,
-      stopName:shoppingStopById(stopRef).name
-    };
-  }, seeded.stopRef);
-
-  expect(result.missing).toBe(false);
-  expect(result.before).toBe('today');
-  expect(result.after).toBe('today');
-  expect(result.overlayOpen).toBe(true);
-  expect(result.groupExists).toBe(true);
-  expect(result.groupText).toContain('白桃果凍');
-  expect(result.targetId).toBe(`shopgroup_${await page.evaluate((ref)=>cssId(ref),seeded.stopRef)}`);
-  expect(result.highlighted).toBe(true);
-  expect(result.statusCount).toBe(1);
-  expect(result.statusRole).toBe('status');
-  expect(result.statusLive).toBe('polite');
-  expect(result.statusText).toBe(`已定位：${result.stopName}`);
-  await page.evaluate(()=>closeShoppingList());
-  expect(await page.evaluate(()=>curView)).toBe('today');
-});
-
 async function seedTodayShoppingGroups(page, groupNames) {
   return page.evaluate((groupNames) => {
     switchView('today');
@@ -159,6 +114,91 @@ async function seedTodayShoppingGroups(page, groupNames) {
     return {currentRef:current&&current.id,otherRefs:others.map((item)=>item.id)};
   }, groupNames);
 }
+
+async function seedShoppingDestinationCase(page,testCase){
+  return page.evaluate(({launcher,longLabel,blankCategory})=>{
+    switchView('today');
+    shoppingListStore.removeMany(shoppingListStore.all().map((item)=>item.id));
+    const dayIndex=findToday(),day=DB.trip.days[dayIndex];
+    const items=homeNextStopItems(day.items),progress=getDayProgress(day,dayIndex),checks=getChecks(),nowMinutes=currentMinutes();
+    const pick=pickNextStop(items,progress,checks,nowMinutes,{day,dayIndex});
+    const clusterParent=clusterParentForPick(day.items,pick.item),cluster=getChildStopCluster(day.items,clusterParent);
+    const clusterPick=cluster?pickClusterChild(cluster,progress,checks,nowMinutes,{day,dayIndex}):null;
+    const current=clusterPick&&clusterPick.item?clusterPick.item:pick.item;
+    const currentIndex=(day.items||[]).indexOf(current);
+    const future=(day.items||[]).slice(currentIndex+1).filter(isTripCheckableItem)[0];
+    const target=launcher==='badge'?current:future;
+    if(longLabel)target.place='廣島和平紀念資料館超長導航目的地名稱';
+    const targetItem=shoppingListStore.add({name:'TARGET_PRODUCT',category:blankCategory?'':'必買',quantity:1,unit:'個'});
+    shoppingListStore.update(targetItem.id,{stopRef:target.id});
+    for(let index=0;index<16;index++)shoppingListStore.add({name:'FILLER_'+index,category:'其他',quantity:1,unit:'個'});
+    renderToday();
+    const stop=shoppingStopById(target.id);
+    return {
+      stopRef:target.id,stopName:stop.name,targetId:'shopgroup_'+cssId(target.id),
+      launcherSelector:launcher==='badge'?'#view-today .nx-buy-badge':'#view-today .today-hero-shopping-summary'
+    };
+  },testCase);
+}
+
+async function activateShoppingLauncher(locator,activation){
+  await locator.focus();
+  if(activation==='tap')await locator.tap();
+  else await locator.press(activation==='enter'?'Enter':'Space');
+}
+
+const shoppingDestinationCases=[
+  {launcher:'badge',width:320,activation:'tap'},
+  {launcher:'badge',width:375,activation:'enter'},
+  {launcher:'badge',width:390,activation:'space'},
+  {launcher:'hero',width:320,activation:'tap',longLabel:true},
+  {launcher:'hero',width:375,activation:'enter',blankCategory:true},
+  {launcher:'hero',width:390,activation:'space',longLabel:true,blankCategory:true}
+];
+
+test.describe('Shopping target acceptance matrix',()=>{
+  test.use({hasTouch:true,isMobile:true,viewport:{width:390,height:844}});
+  shoppingDestinationCases.forEach((testCase)=>{
+    test(`${testCase.launcher} ${testCase.activation} target is unobscured at ${testCase.width}px`,async({page})=>{
+      await page.setViewportSize({width:testCase.width,height:844});
+      const seeded=await seedShoppingDestinationCase(page,testCase);
+      await page.evaluate(()=>closeMemberSelector());
+      const launcher=page.locator(seeded.launcherSelector);
+      await launcher.scrollIntoViewIfNeeded();
+      await launcher.focus();
+      const source=await page.evaluate((selector)=>({scrollY:Math.round(document.scrollingElement.scrollTop),curView,focused:document.activeElement===document.querySelector(selector)}),seeded.launcherSelector);
+      await activateShoppingLauncher(launcher,testCase.activation);
+      await expect(page.locator('#shoppingListOverlay')).toBeVisible();
+      const target=page.locator(`#${seeded.targetId}`),status=page.locator('#shoppingListOverlay .navigation-target-status');
+      await expect(target).toHaveClass(/is-navigation-target/);
+      await expect(status).toHaveCount(1);
+      await expect(status).toHaveAttribute('role','status');
+      await expect(status).toHaveAttribute('aria-live','polite');
+      await expect(status).toHaveText(`已定位：${seeded.stopName}`);
+      const geometry=await page.evaluate((targetId)=>{
+        const target=document.getElementById(targetId),status=document.querySelector('#shoppingListOverlay .navigation-target-status');
+        const segment=document.querySelector('#shoppingListOverlay .shopping-list-segment');
+        return {
+          targetTop:target.getBoundingClientRect().top,statusTop:status.getBoundingClientRect().top,
+          stickyBottom:segment.getBoundingClientRect().bottom,
+          statusHit:document.elementFromPoint(status.getBoundingClientRect().left+2,status.getBoundingClientRect().top+2)===status
+        };
+      },seeded.targetId);
+      expect(geometry.targetTop).toBeGreaterThanOrEqual(geometry.stickyBottom-1);
+      expect(geometry.statusTop).toBeGreaterThanOrEqual(geometry.stickyBottom-1);
+      expect(geometry.statusHit).toBe(true);
+      expect(await page.evaluate(()=>curView)).toBe(source.curView);
+      await page.waitForTimeout(1300);
+      await expect(target).not.toHaveClass(/is-navigation-target/);
+      await page.evaluate(()=>closeShoppingList());
+      const returned=await page.evaluate((selector)=>({scrollY:Math.round(document.scrollingElement.scrollTop),curView,focused:document.activeElement===document.querySelector(selector)}),seeded.launcherSelector);
+      expect(returned.curView).toBe(source.curView);
+      expect(returned.scrollY).toBe(source.scrollY);
+      expect(source.focused).toBe(true);
+      expect(returned.focused).toBe(true);
+    });
+  });
+});
 
 test('Today Hero excludes the exact next stop and shows the first future Shopping group', async ({ page }) => {
   const seeded=await seedTodayShoppingGroups(page,[['current one','current two'],['one','two','three']]);
@@ -259,38 +299,6 @@ test('all Shopping at the current next stop leaves only the existing badge', asy
   await seedTodayShoppingGroups(page,[['one','two']]);
   await expect(page.locator('#view-today .nx-buy-badge')).toHaveText(/2/);
   await expect(page.locator('#view-today .today-hero-shopping-summary')).toHaveCount(0);
-});
-
-test('Hero Shopping target supports keyboard activation and clears its confirmation', async ({ page }) => {
-  const seeded=await seedTodayShoppingGroups(page,[[],['one','two']]);
-  const expectedId=await page.evaluate((ref)=>'shopgroup_'+cssId(ref),seeded.otherRefs[0]);
-  const expectedName=await page.evaluate((ref)=>shoppingStopById(ref).name,seeded.otherRefs[0]);
-  await page.evaluate(()=>{
-    const original=Element.prototype.scrollIntoView;
-    window.__todayHeroScrollTarget='';
-    Element.prototype.scrollIntoView=function(options){window.__todayHeroScrollTarget=this.id||'';return original.call(this,options);};
-  });
-  const summary=page.locator('#view-today .today-hero-shopping-summary');
-  await summary.focus();
-  const focusStyle=await summary.evaluate((element)=>{
-    const style=getComputedStyle(element);
-    return {outlineStyle:style.outlineStyle,outlineWidth:parseFloat(style.outlineWidth)||0};
-  });
-  expect(focusStyle.outlineStyle).not.toBe('none');
-  expect(focusStyle.outlineWidth).toBeGreaterThanOrEqual(2);
-  await summary.press('Enter');
-  await expect(page.locator('#shoppingListOverlay')).toBeVisible();
-  await expect.poll(()=>page.evaluate(()=>window.__todayHeroScrollTarget)).toBe(expectedId);
-  const target=page.locator(`#${expectedId}`);
-  await expect(target).toHaveClass(/is-navigation-target/);
-  await expect(page.locator('#shoppingListOverlay .navigation-target-status')).toHaveText(`已定位：${expectedName}`);
-  expect(await page.evaluate(()=>curView)).toBe('today');
-  await page.waitForTimeout(1300);
-  await expect(target).not.toHaveClass(/is-navigation-target/);
-  await page.evaluate(()=>closeShoppingList());
-  await summary.focus();
-  await summary.press('Space');
-  await expect(page.locator('#shoppingListOverlay')).toBeVisible();
 });
 
 test('navigation target disables transition under reduced motion', async ({ page }) => {

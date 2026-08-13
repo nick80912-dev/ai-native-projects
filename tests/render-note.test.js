@@ -55,6 +55,8 @@ vm.runInContext([
   extractFunction('renderTomorrowPreview'),
   extractFunction('cssId'),
   extractFunction('navigationIntentSourceView'),
+  extractFunction('shopMallByPlaceId'),
+  extractFunction('navigationShopPlaceName'),
   extractFunction('openShopPlace'),
   extractFunction('centerShopFilterChip'),
   extractFunction('parkingLines'),
@@ -98,7 +100,7 @@ assert(heroShoppingOut.includes('<small class="today-hero-shopping-count">+2</sm
 assert(!heroShoppingOut.includes('today-hero-shopping-item'));
 assert(!heroShoppingOut.includes('SECRET_ONE'),'Hero visible markup excludes product names');
 assert(!heroShoppingOut.includes('3 項 →'));
-assert(heroShoppingOut.includes("openShoppingList('future')"));
+assert(heroShoppingOut.includes("openShoppingList('future',this)"));
 assert.strictEqual((heroShoppingOut.match(/<button/g)||[]).length,1);
 assert(!heroShoppingOut.includes('<script>'));
 
@@ -163,7 +165,7 @@ const buyBadgeOut=sandbox.renderNextStopBuy('10/18_4');
 assert(buyBadgeOut.includes('class="nx-buy-badge"'),'pending items render the compact badge class');
 assert(buyBadgeOut.includes('>🛍 2<'),'badge exposes only the icon and pending row count visually');
 assert(buyBadgeOut.includes('aria-label="開啟這一站的 2 項待買"'),'badge has the approved accessible name');
-assert(buyBadgeOut.includes("openShoppingList('10/18_4')"),'badge opens the exact stopRef');
+assert(buyBadgeOut.includes("openShoppingList('10/18_4',this)"),'badge opens the exact stopRef and carries its return-focus origin');
 assert(!buyBadgeOut.includes('白桃'),'badge no longer repeats item names');
 renderedShoppingItems=[];
 assert.strictEqual(sandbox.renderNextStopBuy('10/18_4'),'','a stop without pending items renders no badge');
@@ -173,6 +175,14 @@ sandbox._shopQ = 'uniqlo';
 sandbox.shopPlaceFilter = 'wants';
 sandbox.shopOpenFloors = { 'P001::1F':true };
 sandbox.shopMalls = function(){ return [{ place:{ placeId:'P001' }, stores:[] }]; };
+assert.strictEqual(sandbox.shopMallByPlaceId('p001').place.placeId,'P001','one case-insensitive resolver owns shopping-place lookup');
+assert.strictEqual(sandbox.navigationShopPlaceName('p001'),'P001','navigation naming reuses the shared resolved mall');
+const navigationShopPlaceNameSource=extractFunction('navigationShopPlaceName');
+const openShopPlaceSource=extractFunction('openShopPlace');
+assert(navigationShopPlaceNameSource.includes('shopMallByPlaceId('),'navigation naming uses the single shopping-place resolver');
+assert(openShopPlaceSource.includes('shopMallByPlaceId('),'shopping deep links use the single shopping-place resolver');
+assert(!navigationShopPlaceNameSource.includes('shopMalls().some'),'navigation naming has no duplicate mall scan');
+assert(!openShopPlaceSource.includes('shopMalls().some'),'shopping deep links have no duplicate mall scan');
 /* v82:openShopPlace 不再自己捲動,而是把結構化意圖交給 switchView。
    這裡照真實流程在 render 之後套用意圖,端到端的斷言才仍然成立。 */
 let passedIntent = null;
@@ -395,8 +405,8 @@ const clusterBuyOut=sandbox.renderClusterNextStopCard(
   {},{done:{},skip:{}},600
 );
 assert(clusterBuyOut.includes('class="nx-ticket nx-cluster-ticket has-next-buy"'),'cluster ticket reserves badge space');
-assert(clusterBuyOut.includes("openShoppingList('child-current')"),'cluster badge targets only the active child stopRef');
-assert(!clusterBuyOut.includes("openShoppingList('cluster-parent')"),'cluster parent never owns the active child badge');
+assert(clusterBuyOut.includes("openShoppingList('child-current',this)"),'cluster badge targets only the active child stopRef');
+assert(!clusterBuyOut.includes("openShoppingList('cluster-parent',this)"),'cluster parent never owns the active child badge');
 renderedShoppingItems=[];
 
 const currentNextStopOut = sandbox.renderNextStopCard({}, 0, {
