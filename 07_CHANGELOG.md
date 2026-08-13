@@ -7,6 +7,7 @@
 - asset 缺失／錯版時，valid local active／previous snapshot 可 degraded boot；沒有有效 local snapshot 時顯示非空白 recovery（重新載入／複製診斷），不建立空 DB、不啟動背景同步。mixed-version、installed offline reopen 與 Pages-style cache generation focused Playwright 7/7 通過。
 - 外部化十次冷啟動中位數 Today 382.9 → 374.8 ms（-2.1%）、DOMContentLoaded 400.4 → 396.0 ms（-1.1%），無 blank／mixed；通過 ≤10% kill gate。
 - Playwright worker 實驗：1 worker 180/180（410.9 s）；2 workers 連續三輪 180/180（239.7／234.4／181.8 s），0 retry／pageerror／port conflict。採用 CI=2、本機=1，完整證據見 `docs/qa/playwright-worker-experiment-v111.md`。
+- Final committed-tree gate 通過 Node **88/88** test files、Chromium **180/180**（CI=2、0 retry），以及版本／文件／12 項 runtime asset／BUILTIN no-drift／JSON／diff checks。
 - 本批只交付 `dev` candidate，不合併 `main`、不部署 production、不建立 tag。
 
 ## 2026-08-13 — v110 UI 一致性與 Today 模組拆分（released）⭐ 架構變更

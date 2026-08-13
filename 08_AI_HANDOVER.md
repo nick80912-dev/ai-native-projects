@@ -8,7 +8,7 @@
 - runtime asset 缺失或錯版時，先驗證 local active／previous snapshot；有效即 degraded boot，無有效 local data 才顯示含重新載入與複製診斷的 recovery，且不建立空 DB／不啟動 sync。
 - 十次 cold-navigation 前後中位數為 Today 382.9 → 374.8 ms、DOMContentLoaded 400.4 → 396.0 ms，所有樣本無 blank／mixed version，外部化通過 kill gate。
 - worker 實驗固定在 clean commit `2a7611a`：1 worker 180/180（410.9 s），2 workers 三輪 180/180（239.7／234.4／181.8 s），0 retry／pageerror／port conflict；因此 `CI ? 2 : 1`，紀錄見 `docs/qa/playwright-worker-experiment-v111.md`。
-- final committed-tree gates 與 `dev` push 尚待本次收尾；不合併 main、不部署 production、不建 tag。
+- final committed-tree passes Node **88/88** test files, Chromium **180/180** with CI=2 and zero retries, plus version／document／runtime asset／BUILTIN no-drift／JSON／diff gates. `dev` push equality check 尚待本次最後一步；不合併 main、不部署 production、不建 tag。
 
 ## v110 UI consistency and Today-module handover (released)
 

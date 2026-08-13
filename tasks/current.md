@@ -21,7 +21,7 @@
 | 正式站 | `https://trippilot-jp.netlify.app/` — v110 production health 已通過 |
 | **`dev` candidate** | **SW v111**；generated BUILTIN asset + safe fallback + CI 2-worker candidate |
 | 個人備份格式 | **v9**(`PERSONAL_STATE_SUPPORTED_VERSIONS = [1..9]`)—— v81 因想逛 key 識別語意變更而升版 |
-| candidate automated validation | Externalization safety／mixed-version focused gates pass；Playwright worker experiment 4 full runs all green；final committed-tree gate pending |
+| candidate automated validation | Final committed tree: Node **88/88** test files, Chromium **180/180** with CI=2, zero retries; version／document／runtime asset／BUILTIN no-drift／JSON／diff gates pass |
 | 既有 tag | `production-v18`、`production-v73`、`production-v110` |
 
 **v110 已正式發布；v111 僅交付 `dev` 驗收，不合併 `main`、不部署 production、不建立 tag。**
@@ -114,12 +114,12 @@
 | v108 | transient exact-target navigation、可見定位／scroll／focus return、display-only diagnostic impact、manifest status authority | ✅ final review／完整 gate／dev delivery；Bar 驗收中提出成功提示列精簡修正 |
 | v109 | 成功定位提示列移除、1 秒醒目＋0.2 秒淡出、失敗提示保留 | ✅ Bar device／PWA acceptance complete |
 | v110 | UI semantic tokens 與 Today deep-module extraction（原 v109） | ✅ Bar 驗收、main merge、production verification、tag 完成 |
-| v111 | BUILTIN asset spike 與 test throughput（原 v110） | ⏳ 外部化與 worker 實驗通過；final gate／dev delivery 進行中 |
+| v111 | BUILTIN asset spike 與 test throughput（原 v110） | ⏳ final committed-tree gate 通過；等待 dev push equality check |
 
 **已知未做(需先定判準)**:Today 的「交通／停車／營業／付款／提醒**依當下情境動態調整優先順序**」。v84 只做了可明確驗收的收合(常駐交通／停車／營業,收合付款／提醒);「當下情境」的判準(依時間?依距離?依是否已抵達?)尚未定義,不同讀法會做出完全不同的東西,故未實作。
 
 ## 下一棒
 
-→ **完成 v111 final committed-tree gate 後只推送 `dev` 供 Bar 驗收。** 不建立 release PR、不合併 `main`、不部署 production、不建立 tag。
+→ **只推送 v111 `dev` 供 Bar 驗收。** final gate 已通過；不建立 release PR、不合併 `main`、不部署 production、不建立 tag。
 
 > 正式發布仍必須遵守 §E：PR 與 Actions 通過後才能 merge；Netlify 線上驗證通過後才能建立 production tag。

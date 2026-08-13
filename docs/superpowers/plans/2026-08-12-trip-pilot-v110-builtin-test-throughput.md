@@ -243,11 +243,11 @@ Rejected experiment commit: `docs(qa): retain deterministic Playwright worker`.
 
 If externalization passes, forward-bump to v111 and document the new generated asset, recovery behavior, performance numbers, and worker decision. If it fails, do not claim or version a runtime release solely for the rejected spike; document which generator/test improvements remain.
 
-- [ ] **Step 2: Run full committed-tree gate**
+- [x] **Step 2: Run full committed-tree gate**
 
 Run full Node, Playwright with the accepted worker policy, SW mixed-version, offline boot, Pages-subpath-equivalent, runtime asset, BUILTIN no-drift, manifest, version, document, diff, Health Check, and pageerror gates.
 
-- [ ] **Step 3: Commit final records**
+- [x] **Step 3: Commit final records**
 
 Use a commit message that describes the actual outcome, not the planned outcome.
 
