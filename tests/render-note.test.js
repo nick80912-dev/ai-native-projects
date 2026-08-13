@@ -142,6 +142,13 @@ assert(emptyItemHeroOut.includes('<small class="today-hero-shopping-count">+1</s
 assert(!emptyItemHeroOut.includes('SECRET_ONE'),'blank-category fallback excludes product names');
 assert.deepStrictEqual(blankCategoryReminder,blankCategorySnapshot,'display fallback does not mutate reminder input');
 
+/* Break caught: extraction drops the already-proven selection boundary or the all-current-stop duplicate guard. */
+const todayShoppingRendererSource=extractFunction('renderTodayShoppingSummary');
+assert.match(todayShoppingRendererSource,/todayShoppingHeroModel\(reminder,day,currentStopRef\)/,
+  'the adapter prepares one selected Today Shopping projection');
+assert.match(todayShoppingRendererSource,/pending\.every\(function\(item\)\{return String\(item\.stopRef\|\|''\)===current;\}\)\)return ''/,
+  'the adapter suppresses a duplicate generic entry when every pending item belongs to the exact next stop');
+
 const quotedCategoryHeroOut=sandbox.renderTodayShoppingSummary({
   items:[{id:'future',place:'Future stop'}],
   groups:[{stopRef:'future',stopName:'Future stop',items:['SECRET_PRODUCT'],firstCategory:'Quoted "Category" <svg/onload=alert(1)>'}]

@@ -35,8 +35,8 @@ for (const file of ['index.html']) {
     `${file} excludes the exact regular stop or active cluster child from Today shopping`
   );
   assert.match(html, /\.today-hero\{[^}]*padding:11px 14px 12px/, `${file} trims Today card padding without shrinking its typography`);
-  assert.match(html, /\.today-hero \.lbl\{font-size:11px/, `${file} preserves the Today label size`);
-  assert.match(html, /\.today-hero \.date\{font-size:24px/, `${file} preserves the Today date size`);
+  assert.match(html, /\.today-hero \.lbl\{font-size:var\(--font-caption\)/, `${file} preserves the Today label size through the shared token`);
+  assert.match(html, /\.today-hero \.date\{font-size:var\(--font-display\)/, `${file} preserves the Today date size through the shared token`);
   assert.match(html, /\.today-hero \.loc\{font-size:13px/, `${file} preserves the progress size`);
   assert.match(html, /\.today-weather-art\{[^}]*font-size:46px/, `${file} gives weather mood visual weight`);
   assert.match(html, /\.today-hero-summary\{[^}]*display:grid/, `${file} keeps Hero information in one row`);
@@ -62,7 +62,7 @@ for (const file of ['index.html']) {
   assert.match(html, /\.today-hero-action\{[^}]*width:auto[^}]*color:#fff/, `${file} keeps the non-trip launcher compact inside the dark Today card`);
   assert.match(
     html,
-    /\.today-hero-action\{[^}]*display:inline-flex[^}]*min-height:44px[^}]*background:rgba\(255,255,255,\.16\)[^}]*border:none[^}]*border-radius:10px/,
+    /\.today-hero-action\{[^}]*display:inline-flex[^}]*min-height:44px[^}]*background:rgba\(255,255,255,\.16\)[^}]*border:none[^}]*border-radius:var\(--radius-control\)/,
     `${file} gives shopping and itinerary actions one shared visual treatment`
   );
   assert.match(
