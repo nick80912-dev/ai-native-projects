@@ -51,16 +51,21 @@ function csvFixture(){
   };
 }
 
-function indexSource(snapshot,timestamp=1,legacyMutations=true){
-  return '<script>\nvar BUILTIN_TS = '+timestamp+';\nvar BUILTIN = '+JSON.stringify(snapshot)+';\n'+
+function indexSource(snapshot,timestamp=1,legacyMutations=true,appVersion='v110'){
+  return '<!-- BUILTIN_SNAPSHOT app='+appVersion+' ts='+timestamp+' -->\n<script>\nvar BUILTIN_TS = '+timestamp+';\nvar BUILTIN = '+JSON.stringify(snapshot)+';\n'+
     (legacyMutations?"BUILTIN.cfg+='Exchange Rate,0.2\\nLedger Default Currency,JPY\\n';\nBUILTIN.ledger='紀錄ID,時間,成員\\n';\n":'')+
     '</script>\n';
 }
 
-function makeRoot(snapshot,legacyMutations=true){
+function makeRoot(snapshot,legacyMutations=true,options={}){
   const root=fs.mkdtempSync(path.join(os.tmpdir(),'trip-builtin-refresh-'));
   fs.writeFileSync(path.join(root,'schema.js'),'var SCHEMA='+JSON.stringify(schemaFixture())+';\n');
-  fs.writeFileSync(path.join(root,'index.html'),indexSource(snapshot,1,legacyMutations));
+  fs.writeFileSync(path.join(root,'app-version.js'),"var APP_VERSION='"+(options.appVersion||'v110')+"';\n");
+  fs.writeFileSync(path.join(root,'index.html'),indexSource(snapshot,1,legacyMutations,options.markerVersion||options.appVersion||'v110'));
+  if(options.asset!==null){
+    const asset=options.asset||tool.serializeBuiltinAsset({timestamp:1,snapshot:snapshot},options.assetVersion||options.appVersion||'v110');
+    fs.writeFileSync(path.join(root,'builtin-snapshot.js'),asset);
+  }
   return root;
 }
 
@@ -126,6 +131,45 @@ function capture(){
   const embedded=tool.readEmbeddedBuiltin(writtenSource);
   assert.strictEqual(embedded.timestamp,1234);
   assert.deepStrictEqual(embedded.snapshot,candidate);
+  const writtenAsset=tool.readBuiltinAsset(fs.readFileSync(path.join(writeRoot,'builtin-snapshot.js'),'utf8'));
+  assert.deepStrictEqual(writtenAsset,{timestamp:1234,appVersion:'v110',snapshot:candidate});
+  assert(writtenSource.includes('<!-- BUILTIN_SNAPSHOT app=v110 ts=1234 -->'),'HTML marker is updated with the generated asset');
+
+  const finalPreview=await tool.runRefresh({
+    rootDir:writeRoot,write:false,fetchCsv:async key=>csv[key],now:()=>9999,
+    stdout:capture(),stderr:capture()
+  });
+  assert.strictEqual(finalPreview.exitCode,0,'final preview reports no drift');
+
+  const missingAssetRoot=makeRoot(candidate,false,{asset:null});
+  const missingAssetIndex=fs.readFileSync(path.join(missingAssetRoot,'index.html'));
+  const missingAsset=await tool.runRefresh({
+    rootDir:missingAssetRoot,write:false,fetchCsv:async key=>csv[key],now:()=>1234,
+    stdout:capture(),stderr:capture()
+  });
+  assert.strictEqual(missingAsset.exitCode,2,'missing generated asset is structural drift');
+  assert.strictEqual(fs.existsSync(path.join(missingAssetRoot,'builtin-snapshot.js')),false,'preview does not create a missing asset');
+  assert.deepStrictEqual(fs.readFileSync(path.join(missingAssetRoot,'index.html')),missingAssetIndex,'preview preserves HTML bytes');
+
+  const mismatchedAssetRoot=makeRoot(candidate,false,{assetVersion:'v109'});
+  const mismatchedAsset=await tool.runRefresh({
+    rootDir:mismatchedAssetRoot,write:false,fetchCsv:async key=>csv[key],now:()=>1234,
+    stdout:capture(),stderr:capture()
+  });
+  assert.strictEqual(mismatchedAsset.exitCode,2,'asset/App version mismatch is structural drift');
+
+  const rollbackRoot=makeRoot(stale,false);
+  const rollbackIndex=fs.readFileSync(path.join(rollbackRoot,'index.html'));
+  const rollbackAsset=fs.readFileSync(path.join(rollbackRoot,'builtin-snapshot.js'));
+  const rollback=await tool.runRefresh({
+    rootDir:rollbackRoot,write:true,fetchCsv:async key=>csv[key],now:()=>1234,
+    beforeSecondRename:()=>{throw new Error('simulated second rename failure');},
+    stdout:capture(),stderr:capture()
+  });
+  assert.strictEqual(rollback.exitCode,1,'a failure between renames fails the refresh');
+  assert.deepStrictEqual(fs.readFileSync(path.join(rollbackRoot,'index.html')),rollbackIndex,'rollback restores HTML byte-for-byte');
+  assert.deepStrictEqual(fs.readFileSync(path.join(rollbackRoot,'builtin-snapshot.js')),rollbackAsset,'rollback restores asset byte-for-byte');
+  assert.deepStrictEqual(fs.readdirSync(rollbackRoot).filter(name=>name.includes('.builtin-refresh-')),[],'rollback removes staged siblings');
 
   const aliasSchema=schemaFixture();
   aliasSchema.sheets.places.columns[1].aliases=['Place alias'];
