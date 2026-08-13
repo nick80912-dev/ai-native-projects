@@ -114,12 +114,12 @@
 | v108 | transient exact-target navigation、可見定位／scroll／focus return、display-only diagnostic impact、manifest status authority | ✅ final review／完整 gate／dev delivery；Bar 驗收中提出成功提示列精簡修正 |
 | v109 | 成功定位提示列移除、1 秒醒目＋0.2 秒淡出、失敗提示保留 | ✅ Bar device／PWA acceptance complete |
 | v110 | UI semantic tokens 與 Today deep-module extraction（原 v109） | ✅ Bar 驗收、main merge、production verification、tag 完成 |
-| v111 | BUILTIN asset spike 與 test throughput（原 v110） | ⏳ final committed-tree gate 通過；等待 dev push equality check |
+| v111 | BUILTIN asset spike 與 test throughput（原 v110） | ✅ final gate 通過；runtime／evidence 已推 dev（`5934748`），local／origin equality 已驗證 |
 
 **已知未做(需先定判準)**:Today 的「交通／停車／營業／付款／提醒**依當下情境動態調整優先順序**」。v84 只做了可明確驗收的收合(常駐交通／停車／營業,收合付款／提醒);「當下情境」的判準(依時間?依距離?依是否已抵達?)尚未定義,不同讀法會做出完全不同的東西,故未實作。
 
 ## 下一棒
 
-→ **只推送 v111 `dev` 供 Bar 驗收。** final gate 已通過；不建立 release PR、不合併 `main`、不部署 production、不建立 tag。
+→ **v111 已推送 `dev` 供 Bar 驗收。** 不建立 release PR、不合併 `main`、不部署 production、不建立 tag。
 
 > 正式發布仍必須遵守 §E：PR 與 Actions 通過後才能 merge；Netlify 線上驗證通過後才能建立 production tag。

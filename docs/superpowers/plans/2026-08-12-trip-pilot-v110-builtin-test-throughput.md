@@ -251,7 +251,7 @@ Run full Node, Playwright with the accepted worker policy, SW mixed-version, off
 
 Use a commit message that describes the actual outcome, not the planned outcome.
 
-- [ ] **Step 4: Fetch and push `dev` only when releasable**
+- [x] **Step 4: Fetch and push `dev` only when releasable**
 
 Require zero remote-only commits, clean tree, and identical post-push SHAs. Do not merge, deploy, or tag production.
 

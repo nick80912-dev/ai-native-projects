@@ -8,7 +8,7 @@
 - 外部化十次冷啟動中位數 Today 382.9 → 374.8 ms（-2.1%）、DOMContentLoaded 400.4 → 396.0 ms（-1.1%），無 blank／mixed；通過 ≤10% kill gate。
 - Playwright worker 實驗：1 worker 180/180（410.9 s）；2 workers 連續三輪 180/180（239.7／234.4／181.8 s），0 retry／pageerror／port conflict。採用 CI=2、本機=1，完整證據見 `docs/qa/playwright-worker-experiment-v111.md`。
 - Final committed-tree gate 通過 Node **88/88** test files、Chromium **180/180**（CI=2、0 retry），以及版本／文件／12 項 runtime asset／BUILTIN no-drift／JSON／diff checks。
-- 本批只交付 `dev` candidate，不合併 `main`、不部署 production、不建立 tag。
+- 本批 runtime／evidence through `5934748` 已交付 `dev` 並驗證 local／origin equality；不合併 `main`、不部署 production、不建立 tag。
 
 ## 2026-08-13 — v110 UI 一致性與 Today 模組拆分（released）⭐ 架構變更
 - PR #14 發布門檻補強：行程分頁上方 Day chip 改走頁內 `selectTripDay()`，切日後於重繪完成的 animation frame 回到該日頂端，不再建立定位高亮或 live-status；Today 跨頁 `gotoDay()`、exact item、Shopping 與回到現在的定位提示維持不變。Linux Chromium 對 1px 隱藏狀態框的 sub-pixel 計算與 reduced-motion scheduler margin 僅放寬測試容差，產品 CSS 與 1000ms hold 不變。
