@@ -4,7 +4,7 @@
 - v110 已由 Bar 驗收並完成 `main` merge、Netlify production verification 與 `production-v110` tag；v111 gate 已開啟。
 - v111 將 BUILTIN 從 `index.html` 搬到由工具產生的 `builtin-snapshot.js`，asset version 與 App／SW 原子綁定並納入 App Shell；HTML 不保留 duplicate payload。
 - asset 缺失／錯版時只接受有效 local active／previous snapshot；本機也無有效資料時顯示可重新載入／複製診斷的非空白 recovery，不建立空 DB。
-- 可重算效能證據固定 inline `d0405fe` 與 asset `36e9d59`：Today 中位數 171.70 → 159.35 ms（-7.19%），20 個樣本均記錄 HTML／App／asset／SW／timestamp identity，通過 ≤10% kill gate。
+- 可重算效能證據固定 inline `d0405fe` 與 final asset `d88f5e5`：Today 中位數 171.70 → 158.00 ms（-7.98%），20 個樣本均記錄 HTML／App／asset／SW／timestamp identity，通過 ≤10% kill gate。
 - Playwright 同一 clean commit `e37b59f`：1 worker 181/181（336.2 s）；2 workers 三輪皆 181/181（170.3／185.9／177.2 s），0 retries／pageerrors／port conflicts；全域 fixture 會讓每個未捕捉 pageerror 失敗，因此採用 CI=2、本機=1。後續 release review 另新增 Pages subpath 第 182 案。
 
 

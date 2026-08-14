@@ -1,7 +1,7 @@
 /* ===== sw.js — App 外殼離線防線 =====
    策略(2026-07-11 定案,2026-07-30 依 C1／C1.5 實證修訂;對應 16_OPS_PLAYBOOK 部署章節):
    1. 只管「同源 App 外殼」(index.html / schema.js / validator.js / app-version.js / manifest / icons)
-   2. 外殼採 network-first:有網路永遠拿最新版,離線退回快取 → 沒訊號也打得開 App
+   2. 已安裝外殼採 cache-first:同一個 worker 生命週期固定同世代資產;新版由 install 驗證完成後原子切換
    3. CSV 資料(docs.google.com)一律放行不攔截 → 資料層維持既有三層防線
       (BUILTIN → localStorage → background sync),SW 與資料層職責不重疊
    4. 版本升級:改下方 SW_VERSION,並同步 app-version.js;
@@ -15,14 +15,14 @@
    sw.js 位元組必變、更新必被偵測。app-version.js 仍留在 SHELL —— index.html 要載它,
    離線必須有。
 
-   ── 為什麼 install 用 reload、日常 fetch 用 no-cache(2026-07-30 實證)──
+   ── 為什麼 install 用 reload、非外殼同源 fetch 用 no-cache(2026-07-30 實證)──
    預設 cache mode 下,新版 SW 的 install 會從 HTTP cache 拿到**舊版** SHELL:實測新快取
    裡裝的全是舊世代內容,整個 install 期間 SHELL 資源的 HTTP 請求次數為 0;重載後更出現
    「新版 index.html 配舊版 schema.js」的靜默混版本狀態。
    實測 reload 與 no-cache 皆可解:
      install 用 reload —— 一次性,正確性優先,一律重新下載
-     日常 fetch 用 no-cache —— 允許 304,省行動網路流量(index.html 約 726KB)
-   兩者都不影響離線 fallback:網路失敗仍會 reject 進 catch(已實測關閉伺服器後完整離線載入)。
+     非外殼同源 fetch 用 no-cache —— 允許 304,兼顧流量與更新
+   已安裝外殼不再逐次打網路,避免舊 worker 把新部署的 runtime module 寫入舊世代快取。
 */
 var SW_VERSION='v111';
 var CACHE_NAME='okayama-trip-'+SW_VERSION;
@@ -117,8 +117,8 @@ function cachedOrOffline(request,isNavigate){
 
 self.addEventListener('install', function(e){
   e.waitUntil(
-    /* addAll 維持原子語意:任一資源失敗則 install 失敗、新 SW 不啟用、舊 SW 續命。
-       改傳 Request 物件只為指定 cache:'reload',不改變原子性。 */
+    /* 先完整下載並驗證整組資源,任一失敗就不寫入新快取、不啟用新 SW,讓舊 SW 續命。
+       Request 指定 cache:'reload',避免 install 誤拿 HTTP cache 的舊世代資產。 */
     Promise.all(SHELL.map(function(url){
       var request=new Request(url,{cache:'reload'});
       return fetch(request).then(function(response){
