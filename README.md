@@ -30,9 +30,9 @@
 5. 資料內容改動走 Google Sheets,不改程式;程式只在功能/邏輯變動時修改
 
 ## 專案檔案
-- `index.html` — App UI、DOM adapter 與 Netlify 正式入口
-- `app-version.js` — App runtime 顯示版本來源；與 `sw.js` 的 SW 版本由一致性工具驗證
-- `builtin-snapshot.js` — 由刷新工具產生的版本綁定離線資料資產；禁止手動修改
+- `index.html` / `app-version.js` — 保留正式站前一代 v110 bridge；讓尚未更新的 v110 worker 在 v111 安裝失敗時仍可運作
+- `shell/v111/index.html` / `shell/v111/app-version.js` — v111 不可變文件與 App runtime 版本來源；成功啟用的 `sw.js` 才接管 root 導覽
+- `shell/v111/builtin-snapshot.js` — 由刷新工具產生的版本綁定離線資料資產；禁止手動修改
 - `navigation-intent.js` — 明確導覽目的地的 session-only state module；DOM 定位與回饋 adapter 位於 `index.html`
 - `diagnostic-impact.js` — AppLog 原始紀錄的 display-only impact projection；顯示 adapter 位於 `index.html`
 - `today-view.js` — Today Hero 採買摘要的純 model／renderer module；資料選擇與 DOM effects 留在 `index.html`

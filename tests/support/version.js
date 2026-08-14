@@ -18,11 +18,12 @@ function read(file) {
   return fs.readFileSync(path.join(root, file), 'utf8');
 }
 
-/* App 端版本:app-version.js 是唯一來源 */
+/* App 端版本:目前 generation 的 immutable app-version.js 是唯一來源。 */
 function appVersion() {
-  const source = read('app-version.js');
+  const current=swVersion();
+  const source = read(path.join('shell',current,'app-version.js'));
   const m = /^var APP_VERSION='([^']+)';\s*$/.exec(source);
-  if (!m) throw new Error('app-version.js 不是預期的單行格式,實際:' + JSON.stringify(source));
+  if (!m) throw new Error('current app-version.js 不是預期的單行格式,實際:' + JSON.stringify(source));
   return m[1];
 }
 

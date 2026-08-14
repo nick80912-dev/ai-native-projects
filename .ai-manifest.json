@@ -31,7 +31,8 @@
   },
   "data_flow": "GoogleSheets(8表)→發布CSV→手機瀏覽器fetch→validator.js(防錯)→parser(Schema驅動)→DB→renderers→UI；住宿關聯=Places(Type=住宿).HID→Hotels.HID(N→1 exact resolver,名稱只供顯示)，五個不同travel脈絡PID可共用H001；個人帳、代購對象、主題與旅途紀錄→localStorage only(不進Queue/CMS)，並由個人備份v1–v9原子匯出／還原；採買照片→shopping-photo-store.js壓縮→IndexedDB trip-local-media/shopping-photos,採買項目localStorage只存photoId且備份剝除；團體帳→enqueueBatch一次寫入localStorage佇列→立即UI完成→ledgerRepository背景送達Apps Script→分帳紀錄表(append-only,Schema 2.9固定21欄,time=消費發生時間,末五欄=輸入幣別/免稅/價格方式/稅率/優惠券)；未受還款確認保護的團體編輯=舊筆墓碑+replacesRecordId替代筆；canonical還款確認切點前的收據永久禁止直接改寫，只能由原付款人以commit-last事件整張更正或作廢；共用分帳設定:Settings→Apps Script→TripConfig兩個固定鍵→發布CSV,確認後以本機bridge涵蓋1–5分鐘延遲；離線三層:BUILTIN內建→localStorage快取→背景同步",
   "files": {
-    "builtin-snapshot.js": "由 tools/refresh-builtin-snapshot.js 產生的版本綁定離線資料資產；禁止手動修改",
+    "shell/v111/builtin-snapshot.js": "由 tools/refresh-builtin-snapshot.js 產生的版本綁定離線資料資產；禁止手動修改",
+    "shell/v111/app-version.js": "v111 App 版本來源；與 root sw.js 原子驗證，使用不可變 generation path",
     "navigation-intent.js": "明確導覽目的地的不可變 session-only state module；不讀 DOM、storage 或 navigation history，DOM adapter 位於 index.html",
     "diagnostic-impact.js": "AppLog 原始紀錄的 display-only impact projection；不改寫、隱藏或重新分類儲存內容，DOM adapter 位於 index.html",
     "today-view.js": "Today Hero 採買摘要的純 model／renderer module；不讀 DOM、storage、clock 或 repository，資料與 effect adapter 位於 index.html",
@@ -39,10 +40,11 @@
     "shopping-ui-state.js": "Shopping list selection 與 form session 不可變 state transition 與 ordered effects workflow；DOM adapter 位於 index.html",
     "trip-progression.js": "下一站選擇、cluster blocker 與一次性 auto-skip reconciliation runtime module",
     "tools/refresh-builtin-snapshot.js": "BUILTIN 離線種子安全刷新 CLI；預設只讀 preview、明確 --write、HTML marker／generated asset 雙檔 staging 與 rollback；七張公開 CSV 原子驗證，Ledger 只由 schema 產生空 header",
-    "index.html": "App 與正式部署入口:UI殼+CSS+內嵌JS；住宿 profile 只由正規化 HID exact resolver 解析(區塊分層見10_FOLDER_STRUCTURE)",
+    "index.html": "v110 bridge 入口；v111 安裝成功前保留正式站前一代文件與 inline BUILTIN",
+    "shell/v111/index.html": "v111 App UI 與 DOM adapter；只由成功啟用的 v111 worker 映射到 root 導覽",
     "shopping-photo-store.js": "採買照片縮放壓縮與IndexedDB put/get/remove邊界;Blob只存在目前裝置,不進備份或同步",
     "buy-to-ledger.js": "採買轉記帳純domain與workflow coordinator;dependency adapter留在index.html,模組不直接讀DOM或storage",
-    "app-version.js": "App端版本來源(供顯示與旅途紀錄);sw.js 另自帶 SW_VERSION,兩者必須相等,由 tools/check-app-version.js 守住。2026-07-30 起 sw.js 不再 importScripts 本檔取版本——imported script 會經 HTTP cache,GitHub Pages 的 max-age=600 會讓版本升級靜默失效",
+    "app-version.js": "v110 bridge 版本來源；為尚未更新的 v110 worker 保留，不代表 current generation",
     "schema.js": "唯一資料規格SSoT:CMS Schema 3.0欄位/gid/型別值/發布URL；Places尾端HID→Hotels.HID，名稱只供顯示；schemaDoc()自動產09文件",
     "validator.js": "防錯防線:AppLog六類([Schema/Parser/Data/Repository/Render/Sync Error])+session-only 100筆緩衝+buildHeaderMap+無副作用currentHealthFindings()+window.healthCheck()",
     "apps-script/ledger-sync.gs": "Apps Script部署唯一維護來源:分帳append-only與TripConfig兩鍵白名單更新",
@@ -50,7 +52,8 @@
     "docs/batch2-device-acceptance.md": "批次二真機／PWA 驗收清單;保留v73/v74證據並附v75採買照片與定位導航delta"
   },
   "deploy_files": {
-    "builtin-snapshot.js": "版本綁定的 generated BUILTIN offline runtime asset",
+    "shell/v111/builtin-snapshot.js": "版本綁定的 generated BUILTIN offline runtime asset",
+    "shell/v111/app-version.js": "v111 App runtime version identity",
     "navigation-intent.js": "明確導覽目的地的 session-only runtime module",
     "diagnostic-impact.js": "AppLog display-only impact projection runtime module",
     "today-view.js": "Today Hero 採買摘要的純 model／renderer runtime module",
@@ -58,10 +61,10 @@
     "shopping-ui-state.js": "Shopping list selection 與 form session state／workflow runtime module",
     "shopping-photo-store.js": "採買照片壓縮與裝置本機 IndexedDB runtime module",
     "trip-progression.js": "下一站選擇與進度調和 runtime module",
-    "index.html": "App UI、DOM adapter與正式入口",
+    "index.html + shell/v111/index.html": "v110 bridge 正式入口 + v111 immutable App document",
     "buy-to-ledger.js": "採買轉記帳純domain／workflow runtime module",
     "schema.js + validator.js": "資料規格與防錯來源",
-    "sw.js + app-version.js": "改版須同時更新 sw.js 的 SW_VERSION 與 app-version.js 的 APP_VERSION;不一致時 tools/check-app-version.js 直接讓 CI 失敗",
+    "sw.js + shell/v111/app-version.js": "current generation 的 SW_VERSION 與 APP_VERSION 必須一致；root app-version.js 保留 v110 bridge，不參與 current identity",
     "manifest.webmanifest + icon-*.png": "PWA 安裝資產"
   },
   "cms": {

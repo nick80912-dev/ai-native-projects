@@ -4,11 +4,13 @@
 
 ## Decision
 
-`index.html` exposes a runtime-readable `BUILTIN_HTML_VERSION` and `BUILTIN_HTML_TS` marker before loading the generated asset. Startup accepts BUILTIN only when the HTML marker, `APP_VERSION`, `BUILTIN_ASSET_VERSION`, and timestamp all agree. When a Service Worker controls the page, the expected versioned Cache Storage generation must also exist.
+`shell/v111/index.html` exposes a runtime-readable `BUILTIN_HTML_VERSION` and `BUILTIN_HTML_TS` marker before loading the generated asset. Startup accepts BUILTIN only when the HTML marker, `APP_VERSION`, `BUILTIN_ASSET_VERSION`, and timestamp all agree. When a Service Worker controls the page, the expected versioned Cache Storage generation must also exist.
 
-An active Service Worker serves every known `SHELL` resource cache-first, relative to `self.registration.scope`. It never writes resources from a newer deploy into its older cache. A new worker fetches the complete shell with `cache: 'reload'`, validates the version-bearing HTML/App/BUILTIN responses, and activates only after the complete set is cached. A failed or mixed install therefore leaves the prior worker and its coherent cache active. Offline deep-link HTML receives a generated `<base>` for the current worker scope, preserving both Netlify root and GitHub Pages subpath deployments.
+The deployed v110 predecessor is network-first and cannot be retroactively changed. Therefore root `index.html` and root `app-version.js` remain byte-identical v110 bridge assets, while the v111 document/version/snapshot use immutable `shell/v111/` URLs. The v111 worker fetches that complete shell with `cache: 'reload'`, validates all version-bearing responses, and only after successful activation maps root/scope navigations to the cached v111 document. A failed or mixed install leaves the real v110 worker, root document, inline BUILTIN, and old cache untouched. Offline deep-link HTML receives a generated `<base>` for the current worker scope, preserving both Netlify root and GitHub Pages subpath deployments.
 
-BUILTIN 離線種子只由 `tools/refresh-builtin-snapshot.js` 產生為 Tier 3 的 `builtin-snapshot.js`，不再把資料 payload 複製進 `index.html`。generated asset 必須宣告 `BUILTIN_ASSET_VERSION`，與 `app-version.js`／`sw.js` 同版，並登錄於 `runtime-assets.json`、HTML script order、SW App Shell、`.ai-manifest.json` 與部署 cache header。
+Once active, the v111 worker serves every known `SHELL` resource cache-first, relative to `self.registration.scope`; only non-shell same-origin GET remains network-first. It never writes a newer deployment into its active generation cache.
+
+BUILTIN 離線種子只由 `tools/refresh-builtin-snapshot.js` 產生為 Tier 3 的 `shell/v111/builtin-snapshot.js`，不再把資料 payload 複製進 v111 document。generated asset 必須宣告 `BUILTIN_ASSET_VERSION`，與 `shell/v111/app-version.js`／`sw.js` 同版，並登錄於 `runtime-assets.json`、HTML script order、SW App Shell、`.ai-manifest.json` 與部署 cache header。
 
 App 只在 `BUILTIN_ASSET_VERSION === APP_VERSION` 且八個 sheet 都完整時啟用 BUILTIN。asset 缺失、內容不完整或版本錯配時，依序嘗試已通過既有 shape／data validation 的 local active、previous 與 legacy snapshot；若全部無效，顯示含重新載入及複製診斷資訊的 recovery UI，不建立空 DB、不啟動背景同步。
 
@@ -25,7 +27,7 @@ App 只在 `BUILTIN_ASSET_VERSION === APP_VERSION` 且八個 sheet 都完整時�
 
 ## Why This Decision
 
-generated asset 將內容 authority 收斂到既有 preview-first 工具；版本欄位與 App boot guard 讓 mixed-cache 嘗試可被明確拒絕。SW 以同一 cache generation 安裝 HTML、App version 與 asset，local snapshot fallback 則保留三層資料防線。這些邊界不改 Schema、Ledger、repository、個人備份、框架或 SW network-first lifecycle。
+generated asset 將內容 authority 收斂到既有 preview-first 工具；版本欄位與 App boot guard 讓 mixed-cache 嘗試可被明確拒絕。SW 以同一 cache generation 安裝 HTML、App version 與 asset，local snapshot fallback 則保留三層資料防線。這些邊界不改 Schema、Ledger、repository、個人備份或框架；SW lifecycle 明確分為 install reload、installed known-SHELL cache-first，以及 non-shell same-origin network-first。
 
 ## Expected Benefits
 

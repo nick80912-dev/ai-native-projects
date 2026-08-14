@@ -26,11 +26,13 @@
 */
 var SW_VERSION='v111';
 var CACHE_NAME='okayama-trip-'+SW_VERSION;
+var CURRENT_DOCUMENT='./shell/v111/index.html';
+var CURRENT_APP_VERSION='./shell/v111/app-version.js';
+var CURRENT_BUILTIN='./shell/v111/builtin-snapshot.js';
 var SHELL = [
-  './',
-  './index.html',
-  './app-version.js',
-  './builtin-snapshot.js',
+  './shell/v111/index.html',
+  './shell/v111/app-version.js',
+  './shell/v111/builtin-snapshot.js',
   './navigation-intent.js',
   './diagnostic-impact.js',
   './today-view.js',
@@ -69,9 +71,9 @@ function scopeRelativePath(url){
 
 function versionedShellKind(url,isNavigate){
   var relative=scopeRelativePath(url);
-  if(isNavigate||relative===''||relative==='index.html')return 'html';
-  if(relative==='app-version.js')return 'app';
-  if(relative==='builtin-snapshot.js')return 'builtin';
+  if(isNavigate||relative==='shell/v111/index.html')return 'html';
+  if(relative==='shell/v111/app-version.js')return 'app';
+  if(relative==='shell/v111/builtin-snapshot.js')return 'builtin';
   return '';
 }
 
@@ -105,12 +107,13 @@ function scopedIndexResponse(page){
 }
 
 function cachedOrOffline(request,isNavigate){
+  if(isNavigate)return caches.match(CURRENT_DOCUMENT).then(function(page){
+    if(!page)return offlineMiss();
+    var relative=scopeRelativePath(request.url);
+    return relative===''||relative==='index.html'?page:scopedIndexResponse(page);
+  });
   return caches.match(request,{ignoreSearch:true}).then(function(hit){
     if(hit)return hit;
-    if(isNavigate)return caches.match('./index.html').then(function(page){
-      if(!page)return offlineMiss();
-      return scopeRelativePath(request.url)==='index.html'?page:scopedIndexResponse(page);
-    });
     return offlineMiss();
   });
 }
@@ -123,7 +126,7 @@ self.addEventListener('install', function(e){
       var request=new Request(url,{cache:'reload'});
       return fetch(request).then(function(response){
         if(!response||!response.ok)throw new Error('App Shell fetch failed: '+url);
-        return responseMatchesWorker(request,response,url==='./'||url==='./index.html').then(function(matches){
+        return responseMatchesWorker(request,response,url===CURRENT_DOCUMENT).then(function(matches){
           if(!matches)throw new Error('App Shell generation mismatch: '+url);
           return {request:request,response:response};
         });
@@ -132,7 +135,9 @@ self.addEventListener('install', function(e){
       return caches.open(CACHE_NAME).then(function(cache){
         return Promise.all(entries.map(function(entry){return cache.put(entry.request,entry.response);}));
       });
-    }).then(function(){return self.skipWaiting();})
+    }).then(function(){return self.skipWaiting();}).catch(function(error){
+      return caches.delete(CACHE_NAME).then(function(){return Promise.reject(error);});
+    })
   );
 });
 
@@ -158,6 +163,7 @@ self.addEventListener('fetch', function(e){
   /* 已安裝的整組 App Shell 一律 cache-first,直到通過 install 驗證的新 worker 啟用。
      這會把 HTML、版本檔與所有 runtime module 凍結在同一世代。 */
   if(shellRequest)return e.respondWith(
+    isNavigate?cachedOrOffline(e.request,true):
     caches.match(e.request,{ignoreSearch:true}).then(function(hit){
       return hit||cachedOrOffline(e.request,isNavigate);
     })

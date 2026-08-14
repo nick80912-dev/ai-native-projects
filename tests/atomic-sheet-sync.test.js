@@ -64,8 +64,8 @@ function sharedHotelDb(){
 
 const sb = loadValidator();
 const standaloneSource = fs.readFileSync('validator.js','utf8').replace(/\r\n/g,'\n').trim();
-const htmlSource = fs.readFileSync('index.html','utf8').replace(/\r\n/g,'\n');
-const builtinSource = fs.readFileSync('builtin-snapshot.js','utf8').replace(/\r\n/g,'\n');
+const htmlSource = fs.readFileSync('shell/v111/index.html','utf8').replace(/\r\n/g,'\n');
+const builtinSource = fs.readFileSync('shell/v111/builtin-snapshot.js','utf8').replace(/\r\n/g,'\n');
 const schemaSandbox = {};
 vm.createContext(schemaSandbox);
 vm.runInContext(fs.readFileSync('schema.js','utf8'),schemaSandbox);

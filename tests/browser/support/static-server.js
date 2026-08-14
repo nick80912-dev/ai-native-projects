@@ -3,6 +3,8 @@ const http=require('http');
 const path=require('path');
 
 const root=path.resolve(__dirname,'../../..');
+const swSource=fs.readFileSync(path.join(root,'sw.js'),'utf8');
+const currentVersion=(/var SW_VERSION='([^']+)'/.exec(swSource)||[])[1];
 const port=Number(process.env.PORT)||4173;
 const mimeTypes={
   '.css':'text/css; charset=utf-8',
@@ -16,7 +18,8 @@ const mimeTypes={
 
 const server=http.createServer((request,response)=>{
   const pathname=decodeURIComponent(new URL(request.url,'http://127.0.0.1').pathname);
-  const relativePath=pathname==='/'?'index.html':pathname.replace(/^\/+/,'');
+  const requestedPath=pathname==='/'?'index.html':pathname.replace(/^\/+/,'');
+  const relativePath=requestedPath==='index.html'&&currentVersion?'shell/'+currentVersion+'/index.html':requestedPath;
   const target=path.resolve(root,relativePath);
   const relativeToRoot=path.relative(root,target);
 

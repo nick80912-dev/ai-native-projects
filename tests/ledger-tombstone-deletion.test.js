@@ -25,7 +25,7 @@ function createStorage(initial){
 }
 
 function loadHelpers(){
-  const html=fs.readFileSync('index.html','utf8');
+  const html=fs.readFileSync('shell/v111/index.html','utf8');
   const start=html.indexOf('/* ================= ledgerRepository');
   const end=html.indexOf('/* ================= 分帳',start);
   const warnings=[];

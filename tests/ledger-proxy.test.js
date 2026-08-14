@@ -13,7 +13,7 @@ function createStorage(){
 }
 
 function loadModule(){
-  const source=fs.readFileSync('index.html','utf8');
+  const source=fs.readFileSync('shell/v111/index.html','utf8');
   const start=source.indexOf('/* ================= ledgerRepository');
   const end=source.indexOf('/* ================= 分帳',start);
   assert(start>=0&&end>start,'ledger helper section exists');
@@ -71,7 +71,7 @@ const amy=plain(mod.buildProxySummary(records,'Amy'));
 assert.deepStrictEqual(amy.actualSpend,{amountJpy:500,amountTwd:100},'historical ownership follows each saved member');
 assert.deepStrictEqual(plain(mod.buildProxySummary([], 'Bar')).actualSpend,{amountJpy:0,amountTwd:0});
 
-const uiSource=fs.readFileSync('index.html','utf8');
+const uiSource=fs.readFileSync('shell/v111/index.html','utf8');
 assert(uiSource.includes('未指定')&&uiSource.includes('新增對象'),'proxy targets render as reusable pill choices with inline creation');
 assert(uiSource.includes('ledgerProxyTargetSettingsSection'),'Settings exposes reusable proxy target management');
 assert(uiSource.includes('renderLedgerProxyTargetChoices'),'single and per-item proxy controls share the target chooser');

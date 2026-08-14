@@ -2,7 +2,7 @@ const assert=require('assert');
 const fs=require('fs');
 const vm=require('vm');
 
-const html=fs.readFileSync('index.html','utf8');
+const html=fs.readFileSync('shell/v111/index.html','utf8');
 
 function extract(startText,endText){
   const start=html.indexOf(startText),end=html.indexOf(endText,start);

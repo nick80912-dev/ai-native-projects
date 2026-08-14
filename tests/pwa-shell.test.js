@@ -16,18 +16,22 @@ function assertPngSize(filePath, expectedSize) {
   assert.strictEqual(png.readUInt32BE(20), expectedSize, `${path.basename(filePath)} height is ${expectedSize}px`);
 }
 
-const indexPath = path.join(root, 'index.html');
+const indexPath = path.join(root, 'shell', swVersion(), 'index.html');
+const bridgeIndexPath = path.join(root, 'index.html');
 const manifestPath = path.join(root, 'manifest.webmanifest');
 const serviceWorkerPath = path.join(root, 'sw.js');
-const versionPath = path.join(root, 'app-version.js');
-const builtinAssetPath = path.join(root, 'builtin-snapshot.js');
+const versionPath = path.join(root, 'shell', swVersion(), 'app-version.js');
+const bridgeVersionPath = path.join(root, 'app-version.js');
+const builtinAssetPath = path.join(root, 'shell', swVersion(), 'builtin-snapshot.js');
 const netlifyPath = path.join(root, 'netlify.toml');
 const peachBadgePath = path.join(root, 'okayama-peach-badge.png');
 
 assert.ok(fs.existsSync(indexPath), 'PWA entrypoint index.html exists');
+assert.ok(fs.existsSync(bridgeIndexPath), 'predecessor bridge index.html exists');
 assert.ok(fs.existsSync(manifestPath), 'web app manifest exists');
 assert.ok(fs.existsSync(serviceWorkerPath), 'service worker exists');
 assert.ok(fs.existsSync(versionPath), 'shared app-version.js exists');
+assert.ok(fs.existsSync(bridgeVersionPath), 'predecessor bridge app-version.js exists');
 assert.ok(fs.existsSync(builtinAssetPath), 'generated BUILTIN asset exists');
 assert.ok(fs.existsSync(netlifyPath), 'Netlify configuration exists');
 assert.ok(fs.existsSync(peachBadgePath), 'header peach badge exists');
@@ -42,11 +46,17 @@ assert.strictEqual(
 assert.ok(!fs.existsSync(path.join(root, 'okayama-traveler-icon.png')), 'rejected traveler asset is absent');
 
 const index = fs.readFileSync(indexPath, 'utf8');
+const bridgeIndex = fs.readFileSync(bridgeIndexPath, 'utf8');
 const versionSource = fs.readFileSync(versionPath, 'utf8');
+const bridgeVersionSource = fs.readFileSync(bridgeVersionPath, 'utf8');
 assert.match(versionSource, /^var APP_VERSION='v\d+';\s*$/, 'app-version.js keeps its single-line contract');
 assert.strictEqual(appVersion(), swVersion(), 'app-version.js and the sw.js version marker agree');
-assert.match(index, /<script src="app-version\.js"><\/script>/, 'index loads the shared version before the inline app');
-assert.match(index, /<script src="app-version\.js"><\/script>\s*<script id="builtinSnapshotMarker">var BUILTIN_HTML_VERSION='v\d+';var BUILTIN_HTML_TS=\d+;<\/script>\s*<script src="builtin-snapshot\.js"><\/script>/, 'runtime marker and generated BUILTIN load immediately after the App version and before boot');
+assert.match(bridgeVersionSource,/^var APP_VERSION='v110';\s*$/,'root app-version remains the deployed v110 bridge identity');
+assert.match(bridgeIndex,/var APP_RELEASE_NOTES=\[\s*\{version:'v110'/,'root index remains the deployed v110 bridge document');
+assert.strictEqual(sha256(bridgeIndexPath),'7E22172860865D343DF8061317AA0D231F0323EB296564B10CF871D273E1682F','root index remains byte-for-byte origin/main v110');
+assert.strictEqual(sha256(bridgeVersionPath),'86D72D60DAD9EFA09D93D999D0814ACEAAB4A9492DD1C709EA35EBD81E6CBCE1','root app-version remains byte-for-byte origin/main v110');
+assert.match(index, /<script src="shell\/v111\/app-version\.js"><\/script>/, 'current document loads the immutable generation version');
+assert.match(index, /<script src="shell\/v111\/app-version\.js"><\/script>\s*<script id="builtinSnapshotMarker">var BUILTIN_HTML_VERSION='v\d+';var BUILTIN_HTML_TS=\d+;<\/script>\s*<script src="shell\/v111\/builtin-snapshot\.js"><\/script>/, 'runtime marker and generated BUILTIN use immutable generation paths before boot');
 assert.doesNotMatch(index, /var BUILTIN\s*=\s*\{/, 'index does not retain a duplicate inline BUILTIN payload');
 assert.match(index, /<title>TripPilot<\/title>/, 'index uses the TripPilot browser title');
 assert.doesNotMatch(index, /<base href="\/">/, 'App Shell must not force the domain root because GitHub Pages uses a repository subpath');
@@ -78,8 +88,10 @@ assert.doesNotMatch(serviceWorker, /importScripts\(/, 'service worker no longer 
 /* 只看程式碼:註解刻意保留 APP_VERSION 的來龍去脈,那是說明不是依賴 */
 const swCode = serviceWorker.replace(/\/\*[\s\S]*?\*\//g, '');
 assert.doesNotMatch(swCode, /\bAPP_VERSION\b(?!\s*=\s*')/, 'service worker code never references imported APP_VERSION state');
-assert.match(serviceWorker, /'\.\/app-version\.js'/, 'App Shell still caches the version file for the App and offline use');
-assert.match(serviceWorker, /'\.\/builtin-snapshot\.js'/, 'App Shell caches the generated BUILTIN asset');
+assert.match(serviceWorker, /'\.\/shell\/v111\/index\.html'/, 'App Shell caches the immutable current document');
+assert.match(serviceWorker, /'\.\/shell\/v111\/app-version\.js'/, 'App Shell caches the immutable version file');
+assert.match(serviceWorker, /'\.\/shell\/v111\/builtin-snapshot\.js'/, 'App Shell caches the immutable generated BUILTIN asset');
+assert.match(serviceWorker, /isNavigate\?cachedOrOffline\(e\.request,true\)/, 'active worker maps navigations to the validated immutable document');
 for (const asset of [
   'okayama-peach-badge.png',
   'icon-16.png',
@@ -96,6 +108,7 @@ assert.doesNotMatch(serviceWorker, /okayama-trip-v18/, 'retired v18 cache is not
 /* ---- C1.5 實證的 cache mode 契約 ---- */
 assert.match(serviceWorker, /new Request\(url,\{cache:'reload'\}\)/, 'install refetches the shell bypassing the HTTP cache');
 assert.match(serviceWorker, /responseMatchesWorker\(request,response/, 'install validates version-bound shell responses before caching');
+assert.match(serviceWorker, /caches\.delete\(CACHE_NAME\)[\s\S]*Promise\.reject\(error\)/, 'any failed install removes a partial new-generation cache');
 assert.match(serviceWorker, /function scopeRelativePath\(/, 'versioned shell classification is relative to the active SW scope');
 assert.match(serviceWorker, /function scopedIndexResponse\(/, 'offline deep-link HTML receives a scope-relative base without changing the normal document');
 assert.match(serviceWorker, /function isKnownShellRequest\(/, 'the active worker recognizes every registered App Shell resource');
@@ -104,7 +117,7 @@ assert.match(serviceWorker, /fetch\(new Request\(e\.request, \{ cache:'no-cache'
 
 /* ---- fallback 資源型別契約(Test D 實證:子資源拿到 index.html 會被當 JS 解析)---- */
 assert.match(serviceWorker, /var isNavigate = e\.request\.mode === 'navigate';/, 'the fetch handler distinguishes navigation requests');
-assert.match(serviceWorker, /if\(isNavigate\)return caches\.match\('\.\/index\.html'\)/, 'only navigations resolve through the cached index');
+assert.match(serviceWorker, /if\(isNavigate\)return caches\.match\(CURRENT_DOCUMENT\)/, 'only navigations resolve through the cached immutable current document');
 assert.match(serviceWorker, /scopedIndexResponse\(page\)/, 'offline deep links resolve relative App Shell assets inside the current SW scope');
 assert.match(serviceWorker, /function offlineMiss\(\)/, 'non-navigation cache misses get a dedicated offline response');
 assert.match(serviceWorker, /status: 504/, 'the offline miss response is an error status, not HTML');
@@ -118,7 +131,8 @@ const netlify = fs.readFileSync(netlifyPath, 'utf8');
 assert.match(netlify, /for = "\/sw\.js"/, 'Netlify disables caching for the service worker');
 assert.match(netlify, /for = "\/index\.html"/, 'Netlify disables stale entrypoint caching');
 assert.match(netlify, /for = "\/app-version\.js"/, 'Netlify pins the version file header as a defensive measure');
-assert.match(netlify, /for = "\/builtin-snapshot\.js"/, 'Netlify prevents a stale generated BUILTIN asset from mixing with new HTML');
+assert.match(netlify, /for = "\/shell\/v111\/app-version\.js"/, 'Netlify pins the immutable current version file header');
+assert.match(netlify, /for = "\/shell\/v111\/builtin-snapshot\.js"/, 'Netlify prevents a stale generated BUILTIN asset from mixing with new HTML');
 
 /* ---- index.html:APP_VERSION 一律走安全 helper(缺檔時不得 ReferenceError)---- */
 assert.match(index, /function appVersion\(\)\{/, 'index defines the safe version accessor');

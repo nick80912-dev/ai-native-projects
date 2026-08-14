@@ -265,7 +265,7 @@ node tools/refresh-builtin-snapshot.js
 npx playwright test tests/browser/trip-three-scenarios.spec.js
 ```
 
-`--write` 會在同目錄 staging `index.html` marker 與 `builtin-snapshot.js`，fsync／close／回讀後才進行雙檔替換；任一步失敗都將兩個 target 回復為原始 bytes。App、SW 或 asset 升版時也必須透過本工具更新 marker／asset 版本。最後一次 preview 必須顯示已一致。提交前另跑完整 repo gate。
+`--write` 會在 current generation 目錄（v111 為 `shell/v111/`）staging `index.html` marker 與 `builtin-snapshot.js`，fsync／close／回讀後才進行雙檔替換；任一步失敗都將兩個 target 回復為原始 bytes。root v110 bridge 不由此工具修改。App、SW 或 asset 升版時也必須透過本工具更新 marker／asset 版本。最後一次 preview 必須顯示已一致。提交前另跑完整 repo gate。
 
 ### G4. 權責與邊界
 

@@ -3,12 +3,12 @@
 ## v111 generated BUILTIN asset and test-throughput handover
 
 - v110 已完成 Bar device/PWA acceptance、main merge、Netlify production verification 與 `production-v110` tag。v111 依核准 plan 完成本機 final gate，並已獲 Bar 核准執行 `dev` → `main` 發布流程。
-- `builtin-snapshot.js` 現由 `tools/refresh-builtin-snapshot.js` 產生；asset、HTML marker、`app-version.js` 與 `sw.js` 同為 v111，並由 runtime inventory／SW SHELL／manifest／Netlify no-cache header 登錄。`index.html` 不保留 duplicate BUILTIN payload。
+- `shell/v111/builtin-snapshot.js` 現由 `tools/refresh-builtin-snapshot.js` 產生；current asset、HTML marker、`shell/v111/app-version.js` 與 root `sw.js` 同為 v111。root `index.html`／`app-version.js` 與 `tests/fixtures/sw-v110-production.js` byte-lock 正式 v110 predecessor；v111 install 成功後才映射導覽，失敗則保留 v110 inline BUILTIN 與 cache。
 - refresh preview 會偵測缺檔、stale、App version mismatch 與 marker mismatch；`--write` 以 sibling temp、fsync／close／read-back／雙 rename 更新 HTML＋asset，任一步失敗回復兩個 target 原始 bytes。Ledger 仍只用 schema 21 欄 header，從不請求 live CSV。
 - runtime asset 缺失或錯版時，先驗證 local active／previous snapshot；有效即 degraded boot，無有效 local data 才顯示含重新載入與複製診斷的 recovery，且不建立空 DB／不啟動 sync。
 - 可重算 cold-navigation 證據固定 inline `d0405fe` 與 final asset `d88f5e5`：DCL 中位數 181.10 → 166.35 ms（-8.14%），Today 中位數 171.70 → 158.00 ms（-7.98%）；每個樣本均記錄 HTML／App／asset／SW／timestamp identity，外部化通過 ≤10% kill gate。
-- worker 實驗固定在 clean commit `e37b59f`：1 worker 181/181（336.2 s），2 workers 三輪 181/181（170.3／185.9／177.2 s），0 retry／pageerror／port conflict；全域 fixture 自動攔截未捕捉 pageerror，因此 `CI ? 2 : 1`。release review 另新增 Pages subpath 第 182 案。
-- Current release-hardening tree passes Node **92/92** test files, the 181-test clean worker matrix, expanded Chromium **182/182**（CI=2、186.5 s、zero retries/pageerrors/port conflicts）, plus version／document／runtime asset／BUILTIN／performance evidence／JSON／diff gates. Push dev、PR、main merge、Netlify production verification 仍待執行，未建立 production tag。
+- worker 實驗的三輪 2-worker 歷史結果早於手動 performance page 的 pageerror tracking，未滿足核准的 adoption rule；依 fallback 保留全環境 single worker、zero retries。
+- Current release-hardening tree passes Node **93/93** test files and final Chromium **182/182**（single worker、357.6 s、zero retries/pageerrors/port conflicts）, plus version／document／runtime asset／BUILTIN／performance evidence／JSON／diff gates. Push dev、PR、main merge、Netlify production verification 仍待執行，未建立 production tag。
 
 ## v110 UI consistency and Today-module handover (released)
 

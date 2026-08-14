@@ -45,7 +45,7 @@ function extractThemeIds(html){
 }
 
 (function(){
-  const html=fs.readFileSync('index.html','utf8');
+  const html=fs.readFileSync('shell/'+appVersion()+'/index.html','utf8');
   const themeIds=['ocean','ivory','wisteria','cedar','mist','tea'];
   const tokenNames=[
     '--t-paper','--t-card','--t-chrome','--t-action','--t-accent','--t-accent-bg',

@@ -200,13 +200,13 @@ function readBuiltinMarker(indexSource){
 
 function replaceBuiltinMarker(indexSource,appVersion,timestamp){
   const marker='<script id="builtinSnapshotMarker">var BUILTIN_HTML_VERSION=\''+appVersion+'\';var BUILTIN_HTML_TS='+timestamp+';</script>';
-  const anchor='<script src="builtin-snapshot.js"></script>';
+  const anchor=/<script src="(?:shell\/v\d+\/)?builtin-snapshot\.js"><\/script>/;
   let source=String(indexSource||'')
     .replace(/<script\s+id=["']builtinSnapshotMarker["'][^>]*>[\s\S]*?<\/script>\s*/gi,'')
     .replace(/<!--\s*BUILTIN_SNAPSHOT\s+app=[^\s>]+\s+ts=\d+\s*-->\s*/gi,'');
-  const anchors=source.split(anchor).length-1;
+  const anchors=(source.match(new RegExp(anchor.source,'g'))||[]).length;
   if(anchors!==1)throw new Error('index.html must contain exactly one builtin-snapshot.js bootstrap anchor');
-  return source.replace(anchor,marker+'\n'+anchor);
+  return source.replace(anchor,function(match){return marker+'\n'+match;});
 }
 
 function writeLine(stream,message){
@@ -294,10 +294,14 @@ async function runRefresh(options={}){
     const schema=loadSchema(path.join(rootDir,'schema.js'));
     const fetchCsv=options.fetchCsv||((key,url)=>defaultFetchCsv(schema,key,url));
     const candidate=await buildBuiltinCandidate({schema,fetchCsv});
-    const indexPath=path.join(rootDir,'index.html');
-    const assetPath=path.join(rootDir,'builtin-snapshot.js');
+    const swPath=path.join(rootDir,'sw.js');
+    const swSource=fs.existsSync(swPath)?fs.readFileSync(swPath,'utf8'):'';
+    const swMatch=/^var SW_VERSION='([^']+)';$/m.exec(swSource);
+    const generationDir=swMatch&&fs.existsSync(path.join(rootDir,'shell',swMatch[1]))?path.join(rootDir,'shell',swMatch[1]):rootDir;
+    const indexPath=path.join(generationDir,'index.html');
+    const assetPath=path.join(generationDir,'builtin-snapshot.js');
     const indexSource=fs.readFileSync(indexPath,'utf8');
-    const appVersion=readAppVersion(fs.readFileSync(path.join(rootDir,'app-version.js'),'utf8'));
+    const appVersion=readAppVersion(fs.readFileSync(path.join(generationDir,'app-version.js'),'utf8'));
     const embedded=builtinPattern().test(indexSource)?readEmbeddedBuiltin(indexSource):null;
     let asset=null,assetError=null,marker=null,markerError=null;
     try{asset=readBuiltinAsset(fs.readFileSync(assetPath,'utf8'));}

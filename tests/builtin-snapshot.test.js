@@ -4,8 +4,8 @@ const path=require('path');
 const vm=require('vm');
 
 const root=path.resolve(__dirname,'..');
-const indexSource=fs.readFileSync(path.join(root,'index.html'),'utf8');
-const builtinAssetSource=fs.readFileSync(path.join(root,'builtin-snapshot.js'),'utf8');
+const indexSource=fs.readFileSync(path.join(root,'shell','v111','index.html'),'utf8');
+const builtinAssetSource=fs.readFileSync(path.join(root,'shell','v111','builtin-snapshot.js'),'utf8');
 const schemaSource=fs.readFileSync(path.join(root,'schema.js'),'utf8');
 const validatorSource=fs.readFileSync(path.join(root,'validator.js'),'utf8');
 

@@ -2,12 +2,12 @@
 
 ## 2026-08-13 — v111 產生式 BUILTIN 與測試吞吐（candidate）⭐ 架構變更
 
-- BUILTIN 改為由 `tools/refresh-builtin-snapshot.js` 產生的 `builtin-snapshot.js`；HTML 只保留原子 marker／boot guard，App／SW／asset 同步 v111 並納入 App Shell、runtime inventory、manifest 與 Netlify no-cache header。
+- BUILTIN 改為由 `tools/refresh-builtin-snapshot.js` 產生的 `shell/v111/builtin-snapshot.js`；root HTML／App version byte-lock 為 v110 bridge，v111 document／version／snapshot 採 immutable generation path，只有 v111 worker install 驗證成功後才接管導覽。
 - preview-first 工具新增 deterministic serializer／parser、版本錯配與 stale 偵測、HTML＋asset 雙檔 fsync／read-back／rename transaction，以及跨 rename failure 的 byte-for-byte rollback。Ledger 不抓 live CSV，維持 schema 21 欄 header。
 - asset 缺失／錯版時，valid local active／previous snapshot 可 degraded boot；沒有有效 local snapshot 時顯示非空白 recovery（重新載入／複製診斷），不建立空 DB、不啟動背景同步。mixed-version、installed offline reopen 與 Pages-style cache generation focused Playwright 7/7 通過。
 - 可重算效能證據固定 inline `d0405fe` 與 final asset `d88f5e5`：DCL 中位數 181.10 → 166.35 ms（-8.14%），Today 中位數 171.70 → 158.00 ms（-7.98%）；所有樣本記錄 HTML／App／asset／SW／timestamp identity，通過 ≤10% kill gate。
-- Playwright worker 實驗固定 clean commit `e37b59f`：1 worker 181/181（336.2 s）；2 workers 連續三輪 181/181（170.3／185.9／177.2 s），0 retry／pageerror／port conflict。採用 CI=2、本機=1，完整證據見 `docs/qa/playwright-worker-experiment-v111.md`。
-- Release review 補上全 SHELL generation freeze、failed-install 保留、GitHub Pages subpath 與手動 page 的 pageerror gate；current tree 通過 Node **92/92**、expanded Chromium **182/182**（CI=2、186.5 s、zero retries/pageerrors/port conflicts），以及版本／文件／12 項 runtime asset／BUILTIN／performance evidence／JSON／diff checks。
+- Playwright worker 實驗的三輪 2-worker 歷史結果早於手動 performance page 的 pageerror tracking，不符合固定 adoption rule；依核准 fallback 保留全環境 single worker、zero retries，完整證據見 `docs/qa/playwright-worker-experiment-v111.md`。
+- Release review 改以 exact origin/main v110 network-first worker fixture 驗證一次性 bridge：成功升級後 v111 immutable document 接管；mixed install 失敗時舊 index／App version／schema cache body 完全不變。current tree 通過 Node **93/93**、Chromium **182/182**（single worker、357.6 s、zero retries/pageerrors/port conflicts），以及版本／文件／12 項 runtime asset／BUILTIN／performance evidence／JSON／diff checks。
 - 本批仍在本機 `dev` 完成合併前 hardening；push dev、PR、main merge、Netlify production verification 尚待執行，未建立 tag。
 
 ## 2026-08-13 — v110 UI 一致性與 Today 模組拆分（released）⭐ 架構變更

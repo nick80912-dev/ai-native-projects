@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "measuredAt": "2026-08-14T00:00:00+08:00",
   "thresholdPct": 10,
-  "method": "Ten isolated 390x844 browser contexts per tree, local static server, domcontentloaded plus first non-empty Today render; identical probe from candidate commit.",
+  "method": "Ten isolated 390x844 browser contexts per tree, local static server, domcontentloaded plus first non-empty Today render; identical timing/server probe, with conservative pageerror tracking added for the candidate run.",
   "environment": {
     "os": "win32 x64 10.0.26200",
     "node": "v24.18.0",

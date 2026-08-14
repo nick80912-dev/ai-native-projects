@@ -2,10 +2,10 @@
 
 ## v111 generated BUILTIN and CI throughput candidate
 - v110 已由 Bar 驗收並完成 `main` merge、Netlify production verification 與 `production-v110` tag；v111 gate 已開啟。
-- v111 將 BUILTIN 從 `index.html` 搬到由工具產生的 `builtin-snapshot.js`，asset version 與 App／SW 原子綁定並納入 App Shell；HTML 不保留 duplicate payload。
+- v111 將 BUILTIN 搬到由工具產生的 `shell/v111/builtin-snapshot.js`；root `index.html`／`app-version.js` byte-lock 為 v110 bridge，只有成功啟用的 v111 worker 才將導覽映射至 immutable `shell/v111/index.html`，failed install 保留真實 v110 worker／inline BUILTIN／cache。
 - asset 缺失／錯版時只接受有效 local active／previous snapshot；本機也無有效資料時顯示可重新載入／複製診斷的非空白 recovery，不建立空 DB。
 - 可重算效能證據固定 inline `d0405fe` 與 final asset `d88f5e5`：DCL 中位數 181.10 → 166.35 ms（-8.14%），Today 中位數 171.70 → 158.00 ms（-7.98%）；20 個樣本均記錄 HTML／App／asset／SW／timestamp identity，通過 ≤10% kill gate。
-- Playwright 同一 clean commit `e37b59f`：1 worker 181/181（336.2 s）；2 workers 三輪皆 181/181（170.3／185.9／177.2 s），0 retries／pageerrors／port conflicts；全域 fixture 會讓每個未捕捉 pageerror 失敗，因此採用 CI=2、本機=1。後續 release review 另新增 Pages subpath 第 182 案。
+- Playwright 兩 worker 歷史三輪雖皆 181/181，但當時手動建立的效能 page 尚未掛入全域 pageerror tracker，不符合核准的三輪採用規則；依 fallback 維持全環境單 worker、零 retry。bridge final tree 完整 Chromium 182/182（357.6 s、zero pageerrors／port conflicts）。
 
 
 
@@ -19,9 +19,9 @@
 
 | **`main` 原始碼／正式站** | **SW v110**；Netlify production 與 `production-v110` tag 已驗證 |
 | 正式站 | `https://trippilot-jp.netlify.app/` — v110 production health 已通過 |
-| **`dev` candidate** | **SW v111**；generated BUILTIN asset + safe fallback + CI 2-worker candidate |
+| **`dev` candidate** | **SW v111**；immutable generation BUILTIN + v110 root bridge + safe fallback；Playwright 維持單 worker |
 | 個人備份格式 | **v9**(`PERSONAL_STATE_SUPPORTED_VERSIONS = [1..9]`)—— v81 因想逛 key 識別語意變更而升版 |
-| candidate automated validation | Current release-hardening tree: Node **92/92** test files；worker matrix **181/181**，expanded final Chromium **182/182**（CI=2、186.5 s、zero retries/pageerrors/port conflicts）；version／document／runtime asset／BUILTIN／performance evidence／JSON／diff gates pass |
+| candidate automated validation | Current release-hardening tree: Node **93/93** test files；final Chromium **182/182**（single worker、357.6 s、zero retries/pageerrors/port conflicts）；version／document／runtime asset／BUILTIN／performance evidence／JSON／diff gates pass |
 | 既有 tag | `production-v18`、`production-v73`、`production-v110` |
 
 **v110 已正式發布；v111 release candidate 已獲 Bar 核准執行 `dev` → `main`，仍須通過 PR／Actions 與 Netlify production verification。**

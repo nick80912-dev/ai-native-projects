@@ -12,7 +12,7 @@ const path=require('path');
 const vm=require('vm');
 
 function generatedBuiltin(){
-  const source=fs.readFileSync(path.resolve(__dirname,'../../builtin-snapshot.js'),'utf8');
+  const source=fs.readFileSync(path.resolve(__dirname,'../../shell/v111/builtin-snapshot.js'),'utf8');
   const sandbox={};
   vm.runInNewContext(source,sandbox,{filename:'builtin-snapshot.js'});
   return JSON.parse(JSON.stringify(sandbox.BUILTIN));

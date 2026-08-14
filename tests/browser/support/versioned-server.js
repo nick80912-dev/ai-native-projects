@@ -36,20 +36,27 @@ function createVersionedServer(options) {
   const basePath = ('/' + String(options.basePath || '').replace(/^\/+|\/+$/g, '') + '/').replace(/^\/\/$/, '/');
 
   function transform(relativePath, buffer) {
-    const tag = 'QAGEN' + state.generation;
-    const configuredVersion = options.versions && options.versions[state.generation];
-    const resourceVersion = options.resourceVersions && options.resourceVersions[state.generation] && options.resourceVersions[state.generation][relativePath];
+    const isBridge=relativePath==='index.html'||relativePath==='app-version.js';
+    const isStable=Array.isArray(options.stablePaths)&&options.stablePaths.includes(relativePath);
+    const contentGeneration=(options.bridgeGeneration&&isBridge)||isStable?1:state.generation;
+    const tag = 'QAGEN' + contentGeneration;
+    const configuredVersion = options.versions && options.versions[contentGeneration];
+    const resourceVersion = options.resourceVersions && options.resourceVersions[contentGeneration] && options.resourceVersions[contentGeneration][relativePath];
     const effectiveVersion = resourceVersion || configuredVersion;
     if (relativePath === 'sw.js') {
-      return Buffer.from(String(buffer).replace(/var SW_VERSION='([^']+)';/, (_, current) => "var SW_VERSION='" + (effectiveVersion || current) + '-' + tag + "';"));
+      const workerSource=options.workerSources&&options.workerSources[state.generation];
+      const source=workerSource===undefined?buffer:workerSource;
+      const workerVersion=options.versions&&options.versions[state.generation];
+      const workerTag='QAGEN'+state.generation;
+      return Buffer.from(String(source).replace(/var SW_VERSION='([^']+)';/, (_, current) => "var SW_VERSION='" + (workerVersion || current) + '-' + workerTag + "';"));
     }
-    if (relativePath === 'app-version.js') {
+    if (/(^|\/)app-version\.js$/.test(relativePath)) {
       return Buffer.from(String(buffer).replace(/var APP_VERSION='([^']+)';/, (_, current) => "var APP_VERSION='" + (effectiveVersion || current) + '-' + tag + "';"));
     }
-    if (relativePath === 'builtin-snapshot.js') {
+    if (/(^|\/)builtin-snapshot\.js$/.test(relativePath)) {
       return Buffer.from(String(buffer).replace(/var BUILTIN_ASSET_VERSION='([^']+)';/, (_, current) => "var BUILTIN_ASSET_VERSION='" + (effectiveVersion || current) + '-' + tag + "';"));
     }
-    if (relativePath === 'index.html') {
+    if (/(^|\/)index\.html$/.test(relativePath)) {
       return Buffer.from(String(buffer)
         .replace(/var BUILTIN_HTML_VERSION='([^']+)'/, (_, current) => "var BUILTIN_HTML_VERSION='" + (effectiveVersion || current) + '-' + tag + "'")
         .replace('</body>', "<script>var QA_INDEX_GEN='" + tag + "';</script>\n</body>"));

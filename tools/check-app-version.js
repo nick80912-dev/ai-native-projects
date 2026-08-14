@@ -57,15 +57,18 @@ function checkVersionIntegrity(sources){
   const notes=/var APP_RELEASE_NOTES=\[\s*\{version:'([^']+)'/.exec(index);
   if(!notes)fail('index.html is missing APP_RELEASE_NOTES');
   else if(appMatch&&notes[1]!==appMatch[1])fail('APP_RELEASE_NOTES latest version does not match App');
-  if(netlify&&!/for = "\/app-version\.js"/.test(netlify))fail('netlify.toml is missing /app-version.js cache control');
+  if(netlify&&!/for = "\/shell\/v\d+\/app-version\.js"/.test(netlify))fail('netlify.toml is missing current immutable app-version.js cache control');
   return errors;
 }
 
 function readSources(rootDir='.'){
   const read=file=>fs.existsSync(rootDir+'/'+file)?fs.readFileSync(rootDir+'/'+file,'utf8'):'';
+  const sw=read('sw.js');
+  const swMatch=/^var SW_VERSION='([^']+)';$/m.exec(sw);
+  const generationRoot=swMatch?'shell/'+swMatch[1]+'/':'';
   return {
-    appVersion:read('app-version.js'),sw:read('sw.js'),asset:read('builtin-snapshot.js'),
-    index:read('index.html'),netlify:read('netlify.toml')
+    appVersion:read(generationRoot+'app-version.js'),sw:sw,asset:read(generationRoot+'builtin-snapshot.js'),
+    index:read(generationRoot+'index.html'),netlify:read('netlify.toml')
   };
 }
 
