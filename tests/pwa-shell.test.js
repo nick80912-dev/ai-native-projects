@@ -46,9 +46,10 @@ const versionSource = fs.readFileSync(versionPath, 'utf8');
 assert.match(versionSource, /^var APP_VERSION='v\d+';\s*$/, 'app-version.js keeps its single-line contract');
 assert.strictEqual(appVersion(), swVersion(), 'app-version.js and the sw.js version marker agree');
 assert.match(index, /<script src="app-version\.js"><\/script>/, 'index loads the shared version before the inline app');
-assert.match(index, /<script src="app-version\.js"><\/script>\s*<script src="builtin-snapshot\.js"><\/script>/, 'generated BUILTIN loads immediately after the App version and before boot');
+assert.match(index, /<script src="app-version\.js"><\/script>\s*<script id="builtinSnapshotMarker">var BUILTIN_HTML_VERSION='v\d+';var BUILTIN_HTML_TS=\d+;<\/script>\s*<script src="builtin-snapshot\.js"><\/script>/, 'runtime marker and generated BUILTIN load immediately after the App version and before boot');
 assert.doesNotMatch(index, /var BUILTIN\s*=\s*\{/, 'index does not retain a duplicate inline BUILTIN payload');
 assert.match(index, /<title>TripPilot<\/title>/, 'index uses the TripPilot browser title');
+assert.match(index, /<base href="\/">/, 'offline deep-link fallback resolves App Shell assets from the Netlify site root');
 assert.match(index, /<link rel="manifest" href="manifest\.webmanifest">/, 'index links the manifest');
 assert.match(index, /<link rel="icon" type="image\/png" sizes="32x32" href="icon-32\.png">/, 'index links the favicon');
 assert.match(index, /<link rel="apple-touch-icon" sizes="180x180" href="icon-180\.png">/, 'index links the Apple touch icon');
@@ -76,7 +77,7 @@ assert.match(serviceWorker, /var CACHE_NAME='okayama-trip-'\+SW_VERSION;/, 'cach
 assert.doesNotMatch(serviceWorker, /importScripts\(/, 'service worker no longer imports any script for its version');
 /* 只看程式碼:註解刻意保留 APP_VERSION 的來龍去脈,那是說明不是依賴 */
 const swCode = serviceWorker.replace(/\/\*[\s\S]*?\*\//g, '');
-assert.doesNotMatch(swCode, /\bAPP_VERSION\b/, 'service worker code never references the imported APP_VERSION');
+assert.doesNotMatch(swCode, /\bAPP_VERSION\b(?!\s*=\s*')/, 'service worker code never references imported APP_VERSION state');
 assert.match(serviceWorker, /'\.\/app-version\.js'/, 'App Shell still caches the version file for the App and offline use');
 assert.match(serviceWorker, /'\.\/builtin-snapshot\.js'/, 'App Shell caches the generated BUILTIN asset');
 for (const asset of [
@@ -93,12 +94,14 @@ assert.doesNotMatch(serviceWorker, /okayama-trip-v72/, 'retired v72 cache is not
 assert.doesNotMatch(serviceWorker, /okayama-trip-v18/, 'retired v18 cache is not retained');
 
 /* ---- C1.5 實證的 cache mode 契約 ---- */
-assert.match(serviceWorker, /new Request\(url, \{ cache:'reload' \}\)/, 'install refetches the shell bypassing the HTTP cache');
+assert.match(serviceWorker, /new Request\(url,\{cache:'reload'\}\)/, 'install refetches the shell bypassing the HTTP cache');
+assert.match(serviceWorker, /responseMatchesWorker\(request,response/, 'install validates version-bound shell responses before caching');
 assert.match(serviceWorker, /fetch\(new Request\(e\.request, \{ cache:'no-cache' \}\)\)/, 'network-first revalidates instead of trusting the HTTP cache');
 
 /* ---- fallback 資源型別契約(Test D 實證:子資源拿到 index.html 會被當 JS 解析)---- */
 assert.match(serviceWorker, /var isNavigate = e\.request\.mode === 'navigate';/, 'the fetch handler distinguishes navigation requests');
-assert.match(serviceWorker, /if\(isNavigate\) return caches\.match\('\.\/index\.html'\)/, 'only navigations fall back to index.html');
+assert.match(serviceWorker, /if\(isNavigate\)return caches\.match\('\.\/index\.html'\)/, 'only navigations resolve through the cached index');
+assert.match(serviceWorker, /Response\.redirect\(new URL\('\.\/index\.html',self\.registration\.scope\)\.href,302\)/, 'offline deep links redirect to the cached root entrypoint so relative App Shell assets resolve');
 assert.match(serviceWorker, /function offlineMiss\(\)/, 'non-navigation cache misses get a dedicated offline response');
 assert.match(serviceWorker, /status: 504/, 'the offline miss response is an error status, not HTML');
 assert.match(serviceWorker, /'\.\/icon-maskable-192\.png'/, 'service worker caches the maskable 192px icon');

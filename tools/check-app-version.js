@@ -1,101 +1,86 @@
-/* ============================================================
-   tools/check-app-version.js — 版本一致性檢查
-   ============================================================
-   目的:讓「版本升級」不再依賴人記得改幾個地方。
-   2026-07-30 之前,版本由 sw.js 用 importScripts 匯入 app-version.js 取得,
-   看似單一來源;但實證顯示 imported script 會走 HTTP cache,GitHub Pages 的
-   max-age=600 會讓版本升級被靜默吃掉。因此 sw.js 改為自帶版本標記 ——
-   代價是版本字串出現在兩個檔案,必須由機器守住一致性,而不是靠人。
+'use strict';
 
-   檢查項目:
-   1. app-version.js 維持單行契約,可解析出 APP_VERSION
-   2. sw.js 有頂層 SW_VERSION 標記
-   3. 兩者必須完全相等
-   4. sw.js 的 CACHE_NAME 由 SW_VERSION 推導(不得寫死字面)
-   5. sw.js 不得再 importScripts 任何檔案取版本
-   6. sw.js 程式碼(不含註解)不得引用 APP_VERSION
-   7. index.html 保有版本安全取值區塊與兩個 helper
-   8. index.html 除該區塊外不得裸讀 APP_VERSION(會在版本檔缺失時拋 ReferenceError)
-   9. APP_RELEASE_NOTES 最新一筆必須是目前版本
+const fs=require('fs');
 
-   零相依,Node 內建模組;執行:node tools/check-app-version.js(於 repo 根目錄)
-   ============================================================ */
-const fs = require('fs');
+const HELPER_OPEN='/* ---- APP_VERSION SAFE ACCESS (C2) ----';
+const HELPER_CLOSE='/* ---- /APP_VERSION SAFE ACCESS ---- */';
 
-const HELPER_OPEN = '/* ---- APP_VERSION SAFE ACCESS (C2) ----';
-const HELPER_CLOSE = '/* ---- /APP_VERSION SAFE ACCESS ---- */';
+function checkVersionIntegrity(sources){
+  const errors=[];
+  const fail=message=>errors.push(message);
+  const appSource=String(sources.appVersion||'');
+  const sw=String(sources.sw||'');
+  const asset=String(sources.asset||'');
+  const index=String(sources.index||'');
+  const netlify=String(sources.netlify||'');
 
-const errors = [];
-function fail(message) { errors.push(message); }
+  const appMatch=/^var APP_VERSION='([^']+)';\s*$/.exec(appSource);
+  const swMatch=/^var SW_VERSION='([^']+)';$/m.exec(sw);
+  const assetMatch=/^var BUILTIN_TS=(\d+);\r?\nvar BUILTIN_ASSET_VERSION='([^']+)';/m.exec(asset);
+  const htmlMatches=index.match(/<script id="builtinSnapshotMarker">var BUILTIN_HTML_VERSION='([^']+)';var BUILTIN_HTML_TS=(\d+);<\/script>/g)||[];
+  const htmlMatch=htmlMatches.length===1&&/<script id="builtinSnapshotMarker">var BUILTIN_HTML_VERSION='([^']+)';var BUILTIN_HTML_TS=(\d+);<\/script>/.exec(htmlMatches[0]);
 
-function read(file) {
-  if (!fs.existsSync(file)) { fail('缺少檔案:' + file); return ''; }
-  return fs.readFileSync(file, 'utf8');
-}
+  if(!appMatch)fail("app-version.js must be one line: var APP_VERSION='vNN';");
+  if(!swMatch)fail("sw.js is missing var SW_VERSION='vNN';");
+  if(!assetMatch)fail('builtin-snapshot.js is missing a valid timestamp/version header');
+  if(!htmlMatch)fail('index.html must contain exactly one runtime BUILTIN marker');
 
-const versionSource = read('app-version.js');
-const sw = read('sw.js');
-const index = read('index.html');
-
-/* 1 + 2 + 3:兩個版本來源都要解析得出,而且必須相等 */
-const appMatch = /^var APP_VERSION='([^']+)';\s*$/.exec(versionSource);
-if (!appMatch) fail('app-version.js 必須是單行 `var APP_VERSION=\'vNN\';`,實際:' + JSON.stringify(versionSource.slice(0, 80)));
-
-const swMatch = /^var SW_VERSION='([^']+)';$/m.exec(sw);
-if (!swMatch) fail('sw.js 缺少頂層版本標記 `var SW_VERSION=\'vNN\';`');
-
-const appVersion = appMatch && appMatch[1];
-const swVersion = swMatch && swMatch[1];
-if (appVersion && swVersion && appVersion !== swVersion) {
-  fail('版本不一致:app-version.js 是 ' + appVersion + ',sw.js 是 ' + swVersion +
-    '(升版時兩個檔案都要改;這正是本檢查存在的理由)');
-}
-
-/* 4 + 5 + 6:sw.js 不得回頭依賴 imported 版本 */
-if (sw && !/var CACHE_NAME='okayama-trip-'\+SW_VERSION;/.test(sw)) {
-  fail('sw.js 的 CACHE_NAME 必須由 SW_VERSION 推導,不得寫死版本字面');
-}
-if (/importScripts\(/.test(sw)) {
-  fail('sw.js 不得 importScripts —— imported script 會經過 HTTP cache,版本升級會被靜默吃掉');
-}
-const swCode = sw.replace(/\/\*[\s\S]*?\*\//g, '');
-if (/\bAPP_VERSION\b/.test(swCode)) {
-  fail('sw.js 程式碼不得引用 APP_VERSION(註解說明歷史可以,依賴不行)');
-}
-
-/* 7 + 8:index.html 的版本安全取值 */
-const helperStart = index.indexOf(HELPER_OPEN);
-const helperEnd = index.indexOf(HELPER_CLOSE, helperStart);
-if (helperStart < 0 || helperEnd <= helperStart) {
-  fail('index.html 缺少版本安全取值區塊的起訖標記(' + HELPER_OPEN.trim() + ')');
-} else {
-  const helper = index.slice(helperStart, helperEnd);
-  if (!/function appVersion\(\)\{/.test(helper)) fail('index.html 缺少 appVersion() helper');
-  if (!/function appVersionLabel\(\)\{/.test(helper)) fail('index.html 缺少 appVersionLabel() helper');
-  const outside = index.slice(0, helperStart) + index.slice(helperEnd + HELPER_CLOSE.length);
-  const bare = (outside.match(/\bAPP_VERSION\b/g) || []).length;
-  if (bare) {
-    fail('index.html 有 ' + bare + ' 處在安全取值區塊外直接引用 APP_VERSION —— ' +
-      '版本檔載不到時會拋 ReferenceError,請改用 appVersion() 或 appVersionLabel()');
+  const identities=[
+    ['App',appMatch&&appMatch[1]],
+    ['SW',swMatch&&swMatch[1]],
+    ['BUILTIN asset',assetMatch&&assetMatch[2]],
+    ['HTML',htmlMatch&&htmlMatch[1]]
+  ].filter(entry=>entry[1]);
+  if(identities.length>1){
+    const expected=identities[0][1];
+    identities.slice(1).forEach(([label,value])=>{if(value!==expected)fail(label+' version '+value+' does not match App '+expected);});
   }
+  if(assetMatch&&htmlMatch&&Number(assetMatch[1])!==Number(htmlMatch[2]))fail('HTML marker timestamp does not match builtin-snapshot.js');
+
+  if(sw&&!/var CACHE_NAME='okayama-trip-'\+SW_VERSION;/.test(sw))fail('sw.js CACHE_NAME must derive from SW_VERSION');
+  if(/importScripts\(/.test(sw))fail('sw.js must not import a separately cached version source');
+  const swCode=sw.replace(/\/\*[\s\S]*?\*\//g,'');
+  if(/\bAPP_VERSION\b(?!\s*=\s*')/.test(swCode))fail('sw.js code must not reference APP_VERSION outside the response-version parser');
+
+  const helperStart=index.indexOf(HELPER_OPEN);
+  const helperEnd=index.indexOf(HELPER_CLOSE,helperStart);
+  if(helperStart<0||helperEnd<=helperStart)fail('index.html is missing the APP_VERSION safe-access block');
+  else{
+    const helper=index.slice(helperStart,helperEnd);
+    if(!/function appVersion\(\)\{/.test(helper))fail('index.html is missing appVersion()');
+    if(!/function appVersionLabel\(\)\{/.test(helper))fail('index.html is missing appVersionLabel()');
+    const outside=index.slice(0,helperStart)+index.slice(helperEnd+HELPER_CLOSE.length);
+    const bare=(outside.match(/\bAPP_VERSION\b/g)||[]).length;
+    if(bare)fail('index.html has '+bare+' unsafe APP_VERSION reference(s)');
+  }
+
+  const notes=/var APP_RELEASE_NOTES=\[\s*\{version:'([^']+)'/.exec(index);
+  if(!notes)fail('index.html is missing APP_RELEASE_NOTES');
+  else if(appMatch&&notes[1]!==appMatch[1])fail('APP_RELEASE_NOTES latest version does not match App');
+  if(netlify&&!/for = "\/app-version\.js"/.test(netlify))fail('netlify.toml is missing /app-version.js cache control');
+  return errors;
 }
 
-/* 9:使用者版更新說明的最新一筆要對得上目前版本 */
-const notes = /var APP_RELEASE_NOTES=\[\s*\{version:'([^']+)'/.exec(index);
-if (!notes) fail('index.html 找不到 APP_RELEASE_NOTES 的第一筆');
-else if (appVersion && notes[1] !== appVersion) {
-  fail('APP_RELEASE_NOTES 最新一筆是 ' + notes[1] + ',但目前版本是 ' + appVersion + '(升版時要補一筆使用者版說明)');
+function readSources(rootDir='.'){
+  const read=file=>fs.existsSync(rootDir+'/'+file)?fs.readFileSync(rootDir+'/'+file,'utf8'):'';
+  return {
+    appVersion:read('app-version.js'),sw:read('sw.js'),asset:read('builtin-snapshot.js'),
+    index:read('index.html'),netlify:read('netlify.toml')
+  };
 }
 
-/* 10:Netlify 的防禦性 header(不是修復,見 netlify.toml 註解) */
-const netlify = read('netlify.toml');
-if (netlify && !/for = "\/app-version\.js"/.test(netlify)) {
-  fail('netlify.toml 缺少 /app-version.js 的 Cache-Control 規則(防禦性設定)');
+function run(rootDir='.'){
+  const errors=checkVersionIntegrity(readSources(rootDir));
+  if(errors.length){
+    console.error('App Shell version integrity failed ('+errors.length+'):');
+    errors.forEach(error=>console.error('  - '+error));
+    return 1;
+  }
+  const match=/APP_VERSION='([^']+)'/.exec(readSources(rootDir).appVersion);
+  console.log('App Shell version integrity passed ('+(match&&match[1]||'unknown')+')');
+  return 0;
 }
 
-if (errors.length) {
-  console.error('❌ 版本一致性檢查失敗(' + errors.length + ' 項):');
-  errors.forEach((e) => console.error('  - ' + e));
-  process.exit(1);
-}
-console.log('✅ 版本一致性檢查通過(' + appVersion + ')');
+if(require.main===module)process.exitCode=run(process.cwd());
+
+module.exports={checkVersionIntegrity,readSources,run};

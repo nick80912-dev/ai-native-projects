@@ -188,7 +188,7 @@ function readAppVersion(source){
 }
 
 function builtinMarkerPattern(){
-  return /<!-- BUILTIN_SNAPSHOT app=([0-9A-Za-z._-]+) ts=(\d+) -->/;
+  return /<script id="builtinSnapshotMarker">var BUILTIN_HTML_VERSION='([0-9A-Za-z._-]+)';var BUILTIN_HTML_TS=(\d+);<\/script>/;
 }
 
 function readBuiltinMarker(indexSource){
@@ -199,13 +199,14 @@ function readBuiltinMarker(indexSource){
 }
 
 function replaceBuiltinMarker(indexSource,appVersion,timestamp){
-  const marker='<!-- BUILTIN_SNAPSHOT app='+appVersion+' ts='+timestamp+' -->';
-  if(builtinMarkerPattern().test(indexSource))return indexSource.replace(builtinMarkerPattern(),marker);
-  const declaration=/var BUILTIN_TS\s*=/.exec(indexSource);
-  if(!declaration)throw new Error('index.html has no BUILTIN bootstrap location');
-  const scriptStart=indexSource.lastIndexOf('<script',declaration.index);
-  if(scriptStart<0)throw new Error('index.html BUILTIN script is missing');
-  return indexSource.slice(0,scriptStart)+marker+'\n'+indexSource.slice(scriptStart);
+  const marker='<script id="builtinSnapshotMarker">var BUILTIN_HTML_VERSION=\''+appVersion+'\';var BUILTIN_HTML_TS='+timestamp+';</script>';
+  const anchor='<script src="builtin-snapshot.js"></script>';
+  let source=String(indexSource||'')
+    .replace(/<script\s+id=["']builtinSnapshotMarker["'][^>]*>[\s\S]*?<\/script>\s*/gi,'')
+    .replace(/<!--\s*BUILTIN_SNAPSHOT\s+app=[^\s>]+\s+ts=\d+\s*-->\s*/gi,'');
+  const anchors=source.split(anchor).length-1;
+  if(anchors!==1)throw new Error('index.html must contain exactly one builtin-snapshot.js bootstrap anchor');
+  return source.replace(anchor,marker+'\n'+anchor);
 }
 
 function writeLine(stream,message){
@@ -255,10 +256,19 @@ function atomicReplacePair(options){
   }catch(error){
     try{if(fs.existsSync(indexTemp))fs.unlinkSync(indexTemp);}catch(ignore){}
     try{if(fs.existsSync(assetTemp))fs.unlinkSync(assetTemp);}catch(ignore){}
-    try{
-      restoreOriginal(assetPath,originalAsset,token+'-asset');
-      restoreOriginal(indexPath,originalIndex,token+'-index');
-    }catch(restoreError){error.message+='; rollback failed: '+restoreError.message;}
+    const restore=options.restoreOriginal||restoreOriginal;
+    const restoreErrors=[];
+    function restoreAndVerify(target,original,suffix){
+      try{
+        restore(target,original,token+'-'+suffix);
+        const exists=fs.existsSync(target);
+        if(original===null&&exists)throw new Error(path.basename(target)+' should be absent after rollback');
+        if(original!==null&&(!exists||!fs.readFileSync(target).equals(original)))throw new Error(path.basename(target)+' bytes differ after rollback');
+      }catch(restoreError){restoreErrors.push(path.basename(target)+': '+restoreError.message);}
+    }
+    restoreAndVerify(assetPath,originalAsset,'asset');
+    restoreAndVerify(indexPath,originalIndex,'index');
+    if(restoreErrors.length)error.message+='; rollback failed: '+restoreErrors.join('; ');
     throw error;
   }
 }

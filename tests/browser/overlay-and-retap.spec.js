@@ -14,7 +14,7 @@
       刻意在中間插入 void offsetHeight 才會變成 1 次)。故閃爍來自
       「整份重繪 + 瞬間跳頂」,不是 fade。
    ============================================================ */
-const { test, expect } = require('@playwright/test');
+const { test, expect } = require('./support/test');
 const {
   installFixedDate,
   installOfflineAppNetwork,

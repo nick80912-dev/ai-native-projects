@@ -2,6 +2,7 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
+<base href="/">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -711,6 +712,7 @@ input:not([type="hidden"]),select,textarea{font-size:16px!important}
 .shopping-target-overflow{color:var(--ink-soft);font-weight:400}
 </style>
 <script src="app-version.js"></script>
+<script id="builtinSnapshotMarker">var BUILTIN_HTML_VERSION='v111';var BUILTIN_HTML_TS=1786413763975;</script>
 <script src="builtin-snapshot.js"></script>
 <script src="navigation-intent.js"></script>
 <script src="diagnostic-impact.js"></script>
@@ -1335,7 +1337,6 @@ function healthCheck(){
 if(typeof window !== 'undefined') window.healthCheck = healthCheck;
 
 </script>
-<!-- BUILTIN_SNAPSHOT app=v111 ts=1786413763975 -->
 <script>
 /* ===== app ===== */
 /* ============================================================
@@ -1584,15 +1585,29 @@ var SNAPSHOT_STATE_KEY='trip_data_snapshot_state';
 var SNAPSHOT_FAILURE_KEY='trip_sync_last_failure';
 var SNAPSHOT_FORMAT_VERSION=1;
 var CURRENT_SNAPSHOT=null;
+var SHELL_GENERATION_ERROR='';
 
 function builtinAssetState(){
   var snapshot=typeof BUILTIN==='object'&&BUILTIN?BUILTIN:null;
   var timestamp=typeof BUILTIN_TS==='number'&&isFinite(BUILTIN_TS)?BUILTIN_TS:0;
   var version=typeof BUILTIN_ASSET_VERSION==='string'?BUILTIN_ASSET_VERSION:'';
+  var htmlVersion=typeof BUILTIN_HTML_VERSION==='string'?BUILTIN_HTML_VERSION:'';
+  var htmlTimestamp=typeof BUILTIN_HTML_TS==='number'&&isFinite(BUILTIN_HTML_TS)?BUILTIN_HTML_TS:0;
+  var shellError=typeof SHELL_GENERATION_ERROR==='string'?SHELL_GENERATION_ERROR:'';
+  if(shellError)return {ok:false,reason:shellError,snapshot:null,timestamp:timestamp,version:version};
   if(!snapshot)return {ok:false,reason:'BUILTIN asset missing',snapshot:null,timestamp:0,version:version};
-  if(!appVersion()||version!==appVersion())return {ok:false,reason:'BUILTIN/App version mismatch',snapshot:null,timestamp:timestamp,version:version};
+  if(!appVersion()||htmlVersion!==appVersion()||version!==appVersion())return {ok:false,reason:'HTML/App/BUILTIN version mismatch',snapshot:null,timestamp:timestamp,version:version};
+  if(!htmlTimestamp||htmlTimestamp!==timestamp)return {ok:false,reason:'HTML/BUILTIN timestamp mismatch',snapshot:null,timestamp:timestamp,version:version};
   if(!SHEETS.every(function(sheet){return typeof snapshot[sheet.key]==='string'&&snapshot[sheet.key].trim().length>=5;}))return {ok:false,reason:'BUILTIN asset incomplete',snapshot:null,timestamp:timestamp,version:version};
   return {ok:true,reason:'',snapshot:snapshot,timestamp:timestamp,version:version};
+}
+
+function verifyControllingShellGeneration(){
+  if(!('serviceWorker' in navigator)||!navigator.serviceWorker.controller||typeof caches==='undefined')return Promise.resolve('');
+  var expected='okayama-trip-'+appVersion();
+  return caches.keys().then(function(keys){
+    return keys.indexOf(expected)>=0?'':'Service Worker/App cache generation mismatch';
+  },function(){return 'Service Worker cache generation unavailable';});
 }
 
 function createDataSnapshot(raw,source,createdAt,generationId,validation){
@@ -11252,7 +11267,10 @@ function setupViewportReflow(){
 }
 setupDiagnostics();
 setupViewportReflow();
-init();
+verifyControllingShellGeneration().then(function(reason){
+  SHELL_GENERATION_ERROR=reason;
+  init();
+});
 
 </script>
 <script>

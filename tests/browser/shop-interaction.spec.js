@@ -6,7 +6,7 @@
    本檔同時鎖住「什麼時候仍然應該重繪」:區塊真的要出現／消失／增減列時重繪
    是正確的,不是缺陷。只有「改幾個字」的情況才必須就地更新。
    ============================================================ */
-const { test, expect } = require('@playwright/test');
+const { test, expect } = require('./support/test');
 const {
   installFixedDate,
   installOfflineAppNetwork,
@@ -127,4 +127,3 @@ test('an open want list still renders correctly when a mark changes', async ({ p
   expect(result.afterCount).toBe(1);
   expect(result.total).toBe(1);
 });
-

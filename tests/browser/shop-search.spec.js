@@ -5,7 +5,7 @@
    因為搜尋分支的 rendered++ 是無條件執行的。
    比對範圍也只有 s.name,輸入分類(如「服飾」)找不到任何東西,即使每一列都顯示分類。
    ============================================================ */
-const { test, expect } = require('@playwright/test');
+const { test, expect } = require('./support/test');
 const {
   installFixedDate,
   installOfflineAppNetwork,

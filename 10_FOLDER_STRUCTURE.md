@@ -63,7 +63,7 @@ PROJECT_CONSTITUTION.md    專案憲章(最高規範)
 14_FILE_TIERS_AND_GATE.md  檔案風險分級與 Gate 保護
 15_AI_EXECUTION_RULES.md   AI 決策權限/指令效力/不確定性協議/任務分級
 16_OPS_PLAYBOOK.md         回滾手冊 + DevOps 安全規範
-adr/                       架構決策紀錄(0001-0016 + README)
+adr/                       架構決策紀錄(0001-0019 + README)
 tasks/                     即時狀態唯一權威(current/backlog/done)
 tests/                     測試資產(交付必附)
 tools/                     檢查腳本(文件標題、版本與 runtime asset 一致性)

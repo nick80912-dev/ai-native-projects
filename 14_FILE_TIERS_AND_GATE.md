@@ -37,7 +37,7 @@
 | 產物 | 來源 | 更新方式 |
 |---|---|---|
 | `09_SCHEMA_MAPPING.md` 表格區 | `schema.js` 的 `schemaDoc()` | 改 schema.js → 重跑 schemaDoc() 貼回(檔頭註解為手寫,可直接維護) |
-| 預覽/部署 HTML 內的 `BUILTIN` 快照 | Google Sheets 發布 CSV | 依 BUILTIN 更新 SOP 重抓注入(SOP 文件化見 backlog #6) |
+| `builtin-snapshot.js` | Google Sheets 七張非 Ledger 發布 CSV + `schema.js` Ledger header + App version | 先執行 preview，再以 `node tools/refresh-builtin-snapshot.js --write` 產生；禁止手改或在 HTML 複製 payload |
 
 ## Gate 分級規則(疊加於憲章 4.1 的 Pre-Work Git Sync Gate)
 - Tier 1:過 Gate 後即可依 `15_AI_EXECUTION_RULES.md` 的任務分級動工。

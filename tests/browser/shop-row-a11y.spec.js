@@ -4,7 +4,7 @@
    能不能用鍵盤聚焦、Space 有沒有切換、就地更新後 aria-checked 是否同步、
    焦點看不看得見。
    ============================================================ */
-const { test, expect } = require('@playwright/test');
+const { test, expect } = require('./support/test');
 const {
   installFixedDate,
   installOfflineAppNetwork,

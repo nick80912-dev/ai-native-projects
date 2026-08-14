@@ -9,7 +9,7 @@
    伺服器一律送 Cache-Control: max-age=600(模仿 GitHub Pages);
    用 no-store 的 static-server.js 測不出這兩件事,故本檔自帶 versioned-server。
    ============================================================ */
-const { test, expect } = require('@playwright/test');
+const { test, expect } = require('./support/test');
 const { createVersionedServer } = require('./support/versioned-server');
 /* 目前版本一律取自單一來源(見 tests/support/version.js);versioned-server 會把
    SW_VERSION／APP_VERSION 改寫成 '<目前版本>-QAGEN<N>'。之前這裡寫死 'v73',
@@ -62,21 +62,22 @@ async function waitForActiveWorker(page) {
 /* 在「關掉伺服器模擬斷網」之前必須確定 SHELL 真的已經落進 CacheStorage。
    只等 registration.active 不夠保險 —— 一旦搶在 install 完成前斷網,
    失敗原因會長得像產品缺陷,其實是測試自己的競態。 */
-async function waitForShellCached(page) {
-  await page.waitForFunction(async () => {
+async function waitForShellCached(page,expectedKey) {
+  await page.waitForFunction(async (expected) => {
     const keys = await caches.keys();
-    if (!keys.length) return false;
-    const cache = await caches.open(keys[0]);
+    if (!keys.length || (expected && !keys.includes(expected))) return false;
+    const cache = await caches.open(expected||keys[0]);
     const cached = (await cache.keys()).map((request) => new URL(request.url).pathname);
-    return ['/index.html', '/app-version.js', '/builtin-snapshot.js', '/shopping-photo-store.js', '/buy-to-ledger.js', '/schema.js'].every((p) => cached.includes(p));
-  }, null, { timeout: 20000 });
+    return !!navigator.serviceWorker.controller&&['/index.html', '/app-version.js', '/builtin-snapshot.js', '/shopping-photo-store.js', '/buy-to-ledger.js', '/schema.js'].every((p) => cached.includes(p));
+  }, expectedKey||'', { timeout: 20000 });
+  await page.waitForTimeout(200);
 }
 
 test('SW 更新後新快取實際裝入新版資源,且 index／版本檔／schema 不混版本', async ({ page }) => {
   server.setGeneration(1);
   await page.goto(ORIGIN + '/index.html');
   await waitForActiveWorker(page);
-  await waitForShellCached(page);
+  await waitForShellCached(page,'okayama-trip-'+PREVIOUS_VERSION+'-QAGEN1');
 
   /* 第 1 步:舊版資源先進入 HTTP cache(max-age=600),並確認 gen1 已落在 CacheStorage */
   const expectedFirstKey='okayama-trip-'+PREVIOUS_VERSION+'-QAGEN1';
@@ -92,6 +93,27 @@ test('SW 更新後新快取實際裝入新版資源,且 index／版本檔／sche
 
   /* 第 2 步:同 URL 部署新版 */
   server.setGeneration(2);
+
+  /* The active old worker keeps one coherent generation until the new worker installs. */
+  const transitional=await page.evaluate(async() => {
+    const [html,app,builtin]=await Promise.all([
+      fetch('./index.html').then(response=>response.text()),
+      fetch('./app-version.js').then(response=>response.text()),
+      fetch('./builtin-snapshot.js').then(response=>response.text())
+    ]);
+    return {
+      appVersion:(/APP_VERSION='([^']+)'/.exec(app)||[])[1],
+      htmlVersion:(/BUILTIN_HTML_VERSION='([^']+)'/.exec(html)||[])[1],
+      builtinVersion:(/BUILTIN_ASSET_VERSION='([^']+)'/.exec(builtin)||[])[1],
+      indexGen:(/QA_INDEX_GEN='([^']+)'/.exec(html)||[])[1]
+    };
+  });
+  expect(transitional).toEqual({
+    appVersion:PREVIOUS_VERSION+'-QAGEN1',htmlVersion:PREVIOUS_VERSION+'-QAGEN1',
+    builtinVersion:PREVIOUS_VERSION+'-QAGEN1',indexGen:'QAGEN1'
+  });
+  const transitionalCache=await activeCacheReport(page);
+  for(const marker of Object.values(transitionalCache[expectedFirstKey]))expect(marker).toBe('QAGEN1');
 
   /* 第 3 步:立即執行 SW update */
   await page.evaluate(async () => {
@@ -139,10 +161,10 @@ test('斷網後仍可完整離線載入,且未快取的子資源不得收到 ind
   await page.goto(ORIGIN + '/index.html');
   await waitForActiveWorker(page);
 
-  await waitForShellCached(page);
+  await waitForShellCached(page,'okayama-trip-'+VERSION+'-QAGEN2');
   await page.reload();
   await waitForActiveWorker(page);
-  await waitForShellCached(page);
+  await waitForShellCached(page,'okayama-trip-'+VERSION+'-QAGEN2');
 
   /* 用瀏覽器原生離線模式讓頁面與 SW 的 network fetch 一起失敗；
      直接關 socket 會讓 Chromium 偶發在導覽進入 SW 前先回 ERR_CONNECTION_REFUSED。 */
@@ -153,7 +175,7 @@ test('斷網後仍可完整離線載入,且未快取的子資源不得收到 ind
      未形成這裡真正要驗證的正常 navigation request。明確 goto 與下方 deep-link 驗證同路徑。 */
   await page.goto(ORIGIN + '/index.html');
   await waitForActiveWorker(page);
-  await waitForShellCached(page);
+  await waitForShellCached(page,'okayama-trip-'+VERSION+'-QAGEN2');
 
   /* 導覽請求:離線仍要完整載入 */
   const offline = await page.evaluate(async () => {
@@ -206,4 +228,26 @@ test('斷網後仍可完整離線載入,且未快取的子資源不得收到 ind
   }));
   expect(navigated.indexGen, '離線導覽到未知路徑仍應由 index.html 接手').toBe('QAGEN2');
   expect(navigated.hasApp).toBe(true);
+});
+
+test('a mixed-generation App Shell makes the new SW install fail and preserves the active cache',async({page})=>{
+  if(server)await server.close();
+  server=createVersionedServer({
+    generation:1,versions:{1:PREVIOUS_VERSION,2:VERSION},
+    resourceVersions:{2:{'builtin-snapshot.js':PREVIOUS_VERSION}}
+  });
+  ORIGIN='http://127.0.0.1:'+await server.listen(0);
+  await page.goto(ORIGIN+'/index.html');
+  await waitForActiveWorker(page);
+  await waitForShellCached(page,'okayama-trip-'+PREVIOUS_VERSION+'-QAGEN1');
+  server.setGeneration(2);
+  await page.evaluate(async()=>{const registration=await navigator.serviceWorker.getRegistration();await registration.update();});
+  await page.waitForTimeout(1000);
+  await expect.poll(()=>page.evaluate(()=>caches.keys())).toEqual(['okayama-trip-'+PREVIOUS_VERSION+'-QAGEN1']);
+  await page.reload();
+  const runtime=await page.evaluate(()=>({app:APP_VERSION,html:BUILTIN_HTML_VERSION,asset:BUILTIN_ASSET_VERSION,index:QA_INDEX_GEN}));
+  expect(runtime).toEqual({
+    app:PREVIOUS_VERSION+'-QAGEN1',html:PREVIOUS_VERSION+'-QAGEN1',
+    asset:PREVIOUS_VERSION+'-QAGEN1',index:'QAGEN1'
+  });
 });

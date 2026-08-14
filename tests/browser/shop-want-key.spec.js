@@ -4,7 +4,7 @@
    確認 renderShopResults 的六個讀寫點與 storeRow 的 onclick 真的都走 stable key,
    而不是只有 helper 正確、呼叫端仍在用索引。
    ============================================================ */
-const { test, expect } = require('@playwright/test');
+const { test, expect } = require('./support/test');
 const {
   installFixedDate,
   installOfflineAppNetwork,

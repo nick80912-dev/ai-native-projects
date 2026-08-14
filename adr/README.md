@@ -31,5 +31,6 @@ Decision · Context · Alternatives Considered · Why This Decision · Expected 
 | 0016 | Runtime JavaScript Asset Authority | Accepted |
 | 0017 | 住宿停靠點以 HID 引用住宿主檔 | Accepted |
 | 0018 | 導覽、診斷與 Today 呈現模組邊界 | Accepted |
+| 0019 | 版本綁定的 Generated BUILTIN 離線資產 | Accepted |
 
 新增 ADR:複製格式、編號遞增、更新本索引。

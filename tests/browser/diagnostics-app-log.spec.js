@@ -1,4 +1,4 @@
-const {test,expect}=require('@playwright/test');
+const {test,expect}=require('./support/test');
 const {collectPageErrors,installOfflineAppNetwork,openApp,waitForSyncToSettle}=require('./support/qa-fixture');
 
 test('診斷面板顯示並清除 session AppLog，且不再提供團體帳測試模式入口',async({page})=>{

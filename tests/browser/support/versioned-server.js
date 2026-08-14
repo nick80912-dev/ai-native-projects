@@ -37,17 +37,21 @@ function createVersionedServer(options) {
   function transform(relativePath, buffer) {
     const tag = 'QAGEN' + state.generation;
     const configuredVersion = options.versions && options.versions[state.generation];
+    const resourceVersion = options.resourceVersions && options.resourceVersions[state.generation] && options.resourceVersions[state.generation][relativePath];
+    const effectiveVersion = resourceVersion || configuredVersion;
     if (relativePath === 'sw.js') {
-      return Buffer.from(String(buffer).replace(/var SW_VERSION='([^']+)';/, (_, current) => "var SW_VERSION='" + (configuredVersion || current) + '-' + tag + "';"));
+      return Buffer.from(String(buffer).replace(/var SW_VERSION='([^']+)';/, (_, current) => "var SW_VERSION='" + (effectiveVersion || current) + '-' + tag + "';"));
     }
     if (relativePath === 'app-version.js') {
-      return Buffer.from(String(buffer).replace(/var APP_VERSION='([^']+)';/, (_, current) => "var APP_VERSION='" + (configuredVersion || current) + '-' + tag + "';"));
+      return Buffer.from(String(buffer).replace(/var APP_VERSION='([^']+)';/, (_, current) => "var APP_VERSION='" + (effectiveVersion || current) + '-' + tag + "';"));
     }
     if (relativePath === 'builtin-snapshot.js') {
-      return Buffer.from(String(buffer).replace(/var BUILTIN_ASSET_VERSION='([^']+)';/, (_, current) => "var BUILTIN_ASSET_VERSION='" + (configuredVersion || current) + '-' + tag + "';"));
+      return Buffer.from(String(buffer).replace(/var BUILTIN_ASSET_VERSION='([^']+)';/, (_, current) => "var BUILTIN_ASSET_VERSION='" + (effectiveVersion || current) + '-' + tag + "';"));
     }
     if (relativePath === 'index.html') {
-      return Buffer.from(String(buffer).replace('</body>', "<script>var QA_INDEX_GEN='" + tag + "';</script>\n</body>"));
+      return Buffer.from(String(buffer)
+        .replace(/var BUILTIN_HTML_VERSION='([^']+)'/, (_, current) => "var BUILTIN_HTML_VERSION='" + (effectiveVersion || current) + '-' + tag + "'")
+        .replace('</body>', "<script>var QA_INDEX_GEN='" + tag + "';</script>\n</body>"));
     }
     if (relativePath === 'schema.js') {
       return Buffer.from(String(buffer) + "\nvar QA_SCHEMA_GEN='" + tag + "';\n");

@@ -60,13 +60,57 @@ function offlineMiss(){
   return new Response('', { status: 504, statusText: 'Offline and not cached' });
 }
 
+function versionedShellKind(url,isNavigate){
+  var pathname=new URL(url,self.location.origin).pathname;
+  if(isNavigate||pathname==='/'||pathname==='/index.html')return 'html';
+  if(pathname==='/app-version.js')return 'app';
+  if(pathname==='/builtin-snapshot.js')return 'builtin';
+  return '';
+}
+
+function responseShellVersion(kind,source){
+  var patterns={html:/BUILTIN_HTML_VERSION='([^']+)'/,app:/APP_VERSION='([^']+)'/,builtin:/BUILTIN_ASSET_VERSION='([^']+)'/};
+  var match=patterns[kind]&&patterns[kind].exec(String(source||''));
+  return match&&match[1]||'';
+}
+
+function responseMatchesWorker(request,response,isNavigate){
+  var kind=versionedShellKind(request.url,isNavigate);
+  if(!kind)return Promise.resolve(true);
+  return response.clone().text().then(function(source){return responseShellVersion(kind,source)===SW_VERSION;});
+}
+
+function cachedOrOffline(request,isNavigate){
+  return caches.match(request,{ignoreSearch:true}).then(function(hit){
+    if(hit)return hit;
+    if(isNavigate)return caches.match('./index.html').then(function(page){
+      if(!page)return offlineMiss();
+      var pathname=new URL(request.url).pathname;
+      var indexPath=new URL('./index.html',self.registration.scope).pathname;
+      return pathname===indexPath?page:Response.redirect(new URL('./index.html',self.registration.scope).href,302);
+    });
+    return offlineMiss();
+  });
+}
+
 self.addEventListener('install', function(e){
   e.waitUntil(
     /* addAll 維持原子語意:任一資源失敗則 install 失敗、新 SW 不啟用、舊 SW 續命。
        改傳 Request 物件只為指定 cache:'reload',不改變原子性。 */
-    caches.open(CACHE_NAME).then(function(c){
-      return c.addAll(SHELL.map(function(url){ return new Request(url, { cache:'reload' }); }));
-    }).then(function(){ return self.skipWaiting(); })
+    Promise.all(SHELL.map(function(url){
+      var request=new Request(url,{cache:'reload'});
+      return fetch(request).then(function(response){
+        if(!response||!response.ok)throw new Error('App Shell fetch failed: '+url);
+        return responseMatchesWorker(request,response,url==='./'||url==='./index.html').then(function(matches){
+          if(!matches)throw new Error('App Shell generation mismatch: '+url);
+          return {request:request,response:response};
+        });
+      });
+    })).then(function(entries){
+      return caches.open(CACHE_NAME).then(function(cache){
+        return Promise.all(entries.map(function(entry){return cache.put(entry.request,entry.response);}));
+      });
+    }).then(function(){return self.skipWaiting();})
   );
 });
 
@@ -91,11 +135,13 @@ self.addEventListener('fetch', function(e){
   /* 同源外殼:network-first(繞過 HTTP cache 但允許 304),失敗退快取 */
   e.respondWith(
     fetch(new Request(e.request, { cache:'no-cache' })).then(function(res){
-      if(res && res.ok){
-        var clone = res.clone();
-        caches.open(CACHE_NAME).then(function(c){ c.put(e.request, clone); });
-      }
-      return res;
+      if(!res||!res.ok)return res;
+      return responseMatchesWorker(e.request,res,isNavigate).then(function(matches){
+        if(!matches)return cachedOrOffline(e.request,isNavigate);
+        var clone=res.clone();
+        caches.open(CACHE_NAME).then(function(c){c.put(e.request,clone);});
+        return res;
+      });
     }).catch(function(){
       return caches.match(e.request, { ignoreSearch:true }).then(function(hit){
         if(hit) return hit;

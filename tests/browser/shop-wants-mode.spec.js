@@ -7,7 +7,7 @@
    「全部」與「想逛」是兩種不同閱讀目的:
      全部 = 探索商場,需要樓層結構;想逛 = 執行既定路線,需要快速掃描目標。
    ============================================================ */
-const { test, expect } = require('@playwright/test');
+const { test, expect } = require('./support/test');
 const {
   installFixedDate,
   installOfflineAppNetwork,
