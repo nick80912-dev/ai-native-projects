@@ -211,17 +211,22 @@ GitHub Pages URL：https://nick80912-dev.github.io/ai-native-projects/
 # 1. SW 版本(應等於目標 commit 的 sw.js SW_VERSION)
 curl -s https://dev-trippilot-jp.netlify.app/sw.js | grep SW_VERSION
 
-# 2. App 版本(應與上一項完全相等)
+# 2. Current immutable generation 三件組(以下 v111 需替換為目標 SW_VERSION)
+curl -s https://dev-trippilot-jp.netlify.app/shell/v111/app-version.js
+curl -s https://dev-trippilot-jp.netlify.app/shell/v111/index.html | grep BUILTIN_HTML_VERSION
+curl -s https://dev-trippilot-jp.netlify.app/shell/v111/builtin-snapshot.js | grep BUILTIN_ASSET_VERSION
+
+# 2b. Root bridge 必須仍是 predecessor v110，不得誤升為 current
 curl -s https://dev-trippilot-jp.netlify.app/app-version.js
 
 # 3. header 行為(測試站存在的意義就是驗這個,GitHub Pages 無法重現)
 curl -sI https://dev-trippilot-jp.netlify.app/sw.js | grep -i cache-control
-curl -sI https://dev-trippilot-jp.netlify.app/app-version.js | grep -i cache-control
+curl -sI https://dev-trippilot-jp.netlify.app/shell/v111/app-version.js | grep -i cache-control
 ```
 
 **裝置端第 4 項核對**(前三項通過後,在真機或桌面 DevTools):
 - Application → Cache Storage 的名稱應為 `okayama-trip-<目標版本>`;
-- 展開該 cache,`index.html` 與 `schema.js` 的內容必須是目標版本,**不是只看名稱對就算過** —— 2026-07-30 實證過「新快取名稱裝舊版內容」是會發生的。
+- 展開該 cache，`shell/v111/index.html`／`app-version.js`／`builtin-snapshot.js` 三者必須都是目標版本；`schema.js` 等 reused module 必須存在且由該 cache 提供。root `index.html`／`app-version.js` 不屬於 v111 cache target，應維持 v110 bridge。**不是只看 cache 名稱對就算過**。
 
 **任何一項不符 → 停止驗收,先重新手動部署。**在錯的版本上驗收出來的結論沒有意義,而且會誤導後續判斷。
 

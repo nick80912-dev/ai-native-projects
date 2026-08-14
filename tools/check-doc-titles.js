@@ -85,8 +85,13 @@ for (const f of fs.readdirSync('.')) {
 
 /* 規則 6:HTML 內嵌的 schema.js / validator.js 必須與獨立檔一致(防雙份人工維護漂移) */
 (function(){
-  const app = 'index.html';
-  if (!fs.existsSync(app)) return; // 規則 4 已報缺失
+  const sw=fs.existsSync('sw.js')?fs.readFileSync('sw.js','utf8'):'';
+  const version=(/var SW_VERSION='([^']+)'/.exec(sw)||[])[1];
+  const app=version?path.join('shell',version,'index.html'):'';
+  if (!app||!fs.existsSync(app)) {
+    errors.push('current generation HTML 缺失:'+(app||'無法由 sw.js 推導'));
+    return;
+  }
   const norm = t => t.replace(/\s+/g, '');
   const page = norm(fs.readFileSync(app, 'utf8'));
   [['schema.js','內嵌 schema'], ['validator.js','內嵌 validator']].forEach(function(pair){

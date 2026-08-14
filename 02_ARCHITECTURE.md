@@ -40,12 +40,12 @@ AppLog 與 `healthCheck()` 的原始 entry／finding 保持權威且不變；`di
 - 只有非 SHELL 的同源 GET 維持 network-first／`cache:'no-cache'`；跨世代過渡不把新部署 bytes 寫進舊 generation cache。
 - v110→v111 一次性 bridge 保留 root v110 HTML／App version；v111 document／version／snapshot 使用 `shell/v111/` 唯一路徑，安裝失敗時真實 v110 worker 與舊 cache 可原樣續命。
 - 跨域 CSV 不由 SW 攔截；App 資料層維持 BUILTIN／localStorage／背景同步三層防線。
-- 改版同步 forward-bump `sw.js` 的 `SW_VERSION` 與 `app-version.js` 的 `APP_VERSION`，activate 清除其他 App cache；版本一致性由 `tools/check-app-version.js` 守住。
+- 改版同步 forward-bump `sw.js` 的 `SW_VERSION` 與 current generation `shell/<version>/app-version.js`；root `app-version.js` 維持 byte-locked v110 bridge，版本一致性由 `tools/check-app-version.js` 守住。
 
-## 應用結構(`index.html` UI／adapter + 外部純 module)
+## 應用結構(`shell/v111/index.html` UI／adapter + 外部純 module)
 ```
 SCHEMA(pubBase + sheets.*.gid + 欄位/型別規格)→ 唯一資料設定點
-BUILTIN(`builtin-snapshot.js` generated asset；8 表，ledger 只有 schema header)
+BUILTIN(`shell/v111/builtin-snapshot.js` generated asset；8 表，ledger 只有 schema header)
 utils(storage/toast/CSV parser/copyText)
 parseTable / buildHeaderMap(依 SCHEMA header + aliases 容錯解析,欄位順序無關)
 buildDB(CSV → DB{places,rest,shop,hotels,expCMS,expMembers,ledger,cfg,trip})
@@ -66,7 +66,7 @@ today view(已準備 Today Hero 採買資料 → 純 model／HTML／declarative 
 
 `ledger-ui-state.js` 只擁有 session-only UI workflow state。entry draft 內容與 return context 對 module 不透明；session／request ID 用來阻止重複儲存與過期非同步結果。correction、settlement、calculator 內容、record 建立、同步及 Shopping UI state 仍在既有邊界，不屬於此 module。
 
-`.ai-manifest.json` 的 `manifest_format` 只表示 manifest schema，不是 App 版號；其 `current_status.authority` 必須精確指向 `tasks/current.md`。manifest 不保存 `dev_candidate`、`next_action` 或 automated-test-result snapshot；App／SW 版號只由 `app-version.js` 與 `sw.js` 管理，歷史狀態看 `07_CHANGELOG.md`。
+`.ai-manifest.json` 的 `manifest_format` 只表示 manifest schema，不是 App 版號；其 `current_status.authority` 必須精確指向 `tasks/current.md`。manifest 不保存 `dev_candidate`、`next_action` 或 automated-test-result snapshot；current App／SW 版號只由 `shell/<version>/app-version.js` 與 root `sw.js` 管理，root `app-version.js` 是 frozen bridge，歷史狀態看 `07_CHANGELOG.md`。
 
 ## 部署檔案
 root `index.html / app-version.js` 是 v110 bridge；current generation 在 `shell/v111/index.html / app-version.js / builtin-snapshot.js`。其餘 runtime modules、`sw.js`、manifest 與 icons 位於 repo 根目錄，由 `main` 的 Bar 核准 Merge 觸發 Netlify 正式部署。

@@ -21,9 +21,9 @@
 ## Tier 2 — 高風險保護範圍(修改前必過「原因/影響/風險/回滾」確認)
 | 檔案 | 說明 |
 |---|---|
-| `index.html` | 唯一 App 原始碼與正式部署入口;改壞直接影響線上使用者，修改前需通過四項確認 |
+| root `index.html`／`app-version.js` | byte-locked v110 bridge 正式入口；只供 predecessor 安裝前／失敗續命，禁止當 current App 編輯 |
+| `shell/v111/index.html`／`app-version.js` | current App 原始碼與版本 identity；改壞直接影響成功升級的線上使用者 |
 | `sw.js` | Service Worker;改壞會造成使用者快取災難 |
-| `shell/v111/app-version.js` + root bridge `app-version.js` | current App／SW identity 與 predecessor bridge；前者必須等於 `SW_VERSION`，後者必須維持 v110 bytes，任一改壞都等同改壞 `sw.js` |
 | `manifest.webmanifest`、`icon-*.png` | PWA 安裝行為 |
 | `netlify.toml`(含 `sw.js`／`index.html`／版本檔的 `Cache-Control` header) | 上線與快取行為;header 改錯會讓「改版必到」失效 |
 

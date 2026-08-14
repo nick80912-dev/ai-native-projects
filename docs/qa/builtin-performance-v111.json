@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "measuredAt": "2026-08-14T00:00:00+08:00",
+  "measuredAt": "2026-08-14T11:05:00+08:00",
   "thresholdPct": 10,
-  "method": "Ten isolated 390x844 browser contexts per tree, local static server, domcontentloaded plus first non-empty Today render; identical timing/server probe, with conservative pageerror tracking added for the candidate run.",
+  "method": "Ten isolated 390x844 browser contexts per tree with the same local-server contract and timing metrics; baseline uses its inline root entry, candidate maps the root test entry to its immutable current-generation document and adds conservative pageerror tracking.",
   "environment": {
     "os": "win32 x64 10.0.26200",
     "node": "v24.18.0",

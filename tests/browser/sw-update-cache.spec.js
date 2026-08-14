@@ -284,17 +284,20 @@ test('a mixed-generation App Shell makes the new SW install fail and preserves t
 test('version-bound App Shell updates and offline deep links work under the GitHub Pages subpath',async({page,context})=>{
   if(server)await server.close();
   const basePath='/ai-native-projects/';
-  server=createVersionedServer({generation:1,basePath,versions:{1:PREVIOUS_VERSION,2:VERSION},stablePaths:STABLE_V110_MODULES});
+  server=createVersionedServer({
+    generation:1,basePath,bridgeGeneration:1,versions:{1:PREVIOUS_VERSION,2:VERSION},
+    workerSources:{1:V110_WORKER},stablePaths:STABLE_V110_MODULES
+  });
   ORIGIN='http://127.0.0.1:'+await server.listen(0);
   await page.goto(ORIGIN+basePath+'index.html');
   await waitForActiveWorker(page);
-  await waitForShellCached(page,'okayama-trip-'+PREVIOUS_VERSION+'-QAGEN1');
+  await waitForShellCached(page,'okayama-trip-'+PREVIOUS_VERSION+'-QAGEN1',['index.html','app-version.js','shopping-photo-store.js','buy-to-ledger.js','schema.js']);
   server.setGeneration(2);
   const transitional=await page.evaluate(async()=>{
-    const bodies=await Promise.all(['shell/v111/index.html','shell/v111/app-version.js','shell/v111/builtin-snapshot.js','schema.js'].map(path=>fetch('./'+path).then(response=>response.text())));
+    const bodies=await Promise.all(['index.html','app-version.js','schema.js'].map(path=>fetch('./'+path).then(response=>response.text())));
     return bodies.map(body=>(/QAGEN\d+/.exec(body)||[])[0]);
   });
-  expect(transitional).toEqual(['QAGEN1','QAGEN1','QAGEN1','QAGEN1']);
+  expect(transitional).toEqual(['QAGEN1','QAGEN1','QAGEN1']);
   await page.evaluate(async()=>{const registration=await navigator.serviceWorker.getRegistration();await registration.update();});
   await expect.poll(()=>page.evaluate(()=>caches.keys())).toEqual(['okayama-trip-'+VERSION+'-QAGEN2']);
   await page.reload();
