@@ -4,7 +4,7 @@
 - v110 已由 Bar 驗收並完成 `main` merge、Netlify production verification 與 `production-v110` tag；v111 gate 已開啟。
 - v111 將 BUILTIN 搬到由工具產生的 `shell/v111/builtin-snapshot.js`；root `index.html`／`app-version.js` byte-lock 為 v110 bridge，只有成功啟用的 v111 worker 才將導覽映射至 immutable `shell/v111/index.html`，failed install 保留真實 v110 worker／inline BUILTIN／cache。
 - asset 缺失／錯版時只接受有效 local active／previous snapshot；本機也無有效資料時顯示可重新載入／複製診斷的非空白 recovery，不建立空 DB。
-- 可重算效能證據固定 inline `d0405fe` 與 final asset `d88f5e5`：DCL 中位數 181.10 → 166.35 ms（-8.14%），Today 中位數 171.70 → 158.00 ms（-7.98%）；20 個樣本均記錄 HTML／App／asset／SW／timestamp identity，通過 ≤10% kill gate。
+- 可重算效能證據固定 inline `d0405fe` 與 immutable bridge asset `83e4d2b`：DCL 中位數 181.10 → 185.65 ms（+2.51%），Today 中位數 171.70 → 175.75 ms（+2.36%）；20 個樣本均記錄 HTML／App／asset／SW／timestamp identity，通過 ≤10% kill gate。
 - Playwright 兩 worker 歷史三輪雖皆 181/181，但當時手動建立的效能 page 尚未掛入全域 pageerror tracker，不符合核准的三輪採用規則；依 fallback 維持全環境單 worker、零 retry。bridge final tree 完整 Chromium 182/182（357.6 s、zero pageerrors／port conflicts）。
 
 
