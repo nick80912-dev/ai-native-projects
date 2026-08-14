@@ -4,7 +4,7 @@
 - v110 已由 Bar 驗收並完成 `main` merge、Netlify production verification 與 `production-v110` tag；v111 gate 已開啟。
 - v111 將 BUILTIN 從 `index.html` 搬到由工具產生的 `builtin-snapshot.js`，asset version 與 App／SW 原子綁定並納入 App Shell；HTML 不保留 duplicate payload。
 - asset 缺失／錯版時只接受有效 local active／previous snapshot；本機也無有效資料時顯示可重新載入／複製診斷的非空白 recovery，不建立空 DB。
-- 可重算效能證據固定 inline `d0405fe` 與 final asset `d88f5e5`：Today 中位數 171.70 → 158.00 ms（-7.98%），20 個樣本均記錄 HTML／App／asset／SW／timestamp identity，通過 ≤10% kill gate。
+- 可重算效能證據固定 inline `d0405fe` 與 final asset `d88f5e5`：DCL 中位數 181.10 → 166.35 ms（-8.14%），Today 中位數 171.70 → 158.00 ms（-7.98%）；20 個樣本均記錄 HTML／App／asset／SW／timestamp identity，通過 ≤10% kill gate。
 - Playwright 同一 clean commit `e37b59f`：1 worker 181/181（336.2 s）；2 workers 三輪皆 181/181（170.3／185.9／177.2 s），0 retries／pageerrors／port conflicts；全域 fixture 會讓每個未捕捉 pageerror 失敗，因此採用 CI=2、本機=1。後續 release review 另新增 Pages subpath 第 182 案。
 
 
@@ -24,7 +24,7 @@
 | candidate automated validation | Current release-hardening tree: Node **92/92** test files；worker matrix **181/181**，expanded final Chromium **182/182**（CI=2、186.5 s、zero retries/pageerrors/port conflicts）；version／document／runtime asset／BUILTIN／performance evidence／JSON／diff gates pass |
 | 既有 tag | `production-v18`、`production-v73`、`production-v110` |
 
-**v110 已正式發布；v111 僅交付 `dev` 驗收，不合併 `main`、不部署 production、不建立 tag。**
+**v110 已正式發布；v111 release candidate 已獲 Bar 核准執行 `dev` → `main`，仍須通過 PR／Actions 與 Netlify production verification。**
 
 ### v74–v98 已折疊的主要能力
 
@@ -120,6 +120,6 @@
 
 ## 下一棒
 
-→ **v111 已推送 `dev` 供 Bar 驗收。** 不建立 release PR、不合併 `main`、不部署 production、不建立 tag。
+→ **v111 已完成本機 final gate 並獲 Bar 核准發布。** 下一步推送 `dev`、建立 release PR；Actions 通過後合併 `main`，再做 Netlify production verification。
 
 > 正式發布仍必須遵守 §E：PR 與 Actions 通過後才能 merge；Netlify 線上驗證通過後才能建立 production tag。

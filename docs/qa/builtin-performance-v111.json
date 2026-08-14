@@ -45,6 +45,9 @@
     ]
   },
   "result": {
+    "baselineDclMedian": 181.1000000089407,
+    "candidateDclMedian": 166.3500000089407,
+    "dclRegressionPct": -8.14,
     "baselineTodayMedian": 171.70000000298023,
     "candidateTodayMedian": 158,
     "regressionPct": -7.98,

@@ -33,7 +33,13 @@ assert(evidence.candidate.samples.every(sample=>sample.identity.mode==='asset'),
 const baselineMedian=median(evidence.baseline.samples.map(sample=>sample.today));
 const candidateMedian=median(evidence.candidate.samples.map(sample=>sample.today));
 const regressionPct=(candidateMedian-baselineMedian)/baselineMedian*100;
+const baselineDclMedian=median(evidence.baseline.samples.map(sample=>sample.dcl));
+const candidateDclMedian=median(evidence.candidate.samples.map(sample=>sample.dcl));
+const dclRegressionPct=(candidateDclMedian-baselineDclMedian)/baselineDclMedian*100;
 assert(regressionPct<=evidence.thresholdPct,'Today median regression '+regressionPct.toFixed(2)+'% exceeds '+evidence.thresholdPct+'%');
+assert.strictEqual(evidence.result.baselineDclMedian,baselineDclMedian,'recorded baseline DCL median is mechanically reproducible');
+assert.strictEqual(evidence.result.candidateDclMedian,candidateDclMedian,'recorded candidate DCL median is mechanically reproducible');
+assert.strictEqual(evidence.result.dclRegressionPct,Number(dclRegressionPct.toFixed(2)),'recorded DCL regression percentage is mechanically reproducible');
 assert.strictEqual(evidence.result.baselineTodayMedian,baselineMedian,'recorded baseline median is mechanically reproducible');
 assert.strictEqual(evidence.result.candidateTodayMedian,candidateMedian,'recorded candidate median is mechanically reproducible');
 assert.strictEqual(evidence.result.regressionPct,Number(regressionPct.toFixed(2)),'recorded regression percentage is mechanically reproducible');
