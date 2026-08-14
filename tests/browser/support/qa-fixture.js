@@ -59,11 +59,11 @@ async function installFixedDate(page,isoValue){
 async function openApp(page){
   await page.route('**/*',route=>{
     const url=new URL(route.request().url());
-    if(url.hostname==='127.0.0.1')return route.continue();
+    if(url.hostname==='127.0.0.1')return route.fallback();
     return route.abort('blockedbyclient');
   });
   await page.goto('/',{waitUntil:'domcontentloaded'});
-  await page.waitForFunction(()=>typeof CURRENT_SNAPSHOT!=='undefined'&&CURRENT_SNAPSHOT&&typeof syncInFlight!=='undefined');
+  await page.waitForFunction(()=>typeof CURRENT_SNAPSHOT!=='undefined'&&typeof syncInFlight!=='undefined'&&(CURRENT_SNAPSHOT||document.getElementById('builtinRecovery')));
 }
 
 async function waitForSyncToSettle(page){

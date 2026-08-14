@@ -4,7 +4,7 @@
    這裡證明的是真實 layout 與跨頁狀態:三個寬度下的水平溢位、六主題可讀性、
    測試模式關→開→關的完整循環與根頁警告列同步、legacy deep link 真的抵達可關閉的頁面。
    ============================================================ */
-const {test,expect}=require('@playwright/test');
+const {test,expect}=require('./support/test');
 const {collectPageErrors,installOfflineAppNetwork,openApp,waitForSyncToSettle}=require('./support/qa-fixture');
 
 test.describe.configure({mode:'serial'});

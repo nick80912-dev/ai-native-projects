@@ -17,7 +17,7 @@ const path = require('path');
 const root = path.resolve(__dirname, '..', '..');
 
 function readIndexHtml() {
-  return fs.readFileSync(path.join(root, 'index.html'), 'utf8');
+  return fs.readFileSync(path.join(root, 'shell', 'v111', 'index.html'), 'utf8');
 }
 
 function scanSkippingStrings(source, start, onChar) {

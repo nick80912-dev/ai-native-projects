@@ -1,15 +1,11 @@
 # CURRENT(現在正在做的)
 
-## v110 main release authorized; production verification pending
-
-
-
-- v109 Bar device/PWA acceptance is complete; Bar authorized the reserved v110 batch.
-- v110 adds compact non-theme typography, spacing, radius, action-level, and diagnostic-role tokens only on touched surfaces. All six theme palettes and the existing visual direction remain unchanged.
-- `today-view.js` now owns the pure Today Hero Shopping model／renderer／declarative action. `index.html` retains reminder selection, current-stop exclusion, store／clock access and DOM effects; accepted copy, targeting, keyboard, accessibility and responsive behavior remain unchanged.
-- The Ledger history candidate failed its deletion test, so v110 does not add `ledger-history-view.js`, a global store, controller, event bus or framework. Existing Ledger state, data and workflow semantics remain untouched.
-- Netlify quota reset on 2026-08-13; Bar authorized the accumulated `dev` candidate to merge into `main`. Release review remediation adds ADR 0018, aligns the Today ownership spec with the approved implementation plan, and wires quiet／fixed status colors through semantic tokens before the release PR.
-- App／SW are forward-bumped to v110. Fresh pre-commit and committed-tree validation passes Node **87/87**, full Playwright **176/176**, focused WebKit **39/39**, static／BUILTIN gates and offline Health; runtime／release commit `49f8e8c` reached `dev` with local／remote equality, followed by this evidence-only status update.
+## v111 generated BUILTIN and CI throughput candidate
+- v110 已由 Bar 驗收並完成 `main` merge、Netlify production verification 與 `production-v110` tag；v111 gate 已開啟。
+- v111 將 BUILTIN 搬到由工具產生的 `shell/v111/builtin-snapshot.js`；root `index.html`／`app-version.js` byte-lock 為 v110 bridge，只有成功啟用的 v111 worker 才將導覽映射至 immutable `shell/v111/index.html`，failed install 保留真實 v110 worker／inline BUILTIN／cache。
+- asset 缺失／錯版時只接受有效 local active／previous snapshot；本機也無有效資料時顯示可重新載入／複製診斷的非空白 recovery，不建立空 DB。
+- 可重算效能證據固定 inline `d0405fe` 與 immutable bridge asset `83e4d2b`：DCL 中位數 181.10 → 185.65 ms（+2.51%），Today 中位數 171.70 → 175.75 ms（+2.36%）；20 個樣本均記錄 HTML／App／asset／SW／timestamp identity，通過 ≤10% kill gate。
+- Playwright 兩 worker 歷史三輪雖皆 181/181，但當時手動建立的效能 page 尚未掛入全域 pageerror tracker，不符合核准的三輪採用規則；依 fallback 維持全環境單 worker、零 retry。bridge final tree 完整 Chromium 182/182（357.6 s、zero pageerrors／port conflicts）。
 
 
 
@@ -21,14 +17,14 @@
 | 項目 | 值 |
 |---|---|
 
-| **`main` 原始碼** | **SW v96**，PR #13 merge commit `02705c3`；因 Netlify 額度用罄尚未部署／建立 tag |
-| 正式站 | `https://trippilot-jp.netlify.app/` — 2026-08-01 由 SW v18 升級至 v73,G1–G6 全數通過 |
-| **`dev` candidate** | **SW v110**; UI presentation tokens plus production-used Today view module, Bar-authorized for `main` release |
+| **`main` 原始碼／正式站** | **SW v110**；Netlify production 與 `production-v110` tag 已驗證 |
+| 正式站 | `https://trippilot-jp.netlify.app/` — v110 production health 已通過 |
+| **`dev` candidate** | **SW v111**；immutable generation BUILTIN + v110 root bridge + safe fallback；Playwright 維持單 worker |
 | 個人備份格式 | **v9**(`PERSONAL_STATE_SUPPORTED_VERSIONS = [1..9]`)—— v81 因想逛 key 識別語意變更而升版 |
-| candidate automated validation | Committed tree: Node **87/87**, Playwright **176/176**, focused WebKit **39/39**, static／BUILTIN checks pass; offline Chromium `{"source":"builtin","healthCheck":[],"appLogCount":9,"pageErrors":[]}` |
-| 既有 tag | `production-v18`、`production-v73` |
+| candidate automated validation | Current release-hardening tree: Node **93/93** test files；final Chromium **182/182**（single worker、357.6 s、zero retries/pageerrors/port conflicts）；version／document／runtime asset／BUILTIN／performance evidence／JSON／diff gates pass |
+| 既有 tag | `production-v18`、`production-v73`、`production-v110` |
 
-**`main` 已合併 v96，但正式站仍停在 v73；v110 是目前已獲 Bar 發布授權的 `dev` 候選。** v74–v87 已由 Bar 於 2026-08-03 確認真機驗收皆正常；v88–v89、v92–v95 亦於 2026-08-08 完成 Bar 畫面／真機確認。v96 因 Netlify 額度用罄尚未正式部署，也未建立 `production-v96` tag。Bar 已完成 v101／v102／v109 裝置／PWA 驗收；v110 已完成 committed-tree gates、`dev` delivery 與 device／PWA acceptance，現在依 §E 執行 PR、`main` merge、Netlify production verification 與 `production-v110` tag。
+**v110 已正式發布；v111 release candidate 已獲 Bar 核准執行 `dev` → `main`，仍須通過 PR／Actions 與 Netlify production verification。**
 
 ### v74–v98 已折疊的主要能力
 
@@ -117,13 +113,13 @@
 | v103–v107 | Today Hero 旅行提示、採買摘要分類／對齊／未分類 fallback；原始採買資料與既有 next-stop authority 不變 | ✅ 已完成自動驗證；歷史細節見 `07_CHANGELOG.md` |
 | v108 | transient exact-target navigation、可見定位／scroll／focus return、display-only diagnostic impact、manifest status authority | ✅ final review／完整 gate／dev delivery；Bar 驗收中提出成功提示列精簡修正 |
 | v109 | 成功定位提示列移除、1 秒醒目＋0.2 秒淡出、失敗提示保留 | ✅ Bar device／PWA acceptance complete |
-| v110 | UI semantic tokens 與 Today deep-module extraction（原 v109） | ⏳ committed-tree gates 與 dev delivery 完成；等待 Bar device／PWA verification |
-| v111 | BUILTIN asset spike 與 test throughput（原 v110） | 🔒 gated；只可在 Bar 接受 v110 後開始 |
+| v110 | UI semantic tokens 與 Today deep-module extraction（原 v109） | ✅ Bar 驗收、main merge、production verification、tag 完成 |
+| v111 | BUILTIN asset spike 與 test throughput（原 v110） | ✅ final release hardening complete locally；push dev／PR／main merge／Netlify production verification pending |
 
 **已知未做(需先定判準)**:Today 的「交通／停車／營業／付款／提醒**依當下情境動態調整優先順序**」。v84 只做了可明確驗收的收合(常駐交通／停車／營業,收合付款／提醒);「當下情境」的判準(依時間?依距離?依是否已抵達?)尚未定義,不同讀法會做出完全不同的東西,故未實作。
 
 ## 下一棒
 
-→ **v110 committed-tree release gate、`dev` delivery 與 Bar 手機／PWA 驗收已完成，正式發布已獲授權。** 依 §E 執行 `dev → main` PR、Actions 綠燈、merge、Netlify production verification；線上 v110 驗證通過後才建立 `production-v110` tag。
+→ **v111 已完成本機 final gate 並獲 Bar 核准發布。** 下一步推送 `dev`、建立 release PR；Actions 通過後合併 `main`，再做 Netlify production verification。
 
 > 正式發布仍必須遵守 §E：PR 與 Actions 通過後才能 merge；Netlify 線上驗證通過後才能建立 production tag。

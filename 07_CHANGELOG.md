@@ -1,6 +1,16 @@
 # 07 版本紀錄
 
-## 2026-08-13 — v110 UI 一致性與 Today 模組拆分（candidate）⭐ 架構變更
+## 2026-08-13 — v111 產生式 BUILTIN 與測試吞吐（candidate）⭐ 架構變更
+
+- BUILTIN 改為由 `tools/refresh-builtin-snapshot.js` 產生的 `shell/v111/builtin-snapshot.js`；root HTML／App version byte-lock 為 v110 bridge，v111 document／version／snapshot 採 immutable generation path，只有 v111 worker install 驗證成功後才接管導覽。
+- preview-first 工具新增 deterministic serializer／parser、版本錯配與 stale 偵測、HTML＋asset 雙檔 fsync／read-back／rename transaction，以及跨 rename failure 的 byte-for-byte rollback。Ledger 不抓 live CSV，維持 schema 21 欄 header。
+- asset 缺失／錯版時，valid local active／previous snapshot 可 degraded boot；沒有有效 local snapshot 時顯示非空白 recovery（重新載入／複製診斷），不建立空 DB、不啟動背景同步。mixed-version、installed offline reopen 與 Pages-style cache generation focused Playwright 7/7 通過。
+- 可重算效能證據固定 inline `d0405fe` 與 immutable bridge asset `83e4d2b`：DCL 中位數 181.10 → 185.65 ms（+2.51%），Today 中位數 171.70 → 175.75 ms（+2.36%）；所有樣本記錄 HTML／App／asset／SW／timestamp identity，通過 ≤10% kill gate。
+- Playwright worker 實驗的三輪 2-worker 歷史結果早於手動 performance page 的 pageerror tracking，不符合固定 adoption rule；依核准 fallback 保留全環境 single worker、zero retries，完整證據見 `docs/qa/playwright-worker-experiment-v111.md`。
+- Release review 改以 exact origin/main v110 network-first worker fixture 驗證一次性 bridge：成功升級後 v111 immutable document 接管；mixed install 失敗時舊 index／App version／schema cache body 完全不變。current tree 通過 Node **93/93**、Chromium **182/182**（single worker、357.6 s、zero retries/pageerrors/port conflicts），以及版本／文件／12 項 runtime asset／BUILTIN／performance evidence／JSON／diff checks。
+- 本批仍在本機 `dev` 完成合併前 hardening；push dev、PR、main merge、Netlify production verification 尚待執行，未建立 tag。
+
+## 2026-08-13 — v110 UI 一致性與 Today 模組拆分（released）⭐ 架構變更
 - PR #14 發布門檻補強：行程分頁上方 Day chip 改走頁內 `selectTripDay()`，切日後於重繪完成的 animation frame 回到該日頂端，不再建立定位高亮或 live-status；Today 跨頁 `gotoDay()`、exact item、Shopping 與回到現在的定位提示維持不變。Linux Chromium 對 1px 隱藏狀態框的 sub-pixel 計算與 reduced-motion scheduler margin 僅放寬測試容差，產品 CSS 與 1000ms hold 不變。
 
 - 在六組主題之外新增精簡的呈現 token：字級 `11／12／14／20／24px`、間距 `4／8／12／16／24px`、圓角 `6／10／14／999px`，以及 primary／secondary／quiet／destructive 操作角色與 diagnostic 狀態角色。只替換 Today、導覽回饋、診斷及共用按鈕的等值 literal；六組 13-token palette 與既有 computed 視覺方向不變。

@@ -33,18 +33,33 @@ const mimeTypes = {
 function createVersionedServer(options) {
   options = options || {};
   const state = { generation: options.generation || 1 };
+  const basePath = ('/' + String(options.basePath || '').replace(/^\/+|\/+$/g, '') + '/').replace(/^\/\/$/, '/');
 
   function transform(relativePath, buffer) {
-    const tag = 'QAGEN' + state.generation;
-    const configuredVersion = options.versions && options.versions[state.generation];
+    const isBridge=relativePath==='index.html'||relativePath==='app-version.js';
+    const isStable=Array.isArray(options.stablePaths)&&options.stablePaths.includes(relativePath);
+    const contentGeneration=(options.bridgeGeneration&&isBridge)||isStable?1:state.generation;
+    const tag = 'QAGEN' + contentGeneration;
+    const configuredVersion = options.versions && options.versions[contentGeneration];
+    const resourceVersion = options.resourceVersions && options.resourceVersions[contentGeneration] && options.resourceVersions[contentGeneration][relativePath];
+    const effectiveVersion = resourceVersion || configuredVersion;
     if (relativePath === 'sw.js') {
-      return Buffer.from(String(buffer).replace(/var SW_VERSION='([^']+)';/, (_, current) => "var SW_VERSION='" + (configuredVersion || current) + '-' + tag + "';"));
+      const workerSource=options.workerSources&&options.workerSources[state.generation];
+      const source=workerSource===undefined?buffer:workerSource;
+      const workerVersion=options.versions&&options.versions[state.generation];
+      const workerTag='QAGEN'+state.generation;
+      return Buffer.from(String(source).replace(/var SW_VERSION='([^']+)';/, (_, current) => "var SW_VERSION='" + (workerVersion || current) + '-' + workerTag + "';"));
     }
-    if (relativePath === 'app-version.js') {
-      return Buffer.from(String(buffer).replace(/var APP_VERSION='([^']+)';/, (_, current) => "var APP_VERSION='" + (configuredVersion || current) + '-' + tag + "';"));
+    if (/(^|\/)app-version\.js$/.test(relativePath)) {
+      return Buffer.from(String(buffer).replace(/var APP_VERSION='([^']+)';/, (_, current) => "var APP_VERSION='" + (effectiveVersion || current) + '-' + tag + "';"));
     }
-    if (relativePath === 'index.html') {
-      return Buffer.from(String(buffer).replace('</body>', "<script>var QA_INDEX_GEN='" + tag + "';</script>\n</body>"));
+    if (/(^|\/)builtin-snapshot\.js$/.test(relativePath)) {
+      return Buffer.from(String(buffer).replace(/var BUILTIN_ASSET_VERSION='([^']+)';/, (_, current) => "var BUILTIN_ASSET_VERSION='" + (effectiveVersion || current) + '-' + tag + "';"));
+    }
+    if (/(^|\/)index\.html$/.test(relativePath)) {
+      return Buffer.from(String(buffer)
+        .replace(/var BUILTIN_HTML_VERSION='([^']+)'/, (_, current) => "var BUILTIN_HTML_VERSION='" + (effectiveVersion || current) + '-' + tag + "'")
+        .replace('</body>', "<script>var QA_INDEX_GEN='" + tag + "';</script>\n</body>"));
     }
     if (relativePath === 'schema.js') {
       return Buffer.from(String(buffer) + "\nvar QA_SCHEMA_GEN='" + tag + "';\n");
@@ -54,7 +69,13 @@ function createVersionedServer(options) {
 
   const server = http.createServer((request, response) => {
     const pathname = decodeURIComponent(new URL(request.url, 'http://127.0.0.1').pathname);
-    const relativePath = pathname === '/' ? 'index.html' : pathname.replace(/^\/+/, '');
+    if (!pathname.startsWith(basePath)) {
+      response.writeHead(404, { 'Content-Type': 'text/plain', 'Cache-Control': 'max-age=600' });
+      response.end('Not found');
+      return;
+    }
+    const mountedPath = pathname.slice(basePath.length);
+    const relativePath = mountedPath === '' ? 'index.html' : mountedPath.replace(/^\/+/, '');
     const target = path.resolve(root, relativePath);
     const relativeToRoot = path.relative(root, target);
 

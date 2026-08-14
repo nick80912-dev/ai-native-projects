@@ -6,7 +6,7 @@
    注意 html{scroll-behavior:smooth}:測試裡設定 scrollTop 後必須等它停,
    或直接驗證實作有用 behavior:'instant'。本檔一律等到位置穩定再斷言。
    ============================================================ */
-const { test, expect } = require('@playwright/test');
+const { test, expect } = require('./support/test');
 const {
   installFixedDate,
   installOfflineAppNetwork,

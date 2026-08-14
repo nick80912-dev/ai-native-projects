@@ -1,0 +1,56 @@
+{
+  "schemaVersion": 1,
+  "measuredAt": "2026-08-14T11:05:00+08:00",
+  "thresholdPct": 10,
+  "method": "Ten isolated 390x844 browser contexts per tree with the same local-server contract and timing metrics; baseline uses its inline root entry, candidate maps the root test entry to its immutable current-generation document and adds conservative pageerror tracking.",
+  "environment": {
+    "os": "win32 x64 10.0.26200",
+    "node": "v24.18.0",
+    "playwright": "1.62.0",
+    "chromium": "151.0.7922.34",
+    "chromiumRevision": "1234"
+  },
+  "baseline": {
+    "commit": "d0405fedac6ed5a6e94fb6ec6d11888e49ac83df",
+    "label": "inline BUILTIN snapshot",
+    "probeCommit": "36e9d59185827a4b016b4d556a76f6c139c5684a",
+    "samples": [
+      {"dcl":312.79999999701977,"today":306,"blank":false,"identity":{"app":"v110","html":"v110","asset":null,"sw":"v110","timestamp":1786413763975,"htmlTimestamp":1786413763975,"mode":"inline","controller":false,"cacheKeys":[]}},
+      {"dcl":160.70000000298023,"today":154.59999999403954,"blank":false,"identity":{"app":"v110","html":"v110","asset":null,"sw":"v110","timestamp":1786413763975,"htmlTimestamp":1786413763975,"mode":"inline","controller":false,"cacheKeys":["okayama-trip-v110"]}},
+      {"dcl":181.90000000596046,"today":172.5,"blank":false,"identity":{"app":"v110","html":"v110","asset":null,"sw":"v110","timestamp":1786413763975,"htmlTimestamp":1786413763975,"mode":"inline","controller":false,"cacheKeys":["okayama-trip-v110"]}},
+      {"dcl":172.09999999403954,"today":164.40000000596046,"blank":false,"identity":{"app":"v110","html":"v110","asset":null,"sw":"v110","timestamp":1786413763975,"htmlTimestamp":1786413763975,"mode":"inline","controller":false,"cacheKeys":["okayama-trip-v110"]}},
+      {"dcl":163.30000001192093,"today":155.20000000298023,"blank":false,"identity":{"app":"v110","html":"v110","asset":null,"sw":"v110","timestamp":1786413763975,"htmlTimestamp":1786413763975,"mode":"inline","controller":false,"cacheKeys":["okayama-trip-v110"]}},
+      {"dcl":163.90000000596046,"today":156.70000000298023,"blank":false,"identity":{"app":"v110","html":"v110","asset":null,"sw":"v110","timestamp":1786413763975,"htmlTimestamp":1786413763975,"mode":"inline","controller":false,"cacheKeys":["okayama-trip-v110"]}},
+      {"dcl":180.30000001192093,"today":170.90000000596046,"blank":false,"identity":{"app":"v110","html":"v110","asset":null,"sw":"v110","timestamp":1786413763975,"htmlTimestamp":1786413763975,"mode":"inline","controller":false,"cacheKeys":["okayama-trip-v110"]}},
+      {"dcl":193.09999999403954,"today":182,"blank":false,"identity":{"app":"v110","html":"v110","asset":null,"sw":"v110","timestamp":1786413763975,"htmlTimestamp":1786413763975,"mode":"inline","controller":false,"cacheKeys":["okayama-trip-v110"]}},
+      {"dcl":191.70000000298023,"today":183.09999999403954,"blank":false,"identity":{"app":"v110","html":"v110","asset":null,"sw":"v110","timestamp":1786413763975,"htmlTimestamp":1786413763975,"mode":"inline","controller":false,"cacheKeys":["okayama-trip-v110"]}},
+      {"dcl":182.8999999910593,"today":175.79999999701977,"blank":false,"identity":{"app":"v110","html":"v110","asset":null,"sw":"v110","timestamp":1786413763975,"htmlTimestamp":1786413763975,"mode":"inline","controller":false,"cacheKeys":["okayama-trip-v110"]}}
+    ]
+  },
+  "candidate": {
+    "commit": "83e4d2b2c7c744b325637dc3c2324bf51635f7bf",
+    "label": "generated builtin-snapshot.js",
+    "probeCommit": "83e4d2b2c7c744b325637dc3c2324bf51635f7bf",
+    "samples": [
+      {"dcl":168.19999998807907,"today":162.90000000596046,"blank":false,"identity":{"app":"v111","html":"v111","asset":"v111","sw":"v111","timestamp":1786413763975,"htmlTimestamp":1786413763975,"mode":"asset","controller":false,"cacheKeys":[]}},
+      {"dcl":193.5,"today":183.69999998807907,"blank":false,"identity":{"app":"v111","html":"v111","asset":"v111","sw":"v111","timestamp":1786413763975,"htmlTimestamp":1786413763975,"mode":"asset","controller":false,"cacheKeys":[]}},
+      {"dcl":148.69999998807907,"today":138,"blank":false,"identity":{"app":"v111","html":"v111","asset":"v111","sw":"v111","timestamp":1786413763975,"htmlTimestamp":1786413763975,"mode":"asset","controller":false,"cacheKeys":[]}},
+      {"dcl":177.80000001192093,"today":167.80000001192093,"blank":false,"identity":{"app":"v111","html":"v111","asset":"v111","sw":"v111","timestamp":1786413763975,"htmlTimestamp":1786413763975,"mode":"asset","controller":false,"cacheKeys":[]}},
+      {"dcl":165.80000001192093,"today":158.60000002384186,"blank":false,"identity":{"app":"v111","html":"v111","asset":"v111","sw":"v111","timestamp":1786413763975,"htmlTimestamp":1786413763975,"mode":"asset","controller":false,"cacheKeys":[]}},
+      {"dcl":165.60000002384186,"today":154.90000000596046,"blank":false,"identity":{"app":"v111","html":"v111","asset":"v111","sw":"v111","timestamp":1786413763975,"htmlTimestamp":1786413763975,"mode":"asset","controller":false,"cacheKeys":[]}},
+      {"dcl":294.2999999821186,"today":285.5,"blank":false,"identity":{"app":"v111","html":"v111","asset":"v111","sw":"v111","timestamp":1786413763975,"htmlTimestamp":1786413763975,"mode":"asset","controller":false,"cacheKeys":[]}},
+      {"dcl":263.19999998807907,"today":257.40000000596046,"blank":false,"identity":{"app":"v111","html":"v111","asset":"v111","sw":"v111","timestamp":1786413763975,"htmlTimestamp":1786413763975,"mode":"asset","controller":false,"cacheKeys":[]}},
+      {"dcl":206.09999999403954,"today":189.39999997615814,"blank":false,"identity":{"app":"v111","html":"v111","asset":"v111","sw":"v111","timestamp":1786413763975,"htmlTimestamp":1786413763975,"mode":"asset","controller":false,"cacheKeys":[]}},
+      {"dcl":222.90000000596046,"today":214,"blank":false,"identity":{"app":"v111","html":"v111","asset":"v111","sw":"v111","timestamp":1786413763975,"htmlTimestamp":1786413763975,"mode":"asset","controller":false,"cacheKeys":[]}}
+    ]
+  },
+  "result": {
+    "baselineDclMedian": 181.1000000089407,
+    "candidateDclMedian": 185.65000000596046,
+    "dclRegressionPct": 2.51,
+    "baselineTodayMedian": 171.70000000298023,
+    "candidateTodayMedian": 175.75,
+    "regressionPct": 2.36,
+    "passes": true
+  }
+}

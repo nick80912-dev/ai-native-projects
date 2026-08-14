@@ -1,7 +1,7 @@
 const assert=require('assert');
 const fs=require('fs');
 
-const html=fs.readFileSync('index.html','utf8');
+const html=fs.readFileSync('shell/v111/index.html','utf8');
 assert.doesNotMatch(html,/fonts\.googleapis\.com/,'first paint does not wait for Google Fonts CSS');
 assert.doesNotMatch(html,/fonts\.gstatic\.com/,'first paint has no remote font connection');
 assert.match(

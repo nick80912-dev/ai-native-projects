@@ -32,7 +32,7 @@
 - Consumes: `{timestamp:number,snapshot:object}` from the existing generator.
 - Produces: exact generated JavaScript format containing `BUILTIN_TS`, `BUILTIN_ASSET_VERSION`, and `BUILTIN`.
 
-- [ ] **Step 1: Write RED format tests**
+- [x] **Step 1: Write RED format tests**
 
 Require a deterministic serializer result:
 
@@ -47,13 +47,13 @@ assert.strictEqual(text,
 
 Require parsing, round-trip equality, deterministic key order, rejection of missing seven non-Ledger sheets, rejection of non-empty Ledger rows, and no mutation of the candidate.
 
-- [ ] **Step 2: Run RED**
+- [x] **Step 2: Run RED**
 
 Run: `node tests/builtin-snapshot-asset.test.js tests/builtin-snapshot-refresh.test.js`
 
 Expected: FAIL because asset serializer/parser functions do not exist.
 
-- [ ] **Step 3: Implement serializer/parser helpers in the generator**
+- [x] **Step 3: Implement serializer/parser helpers in the generator**
 
 Export:
 
@@ -64,7 +64,7 @@ readBuiltinAsset(source)
 
 Keep the existing schema/header candidate builder and safety checks as the only content authority.
 
-- [ ] **Step 4: Run GREEN and commit tooling**
+- [x] **Step 4: Run GREEN and commit tooling**
 
 ```powershell
 node tests/builtin-snapshot-asset.test.js
@@ -85,7 +85,7 @@ git commit -m "test(builtin): define generated asset contract"
 - Consumes: current Sheet candidate and `app-version.js`.
 - Produces: atomic pair update for HTML bootstrap marker and generated asset, with rollback on either verification failure.
 
-- [ ] **Step 1: Add RED atomicity cases**
+- [x] **Step 1: Add RED atomicity cases**
 
 Cover:
 
@@ -96,17 +96,17 @@ Cover:
 - the final preview reports no drift;
 - no request is ever made for public Ledger CSV.
 
-- [ ] **Step 2: Run RED**
+- [x] **Step 2: Run RED**
 
 Run: `node tests/builtin-snapshot-refresh.test.js`
 
 Expected: FAIL on missing two-file staging behavior.
 
-- [ ] **Step 3: Implement two-file staging and rollback**
+- [x] **Step 3: Implement two-file staging and rollback**
 
 Use explicit absolute paths resolved under the supplied root. Write temporary siblings, fsync/close, read back both, then rename. If either rename/read-back fails, restore the original bytes through the same safe sibling strategy. Do not use broad deletion or unresolved paths.
 
-- [ ] **Step 4: Generate through the approved tool and verify**
+- [x] **Step 4: Generate through the approved tool and verify**
 
 ```powershell
 node tools/refresh-builtin-snapshot.js
@@ -118,7 +118,7 @@ node tools/refresh-builtin-snapshot.js
 
 The first preview may report expected structural drift; after write, the final preview must report no drift.
 
-- [ ] **Step 5: Commit generator and generated asset**
+- [x] **Step 5: Commit generator and generated asset**
 
 ```powershell
 git add -- tools/refresh-builtin-snapshot.js tests/builtin-snapshot-refresh.test.js builtin-snapshot.js
@@ -144,7 +144,7 @@ git commit -m "feat(builtin): generate snapshot asset atomically"
 - Consumes: `BUILTIN`, `BUILTIN_TS`, `BUILTIN_ASSET_VERSION` from the generated asset.
 - Produces: matching-version boot or explicit safe recovery; never an empty DB.
 
-- [ ] **Step 1: Write RED mixed-version and asset-failure tests**
+- [x] **Step 1: Write RED mixed-version and asset-failure tests**
 
 Require:
 
@@ -157,7 +157,7 @@ Require:
 
 Extend `activeCacheReport()` and `waitForShellCached()` to include `builtin-snapshot.js` and its QAGEN marker.
 
-- [ ] **Step 2: Run RED**
+- [x] **Step 2: Run RED**
 
 ```powershell
 node tests/pwa-shell.test.js tests/atomic-sheet-sync.test.js tests/runtime-assets.test.js
@@ -166,7 +166,7 @@ npx playwright test tests/browser/trip-three-scenarios.spec.js tests/browser/sw-
 
 Expected: FAIL because the generated asset is not yet loaded/cached/version-checked.
 
-- [ ] **Step 3: Implement safe boot wiring**
+- [x] **Step 3: Implement safe boot wiring**
 
 - Load the generated asset before the App boot script.
 - Replace inline generated payload with a small hand-maintained bootstrap guard only; do not retain a duplicate snapshot.
@@ -175,11 +175,11 @@ Expected: FAIL because the generated asset is not yet loaded/cached/version-chec
 - When neither exists, render a recovery panel with `重新載入` and diagnostic-copy actions; do not render an empty trip.
 - Register and cache the asset in every runtime location.
 
-- [ ] **Step 4: Run GREEN and performance comparison**
+- [x] **Step 4: Run GREEN and performance comparison**
 
 Run the focused Node/browser commands from Step 2 until green. Measure ten local Chromium cold navigations before and after using the same static server and record median DOMContentLoaded and first Today render. The external asset passes only when the median Today render regression is no greater than 10% and no individual run produces a blank or mixed-version state.
 
-- [ ] **Step 5: Apply the kill criterion**
+- [x] **Step 5: Apply the kill criterion**
 
 If any safety or performance condition fails, revert Task 3 runtime wiring and generated runtime registration, restore inline BUILTIN through the generator, and retain only independently useful generator tests. Record the failed condition in the v111 decision note.
 
@@ -201,19 +201,19 @@ git commit -m "refactor(builtin): externalize verified snapshot asset"
 - Consumes: clean committed v111 candidate and existing Playwright suite.
 - Produces: evidence-based worker decision; `workers: process.env.CI ? 2 : 1` only after three clean runs.
 
-- [ ] **Step 1: Record one-worker baseline**
+- [x] **Step 1: Record one-worker baseline**
 
 Run `npx playwright test --workers=1` once and record SHA, pass count, failure count, and wall time.
 
-- [ ] **Step 2: Run three clean two-worker suites**
+- [x] **Step 2: Run three clean two-worker suites**
 
 Run `npx playwright test --workers=2` three consecutive times without changing files between runs. Record every result and duration.
 
-- [ ] **Step 3: Decide mechanically**
+- [x] **Step 3: Decide mechanically**
 
 Adopt two CI workers only if all three runs pass with zero retries, zero pageerrors, no port conflicts, and identical test count. Otherwise leave config/workflow unchanged and record `one worker retained` with the exact failing evidence.
 
-- [ ] **Step 4: Implement the accepted configuration**
+- [x] **Step 4: Implement the accepted configuration**
 
 On success set:
 
@@ -223,7 +223,7 @@ workers:process.env.CI?2:1,
 
 Keep `.github/workflows/qa.yml` command `npm run test:browser`; add a troubleshooting comment documenting `npx playwright test --workers=1`. On rejection, commit only the experiment report.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 Success commit: `perf(test): use two Playwright CI workers`.
 
@@ -239,19 +239,19 @@ Rejected experiment commit: `docs(qa): retain deterministic Playwright worker`.
 - Consumes: Tasks 1–4 evidence.
 - Produces: either a verified v111 runtime candidate or a documented no-ship spike with the last accepted App version unchanged.
 
-- [ ] **Step 1: Record the exact outcome**
+- [x] **Step 1: Record the exact outcome**
 
 If externalization passes, forward-bump to v111 and document the new generated asset, recovery behavior, performance numbers, and worker decision. If it fails, do not claim or version a runtime release solely for the rejected spike; document which generator/test improvements remain.
 
-- [ ] **Step 2: Run full committed-tree gate**
+- [x] **Step 2: Run full committed-tree gate**
 
 Run full Node, Playwright with the accepted worker policy, SW mixed-version, offline boot, Pages-subpath-equivalent, runtime asset, BUILTIN no-drift, manifest, version, document, diff, Health Check, and pageerror gates.
 
-- [ ] **Step 3: Commit final records**
+- [x] **Step 3: Commit final records**
 
 Use a commit message that describes the actual outcome, not the planned outcome.
 
-- [ ] **Step 4: Fetch and push `dev` only when releasable**
+- [x] **Step 4: Fetch and push `dev` only when releasable**
 
 Require zero remote-only commits, clean tree, and identical post-push SHAs. Do not merge, deploy, or tag production.
 

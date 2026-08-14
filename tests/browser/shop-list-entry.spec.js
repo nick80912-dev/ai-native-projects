@@ -10,7 +10,7 @@
    2. 全檔沒有任何採買流程呼叫 renderAll()。在 overlay 內完成一項再關閉,
       購物頁的數字會停在舊值 —— 這個必須處理。
    ============================================================ */
-const { test, expect } = require('@playwright/test');
+const { test, expect } = require('./support/test');
 const {
   installFixedDate,
   installOfflineAppNetwork,

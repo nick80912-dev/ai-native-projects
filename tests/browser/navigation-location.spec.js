@@ -1,4 +1,4 @@
-const {test,expect}=require('@playwright/test');
+const {test,expect}=require('./support/test');
 const {collectPageErrors,waitForSyncToSettle}=require('./support/qa-fixture');
 
 async function openNavigationQaApp(page){

@@ -49,4 +49,5 @@ jobs:
       - name: 安裝 Chromium
         run: npx playwright install --with-deps chromium
       - name: Playwright QA(三情境 + SW 更新快取正確性)
+        # 疑似並行波動時，以 `npx playwright test --workers=1` 重跑定位；正式 gate 不啟用 retry。
         run: npm run test:browser

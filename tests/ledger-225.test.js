@@ -5,7 +5,7 @@ const vm=require('vm');
 const TripBuyToLedger=require('../buy-to-ledger.js');
 const TripLedgerUiState=require('../ledger-ui-state.js');
 
-const html=fs.readFileSync('index.html','utf8');
+const html=fs.readFileSync('shell/v111/index.html','utf8');
 const sw=fs.readFileSync('sw.js','utf8');
 
 function plain(value){return JSON.parse(JSON.stringify(value));}

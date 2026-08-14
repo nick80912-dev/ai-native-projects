@@ -21,23 +21,23 @@
 ## Tier 2 — 高風險保護範圍(修改前必過「原因/影響/風險/回滾」確認)
 | 檔案 | 說明 |
 |---|---|
-| `index.html` | 唯一 App 原始碼與正式部署入口;改壞直接影響線上使用者，修改前需通過四項確認 |
+| root `index.html`／`app-version.js` | byte-locked v110 bridge 正式入口；只供 predecessor 安裝前／失敗續命，禁止當 current App 編輯 |
+| `shell/v111/index.html`／`app-version.js` | current App 原始碼與版本 identity；改壞直接影響成功升級的線上使用者 |
 | `sw.js` | Service Worker;改壞會造成使用者快取災難 |
-| `app-version.js` | **App 與 SW 共用的版本單一來源**(2026-07-30 由 Bar 補列);`CACHE_NAME` 由此推導,改壞等同改壞 `sw.js`,風險視同 `sw.js` |
 | `manifest.webmanifest`、`icon-*.png` | PWA 安裝行為 |
 | `netlify.toml`(含 `sw.js`／`index.html`／版本檔的 `Cache-Control` header) | 上線與快取行為;header 改錯會讓「改版必到」失效 |
 
 ### PWA 風險群組(2026-07-30 由 Bar 定義)
-`sw.js`、`app-version.js` 與 `netlify.toml` 中對應的 cache header **視為同一風險群組**,理由:三者共同決定「使用者裝置上會不會拿到新版」。因此:
+`sw.js`、`shell/v111/index.html`／`app-version.js`／`builtin-snapshot.js`、root v110 bridge 與 `netlify.toml` 對應 cache header **視為同一風險群組**,理由:它們共同決定「使用者裝置上會不會原子取得新版」。因此:
 - 四項確認以**群組為單位**提出,不得因「這次只改一個檔」而略過;動其中任一個,四段說明必須涵蓋對另外兩者的影響。
-- 版本升級時,群組內任何不一致(例如 `app-version.js` 升版但 `sw.js` 的版本標記／`netlify.toml` 的 header 未同步)一律視為交付缺陷。
+- 版本升級時,群組內任何不一致(例如 current generation version 升版但 `sw.js` 標記／immutable path／header 未同步，或 bridge bytes 漂移)一律視為交付缺陷。
 - 群組相關的回滾一律依 `16_OPS_PLAYBOOK.md` §A2:往前 bump 版本號重新發布,**禁止以刪除 `sw.js` 作為回滾手段**。
 
 ## Tier 3 — 產生產物(禁止手改,只能重新產生)
 | 產物 | 來源 | 更新方式 |
 |---|---|---|
 | `09_SCHEMA_MAPPING.md` 表格區 | `schema.js` 的 `schemaDoc()` | 改 schema.js → 重跑 schemaDoc() 貼回(檔頭註解為手寫,可直接維護) |
-| 預覽/部署 HTML 內的 `BUILTIN` 快照 | Google Sheets 發布 CSV | 依 BUILTIN 更新 SOP 重抓注入(SOP 文件化見 backlog #6) |
+| `shell/v111/builtin-snapshot.js` | Google Sheets 七張非 Ledger 發布 CSV + `schema.js` Ledger header + App version | 先執行 preview，再以 `node tools/refresh-builtin-snapshot.js --write` 產生；禁止手改或在 v111 HTML 複製 payload |
 
 ## Gate 分級規則(疊加於憲章 4.1 的 Pre-Work Git Sync Gate)
 - Tier 1:過 Gate 後即可依 `15_AI_EXECUTION_RULES.md` 的任務分級動工。

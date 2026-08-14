@@ -28,8 +28,9 @@ function validateRuntimeAssets(options={}){
     }
   });
 
-  const index=read(rootDir,'index.html',errors);
   const serviceWorker=read(rootDir,'sw.js',errors);
+  const swVersion=(/var SW_VERSION='([^']+)'/.exec(serviceWorker)||[])[1];
+  const index=read(rootDir,swVersion?'shell/'+swVersion+'/index.html':'index.html',errors);
   const readme=read(rootDir,'README.md',errors);
   const shellMatch=/var\s+SHELL\s*=\s*\[([\s\S]*?)\];/.exec(serviceWorker);
   const shell=shellMatch?shellMatch[1]:'';

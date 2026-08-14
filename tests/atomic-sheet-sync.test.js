@@ -64,7 +64,8 @@ function sharedHotelDb(){
 
 const sb = loadValidator();
 const standaloneSource = fs.readFileSync('validator.js','utf8').replace(/\r\n/g,'\n').trim();
-const htmlSource = fs.readFileSync('index.html','utf8').replace(/\r\n/g,'\n');
+const htmlSource = fs.readFileSync('shell/v111/index.html','utf8').replace(/\r\n/g,'\n');
+const builtinSource = fs.readFileSync('shell/v111/builtin-snapshot.js','utf8').replace(/\r\n/g,'\n');
 const schemaSandbox = {};
 vm.createContext(schemaSandbox);
 vm.runInContext(fs.readFileSync('schema.js','utf8'),schemaSandbox);
@@ -79,10 +80,10 @@ const itineraryActColumn = schemaSandbox.SCHEMA.sheets.itin.columns.find(functio
 assert.strictEqual(itineraryActColumn.header,'行程','production Schema uses the confirmed itinerary Header');
 assert.strictEqual((itineraryActColumn.aliases||[]).indexOf('詳細行程'),-1,'obsolete Header is not retained as an alias');
 assert.match(htmlSource,/version:\s*'3\.0 \(2026-08-11\)'/,'inline fallback Schema version identifies the HID linkage contract');
-assert(htmlSource.includes('Exchange Rate,0.2'),'BUILTIN TripConfig contains the initial exchange rate');
-assert(htmlSource.includes('Ledger Default Currency,JPY'),'BUILTIN TripConfig contains the initial ledger currency');
+assert(builtinSource.includes('Exchange Rate,0.2'),'BUILTIN TripConfig contains the initial exchange rate');
+assert(builtinSource.includes('Ledger Default Currency,JPY'),'BUILTIN TripConfig contains the initial ledger currency');
 assert.match(htmlSource,/field:'act',\s*header:'行程'/,'inline fallback Schema uses the confirmed itinerary Header');
-assert(htmlSource.includes('日期,時間,行程,地點,ID,交通,備註'),'BUILTIN itinerary CSV uses the confirmed Header');
+assert(builtinSource.includes('日期,時間,行程,地點,ID,交通,備註'),'BUILTIN itinerary CSV uses the confirmed Header');
 const validatorMarker = htmlSource.indexOf('/* ===== validator.js');
 const embeddedStart = htmlSource.indexOf('/* ============================================================',validatorMarker+20);
 const embeddedEnd = htmlSource.indexOf('\n\n</script>',embeddedStart);
@@ -498,7 +499,12 @@ function loadCoordinator(){
     SHEETS:[{key:'itin'},{key:'places'},{key:'rest'},{key:'shop'},{key:'hotels'},{key:'exp'},{key:'cfg'}],
     SCHEMA:orchestrationSchema(),
     BUILTIN_TS:50,
+    BUILTIN_HTML_TS:50,
+    BUILTIN_HTML_VERSION:'v111',
+    BUILTIN_ASSET_VERSION:'v111',
+    SHELL_GENERATION_ERROR:'',
     BUILTIN:orchestrationRaw('builtin'),
+    appVersion:function(){return 'v111';},
     localStorage:storage,
     RAW:{sentinel:'raw'}, DB:{sentinel:'db'}, SRC:{sentinel:'src'}, CURRENT_SNAPSHOT:null,
     renderCount:0, renderAll:function(){runtime.renderCount++;},
@@ -519,6 +525,7 @@ function loadCoordinator(){
   runtime.makeValidationFinding=sb.makeValidationFinding;
   vm.runInContext([
     "var SNAPSHOT_STATE_KEY='trip_data_snapshot_state';var SNAPSHOT_FAILURE_KEY='trip_sync_last_failure';var SNAPSHOT_FORMAT_VERSION=1;",
+    extractFunction('builtinAssetState'),
     extractFunction('createDataSnapshot'), extractFunction('validSnapshotShape'),
     extractFunction('readSnapshotState'), extractFunction('nextSnapshotState'), extractFunction('writeSnapshotState'),
     extractFunction('validateCandidateStructure'), extractFunction('prepareSheetCandidate'),

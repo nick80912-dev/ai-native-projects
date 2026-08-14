@@ -8,7 +8,7 @@ function createStorage(initial){
   return {getItem(key){return Object.prototype.hasOwnProperty.call(values,key)?values[key]:null;},setItem(key,value){values[key]=String(value);writes++;},removeItem(key){delete values[key];},writes(){return writes;}};
 }
 function loadModule(storage){
-  const source=fs.readFileSync('index.html','utf8');
+  const source=fs.readFileSync('shell/v111/index.html','utf8');
   const start=source.indexOf('/* ================= ledgerRepository');
   const end=source.indexOf('/* ================= 分帳(雲端 Ledger)',start);
   assert(start>=0&&end>start,'ledger helper section exists');
@@ -77,7 +77,7 @@ assert.strictEqual(personalStore.writes()-beforeWrites,1,'personal batch editing
 assert.strictEqual(personal.all()[0].id,'p1','personal editing preserves the original ID');
 assert(!personal.all().some(record=>record.recordType==='deletion'),'personal edits never create tombstones');
 
-const html=fs.readFileSync('index.html','utf8');
+const html=fs.readFileSync('shell/v111/index.html','utf8');
 assert(html.includes('編輯')&&html.includes('⋯'),'effective record detail exposes an edit action menu');
 assert(html.includes("'編輯修改'"),'shared edit tombstones use the fixed automatic reason');
 

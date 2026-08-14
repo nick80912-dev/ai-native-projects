@@ -6,7 +6,7 @@
    與下一站卡片的 it.id 是 1:1 直接 join —— 不需要經由商場推導,
    也就沒有「一個商場對多個不同日期站點」的問題。
    ============================================================ */
-const { test, expect } = require('@playwright/test');
+const { test, expect } = require('./support/test');
 const {
   installFixedDate,
   installOfflineAppNetwork,

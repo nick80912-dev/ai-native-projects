@@ -4,7 +4,8 @@ const path=require('path');
 const vm=require('vm');
 
 const root=path.resolve(__dirname,'..');
-const indexSource=fs.readFileSync(path.join(root,'index.html'),'utf8');
+const indexSource=fs.readFileSync(path.join(root,'shell','v111','index.html'),'utf8');
+const builtinAssetSource=fs.readFileSync(path.join(root,'shell','v111','builtin-snapshot.js'),'utf8');
 const schemaSource=fs.readFileSync(path.join(root,'schema.js'),'utf8');
 const validatorSource=fs.readFileSync(path.join(root,'validator.js'),'utf8');
 
@@ -34,10 +35,10 @@ function extractFunction(source,name){
 }
 
 function readEffectiveBuiltin(){
-  const match=indexSource.match(/var BUILTIN_TS\s*=\s*\d+;\s*var BUILTIN\s*=\s*\{[\s\S]*?\};\s*(?:BUILTIN\.cfg\s*\+=\s*['"][\s\S]*?['"];\s*)?(?:BUILTIN\.ledger\s*=\s*['"][\s\S]*?['"];\s*)?/);
-  assert(match,'missing BUILTIN injection block');
+  const match=builtinAssetSource.match(/var BUILTIN_TS=\d+;\s*var BUILTIN_ASSET_VERSION='v\d+';\s*var BUILTIN=\{[\s\S]*?\};/);
+  assert(match,'missing generated BUILTIN asset block');
   const sandbox={};
-  vm.runInNewContext(match[0],sandbox,{filename:'index.html#BUILTIN'});
+  vm.runInNewContext(match[0],sandbox,{filename:'builtin-snapshot.js'});
   return JSON.parse(JSON.stringify(sandbox.BUILTIN));
 }
 
