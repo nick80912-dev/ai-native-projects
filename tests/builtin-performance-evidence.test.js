@@ -22,7 +22,9 @@ assert.strictEqual(evidence.thresholdPct,10,'approved regression threshold remai
     assert.strictEqual(sample.blank,false,label+' sample '+index+' rendered Today');
     assert(sample.identity&&sample.identity.app&&sample.identity.html&&sample.identity.sw,label+' sample '+index+' records shell identity');
     assert.strictEqual(sample.identity.app,sample.identity.html,label+' sample '+index+' HTML/App identity agrees');
+    assert.strictEqual(sample.identity.sw,sample.identity.app,label+' sample '+index+' SW/App identity agrees');
     if(sample.identity.asset)assert.strictEqual(sample.identity.asset,sample.identity.app,label+' sample '+index+' asset/App identity agrees');
+    assert.strictEqual(sample.identity.htmlTimestamp,sample.identity.timestamp,label+' sample '+index+' HTML/asset timestamp agrees');
   });
 });
 assert(evidence.baseline.samples.every(sample=>sample.identity.mode==='inline'),'baseline is the approved inline snapshot');
@@ -35,5 +37,6 @@ assert(regressionPct<=evidence.thresholdPct,'Today median regression '+regressio
 assert.strictEqual(evidence.result.baselineTodayMedian,baselineMedian,'recorded baseline median is mechanically reproducible');
 assert.strictEqual(evidence.result.candidateTodayMedian,candidateMedian,'recorded candidate median is mechanically reproducible');
 assert.strictEqual(evidence.result.regressionPct,Number(regressionPct.toFixed(2)),'recorded regression percentage is mechanically reproducible');
+assert.strictEqual(evidence.result.passes,regressionPct<=evidence.thresholdPct,'recorded pass/fail is mechanically reproducible');
 
 console.log('BUILTIN performance evidence tests passed');

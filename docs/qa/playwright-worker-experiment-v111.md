@@ -24,3 +24,7 @@ The three two-worker runs averaged 177.8 seconds, 47.1% below the one-worker bas
 ## Decision
 
 Accepted. `playwright.config.js` uses `process.env.CI ? 2 : 1`. The workflow command remains `npm run test:browser`, retries remain zero, and local runs remain single-worker for deterministic debugging. If CI later shows a parallel-only failure, reproduce with `npx playwright test --workers=1` before changing assertions or retry policy.
+
+## Post-review confirmation
+
+Release review added one GitHub Pages subpath/Service Worker generation case after the fixed matrix. The expanded suite then passed 182/182 with two workers, zero retries, zero page errors, and zero port conflicts in 186.5 seconds. This confirmation did not change the worker policy or the historical matrix above.

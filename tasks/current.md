@@ -4,8 +4,8 @@
 - v110 已由 Bar 驗收並完成 `main` merge、Netlify production verification 與 `production-v110` tag；v111 gate 已開啟。
 - v111 將 BUILTIN 從 `index.html` 搬到由工具產生的 `builtin-snapshot.js`，asset version 與 App／SW 原子綁定並納入 App Shell；HTML 不保留 duplicate payload。
 - asset 缺失／錯版時只接受有效 local active／previous snapshot；本機也無有效資料時顯示可重新載入／複製診斷的非空白 recovery，不建立空 DB。
-- 外部化十次冷啟動中位數：Today 382.9 → 374.8 ms（-2.1%），DOMContentLoaded 400.4 → 396.0 ms（-1.1%），無空白／混版，通過 ≤10% kill gate。
-- Playwright 同一 clean commit：1 worker 180/180（410.9 s）；2 workers 三輪皆 180/180（239.7／234.4／181.8 s），0 retries／pageerrors／port conflicts，因此採用 CI=2、本機=1。
+- 可重算效能證據固定 inline `d0405fe` 與 asset `36e9d59`：Today 中位數 171.70 → 159.35 ms（-7.19%），20 個樣本均記錄 HTML／App／asset／SW／timestamp identity，通過 ≤10% kill gate。
+- Playwright 同一 clean commit `e37b59f`：1 worker 181/181（336.2 s）；2 workers 三輪皆 181/181（170.3／185.9／177.2 s），0 retries／pageerrors／port conflicts；全域 fixture 會讓每個未捕捉 pageerror 失敗，因此採用 CI=2、本機=1。後續 release review 另新增 Pages subpath 第 182 案。
 
 
 
@@ -21,7 +21,7 @@
 | 正式站 | `https://trippilot-jp.netlify.app/` — v110 production health 已通過 |
 | **`dev` candidate** | **SW v111**；generated BUILTIN asset + safe fallback + CI 2-worker candidate |
 | 個人備份格式 | **v9**(`PERSONAL_STATE_SUPPORTED_VERSIONS = [1..9]`)—— v81 因想逛 key 識別語意變更而升版 |
-| candidate automated validation | Final committed tree: Node **88/88** test files, Chromium **180/180** with CI=2, zero retries; version／document／runtime asset／BUILTIN no-drift／JSON／diff gates pass |
+| candidate automated validation | Current release-hardening tree: Node **92/92** test files；worker matrix **181/181**，expanded final Chromium **182/182**（CI=2、186.5 s、zero retries/pageerrors/port conflicts）；version／document／runtime asset／BUILTIN／performance evidence／JSON／diff gates pass |
 | 既有 tag | `production-v18`、`production-v73`、`production-v110` |
 
 **v110 已正式發布；v111 僅交付 `dev` 驗收，不合併 `main`、不部署 production、不建立 tag。**
@@ -114,7 +114,7 @@
 | v108 | transient exact-target navigation、可見定位／scroll／focus return、display-only diagnostic impact、manifest status authority | ✅ final review／完整 gate／dev delivery；Bar 驗收中提出成功提示列精簡修正 |
 | v109 | 成功定位提示列移除、1 秒醒目＋0.2 秒淡出、失敗提示保留 | ✅ Bar device／PWA acceptance complete |
 | v110 | UI semantic tokens 與 Today deep-module extraction（原 v109） | ✅ Bar 驗收、main merge、production verification、tag 完成 |
-| v111 | BUILTIN asset spike 與 test throughput（原 v110） | ✅ final gate 通過；runtime／evidence 已推 dev（`5934748`），local／origin equality 已驗證 |
+| v111 | BUILTIN asset spike 與 test throughput（原 v110） | ✅ final release hardening complete locally；push dev／PR／main merge／Netlify production verification pending |
 
 **已知未做(需先定判準)**:Today 的「交通／停車／營業／付款／提醒**依當下情境動態調整優先順序**」。v84 只做了可明確驗收的收合(常駐交通／停車／營業,收合付款／提醒);「當下情境」的判準(依時間?依距離?依是否已抵達?)尚未定義,不同讀法會做出完全不同的東西,故未實作。
 

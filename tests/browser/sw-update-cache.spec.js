@@ -68,7 +68,7 @@ async function waitForShellCached(page,expectedKey) {
     if (!keys.length || (expected && !keys.includes(expected))) return false;
     const cache = await caches.open(expected||keys[0]);
     const cached = (await cache.keys()).map((request) => new URL(request.url).pathname);
-    return !!navigator.serviceWorker.controller&&['/index.html', '/app-version.js', '/builtin-snapshot.js', '/shopping-photo-store.js', '/buy-to-ledger.js', '/schema.js'].every((p) => cached.includes(p));
+    return !!navigator.serviceWorker.controller&&['index.html','app-version.js','builtin-snapshot.js','shopping-photo-store.js','buy-to-ledger.js','schema.js'].every((asset) => cached.some(pathname=>pathname.endsWith('/'+asset)));
   }, expectedKey||'', { timeout: 20000 });
   await page.waitForTimeout(200);
 }
@@ -96,21 +96,23 @@ test('SW 更新後新快取實際裝入新版資源,且 index／版本檔／sche
 
   /* The active old worker keeps one coherent generation until the new worker installs. */
   const transitional=await page.evaluate(async() => {
-    const [html,app,builtin]=await Promise.all([
+    const [html,app,builtin,schema]=await Promise.all([
       fetch('./index.html').then(response=>response.text()),
       fetch('./app-version.js').then(response=>response.text()),
-      fetch('./builtin-snapshot.js').then(response=>response.text())
+      fetch('./builtin-snapshot.js').then(response=>response.text()),
+      fetch('./schema.js').then(response=>response.text())
     ]);
     return {
       appVersion:(/APP_VERSION='([^']+)'/.exec(app)||[])[1],
       htmlVersion:(/BUILTIN_HTML_VERSION='([^']+)'/.exec(html)||[])[1],
       builtinVersion:(/BUILTIN_ASSET_VERSION='([^']+)'/.exec(builtin)||[])[1],
-      indexGen:(/QA_INDEX_GEN='([^']+)'/.exec(html)||[])[1]
+      indexGen:(/QA_INDEX_GEN='([^']+)'/.exec(html)||[])[1],
+      schemaGen:(/QA_SCHEMA_GEN='([^']+)'/.exec(schema)||[])[1]
     };
   });
   expect(transitional).toEqual({
     appVersion:PREVIOUS_VERSION+'-QAGEN1',htmlVersion:PREVIOUS_VERSION+'-QAGEN1',
-    builtinVersion:PREVIOUS_VERSION+'-QAGEN1',indexGen:'QAGEN1'
+    builtinVersion:PREVIOUS_VERSION+'-QAGEN1',indexGen:'QAGEN1',schemaGen:'QAGEN1'
   });
   const transitionalCache=await activeCacheReport(page);
   for(const marker of Object.values(transitionalCache[expectedFirstKey]))expect(marker).toBe('QAGEN1');
@@ -245,9 +247,38 @@ test('a mixed-generation App Shell makes the new SW install fail and preserves t
   await page.waitForTimeout(1000);
   await expect.poll(()=>page.evaluate(()=>caches.keys())).toEqual(['okayama-trip-'+PREVIOUS_VERSION+'-QAGEN1']);
   await page.reload();
-  const runtime=await page.evaluate(()=>({app:APP_VERSION,html:BUILTIN_HTML_VERSION,asset:BUILTIN_ASSET_VERSION,index:QA_INDEX_GEN}));
+  const runtime=await page.evaluate(async()=>{
+    const schema=await fetch('./schema.js').then(response=>response.text());
+    return {app:APP_VERSION,html:BUILTIN_HTML_VERSION,asset:BUILTIN_ASSET_VERSION,index:QA_INDEX_GEN,schema:(/QA_SCHEMA_GEN='([^']+)'/.exec(schema)||[])[1]};
+  });
   expect(runtime).toEqual({
     app:PREVIOUS_VERSION+'-QAGEN1',html:PREVIOUS_VERSION+'-QAGEN1',
-    asset:PREVIOUS_VERSION+'-QAGEN1',index:'QAGEN1'
+    asset:PREVIOUS_VERSION+'-QAGEN1',index:'QAGEN1',schema:'QAGEN1'
   });
+});
+
+test('version-bound App Shell updates and offline deep links work under the GitHub Pages subpath',async({page,context})=>{
+  if(server)await server.close();
+  const basePath='/ai-native-projects/';
+  server=createVersionedServer({generation:1,basePath,versions:{1:PREVIOUS_VERSION,2:VERSION}});
+  ORIGIN='http://127.0.0.1:'+await server.listen(0);
+  await page.goto(ORIGIN+basePath+'index.html');
+  await waitForActiveWorker(page);
+  await waitForShellCached(page,'okayama-trip-'+PREVIOUS_VERSION+'-QAGEN1');
+  server.setGeneration(2);
+  const transitional=await page.evaluate(async()=>{
+    const bodies=await Promise.all(['index.html','app-version.js','builtin-snapshot.js','schema.js'].map(path=>fetch('./'+path).then(response=>response.text())));
+    return bodies.map(body=>(/QAGEN\d+/.exec(body)||[])[0]);
+  });
+  expect(transitional).toEqual(['QAGEN1','QAGEN1','QAGEN1','QAGEN1']);
+  await page.evaluate(async()=>{const registration=await navigator.serviceWorker.getRegistration();await registration.update();});
+  await expect.poll(()=>page.evaluate(()=>caches.keys())).toEqual(['okayama-trip-'+VERSION+'-QAGEN2']);
+  await page.reload();
+  expect(await page.evaluate(()=>[BUILTIN_HTML_VERSION,APP_VERSION,BUILTIN_ASSET_VERSION])).toEqual([
+    VERSION+'-QAGEN2',VERSION+'-QAGEN2',VERSION+'-QAGEN2'
+  ]);
+  await context.setOffline(true);
+  await page.goto(ORIGIN+basePath+'deep/link');
+  await expect(page.locator('#view-today')).not.toBeEmpty();
+  expect(page.url()).toContain(basePath+'deep/link');
 });

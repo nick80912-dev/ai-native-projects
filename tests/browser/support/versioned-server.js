@@ -33,6 +33,7 @@ const mimeTypes = {
 function createVersionedServer(options) {
   options = options || {};
   const state = { generation: options.generation || 1 };
+  const basePath = ('/' + String(options.basePath || '').replace(/^\/+|\/+$/g, '') + '/').replace(/^\/\/$/, '/');
 
   function transform(relativePath, buffer) {
     const tag = 'QAGEN' + state.generation;
@@ -61,7 +62,13 @@ function createVersionedServer(options) {
 
   const server = http.createServer((request, response) => {
     const pathname = decodeURIComponent(new URL(request.url, 'http://127.0.0.1').pathname);
-    const relativePath = pathname === '/' ? 'index.html' : pathname.replace(/^\/+/, '');
+    if (!pathname.startsWith(basePath)) {
+      response.writeHead(404, { 'Content-Type': 'text/plain', 'Cache-Control': 'max-age=600' });
+      response.end('Not found');
+      return;
+    }
+    const mountedPath = pathname.slice(basePath.length);
+    const relativePath = mountedPath === '' ? 'index.html' : mountedPath.replace(/^\/+/, '');
     const target = path.resolve(root, relativePath);
     const relativeToRoot = path.relative(root, target);
 

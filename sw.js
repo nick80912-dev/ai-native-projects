@@ -60,12 +60,26 @@ function offlineMiss(){
   return new Response('', { status: 504, statusText: 'Offline and not cached' });
 }
 
-function versionedShellKind(url,isNavigate){
+function scopeRelativePath(url){
   var pathname=new URL(url,self.location.origin).pathname;
-  if(isNavigate||pathname==='/'||pathname==='/index.html')return 'html';
-  if(pathname==='/app-version.js')return 'app';
-  if(pathname==='/builtin-snapshot.js')return 'builtin';
+  var scopePath=new URL(self.registration.scope).pathname;
+  if(pathname.indexOf(scopePath)!==0)return null;
+  return pathname.slice(scopePath.length).replace(/^\/+/, '');
+}
+
+function versionedShellKind(url,isNavigate){
+  var relative=scopeRelativePath(url);
+  if(isNavigate||relative===''||relative==='index.html')return 'html';
+  if(relative==='app-version.js')return 'app';
+  if(relative==='builtin-snapshot.js')return 'builtin';
   return '';
+}
+
+function isKnownShellRequest(url,isNavigate){
+  if(isNavigate)return true;
+  var relative=scopeRelativePath(url);
+  if(relative===null)return false;
+  return SHELL.some(function(entry){return entry.replace(/^\.\//,'')===relative;});
 }
 
 function responseShellVersion(kind,source){
@@ -80,14 +94,22 @@ function responseMatchesWorker(request,response,isNavigate){
   return response.clone().text().then(function(source){return responseShellVersion(kind,source)===SW_VERSION;});
 }
 
+function scopedIndexResponse(page){
+  return page.text().then(function(source){
+    var scope=String(self.registration.scope).replace(/&/g,'&amp;').replace(/"/g,'&quot;');
+    var html=source.replace(/<head>/i,'<head>\n<base href="'+scope+'">');
+    var headers=new Headers(page.headers);
+    headers.delete('content-length');
+    return new Response(html,{status:page.status,statusText:page.statusText,headers:headers});
+  });
+}
+
 function cachedOrOffline(request,isNavigate){
   return caches.match(request,{ignoreSearch:true}).then(function(hit){
     if(hit)return hit;
     if(isNavigate)return caches.match('./index.html').then(function(page){
       if(!page)return offlineMiss();
-      var pathname=new URL(request.url).pathname;
-      var indexPath=new URL('./index.html',self.registration.scope).pathname;
-      return pathname===indexPath?page:Response.redirect(new URL('./index.html',self.registration.scope).href,302);
+      return scopeRelativePath(request.url)==='index.html'?page:scopedIndexResponse(page);
     });
     return offlineMiss();
   });
@@ -131,24 +153,21 @@ self.addEventListener('fetch', function(e){
   if(e.request.method !== 'GET') return;
 
   var isNavigate = e.request.mode === 'navigate';
+  var shellRequest = isKnownShellRequest(e.request.url,isNavigate);
 
-  /* 同源外殼:network-first(繞過 HTTP cache 但允許 304),失敗退快取 */
+  /* 已安裝的整組 App Shell 一律 cache-first,直到通過 install 驗證的新 worker 啟用。
+     這會把 HTML、版本檔與所有 runtime module 凍結在同一世代。 */
+  if(shellRequest)return e.respondWith(
+    caches.match(e.request,{ignoreSearch:true}).then(function(hit){
+      return hit||cachedOrOffline(e.request,isNavigate);
+    })
+  );
+
+  /* 非 App Shell 的同源 GET 維持 network-first。 */
   e.respondWith(
     fetch(new Request(e.request, { cache:'no-cache' })).then(function(res){
       if(!res||!res.ok)return res;
-      return responseMatchesWorker(e.request,res,isNavigate).then(function(matches){
-        if(!matches)return cachedOrOffline(e.request,isNavigate);
-        var clone=res.clone();
-        caches.open(CACHE_NAME).then(function(c){c.put(e.request,clone);});
-        return res;
-      });
-    }).catch(function(){
-      return caches.match(e.request, { ignoreSearch:true }).then(function(hit){
-        if(hit) return hit;
-        /* 只有整頁導覽才退回 index.html;script / manifest / 圖片等子資源一律不得。 */
-        if(isNavigate) return caches.match('./index.html').then(function(page){ return page || offlineMiss(); });
-        return offlineMiss();
-      });
-    })
+      return res;
+    }).catch(function(){return cachedOrOffline(e.request,false);})
   );
 });

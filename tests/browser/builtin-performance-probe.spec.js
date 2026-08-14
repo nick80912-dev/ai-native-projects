@@ -1,10 +1,11 @@
-const {test,expect}=require('./support/test');
+const {test,expect,trackPageErrors}=require('./support/test');
 
 test('records ten cold boot samples',async ({browser})=>{
   const samples=[];
   for(let run=0;run<10;run+=1){
     const context=await browser.newContext({viewport:{width:390,height:844}});
     const page=await context.newPage();
+    const pageErrors=trackPageErrors(page);
     await page.addInitScript(()=>{
       window.__firstTodayRender=0;
       new MutationObserver(function(){
@@ -35,6 +36,8 @@ test('records ten cold boot samples',async ({browser})=>{
         }
       };
     }));
+    pageErrors.dispose();
+    pageErrors.assert();
     await context.close();
   }
   console.log('BUILTIN_PERF '+JSON.stringify(samples));
