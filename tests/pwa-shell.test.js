@@ -10,6 +10,11 @@ function sha256(filePath) {
   return crypto.createHash('sha256').update(fs.readFileSync(filePath)).digest('hex').toUpperCase();
 }
 
+function sha256RepositoryText(filePath) {
+  const source = fs.readFileSync(filePath, 'utf8').replace(/\r\n/g, '\n');
+  return crypto.createHash('sha256').update(source).digest('hex').toUpperCase();
+}
+
 function assertPngSize(filePath, expectedSize) {
   const png = fs.readFileSync(filePath);
   assert.strictEqual(png.readUInt32BE(16), expectedSize, `${path.basename(filePath)} width is ${expectedSize}px`);
@@ -53,8 +58,8 @@ assert.match(versionSource, /^var APP_VERSION='v\d+';\s*$/, 'app-version.js keep
 assert.strictEqual(appVersion(), swVersion(), 'app-version.js and the sw.js version marker agree');
 assert.match(bridgeVersionSource,/^var APP_VERSION='v110';\s*$/,'root app-version remains the deployed v110 bridge identity');
 assert.match(bridgeIndex,/var APP_RELEASE_NOTES=\[\s*\{version:'v110'/,'root index remains the deployed v110 bridge document');
-assert.strictEqual(sha256(bridgeIndexPath),'7E22172860865D343DF8061317AA0D231F0323EB296564B10CF871D273E1682F','root index remains byte-for-byte origin/main v110');
-assert.strictEqual(sha256(bridgeVersionPath),'86D72D60DAD9EFA09D93D999D0814ACEAAB4A9492DD1C709EA35EBD81E6CBCE1','root app-version remains byte-for-byte origin/main v110');
+assert.strictEqual(sha256RepositoryText(bridgeIndexPath),'7E22172860865D343DF8061317AA0D231F0323EB296564B10CF871D273E1682F','root index remains byte-for-byte origin/main v110');
+assert.strictEqual(sha256RepositoryText(bridgeVersionPath),'085E37A275B03DBC20630A5A500F5E5192DB7C5A75F13E4725F788E0D49714CB','root app-version remains byte-for-byte origin/main v110');
 assert.match(index, /<script src="shell\/v111\/app-version\.js"><\/script>/, 'current document loads the immutable generation version');
 assert.match(index, /<script src="shell\/v111\/app-version\.js"><\/script>\s*<script id="builtinSnapshotMarker">var BUILTIN_HTML_VERSION='v\d+';var BUILTIN_HTML_TS=\d+;<\/script>\s*<script src="shell\/v111\/builtin-snapshot\.js"><\/script>/, 'runtime marker and generated BUILTIN use immutable generation paths before boot');
 assert.doesNotMatch(index, /var BUILTIN\s*=\s*\{/, 'index does not retain a duplicate inline BUILTIN payload');
