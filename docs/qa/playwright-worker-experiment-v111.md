@@ -1,7 +1,7 @@
 # Playwright worker experiment — v111
 
-Date: 2026-08-13  
-Candidate commit: `2a7611a3c2eb5788bd288dba63ff2d1debf33b7c`  
+Date: 2026-08-13
+Candidate commit: `2a7611a3c2eb5788bd288dba63ff2d1debf33b7c`
 Policy under test: keep local default at one worker; use two workers only in CI.
 
 ## Fixed acceptance rule
