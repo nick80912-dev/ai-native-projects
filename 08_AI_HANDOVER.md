@@ -5,7 +5,7 @@
 - Current local `dev` candidate 為 v113；只修改 Cedar／杉綠、Mist／霧藍、Tea／焙茶的既有 13-token palette，Ocean／Ivory／Wisteria 與所有 layout、資料、互動、Schema、Ledger、同步及備份語意不變。
 - Cedar 保留 action `#2f6b4f`，改用 moss paper、torii orange、olive-gold；Mist 改用 fog-blue paper、deep-sea blue、sun-gold、sea-glass；Tea 保留 action `#896748`，改用 warm paper、Kurashiki indigo、kiln-rust。
 - Node source contract 驗證三組 paper RGB distance、accent hue distance、secondary 唯一性及 WCAG 對比；Playwright 使用實際 computed styles 驗證 390×844 下的六主題 chrome、幾何、overflow 與優先 palette。root `index.html`／`app-version.js` 仍為 byte-locked v110 bridge。
-- v113 尚未 push、merge、部署或建立 tag；最後驗證數字以 `tasks/current.md` 為準。
+- v113 功能 commit `d453b84` 已推送 `dev`，merge commit `7cbb1ab` 已推送 `main`；merged tree 通過 Node **94/94**、Chromium Playwright **185/185**，版本／文件／12 項 runtime asset／BUILTIN no-drift／root bridge checks 全綠。未建立 PR，Netlify production verification、Android 實體手機與 production tag 仍待後續流程；最後狀態以 `tasks/current.md` 為準。
 
 ## v112 UI/UX and Android PWA handover
 

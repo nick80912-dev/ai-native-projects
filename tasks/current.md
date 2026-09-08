@@ -4,7 +4,7 @@
 - v112 已推送 `dev`／`main`，Bar 回報正式站已是 v112 且目前驗證正常；Android Chromium 等效自動驗證通過，Android 實體手機仍待 Bar 操作驗收。
 - v113 只調整杉綠、霧藍、焙茶三組既有 palette；Ocean、Ivory、Wisteria、版面、資料與互動行為不變。
 - 三組 page surface、accent 與 secondary 已拉開；主要文字／操作色維持 WCAG AA，390×844 畫面無 overflow。
-- 本機完整 Node **94/94**、Playwright **185/185** 與三情境健康檢查通過；尚未 push、merge 或部署。
+- 本機及 merged tree 的 Node **94/94**、Playwright **185/185** 與三情境健康檢查通過；已推送 `dev`／`main`，正式部署尚待驗證。
 
 
 
@@ -16,14 +16,14 @@
 | 項目 | 值 |
 |---|---|
 
-| **`origin/main` 原始碼** | **SW v112**；目前 `3acf933` |
+| **`origin/main` 原始碼** | **SW v113**；功能 merge `7cbb1ab` 已推送 |
 | 正式站 | `https://trippilot-jp.netlify.app/` — Bar 回報已是 v112 且驗證正常；Android 實體手機仍待驗收 |
-| **本機 `dev` candidate** | **SW v113**；以 `origin/dev` `eac36ef` 為基準，尚未 push |
+| **`origin/dev` candidate** | **SW v113**；功能 commit `d453b84` 已推送 |
 | 個人備份格式 | **v9**(`PERSONAL_STATE_SUPPORTED_VERSIONS = [1..9]`)—— v81 因想逛 key 識別語意變更而升版 |
 | candidate automated validation | Node **94/94**、Chromium Playwright **185/185**；三種啟動情境 `healthCheck()=[]`、`pageerror=0` |
 | 既有 tag | `production-v18`、`production-v73`、`production-v110`、`production-v111` |
 
-**v113 僅存在本機 `dev` working tree；不得把本機自動驗證視為正式站部署或 Android 實體手機驗收。**
+**v113 已推送 `dev` 與 `main`；不得把 Git 推送或自動驗證視為 Netlify 正式站部署或 Android 實體手機驗收。**
 
 ### v74–v98 已折疊的主要能力
 
@@ -115,12 +115,12 @@
 | v110 | UI semantic tokens 與 Today deep-module extraction（原 v109） | ✅ Bar 驗收、main merge、production verification、tag 完成 |
 | v111 | BUILTIN asset spike 與 test throughput（原 v110） | ✅ main merge、production verification、tag 完成 |
 | v112 | 行程 UI/UX 精簡、延後身分選擇、空狀態 CTA、Android PWA 相容 | ✅ `dev`／`main` 已推送、正式站由 Bar 回報驗證正常；Android 實體手機待驗收 |
-| v113 | 杉綠／霧藍／焙茶優先配色辨識度 | ✅ 本機完整 gate 通過；待 Bar 決定是否 push `dev` |
+| v113 | 杉綠／霧藍／焙茶優先配色辨識度 | ✅ `dev`／`main` 已推送、merged-tree gate 通過；待 Netlify production verification |
 
 **已知未做(需先定判準)**:Today 的「交通／停車／營業／付款／提醒**依當下情境動態調整優先順序**」。v84 只做了可明確驗收的收合(常駐交通／停車／營業,收合付款／提醒);「當下情境」的判準(依時間?依距離?依是否已抵達?)尚未定義,不同讀法會做出完全不同的東西,故未實作。
 
 ## 下一棒
 
-→ **由 Bar 檢視 v113 三組主題預覽，確認後再決定是否 push `dev`；Android 實體手機可另依既有 v112 流程驗收。** 未完成正式發版流程前不得建立 production tag。
+→ **確認 GitHub Actions／Netlify production 已接管 v113，再由 Bar 驗收三組主題；Android 實體手機可一併依既有流程驗收。** 未完成正式發版流程前不得建立 production tag。
 
 > 正式發布仍必須遵守 §E：PR 與 Actions 通過後才能 merge；Netlify 線上驗證通過後才能建立 production tag。
