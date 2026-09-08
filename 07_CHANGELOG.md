@@ -5,7 +5,7 @@
 - 只調整使用者指出較相近的杉綠、霧藍、焙茶三組主題；Ocean、Ivory、Wisteria、版面、資料、互動與導航行為不變。
 - 杉綠採苔綠和紙底、鳥居橘與橄欖金；霧藍採瀨戶海霧底、深海藍、日光金與海玻璃綠；焙茶採暖紙棕、原焙茶操作色、倉敷靛藍與窯燒鏽紅。
 - 三組主題的 page surface、accent 與 secondary 皆有可測量差異；所有主要文字／操作色對背景維持 WCAG AA 4.5:1 以上，390×844 mobile UI 與既有六主題幾何契約納入瀏覽器驗證。
-- App／SW forward-bump 至 v113，root v110 bridge 保持 byte-identical；版本綁定 BUILTIN 由既有 generator 更新並通過 no-drift preview。尚未 push、merge、部署或建立 production tag。
+- App／SW forward-bump 至 v113，root v110 bridge 保持 byte-identical；版本綁定 BUILTIN 由既有 generator 更新並通過 no-drift preview。功能 commit `d453b84` 已推送 `dev`，merge commit `7cbb1ab` 已推送 `main`；merged tree 通過 Node **94/94**、Chromium Playwright **185/185**。未建立 PR，Netlify production verification 與 production tag 仍待後續流程。
 
 ## 2026-09-07 — v112 行程 UI/UX 精簡與 Android PWA 相容（candidate）
 
