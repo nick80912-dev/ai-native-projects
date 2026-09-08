@@ -1,5 +1,13 @@
 # 07 版本紀錄
 
+## 2026-09-07 — v112 行程 UI/UX 精簡與 Android PWA 相容（candidate）
+
+- 行程卡改以 resolved Place／Restaurant 或 itinerary place 為主標題，時間與活動降為次要資訊；導航依逐站 move／travel 選擇步行、開車或大眾運輸，並把桃園等台灣目的地正確限定為台灣。
+- 出發前 Today Hero 的 Day 1 預覽縮成兩個實際目的地與剩餘站數，六日摘要排除無目的地的泛用活動；樓層與營業時間提升為 13px。
+- 首次啟動不再強迫選擇 Ledger 身分；第一次進入分帳才觸發既有 selector。Shopping／Ledger 空狀態新增主要 CTA，零紀錄時隱藏查看全部、結算與代購管理卡。
+- App／SW forward-bump 至 v112，root v110 bridge 保持 byte-identical，BUILTIN 由既有 generator 建立。Android Chromium 實測揭露並修正 Service Worker 並行 fetch 未先消耗 response body 導致的連線池 deadlock；response 先完整 buffer，全部驗證成功後才寫入 cache，原子安裝語意不變。
+- 新增 Node `ui-ux-v112.test.js` 與 Android mobile/touch Playwright 覆蓋；最終本機 gate 通過 Node **94/94**、Chromium Playwright **185/185**（single worker、zero retries），三種啟動情境 `healthCheck()=[]` 且 `pageerror=0`，另通過版本／文件／12 項 runtime asset／BUILTIN no-drift／manifest JSON／diff checks。Android 實體手機安裝仍保留為 Bar 驗收項；本批未 push、未建 PR、未部署、未進 production。
+
 ## 2026-08-13 — v111 產生式 BUILTIN 與測試吞吐（candidate）⭐ 架構變更
 
 - BUILTIN 改為由 `tools/refresh-builtin-snapshot.js` 產生的 `shell/v111/builtin-snapshot.js`；root HTML／App version byte-lock 為 v110 bridge，v111 document／version／snapshot 採 immutable generation path，只有 v111 worker install 驗證成功後才接管導覽。

@@ -80,7 +80,10 @@ test('消費與採買卡同行顯示共用代購標記，消費卡窄螢幕維�
   await installProxyFixtures(page);
   await openApp(page);
   await waitForSyncToSettle(page);
-  await page.evaluate(()=>{closeMemberSelector();switchView('split');});
+  await page.evaluate(()=>{
+    memberRegistrationBridge.push({id:'proxy-member',time:'2026-08-03T00:00:00.000Z',member:'Bar',recordType:'identity_registration'});
+    closeMemberSelector();switchView('split');
+  });
 
   const recent=page.locator('.ledger-recent-row').filter({hasText:DETAIL}).first();
   await expect(recent.locator('.ledger-recent-primary-line')).toContainText(DETAIL);

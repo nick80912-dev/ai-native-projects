@@ -235,11 +235,12 @@ function extractThemeIds(html){
   assert.strictEqual(notes[0].version,appVersion(),'the newest release note is the current version');
   /* 滾動的五筆視窗:最新一筆是目前版本,其餘四筆是緊接在後的歷史版本。
      歷史版本刻意寫死字面值(見 tests/support/version.js 的適用範圍說明)。 */
-  assert.deepStrictEqual(Array.from(notes.slice(1),function(note){return note.version;}),['v110','v109','v108','v107']);
-  assert.match(notes[0].title,/離線/,'v111 release note describes the offline boot work');
-  assert(JSON.stringify(notes[0]).includes('版本綁定'),'v111 release note explains the atomic version boundary');
-  assert(JSON.stringify(notes[0]).includes('本機完整快照'),'v111 release note explains the safe local fallback');
-  assert(JSON.stringify(notes[0]).includes('空白頁'),'v111 release note explains the actionable recovery state');
+  assert.deepStrictEqual(Array.from(notes.slice(1),function(note){return note.version;}),['v111','v110','v109','v108']);
+  assert.match(notes[0].title,/行程/,'v112 release note describes the itinerary UX work');
+  assert(JSON.stringify(notes[0]).includes('交通方式'),'v112 release note explains item-local navigation');
+  assert(JSON.stringify(notes[0]).includes('身分選擇'),'v112 release note explains deferred identity selection');
+  const v111Note=notes.filter(function(note){return note.version==='v111';})[0];
+  assert(v111Note&&JSON.stringify(v111Note).includes('版本綁定'),'v111 offline boot note remains in the five-release window');
   notes.forEach(note=>{
     assert(note.title&&note.title.length<=24,'release title is short and present');
     assert(Array.isArray(note.items)&&note.items.length>=1,'release has user-readable items');

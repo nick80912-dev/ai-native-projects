@@ -1,7 +1,7 @@
 const assert=require('assert');
 const fs=require('fs');
 const vm=require('vm');
-const html=fs.readFileSync('shell/v111/index.html','utf8');
+const html=fs.readFileSync('shell/v112/index.html','utf8');
 
 function extractFunction(source,name){
   const start=source.indexOf('function '+name+'(');assert(start>=0,name+' exists');
@@ -152,7 +152,7 @@ const correctionHistorySource=extractFunction(html,'renderLedgerCorrectionHistor
 assert(correctionHistorySource.includes('操作人：')&&correctionHistorySource.includes('參與：'),'history discloses actor and version item content');
 assert(correctionHistorySource.includes('與前版差異')&&correctionHistorySource.includes('renderLedgerCorrectionChanges(entry.changes)'),'history discloses actual changes relative to the prior canonical version');
 assert(html.includes('function formatLedgerLocalOccurrence('),'local occurrence formatting is shared');
-assert(html.includes('尚無消費紀錄')&&html.includes('點右下角 ＋ 開始記帳'),'recent empty state explains the next action');
+assert(html.includes('尚無消費紀錄')&&html.includes('記一筆消費'),'recent empty state provides the next action directly');
 
 const splitSource=html.slice(html.indexOf('function renderSplit()'),html.indexOf('/* ================= 導覽 / 啟動'));
 const copyIndex=splitSource.indexOf('個人帳留在本機；團體帳跨裝置同步。');

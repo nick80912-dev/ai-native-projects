@@ -13,7 +13,7 @@ function createStorage(){
 }
 
 function loadModule(){
-  const source=fs.readFileSync('shell/v111/index.html','utf8');
+  const source=fs.readFileSync('shell/v112/index.html','utf8');
   const start=source.indexOf('/* ================= ledgerRepository');
   const end=source.indexOf('/* ================= 分帳',start);
   assert(start>=0&&end>start,'ledger helper section exists');
@@ -230,7 +230,7 @@ assert.strictEqual(mod.ledgerSettlementCardProgress(allSettled,false),'新增團
 const threePending=Object.assign({},multipleReceivable,{pendingCount:3,pendingNames:['小明','小華','媽媽']});
 assert.strictEqual(mod.ledgerSettlementCardProgress(threePending,true),'尚待 3 人 · 小明、小華等','settlement card caps names at two and adds the overflow suffix');
 
-const html=fs.readFileSync('shell/v111/index.html','utf8');
+const html=fs.readFileSync('shell/v112/index.html','utf8');
 const settlementSource=html.slice(html.indexOf('function ledgerCurrentMemberSettlement('),html.indexOf('function showLedgerFullList('));
 assert(settlementSource.includes('buildMemberBalances(records,null,null,universe)'),'settlement UI consumes the universe-aware PR4 balance engine');
 assert(settlementSource.includes("buildTransferSuggestions(balances,'JPY')"),'settlement UI consumes PR4 JPY transfer suggestions');

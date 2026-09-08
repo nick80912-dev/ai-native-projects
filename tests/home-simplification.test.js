@@ -2,7 +2,7 @@ const assert = require('assert');
 const fs = require('fs');
 const path = require('path');
 
-for (const file of ['shell/v111/index.html']) {
+for (const file of ['shell/v112/index.html']) {
   const html = fs.readFileSync(path.join(__dirname, '..', file), 'utf8');
   assert.match(html, /--tabbar-height:62px/, `${file} has a stable tabbar height`);
   assert.match(html, /height:calc\(var\(--tabbar-height\) \+ env\(safe-area-inset-bottom\)\)/, `${file} locks tabbar height`);

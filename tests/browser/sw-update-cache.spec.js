@@ -243,7 +243,7 @@ test('a mixed-generation App Shell makes the new SW install fail and preserves t
   server=createVersionedServer({
     generation:1,bridgeGeneration:1,versions:{1:PREVIOUS_VERSION,2:VERSION},
     workerSources:{1:V110_WORKER},stablePaths:STABLE_V110_MODULES,
-    resourceVersions:{2:{'shell/v111/builtin-snapshot.js':PREVIOUS_VERSION}}
+    resourceVersions:{2:{'shell/v112/builtin-snapshot.js':PREVIOUS_VERSION}}
   });
   ORIGIN='http://127.0.0.1:'+await server.listen(0);
   await page.goto(ORIGIN+'/index.html');

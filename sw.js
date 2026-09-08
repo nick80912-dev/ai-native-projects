@@ -1,6 +1,6 @@
 /* ===== sw.js — App 外殼離線防線 =====
    策略(2026-07-11 定案,2026-07-30 依 C1／C1.5 實證修訂;對應 16_OPS_PLAYBOOK 部署章節):
-   1. 只管同源 App Shell；root index／app-version 是 frozen v110 bridge，current version-bearing assets 在 shell/v111/
+   1. 只管同源 App Shell；root index／app-version 是 frozen v110 bridge，current version-bearing assets 在 shell/v112/
    2. 已安裝外殼採 cache-first:同一個 worker 生命週期固定同世代資產;新版由 install 驗證完成後原子切換
    3. CSV 資料(docs.google.com)一律放行不攔截 → 資料層維持既有三層防線
       (BUILTIN → localStorage → background sync),SW 與資料層職責不重疊
@@ -24,15 +24,15 @@
      非外殼同源 fetch 用 no-cache —— 允許 304,兼顧流量與更新
    已安裝外殼不再逐次打網路,避免舊 worker 把新部署的 runtime module 寫入舊世代快取。
 */
-var SW_VERSION='v111';
+var SW_VERSION='v112';
 var CACHE_NAME='okayama-trip-'+SW_VERSION;
-var CURRENT_DOCUMENT='./shell/v111/index.html';
-var CURRENT_APP_VERSION='./shell/v111/app-version.js';
-var CURRENT_BUILTIN='./shell/v111/builtin-snapshot.js';
+var CURRENT_DOCUMENT='./shell/v112/index.html';
+var CURRENT_APP_VERSION='./shell/v112/app-version.js';
+var CURRENT_BUILTIN='./shell/v112/builtin-snapshot.js';
 var SHELL = [
-  './shell/v111/index.html',
-  './shell/v111/app-version.js',
-  './shell/v111/builtin-snapshot.js',
+  './shell/v112/index.html',
+  './shell/v112/app-version.js',
+  './shell/v112/builtin-snapshot.js',
   './navigation-intent.js',
   './diagnostic-impact.js',
   './today-view.js',
@@ -71,9 +71,9 @@ function scopeRelativePath(url){
 
 function versionedShellKind(url,isNavigate){
   var relative=scopeRelativePath(url);
-  if(isNavigate||relative==='shell/v111/index.html')return 'html';
-  if(relative==='shell/v111/app-version.js')return 'app';
-  if(relative==='shell/v111/builtin-snapshot.js')return 'builtin';
+  if(isNavigate||relative==='shell/v112/index.html')return 'html';
+  if(relative==='shell/v112/app-version.js')return 'app';
+  if(relative==='shell/v112/builtin-snapshot.js')return 'builtin';
   return '';
 }
 
@@ -94,6 +94,15 @@ function responseMatchesWorker(request,response,isNavigate){
   var kind=versionedShellKind(request.url,isNavigate);
   if(!kind)return Promise.resolve(true);
   return response.clone().text().then(function(source){return responseShellVersion(kind,source)===SW_VERSION;});
+}
+
+/* Chromium 對同源連線數有上限。若先並行 fetch 全部資源、但等 Promise.all 後才由 cache.put
+   讀取 response body，未消耗的 stream 會占住連線槽並讓後續請求永遠無法開始。
+   先完整讀成 Blob 再重建 Response，可釋放連線且仍維持「全部驗證後才開 cache 寫入」的原子邊界。 */
+function bufferShellResponse(response){
+  return response.blob().then(function(body){
+    return new Response(body,{status:response.status,statusText:response.statusText,headers:new Headers(response.headers)});
+  });
 }
 
 function scopedIndexResponse(page){
@@ -128,7 +137,7 @@ self.addEventListener('install', function(e){
         if(!response||!response.ok)throw new Error('App Shell fetch failed: '+url);
         return responseMatchesWorker(request,response,url===CURRENT_DOCUMENT).then(function(matches){
           if(!matches)throw new Error('App Shell generation mismatch: '+url);
-          return {request:request,response:response};
+          return bufferShellResponse(response).then(function(buffered){return {request:request,response:buffered};});
         });
       });
     })).then(function(entries){

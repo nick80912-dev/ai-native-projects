@@ -70,7 +70,10 @@ test('個人與團體摘要以今日為主、旅程累計為次，三種手機�
   await installLedgerFixture(page);
   await openApp(page);
   await waitForSyncToSettle(page);
-  await page.evaluate(()=>{closeMemberSelector();switchView('split');});
+  await page.evaluate(()=>{
+    memberRegistrationBridge.push({id:'observability-member',time:'2026-08-03T00:00:00.000Z',member:'Bar',recordType:'identity_registration'});
+    closeMemberSelector();switchView('split');
+  });
 
   await expect(page.locator('.ledger-summary-count')).toHaveText('今日支出 · 1 筆');
   await expect(page.locator('.ledger-summary-amount strong')).toHaveText('¥700');

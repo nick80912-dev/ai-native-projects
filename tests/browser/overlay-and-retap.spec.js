@@ -277,6 +277,7 @@ test('reduced motion gets an instant jump instead of a smooth scroll', async ({ 
 
 test('the split contract is preserved', async ({ page }) => {
   const r = await page.evaluate(async () => {
+    memberRegistrationBridge.push({id:'retap-member',time:'2026-10-18T00:00:00.000Z',member:'Bar',recordType:'identity_registration'});
     switchView('split');
     await new Promise((res) => setTimeout(res, 250));
     /* 次層頁:再點分帳先回 dashboard */

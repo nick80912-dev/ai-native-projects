@@ -27,7 +27,10 @@ test('Ledger history state workflow preserves UI behavior and reset invariants',
   await installLedgerFixtures(page);
   await openApp(page);
   await waitForSyncToSettle(page);
-  await page.evaluate(()=>{closeMemberSelector();switchView('split');showLedgerFullList();});
+  await page.evaluate(()=>{
+    memberRegistrationBridge.push({id:'ui-state-member',time:'2026-08-03T00:00:00.000Z',member:'Bar',recordType:'identity_registration'});
+    closeMemberSelector();switchView('split');showLedgerFullList();
+  });
 
   await expect(page.locator('#ledgerHistorySearch')).toBeVisible();
   await page.locator('#ledgerHistorySearch').fill('藥妝');

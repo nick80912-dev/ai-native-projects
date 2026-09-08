@@ -17,6 +17,8 @@ const sandbox={
 vm.createContext(sandbox);
 vm.runInContext([
   extractFunction(html,'navigationIntent'),
+  extractFunction(html,'navigationTravelMode'),
+  extractFunction(html,'navigationDestinationQuery'),
   extractFunction(html,'navigationDirectionsUrl'),
   extractFunction(html,'tripItemForNavigation')
 ].join('\n'),sandbox);
@@ -41,6 +43,19 @@ const exactRestaurant=sandbox.navigationIntent(
 assert.deepStrictEqual(JSON.parse(JSON.stringify(exactRestaurant)),{
   kind:'exact',query:'一鶴 高松店'
 },'a resolved restaurant is exact even when the itinerary display is shorter');
+
+const taiwanItem={id:'airport',act:'機場 check in',place:'桃園機場第一航廈1樓'};
+const taiwanIntent=sandbox.navigationIntent(taiwanItem,{kind:'place',p:{name:'桃園機場第一航廈1樓'}});
+assert.strictEqual(
+  sandbox.navigationDirectionsUrl(taiwanIntent,null,taiwanItem,{kind:'place',p:{name:'桃園機場第一航廈1樓'}}),
+  'https://www.google.com/maps/dir/?api=1&destination=%E6%A1%83%E5%9C%92%E6%A9%9F%E5%A0%B4%E7%AC%AC%E4%B8%80%E8%88%AA%E5%BB%881%E6%A8%93%20%E5%8F%B0%E7%81%A3&travelmode=driving',
+  'Taiwan departure points are never mislabeled as Japan'
+);
+
+const walkingItem={id:'walk',act:'血拚時間',place:'唐吉訶德',move:''};
+const walkingRef={kind:'place',p:{name:'唐吉訶德 岡山駅前店',travel:'步行4分鐘'}};
+assert.strictEqual(sandbox.navigationTravelMode(walkingItem,walkingRef),'walking','resolved stop travel overrides the trip-wide driving default');
+assert.match(sandbox.navigationDirectionsUrl(sandbox.navigationIntent(walkingItem,walkingRef),null,walkingItem,walkingRef),/travelmode=walking$/,'walking stops open walking directions');
 
 const nearby=sandbox.navigationIntent({id:'g',act:'採買',place:'AEON\n候選分店'},null);
 assert.deepStrictEqual(JSON.parse(JSON.stringify(nearby)),{kind:'nearby',query:'AEON'},'an unresolved first-line name requests nearby resolution');

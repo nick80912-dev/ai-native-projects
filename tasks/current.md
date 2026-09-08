@@ -1,15 +1,14 @@
 # CURRENT(現在正在做的)
 
-## v111 generated BUILTIN and CI throughput candidate
-- v110 已由 Bar 驗收並完成 `main` merge、Netlify production verification 與 `production-v110` tag；v111 gate 已開啟。
-- v111 將 BUILTIN 搬到由工具產生的 `shell/v111/builtin-snapshot.js`；root `index.html`／`app-version.js` byte-lock 為 v110 bridge，只有成功啟用的 v111 worker 才將導覽映射至 immutable `shell/v111/index.html`，failed install 保留真實 v110 worker／inline BUILTIN／cache。
-- asset 缺失／錯版時只接受有效 local active／previous snapshot；本機也無有效資料時顯示可重新載入／複製診斷的非空白 recovery，不建立空 DB。
-- 可重算效能證據固定 inline `d0405fe` 與 immutable bridge asset `83e4d2b`：DCL 中位數 181.10 → 185.65 ms（+2.51%），Today 中位數 171.70 → 175.75 ms（+2.36%）；20 個樣本均記錄 HTML／App／asset／SW／timestamp identity，通過 ≤10% kill gate。
-- Playwright 兩 worker 歷史三輪雖皆 181/181，但當時手動建立的效能 page 尚未掛入全域 pageerror tracker，不符合核准的三輪採用規則；依 fallback 維持全環境單 worker、零 retry。bridge final tree 完整 Chromium 182/182（357.6 s、zero pageerrors／port conflicts）。
+## v112 UI/UX and Android PWA candidate
+- v111 已由 Bar 驗收並完成 `main` merge、Netlify production verification 與 `production-v111` tag；目前日常開發基準為 v112。
+- v112 讓行程卡／出發前首頁以目的地優先，逐站導航會選 walking／driving／transit，台灣目的地不再誤加日本。
+- 首次瀏覽不再強迫選 Ledger 身分；Shopping／Ledger 空狀態提供直接 CTA，零資料管理入口收斂。
+- Android Chromium 等效環境已完成 Service Worker 接管、離線 BUILTIN 重載與 390×844 touch UI verification；完整 Node **94/94**、Playwright **185/185** 與三情境健康檢查通過。
 
 
 
-> 更新於 2026-08-13。細任務層;里程碑看 `06_ROADMAP.md`,**逐版交付紀錄一律看 `07_CHANGELOG.md`**,正式待辦看 `tasks/backlog.md`。
+> 更新於 2026-09-08。細任務層;里程碑看 `06_ROADMAP.md`,**逐版交付紀錄一律看 `07_CHANGELOG.md`**,正式待辦看 `tasks/backlog.md`。
 > 本檔只回答三件事:**現在線上是什麼、dev 上是什麼、下一批要做什麼**。歷史流水帳不放這裡。
 
 ## 📌 現況
@@ -17,14 +16,14 @@
 | 項目 | 值 |
 |---|---|
 
-| **`main` 原始碼／正式站** | **SW v110**；Netlify production 與 `production-v110` tag 已驗證 |
-| 正式站 | `https://trippilot-jp.netlify.app/` — v110 production health 已通過 |
-| **`dev` candidate** | **SW v111**；immutable generation BUILTIN + v110 root bridge + safe fallback；Playwright 維持單 worker |
+| **`origin/main`／正式站** | **SW v111**；Netlify production 與 `production-v111` tag 已驗證 |
+| 正式站 | `https://trippilot-jp.netlify.app/` — v111 production health 已通過 |
+| **`dev` candidate** | **SW v112**；目的地優先 UI、延後身分選擇、空狀態 CTA、Android Chromium install fix |
 | 個人備份格式 | **v9**(`PERSONAL_STATE_SUPPORTED_VERSIONS = [1..9]`)—— v81 因想逛 key 識別語意變更而升版 |
-| candidate automated validation | Current release-hardening tree: Node **93/93** test files；final Chromium **182/182**（single worker、357.6 s、zero retries/pageerrors/port conflicts）；version／document／runtime asset／BUILTIN／performance evidence／JSON／diff gates pass |
-| 既有 tag | `production-v18`、`production-v73`、`production-v110` |
+| candidate automated validation | Node **94/94**、Chromium Playwright **185/185**；三種啟動情境 `healthCheck()=[]`、`pageerror=0` |
+| 既有 tag | `production-v18`、`production-v73`、`production-v110`、`production-v111` |
 
-**v110 已正式發布；v111 release candidate 已獲 Bar 核准執行 `dev` → `main`，仍須通過 PR／Actions 與 Netlify production verification。**
+**v111 已正式發布；v112 目前只在本機工作區，尚未 push、建立 PR、部署或進入 production。**
 
 ### v74–v98 已折疊的主要能力
 
@@ -114,12 +113,13 @@
 | v108 | transient exact-target navigation、可見定位／scroll／focus return、display-only diagnostic impact、manifest status authority | ✅ final review／完整 gate／dev delivery；Bar 驗收中提出成功提示列精簡修正 |
 | v109 | 成功定位提示列移除、1 秒醒目＋0.2 秒淡出、失敗提示保留 | ✅ Bar device／PWA acceptance complete |
 | v110 | UI semantic tokens 與 Today deep-module extraction（原 v109） | ✅ Bar 驗收、main merge、production verification、tag 完成 |
-| v111 | BUILTIN asset spike 與 test throughput（原 v110） | ✅ final release hardening complete locally；push dev／PR／main merge／Netlify production verification pending |
+| v111 | BUILTIN asset spike 與 test throughput（原 v110） | ✅ main merge、production verification、tag 完成 |
+| v112 | 行程 UI/UX 精簡、延後身分選擇、空狀態 CTA、Android PWA 相容 | ✅ 本機 candidate 完整 gate 通過；待 Android 真機驗收與 Bar 決定是否 push `dev` |
 
 **已知未做(需先定判準)**:Today 的「交通／停車／營業／付款／提醒**依當下情境動態調整優先順序**」。v84 只做了可明確驗收的收合(常駐交通／停車／營業,收合付款／提醒);「當下情境」的判準(依時間?依距離?依是否已抵達?)尚未定義,不同讀法會做出完全不同的東西,故未實作。
 
 ## 下一棒
 
-→ **v111 已完成本機 final gate 並獲 Bar 核准發布。** 下一步推送 `dev`、建立 release PR；Actions 通過後合併 `main`，再做 Netlify production verification。
+→ **由 Bar 決定是否推送 v112 到 `dev` 進行 Android 真機驗收。** 未經核准不得直接合併 `main`、部署 production 或建立 tag。
 
 > 正式發布仍必須遵守 §E：PR 與 Actions 通過後才能 merge；Netlify 線上驗證通過後才能建立 production tag。

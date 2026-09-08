@@ -15,7 +15,7 @@ function createStorage(initial){
 }
 
 function loadLedgerModule(){
-  const source = fs.readFileSync('shell/v111/index.html','utf8');
+  const source = fs.readFileSync('shell/v112/index.html','utf8');
   const start = source.indexOf('/* ================= ledgerRepository');
   const end = source.indexOf('/* ================= 分帳', start);
   assert(start >= 0 && end > start, 'ledgerRepository section is present in index.html');
@@ -43,7 +43,7 @@ function loadLedgerModule(){
 
 (async function(){
   const mod = loadLedgerModule();
-  const html=fs.readFileSync('shell/v111/index.html','utf8');
+  const html=fs.readFileSync('shell/v112/index.html','utf8');
 
   assert.strictEqual(typeof mod.formatLedgerSyncRecordTime,'function','sync panel time formatter is testable with the queue helpers');
   assert.notStrictEqual(mod.formatLedgerSyncRecordTime('2026-07-22T08:30:00.000Z'),'建立時間不明','ISO queue timestamps remain readable in the sync panel');

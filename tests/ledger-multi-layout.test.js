@@ -2,7 +2,7 @@ const assert=require('assert');
 const fs=require('fs');
 const vm=require('vm');
 
-const source=fs.readFileSync('shell/v111/index.html','utf8');
+const source=fs.readFileSync('shell/v112/index.html','utf8');
 
 assert(source.includes('function renderLedgerMultiBillInfo(draft)'),
   'multi-item mode has a dedicated shared bill information renderer');
