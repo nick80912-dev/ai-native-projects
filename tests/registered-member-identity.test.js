@@ -15,7 +15,7 @@ function createStorage(initial){
 }
 
 function loadIdentityModule(){
-  const html=fs.readFileSync('shell/v111/index.html','utf8');
+  const html=fs.readFileSync('shell/v112/index.html','utf8');
   const start=html.indexOf('/* ================= ledgerRepository');
   const end=html.indexOf('function setLedgerTestMode(',start);
   assert(start>=0&&end>start,'ledger and identity module is present');

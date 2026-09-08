@@ -3,7 +3,7 @@ const fs = require('fs');
 const vm = require('vm');
 const TripTodayView = require('../today-view.js');
 
-const html = fs.readFileSync('shell/v111/index.html', 'utf8');
+const html = fs.readFileSync('shell/v112/index.html', 'utf8');
 
 function extractFunction(name){
   const start = html.indexOf('function ' + name + '(');
@@ -30,6 +30,7 @@ function extractConst(name){
 let renderedShoppingItems = [];
 const sandbox = {
   TripTodayView,
+  transport(){ return 'drive'; },
   shoppingListStore: { all(){ return renderedShoppingItems; } },
   buildShoppingTodayReminder(items,day){ return day&&day.groups?day:null; }
 };
@@ -41,6 +42,8 @@ vm.runInContext([
   extractFunction('jsString'),
   extractFunction('jsHtmlAttrString'),
   extractFunction('navigationIntent'),
+  extractFunction('navigationTravelMode'),
+  extractFunction('navigationDestinationQuery'),
   extractFunction('navigationDirectionsUrl'),
   extractFunction('renderTripNavigationLink'),
   extractFunction('highlightNote'),

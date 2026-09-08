@@ -2,7 +2,7 @@ const assert=require('assert');
 const fs=require('fs');
 const vm=require('vm');
 
-const html=fs.readFileSync('shell/v111/index.html','utf8');
+const html=fs.readFileSync('shell/v112/index.html','utf8');
 const markerStart='/* ---- DIAGNOSTIC APPLOG START ---- */';
 const markerEnd='/* ---- DIAGNOSTIC APPLOG END ---- */';
 const start=html.indexOf(markerStart);

@@ -3,7 +3,7 @@ const fs=require('fs');
 const path=require('path');
 const vm=require('vm');
 
-const html=fs.readFileSync(path.resolve(__dirname,'../shell/v111/index.html'),'utf8');
+const html=fs.readFileSync(path.resolve(__dirname,'../shell/v112/index.html'),'utf8');
 const start=html.indexOf('function builtinAssetState(){');
 const end=html.indexOf('\n}\n\nfunction createDataSnapshot',start);
 assert(start>=0&&end>start,'builtinAssetState has a stable extraction boundary');

@@ -1,9 +1,18 @@
 # 08 AI 交接文件(給未來的 AI 模型)
 
-## v111 generated BUILTIN asset and test-throughput handover
+## v112 UI/UX and Android PWA handover
 
-- v110 已完成 Bar device/PWA acceptance、main merge、Netlify production verification 與 `production-v110` tag。v111 依核准 plan 完成本機 final gate，並已獲 Bar 核准執行 `dev` → `main` 發布流程。
-- `shell/v111/builtin-snapshot.js` 現由 `tools/refresh-builtin-snapshot.js` 產生；current asset、HTML marker、`shell/v111/app-version.js` 與 root `sw.js` 同為 v111。root `index.html`／`app-version.js` 與 `tests/fixtures/sw-v110-production.js` byte-lock 正式 v110 predecessor；v111 install 成功後才映射導覽，失敗則保留 v110 inline BUILTIN 與 cache。
+- v111 已完成 main merge、Netlify production verification 與 `production-v111` tag；目前開發候選為 v112，root `index.html`／`app-version.js` 仍 byte-lock 在 v110 bridge。
+- v112 行程卡以 resolved Place／Restaurant 或 itinerary place 為主標題，活動降為次要資訊；導航依 item move 或 resolved travel 選 walking／driving／transit，桃園等台灣目的地不再被附加「日本」。
+- 首次 boot 不再強迫選身分；進入分帳或執行既有身分相依操作時才開啟原 selector。Shopping／Ledger 空狀態提供直接 CTA，零資料時隱藏 Ledger 的查看全部、結算與代購管理卡。
+- 出發前 Today Hero 的 Day 1 預覽只顯示兩個目的地與剩餘站數，六日摘要排除「出發」等無目的地活動。樓層與營業時間提升至 13px；四分頁、六主題、Schema、Ledger repository、同步與備份語意不變。
+- Android Chromium 驗證發現原 worker 在 `Promise.all(fetches)` 後才消耗 response body，會占滿同源連線槽並卡在 installing。v112 在完整驗證後先把每個 response 讀成 Blob，再於全部成功後開 cache 寫入，維持原子安裝且可完成 Android Service Worker 接管與離線重載。
+- v112 最終本機驗證為 Node **94/94**、Chromium Playwright **185/185**（single worker、zero retries）；offline BUILTIN、online mock Sheet、旅行日三情境皆為 `healthCheck()=[]` 且 `pageerror=0`。Android 實體手機安裝仍待 Bar 驗收；尚未 push、建立 PR、部署或進入 production。
+
+## v111 generated BUILTIN asset and test-throughput handover (released)
+
+- v110 已完成 Bar device/PWA acceptance、main merge、Netlify production verification 與 `production-v110` tag。v111 後續亦完成 main merge、production verification 與 `production-v111` tag。
+- v111 發布時的 `shell/v111/builtin-snapshot.js` 由 `tools/refresh-builtin-snapshot.js` 產生；asset、HTML marker、`shell/v111/app-version.js` 與當版 root `sw.js` 同為 v111。root `index.html`／`app-version.js` 與 `tests/fixtures/sw-v110-production.js` byte-lock 正式 v110 predecessor；v111 install 成功後才映射導覽，失敗則保留 v110 inline BUILTIN 與 cache。
 - refresh preview 會偵測缺檔、stale、App version mismatch 與 marker mismatch；`--write` 以 sibling temp、fsync／close／read-back／雙 rename 更新 HTML＋asset，任一步失敗回復兩個 target 原始 bytes。Ledger 仍只用 schema 21 欄 header，從不請求 live CSV。
 - runtime asset 缺失或錯版時，先驗證 local active／previous snapshot；有效即 degraded boot，無有效 local data 才顯示含重新載入與複製診斷的 recovery，且不建立空 DB／不啟動 sync。
 - 可重算 cold-navigation 證據固定 inline `d0405fe` 與 immutable bridge asset `83e4d2b`：DCL 中位數 181.10 → 185.65 ms（+2.51%），Today 中位數 171.70 → 175.75 ms（+2.36%）；每個樣本均記錄 HTML／App／asset／SW／timestamp identity，外部化通過 ≤10% kill gate。
@@ -26,7 +35,7 @@
 
 ## 你是誰、專案是什麼
 你是 Bar 的 AI 工程團隊(CTO/工程師/設計/QA 合一)。Bar **不會程式**,用白話下需求;你負責全部技術決策與實作,不教學、不解釋程式概念(除非被問)。
-專案:日本旅遊 PWA。Google Sheets 是 CMS,vanilla JS App 在使用者手機端抓 8 張公開 CSV 渲染,Netlify 託管。CMS 現行 Schema 3.0 以 Places.HID 精確關聯 Hotels.HID；住宿名稱只供顯示。current `shell/v111/index.html` 是 UI 與 DOM adapter；root `index.html`／`app-version.js` 是禁止當日常程式修改的 frozen v110 predecessor bridge。獨立 runtime modules 由 `runtime-assets.json` 登錄，包含 Navigation Intent、Diagnostic Impact、Buy-to-Ledger、Ledger/Shopping UI state 與 Trip progression。`schema.js`、`validator.js`、`sw.js` 等部署檔均在 repo 根目錄,經 GitHub 連動由 Netlify 部署(流程見 16 §E)。
+專案:日本旅遊 PWA。Google Sheets 是 CMS,vanilla JS App 在使用者手機端抓 8 張公開 CSV 渲染,Netlify 託管。CMS 現行 Schema 3.0 以 Places.HID 精確關聯 Hotels.HID；住宿名稱只供顯示。current `shell/v112/index.html` 是 UI 與 DOM adapter；root `index.html`／`app-version.js` 是禁止當日常程式修改的 frozen v110 predecessor bridge。獨立 runtime modules 由 `runtime-assets.json` 登錄，包含 Navigation Intent、Diagnostic Impact、Buy-to-Ledger、Ledger/Shopping UI state 與 Trip progression。`schema.js`、`validator.js`、`sw.js` 等部署檔均在 repo 根目錄,經 GitHub 連動由 Netlify 部署(流程見 16 §E)。
 
 ## 接手第一步:Project Understanding Report(先說理解,再動手)
 任何 AI 首次接手本專案、或在無既有專案脈絡的新對話/新環境開工時,完成下方閱讀順序後**不得直接修改任何檔案**,必須先輸出理解報告並等 Bar 核准(例:「確認,可以開始實作」)。此要求是「每個 AI 接手時做一次」,不是每個任務都做;同一脈絡內的後續任務依 15 的任務分級與 14 的 Tier 規則執行。
@@ -44,7 +53,7 @@
 
 ## 閱讀順序(最省 token)
 1. `.ai-manifest.json` → 2. `PROJECT_CONSTITUTION.md` → 3. 本文件 → 4. 相關 `adr/` → 5. **必讀** `15_AI_EXECUTION_RULES.md`(決策權限/指令效力/任務分級)→ 6. 依任務讀 `03_DATABASE.md` / `09_SCHEMA_MAPPING.md` / `05_CODING_RULES.md` / `11_CODING_CONVENTION.md` / `12_DEV_WORKFLOW.md` / `14_FILE_TIERS_AND_GATE.md` / `16_OPS_PLAYBOOK.md`
-程式碼本體主要在 current generation `shell/v111/index.html` 內嵌 JS(區塊順序見 02)；root `index.html`／`app-version.js` 必須維持 frozen v110 bridge bytes。`navigation-intent.js`、`diagnostic-impact.js`、`today-view.js`、`buy-to-ledger.js`、`ledger-ui-state.js`、`shopping-ui-state.js`、`trip-progression.js` 是 production-used module seams，`schema.js` / `validator.js` 是獨立權威來源。
+程式碼本體主要在 current generation `shell/v112/index.html` 內嵌 JS(區塊順序見 02)；root `index.html`／`app-version.js` 必須維持 frozen v110 bridge bytes。`navigation-intent.js`、`diagnostic-impact.js`、`today-view.js`、`buy-to-ledger.js`、`ledger-ui-state.js`、`shopping-ui-state.js`、`trip-progression.js` 是 production-used module seams，`schema.js` / `validator.js` 是獨立權威來源。
 
 ## 工作流程(必守)
 0. 開工前先通過 Pre-Work Git Sync Gate:`git fetch origin --prune`,確認本地與**目前工作分支**(日常 = `origin/dev`)一致且 working tree 乾淨;若不一致先盤點,不得自動覆蓋本地改動。

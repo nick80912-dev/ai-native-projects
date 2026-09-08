@@ -14,7 +14,7 @@ function createStorage(){
 }
 
 function loadModule(){
-  const source=fs.readFileSync('shell/v111/index.html','utf8');
+  const source=fs.readFileSync('shell/v112/index.html','utf8');
   const start=source.indexOf('/* ================= ledgerRepository');
   const end=source.indexOf('/* ================= 分帳',start);
   assert(start>=0&&end>start,'ledger helper section exists');
@@ -95,6 +95,7 @@ const recentHeading=mod.renderLedgerRecentHeading('<button>選取</button>');
 assert(recentHeading.includes('最近消費'),'recent heading keeps the section title');
 assert(recentHeading.includes('查看全部 〉'),'recent heading keeps the complete history entry');
 assert(!recentHeading.includes('今日'),'recent heading never duplicates Today counts or amounts');
+assert(!mod.renderLedgerRecentHeading('',false).includes('查看全部 〉'),'empty tracks hide the complete-history management entry');
 assert.strictEqual(typeof mod.renderLedgerTodayHint,'undefined','the old zero-Today hint is removed because the summary always shows Today');
 assert.strictEqual(typeof mod.ledgerRecentDateLabel,'function','dashboard exposes one recent-date label rule');
 assert.strictEqual(mod.ledgerRecentDateLabel([{time:new Date(now).toISOString()}],now),'今天','the current local date is labelled Today');

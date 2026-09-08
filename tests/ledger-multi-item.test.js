@@ -13,7 +13,7 @@ function createStorage(){
 }
 
 function loadModule(){
-  const source=fs.readFileSync('shell/v111/index.html','utf8');
+  const source=fs.readFileSync('shell/v112/index.html','utf8');
   const start=source.indexOf('/* ================= ledgerRepository');
   const end=source.indexOf('/* ================= 分帳',start);
   assert(start>=0&&end>start,'ledger helper section exists');
@@ -34,7 +34,7 @@ function loadModule(){
 function plain(value){return JSON.parse(JSON.stringify(value));}
 
 const mod=loadModule();
-const uiSource=fs.readFileSync('shell/v111/index.html','utf8');
+const uiSource=fs.readFileSync('shell/v112/index.html','utf8');
 const participantHelperStart=uiSource.indexOf('function canonicalMemberName(');
 const participantHelperEnd=uiSource.indexOf('function buildParticipantSnapshot(',participantHelperStart);
 const itemModeStart=uiSource.indexOf('function ledgerDraftItem(');

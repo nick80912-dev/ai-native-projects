@@ -2,6 +2,7 @@ const assert=require('assert');
 const fs=require('fs');
 const os=require('os');
 const path=require('path');
+const {swVersion}=require('./support/version');
 const {validateRuntimeAssets}=require('../tools/check-runtime-assets.js');
 
 function fixture(overrides={}){
@@ -56,7 +57,7 @@ assert(result.errors.includes('.ai-manifest.json deploy_files does not cover run
 
 const realRoot=path.resolve(__dirname,'..');
 const realInventory=JSON.parse(fs.readFileSync(path.join(realRoot,'runtime-assets.json'),'utf8'));
-const indexHtml=fs.readFileSync(path.join(realRoot,'shell','v111','index.html'),'utf8');
+const indexHtml=fs.readFileSync(path.join(realRoot,'shell',swVersion(),'index.html'),'utf8');
 const swSource=fs.readFileSync(path.join(realRoot,'sw.js'),'utf8');
 assert(realInventory.assets.includes('navigation-intent.js'),'the runtime inventory includes navigation-intent.js');
 assert(indexHtml.includes('<script src="navigation-intent.js"></script>'),'index.html loads navigation-intent.js');
@@ -67,9 +68,9 @@ assert(swSource.includes("'./diagnostic-impact.js'"),'the offline shell includes
 assert(realInventory.assets.includes('today-view.js'),'the runtime inventory includes today-view.js');
 assert(indexHtml.includes('<script src="today-view.js"></script>'),'index.html loads today-view.js');
 assert(swSource.includes("'./today-view.js'"),'the offline shell includes today-view.js');
-assert(realInventory.assets.includes('shell/v111/builtin-snapshot.js'),'the runtime inventory includes the generated BUILTIN asset');
-assert(indexHtml.includes('<script src="shell/v111/builtin-snapshot.js"></script>'),'current document loads the generated BUILTIN asset');
-assert(swSource.includes("'./shell/v111/builtin-snapshot.js'"),'the offline shell includes the generated BUILTIN asset');
+assert(realInventory.assets.includes('shell/v112/builtin-snapshot.js'),'the runtime inventory includes the generated BUILTIN asset');
+assert(indexHtml.includes('<script src="shell/v112/builtin-snapshot.js"></script>'),'current document loads the generated BUILTIN asset');
+assert(swSource.includes("'./shell/v112/builtin-snapshot.js'"),'the offline shell includes the generated BUILTIN asset');
 result=validateRuntimeAssets({rootDir:realRoot,inventory:realInventory});
 assert.deepStrictEqual(result.errors,[],'the repository runtime inventory is fully registered');
 
