@@ -9,7 +9,7 @@ function fixture(overrides={}){
     index:"<script id=\"builtinSnapshotMarker\">var BUILTIN_HTML_VERSION='v111';var BUILTIN_HTML_TS=1234;</script>\n"+
       "/* ---- APP_VERSION SAFE ACCESS (C2) ----\nfunction appVersion(){}\nfunction appVersionLabel(){}\n/* ---- /APP_VERSION SAFE ACCESS ---- */\n"+
       "var APP_RELEASE_NOTES=[{version:'v111'}];\n",
-    netlify:'[[headers]]\n  for = "/shell/v112/app-version.js"\n'
+    netlify:'[[headers]]\n  for = "/shell/v113/app-version.js"\n'
   },overrides);
 }
 

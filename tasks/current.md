@@ -1,10 +1,10 @@
 # CURRENT(現在正在做的)
 
-## v112 UI/UX and Android PWA candidate
-- v111 已由 Bar 驗收並完成 `main` merge、Netlify production verification 與 `production-v111` tag；目前日常開發基準為 v112。
-- v112 讓行程卡／出發前首頁以目的地優先，逐站導航會選 walking／driving／transit，台灣目的地不再誤加日本。
-- 首次瀏覽不再強迫選 Ledger 身分；Shopping／Ledger 空狀態提供直接 CTA，零資料管理入口收斂。
-- Android Chromium 等效環境已完成 Service Worker 接管、離線 BUILTIN 重載與 390×844 touch UI verification；完整 Node **94/94**、Playwright **185/185** 與三情境健康檢查通過。
+## v113 優先主題辨識度 candidate
+- v112 已推送 `dev`／`main`，Bar 回報正式站已是 v112 且目前驗證正常；Android Chromium 等效自動驗證通過，Android 實體手機仍待 Bar 操作驗收。
+- v113 只調整杉綠、霧藍、焙茶三組既有 palette；Ocean、Ivory、Wisteria、版面、資料與互動行為不變。
+- 三組 page surface、accent 與 secondary 已拉開；主要文字／操作色維持 WCAG AA，390×844 畫面無 overflow。
+- 本機完整 Node **94/94**、Playwright **185/185** 與三情境健康檢查通過；尚未 push、merge 或部署。
 
 
 
@@ -16,14 +16,14 @@
 | 項目 | 值 |
 |---|---|
 
-| **`origin/main` 原始碼** | **SW v112**；merge commit `894591c` 已推送 |
-| 正式站 | `https://trippilot-jp.netlify.app/` — 最近確認為 v111；v112 Netlify deployment 尚待驗證 |
-| **`origin/dev` candidate** | **SW v112**；功能 commit `b7b71d3` 已推送 |
+| **`origin/main` 原始碼** | **SW v112**；目前 `3acf933` |
+| 正式站 | `https://trippilot-jp.netlify.app/` — Bar 回報已是 v112 且驗證正常；Android 實體手機仍待驗收 |
+| **本機 `dev` candidate** | **SW v113**；以 `origin/dev` `eac36ef` 為基準，尚未 push |
 | 個人備份格式 | **v9**(`PERSONAL_STATE_SUPPORTED_VERSIONS = [1..9]`)—— v81 因想逛 key 識別語意變更而升版 |
 | candidate automated validation | Node **94/94**、Chromium Playwright **185/185**；三種啟動情境 `healthCheck()=[]`、`pageerror=0` |
 | 既有 tag | `production-v18`、`production-v73`、`production-v110`、`production-v111` |
 
-**v112 已推送 `dev` 與 `main`；未建立 PR。是否已由 Netlify 部署及正式站是否完成 v112 接管尚未驗證，故仍不得建立 production tag。**
+**v113 僅存在本機 `dev` working tree；不得把本機自動驗證視為正式站部署或 Android 實體手機驗收。**
 
 ### v74–v98 已折疊的主要能力
 
@@ -114,12 +114,13 @@
 | v109 | 成功定位提示列移除、1 秒醒目＋0.2 秒淡出、失敗提示保留 | ✅ Bar device／PWA acceptance complete |
 | v110 | UI semantic tokens 與 Today deep-module extraction（原 v109） | ✅ Bar 驗收、main merge、production verification、tag 完成 |
 | v111 | BUILTIN asset spike 與 test throughput（原 v110） | ✅ main merge、production verification、tag 完成 |
-| v112 | 行程 UI/UX 精簡、延後身分選擇、空狀態 CTA、Android PWA 相容 | ✅ `dev`／`main` 已推送、merged-tree gate 通過；待 Netlify production 與 Android 真機驗收 |
+| v112 | 行程 UI/UX 精簡、延後身分選擇、空狀態 CTA、Android PWA 相容 | ✅ `dev`／`main` 已推送、正式站由 Bar 回報驗證正常；Android 實體手機待驗收 |
+| v113 | 杉綠／霧藍／焙茶優先配色辨識度 | ✅ 本機完整 gate 通過；待 Bar 決定是否 push `dev` |
 
 **已知未做(需先定判準)**:Today 的「交通／停車／營業／付款／提醒**依當下情境動態調整優先順序**」。v84 只做了可明確驗收的收合(常駐交通／停車／營業,收合付款／提醒);「當下情境」的判準(依時間?依距離?依是否已抵達?)尚未定義,不同讀法會做出完全不同的東西,故未實作。
 
 ## 下一棒
 
-→ **確認 GitHub Actions／Netlify production 已接管 v112，再進行 Android 真機安裝驗收。** 線上驗證完成前不得建立 production tag。
+→ **由 Bar 檢視 v113 三組主題預覽，確認後再決定是否 push `dev`；Android 實體手機可另依既有 v112 流程驗收。** 未完成正式發版流程前不得建立 production tag。
 
 > 正式發布仍必須遵守 §E：PR 與 Actions 通過後才能 merge；Netlify 線上驗證通過後才能建立 production tag。

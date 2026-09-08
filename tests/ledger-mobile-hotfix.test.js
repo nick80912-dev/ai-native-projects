@@ -2,7 +2,7 @@ const assert=require('assert');
 const {appVersion,swVersion}=require('./support/version');
 const fs=require('fs');
 
-const html=fs.readFileSync('shell/v112/index.html','utf8');
+const html=fs.readFileSync('shell/v113/index.html','utf8');
 const sw=fs.readFileSync('sw.js','utf8');
 
 assert(

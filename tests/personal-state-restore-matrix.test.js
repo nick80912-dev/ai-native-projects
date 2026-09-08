@@ -17,7 +17,7 @@ const fs = require('fs');
 const vm = require('vm');
 const TripBuyToLedger = require('../buy-to-ledger.js');
 
-const html = fs.readFileSync('shell/v112/index.html', 'utf8');
+const html = fs.readFileSync('shell/v113/index.html', 'utf8');
 
 /* vm context 內建立的物件 prototype 與 Node realm 不同,比對前先轉成純值 */
 function plain(value){ return JSON.parse(JSON.stringify(value)); }

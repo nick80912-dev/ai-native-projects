@@ -55,7 +55,7 @@ assert.strictEqual(typeColumn.values['纜車'], 'attraction');
 assert.strictEqual(typeColumn.values['加油站'], 'fuel');
 assert.strictEqual(typeColumn.values.fuel, 'fuel');
 
-const html = fs.readFileSync('shell/v112/index.html', 'utf8');
+const html = fs.readFileSync('shell/v113/index.html', 'utf8');
 const embeddedSchemaStart = html.indexOf('var SCHEMA =');
 const embeddedSchemaSource = html.slice(embeddedSchemaStart, html.indexOf('</script>',embeddedSchemaStart));
 const embeddedSchema = loadSchema(embeddedSchemaSource);
