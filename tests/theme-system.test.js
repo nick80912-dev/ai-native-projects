@@ -38,6 +38,22 @@ function contrastRatio(first,second){
   const b=relativeLuminance(second);
   return (Math.max(a,b)+0.05)/(Math.min(a,b)+0.05);
 }
+function rgbDistance(first,second){
+  const a=hexToRgb(first),b=hexToRgb(second);
+  return Math.sqrt(a.reduce((sum,value,index)=>sum+Math.pow(value-b[index],2),0));
+}
+function hueDegrees(hex){
+  const [red,green,blue]=hexToRgb(hex).map(value=>value/255);
+  const max=Math.max(red,green,blue),min=Math.min(red,green,blue),delta=max-min;
+  if(!delta)return 0;
+  let hue=max===red?(green-blue)/delta:max===green?2+(blue-red)/delta:4+(red-green)/delta;
+  hue=(hue*60+360)%360;
+  return hue;
+}
+function hueDistance(first,second){
+  const distance=Math.abs(hueDegrees(first)-hueDegrees(second));
+  return Math.min(distance,360-distance);
+}
 function extractThemeIds(html){
   const match=html.match(/var THEME_IDS=(\[[^;]+\]);/);
   assert(match,'THEME_IDS declaration exists');
@@ -65,6 +81,27 @@ function extractThemeIds(html){
   assert.strictEqual(cssValue(cedarBlock,'--t-action'),'#2f6b4f');
   assert(contrastRatio('#ffffff',cssValue(cedarBlock,'--t-action'))>=4.5,'cedar action supports white text');
   assert.strictEqual(cssValue(themeBlock(html,'tea'),'--t-action'),'#896748');
+
+  /* Break caught: Cedar, Mist and Tea drift back to near-identical white surfaces,
+     coral accents and the same purple secondary color, making the theme picker cosmetic. */
+  const priorityThemes=['cedar','mist','tea'].map(id=>({id,block:themeBlock(html,id)}));
+  for(let i=0;i<priorityThemes.length;i++){
+    for(let j=i+1;j<priorityThemes.length;j++){
+      assert(
+        rgbDistance(cssValue(priorityThemes[i].block,'--t-paper'),cssValue(priorityThemes[j].block,'--t-paper'))>=10,
+        priorityThemes[i].id+' and '+priorityThemes[j].id+' keep visibly different page surfaces'
+      );
+      assert(
+        hueDistance(cssValue(priorityThemes[i].block,'--t-accent'),cssValue(priorityThemes[j].block,'--t-accent'))>=20,
+        priorityThemes[i].id+' and '+priorityThemes[j].id+' keep distinct accent families'
+      );
+    }
+  }
+  const prioritySecondaries=priorityThemes.map(theme=>cssValue(theme.block,'--t-secondary'));
+  assert.strictEqual(new Set(prioritySecondaries).size,3,'priority themes no longer share one secondary color');
+  assert(prioritySecondaries.every(color=>color!=='#7659a0'),'priority themes do not inherit the old shared purple secondary');
+  assert(hueDegrees(cssValue(themeBlock(html,'mist'),'--t-accent'))>=35&&hueDegrees(cssValue(themeBlock(html,'mist'),'--t-accent'))<=50,'Mist uses a warm sun accent');
+  assert(hueDegrees(cssValue(themeBlock(html,'tea'),'--t-accent'))>=195&&hueDegrees(cssValue(themeBlock(html,'tea'),'--t-accent'))<=225,'Tea uses a Kurashiki indigo accent');
 
   const baseBlock=themeBlock(html,'ocean');
   const sharedPresentation=presentationBlock(html);
@@ -194,7 +231,7 @@ function extractThemeIds(html){
   vm.runInContext(html.slice(moduleStart,moduleEnd),sandbox);
   assert.strictEqual(sandbox.applyTheme('mist').id,'mist');
   assert.strictEqual(root.dataset.theme,'mist');
-  assert.strictEqual(meta.content,'#3f4c5e');
+  assert.strictEqual(meta.content,'#314d63');
   assert.strictEqual(storage.getItem('trip_theme'),'mist');
   assert.strictEqual(sandbox.applyTheme('unknown').id,'ocean');
   assert.strictEqual(root.dataset.theme,'ocean');
@@ -235,10 +272,11 @@ function extractThemeIds(html){
   assert.strictEqual(notes[0].version,appVersion(),'the newest release note is the current version');
   /* 滾動的五筆視窗:最新一筆是目前版本,其餘四筆是緊接在後的歷史版本。
      歷史版本刻意寫死字面值(見 tests/support/version.js 的適用範圍說明)。 */
-  assert.deepStrictEqual(Array.from(notes.slice(1),function(note){return note.version;}),['v111','v110','v109','v108']);
-  assert.match(notes[0].title,/行程/,'v112 release note describes the itinerary UX work');
-  assert(JSON.stringify(notes[0]).includes('交通方式'),'v112 release note explains item-local navigation');
-  assert(JSON.stringify(notes[0]).includes('身分選擇'),'v112 release note explains deferred identity selection');
+  assert.deepStrictEqual(Array.from(notes.slice(1),function(note){return note.version;}),['v112','v111','v110','v109']);
+  assert.match(notes[0].title,/主題/,'v113 release note describes the theme differentiation work');
+  assert(JSON.stringify(notes[0]).includes('杉綠'),'v113 release note explains the Cedar palette');
+  assert(JSON.stringify(notes[0]).includes('霧藍'),'v113 release note explains the Mist palette');
+  assert(JSON.stringify(notes[0]).includes('焙茶'),'v113 release note explains the Tea palette');
   const v111Note=notes.filter(function(note){return note.version==='v111';})[0];
   assert(v111Note&&JSON.stringify(v111Note).includes('版本綁定'),'v111 offline boot note remains in the five-release window');
   notes.forEach(note=>{

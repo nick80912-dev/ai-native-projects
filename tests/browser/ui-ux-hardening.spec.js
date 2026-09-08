@@ -110,6 +110,9 @@ test('all six themes preserve sliders currentColor and compact header chrome',as
     return {
       id,
       action:getComputedStyle(document.documentElement).getPropertyValue('--t-action').trim(),
+      paper:getComputedStyle(document.documentElement).getPropertyValue('--t-paper').trim(),
+      accent:getComputedStyle(document.documentElement).getPropertyValue('--t-accent').trim(),
+      secondary:getComputedStyle(document.documentElement).getPropertyValue('--t-secondary').trim(),
       iconStroke:icon&&getComputedStyle(icon).stroke,
       buttonColor:getComputedStyle(settings).color,
       settingsChrome:getComputedStyle(settings,'::before').backgroundColor,
@@ -123,6 +126,9 @@ test('all six themes preserve sliders currentColor and compact header chrome',as
   }
   expect(themes.find(theme=>theme.id==='cedar').action).toBe('#2f6b4f');
   expect(themes.find(theme=>theme.id==='tea').action).toBe('#896748');
+  expect(themes.find(theme=>theme.id==='cedar')).toMatchObject({paper:'#edf3ec',accent:'#bd4e24',secondary:'#6f6532'});
+  expect(themes.find(theme=>theme.id==='mist')).toMatchObject({paper:'#edf4f8',accent:'#9a6614',secondary:'#4b746c'});
+  expect(themes.find(theme=>theme.id==='tea')).toMatchObject({paper:'#f7f0e7',accent:'#405c7a',secondary:'#9a4f30'});
 });
 
 test('presentation tokens preserve touched component geometry across all six themes',async({page})=>{

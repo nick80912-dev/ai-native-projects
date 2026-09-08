@@ -31,8 +31,8 @@ test('Android Chromium receives the complete PWA installability inputs',async({p
   const workerResponse=await request.get('/sw.js');
   expect(workerResponse.ok()).toBe(true);
   const worker=await workerResponse.text();
-  expect(worker).toContain("var SW_VERSION='v112'");
-  expect(worker).toContain("'./shell/v112/index.html'");
+  expect(worker).toContain("var SW_VERSION='v113'");
+  expect(worker).toContain("'./shell/v113/index.html'");
   await page.waitForLoadState('load');
   await page.evaluate(()=>navigator.serviceWorker.ready);
   await page.reload({waitUntil:'domcontentloaded'});

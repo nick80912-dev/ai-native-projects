@@ -13,7 +13,7 @@ function createStorage(initial){
 }
 
 function loadModule(storage){
-  const source=fs.readFileSync('shell/v112/index.html','utf8');
+  const source=fs.readFileSync('shell/v113/index.html','utf8');
   const start=source.indexOf('/* ================= ledgerRepository');
   const end=source.indexOf('/* ================= 分帳',start);
   assert(start>=0&&end>start,'ledger helper section exists');

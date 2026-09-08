@@ -25,7 +25,7 @@ function createStorage() {
 }
 
 function loadModule() {
-  const source = fs.readFileSync('shell/v112/index.html', 'utf8');
+  const source = fs.readFileSync('shell/v113/index.html', 'utf8');
   const start = source.indexOf('/* ================= ledgerRepository');
   const end = source.indexOf('/* ================= 分帳', start);
   assert(start >= 0 && end > start, 'ledger helper section exists');
@@ -271,7 +271,7 @@ test('equal-time tie-break: smaller record.id is canonical when times are identi
 });
 
 // ===== Ticket #7 — Operation reliability: action lock + button state machine + retry-id idempotency =====
-const html = fs.readFileSync('shell/v112/index.html', 'utf8');
+const html = fs.readFileSync('shell/v113/index.html', 'utf8');
 const uiSlice = html.slice(html.indexOf('function ledgerHandshakeStatusLine('), html.indexOf('function openLedgerProxyPanel('));
 
 // #1/#2 — pre-await action lock suppresses rapid re-entry (5 taps -> 1 record)

@@ -15,7 +15,7 @@ function createStorage(initial){
 }
 
 (async function(){
-  const html=fs.readFileSync('shell/v112/index.html','utf8');
+  const html=fs.readFileSync('shell/v113/index.html','utf8');
   assert.match(html,/照片附件只保存在本裝置，不包含於備份。/,'data settings disclose that photo attachments are device-local and excluded from backups');
   const start=html.indexOf('function closeSettings()');
   const end=html.indexOf('function setLedgerTestMode(',start);

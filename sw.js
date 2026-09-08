@@ -1,6 +1,6 @@
 /* ===== sw.js — App 外殼離線防線 =====
    策略(2026-07-11 定案,2026-07-30 依 C1／C1.5 實證修訂;對應 16_OPS_PLAYBOOK 部署章節):
-   1. 只管同源 App Shell；root index／app-version 是 frozen v110 bridge，current version-bearing assets 在 shell/v112/
+   1. 只管同源 App Shell；root index／app-version 是 frozen v110 bridge，current version-bearing assets 在 shell/v113/
    2. 已安裝外殼採 cache-first:同一個 worker 生命週期固定同世代資產;新版由 install 驗證完成後原子切換
    3. CSV 資料(docs.google.com)一律放行不攔截 → 資料層維持既有三層防線
       (BUILTIN → localStorage → background sync),SW 與資料層職責不重疊
@@ -24,15 +24,15 @@
      非外殼同源 fetch 用 no-cache —— 允許 304,兼顧流量與更新
    已安裝外殼不再逐次打網路,避免舊 worker 把新部署的 runtime module 寫入舊世代快取。
 */
-var SW_VERSION='v112';
+var SW_VERSION='v113';
 var CACHE_NAME='okayama-trip-'+SW_VERSION;
-var CURRENT_DOCUMENT='./shell/v112/index.html';
-var CURRENT_APP_VERSION='./shell/v112/app-version.js';
-var CURRENT_BUILTIN='./shell/v112/builtin-snapshot.js';
+var CURRENT_DOCUMENT='./shell/v113/index.html';
+var CURRENT_APP_VERSION='./shell/v113/app-version.js';
+var CURRENT_BUILTIN='./shell/v113/builtin-snapshot.js';
 var SHELL = [
-  './shell/v112/index.html',
-  './shell/v112/app-version.js',
-  './shell/v112/builtin-snapshot.js',
+  './shell/v113/index.html',
+  './shell/v113/app-version.js',
+  './shell/v113/builtin-snapshot.js',
   './navigation-intent.js',
   './diagnostic-impact.js',
   './today-view.js',
@@ -71,9 +71,9 @@ function scopeRelativePath(url){
 
 function versionedShellKind(url,isNavigate){
   var relative=scopeRelativePath(url);
-  if(isNavigate||relative==='shell/v112/index.html')return 'html';
-  if(relative==='shell/v112/app-version.js')return 'app';
-  if(relative==='shell/v112/builtin-snapshot.js')return 'builtin';
+  if(isNavigate||relative==='shell/v113/index.html')return 'html';
+  if(relative==='shell/v113/app-version.js')return 'app';
+  if(relative==='shell/v113/builtin-snapshot.js')return 'builtin';
   return '';
 }
 

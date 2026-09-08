@@ -16,7 +16,7 @@ function createStorage(){
 function plain(value){return JSON.parse(JSON.stringify(value));}
 
 function loadShoppingModule(){
-  const html=fs.readFileSync('shell/v112/index.html','utf8');
+  const html=fs.readFileSync('shell/v113/index.html','utf8');
   const helpersStart=html.indexOf('function escapeHtml(');
   const helpersEnd=html.indexOf('function timestampDate(',helpersStart);
   const rendererStart=html.indexOf('function todayViewActionAttribute(');
@@ -253,9 +253,9 @@ assert.throws(()=>q({quantity:Infinity}),/數量/,'Infinity 拒絕');
 assert.throws(()=>q({quantity:Number.MAX_SAFE_INTEGER+2}),/數量/,'超出安全整數拒絕');
 assert.throws(()=>q({quantity:'5'}),/數量/,'字串數量拒絕,不做隱式轉型');
 /* type="number" 在部分瀏覽器仍會送出 1e6／1.0／+3,表單必須先擋掉非純十進位字串。 */
-const saveSource=mod.__saveSource||fs.readFileSync('shell/v112/index.html','utf8').slice(
-  fs.readFileSync('shell/v112/index.html','utf8').indexOf('function saveShoppingForm('),
-  fs.readFileSync('shell/v112/index.html','utf8').indexOf('function deleteShoppingItem(')
+const saveSource=mod.__saveSource||fs.readFileSync('shell/v113/index.html','utf8').slice(
+  fs.readFileSync('shell/v113/index.html','utf8').indexOf('function saveShoppingForm('),
+  fs.readFileSync('shell/v113/index.html','utf8').indexOf('function deleteShoppingItem(')
 );
 assert(/\^\\d\+\$\/\.test\(raw\)/.test(saveSource),'表單只接受純十進位數字字串,不得直接 Number() 轉換');
 assert.strictEqual(q({quantity:3,unit:'　大　包 '}).unit,'大 包','單位正規化全形與連續空白');
@@ -625,7 +625,7 @@ sharedTargets.add(' 小明 ');
 sharedTargets.add('小明');
 assert.deepStrictEqual(plain(sharedTargets.all()),['小明'],'shopping and ledger use the same de-duplicated proxy-target store');
 
-const ui=fs.readFileSync('shell/v112/index.html','utf8');
+const ui=fs.readFileSync('shell/v113/index.html','utf8');
 function extractUiFunction(name){
   const start=ui.indexOf('function '+name+'(');
   assert.notStrictEqual(start,-1,name+' exists');
