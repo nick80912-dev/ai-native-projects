@@ -16,14 +16,14 @@
 | 項目 | 值 |
 |---|---|
 
-| **`origin/main`／正式站** | **SW v111**；Netlify production 與 `production-v111` tag 已驗證 |
-| 正式站 | `https://trippilot-jp.netlify.app/` — v111 production health 已通過 |
-| **`dev` candidate** | **SW v112**；目的地優先 UI、延後身分選擇、空狀態 CTA、Android Chromium install fix |
+| **`origin/main` 原始碼** | **SW v112**；merge commit `894591c` 已推送 |
+| 正式站 | `https://trippilot-jp.netlify.app/` — 最近確認為 v111；v112 Netlify deployment 尚待驗證 |
+| **`origin/dev` candidate** | **SW v112**；功能 commit `b7b71d3` 已推送 |
 | 個人備份格式 | **v9**(`PERSONAL_STATE_SUPPORTED_VERSIONS = [1..9]`)—— v81 因想逛 key 識別語意變更而升版 |
 | candidate automated validation | Node **94/94**、Chromium Playwright **185/185**；三種啟動情境 `healthCheck()=[]`、`pageerror=0` |
 | 既有 tag | `production-v18`、`production-v73`、`production-v110`、`production-v111` |
 
-**v111 已正式發布；v112 目前只在本機工作區，尚未 push、建立 PR、部署或進入 production。**
+**v112 已推送 `dev` 與 `main`；未建立 PR。是否已由 Netlify 部署及正式站是否完成 v112 接管尚未驗證，故仍不得建立 production tag。**
 
 ### v74–v98 已折疊的主要能力
 
@@ -114,12 +114,12 @@
 | v109 | 成功定位提示列移除、1 秒醒目＋0.2 秒淡出、失敗提示保留 | ✅ Bar device／PWA acceptance complete |
 | v110 | UI semantic tokens 與 Today deep-module extraction（原 v109） | ✅ Bar 驗收、main merge、production verification、tag 完成 |
 | v111 | BUILTIN asset spike 與 test throughput（原 v110） | ✅ main merge、production verification、tag 完成 |
-| v112 | 行程 UI/UX 精簡、延後身分選擇、空狀態 CTA、Android PWA 相容 | ✅ 本機 candidate 完整 gate 通過；待 Android 真機驗收與 Bar 決定是否 push `dev` |
+| v112 | 行程 UI/UX 精簡、延後身分選擇、空狀態 CTA、Android PWA 相容 | ✅ `dev`／`main` 已推送、merged-tree gate 通過；待 Netlify production 與 Android 真機驗收 |
 
 **已知未做(需先定判準)**:Today 的「交通／停車／營業／付款／提醒**依當下情境動態調整優先順序**」。v84 只做了可明確驗收的收合(常駐交通／停車／營業,收合付款／提醒);「當下情境」的判準(依時間?依距離?依是否已抵達?)尚未定義,不同讀法會做出完全不同的東西,故未實作。
 
 ## 下一棒
 
-→ **由 Bar 決定是否推送 v112 到 `dev` 進行 Android 真機驗收。** 未經核准不得直接合併 `main`、部署 production 或建立 tag。
+→ **確認 GitHub Actions／Netlify production 已接管 v112，再進行 Android 真機安裝驗收。** 線上驗證完成前不得建立 production tag。
 
 > 正式發布仍必須遵守 §E：PR 與 Actions 通過後才能 merge；Netlify 線上驗證通過後才能建立 production tag。

@@ -6,7 +6,7 @@
 - 出發前 Today Hero 的 Day 1 預覽縮成兩個實際目的地與剩餘站數，六日摘要排除無目的地的泛用活動；樓層與營業時間提升為 13px。
 - 首次啟動不再強迫選擇 Ledger 身分；第一次進入分帳才觸發既有 selector。Shopping／Ledger 空狀態新增主要 CTA，零紀錄時隱藏查看全部、結算與代購管理卡。
 - App／SW forward-bump 至 v112，root v110 bridge 保持 byte-identical，BUILTIN 由既有 generator 建立。Android Chromium 實測揭露並修正 Service Worker 並行 fetch 未先消耗 response body 導致的連線池 deadlock；response 先完整 buffer，全部驗證成功後才寫入 cache，原子安裝語意不變。
-- 新增 Node `ui-ux-v112.test.js` 與 Android mobile/touch Playwright 覆蓋；最終本機 gate 通過 Node **94/94**、Chromium Playwright **185/185**（single worker、zero retries），三種啟動情境 `healthCheck()=[]` 且 `pageerror=0`，另通過版本／文件／12 項 runtime asset／BUILTIN no-drift／manifest JSON／diff checks。Android 實體手機安裝仍保留為 Bar 驗收項；本批未 push、未建 PR、未部署、未進 production。
+- 新增 Node `ui-ux-v112.test.js` 與 Android mobile/touch Playwright 覆蓋；最終本機及 merged-tree gate 均通過 Node **94/94**、Chromium Playwright **185/185**（single worker、zero retries），三種啟動情境 `healthCheck()=[]` 且 `pageerror=0`，另通過版本／文件／12 項 runtime asset／BUILTIN no-drift／manifest JSON／diff checks。Bar 核准本機合併後，功能 commit `b7b71d3` 已推送 `dev`，merge commit `894591c` 已推送 `main`；未建立 PR，Netlify production 與 Android 實體手機仍待驗證，未建立 production tag。
 
 ## 2026-08-13 — v111 產生式 BUILTIN 與測試吞吐（candidate）⭐ 架構變更
 

@@ -7,7 +7,7 @@
 - 首次 boot 不再強迫選身分；進入分帳或執行既有身分相依操作時才開啟原 selector。Shopping／Ledger 空狀態提供直接 CTA，零資料時隱藏 Ledger 的查看全部、結算與代購管理卡。
 - 出發前 Today Hero 的 Day 1 預覽只顯示兩個目的地與剩餘站數，六日摘要排除「出發」等無目的地活動。樓層與營業時間提升至 13px；四分頁、六主題、Schema、Ledger repository、同步與備份語意不變。
 - Android Chromium 驗證發現原 worker 在 `Promise.all(fetches)` 後才消耗 response body，會占滿同源連線槽並卡在 installing。v112 在完整驗證後先把每個 response 讀成 Blob，再於全部成功後開 cache 寫入，維持原子安裝且可完成 Android Service Worker 接管與離線重載。
-- v112 最終本機驗證為 Node **94/94**、Chromium Playwright **185/185**（single worker、zero retries）；offline BUILTIN、online mock Sheet、旅行日三情境皆為 `healthCheck()=[]` 且 `pageerror=0`。Android 實體手機安裝仍待 Bar 驗收；尚未 push、建立 PR、部署或進入 production。
+- v112 最終本機及 merged-tree 驗證均為 Node **94/94**、Chromium Playwright **185/185**（single worker、zero retries）；offline BUILTIN、online mock Sheet、旅行日三情境皆為 `healthCheck()=[]` 且 `pageerror=0`。Bar 核准本機合併後，功能 commit `b7b71d3` 已推送 `dev`，merge commit `894591c` 已推送 `main`；未建立 PR，Netlify production 與 Android 實體手機仍待驗證，未建立 production tag。
 
 ## v111 generated BUILTIN asset and test-throughput handover (released)
 
