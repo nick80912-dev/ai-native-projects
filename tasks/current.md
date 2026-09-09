@@ -1,23 +1,23 @@
 # CURRENT(現在正在做的)
 
 ## v113 優先主題辨識度 candidate
-- v112 已推送 `dev`／`main`，Bar 回報正式站已是 v112 且目前驗證正常；Android Chromium 等效自動驗證通過，Android 實體手機仍待 Bar 操作驗收。
+- v112 已推送 `dev`／`main` 並經 Bar 回報正式站驗證正常；**Android 實體手機仍待 Bar 操作驗收**（Android Chromium 等效自動驗證已通過）。
 - v113 只調整杉綠、霧藍、焙茶三組既有 palette；Ocean、Ivory、Wisteria、版面、資料與互動行為不變。
 - 三組 page surface、accent 與 secondary 已拉開；主要文字／操作色維持 WCAG AA，390×844 畫面無 overflow。
-- 本機及 merged tree 的 Node **94/94**、Playwright **185/185** 與三情境健康檢查通過；已推送 `dev`／`main`，正式部署尚待驗證。
+- 本機及 merged tree 的 Node **94/94**、Playwright **185/185** 與三情境健康檢查通過；已推送 `dev`／`main`。
+- **正式部署已完成（2026-09-08）**：Netlify production deploy `6a9fb443`，`commit_ref` = `745bb6f`（與 `origin/main` HEAD 相符），`published_at` 有值；線上 `sw.js` 與 `shell/v113/app-version.js` 皆為 `v113`。**尚待 Bar 對三組主題做裝置驗收。**
 
 
 
-> 更新於 2026-09-08。細任務層;里程碑看 `06_ROADMAP.md`,**逐版交付紀錄一律看 `07_CHANGELOG.md`**,正式待辦看 `tasks/backlog.md`。
+> 更新於 2026-09-09。細任務層;里程碑看 `06_ROADMAP.md`,**逐版交付紀錄一律看 `07_CHANGELOG.md`**,正式待辦看 `tasks/backlog.md`。
 > 本檔只回答三件事:**現在線上是什麼、dev 上是什麼、下一批要做什麼**。歷史流水帳不放這裡。
 
 ## 📌 現況
 
 | 項目 | 值 |
 |---|---|
-
 | **`origin/main` 原始碼** | **SW v113**；功能 merge `7cbb1ab` 已推送 |
-| 正式站 | `https://trippilot-jp.netlify.app/` — Bar 回報已是 v112 且驗證正常；Android 實體手機仍待驗收 |
+| **正式站** | `https://trippilot-jp.netlify.app/` — **SW v113**（2026-09-09 實查：deploy `6a9fb443`，`commit_ref` = `745bb6f` = main HEAD）；**Bar 對 v113 三組主題的裝置驗收未做**，v112 的 Android 實體手機驗收亦仍掛著 |
 | **`origin/dev` candidate** | **SW v113**；功能 commit `d453b84` 已推送 |
 | 個人備份格式 | **v9**(`PERSONAL_STATE_SUPPORTED_VERSIONS = [1..9]`)—— v81 因想逛 key 識別語意變更而升版 |
 | candidate automated validation | Node **94/94**、Chromium Playwright **185/185**；三種啟動情境 `healthCheck()=[]`、`pageerror=0` |
@@ -79,8 +79,8 @@
 | G1' | v74–v87 累積 delta 的 Bar 真機／PWA 驗收 | ✅ 2026-08-03，Bar 確認真機驗收皆正常 |
 | G1'' | v88–v89、v92–v95 畫面／真機確認 | ✅ 2026-08-08，Bar 確認皆已完成 |
 | G4' | Bar 核准 PR merge `dev → main` | ✅ PR #13，merge commit `02705c3` |
-| G5' | 正式站部署後線上驗證 | ⏸ Netlify 額度用罄，正式站仍為 v73 |
-| G6' | 建立 `production-v96` tag | ⏸ 等待正式部署與線上驗證 |
+| G5' | 正式站部署後線上驗證 | 🗄 **已被後續版本取代** —— 原記「Netlify 額度用罄，正式站仍為 v73」，該狀態早已解除；正式站其後歷經 v110／v111／v112／v113，現為 **v113** |
+| G6' | 建立 `production-v96` tag | 🗄 **已被後續版本取代** —— v96 不再單獨發 tag；tag 已推進至 `production-v111`，v112／v113 依 §E 待裝置驗收後才建 |
 
 > G1／G4／G5 為 Bar 專屬職責;AI 不得以自動驗證全綠為由推進。
 > **測試站驗收前置**:`dev-trippilot-jp.netlify.app` 自動部署已於 2026-07-26 關閉。用它驗收前必須先手動部署到目標 commit,並依 `16_OPS_PLAYBOOK.md` §F5 核對線上 `sw.js`／`app-version.js` 版本與 CacheStorage 實際內容,**不得只看 Git 分支**。
@@ -115,12 +115,16 @@
 | v110 | UI semantic tokens 與 Today deep-module extraction（原 v109） | ✅ Bar 驗收、main merge、production verification、tag 完成 |
 | v111 | BUILTIN asset spike 與 test throughput（原 v110） | ✅ main merge、production verification、tag 完成 |
 | v112 | 行程 UI/UX 精簡、延後身分選擇、空狀態 CTA、Android PWA 相容 | ✅ `dev`／`main` 已推送、正式站由 Bar 回報驗證正常；Android 實體手機待驗收 |
-| v113 | 杉綠／霧藍／焙茶優先配色辨識度 | ✅ `dev`／`main` 已推送、merged-tree gate 通過；待 Netlify production verification |
+| v113 | 杉綠／霧藍／焙茶優先配色辨識度 | ✅ `dev`／`main` 已推送、merged-tree gate 通過、**Netlify production 已接管並線上核對通過（2026-09-08 deploy `6a9fb443`）**；待 Bar 三組主題裝置驗收 |
 
 **已知未做(需先定判準)**:Today 的「交通／停車／營業／付款／提醒**依當下情境動態調整優先順序**」。v84 只做了可明確驗收的收合(常駐交通／停車／營業,收合付款／提醒);「當下情境」的判準(依時間?依距離?依是否已抵達?)尚未定義,不同讀法會做出完全不同的東西,故未實作。
 
 ## 下一棒
 
-→ **確認 GitHub Actions／Netlify production 已接管 v113，再由 Bar 驗收三組主題；Android 實體手機可一併依既有流程驗收。** 未完成正式發版流程前不得建立 production tag。
+→ **由 Bar 驗收 v113 三組主題（杉綠／霧藍／焙茶），並一併完成 v112 的 Android 實體手機驗收。**
+
+> GitHub Actions 與 Netlify production **已於 2026-09-08 接管 v113** —— deploy `6a9fb443`、`commit_ref` = `745bb6f`、線上 `sw.js`／`app-version.js` 皆 v113、`qa-sanity` 於 `main` `745bb6f` 與 `dev` `f0444cb` 皆 success。**這一步已完成，不需再確認。**
+>
+> 裝置驗收通過後才可建立 `production-v112` 與 `production-v113`；**未完成正式發版流程前不得建立 production tag。**
 
 > 正式發布仍必須遵守 §E：PR 與 Actions 通過後才能 merge；Netlify 線上驗證通過後才能建立 production tag。

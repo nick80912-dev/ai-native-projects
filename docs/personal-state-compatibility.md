@@ -123,6 +123,8 @@ w2:p<encoded placeId>:<encoded floor>:<encoded store name>
 
 ## 五、複驗紀錄(2026-07-30)
 
+> ⚠️ **本節為當時的歷史裁定,其中「不升 v9」一條已被第六節取代。** v81 因想逛 key 的識別語意變更而升版,現行版本為 **v9**(見本檔開頭「現行版本」與第六節)。保留本節是為了記錄當時的判斷理由,不是現行契約。
+
 - **無安全還原斷點**:v1–v8 逐版本實測,全部可還原成功,無需犧牲任何版本。
 - **不升 v9**:P3 原提案要升版納入 `trip_shopping_units`,複驗發現該欄位已於 SW v72 的 v8 納入(`personalStateJson()` 已含 `shoppingUnits`)。無新欄位卻升版,只會讓已發出的 v8 備份被 v8 裝置拒絕,憑空製造相容斷點。經 Bar 裁定維持 `PERSONAL_STATE_VERSION = 8`。
 - **測試覆蓋缺口已補**:此前僅 v1／v2／v4／v8 有還原測試,v3／v5／v6／v7 完全沒有;且既有 `settings-backup-ux.test.js` 用簡化假 store,跑不到真正的遷移邏輯。新增的矩陣測試注入真實實作,並經對照驗證(破壞 `payload.version<8` 分支後測試確實失敗)。
