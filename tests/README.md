@@ -38,6 +38,7 @@
 
 ## 現有測試
 - `manifest-status-authority.test.js`：驗證 `.ai-manifest.json` 僅宣告 `tasks/current.md` 為目前產品狀態權威，且不保留易過時的開發候選、下一步或自動驗證快照。執行：`node tests/manifest-status-authority.test.js`；repo gate：`node tools/check-doc-titles.js`。
+- `doc-generation.test.js`：驗證活文件的 `shell/vNNN` 必須等於 `sw.js` 的 `SW_VERSION`，錯誤訊息帶檔名與行號，同一行多個舊引用各自回報，`generation-exempt` 只在同一行生效，推導不出版本時必須報錯而非放行；並含負向控制（把真實文件在記憶體裡改回舊 generation，gate 必須紅）。歷史文件（`adr/`、`07_CHANGELOG.md`、`tasks/done.md`、`docs/batch2-device-acceptance.md` 等）刻意不納管。執行：`node tests/doc-generation.test.js`；repo gate：`node tools/check-doc-generation.js`。
 - `atomic-sheet-sync.test.js`:驗證七張 Sheet 候選資料需整批驗證後一次啟用、舊快取遷移、失敗候選保留與同步狀態面板；v88 另鎖定健康 header 只顯示「已同步」但 aria 保留更新時間、其他狀態相對時間、最後完整同步時間、partial 失敗來源的人類可讀文案，以及舊快照 metadata 相容。執行:`node tests/atomic-sheet-sync.test.js`。
 - `network-retry-toast-guard.test.js`：驗證 Sheet 首次抓取失敗後精確退避 800ms 且只重試一次、第二次錯誤維持可觀察，以及缺少 Toast DOM 節點時不拋錯、不改 action／timer，正常 Toast 行為不變。執行：`node tests/network-retry-toast-guard.test.js`。
 - `app-now.test.js`:驗證正式時間、offset/custom 時間模擬與共用 `appNow()` 時鐘。執行:`node tests/app-now.test.js`。
@@ -108,7 +109,7 @@
 - 打包前離線回歸(SW 快取)腳本。
 
 ## Sanity CI(2026-07-09 起)
-- `.github/workflows/qa.yml` 於 `main` push / Pull Request 自動執行：①`tools/check-doc-titles.js`（文件標題／檔名一致性＋manifest JSON）②`tests/` 內全部 `*.test.js` ③Playwright 三情境。`dev` push 目前先執行相同本機 CI，是否納入 workflow 另見 backlog。
+- `.github/workflows/qa.yml` 的 `sanity` job 於 `main`／`dev` push 與 Pull Request 自動執行：①`tools/check-doc-titles.js`（文件標題／檔名一致性＋manifest JSON）②`tools/check-app-version.js`（runtime 版本鏈）③`tools/check-doc-generation.js`（活文件不得停在舊 `shell/vNNN`）④`tests/` 內全部 `*.test.js`。`browser-qa` job 只在 Pull Request 與 `main` push 跑 Playwright 三情境與 SW 更新快取正確性。
 - 上傳/commit 後到 GitHub 的 **Actions** 頁看結果:綠勾=通過;紅叉=點進去看哪個檔案錯位或哪個測試失敗。
 
 ## 規則

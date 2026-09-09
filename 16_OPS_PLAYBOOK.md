@@ -189,7 +189,7 @@ GitHub Pages URL：https://nick80912-dev.github.io/ai-native-projects/
 ### F4. 標準驗收層級
 日常開發採以下順序,**能在前一層擋掉的問題就不要往後推**:
 ```
-自動測試(node tests/*.test.js + tools/check-doc-titles.js + tools/check-app-version.js)
+自動測試(node tests/*.test.js + tools/check-doc-titles.js + tools/check-app-version.js + tools/check-doc-generation.js)
 → 電腦 localhost(§F1)
 → 手機 LAN 真機 UI(§F2)
 → GitHub Pages HTTPS／PWA／離線(§F3)

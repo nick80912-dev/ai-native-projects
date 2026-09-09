@@ -1,5 +1,13 @@
 # 07 版本紀錄
 
+## 2026-09-09 — 治理層：活文件 generation 一致性 gate（無 runtime 變更）
+
+- 新增 `tools/check-doc-generation.js`：活文件出現的 `shell/vNNN` 必須等於 `sw.js` 的 `SW_VERSION`，current generation 由 `sw.js` 反推而不新增第二個真相來源。採白名單納管 22 份活文件；`adr/`、`07_CHANGELOG.md`、`tasks/done.md`、`docs/superpowers/`、`00_CONTEXT_HANDOVER.md`、`docs/batch2-device-acceptance.md` 等歷史記錄刻意豁免——那些檔案寫死當時的版本才是正確的。同一行加 `generation-exempt` 註解可逐行豁免，且必須寫明理由。
+- 導入前實測：`02_ARCHITECTURE.md`（7 處）、`10_FOLDER_STRUCTURE.md`（8 處）、`08_AI_HANDOVER.md`（2 處）共 17 處仍指向三代之前的 `shell/v111/`，誤殺 0 筆。舊 generation 目錄仍存在於 repo，所以這類漂移不會 404、不會報錯，只會讓接手者安靜地改錯檔案——既有的 `check-doc-titles.js` 與 `check-app-version.js` 都不涵蓋文件端路徑。
+- 依實測結果修正文件：`02_ARCHITECTURE.md` 與 `10_FOLDER_STRUCTURE.md` 的現行契約敘述改為 `shell/v113/`；`08_AI_HANDOVER.md` 第 22 行屬「v111 …（released）」歷史段落，改以逐行 `generation-exempt` 標註而非竄改成 v113。
+- `13_PROJECT_STATUS.md` 自 2026-08-01 起停在「SW v73 已正式發布」、下一步仍寫 v75 真機驗收，落後 40 個版本。改寫為薄指標：即時狀態一律看 `tasks/current.md`，本檔只保留與版本無關的長期風險提醒，不再手抄第二份狀態表。
+- 新增 `tests/doc-generation.test.js`（含負向控制：把真實文件在記憶體裡改回舊 generation，gate 必須紅），並把 `node tools/check-doc-generation.js` 接進 `.github/workflows/qa.yml` 的 `sanity` job 與 `16_OPS_PLAYBOOK.md` §F4 驗收層級。本機 Node **95/95**、`check-doc-titles.js`、`check-app-version.js`、`check-doc-generation.js` 全綠。
+
 ## 2026-09-08 — v113 優先主題辨識度調整（candidate）
 
 - 只調整使用者指出較相近的杉綠、霧藍、焙茶三組主題；Ocean、Ivory、Wisteria、版面、資料、互動與導航行為不變。

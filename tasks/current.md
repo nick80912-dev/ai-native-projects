@@ -8,6 +8,13 @@
 - **正式部署已完成（2026-09-08）**：Netlify production deploy `6a9fb443`，`commit_ref` = `745bb6f`（與 `origin/main` HEAD 相符），`published_at` 有值；線上 `sw.js` 與 `shell/v113/app-version.js` 皆為 `v113`。**尚待 Bar 對三組主題做裝置驗收。**
 
 
+## 治理層 gate:活文件 generation 一致性(2026-09-09,dev)
+- 新增 `tools/check-doc-generation.js` + `tests/doc-generation.test.js`,已接進 `qa.yml` 的 `sanity` job。
+- 修掉 17 處指向 `shell/v111/` 的活文件漂移(`02`、`10`);`08` 第 22 行屬歷史段落,改用逐行 `generation-exempt`。
+- `13_PROJECT_STATUS.md` 落後 40 個版本,已改寫為指向 `tasks/current.md` 的薄指標,不再手抄第二份狀態表。
+- **無 runtime 變更**,不升版、不影響 v113 的裝置驗收與 production tag 條件。
+
+
 
 > 更新於 2026-09-09。細任務層;里程碑看 `06_ROADMAP.md`,**逐版交付紀錄一律看 `07_CHANGELOG.md`**,正式待辦看 `tasks/backlog.md`。
 > 本檔只回答三件事:**現在線上是什麼、dev 上是什麼、下一批要做什麼**。歷史流水帳不放這裡。

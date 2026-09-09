@@ -19,7 +19,7 @@
 ## v111 generated BUILTIN asset and test-throughput handover (released)
 
 - v110 已完成 Bar device/PWA acceptance、main merge、Netlify production verification 與 `production-v110` tag。v111 後續亦完成 main merge、production verification 與 `production-v111` tag。
-- v111 發布時的 `shell/v111/builtin-snapshot.js` 由 `tools/refresh-builtin-snapshot.js` 產生；asset、HTML marker、`shell/v111/app-version.js` 與當版 root `sw.js` 同為 v111。root `index.html`／`app-version.js` 與 `tests/fixtures/sw-v110-production.js` byte-lock 正式 v110 predecessor；v111 install 成功後才映射導覽，失敗則保留 v110 inline BUILTIN 與 cache。
+- v111 發布時的 `shell/v111/builtin-snapshot.js` 由 `tools/refresh-builtin-snapshot.js` 產生；asset、HTML marker、`shell/v111/app-version.js` 與當版 root `sw.js` 同為 v111。root `index.html`／`app-version.js` 與 `tests/fixtures/sw-v110-production.js` byte-lock 正式 v110 predecessor；v111 install 成功後才映射導覽，失敗則保留 v110 inline BUILTIN 與 cache。<!-- generation-exempt: 本行記錄 v111 發布當時的產出事實,路徑不隨升版變動 -->
 - refresh preview 會偵測缺檔、stale、App version mismatch 與 marker mismatch；`--write` 以 sibling temp、fsync／close／read-back／雙 rename 更新 HTML＋asset，任一步失敗回復兩個 target 原始 bytes。Ledger 仍只用 schema 21 欄 header，從不請求 live CSV。
 - runtime asset 缺失或錯版時，先驗證 local active／previous snapshot；有效即 degraded boot，無有效 local data 才顯示含重新載入與複製診斷的 recovery，且不建立空 DB／不啟動 sync。
 - 可重算 cold-navigation 證據固定 inline `d0405fe` 與 immutable bridge asset `83e4d2b`：DCL 中位數 181.10 → 185.65 ms（+2.51%），Today 中位數 171.70 → 175.75 ms（+2.36%）；每個樣本均記錄 HTML／App／asset／SW／timestamp identity，外部化通過 ≤10% kill gate。
