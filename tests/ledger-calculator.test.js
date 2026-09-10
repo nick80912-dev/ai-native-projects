@@ -3,7 +3,7 @@ const fs=require('fs');
 const vm=require('vm');
 const {extractFunction}=require('./support/source');
 
-const html=fs.readFileSync('shell/v113/index.html','utf8');
+const html=fs.readFileSync('shell/v114/index.html','utf8');
 const evaluatorSource=extractFunction(html,'evaluateLedgerCalculatorExpression');
 const normalizeSource=extractFunction(html,'normalizeLedgerCalculatorExpression');
 const amountResultSource=extractFunction(html,'ledgerCalculatorAmountResult');

@@ -15,7 +15,7 @@ const assert = require('assert');
 const fs = require('fs');
 const vm = require('vm');
 
-const html = fs.readFileSync('shell/v113/index.html', 'utf8');
+const html = fs.readFileSync('shell/v114/index.html', 'utf8');
 
 function extractFunction(source, name) {
   const start = source.indexOf('function ' + name + '(');

@@ -8,7 +8,7 @@
 
 ## 你是誰、專案是什麼
 你是 Bar 的 AI 工程團隊(CTO/工程師/設計/QA 合一)。Bar **不會程式**,用白話下需求;你負責全部技術決策與實作,不教學、不解釋程式概念(除非被問)。
-專案:日本旅遊 PWA。Google Sheets 是 CMS,vanilla JS App 在使用者手機端抓 8 張公開 CSV 渲染,Netlify 託管。CMS 現行 Schema 3.0 以 Places.HID 精確關聯 Hotels.HID；住宿名稱只供顯示。current `shell/v113/index.html` 是 UI 與 DOM adapter；root `index.html`／`app-version.js` 是禁止當日常程式修改的 frozen v110 predecessor bridge。獨立 runtime modules 由 `runtime-assets.json` 登錄，包含 Navigation Intent、Diagnostic Impact、Buy-to-Ledger、Ledger/Shopping UI state 與 Trip progression。`schema.js`、`validator.js`、`sw.js` 等部署檔均在 repo 根目錄,經 GitHub 連動由 Netlify 部署(流程見 16 §E)。
+專案:日本旅遊 PWA。Google Sheets 是 CMS,vanilla JS App 在使用者手機端抓 8 張公開 CSV 渲染,Netlify 託管。CMS 現行 Schema 3.0 以 Places.HID 精確關聯 Hotels.HID；住宿名稱只供顯示。current `shell/v114/index.html` 是 UI 與 DOM adapter；root `index.html`／`app-version.js` 是禁止當日常程式修改的 frozen v110 predecessor bridge。獨立 runtime modules 由 `runtime-assets.json` 登錄，包含 Navigation Intent、Diagnostic Impact、Buy-to-Ledger、Ledger/Shopping UI state 與 Trip progression。`schema.js`、`validator.js`、`sw.js` 等部署檔均在 repo 根目錄,經 GitHub 連動由 Netlify 部署(流程見 16 §E)。
 
 ## 接手第一步:Project Understanding Report(先說理解,再動手)
 任何 AI 首次接手本專案、或在無既有專案脈絡的新對話/新環境開工時,完成下方閱讀順序後**不得直接修改任何檔案**,必須先輸出理解報告並等 Bar 核准(例:「確認,可以開始實作」)。此要求是「每個 AI 接手時做一次」,不是每個任務都做;同一脈絡內的後續任務依 15 的任務分級與 14 的 Tier 規則執行。
@@ -26,7 +26,7 @@
 
 ## 閱讀順序(最省 token)
 1. `.ai-manifest.json` → 2. `PROJECT_CONSTITUTION.md` → 3. 本文件 → 4. 相關 `adr/` → 5. **必讀** `15_AI_EXECUTION_RULES.md`(決策權限/指令效力/任務分級)→ 6. 依任務讀 `03_DATABASE.md` / `09_SCHEMA_MAPPING.md` / `05_CODING_RULES.md` / `11_CODING_CONVENTION.md` / `12_DEV_WORKFLOW.md` / `14_FILE_TIERS_AND_GATE.md` / `16_OPS_PLAYBOOK.md`
-程式碼本體主要在 current generation `shell/v113/index.html` 內嵌 JS(區塊順序見 02)；root `index.html`／`app-version.js` 必須維持 frozen v110 bridge bytes。`navigation-intent.js`、`diagnostic-impact.js`、`today-view.js`、`buy-to-ledger.js`、`ledger-ui-state.js`、`shopping-ui-state.js`、`trip-progression.js` 是 production-used module seams，`schema.js` / `validator.js` 是獨立權威來源。
+程式碼本體主要在 current generation `shell/v114/index.html` 內嵌 JS(區塊順序見 02)；root `index.html`／`app-version.js` 必須維持 frozen v110 bridge bytes。`navigation-intent.js`、`diagnostic-impact.js`、`today-view.js`、`buy-to-ledger.js`、`ledger-ui-state.js`、`shopping-ui-state.js`、`trip-progression.js` 是 production-used module seams，`schema.js` / `validator.js` 是獨立權威來源。
 
 ## 工作流程(必守)
 0. 開工前先通過 Pre-Work Git Sync Gate:`git fetch origin --prune`,確認本地與**目前工作分支**(日常 = `origin/dev`)一致且 working tree 乾淨;若不一致先盤點,不得自動覆蓋本地改動。
@@ -72,10 +72,12 @@
 - **第一次載入拿到的是 root v110 bridge,不是 current generation**。全新裝置、清過網站資料、或 SW 尚未啟用時,第一個畫面由 byte-locked v110 bridge 提供(`APP_VERSION` 顯示 `v110`),要等 v113 worker 啟用後**重新載入**才會換成 current generation。這是 ADR 0019 的設計,不是缺陷,但有兩個實務後果:
   - **驗收前必須先確認實際 runtime 版本再看畫面**。只看畫面會驗到三代之前的 App —— 2026-09-10 實測踩過:第一次截圖拿到的是 v110。
   - **使用者的第一印象是 v110 的行為,不是最新版**。討論「新使用者第一次看到什麼」時,答案一律是 bridge 的行為,不是 current generation 的行為。
-- **強制身分牆的真正觸發點是「資料同步完成」,不是 boot,也不是進入分帳**(2026-09-10 A/B 實測,v113):`shell/<current>/index.html` 在快照套用成功後呼叫 `refreshMemberSelector()`,其 else 分支在沒有身分時直接 `openMemberSelector(true)`。實測 —— 封鎖 CSV(等同離線、不會有成功同步)全程 `overlay=false`;正常連網則在「今天」頁、零互動的情況下 `overlay=true, forced=true`。
-  - v112 只移除了 **boot** 的強迫選身分,**同步完成的觸發仍在**。真實使用者一定連網,所以幾乎必然撞到。
-  - **量測這件事時務必等到第一次同步完成再判斷**。只看載入後兩三秒會得到相反結論 —— 2026-09-10 就是這樣誤判過一次。
-- **身分選擇 overlay 在 forced 模式沒有取消路徑**(2026-09-10 實測,v113):`renderMemberSelector()` 只在 `forced` 為 false 時渲染 `×` 關閉鈕,兩個步驟(選人 → 重選／確認)在 forced 下都關不掉,`Escape` 與點背景皆無效。另外 `switchView()` 在 `ensureLedgerMember()` 失敗時直接 `return`,所以點「分帳」不會切換分頁,完成選擇後也落回原本的分頁而不是分帳。修改該流程前先看這一條,不要以為是新問題。
+- **身分是選用的,不是進門條件**(v114 起的現行契約)。沒有選身分仍可正常瀏覽四個分頁,分帳頁也能看空狀態。只有真正需要身分的操作才叫得出選擇器:
+  - **進分帳分頁**:非 forced,渲染 `×` 關閉鈕,取消後留在原分頁;完成選擇後會自動接續前往分帳(`pendingViewAfterMember`)。
+  - **送出記帳、結算、切換測試模式**:維持 forced,刻意沒有 `×` —— 取消等於中止該操作。
+  - `refreshMemberSelector()` **只重繪已開著的選擇器,永遠不會自己開一個**。
+- **改動這一塊之前先讀這段歷史**(v113 及更早):快照套用成功後會呼叫 `refreshMemberSelector()`,其 else 分支在沒有身分時直接 `openMemberSelector(true)`。結果是使用者一連網、還在「今天」頁、零互動就被 forced 身分牆全螢幕擋住,而 forced 不渲染 `×`,退不出去。v112 只移除了 **boot** 的觸發,同步完成的觸發到 v114 才移除。
+  - **量測這類「什麼時候會跳出來」的問題,務必等第一次同步完成再判斷**。只看載入後兩三秒會得到相反結論 —— 2026-09-10 就是這樣誤判過一次,先報成「只有 v110 bridge 會跳」,A/B 實測(封鎖 CSV vs 正常連網)才看出真正的觸發點。
 
 ## 現行診斷契約（2026-08-09）
 - `AppLog` 六類方法仍輸出既有 console level／前綴，並只在記憶體保存本次 session 最新 100 筆；每筆訊息最多 1,000 字，`snapshot()` 不暴露內部可變狀態。

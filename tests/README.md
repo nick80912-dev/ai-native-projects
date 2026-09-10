@@ -1,5 +1,10 @@
 # tests — 測試資產(交付必附)
 
+## v114 member-gate coverage
+
+- `browser/member-gate.spec.js`:六個規格鎖住 v114 的身分流程 ——(1)成功同步後不得自動彈出身分牆(舊行為在此為 `overlay=true, forced=true`);(2)`refreshMemberSelector()` 只重繪已開著的選擇器、絕不自己開一個;(3)進分帳的選擇器為非 forced 且渲染 `×`,取消後留在原分頁;(4)確認身分後接續前往分帳(舊行為留在原分頁);(5)取消後不得挾持之後從設定頁做的身分切換;(6)`openMemberSelector(true)` 的 forced 語意與「刻意沒有 `×`」維持不變。執行:`npx playwright test tests/browser/member-gate.spec.js`。
+- 第 (4) 條在實作階段抓到一個真缺陷:`closeMemberSelector()` 會清掉 `pendingViewAfterMember`,而原本的實作在它之後才讀,永遠讀到 `null`。改為先取值再關閉。
+
 ## v113 priority-theme coverage
 
 - `theme-system.test.js` protects perceptual separation for Cedar／Mist／Tea page surfaces, accents and secondary roles, plus AA contrast and the two preserved action colors.
@@ -30,7 +35,7 @@
 - `browser/today-live-info.spec.js` exercises Hero／badge target confirmation at 320／375／390px with tap／Enter／Space, sticky-safe geometry, live status, reduced motion, missing targets, stale timers, source scroll, connected／replacement／fallback focus, and blank-category behavior. Focused WebKit uses `--grep "target|定位|blank category"`.
 - `browser/navigation-target-matrix.spec.js` exercises the actual expanded cluster-stop, pre-trip day, mall-floor, and back-to-now controls at 320／375／390px with rotating Tap／Enter／Space. It asserts exact target and live status, native keyboard focus, sticky-header-safe target／status geometry, 1.2-second clear, reduced-motion static treatment, zero horizontal overflow, and current-day return behavior. Run focused WebKit together with the existing Today target selection.
 - `diagnostic-impact-module.test.js` and `diagnostics-app-log.test.js` protect exact timeout classification, conservative unknown handling, input immutability, escaped raw／projected output, and byte-for-byte raw copied reports; `browser/diagnostics-app-log.spec.js` verifies the same boundary in Chromium.
-- `manifest-status-authority.test.js` plus `tools/check-doc-titles.js` require `.ai-manifest.json` to name `tasks/current.md` as the sole current-status authority, identify changelog／task archives only as history, reject stale `tasks/(current/backlog/done)`／`manifest.status` prose, and omit volatile candidate／next-action／automated-test snapshots. Current version authority is `shell/v113/app-version.js`／root `sw.js`; root `app-version.js` is the byte-locked v110 bridge.
+- `manifest-status-authority.test.js` plus `tools/check-doc-titles.js` require `.ai-manifest.json` to name `tasks/current.md` as the sole current-status authority, identify changelog／task archives only as history, reject stale `tasks/(current/backlog/done)`／`manifest.status` prose, and omit volatile candidate／next-action／automated-test snapshots. Current version authority is `shell/v114/app-version.js`／root `sw.js`; root `app-version.js` is the byte-locked v110 bridge.
 
 
 

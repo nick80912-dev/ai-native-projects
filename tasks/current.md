@@ -1,11 +1,19 @@
 # CURRENT(現在正在做的)
 
-## v113 優先主題辨識度 candidate
+## v114 身分不再是進門條件 candidate(2026-09-10,dev)
+- A/B 實測(v113):同步完成後會強制彈出身分牆,使用者在「今天」頁、零互動就被全螢幕擋住且退不出去。觸發點是**同步完成**,不是 boot 也不是進入分帳;v112 只移除了 boot 觸發。
+- 修正四處:同步完成不再自動彈出;進分帳的選擇器改為可取消;記住待前往的分頁;確認後接續前往。送出記帳／結算／切測試模式維持 forced。
+- 動工前先驗過最大風險:**沒有身分時進分帳頁渲染完全正常**(無 throw、`healthCheck()` 空、pageerror 0、溢位 0)。
+- 新增 `tests/browser/member-gate.spec.js` 六個規格;其中一條在實作階段抓到真缺陷(`closeMemberSelector()` 會先清掉待前往目的地),已修。
+- **六組主題色一律未動** —— v114 不含配色變更。
+- **尚未部署、尚未 merge `main`、G1 未做、不得建立 production tag。**
+
+## v113 優先主題辨識度(已由 v114 接續,保留紀錄)
 - v112 已推送 `dev`／`main` 並經 Bar 回報正式站驗證正常；**Android 實體手機仍待 Bar 操作驗收**（Android Chromium 等效自動驗證已通過）。
 - v113 只調整杉綠、霧藍、焙茶三組既有 palette；Ocean、Ivory、Wisteria、版面、資料與互動行為不變。
 - 三組 page surface、accent 與 secondary 已拉開；主要文字／操作色維持 WCAG AA，390×844 畫面無 overflow。
 - 本機及 merged tree 的 Node **94/94**、Playwright **185/185** 與三情境健康檢查通過；已推送 `dev`／`main`。
-- **正式部署已完成（2026-09-08）**：Netlify production deploy `6a9fb443`，`commit_ref` = `745bb6f`（與 `origin/main` HEAD 相符），`published_at` 有值；線上 `sw.js` 與 `shell/v113/app-version.js` 皆為 `v113`。**尚待 Bar 對三組主題做裝置驗收。**
+- **正式部署已完成（2026-09-08）**：Netlify production deploy `6a9fb443`，`commit_ref` = `745bb6f`（與 `origin/main` HEAD 相符），`published_at` 有值；線上 `sw.js` 與 `shell/v114/app-version.js` 皆為 `v113`。**尚待 Bar 對三組主題做裝置驗收。**
 
 
 ## 治理層 gate:活文件 generation 一致性(2026-09-09,dev)

@@ -62,7 +62,7 @@ const LIVING = [
 const GENERATION_REF = /shell\/v\d+/g;
 const EXEMPT_MARK = 'generation-exempt';
 
-/* 純函式:sources = { current:'v113', docs:{ '02_ARCHITECTURE.md': '檔案內容', ... } } */
+/* 純函式:sources = { current:'vNNN', docs:{ '02_ARCHITECTURE.md': '檔案內容', ... } } */
 function checkDocGeneration(sources) {
   const errors = [];
   const current = String((sources && sources.current) || '');

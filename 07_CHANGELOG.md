@@ -1,5 +1,15 @@
 # 07 版本紀錄
 
+## 2026-09-10 — v114 身分不再是進門條件（candidate）
+
+- **問題**：A/B 實測（v113）顯示，快照套用成功後會呼叫 `refreshMemberSelector()`，其 else 分支在沒有身分時直接 `openMemberSelector(true)`。使用者一連網、還在「今天」頁、零互動就被 forced 身分牆全螢幕擋住；forced 模式不渲染 `×`，`Escape` 與點背景皆無效，退不出去。封鎖 CSV（等同離線、不會有成功同步）則全程沒有 overlay——觸發點是**同步完成**，不是 boot、也不是進入分帳。v112 只移除了 boot 觸發。
+- **修正**（`shell/v114/index.html` 四處）：①`refreshMemberSelector()` 只重繪已開著的選擇器，不再自己開一個；②`ensureLedgerMember()` 改叫非 forced，讓程式裡本來就有的 `×` 關閉鈕出現；③`switchView()` 以 `pendingViewAfterMember` 記住「因為缺身分而沒去成的分頁」，不再直接 `return` 丟掉；④`confirmMemberSelection()` 成功後接續前往該分頁。取消時清除待前往目的地，避免挾持之後從設定頁做的身分切換。
+- **維持不變**：送出記帳、結算、切換測試模式那幾處仍是 forced，取消等於中止該操作——`openMemberSelector(true)` 的語意與「刻意沒有 `×`」都保留。
+- 動工前先驗過最大風險：**沒有身分時直接進分帳頁渲染完全正常**（`view=split`、無 throw、`healthCheck()` 空、pageerror 0、水平溢位 0，空狀態文案可讀）。
+- 新增 `tests/browser/member-gate.spec.js` 六個規格。第 4 條在實作階段抓到一個真缺陷：`closeMemberSelector()` 會清掉 `pendingViewAfterMember`，而原實作在它之後才讀，永遠讀到 `null`；改為先取值再關閉。
+- App／SW forward-bump 至 v114，root v110 bridge 保持 byte-identical，BUILTIN 由既有 generator 更新（preview 顯示無資料漂移）。**六組主題色一律未動**——v114 不含任何配色變更。`APP_RELEASE_NOTES` 五筆視窗由 v114 擠掉 v109；`theme-system.test.js` 的主題 release-note 斷言改綁在 v113 那一筆而非「最新一筆」，避免每次升版做別的事就假失敗。
+- **尚未部署、尚未 merge `main`、G1 未做、未建立 production tag。**
+
 ## 2026-09-10 — UI/UX 審查:調色盤表修正與兩條交接陷阱（無 runtime 變更）
 
 - **`04_UI_GUIDELINES.md` 的調色盤表對杉綠／霧藍／焙茶三組是錯的**——v113 改了 runtime 卻沒同步這張表，三列的 **13 個 token 全部**是舊值（例如杉綠 paper 文件寫 `#f3f5f0`、實際 `#edf3ec`；焙茶 accent 文件寫 `#b64f5c`、實際 `#405c7a`）。整張表改為由 `shell/v113/index.html` 重新產生並逐列核對，海洋／象牙／藤紫三列確認原本就正確。

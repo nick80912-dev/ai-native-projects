@@ -119,7 +119,7 @@ function createStorage(){
 }
 
 function loadModule(fetchImpl){
-  const source = fs.readFileSync('shell/v113/index.html','utf8');
+  const source = fs.readFileSync('shell/v114/index.html','utf8');
   const start = source.indexOf('/* ================= ledgerRepository');
   const end = source.indexOf('var ledgerRepository=createLedgerRepository', start);
   assert(start >= 0 && end > start,'ledger helper section is present');

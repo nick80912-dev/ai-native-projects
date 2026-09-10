@@ -8,27 +8,30 @@ const checker = require('../tools/check-doc-generation.js');
 
 assert.strictEqual(typeof checker.checkDocGeneration, 'function', 'gate 對外提供可重用的純函式驗證器');
 
-function docs(map) { return { current: 'v113', docs: map }; }
+/* 合成 fixture 一律使用 repo 內不存在的假版本(v900／v899／v898):
+   這些斷言測的是規則本身,不該隨每次 generation 升版而需要維護。
+   真實 repo 的斷言另外用 checker.readSources('.') 動態取得目前 generation。 */
+function docs(map) { return { current: 'v900', docs: map }; }
 
 /* ---- 正向:活文件全部指向 current generation ---- */
 assert.deepStrictEqual(
-  checker.checkDocGeneration(docs({ 'a.md': 'current App 在 `shell/v113/index.html`。\n' })),
+  checker.checkDocGeneration(docs({ 'a.md': 'current App 在 `shell/v900/index.html`。\n' })),
   [],
   '指向 current generation 的活文件通過'
 );
 
 /* ---- 負向控制:指向舊 generation 必須失敗,且要指得出檔案與行號 ---- */
 const stale = checker.checkDocGeneration(docs({
-  'a.md': '第一行沒有版本。\ncurrent App 在 `shell/v111/index.html`。\n'
+  'a.md': '第一行沒有版本。\ncurrent App 在 `shell/v899/index.html`。\n'
 }));
 assert.strictEqual(stale.length, 1, '舊 generation 必須被攔下,實際:' + JSON.stringify(stale));
 assert(stale[0].indexOf('a.md:2') === 0, '錯誤訊息要帶檔名與行號,實際:' + stale[0]);
-assert(stale[0].indexOf('shell/v111') !== -1 && stale[0].indexOf('shell/v113') !== -1,
+assert(stale[0].indexOf('shell/v899') !== -1 && stale[0].indexOf('shell/v900') !== -1,
   '錯誤訊息要同時說出「寫了什麼」與「該寫什麼」');
 
 /* ---- 同一行出現多個舊引用要逐一報,不是只報第一個 ---- */
 assert.strictEqual(
-  checker.checkDocGeneration(docs({ 'a.md': '`shell/v111/index.html` 與 `shell/v112/app-version.js`\n' })).length,
+  checker.checkDocGeneration(docs({ 'a.md': '`shell/v899/index.html` 與 `shell/v898/app-version.js`\n' })).length,
   2,
   '同一行的多個舊引用各自回報'
 );
@@ -36,7 +39,7 @@ assert.strictEqual(
 /* ---- 逐行豁免:歷史敘述可以留在活文件裡 ---- */
 assert.deepStrictEqual(
   checker.checkDocGeneration(docs({
-    'a.md': '`shell/v111/builtin-snapshot.js` 是當時的發布事實。<!-- generation-exempt: 歷史 -->\n'
+    'a.md': '`shell/v899/builtin-snapshot.js` 是當時的發布事實。<!-- generation-exempt: 歷史 -->\n'
   })),
   [],
   '同一行標註 generation-exempt 即豁免'
@@ -44,7 +47,7 @@ assert.deepStrictEqual(
 /* 負向控制:豁免必須在同一行,不能寫在別行就把整份檔案放行 */
 assert.strictEqual(
   checker.checkDocGeneration(docs({
-    'a.md': '<!-- generation-exempt: 歷史 -->\n`shell/v111/index.html`\n'
+    'a.md': '<!-- generation-exempt: 歷史 -->\n`shell/v899/index.html`\n'
   })).length,
   1,
   '寫在別行的 generation-exempt 不得放行整份檔案'
@@ -52,7 +55,7 @@ assert.strictEqual(
 
 /* ---- current generation 推導失敗要明講,不得靜默通過 ---- */
 assert.strictEqual(
-  checker.checkDocGeneration({ current: '', docs: { 'a.md': '`shell/v111/index.html`\n' } }).length,
+  checker.checkDocGeneration({ current: '', docs: { 'a.md': '`shell/v899/index.html`\n' } }).length,
   1,
   '推導不出 SW_VERSION 時必須報錯而不是放行'
 );
@@ -80,7 +83,7 @@ assert.deepStrictEqual(checker.checkDocGeneration(real), [], '本 repo 的活文
 /* 負向控制:把真實文件在記憶體裡改回舊 generation,gate 必須紅 —— 證明上一條不是恆真 */
 const mutated = { current: real.current, docs: Object.assign({}, real.docs) };
 mutated.docs['02_ARCHITECTURE.md'] = String(real.docs['02_ARCHITECTURE.md'])
-  .split('shell/' + real.current).join('shell/v111');
+  .split('shell/' + real.current).join('shell/v899');
 assert(checker.checkDocGeneration(mutated).length > 0,
   '把真實文件改回舊 generation 後 gate 必須失敗(否則前一條斷言是恆真)');
 
