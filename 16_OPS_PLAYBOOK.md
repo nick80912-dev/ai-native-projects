@@ -189,7 +189,7 @@ GitHub Pages URL：https://nick80912-dev.github.io/ai-native-projects/
 ### F4. 標準驗收層級
 日常開發採以下順序,**能在前一層擋掉的問題就不要往後推**:
 ```
-自動測試(node tests/*.test.js + tools/check-doc-titles.js + tools/check-app-version.js)
+自動測試(node tests/*.test.js + tools/check-doc-titles.js + tools/check-app-version.js + tools/check-doc-generation.js)
 → 電腦 localhost(§F1)
 → 手機 LAN 真機 UI(§F2)
 → GitHub Pages HTTPS／PWA／離線(§F3)
@@ -211,22 +211,22 @@ GitHub Pages URL：https://nick80912-dev.github.io/ai-native-projects/
 # 1. SW 版本(應等於目標 commit 的 sw.js SW_VERSION)
 curl -s https://dev-trippilot-jp.netlify.app/sw.js | grep SW_VERSION
 
-# 2. Current immutable generation 三件組(以下 v113 需替換為目標 SW_VERSION)
-curl -s https://dev-trippilot-jp.netlify.app/shell/v113/app-version.js
-curl -s https://dev-trippilot-jp.netlify.app/shell/v113/index.html | grep BUILTIN_HTML_VERSION
-curl -s https://dev-trippilot-jp.netlify.app/shell/v113/builtin-snapshot.js | grep BUILTIN_ASSET_VERSION
+# 2. Current immutable generation 三件組(以下 v114 需替換為目標 SW_VERSION)
+curl -s https://dev-trippilot-jp.netlify.app/shell/v114/app-version.js
+curl -s https://dev-trippilot-jp.netlify.app/shell/v114/index.html | grep BUILTIN_HTML_VERSION
+curl -s https://dev-trippilot-jp.netlify.app/shell/v114/builtin-snapshot.js | grep BUILTIN_ASSET_VERSION
 
 # 2b. Root bridge 必須仍是 predecessor v110，不得誤升為 current
 curl -s https://dev-trippilot-jp.netlify.app/app-version.js
 
 # 3. header 行為(測試站存在的意義就是驗這個,GitHub Pages 無法重現)
 curl -sI https://dev-trippilot-jp.netlify.app/sw.js | grep -i cache-control
-curl -sI https://dev-trippilot-jp.netlify.app/shell/v113/app-version.js | grep -i cache-control
+curl -sI https://dev-trippilot-jp.netlify.app/shell/v114/app-version.js | grep -i cache-control
 ```
 
 **裝置端第 4 項核對**(前三項通過後,在真機或桌面 DevTools):
 - Application → Cache Storage 的名稱應為 `okayama-trip-<目標版本>`;
-- 展開該 cache，`shell/v113/index.html`／`app-version.js`／`builtin-snapshot.js` 三者必須都是目標版本；`schema.js` 等 reused module 必須存在且由該 cache 提供。root `index.html`／`app-version.js` 不屬於 v113 cache target，應維持 v110 bridge。**不是只看 cache 名稱對就算過**。
+- 展開該 cache，`shell/v114/index.html`／`app-version.js`／`builtin-snapshot.js` 三者必須都是目標版本；`schema.js` 等 reused module 必須存在且由該 cache 提供。root `index.html`／`app-version.js` 不屬於 v114 cache target，應維持 v110 bridge。**不是只看 cache 名稱對就算過**。
 
 **任何一項不符 → 停止驗收,先重新手動部署。**在錯的版本上驗收出來的結論沒有意義,而且會誤導後續判斷。
 
@@ -270,7 +270,7 @@ node tools/refresh-builtin-snapshot.js
 npx playwright test tests/browser/trip-three-scenarios.spec.js
 ```
 
-`--write` 會在 current generation 目錄（v113 為 `shell/v113/`）staging `index.html` marker 與 `builtin-snapshot.js`，fsync／close／回讀後才進行雙檔替換；任一步失敗都將兩個 target 回復為原始 bytes。root v110 bridge 不由此工具修改。App、SW 或 asset 升版時也必須透過本工具更新 marker／asset 版本。最後一次 preview 必須顯示已一致。提交前另跑完整 repo gate。
+`--write` 會在 current generation 目錄（v114 為 `shell/v114/`）staging `index.html` marker 與 `builtin-snapshot.js`，fsync／close／回讀後才進行雙檔替換；任一步失敗都將兩個 target 回復為原始 bytes。root v110 bridge 不由此工具修改。App、SW 或 asset 升版時也必須透過本工具更新 marker／asset 版本。最後一次 preview 必須顯示已一致。提交前另跑完整 repo gate。
 
 ### G4. 權責與邊界
 

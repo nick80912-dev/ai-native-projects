@@ -32,7 +32,7 @@ const domain=TripBuyToLedger.createDomain({
 assert.deepStrictEqual(Object.keys(TripBuyToLedger).sort(),['createDomain','createWorkflow'],'module top-level exports are exact');
 const moduleSource=fs.readFileSync('buy-to-ledger.js','utf8');
 assert.doesNotMatch(moduleSource,/\b(?:document|localStorage|sessionStorage|indexedDB)\b/,'module has no DOM or storage globals');
-const runtimeSource=fs.readFileSync('shell/v113/index.html','utf8');
+const runtimeSource=fs.readFileSync('shell/v114/index.html','utf8');
 [
   'normalizeShoppingLedgerLink','activeShoppingLedgerLink','releaseShoppingLedgerLinks','appendShoppingLedgerLink',
   'resolveShoppingLedgerLinkState','buildShoppingLedgerLinkPlan','planShoppingLedgerLinks','shoppingLedgerSources',

@@ -1,7 +1,7 @@
 # 06 路線圖
 
 > **定位**:本檔是方向性文件(做什麼、順序為何),**不承載即時狀態**。
-> 即時狀態唯一權威:`tasks/`(current/backlog/done);快照見 `13_PROJECT_STATUS.md`。
+> 即時狀態唯一權威:`tasks/`(current/backlog/done);逐版交付紀錄見 `07_CHANGELOG.md`。
 
 ## ✅ 已完成(里程碑層級)
 - 基礎版:試算表→手機頁、離線內建、三層防線、WebView 相容修正

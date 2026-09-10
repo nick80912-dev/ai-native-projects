@@ -13,7 +13,7 @@ const fs = require('fs');
 const vm = require('vm');
 const TripProgression = require('../trip-progression.js');
 
-const html = fs.readFileSync('shell/v113/index.html', 'utf8');
+const html = fs.readFileSync('shell/v114/index.html', 'utf8');
 
 function extractFunction(name){
   const start = html.indexOf('function ' + name + '(');

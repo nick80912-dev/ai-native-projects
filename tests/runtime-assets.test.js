@@ -68,9 +68,9 @@ assert(swSource.includes("'./diagnostic-impact.js'"),'the offline shell includes
 assert(realInventory.assets.includes('today-view.js'),'the runtime inventory includes today-view.js');
 assert(indexHtml.includes('<script src="today-view.js"></script>'),'index.html loads today-view.js');
 assert(swSource.includes("'./today-view.js'"),'the offline shell includes today-view.js');
-assert(realInventory.assets.includes('shell/v113/builtin-snapshot.js'),'the runtime inventory includes the generated BUILTIN asset');
-assert(indexHtml.includes('<script src="shell/v113/builtin-snapshot.js"></script>'),'current document loads the generated BUILTIN asset');
-assert(swSource.includes("'./shell/v113/builtin-snapshot.js'"),'the offline shell includes the generated BUILTIN asset');
+assert(realInventory.assets.includes('shell/v114/builtin-snapshot.js'),'the runtime inventory includes the generated BUILTIN asset');
+assert(indexHtml.includes('<script src="shell/v114/builtin-snapshot.js"></script>'),'current document loads the generated BUILTIN asset');
+assert(swSource.includes("'./shell/v114/builtin-snapshot.js'"),'the offline shell includes the generated BUILTIN asset');
 result=validateRuntimeAssets({rootDir:realRoot,inventory:realInventory});
 assert.deepStrictEqual(result.errors,[],'the repository runtime inventory is fully registered');
 

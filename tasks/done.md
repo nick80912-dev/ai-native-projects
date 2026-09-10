@@ -1,8 +1,9 @@
 # DONE(已完成)
 
-> 更新於 2026-08-11。完成事項來自 `.ai-manifest.json` status.done、既有 CHANGELOG 與 Bar 驗收確認；細節仍以 07_CHANGELOG.md 為準。
+> 更新於 2026-09-10。完成事項來自 `.ai-manifest.json` status.done、既有 CHANGELOG 與 Bar 驗收確認；細節仍以 07_CHANGELOG.md 為準。
 
 ## 已完成
+- 2026-09-10:backlog #26 完成。`qa.yml` 的 `actions/checkout` 與 `actions/setup-node` 由已棄用 Node 20 的 `@v4` 升到 `@v7`(四處),兩個 action 自 v5 起即以 node24 執行,GitHub 的棄用 annotation 消除。**未採 backlog 原文寫的 `@v5`**:該建議寫於 2026-07-31,當時 v5 是最新;現行最新為 checkout v7.0.1／setup-node v7.0.0,升到 v7 可避免三個月後再修一次,且 v5–v7 的 runtime 同為 node24。已核對破壞性變更:setup-node v5／v6 的自動快取只在 `package.json` 有 `packageManager` 欄位時觸發,本專案沒有該欄位且 `package-lock.json` 存在,`browser-qa` 的顯式 `cache: npm` 行為不變;checkout v7 只新增 fork PR 於 `pull_request_target`／`workflow_run` 的封鎖,本 workflow 未使用這兩個事件。
 - 2026-08-11：backlog #22 完成。採用專用 HID 而非 PID 作為 Hotel profile join key：公開 Places L1 新增 `HID`,L4／L15／L24／L33／L42 分別讓 P002／P013／P022／P031／P040 引用 H001；五筆 travel 值原樣保留。Schema 3.0、BUILTIN、條件式 Validator 與 runtime exact resolver 已同步,住宿／Hotels 名稱改為只供顯示；Ledger 維持位置式 21 欄 Schema 2.9,個人備份維持 v9。
 - 2026-08-10：backlog #24 於 v99／v100 完成雙版本實驗後，由 Bar 裁定取消而非功能完成。實機顯示時機與使用者已看到新版內容的時間軸不一致，必要性不足以支持跨資源 generation 協議；v101 完整移除全域更新提示與明確 reload action，保留原 SW lifecycle、cache strategy、離線 fallback 與設定頁版本資訊。未來若重啟須視為新需求重新設計。
 - 2026-08-09：backlog #4 與 #11 完成；BUILTIN 已由東京／新宿舊資料刷新為現行岡山四國六天五夜，Ledger 種子改為 schema 推導的 21 欄空 header、TripConfig 八 key 各一次。新增預設只讀、明確 `--write`、不抓 live Ledger、原子替換與回讀驗證的刷新工具，完整操作與權責 SOP 見 `16_OPS_PLAYBOOK.md` §G；維持 SW v98。

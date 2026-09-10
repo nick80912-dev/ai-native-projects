@@ -1,5 +1,10 @@
 # tests — 測試資產(交付必附)
 
+## v114 member-gate coverage
+
+- `browser/member-gate.spec.js`:六個規格鎖住 v114 的身分流程 ——(1)成功同步後不得自動彈出身分牆(舊行為在此為 `overlay=true, forced=true`);(2)`refreshMemberSelector()` 只重繪已開著的選擇器、絕不自己開一個;(3)進分帳的選擇器為非 forced 且渲染 `×`,取消後留在原分頁;(4)確認身分後接續前往分帳(舊行為留在原分頁);(5)取消後不得挾持之後從設定頁做的身分切換;(6)`openMemberSelector(true)` 的 forced 語意與「刻意沒有 `×`」維持不變。執行:`npx playwright test tests/browser/member-gate.spec.js`。
+- 第 (4) 條在實作階段抓到一個真缺陷:`closeMemberSelector()` 會清掉 `pendingViewAfterMember`,而原本的實作在它之後才讀,永遠讀到 `null`。改為先取值再關閉。
+
 ## v113 priority-theme coverage
 
 - `theme-system.test.js` protects perceptual separation for Cedar／Mist／Tea page surfaces, accents and secondary roles, plus AA contrast and the two preserved action colors.
@@ -30,7 +35,7 @@
 - `browser/today-live-info.spec.js` exercises Hero／badge target confirmation at 320／375／390px with tap／Enter／Space, sticky-safe geometry, live status, reduced motion, missing targets, stale timers, source scroll, connected／replacement／fallback focus, and blank-category behavior. Focused WebKit uses `--grep "target|定位|blank category"`.
 - `browser/navigation-target-matrix.spec.js` exercises the actual expanded cluster-stop, pre-trip day, mall-floor, and back-to-now controls at 320／375／390px with rotating Tap／Enter／Space. It asserts exact target and live status, native keyboard focus, sticky-header-safe target／status geometry, 1.2-second clear, reduced-motion static treatment, zero horizontal overflow, and current-day return behavior. Run focused WebKit together with the existing Today target selection.
 - `diagnostic-impact-module.test.js` and `diagnostics-app-log.test.js` protect exact timeout classification, conservative unknown handling, input immutability, escaped raw／projected output, and byte-for-byte raw copied reports; `browser/diagnostics-app-log.spec.js` verifies the same boundary in Chromium.
-- `manifest-status-authority.test.js` plus `tools/check-doc-titles.js` require `.ai-manifest.json` to name `tasks/current.md` as the sole current-status authority, identify changelog／task archives only as history, reject stale `tasks/(current/backlog/done)`／`manifest.status` prose, and omit volatile candidate／next-action／automated-test snapshots. Current version authority is `shell/v113/app-version.js`／root `sw.js`; root `app-version.js` is the byte-locked v110 bridge.
+- `manifest-status-authority.test.js` plus `tools/check-doc-titles.js` require `.ai-manifest.json` to name `tasks/current.md` as the sole current-status authority, identify changelog／task archives only as history, reject stale `tasks/(current/backlog/done)`／`manifest.status` prose, and omit volatile candidate／next-action／automated-test snapshots. Current version authority is `shell/v114/app-version.js`／root `sw.js`; root `app-version.js` is the byte-locked v110 bridge.
 
 
 
@@ -38,6 +43,7 @@
 
 ## 現有測試
 - `manifest-status-authority.test.js`：驗證 `.ai-manifest.json` 僅宣告 `tasks/current.md` 為目前產品狀態權威，且不保留易過時的開發候選、下一步或自動驗證快照。執行：`node tests/manifest-status-authority.test.js`；repo gate：`node tools/check-doc-titles.js`。
+- `doc-generation.test.js`：驗證活文件的 `shell/vNNN` 必須等於 `sw.js` 的 `SW_VERSION`，錯誤訊息帶檔名與行號，同一行多個舊引用各自回報，`generation-exempt` 只在同一行生效，推導不出版本時必須報錯而非放行；並含負向控制（把真實文件在記憶體裡改回舊 generation，gate 必須紅）。歷史文件（`adr/`、`07_CHANGELOG.md`、`tasks/done.md`、`docs/device-acceptance-log.md` 等）刻意不納管。執行：`node tests/doc-generation.test.js`；repo gate：`node tools/check-doc-generation.js`。
 - `atomic-sheet-sync.test.js`:驗證七張 Sheet 候選資料需整批驗證後一次啟用、舊快取遷移、失敗候選保留與同步狀態面板；v88 另鎖定健康 header 只顯示「已同步」但 aria 保留更新時間、其他狀態相對時間、最後完整同步時間、partial 失敗來源的人類可讀文案，以及舊快照 metadata 相容。執行:`node tests/atomic-sheet-sync.test.js`。
 - `network-retry-toast-guard.test.js`：驗證 Sheet 首次抓取失敗後精確退避 800ms 且只重試一次、第二次錯誤維持可觀察，以及缺少 Toast DOM 節點時不拋錯、不改 action／timer，正常 Toast 行為不變。執行：`node tests/network-retry-toast-guard.test.js`。
 - `app-now.test.js`:驗證正式時間、offset/custom 時間模擬與共用 `appNow()` 時鐘。執行:`node tests/app-now.test.js`。
@@ -108,7 +114,7 @@
 - 打包前離線回歸(SW 快取)腳本。
 
 ## Sanity CI(2026-07-09 起)
-- `.github/workflows/qa.yml` 於 `main` push / Pull Request 自動執行：①`tools/check-doc-titles.js`（文件標題／檔名一致性＋manifest JSON）②`tests/` 內全部 `*.test.js` ③Playwright 三情境。`dev` push 目前先執行相同本機 CI，是否納入 workflow 另見 backlog。
+- `.github/workflows/qa.yml` 的 `sanity` job 於 `main`／`dev` push 與 Pull Request 自動執行：①`tools/check-doc-titles.js`（文件標題／檔名一致性＋manifest JSON）②`tools/check-app-version.js`（runtime 版本鏈）③`tools/check-doc-generation.js`（活文件不得停在舊 `shell/vNNN`）④`tests/` 內全部 `*.test.js`。`browser-qa` job 只在 Pull Request 與 `main` push 跑 Playwright 三情境與 SW 更新快取正確性。
 - 上傳/commit 後到 GitHub 的 **Actions** 頁看結果:綠勾=通過;紅叉=點進去看哪個檔案錯位或哪個測試失敗。
 
 ## 規則

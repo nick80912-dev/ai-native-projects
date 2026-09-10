@@ -75,7 +75,7 @@ function createSandbox(options){
 /* 由 index.html 的具名標記取出版本安全 helper。標記變動時這裡會直接失敗,
    而不是靜默改用假實作。 */
 function readAppVersionHelpers(){
-  const html=fs.readFileSync('shell/v113/index.html','utf8');
+  const html=fs.readFileSync('shell/v114/index.html','utf8');
   const start=html.indexOf('/* ---- APP_VERSION SAFE ACCESS (C2) ----');
   const end=html.indexOf('/* ---- /APP_VERSION SAFE ACCESS ---- */',start);
   assert(start>=0&&end>start,'index.html 的 APP_VERSION 安全取值區塊有穩定標記');
@@ -83,7 +83,7 @@ function readAppVersionHelpers(){
 }
 
 (async function(){
-  const html=fs.readFileSync('shell/v113/index.html','utf8');
+  const html=fs.readFileSync('shell/v114/index.html','utf8');
   const start=html.indexOf('var TRAVEL_NOTES_KEY=');
   const end=html.indexOf('/* ================= SETTINGS 2.0 ================= */',start);
   assert(start>=0&&end>start,'travel-note module has a stable bounded section');

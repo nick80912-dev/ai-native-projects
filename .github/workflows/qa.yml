@@ -1,6 +1,6 @@
 # Sanity CI — 每次 push / PR 自動跑的輕量檢查
 # 目的:把 Gate 從「文字規範」升級為「自動檢查」。
-# 涵蓋:①文件標題/檔名一致性(防上傳錯位)②manifest JSON 有效性 ③版本一致性 ④既有回歸測試
+# 涵蓋:①文件標題/檔名一致性(防上傳錯位)②manifest JSON 有效性 ③runtime 版本一致性 ④活文件 generation 一致性 ⑤既有回歸測試
 # Playwright 在獨立 job 驗證三情境,以及 SW 更新後的快取正確性與離線 fallback 型別。
 #
 # 觸發策略(2026-07-30 修訂,對應 backlog #21 的 sanity 部分):
@@ -17,14 +17,16 @@ jobs:
   sanity:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
           node-version: '20'
       - name: 文件標題/檔名一致性 + manifest 檢查
         run: node tools/check-doc-titles.js
       - name: 版本一致性檢查(app-version.js / sw.js / index.html / netlify.toml)
         run: node tools/check-app-version.js
+      - name: 活文件 generation 一致性檢查(文件不得停在舊 shell/vNNN)
+        run: node tools/check-doc-generation.js
       - name: 全部回歸測試(自動涵蓋 tests/ 內所有 *.test.js,新增測試免改本檔)
         run: |
           set -e
@@ -39,8 +41,8 @@ jobs:
     # dev push 不跑完整 Playwright:只在 PR 與 main push 執行
     if: github.event_name == 'pull_request' || github.ref == 'refs/heads/main'
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
           node-version: '20'
           cache: npm

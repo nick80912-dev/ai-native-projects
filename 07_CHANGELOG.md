@@ -1,5 +1,65 @@
 # 07 版本紀錄
 
+## 2026-09-10 — v114 身分不再是進門條件（candidate）
+
+- **問題**：A/B 實測（v113）顯示，快照套用成功後會呼叫 `refreshMemberSelector()`，其 else 分支在沒有身分時直接 `openMemberSelector(true)`。使用者一連網、還在「今天」頁、零互動就被 forced 身分牆全螢幕擋住；forced 模式不渲染 `×`，`Escape` 與點背景皆無效，退不出去。封鎖 CSV（等同離線、不會有成功同步）則全程沒有 overlay——觸發點是**同步完成**，不是 boot、也不是進入分帳。v112 只移除了 boot 觸發。
+- **修正**（`shell/v114/index.html` 四處）：①`refreshMemberSelector()` 只重繪已開著的選擇器，不再自己開一個；②`ensureLedgerMember()` 改叫非 forced，讓程式裡本來就有的 `×` 關閉鈕出現；③`switchView()` 以 `pendingViewAfterMember` 記住「因為缺身分而沒去成的分頁」，不再直接 `return` 丟掉；④`confirmMemberSelection()` 成功後接續前往該分頁。取消時清除待前往目的地，避免挾持之後從設定頁做的身分切換。
+- **維持不變**：送出記帳、結算、切換測試模式那幾處仍是 forced，取消等於中止該操作——`openMemberSelector(true)` 的語意與「刻意沒有 `×`」都保留。
+- 動工前先驗過最大風險：**沒有身分時直接進分帳頁渲染完全正常**（`view=split`、無 throw、`healthCheck()` 空、pageerror 0、水平溢位 0，空狀態文案可讀）。
+- 新增 `tests/browser/member-gate.spec.js` 六個規格。第 4 條在實作階段抓到一個真缺陷：`closeMemberSelector()` 會清掉 `pendingViewAfterMember`，而原實作在它之後才讀，永遠讀到 `null`；改為先取值再關閉。
+- App／SW forward-bump 至 v114，root v110 bridge 保持 byte-identical，BUILTIN 由既有 generator 更新（preview 顯示無資料漂移）。**六組主題色一律未動**——v114 不含任何配色變更。`APP_RELEASE_NOTES` 五筆視窗由 v114 擠掉 v109；`theme-system.test.js` 的主題 release-note 斷言改綁在 v113 那一筆而非「最新一筆」，避免每次升版做別的事就假失敗。
+- **尚未部署、尚未 merge `main`、G1 未做、未建立 production tag。**
+
+## 2026-09-10 — UI/UX 審查:調色盤表修正與兩條交接陷阱（無 runtime 變更）
+
+- **`04_UI_GUIDELINES.md` 的調色盤表對杉綠／霧藍／焙茶三組是錯的**——v113 改了 runtime 卻沒同步這張表，三列的 **13 個 token 全部**是舊值（例如杉綠 paper 文件寫 `#f3f5f0`、實際 `#edf3ec`；焙茶 accent 文件寫 `#b64f5c`、實際 `#405c7a`）。整張表改為由 `shell/v113/index.html` 重新產生並逐列核對，海洋／象牙／藤紫三列確認原本就正確。
+- 同時修掉分隔列後的一個空行——它讓整張表在 Markdown 下根本沒被 render 成表格。
+- `tools/check-doc-generation.js` 抓不到這類錯誤：**它只驗 `shell/vNNN` 路徑，不驗 token 值**。這是該 gate 的第二個已知盲區（第一個是「路徑換了、句子裡的版本字沒換」）。
+- `08_AI_HANDOVER.md` 常見陷阱新增兩條實測結果：①**第一次載入拿到的是 root v110 bridge 而非 current generation**，驗收前必須先確認 runtime 版本；且使用者的第一印象一律是 bridge 的行為——v112 移除的「首次 boot 強迫選身分」在 v110 bridge 上仍會出現（實測第一次載入 `overlay=true`、第二次 `overlay=false`）。②**身分選擇 overlay 沒有取消路徑**：兩個步驟都沒有關閉鈕，`Escape` 與點背景皆無效；點「分帳」不切換分頁，完成選擇後落回「今天」。
+- **同日修正上述第二條陷阱**:進一步 A/B 實測後確認，強制身分牆的觸發點是**資料同步完成**，不是 boot、也不是進入分帳。封鎖 CSV（等同離線、不會有成功同步）全程 `overlay=false`；正常連網則在「今天」頁、零互動下 `overlay=true, forced=true`。程式路徑為快照套用成功後呼叫 `refreshMemberSelector()`，其 else 分支在無身分時 `openMemberSelector(true)`。v112 只移除了 boot 觸發，同步觸發仍在。先前寫成「只有 v110 bridge 會跳」是抽樣不足造成的誤判——量測必須等第一次同步完成後再判斷。
+- 審查另發現兩項經 Bar 裁定暫不處理，已記入 `tasks/backlog.md` #28（`.chk` 打卡目標 24×24px，整列非熱區）與 #29（多處字級低於準則的 11px 下限，最小 9.5px）。
+
+## 2026-09-10 — v113 三組主題:桌機預檢與 G1 清單(無 runtime 變更)
+
+- `docs/device-acceptance-log.md` 新增 v113 delta 驗收清單（Z1 辨識度／Z2 可讀性與版面／Z3 沒有連帶損傷，共 14 項）。**`Bar 真機` 欄全部留空** —— G1 是 Bar 專屬職責，不因自動驗證全綠而代勾。
+- 桌機預檢在**經 Service Worker 接管後的實際 v113 runtime** 上量測（非 v110 bridge）：三主題 × 320／375／390px × 今天／行程／購物／分帳共 36 組，水平溢位**全部為 0**；`healthCheck()` 空、pageerror 0、console.error 0。三組 390×844 今天頁截圖已交付 Bar 對照。
+- 量到兩個**貼著門檻**的值，已在清單裡標為真機必看：杉綠↔霧藍與杉綠↔焙茶的 `--t-paper` RGB 距離皆為 **12**（契約門檻 ≥10），而底色是畫面面積最大的顏色；焙茶 `--t-action` 對底色對比 **4.53**（AA 門檻 4.5）。兩者在桌機皆通過契約，但桌機通過不代表真機可辨識。
+- 同日於 `dev` `91d4ccf` 重跑完整套件：Node **95/95**、Chromium Playwright **185/185**（6.0 分鐘、零 retry），含「六主題在系統深色模式下維持淺色」。
+- 附帶記錄一個容易誤判的現象：本機 static server 首次載入拿到的是 root v110 bridge（`APP_VERSION=v110`），要等 v113 worker 啟用後再載入才是 current generation。這是 ADR 0019 的設計行為，不是缺陷；驗收前必須先確認實際 runtime 版本再看畫面。
+
+## 2026-09-10 — 文件：修正指向 13 的舊敘述（A2 收尾，無 runtime 變更）
+
+- `13_PROJECT_STATUS.md` 已於本批改為薄指標、不再承載狀態，但另有兩處仍把讀者導回去：`06_ROADMAP.md` 檔頭的「快照見 `13_PROJECT_STATUS.md`」改為「逐版交付紀錄見 `07_CHANGELOG.md`」；`00_CONTEXT_HANDOVER.md` 的維護指示「需要新的交接內容時…或直接更新 13_PROJECT_STATUS」改為指向 `tasks/current.md`，並註明 13 自 2026-09-10 起只保留與版本無關的長期風險提醒。
+- 一併掃過 22 份活文件內以反引號標示的 repo 路徑引用（28 筆候選），逐筆核對後確認**沒有真正壞掉的引用**：`tests/README.md` 的 `browser/*.spec.js` 是相對 `tests/` 的寫法、`support/versioned-server.js` 與 `static-server.js` 相對 `tests/browser/`、`qa.yml` 指 `.github/workflows/qa.yml`，而 `04_UI_GUIDELINES.md` 的 `ledger-history-view.js` 是刻意「不存在」的 v110 刪除測試結論。此掃描為一次性核對，未新增 gate。
+
+## 2026-09-10 — 文件：驗收記錄更名並補上定位（無 runtime 變更）
+
+- `docs/batch2-device-acceptance.md` 更名為 `docs/device-acceptance-log.md`。該檔起於 2026-07-30 的批次二（SW v73），其後陸續 append v74／v75／v76／v88 的 delta，共 544 行；「batch2」早已不符它實際的累積驗收記錄角色。
+- 新增檔頭定位：本檔記的是 Bar 在實機上的驗收結論與逐項清單，各版自動驗證證據看 `07_CHANGELOG.md`、目前還掛著哪些驗收看 `tasks/current.md`；原批次二引言降為 `## 批次二（SW v73 候選版）` 一節，內容一字未改。
+- 同步更新現行引用：`.ai-manifest.json`、`tasks/current.md`、`tests/README.md`、`tools/check-doc-generation.js`、`tests/doc-generation.test.js`。`07_CHANGELOG.md` 與 `docs/superpowers/` 內的舊路徑刻意保留原樣——那些檔案記錄的是當時的事實；更名一事寫在新檔檔頭，循舊路徑而來的人找得到。
+
+## 2026-09-10 — CI：GitHub Actions 升版脫離 Node 20（backlog #26，無 runtime 變更）
+
+- `qa.yml` 的 `actions/checkout` 與 `actions/setup-node` 由 `@v4` 升到 `@v7`（`sanity`／`browser-qa` 各兩處）。`@v4` 仍以已棄用的 Node.js 20 執行，GitHub 已強制改跑 Node 24 並持續發出 annotation；v5 起兩個 action 的 `runs.using` 皆為 `node24`。
+- 未採 backlog 原文的 `@v5`：該建議寫於 2026-07-31，當時 v5 是最新版；現行最新為 checkout v7.0.1／setup-node v7.0.0，升到 v7 可避免三個月後再修一次，且 v5–v7 的 runtime 同為 node24。
+- 已逐項核對破壞性變更：setup-node v5／v6 的自動快取只在 `package.json` 帶 `packageManager` 欄位時觸發，本專案沒有該欄位且 `package-lock.json` 存在，`browser-qa` 的顯式 `cache: npm` 行為不變；checkout v7 只新增 fork PR 於 `pull_request_target`／`workflow_run` 的封鎖，本 workflow 未使用這兩個事件。
+- backlog #26 移至 `tasks/done.md`，編號依既有規則留空不回收。
+
+## 2026-09-10 — 治理層：08 交接文件收斂（無 runtime 變更）
+
+- `08_AI_HANDOVER.md` 由 132 行收斂為 100 行。刪除檔頭累積的 v110／v111／v112／v113 四段逐版 handover——那四段與 `07_CHANGELOG.md` 重複，而本檔是第一閱讀順序的必讀檔，每出一版就再長一段。README 對本檔的定位（交接重點、禁改事項、常見陷阱）與實際內容重新一致。
+- 刪除前逐條確認 durable 內容另有權威記錄：`today-view.js` seam 契約在 `07_CHANGELOG.md` 與 ADR 0018、BUILTIN 刷新原子性在 `16_OPS_PLAYBOOK.md` §G、degraded boot 在 `02_ARCHITECTURE.md`。唯一只存在於被刪段落的禁改事項——root `index.html`／`app-version.js` 與 `tests/fixtures/sw-v110-production.js` 的 v110 byte-lock——已移入「絕不可改變」。
+- 一併修掉留在長期段落裡的過期敘述：住宿 HID 契約中「交付順序以本文件頂部 v110 handover 為準」改為指向 `tasks/current.md`；標題 `（Schema 3.0，SW v102）` 改為「自 SW v102 起持續有效」；Tier 2 復原改為與版本無關的敘述。
+- 本機 Node **95/95**、`check-doc-titles.js`、`check-app-version.js`、`check-doc-generation.js`、`check-runtime-assets.js` 全綠。runtime 未變更。
+
+## 2026-09-09 — 治理層：活文件 generation 一致性 gate（無 runtime 變更）
+
+- 新增 `tools/check-doc-generation.js`：活文件出現的 `shell/vNNN` 必須等於 `sw.js` 的 `SW_VERSION`，current generation 由 `sw.js` 反推而不新增第二個真相來源。採白名單納管 22 份活文件；`adr/`、`07_CHANGELOG.md`、`tasks/done.md`、`docs/superpowers/`、`00_CONTEXT_HANDOVER.md`、`docs/batch2-device-acceptance.md` 等歷史記錄刻意豁免——那些檔案寫死當時的版本才是正確的。同一行加 `generation-exempt` 註解可逐行豁免，且必須寫明理由。
+- 導入前實測：`02_ARCHITECTURE.md`（7 處）、`10_FOLDER_STRUCTURE.md`（8 處）、`08_AI_HANDOVER.md`（2 處）共 17 處仍指向三代之前的 `shell/v111/`，誤殺 0 筆。舊 generation 目錄仍存在於 repo，所以這類漂移不會 404、不會報錯，只會讓接手者安靜地改錯檔案——既有的 `check-doc-titles.js` 與 `check-app-version.js` 都不涵蓋文件端路徑。
+- 依實測結果修正文件：`02_ARCHITECTURE.md` 與 `10_FOLDER_STRUCTURE.md` 的現行契約敘述改為 `shell/v113/`；`08_AI_HANDOVER.md` 第 22 行屬「v111 …（released）」歷史段落，改以逐行 `generation-exempt` 標註而非竄改成 v113。
+- `13_PROJECT_STATUS.md` 自 2026-08-01 起停在「SW v73 已正式發布」、下一步仍寫 v75 真機驗收，落後 40 個版本。改寫為薄指標：即時狀態一律看 `tasks/current.md`，本檔只保留與版本無關的長期風險提醒，不再手抄第二份狀態表。
+- 新增 `tests/doc-generation.test.js`（含負向控制：把真實文件在記憶體裡改回舊 generation，gate 必須紅），並把 `node tools/check-doc-generation.js` 接進 `.github/workflows/qa.yml` 的 `sanity` job 與 `16_OPS_PLAYBOOK.md` §F4 驗收層級。本機 Node **95/95**、`check-doc-titles.js`、`check-app-version.js`、`check-doc-generation.js` 全綠。
+
 ## 2026-09-08 — v113 優先主題辨識度調整（candidate）
 
 - 只調整使用者指出較相近的杉綠、霧藍、焙茶三組主題；Ocean、Ivory、Wisteria、版面、資料、互動與導航行為不變。

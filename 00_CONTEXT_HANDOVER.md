@@ -3,7 +3,7 @@
 > ⚠️ **文件定位(2026-07-09 由 Bar 核定):本檔為「歷史快照 / 交接紀錄」,代表 2026-07-06 時間點的交接狀態,不是永遠最新的核心規範。**
 > - 用途:幫助接手 AI 快速了解專案背景與脈絡。
 > - 效力:**不得優先於** README、PROJECT_CONSTITUTION、13_PROJECT_STATUS、tasks/、14/15/16 等現行核心文件;內容衝突時一律以最新核心文件為準。
-> - 維護:未來**不需要**每次交接重寫本檔;需要新的交接內容時,新增新的 handover snapshot 或直接更新 13_PROJECT_STATUS。
+> - 維護:未來**不需要**每次交接重寫本檔;需要新的交接內容時,新增新的 handover snapshot,或更新 `tasks/current.md`(即時狀態的唯一權威)。2026-09-10 起 `13_PROJECT_STATUS.md` 不再承載狀態,只保留與版本無關的長期風險提醒。
 > - 已知過時處(勿採信):文件庫位置(現以 GitHub 為權威,Drive 為備份)、「正式站仍是 V1」、Day 行程待補範圍。
 
 > 給接手 AI:先讀 `.ai-manifest.json` → `PROJECT_CONSTITUTION.md` → `08_AI_HANDOVER.md` → 相關 `adr/`;再依任務查 `03_DATABASE` / `09_SCHEMA_MAPPING` / `05_CODING_RULES` / `11_CODING_CONVENTION` / `12_DEV_WORKFLOW`。
