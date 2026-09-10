@@ -6,7 +6,9 @@
 - 動工前先驗過最大風險:**沒有身分時進分帳頁渲染完全正常**(無 throw、`healthCheck()` 空、pageerror 0、溢位 0)。
 - 新增 `tests/browser/member-gate.spec.js` 六個規格;其中一條在實作階段抓到真缺陷(`closeMemberSelector()` 會先清掉待前往目的地),已修。
 - **六組主題色一律未動** —— v114 不含配色變更。
-- **尚未部署、尚未 merge `main`、G1 未做、不得建立 production tag。**
+- **2026-09-10 Bar 裁定:跳過 G1 真機驗收,直接走 `dev → main` merge 發布。** BB1–BB3 共 14 項維持未勾 —— 跳過不等於通過,清單保留供日後補驗。
+- 測試站已部署 v114(deploy `6aa25ba7`),永久連結核對 SW／app-version／root bridge／cache header 四項皆正確;主網域因舊 deploy 被 `locked` 而仍為 v73,未按 Publish。
+- **production tag 仍不建立** —— G1 未執行,發版流程未完整走完。
 
 ## v113 優先主題辨識度(已由 v114 接續,保留紀錄)
 - v112 已推送 `dev`／`main` 並經 Bar 回報正式站驗證正常；**Android 實體手機仍待 Bar 操作驗收**（Android Chromium 等效自動驗證已通過）。
