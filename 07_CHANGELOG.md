@@ -1,5 +1,10 @@
 # 07 版本紀錄
 
+## 2026-09-10 — 文件：修正指向 13 的舊敘述（A2 收尾，無 runtime 變更）
+
+- `13_PROJECT_STATUS.md` 已於本批改為薄指標、不再承載狀態，但另有兩處仍把讀者導回去：`06_ROADMAP.md` 檔頭的「快照見 `13_PROJECT_STATUS.md`」改為「逐版交付紀錄見 `07_CHANGELOG.md`」；`00_CONTEXT_HANDOVER.md` 的維護指示「需要新的交接內容時…或直接更新 13_PROJECT_STATUS」改為指向 `tasks/current.md`，並註明 13 自 2026-09-10 起只保留與版本無關的長期風險提醒。
+- 一併掃過 22 份活文件內以反引號標示的 repo 路徑引用（28 筆候選），逐筆核對後確認**沒有真正壞掉的引用**：`tests/README.md` 的 `browser/*.spec.js` 是相對 `tests/` 的寫法、`support/versioned-server.js` 與 `static-server.js` 相對 `tests/browser/`、`qa.yml` 指 `.github/workflows/qa.yml`，而 `04_UI_GUIDELINES.md` 的 `ledger-history-view.js` 是刻意「不存在」的 v110 刪除測試結論。此掃描為一次性核對，未新增 gate。
+
 ## 2026-09-10 — 文件：驗收記錄更名並補上定位（無 runtime 變更）
 
 - `docs/batch2-device-acceptance.md` 更名為 `docs/device-acceptance-log.md`。該檔起於 2026-07-30 的批次二（SW v73），其後陸續 append v74／v75／v76／v88 的 delta，共 544 行；「batch2」早已不符它實際的累積驗收記錄角色。
