@@ -1,5 +1,13 @@
 # 07 版本紀錄
 
+## 2026-09-10 — UI/UX 審查:調色盤表修正與兩條交接陷阱（無 runtime 變更）
+
+- **`04_UI_GUIDELINES.md` 的調色盤表對杉綠／霧藍／焙茶三組是錯的**——v113 改了 runtime 卻沒同步這張表，三列的 **13 個 token 全部**是舊值（例如杉綠 paper 文件寫 `#f3f5f0`、實際 `#edf3ec`；焙茶 accent 文件寫 `#b64f5c`、實際 `#405c7a`）。整張表改為由 `shell/v113/index.html` 重新產生並逐列核對，海洋／象牙／藤紫三列確認原本就正確。
+- 同時修掉分隔列後的一個空行——它讓整張表在 Markdown 下根本沒被 render 成表格。
+- `tools/check-doc-generation.js` 抓不到這類錯誤：**它只驗 `shell/vNNN` 路徑，不驗 token 值**。這是該 gate 的第二個已知盲區（第一個是「路徑換了、句子裡的版本字沒換」）。
+- `08_AI_HANDOVER.md` 常見陷阱新增兩條實測結果：①**第一次載入拿到的是 root v110 bridge 而非 current generation**，驗收前必須先確認 runtime 版本；且使用者的第一印象一律是 bridge 的行為——v112 移除的「首次 boot 強迫選身分」在 v110 bridge 上仍會出現（實測第一次載入 `overlay=true`、第二次 `overlay=false`）。②**身分選擇 overlay 沒有取消路徑**：兩個步驟都沒有關閉鈕，`Escape` 與點背景皆無效；點「分帳」不切換分頁，完成選擇後落回「今天」。
+- 審查另發現兩項經 Bar 裁定暫不處理，已記入 `tasks/backlog.md` #28（`.chk` 打卡目標 24×24px，整列非熱區）與 #29（多處字級低於準則的 11px 下限，最小 9.5px）。
+
 ## 2026-09-10 — v113 三組主題:桌機預檢與 G1 清單(無 runtime 變更)
 
 - `docs/device-acceptance-log.md` 新增 v113 delta 驗收清單（Z1 辨識度／Z2 可讀性與版面／Z3 沒有連帶損傷，共 14 項）。**`Bar 真機` 欄全部留空** —— G1 是 Bar 專屬職責，不因自動驗證全綠而代勾。

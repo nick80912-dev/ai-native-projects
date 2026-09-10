@@ -69,6 +69,10 @@
 - 老 WebView 無 console.info、fetch 帶 options 會拋 clone 錯誤
 - Google 試算表 `/edit` 連結讀不到,必須用「發布到網路」CSV;web_fetch 可能被 robots 擋,改走 Drive 連接或由使用者瀏覽器端抓
 - item id 含「/」(如 10/19_2),CSS selector 需 escape,DOM 查找用 getElementById
+- **第一次載入拿到的是 root v110 bridge,不是 current generation**。全新裝置、清過網站資料、或 SW 尚未啟用時,第一個畫面由 byte-locked v110 bridge 提供(`APP_VERSION` 顯示 `v110`),要等 v113 worker 啟用後**重新載入**才會換成 current generation。這是 ADR 0019 的設計,不是缺陷,但有兩個實務後果:
+  - **驗收前必須先確認實際 runtime 版本再看畫面**。只看畫面會驗到三代之前的 App —— 2026-09-10 實測踩過:第一次截圖拿到的是 v110。
+  - **使用者的第一印象是 v110 的行為,不是最新版**。例如 v112 移除了「首次 boot 強迫選成員身分」,但 v110 bridge 仍會在第一個畫面全螢幕跳出身分選擇。2026-09-10 實測:第一次載入 `overlay=true`、第二次(v113 接管後)`overlay=false`。討論「新使用者第一次看到什麼」時,答案一律是 bridge 的行為。
+- **身分選擇 overlay 沒有取消路徑**(2026-09-10 實測,v113):兩個步驟(選人 → 重選／確認)都沒有關閉鈕,`Escape` 與點背景皆無效;點「分帳」不會切換分頁,完成選擇後落回「今天」而不是分帳。修改該流程前先看這一條,不要以為是新問題。
 
 ## 現行診斷契約（2026-08-09）
 - `AppLog` 六類方法仍輸出既有 console level／前綴，並只在記憶體保存本次 session 最新 100 筆；每筆訊息最多 1,000 字，`snapshot()` 不暴露內部可變狀態。
