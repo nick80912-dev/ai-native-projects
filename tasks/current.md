@@ -3,7 +3,8 @@
 ## v114 已正式發布(2026-09-10)
 - PR #16 以 **merge**(非 squash／rebase)合併 `dev` `064e932` → `main`,merge commit **`39c96b2`**;合併前確認 head 未變,且該 head 的遠端 CI `sanity` 與 **`browser-qa`** 皆 success。
 - Netlify 由 `main` 自動部署 deploy **`6aa25e07`**,`commit_ref` = `39c96b2`、`published_at` 有值。§F5 線上核對五項全過(SW v114／generation 三件組 v114／root bridge v110／兩處 cache header 正確)。
-- **G1 經 Bar 裁定跳過,BB1–BB3 共 14 項維持未勾;依規則未建立 production tag。**
+- **G1 經 Bar 裁定跳過**,BB1–BB3 共 14 項維持未勾 —— 跳過不等於通過。
+- **G6 完成**:依 Bar 指示建立並推送 annotated tag `production-v114`,指向 `39c96b2`(正式站實際服務的 commit)。Tag 訊息明文記錄 G1 未執行。
 
 ### v114 交付內容(保留紀錄)
 - A/B 實測(v113):同步完成後會強制彈出身分牆,使用者在「今天」頁、零互動就被全螢幕擋住且退不出去。觸發點是**同步完成**,不是 boot 也不是進入分帳;v112 只移除了 boot 觸發。
@@ -55,7 +56,7 @@
 | **`origin/dev` candidate** | **SW v114**;已與 `main` 同步於 `39c96b2` |
 | 個人備份格式 | **v9**(`PERSONAL_STATE_SUPPORTED_VERSIONS = [1..9]`)—— v81 因想逛 key 識別語意變更而升版 |
 | candidate automated validation | Node **94/94**、Chromium Playwright **185/185**；三種啟動情境 `healthCheck()=[]`、`pageerror=0` |
-| 既有 tag | `production-v18`、`production-v73`、`production-v110`、`production-v111` |
+| 既有 tag | `production-v18`、`production-v73`、`production-v110`、`production-v111`、**`production-v114`** |
 
 **v114 已發布至正式站(2026-09-10,deploy `6aa25e07`)。G1 未執行,依規則未建立 production tag。**
 

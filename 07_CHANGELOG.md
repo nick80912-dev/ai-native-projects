@@ -1,5 +1,12 @@
 # 07 版本紀錄
 
+## 2026-09-10 — G6：建立 `production-v114` tag
+
+- 依 Bar 指示建立並推送 annotated tag **`production-v114`**，指向 **`39c96b2`**——即 Netlify deploy `6aa25e07` 的 `commit_ref`，也就是正式站實際服務的 commit，而不是其後 `dev` 上的文件 commit。
+- 建 tag 前重新核對：`39c96b2` 在 `origin/main` 上；該 commit 的 `sw.js` = v114、`shell/v114/app-version.js` = v114、root `app-version.js` = v110；線上再查一次仍相符。
+- Tag 訊息沿用既有格式（驗證日期、Netlify deploy id、SW cache 名稱、回滾指引），並**明文記錄 G1 未執行**：Bar 於 2026-09-10 明示豁免，`docs/device-acceptance-log.md` 的 14 項維持未勾——**跳過不等於通過**。日後查這個 tag 的人不會誤以為它經過完整發版流程。
+- 現行 production tags：`production-v18`／`production-v73`／`production-v110`／`production-v111`／`production-v114`。v112 與 v113 未建 tag（裝置驗收未完成即被後續版本接續）。
+
 ## 2026-09-10 — 治理層：Netlify 測試站永久移除，§F5 改為發布後核對
 
 - Bar 於 v114 發布後刪除 Netlify 測試站 `dev-trippilot-jp`。實查確認：該網域回 **404**，Netlify 專案清單只剩 `trippilot-jp`；正式站不受影響（`sw.js` v114、`shell/v114/app-version.js` v114、root bridge v110 皆正常）。
