@@ -1,5 +1,13 @@
 # 07 版本紀錄
 
+## 2026-09-10 — v112 Android 驗收併入 v114 清單（新增 BB4）
+
+- Bar 裁定把從 v112 掛到現在的 **Android 實體手機驗收併入 v114 清單**。v114 的正式站已含 v112／v113／v114 全部改動，在 Android 上驗 v114 等同一次驗完三版；v112 不再單獨掛著。
+- `docs/device-acceptance-log.md` 的 v114 段新增 **BB4（八項）**，清單由 14 項增為 **22 項**，全部維持未勾。BB1–BB3 走 iPhone，BB4 走實體 Android。
+- **BB4-a 是其中唯一非驗不可的**：v112 修的是 Chromium 同源連線數上限造成的 Service Worker 卡在 installing——舊 worker 先並行 fetch 全部資源、卻等 `Promise.all` 之後才由 `cache.put` 讀 body，未消耗的 stream 占住連線槽。修法是先把每個 response 讀成 Blob 再重建（`sw.js` 的 `bufferShellResponse()`）。**桌機 Chromium 與 Playwright 的 Android 模擬都重現不出來**，只有實體 Android 能證明它真的好了。清單裡寫明判斷方式：開啟 → 關掉 → 再開，版本資訊顯示 v114 才算通過（顯示 v110 代表 SW 沒接管），並提醒第一次開啟顯示 v110 是 root bridge 的正常設計。
+- v114 段檔頭改寫為「**發布後補驗**」定位，並明記處理方式與發布前不同：發現問題依 `16_OPS_PLAYBOOK.md` §A2 **forward bump 到 v115**，不得倒退覆寫——已經有裝置接管 v114。
+- 過程中 BB4 一度被插進 v113 段落（兩段的收尾句文字相同，字串比對命中了前一個），已移到 v114 的 BB3 之後並核對章節順序。
+
 ## 2026-09-10 — G6：建立 `production-v114` tag
 
 - 依 Bar 指示建立並推送 annotated tag **`production-v114`**，指向 **`39c96b2`**——即 Netlify deploy `6aa25e07` 的 `commit_ref`，也就是正式站實際服務的 commit，而不是其後 `dev` 上的文件 commit。
