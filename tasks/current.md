@@ -77,7 +77,7 @@
 
 | # | Gate | 狀態 |
 |---|---|---|
-| G1 | SW v73 Bar 真機／PWA 驗收 | ✅ 2026-08-01,清單見 `docs/batch2-device-acceptance.md` |
+| G1 | SW v73 Bar 真機／PWA 驗收 | ✅ 2026-08-01,清單見 `docs/device-acceptance-log.md` |
 | G2 | 批次一發布阻斷項全數交付且全套自動驗證通過 | ✅ |
 | G3 | `main` 現況建立回滾 tag | ✅ `production-v18` |
 | R1 | 遠端 CI 證據 | ✅ head `9ec2c21`,run `30682429659`,`sanity` + `browser-qa` success |

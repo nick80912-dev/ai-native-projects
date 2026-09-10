@@ -65,7 +65,7 @@ assert(checker.LIVING.indexOf('02_ARCHITECTURE.md') !== -1 &&
   '2026-09-09 實際漂移過的三份文件必須在白名單內');
 
 /* ---- 歷史文件不得被納管:寫死舊版本才是對的 ---- */
-['07_CHANGELOG.md', 'tasks/done.md', '00_CONTEXT_HANDOVER.md', 'docs/batch2-device-acceptance.md']
+['07_CHANGELOG.md', 'tasks/done.md', '00_CONTEXT_HANDOVER.md', 'docs/device-acceptance-log.md']
   .forEach(function (file) {
     assert(checker.LIVING.indexOf(file) === -1, file + ' 是歷史記錄,不得納入活文件白名單');
   });

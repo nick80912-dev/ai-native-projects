@@ -49,7 +49,7 @@
     "validator.js": "防錯防線:AppLog六類([Schema/Parser/Data/Repository/Render/Sync Error])+session-only 100筆緩衝+buildHeaderMap+無副作用currentHealthFindings()+window.healthCheck()",
     "apps-script/ledger-sync.gs": "Apps Script部署唯一維護來源:分帳append-only與TripConfig兩鍵白名單更新",
     "docs/personal-state-compatibility.md": "個人狀態備份 v1–v9 相容策略契約(向後／向前相容、缺欄位預設值、採買單位規則、失敗語意);可執行契約=tests/personal-state-restore-matrix.test.js,兩者不一致即為缺陷",
-    "docs/batch2-device-acceptance.md": "批次二真機／PWA 驗收清單;保留v73/v74證據並附v75採買照片與定位導航delta"
+    "docs/device-acceptance-log.md": "累積裝置／PWA 驗收記錄;起於批次二v73,其後append v74/v75/v76/v88各版delta(2026-09-10由batch2-device-acceptance.md更名)"
   },
   "deploy_files": {
     "shell/v113/builtin-snapshot.js": "版本綁定的 generated BUILTIN offline runtime asset",

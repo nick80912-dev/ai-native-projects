@@ -1,5 +1,11 @@
 # 07 版本紀錄
 
+## 2026-09-10 — 文件：驗收記錄更名並補上定位（無 runtime 變更）
+
+- `docs/batch2-device-acceptance.md` 更名為 `docs/device-acceptance-log.md`。該檔起於 2026-07-30 的批次二（SW v73），其後陸續 append v74／v75／v76／v88 的 delta，共 544 行；「batch2」早已不符它實際的累積驗收記錄角色。
+- 新增檔頭定位：本檔記的是 Bar 在實機上的驗收結論與逐項清單，各版自動驗證證據看 `07_CHANGELOG.md`、目前還掛著哪些驗收看 `tasks/current.md`；原批次二引言降為 `## 批次二（SW v73 候選版）` 一節，內容一字未改。
+- 同步更新現行引用：`.ai-manifest.json`、`tasks/current.md`、`tests/README.md`、`tools/check-doc-generation.js`、`tests/doc-generation.test.js`。`07_CHANGELOG.md` 與 `docs/superpowers/` 內的舊路徑刻意保留原樣——那些檔案記錄的是當時的事實；更名一事寫在新檔檔頭，循舊路徑而來的人找得到。
+
 ## 2026-09-10 — CI：GitHub Actions 升版脫離 Node 20（backlog #26，無 runtime 變更）
 
 - `qa.yml` 的 `actions/checkout` 與 `actions/setup-node` 由 `@v4` 升到 `@v7`（`sanity`／`browser-qa` 各兩處）。`@v4` 仍以已棄用的 Node.js 20 執行，GitHub 已強制改跑 Node 24 並持續發出 annotation；v5 起兩個 action 的 `runs.using` 皆為 `node24`。
