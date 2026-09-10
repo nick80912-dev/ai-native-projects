@@ -1,6 +1,11 @@
 # CURRENT(現在正在做的)
 
-## v114 身分不再是進門條件 candidate(2026-09-10,dev)
+## v114 已正式發布(2026-09-10)
+- PR #16 以 **merge**(非 squash／rebase)合併 `dev` `064e932` → `main`,merge commit **`39c96b2`**;合併前確認 head 未變,且該 head 的遠端 CI `sanity` 與 **`browser-qa`** 皆 success。
+- Netlify 由 `main` 自動部署 deploy **`6aa25e07`**,`commit_ref` = `39c96b2`、`published_at` 有值。§F5 線上核對五項全過(SW v114／generation 三件組 v114／root bridge v110／兩處 cache header 正確)。
+- **G1 經 Bar 裁定跳過,BB1–BB3 共 14 項維持未勾;依規則未建立 production tag。**
+
+### v114 交付內容(保留紀錄)
 - A/B 實測(v113):同步完成後會強制彈出身分牆,使用者在「今天」頁、零互動就被全螢幕擋住且退不出去。觸發點是**同步完成**,不是 boot 也不是進入分帳;v112 只移除了 boot 觸發。
 - 修正四處:同步完成不再自動彈出;進分帳的選擇器改為可取消;記住待前往的分頁;確認後接續前往。送出記帳／結算／切測試模式維持 forced。
 - 動工前先驗過最大風險:**沒有身分時進分帳頁渲染完全正常**(無 throw、`healthCheck()` 空、pageerror 0、溢位 0)。
@@ -38,21 +43,21 @@
 
 
 
-> 更新於 2026-09-09。細任務層;里程碑看 `06_ROADMAP.md`,**逐版交付紀錄一律看 `07_CHANGELOG.md`**,正式待辦看 `tasks/backlog.md`。
+> 更新於 2026-09-10。細任務層;里程碑看 `06_ROADMAP.md`,**逐版交付紀錄一律看 `07_CHANGELOG.md`**,正式待辦看 `tasks/backlog.md`。
 > 本檔只回答三件事:**現在線上是什麼、dev 上是什麼、下一批要做什麼**。歷史流水帳不放這裡。
 
 ## 📌 現況
 
 | 項目 | 值 |
 |---|---|
-| **`origin/main` 原始碼** | **SW v113**；功能 merge `7cbb1ab` 已推送 |
-| **正式站** | `https://trippilot-jp.netlify.app/` — **SW v113**（2026-09-09 實查：deploy `6a9fb443`，`commit_ref` = `745bb6f` = main HEAD）；**Bar 對 v113 三組主題的裝置驗收未做**，v112 的 Android 實體手機驗收亦仍掛著 |
-| **`origin/dev` candidate** | **SW v113**；功能 commit `d453b84` 已推送 |
+| **`origin/main` 原始碼** | **SW v114**;merge commit `39c96b2`(PR #16) |
+| **正式站** | `https://trippilot-jp.netlify.app/` — **SW v114**(2026-09-10 實查:deploy `6aa25e07`,`commit_ref` = `39c96b2` = main HEAD,`published_at` 有值);**v114 的 G1 經 Bar 裁定跳過**,v112 的 Android 實體手機驗收仍掛著 |
+| **`origin/dev` candidate** | **SW v114**;已與 `main` 同步於 `39c96b2` |
 | 個人備份格式 | **v9**(`PERSONAL_STATE_SUPPORTED_VERSIONS = [1..9]`)—— v81 因想逛 key 識別語意變更而升版 |
 | candidate automated validation | Node **94/94**、Chromium Playwright **185/185**；三種啟動情境 `healthCheck()=[]`、`pageerror=0` |
 | 既有 tag | `production-v18`、`production-v73`、`production-v110`、`production-v111` |
 
-**v113 已推送 `dev` 與 `main`；不得把 Git 推送或自動驗證視為 Netlify 正式站部署或 Android 實體手機驗收。**
+**v114 已發布至正式站(2026-09-10,deploy `6aa25e07`)。G1 未執行,依規則未建立 production tag。**
 
 ### v74–v98 已折疊的主要能力
 

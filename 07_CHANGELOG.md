@@ -1,5 +1,13 @@
 # 07 版本紀錄
 
+## 2026-09-10 — v114 正式發布（released，未經 G1）
+
+- PR [#16](https://github.com/nick80912-dev/ai-native-projects/pull/16) 由 Bar 核准，以 **merge**（非 squash／rebase）合併 `dev` `064e932` → `main`，merge commit **`39c96b2`**。合併前確認 head 未變，且該 head 的遠端 CI 兩個 job 皆 success（`sanity` 與 **`browser-qa`**——後者只在 PR 與 main push 觸發，這是 v114 第一次在遠端跑完整 Playwright）。
+- Netlify 由 `main` 自動部署：deploy **`6aa25e07`**、`state: ready`、`commit_ref` = **`39c96b2`**（與 merge commit 相符）、**`published_at` 有值**、6 條 header 規則套用。**未用 API 直傳**，因此 commit 追溯與回滾路徑完整。
+- §F5 正式站線上核對全數通過：`sw.js` 的 `SW_VERSION` = **v114**；`shell/v114/` 的 `app-version.js`／HTML marker／`builtin-snapshot.js` 三者皆 **v114**；root `app-version.js` 維持 **v110** bridge 未被誤升；`sw.js` 與 `shell/v114/app-version.js` 的 `Cache-Control` 皆為 `no-cache, no-store, must-revalidate`。`shell/v113/app-version.js` 仍回 200——依 ADR 0019 的 immutable generation 設計，尚未升級的裝置繼續由 v113 資產服務，不受影響。
+- **本次發布未執行 G1 真機驗收**，為 Bar 2026-09-10 明示裁定。`docs/device-acceptance-log.md` 的 v114 段 BB1–BB3 共 14 項維持未勾——**跳過不等於通過**。依既有規則**未建立 production tag**。
+- 測試站 `dev-trippilot-jp` 的 v114 deploy `6aa25ba7` 仍為 `published_at: null`（舊 deploy 帶 `locked`），主網域停在 v73，未按 Publish。正式站已是 v114，測試站是否一併處理待 Bar 決定。
+
 ## 2026-09-10 — v114 身分不再是進門條件（candidate）
 
 - **問題**：A/B 實測（v113）顯示，快照套用成功後會呼叫 `refreshMemberSelector()`，其 else 分支在沒有身分時直接 `openMemberSelector(true)`。使用者一連網、還在「今天」頁、零互動就被 forced 身分牆全螢幕擋住；forced 模式不渲染 `×`，`Escape` 與點背景皆無效，退不出去。封鎖 CSV（等同離線、不會有成功同步）則全程沒有 overlay——觸發點是**同步完成**，不是 boot、也不是進入分帳。v112 只移除了 boot 觸發。
