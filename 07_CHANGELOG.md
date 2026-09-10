@@ -5,6 +5,7 @@
 - `docs/device-acceptance-log.md` 新增 v113 delta 驗收清單（Z1 辨識度／Z2 可讀性與版面／Z3 沒有連帶損傷，共 14 項）。**`Bar 真機` 欄全部留空** —— G1 是 Bar 專屬職責，不因自動驗證全綠而代勾。
 - 桌機預檢在**經 Service Worker 接管後的實際 v113 runtime** 上量測（非 v110 bridge）：三主題 × 320／375／390px × 今天／行程／購物／分帳共 36 組，水平溢位**全部為 0**；`healthCheck()` 空、pageerror 0、console.error 0。三組 390×844 今天頁截圖已交付 Bar 對照。
 - 量到兩個**貼著門檻**的值，已在清單裡標為真機必看：杉綠↔霧藍與杉綠↔焙茶的 `--t-paper` RGB 距離皆為 **12**（契約門檻 ≥10），而底色是畫面面積最大的顏色；焙茶 `--t-action` 對底色對比 **4.53**（AA 門檻 4.5）。兩者在桌機皆通過契約，但桌機通過不代表真機可辨識。
+- 同日於 `dev` `91d4ccf` 重跑完整套件：Node **95/95**、Chromium Playwright **185/185**（6.0 分鐘、零 retry），含「六主題在系統深色模式下維持淺色」。
 - 附帶記錄一個容易誤判的現象：本機 static server 首次載入拿到的是 root v110 bridge（`APP_VERSION=v110`），要等 v113 worker 啟用後再載入才是 current generation。這是 ADR 0019 的設計行為，不是缺陷；驗收前必須先確認實際 runtime 版本再看畫面。
 
 ## 2026-09-10 — 文件：修正指向 13 的舊敘述（A2 收尾，無 runtime 變更）

@@ -594,4 +594,6 @@ v74 的實際 diff 已逐項核對:
 
 正式站與本機皆可;上述數字取自 **本機 `shell/v113/` 經 Service Worker 接管後的實際 runtime**(`APP_VERSION='v113'`,非 v110 bridge)。三組主題的 390×844 今天頁截圖已於 2026-09-10 交付 Bar 對照。
 
+同日於 `dev` `91d4ccf` 重跑完整套件:Node **95/95**、Chromium Playwright **185/185**(6.0 分鐘,零 retry),其中 `ui-ux-hardening.spec.js` 的「六主題在系統深色模式下維持淺色」通過。
+
 **桌機預檢一律不等於 G1 通過。上表 `Bar 真機` 欄全部留空,等 Bar 在 iPhone 上逐項確認。**
