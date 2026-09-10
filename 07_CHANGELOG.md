@@ -1,5 +1,12 @@
 # 07 版本紀錄
 
+## 2026-09-10 — CI：GitHub Actions 升版脫離 Node 20（backlog #26，無 runtime 變更）
+
+- `qa.yml` 的 `actions/checkout` 與 `actions/setup-node` 由 `@v4` 升到 `@v7`（`sanity`／`browser-qa` 各兩處）。`@v4` 仍以已棄用的 Node.js 20 執行，GitHub 已強制改跑 Node 24 並持續發出 annotation；v5 起兩個 action 的 `runs.using` 皆為 `node24`。
+- 未採 backlog 原文的 `@v5`：該建議寫於 2026-07-31，當時 v5 是最新版；現行最新為 checkout v7.0.1／setup-node v7.0.0，升到 v7 可避免三個月後再修一次，且 v5–v7 的 runtime 同為 node24。
+- 已逐項核對破壞性變更：setup-node v5／v6 的自動快取只在 `package.json` 帶 `packageManager` 欄位時觸發，本專案沒有該欄位且 `package-lock.json` 存在，`browser-qa` 的顯式 `cache: npm` 行為不變；checkout v7 只新增 fork PR 於 `pull_request_target`／`workflow_run` 的封鎖，本 workflow 未使用這兩個事件。
+- backlog #26 移至 `tasks/done.md`，編號依既有規則留空不回收。
+
 ## 2026-09-10 — 治理層：08 交接文件收斂（無 runtime 變更）
 
 - `08_AI_HANDOVER.md` 由 132 行收斂為 100 行。刪除檔頭累積的 v110／v111／v112／v113 四段逐版 handover——那四段與 `07_CHANGELOG.md` 重複，而本檔是第一閱讀順序的必讀檔，每出一版就再長一段。README 對本檔的定位（交接重點、禁改事項、常見陷阱）與實際內容重新一致。
