@@ -103,6 +103,7 @@
 
 ## 關鍵資源
 - 正式站:https://trippilot-jp.netlify.app/
-- 測試站:https://dev-trippilot-jp.netlify.app/
+- GitHub Pages(日常驗收):https://nick80912-dev.github.io/ai-native-projects/
+- ~~Netlify 測試站~~:**已於 2026-09-10 由 Bar 永久刪除**。Netlify 特有的 header／redirects 行為改為發布後在正式站核對(見 `16_OPS_PLAYBOOK.md` §F5)。
 - CMS fileId:`1B5g7KuVi2WaFVVSdhqRMeTQV_tBpgnzOAv6aMQdFZJw`(gid 與資料表概覽見 03;欄位細節見 09)
 - Bar 的溝通偏好:直接執行、精簡回報、表格化 QA 結果、繁體中文

@@ -12,7 +12,7 @@
 - 新增 `tests/browser/member-gate.spec.js` 六個規格;其中一條在實作階段抓到真缺陷(`closeMemberSelector()` 會先清掉待前往目的地),已修。
 - **六組主題色一律未動** —— v114 不含配色變更。
 - **2026-09-10 Bar 裁定:跳過 G1 真機驗收,直接走 `dev → main` merge 發布。** BB1–BB3 共 14 項維持未勾 —— 跳過不等於通過,清單保留供日後補驗。
-- 測試站已部署 v114(deploy `6aa25ba7`),永久連結核對 SW／app-version／root bridge／cache header 四項皆正確;主網域因舊 deploy 被 `locked` 而仍為 v73,未按 Publish。
+- Netlify 測試站 `dev-trippilot-jp` 已於 **2026-09-10 由 Bar 永久刪除**(該站當時的 v114 deploy `6aa25ba7` 一併消失)。`16_OPS_PLAYBOOK.md` 已改為單站模型,§F5 由「發布前置核對」改寫為「正式站發布後線上核對」。
 - **production tag 仍不建立** —— G1 未執行,發版流程未完整走完。
 
 ## v113 優先主題辨識度(已由 v114 接續,保留紀錄)
@@ -117,7 +117,7 @@
 | G6' | 建立 `production-v96` tag | 🗄 **已被後續版本取代** —— v96 不再單獨發 tag；tag 已推進至 `production-v111`，v112／v113 依 §E 待裝置驗收後才建 |
 
 > G1／G4／G5 為 Bar 專屬職責;AI 不得以自動驗證全綠為由推進。
-> **測試站驗收前置**:`dev-trippilot-jp.netlify.app` 自動部署已於 2026-07-26 關閉。用它驗收前必須先手動部署到目標 commit,並依 `16_OPS_PLAYBOOK.md` §F5 核對線上 `sw.js`／`app-version.js` 版本與 CacheStorage 實際內容,**不得只看 Git 分支**。
+> **正式站發布後核對**:Netlify 測試站已於 2026-09-10 永久刪除,發布前沒有 Netlify 驗證通道。每次正式站部署後必須依 `16_OPS_PLAYBOOK.md` §F5 核對線上 `sw.js`／`app-version.js` 版本、header 行為與 CacheStorage 實際內容,**不得只看 merge 成功或 Netlify 顯示 ready**。
 
 ## ▶️ 五頁優化 roadmap 進度
 

@@ -1,5 +1,14 @@
 # 07 版本紀錄
 
+## 2026-09-10 — 治理層：Netlify 測試站永久移除，§F5 改為發布後核對
+
+- Bar 於 v114 發布後刪除 Netlify 測試站 `dev-trippilot-jp`。實查確認：該網域回 **404**，Netlify 專案清單只剩 `trippilot-jp`；正式站不受影響（`sw.js` v114、`shell/v114/app-version.js` v114、root bridge v110 皆正常）。
+- `16_OPS_PLAYBOOK.md` 由三通道改為**兩通道**模型（Netlify 正式站 + GitHub Pages），移除站台表的測試站列、手動部署模型說明與 §E 的雙站回滾註記。
+- **§F5 由「Netlify 測試站驗收前置核對」改寫為「正式站發布後線上核對」**。原本 2026-07-30 的教訓（測試站停在 v62 而 `dev` 已 v72，Git 分支更新不等於站台已更新）換了對象仍成立：**merge 完成不等於 Netlify 已發布**。新版核對含部署身分（`commit_ref` 等於 merge commit、`published_at` 不得為 null）、SW 版本、generation 三件組、root bridge、header 行為，以及**前一代 generation 必須仍可服務**（ADR 0019，回 404 就是把尚未升級的裝置打斷）。
+- **明記這是刻意接受的取捨**：`netlify.toml` 的 header／redirects 行為現在只能在使用者已經拿得到的版本上驗證。`tests/pwa-shell.test.js` 守得住「檔案裡有沒有寫對」，守不住「Netlify 有沒有照著做」。日後若要對這類設定做非平凡變更，應先重建測試站再改。
+- 同步更新 `.ai-manifest.json`（`delivery_rule` 原本還寫著「dev 推送自動部署至測試站」——自 2026-07-26 起就已不成立）、`08_AI_HANDOVER.md` 關鍵資源、`tasks/current.md`。歷史文件（`07_CHANGELOG.md` 既有條目、`docs/device-acceptance-log.md`、`adr/0005`）刻意保留原樣。
+- 撰寫新 §F5 時 `tools/check-doc-generation.js` 當場抓到我自己寫死的 `shell/v113`，已改為版本無關的寫法而非用 `generation-exempt` 豁免——豁免只會讓它繼續腐爛。
+
 ## 2026-09-10 — v114 正式發布（released，未經 G1）
 
 - PR [#16](https://github.com/nick80912-dev/ai-native-projects/pull/16) 由 Bar 核准，以 **merge**（非 squash／rebase）合併 `dev` `064e932` → `main`，merge commit **`39c96b2`**。合併前確認 head 未變，且該 head 的遠端 CI 兩個 job 皆 success（`sanity` 與 **`browser-qa`**——後者只在 PR 與 main push 觸發，這是 v114 第一次在遠端跑完整 Playwright）。
