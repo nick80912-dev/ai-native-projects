@@ -14,6 +14,12 @@
 - `13_PROJECT_STATUS.md` 落後 40 個版本,已改寫為指向 `tasks/current.md` 的薄指標,不再手抄第二份狀態表。
 - **無 runtime 變更**,不升版、不影響 v113 的裝置驗收與 production tag 條件。
 
+## 治理層:08 交接文件收斂(2026-09-10,dev)
+- `08_AI_HANDOVER.md` 132 → 100 行,刪除 v110–v113 四段逐版 handover(與 `07_CHANGELOG.md` 重複)。
+- 只存在於被刪段落的 v110 bridge byte-lock 禁改事項已移入「絕不可改變」,未遺失。
+- 順帶修掉住宿 HID 契約裡指向已刪段落的交付順序敘述。
+- **無 runtime 變更**。
+
 
 
 > 更新於 2026-09-09。細任務層;里程碑看 `06_ROADMAP.md`,**逐版交付紀錄一律看 `07_CHANGELOG.md`**,正式待辦看 `tasks/backlog.md`。

@@ -1,5 +1,12 @@
 # 07 版本紀錄
 
+## 2026-09-10 — 治理層：08 交接文件收斂（無 runtime 變更）
+
+- `08_AI_HANDOVER.md` 由 132 行收斂為 100 行。刪除檔頭累積的 v110／v111／v112／v113 四段逐版 handover——那四段與 `07_CHANGELOG.md` 重複，而本檔是第一閱讀順序的必讀檔，每出一版就再長一段。README 對本檔的定位（交接重點、禁改事項、常見陷阱）與實際內容重新一致。
+- 刪除前逐條確認 durable 內容另有權威記錄：`today-view.js` seam 契約在 `07_CHANGELOG.md` 與 ADR 0018、BUILTIN 刷新原子性在 `16_OPS_PLAYBOOK.md` §G、degraded boot 在 `02_ARCHITECTURE.md`。唯一只存在於被刪段落的禁改事項——root `index.html`／`app-version.js` 與 `tests/fixtures/sw-v110-production.js` 的 v110 byte-lock——已移入「絕不可改變」。
+- 一併修掉留在長期段落裡的過期敘述：住宿 HID 契約中「交付順序以本文件頂部 v110 handover 為準」改為指向 `tasks/current.md`；標題 `（Schema 3.0，SW v102）` 改為「自 SW v102 起持續有效」；Tier 2 復原改為與版本無關的敘述。
+- 本機 Node **95/95**、`check-doc-titles.js`、`check-app-version.js`、`check-doc-generation.js`、`check-runtime-assets.js` 全綠。runtime 未變更。
+
 ## 2026-09-09 — 治理層：活文件 generation 一致性 gate（無 runtime 變更）
 
 - 新增 `tools/check-doc-generation.js`：活文件出現的 `shell/vNNN` 必須等於 `sw.js` 的 `SW_VERSION`，current generation 由 `sw.js` 反推而不新增第二個真相來源。採白名單納管 22 份活文件；`adr/`、`07_CHANGELOG.md`、`tasks/done.md`、`docs/superpowers/`、`00_CONTEXT_HANDOVER.md`、`docs/batch2-device-acceptance.md` 等歷史記錄刻意豁免——那些檔案寫死當時的版本才是正確的。同一行加 `generation-exempt` 註解可逐行豁免，且必須寫明理由。
