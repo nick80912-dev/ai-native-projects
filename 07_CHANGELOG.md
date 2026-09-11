@@ -1,5 +1,15 @@
 # 07 版本紀錄
 
+## 2026-09-11 — G6 補建:`production-v113` tag
+
+- v113 的裝置驗收於本日完成(14／14)後,封鎖條件解除,建立並推送 annotated tag **`production-v113`**,指向 **`745bb6f`** —— 即 Netlify deploy `6a9fb443` 的 `commit_ref`,也就是 v113 當時正式站實際服務的 commit,而不是其後的文件 commit。
+- 建 tag 前核對:`745bb6f` 在 `origin/main` 上;該 commit 的 `sw.js` = **v113**、`shell/v113/app-version.js` = **v113**、root `app-version.js` 維持 **v110** bridge 未被誤升。
+- **Tag 訊息明記這是回溯補建**。正式站已於 2026-09-10 換成 v114,**無法再對 v113 做線上驗證** —— 所依據的是 2026-09-08 當時那一次線上核對(記於 `tasks/current.md`),不是建 tag 前剛驗過。這一點與 v114 的 tag 不同,不能混為一談。
+- 線上實查佐證 ADR 0019 的 immutable generation 仍成立:`shell/v113/app-version.js` 今日仍回 **200**,尚未升級的裝置繼續由 v113 資產服務。
+- 訊息同時記錄 G1 的完成時間與兩個貼門檻值(底色距離 12／門檻 10、焙茶操作色 4.53／門檻 4.5),以及 **`production-v112` 刻意缺席的原因** —— v112 的裝置驗收已併入 v114 的 BB4,需實體 Android,尚未執行。
+- 現行 production tags:`production-v18`／`production-v73`／`production-v110`／`production-v111`／**`production-v113`**／`production-v114`。
+- **無 runtime 變更**,不升版。
+
 ## 2026-09-11 — G1 補驗:v113 與 v114 的 iPhone 半邊全數通過
 
 - **Bar 於 2026-09-11 確認 v114 在 iOS 上操作正常、驗收無誤。** 依此回填 `docs/device-acceptance-log.md`:v114 的 **BB1–BB3 共 14 項**(身分流程、forced 語意保留、主題與版本資訊)記為通過。

@@ -40,7 +40,7 @@
 - `docs/device-acceptance-log.md` 的 v113 delta 清單(Z1／Z2／Z3 共 14 項)**已全數通過**:Z1-a、Z2-a 於 2026-09-10 通過,其餘 12 項於 **2026-09-11** 由 Bar 在 iPhone 上確認。
 - 桌機預檢:36 組寬度×分頁水平溢位全 0、對比全數 ≥4.5、pageerror 0、`healthCheck()` 空;三組截圖已交付。
 - **兩個貼門檻的值已由 Bar 在真機判定通過**(2026-09-10 的 Z1-a／Z2-a):杉綠↔霧藍／杉綠↔焙茶底色距離 12(門檻 10);焙茶操作色對比 4.53(門檻 4.5)。
-- G1 是 Bar 專屬職責,**AI 不得因桌機全綠而代勾** —— 本次回填依據為 Bar 2026-09-11 明示的驗收結論。**`production-v113` 的驗收條件至此解除**,是否補建 tag 由 Bar 決定。
+- G1 是 Bar 專屬職責,**AI 不得因桌機全綠而代勾** —— 本次回填依據為 Bar 2026-09-11 明示的驗收結論。**`production-v113` 已於 2026-09-11 回溯補建**,指向 `745bb6f`(deploy `6a9fb443` 的 `commit_ref`)。
 
 
 
@@ -56,7 +56,7 @@
 | **`origin/dev` candidate** | **SW v114**;已與 `main` 同步於 `39c96b2` |
 | 個人備份格式 | **v9**(`PERSONAL_STATE_SUPPORTED_VERSIONS = [1..9]`)—— v81 因想逛 key 識別語意變更而升版 |
 | candidate automated validation | Node **94/94**、Chromium Playwright **185/185**；三種啟動情境 `healthCheck()=[]`、`pageerror=0` |
-| 既有 tag | `production-v18`、`production-v73`、`production-v110`、`production-v111`、**`production-v114`** |
+| 既有 tag | `production-v18`、`production-v73`、`production-v110`、`production-v111`、**`production-v113`**(2026-09-11 回溯補建)、**`production-v114`** |
 
 **v114 已發布至正式站(2026-09-10,deploy `6aa25e07`),`production-v114` tag 已建立。G1 的 iPhone 半邊於 2026-09-11 補驗通過,Android 半邊(BB4)仍未驗。**
 
@@ -164,6 +164,6 @@
 
 > GitHub Actions 與 Netlify production **已於 2026-09-08 接管 v113** —— deploy `6a9fb443`、`commit_ref` = `745bb6f`、線上 `sw.js`／`app-version.js` 皆 v113、`qa-sanity` 於 `main` `745bb6f` 與 `dev` `f0444cb` 皆 success。**這一步已完成，不需再確認。**
 >
-> **`production-v113` 的裝置驗收條件已於 2026-09-11 解除**(v113 清單 14／14 通過),是否補建 tag 由 Bar 決定。**`production-v112` 仍不得建立** —— v112 的裝置驗收已併入 v114 的 BB4,而 BB4 尚未執行。**未完成正式發版流程前不得建立 production tag。**
+> **`production-v113` 已於 2026-09-11 建立**(v113 清單 14／14 通過後解除封鎖),指向 `745bb6f`。該 tag 為**回溯補建** —— 正式站早於 2026-09-10 換成 v114,無法再對 v113 做線上驗證,tag 訊息已明記所依據的線上核對是 2026-09-08 當時那一次。**`production-v112` 仍不得建立** —— v112 的裝置驗收已併入 v114 的 BB4,而 BB4 尚未執行。**未完成正式發版流程前不得建立 production tag。**
 
 > 正式發布仍必須遵守 §E：PR 與 Actions 通過後才能 merge；Netlify 線上驗證通過後才能建立 production tag。
