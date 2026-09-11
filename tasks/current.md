@@ -3,7 +3,7 @@
 ## v114 已正式發布(2026-09-10)
 - PR #16 以 **merge**(非 squash／rebase)合併 `dev` `064e932` → `main`,merge commit **`39c96b2`**;合併前確認 head 未變,且該 head 的遠端 CI `sanity` 與 **`browser-qa`** 皆 success。
 - Netlify 由 `main` 自動部署 deploy **`6aa25e07`**,`commit_ref` = `39c96b2`、`published_at` 有值。§F5 線上核對五項全過(SW v114／generation 三件組 v114／root bridge v110／兩處 cache header 正確)。
-- **G1 經 Bar 裁定跳過**,BB1–BB3 共 14 項維持未勾 —— 跳過不等於通過。
+- **G1 的 iPhone 半邊已於 2026-09-11 補驗完成**:BB1–BB3 共 14 項由 Bar 在 iPhone 上確認全數通過。發布當下 G1 經 Bar 裁定跳過,現已補齊;**BB4 的 8 項實體 Android 仍未驗**。
 - **G6 完成**:依 Bar 指示建立並推送 annotated tag `production-v114`,指向 `39c96b2`(正式站實際服務的 commit)。Tag 訊息明文記錄 G1 未執行。
 
 ### v114 交付內容(保留紀錄)
@@ -14,7 +14,7 @@
 - **六組主題色一律未動** —— v114 不含配色變更。
 - **2026-09-10 Bar 裁定:跳過 G1 真機驗收,直接走 `dev → main` merge 發布。** BB1–BB3 共 14 項維持未勾 —— 跳過不等於通過,清單保留供日後補驗。
 - Netlify 測試站 `dev-trippilot-jp` 已於 **2026-09-10 由 Bar 永久刪除**(該站當時的 v114 deploy `6aa25ba7` 一併消失)。`16_OPS_PLAYBOOK.md` 已改為單站模型,§F5 由「發布前置核對」改寫為「正式站發布後線上核對」。
-- **production tag 仍不建立** —— G1 未執行,發版流程未完整走完。
+- **`production-v114` 已於 G6 建立**(見上)。G1 的 iPhone 半邊 2026-09-11 補驗通過,**Android 半邊(BB4)仍缺**。
 
 ## v113 優先主題辨識度(已由 v114 接續,保留紀錄)
 - v112 已隨 v114 上線;**Android 實體手機驗收已併入 v114 清單的 BB4**(2026-09-10 Bar 裁定),不再單獨掛著。
@@ -36,11 +36,11 @@
 - 順帶修掉住宿 HID 契約裡指向已刪段落的交付順序敘述。
 - **無 runtime 變更**。
 
-## v113 三組主題 G1:桌機預檢完成,等 Bar 真機(2026-09-10)
-- `docs/device-acceptance-log.md` 已有 v113 delta 清單(Z1／Z2／Z3 共 14 項),**真機欄全空**。
+## v113 三組主題 G1:已完成(2026-09-11 Bar iPhone 確認)
+- `docs/device-acceptance-log.md` 的 v113 delta 清單(Z1／Z2／Z3 共 14 項)**已全數通過**:Z1-a、Z2-a 於 2026-09-10 通過,其餘 12 項於 **2026-09-11** 由 Bar 在 iPhone 上確認。
 - 桌機預檢:36 組寬度×分頁水平溢位全 0、對比全數 ≥4.5、pageerror 0、`healthCheck()` 空;三組截圖已交付。
-- **兩個貼門檻的值須由 Bar 在真機判定**:杉綠↔霧藍／杉綠↔焙茶底色距離 12(門檻 10);焙茶操作色對比 4.53(門檻 4.5)。
-- G1 是 Bar 專屬職責,**AI 不得因桌機全綠而代勾**;未完成 G1 不得建立 `production-v113`。
+- **兩個貼門檻的值已由 Bar 在真機判定通過**(2026-09-10 的 Z1-a／Z2-a):杉綠↔霧藍／杉綠↔焙茶底色距離 12(門檻 10);焙茶操作色對比 4.53(門檻 4.5)。
+- G1 是 Bar 專屬職責,**AI 不得因桌機全綠而代勾** —— 本次回填依據為 Bar 2026-09-11 明示的驗收結論。**`production-v113` 的驗收條件至此解除**,是否補建 tag 由 Bar 決定。
 
 
 
@@ -52,13 +52,13 @@
 | 項目 | 值 |
 |---|---|
 | **`origin/main` 原始碼** | **SW v114**;merge commit `39c96b2`(PR #16) |
-| **正式站** | `https://trippilot-jp.netlify.app/` — **SW v114**(2026-09-10 實查:deploy `6aa25e07`,`commit_ref` = `39c96b2` = main HEAD,`published_at` 有值,tag `production-v114`);**v114 為發布後補驗**,清單 22 項全部未勾 |
+| **正式站** | `https://trippilot-jp.netlify.app/` — **SW v114**(2026-09-10 實查:deploy `6aa25e07`,`commit_ref` = `39c96b2` = main HEAD,`published_at` 有值,tag `production-v114`);**v114 發布後補驗**:BB1–BB3 共 14 項 iPhone 已於 2026-09-11 通過,**BB4 共 8 項實體 Android 未驗** |
 | **`origin/dev` candidate** | **SW v114**;已與 `main` 同步於 `39c96b2` |
 | 個人備份格式 | **v9**(`PERSONAL_STATE_SUPPORTED_VERSIONS = [1..9]`)—— v81 因想逛 key 識別語意變更而升版 |
 | candidate automated validation | Node **94/94**、Chromium Playwright **185/185**；三種啟動情境 `healthCheck()=[]`、`pageerror=0` |
 | 既有 tag | `production-v18`、`production-v73`、`production-v110`、`production-v111`、**`production-v114`** |
 
-**v114 已發布至正式站(2026-09-10,deploy `6aa25e07`)。G1 未執行,依規則未建立 production tag。**
+**v114 已發布至正式站(2026-09-10,deploy `6aa25e07`),`production-v114` tag 已建立。G1 的 iPhone 半邊於 2026-09-11 補驗通過,Android 半邊(BB4)仍未驗。**
 
 ### v74–v98 已折疊的主要能力
 
@@ -150,13 +150,13 @@
 | v110 | UI semantic tokens 與 Today deep-module extraction（原 v109） | ✅ Bar 驗收、main merge、production verification、tag 完成 |
 | v111 | BUILTIN asset spike 與 test throughput（原 v110） | ✅ main merge、production verification、tag 完成 |
 | v112 | 行程 UI/UX 精簡、延後身分選擇、空狀態 CTA、Android PWA 相容 | ✅ 已隨 v114 上線;**Android 實體手機驗收已併入 v114 清單的 BB4** |
-| v113 | 杉綠／霧藍／焙茶優先配色辨識度 | ✅ `dev`／`main` 已推送、merged-tree gate 通過、**Netlify production 已接管並線上核對通過（2026-09-08 deploy `6a9fb443`）**；待 Bar 三組主題裝置驗收 |
+| v113 | 杉綠／霧藍／焙茶優先配色辨識度 | ✅ `dev`／`main` 已推送、merged-tree gate 通過、**Netlify production 已接管並線上核對通過（2026-09-08 deploy `6a9fb443`）**；**Bar 三組主題裝置驗收已於 2026-09-11 完成(14／14)** |
 
 **已知未做(需先定判準)**:Today 的「交通／停車／營業／付款／提醒**依當下情境動態調整優先順序**」。v84 只做了可明確驗收的收合(常駐交通／停車／營業,收合付款／提醒);「當下情境」的判準(依時間?依距離?依是否已抵達?)尚未定義,不同讀法會做出完全不同的東西,故未實作。
 
 ## 下一棒
 
-→ **由 Bar 對已上線的 v114 做發布後補驗**:`docs/device-acceptance-log.md` 的 v114 段共 **22 項**,BB1–BB3 走 iPhone、**BB4 走實體 Android**(併入 v112 遺留項)。
+→ **由 Bar 在實體 Android 上完成 v114 的 BB4 共 8 項**。`docs/device-acceptance-log.md` 的 v114 段 22 項中,BB1–BB3 共 14 項已於 **2026-09-11** 由 Bar 在 iPhone 上確認通過;**剩下的 BB4 是併入的 v112 遺留項,只能在實體 Android 上驗。**
 
 > 最關鍵的是 **BB4-a**:Service Worker 能否在實體 Android 上安裝並接管。v112 修的連線槽耗盡缺陷**只在真機發生**,桌機與 Playwright 的 Android 模擬都重現不出來。判斷方式:開啟網站 → 關掉 → 再開,設定的版本資訊顯示 **v114** 才算通過(顯示 v110 代表 SW 沒接管)。
 >
@@ -164,6 +164,6 @@
 
 > GitHub Actions 與 Netlify production **已於 2026-09-08 接管 v113** —— deploy `6a9fb443`、`commit_ref` = `745bb6f`、線上 `sw.js`／`app-version.js` 皆 v113、`qa-sanity` 於 `main` `745bb6f` 與 `dev` `f0444cb` 皆 success。**這一步已完成，不需再確認。**
 >
-> 裝置驗收通過後才可建立 `production-v112` 與 `production-v113`；**未完成正式發版流程前不得建立 production tag。**
+> **`production-v113` 的裝置驗收條件已於 2026-09-11 解除**(v113 清單 14／14 通過),是否補建 tag 由 Bar 決定。**`production-v112` 仍不得建立** —— v112 的裝置驗收已併入 v114 的 BB4,而 BB4 尚未執行。**未完成正式發版流程前不得建立 production tag。**
 
 > 正式發布仍必須遵守 §E：PR 與 Actions 通過後才能 merge；Netlify 線上驗證通過後才能建立 production tag。

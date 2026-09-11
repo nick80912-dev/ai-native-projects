@@ -1,5 +1,14 @@
 # 07 版本紀錄
 
+## 2026-09-11 — G1 補驗:v113 與 v114 的 iPhone 半邊全數通過
+
+- **Bar 於 2026-09-11 確認 v114 在 iOS 上操作正常、驗收無誤。** 依此回填 `docs/device-acceptance-log.md`:v114 的 **BB1–BB3 共 14 項**(身分流程、forced 語意保留、主題與版本資訊)記為通過。
+- **v113 的 12 項一併通過**。Z1-a、Z2-a 已於 2026-09-10 通過,其餘 12 項於本日補齊,v113 清單至此 **14／14**。兩個貼門檻的值(杉綠↔霧藍／杉綠↔焙茶底色距離 12、焙茶操作色對比 4.53)已由真機判定成立。**`production-v113` 的裝置驗收條件解除**,是否補建 tag 由 Bar 決定。
+- **BB4 的 8 項實體 Android 維持未勾** —— iOS 的結論不外推到 Android。回填後全檔剩餘未勾數恰為 **8**,與 BB4 完全吻合。其中 **BB4-a** 仍是最關鍵項:v112 修的是 Chromium 同源連線槽耗盡導致 Service Worker 永遠卡在 installing,**桌機與 Playwright 的 Android 模擬都重現不出來**,只有實體 Android 能證明。**`production-v112` 因此仍不得建立** —— v112 的裝置驗收已併入 BB4。
+- 回填前先向 Bar 確認過範圍:v114 的 14 項 iPhone 中,BB2-a／b／c 需在**無身分狀態**下操作、BB3-d 需**飛航模式冷啟動**、BB3-e 需**備份匯出還原**,這五項不是日常使用會自然涵蓋的。Bar 明示 14 項全數通過,故全部回填。**`15_AI_EXECUTION_RULES.md` 的「AI 不得代勾」仍然成立** —— 本次寫入的依據是 Bar 的明示結論,不是自動驗證全綠的推論。
+- 同步改寫兩份文件共 17 處敘述:`docs/device-acceptance-log.md` 六處「全部留空／全部維持未勾」的字句,以及 `tasks/current.md` 的現況表、Gate 敘述、v113 段標題與「下一棒」。**下一棒已由「v114 發布後補驗 22 項」收斂為「BB4 共 8 項實體 Android」。**
+- **無 runtime 變更**,不升版。
+
 ## 2026-09-11 — 開發工具：註冊 chrome-devtools MCP server
 
 - 新增 `.mcp.json`，向 agent 宣告 **chrome-devtools MCP server**（`chrome-devtools-mcp@latest`，實測 1.9.0、29 個工具）。補的是 PWA 除錯盲區：`sw.js` 的快取與接管行為、首屏、記憶體，過去只能靠 Playwright 的最終結果反推，讀不到 console、network waterfall 與 performance trace。相對既有瀏覽器工具，真正的增量是 `performance_start_trace`／`lighthouse_audit`／`take_heapsnapshot` 這三類。
