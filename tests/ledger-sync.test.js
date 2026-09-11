@@ -1,7 +1,7 @@
 const assert = require('assert');
-const fs = require('fs');
 const vm = require('vm');
 const TripBuyToLedger = require('../buy-to-ledger.js');
+const {appHtml}=require('./support/version');
 
 function createStorage(initial){
   const values = Object.assign({}, initial || {});
@@ -15,7 +15,7 @@ function createStorage(initial){
 }
 
 function loadLedgerModule(){
-  const source = fs.readFileSync('shell/v114/index.html','utf8');
+  const source = appHtml();
   const start = source.indexOf('/* ================= ledgerRepository');
   const end = source.indexOf('/* ================= 分帳', start);
   assert(start >= 0 && end > start, 'ledgerRepository section is present in index.html');
@@ -43,7 +43,7 @@ function loadLedgerModule(){
 
 (async function(){
   const mod = loadLedgerModule();
-  const html=fs.readFileSync('shell/v114/index.html','utf8');
+  const html=appHtml();
 
   assert.strictEqual(typeof mod.formatLedgerSyncRecordTime,'function','sync panel time formatter is testable with the queue helpers');
   assert.notStrictEqual(mod.formatLedgerSyncRecordTime('2026-07-22T08:30:00.000Z'),'建立時間不明','ISO queue timestamps remain readable in the sync panel');

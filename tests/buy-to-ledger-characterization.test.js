@@ -1,10 +1,10 @@
 const assert=require('assert');
-const fs=require('fs');
 const vm=require('vm');
 const TripBuyToLedger=require('../buy-to-ledger.js');
 const TripLedgerUiState=require('../ledger-ui-state.js');
+const {appHtml}=require('./support/version');
 
-const html=fs.readFileSync('shell/v114/index.html','utf8');
+const html=appHtml();
 const DEGRADED_MESSAGE='消費已建立，但採買項目的記帳標記更新失敗。請避免再次記帳，並重新開啟採買清單確認。';
 
 function extractFunction(name){

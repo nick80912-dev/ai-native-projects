@@ -2,6 +2,7 @@ const assert=require('assert');
 const fs=require('fs');
 const vm=require('vm');
 const TripBuyToLedger=require('../buy-to-ledger.js');
+const {appHtml}=require('./support/version');
 
 function createStorage(){
   const values={};
@@ -13,7 +14,7 @@ function createStorage(){
 }
 
 function loadModule(){
-  const source=fs.readFileSync('shell/v114/index.html','utf8');
+  const source=appHtml();
   const start=source.indexOf('/* ================= ledgerRepository');
   const end=source.indexOf('/* ================= 分帳',start);
   assert(start>=0&&end>start,'ledger helper section exists');
@@ -174,7 +175,7 @@ const spending=mod.spendLedgerRecords(base.concat([claim,confirm,reject]));
 assert.deepStrictEqual(spending.map(record=>record.id),['dinner'],'handshake records are excluded from spending lists and totals');
 
 /* ── UI wiring (source assertions, same pattern as ledger-settlement.test.js) ── */
-const html=fs.readFileSync('shell/v114/index.html','utf8');
+const html=appHtml();
 const settlementSource=html.slice(html.indexOf('function ledgerCurrentMemberSettlement('),html.indexOf('function showLedgerFullList('));
 assert(settlementSource.includes('applyConfirmedSettlements(buildMemberBalances(records,null,null,universe)'),'the settlement view applies confirmed settlements before suggestions');
 assert(settlementSource.includes('deriveSettlements(records,null,universe)'),'the settlement view derives the handshake from ledger records');

@@ -2,7 +2,7 @@
    ledgerLinks[] append-only、releasedAt 解除事實、三態動態推導、
    多品項 source→record 一一對應、原子回寫、部分購買拆分、個人狀態備份 v5。 */
 const assert=require('assert');
-const {appVersion,swVersion}=require('./support/version');
+const {appVersion,swVersion,appHtml}=require('./support/version');
 const fs=require('fs');
 const vm=require('vm');
 const TripBuyToLedger=require('../buy-to-ledger.js');
@@ -23,7 +23,7 @@ function createStorage(){
 function plain(value){return JSON.parse(JSON.stringify(value));}
 
 function loadModule(){
-  const html=fs.readFileSync('shell/v114/index.html','utf8');
+  const html=appHtml();
   const start=html.indexOf('/* ================= ledgerRepository');
   const end=html.indexOf('/* ================= 分帳',start);
   assert(start>=0&&end>start,'ledger helper section exists');

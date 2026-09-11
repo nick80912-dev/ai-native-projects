@@ -1,6 +1,7 @@
 const assert = require('assert');
 const fs = require('fs');
 const vm = require('vm');
+const {appHtml,read,shellPath}=require('./support/version');
 
 function loadValidator(){
   const sandbox = { console:{log:function(){},warn:function(){},error:function(){}}, AppLog:{data:function(){}} };
@@ -64,8 +65,8 @@ function sharedHotelDb(){
 
 const sb = loadValidator();
 const standaloneSource = fs.readFileSync('validator.js','utf8').replace(/\r\n/g,'\n').trim();
-const htmlSource = fs.readFileSync('shell/v114/index.html','utf8').replace(/\r\n/g,'\n');
-const builtinSource = fs.readFileSync('shell/v114/builtin-snapshot.js','utf8').replace(/\r\n/g,'\n');
+const htmlSource = appHtml().replace(/\r\n/g,'\n');
+const builtinSource = read(shellPath('builtin-snapshot.js')).replace(/\r\n/g,'\n');
 const schemaSandbox = {};
 vm.createContext(schemaSandbox);
 vm.runInContext(fs.readFileSync('schema.js','utf8'),schemaSandbox);

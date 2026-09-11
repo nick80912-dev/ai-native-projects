@@ -1,8 +1,8 @@
 const assert=require('assert');
-const fs=require('fs');
 const vm=require('vm');
+const {appHtml}=require('./support/version');
 
-const html=fs.readFileSync('shell/v114/index.html','utf8');
+const html=appHtml();
 
 function extractFunction(source,name){
   const start=source.indexOf('function '+name+'(');

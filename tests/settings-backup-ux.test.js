@@ -1,6 +1,6 @@
 const assert = require('assert');
-const fs = require('fs');
 const vm = require('vm');
+const {appHtml}=require('./support/version');
 
 function createStorage(initial){
   const values=Object.assign({},initial);
@@ -15,7 +15,7 @@ function createStorage(initial){
 }
 
 (async function(){
-  const html=fs.readFileSync('shell/v114/index.html','utf8');
+  const html=appHtml();
   assert.match(html,/照片附件只保存在本裝置，不包含於備份。/,'data settings disclose that photo attachments are device-local and excluded from backups');
   const start=html.indexOf('function closeSettings()');
   const end=html.indexOf('function setLedgerTestMode(',start);

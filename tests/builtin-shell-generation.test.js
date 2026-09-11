@@ -1,9 +1,8 @@
 const assert=require('assert');
-const fs=require('fs');
-const path=require('path');
 const vm=require('vm');
+const {appHtml}=require('./support/version');
 
-const html=fs.readFileSync(path.resolve(__dirname,'../shell/v114/index.html'),'utf8');
+const html=appHtml();
 const start=html.indexOf('function builtinAssetState(){');
 const end=html.indexOf('\n}\n\nfunction createDataSnapshot',start);
 assert(start>=0&&end>start,'builtinAssetState has a stable extraction boundary');

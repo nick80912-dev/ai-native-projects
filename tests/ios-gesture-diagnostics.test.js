@@ -1,7 +1,7 @@
 const assert = require('assert');
-const fs = require('fs');
+const {appHtml}=require('./support/version');
 
-const html = fs.readFileSync('shell/v114/index.html', 'utf8');
+const html = appHtml();
 
 const suppressorPattern = /document\.addEventListener\(\s*['"]dblclick['"]\s*,\s*function\s+iosDoubleTapZoomSuppressor\s*\(\s*\)\s*\{\s*\}\s*,\s*\{\s*passive\s*:\s*true\s*\}\s*\)\s*;/g;
 const suppressors = html.match(suppressorPattern) || [];

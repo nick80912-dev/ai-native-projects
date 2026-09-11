@@ -1,6 +1,7 @@
 const assert=require('assert');
 const fs=require('fs');
 const TripBuyToLedger=require('../buy-to-ledger.js');
+const {appHtml}=require('./support/version');
 
 function plain(value){return JSON.parse(JSON.stringify(value));}
 
@@ -32,7 +33,7 @@ const domain=TripBuyToLedger.createDomain({
 assert.deepStrictEqual(Object.keys(TripBuyToLedger).sort(),['createDomain','createWorkflow'],'module top-level exports are exact');
 const moduleSource=fs.readFileSync('buy-to-ledger.js','utf8');
 assert.doesNotMatch(moduleSource,/\b(?:document|localStorage|sessionStorage|indexedDB)\b/,'module has no DOM or storage globals');
-const runtimeSource=fs.readFileSync('shell/v114/index.html','utf8');
+const runtimeSource=appHtml();
 [
   'normalizeShoppingLedgerLink','activeShoppingLedgerLink','releaseShoppingLedgerLinks','appendShoppingLedgerLink',
   'resolveShoppingLedgerLinkState','buildShoppingLedgerLinkPlan','planShoppingLedgerLinks','shoppingLedgerSources',

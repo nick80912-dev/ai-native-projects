@@ -3,7 +3,7 @@
    涵蓋正常資料四象限、legacy participants fail-open、成員無法解析的 fail-safe,
    以及「清單／筆數／總額／完整紀錄頁／編輯／刪除入口」共用同一批過濾結果的全域一致性。 */
 const assert=require('assert');
-const {appVersion,swVersion}=require('./support/version');
+const {appVersion,swVersion,appHtml}=require('./support/version');
 const fs=require('fs');
 const vm=require('vm');
 const TripBuyToLedger=require('../buy-to-ledger.js');
@@ -18,7 +18,7 @@ function createStorage(){
 }
 
 function loadModule(){
-  const source=fs.readFileSync('shell/v114/index.html','utf8');
+  const source=appHtml();
   const start=source.indexOf('/* ================= ledgerRepository');
   const end=source.indexOf('/* ================= 分帳',start);
   assert(start>=0&&end>start,'ledger helper section exists');

@@ -1,10 +1,10 @@
 const assert = require('assert');
-const fs = require('fs');
 const vm = require('vm');
 const TripBuyToLedger = require('../buy-to-ledger.js');
 const TripLedgerUiState = require('../ledger-ui-state.js');
 
 const {extractFunction,extractDeclaration} = require('./support/source');
+const {appHtml}=require('./support/version');
 
 function plain(value){ return JSON.parse(JSON.stringify(value)); }
 
@@ -119,7 +119,7 @@ function createStorage(){
 }
 
 function loadModule(fetchImpl){
-  const source = fs.readFileSync('shell/v114/index.html','utf8');
+  const source = appHtml();
   const start = source.indexOf('/* ================= ledgerRepository');
   const end = source.indexOf('var ledgerRepository=createLedgerRepository', start);
   assert(start >= 0 && end > start,'ledger helper section is present');

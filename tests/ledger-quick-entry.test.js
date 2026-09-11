@@ -1,10 +1,10 @@
 const assert=require('assert');
-const fs=require('fs');
 const vm=require('vm');
 const TripBuyToLedger=require('../buy-to-ledger.js');
 const TripLedgerUiState=require('../ledger-ui-state.js');
+const {appHtml}=require('./support/version');
 
-const html=fs.readFileSync('shell/v114/index.html','utf8');
+const html=appHtml();
 
 function extract(startText,endText){
   const start=html.indexOf(startText),end=html.indexOf(endText,start);

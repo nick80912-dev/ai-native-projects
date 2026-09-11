@@ -1,5 +1,14 @@
 # 07 版本紀錄
 
+## 2026-09-11 — backlog #27:測試檔 shell generation 硬編碼遷移
+
+- **問題**:`tests/support/version.js` 建於 2026-07-30,當初就是為了消滅「8 個測試檔各自硬編碼版本字串」。但同一個問題在路徑層重新長出來 —— 58 個測試檔硬編碼 `shell/<current>/index.html` 共 **74 處**,每次升版都要手工掃一遍。
+- **helper 擴充**:新增 `shellPath(file)` 與 `appHtml()`。主流用法 `fs.readFileSync('shell/vNNN/index.html','utf8')`(64 處)收斂為 `appHtml()`;其餘 10 處(builtin-snapshot 路徑、文件內容斷言、runtime inventory 斷言)改用 `shellPath()` 組字串。順帶移除 39 個因此不再需要的 `fs`／`path` require。
+- **合成 fixture 一律保留字面**,沿用 Bar 2026-07-30 裁定:`doc-generation.test.js` 的 v898／v899／v900 是用來測 checker 本身的合成版本,`app-shell-version-integrity.test.js` 的 fixture 亦然。後者原本的 `netlify` 欄寫 `v114`,與同 fixture 其他欄位的 `v111` 不一致 —— checker 用的是版本無關的 `v\d+` 正則,該值從來不需要同步,但它剛好等於現行版本會誤導讀者,已改為 `v111`。
+- **以竄改版本實證解耦,而非只看測試仍通過**:把 `sw.js` 的 `SW_VERSION` 暫改為不存在的 `v999` 後重跑,**75 個測試跟著推導而失敗**(72 個因 `shell/v999` 路徑 ENOENT,3 個因 generation 一致性斷言正確偵測到目錄不存在與文件未登記),另 20 個不讀 shell 故不受影響。還原 `sw.js` 後 **95/95** 與四個 gate 全數通過。
+- **為何當初刻意不納入 gate**:backlog #27 原文寫明,測試指到舊 generation 會 ENOENT 大聲失敗、不是無聲錯誤,因此不阻擋發布。本次遷移消除的是每次升版的手工成本,不是修正正確性缺陷。
+- **無 runtime 變更**,不升版。
+
 ## 2026-09-11 — G6 補建:`production-v113` tag
 
 - v113 的裝置驗收於本日完成(14／14)後,封鎖條件解除,建立並推送 annotated tag **`production-v113`**,指向 **`745bb6f`** —— 即 Netlify deploy `6a9fb443` 的 `commit_ref`,也就是 v113 當時正式站實際服務的 commit,而不是其後的文件 commit。
