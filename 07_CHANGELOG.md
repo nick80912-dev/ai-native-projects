@@ -1,5 +1,14 @@
 # 07 版本紀錄
 
+## 2026-09-11 — 開發工具：註冊 chrome-devtools MCP server
+
+- 新增 `.mcp.json`，向 agent 宣告 **chrome-devtools MCP server**（`chrome-devtools-mcp@latest`，實測 1.9.0、29 個工具）。補的是 PWA 除錯盲區：`sw.js` 的快取與接管行為、首屏、記憶體，過去只能靠 Playwright 的最終結果反推，讀不到 console、network waterfall 與 performance trace。相對既有瀏覽器工具，真正的增量是 `performance_start_trace`／`lighthouse_audit`／`take_heapsnapshot` 這三類。
+- **Windows 必須包 `cmd /c`**：官方 README 給的 `"command": "npx"` 在本機起不來。實測直接 spawn `npx`（`shell: false`）回 **ENOENT**——Windows 的 CreateProcess 不會自動補 `.cmd` 副檔名；改為 `"command": "cmd"` + `["/c", "npx", ...]` 後 handshake 正常、29 個工具全數載入。**照抄官方設定會踩到這個**。
+- **關掉預設的使用統計回報**：加 `--no-usage-statistics`。Google 對此採 opt-out 制，預設收集工具呼叫成功率、延遲與環境資訊。另記：performance 工具仍會把 trace URL 送往 Google CrUX API，要一併關閉需再加 `--no-performance-crux`。
+- **不影響 runtime，未 bump VERSION**：`.mcp.json` 是本機開發工具設定，不進 PWA bundle、不被 `sw.js` 快取、不列入 `runtime-assets.json`。依 `11_CODING_CONVENTION.md` 只有 `sw.js` 有改才必須進位，此次不符。
+- **與 `.claude/` 刻意不同**：`.claude/` 由 `.git/info/exclude` 本機排除（個人偏好不進 repo），`.mcp.json` 反向處理——它是專案層級的共享宣告，其他機器 clone 後即取得同一組除錯工具。
+- **安全註記**：此 server 可檢視並修改瀏覽器內的任何資料與 DevTools 內容。除錯時若該瀏覽器登著私人帳號，那些內容對 agent 可見。
+
 ## 2026-09-10 — v112 Android 驗收併入 v114 清單（新增 BB4）
 
 - Bar 裁定把從 v112 掛到現在的 **Android 實體手機驗收併入 v114 清單**。v114 的正式站已含 v112／v113／v114 全部改動，在 Android 上驗 v114 等同一次驗完三版；v112 不再單獨掛著。

@@ -70,6 +70,7 @@ tasks/                     即時狀態唯一權威(current/backlog/done)
 tests/                     測試資產(交付必附)
 tools/                     檢查腳本(文件標題、runtime 版本、活文件 generation 與 runtime asset 一致性)
 .github/workflows/         Sanity CI(qa.yml,main push/PR 自動檢查;dev 目前跑同等本機 CI)
+.mcp.json                  chrome-devtools MCP server 宣告(本機除錯工具,不進 runtime)
 docs/superpowers/          功能設計規格與實作計畫
 schema.js / validator.js   資料規格 SSoT / 防錯防線(Tier 1 原始碼)
 index.html / app-version.js v110 byte-locked bridge 正式入口
