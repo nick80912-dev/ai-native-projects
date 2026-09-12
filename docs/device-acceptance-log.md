@@ -612,6 +612,10 @@ v74 的實際 diff 已逐項核對:
 
 # v118 delta 驗收清單(顏色語意收斂)
 
+> **⚠️ 這是「發布後補驗」清單 —— v118 已經在正式站上。**
+>
+> **2026-09-12**:Bar 裁定跳過 G1 直接發布(同 v114–v117)。已 merge(`7549d20`)、deploy `6aa5581c`、已建 `production-v118` tag。**6 項全部維持未勾 —— 跳過不等於通過。** 發現問題依 §A2 forward bump 到 v119。
+>
 > 適用 runtime:SW／App **v118**。本批**只改顏色套用,不改任何色值**:移除代購對象 chip 的整條覆寫使其沿用分類 chip 的選取樣式;三處面板由選取色 `--mint` 改為次級面色 `--entry-secondary-bg`。**不動資料、不動結算語意、六組主題 token 一字未改。**
 
 | ID | 驗收項目 | 自動驗證涵蓋範圍 | Bar 真機 |
@@ -747,7 +751,7 @@ v74 的實際 diff 已逐項核對:
 
 | ID | 驗收項目 | 自動驗證涵蓋範圍 | Bar Android 真機 |
 |---|---|---|---|
-| BB4-a | **Service Worker 能安裝並接管**:開啟網站 → 關掉 → 再開,版本資訊頁顯示 **v118**(不是 v110) | 🧪 Playwright Android mobile/touch 模擬通過,**但連線槽耗盡是模擬重現不出來的** · 📱 **Android 必測** | ☐ |
+| BB4-a | **Service Worker 能安裝並接管**:開啟網站 → 關掉 → 再開,版本資訊頁顯示 **v118**(不是 v110) <!-- BB4 判準已隨 v118 更新 --> | 🧪 Playwright Android mobile/touch 模擬通過,**但連線槽耗盡是模擬重現不出來的** · 📱 **Android 必測** | ☐ |
 | BB4-b | 加到主畫面後,從桌面圖示啟動正常,不是開回瀏覽器分頁 | 🖥️ manifest 的 `start_url`／`scope`／`display: standalone` 與 192／512 maskable 圖示已驗 · 📱 **Android 必測** | ☐ |
 | BB4-c | **飛航模式冷啟動**:完全關閉 App → 開飛航 → 由桌面圖示啟動 → 不空白頁,行程資料仍在 | 🧪 桌機離線情境涵蓋,真機冷啟動做不到 · 📱 **Android 必測** | ☐ |
 | BB4-d | 行程卡以**地點**為主標題,時間與活動是次要資訊(v112 改動) | 🧪 Playwright Android 斷言通過 · 📱 **Android 複核** | ☐ |

@@ -1,5 +1,14 @@
 # 07 版本紀錄
 
+## 2026-09-12 — v118 正式發布(released,未經 G1)+ G6 tag
+
+- PR [#21](https://github.com/nick80912-dev/ai-native-projects/pull/21) 以 merge 合併 `dev` `598e443` → `main`,merge commit **`7549d20`**。合併前核對 PR head 等於 `origin/dev`,該 head 的 `sanity` 與 `browser-qa` 皆 success。
+- Netlify deploy **`6aa5581c75582e00089d3bf2`**、`ready`、`commit_ref` 相符、`published_at` 有值、`manual_deploy: false`。
+- **§F5 全過**:`sw.js` 與 `shell/v118/` 三件組皆 v118;root bridge 維持 v110;三處 `Cache-Control` 正確;**v111–v117 七個舊世代皆回 200**(ADR 0019)。
+- **真實瀏覽器驗證兩點皆達成**:分類與代購 chip 的選取樣式**完全相同**(`rgb(214,232,228)` / `rgb(18,…)` / `rgb(14,58,68)`);稅與優惠券、分攤成員、帳單摘要三者底色**一致為 `rgb(243,248,246)`**。
+- **G1 經 Bar 裁定跳過**(同 v114–v117),6 項維持未勾。**G6 完成**:`production-v118` 指向 `7549d20`。
+- **BB4 判準改為 v118**。現行 tags 十個。**發布後補驗累計 34 項**(BB4 8 + v115 6 + v116 10 + v117 4 + v118 6)。
+
 ## 2026-09-12 — v118:顏色語意收斂(candidate,未發布)
 
 - Bar 指出兩點:採買表單兩組選取 chip 的顏色不一致;記帳視窗中「稅與優惠券」與「分攤成員」「帳單資訊」三個區塊底色不一致。
