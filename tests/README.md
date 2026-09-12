@@ -116,6 +116,9 @@
 ## Sanity CI(2026-07-09 起)
 - `.github/workflows/qa.yml` 的 `sanity` job 於 `main`／`dev` push 與 Pull Request 自動執行：①`tools/check-doc-titles.js`（文件標題／檔名一致性＋manifest JSON）②`tools/check-app-version.js`（runtime 版本鏈）③`tools/check-doc-generation.js`（活文件不得停在舊 `shell/vNNN`）④`tests/` 內全部 `*.test.js`。`browser-qa` job 只在 Pull Request 與 `main` push 跑 Playwright 三情境與 SW 更新快取正確性。
 - 上傳/commit 後到 GitHub 的 **Actions** 頁看結果:綠勾=通過;紅叉=點進去看哪個檔案錯位或哪個測試失敗。
+- **`browser-qa` job 自 2026-09-12 起同樣在 `main`／`dev` push 與 Pull Request 都執行**(先前只在 PR 與 `main` push)。
+  反轉原因:v114→v115 升版漏改 `sw.js` 的 `versionedShellKind()`,混世代 install 守衛被靜默停用,而**四個 gate 與 95 個 Node 測試全部綠燈** —— 唯一抓到的是 `sw-update-cache.spec.js` 的 mixed-generation 規格。
+  代價是每次 dev push 多約 5 分鐘(裝 Chromium),買到的是 SW 換代正確性;那是本專案最貴的失敗模式 —— 裝置端無聲壞掉,且依 ADR 0019 不得倒退覆寫,只能 forward bump。
 
 ## 規則
 - 測試只依賴 Node 內建模組或 devDependency 明列的工具;引入新測試框架屬技術棧變更,走五段提案。

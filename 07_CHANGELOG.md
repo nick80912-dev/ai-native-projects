@@ -1,5 +1,14 @@
 # 07 版本紀錄
 
+## 2026-09-12 — CI:`browser-qa` 改為 dev push 也跑(反轉 2026-07-30 裁定)
+
+- `.github/workflows/qa.yml` 移除 `browser-qa` 的 job-level `if`,該 job 自此在 **`main` push／`dev` push／Pull Request** 都執行。
+- **反轉的依據是同日的實際事故**,不是偏好:v114→v115 升版漏改 `sw.js` 的 `versionedShellKind()` 三條路徑,混世代 install 守衛被靜默停用。當時 **四個 gate 與 95 個 Node 測試全部綠燈**,唯一抓到的是 `browser-qa` 裡的 `sw-update-cache.spec.js` mixed-generation 規格 —— 而它當時不在 dev push 上跑。若照 dev 的綠勾發布,會送出一個防線已死的 v115。
+- **原裁定的成本理由仍然成立**(裝 Chromium 約 5 分鐘),改變的是對「買到什麼」的評估:那 5 分鐘買的是 SW 換代正確性,而那是本專案最貴的失敗模式 —— 裝置端無聲壞掉,且依 ADR 0019 不得倒退覆寫、只能 forward bump。修一次的代價遠高於每次推送 5 分鐘。
+- `qa.yml` 檔頭的觸發策略說明與 `tests/README.md` 同步改寫,兩處都寫明反轉原因,避免日後有人只看到「dev 也跑很慢」而改回去。
+- **歷史紀錄刻意保留原樣**:`tasks/done.md` 的 backlog #21 條目、`docs/device-acceptance-log.md` 裡「`browser-qa` 未執行(0s)—— job-level `if` 條件如設計般在 dev push 上排除」等,都是當時的事實。
+- **無 runtime 變更**,不升版。
+
 ## 2026-09-12 — v115:兩處觸控命中區修正(candidate,未發布)
 
 - **來源不是使用者回報**,是 2026-09-12 用 chrome-devtools MCP 在 **390×844** 實跑 v114 量測出來的。兩處都不是尺寸偏好問題,是**點了沒反應／關鍵時刻按不到**的功能性缺陷,與 backlog #28／#29(Bar 已裁定暫不處理)性質不同。
