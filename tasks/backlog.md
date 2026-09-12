@@ -51,7 +51,7 @@
 
     - **為何不單獨處理**:同 #30 —— 依 ADR 0019,已發布 generation 不得就地改,一行 CSS 也要完整 forward bump。**與 #30 同批執行**。
 
-32. **多品項新增消費:帳單摘要列與單品項對齊(搭便車項目,與 #30／#31 同批)**:多品項模式帳單資訊卡裡的 `.ledger-multi-summary`(收合時顯示 `2026/09/12 · 現金 · 餐飲`,343×44)與單品項的同一個邏輯控制項有四處不一致。2026-09-12 在正式站 v115、390×844 實測。
+32. **多品項新增消費:帳單摘要列與單品項對齊(搭便車項目,與 #30／#31 同批)**:多品項模式帳單資訊卡裡的 `.ledger-multi-summary`(收合時顯示 `2026/09/12 · 現金 · 餐飲`,343×44)與單品項的同一個邏輯控制項有**五處不一致**((a)–(e)),其中 (e) 是外觀與摺疊行為。2026-09-12 在正式站 v115、390×844 實測。
 
     - **兩個文字函式並排即可看出**:
       - `ledgerSingleSummaryText(draft)` → `[ledgerOptionalDateLabel(draft.occurredDate, appNow()), draft.category, draft.payMethod, 有備註/無備註].join(' · ')`
@@ -64,6 +64,24 @@
     - **(c) `餐飲` 在收合行裡語意被夷平**:展開後它標示得很清楚 —— `renderLedgerCategoryApply()` 給的是 **`預設類別`** 加上說明「新品項自動帶入,可逐筆調整」與「套用至全部」按鈕。但收合行把它和日期、支付方式並列成三個等價的值,讀起來像「這張帳單的類別是餐飲」。實際上前兩者是帳單事實,第三個是**新品項的範本**;而每個品項列本身又各自顯示 `🍜 餐飲⌄`,容易被誤讀成重複或衝突。**建議收合行加註語意(`… · 預設 餐飲`),或只留真正的帳單事實(`今天 · 現金`),把預設類別交給展開區與品項列**。
 
     - **(d) 欄位順序不一致**:單品項 `日期 · 類別 · 支付`,多品項 `日期 · 支付 · 類別`。切換模式時欄位會跳位。**建議統一**。
+
+    - **(e) 外觀與摺疊行為:同一張 sheet 裡有兩套摺疊控制項,這一顆用的是比較差的那套(Bar 2026-09-12 指出視覺不協調,實測確認)**
+
+      | | `.ledger-multi-summary`(本項) | `.ledger-disclosure-toggle`(同 sheet 的「稅與優惠券」) |
+      |---|---|---|
+      | 背景 | `rgb(243,248,246)` 實色 ＋ 邊框 | `transparent` |
+      | 圓角 | **10px** | 8px |
+      | chevron | `<span aria-hidden>⌄</span>`,**無 class** | `<span class="chevron">` |
+      | transition | `all`(未指定) | `transform 0.2s` |
+      | 展開時 | **`transform: none`,不旋轉** | `rotate(180deg)` |
+
+      - **(e-1) 箭頭不旋轉,違反既有準則**:`04_UI_GUIDELINES` 明訂「摺疊箭頭旋轉動畫 .25s」,而 CSS 也已存在 —— `.ledger-disclosure-toggle .chevron{transition:transform .2s}` 與 `.ledger-disclosure-toggle[aria-expanded="true"] .chevron{transform:rotate(180deg)}`。但本顆的 chevron **沒有 `.chevron` class**,兩條選擇器都不命中,展開後箭頭仍朝下,狀態只能靠內容有沒有跑出來判斷。**加一個 class 即生效,CSS 不必新增 —— 四項中最划算**。
+
+      - **(e-2) `.ledger-entry-summary.open` 是死 CSS**:規則 `{border-radius:10px 10px 0 0}` 存在,意圖是展開時上圓下方、與下方面板接成一體,**但沒有任何地方加上 `open` class**。實測展開後圓角仍是四角 10px,而下方 `.ledger-multi-bill-secondary` 是 `background:transparent; border:0; border-radius:0` 的裸內容 —— **兩者視覺上完全沒有連接**,看起來像一顆按鈕後面多出一坨東西,而不是一個展開的區塊。
+
+      - **(e-3) 內圓角大於父容器**:外層 `.ledger-multi-bill-info` 為白底、**8px** 圓角;本顆為色底＋邊框＋**10px** 圓角。巢狀容器的內圓角應等於或小於外圓角,10px 包在 8px 裡會視覺上頂出來;再加上白卡內再套一個有邊框的色塊,等於兩層容器互相競爭。
+
+      - **建議(依成本排序)**:①給 chevron 加 `.chevron` class;②圓角 10px → 8px 對齊父卡片;③二選一收斂 —— 讓 `.open` 真的套用(展開時與面板接合),或改用 `.ledger-disclosure-toggle`(透明底、無邊框),讓它像「卡片內的區塊標題」而非「卡片內的一顆按鈕」。**傾向後者**,因為它本來就在白卡內,不需要自己再當一層容器;底色那層由 #31 處理。
 
     - **不是不一致、不要「修」**:多品項少了「有備註／無備註」是正確的 —— `renderLedgerMultiBillInfo()` 只組 occurrence／payment／categoryApply 三段,**多品項的帳單資訊裡根本沒有備註欄**,沒有東西可顯示。
 
