@@ -270,17 +270,11 @@ function extractThemeIds(html){
      最新一筆必須是目前版本(推導);其餘為歷史 release note,依裁定保留原字面。 */
   assert.strictEqual(notes.length,5,'Settings exposes exactly five user-facing releases');
   assert.strictEqual(notes[0].version,appVersion(),'the newest release note is the current version');
+  /* v113 的主題辨識度說明已於 2026-09-12 隨 v118 加入而滾出五筆視窗(v72 核定的固定視窗設計),
+     守著它的斷言完成任務後移除 —— 與 v111 的離線啟動說明同一處理。 */
   /* 滾動的五筆視窗:最新一筆是目前版本,其餘四筆是緊接在後的歷史版本。
      歷史版本刻意寫死字面值(見 tests/support/version.js 的適用範圍說明)。 */
-  assert.deepStrictEqual(Array.from(notes.slice(1),function(note){return note.version;}),['v116','v115','v114','v113']);
-  /* 主題辨識度那一批是 v113,不是最新一筆 —— 斷言綁在該版本上,而不是綁在「最新」,
-     否則每次升版做別的事都會假失敗。它離開五筆視窗時本斷言會失敗,那時再由裁定決定去留。 */
-  const themeNote=notes.filter(function(note){return note.version==='v113';})[0];
-  assert(themeNote,'the priority-theme release note is still inside the five-release window');
-  assert.match(themeNote.title,/主題/,'the v113 release note describes the theme differentiation work');
-  assert(JSON.stringify(themeNote).includes('杉綠'),'the v113 release note explains the Cedar palette');
-  assert(JSON.stringify(themeNote).includes('霧藍'),'the v113 release note explains the Mist palette');
-  assert(JSON.stringify(themeNote).includes('焙茶'),'the v113 release note explains the Tea palette');
+  assert.deepStrictEqual(Array.from(notes.slice(1),function(note){return note.version;}),['v117','v116','v115','v114']);
   /* v111 的離線啟動說明已於 2026-09-12 隨 v116 加入而滾出五筆視窗(v72 核定的固定視窗設計),
      原本守著它的斷言完成任務後移除。日後若要保留某一筆說明,應改變視窗規則而非加回斷言。 */
   notes.forEach(note=>{
