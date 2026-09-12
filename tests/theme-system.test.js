@@ -110,7 +110,7 @@ function extractThemeIds(html){
     '--space-1':'4px','--space-2':'8px','--space-3':'12px','--space-4':'16px','--space-5':'24px',
     '--radius-sm':'6px','--radius-control':'10px','--radius-card':'14px','--radius-pill':'999px',
     '--status-pending-bg':'#fff3cf','--status-pending-ink':'#80600d',
-    '--entry-secondary-border':'#cfe0dd','--entry-secondary-bg':'#f3f8f6',
+    '--entry-secondary-border':'#cfe0dd','--entry-secondary-bg':'#f3f8f6','--mint':'#d6e8e4',
     '--shopping-category-bg':'#fff7dc','--shopping-category-ink':'#8a6416',
     '--status-partial-bg':'#e8f0f2','--status-unverified-bg':'#fdf0e2',
     '--status-unverified-ink':'#9a5b18','--status-wait-ink':'#8b531a'
@@ -272,7 +272,7 @@ function extractThemeIds(html){
   assert.strictEqual(notes[0].version,appVersion(),'the newest release note is the current version');
   /* 滾動的五筆視窗:最新一筆是目前版本,其餘四筆是緊接在後的歷史版本。
      歷史版本刻意寫死字面值(見 tests/support/version.js 的適用範圍說明)。 */
-  assert.deepStrictEqual(Array.from(notes.slice(1),function(note){return note.version;}),['v114','v113','v112','v111']);
+  assert.deepStrictEqual(Array.from(notes.slice(1),function(note){return note.version;}),['v115','v114','v113','v112']);
   /* 主題辨識度那一批是 v113,不是最新一筆 —— 斷言綁在該版本上,而不是綁在「最新」,
      否則每次升版做別的事都會假失敗。它離開五筆視窗時本斷言會失敗,那時再由裁定決定去留。 */
   const themeNote=notes.filter(function(note){return note.version==='v113';})[0];
@@ -281,8 +281,8 @@ function extractThemeIds(html){
   assert(JSON.stringify(themeNote).includes('杉綠'),'the v113 release note explains the Cedar palette');
   assert(JSON.stringify(themeNote).includes('霧藍'),'the v113 release note explains the Mist palette');
   assert(JSON.stringify(themeNote).includes('焙茶'),'the v113 release note explains the Tea palette');
-  const v111Note=notes.filter(function(note){return note.version==='v111';})[0];
-  assert(v111Note&&JSON.stringify(v111Note).includes('版本綁定'),'v111 offline boot note remains in the five-release window');
+  /* v111 的離線啟動說明已於 2026-09-12 隨 v116 加入而滾出五筆視窗(v72 核定的固定視窗設計),
+     原本守著它的斷言完成任務後移除。日後若要保留某一筆說明,應改變視窗規則而非加回斷言。 */
   notes.forEach(note=>{
     assert(note.title&&note.title.length<=24,'release title is short and present');
     assert(Array.isArray(note.items)&&note.items.length>=1,'release has user-readable items');

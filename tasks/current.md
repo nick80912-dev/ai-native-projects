@@ -21,7 +21,7 @@
 - v113 只調整杉綠、霧藍、焙茶三組既有 palette；Ocean、Ivory、Wisteria、版面、資料與互動行為不變。
 - 三組 page surface、accent 與 secondary 已拉開；主要文字／操作色維持 WCAG AA，390×844 畫面無 overflow。
 - 本機及 merged tree 的 Node **94/94**、Playwright **185/185** 與三情境健康檢查通過；已推送 `dev`／`main`。
-- **正式部署已完成（2026-09-08）**：Netlify production deploy `6a9fb443`，`commit_ref` = `745bb6f`（與 `origin/main` HEAD 相符），`published_at` 有值；線上 `sw.js` 與 `shell/v115/app-version.js` 皆為 `v113`。**尚待 Bar 對三組主題做裝置驗收。**
+- **正式部署已完成（2026-09-08）**：Netlify production deploy `6a9fb443`，`commit_ref` = `745bb6f`（與 `origin/main` HEAD 相符），`published_at` 有值；線上 `sw.js` 與 `shell/v116/app-version.js` 皆為 `v113`。**尚待 Bar 對三組主題做裝置驗收。**
 
 
 ## 治理層 gate:活文件 generation 一致性(2026-09-09,dev)
@@ -53,7 +53,7 @@
 |---|---|
 | **`origin/main` 原始碼** | **SW v115**;merge commit `6094584`(PR #17) |
 | **正式站** | `https://trippilot-jp.netlify.app/` — **SW v114**(2026-09-10 實查:deploy `6aa25e07`,`commit_ref` = `39c96b2` = main HEAD,`published_at` 有值,tag `production-v114`);**v114 發布後補驗**:BB1–BB3 共 14 項 iPhone 已於 2026-09-11 通過,**BB4 共 8 項實體 Android 未驗** |
-| **`origin/dev` candidate** | **SW v115**;已與 `main` 同步於 `6094584` |
+| **`origin/dev` candidate** | **SW v116**(未發布);在 `main` `6ee9533` 之上多出一致性批次 |
 | 個人備份格式 | **v9**(`PERSONAL_STATE_SUPPORTED_VERSIONS = [1..9]`)—— v81 因想逛 key 識別語意變更而升版 |
 | candidate automated validation | Node **94/94**、Chromium Playwright **185/185**；三種啟動情境 `healthCheck()=[]`、`pageerror=0` |
 | 既有 tag | `production-v18`、`production-v73`、`production-v110`、`production-v111`、`production-v113`、`production-v114`、**`production-v115`** |
@@ -163,12 +163,19 @@
 - 本次 forward bump **未改動任何測試檔的 generation 路徑** —— backlog #27 的遷移(2026-09-11)剛好在此回收成本。僅兩處必要維護:`theme-system.test.js` 的五筆滾動視窗尾四筆(歷史 release note,依裁定寫死),以及 `pwa-shell.test.js` 的 7 處轉義形式路徑(#27 當時的 grep 用 `shell/v114` 比對,漏掉正則字面裡的 `shell/v114/`)。 <!-- generation-exempt: 這一行描述的是 v114->v115 升版當下的事實(不得就地改的舊 generation、保留的舊世代),不隨後續升版變動 -->
 - 完整 gate、95/95 Node 與 **191/191 Playwright** 通過;已在 390×844 實測兩處修正生效且無視覺回歸。
 - **2026-09-12 發布**:PR #17 以 merge(非 squash／rebase)合併 `dev` `4141ae1` → `main`,merge commit **`6094584`**;合併前確認 PR head 等於 `origin/dev` 且該 head 的 `sanity` 與 `browser-qa` 皆 success。Netlify 由 `main` 自動部署 deploy **`6aa4ffff28234900086dd305`**、`state: ready`、`commit_ref` 相符、`published_at` 有值、`manual_deploy: false`。
-- **§F5 線上核對全數通過**:`sw.js` v115;`shell/v115/` 的 app-version／HTML marker／builtin-snapshot 三者皆 v115;root `app-version.js` 維持 v110 bridge;三處 `Cache-Control` 皆為 `no-cache, no-store, must-revalidate`;**v111／v112／v113／v114 四個舊世代皆仍回 200**(ADR 0019)。另以真實瀏覽器確認 SW 接管至 v115、快取換為 `okayama-trip-v115`、兩處修正皆生效。
+- **§F5 線上核對全數通過**:`sw.js` v115;`shell/v116/` 的 app-version／HTML marker／builtin-snapshot 三者皆 v115;root `app-version.js` 維持 v110 bridge;三處 `Cache-Control` 皆為 `no-cache, no-store, must-revalidate`;**v111／v112／v113／v114 四個舊世代皆仍回 200**(ADR 0019)。另以真實瀏覽器確認 SW 接管至 v115、快取換為 `okayama-trip-v115`、兩處修正皆生效。
 - **G1 經 Bar 裁定跳過**(同 v114 前例),6 項維持未勾 —— 跳過不等於通過。**G6 完成**:`production-v115` 指向 `6094584`。
+
+## v116 一致性批次(2026-09-12,dev,未發布)
+- backlog **#30／#32／#33／#34／#35(a)** 打包為一次 forward bump。共同性質是**把已經做對的事套用一致**,不是新功能。
+- **#34 是唯一的真缺陷**:`--mint` 從未定義,8 條規則的 `background` 靜默失效,其中 3 條是選取狀態。定義為 `--mint:#d6e8e4` 後,選取 chip 與未選白底的底色距離由 **0 變 54**。
+- **#31 經查證前提錯誤而關閉,不實作** —— `tests/theme-system.test.js` 的 `presentationTokens` 明列 `--entry-secondary-*` 為核定的非主題呈現 token 並當場擋下。**自動測試擋下一次基於錯誤前提的修正。**
+- 實機驗證抓到一個自造缺陷:移除「取消」後多品項模式只剩 **12px** 可點背景,已將 `.ledger-sheet` 背景保留區加大為 **56px**。
+- 四個 gate、**95/95 Node**、**191/191 Playwright** 通過,並在 390×844 以真實 SW 接管逐項實測。**尚未發布,待 Bar 決定。**
 
 ## 下一棒
 
-→ **由 Bar 在實體 Android 上完成 BB4 共 8 項**(判準版本現為 **v115**),另有 **v115 delta 清單 6 項**待 iPhone 補驗。兩者皆為發布後補驗 —— v115 已在正式站上。`docs/device-acceptance-log.md` 的 v114 段 22 項中,BB1–BB3 共 14 項已於 **2026-09-11** 由 Bar 在 iPhone 上確認通過;**剩下的 BB4 是併入的 v112 遺留項,只能在實體 Android 上驗。**
+→ **由 Bar 在實體 Android 上完成 BB4 共 8 項**(判準版本現為 **v115**;v116 若發布則改為 v116),另有 **v115 的 6 項**待 iPhone 補驗、**v116 的 10 項**待 iPhone 驗收。`docs/device-acceptance-log.md` 的 v114 段 22 項中,BB1–BB3 共 14 項已於 **2026-09-11** 由 Bar 在 iPhone 上確認通過;**剩下的 BB4 是併入的 v112 遺留項,只能在實體 Android 上驗。**
 
 > 最關鍵的是 **BB4-a**:Service Worker 能否在實體 Android 上安裝並接管。v112 修的連線槽耗盡缺陷**只在真機發生**,桌機與 Playwright 的 Android 模擬都重現不出來。判斷方式:開啟網站 → 關掉 → 再開,設定的版本資訊顯示 **v114** 才算通過(顯示 v110 代表 SW 沒接管)。
 >
