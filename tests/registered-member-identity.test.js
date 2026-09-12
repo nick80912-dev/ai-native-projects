@@ -1,9 +1,9 @@
 const assert = require('assert');
-const fs = require('fs');
 const vm = require('vm');
 const TripBuyToLedger = require('../buy-to-ledger.js');
 const TripLedgerUiState = require('../ledger-ui-state.js');
 const {extractFunction} = require('./support/source');
+const {appHtml}=require('./support/version');
 
 function createStorage(initial){
   const values=Object.assign({},initial||{});
@@ -15,7 +15,7 @@ function createStorage(initial){
 }
 
 function loadIdentityModule(){
-  const html=fs.readFileSync('shell/v114/index.html','utf8');
+  const html=appHtml();
   const start=html.indexOf('/* ================= ledgerRepository');
   const end=html.indexOf('function setLedgerTestMode(',start);
   assert(start>=0&&end>start,'ledger and identity module is present');

@@ -1,5 +1,120 @@
 # 07 版本紀錄
 
+## 2026-09-12 — CI:`browser-qa` 改為 dev push 也跑(反轉 2026-07-30 裁定)
+
+- `.github/workflows/qa.yml` 移除 `browser-qa` 的 job-level `if`,該 job 自此在 **`main` push／`dev` push／Pull Request** 都執行。
+- **反轉的依據是同日的實際事故**,不是偏好:v114→v115 升版漏改 `sw.js` 的 `versionedShellKind()` 三條路徑,混世代 install 守衛被靜默停用。當時 **四個 gate 與 95 個 Node 測試全部綠燈**,唯一抓到的是 `browser-qa` 裡的 `sw-update-cache.spec.js` mixed-generation 規格 —— 而它當時不在 dev push 上跑。若照 dev 的綠勾發布,會送出一個防線已死的 v115。
+- **原裁定的成本理由仍然成立**(裝 Chromium 約 5 分鐘),改變的是對「買到什麼」的評估:那 5 分鐘買的是 SW 換代正確性,而那是本專案最貴的失敗模式 —— 裝置端無聲壞掉,且依 ADR 0019 不得倒退覆寫、只能 forward bump。修一次的代價遠高於每次推送 5 分鐘。
+- `qa.yml` 檔頭的觸發策略說明與 `tests/README.md` 同步改寫,兩處都寫明反轉原因,避免日後有人只看到「dev 也跑很慢」而改回去。
+- **歷史紀錄刻意保留原樣**:`tasks/done.md` 的 backlog #21 條目、`docs/device-acceptance-log.md` 裡「`browser-qa` 未執行(0s)—— job-level `if` 條件如設計般在 dev push 上排除」等,都是當時的事實。
+- **無 runtime 變更**,不升版。
+
+## 2026-09-12 — v115:兩處觸控命中區修正(candidate,未發布)
+
+- **來源不是使用者回報**,是 2026-09-12 用 chrome-devtools MCP 在 **390×844** 實跑 v114 量測出來的。兩處都不是尺寸偏好問題,是**點了沒反應／關鍵時刻按不到**的功能性缺陷,與 backlog #28／#29(Bar 已裁定暫不處理)性質不同。
+
+### 修正一:設定頁「簡易結算模式」整列可點
+- `.settings-row` 是 `<div>`,52px 的列看起來就是標準可點列,但**沒有 onclick、input 沒有 id、也沒有 `<label>` 包覆** —— 實測點最左邊的文字**完全無反應**,真正的命中區只有右側 **22×22** 的 checkbox,約佔整列面積的 17%。
+- 改為 `<label class="settings-row settings-row-toggle">` 並補 `cursor:pointer`。`.settings-row` 本就設了 `display:flex` 與一組 button reset(它同時用在 `<button>` 列上),換成 `<label>` 版面不變。
+- **既有的 `aria-label="簡易結算模式(保留已確認結清)"` 未動** —— 可及名稱原本就是正確的,這不是無障礙命名缺陷,純粹是命中區缺陷。
+
+### 修正二:分帳待同步指示器的命中區 13px → 31px
+- `.ledger-summary-rate.pending` 是「N 筆待同步」時唯一的入口(`onclick="openLedgerSyncPanel()"`),但命中區只有 **13px 高**。在訊號差、紀錄正堆在離線佇列時,最該按的東西最難按。
+- **該處的扁平琥珀外觀是刻意設計,不是被誤刪的膠囊樣式** —— 既有規則明寫 `color:rgba(255,240,190,.9);cursor:pointer`。最初診斷為「`.ledger-summary-rate` 把膠囊樣式歸零」並試圖還原成膠囊,經查完整級聯後推翻:`.ledger-summary-rate.pending` 是後於它的明確設計規則。
+- 最終做法**只放大命中區、不動外觀**:`padding:9px 6px` 撐開按鈕自身 hit area,`margin:-9px -6px` 等量抵銷。實測命中區 13px → **31px**,而摘要卡高度在平常／待同步兩種狀態皆為 **231px**,**零版面位移**;平常態仍是 84×13 的匯率標籤且維持 `disabled`。
+
+### 為何必須 forward bump
+- 依 **ADR 0019**,已發布 generation 的 shell 資源不得就地改 —— 裝置已快取 `shell/v114/` 的 bytes。故走完整 **v114 → v115** 升版:新增 `shell/v115/`(v111–v114 一律保留)、`sw.js` 四處路徑與 `SW_VERSION`、`netlify.toml`、`runtime-assets.json`,以及 10 份活文件共 45 處 generation 引用。
+- **`APP_RELEASE_NOTES` 是固定五筆的滾動視窗**,加入 v115 後移除最舊的 v110(v72 核准的設計,不是讓清單長大)。
+
+### ⭐ 升版時漏改 `sw.js` 的 `versionedShellKind()`,混版本守衛被靜默停用
+
+- `versionedShellKind()` 第 74–76 行硬編碼三條 `shell/v114/` 路徑。它們**沒有 `./` 前綴**,與同檔 `CURRENT_*` 及 `SHELL` 的寫法不同,升版替換時整組被漏掉。
+- 後果不是報錯,是**靜默失效**:分類函式對每個資源都回傳 `''`,`responseMatchesWorker()` 因此一律回 true —— 新 worker 的 install 不再比對任何資源的版本,**混世代 App Shell 會被當成正常安裝**。這正是該函式唯一存在的理由。
+- **四個 gate 與 95 個 Node 測試全部沒抓到**;唯一抓到的是 Playwright 的 `sw-update-cache.spec.js` 「a mixed-generation App Shell makes the new SW install fail and preserves the active cache」。若當時只看 `sanity` 綠燈就發布,會送出一個防線已死的 v115。
+- **修法不只是改成 v115**,而是讓它無法再漂移:三條路徑改為由 `CURRENT_DOCUMENT`／`CURRENT_APP_VERSION`／`CURRENT_BUILTIN` 推導(沿用同檔 `isKnownShellRequest()` 既有的 `replace(/^\.\//,'')` 慣用法),並在函式上方寫明這次的教訓。
+- 這與 backlog #27 是**同一類缺陷**:必須靠人記得同步的硬編碼。差別在於 #27 失敗時會 ENOENT 大聲失敗,而這一個失敗時完全無聲。
+- 同時補上 Playwright spec 的 4 處硬編碼(`android-pwa-ui` 2 處含裸 `SW_VERSION='v114'`、`sw-update-cache` 1 處、`trip-three-scenarios` 1 處) —— #27 當時只掃 `tests/*.test.js`,沒掃 `tests/browser/*.spec.js`。
+- 修正後 **Playwright 191/191** 通過。
+
+### backlog #27 的即時回收
+- 上一次世代升版(`b4fa632`)必須修改 58 個測試檔的硬編碼路徑;**本次一個都不用改**。
+- 僅兩處必要維護:`theme-system.test.js` 五筆視窗的尾四筆(歷史 release note,依 Bar 2026-07-30 裁定寫死字面),以及 `pwa-shell.test.js` 的 **7 處轉義形式**路徑 —— #27 當時以 `shell/v114` 比對,漏掉寫在正則字面裡的 `shell\/v114\/`。**#27 的實際覆蓋率是 81 處中的 74 處,不是先前所記的全部**,本次一併補齊。
+
+### 驗收與狀態
+- 四個 gate 與 **95/95** 通過。已在 390×844 以真實 SW 接管的 v115 實測兩處修正生效,並確認正常狀態零視覺回歸。
+- `docs/device-acceptance-log.md` 新增 **v115 delta 清單 6 項**;**BB4 的判準版本由 v114 改為 v115** —— 這不是重做驗收(BB4 至今未執行過),而是判準隨現行 generation 前進,在 Android 上驗 v115 等同一次驗完四版。全檔未勾數 8 → **14**(BB4 8 + v115 6)。
+- **v115 為 candidate,尚未發布**;`origin/main` 與正式站仍是 v114。
+
+## 2026-09-11 — backlog #27:測試檔 shell generation 硬編碼遷移
+
+- **問題**:`tests/support/version.js` 建於 2026-07-30,當初就是為了消滅「8 個測試檔各自硬編碼版本字串」。但同一個問題在路徑層重新長出來 —— 58 個測試檔硬編碼 `shell/<current>/index.html` 共 **74 處**,每次升版都要手工掃一遍。
+- **helper 擴充**:新增 `shellPath(file)` 與 `appHtml()`。主流用法 `fs.readFileSync('shell/vNNN/index.html','utf8')`(64 處)收斂為 `appHtml()`;其餘 10 處(builtin-snapshot 路徑、文件內容斷言、runtime inventory 斷言)改用 `shellPath()` 組字串。順帶移除 39 個因此不再需要的 `fs`／`path` require。
+- **合成 fixture 一律保留字面**,沿用 Bar 2026-07-30 裁定:`doc-generation.test.js` 的 v898／v899／v900 是用來測 checker 本身的合成版本,`app-shell-version-integrity.test.js` 的 fixture 亦然。後者原本的 `netlify` 欄寫 `v114`,與同 fixture 其他欄位的 `v111` 不一致 —— checker 用的是版本無關的 `v\d+` 正則,該值從來不需要同步,但它剛好等於現行版本會誤導讀者,已改為 `v111`。
+- **以竄改版本實證解耦,而非只看測試仍通過**:把 `sw.js` 的 `SW_VERSION` 暫改為不存在的 `v999` 後重跑,**75 個測試跟著推導而失敗**(72 個因 `shell/v999` 路徑 ENOENT,3 個因 generation 一致性斷言正確偵測到目錄不存在與文件未登記),另 20 個不讀 shell 故不受影響。還原 `sw.js` 後 **95/95** 與四個 gate 全數通過。
+- **為何當初刻意不納入 gate**:backlog #27 原文寫明,測試指到舊 generation 會 ENOENT 大聲失敗、不是無聲錯誤,因此不阻擋發布。本次遷移消除的是每次升版的手工成本,不是修正正確性缺陷。
+- **無 runtime 變更**,不升版。
+
+## 2026-09-11 — G6 補建:`production-v113` tag
+
+- v113 的裝置驗收於本日完成(14／14)後,封鎖條件解除,建立並推送 annotated tag **`production-v113`**,指向 **`745bb6f`** —— 即 Netlify deploy `6a9fb443` 的 `commit_ref`,也就是 v113 當時正式站實際服務的 commit,而不是其後的文件 commit。
+- 建 tag 前核對:`745bb6f` 在 `origin/main` 上;該 commit 的 `sw.js` = **v113**、`shell/v113/app-version.js` = **v113**、root `app-version.js` 維持 **v110** bridge 未被誤升。
+- **Tag 訊息明記這是回溯補建**。正式站已於 2026-09-10 換成 v114,**無法再對 v113 做線上驗證** —— 所依據的是 2026-09-08 當時那一次線上核對(記於 `tasks/current.md`),不是建 tag 前剛驗過。這一點與 v114 的 tag 不同,不能混為一談。
+- 線上實查佐證 ADR 0019 的 immutable generation 仍成立:`shell/v113/app-version.js` 今日仍回 **200**,尚未升級的裝置繼續由 v113 資產服務。
+- 訊息同時記錄 G1 的完成時間與兩個貼門檻值(底色距離 12／門檻 10、焙茶操作色 4.53／門檻 4.5),以及 **`production-v112` 刻意缺席的原因** —— v112 的裝置驗收已併入 v114 的 BB4,需實體 Android,尚未執行。
+- 現行 production tags:`production-v18`／`production-v73`／`production-v110`／`production-v111`／**`production-v113`**／`production-v114`。
+- **無 runtime 變更**,不升版。
+
+## 2026-09-11 — G1 補驗:v113 與 v114 的 iPhone 半邊全數通過
+
+- **Bar 於 2026-09-11 確認 v114 在 iOS 上操作正常、驗收無誤。** 依此回填 `docs/device-acceptance-log.md`:v114 的 **BB1–BB3 共 14 項**(身分流程、forced 語意保留、主題與版本資訊)記為通過。
+- **v113 的 12 項一併通過**。Z1-a、Z2-a 已於 2026-09-10 通過,其餘 12 項於本日補齊,v113 清單至此 **14／14**。兩個貼門檻的值(杉綠↔霧藍／杉綠↔焙茶底色距離 12、焙茶操作色對比 4.53)已由真機判定成立。**`production-v113` 的裝置驗收條件解除**,是否補建 tag 由 Bar 決定。
+- **BB4 的 8 項實體 Android 維持未勾** —— iOS 的結論不外推到 Android。回填後全檔剩餘未勾數恰為 **8**,與 BB4 完全吻合。其中 **BB4-a** 仍是最關鍵項:v112 修的是 Chromium 同源連線槽耗盡導致 Service Worker 永遠卡在 installing,**桌機與 Playwright 的 Android 模擬都重現不出來**,只有實體 Android 能證明。**`production-v112` 因此仍不得建立** —— v112 的裝置驗收已併入 BB4。
+- 回填前先向 Bar 確認過範圍:v114 的 14 項 iPhone 中,BB2-a／b／c 需在**無身分狀態**下操作、BB3-d 需**飛航模式冷啟動**、BB3-e 需**備份匯出還原**,這五項不是日常使用會自然涵蓋的。Bar 明示 14 項全數通過,故全部回填。**`15_AI_EXECUTION_RULES.md` 的「AI 不得代勾」仍然成立** —— 本次寫入的依據是 Bar 的明示結論,不是自動驗證全綠的推論。
+- 同步改寫兩份文件共 17 處敘述:`docs/device-acceptance-log.md` 六處「全部留空／全部維持未勾」的字句,以及 `tasks/current.md` 的現況表、Gate 敘述、v113 段標題與「下一棒」。**下一棒已由「v114 發布後補驗 22 項」收斂為「BB4 共 8 項實體 Android」。**
+- **無 runtime 變更**,不升版。
+
+## 2026-09-11 — 開發工具：註冊 chrome-devtools MCP server
+
+- 新增 `.mcp.json`，向 agent 宣告 **chrome-devtools MCP server**（`chrome-devtools-mcp@latest`，實測 1.9.0、29 個工具）。補的是 PWA 除錯盲區：`sw.js` 的快取與接管行為、首屏、記憶體，過去只能靠 Playwright 的最終結果反推，讀不到 console、network waterfall 與 performance trace。相對既有瀏覽器工具，真正的增量是 `performance_start_trace`／`lighthouse_audit`／`take_heapsnapshot` 這三類。
+- **Windows 必須包 `cmd /c`**：官方 README 給的 `"command": "npx"` 在本機起不來。實測直接 spawn `npx`（`shell: false`）回 **ENOENT**——Windows 的 CreateProcess 不會自動補 `.cmd` 副檔名；改為 `"command": "cmd"` + `["/c", "npx", ...]` 後 handshake 正常、29 個工具全數載入。**照抄官方設定會踩到這個**。
+- **關掉預設的使用統計回報**：加 `--no-usage-statistics`。Google 對此採 opt-out 制，預設收集工具呼叫成功率、延遲與環境資訊。另記：performance 工具仍會把 trace URL 送往 Google CrUX API，要一併關閉需再加 `--no-performance-crux`。
+- **不影響 runtime，未 bump VERSION**：`.mcp.json` 是本機開發工具設定，不進 PWA bundle、不被 `sw.js` 快取、不列入 `runtime-assets.json`。依 `11_CODING_CONVENTION.md` 只有 `sw.js` 有改才必須進位，此次不符。
+- **與 `.claude/` 刻意不同**：`.claude/` 由 `.git/info/exclude` 本機排除（個人偏好不進 repo），`.mcp.json` 反向處理——它是專案層級的共享宣告，其他機器 clone 後即取得同一組除錯工具。
+- **安全註記**：此 server 可檢視並修改瀏覽器內的任何資料與 DevTools 內容。除錯時若該瀏覽器登著私人帳號，那些內容對 agent 可見。
+
+## 2026-09-10 — v112 Android 驗收併入 v114 清單（新增 BB4）
+
+- Bar 裁定把從 v112 掛到現在的 **Android 實體手機驗收併入 v114 清單**。v114 的正式站已含 v112／v113／v114 全部改動，在 Android 上驗 v114 等同一次驗完三版；v112 不再單獨掛著。
+- `docs/device-acceptance-log.md` 的 v114 段新增 **BB4（八項）**，清單由 14 項增為 **22 項**，全部維持未勾。BB1–BB3 走 iPhone，BB4 走實體 Android。
+- **BB4-a 是其中唯一非驗不可的**：v112 修的是 Chromium 同源連線數上限造成的 Service Worker 卡在 installing——舊 worker 先並行 fetch 全部資源、卻等 `Promise.all` 之後才由 `cache.put` 讀 body，未消耗的 stream 占住連線槽。修法是先把每個 response 讀成 Blob 再重建（`sw.js` 的 `bufferShellResponse()`）。**桌機 Chromium 與 Playwright 的 Android 模擬都重現不出來**，只有實體 Android 能證明它真的好了。清單裡寫明判斷方式：開啟 → 關掉 → 再開，版本資訊顯示 v114 才算通過（顯示 v110 代表 SW 沒接管），並提醒第一次開啟顯示 v110 是 root bridge 的正常設計。
+- v114 段檔頭改寫為「**發布後補驗**」定位，並明記處理方式與發布前不同：發現問題依 `16_OPS_PLAYBOOK.md` §A2 **forward bump 到 v115**，不得倒退覆寫——已經有裝置接管 v114。
+- 過程中 BB4 一度被插進 v113 段落（兩段的收尾句文字相同，字串比對命中了前一個），已移到 v114 的 BB3 之後並核對章節順序。
+
+## 2026-09-10 — G6：建立 `production-v114` tag
+
+- 依 Bar 指示建立並推送 annotated tag **`production-v114`**，指向 **`39c96b2`**——即 Netlify deploy `6aa25e07` 的 `commit_ref`，也就是正式站實際服務的 commit，而不是其後 `dev` 上的文件 commit。
+- 建 tag 前重新核對：`39c96b2` 在 `origin/main` 上；該 commit 的 `sw.js` = v114、`shell/v114/app-version.js` = v114、root `app-version.js` = v110；線上再查一次仍相符。
+- Tag 訊息沿用既有格式（驗證日期、Netlify deploy id、SW cache 名稱、回滾指引），並**明文記錄 G1 未執行**：Bar 於 2026-09-10 明示豁免，`docs/device-acceptance-log.md` 的 14 項維持未勾——**跳過不等於通過**。日後查這個 tag 的人不會誤以為它經過完整發版流程。
+- 現行 production tags：`production-v18`／`production-v73`／`production-v110`／`production-v111`／`production-v114`。v112 與 v113 未建 tag（裝置驗收未完成即被後續版本接續）。
+
+## 2026-09-10 — 治理層：Netlify 測試站永久移除，§F5 改為發布後核對
+
+- Bar 於 v114 發布後刪除 Netlify 測試站 `dev-trippilot-jp`。實查確認：該網域回 **404**，Netlify 專案清單只剩 `trippilot-jp`；正式站不受影響（`sw.js` v114、`shell/v114/app-version.js` v114、root bridge v110 皆正常）。
+- `16_OPS_PLAYBOOK.md` 由三通道改為**兩通道**模型（Netlify 正式站 + GitHub Pages），移除站台表的測試站列、手動部署模型說明與 §E 的雙站回滾註記。
+- **§F5 由「Netlify 測試站驗收前置核對」改寫為「正式站發布後線上核對」**。原本 2026-07-30 的教訓（測試站停在 v62 而 `dev` 已 v72，Git 分支更新不等於站台已更新）換了對象仍成立：**merge 完成不等於 Netlify 已發布**。新版核對含部署身分（`commit_ref` 等於 merge commit、`published_at` 不得為 null）、SW 版本、generation 三件組、root bridge、header 行為，以及**前一代 generation 必須仍可服務**（ADR 0019，回 404 就是把尚未升級的裝置打斷）。
+- **明記這是刻意接受的取捨**：`netlify.toml` 的 header／redirects 行為現在只能在使用者已經拿得到的版本上驗證。`tests/pwa-shell.test.js` 守得住「檔案裡有沒有寫對」，守不住「Netlify 有沒有照著做」。日後若要對這類設定做非平凡變更，應先重建測試站再改。
+- 同步更新 `.ai-manifest.json`（`delivery_rule` 原本還寫著「dev 推送自動部署至測試站」——自 2026-07-26 起就已不成立）、`08_AI_HANDOVER.md` 關鍵資源、`tasks/current.md`。歷史文件（`07_CHANGELOG.md` 既有條目、`docs/device-acceptance-log.md`、`adr/0005`）刻意保留原樣。
+- 撰寫新 §F5 時 `tools/check-doc-generation.js` 當場抓到我自己寫死的 `shell/v113`，已改為版本無關的寫法而非用 `generation-exempt` 豁免——豁免只會讓它繼續腐爛。
+
+## 2026-09-10 — v114 正式發布（released，未經 G1）
+
+- PR [#16](https://github.com/nick80912-dev/ai-native-projects/pull/16) 由 Bar 核准，以 **merge**（非 squash／rebase）合併 `dev` `064e932` → `main`，merge commit **`39c96b2`**。合併前確認 head 未變，且該 head 的遠端 CI 兩個 job 皆 success（`sanity` 與 **`browser-qa`**——後者只在 PR 與 main push 觸發，這是 v114 第一次在遠端跑完整 Playwright）。
+- Netlify 由 `main` 自動部署：deploy **`6aa25e07`**、`state: ready`、`commit_ref` = **`39c96b2`**（與 merge commit 相符）、**`published_at` 有值**、6 條 header 規則套用。**未用 API 直傳**，因此 commit 追溯與回滾路徑完整。
+- §F5 正式站線上核對全數通過：`sw.js` 的 `SW_VERSION` = **v114**；`shell/v114/` 的 `app-version.js`／HTML marker／`builtin-snapshot.js` 三者皆 **v114**；root `app-version.js` 維持 **v110** bridge 未被誤升；`sw.js` 與 `shell/v114/app-version.js` 的 `Cache-Control` 皆為 `no-cache, no-store, must-revalidate`。`shell/v113/app-version.js` 仍回 200——依 ADR 0019 的 immutable generation 設計，尚未升級的裝置繼續由 v113 資產服務，不受影響。
+- **本次發布未執行 G1 真機驗收**，為 Bar 2026-09-10 明示裁定。`docs/device-acceptance-log.md` 的 v114 段 BB1–BB3 共 14 項維持未勾——**跳過不等於通過**。依既有規則**未建立 production tag**。
+- 測試站 `dev-trippilot-jp` 的 v114 deploy `6aa25ba7` 仍為 `published_at: null`（舊 deploy 帶 `locked`），主網域停在 v73，未按 Publish。正式站已是 v114，測試站是否一併處理待 Bar 決定。
+
 ## 2026-09-10 — v114 身分不再是進門條件（candidate）
 
 - **問題**：A/B 實測（v113）顯示，快照套用成功後會呼叫 `refreshMemberSelector()`，其 else 分支在沒有身分時直接 `openMemberSelector(true)`。使用者一連網、還在「今天」頁、零互動就被 forced 身分牆全螢幕擋住；forced 模式不渲染 `×`，`Escape` 與點背景皆無效，退不出去。封鎖 CSV（等同離線、不會有成功同步）則全程沒有 overlay——觸發點是**同步完成**，不是 boot、也不是進入分帳。v112 只移除了 boot 觸發。

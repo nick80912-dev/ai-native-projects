@@ -5,8 +5,14 @@
 #
 # 觸發策略(2026-07-30 修訂,對應 backlog #21 的 sanity 部分):
 #   sanity      → main push / dev push / PR 都跑。輕量、無瀏覽器,dev 每次推送都值得綠勾。
-#   browser-qa  → 只在 PR 與 main push 跑。要裝 Chromium,dev 每次推送都跑代價太高;
-#                 以 job-level if 條件排除 dev push,而不是拆成兩個 workflow。
+#   browser-qa  → main push / dev push / PR 都跑(2026-09-12 修訂)。
+#
+#   為什麼反轉 2026-07-30 的「dev push 不跑」決定:v114→v115 升版時漏改 sw.js 的
+#   versionedShellKind() 三條路徑,混世代 install 守衛被靜默停用 —— 四個 gate 與 95 個
+#   Node 測試全部綠燈,唯一抓到的是本 job 的 sw-update-cache mixed-generation 規格。
+#   當時它只在 PR 跑,若照 dev 的綠勾發布就會送出防線已死的版本。
+#   結論:Chromium 那 ~5 分鐘買的是「SW 換代正確性」,而那正是本專案最貴的失敗模式
+#   (裝置端無聲壞掉、且依 ADR 0019 不得倒退覆寫,只能 forward bump)。
 name: qa-sanity
 on:
   push:
@@ -38,8 +44,6 @@ jobs:
   browser-qa:
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    # dev push 不跑完整 Playwright:只在 PR 與 main push 執行
-    if: github.event_name == 'pull_request' || github.ref == 'refs/heads/main'
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7

@@ -2,9 +2,10 @@ const assert = require('assert');
 const fs = require('fs');
 const path = require('path');
 const vm = require('vm');
+const {shellPath}=require('./support/version');
 
 const root = path.resolve(__dirname, '..');
-const files = ['shell/v114/index.html'];
+const files = [shellPath('index.html')];
 
 function extractFunction(html, name) {
   const start = html.indexOf(`function ${name}(`);

@@ -1,8 +1,9 @@
 # DONE(已完成)
 
-> 更新於 2026-09-10。完成事項來自 `.ai-manifest.json` status.done、既有 CHANGELOG 與 Bar 驗收確認；細節仍以 07_CHANGELOG.md 為準。
+> 更新於 2026-09-11。完成事項來自 `.ai-manifest.json` status.done、既有 CHANGELOG 與 Bar 驗收確認；細節仍以 07_CHANGELOG.md 為準。
 
 ## 已完成
+- 2026-09-11:backlog #27 完成。測試檔的 shell generation 硬編碼遷移:74 處 `shell/v114/...` 全數改由 `tests/support/version.js` 推導,涵蓋 58 個測試檔。helper 新增 `shellPath(file)` 與 `appHtml()`,把主流的 `fs.readFileSync('shell/vNNN/index.html','utf8')` 收斂為 `appHtml()`;順帶移除 39 個因此不再需要的 `fs`／`path` require。合成 fixture 依 Bar 2026-07-30 裁定保留字面(`doc-generation` 的 v898–v900、版本完整性 fixture 的 v111)。**以竄改 `sw.js` 版本為 v999 實證解耦**:75 個測試跟著推導失敗(72 個路徑 ENOENT + 3 個 generation 一致性斷言),20 個不碰 shell 故不受影響;還原後 95/95 與四個 gate 全過。
 - 2026-09-10:backlog #26 完成。`qa.yml` 的 `actions/checkout` 與 `actions/setup-node` 由已棄用 Node 20 的 `@v4` 升到 `@v7`(四處),兩個 action 自 v5 起即以 node24 執行,GitHub 的棄用 annotation 消除。**未採 backlog 原文寫的 `@v5`**:該建議寫於 2026-07-31,當時 v5 是最新;現行最新為 checkout v7.0.1／setup-node v7.0.0,升到 v7 可避免三個月後再修一次,且 v5–v7 的 runtime 同為 node24。已核對破壞性變更:setup-node v5／v6 的自動快取只在 `package.json` 有 `packageManager` 欄位時觸發,本專案沒有該欄位且 `package-lock.json` 存在,`browser-qa` 的顯式 `cache: npm` 行為不變;checkout v7 只新增 fork PR 於 `pull_request_target`／`workflow_run` 的封鎖,本 workflow 未使用這兩個事件。
 - 2026-08-11：backlog #22 完成。採用專用 HID 而非 PID 作為 Hotel profile join key：公開 Places L1 新增 `HID`,L4／L15／L24／L33／L42 分別讓 P002／P013／P022／P031／P040 引用 H001；五筆 travel 值原樣保留。Schema 3.0、BUILTIN、條件式 Validator 與 runtime exact resolver 已同步,住宿／Hotels 名稱改為只供顯示；Ledger 維持位置式 21 欄 Schema 2.9,個人備份維持 v9。
 - 2026-08-10：backlog #24 於 v99／v100 完成雙版本實驗後，由 Bar 裁定取消而非功能完成。實機顯示時機與使用者已看到新版內容的時間軸不一致，必要性不足以支持跨資源 generation 協議；v101 完整移除全域更新提示與明確 reload action，保留原 SW lifecycle、cache strategy、離線 fallback 與設定頁版本資訊。未來若重啟須視為新需求重新設計。

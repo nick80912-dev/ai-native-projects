@@ -1,7 +1,8 @@
 const assert=require('assert');
 const fs=require('fs');
+const {appHtml}=require('./support/version');
 
-const html=fs.readFileSync('shell/v114/index.html','utf8');
+const html=appHtml();
 const sw=fs.readFileSync('sw.js','utf8');
 
 function extractFunction(source,name){

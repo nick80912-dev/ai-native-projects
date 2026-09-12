@@ -1,7 +1,7 @@
 const assert = require('assert');
-const fs = require('fs');
 const vm = require('vm');
 const TripBuyToLedger = require('../buy-to-ledger.js');
+const {appHtml}=require('./support/version');
 
 function createStorage(initial){
   const values=Object.assign({},initial||{});
@@ -13,7 +13,7 @@ function createStorage(initial){
 }
 
 function loadModule(storage){
-  const source=fs.readFileSync('shell/v114/index.html','utf8');
+  const source=appHtml();
   const start=source.indexOf('/* ================= ledgerRepository');
   const end=source.indexOf('/* ================= 分帳',start);
   assert(start>=0&&end>start,'ledger helper section exists');

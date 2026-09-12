@@ -39,4 +39,20 @@ function expectedCacheName() {
   return 'okayama-trip-' + swVersion();
 }
 
-module.exports = { root, read, appVersion, swVersion, expectedCacheName };
+/* 目前 generation 的路徑與內容 —— 測試不得自己拼 `shell/vNNN/...`。
+   2026-09-11:當時 59 個測試檔各自硬編碼 `shell/<current>/index.html`,共 74 處,
+   每次升版都要手工掃一遍 —— 正是這個 helper 當初(2026-07-30)要消滅的同一個問題,
+   只是從版本字串搬到了路徑層。凡是要取用「目前 generation」的資產,一律走這裡。
+
+   ⚠️ 仍不適用(沿用 Bar 2026-07-30 裁定):合成版本 fixture(v898/v899/v900)、
+   歷史 release note 版本、migration 舊版本、已淘汰 cache 名稱的負向斷言 —— 一律保留字面。 */
+function shellPath(file) {
+  return file ? 'shell/' + swVersion() + '/' + file : 'shell/' + swVersion();
+}
+
+/* 目前 generation 的 App 文件內容。取代 fs.readFileSync('shell/vNNN/index.html','utf8')。 */
+function appHtml() {
+  return read(shellPath('index.html'));
+}
+
+module.exports = { root, read, appVersion, swVersion, expectedCacheName, shellPath, appHtml };

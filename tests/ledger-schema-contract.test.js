@@ -1,6 +1,7 @@
 const assert = require('assert');
 const fs = require('fs');
 const vm = require('vm');
+const {appHtml}=require('./support/version');
 
 const sandbox = {
   console:{log:function(){},warn:function(){},error:function(){}},
@@ -24,7 +25,7 @@ assert.deepStrictEqual(
   ['輸入幣別','免稅品','價格方式','稅率','優惠券金額']
 );
 
-const html = fs.readFileSync('shell/v114/index.html','utf8');
+const html = appHtml();
 assert.match(html,/version:\s*'3\.0 \(2026-08-11\)'/,'inline fallback Schema version is 3.0');
 ['expense_correction_item','expense_correction_commit','expense_void_commit'].forEach(function(type){
   assert.match(html,new RegExp("'"+type+"':'"+type+"'"),'inline fallback contains '+type);

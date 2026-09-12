@@ -1,6 +1,6 @@
 /* ===== sw.js — App 外殼離線防線 =====
    策略(2026-07-11 定案,2026-07-30 依 C1／C1.5 實證修訂;對應 16_OPS_PLAYBOOK 部署章節):
-   1. 只管同源 App Shell；root index／app-version 是 frozen v110 bridge，current version-bearing assets 在 shell/v114/
+   1. 只管同源 App Shell；root index／app-version 是 frozen v110 bridge，current version-bearing assets 在 shell/v115/
    2. 已安裝外殼採 cache-first:同一個 worker 生命週期固定同世代資產;新版由 install 驗證完成後原子切換
    3. CSV 資料(docs.google.com)一律放行不攔截 → 資料層維持既有三層防線
       (BUILTIN → localStorage → background sync),SW 與資料層職責不重疊
@@ -24,15 +24,15 @@
      非外殼同源 fetch 用 no-cache —— 允許 304,兼顧流量與更新
    已安裝外殼不再逐次打網路,避免舊 worker 把新部署的 runtime module 寫入舊世代快取。
 */
-var SW_VERSION='v114';
+var SW_VERSION='v115';
 var CACHE_NAME='okayama-trip-'+SW_VERSION;
-var CURRENT_DOCUMENT='./shell/v114/index.html';
-var CURRENT_APP_VERSION='./shell/v114/app-version.js';
-var CURRENT_BUILTIN='./shell/v114/builtin-snapshot.js';
+var CURRENT_DOCUMENT='./shell/v115/index.html';
+var CURRENT_APP_VERSION='./shell/v115/app-version.js';
+var CURRENT_BUILTIN='./shell/v115/builtin-snapshot.js';
 var SHELL = [
-  './shell/v114/index.html',
-  './shell/v114/app-version.js',
-  './shell/v114/builtin-snapshot.js',
+  './shell/v115/index.html',
+  './shell/v115/app-version.js',
+  './shell/v115/builtin-snapshot.js',
   './navigation-intent.js',
   './diagnostic-impact.js',
   './today-view.js',
@@ -69,11 +69,16 @@ function scopeRelativePath(url){
   return pathname.slice(scopePath.length).replace(/^\/+/, '');
 }
 
+/* 三條路徑一律由上方 CURRENT_* 推導,不得各自硬編碼 generation。
+   2026-09-12:v114->v115 升版時這裡被漏掉(它們沒有 './' 前綴,與 SHELL 的寫法不同),
+   分類函式因此對所有資源回傳 '',responseMatchesWorker() 一律放行 —— 混版本守衛被靜默停用。
+   單元測試與四個 gate 都沒抓到,只有 Playwright 的 mixed-generation 規格抓到。 */
 function versionedShellKind(url,isNavigate){
   var relative=scopeRelativePath(url);
-  if(isNavigate||relative==='shell/v114/index.html')return 'html';
-  if(relative==='shell/v114/app-version.js')return 'app';
-  if(relative==='shell/v114/builtin-snapshot.js')return 'builtin';
+  var shellPath=function(entry){return String(entry).replace(/^\.\//,'');};
+  if(isNavigate||relative===shellPath(CURRENT_DOCUMENT))return 'html';
+  if(relative===shellPath(CURRENT_APP_VERSION))return 'app';
+  if(relative===shellPath(CURRENT_BUILTIN))return 'builtin';
   return '';
 }
 

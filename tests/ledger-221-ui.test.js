@@ -1,9 +1,9 @@
 const assert=require('assert');
-const {appVersion,swVersion}=require('./support/version');
+const {appVersion,swVersion,appHtml}=require('./support/version');
 const fs=require('fs');
 const vm=require('vm');
 
-const html=fs.readFileSync('shell/v114/index.html','utf8');
+const html=appHtml();
 
 function extractFunction(name,nextName){
   const start=html.indexOf('function '+name+'(');

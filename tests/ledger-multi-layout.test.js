@@ -1,8 +1,8 @@
 const assert=require('assert');
-const fs=require('fs');
 const vm=require('vm');
+const {appHtml}=require('./support/version');
 
-const source=fs.readFileSync('shell/v114/index.html','utf8');
+const source=appHtml();
 
 assert(source.includes('function renderLedgerMultiBillInfo(draft)'),
   'multi-item mode has a dedicated shared bill information renderer');

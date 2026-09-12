@@ -3,14 +3,14 @@
 > 原則:每個檔案責任單一,命名一致,AI 一眼知道去哪修改。不使用 common/misc/temp 這類模糊命名。
 
 ## 正式 App 與 PWA 檔案(Netlify 部署樹)
-> root `index.html`／`app-version.js` 是 byte-locked v110 bridge；current App 位於 `shell/v114/`，只有 v114 worker 成功啟用後才接管 root 導覽。裝置照片、採買轉記帳、Ledger UI、Shopping UI 與 Trip progression 各有獨立 runtime 邊界。
+> root `index.html`／`app-version.js` 是 byte-locked v110 bridge；current App 位於 `shell/v115/`，只有 v114 worker 成功啟用後才接管 root 導覽。裝置照片、採買轉記帳、Ledger UI、Shopping UI 與 Trip progression 各有獨立 runtime 邊界。
 
 ```
 index.html              v110 bridge App（必須維持 origin/main v110 bytes）
 app-version.js          v110 bridge 顯示版本（不代表 current generation，禁止升為 current generation）
-shell/v114/index.html   current App:UI 殼 + CSS + 內嵌 JS（依區塊分層，見下）
-shell/v114/app-version.js current App 顯示版本（必須與 sw.js 的 SW_VERSION 一致）
-shell/v114/builtin-snapshot.js 工具產生、與 current App／SW 同版的 BUILTIN 離線資產（Tier 3，禁手改）
+shell/v115/index.html   current App:UI 殼 + CSS + 內嵌 JS（依區塊分層，見下）
+shell/v115/app-version.js current App 顯示版本（必須與 sw.js 的 SW_VERSION 一致）
+shell/v115/builtin-snapshot.js 工具產生、與 current App／SW 同版的 BUILTIN 離線資產（Tier 3，禁手改）
 shopping-photo-store.js 採買照片壓縮與 IndexedDB put/get/remove 邊界
 buy-to-ledger.js        採買轉記帳的純 domain 與 workflow coordinator（UMD/CommonJS）
 ledger-ui-state.js      Ledger history／entry／correction state 與 ordered effects workflow（UMD/CommonJS）
@@ -35,12 +35,12 @@ okayama-peach-badge.png 診斷徽章圖
 netlify.toml            Netlify 快取 header 設定
 .ai-manifest.json       AI 導航檔(接手第一步只讀這份)
 ```
-> App UI、DOM adapter 與多數流程維持在單一 current generation document `shell/v114/index.html`；獨立 runtime modules 由 `runtime-assets.json` 登錄並以 `tools/check-runtime-assets.js` 驗證入口、SW 與文件一致性。root bridge 不是日常功能修改目標。
+> App UI、DOM adapter 與多數流程維持在單一 current generation document `shell/v115/index.html`；獨立 runtime modules 由 `runtime-assets.json` 登錄並以 `tools/check-runtime-assets.js` 驗證入口、SW 與文件一致性。root bridge 不是日常功能修改目標。
 
-## Current App HTML `shell/v114/index.html` 內部分層(區塊順序,即邏輯模組)
+## Current App HTML `shell/v115/index.html` 內部分層(區塊順序,即邏輯模組)
 ```
 SCHEMA        來自 schema.js(pubBase + sheets.*.gid + 欄位/型別規格)
-BUILTIN       由 shell/v114/builtin-snapshot.js 載入的 8 表離線後備；current HTML 只留安全 guard
+BUILTIN       由 shell/v115/builtin-snapshot.js 載入的 8 表離線後備；current HTML 只留安全 guard
 UTILS         storage / toast / CSV parser / copyText / date
 VALIDATOR     來自 validator.js(表頭驗證 + 六類日誌 + session-only 診斷緩衝)
 PARSER        parseTable / parseKeyValue / parseExpensesFree(Schema 驅動)
@@ -70,10 +70,11 @@ tasks/                     即時狀態唯一權威(current/backlog/done)
 tests/                     測試資產(交付必附)
 tools/                     檢查腳本(文件標題、runtime 版本、活文件 generation 與 runtime asset 一致性)
 .github/workflows/         Sanity CI(qa.yml,main push/PR 自動檢查;dev 目前跑同等本機 CI)
+.mcp.json                  chrome-devtools MCP server 宣告(本機除錯工具,不進 runtime)
 docs/superpowers/          功能設計規格與實作計畫
 schema.js / validator.js   資料規格 SSoT / 防錯防線(Tier 1 原始碼)
 index.html / app-version.js v110 byte-locked bridge 正式入口
-shell/v114/                current App document／version／generated BUILTIN generation
+shell/v115/                current App document／version／generated BUILTIN generation
 shopping-photo-store.js    採買照片的裝置本機 IndexedDB 邊界
 buy-to-ledger.js           採買轉記帳的純 domain／workflow runtime module
 ledger-ui-state.js         Ledger history／entry／correction state／workflow runtime module

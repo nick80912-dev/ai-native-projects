@@ -9,7 +9,7 @@
 2. 找到上一個正常的 deploy → 點入 → **Publish deploy**(即時切回舊版,無需重新上傳)。
 3. 回滾後在 07_CHANGELOG 記錄:回滾時間、原因、退回的版本。
 > Netlify 每次部署皆保留快照,拖放部署也一樣可回滾;這是本專案的第一逃生門。
-> 正式站與測試站為兩個獨立 Netlify site，部署快照與回滾操作各自獨立。
+> 正式站是唯一的 Netlify site。測試站 `dev-trippilot-jp` 已於 2026-09-10 由 Bar 永久刪除(見 §F5)。
 
 ### A2. Service Worker 快取災難
 - 症狀:回滾後使用者仍看到壞版(SW 快取住舊 Shell)。
@@ -46,9 +46,8 @@
    - 若壞版是一個 merge commit(正常 Release Flow 的情況)→ 開分支做 `git revert -m 1 <merge-sha>`,走 PR 由 Bar merge 回 `main`。
    - 若需要整棵樹回到 v18 內容 → 開分支後 `git checkout production-v18 -- .`,commit 後同樣走 PR。
    - **兩種都不得直接 push `main`**;正式站部署由 merge 觸發,繞過 PR 等於繞過 §E Release Flow。
-4. **Netlify 端**(現為 `main`=正式站 `trippilot-jp.netlify.app` / `dev`=測試站 `dev-trippilot-jp.netlify.app` 雙站架構):
+4. **Netlify 端**(`main` = 正式站 `trippilot-jp.netlify.app`,單站架構):
    - 正式站追蹤 `main`,PR merge 後**自動部署**,無需手動觸發。
-   - 測試站自動部署已於 2026-07-26 由 Bar 手動關閉,回滾**不會**同步影響測試站;若要讓測試站也呈現舊版,需在 Netlify 後台手動觸發。
    - `dev` 分支不受回滾影響 — 壞版程式仍在 `dev` 上,修好後再重新走 Release Flow。
 5. **Service Worker**(依 §A2,回滾最容易踩的一步):
    - v18 的 `sw.js` 是 `CACHE_NAME = 'okayama-trip-v18'` **硬編碼、無 `importScripts`**;v72 是 `importScripts('./app-version.js')` + `'okayama-trip-'+APP_VERSION`。兩者位元組不同,SW 會判定更新並在 activate 清掉 `okayama-trip-v72`,「開兩次生效」限制仍在。
@@ -100,12 +99,10 @@ dev → Pull Request → Bar Review → Bar Merge → Netlify Production Deploy 
 |---|---|---|---|---|
 | Netlify 正式站 | `https://trippilot-jp.netlify.app/` | `main` | Bar 核准 PR merge 後自動部署 | 正式發布 |
 | GitHub Pages | `https://nick80912-dev.github.io/ai-native-projects/` | `dev` | 每次推送自動發布 | **日常 HTTPS／PWA／離線驗收的預設通道**(見 §F3) |
-| Netlify 測試站 | `https://dev-trippilot-jp.netlify.app/` | `dev` | 已停用自動部署(2026-07-26 由 Bar 手動關閉)。需要時於 Netlify 後台手動觸發部署;待系統穩定後,由 Bar 決定並恢復自動部署 | 只驗證 Netlify 特有行為(見下) |
 
-- 三個通道為獨立 origin:網域、Service Worker 快取、localStorage 與 PWA 安裝完全隔離,任一站的狀態不污染其他站。
-- **測試站目前採手動部署模型。GitHub 分支更新不代表測試站已同步更新**;需要使用測試站驗收時,應由 Netlify 後台手動觸發部署。自動部署的恢復時機由 Bar 決定。
+- 兩個通道為獨立 origin:網域、Service Worker 快取、localStorage 與 PWA 安裝完全隔離,任一站的狀態不污染另一站。
 - 日常驗收改走 GitHub Pages,以降低 Netlify 額度消耗。
-- 測試站保留的用途:驗證 `netlify.toml` 定義的 header 行為(例如 `sw.js` 的 `no-cache, no-store, must-revalidate`)、redirects,或其他 GitHub Pages 無法重現的 Netlify 特有整合。**這些是 Pages 驗收不能取代的**(Pages 不讀 `netlify.toml`,一律 `max-age=600`)。
+- **`netlify.toml` 的 header／redirects 行為在發布前無法驗證。** GitHub Pages 不讀 `netlify.toml`(一律 `max-age=600`),而測試站已刪除。`tests/pwa-shell.test.js` 只能守住「`netlify.toml` 裡有沒有寫對」,守不住「Netlify 有沒有照著做」。該項驗證已移至**發布後**的 §F5 正式站線上核對 —— 這是 2026-09-10 刪除測試站時**刻意接受的取捨**。
 
 **Release Checklist**:
 - CI PASS
@@ -114,7 +111,7 @@ dev → Pull Request → Bar Review → Bar Merge → Netlify Production Deploy 
 - Documentation 已同步
 - ADR 已更新(若涉及架構)
 
-Push 至 `dev` 會自動更新 GitHub Pages(測試站需手動觸發),**兩者都不等於正式 Release**。只有 Bar 核准並 Merge `dev → main` 才會觸發正式站部署。GitHub Pages 驗收通過**不代表**已發布;正式發布責任仍依本節 Release Flow 與 Bar 核准執行。
+Push 至 `dev` 會自動更新 GitHub Pages,**但不等於正式 Release**。只有 Bar 核准並 Merge `dev → main` 才會觸發正式站部署。GitHub Pages 驗收通過**不代表**已發布;正式發布責任仍依本節 Release Flow 與 Bar 核准執行。
 
 ## F. 非 Netlify 驗收流程(2026-07-26 新增)
 > 目的:讓日常 UI 與資料邏輯的反覆驗收不必依賴 Netlify 部署。本節不改變 §E 的發布責任。
@@ -184,7 +181,7 @@ GitHub Pages URL：https://nick80912-dev.github.io/ai-native-projects/
 - `navigator.serviceWorker.register('sw.js')` 未指定 `updateViaCache`,瀏覽器預設 `'imports'`,最上層 SW script 本來就會繞過 HTTP 快取,因此 SW 版本更新仍會被偵測到;真正可能延遲的是 `index.html`(CDN 最多壓 10 分鐘)。**驗收 SW 更新時勿把 CDN 延遲誤判成「SW 沒更新」。**
 - 整個 repo 會以靜態站公開(`tasks/`、`docs/`、`07_CHANGELOG.md` 皆可直接瀏覽)。repo 本來就是 public,不構成新增暴露。
 - Pages 沒有獨立的部署快照可回滾;它永遠等於 `dev` 當下的內容。要退版就 `git revert` 後推 `dev`(見 §A4)。
-- **使用測試站驗證 Netlify 特有的 headers、redirects 或其他平台行為前,必須先確認測試站已手動部署至目標 commit,並核對 Netlify 顯示的部署 commit SHA;否則實際驗證的可能是舊版本。** 測試站已停用自動部署(見 §E),`dev` 有新推送不代表測試站已跟上。
+- **Netlify 特有的 headers／redirects 已無發布前驗證通道**(測試站於 2026-09-10 刪除)。這類行為一律在發布後依 §F5 於正式站核對;`dev` 上的推送與 GitHub Pages 驗收都不涵蓋它。
 
 ### F4. 標準驗收層級
 日常開發採以下順序,**能在前一層擋掉的問題就不要往後推**:
@@ -198,37 +195,50 @@ GitHub Pages URL：https://nick80912-dev.github.io/ai-native-projects/
 **原則**:
 - 一般 UI 與資料邏輯修改**不得**為了每次驗收反覆依賴 Netlify 部署。
 - LAN 負責快速真機操作驗收;GitHub Pages 負責 HTTPS、子路徑、PWA 與離線驗收。
-- Netlify 留給正式站驗證、Netlify 特有 headers／redirects,或正式 Release。
+- Netlify 只剩正式站:正式 Release,以及發布後才驗得到的 Netlify 特有 headers／redirects(見 §F5)。
 - **GitHub Pages 驗收通過不等於正式 Release。** 正式發布責任仍依 §E 的 Release Flow 與 Bar 核准執行。
 
-### F5. Netlify 測試站驗收前置核對(2026-07-30 新增,由 Bar 裁定)
+### F5. 正式站發布後線上核對(2026-07-30 建立,2026-09-10 改寫)
 
-**背景**:測試站自動部署已於 2026-07-26 由 Bar 手動關閉。2026-07-30 實測發現 `dev-trippilot-jp.netlify.app` 線上仍停在 **SW v62**(`var CACHE_NAME = 'okayama-trip-v62';`),`app-version.js` 回 **404** —— 與當時 `dev` 分支的 v72 差了 10 個版本。**Git 分支更新不等於測試站已更新。**
+**沿革**:本節原為「Netlify 測試站驗收**前置**核對」。測試站 `dev-trippilot-jp` 於 **2026-09-10 由 Bar 永久刪除**,前置驗證通道不再存在,本節改為**發布後**在正式站執行。
 
-**規則:使用 Netlify 測試站驗收任何版本前,必須先手動部署到目標 commit,再以線上實際回應核對三件事,不得只看 Git 分支。**
+原本的教訓仍然成立、只是換了對象:2026-07-30 曾實測發現測試站線上停在 SW v62 而 `dev` 已是 v72,差了 10 個版本 —— **Git 分支更新不等於站台已更新**。同一個道理現在適用於正式站:**merge 完成不等於 Netlify 已發布**。
+
+**規則:每次正式站部署後,必須以線上實際回應核對下列各項,不得只看 merge 成功或 Netlify 顯示 ready。**
 
 ```
-# 1. SW 版本(應等於目標 commit 的 sw.js SW_VERSION)
-curl -s https://dev-trippilot-jp.netlify.app/sw.js | grep SW_VERSION
+# 0. 部署身分(Netlify API 或後台)
+#    commit_ref 必須等於 merge commit;published_at 必須有值。
+#    published_at 為 null = 建好但沒上線,主網域仍服務舊版。
+
+# 1. SW 版本(應等於 main 的 sw.js SW_VERSION)
+curl -s https://trippilot-jp.netlify.app/sw.js | grep "^var SW_VERSION"
 
 # 2. Current immutable generation 三件組(以下 v114 需替換為目標 SW_VERSION)
-curl -s https://dev-trippilot-jp.netlify.app/shell/v114/app-version.js
-curl -s https://dev-trippilot-jp.netlify.app/shell/v114/index.html | grep BUILTIN_HTML_VERSION
-curl -s https://dev-trippilot-jp.netlify.app/shell/v114/builtin-snapshot.js | grep BUILTIN_ASSET_VERSION
+curl -s https://trippilot-jp.netlify.app/shell/v115/app-version.js
+curl -s https://trippilot-jp.netlify.app/shell/v115/index.html | grep BUILTIN_HTML_VERSION
+curl -s https://trippilot-jp.netlify.app/shell/v115/builtin-snapshot.js | grep BUILTIN_ASSET_VERSION
 
 # 2b. Root bridge 必須仍是 predecessor v110，不得誤升為 current
-curl -s https://dev-trippilot-jp.netlify.app/app-version.js
+curl -s https://trippilot-jp.netlify.app/app-version.js
 
-# 3. header 行為(測試站存在的意義就是驗這個,GitHub Pages 無法重現)
-curl -sI https://dev-trippilot-jp.netlify.app/sw.js | grep -i cache-control
-curl -sI https://dev-trippilot-jp.netlify.app/shell/v114/app-version.js | grep -i cache-control
+# 3. header 行為(測試站刪除後,這是唯一驗得到的地方;GitHub Pages 無法重現)
+curl -sI https://trippilot-jp.netlify.app/sw.js | grep -i cache-control
+curl -sI https://trippilot-jp.netlify.app/shell/v115/app-version.js | grep -i cache-control
+
+# 4. 前一代 generation 必須仍可服務(ADR 0019)
+#    尚未升級的裝置靠它繼續運作,回 404 就是把舊裝置打斷。
+#    以「前一代」的版本號代入,例如發布 v114 時查的是 v113。
+curl -s -o /dev/null -w "%{http_code}" https://trippilot-jp.netlify.app/shell/<前一代>/app-version.js
 ```
 
-**裝置端第 4 項核對**(前三項通過後,在真機或桌面 DevTools):
+**裝置端第 5 項核對**(前四項通過後,在真機或桌面 DevTools):
 - Application → Cache Storage 的名稱應為 `okayama-trip-<目標版本>`;
-- 展開該 cache，`shell/v114/index.html`／`app-version.js`／`builtin-snapshot.js` 三者必須都是目標版本；`schema.js` 等 reused module 必須存在且由該 cache 提供。root `index.html`／`app-version.js` 不屬於 v114 cache target，應維持 v110 bridge。**不是只看 cache 名稱對就算過**。
+- 展開該 cache，`shell/v115/index.html`／`app-version.js`／`builtin-snapshot.js` 三者必須都是目標版本；`schema.js` 等 reused module 必須存在且由該 cache 提供。root `index.html`／`app-version.js` 不屬於 v114 cache target，應維持 v110 bridge。**不是只看 cache 名稱對就算過**。
 
-**任何一項不符 → 停止驗收,先重新手動部署。**在錯的版本上驗收出來的結論沒有意義,而且會誤導後續判斷。
+**任何一項不符 → 立即依 §A2 forward bump 修正,不得倒退覆寫。** 因為這是發布後核對,不符即代表**線上已經是壞的**,處理優先於一切其他工作。
+
+> ⚠️ **這是刪除測試站後刻意接受的取捨**:header／redirects 這類 Netlify 特有行為,現在只能在**使用者已經拿得到**的版本上驗證。若日後這類設定要做非平凡的變更,應先重建一個測試站再改,而不是直接改正式站。
 
 > GitHub Pages(`https://nick80912-dev.github.io/ai-native-projects/`)追蹤 `dev` 且每次推送自動發布,不需要本節的手動部署步驟;但它固定送 `Cache-Control: max-age=600`,**不讀 `netlify.toml`**,所以驗不了 header 行為 —— 兩個通道各驗各的,見 §E。
 
@@ -270,7 +280,7 @@ node tools/refresh-builtin-snapshot.js
 npx playwright test tests/browser/trip-three-scenarios.spec.js
 ```
 
-`--write` 會在 current generation 目錄（v114 為 `shell/v114/`）staging `index.html` marker 與 `builtin-snapshot.js`，fsync／close／回讀後才進行雙檔替換；任一步失敗都將兩個 target 回復為原始 bytes。root v110 bridge 不由此工具修改。App、SW 或 asset 升版時也必須透過本工具更新 marker／asset 版本。最後一次 preview 必須顯示已一致。提交前另跑完整 repo gate。
+`--write` 會在 current generation 目錄（v114 為 `shell/v115/`）staging `index.html` marker 與 `builtin-snapshot.js`，fsync／close／回讀後才進行雙檔替換；任一步失敗都將兩個 target 回復為原始 bytes。root v110 bridge 不由此工具修改。App、SW 或 asset 升版時也必須透過本工具更新 marker／asset 版本。最後一次 preview 必須顯示已一致。提交前另跑完整 repo gate。
 
 ### G4. 權責與邊界
 

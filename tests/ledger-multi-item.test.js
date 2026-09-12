@@ -1,7 +1,7 @@
 const assert=require('assert');
-const fs=require('fs');
 const vm=require('vm');
 const TripBuyToLedger=require('../buy-to-ledger.js');
+const {appHtml}=require('./support/version');
 
 function createStorage(){
   const values={};
@@ -13,7 +13,7 @@ function createStorage(){
 }
 
 function loadModule(){
-  const source=fs.readFileSync('shell/v114/index.html','utf8');
+  const source=appHtml();
   const start=source.indexOf('/* ================= ledgerRepository');
   const end=source.indexOf('/* ================= 分帳',start);
   assert(start>=0&&end>start,'ledger helper section exists');
@@ -34,7 +34,7 @@ function loadModule(){
 function plain(value){return JSON.parse(JSON.stringify(value));}
 
 const mod=loadModule();
-const uiSource=fs.readFileSync('shell/v114/index.html','utf8');
+const uiSource=appHtml();
 const participantHelperStart=uiSource.indexOf('function canonicalMemberName(');
 const participantHelperEnd=uiSource.indexOf('function buildParticipantSnapshot(',participantHelperStart);
 const itemModeStart=uiSource.indexOf('function ledgerDraftItem(');

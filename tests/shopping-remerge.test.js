@@ -1,7 +1,7 @@
 const assert=require('assert');
-const fs=require('fs');
 const vm=require('vm');
 const TripBuyToLedger=require('../buy-to-ledger.js');
+const {appHtml}=require('./support/version');
 
 function createStorage(){
   const values={};
@@ -21,7 +21,7 @@ function createStorage(){
 function plain(value){return JSON.parse(JSON.stringify(value));}
 
 function loadModule(){
-  const html=fs.readFileSync('shell/v114/index.html','utf8');
+  const html=appHtml();
   const start=html.indexOf('/* ================= ledgerRepository');
   const end=html.indexOf('/* ================= 分帳',start);
   assert(start>=0&&end>start,'shopping helpers live in the local module section');
