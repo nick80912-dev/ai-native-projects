@@ -1,5 +1,15 @@
 # 07 版本紀錄
 
+## 2026-09-12 — v117 正式發布(released,未經 G1)+ G6 tag
+
+- PR [#20](https://github.com/nick80912-dev/ai-native-projects/pull/20) 以 **merge** 合併 `dev` `726b9d6` → `main`,merge commit **`c364974`**。合併前核對 PR head 等於 `origin/dev`,且該 head 的 `sanity` 與 `browser-qa` 皆 success。
+- Netlify deploy **`6aa5513763477600088c7849`**、`state: ready`、`commit_ref` 相符、`published_at` 有值、`manual_deploy: false`、6 條 header 規則套用。
+- **§F5 全數通過**:`sw.js` = v117;`shell/v117/` 三件組皆 v117;root bridge 維持 v110;三處 `Cache-Control` 正確;**v111–v116 六個舊世代皆回 200**(ADR 0019)。
+- 另以**真實瀏覽器**驗證:接管至 v117、快取換為 `okayama-trip-v117`、**兩組 chip 皆帶可見邊框且色系仍不同**(分類 `rgb(18,…)` sea、代購對象 `rgb(223,…)` coral)、同步 chip 圓角 999px／高 44px。
+- **G1 經 Bar 裁定跳過**(同 v114／v115／v116),4 項維持未勾 —— **跳過不等於通過**。**G6 完成**:`production-v117` 指向 `c364974`。
+- **BB4 判準版本改為 v117**。現行 tags 九個,最新為 `production-v117`。
+- **發布後補驗累計 28 項**(BB4 8 + v115 6 + v116 10 + v117 4)。
+
 ## 2026-09-12 — v117:選取表達一致(backlog #35(b)、#36)
 
 - **#36 —— 兩組選取 chip 的邊框處理一致**:`.shopping-target-chip.on` 原本明寫 `border-color:transparent`,而相鄰的 `.shopping-chip.on` 有 `var(--sea)` 可見邊框 —— 同一張表單裡兩組 chip 的「選取感」強度不同。改為 `var(--coral)`,對應其自身的 accent 色系。**色系刻意維持不同**(分類=主色系、對象=accent),統一的是邊框強度而非顏色。
