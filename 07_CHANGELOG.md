@@ -1,5 +1,13 @@
 # 07 版本紀錄
 
+## 2026-09-12 — v120:摺疊外框補齊(candidate,未發布)
+
+- Bar 指出 v119 的包覆做了一半:**展開內容有左右下邊框,標題列卻是 `border:0`** —— 外框從中間才開始,上半截斷開。
+- **又是同一類錯誤**:比照 `.ledger-entry-summary` 時,我抄了內容面板的處理(`border-top:0` 接續),**卻沒抄標題列本身的 `border:1px solid var(--entry-secondary-border)`**。該模式裡標題列在收合與展開兩種狀態都帶完整邊框,內容只是接續它。
+- `.ledger-disclosure-toggle` 由 `border:0` 改為 `border:1px solid var(--entry-secondary-border)`。全域 `box-sizing:border-box`,**高度仍是 44px**,實測收合與展開皆未變。
+- **這是連續第三個版本動同一處**(v118 統一底色 → v119 補包覆 → v120 補外框),每一次都是前一次造成的。如實記錄:**這三次本可以在 v118 一次做完,是我每次只看了問題的一層。**
+- 四個 gate、**95/95 Node**、**191/191 Playwright** 通過。**v120 為 candidate,尚未發布**。
+
 ## 2026-09-12 — v119 正式發布(released,未經 G1)+ G6 tag
 
 - PR [#22](https://github.com/nick80912-dev/ai-native-projects/pull/22) 以 merge 合併 `dev` `a0db382` → `main`,merge commit **`dd164f7`**;合併前核對 PR head 等於 `origin/dev`,`sanity` 與 `browser-qa` 皆 success。
