@@ -64,7 +64,7 @@ function extractThemeIds(html){
   const html=fs.readFileSync('shell/'+appVersion()+'/index.html','utf8');
   const themeIds=['ocean','ivory','wisteria','cedar','mist','tea'];
   const tokenNames=[
-    '--t-paper','--t-card','--t-chrome','--t-action','--t-accent','--t-accent-bg',
+    '--t-paper','--t-card','--t-chrome','--t-action','--t-select-bg','--t-accent','--t-accent-bg',
     '--t-ink','--t-ink-soft','--t-ink-faint','--t-line','--t-line-soft','--t-tabbar','--t-secondary'
   ];
   themeIds.forEach(id=>{
@@ -76,6 +76,10 @@ function extractThemeIds(html){
     assert(contrastRatio(cssValue(block,'--t-ink'),paper)>=4.5,id+' ink contrast');
     assert(contrastRatio(cssValue(block,'--t-ink-soft'),paper)>=4.5,id+' soft ink contrast');
     assert(contrastRatio('#ffffff',cssValue(block,'--t-chrome'))>=4.5,id+' chrome contrast');
+    /* --t-select-bg 是選取狀態底色,其上是 --t-chrome 文字、--t-action 邊框。
+       2026-09-12:原為固定的 --mint:#d6e8e4,只服務 ocean 系;同一顆 chip 的邊框與文字卻逐主題,
+       三分之二跟主題走、三分之一不跟。改為逐主題後三者一致。 */
+    assert(contrastRatio(cssValue(block,'--t-chrome'),cssValue(block,'--t-select-bg'))>=4.5,id+' select-bg carries chrome text');
   });
   const cedarBlock=themeBlock(html,'cedar');
   assert.strictEqual(cssValue(cedarBlock,'--t-action'),'#2f6b4f');
@@ -110,7 +114,7 @@ function extractThemeIds(html){
     '--space-1':'4px','--space-2':'8px','--space-3':'12px','--space-4':'16px','--space-5':'24px',
     '--radius-sm':'6px','--radius-control':'10px','--radius-card':'14px','--radius-pill':'999px',
     '--status-pending-bg':'#fff3cf','--status-pending-ink':'#80600d',
-    '--entry-secondary-border':'#cfe0dd','--entry-secondary-bg':'#f3f8f6','--mint':'#d6e8e4',
+    '--entry-secondary-border':'#cfe0dd','--entry-secondary-bg':'#f3f8f6',
     '--shopping-category-bg':'#fff7dc','--shopping-category-ink':'#8a6416',
     '--status-partial-bg':'#e8f0f2','--status-unverified-bg':'#fdf0e2',
     '--status-unverified-ink':'#9a5b18','--status-wait-ink':'#8b531a'
@@ -274,7 +278,7 @@ function extractThemeIds(html){
      守著它的斷言完成任務後移除 —— 與 v111 的離線啟動說明同一處理。 */
   /* 滾動的五筆視窗:最新一筆是目前版本,其餘四筆是緊接在後的歷史版本。
      歷史版本刻意寫死字面值(見 tests/support/version.js 的適用範圍說明)。 */
-  assert.deepStrictEqual(Array.from(notes.slice(1),function(note){return note.version;}),['v118','v117','v116','v115']);
+  assert.deepStrictEqual(Array.from(notes.slice(1),function(note){return note.version;}),['v120','v119','v118','v117']);
   /* v111 的離線啟動說明已於 2026-09-12 隨 v116 加入而滾出五筆視窗(v72 核定的固定視窗設計),
      原本守著它的斷言完成任務後移除。日後若要保留某一筆說明,應改變視窗規則而非加回斷言。 */
   notes.forEach(note=>{

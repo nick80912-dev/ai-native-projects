@@ -1,5 +1,36 @@
 # 07 版本紀錄
 
+## 2026-09-12 — v121:選取色改為逐主題(candidate,未發布)
+
+- Bar 指出選取 chip 的底色在焙茶等主題下不搭。查證屬實,**而且問題比「不搭」更根本**:
+  ```css
+  .shopping-chip.on{ border-color:var(--sea); color:var(--sea-deep); background:var(--mint); }
+  ```
+  **邊框與文字逐主題,底色固定 —— 三分之二跟主題走、三分之一不跟。** 在焙茶下是「棕邊框＋棕文字＋薄荷綠底」,不是顏色不搭,是元件自相矛盾。
+- **這是我 v116 的疏漏**。當時為了「不引入新色」而抄了 `.ledger-participant-choice.on` 早已寫死的 `#d6e8e4`,**但沒檢查它在另外五組主題下成不成立**。該值與各主題主色的色相差:cedar 15°／ocean 21°／mist 34°,但 **wisteria 115°／tea 138°／ivory 167°**(近乎互補)。
+- 新增第一層 token **`--t-select-bg`**(六組各一值),`--mint` 改為 `var(--t-select-bg)`。取值方式:從各主題 `--t-action` 混白,**混合比例個別調整使每組對白底的 RGB 距離皆為 54** —— 即原 `#d6e8e4` 的分離強度,**確保主題化不削弱可辨識度**。
+- 實測六組:底色／邊框／文字**三者同色族**,對白距離**皆 54**,`--t-chrome` 對新底色的對比 **6.72–11.64**(門檻 4.5)。ocean 由 `#d6e8e4` 變 `#d5e6e8`,肉眼難辨。
+- `--mint` 自 `presentationTokens` 移除(它不再是固定色),`--t-select-bg` 納入第一層 token 清單並新增對比斷言 —— **第一層由 13 個增為 14 個**。
+- **`--entry-secondary-bg` 刻意維持固定**。它是長期核定的非主題 token(見 backlog #31 的關閉紀錄),且 S26%／L96% 幾乎是白的,不搭程度遠低於 mint。要改需另行裁定。
+- 四個 gate、**95/95 Node**、**191/191 Playwright** 通過。**v121 為 candidate**,將與 v120 一併發布。
+
+## 2026-09-12 — v120:摺疊外框補齊(candidate,未發布)
+
+- Bar 指出 v119 的包覆做了一半:**展開內容有左右下邊框,標題列卻是 `border:0`** —— 外框從中間才開始,上半截斷開。
+- **又是同一類錯誤**:比照 `.ledger-entry-summary` 時,我抄了內容面板的處理(`border-top:0` 接續),**卻沒抄標題列本身的 `border:1px solid var(--entry-secondary-border)`**。該模式裡標題列在收合與展開兩種狀態都帶完整邊框,內容只是接續它。
+- `.ledger-disclosure-toggle` 由 `border:0` 改為 `border:1px solid var(--entry-secondary-border)`。全域 `box-sizing:border-box`,**高度仍是 44px**,實測收合與展開皆未變。
+- **這是連續第三個版本動同一處**(v118 統一底色 → v119 補包覆 → v120 補外框),每一次都是前一次造成的。如實記錄:**這三次本可以在 v118 一次做完,是我每次只看了問題的一層。**
+- 四個 gate、**95/95 Node**、**191/191 Playwright** 通過。**v120 為 candidate,尚未發布**。
+
+## 2026-09-12 — v119 正式發布(released,未經 G1)+ G6 tag
+
+- PR [#22](https://github.com/nick80912-dev/ai-native-projects/pull/22) 以 merge 合併 `dev` `a0db382` → `main`,merge commit **`dd164f7`**;合併前核對 PR head 等於 `origin/dev`,`sanity` 與 `browser-qa` 皆 success。
+- Netlify deploy **`6aa55e1a23a3df0008d19b3f`**、`ready`、`commit_ref` 相符、`published_at` 有值、`manual_deploy: false`。
+- **§F5 全過**:`sw.js` 與 `shell/v119/` 三件組皆 v119;root bridge 維持 v110;**v111–v118 八個舊世代皆回 200**(ADR 0019)。
+- 發布前於 shell 實測:收合標題 `8px`、展開 `8px 8px 0 0`、內容 `0 0 8px 8px` 含 `flow-root`,**接合空白帶 0**。
+- **G1 經 Bar 裁定跳過**(同 v114–v118),5 項維持未勾。**G6 完成**:`production-v119` 指向 `dd164f7`。
+- **BB4 判準改為 v119**。現行 tags 十一個。**發布後補驗累計 39 項**。
+
 ## 2026-09-12 — v119:摺疊區塊包覆一致(candidate,未發布)
 
 - 同一張記帳 sheet 有三個摺疊控制項,**兩個展開後包成連續容器,一個不包**。`.ledger-entry-secondary` 與 `.ledger-multi-bill-secondary` 是位元組相同的規則;`.ledger-disclosure-body` 卻只有 `margin-top:9px`,內容直接散在 sheet 上。
