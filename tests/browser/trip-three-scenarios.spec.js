@@ -10,9 +10,10 @@ const {
 const fs=require('fs');
 const path=require('path');
 const vm=require('vm');
+const {shellPath}=require('../support/version');
 
 function generatedBuiltin(){
-  const source=fs.readFileSync(path.resolve(__dirname,'../../shell/v114/builtin-snapshot.js'),'utf8');
+  const source=fs.readFileSync(path.resolve(__dirname,'../..',shellPath('builtin-snapshot.js')),'utf8');
   const sandbox={};
   vm.runInNewContext(source,sandbox,{filename:'builtin-snapshot.js'});
   return JSON.parse(JSON.stringify(sandbox.BUILTIN));

@@ -69,11 +69,16 @@ function scopeRelativePath(url){
   return pathname.slice(scopePath.length).replace(/^\/+/, '');
 }
 
+/* 三條路徑一律由上方 CURRENT_* 推導,不得各自硬編碼 generation。
+   2026-09-12:v114->v115 升版時這裡被漏掉(它們沒有 './' 前綴,與 SHELL 的寫法不同),
+   分類函式因此對所有資源回傳 '',responseMatchesWorker() 一律放行 —— 混版本守衛被靜默停用。
+   單元測試與四個 gate 都沒抓到,只有 Playwright 的 mixed-generation 規格抓到。 */
 function versionedShellKind(url,isNavigate){
   var relative=scopeRelativePath(url);
-  if(isNavigate||relative==='shell/v114/index.html')return 'html';
-  if(relative==='shell/v114/app-version.js')return 'app';
-  if(relative==='shell/v114/builtin-snapshot.js')return 'builtin';
+  var shellPath=function(entry){return String(entry).replace(/^\.\//,'');};
+  if(isNavigate||relative===shellPath(CURRENT_DOCUMENT))return 'html';
+  if(relative===shellPath(CURRENT_APP_VERSION))return 'app';
+  if(relative===shellPath(CURRENT_BUILTIN))return 'builtin';
   return '';
 }
 

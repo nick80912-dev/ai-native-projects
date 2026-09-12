@@ -18,6 +18,16 @@
 - 依 **ADR 0019**,已發布 generation 的 shell 資源不得就地改 —— 裝置已快取 `shell/v114/` 的 bytes。故走完整 **v114 → v115** 升版:新增 `shell/v115/`(v111–v114 一律保留)、`sw.js` 四處路徑與 `SW_VERSION`、`netlify.toml`、`runtime-assets.json`,以及 10 份活文件共 45 處 generation 引用。
 - **`APP_RELEASE_NOTES` 是固定五筆的滾動視窗**,加入 v115 後移除最舊的 v110(v72 核准的設計,不是讓清單長大)。
 
+### ⭐ 升版時漏改 `sw.js` 的 `versionedShellKind()`,混版本守衛被靜默停用
+
+- `versionedShellKind()` 第 74–76 行硬編碼三條 `shell/v114/` 路徑。它們**沒有 `./` 前綴**,與同檔 `CURRENT_*` 及 `SHELL` 的寫法不同,升版替換時整組被漏掉。
+- 後果不是報錯,是**靜默失效**:分類函式對每個資源都回傳 `''`,`responseMatchesWorker()` 因此一律回 true —— 新 worker 的 install 不再比對任何資源的版本,**混世代 App Shell 會被當成正常安裝**。這正是該函式唯一存在的理由。
+- **四個 gate 與 95 個 Node 測試全部沒抓到**;唯一抓到的是 Playwright 的 `sw-update-cache.spec.js` 「a mixed-generation App Shell makes the new SW install fail and preserves the active cache」。若當時只看 `sanity` 綠燈就發布,會送出一個防線已死的 v115。
+- **修法不只是改成 v115**,而是讓它無法再漂移:三條路徑改為由 `CURRENT_DOCUMENT`／`CURRENT_APP_VERSION`／`CURRENT_BUILTIN` 推導(沿用同檔 `isKnownShellRequest()` 既有的 `replace(/^\.\//,'')` 慣用法),並在函式上方寫明這次的教訓。
+- 這與 backlog #27 是**同一類缺陷**:必須靠人記得同步的硬編碼。差別在於 #27 失敗時會 ENOENT 大聲失敗,而這一個失敗時完全無聲。
+- 同時補上 Playwright spec 的 4 處硬編碼(`android-pwa-ui` 2 處含裸 `SW_VERSION='v114'`、`sw-update-cache` 1 處、`trip-three-scenarios` 1 處) —— #27 當時只掃 `tests/*.test.js`,沒掃 `tests/browser/*.spec.js`。
+- 修正後 **Playwright 191/191** 通過。
+
 ### backlog #27 的即時回收
 - 上一次世代升版(`b4fa632`)必須修改 58 個測試檔的硬編碼路徑;**本次一個都不用改**。
 - 僅兩處必要維護:`theme-system.test.js` 五筆視窗的尾四筆(歷史 release note,依 Bar 2026-07-30 裁定寫死字面),以及 `pwa-shell.test.js` 的 **7 處轉義形式**路徑 —— #27 當時以 `shell/v114` 比對,漏掉寫在正則字面裡的 `shell\/v114\/`。**#27 的實際覆蓋率是 81 處中的 74 處,不是先前所記的全部**,本次一併補齊。

@@ -1,5 +1,6 @@
 const {test,expect}=require('./support/test');
 const {installFixedDate,openApp,waitForSyncToSettle}=require('./support/qa-fixture');
+const {swVersion,shellPath}=require('../support/version');
 
 test.use({
   viewport:{width:390,height:844},
@@ -31,8 +32,8 @@ test('Android Chromium receives the complete PWA installability inputs',async({p
   const workerResponse=await request.get('/sw.js');
   expect(workerResponse.ok()).toBe(true);
   const worker=await workerResponse.text();
-  expect(worker).toContain("var SW_VERSION='v114'");
-  expect(worker).toContain("'./shell/v114/index.html'");
+  expect(worker).toContain("var SW_VERSION='"+swVersion()+"'");
+  expect(worker).toContain("'./"+shellPath('index.html')+"'");
   await page.waitForLoadState('load');
   await page.evaluate(()=>navigator.serviceWorker.ready);
   await page.reload({waitUntil:'domcontentloaded'});

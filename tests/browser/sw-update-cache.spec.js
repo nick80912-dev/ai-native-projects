@@ -16,7 +16,7 @@ const path=require('path');
 /* 目前版本一律取自單一來源(見 tests/support/version.js);versioned-server 會把
    SW_VERSION／APP_VERSION 改寫成 '<目前版本>-QAGEN<N>'。之前這裡寫死 'v73',
    升版時整個檔會紅 —— 那正是 version.js 當初要消滅的「記得改 N 個地方」。 */
-const { appVersion } = require('../support/version');
+const { appVersion, shellPath } = require('../support/version');
 const VERSION = appVersion();
 const PREVIOUS_VERSION = 'v' + (Number(VERSION.slice(1)) - 1);
 const V110_WORKER=fs.readFileSync(path.join(__dirname,'..','fixtures','sw-v110-production.js'),'utf8');
@@ -243,7 +243,7 @@ test('a mixed-generation App Shell makes the new SW install fail and preserves t
   server=createVersionedServer({
     generation:1,bridgeGeneration:1,versions:{1:PREVIOUS_VERSION,2:VERSION},
     workerSources:{1:V110_WORKER},stablePaths:STABLE_V110_MODULES,
-    resourceVersions:{2:{'shell/v114/builtin-snapshot.js':PREVIOUS_VERSION}}
+    resourceVersions:{2:{[shellPath('builtin-snapshot.js')]:PREVIOUS_VERSION}}
   });
   ORIGIN='http://127.0.0.1:'+await server.listen(0);
   await page.goto(ORIGIN+'/index.html');
