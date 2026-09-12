@@ -1,5 +1,20 @@
 # 07 版本紀錄
 
+## 2026-09-12 — v115 正式發布(released,未經 G1)+ G6 tag
+
+- PR [#17](https://github.com/nick80912-dev/ai-native-projects/pull/17) 以 **merge**(非 squash／rebase)合併 `dev` `4141ae1` → `main`,merge commit **`6094584`**。合併前依 §E 核對:**PR head 等於 `origin/dev`**(head 未移動),且該 head 的遠端 CI `sanity` 與 **`browser-qa`** 皆 success —— 這是 `browser-qa` 改為 dev push 也跑之後的第一次發布,兩條證據來自同一個 commit。
+- Netlify 由 `main` 自動部署:deploy **`6aa4ffff28234900086dd305`**、`state: ready`、`commit_ref` = **`6094584`**(與 merge commit 相符)、**`published_at` 有值**、`manual_deploy: false`(由 git 觸發,非 API 直傳,commit 追溯與回滾路徑完整)、6 條 header 規則套用。
+- **§F5 線上核對全數通過**:
+  - `sw.js` 的 `SW_VERSION` = **v115**;`shell/v115/` 的 `app-version.js`／HTML marker／`builtin-snapshot.js` 三者皆 **v115**。
+  - root `app-version.js` 維持 **v110** bridge,未被誤升。
+  - `sw.js`／`shell/v115/app-version.js`／`shell/v115/builtin-snapshot.js` 的 `Cache-Control` 皆為 `no-cache, no-store, must-revalidate`。
+  - **v111／v112／v113／v114 四個舊世代的 `app-version.js` 皆仍回 200**,依 ADR 0019 尚未升級的裝置繼續由原世代資產服務。
+  - 另以**真實瀏覽器**對正式站驗證(不只 curl):SW 接管至 v115、快取換為 `okayama-trip-v115`、設定列已是 `<label>` 且點文字可切換、待同步熱區 60×31 且摘要卡高度 231px 不變。
+- **G1 經 Bar 裁定跳過**,處理方式與 v114 相同。`docs/device-acceptance-log.md` 的 v115 段 **6 項全部維持未勾** —— **跳過不等於通過**;該段檔頭已改寫為「發布後補驗」定位,並明記發現問題時依 §A2 **forward bump 到 v116**,不得倒退覆寫。
+- **G6 完成**:建立並推送 annotated tag **`production-v115`**,指向 **`6094584`**。Tag 訊息含驗證日期、deploy id、SW cache 名稱、回滾指引,並明文記錄 G1 未執行、本次發布中途自製並修復的混版本守衛缺陷,以及 **BB4 至今未執行**(判準現為 v115,`production-v112` 因此仍刻意缺席)。
+- 現行 production tags:`production-v18`／`production-v73`／`production-v110`／`production-v111`／`production-v113`／`production-v114`／**`production-v115`**。
+- **本次發布仍未執行 G1 真機驗收**,為 Bar 2026-09-12 明示裁定。連同 v114 的 BB4 共 8 項,目前累計 **14 項**待補驗 —— 全部都在使用者已經拿得到的版本上。
+
 ## 2026-09-12 — CI:`browser-qa` 改為 dev push 也跑(反轉 2026-07-30 裁定)
 
 - `.github/workflows/qa.yml` 移除 `browser-qa` 的 job-level `if`,該 job 自此在 **`main` push／`dev` push／Pull Request** 都執行。
