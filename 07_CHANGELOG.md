@@ -1,5 +1,21 @@
 # 07 版本紀錄
 
+## 2026-09-12 — v122:採買存檔鈕配色對齊記帳(candidate,未發布)
+
+- Bar 指出新增採買項目的「儲存」「儲存並新增」與新增消費的「儲存」「儲存並再記一筆」配色不一致。查證屬實:
+
+  | | 主儲存 | 次儲存 |
+  |---|---|---|
+  | 記帳 sheet(單品項) | `btn coral` | `btn ledger-save-another-quiet` |
+  | 採買表單(改前) | `btn` | `btn ghost shopping-save-another` |
+
+- 採買主儲存改為 `btn coral`;次儲存去掉 `ghost`,改與 `.ledger-save-another-quiet` **共用同一條規則**(選擇器清單而非複製宣告,避免兩份各自漂移)。取消鈕維持 `btn ghost` 不動。
+- **必須記下的語意問題**:記帳主儲存用的 `.btn.coral` 吃的是 `--action-destructive-bg`。那個 token 名義上是「破壞性操作」,實際被當成醒目 CTA 用。**把它複製到採買,等於把這個命名錯配擴散到第二處** —— 日後若有人依名稱把 destructive 改成警告紅,兩頁的儲存鈕都會變紅。本次依 Bar 指示先求視覺一致;**正確的收斂是另立一個「主要 CTA」角色 token,讓 destructive 回歸其字面語意**,已記為 backlog #39。
+- 依 #37 的教訓,動手前先確認核准邊界:`tests/shopping-list.test.js` 原本**只斷言** `disabled` 狀態與 `>儲存並新增</button>` 字面,無外觀斷言;`07_CHANGELOG.md` 關於「儲存並新增」的既有紀錄全是行為(保留什麼、清空什麼、焦點、預設值),**無配色核准**。故本次變更未觸及既有核定。
+- `tests/ledger-entry-p0.test.js:181` 原本比對 `.ledger-sheet-actions .ledger-save-another-quiet{` 這個**確切選擇器**,共用規則後當場擋下。記帳鈕的宣告與呈現皆未變,故放寬為容許選擇器清單(`[^{]*`),而非複製一份宣告。
+- 新增三條外觀斷言到 `tests/shopping-list.test.js`,把本次核定寫進測試。**三條逐一以「改回舊寫法」實測確認會失敗** —— 第一版斷言(`indexOf` 切到檔尾再 `includes('class="btn coral"')`)在弄壞後仍通過,因為整份 HTML 本來就含記帳的 `.btn.coral`,**比對恆真**;已改為錨在「取消之後緊接主儲存」的採買自身 markup。
+- 四個 gate、**95/95 Node** 通過。
+
 ## 2026-09-12 — backlog #37 經查證前提錯誤而關閉(無 runtime 變更)
 
 - 原記「代購開關的三個裸 hex(`#f4e9e6`／`#c99c94`／`#6e4540`)不是 token、可自由改用 accent 家族」。**這個前提是錯的。**
