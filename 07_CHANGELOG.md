@@ -1,5 +1,32 @@
 # 07 版本紀錄
 
+## 2026-09-12 — v115:兩處觸控命中區修正(candidate,未發布)
+
+- **來源不是使用者回報**,是 2026-09-12 用 chrome-devtools MCP 在 **390×844** 實跑 v114 量測出來的。兩處都不是尺寸偏好問題,是**點了沒反應／關鍵時刻按不到**的功能性缺陷,與 backlog #28／#29(Bar 已裁定暫不處理)性質不同。
+
+### 修正一:設定頁「簡易結算模式」整列可點
+- `.settings-row` 是 `<div>`,52px 的列看起來就是標準可點列,但**沒有 onclick、input 沒有 id、也沒有 `<label>` 包覆** —— 實測點最左邊的文字**完全無反應**,真正的命中區只有右側 **22×22** 的 checkbox,約佔整列面積的 17%。
+- 改為 `<label class="settings-row settings-row-toggle">` 並補 `cursor:pointer`。`.settings-row` 本就設了 `display:flex` 與一組 button reset(它同時用在 `<button>` 列上),換成 `<label>` 版面不變。
+- **既有的 `aria-label="簡易結算模式(保留已確認結清)"` 未動** —— 可及名稱原本就是正確的,這不是無障礙命名缺陷,純粹是命中區缺陷。
+
+### 修正二:分帳待同步指示器的命中區 13px → 31px
+- `.ledger-summary-rate.pending` 是「N 筆待同步」時唯一的入口(`onclick="openLedgerSyncPanel()"`),但命中區只有 **13px 高**。在訊號差、紀錄正堆在離線佇列時,最該按的東西最難按。
+- **該處的扁平琥珀外觀是刻意設計,不是被誤刪的膠囊樣式** —— 既有規則明寫 `color:rgba(255,240,190,.9);cursor:pointer`。最初診斷為「`.ledger-summary-rate` 把膠囊樣式歸零」並試圖還原成膠囊,經查完整級聯後推翻:`.ledger-summary-rate.pending` 是後於它的明確設計規則。
+- 最終做法**只放大命中區、不動外觀**:`padding:9px 6px` 撐開按鈕自身 hit area,`margin:-9px -6px` 等量抵銷。實測命中區 13px → **31px**,而摘要卡高度在平常／待同步兩種狀態皆為 **231px**,**零版面位移**;平常態仍是 84×13 的匯率標籤且維持 `disabled`。
+
+### 為何必須 forward bump
+- 依 **ADR 0019**,已發布 generation 的 shell 資源不得就地改 —— 裝置已快取 `shell/v114/` 的 bytes。故走完整 **v114 → v115** 升版:新增 `shell/v115/`(v111–v114 一律保留)、`sw.js` 四處路徑與 `SW_VERSION`、`netlify.toml`、`runtime-assets.json`,以及 10 份活文件共 45 處 generation 引用。
+- **`APP_RELEASE_NOTES` 是固定五筆的滾動視窗**,加入 v115 後移除最舊的 v110(v72 核准的設計,不是讓清單長大)。
+
+### backlog #27 的即時回收
+- 上一次世代升版(`b4fa632`)必須修改 58 個測試檔的硬編碼路徑;**本次一個都不用改**。
+- 僅兩處必要維護:`theme-system.test.js` 五筆視窗的尾四筆(歷史 release note,依 Bar 2026-07-30 裁定寫死字面),以及 `pwa-shell.test.js` 的 **7 處轉義形式**路徑 —— #27 當時以 `shell/v114` 比對,漏掉寫在正則字面裡的 `shell\/v114\/`。**#27 的實際覆蓋率是 81 處中的 74 處,不是先前所記的全部**,本次一併補齊。
+
+### 驗收與狀態
+- 四個 gate 與 **95/95** 通過。已在 390×844 以真實 SW 接管的 v115 實測兩處修正生效,並確認正常狀態零視覺回歸。
+- `docs/device-acceptance-log.md` 新增 **v115 delta 清單 6 項**;**BB4 的判準版本由 v114 改為 v115** —— 這不是重做驗收(BB4 至今未執行過),而是判準隨現行 generation 前進,在 Android 上驗 v115 等同一次驗完四版。全檔未勾數 8 → **14**(BB4 8 + v115 6)。
+- **v115 為 candidate,尚未發布**;`origin/main` 與正式站仍是 v114。
+
 ## 2026-09-11 — backlog #27:測試檔 shell generation 硬編碼遷移
 
 - **問題**:`tests/support/version.js` 建於 2026-07-30,當初就是為了消滅「8 個測試檔各自硬編碼版本字串」。但同一個問題在路徑層重新長出來 —— 58 個測試檔硬編碼 `shell/<current>/index.html` 共 **74 處**,每次升版都要手工掃一遍。
