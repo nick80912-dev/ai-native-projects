@@ -2,7 +2,7 @@
 
 > 更新於 2026-09-12(v116 後)。做完或經 Bar 裁定不再需要的項目移到 done.md,正在做的移到 current.md。
 
-> **編號刻意不連續,不得重排**:`tasks/current.md`、`tasks/done.md` 與 `07_CHANGELOG.md` 都以編號互相引用,重排會打斷既有交叉引用。已歸檔項目的編號一律**留空不回收**(目前缺號:1、2、3b、4、5、6–11、13–19、21–24、26、27、30–36);新項目接在現有最大號之後。
+> **編號刻意不連續,不得重排**:`tasks/current.md`、`tasks/done.md` 與 `07_CHANGELOG.md` 都以編號互相引用,重排會打斷既有交叉引用。已歸檔項目的編號一律**留空不回收**(目前缺號:1、2、3b、4、5、6–11、13–19、21–24、26、27、30–37);新項目接在現有最大號之後。
 
 ## 中優先(已核准正式待辦)
 3. **驗收後 UI/內容微調**(最小修改,不動 schema)。
@@ -12,14 +12,6 @@
 25. **AI Native Framework 抽取**:App 穩定落地後執行,見 `FUTURE_PLAN_framework-extraction.md`。
 28. **打卡控制觸控目標過小**:行程頁的 `.chk` 打卡方塊為 **24×24px**,整列不是熱區(往右 80px 落在 `.item-main`,不觸發)。`04_UI_GUIDELINES.md` 自訂的門檻是「所有清單觸控列 ≥44px 高」,24×24 約為建議面積的 30%,而這是走路中單手操作的元件。同頁 `.qa-btn` 為 38–41px,但準則對它有 ≥38px 的明文豁免,不在此項範圍。**Bar 於 2026-09-10 裁定暫不處理。** 屬 Tier 2,動工前需四項確認並 forward bump。
 29. **多處字級低於準則下限**:`04_UI_GUIDELINES.md` 寫「輔助 11-13px」,實測行程頁 `.dow` 星期為 **9.5px**(6 處)、`.drive-chip`／`.tag` 10.5px(13 處)、今天頁 `.h-lbl` 10.5px(6 處)、購物頁 `.fl-arw` 10px(11 處)、分帳 `ledger-status-pill`／`ledger-summary-helper` 10px。改動散布廣,需逐一評估會不會撐破既有版面。**Bar 於 2026-09-10 裁定暫不處理。** 屬 Tier 2。
-
-37. **代購開關的三個寫死色值改用 accent 家族**:`.ledger-proxy-switch` 的 `background:#f4e9e6`、`border:1px solid #c99c94`、`color:#6e4540` **三個都是裸 hex**,不是 token,也不在 `tests/theme-system.test.js` 的 `presentationTokens` 核定清單內。**修它不需推翻任何裁定。** 2026-09-12 於 v121 實測。
-
-    - **真正的問題不是「刺眼」,是「融進背景」**。量測顯示現況底色 `#f4e9e6`(H13)與各主題紙底的色相差:tea **21°**、ocean 29°、ivory 35°、wisteria 88°、cedar 98°、mist 171°。**在焙茶下它跟紙底幾乎同色** —— 而這是一個「這筆是幫別人買的」模式標示,它應該明顯。
-    - **不要用「與紙底和諧」當判準**。`--t-accent` 本來就是設計來跳出來的:焙茶的 accent 是 `#405c7a` 冷藍,刻意與暖紙底對立。改用 accent 家族後 tea 的色相差會從 21° 變成 176° —— **那是正確的方向,不是變糟**。
-    - **建議**:`background:var(--t-accent-bg); border-color:var(--t-accent); color:var(--t-ink)`。三個 token 每組主題皆已定義,**不需新增**。`--t-ink` 對 `--t-accent-bg` 的對比實測 **11.56–13.5**(門檻 4.5),六組全過。
-    - **與 #31 的關係**:v116 曾把此處改為 accent 家族,但因 #31 的 `--entry-secondary-*` 前提錯誤而整批撤回 —— **本項被連坐了**。`.ledger-proxy-switch` 從來就不在核定的固定清單裡,應獨立處理。
-    - **為何不單獨處理**:依 ADR 0019 需完整 forward bump。
 
 38. **重新評估 `--entry-secondary-bg` 是否該主題化(需 Bar 裁定)**:`#f3f8f6` 目前是**核定的非主題呈現 token**,`presentationTokens` 有斷言把關,`04_UI_GUIDELINES` 亦明載。backlog #31 就是因為誤判它為疏漏而被關閉。**本項不主張推翻,只記錄一個新事實供重新評估。**
 

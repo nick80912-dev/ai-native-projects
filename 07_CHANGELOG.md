@@ -1,5 +1,14 @@
 # 07 版本紀錄
 
+## 2026-09-12 — backlog #37 經查證前提錯誤而關閉(無 runtime 變更)
+
+- 原記「代購開關的三個裸 hex(`#f4e9e6`／`#c99c94`／`#6e4540`)不是 token、可自由改用 accent 家族」。**這個前提是錯的。**
+- 實作 v122 時 `tests/ledger-form-223.test.js` 當場擋下:該檔斷言 `.ledger-sheet-field>label.ledger-proxy-switch` 的 `background:#f4e9e6` 與 `border:1px solid #c99c94` 為 **approved**,措辭與 `theme-system.test.js` 中 `presentationTokens` 的「approved non-theme scale」一致。
+- `07_CHANGELOG.md` 的既有紀錄佐證:代購顯示一律套「**coral／淡紅底**」badge。**那是「代購」的語意色,全 app 一致(卡片 badge 與單品項開關共用),刻意選定。**
+- **我的判斷錯在哪**:我以「它不是 token、不在 `presentationTokens` 清單內」就推論它是 ad-hoc。**但核定不只存在於 token 清單裡 —— 也存在於元件層的斷言中。** 檢查「有沒有被納入某張清單」不等於檢查「有沒有被核定」。
+- 已完整撤回(刪除 `shell/v122/`、還原 `sw.js` 與 47 處 generation 引用、版本說明視窗)。正式站維持 **v121**。
+- **今日第二次由自動測試擋下基於錯誤前提的修正**(前一次為 #31 的 `--entry-secondary-*`)。兩次都證明那些斷言不是形式主義。
+
 ## 2026-09-12 — v120 + v121 正式發布(released,未經 G1)+ G6 tag
 
 - PR [#23](https://github.com/nick80912-dev/ai-native-projects/pull/23) 以 merge 合併 `dev` `51a11c5` → `main`,merge commit **`f6eff49`**。**v120 先前建置但未發布,故本次一併上線。**
