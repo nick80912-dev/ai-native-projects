@@ -31,8 +31,8 @@
 
 ## 專案檔案
 - `index.html` / `app-version.js` — 保留正式站前一代 v110 bridge；讓尚未更新的 v110 worker 在 v114 安裝失敗時仍可運作
-- `shell/v117/index.html` / `shell/v117/app-version.js` — v114 不可變文件與 App runtime 版本來源；成功啟用的 `sw.js` 才接管 root 導覽
-- `shell/v117/builtin-snapshot.js` — 由刷新工具產生的版本綁定離線資料資產；禁止手動修改
+- `shell/v118/index.html` / `shell/v118/app-version.js` — v114 不可變文件與 App runtime 版本來源；成功啟用的 `sw.js` 才接管 root 導覽
+- `shell/v118/builtin-snapshot.js` — 由刷新工具產生的版本綁定離線資料資產；禁止手動修改
 - `navigation-intent.js` — 明確導覽目的地的 session-only state module；DOM 定位與回饋 adapter 位於 `index.html`
 - `diagnostic-impact.js` — AppLog 原始紀錄的 display-only impact projection；顯示 adapter 位於 `index.html`
 - `today-view.js` — Today Hero 採買摘要的純 model／renderer module；資料選擇與 DOM effects 留在 `index.html`

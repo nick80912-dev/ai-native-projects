@@ -1,5 +1,16 @@
 # 07 版本紀錄
 
+## 2026-09-12 — v118:顏色語意收斂(candidate,未發布)
+
+- Bar 指出兩點:採買表單兩組選取 chip 的顏色不一致;記帳視窗中「稅與優惠券」與「分攤成員」「帳單資訊」三個區塊底色不一致。
+- **第二點是 v116(#34)的副作用,我應該負責**。`--mint` 原本從未定義,所有引用它的規則都是透明的;定義之後,**原本看不見的誤用就浮現了** —— 我把「選取色」給了三個不是選取狀態的面:`.ledger-disclosure-toggle`、`.ledger-bill-preview`、`.ledger-correction-preview`。三處改用 `--entry-secondary-bg`,與同 sheet 的 `.ledger-entry-summary`／`.ledger-participant-group` 一致。
+- **token 語意至此乾淨**:`--mint` 只服務選取狀態(4 條 `.on` 規則 + `.shopping-link-linked` 這個已連結標記);`--entry-secondary-bg` 只服務次級面板。
+- **第一點取代 v117(#36)的做法**。v117 只對齊了邊框強度、保留色系差異(分類主色系、對象 accent 色系),理由是「什麼」與「給誰」的語意區分。Bar 的判斷是顏色不一致比語意編碼更擾人 —— **移除 `.shopping-target-chip.on` 整條覆寫**,直接沿用 `.shopping-chip.on`。語意區分改由區塊標題(分類／幫誰買)承擔。
+  - **如實記錄**:v117 才剛加上的 coral 邊框在 v118 被整條移除。連續兩版動同一處是churn,但 v117 對齊邊框、v118 統一顏色是兩個不同層次的決定,後者由 Bar 在看到前者上線後才做出。
+- **v113 的主題辨識度說明滾出五筆視窗**(v72 核定設計),守著它的 5 條斷言完成任務後移除 —— 與 v116 時處理 v111 的離線啟動說明同一慣例。
+- **不改任何色值**,六組主題 token 一字未動。四個 gate、**95/95 Node**、**191/191 Playwright** 通過。
+- **v118 為 candidate,尚未發布**。
+
 ## 2026-09-12 — v117 正式發布(released,未經 G1)+ G6 tag
 
 - PR [#20](https://github.com/nick80912-dev/ai-native-projects/pull/20) 以 **merge** 合併 `dev` `726b9d6` → `main`,merge commit **`c364974`**。合併前核對 PR head 等於 `origin/dev`,且該 head 的 `sanity` 與 `browser-qa` 皆 success。
