@@ -51,12 +51,12 @@
 
 | 項目 | 值 |
 |---|---|
-| **`origin/main` 原始碼** | **SW v121**;merge commit `f6eff49`(PR #23,含 v120) |
+| **`origin/main` 原始碼** | **SW v122**;merge commit `b34d4b9`(PR #24) |
 | **正式站** | `https://trippilot-jp.netlify.app/` — **SW v114**(2026-09-10 實查:deploy `6aa25e07`,`commit_ref` = `39c96b2` = main HEAD,`published_at` 有值,tag `production-v114`);**v114 發布後補驗**:BB1–BB3 共 14 項 iPhone 已於 2026-09-11 通過,**BB4 共 8 項實體 Android 未驗** |
-| **`origin/dev` candidate** | **SW v122**（採買存檔鈕配色對齊，未發布） |
+| **`origin/dev` candidate** | **SW v122**;已與 `main` 同步於 `b34d4b9` |
 | 個人備份格式 | **v9**(`PERSONAL_STATE_SUPPORTED_VERSIONS = [1..9]`)—— v81 因想逛 key 識別語意變更而升版 |
 | candidate automated validation | Node **95/95**、Chromium Playwright **191/191**；三種啟動情境 `healthCheck()=[]`、`pageerror=0` |
-| 既有 tag | `production-v18`、`production-v73`、`production-v110`、`production-v111`、`production-v113`、`production-v114`、`production-v115`、`production-v116`、`production-v117`、`production-v118`、`production-v119`、**`production-v121`**(v120 未單獨發布,與 v121 同批) |
+| 既有 tag | `production-v18`、`production-v73`、`production-v110`、`production-v111`、`production-v113`、`production-v114`、`production-v115`、`production-v116`、`production-v117`、`production-v118`、`production-v119`、`production-v121`、**`production-v122`** |
 
 **v114 已發布至正式站(2026-09-10,deploy `6aa25e07`),`production-v114` tag 已建立。G1 的 iPhone 半邊於 2026-09-11 補驗通過,Android 半邊(BB4)仍未驗。**
 
@@ -176,11 +176,13 @@
 - **§F5 全過**:`sw.js`／`shell/v121` 三件組皆 v116;root bridge 維持 v110;三處 `Cache-Control` 正確;**v111–v115 五個舊世代皆回 200**(ADR 0019)。另以真實瀏覽器確認接管至 v116、快取換代、`--mint` 解析為 `#d6e8e4`、兩處形狀修正皆 9px、共用 helper 存在、死碼已除。 <!-- generation-exempt: 這是 v116 §F5 線上核對當下的量測結果,不隨後續升版變動 -->
 - **G1 經 Bar 裁定跳過**(同 v114／v115),10 項維持未勾。**G6 完成**:`production-v116` 指向 `9769636`。
 
-## v122 candidate（2026-09-12，未發布）
+## v122 已正式發布（2026-09-12，未經 G1）
 
 - 採買表單主存檔 `btn` → `btn coral`；次存檔去掉 `ghost`，改與 `.ledger-save-another-quiet` **共用同一條規則**。取消鈕未動。
 - 四個 gate、**Node 95/95**、**Playwright 191/191** 通過。三條新增外觀斷言已逐一以「改回舊寫法」實測會失敗。
-- **待 Bar 決定是否發正式站**。發布前需走完 PR → Actions → merge → §F5 → G6 tag。
+- PR [#24](https://github.com/nick80912-dev/ai-native-projects/pull/24) merge commit **`b34d4b9`**;Netlify deploy **`6aa573842a2a6f000829a985`**、`ready`、`commit_ref` 相符、`published_at` 有值。
+- **§F5 全過**:`sw.js` 與 `shell/v122/` 三件組皆 v122;root bridge v110;兩處 `Cache-Control` 正確;**v111–v121 十一個舊世代皆回 200**。
+- **G6 完成**:`production-v122` 指向 `b34d4b9`。**G1 未執行**,v122 裝置驗收項維持未勾。
 - 順帶記下 backlog **#39**：`--action-destructive-*` 被當主要 CTA 用，名實不符，本次變更把這個錯配擴散到第二處。
 
 ## 下一棒

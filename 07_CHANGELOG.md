@@ -1,6 +1,14 @@
 # 07 版本紀錄
 
-## 2026-09-12 — v122:採買存檔鈕配色對齊記帳(candidate,未發布)
+## 2026-09-12 — v122 正式發布(released,未經 G1)+ G6 tag
+
+- PR [#24](https://github.com/nick80912-dev/ai-native-projects/pull/24) 以 merge 合併 `dev` `8fb033f` → `main`,merge commit **`b34d4b9`**。合併前確認 head 未變,且該 head 的遠端 `sanity` 與 `browser-qa` 皆 success。
+- Netlify deploy **`6aa573842a2a6f000829a985`**、`ready`、`commit_ref` = `b34d4b9` 相符、`published_at` 有值。
+- **§F5 全過**:`sw.js` 與 `shell/v122/` 三件組皆 v122;root bridge 維持 v110;`sw.js` 與 `shell/v122/app-version.js` 的 `Cache-Control` 皆為 `no-cache,no-store,must-revalidate`;**v111–v121 十一個舊世代皆回 200**(ADR 0019)。
+- 發布前於本機逐主題實測:六組主題的兩頁存檔鈕 computed style **完全相同**(含 `color-mix` 解算後的值)。
+- **G1 經 Bar 裁定跳過**(同 v114–v121),v122 的裝置驗收項維持未勾。**G6 完成**:`production-v122` 指向 `b34d4b9`。現行 tags 十三個。
+
+## 2026-09-12 — v122:採買存檔鈕配色對齊記帳(released,未經 G1)
 
 - Bar 指出新增採買項目的「儲存」「儲存並新增」與新增消費的「儲存」「儲存並再記一筆」配色不一致。查證屬實:
 
