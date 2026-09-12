@@ -1,5 +1,14 @@
 # 07 版本紀錄
 
+## 2026-09-12 — v120 + v121 正式發布(released,未經 G1)+ G6 tag
+
+- PR [#23](https://github.com/nick80912-dev/ai-native-projects/pull/23) 以 merge 合併 `dev` `51a11c5` → `main`,merge commit **`f6eff49`**。**v120 先前建置但未發布,故本次一併上線。**
+- Netlify deploy **`6aa56a586320810008f41dd8`**、`ready`、`commit_ref` 相符、`published_at` 有值、`manual_deploy: false`。
+- **§F5 全過**:`sw.js` 與 `shell/v121/` 三件組皆 v121;root bridge 維持 v110;**六組 `--t-select-bg` 全部上線**;**v111–v120 十個舊世代皆回 200**(ADR 0019)。
+- 發布前於 shell 逐主題實測:底色／邊框／文字**三者同色族**,對白底距離**六組皆 54**,`--t-chrome` 對比 **6.72–11.64**。
+- **G1 經 Bar 裁定跳過**(同 v114–v119),v120 4 項 + v121 7 項維持未勾。**G6 完成**:`production-v121` 指向 `f6eff49`;**v120 未單獨建 tag**(與 v121 同批發布)。
+- **BB4 判準改為 v121**。現行 tags 十二個。**發布後補驗累計 50 項**。
+
 ## 2026-09-12 — v121:選取色改為逐主題(candidate,未發布)
 
 - Bar 指出選取 chip 的底色在焙茶等主題下不搭。查證屬實,**而且問題比「不搭」更根本**:

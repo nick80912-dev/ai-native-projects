@@ -51,12 +51,12 @@
 
 | 項目 | 值 |
 |---|---|
-| **`origin/main` 原始碼** | **SW v119**;merge commit `dd164f7`(PR #22) |
+| **`origin/main` 原始碼** | **SW v121**;merge commit `f6eff49`(PR #23,含 v120) |
 | **正式站** | `https://trippilot-jp.netlify.app/` — **SW v114**(2026-09-10 實查:deploy `6aa25e07`,`commit_ref` = `39c96b2` = main HEAD,`published_at` 有值,tag `production-v114`);**v114 發布後補驗**:BB1–BB3 共 14 項 iPhone 已於 2026-09-11 通過,**BB4 共 8 項實體 Android 未驗** |
-| **`origin/dev` candidate** | **SW v119**;已與 `main` 同步於 `dd164f7` |
+| **`origin/dev` candidate** | **SW v121**;已與 `main` 同步於 `f6eff49` |
 | 個人備份格式 | **v9**(`PERSONAL_STATE_SUPPORTED_VERSIONS = [1..9]`)—— v81 因想逛 key 識別語意變更而升版 |
 | candidate automated validation | Node **94/94**、Chromium Playwright **185/185**；三種啟動情境 `healthCheck()=[]`、`pageerror=0` |
-| 既有 tag | `production-v18`、`production-v73`、`production-v110`、`production-v111`、`production-v113`、`production-v114`、`production-v115`、`production-v116`、`production-v117`、`production-v118`、**`production-v119`** |
+| 既有 tag | `production-v18`、`production-v73`、`production-v110`、`production-v111`、`production-v113`、`production-v114`、`production-v115`、`production-v116`、`production-v117`、`production-v118`、`production-v119`、**`production-v121`**(v120 未單獨發布,與 v121 同批) |
 
 **v114 已發布至正式站(2026-09-10,deploy `6aa25e07`),`production-v114` tag 已建立。G1 的 iPhone 半邊於 2026-09-11 補驗通過,Android 半邊(BB4)仍未驗。**
 
@@ -178,7 +178,7 @@
 
 ## 下一棒
 
-→ **由 Bar 在實體 Android 上完成 BB4 共 8 項**(判準版本現為 **v119**),另有 v115 6 項、v116 10 項、v117 4 項、v118 6 項、v119 5 項待 iPhone 補驗。**合計 39 項,全部在使用者已拿得到的版本上。**`docs/device-acceptance-log.md` 的 v114 段 22 項中,BB1–BB3 共 14 項已於 **2026-09-11** 由 Bar 在 iPhone 上確認通過;**剩下的 BB4 是併入的 v112 遺留項,只能在實體 Android 上驗。**
+→ **由 Bar 在實體 Android 上完成 BB4 共 8 項**(判準版本現為 **v121**),另有 v115 6／v116 10／v117 4／v118 6／v119 5／v120 4／v121 7 項待 iPhone 補驗。**合計 50 項,全部在使用者已拿得到的版本上。**`docs/device-acceptance-log.md` 的 v114 段 22 項中,BB1–BB3 共 14 項已於 **2026-09-11** 由 Bar 在 iPhone 上確認通過;**剩下的 BB4 是併入的 v112 遺留項,只能在實體 Android 上驗。**
 
 > 最關鍵的是 **BB4-a**:Service Worker 能否在實體 Android 上安裝並接管。v112 修的連線槽耗盡缺陷**只在真機發生**,桌機與 Playwright 的 Android 模擬都重現不出來。判斷方式:開啟網站 → 關掉 → 再開,設定的版本資訊顯示 **v114** 才算通過(顯示 v110 代表 SW 沒接管)。
 >
