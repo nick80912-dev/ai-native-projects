@@ -69,7 +69,7 @@
 
       | | `.ledger-multi-summary`(本項) | `.ledger-disclosure-toggle`(同 sheet 的「稅與優惠券」) |
       |---|---|---|
-      | 背景 | `rgb(243,248,246)` 實色 ＋ 邊框 | `transparent` |
+      | 背景 | `rgb(243,248,246)` 實色 ＋ 邊框 | `transparent`(**實為 #34 的 bug,原意是 `var(--mint)`**) |
       | 圓角 | **10px** | 8px |
       | chevron | `<span aria-hidden>⌄</span>`,**無 class** | `<span class="chevron">` |
       | transition | `all`(未指定) | `transform 0.2s` |
@@ -81,7 +81,8 @@
 
       - **(e-3) 內圓角大於父容器**:外層 `.ledger-multi-bill-info` 為白底、**8px** 圓角;本顆為色底＋邊框＋**10px** 圓角。巢狀容器的內圓角應等於或小於外圓角,10px 包在 8px 裡會視覺上頂出來;再加上白卡內再套一個有邊框的色塊,等於兩層容器互相競爭。
 
-      - **建議(依成本排序)**:①給 chevron 加 `.chevron` class;②圓角 10px → 8px 對齊父卡片;③二選一收斂 —— 讓 `.open` 真的套用(展開時與面板接合),或改用 `.ledger-disclosure-toggle`(透明底、無邊框),讓它像「卡片內的區塊標題」而非「卡片內的一顆按鈕」。**傾向後者**,因為它本來就在白卡內,不需要自己再當一層容器;底色那層由 #31 處理。
+      - **建議(依成本排序)**:①給 chevron 加 `.chevron` class;②圓角 10px → 8px 對齊父卡片;③二選一收斂 —— 讓 `.open` 真的套用(展開時與面板接合),或改用 `.ledger-disclosure-toggle`,讓它像「卡片內的區塊標題」而非「卡片內的一顆按鈕」。**傾向後者**,但理由限於**摺疊行為**(箭頭旋轉、圓角、狀態表達),不包含外觀。
+        **更正(2026-09-12)**:本項原先寫「傾向後者,因為它透明底、無邊框、不跟卡片競爭」。**該透明底是 #34 的 bug,不是設計意圖** —— `.ledger-disclosure-toggle` 的規則寫的是 `background:var(--mint)`,而 `--mint` 從未定義。#34 修好之後它會有底色,原本的理由不成立,已刪除。底色那層仍由 #31 與 #34 處理。
 
     - **不是不一致、不要「修」**:多品項少了「有備註／無備註」是正確的 —— `renderLedgerMultiBillInfo()` 只組 occurrence／payment／categoryApply 三段,**多品項的帳單資訊裡根本沒有備註欄**,沒有東西可顯示。
 
@@ -118,6 +119,27 @@
     - **待裁定事項**:僅剩「是否一併補未存內容確認」—— 目前輸入店家名稱後關閉會直接丟棄、不確認。此項可獨立於本案,不阻擋上述執行。
 
     - **為何不單獨處理**:同 #30／#31／#32 —— 依 ADR 0019 需完整 forward bump。若成案,**與該三項同批執行**。
+
+34. **⭐ `--mint` 從未定義,8 條規則的背景靜默消失(缺陷,非提案)**:CSS 有 8 條規則使用 `var(--mint)`,但**該 token 在 repo 歷史中從未被定義過**(`git log -S"--mint:"` 無任何結果)。無 fallback 的 `var()` 解析失敗時,該屬性在計算值階段失效,`background` 退回初始值 `transparent` —— **填色就這樣無聲消失**。2026-09-12 由 Bar 指出採買分類「已選看不出來」而追查到根因。
+
+    - **實測佐證**:`getPropertyValue('--mint')` 回空字串;以 `background:var(--mint)` 探針測得 `rgba(0, 0, 0, 0)`;對照組 `background:var(--sea)` 正常解析為 `rgb(18, 112, 127)`。
+
+    - **受影響的 8 條規則**(★ 為選取狀態,也就是「選了卻看不出來」):
+      - ★ `.shopping-chip.on` —— 採買分類。規則為 `border-color:var(--sea); background:var(--mint); color:var(--sea-deep)`,**意圖完全正確,只是填色沒生效**。剩下的線索只有 **0.667px** 的邊框顏色與文字深淺(`rgb(92,107,115)` → `rgb(14,58,68)`),字重同為 800 未變 —— 四顆 12px chip 並排時辨識不出來。
+      - ★ `.ledger-history-filter-btn.on`
+      - ★ `.ledger-history-compact-options .ledger-sheet-choice.on`
+      - `.ledger-item-flag.on`
+      - `.ledger-disclosure-toggle`(其透明外觀是本 bug 的產物,見 #32 (e) 的更正)
+      - `.ledger-bill-preview`／`.ledger-correction-preview`
+      - `.shopping-link-linked`
+
+    - **原本想要的顏色幾乎可以確定是 `#d6e8e4`** —— `.ledger-participant-choice.on` 把它**寫死**了(`border-color:var(--sea-deep); background:#d6e8e4; color:var(--sea-deep)`)。所以整件事是:有人打算用 token、在 8 處引用、在 1 處寫死了值、**但從沒定義那個 token**。
+
+    - **對照:app 其他選取狀態都有填色**,本組是唯一的例外 —— `.member-option.on`／`.ledger-track-btn.on`／`.ledger-choice.on`／`.ledger-sheet-choice.on` 皆為 `background:var(--sea)` 加白字。
+
+    - **修法**:定義 `--mint`,但**建議逐主題定義**(比照 `--sea`／`--card`／`--line`),不要給單一全域值 —— 否則會直接變成 **#31** 記錄的同一類問題:固定色配上逐主題紙底,分離度碰運氣。
+
+    - **本批 CP 值最高**:修改量是定義一個 token,影響 8 個面、其中 3 個是選取狀態。**建議在下次 bump 時優先處理**。與 #31 相鄰(同為顏色 token 的主題適配),但性質不同 —— #31 是「寫死的值不跟主題走」,本項是「token 根本不存在」。
 
 ## 想法池(未承諾)
 - 社群內容抓取(Facebook 等)——需 Firecrawl/Playwright MCP,尚未配置
