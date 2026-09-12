@@ -68,7 +68,7 @@
 - **`border-radius:50%` 正圓 = 純圖示按鈕**。沒有文字、方形命中區的圖示控制項:`.settings-btn`、`.settings-close`、`.shop-search-clear`、`.ledger-fab`、`.shopping-add-button`、`.shopping-photo-warning-mark`。**它們是動作,但不套 `.btn` 的矩形** —— 圖示按鈕自成一類,改成矩形反而會讓它變成這個家族裡的異類。
 - **不得互換**。膠囊傳達「這是一個你可以切換的狀態」,矩形傳達「這會執行一件事」,正圓傳達「這是一個圖示操作」。把選取控制項改成矩形會讓它看起來像命令;把動作做成膠囊則相反。**新增元件時先問它是狀態還是動作,再決定形狀**。
 - **可選取的膠囊必須有明確的選取外觀**,不能只靠邊框顏色與文字深淺 —— 全 app 的選取狀態慣例是**填色**(`background:var(--sea)` 加白字,或淺色填底加深色字)。`0.667px` 的邊框在 12px 字級下辨識不出來。
-- **已知例外,待修正**:`.toast-action` 與 `.trip-back-now` 是動作卻用 999px 膠囊,見 `tasks/backlog.md` #35。
+- **圓角尺度(2026-09-12 修訂)**:既有 token 為 `--radius-sm:6px`／`--radius-control:10px`／`--radius-card:14px`／`--radius-pill:999px`。實際使用最多的是 **8px** 與 **9px**(`.btn` 家族),兩者原本不在尺度內。**現正式承認四級之外的 8／9px 為既有主力值**,新元件應優先取用既有 token;`3／4／5／11／13／18／20／22px` 等單次使用的離群值列為可收斂對象(`tasks/backlog.md` #35)。
 
 > 頁首的同步狀態 chip(`.brand .sync`)與設定鈕(`.settings-btn`)是**成對設計**:`.brand .sync::before,.settings-btn::before` 同一條規則給兩者 `inset:4px`、`border-radius:inherit` 的 `rgba(255,255,255,.1)` 襯底。前者是狀態顯示(可點開詳情),後者是圖示動作,**形狀各依其類,不應統一**。
 

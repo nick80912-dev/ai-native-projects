@@ -1,5 +1,24 @@
 # 07 版本紀錄
 
+## 2026-09-12 — v117:選取表達一致(backlog #35(b)、#36)
+
+- **#36 —— 兩組選取 chip 的邊框處理一致**:`.shopping-target-chip.on` 原本明寫 `border-color:transparent`,而相鄰的 `.shopping-chip.on` 有 `var(--sea)` 可見邊框 —— 同一張表單裡兩組 chip 的「選取感」強度不同。改為 `var(--coral)`,對應其自身的 accent 色系。**色系刻意維持不同**(分類=主色系、對象=accent),統一的是邊框強度而非顏色。
+- **#35(b) —— 頁首同步標記的圓角**:`.brand .sync` 高 **44px** 但圓角 **20px**,真膠囊需 ≥22px,差 2px。依形狀語意它是狀態顯示,收斂為 **999px**。
+- **圓角尺度正式修訂**:`04_UI_GUIDELINES` 原寫四級 `6／10／14／999px`,但實際最常用的 **8px** 與 `.btn` 家族的 **9px** 都不在其中。**現正式承認 8／9px 為既有主力值**,並把 `3／4／5／11／13／18／20／22px` 等單次離群值列為可收斂對象。**這是讓文件承認現實,而不是硬把 17 種值套回 4 種** —— 後者風險遠大於收益。
+- **無資料／結算語意變更,六組主題 token 一字未改**。四個 gate、**95/95 Node**、**191/191 Playwright** 通過。
+- **v117 為 candidate,尚未發布**。
+
+## 2026-09-12 — v116 正式發布(released,未經 G1)+ G6 tag
+
+- PR [#19](https://github.com/nick80912-dev/ai-native-projects/pull/19) 以 **merge** 合併 `dev` `2ff9445` → `main`,merge commit **`9769636`**。合併前依 §E 核對:PR head 等於 `origin/dev`,且該 head 的 `sanity` 與 `browser-qa` 皆 success。
+- Netlify 由 `main` 自動部署:deploy **`6aa51cd722ac980008b5b5c0`**、`state: ready`、`commit_ref` 相符、**`published_at` 有值**、`manual_deploy: false`、6 條 header 規則套用。
+- **§F5 線上核對全數通過**:`sw.js` = v116;`shell/v116/` 的 app-version／HTML marker／builtin-snapshot 三者皆 v116;root `app-version.js` 維持 v110 bridge;三處 `Cache-Control` 皆為 `no-cache, no-store, must-revalidate`;**v111／v112／v113／v114／v115 五個舊世代皆回 200**(ADR 0019)。
+- 另以**真實瀏覽器**驗證正式站:SW 接管至 v116、快取換為 `okayama-trip-v116`、`var(--mint)` 解析為 `rgb(214,232,228)`、`.toast-action` 與 `.trip-back-now` 皆 9px、`installOverlayDismiss` 存在、`manualSync` 已不存在。
+- **G1 經 Bar 裁定跳過**(同 v114／v115)。v116 段 **10 項全部維持未勾** —— **跳過不等於通過**;該段已改寫為「發布後補驗」定位,並明記發現問題依 §A2 **forward bump 到 v117**。
+- **G6 完成**:`production-v116` 指向 `9769636`。Tag 訊息完整記錄 #34 的根因、#31 因前提錯誤而關閉、以及本次發布中途自製又修掉的兩個缺陷(12px 背景、10px 空白帶)。
+- **BB4 判準版本由 v115 改為 v116**。現行 tags:`v18`／`v73`／`v110`／`v111`／`v113`／`v114`／`v115`／**`v116`**。
+- **發布後補驗累計 24 項**(BB4 8 + v115 6 + v116 10),全部在使用者已經拿得到的版本上。
+
 ## 2026-09-12 — v116:一致性批次(candidate,未發布)
 
 - 把 backlog #30／#32／#33／#34／#35(a) 打包成一次 forward bump。**這批的共同性質是「把已經做對的事套用一致」,而不是新功能** —— 幾乎每一項的正確做法 repo 裡都已經有了,只是沒被套到所有地方。
