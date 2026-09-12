@@ -1,5 +1,14 @@
 # 07 版本紀錄
 
+## 2026-09-12 — v119 正式發布(released,未經 G1)+ G6 tag
+
+- PR [#22](https://github.com/nick80912-dev/ai-native-projects/pull/22) 以 merge 合併 `dev` `a0db382` → `main`,merge commit **`dd164f7`**;合併前核對 PR head 等於 `origin/dev`,`sanity` 與 `browser-qa` 皆 success。
+- Netlify deploy **`6aa55e1a23a3df0008d19b3f`**、`ready`、`commit_ref` 相符、`published_at` 有值、`manual_deploy: false`。
+- **§F5 全過**:`sw.js` 與 `shell/v119/` 三件組皆 v119;root bridge 維持 v110;**v111–v118 八個舊世代皆回 200**(ADR 0019)。
+- 發布前於 shell 實測:收合標題 `8px`、展開 `8px 8px 0 0`、內容 `0 0 8px 8px` 含 `flow-root`,**接合空白帶 0**。
+- **G1 經 Bar 裁定跳過**(同 v114–v118),5 項維持未勾。**G6 完成**:`production-v119` 指向 `dd164f7`。
+- **BB4 判準改為 v119**。現行 tags 十一個。**發布後補驗累計 39 項**。
+
 ## 2026-09-12 — v119:摺疊區塊包覆一致(candidate,未發布)
 
 - 同一張記帳 sheet 有三個摺疊控制項,**兩個展開後包成連續容器,一個不包**。`.ledger-entry-secondary` 與 `.ledger-multi-bill-secondary` 是位元組相同的規則;`.ledger-disclosure-body` 卻只有 `margin-top:9px`,內容直接散在 sheet 上。
