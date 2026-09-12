@@ -74,6 +74,12 @@
 
 > 2026-09-12 實測依據:37 條規則使用 999px,分屬上述三類;`.btn` 家族為 9px。Bar 曾提議把膠囊統一為圓角矩形,經盤點後確認形狀承載語意而未採納,改為明文寫下規則。
 
+## 表單存檔鈕配色（2026-09-12 核定）
+
+- **主存檔走 `.btn.coral`，次存檔走安靜次級表面**。適用於所有「存檔＋再來一筆」型的表單：新增消費（儲存／儲存並再記一筆）、新增採買項目（儲存／儲存並新增）。取消走 `.btn.ghost`。
+- 次存檔的安靜表面由 `.ledger-sheet-actions .ledger-save-another-quiet,.shopping-form-actions .shopping-save-another` **一條規則共同提供**。新增同類表單時把選擇器加進這條規則，**不要複製宣告** —— 兩份宣告必定漂移。
+- **已知問題**：`.btn.coral` 吃的是 `--action-destructive-bg`，而這兩處都不是破壞性操作。**不要依 token 名稱把 `--action-destructive-*` 改成警告紅** —— 會連帶把兩頁的存檔鈕染紅。收斂方向見 `tasks/backlog.md` #39。
+
 ## 字體
 全站使用 `"Noto Sans TC","PingFang TC","Microsoft JhengHei"` 優先的繁中字體 stack。內文 15px、標題 17-20px、輔助 11-13px。主導覽四個功能圖示與設定入口使用同一組 inline outline SVG（`currentColor`），不引入 icon font；交通、天氣等內容 Emoji 可保留。桃子診斷徽章維持 PNG。
 

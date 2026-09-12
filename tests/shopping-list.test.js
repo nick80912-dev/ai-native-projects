@@ -1088,4 +1088,13 @@ assert(shoppingSource.includes('shoppingTripAuthority()'),'顯示層透過單一
 const authoritySource=ui.slice(ui.indexOf('function tripDatasetAuthority('),ui.indexOf('function resolveShoppingStopState('));
 assert(authoritySource.includes('CURRENT_SNAPSHOT')||ui.includes('tripDatasetAuthority(CURRENT_SNAPSHOT'),'權威性沿用資料層既有的 snapshot source,未另造平行狀態');
 
+/* v122:採買表單的兩顆存檔鈕與記帳 sheet 同一配色 —— 主存檔走 .btn.coral,
+   次存檔走與 .ledger-save-another-quiet 共用的安靜次級表面。這一組斷言就是該外觀的核准來源。 */
+assert(ui.includes('>取消</button><button type="submit" class="btn coral"'),
+  '採買「儲存」與記帳主存檔同為 .btn.coral');
+assert(ui.includes('<button type="button" class="btn shopping-save-another" onclick="saveShoppingForm(true)"'),
+  '採買「儲存並新增」不再是 ghost，改吃安靜次級規則');
+assert(ui.includes('.ledger-sheet-actions .ledger-save-another-quiet,.shopping-form-actions .shopping-save-another{'),
+  '兩處次存檔鈕共用同一條規則，避免各自漂移');
+
 console.log('shopping list tests passed');

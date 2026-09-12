@@ -1,5 +1,39 @@
 # 07 版本紀錄
 
+## 2026-09-12 — v122:採買存檔鈕配色對齊記帳(candidate,未發布)
+
+- Bar 指出新增採買項目的「儲存」「儲存並新增」與新增消費的「儲存」「儲存並再記一筆」配色不一致。查證屬實:
+
+  | | 主儲存 | 次儲存 |
+  |---|---|---|
+  | 記帳 sheet(單品項) | `btn coral` | `btn ledger-save-another-quiet` |
+  | 採買表單(改前) | `btn` | `btn ghost shopping-save-another` |
+
+- 採買主儲存改為 `btn coral`;次儲存去掉 `ghost`,改與 `.ledger-save-another-quiet` **共用同一條規則**(選擇器清單而非複製宣告,避免兩份各自漂移)。取消鈕維持 `btn ghost` 不動。
+- **必須記下的語意問題**:記帳主儲存用的 `.btn.coral` 吃的是 `--action-destructive-bg`。那個 token 名義上是「破壞性操作」,實際被當成醒目 CTA 用。**把它複製到採買,等於把這個命名錯配擴散到第二處** —— 日後若有人依名稱把 destructive 改成警告紅,兩頁的儲存鈕都會變紅。本次依 Bar 指示先求視覺一致;**正確的收斂是另立一個「主要 CTA」角色 token,讓 destructive 回歸其字面語意**,已記為 backlog #39。
+- 依 #37 的教訓,動手前先確認核准邊界:`tests/shopping-list.test.js` 原本**只斷言** `disabled` 狀態與 `>儲存並新增</button>` 字面,無外觀斷言;`07_CHANGELOG.md` 關於「儲存並新增」的既有紀錄全是行為(保留什麼、清空什麼、焦點、預設值),**無配色核准**。故本次變更未觸及既有核定。
+- `tests/ledger-entry-p0.test.js:181` 原本比對 `.ledger-sheet-actions .ledger-save-another-quiet{` 這個**確切選擇器**,共用規則後當場擋下。記帳鈕的宣告與呈現皆未變,故放寬為容許選擇器清單(`[^{]*`),而非複製一份宣告。
+- 新增三條外觀斷言到 `tests/shopping-list.test.js`,把本次核定寫進測試。**三條逐一以「改回舊寫法」實測確認會失敗** —— 第一版斷言(`indexOf` 切到檔尾再 `includes('class="btn coral"')`)在弄壞後仍通過,因為整份 HTML 本來就含記帳的 `.btn.coral`,**比對恆真**;已改為錨在「取消之後緊接主儲存」的採買自身 markup。
+- 四個 gate、**95/95 Node** 通過。
+
+## 2026-09-12 — backlog #37 經查證前提錯誤而關閉(無 runtime 變更)
+
+- 原記「代購開關的三個裸 hex(`#f4e9e6`／`#c99c94`／`#6e4540`)不是 token、可自由改用 accent 家族」。**這個前提是錯的。**
+- 實作 v122 時 `tests/ledger-form-223.test.js` 當場擋下:該檔斷言 `.ledger-sheet-field>label.ledger-proxy-switch` 的 `background:#f4e9e6` 與 `border:1px solid #c99c94` 為 **approved**,措辭與 `theme-system.test.js` 中 `presentationTokens` 的「approved non-theme scale」一致。
+- `07_CHANGELOG.md` 的既有紀錄佐證:代購顯示一律套「**coral／淡紅底**」badge。**那是「代購」的語意色,全 app 一致(卡片 badge 與單品項開關共用),刻意選定。**
+- **我的判斷錯在哪**:我以「它不是 token、不在 `presentationTokens` 清單內」就推論它是 ad-hoc。**但核定不只存在於 token 清單裡 —— 也存在於元件層的斷言中。** 檢查「有沒有被納入某張清單」不等於檢查「有沒有被核定」。
+- 已完整撤回(刪除 `shell/v122/`、還原 `sw.js` 與 47 處 generation 引用、版本說明視窗)。正式站維持 **v121**。
+- **今日第二次由自動測試擋下基於錯誤前提的修正**(前一次為 #31 的 `--entry-secondary-*`)。兩次都證明那些斷言不是形式主義。
+
+## 2026-09-12 — v120 + v121 正式發布(released,未經 G1)+ G6 tag
+
+- PR [#23](https://github.com/nick80912-dev/ai-native-projects/pull/23) 以 merge 合併 `dev` `51a11c5` → `main`,merge commit **`f6eff49`**。**v120 先前建置但未發布,故本次一併上線。**
+- Netlify deploy **`6aa56a586320810008f41dd8`**、`ready`、`commit_ref` 相符、`published_at` 有值、`manual_deploy: false`。
+- **§F5 全過**:`sw.js` 與 `shell/v121/` 三件組皆 v121;root bridge 維持 v110;**六組 `--t-select-bg` 全部上線**;**v111–v120 十個舊世代皆回 200**(ADR 0019)。
+- 發布前於 shell 逐主題實測:底色／邊框／文字**三者同色族**,對白底距離**六組皆 54**,`--t-chrome` 對比 **6.72–11.64**。
+- **G1 經 Bar 裁定跳過**(同 v114–v119),v120 4 項 + v121 7 項維持未勾。**G6 完成**:`production-v121` 指向 `f6eff49`;**v120 未單獨建 tag**(與 v121 同批發布)。
+- **BB4 判準改為 v121**。現行 tags 十二個。**發布後補驗累計 50 項**。
+
 ## 2026-09-12 — v121:選取色改為逐主題(candidate,未發布)
 
 - Bar 指出選取 chip 的底色在焙茶等主題下不搭。查證屬實,**而且問題比「不搭」更根本**:

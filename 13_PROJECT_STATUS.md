@@ -18,6 +18,6 @@
 - 個人狀態只存 localStorage,不進 CMS;採買照片 Blob 只存目前裝置 IndexedDB,不進備份或跨裝置同步。
 - Hotels 以「名稱比對」掛 Places 是已知脆弱點(名稱異動會懸空),列於 `tasks/backlog.md` 觀察。
 - 修改核心架構、schema、Google Sheet 欄位、既有 ADR、或 14 定義的高風險檔案前,必須先取得 Bar 確認。
-- `sw.js`、`shell/v121/app-version.js` 與 `netlify.toml` 的 cache header 屬同一 PWA 風險群組(見 14);升版時版本字串必須同步,否則 CI 的 `tools/check-app-version.js` 會失敗。
+- `sw.js`、`shell/v122/app-version.js` 與 `netlify.toml` 的 cache header 屬同一 PWA 風險群組(見 14);升版時版本字串必須同步,否則 CI 的 `tools/check-app-version.js` 會失敗。
 - 文件裡的 `shell/vNNN` 路徑由 `tools/check-doc-generation.js` 守住,活文件不得停在舊 generation;歷史文件(`adr/`、`07_CHANGELOG.md`、`tasks/done.md` 等)刻意豁免。
 - Git 推送與自動驗證**都不等於**正式站部署,也不等於 Bar 的實機驗收 —— 三者必須分別確認。
