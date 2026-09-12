@@ -1,5 +1,13 @@
 # 07 版本紀錄
 
+## 2026-09-12 — v117:選取表達一致(backlog #35(b)、#36)
+
+- **#36 —— 兩組選取 chip 的邊框處理一致**:`.shopping-target-chip.on` 原本明寫 `border-color:transparent`,而相鄰的 `.shopping-chip.on` 有 `var(--sea)` 可見邊框 —— 同一張表單裡兩組 chip 的「選取感」強度不同。改為 `var(--coral)`,對應其自身的 accent 色系。**色系刻意維持不同**(分類=主色系、對象=accent),統一的是邊框強度而非顏色。
+- **#35(b) —— 頁首同步標記的圓角**:`.brand .sync` 高 **44px** 但圓角 **20px**,真膠囊需 ≥22px,差 2px。依形狀語意它是狀態顯示,收斂為 **999px**。
+- **圓角尺度正式修訂**:`04_UI_GUIDELINES` 原寫四級 `6／10／14／999px`,但實際最常用的 **8px** 與 `.btn` 家族的 **9px** 都不在其中。**現正式承認 8／9px 為既有主力值**,並把 `3／4／5／11／13／18／20／22px` 等單次離群值列為可收斂對象。**這是讓文件承認現實,而不是硬把 17 種值套回 4 種** —— 後者風險遠大於收益。
+- **無資料／結算語意變更,六組主題 token 一字未改**。四個 gate、**95/95 Node**、**191/191 Playwright** 通過。
+- **v117 為 candidate,尚未發布**。
+
 ## 2026-09-12 — v116 正式發布(released,未經 G1)+ G6 tag
 
 - PR [#19](https://github.com/nick80912-dev/ai-native-projects/pull/19) 以 **merge** 合併 `dev` `2ff9445` → `main`,merge commit **`9769636`**。合併前依 §E 核對:PR head 等於 `origin/dev`,且該 head 的 `sanity` 與 `browser-qa` 皆 success。

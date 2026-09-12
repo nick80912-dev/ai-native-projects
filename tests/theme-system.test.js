@@ -272,7 +272,7 @@ function extractThemeIds(html){
   assert.strictEqual(notes[0].version,appVersion(),'the newest release note is the current version');
   /* 滾動的五筆視窗:最新一筆是目前版本,其餘四筆是緊接在後的歷史版本。
      歷史版本刻意寫死字面值(見 tests/support/version.js 的適用範圍說明)。 */
-  assert.deepStrictEqual(Array.from(notes.slice(1),function(note){return note.version;}),['v115','v114','v113','v112']);
+  assert.deepStrictEqual(Array.from(notes.slice(1),function(note){return note.version;}),['v116','v115','v114','v113']);
   /* 主題辨識度那一批是 v113,不是最新一筆 —— 斷言綁在該版本上,而不是綁在「最新」,
      否則每次升版做別的事都會假失敗。它離開五筆視窗時本斷言會失敗,那時再由裁定決定去留。 */
   const themeNote=notes.filter(function(note){return note.version==='v113';})[0];
