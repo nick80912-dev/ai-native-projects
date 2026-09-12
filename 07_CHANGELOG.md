@@ -1,5 +1,49 @@
 # 07 版本紀錄
 
+## 2026-09-12 — v116:一致性批次(candidate,未發布)
+
+- 把 backlog #30／#32／#33／#34／#35(a) 打包成一次 forward bump。**這批的共同性質是「把已經做對的事套用一致」,而不是新功能** —— 幾乎每一項的正確做法 repo 裡都已經有了,只是沒被套到所有地方。
+
+### ⭐ #34:`--mint` 從未定義,8 條規則的背景靜默失效
+- 起因是 Bar 指出採買分類「已選看不出來」。追查後發現 `.shopping-chip.on` 的規則**寫得完全正確**(`border-color:var(--sea); background:var(--mint); color:var(--sea-deep)`),但 `--mint` 在 repo 歷史中**從未被定義**(`git log -S"--mint:"` 無結果)。無 fallback 的 `var()` 解析失敗會讓該屬性在計算值階段失效,`background` 退回 `transparent`。
+- 受害的 8 條規則中有 **3 條是選取狀態**,所以「選了卻看不出來」在 app 裡至少出現三次,同一個根因。
+- 定義為 **`--mint:#d6e8e4`**,取值即 `.ledger-participant-choice.on` 早已寫死的同一色。實測選取 chip 底色與未選白底的距離由 **0 變為 54**。
+- **改以「核定的非主題呈現 token」形式定義**,並納入 `tests/theme-system.test.js` 的 `presentationTokens` 受測清單 —— 理由見下方 #31。
+
+### #31 經查證前提錯誤,不實作(重要)
+- 原記「`--entry-secondary-bg`／`--entry-secondary-border` 不跟主題走是疏漏,應主題化」。**這個前提是錯的。**
+- 實作時 `tests/theme-system.test.js` 當場擋下:該檔的 `presentationTokens` 明列這兩個 token 為**核定的非主題呈現 token**並斷言其固定值;`04_UI_GUIDELINES` 也寫明「跨主題固定的 pending、entry-secondary、Shopping category」。
+- 已全數撤回,包含一度新增的第 14 個第一層 token `--t-action-bg`(6 組主題)。`.ledger-proxy-switch` 的寫死值同屬此類,維持原狀。
+- **這是自動測試擋下一次基於錯誤前提的「修正」** —— 值得記錄,因為它證明那組斷言不是形式主義。
+
+### #32:多品項帳單摘要列與單品項對齊
+- 補標籤「帳單資訊」(原本只有裸值);日期改走既有的 `ledgerOptionalDateLabel()` 顯示「今天」(原本吐 `2026/09/12`,而該函式單品項早就在用);類別加註「預設」以區分它是新品項範本而非帳單事實;順序改為 日期·類別·支付 對齊單品項。
+- chevron 由「瞬間換字元(`⌄`／`⌃`)」改為 `.chevron` class 交由 CSS 旋轉,並把旋轉規則由 `.ledger-disclosure-toggle` 擴及 `.ledger-entry-summary`,讓同一張 sheet 的兩個摺疊控制項行為一致(`04_UI_GUIDELINES`:摺疊箭頭旋轉動畫)。
+- 補上 `open` class,並讓 `.ledger-multi-bill-secondary` 比照單品項的 `.ledger-entry-secondary`(同底色、`border-top:0`、`0 0 10px 10px`),與 `.open` 的 `10px 10px 0 0` 接成連續容器。
+- **兩處先前記錄有誤,一併更正**:(e-1) chevron 原本**有**換字元,狀態看得到,差別在「瞬間切換」vs「0.2s 旋轉」,先前寫「箭頭仍朝下」是講過頭;(e-2) `.ledger-entry-summary.open` **不是死 CSS**,單品項的 render 一直有加,只有多品項那個變體沒加。
+
+### ⭐ #32 的接合一度留下 10px 空白帶(自造 regression,已修)
+- Bar 實機指出展開「帳單資訊」後,摘要文字與「日期」之間有一條空白。實測:摘要鈕底 459、面板頂 **469**,中間 10px 是空的 —— 接合根本沒接上。
+- **原因是 margin collapsing**:面板的 `padding-top:0` 與 `border-top:0` 讓第一個欄位的 `margin-top:10px` 穿透出去,把面板整個往下推。原本面板無邊框無底色時看不出來,加上邊框與底色後就成了一條明顯的空白帶。
+- **單品項的 `.ledger-entry-secondary` 本來就有 `display:flow-root`**(建立 BFC 以阻斷 margin collapsing) —— 我抄了邊框、`border-top:0`、圓角、底色,**唯獨漏抄這一個**。補上後空白帶由 10px 變為 **0**。
+- 教訓與 #33 的 12px 背景同類:**把一個既有模式複製到新位置時,漏掉的往往是那個「看起來沒作用」的屬性**,而它正是該模式成立的原因。
+
+### #33:overlay 離開方式統一
+- 把原本只服務照片修復的 `installShoppingPhotoRepairDismiss()` 抽成共用的 **`installOverlayDismiss(overlay, close, opts)`**(背景點擊、Escape、下滑、touchcancel 清理),套用於照片修復、照片檢視器與記帳 sheet。照片檢視器先前只複製了 swipe 那一半,現在補齊。
+- **記帳 sheet 以 `{swipe:false}` 套用** —— 它的內容可捲動,下滑關閉會與捲動衝突。
+- 移除底部「取消」(與右上 `×` 呼叫同一個 `closeLedgerEntrySheet()`,功能零損失),操作列由 **172px 降至 120px**。
+- **實機驗證抓到一個我自己造成的缺陷**:「取消」原本只在多品項／更正模式出現,而多品項 sheet 高到只剩 **12px** 可見背景 —— 移除後那個模式等於只剩右上 `×`。因此把 `.ledger-sheet` 的背景保留區由 `12px` 加大為 **`56px`**,兩種模式實測分別有 151px／56px 可點背景且點下去確實關閉。**這是只有真瀏覽器量得出來的問題。**
+
+### #30／#35(a)
+- 刪除 `manualSyncNew()`／`manualSync()` 兩行死碼,以及 `atomic-sheet-sync.test.js` 中隨之空轉的負向斷言(同檔前一行的正向斷言已涵蓋同一意圖)。
+- `.toast-action` 與 `.trip-back-now` 是**動作**卻用 999px 膠囊,依 2026-09-12 核定的形狀語意改為 `.btn` 的 9px 矩形。
+
+### 其他
+- **v111 的離線啟動說明滾出五筆視窗**(v72 核定的固定視窗設計),原本守著它的斷言完成任務後移除,並在測試檔留下說明。`APP_RELEASE_NOTES` 現為 v116／v115／v114／v113／v112。
+- **本次升版未再出現 v115 那類路徑殘留** —— `versionedShellKind()` 已於 v115 改為由 `CURRENT_*` 推導,全檔掃描無任何遺漏的 `shell/v115`。
+- 驗證:四個 gate、**95/95 Node**、**191/191 Playwright**,並在 390×844 以真實 SW 接管逐項實測。
+- **v116 為 candidate,尚未發布**;`origin/main` 與正式站仍是 v115。
+
 ## 2026-09-12 — v115 正式發布(released,未經 G1)+ G6 tag
 
 - PR [#17](https://github.com/nick80912-dev/ai-native-projects/pull/17) 以 **merge**(非 squash／rebase)合併 `dev` `4141ae1` → `main`,merge commit **`6094584`**。合併前依 §E 核對:**PR head 等於 `origin/dev`**(head 未移動),且該 head 的遠端 CI `sanity` 與 **`browser-qa`** 皆 success —— 這是 `browser-qa` 改為 dev push 也跑之後的第一次發布,兩條證據來自同一個 commit。

@@ -289,7 +289,6 @@ assert.notStrictEqual(htmlSource.indexOf('function closeSyncStatus('),-1,'closeS
 assert.notStrictEqual(htmlSource.indexOf('function renderSyncStatusBody('),-1,'renderSyncStatusBody exists');
 assert.notStrictEqual(htmlSource.indexOf('function retrySyncFromPanel('),-1,'retrySyncFromPanel exists');
 assert(/id="syncBtn" onclick="openSyncStatus\(\)"/.test(htmlSource),'header opens status panel');
-assert(!/id="syncBtn" onclick="manualSyncNew\(\)"/.test(htmlSource),'header no longer syncs directly');
 const syncStatusBodySource=extractFunction('renderSyncStatusBody');
 ['同步中','同步正常','更新失敗','離線資料','內建資料'].forEach(function(label){
   assert(htmlSource.indexOf(label)>=0,'status UI contains '+label);
