@@ -51,12 +51,12 @@
 
 | 項目 | 值 |
 |---|---|
-| **`origin/main` 原始碼** | **SW v114**;merge commit `39c96b2`(PR #16) |
+| **`origin/main` 原始碼** | **SW v115**;merge commit `6094584`(PR #17) |
 | **正式站** | `https://trippilot-jp.netlify.app/` — **SW v114**(2026-09-10 實查:deploy `6aa25e07`,`commit_ref` = `39c96b2` = main HEAD,`published_at` 有值,tag `production-v114`);**v114 發布後補驗**:BB1–BB3 共 14 項 iPhone 已於 2026-09-11 通過,**BB4 共 8 項實體 Android 未驗** |
-| **`origin/dev` candidate** | **SW v115**(未發布);在 `main` `39c96b2` 之上多出文件與 v115 forward bump |
+| **`origin/dev` candidate** | **SW v115**;已與 `main` 同步於 `6094584` |
 | 個人備份格式 | **v9**(`PERSONAL_STATE_SUPPORTED_VERSIONS = [1..9]`)—— v81 因想逛 key 識別語意變更而升版 |
 | candidate automated validation | Node **94/94**、Chromium Playwright **185/185**；三種啟動情境 `healthCheck()=[]`、`pageerror=0` |
-| 既有 tag | `production-v18`、`production-v73`、`production-v110`、`production-v111`、**`production-v113`**(2026-09-11 回溯補建)、**`production-v114`** |
+| 既有 tag | `production-v18`、`production-v73`、`production-v110`、`production-v111`、`production-v113`、`production-v114`、**`production-v115`** |
 
 **v114 已發布至正式站(2026-09-10,deploy `6aa25e07`),`production-v114` tag 已建立。G1 的 iPhone 半邊於 2026-09-11 補驗通過,Android 半邊(BB4)仍未驗。**
 
@@ -154,18 +154,21 @@
 
 **已知未做(需先定判準)**:Today 的「交通／停車／營業／付款／提醒**依當下情境動態調整優先順序**」。v84 只做了可明確驗收的收合(常駐交通／停車／營業,收合付款／提醒);「當下情境」的判準(依時間?依距離?依是否已抵達?)尚未定義,不同讀法會做出完全不同的東西,故未實作。
 
-## v115 forward bump:兩處觸控命中區修正(2026-09-12,dev,未發布)
+## v115 已正式發布(2026-09-12,未經 G1)
 - 2026-09-12 以 chrome-devtools MCP 在 390×844 實測 v114 發現兩處缺陷,**非使用者回報**:
   - 設定頁「簡易結算模式」的 `.settings-row` 是 `<div>`,52px 的列不是熱區,**只有 22×22 的 checkbox 可點**,點文字無反應。改為 `<label>` 後整列可切換;既有 `aria-label` 未動,可及名稱不受影響。
   - 分帳頁待同步指示器 `.ledger-summary-rate.pending` 的命中區僅 **13px 高**。**該處的扁平琥珀樣式是刻意設計**(`rgba(255,240,190,.9)` + `cursor:pointer`),因此只以 padding 撐開命中區至 **31px**、等量負 margin 抵銷,**外觀與版面完全不變**(卡片高度 231px 於兩種狀態相同)。
 - 依 ADR 0019 immutable generation,已發布的 `shell/v114/` 不得就地改,故走完整 forward bump 至 **v115**。`shell/v111`–`v114` 一律保留。 <!-- generation-exempt: 這一行描述的是 v114->v115 升版當下的事實(不得就地改的舊 generation、保留的舊世代),不隨後續升版變動 -->
 - **BB4 的判準版本隨之由 v114 改為 v115** —— 不是重做驗收,BB4 至今仍未執行過;驗 v115 反而等同一次驗完 v112／v113／v114／v115 四版。
 - 本次 forward bump **未改動任何測試檔的 generation 路徑** —— backlog #27 的遷移(2026-09-11)剛好在此回收成本。僅兩處必要維護:`theme-system.test.js` 的五筆滾動視窗尾四筆(歷史 release note,依裁定寫死),以及 `pwa-shell.test.js` 的 7 處轉義形式路徑(#27 當時的 grep 用 `shell/v114` 比對,漏掉正則字面裡的 `shell/v114/`)。 <!-- generation-exempt: 這一行描述的是 v114->v115 升版當下的事實(不得就地改的舊 generation、保留的舊世代),不隨後續升版變動 -->
-- 完整 gate 與 95/95 通過;已在 390×844 實測兩處修正生效且無視覺回歸。**尚未發布,待 Bar 決定是否併入 main。**
+- 完整 gate、95/95 Node 與 **191/191 Playwright** 通過;已在 390×844 實測兩處修正生效且無視覺回歸。
+- **2026-09-12 發布**:PR #17 以 merge(非 squash／rebase)合併 `dev` `4141ae1` → `main`,merge commit **`6094584`**;合併前確認 PR head 等於 `origin/dev` 且該 head 的 `sanity` 與 `browser-qa` 皆 success。Netlify 由 `main` 自動部署 deploy **`6aa4ffff28234900086dd305`**、`state: ready`、`commit_ref` 相符、`published_at` 有值、`manual_deploy: false`。
+- **§F5 線上核對全數通過**:`sw.js` v115;`shell/v115/` 的 app-version／HTML marker／builtin-snapshot 三者皆 v115;root `app-version.js` 維持 v110 bridge;三處 `Cache-Control` 皆為 `no-cache, no-store, must-revalidate`;**v111／v112／v113／v114 四個舊世代皆仍回 200**(ADR 0019)。另以真實瀏覽器確認 SW 接管至 v115、快取換為 `okayama-trip-v115`、兩處修正皆生效。
+- **G1 經 Bar 裁定跳過**(同 v114 前例),6 項維持未勾 —— 跳過不等於通過。**G6 完成**:`production-v115` 指向 `6094584`。
 
 ## 下一棒
 
-→ **由 Bar 在實體 Android 上完成 BB4 共 8 項**(判準版本 2026-09-12 起為 **v115**),另有 **v115 delta 清單 6 項**待 iPhone 確認。`docs/device-acceptance-log.md` 的 v114 段 22 項中,BB1–BB3 共 14 項已於 **2026-09-11** 由 Bar 在 iPhone 上確認通過;**剩下的 BB4 是併入的 v112 遺留項,只能在實體 Android 上驗。**
+→ **由 Bar 在實體 Android 上完成 BB4 共 8 項**(判準版本現為 **v115**),另有 **v115 delta 清單 6 項**待 iPhone 補驗。兩者皆為發布後補驗 —— v115 已在正式站上。`docs/device-acceptance-log.md` 的 v114 段 22 項中,BB1–BB3 共 14 項已於 **2026-09-11** 由 Bar 在 iPhone 上確認通過;**剩下的 BB4 是併入的 v112 遺留項,只能在實體 Android 上驗。**
 
 > 最關鍵的是 **BB4-a**:Service Worker 能否在實體 Android 上安裝並接管。v112 修的連線槽耗盡缺陷**只在真機發生**,桌機與 Playwright 的 Android 模擬都重現不出來。判斷方式:開啟網站 → 關掉 → 再開,設定的版本資訊顯示 **v114** 才算通過(顯示 v110 代表 SW 沒接管)。
 >
