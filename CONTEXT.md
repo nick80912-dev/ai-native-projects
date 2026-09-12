@@ -9,7 +9,7 @@
 - **身分註冊紀錄**：明細為 `[身分註冊]`、用來建立團體成員名單來源的專用 Ledger 紀錄；不等同一般消費。
 - **最大餘數法**：分攤整數金額時先取各份額整數，再依小數餘額由大到小補足差額，確保分攤總和等於原金額。
 - **原子快照**：多份 Google Sheet 資料須通過同一批驗證後才整批替換；任一必要資料失敗時不發布混合版本。
-- **BUILTIN 離線種子**：由 `tools/refresh-builtin-snapshot.js` 產生的 Tier 3 `shell/v118/builtin-snapshot.js`，包含完整八 key 並以 `BUILTIN_ASSET_VERSION` 綁定 App／SW；`shell/v118/index.html` 只保留 marker 與安全 boot guard，不複製 payload。root `index.html`／`app-version.js` 是 byte-locked v110 bridge，只在 v114 安裝前／失敗時續命。七張非 Ledger 資料來自 `schema.js` 指定的公開 CSV，Ledger 永遠只有 schema 推導的 21 欄空 header，禁止抓取 live Ledger 紀錄。asset 缺失／錯版時只接受有效 local snapshot，否則顯示 recovery 而非空 DB。預設 preview 只讀，經 Bar 核准才可 `--write`；完整 SOP 見 `16_OPS_PLAYBOOK.md` §G，決策見 ADR 0019。
+- **BUILTIN 離線種子**：由 `tools/refresh-builtin-snapshot.js` 產生的 Tier 3 `shell/v119/builtin-snapshot.js`，包含完整八 key 並以 `BUILTIN_ASSET_VERSION` 綁定 App／SW；`shell/v119/index.html` 只保留 marker 與安全 boot guard，不複製 payload。root `index.html`／`app-version.js` 是 byte-locked v110 bridge，只在 v114 安裝前／失敗時續命。七張非 Ledger 資料來自 `schema.js` 指定的公開 CSV，Ledger 永遠只有 schema 推導的 21 欄空 header，禁止抓取 live Ledger 紀錄。asset 缺失／錯版時只接受有效 local snapshot，否則顯示 recovery 而非空 DB。預設 preview 只讀，經 Bar 核准才可 `--write`；完整 SOP 見 `16_OPS_PLAYBOOK.md` §G，決策見 ADR 0019。
 - **住宿停靠點（lodging stop）**：Places 中 `Type=住宿` 的行程路線節點；PID 識別該次抵達的交通與導航脈絡。同一實體住宿可因每日里程與時間不同而有多個住宿停靠點，這些 PID 不應被自動合併。
 - **住宿主檔（hotel profile）**：Hotels 中以 HID 識別的實體住宿資料；同一主檔可被多個住宿停靠點引用。住宿或停靠點名稱都是顯示文字，不是關聯鍵。
 - **觀測者效應（no-op dblclick）**：iPhone 相容性 workaround；保留 passive、無副作用的 `dblclick` 監聽器，避免診斷或阻擋手勢本身改變問題。

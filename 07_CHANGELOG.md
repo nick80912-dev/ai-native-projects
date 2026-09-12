@@ -1,5 +1,15 @@
 # 07 版本紀錄
 
+## 2026-09-12 — v119:摺疊區塊包覆一致(candidate,未發布)
+
+- 同一張記帳 sheet 有三個摺疊控制項,**兩個展開後包成連續容器,一個不包**。`.ledger-entry-secondary` 與 `.ledger-multi-bill-secondary` 是位元組相同的規則;`.ledger-disclosure-body` 卻只有 `margin-top:9px`,內容直接散在 sheet 上。
+- **這個落差是 v118 放大的,我該負責**。v118 之前三個標題列底色不同(稅與優惠券用 `--mint`),視覺上本來就是三種東西;v118 統一底色之後才變成「**標題看起來一樣、展開卻不一樣**」—— 比原本更容易誤讀。
+- 修法沿用既有模式:展開時標題 `8px 8px 0 0`,內容 `0 0 8px 8px` + `border-top:0` + 同底色同外框。**圓角用 8px 對齊其自身標題列,而非抄那兩個面板的 10px。**
+- **`display:flow-root` 有記得加**(v116 的教訓:少了它,首個子元素的 `margin-top` 會穿透並在標題與內容間留下空白帶)。實測接合空白帶為 **0**。
+- **padding 用 `11px` 而非抄 `0 11px 11px`**:那兩個面板的首個子元素自帶 `margin-top`,本 body 的首個子元素是裸 `<span class="ledger-sheet-label">`,padding-top 給 0 會貼到標題。
+- **不改任何色值**,六組主題 token 一字未動。四個 gate、**95/95 Node**、**191/191 Playwright** 通過。
+- **v119 為 candidate,尚未發布**。
+
 ## 2026-09-12 — v118 正式發布(released,未經 G1)+ G6 tag
 
 - PR [#21](https://github.com/nick80912-dev/ai-native-projects/pull/21) 以 merge 合併 `dev` `598e443` → `main`,merge commit **`7549d20`**。合併前核對 PR head 等於 `origin/dev`,該 head 的 `sanity` 與 `browser-qa` 皆 success。
