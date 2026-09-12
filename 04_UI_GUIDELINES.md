@@ -65,9 +65,12 @@
 
 - **`border-radius:999px` 膠囊 = 狀態**。三種用途:①純顯示的 badge／tag(`.now-badge`、`.ledger-tag`、`.shop-list-count`、`.ledger-pending`、`.ledger-status-pill`)②可選取的 chip／toggle(`.ledger-track-btn`、`.shopping-chip`、`.trip-filter-btn`、`.shop-filter-btn`、`.ledger-choice`)③segmented control 的 track(`.ledger-track-grid`、`.ledger-segment`、`.ledger-sheet-track`、`.ledger-currency-grid`)。
 - **`.btn` 的圓角矩形 = 動作**。按下去會發生事情的命令:儲存、取消、新增第一項採買、儲存並再記一筆。
-- **不得互換**。膠囊傳達「這是一個你可以切換的狀態」,矩形傳達「這會執行一件事」。把選取控制項改成矩形會讓它看起來像命令;把動作做成膠囊則相反。**新增元件時先問它是狀態還是動作,再決定形狀**。
+- **`border-radius:50%` 正圓 = 純圖示按鈕**。沒有文字、方形命中區的圖示控制項:`.settings-btn`、`.settings-close`、`.shop-search-clear`、`.ledger-fab`、`.shopping-add-button`、`.shopping-photo-warning-mark`。**它們是動作,但不套 `.btn` 的矩形** —— 圖示按鈕自成一類,改成矩形反而會讓它變成這個家族裡的異類。
+- **不得互換**。膠囊傳達「這是一個你可以切換的狀態」,矩形傳達「這會執行一件事」,正圓傳達「這是一個圖示操作」。把選取控制項改成矩形會讓它看起來像命令;把動作做成膠囊則相反。**新增元件時先問它是狀態還是動作,再決定形狀**。
 - **可選取的膠囊必須有明確的選取外觀**,不能只靠邊框顏色與文字深淺 —— 全 app 的選取狀態慣例是**填色**(`background:var(--sea)` 加白字,或淺色填底加深色字)。`0.667px` 的邊框在 12px 字級下辨識不出來。
 - **已知例外,待修正**:`.toast-action` 與 `.trip-back-now` 是動作卻用 999px 膠囊,見 `tasks/backlog.md` #35。
+
+> 頁首的同步狀態 chip(`.brand .sync`)與設定鈕(`.settings-btn`)是**成對設計**:`.brand .sync::before,.settings-btn::before` 同一條規則給兩者 `inset:4px`、`border-radius:inherit` 的 `rgba(255,255,255,.1)` 襯底。前者是狀態顯示(可點開詳情),後者是圖示動作,**形狀各依其類,不應統一**。
 
 > 2026-09-12 實測依據:37 條規則使用 999px,分屬上述三類;`.btn` 家族為 9px。Bar 曾提議把膠囊統一為圓角矩形,經盤點後確認形狀承載語意而未採納,改為明文寫下規則。
 

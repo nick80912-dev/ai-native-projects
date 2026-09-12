@@ -22,6 +22,12 @@
 - 補上 `open` class,並讓 `.ledger-multi-bill-secondary` 比照單品項的 `.ledger-entry-secondary`(同底色、`border-top:0`、`0 0 10px 10px`),與 `.open` 的 `10px 10px 0 0` 接成連續容器。
 - **兩處先前記錄有誤,一併更正**:(e-1) chevron 原本**有**換字元,狀態看得到,差別在「瞬間切換」vs「0.2s 旋轉」,先前寫「箭頭仍朝下」是講過頭;(e-2) `.ledger-entry-summary.open` **不是死 CSS**,單品項的 render 一直有加,只有多品項那個變體沒加。
 
+### ⭐ #32 的接合一度留下 10px 空白帶(自造 regression,已修)
+- Bar 實機指出展開「帳單資訊」後,摘要文字與「日期」之間有一條空白。實測:摘要鈕底 459、面板頂 **469**,中間 10px 是空的 —— 接合根本沒接上。
+- **原因是 margin collapsing**:面板的 `padding-top:0` 與 `border-top:0` 讓第一個欄位的 `margin-top:10px` 穿透出去,把面板整個往下推。原本面板無邊框無底色時看不出來,加上邊框與底色後就成了一條明顯的空白帶。
+- **單品項的 `.ledger-entry-secondary` 本來就有 `display:flow-root`**(建立 BFC 以阻斷 margin collapsing) —— 我抄了邊框、`border-top:0`、圓角、底色,**唯獨漏抄這一個**。補上後空白帶由 10px 變為 **0**。
+- 教訓與 #33 的 12px 背景同類:**把一個既有模式複製到新位置時,漏掉的往往是那個「看起來沒作用」的屬性**,而它正是該模式成立的原因。
+
 ### #33:overlay 離開方式統一
 - 把原本只服務照片修復的 `installShoppingPhotoRepairDismiss()` 抽成共用的 **`installOverlayDismiss(overlay, close, opts)`**(背景點擊、Escape、下滑、touchcancel 清理),套用於照片修復、照片檢視器與記帳 sheet。照片檢視器先前只複製了 swipe 那一半,現在補齊。
 - **記帳 sheet 以 `{swipe:false}` 套用** —— 它的內容可捲動,下滑關閉會與捲動衝突。
