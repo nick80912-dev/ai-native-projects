@@ -61,6 +61,16 @@
 - 下一站 `.nx-hero`(coral 外框)+特大導航鈕 `.nx-navbtn`
 - 底部四分頁 `.tabbar`:今天/行程/購物/分帳;吸頂 `.hdr`(單一容器,勿拆回兩段 sticky)
 
+## 形狀語意(2026-09-12 核定:圓角區分「狀態」與「動作」,不得互換)
+
+- **`border-radius:999px` 膠囊 = 狀態**。三種用途:①純顯示的 badge／tag(`.now-badge`、`.ledger-tag`、`.shop-list-count`、`.ledger-pending`、`.ledger-status-pill`)②可選取的 chip／toggle(`.ledger-track-btn`、`.shopping-chip`、`.trip-filter-btn`、`.shop-filter-btn`、`.ledger-choice`)③segmented control 的 track(`.ledger-track-grid`、`.ledger-segment`、`.ledger-sheet-track`、`.ledger-currency-grid`)。
+- **`.btn` 的圓角矩形 = 動作**。按下去會發生事情的命令:儲存、取消、新增第一項採買、儲存並再記一筆。
+- **不得互換**。膠囊傳達「這是一個你可以切換的狀態」,矩形傳達「這會執行一件事」。把選取控制項改成矩形會讓它看起來像命令;把動作做成膠囊則相反。**新增元件時先問它是狀態還是動作,再決定形狀**。
+- **可選取的膠囊必須有明確的選取外觀**,不能只靠邊框顏色與文字深淺 —— 全 app 的選取狀態慣例是**填色**(`background:var(--sea)` 加白字,或淺色填底加深色字)。`0.667px` 的邊框在 12px 字級下辨識不出來。
+- **已知例外,待修正**:`.toast-action` 與 `.trip-back-now` 是動作卻用 999px 膠囊,見 `tasks/backlog.md` #35。
+
+> 2026-09-12 實測依據:37 條規則使用 999px,分屬上述三類;`.btn` 家族為 9px。Bar 曾提議把膠囊統一為圓角矩形,經盤點後確認形狀承載語意而未採納,改為明文寫下規則。
+
 ## 字體
 全站使用 `"Noto Sans TC","PingFang TC","Microsoft JhengHei"` 優先的繁中字體 stack。內文 15px、標題 17-20px、輔助 11-13px。主導覽四個功能圖示與設定入口使用同一組 inline outline SVG（`currentColor`），不引入 icon font；交通、天氣等內容 Emoji 可保留。桃子診斷徽章維持 PNG。
 
