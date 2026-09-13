@@ -278,8 +278,9 @@ function extractThemeIds(html){
      守著它的斷言完成任務後移除 —— 與 v111 的離線啟動說明同一處理。 */
   /* 滾動的五筆視窗:最新一筆是目前版本,其餘四筆是緊接在後的歷史版本。
      歷史版本刻意寫死字面值(見 tests/support/version.js 的適用範圍說明)。 */
-  assert.deepStrictEqual(Array.from(notes.slice(1),function(note){return note.version;}),['v121','v120','v119','v118']);
+  assert.deepStrictEqual(Array.from(notes.slice(1),function(note){return note.version;}),['v122','v121','v120','v119']);
   /* v117 的選取表達說明已於 2026-09-12 隨 v122 加入而滾出五筆視窗，同前一個處理。
+  /* v118 的顏色語意收斂說明已於 2026-09-13 隨 v123 加入而滾出五筆視窗,同前一個處理。
   /* v111 的離線啟動說明已於 2026-09-12 隨 v116 加入而滾出五筆視窗(v72 核定的固定視窗設計),
      原本守著它的斷言完成任務後移除。日後若要保留某一筆說明,應改變視窗規則而非加回斷言。 */
   notes.forEach(note=>{
@@ -291,5 +292,16 @@ function extractThemeIds(html){
   assert(dataPageSource.includes('renderAppReleaseNotes()'),'release notes render only in Data and Version');
   assert.strictEqual((dataPageSource.match(/SW /g)||[]).length,1,'Data and Version shows the SW version once');
 
-  console.log('theme system tests passed');
+  /* v123:v121 把選取底色抽成 --t-select-bg(--mint)後,仍有三處寫死 ocean 青綠調。
+   .ledger-participant-choice.on 由 tests/ledger-entry-p0.test.js 守著;另外兩處在此。
+   04_UI_GUIDELINES 形狀語意節明訂「可選取的膠囊必須有明確的選取外觀 —— 慣例是填色」。 */
+assert.match(html,/\.nx-cluster-expand\.on\{[^}]*background:var\(--mint\)/,'cluster expand selection uses the per-theme selection surface');
+assert.match(html,/\.floor-head\.on\{[^}]*background:var\(--mint\)/,'floor head selection uses the per-theme selection surface');
+assert.doesNotMatch(html,/background:#f1f8f8|background:#f2f8f8|background:#d6e8e4/,'the three hardcoded ocean selection tints are gone');
+
+/* v123:測試帳本提示裡的「前往設定關閉」是純導覽,不應與確認刪除同色(backlog #39)。 */
+assert.doesNotMatch(html,/class="btn coral" onclick="openSettings\(/,'the test-ledger navigation button no longer uses the destructive role');
+assert.match(html,/class="btn ghost" onclick="openSettings\(/,'the test-ledger navigation button uses the secondary role');
+
+console.log('theme system tests passed');
 })();
