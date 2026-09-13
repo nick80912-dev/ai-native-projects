@@ -1097,4 +1097,10 @@ assert(ui.includes('<button type="button" class="btn shopping-save-another" oncl
 assert(ui.includes('.ledger-sheet-actions .ledger-save-another-quiet,.shopping-form-actions .shopping-save-another{'),
   '兩處次存檔鈕共用同一條規則，避免各自漂移');
 
+/* v124:批次工具列的刪除鈕原本靠 button:last-child 上色,但 JS 送出的是
+   class="danger"(index===2)。位置與語意目前剛好重合,按鈕順序一改就會靜默
+   錯色。Ledger 的同類工具列本來就是 .danger,這裡對齊它。 */
+assert.doesNotMatch(appHtml(),/\.shopping-selection[a-z-]*( \.shopping-selection-actions)? button:last-child/,'the shopping bulk toolbar no longer colours by position');
+assert.match(appHtml(),/\.shopping-selection-toolbar button\.danger\{[^}]*background:var\(--coral\)/,'the shopping bulk delete button is keyed on its semantic class');
+
 console.log('shopping list tests passed');

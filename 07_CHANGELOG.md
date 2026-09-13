@@ -1,5 +1,33 @@
 # 07 版本紀錄
 
+## 2026-09-13 — v124:三組低對比按鈕文字 + 三項一致性收斂(candidate,未發布)
+
+- 本批處理 2026-09-13 配色稽核裡**不需要新設計裁定**的項目。需要 Bar 裁定的(backlog #39 的 token 改名＋定色)與大型重構(角色 token 採用率、寫死 hex 收斂)都不在此批。
+
+### 可近用性:三組低於 WCAG AA 4.5:1 的按鈕文字
+
+`--ink-faint` 是給輔助說明用的灰,被拿來當按鈕標籤;`#9a7620` 則是 `.tag.stay` 的色值被複製到 `.qa-btn.nf`。三組都是既存缺陷,與主題無關。
+
+| 選擇器 | 改動 | 六主題對比 |
+|---|---|---|
+| `.qa-btn.mo`(更多) | `--ink-faint` → `--ink-soft` | 2.92–3.99 → **4.52–6.46** |
+| `.nx-decision-btn.skip`(略過) | `--ink-faint` → `--ink-soft` | 3.22–4.73 → **4.98–7.14** |
+| `.qa-btn.nf`(景點資訊) | `#9a7620` → `#8a6416` | 3.80 → **4.84** |
+
+`#8a6416` 是專案既有值(`.detail .hl`／`.pc-tip`／`--shopping-category-ink` 都在用),同一個金色家族的深階,不新增色票。**ocean 的 `.qa-btn.mo` 落在 4.52,只比門檻高 0.02** —— 若日後 `--t-ink-soft` 或 `--t-line-soft` 再調,這一格要重驗。
+
+### 一致性收斂
+
+- **`.sw-opt.on`(分攤成員)**:原為寫死的 `#e9f2ec` + `--green` 描邊,改為 `var(--sea)` 填色 + 白字。它與正上方的 `.payer-opt.on`(付款人)是**同一張表單裡上下相鄰的同一種多選 chip**,原本卻是兩種選取外觀。改後與全 app 的 14 條主流選取規則一致。
+- **Shopping 批次工具列**:三條 `button:last-child` 改為 `button.danger`。JS 本來就送出 `class="danger"`(`index===2`),但 CSS 靠**位置**上色。目前 `model.actions` 恆為三項(`已買／記帳／刪除` 或 `移回待買／記帳／刪除`),位置與語意剛好重合,**按鈕順序一改就會靜默錯色**。Ledger 的同類工具列本來就是 `.danger`,這裡對齊它。純機械改動,零視覺變更。
+- **`.settings-member-add` 改正圓**(Bar 2026-09-13 裁定):它的內容只有一個 `＋`、靠 `aria-label="新增身分"` 命名、`38×38` 近正方,條件上就是 `04_UI_GUIDELINES` 形狀語意節的「純圖示按鈕」,卻套著 `.btn` 的 9px 矩形,也不在準則點名的六個正圓成員裡。這是該節 2026-09-12 立規時漏掉的成員,現補列進清單並附上理由。
+
+### 驗證
+
+- 四個 gate、**95/95 Node**、**191/191 Playwright** 通過。
+- **六項變更逐一以「改回舊寫法」實測確認新斷言會紅**。過程中修掉兩條自己寫壞的斷言:一條 `doesNotMatch` 因為 `.tag.shop` 也用 `#e9f2ec` + `--green` 而恆假,已收斂到 `.sw-opt.on` 規則自身;另一條誤用了 `tests/shopping-list.test.js` 裡不存在的頂層 `html` 變數,改為 `appHtml()`。
+- 五筆 release-note 視窗依 v72 核定規則滾動:v124 進、v119 出。
+
 ## 2026-09-13 — v123 正式發布(released,未經 G1)+ G6 tag
 
 - PR [#25](https://github.com/nick80912-dev/ai-native-projects/pull/25) 以 merge 合併 `dev` `ff7cae4` → `main`,merge commit **`151f973`**。合併前確認 PR head 等於 `origin/dev`,且該 head 的遠端 `sanity` 與 `browser-qa` 皆 success(7 checks pass / 0 fail)。

@@ -27,17 +27,17 @@
 39. **`--action-destructive-*` 被當成主要 CTA 用,名實不符**:`.btn.coral` 吃 `--action-destructive-bg`(`var(--coral)`),但實際掛在**記帳主儲存**上,v122 起又多了**採買主儲存**。三個角色 token 裡,primary(`var(--sea)`)與 secondary 名實相符,只有 destructive 被挪用。
 
     - **風險具體化**:今天若有人依 token 名稱把 `--action-destructive-bg` 改成警告紅(那正是這個名字要求的),**兩頁的儲存鈕會一起變紅**,而兩者都不是破壞性操作。名稱與用途脫鉤的 token 遲早會被依名稱修改。
-    - **現況盤點(2026-09-13 完成,v123 更新)**:`shell/v123/index.html` 共 7 個 `.btn.coral` 站點,分成兩類 ——
+    - **現況盤點(2026-09-13 完成,v124 更新)**:`shell/v124/index.html` 共 7 個 `.btn.coral` 站點,分成兩類 ——
 
       | 行 | 標籤 | 呼叫 | 分類 |
       |---|---|---|---|
       | `:3906` | 儲存 | `saveShoppingForm()` | 醒目 CTA |
       | `:4219` | 新增第一項採買 | `startShoppingAdd()` | 醒目 CTA |
-      | `:10135` | 儲存／更新(`saveLabel`) | `#ledgerSave` | 醒目 CTA |
-      | `:11065` | 記一筆消費 | `openLedgerQuickEntryFromFab()` | 醒目 CTA |
-      | `:10371` | 確認刪除 N 筆 | `submitSharedLedgerDeletion()` | **真正破壞性** |
-      | `:11066` | 清除舊本機紀錄 | `clearLegacyExpenses()` | **真正破壞性** |
-      | `:10878` | 退回 | `submitSettlementReject()` | **待裁定**(拒絕收款,不刪資料) |
+      | `:10133` | 儲存／更新(`saveLabel`) | `#ledgerSave` | 醒目 CTA |
+      | `:11063` | 記一筆消費 | `openLedgerQuickEntryFromFab()` | 醒目 CTA |
+      | `:10369` | 確認刪除 N 筆 | `submitSharedLedgerDeletion()` | **真正破壞性** |
+      | `:11064` | 清除舊本機紀錄 | `clearLegacyExpenses()` | **真正破壞性** |
+      | `:10876` | 退回 | `submitSettlementReject()` | **待裁定**(拒絕收款,不刪資料) |
 
       4 個醒目 CTA、2 個真破壞性、1 個待裁定。v122 盤點時的第 8 個站點「前往設定關閉」(純導覽,兩類都不是)**已於 v123 改為 `.btn.ghost`**,不再屬於本項。
     - **做法:改名＋定色(2026-09-13 修訂,原為「純改名」)**:新增第四個角色 `--action-cta-*`,把 4 個醒目 CTA 遷過去;`--action-destructive-*` 回歸字面語意,供 `:10366`／`:11061` 使用。
