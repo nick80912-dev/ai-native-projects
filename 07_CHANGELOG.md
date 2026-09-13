@@ -1,5 +1,21 @@
 # 07 版本紀錄
 
+## 2026-09-13 — v123 正式發布(released,未經 G1)+ G6 tag
+
+- PR [#25](https://github.com/nick80912-dev/ai-native-projects/pull/25) 以 merge 合併 `dev` `ff7cae4` → `main`,merge commit **`151f973`**。合併前確認 PR head 等於 `origin/dev`,且該 head 的遠端 `sanity` 與 `browser-qa` 皆 success(7 checks pass / 0 fail)。
+- Netlify deploy **`6aa606e0f24f7a0008e536ed`**、`ready`、`commit_ref` = `151f973` 相符、`published_at` 有值、`manual_deploy: false`。20 個新檔、6 條 header rule 全數部署成功。
+- **§F5 線上核對五項全過**:`sw.js` v123;`shell/v123/` 三件組皆 v123;root `app-version.js` 維持 v110 bridge;三處 `Cache-Control` 皆 `no-cache, no-store, must-revalidate`;**v111–v122 十二個舊世代皆回 200**(ADR 0019)。
+- **G6 完成**:annotated tag `production-v123` 指向 `151f973`,訊息明文記錄 G1 未執行。
+- **真機回報與排除過程(值得記下)**:Bar 發布後回報「點篩選還是會往下移」。實查後確認是**裝置端仍停在 v122** —— 線上 `sw.js` 已是 v123,但 worker 未換代(§A2 的「開兩次生效」)。判定方式是在 v123 的實際頁面上做同頁對照組:呼叫真實的 `renderLedgerFullHistory` 產生 DOM,再切換 `#ledgerHistoryClearFilters` 的 `hidden`——
+
+  | | 標題列高 | 面板高 | 清單頂端位移 |
+  |---|---|---|---|
+  | v123 現況 | 32 → 32px | 362.59 → 362.59 | **0** |
+  | 同頁移除 `min-height`(＝v122) | 20.79 → 32px | 351.39 → 362.59 | **11.21px** |
+
+  Bar 重開 App 換到 v123 後確認位移不再發生。**教訓:使用者回報「修了還是壞的」時,第一個排除項是版本而不是程式碼。** 第一次的量測用的是自己拼的 markup,雖然數字正確,但無法回答「真實頁面上是否仍有其他位移來源」;改用 App 自己的 render 函式才是可信的對照。
+- 一併確認更新路徑是**就地改屬性**而非整頁重繪(`badge.hidden` / `button.classList.toggle('on')` / `clear.hidden` / `renderLedgerHistoryResults()` 只換 `#ledgerHistoryResults`),因此面板內不存在其他會變動版面的節點。
+
 ## 2026-09-13 — v123:篩選面板位移修正 + 兩處選取底色補主題化(candidate,未發布)
 
 - Bar 回報:團體完整紀錄頁點篩選、選了條件之後,頁面會稍微向下偏移。**查證屬實,量得 11.21px。**
