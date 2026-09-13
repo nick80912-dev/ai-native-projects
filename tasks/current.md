@@ -196,12 +196,14 @@
 - **真機已確認**:Bar 於 2026-09-13 在正式站確認篩選位移不再發生。**回報過程本身值得記下** —— Bar 第一次回報「還是會位移」時仍停在 v122,`sw.js` 已是 v123 但裝置端的 worker 尚未換代;以同頁對照組(移除 `min-height` → 11.21px;保留 → 0)確認 v123 的修正有效後,請 Bar 重開 App 才換到 v123。**§A2 的「開兩次生效」不只是部署細節,也是回報缺陷時的第一個排除項。**
 - **G1 經 Bar 裁定跳過**(同 v114–v122),v123 的裝置驗收項維持未勾 —— 跳過不等於通過。**G6 完成**:`production-v123` 指向 `151f973`。
 
-## v124 candidate(2026-09-13,未發布)
+## v124 已正式發布(2026-09-13,未經 G1)
 
 - 本批只做**不需新設計裁定**的項目:三組低於 AA 的按鈕文字(`.qa-btn.mo`／`.nx-decision-btn.skip`／`.qa-btn.nf`)、`.sw-opt.on` 對齊隔壁的 `.payer-opt.on`、Shopping 批次工具列由 `:last-child` 改為 `.danger`,以及 Bar 裁定的 `.settings-member-add` 改正圓並補進準則清單。
 - 四個 gate、**Node 95/95**、**Playwright 191/191** 通過。六項變更**逐一以「改回舊寫法」實測確認新斷言會紅**。
-- **待 Bar 決定是否發正式站**。發布前需走完 PR → Actions → merge → §F5 → G6 tag。
-- **尚未在真機驗證**。對比值為計算值,建議在陽光下或低亮度實測「更多」與「略過」兩顆鈕 —— ocean 的 `.qa-btn.mo` 只比門檻高 0.02。
+- **2026-09-13 發布**:PR [#26](https://github.com/nick80912-dev/ai-native-projects/pull/26) 以 merge 合併 `dev` `e7cd524` → `main`,merge commit **`2e11c48`**;合併前確認 PR head 等於 `origin/dev`,並**等 PR 觸發的那輪 `browser-qa` 跑完才動手,未在 pending 狀態下 merge**。Netlify deploy `state: ready`、`commit_ref` 相符、`published_at` 有值。
+- **§F5 線上核對全數通過**:`sw.js` v124;`shell/v124/` 三件組皆 v124;root `app-version.js` 維持 v110 bridge;三處 `Cache-Control` 正確;**v111–v123 十三個舊世代皆回 200**(ADR 0019)。 <!-- generation-exempt: 這是 v124 §F5 線上核對當下的量測結果,不隨後續升版變動 -->
+- **G1 經 Bar 裁定跳過**(同 v114–v123),裝置驗收項維持未勾。**G6 完成**:`production-v124` 指向 `2e11c48`。
+- **真機觀感未回報**:本批的對比改善為計算值,Bar 尚未在實機確認「更多」與「略過」的觀感。ocean 的 `.qa-btn.mo` 落在 4.52,只比門檻高 0.02 —— 日後若再調 `--t-ink-soft` 或 `--t-line-soft`,這一格要重驗。
 - **仍未動的**:backlog #39(`--action-destructive-*` 改名＋定色)待 Bar 裁定;「退回」兩種配方(D1)的答案跟著 #39 走;角色 token 採用率 3/105(E1)與 63 個寫死 hex(E2)是大型重構,建議排在 #39 之後;「改回未記帳」的 `.danger` 紅字(D2)本批未處理,待 Bar 決定。
 
 ## v125 candidate(2026-09-13,未發布)

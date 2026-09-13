@@ -1,5 +1,12 @@
 # 07 版本紀錄
 
+## 2026-09-13 — v124 正式發布(released,未經 G1)+ G6 tag
+
+- PR [#26](https://github.com/nick80912-dev/ai-native-projects/pull/26) 以 merge 合併 `dev` `e7cd524` → `main`,merge commit **`2e11c48`**。合併前確認 PR head 等於 `origin/dev`,並**等 PR 觸發的那輪 `browser-qa` 跑完才動手** —— 該 commit 在 push 事件已綠一次,但不以「同一個 commit 已經綠過」為由在 pending 狀態下 merge。
+- Netlify deploy `ready`、`commit_ref` = `2e11c48` 相符、`published_at` 有值。
+- **§F5 線上核對五項全過**:`sw.js` v124;`shell/v124/` 三件組皆 v124;root bridge 維持 v110;三處 `Cache-Control` 正確;**v111–v123 十三個舊世代皆回 200**(ADR 0019)。
+- **G6 完成**:annotated tag `production-v124` 指向 `2e11c48`,訊息明文記錄 G1 未執行**以及真機觀感尚未回報**。
+- 本批不含 backlog #39(已於 v125 收斂)。
 ## 2026-09-13 — v125:backlog #39 收斂,destructive 改為固定紅(candidate,未發布)
 
 - Bar 問「刪除或影響資料庫的按鈕就沿用之前的紅色(珊瑚色)嗎」。**這個前提不成立** —— `--coral` 就是 `--t-accent`,從來不是固定紅:
