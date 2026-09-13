@@ -51,12 +51,12 @@
 
 | 項目 | 值 |
 |---|---|
-| **`origin/main` 原始碼** | **SW v122**;merge commit `b34d4b9`(PR #24) |
+| **`origin/main` 原始碼** | **SW v123**;merge commit `151f973`(PR #25) |
 | **正式站** | `https://trippilot-jp.netlify.app/` — **SW v114**(2026-09-10 實查:deploy `6aa25e07`,`commit_ref` = `39c96b2` = main HEAD,`published_at` 有值,tag `production-v114`);**v114 發布後補驗**:BB1–BB3 共 14 項 iPhone 已於 2026-09-11 通過,**BB4 共 8 項實體 Android 未驗** |
-| **`origin/dev` candidate** | **SW v122**;已與 `main` 同步於 `b34d4b9` |
+| **`origin/dev` candidate** | **SW v123**;已與 `main` 同步於 `151f973` |
 | 個人備份格式 | **v9**(`PERSONAL_STATE_SUPPORTED_VERSIONS = [1..9]`)—— v81 因想逛 key 識別語意變更而升版 |
 | candidate automated validation | Node **95/95**、Chromium Playwright **191/191**；三種啟動情境 `healthCheck()=[]`、`pageerror=0` |
-| 既有 tag | `production-v18`、`production-v73`、`production-v110`、`production-v111`、`production-v113`、`production-v114`、`production-v115`、`production-v116`、`production-v117`、`production-v118`、`production-v119`、`production-v121`、**`production-v122`** |
+| 既有 tag | `production-v18`、`production-v73`、`production-v110`、`production-v111`、`production-v113`、`production-v114`、`production-v115`、`production-v116`、`production-v117`、`production-v118`、`production-v119`、`production-v121`、`production-v122`、**`production-v123`** |
 
 **v114 已發布至正式站(2026-09-10,deploy `6aa25e07`),`production-v114` tag 已建立。G1 的 iPhone 半邊於 2026-09-11 補驗通過,Android 半邊(BB4)仍未驗。**
 
@@ -181,18 +181,28 @@
 - 採買表單主存檔 `btn` → `btn coral`；次存檔去掉 `ghost`，改與 `.ledger-save-another-quiet` **共用同一條規則**。取消鈕未動。
 - 四個 gate、**Node 95/95**、**Playwright 191/191** 通過。三條新增外觀斷言已逐一以「改回舊寫法」實測會失敗。
 - PR [#24](https://github.com/nick80912-dev/ai-native-projects/pull/24) merge commit **`b34d4b9`**;Netlify deploy **`6aa573842a2a6f000829a985`**、`ready`、`commit_ref` 相符、`published_at` 有值。
-- **§F5 全過**:`sw.js` 與 `shell/v123/` 三件組皆 v122;root bridge v110;兩處 `Cache-Control` 正確;**v111–v121 十一個舊世代皆回 200**。
+- **§F5 全過**:`sw.js` 與 `shell/v124/` 三件組皆 v122;root bridge v110;兩處 `Cache-Control` 正確;**v111–v121 十一個舊世代皆回 200**。
 - **G6 完成**:`production-v122` 指向 `b34d4b9`。**G1 未執行**,v122 裝置驗收項維持未勾。
 - 順帶記下 backlog **#39**：`--action-destructive-*` 被當主要 CTA 用，名實不符，本次變更把這個錯配擴散到第二處。
 
-## v123 candidate(2026-09-13,未發布)
+## v123 已正式發布(2026-09-13,未經 G1)
 
 - **修正 Bar 回報的篩選位移**:團體完整紀錄頁選了篩選條件時,「清除篩選」由 hidden 轉為顯示,`.ledger-history-filter-panel-head` 的 flex 列高由 20.79px(`<strong>`)跳到 32px(該鈕的 `min-height`),面板長高 **11.21px**,下方整份清單被推走。加 `min-height:32px` 預留高度,實測位移歸零。
 - **順帶補完 v121 的收尾**:`.ledger-participant-choice.on`／`.nx-cluster-expand.on`／`.floor-head.on` 三處仍寫死 ocean 青綠調(`#d6e8e4`／`#f1f8f8`／`#f2f8f8`),改為 `var(--mint)`。後兩者只差一階、等同重複,一併消掉。
 - **backlog #39 的唯一錯用站點先修**:測試帳本提示的「前往設定關閉」是純導覽,`btn coral` → `btn ghost`。`--action-destructive-*` 本身未動,#39 仍待裁定,盤點表已更新為 7 個站點。
 - 四個 gate、**Node 95/95**、**Playwright 191/191** 通過。四項變更**逐一以「改回舊寫法」實測確認新斷言會紅**。
+- **2026-09-13 發布**:PR [#25](https://github.com/nick80912-dev/ai-native-projects/pull/25) 以 merge(非 squash／rebase)合併 `dev` `ff7cae4` → `main`,merge commit **`151f973`**;合併前確認 PR head 等於 `origin/dev` 且該 head 的 `sanity` 與 `browser-qa` 皆 success(7 checks pass / 0 fail)。Netlify 由 `main` 自動部署 deploy **`6aa606e0f24f7a0008e536ed`**、`state: ready`、`commit_ref` = `151f973` 相符、`published_at` 有值、`manual_deploy: false`。
+- **§F5 線上核對全數通過**:`sw.js` v123;`shell/v124/` 的 app-version／HTML marker／builtin-snapshot 三者皆 v123;root `app-version.js` 維持 v110 bridge;三處 `Cache-Control` 皆為 `no-cache, no-store, must-revalidate`;**v111–v122 十二個舊世代皆仍回 200**(ADR 0019)。 <!-- generation-exempt: 這是 v123 §F5 線上核對當下的量測結果,不隨後續升版變動 -->
+- **真機已確認**:Bar 於 2026-09-13 在正式站確認篩選位移不再發生。**回報過程本身值得記下** —— Bar 第一次回報「還是會位移」時仍停在 v122,`sw.js` 已是 v123 但裝置端的 worker 尚未換代;以同頁對照組(移除 `min-height` → 11.21px;保留 → 0)確認 v123 的修正有效後,請 Bar 重開 App 才換到 v123。**§A2 的「開兩次生效」不只是部署細節,也是回報缺陷時的第一個排除項。**
+- **G1 經 Bar 裁定跳過**(同 v114–v122),v123 的裝置驗收項維持未勾 —— 跳過不等於通過。**G6 完成**:`production-v123` 指向 `151f973`。
+
+## v124 candidate(2026-09-13,未發布)
+
+- 本批只做**不需新設計裁定**的項目:三組低於 AA 的按鈕文字(`.qa-btn.mo`／`.nx-decision-btn.skip`／`.qa-btn.nf`)、`.sw-opt.on` 對齊隔壁的 `.payer-opt.on`、Shopping 批次工具列由 `:last-child` 改為 `.danger`,以及 Bar 裁定的 `.settings-member-add` 改正圓並補進準則清單。
+- 四個 gate、**Node 95/95**、**Playwright 191/191** 通過。六項變更**逐一以「改回舊寫法」實測確認新斷言會紅**。
 - **待 Bar 決定是否發正式站**。發布前需走完 PR → Actions → merge → §F5 → G6 tag。
-- **尚未在真機驗證**:11.21px 的量測是在 375×812 的桌面瀏覽器以 v123 真實 CSS 測得,SW 接管後的實機表現待 Bar 確認。
+- **尚未在真機驗證**。對比值為計算值,建議在陽光下或低亮度實測「更多」與「略過」兩顆鈕 —— ocean 的 `.qa-btn.mo` 只比門檻高 0.02。
+- **仍未動的**:backlog #39(`--action-destructive-*` 改名＋定色)待 Bar 裁定;「退回」兩種配方(D1)的答案跟著 #39 走;角色 token 採用率 3/105(E1)與 63 個寫死 hex(E2)是大型重構,建議排在 #39 之後;「改回未記帳」的 `.danger` 紅字(D2)本批未處理,待 Bar 決定。
 
 ## 下一棒
 
