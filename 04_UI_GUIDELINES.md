@@ -51,7 +51,15 @@
 | 霧藍／瀨戶 | `#edf4f8` | `#fbfdff` | `#314d63` | `#356d8c` | `#9a6614` | `#f7ecd0` | `#1e303d` | `#4d6270` | `#6f8290` | `#d2dfe7` | `#e2ebf0` | `rgba(251,253,255,.96)` | `#4b746c` |
 | 焙茶／倉敷 | `#f7f0e7` | `#fff9f1` | `#49362b` | `#896748` | `#405c7a` | `#e5edf5` | `#33261d` | `#5f4e42` | `#7a695d` | `#ddcbb9` | `#eadfd2` | `rgba(255,249,241,.96)` | `#9a4f30` |
 
-固定色：`--green #367055`、`--gold #c1963c`、`--gold-ink #85661c`，以及既有 warning／correction／shadow token。新增主題時必須補齊 13 個第一層 token 並通過自動對比測試。
+固定色：`--action-destructive-bg #8c1d2c`(刪除／清除資料,**不隨主題** —— 見下)、`--green #367055`、`--gold #c1963c`、`--gold-ink #85661c`，以及既有 warning／correction／shadow token。新增主題時必須補齊 13 個第一層 token 並通過自動對比測試。
+
+### 動作角色色(2026-09-13,v125 核定)
+
+- **`--action-cta-*` = 主要提交／建立**。儲存、新增第一項、記一筆消費、對話框的主要確認。底色取自第 15 個主題 token **`--t-cta-bg`**,由各主題 accent 推導,白字一律 ≥ 4.5:1。只有海洋 `#c05232` 與象牙 `#c74f0d` 相對 accent 壓深一階(色相位移 0–1°),其餘四組沿用原 accent 值。
+- **`--action-destructive-* = #8c1d2c` 固定紅,不隨主題**。只用於**刪除或清除資料**:`確認刪除 N 筆`、`清除舊本機紀錄`、各處 `.danger`／`.remove`、整張收據作廢。**理由**:`--coral` 是 `--t-accent`,六主題下分別是橙紅／橙／粉紅／橙／琥珀／藍 —— 危險訊號不得隨佈景主題改變。
+- **不是破壞性就不得用紅**。「改回未記帳」只解除記帳連結、不刪資料,已於 v125 拿掉 `class="danger"`。判準是「**這個動作會不會讓資料消失**」,不是「使用者會不會後悔」。
+- **已知弱點**:藤紫的 CTA `#c0416e` 與固定紅只差 13° 色相。靠明度拉開(底色明度比 1.81),且兩個真正破壞性的站點都在二次確認對話框後面 —— **紅色是最後一層防線,不是唯一一層**。不得因此改動六主題的 `--t-*` 值(v110 準則)。
+
 
 ## 元件慣例(復用既有 class,不重造)
 - 卡片 `.item`(行程)/ `.card`(區塊)/ `.shop-mall`;圓角 12-16px,shadow 統一 `--shadow`
@@ -78,7 +86,7 @@
 
 - **主存檔走 `.btn.coral`，次存檔走安靜次級表面**。適用於所有「存檔＋再來一筆」型的表單：新增消費（儲存／儲存並再記一筆）、新增採買項目（儲存／儲存並新增）。取消走 `.btn.ghost`。
 - 次存檔的安靜表面由 `.ledger-sheet-actions .ledger-save-another-quiet,.shopping-form-actions .shopping-save-another` **一條規則共同提供**。新增同類表單時把選擇器加進這條規則，**不要複製宣告** —— 兩份宣告必定漂移。
-- **已知問題**：`.btn.coral` 吃的是 `--action-destructive-bg`，而這兩處都不是破壞性操作。**不要依 token 名稱把 `--action-destructive-*` 改成警告紅** —— 會連帶把兩頁的存檔鈕染紅。收斂方向見 `tasks/backlog.md` #39。
+- **已解除(2026-09-13,v125)**:原記「`.btn.coral` 吃的是 `--action-destructive-bg`,而這兩處都不是破壞性操作;不要依 token 名稱把它改成警告紅」。backlog #39 落地後,**主存檔改走 `.btn.cta`**(`--action-cta-*`,由第 15 個主題 token `--t-cta-bg` 供色),`--action-destructive-*` 已回歸字面語意並定為不隨主題的固定紅 `#8c1d2c`。**該限制不再適用**,`.btn.coral` 這個 class 也已移除。
 
 ## 字體
 全站使用 `"Noto Sans TC","PingFang TC","Microsoft JhengHei"` 優先的繁中字體 stack。內文 15px、標題 17-20px、輔助 11-13px。主導覽四個功能圖示與設定入口使用同一組 inline outline SVG（`currentColor`），不引入 icon font；交通、天氣等內容 Emoji 可保留。桃子診斷徽章維持 PNG。

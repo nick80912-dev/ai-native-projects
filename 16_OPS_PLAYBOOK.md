@@ -215,16 +215,16 @@ GitHub Pages URL：https://nick80912-dev.github.io/ai-native-projects/
 curl -s https://trippilot-jp.netlify.app/sw.js | grep "^var SW_VERSION"
 
 # 2. Current immutable generation 三件組(以下 v114 需替換為目標 SW_VERSION)
-curl -s https://trippilot-jp.netlify.app/shell/v124/app-version.js
-curl -s https://trippilot-jp.netlify.app/shell/v124/index.html | grep BUILTIN_HTML_VERSION
-curl -s https://trippilot-jp.netlify.app/shell/v124/builtin-snapshot.js | grep BUILTIN_ASSET_VERSION
+curl -s https://trippilot-jp.netlify.app/shell/v125/app-version.js
+curl -s https://trippilot-jp.netlify.app/shell/v125/index.html | grep BUILTIN_HTML_VERSION
+curl -s https://trippilot-jp.netlify.app/shell/v125/builtin-snapshot.js | grep BUILTIN_ASSET_VERSION
 
 # 2b. Root bridge 必須仍是 predecessor v110，不得誤升為 current
 curl -s https://trippilot-jp.netlify.app/app-version.js
 
 # 3. header 行為(測試站刪除後,這是唯一驗得到的地方;GitHub Pages 無法重現)
 curl -sI https://trippilot-jp.netlify.app/sw.js | grep -i cache-control
-curl -sI https://trippilot-jp.netlify.app/shell/v124/app-version.js | grep -i cache-control
+curl -sI https://trippilot-jp.netlify.app/shell/v125/app-version.js | grep -i cache-control
 
 # 4. 前一代 generation 必須仍可服務(ADR 0019)
 #    尚未升級的裝置靠它繼續運作,回 404 就是把舊裝置打斷。
@@ -234,7 +234,7 @@ curl -s -o /dev/null -w "%{http_code}" https://trippilot-jp.netlify.app/shell/<�
 
 **裝置端第 5 項核對**(前四項通過後,在真機或桌面 DevTools):
 - Application → Cache Storage 的名稱應為 `okayama-trip-<目標版本>`;
-- 展開該 cache，`shell/v124/index.html`／`app-version.js`／`builtin-snapshot.js` 三者必須都是目標版本；`schema.js` 等 reused module 必須存在且由該 cache 提供。root `index.html`／`app-version.js` 不屬於 v114 cache target，應維持 v110 bridge。**不是只看 cache 名稱對就算過**。
+- 展開該 cache，`shell/v125/index.html`／`app-version.js`／`builtin-snapshot.js` 三者必須都是目標版本；`schema.js` 等 reused module 必須存在且由該 cache 提供。root `index.html`／`app-version.js` 不屬於 v114 cache target，應維持 v110 bridge。**不是只看 cache 名稱對就算過**。
 
 **任何一項不符 → 立即依 §A2 forward bump 修正,不得倒退覆寫。** 因為這是發布後核對,不符即代表**線上已經是壞的**,處理優先於一切其他工作。
 
@@ -280,7 +280,7 @@ node tools/refresh-builtin-snapshot.js
 npx playwright test tests/browser/trip-three-scenarios.spec.js
 ```
 
-`--write` 會在 current generation 目錄（v114 為 `shell/v124/`）staging `index.html` marker 與 `builtin-snapshot.js`，fsync／close／回讀後才進行雙檔替換；任一步失敗都將兩個 target 回復為原始 bytes。root v110 bridge 不由此工具修改。App、SW 或 asset 升版時也必須透過本工具更新 marker／asset 版本。最後一次 preview 必須顯示已一致。提交前另跑完整 repo gate。
+`--write` 會在 current generation 目錄（v114 為 `shell/v125/`）staging `index.html` marker 與 `builtin-snapshot.js`，fsync／close／回讀後才進行雙檔替換；任一步失敗都將兩個 target 回復為原始 bytes。root v110 bridge 不由此工具修改。App、SW 或 asset 升版時也必須透過本工具更新 marker／asset 版本。最後一次 preview 必須顯示已一致。提交前另跑完整 repo gate。
 
 ### G4. 權責與邊界
 
