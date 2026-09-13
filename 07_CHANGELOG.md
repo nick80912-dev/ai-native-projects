@@ -1,5 +1,51 @@
 # 07 版本紀錄
 
+## 2026-09-13 — v124 正式發布(released,未經 G1)+ G6 tag
+
+- PR [#26](https://github.com/nick80912-dev/ai-native-projects/pull/26) 以 merge 合併 `dev` `e7cd524` → `main`,merge commit **`2e11c48`**。合併前確認 PR head 等於 `origin/dev`,並**等 PR 觸發的那輪 `browser-qa` 跑完才動手** —— 該 commit 在 push 事件已綠一次,但不以「同一個 commit 已經綠過」為由在 pending 狀態下 merge。
+- Netlify deploy `ready`、`commit_ref` = `2e11c48` 相符、`published_at` 有值。
+- **§F5 線上核對五項全過**:`sw.js` v124;`shell/v124/` 三件組皆 v124;root bridge 維持 v110;三處 `Cache-Control` 正確;**v111–v123 十三個舊世代皆回 200**(ADR 0019)。
+- **G6 完成**:annotated tag `production-v124` 指向 `2e11c48`,訊息明文記錄 G1 未執行**以及真機觀感尚未回報**。
+- 本批不含 backlog #39(已於 v125 收斂)。
+## 2026-09-13 — v125:backlog #39 收斂,destructive 改為固定紅(candidate,未發布)
+
+- Bar 問「刪除或影響資料庫的按鈕就沿用之前的紅色(珊瑚色)嗎」。**這個前提不成立** —— `--coral` 就是 `--t-accent`,從來不是固定紅:
+
+  | 主題 | `--coral` | 色相 | 看起來 |
+  |---|---|---|---|
+  | 海洋 | `#df5f3a` | 13° | 橙紅 |
+  | 象牙 | `#e25a0f` | 21° | 橙 |
+  | 藤紫 | `#c0416e` | 339° | 粉紅 |
+  | 杉綠 | `#bd4e24` | 16° | 橙 |
+  | 霧藍 | `#9a6614` | 37° | **琥珀／土黃** |
+  | 焙茶 | `#405c7a` | 211° | **藍** |
+
+  **焙茶主題下「確認刪除」是藍色的。** 危險訊號隨佈景主題改變,與「高風險操作要有穩定、一眼認得出的訊號」正好相反;而且 coral 同時是提交色,刪除與儲存永遠同色。
+
+- Bar 2026-09-13 裁定改採「**改名＋定色**」(原 backlog #39 寫的是「純改名、零視覺變更」):
+
+  - `--action-destructive-bg` 定為**不隨主題的固定紅 `#8c1d2c`**,比照既有 `--green #367055`／`--gold #c1963c` 的固定語意色慣例。白字 9.02:1;新增 `--action-destructive-ink-on-surface` 供紅字用途,對六主題卡片 8.63–9.02。
+  - CTA 另立 `--action-cta-*`,由**新增的第 15 個主題 token `--t-cta-bg`** 供色 —— 照 v121 加 `--t-select-bg` 的同一手法。只有海洋 `#df5f3a → #c05232`、象牙 `#e25a0f → #c74f0d` 需要壓深以通過 AA(白字 **3.60／3.68 → 4.67／4.61**),**色相位移 0–1°**;其餘四組沿用原 accent 值。**這同時解掉 F1 最後一組對比缺陷。**
+
+- 呼叫端重新分類。`.btn.coral` 移除,拆為 `.btn.cta` 與 `.btn.danger`:
+
+  | 行 | 標籤 | 新角色 |
+  |---|---|---|
+  | 採買表單 | 儲存 | `.btn.cta` |
+  | 空狀態 | 新增第一項採買 | `.btn.cta` |
+  | `#ledgerSave` | 儲存／更新 | `.btn.cta` |
+  | 空狀態 | 記一筆消費 | `.btn.cta` |
+  | 結算對話框 | 退回 | `.btn.cta`(**D1**:它是對話框的主要動作,不刪資料) |
+  | 共用帳本 | 確認刪除 N 筆 | `.btn.danger` |
+  | 設定 | 清除舊本機紀錄 | `.btn.danger` |
+
+- 既有 11 條破壞性訊號規則(`.danger`／`.remove`／`.ledger-item-remove`／`.ledger-correction-void`／`.shopping-clear-binding`)一併由 `var(--coral)` 改用 destructive token。
+- **D2 一併處理**:「改回未記帳」拿掉 `class="danger"`。它只解除記帳連結、**不刪任何資料**,在新的固定紅之下會比舊的 coral 更刺眼。判準寫進準則:「**這個動作會不會讓資料消失**」,不是「使用者會不會後悔」。
+- **已知弱點(Bar 已裁定接受)**:藤紫的 CTA `#c0416e` 與固定紅只差 13° 色相。採 Bar 核定的前兩項緩解 —— (1)靠明度拉開(白字對比 4.97 vs 9.02,底色明度比 1.81);(2)紅色不是唯一防線,兩個真正破壞性的站點本來就在二次確認對話框後面。第三案(改藤紫 accent)因 v110 準則禁止改動六主題的 13 個 `--t-*` 值而排除。
+- `04_UI_GUIDELINES.md` 新增「動作角色色」節;原「不要依 token 名稱把 `--action-destructive-*` 改成警告紅」的限制**隨本項落地而解除**,已改寫。backlog #39 移入 `tasks/done.md`。
+- 測試:`theme-system` 的主題 token 清單加入 `--t-cta-bg`、角色清單加入 `--action-cta-*`;`.btn.coral` 斷言改為 `.btn.cta` + `.btn.danger`,並加 `doesNotMatch` 鎖住舊 class 不得回來;新增固定紅斷言與**六主題逐一驗 CTA 底色白字 ≥ 4.5、固定紅對卡片 ≥ 4.5**。`shopping-list` 的存檔鈕斷言改為 `.btn.cta`。**五項變更逐一以「改回舊寫法」實測確認斷言會紅。**
+- 四個 gate、**95/95 Node**、**191/191 Playwright** 通過。
+
 ## 2026-09-13 — v124:三組低對比按鈕文字 + 三項一致性收斂(candidate,未發布)
 
 - 本批處理 2026-09-13 配色稽核裡**不需要新設計裁定**的項目。需要 Bar 裁定的(backlog #39 的 token 改名＋定色)與大型重構(角色 token 採用率、寫死 hex 收斂)都不在此批。

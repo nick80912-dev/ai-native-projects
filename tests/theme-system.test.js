@@ -64,7 +64,7 @@ function extractThemeIds(html){
   const html=fs.readFileSync('shell/'+appVersion()+'/index.html','utf8');
   const themeIds=['ocean','ivory','wisteria','cedar','mist','tea'];
   const tokenNames=[
-    '--t-paper','--t-card','--t-chrome','--t-action','--t-select-bg','--t-accent','--t-accent-bg',
+    '--t-paper','--t-card','--t-chrome','--t-action','--t-select-bg','--t-cta-bg','--t-accent','--t-accent-bg',
     '--t-ink','--t-ink-soft','--t-ink-faint','--t-line','--t-line-soft','--t-tabbar','--t-secondary'
   ];
   themeIds.forEach(id=>{
@@ -124,7 +124,7 @@ function extractThemeIds(html){
   });
   [
     '--action-primary-bg','--action-primary-ink','--action-secondary-bg','--action-secondary-ink',
-    '--action-secondary-border','--action-quiet-bg','--action-quiet-ink','--action-destructive-bg',
+    '--action-secondary-border','--action-quiet-bg','--action-quiet-ink','--action-cta-bg','--action-cta-ink','--action-destructive-bg',
     '--action-destructive-ink','--diagnostic-success','--diagnostic-warning','--diagnostic-degraded','--diagnostic-error'
   ].forEach(name=>assert(sharedPresentation.includes(name+':'),name+' defines the shared presentation role'));
   [
@@ -139,8 +139,25 @@ function extractThemeIds(html){
     'shared primary buttons consume action-role tokens');
   assert.match(html,/\.btn\.ghost\{[^}]*background:var\(--action-secondary-bg\)[^}]*color:var\(--action-secondary-ink\)[^}]*border:1px solid var\(--action-secondary-border\)/,
     'shared secondary buttons consume action-role tokens');
-  assert.match(html,/\.btn\.coral\{[^}]*background:var\(--action-destructive-bg\)/,
-    'shared destructive buttons consume the destructive action role');
+  assert.match(html,/\.btn\.cta\{[^}]*background:var\(--action-cta-bg\)/,
+    'the commit CTA consumes the cta action role');
+  assert.match(html,/\.btn\.danger\{[^}]*background:var\(--action-destructive-bg\)/,
+    'destructive buttons consume the destructive action role');
+  assert.doesNotMatch(html,/\.btn\.coral\{|class="btn coral"/,
+    'the old .btn.coral class is gone from both CSS and markup');
+  /* v125(backlog #39):destructive 不再是主題 accent。--coral 六主題下分別是
+     橙紅／橙／粉紅／橙／琥珀／藍(焙茶 #405c7a),危險訊號不得隨佈景主題改變。
+     固定紅 #8c1d2c 白字 9.02:1,紅字對各主題卡片 8.63-9.02。 */
+  assert.match(sharedPresentation,/--action-destructive-bg:#8c1d2c/,
+    'the destructive role is a fixed red, not the theme accent');
+  assert.doesNotMatch(sharedPresentation,/--action-destructive-bg:var\(--coral\)/,
+    'the destructive role no longer follows the theme accent');
+  /* CTA 底色白字必須過 AA —— 這正是舊 .btn.coral 在海洋 3.60／象牙 3.68 的缺陷。 */
+  themeIds.forEach(id=>{
+    const ctaBg=cssValue(themeBlock(html,id),'--t-cta-bg');
+    assert(contrastRatio('#ffffff',ctaBg)>=4.5,id+' cta background carries white text');
+    assert(contrastRatio('#8c1d2c',cssValue(themeBlock(html,id),'--t-card'))>=4.5,id+' destructive red reads on the card surface');
+  });
   assert.match(html,/\.ledger-sheet-back\{[^}]*border-radius:var\(--radius-pill\)[^}]*background:var\(--action-quiet-bg\)[^}]*color:var\(--action-quiet-ink\)[^}]*font-size:var\(--font-body\)/,
     'quiet sheet action consumes the shared quiet, radius, and typography roles');
   assert.match(html,/\.ledger-recent-badge\.pending\{background:var\(--status-pending-bg\);color:var\(--status-pending-ink\)\}/,
@@ -278,10 +295,11 @@ function extractThemeIds(html){
      守著它的斷言完成任務後移除 —— 與 v111 的離線啟動說明同一處理。 */
   /* 滾動的五筆視窗:最新一筆是目前版本,其餘四筆是緊接在後的歷史版本。
      歷史版本刻意寫死字面值(見 tests/support/version.js 的適用範圍說明)。 */
-  assert.deepStrictEqual(Array.from(notes.slice(1),function(note){return note.version;}),['v123','v122','v121','v120']);
+  assert.deepStrictEqual(Array.from(notes.slice(1),function(note){return note.version;}),['v124','v123','v122','v121']);
   /* v117 的選取表達說明已於 2026-09-12 隨 v122 加入而滾出五筆視窗，同前一個處理。
   /* v118 的顏色語意收斂說明已於 2026-09-13 隨 v123 加入而滾出五筆視窗,同前一個處理。
   /* v119 的攤疊區塊說明已於 2026-09-13 隨 v124 加入而滾出五筆視窗,同前一個處理。
+  /* v120 的攤疊外框說明已於 2026-09-13 隨 v125 加入而滾出五筆視窗,同前一個處理。
   /* v111 的離線啟動說明已於 2026-09-12 隨 v116 加入而滾出五筆視窗(v72 核定的固定視窗設計),
      原本守著它的斷言完成任務後移除。日後若要保留某一筆說明,應改變視窗規則而非加回斷言。 */
   notes.forEach(note=>{

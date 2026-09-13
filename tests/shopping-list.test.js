@@ -1088,10 +1088,10 @@ assert(shoppingSource.includes('shoppingTripAuthority()'),'顯示層透過單一
 const authoritySource=ui.slice(ui.indexOf('function tripDatasetAuthority('),ui.indexOf('function resolveShoppingStopState('));
 assert(authoritySource.includes('CURRENT_SNAPSHOT')||ui.includes('tripDatasetAuthority(CURRENT_SNAPSHOT'),'權威性沿用資料層既有的 snapshot source,未另造平行狀態');
 
-/* v122:採買表單的兩顆存檔鈕與記帳 sheet 同一配色 —— 主存檔走 .btn.coral,
+/* v122:採買表單的兩顆存檔鈕與記帳 sheet 同一配色 —— 主存檔走 .btn.cta(v122 為 .btn.coral,v125 隨 backlog #39 改名),
    次存檔走與 .ledger-save-another-quiet 共用的安靜次級表面。這一組斷言就是該外觀的核准來源。 */
-assert(ui.includes('>取消</button><button type="submit" class="btn coral"'),
-  '採買「儲存」與記帳主存檔同為 .btn.coral');
+assert(ui.includes('>取消</button><button type="submit" class="btn cta"'),
+  '採買「儲存」與記帳主存檔同為 .btn.cta(v125 起 CTA 與 destructive 分家)');
 assert(ui.includes('<button type="button" class="btn shopping-save-another" onclick="saveShoppingForm(true)"'),
   '採買「儲存並新增」不再是 ghost，改吃安靜次級規則');
 assert(ui.includes('.ledger-sheet-actions .ledger-save-another-quiet,.shopping-form-actions .shopping-save-another{'),
@@ -1101,6 +1101,6 @@ assert(ui.includes('.ledger-sheet-actions .ledger-save-another-quiet,.shopping-f
    class="danger"(index===2)。位置與語意目前剛好重合,按鈕順序一改就會靜默
    錯色。Ledger 的同類工具列本來就是 .danger,這裡對齊它。 */
 assert.doesNotMatch(appHtml(),/\.shopping-selection[a-z-]*( \.shopping-selection-actions)? button:last-child/,'the shopping bulk toolbar no longer colours by position');
-assert.match(appHtml(),/\.shopping-selection-toolbar button\.danger\{[^}]*background:var\(--coral\)/,'the shopping bulk delete button is keyed on its semantic class');
+assert.match(appHtml(),/\.shopping-selection-toolbar button\.danger\{[^}]*background:var\(--action-destructive-bg\)/,'the shopping bulk delete button is keyed on its semantic class');
 
 console.log('shopping list tests passed');

@@ -3,6 +3,11 @@
 > 更新於 2026-09-12。完成事項來自 `.ai-manifest.json` status.done、既有 CHANGELOG 與 Bar 驗收確認；細節仍以 07_CHANGELOG.md 為準。
 
 ## 已完成
+- 2026-09-13:backlog **#39 隨 v125 完成**。`--action-destructive-*` 名實不符的收斂,依 Bar 2026-09-13 裁定採「**改名＋定色**」而非原記的「純改名、零視覺變更」—— 因為 `--coral` 就是 `--t-accent`,**它從來不是固定紅**:六主題下分別是橙紅／橙／粉紅／橙／琥珀／**藍**(焙茶 `#405c7a`)。刪除鈕的顏色跟著佈景主題跑,與「高風險操作要有穩定訊號」正好相反;而且 coral 同時是提交色,刪除與儲存永遠同色。
+  - **destructive 改為不隨主題的固定紅 `#8c1d2c`**(白字 9.02:1,紅字對各主題卡片 8.63–9.02),比照既有的 `--green`／`--gold` 固定語意色慣例。
+  - **CTA 另立 `--action-cta-*`**,由新增的第 15 個主題 token `--t-cta-bg` 供色(照 v121 加 `--t-select-bg` 的同一手法)。只有海洋 `#df5f3a→#c05232`、象牙 `#e25a0f→#c74f0d` 需要壓深以通過 AA(白字 3.60／3.68 → 4.67／4.61),**色相位移 0–1°**;其餘四組沿用原 accent。這同時解掉 F1 最後一組對比缺陷。
+  - **已知弱點(Bar 已裁定接受)**:藤紫的 CTA `#c0416e` 與固定紅只差 13° 色相。緩解採 Bar 核定的前兩項 —— (1)靠明度拉開(4.97 vs 9.02,底色明度比 1.81);(2)紅色不是唯一防線,兩個真正破壞性的站點本來就在二次確認對話框後面。第三案(改藤紫 accent)因 v110 準則禁止改動六主題的 13 個 `--t-*` 值而排除。
+  - 連帶處理 **D1**(「退回」是對話框的主要動作,歸 CTA)與 **D2**(「改回未記帳」只解除連結、不刪資料,拿掉 `class="danger"`)。`04_UI_GUIDELINES` 的「不要依 token 名稱把 `--action-destructive-*` 改成警告紅」限制隨本項落地而解除,該節已改寫。
 - 2026-09-12:**backlog #37 經查證前提錯誤而關閉,不實作**。原記「`.ledger-proxy-switch` 的三個裸 hex 應改用 accent 家族」,但 `tests/ledger-form-223.test.js` 斷言 `.ledger-sheet-field>label.ledger-proxy-switch` 的 `background:#f4e9e6` 與 `border:1px solid #c99c94` 為 **approved**(措辭與 `presentationTokens` 的「approved non-theme scale」一致),`07_CHANGELOG.md` 亦載明代購一律套「coral／淡紅底」—— **那是「代購」的語意色,全 app 一致使用(badge 與開關),刻意選定而非疏漏**。實作時該測試當場擋下,已全數撤回。**今日第二次由自動測試擋下基於錯誤前提的「修正」**(前一次為 #31)。
 - 2026-09-12:backlog #35／#36 隨 **v117** 完成。#36 讓「幫誰買」的已選 chip 帶可見的 accent 邊框,與「分類」那組的選取強度一致(色系刻意維持不同);#35(b) 把 `.brand .sync` 的 20px 圓角收斂為 999px(該元素高 44px,原本差 2px 不成膠囊),並在 `04_UI_GUIDELINES` **正式承認 8／9px 為既有主力值** —— 讓文件承認現實,而非硬把 17 種圓角套回 4 種。
 - 2026-09-12:backlog #30／#32／#33／#34／#35(a) 隨 **v116** 完成。#30 刪除 `manualSync`／`manualSyncNew` 兩行死碼與 `atomic-sheet-sync.test.js` 中隨之空轉的負向斷言;#32 多品項帳單摘要列補標籤、改用既有的相對日期、類別加註「預設」、順序對齊單品項、chevron 改為 `.chevron` 旋轉、補 `open` class 使其與展開面板接成連續容器;#33 抽出共用的 `installOverlayDismiss(overlay,close,opts)` 並套用於照片修復／照片檢視器／記帳 sheet(後者 `swipe:false`,避免與捲動衝突)、移除底部「取消」、sheet 背景保留區 12px→56px 讓點背景關閉在多品項模式也可用;#34 定義 `--mint:#d6e8e4` 修好 8 條規則靜默失效的背景;#35(a) `.toast-action` 與 `.trip-back-now` 由膠囊改為 `.btn` 的 9px 矩形。
