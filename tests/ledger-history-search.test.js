@@ -87,4 +87,12 @@ assert.strictEqual(button.disabled,true);assert.strictEqual(attributes['aria-bus
 busySandbox.setButtonBusy(button,false);
 assert.strictEqual(button.disabled,false);assert.strictEqual(button.textContent,'立即重新同步');assert.strictEqual(attributes['aria-busy'],undefined);
 
+/* v123:「清除篩選」是 hidden 切換的 flex 子項,min-height 32px 高於同列 <strong> 的 20.79px。
+   標題列若不預留高度,篩選數 0 -> 1 會讓面板長高 11.21px,把下方整份紀錄清單往下推。
+   實測(375x812,六主題無差異):面板 83.32px -> 94.53px。這條斷言鎖住預留高度。 */
+const filterHeadRule=html.match(/\.ledger-history-filter-panel-head\{[^}]*}/);
+assert(filterHeadRule,'filter panel head rule exists');
+assert.match(filterHeadRule[0],/min-height:32px/,'filter panel head reserves the clear-button height so the list does not shift');
+assert.match(html,/\.ledger-history-clear\{[^}]*min-height:32px/,'the clear button height the head reserves is still 32px');
+
 console.log('ledger history search tests passed');

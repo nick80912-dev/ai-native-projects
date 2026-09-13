@@ -245,8 +245,8 @@ assert.match(commitSource,/failLedgerEntrySaveUi\(command,error\)/,'generic Ledg
 
 assert.match(
   html,
-  /\.ledger-participant-choice\.on\{[^}]*background:#d6e8e4[^}]*color:var\(--sea-deep\)/,
-  'selected participant choices use a distinct medium teal background with deep text'
+  /\.ledger-participant-choice\.on\{[^}]*background:var\(--mint\)[^}]*color:var\(--sea-deep\)/,
+  'selected participant choices use the per-theme selection surface with deep text'
 );
 
 console.log('ledger entry P0 tests passed');

@@ -181,9 +181,18 @@
 - 採買表單主存檔 `btn` → `btn coral`；次存檔去掉 `ghost`，改與 `.ledger-save-another-quiet` **共用同一條規則**。取消鈕未動。
 - 四個 gate、**Node 95/95**、**Playwright 191/191** 通過。三條新增外觀斷言已逐一以「改回舊寫法」實測會失敗。
 - PR [#24](https://github.com/nick80912-dev/ai-native-projects/pull/24) merge commit **`b34d4b9`**;Netlify deploy **`6aa573842a2a6f000829a985`**、`ready`、`commit_ref` 相符、`published_at` 有值。
-- **§F5 全過**:`sw.js` 與 `shell/v122/` 三件組皆 v122;root bridge v110;兩處 `Cache-Control` 正確;**v111–v121 十一個舊世代皆回 200**。
+- **§F5 全過**:`sw.js` 與 `shell/v123/` 三件組皆 v122;root bridge v110;兩處 `Cache-Control` 正確;**v111–v121 十一個舊世代皆回 200**。
 - **G6 完成**:`production-v122` 指向 `b34d4b9`。**G1 未執行**,v122 裝置驗收項維持未勾。
 - 順帶記下 backlog **#39**：`--action-destructive-*` 被當主要 CTA 用，名實不符，本次變更把這個錯配擴散到第二處。
+
+## v123 candidate(2026-09-13,未發布)
+
+- **修正 Bar 回報的篩選位移**:團體完整紀錄頁選了篩選條件時,「清除篩選」由 hidden 轉為顯示,`.ledger-history-filter-panel-head` 的 flex 列高由 20.79px(`<strong>`)跳到 32px(該鈕的 `min-height`),面板長高 **11.21px**,下方整份清單被推走。加 `min-height:32px` 預留高度,實測位移歸零。
+- **順帶補完 v121 的收尾**:`.ledger-participant-choice.on`／`.nx-cluster-expand.on`／`.floor-head.on` 三處仍寫死 ocean 青綠調(`#d6e8e4`／`#f1f8f8`／`#f2f8f8`),改為 `var(--mint)`。後兩者只差一階、等同重複,一併消掉。
+- **backlog #39 的唯一錯用站點先修**:測試帳本提示的「前往設定關閉」是純導覽,`btn coral` → `btn ghost`。`--action-destructive-*` 本身未動,#39 仍待裁定,盤點表已更新為 7 個站點。
+- 四個 gate、**Node 95/95**、**Playwright 191/191** 通過。四項變更**逐一以「改回舊寫法」實測確認新斷言會紅**。
+- **待 Bar 決定是否發正式站**。發布前需走完 PR → Actions → merge → §F5 → G6 tag。
+- **尚未在真機驗證**:11.21px 的量測是在 375×812 的桌面瀏覽器以 v123 真實 CSS 測得,SW 接管後的實機表現待 Bar 確認。
 
 ## 下一棒
 

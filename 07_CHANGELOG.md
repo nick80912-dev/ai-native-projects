@@ -1,5 +1,35 @@
 # 07 版本紀錄
 
+## 2026-09-13 — v123:篩選面板位移修正 + 兩處選取底色補主題化(candidate,未發布)
+
+- Bar 回報:團體完整紀錄頁點篩選、選了條件之後,頁面會稍微向下偏移。**查證屬實,量得 11.21px。**
+- 成因不是「清除篩選」跳出來這件事本身,而是它所在的那一列沒有預留高度:
+
+  | | 高度 |
+  |---|---|
+  | `.ledger-history-filter-panel-head`(flex,`align-items:center`) | 由最高子項決定 |
+  | `<strong>篩選條件</strong>`(13px × line-height 1.6) | 20.79px |
+  | `.ledger-history-clear`(`min-height:32px`) | 32px |
+
+  `#ledgerHistoryClearFilters` 的 `hidden` 綁 `ledgerHistoryActiveFilterCount()`。篩選數 0 → 1 時該鈕由 `display:none` 轉為顯示,標題列 20.79px → 32px,面板 83.32px → 94.53px,**下方的分組切換、筆數摘要與整份紀錄清單一起被往下推 11.21px**。
+- 修法是 `.ledger-history-filter-panel-head` 加 `min-height:32px` 預留該鈕的高度。實測(375×812)位移 **11.21px → 0**;代價是無篩選時標題列也佔 32px,與有篩選時相同。
+- 排除過的其他嫌疑:`.ledger-filter-badge` 是 `position:absolute`(不影響版面);`.ledger-history-filter-btn.on` 只改 `background`。**篩選數變化時唯一的版面變動就是這顆按鈕。**
+- 一併盤查全檔其餘 `[hidden]` 切換,確認本例是孤例:`.shop-search-clear` 是 absolute;`.shop-list-count`(22px)在 `min-height:46px` 的 `.shop-list-entry` 裡撐不破;`.ledger-batch-children`／`.ledger-entry-secondary`／`.ledger-item-categories` 是刻意的展開區塊。
+- 同批帶上 v121 收尾沒掃到的三處寫死選取底色 —— v121 已把選取底色抽成 `--t-select-bg`(`--mint`),但這三處仍是 ocean 青綠調,在藤紫／焙茶下是孤立的綠塊,也違反 `04_UI_GUIDELINES` 形狀語意節「可選取的膠囊必須有明確的選取外觀 —— 慣例是填色」:
+
+  | 選擇器 | 改前 | 改後 |
+  |---|---|---|
+  | `.ledger-participant-choice.on` | `#d6e8e4` | `var(--mint)` |
+  | `.nx-cluster-expand.on` | `#f1f8f8` | `var(--mint)` |
+  | `.floor-head.on` | `#f2f8f8` | `var(--mint)` |
+
+  後兩者只差一階、等同重複定義,一併消掉。六主題的文字對比全部通過(ink/select-bg 10.31–11.64,chrome/select-bg 6.72–11.64)。
+- 另把測試帳本提示裡的「前往設定關閉」由 `btn coral` 改為 `btn ghost`。它是**純導覽**,兩類都不是,是 backlog #39 盤點出的唯一錯用站點,且不需等 #39 落地即可獨立修正。#39 的盤點表已同步更新為 7 個站點。
+- **本次未動 `--action-destructive-*` 本身**,#39 仍待裁定。
+- 測試:`tests/ledger-history-search.test.js` 新增標題列預留高度的斷言;`tests/theme-system.test.js` 新增兩條選取底色與兩條導覽鈕角色的斷言,並加一條 `doesNotMatch` 鎖住三個寫死 hex 不得回來。`tests/ledger-entry-p0.test.js` 原本比對 `background:#d6e8e4` 的確切值,改為 `var(--mint)`。**四項變更逐一以「改回舊寫法」實測確認斷言會紅。**
+- 五筆 release-note 視窗依 v72 核定規則滾動:v123 進入,v118 擠出,`tests/theme-system.test.js` 的視窗尾端更新為 `v122-v119`。
+- 四個 gate、**95/95 Node**、**191/191 Playwright** 通過。
+
 ## 2026-09-12 — v122 正式發布(released,未經 G1)+ G6 tag
 
 - PR [#24](https://github.com/nick80912-dev/ai-native-projects/pull/24) 以 merge 合併 `dev` `8fb033f` → `main`,merge commit **`b34d4b9`**。合併前確認 head 未變,且該 head 的遠端 `sanity` 與 `browser-qa` 皆 success。
