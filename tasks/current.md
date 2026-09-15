@@ -214,7 +214,7 @@
 - **2026-09-13 發布**:PR [#27](https://github.com/nick80912-dev/ai-native-projects/pull/27) 以 merge 合併 `dev` `b4129b7` → `main`,merge commit **`a0131ce`**;合併前確認 PR head 等於 `origin/dev`,並等該 head 的**兩輪** CI(push + pull_request,各含 `sanity` 與 `browser-qa`)全綠才動手。
 - **§F5 線上核對全數通過**:`sw.js` v125;`shell/v125/` 三件組皆 v125;root `app-version.js` 維持 v110 bridge;三處 `Cache-Control` 正確;**v111–v124 十四個舊世代皆回 200**(ADR 0019)。另以線上實查確認 `--action-destructive-bg:#8c1d2c` 與六組 `--t-cta-bg` 皆已上線。 <!-- generation-exempt: 這是 v125 §F5 線上核對當下的量測結果,不隨後續升版變動 -->
 - **真機驗收通過**:Bar 於 **2026-09-15 在 Android 實機**確認正式版 v125 驗收 OK。這是本專案**第一次由 Android 實機回報通過**。
-  - **待明確認定**:G1 的 **BB4 八項清單**(v114 起掛著的實體 Android 項目)是否由本次一併涵蓋。Bar 的回報是「Android 上的正式版驗收 OK」,**未逐項對應 BB4**,因此本文件暫不代為勾銷;若確認涵蓋,請一併更新 `docs/device-acceptance-log.md`。
+  - **BB4 維持掛著(Bar 2026-09-15 裁定)**:G1 的 **BB4 八項清單**(v114 起掛著的實體 Android 項目)**本次並未走過**。Bar 的回報是整體試用無異常,不等於逐項驗收。**BB4 仍為未驗**,`docs/device-acceptance-log.md` 不動。
 - **G6 完成**:`production-v125` 指向 `a0131ce`,訊息記錄 §F5 結果與上述 BB4 待認定事項。
 - **剩餘未結**:E1(角色 token 採用率 3/105 → 現為 5/105)與 E2(63 個寫死 hex)兩項大型重構。#39 已落地,這兩項不再有前置相依,可視需要另行排程。
 

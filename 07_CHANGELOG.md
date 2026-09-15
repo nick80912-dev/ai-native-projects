@@ -13,7 +13,7 @@
 - **§F5 線上核對五項全過**:`sw.js` v125;`shell/v125/` 三件組皆 v125;root bridge 維持 v110;三處 `Cache-Control` 正確;**v111–v124 十四個舊世代皆回 200**(ADR 0019)。另線上實查 `--action-destructive-bg:#8c1d2c` 與六組 `--t-cta-bg` 已上線。
 - **G6 完成**:annotated tag `production-v125` 指向 `a0131ce`。
 - **2026-09-15:Bar 在 Android 實機確認正式版 v125 驗收通過。** 本專案第一次由 Android 實機回報通過 —— 先前 `docs/device-acceptance-log.md` 的 **BB4 八項自 v114 起一直掛著未驗**。
-  - **本次未代為勾銷 BB4**:Bar 的回報是「Android 上的正式版驗收 OK」,未逐項對應 BB4 的八個項目。兩者是否等同,由 Bar 明確認定後再更新 `docs/device-acceptance-log.md`。
+  - **BB4 維持掛著(Bar 2026-09-15 裁定)**:Bar 的回報是整體試用無異常,**BB4 的八個項目並未逐項走過**,兩者不等同。`docs/device-acceptance-log.md` 不動,BB4 仍為本專案最久的未驗缺口。
 - 至此 2026-09-13 配色稽核的 11 項全數結案(A1／B2／B4／D1–D5／F1／G1／H1),僅餘 **E1**(角色 token 採用率,現為 5/105)與 **E2**(63 個寫死 hex)兩項大型重構留在 backlog,且不再有前置相依。
 ## 2026-09-13 — v125:backlog #39 收斂,destructive 改為固定紅(candidate,未發布)
 
