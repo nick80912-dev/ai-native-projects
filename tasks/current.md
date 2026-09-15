@@ -51,12 +51,12 @@
 
 | 項目 | 值 |
 |---|---|
-| **`origin/main` 原始碼** | **SW v123**;merge commit `151f973`(PR #25) |
+| **`origin/main` 原始碼** | **SW v125**;merge commit `a0131ce`(PR #27) |
 | **正式站** | `https://trippilot-jp.netlify.app/` — **SW v114**(2026-09-10 實查:deploy `6aa25e07`,`commit_ref` = `39c96b2` = main HEAD,`published_at` 有值,tag `production-v114`);**v114 發布後補驗**:BB1–BB3 共 14 項 iPhone 已於 2026-09-11 通過,**BB4 共 8 項實體 Android 未驗** |
-| **`origin/dev` candidate** | **SW v123**;已與 `main` 同步於 `151f973` |
+| **`origin/dev` candidate** | **SW v125**;已與 `main` 同步於 `a0131ce` |
 | 個人備份格式 | **v9**(`PERSONAL_STATE_SUPPORTED_VERSIONS = [1..9]`)—— v81 因想逛 key 識別語意變更而升版 |
 | candidate automated validation | Node **95/95**、Chromium Playwright **191/191**；三種啟動情境 `healthCheck()=[]`、`pageerror=0` |
-| 既有 tag | `production-v18`、`production-v73`、`production-v110`、`production-v111`、`production-v113`、`production-v114`、`production-v115`、`production-v116`、`production-v117`、`production-v118`、`production-v119`、`production-v121`、`production-v122`、**`production-v123`** |
+| 既有 tag | `production-v18`、`production-v73`、`production-v110`、`production-v111`、`production-v113`、`production-v114`、`production-v115`、`production-v116`、`production-v117`、`production-v118`、`production-v119`、`production-v121`、`production-v122`、`production-v123`、`production-v124`、**`production-v125`** |
 
 **v114 已發布至正式站(2026-09-10,deploy `6aa25e07`),`production-v114` tag 已建立。G1 的 iPhone 半邊於 2026-09-11 補驗通過,Android 半邊(BB4)仍未驗。**
 
@@ -206,13 +206,16 @@
 - **真機觀感未回報**:本批的對比改善為計算值,Bar 尚未在實機確認「更多」與「略過」的觀感。ocean 的 `.qa-btn.mo` 落在 4.52,只比門檻高 0.02 —— 日後若再調 `--t-ink-soft` 或 `--t-line-soft`,這一格要重驗。
 - **仍未動的**:backlog #39(`--action-destructive-*` 改名＋定色)待 Bar 裁定;「退回」兩種配方(D1)的答案跟著 #39 走;角色 token 採用率 3/105(E1)與 63 個寫死 hex(E2)是大型重構,建議排在 #39 之後;「改回未記帳」的 `.danger` 紅字(D2)本批未處理,待 Bar 決定。
 
-## v125 candidate(2026-09-13,未發布)
+## v125 已正式發布(2026-09-13,Android 真機 2026-09-15 驗收通過)
 
 - **backlog #39 收斂完成**,依 Bar 裁定採「改名＋定色」。`--action-destructive-bg` 定為不隨主題的固定紅 `#8c1d2c`;CTA 另立 `--action-cta-*`,由新增的第 15 個主題 token `--t-cta-bg` 供色(只有海洋與象牙壓深一階以通過 AA,色相位移 0–1°)。`.btn.coral` 移除,拆為 `.btn.cta`(5 個站點,含「退回」)與 `.btn.danger`(2 個真刪除)。
 - 連帶結掉 **D1**(退回歸 CTA)、**D2**(「改回未記帳」拿掉 `danger`)與 **F1** 最後一組對比缺陷。
 - 四個 gate、**Node 95/95**、**Playwright 191/191** 通過。五項變更逐一以「改回舊寫法」實測確認斷言會紅。
-- **待 Bar 決定是否發正式站**。發布前需走完 PR → Actions → merge → §F5 → G6 tag。
-- **尚未在真機驗證**。建議重點看:焙茶／霧藍主題下的「確認刪除」是否確實變成深紅(舊版是藍／土黃)、藤紫主題下「儲存」與「確認刪除」並排時分不分得出來、以及海洋／象牙的儲存鈕加深後的觀感。
+- **2026-09-13 發布**:PR [#27](https://github.com/nick80912-dev/ai-native-projects/pull/27) 以 merge 合併 `dev` `b4129b7` → `main`,merge commit **`a0131ce`**;合併前確認 PR head 等於 `origin/dev`,並等該 head 的**兩輪** CI(push + pull_request,各含 `sanity` 與 `browser-qa`)全綠才動手。
+- **§F5 線上核對全數通過**:`sw.js` v125;`shell/v125/` 三件組皆 v125;root `app-version.js` 維持 v110 bridge;三處 `Cache-Control` 正確;**v111–v124 十四個舊世代皆回 200**(ADR 0019)。另以線上實查確認 `--action-destructive-bg:#8c1d2c` 與六組 `--t-cta-bg` 皆已上線。 <!-- generation-exempt: 這是 v125 §F5 線上核對當下的量測結果,不隨後續升版變動 -->
+- **真機驗收通過**:Bar 於 **2026-09-15 在 Android 實機**確認正式版 v125 驗收 OK。這是本專案**第一次由 Android 實機回報通過**。
+  - **待明確認定**:G1 的 **BB4 八項清單**(v114 起掛著的實體 Android 項目)是否由本次一併涵蓋。Bar 的回報是「Android 上的正式版驗收 OK」,**未逐項對應 BB4**,因此本文件暫不代為勾銷;若確認涵蓋,請一併更新 `docs/device-acceptance-log.md`。
+- **G6 完成**:`production-v125` 指向 `a0131ce`,訊息記錄 §F5 結果與上述 BB4 待認定事項。
 - **剩餘未結**:E1(角色 token 採用率 3/105 → 現為 5/105)與 E2(63 個寫死 hex)兩項大型重構。#39 已落地,這兩項不再有前置相依,可視需要另行排程。
 
 ## 下一棒
