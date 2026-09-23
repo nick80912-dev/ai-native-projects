@@ -7,6 +7,45 @@
 - **§F5 線上核對五項全過**:`sw.js` v124;`shell/v124/` 三件組皆 v124;root bridge 維持 v110;三處 `Cache-Control` 正確;**v111–v123 十三個舊世代皆回 200**(ADR 0019)。
 - **G6 完成**:annotated tag `production-v124` 指向 `2e11c48`,訊息明文記錄 G1 未執行**以及真機觀感尚未回報**。
 - 本批不含 backlog #39(已於 v125 收斂)。
+## 2026-09-23 — v126:清除死 CSS(candidate,未發布)
+
+- 新模型複審全專案時量到:stylesheet 裡有一整層**從未被任何 markup 或 runtime module 輸出過**的樣式。清除結果:
+
+  | | v125 | v126 |
+  |---|---|---|
+  | stylesheet | 125,718 字元 | **116,504**(−9,214,−7%) |
+  | 規則數 | 1,177 | **1,077**(−100) |
+  | 宣告的 class | 767 | **703**(−64) |
+
+- 死樣式集中在**分帳頁舊 UI**(`.split-intro`／`.people-chips`／`.pchip`／`.inline-add`／`.exp-item`／`.er1`／`.er2`／`.edesc`／`.eamt`／`.edel`／`.bal-row`／`.who`／`.num.pos`／`.num.neg`／`.result-card`／`.settle .s-line`／`.payer-grid`／`.payer-opt`／`.split-with`／`.sw-opt`)與**下一站舊卡片**(`.nx-hero`／`.nx-lbl`／`.nx-time`／`.nx-act`／`.nx-place`／`.nx-done`／`.nx-ticket-actions`／`.nx-cluster-actions`),另有 `.mini-tl`／`.mini-item`／`.mini-card`／`.nav-btn`／`.more-btn`／`.ft-wrap`／`.ferry-*`／`.st-l`／`.st-v`／`.copy-btn`／`.ledger-pending` 等散落殘留。
+
+### 偵測方法兩次修正 —— 直接字面比對會刪錯
+
+1. **動態拼接的 class 救回 18 個**。`'<div class="diag-log-entry diag-impact-'+projected.severity+'">'` 這種組法讓 `.diag-impact-info`／`-degraded`／`-action-required` 在檔案裡找不到字面,但它們是活的。改為先掃出所有 `前綴'+` 形態的動態前綴(24 個),任何 class 只要能由其中一個前綴組出來就一律保留 —— 連帶救回 `.shopping-link-*`(4)、`.ledger-settle-*`(4)、`.state-*`(3)、`.shopping-selection-toolbar-*`(2) 等。
+2. **刪除條件從「所有 class 皆死」改為「任一 class 死」**。CSS 語意上 `.mini-item .mc` 只要 `.mini-item` 不存在就永遠匹配不到,`.payer-opt.on` 亦然。第一版條件漏掉 36 條這類規則(`.hotel .h-meta`、`.nx-ticket-actions .qa-btn`、`.bal-row .num.neg`…)。
+
+### 三個測試在守死碼
+
+- `tests/theme-system.test.js` 的 **v124 D4 斷言**(`.payer-opt.on` 與 `.sw-opt.on` 選取外觀一致)。**這是本次最該記下的一項** —— v124 當時把「分攤成員對齊付款人」當成配色不一致修掉並發布,但**那兩個 class 從未被渲染**,該次修正對使用者是零效果。成因是只憑 CSS 選擇器的名字推論 UI 結構,沒有回頭確認它在 markup 裡存在。
+- `tests/ios-zoom-guard.test.js` 的 `.inline-add input{font-size:16px}` —— iOS 縮放防線的四條之一守在不存在的元素上。其餘三條與全域 `input,select,textarea` 16px 下限仍然有效。
+- `tests/ui-ux-v112.test.js` 的 `.st-l{font-size:13px}`「樓層資訊可讀」斷言 —— 同上。對照組 `.sm-hours`／`.st-chk`／`.st-must` 都有 markup 引用,是活的。
+
+三條皆已移除並就地寫明原因。**教訓:測試斷言 CSS 規則存在,不等於該規則會生效;可讀性與觸控類的保證要錨在會渲染的元素上。**
+
+### 驗證
+
+- 結構完整性:大括號平衡、`@media`／`@keyframes` 區塊數 8 → 8 不變、0 個空規則;移除的 72 個 class 宣告逐一確認 markup 與所有 runtime module 皆無 class 屬性引用(`.mc`／`.md`／`.g`／`.u`／`.arw`／`.x`／`.who`／`.pos` 等短名以 class 屬性精確比對複驗,全為 0)。
+- 四個 gate、**95/95 Node**、**191/191 Playwright** 通過。Playwright 會實際驅動瀏覽器渲染,是這次刪除未破壞畫面的主要證據。
+- 畫面與操作**完全不變** —— 被刪的規則本來就匹配不到任何元素。
+
+## 2026-09-13 — v125 正式發布(released,未經 G1)+ G6 tag;2026-09-15 Android 真機驗收通過
+
+- PR [#27](https://github.com/nick80912-dev/ai-native-projects/pull/27) 以 merge 合併 `dev` `b4129b7` → `main`,merge commit **`a0131ce`**。合併前等該 head 的**兩輪** CI(push + pull_request)全綠。
+- **§F5 線上核對五項全過**:`sw.js` v125;`shell/v125/` 三件組皆 v125;root bridge 維持 v110;三處 `Cache-Control` 正確;**v111–v124 十四個舊世代皆回 200**(ADR 0019)。另線上實查 `--action-destructive-bg:#8c1d2c` 與六組 `--t-cta-bg` 已上線。
+- **G6 完成**:annotated tag `production-v125` 指向 `a0131ce`。
+- **2026-09-15:Bar 在 Android 實機確認正式版 v125 驗收通過。** 本專案第一次由 Android 實機回報通過 —— 先前 `docs/device-acceptance-log.md` 的 **BB4 八項自 v114 起一直掛著未驗**。
+  - **BB4 維持掛著(Bar 2026-09-15 裁定)**:Bar 的回報是整體試用無異常,**BB4 的八個項目並未逐項走過**,兩者不等同。`docs/device-acceptance-log.md` 不動,BB4 仍為本專案最久的未驗缺口。
+- 至此 2026-09-13 配色稽核的 11 項全數結案(A1／B2／B4／D1–D5／F1／G1／H1),僅餘 **E1**(角色 token 採用率,現為 5/105)與 **E2**(63 個寫死 hex)兩項大型重構留在 backlog,且不再有前置相依。
 ## 2026-09-13 — v125:backlog #39 收斂,destructive 改為固定紅(candidate,未發布)
 
 - Bar 問「刪除或影響資料庫的按鈕就沿用之前的紅色(珊瑚色)嗎」。**這個前提不成立** —— `--coral` 就是 `--t-accent`,從來不是固定紅:

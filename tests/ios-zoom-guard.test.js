@@ -21,7 +21,11 @@ function extractFunction(name){
 
 assert.match(html, /input\s*,\s*select\s*,\s*textarea\s*\{[^}]*font-size\s*:\s*16px/i, 'global form controls have a 16px floor');
 [
-  /\.inline-add input\{[^}]*font-size\s*:\s*16px/i,
+  /* v126:原本這裡還有 /.inline-add input{...16px/ 一條。`.inline-add` 是分帳頁
+     舊 UI 的殘留樣式,整組(.split-intro / .people-chips / .pchip / .inline-add /
+     .exp-item / .bal-row / .result-card / .payer-opt / .sw-opt)在 markup 與所有
+     runtime module 都已無任何引用,v126 一併清除。iOS 縮放防線由上面的全域
+     input,select,textarea 16px 下限與其餘三條活規則守住。 */
   /\.field input\s*,\s*\.field select\{[^}]*font-size\s*:\s*16px/i,
   /\.shop-search input\{[^}]*font-size\s*:\s*16px/i,
   /\.diag-panel input\{[^}]*font-size\s*:\s*16px/i

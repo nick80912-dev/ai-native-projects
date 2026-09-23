@@ -11,7 +11,10 @@ assert.match(html,/function tripItemPresentation\(it,res\)/,'itinerary presentat
 assert.match(extractFunction(html,'renderItem'),/var presentation=tripItemPresentation\(it,res\)/,'itinerary cards use destination-first presentation');
 
 assert.match(html,/\.sm-hours\{font-size:13px/,'opening hours are readable at 13px');
-assert.match(html,/\.st-l\{font-size:13px/,'shopping floor metadata is readable at 13px');
+/* v126:原本這裡還有一條「樓層資訊 .st-l 13px 可讀」的斷言。查證後 .st-l 與 .st-v
+   在整份 App 各只出現一次 —— 就是 CSS 規則本身,markup 從未輸出過(對照組
+   .sm-hours / .st-chk / .st-must 都有 class 屬性引用)。該斷言守的是死碼,隨整組
+   舊樣式於 v126 一併移除。上一行的 .sm-hours 13px 斷言仍然有效。 */
 
 const init=extractFunction(html,'init');
 assert.doesNotMatch(init,/openMemberSelector\(true\)/,'startup does not block browsing with identity selection');

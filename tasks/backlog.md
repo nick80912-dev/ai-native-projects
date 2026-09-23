@@ -2,7 +2,7 @@
 
 > 更新於 2026-09-12(v116 後)。做完或經 Bar 裁定不再需要的項目移到 done.md,正在做的移到 current.md。
 
-> **編號刻意不連續,不得重排**:`tasks/current.md`、`tasks/done.md` 與 `07_CHANGELOG.md` 都以編號互相引用,重排會打斷既有交叉引用。已歸檔項目的編號一律**留空不回收**(目前缺號:1、2、3b、4、5、6–11、13–19、21–24、26、27、30–37);新項目接在現有最大號之後。
+> **編號刻意不連續,不得重排**:`tasks/current.md`、`tasks/done.md` 與 `07_CHANGELOG.md` 都以編號互相引用,重排會打斷既有交叉引用。已歸檔項目的編號一律**留空不回收**(目前缺號:1、2、3b、4、5、6–11、13–19、21–24、26、27、30–37、39);新項目接在現有最大號之後。
 
 ## 中優先(已核准正式待辦)
 3. **驗收後 UI/內容微調**(最小修改,不動 schema)。
@@ -12,6 +12,7 @@
 25. **AI Native Framework 抽取**:App 穩定落地後執行,見 `FUTURE_PLAN_framework-extraction.md`。
 28. **打卡控制觸控目標過小**:行程頁的 `.chk` 打卡方塊為 **24×24px**,整列不是熱區(往右 80px 落在 `.item-main`,不觸發)。`04_UI_GUIDELINES.md` 自訂的門檻是「所有清單觸控列 ≥44px 高」,24×24 約為建議面積的 30%,而這是走路中單手操作的元件。同頁 `.qa-btn` 為 38–41px,但準則對它有 ≥38px 的明文豁免,不在此項範圍。**Bar 於 2026-09-10 裁定暫不處理。** 屬 Tier 2,動工前需四項確認並 forward bump。
 29. **多處字級低於準則下限**:`04_UI_GUIDELINES.md` 寫「輔助 11-13px」,實測行程頁 `.dow` 星期為 **9.5px**(6 處)、`.drive-chip`／`.tag` 10.5px(13 處)、今天頁 `.h-lbl` 10.5px(6 處)、購物頁 `.fl-arw` 10px(11 處)、分帳 `ledger-status-pill`／`ledger-summary-helper` 10px。改動散布廣,需逐一評估會不會撐破既有版面。**Bar 於 2026-09-10 裁定暫不處理。** 屬 Tier 2。
+    - **2026-09-23 複審補量(v126)**:全 stylesheet 共 **45 處** `font-size < 11px`,最小 **8.5px**,分佈 8.5／9／9.5／10／10.5px。原記錄只涵蓋其中一部分。清除死 CSS 後這個數字已是活規則的實數。**本項範圍因此比原記述大**,動工前重新盤點。
 
 38. **重新評估 `--entry-secondary-bg` 是否該主題化(Bar 2026-09-12 裁定:待實機確認後再決定)**:`#f3f8f6` 目前是**核定的非主題呈現 token**,`presentationTokens` 有斷言把關,`04_UI_GUIDELINES` 亦明載。backlog #31 就是因為誤判它為疏漏而被關閉。**本項不主張推翻,只記錄一個新事實供重新評估。**
 
@@ -23,6 +24,28 @@
 
     - **狀態(2026-09-12)**:**Bar 明示先保留,待實機看過再決定**。本項不是懸而未決的疑問,而是**刻意等待一個特定輸入** —— 焙茶／象牙下實際使用的觀感。在那之前不應因為色相數字好看或難看而自行推進。
     - **前車之鑑**:同日的 #31 與 #37 都是「看起來像疏漏就去修」而被自動測試擋下的前提錯誤。`--entry-secondary-bg` 與它們同屬**已核定的固定色**,推翻需要的是明確裁定,不是分析。
+
+40. **鍵盤焦點樣式覆蓋率過低**:全 App **235 個 `<button>`,只有 13 條 `:focus-visible` 規則**,而且全是個別元素的窄選擇器(`.chk`／`.trip-back-now`／`.nx-buy-badge`／`.store-row`…),沒有 `.btn:focus-visible` 這種通則。
+
+    - **現況不是「完全沒有焦點環」**:`outline:none` 只有四處,且都配了替代樣式;其餘按鈕仍吃瀏覽器預設焦點環。問題是**不一致** —— 13 顆有自訂的 2px `var(--sea)` 環,其餘看瀏覽器臉色。
+    - **風險集中在深色實心鈕**:`.btn.cta`(各主題 CTA 底色)與 `.btn.danger`(固定紅 `#8c1d2c`)上,預設焦點環的對比通常很差。v125 才把這兩類的底色定深,這個問題隨之變明顯。
+    - **成本低**:加一條 `.btn:focus-visible{outline:2px solid ...;outline-offset:2px}` 通則即可覆蓋主要缺口;深色底可考慮改用 `outline-color:#fff` 或雙層 `box-shadow`。屬 Tier 2,需 forward bump。
+    - 來源:2026-09-23 新模型全專案複審。
+
+41. **Ledger 表單一批觸控目標低於 44px**:`.ledger-participant-choice` **28px**、`.ledger-proxy-add-row button` 30px、`.ledger-category-apply-actions button` 34px、`.ledger-history-compact-options .ledger-sheet-choice` 34px、`.ledger-option-row button`／`.ledger-action-popover button`／`.ledger-form-open-choice`／`.ledger-entry-heading-row .ledger-sheet-toggle` 36px、`.travel-note-kind button` 36px、`.settings-identity-actions .btn` 38px。
+
+    - **與 #28 的分界**:#28 是行程頁的 `.chk` 24×24px(Bar 2026-09-10 裁定暫不處理);本項是**記帳表單**這一整批,不同畫面、不同使用情境 —— 記帳多在店內站著單手操作,錯按成本是寫錯一筆帳。
+    - **`.ledger-participant-choice` 28px 最該優先**:它是分攤成員的多選 chip,一次要點好幾個,而且 v123 才剛把它的選取底色主題化(表示它是活的、會被用到的元件)。
+    - 改動會撐開既有版面(`.ledger-item-control-row` 的 grid 欄寬、popover 高度),需逐一評估。屬 Tier 2,需 forward bump。
+    - 來源:2026-09-23 新模型全專案複審。
+
+42. **`ubuntu-latest` 將於 2026-10-19 起移轉到 Ubuntu 26**:`.github/workflows/qa.yml` 的兩個 job(`sanity` L24、`browser-qa` L45)都用 `runs-on: ubuntu-latest`。GitHub 已在 CI log 以 annotation 預告(`actions/runner-images#14748`)。
+
+    - **不是現在要改**:移轉是 GitHub 端自動發生,`ubuntu-latest` 這個標籤本身不需要動。本項的用途是**留一個已知的變因**,日後 CI 若出現「程式沒改卻突然紅」,先來看這裡而不是從頭 debug。
+    - **本專案的實際暴露面**:`browser-qa` 跑 `npx playwright install --with-deps chromium` —— **系統層相依由 runner 的 OS 版本決定**,這是最可能受影響的一步。`@playwright/test` 目前固定在 `1.62.0`,若該版的 `--with-deps` 不支援 Ubuntu 26 的套件名,安裝會失敗。
+    - **actions 版本無虞**:`checkout@v7` 與 `setup-node@v7` 已於 backlog #26(2026-09-10)升到當時最新,runtime 為 node24。`node-version: '20'` 是 App 端測試用的 Node,與 runner OS 無關。
+    - **若真的出事**:短期釘住 `runs-on: ubuntu-24.04` 即可止血(GitHub 保證舊標籤在移轉後仍可用一段時間),再從容升 Playwright。**不要在沒壞之前先釘版** —— 釘住反而會錯過日後的安全性更新。
+    - 來源:2026-09-23 v126 的 CI log annotation。
 
 ## 想法池(未承諾)
 - 社群內容抓取(Facebook 等)——需 Firecrawl/Playwright MCP,尚未配置

@@ -295,11 +295,12 @@ function extractThemeIds(html){
      守著它的斷言完成任務後移除 —— 與 v111 的離線啟動說明同一處理。 */
   /* 滾動的五筆視窗:最新一筆是目前版本,其餘四筆是緊接在後的歷史版本。
      歷史版本刻意寫死字面值(見 tests/support/version.js 的適用範圍說明)。 */
-  assert.deepStrictEqual(Array.from(notes.slice(1),function(note){return note.version;}),['v124','v123','v122','v121']);
+  assert.deepStrictEqual(Array.from(notes.slice(1),function(note){return note.version;}),['v125','v124','v123','v122']);
   /* v117 的選取表達說明已於 2026-09-12 隨 v122 加入而滾出五筆視窗，同前一個處理。
   /* v118 的顏色語意收斂說明已於 2026-09-13 隨 v123 加入而滾出五筆視窗,同前一個處理。
   /* v119 的攤疊區塊說明已於 2026-09-13 隨 v124 加入而滾出五筆視窗,同前一個處理。
   /* v120 的攤疊外框說明已於 2026-09-13 隨 v125 加入而滾出五筆視窗,同前一個處理。
+  /* v121 的選取色說明已於 2026-09-23 隨 v126 加入而滾出五筆視窗,同前一個處理。
   /* v111 的離線啟動說明已於 2026-09-12 隨 v116 加入而滾出五筆視窗(v72 核定的固定視窗設計),
      原本守著它的斷言完成任務後移除。日後若要保留某一筆說明,應改變視窗規則而非加回斷言。 */
   notes.forEach(note=>{
@@ -331,14 +332,12 @@ assert.match(html,/\.nx-decision-btn\.skip\{[^}]*color:var\(--ink-soft\)/,'the s
 assert.match(html,/\.qa-btn\.nf\{[^}]*color:#8a6416/,'the info quick-action label meets AA');
 assert.doesNotMatch(html,/\.qa-btn\.mo\{[^}]*color:var\(--ink-faint\)|\.nx-decision-btn\.skip\{[^}]*color:var\(--ink-faint\)|color:#9a7620[^}]*background:#faf3df/,'the three sub-AA button labels are gone');
 
-/* v124:分帳表單的「分攤成員」與正上方的「付款人」是同一種多選 chip,
-   選取外觀必須相同。原本是寫死的 #e9f2ec + --green 描邊。 */
-const payerOn=html.match(/\.payer-opt\.on\{[^}]*}/);
-const swOn=html.match(/\.sw-opt\.on\{[^}]*}/);
-assert(payerOn&&swOn,'both multi-select chip selected rules exist');
-assert.match(swOn[0],/background:var\(--sea\)/,'split-with selection uses the mainstream filled recipe');
-assert.match(swOn[0],/color:#fff/,'split-with selection uses white text like the payer chip');
-assert.doesNotMatch(swOn[0],/#e9f2ec|var\(--green\)/,'the one-off green selection recipe is gone from the chip rule');
+/* v126:此處原有 v124 的 .payer-opt.on / .sw-opt.on 一致性斷言,現已移除。
+   事後查證:這兩個 class 在整個 App 與所有 runtime module 都只出現在 CSS,
+   從未被任何 markup 輸出 —— 它們是分帳頁改版後未清的死樣式。v124 那次
+   「把分攤成員對齊付款人」的修正因此對使用者是零效果,斷言也只是在守死碼。
+   整組舊分帳樣式已於 v126 清除,連同這些斷言。
+   教訓:不要只憑 CSS 選擇器的名字推論 UI 結構,要回頭確認它在 markup 裡存在。 */
 
 /* v124:.settings-member-add 只有一個 + 字符、靠 aria-label 命名、38x38 近正方,
    條件上就是 04_UI_GUIDELINES 形狀語意節的「純圖示按鈕」,應為正圓。 */

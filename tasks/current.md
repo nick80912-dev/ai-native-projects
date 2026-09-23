@@ -51,12 +51,12 @@
 
 | 項目 | 值 |
 |---|---|
-| **`origin/main` 原始碼** | **SW v123**;merge commit `151f973`(PR #25) |
+| **`origin/main` 原始碼** | **SW v125**;merge commit `a0131ce`(PR #27) |
 | **正式站** | `https://trippilot-jp.netlify.app/` — **SW v114**(2026-09-10 實查:deploy `6aa25e07`,`commit_ref` = `39c96b2` = main HEAD,`published_at` 有值,tag `production-v114`);**v114 發布後補驗**:BB1–BB3 共 14 項 iPhone 已於 2026-09-11 通過,**BB4 共 8 項實體 Android 未驗** |
-| **`origin/dev` candidate** | **SW v123**;已與 `main` 同步於 `151f973` |
+| **`origin/dev` candidate** | **SW v125**;已與 `main` 同步於 `a0131ce` |
 | 個人備份格式 | **v9**(`PERSONAL_STATE_SUPPORTED_VERSIONS = [1..9]`)—— v81 因想逛 key 識別語意變更而升版 |
 | candidate automated validation | Node **95/95**、Chromium Playwright **191/191**；三種啟動情境 `healthCheck()=[]`、`pageerror=0` |
-| 既有 tag | `production-v18`、`production-v73`、`production-v110`、`production-v111`、`production-v113`、`production-v114`、`production-v115`、`production-v116`、`production-v117`、`production-v118`、`production-v119`、`production-v121`、`production-v122`、**`production-v123`** |
+| 既有 tag | `production-v18`、`production-v73`、`production-v110`、`production-v111`、`production-v113`、`production-v114`、`production-v115`、`production-v116`、`production-v117`、`production-v118`、`production-v119`、`production-v121`、`production-v122`、`production-v123`、`production-v124`、**`production-v125`** |
 
 **v114 已發布至正式站(2026-09-10,deploy `6aa25e07`),`production-v114` tag 已建立。G1 的 iPhone 半邊於 2026-09-11 補驗通過,Android 半邊(BB4)仍未驗。**
 
@@ -181,7 +181,7 @@
 - 採買表單主存檔 `btn` → `btn coral`；次存檔去掉 `ghost`，改與 `.ledger-save-another-quiet` **共用同一條規則**。取消鈕未動。
 - 四個 gate、**Node 95/95**、**Playwright 191/191** 通過。三條新增外觀斷言已逐一以「改回舊寫法」實測會失敗。
 - PR [#24](https://github.com/nick80912-dev/ai-native-projects/pull/24) merge commit **`b34d4b9`**;Netlify deploy **`6aa573842a2a6f000829a985`**、`ready`、`commit_ref` 相符、`published_at` 有值。
-- **§F5 全過**:`sw.js` 與 `shell/v125/` 三件組皆 v122;root bridge v110;兩處 `Cache-Control` 正確;**v111–v121 十一個舊世代皆回 200**。
+- **§F5 全過**:`sw.js` 與 `shell/v126/` 三件組皆 v122;root bridge v110;兩處 `Cache-Control` 正確;**v111–v121 十一個舊世代皆回 200**。
 - **G6 完成**:`production-v122` 指向 `b34d4b9`。**G1 未執行**,v122 裝置驗收項維持未勾。
 - 順帶記下 backlog **#39**：`--action-destructive-*` 被當主要 CTA 用，名實不符，本次變更把這個錯配擴散到第二處。
 
@@ -192,7 +192,7 @@
 - **backlog #39 的唯一錯用站點先修**:測試帳本提示的「前往設定關閉」是純導覽,`btn coral` → `btn ghost`。`--action-destructive-*` 本身未動,#39 仍待裁定,盤點表已更新為 7 個站點。
 - 四個 gate、**Node 95/95**、**Playwright 191/191** 通過。四項變更**逐一以「改回舊寫法」實測確認新斷言會紅**。
 - **2026-09-13 發布**:PR [#25](https://github.com/nick80912-dev/ai-native-projects/pull/25) 以 merge(非 squash／rebase)合併 `dev` `ff7cae4` → `main`,merge commit **`151f973`**;合併前確認 PR head 等於 `origin/dev` 且該 head 的 `sanity` 與 `browser-qa` 皆 success(7 checks pass / 0 fail)。Netlify 由 `main` 自動部署 deploy **`6aa606e0f24f7a0008e536ed`**、`state: ready`、`commit_ref` = `151f973` 相符、`published_at` 有值、`manual_deploy: false`。
-- **§F5 線上核對全數通過**:`sw.js` v123;`shell/v125/` 的 app-version／HTML marker／builtin-snapshot 三者皆 v123;root `app-version.js` 維持 v110 bridge;三處 `Cache-Control` 皆為 `no-cache, no-store, must-revalidate`;**v111–v122 十二個舊世代皆仍回 200**(ADR 0019)。 <!-- generation-exempt: 這是 v123 §F5 線上核對當下的量測結果,不隨後續升版變動 -->
+- **§F5 線上核對全數通過**:`sw.js` v123;`shell/v126/` 的 app-version／HTML marker／builtin-snapshot 三者皆 v123;root `app-version.js` 維持 v110 bridge;三處 `Cache-Control` 皆為 `no-cache, no-store, must-revalidate`;**v111–v122 十二個舊世代皆仍回 200**(ADR 0019)。 <!-- generation-exempt: 這是 v123 §F5 線上核對當下的量測結果,不隨後續升版變動 -->
 - **真機已確認**:Bar 於 2026-09-13 在正式站確認篩選位移不再發生。**回報過程本身值得記下** —— Bar 第一次回報「還是會位移」時仍停在 v122,`sw.js` 已是 v123 但裝置端的 worker 尚未換代;以同頁對照組(移除 `min-height` → 11.21px;保留 → 0)確認 v123 的修正有效後,請 Bar 重開 App 才換到 v123。**§A2 的「開兩次生效」不只是部署細節,也是回報缺陷時的第一個排除項。**
 - **G1 經 Bar 裁定跳過**(同 v114–v122),v123 的裝置驗收項維持未勾 —— 跳過不等於通過。**G6 完成**:`production-v123` 指向 `151f973`。
 
@@ -206,14 +206,27 @@
 - **真機觀感未回報**:本批的對比改善為計算值,Bar 尚未在實機確認「更多」與「略過」的觀感。ocean 的 `.qa-btn.mo` 落在 4.52,只比門檻高 0.02 —— 日後若再調 `--t-ink-soft` 或 `--t-line-soft`,這一格要重驗。
 - **仍未動的**:backlog #39(`--action-destructive-*` 改名＋定色)待 Bar 裁定;「退回」兩種配方(D1)的答案跟著 #39 走;角色 token 採用率 3/105(E1)與 63 個寫死 hex(E2)是大型重構,建議排在 #39 之後;「改回未記帳」的 `.danger` 紅字(D2)本批未處理,待 Bar 決定。
 
-## v125 candidate(2026-09-13,未發布)
+## v125 已正式發布(2026-09-13,Android 真機 2026-09-15 驗收通過)
 
 - **backlog #39 收斂完成**,依 Bar 裁定採「改名＋定色」。`--action-destructive-bg` 定為不隨主題的固定紅 `#8c1d2c`;CTA 另立 `--action-cta-*`,由新增的第 15 個主題 token `--t-cta-bg` 供色(只有海洋與象牙壓深一階以通過 AA,色相位移 0–1°)。`.btn.coral` 移除,拆為 `.btn.cta`(5 個站點,含「退回」)與 `.btn.danger`(2 個真刪除)。
 - 連帶結掉 **D1**(退回歸 CTA)、**D2**(「改回未記帳」拿掉 `danger`)與 **F1** 最後一組對比缺陷。
 - 四個 gate、**Node 95/95**、**Playwright 191/191** 通過。五項變更逐一以「改回舊寫法」實測確認斷言會紅。
-- **待 Bar 決定是否發正式站**。發布前需走完 PR → Actions → merge → §F5 → G6 tag。
-- **尚未在真機驗證**。建議重點看:焙茶／霧藍主題下的「確認刪除」是否確實變成深紅(舊版是藍／土黃)、藤紫主題下「儲存」與「確認刪除」並排時分不分得出來、以及海洋／象牙的儲存鈕加深後的觀感。
+- **2026-09-13 發布**:PR [#27](https://github.com/nick80912-dev/ai-native-projects/pull/27) 以 merge 合併 `dev` `b4129b7` → `main`,merge commit **`a0131ce`**;合併前確認 PR head 等於 `origin/dev`,並等該 head 的**兩輪** CI(push + pull_request,各含 `sanity` 與 `browser-qa`)全綠才動手。
+- **§F5 線上核對全數通過**:`sw.js` v125;`shell/v126/` 三件組皆 v125;root `app-version.js` 維持 v110 bridge;三處 `Cache-Control` 正確;**v111–v124 十四個舊世代皆回 200**(ADR 0019)。另以線上實查確認 `--action-destructive-bg:#8c1d2c` 與六組 `--t-cta-bg` 皆已上線。 <!-- generation-exempt: 這是 v125 §F5 線上核對當下的量測結果,不隨後續升版變動 -->
+- **真機驗收通過**:Bar 於 **2026-09-15 在 Android 實機**確認正式版 v125 驗收 OK。這是本專案**第一次由 Android 實機回報通過**。
+  - **BB4 維持掛著(Bar 2026-09-15 裁定)**:G1 的 **BB4 八項清單**(v114 起掛著的實體 Android 項目)**本次並未走過**。Bar 的回報是整體試用無異常,不等於逐項驗收。**BB4 仍為未驗**,`docs/device-acceptance-log.md` 不動。
+- **G6 完成**:`production-v125` 指向 `a0131ce`,訊息記錄 §F5 結果與上述 BB4 待認定事項。
 - **剩餘未結**:E1(角色 token 採用率 3/105 → 現為 5/105)與 E2(63 個寫死 hex)兩項大型重構。#39 已落地,這兩項不再有前置相依,可視需要另行排程。
+
+## v126 candidate(2026-09-23,未發布)
+
+- **清除死 CSS**:100 條規則、64 個 class、9,214 字元(stylesheet −7%)。集中在分帳頁舊 UI 與下一站舊卡片。畫面與操作完全不變 —— 被刪的規則本來就匹配不到任何元素。
+- **偵測方法修正兩次**:先補上動態拼接前綴的保留(救回 `.diag-impact-*`／`.shopping-link-*`／`.ledger-settle-*` 等 18 個),再把刪除條件由「所有 class 皆死」改為「任一 class 死」(CSS 語意上 `.mini-item .mc` 只要父層不存在就永不匹配)。
+- **三個測試在守死碼**,已移除並寫明原因:`theme-system` 的 v124 D4 斷言、`ios-zoom-guard` 的 `.inline-add`、`ui-ux-v112` 的 `.st-l`。
+- **更正 v124 的 D4**:`.payer-opt` 與 `.sw-opt` 從未被渲染,v124 那次「把分攤成員對齊付款人」對使用者是零效果。成因是只憑 CSS 選擇器名稱推論 UI 結構。
+- 四個 gate、**Node 95/95**、**Playwright 191/191** 通過。
+- **待 Bar 決定是否發正式站**。這是純內部整理,真機驗證的重點是「確認沒有任何畫面掉樣式」,而非看新效果。
+- **剩餘未結**:E1(角色 token 採用率 5/103)與 E2(寫死 hex)兩項大型重構;另有新模型複審提出的三項未進 backlog —— 鍵盤焦點只有 13 條 `:focus-visible` 覆蓋 235 個 button、45 處 `font-size < 11px`(最小 8.5px)、Ledger 表單一批 28–36px 的觸控目標。
 
 ## 下一棒
 
