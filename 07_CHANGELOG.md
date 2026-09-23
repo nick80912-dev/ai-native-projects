@@ -7,12 +7,12 @@
 - **§F5 線上核對五項全過**:`sw.js` v124;`shell/v124/` 三件組皆 v124;root bridge 維持 v110;三處 `Cache-Control` 正確;**v111–v123 十三個舊世代皆回 200**(ADR 0019)。
 - **G6 完成**:annotated tag `production-v124` 指向 `2e11c48`,訊息明文記錄 G1 未執行**以及真機觀感尚未回報**。
 - 本批不含 backlog #39(已於 v125 收斂)。
-## 2026-09-23 — v126 正式發布(released,未經 G1)+ G6 tag
+## 2026-09-23 — v126 正式發布(released,未經 G1)+ G6 tag;同日真機掃查通過
 
 - PR [#28](https://github.com/nick80912-dev/ai-native-projects/pull/28) 以 merge 合併 `dev` `9d0afa8` → `main`,merge commit **`4c9233e`**。合併前等該 head 的**兩輪** CI 全綠。
 - **§F5 線上核對五項全過**:`sw.js` v126;`shell/v126/` 三件組皆 v126;root bridge 維持 v110;三處 `Cache-Control` 正確;**v111–v125 十五個舊世代皆回 200**(ADR 0019)。另線上實查五個代表性死 class 皆 **0 次**。
 - **G6 完成**:annotated tag `production-v126` 指向 `4c9233e`。
-- **⚠ 真機驗證尚未回報**:純內部整理,理論上畫面不變,但屬 100 條規則的一次性刪除。**分帳頁與下一站卡片是被刪最多的兩塊。**
+- **真機驗證通過(2026-09-23)**:Bar 在手機上掃過,**沒有畫面掉樣式**。純內部整理的刪除獲得實機確認。`production-v126` 的 tag 訊息仍寫「未經真機確認」—— **tag 不改寫,以本文件為準**(同 v125 的處理)。
 - 同批推上 `dev` 的文件變更(尚未進 `main`):backlog **#40–#49** 記錄 2026-09-23 新模型複審與 active-trip 實機走查的發現;**#41** 以實機渲染量測修正原本的 CSS 宣告值,並加註「新增消費表單的金額欄(67px／30px)是好範例,不得為了一致把它縮小」;**#43** 由 BUG 降為呈現口徑裁定 —— 追查後確認三個進度數字各自都對,`hero` 用 `homeNextStopItems`(串點併為一站)且分子含自動略過,`day-head` 用 `isTripCheckableItem`(子站各算一站)且略過另計,而 hero 的 `aria-label` 早已使用正確措辭「今日已處理 N 站」。
 ## 2026-09-23 — v126:清除死 CSS(candidate,未發布)
 
