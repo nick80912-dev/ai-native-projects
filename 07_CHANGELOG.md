@@ -7,6 +7,39 @@
 - **§F5 線上核對五項全過**:`sw.js` v124;`shell/v124/` 三件組皆 v124;root bridge 維持 v110;三處 `Cache-Control` 正確;**v111–v123 十三個舊世代皆回 200**(ADR 0019)。
 - **G6 完成**:annotated tag `production-v124` 指向 `2e11c48`,訊息明文記錄 G1 未執行**以及真機觀感尚未回報**。
 - 本批不含 backlog #39(已於 v125 收斂)。
+## 2026-09-23 — v127:今天頁進度改用「已處理」措辭(backlog #43,candidate 未發布)
+
+- **前情**:2026-09-23 的 active-trip 走查發現同一天的進度數字在三個畫面互相矛盾(hero `1 / 8`、day-head `完成 0・略過 3／共 14`、實際渲染 11 張卡)。**追查後確認三個數字各自都對,不存在計數錯誤**:
+
+  | | 分母來源 | 條件 | 值 |
+  |---|---|---|---|
+  | hero | `homeNextStopItems(day.items)` | 只取 `item.act`,**串點併為一站** | 8 |
+  | day-head | `day.items.filter(isTripCheckableItem)` | `act｜place｜ref` 任一,**子站各算一站** | 14 |
+  | 渲染 | `tripHideDone` 濾掉已清除項 | 14 − 3 略過 | 11 |
+
+  分子差異更關鍵 —— hero 的 `completed = items.length - (pick.remaining + (pick.item?1:0))` 是「**已經走過的**」、**含自動略過**;day-head 的 `doneN` 只算真的打卡完成,略過另以 `skipN` 顯示。所以 hero 的「1」就是那個被自動略過的站。
+
+- **關鍵發現:hero 早就有正確的 `aria-label`**:
+
+  ```js
+  var progressLabel='今日已處理 '+completed+' 站，共 '+items.length+' 站';
+  ```
+
+  「已處理」正是能和「完成」區分、涵蓋略過的詞。但畫面上只印裸的 `1 / 8` —— **螢幕閱讀器使用者拿到的資訊比看得見的人更準確**。
+
+- **Bar 2026-09-23 裁定採「已處理」措辭。** v127 只改一行的可見文字:
+
+  ```
+  改前  '">'+completed+' / '+items.length+'</div>'
+  改後  '">已處理 '+completed+'/'+items.length+'</div>'
+  ```
+
+  **`aria-label` 與所有計數邏輯一律未動。** 320px 實測:左側 `TODAY · DAY 2` 97px、右側 `已處理 1/8` 63px、間距 108px,無溢出。
+
+- **刻意沒做的事**:未把兩個分母「統一」成同一個數字。兩者各有用途(hero 服務下一站流程、day-head 服務打卡清單),硬統一會讓其中一邊失去意義 —— 呼應 #31／#37 的教訓。day-head 本來就寫明「完成／略過／共」,語意清楚,不需改。
+- 測試:`tests/home-simplification.test.js` 新增兩條斷言(可見文字必須帶「已處理」、不得再出現裸的 `N / N`),並**以改回舊寫法實測確認會紅**;`tests/browser/today-live-info.spec.js` 的 `toHaveText` 由 `/^\d+\s*\/\s*\d+$/` 改為 `/^已處理 \d+\s*\/\s*\d+$/`。原本守著 `progressLabel` 的斷言未動,因為該行沒變。
+- 四個 gate、**95/95 Node**、**191/191 Playwright** 通過。backlog **#43 移入 `tasks/done.md`**。
+
 ## 2026-09-23 — v126 正式發布(released,未經 G1)+ G6 tag;同日真機掃查通過
 
 - PR [#28](https://github.com/nick80912-dev/ai-native-projects/pull/28) 以 merge 合併 `dev` `9d0afa8` → `main`,merge commit **`4c9233e`**。合併前等該 head 的**兩輪** CI 全綠。

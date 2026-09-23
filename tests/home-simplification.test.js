@@ -30,6 +30,13 @@ for (const file of [shellPath('index.html')]) {
   assert.match(renderToday, /renderTodayWeatherArt\(weather\)[\s\S]*renderTodayHeroSummary\(weather,renderShoppingTodayEntry\(day,currentStopRef\)\)/, `${file} composes weather and Shopping inside the active Hero`);
   assert.doesNotMatch(renderToday, /h\+=renderShoppingTodayEntry\(day,currentStopRef\)/, `${file} no longer renders active Shopping below the Hero`);
   assert.match(renderToday, /var progressLabel='今日已處理 '\+completed\+' 站，共 '\+items\.length\+' 站';/, `${file} gives active progress the approved accessible name`);
+  /* v127(backlog #43):可見文字必須帶「已處理」。Bar 2026-09-23 裁定。
+     成因:hero 的分母是 homeNextStopItems(串點併為一站),分子含自動略過;
+     行程頁 day-head 的分母是 isTripCheckableItem(子站各算一站),分子只算真的
+     打卡完成。兩個數字各自都對,但畫面上都印裸數字時使用者會以為矛盾。
+     aria-label 原本就用了正確措辭,本次只是把它搬到看得見的地方,計數邏輯未動。 */
+  assert.match(renderToday, /aria-label="'\+escapeHtml\(progressLabel\)\+'">已處理 '\+completed/, `${file} shows the 已處理 wording on screen, not a bare count`);
+  assert.doesNotMatch(renderToday, /'\">'\+completed\+' \/ '/, `${file} no longer renders the ambiguous bare N / N`);
   assert.match(
     renderToday,
     /var currentStop=clusterPick&&clusterPick\.item\?clusterPick\.item:pick\.item;[\s\S]*var currentStopRef=currentStop&&currentStop\.id\?currentStop\.id:'';/,
