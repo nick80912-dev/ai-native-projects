@@ -51,12 +51,12 @@
 
 | 項目 | 值 |
 |---|---|
-| **`origin/main` 原始碼** | **SW v125**;merge commit `a0131ce`(PR #27) |
+| **`origin/main` 原始碼** | **SW v126**;merge commit `4c9233e`(PR #28) |
 | **正式站** | `https://trippilot-jp.netlify.app/` — **SW v114**(2026-09-10 實查:deploy `6aa25e07`,`commit_ref` = `39c96b2` = main HEAD,`published_at` 有值,tag `production-v114`);**v114 發布後補驗**:BB1–BB3 共 14 項 iPhone 已於 2026-09-11 通過,**BB4 共 8 項實體 Android 未驗** |
-| **`origin/dev` candidate** | **SW v125**;已與 `main` 同步於 `a0131ce` |
+| **`origin/dev` candidate** | **SW v126**;已與 `main` 同步於 `4c9233e`,另有數筆 backlog 文件 commit |
 | 個人備份格式 | **v9**(`PERSONAL_STATE_SUPPORTED_VERSIONS = [1..9]`)—— v81 因想逛 key 識別語意變更而升版 |
 | candidate automated validation | Node **95/95**、Chromium Playwright **191/191**；三種啟動情境 `healthCheck()=[]`、`pageerror=0` |
-| 既有 tag | `production-v18`、`production-v73`、`production-v110`、`production-v111`、`production-v113`、`production-v114`、`production-v115`、`production-v116`、`production-v117`、`production-v118`、`production-v119`、`production-v121`、`production-v122`、`production-v123`、`production-v124`、**`production-v125`** |
+| 既有 tag | `production-v18`、`production-v73`、`production-v110`、`production-v111`、`production-v113`、`production-v114`、`production-v115`、`production-v116`、`production-v117`、`production-v118`、`production-v119`、`production-v121`、`production-v122`、`production-v123`、`production-v124`、`production-v125`、**`production-v126`** |
 
 **v114 已發布至正式站(2026-09-10,deploy `6aa25e07`),`production-v114` tag 已建立。G1 的 iPhone 半邊於 2026-09-11 補驗通過,Android 半邊(BB4)仍未驗。**
 
@@ -218,14 +218,17 @@
 - **G6 完成**:`production-v125` 指向 `a0131ce`,訊息記錄 §F5 結果與上述 BB4 待認定事項。
 - **剩餘未結**:E1(角色 token 採用率 3/105 → 現為 5/105)與 E2(63 個寫死 hex)兩項大型重構。#39 已落地,這兩項不再有前置相依,可視需要另行排程。
 
-## v126 candidate(2026-09-23,未發布)
+## v126 已正式發布(2026-09-23,未經 G1)
 
 - **清除死 CSS**:100 條規則、64 個 class、9,214 字元(stylesheet −7%)。集中在分帳頁舊 UI 與下一站舊卡片。畫面與操作完全不變 —— 被刪的規則本來就匹配不到任何元素。
 - **偵測方法修正兩次**:先補上動態拼接前綴的保留(救回 `.diag-impact-*`／`.shopping-link-*`／`.ledger-settle-*` 等 18 個),再把刪除條件由「所有 class 皆死」改為「任一 class 死」(CSS 語意上 `.mini-item .mc` 只要父層不存在就永不匹配)。
 - **三個測試在守死碼**,已移除並寫明原因:`theme-system` 的 v124 D4 斷言、`ios-zoom-guard` 的 `.inline-add`、`ui-ux-v112` 的 `.st-l`。
 - **更正 v124 的 D4**:`.payer-opt` 與 `.sw-opt` 從未被渲染,v124 那次「把分攤成員對齊付款人」對使用者是零效果。成因是只憑 CSS 選擇器名稱推論 UI 結構。
 - 四個 gate、**Node 95/95**、**Playwright 191/191** 通過。
-- **待 Bar 決定是否發正式站**。這是純內部整理,真機驗證的重點是「確認沒有任何畫面掉樣式」,而非看新效果。
+- **2026-09-23 發布**:PR [#28](https://github.com/nick80912-dev/ai-native-projects/pull/28) 以 merge 合併 `dev` `9d0afa8` → `main`,merge commit **`4c9233e`**;合併前等該 head 的**兩輪** CI(push + pull_request)全綠才動手。
+- **§F5 線上核對全數通過**:`sw.js` v126;`shell/v126/` 三件組皆 v126;root `app-version.js` 維持 v110 bridge;三處 `Cache-Control` 正確;**v111–v125 十五個舊世代皆回 200**(ADR 0019)。另線上實查 `.payer-opt`／`.sw-opt`／`.nx-hero`／`.exp-item`／`.st-l` 皆 **0 次**,確認死碼確實不在線上。 <!-- generation-exempt: 這是 v126 §F5 線上核對當下的量測結果,不隨後續升版變動 -->
+- **G6 完成**:`production-v126` 指向 `4c9233e`。
+- **⚠ 真機驗證尚未回報**:本批是純內部整理,畫面與操作理論上完全不變(被刪的規則本來就匹配不到任何元素),但這是 **100 條規則的一次性刪除**。Bar 尚未回報「有沒有畫面掉樣式」。**分帳頁與下一站卡片是被刪最多的兩塊**,是掃查重點。
 - **剩餘未結**:E1(角色 token 採用率 5/103)與 E2(寫死 hex)兩項大型重構;另有新模型複審提出的三項未進 backlog —— 鍵盤焦點只有 13 條 `:focus-visible` 覆蓋 235 個 button、45 處 `font-size < 11px`(最小 8.5px)、Ledger 表單一批 28–36px 的觸控目標。
 
 ## 下一棒
