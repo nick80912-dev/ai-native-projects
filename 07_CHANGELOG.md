@@ -7,6 +7,14 @@
 - **§F5 線上核對五項全過**:`sw.js` v124;`shell/v124/` 三件組皆 v124;root bridge 維持 v110;三處 `Cache-Control` 正確;**v111–v123 十三個舊世代皆回 200**(ADR 0019)。
 - **G6 完成**:annotated tag `production-v124` 指向 `2e11c48`,訊息明文記錄 G1 未執行**以及真機觀感尚未回報**。
 - 本批不含 backlog #39(已於 v125 收斂)。
+## 2026-09-23 — v129:串點卡片的用詞與站數(backlog #44 收尾,candidate 未發布)
+
+- **「目前」一詞兩義**:卡片寫 `9:00 - 11:30` 與 `目前 11:30 廣島紙鶴塔`,而當下時鐘可能是 10:00 —— 這裡的「目前」指的是**該站的排定時間**,不是「現在幾點」。改為 **「這一站」**。
+- **剩餘站數要心算**:原為 `4 站` 與 `2 站已自動略過` 兩顆 chip 並排,沒有直接說還剩幾站。改為 **「共 N 站」**,並在 `childPick.remaining > 0` 時補一顆 **「還有 N 站」**。`childPick` 在 chips 之前就已定義,不需改動任何計算。
+- 實測(320px,清空 `trip_checks`／`trip_next_stop_progress` 後):`這一站 9:00 廣島城`;chips `共 4 站`(53px)＋`還有 3 站`(65px)同一行共 118px,容器 234px;決策鈕維持 v128 的「完成／跳過」不截斷、`aria-label` 正確。
+- **驗證時發現的事實**:自動略過狀態存在 localStorage(`trip_next_stop_progress`),不隨模擬時鐘重算 —— 因此要看到「還有 N 站」必須先清空進度。這不是缺陷,但驗證這類 UI 時要知道。
+- 測試:`tests/home-simplification.test.js` 新增四條斷言(`這一站` 必須存在、`目前` 不得再出現、`共 N 站`、`還有 N 站`),**三處改動逐一以改回舊寫法實測確認會紅**。
+- 四個 gate、**95/95 Node**、**191/191 Playwright** 通過。backlog **#44 移入 `tasks/done.md`**。
 ## 2026-09-23 — v128:串點決策鈕不再截斷(backlog #44 之一,candidate 未發布)
 
 - 同區串點卡片的「完成」「跳過」原本把站名夾進可見文字(`完成：'+escapeHtml(clusterItemName(current))+'`),在 375px 下被 `text-overflow:ellipsis` 切成「完成：廣島和平…」「跳過：廣…」。實測 `scrollWidth > clientWidth` 兩顆皆為 true。

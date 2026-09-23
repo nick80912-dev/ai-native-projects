@@ -46,6 +46,14 @@ for (const file of [shellPath('index.html')]) {
   assert.match(html, /aria-label="完成：'\+escapeHtml\(clusterItemName\(current\)\)\+'">完成</,
     `${file} cluster done button keeps the stop name only in its accessible name`);
   assert.doesNotMatch(html, /[>]完成：'\+escapeHtml\(clusterItemName/, `${file} no longer puts the stop name in the visible button label`);
+  /* v129(backlog #44 收尾):
+     (a)「目前」一詞兩義 —— 旁邊那個時間是該站的排定時間,不是現在幾點。改為「這一站」。
+     (b) 剩餘站數原本要使用者自己減(`4 站` 與 `2 站已自動略過` 並排)。改為
+         「共 N 站」並在 childPick.remaining > 0 時補一顆「還有 N 站」。 */
+  assert.match(html, /<b>這一站<\/b>/, `${file} labels the cluster stop line without implying the current clock time`);
+  assert.doesNotMatch(html, /<b>目前<\/b>/, `${file} drops the ambiguous 目前 wording`);
+  assert.match(html, /nx-ticket-tag">共 '\+cluster\.items\.length/, `${file} marks the cluster total as a total`);
+  assert.match(html, /nx-ticket-tag">還有 '\+childPick\.remaining/, `${file} states the remaining stops instead of making the user subtract`);
   assert.match(
     renderToday,
     /var currentStop=clusterPick&&clusterPick\.item\?clusterPick\.item:pick\.item;[\s\S]*var currentStopRef=currentStop&&currentStop\.id\?currentStop\.id:'';/,
