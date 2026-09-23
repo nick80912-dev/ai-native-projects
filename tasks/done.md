@@ -3,6 +3,10 @@
 > 更新於 2026-09-12。完成事項來自 `.ai-manifest.json` status.done、既有 CHANGELOG 與 Bar 驗收確認；細節仍以 07_CHANGELOG.md 為準。
 
 ## 已完成
+- 2026-09-23:backlog **#45 經 Bar 裁定採方案 b 關閉,無程式變更**。原記「v125 的副作用:採買清單空狀態裡 ＋ FAB(`--coral`)與『新增第一項採買』(`--t-cta-bg`)兩種橘」。以 v127 真實 CSS 產出六主題對照頁供 Bar 檢視後裁定:**正圓圖示鈕屬 accent 裝飾層,不屬動作角色**,吃 `--coral` 是正確的。
+  - **只有海洋(`#df5f3a` vs `#c05232`)與象牙(`#e25a0f` vs `#c74f0d`)兩組會差一階**;其餘四組 `--t-cta-bg` 等於 accent,本來就同色。成因是 v125 只壓深了白字未過 AA 的那兩組,而圓鈕上沒有白色文字標籤(只有一個 `＋`),不受該對比要求約束。
+  - 已寫入 `04_UI_GUIDELINES.md` 的「動作角色色」節,並明文寫下**不要為了一致把圓鈕改吃 `--action-cta-bg`** —— 那會連帶改動 `.ledger-fab`,且讓「正圓＝裝飾層」的界線失效。
+  - **本項純文件,未動 shell,因此不需 forward bump。**
 - 2026-09-23:backlog **#43 隨 v127 完成**。原記為「同一天的進度數字三個畫面互相矛盾」,追查後確認**三個數字各自都對,不存在計數錯誤** —— hero 的分母是 `homeNextStopItems`(只取 `item.act`,**串點併為一站**)且分子 `items.length-(remaining+current)` **含自動略過**;行程頁 day-head 的分母是 `isTripCheckableItem`(`act||place||ref`,**子站各算一站**)且 `doneN` 只算真的打卡完成、略過另計 `skipN`;渲染的 11 張則是 `tripHideDone` 濾掉 3 個略過項的結果。
   - **關鍵發現**:hero 那個數字**早就有正確的 `aria-label`** —— `'今日已處理 '+completed+' 站，共 '+items.length+' 站'`。「已處理」正是能和「完成」區分、涵蓋略過的詞。但畫面上只印裸的 `1 / 8`,**螢幕閱讀器使用者拿到的資訊比看得見的人更準確**。
   - **Bar 2026-09-23 裁定採「已處理」措辭**。v127 只把可見文字由 `'+completed+' / '+items.length+'` 改為 `已處理 '+completed+'/'+items.length+'`,**`aria-label` 與所有計數邏輯一律未動**。320px 實測:左側 `TODAY · DAY 2` 97px、右側 `已處理 1/8` 63px,間距 108px,無溢出。
