@@ -295,7 +295,7 @@ function extractThemeIds(html){
      守著它的斷言完成任務後移除 —— 與 v111 的離線啟動說明同一處理。 */
   /* 滾動的五筆視窗:最新一筆是目前版本,其餘四筆是緊接在後的歷史版本。
      歷史版本刻意寫死字面值(見 tests/support/version.js 的適用範圍說明)。 */
-  assert.deepStrictEqual(Array.from(notes.slice(1),function(note){return note.version;}),['v129','v128','v127','v126']);
+  assert.deepStrictEqual(Array.from(notes.slice(1),function(note){return note.version;}),['v130','v129','v128','v127']);
   /* v117 的選取表達說明已於 2026-09-12 隨 v122 加入而滾出五筆視窗，同前一個處理。
   /* v118 的顏色語意收斂說明已於 2026-09-13 隨 v123 加入而滾出五筆視窗,同前一個處理。
   /* v119 的攤疊區塊說明已於 2026-09-13 隨 v124 加入而滾出五筆視窗,同前一個處理。
@@ -305,6 +305,7 @@ function extractThemeIds(html){
   /* v123 的篩選面板說明已於 2026-09-23 隨 v128 加入而滾出五筆視窗,同前一個處理。
   /* v124 的低對比字色說明已於 2026-09-23 隨 v129 加入而滾出五筆視窗,同前一個處理。
   /* v125 的刪除鈕定色說明已於 2026-09-23 隨 v130 加入而滾出五筆視窗,同前一個處理。
+  /* v126 的死 CSS 清除說明已於 2026-09-23 隨 v131 加入而滾出五筆視窗,同前一個處理。
   /* v111 的離線啟動說明已於 2026-09-12 隨 v116 加入而滾出五筆視窗(v72 核定的固定視窗設計),
      原本守著它的斷言完成任務後移除。日後若要保留某一筆說明,應改變視窗規則而非加回斷言。 */
   notes.forEach(note=>{
@@ -354,6 +355,12 @@ assert.match(html,/button:focus-visible,[^{]*\{outline:2px solid var\(--sea\);ou
   'every button gets a visible keyboard focus ring');
 assert.match(html,/\.topbar button:focus-visible[^{]*\{outline-color:#fff\}/,
   'buttons on dark surfaces switch to a white focus ring');
+/* v131(backlog #47):交通 chip 保留資料原文的換行。P000 的交通時間欄本來就寫成兩行,
+   折成一行後整串變成一個長 run,瀏覽器就在 CJK 任意位置斷開 —— 375px 下斷在「桃|園」。
+   同一份 CMS 的多行慣例在 .detail .sec(資訊面板)早就以 pre-line 保留,本條只是讓
+   交通 chip 與它一致,不是新發明的規則。 */
+assert.match(html,/.drive-chip{[^}]*white-space:pre-line/,
+  'the transit chip keeps the line breaks the CMS author wrote');
 
 console.log('theme system tests passed');
 })();

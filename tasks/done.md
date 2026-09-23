@@ -3,6 +3,11 @@
 > 更新於 2026-09-12。完成事項來自 `.ai-manifest.json` status.done、既有 CHANGELOG 與 Bar 驗收確認；細節仍以 07_CHANGELOG.md 為準。
 
 ## 已完成
+- 2026-09-23:backlog **#47 隨 v131 完成**。原記「行程頁 Day 1 的 9:00 卡片,航班時刻在 375px 斷在括號中間,`桃園` 被拆開」。
+  - **根因不是斷行規則,是資料原文的換行被吃掉**。P000 的「交通時間」欄本來就寫成兩行(`9:00開櫃` / `11:30(TPE台灣桃園)-15:05(OKJ日本岡山)`);`.drive-chip` 沒宣告 `white-space`,換行折成空白、整串變成一個長 run,瀏覽器就在 CJK 任意位置斷開。
+  - 改法:`.drive-chip` 加 `white-space:pre-line`。**同一份 CMS 的多行慣例在 `.detail .sec`(資訊面板)早就以 `pre-line` 保留** —— 本次只是讓交通 chip 與它一致,不是新發明的規則。
+  - 影響面實測:全 App **28 個不重複交通字串只有 1 個含換行**,其餘 27 個渲染逐字不變;68 個行程項目的「交通」欄全為空,都退回資料庫 `travel` 欄。
+  - **否決的做法**:`word-break:keep-all` 在 320px 下整串溢出 chip(實測 `scrollWidth > clientWidth`);補 `overflow-wrap:anywhere` 止血後,兩個純中文交通說明反而各多一行、`🚶` 被獨自留在第一行。為一個字串讓另外 27 個變差,不划算。
 - 2026-09-23:backlog **#40 隨 v130 完成**。原記「全 App 235 個 `<button>` 只有 13 條 `:focus-visible`,而且全是個別元素的窄選擇器」。加入兩條通則:
   - `button:focus-visible,[role="button"]:focus-visible,summary:focus-visible,.qa-btn/.nav-btn/.nx-navbtn/.nx-drive-btn:focus-visible{outline:2px solid var(--sea);outline-offset:2px}`
   - `.topbar/.daybar/.today-hero/.ledger-summary-card/.ledger-selection-toolbar/.shopping-selection-toolbar` **內的** button 改 `outline-color:#fff`
@@ -32,6 +37,10 @@
 - 2026-09-12:backlog #30／#32／#33／#34／#35(a) 隨 **v116** 完成。#30 刪除 `manualSync`／`manualSyncNew` 兩行死碼與 `atomic-sheet-sync.test.js` 中隨之空轉的負向斷言;#32 多品項帳單摘要列補標籤、改用既有的相對日期、類別加註「預設」、順序對齊單品項、chevron 改為 `.chevron` 旋轉、補 `open` class 使其與展開面板接成連續容器;#33 抽出共用的 `installOverlayDismiss(overlay,close,opts)` 並套用於照片修復／照片檢視器／記帳 sheet(後者 `swipe:false`,避免與捲動衝突)、移除底部「取消」、sheet 背景保留區 12px→56px 讓點背景關閉在多品項模式也可用;#34 定義 `--mint:#d6e8e4` 修好 8 條規則靜默失效的背景;#35(a) `.toast-action` 與 `.trip-back-now` 由膠囊改為 `.btn` 的 9px 矩形。
 - 2026-09-12:**backlog #31 經查證前提錯誤而關閉,不實作**。原記「`--entry-secondary-*` 不跟主題走是疏漏」,但 `tests/theme-system.test.js` 的 `presentationTokens` 明列它們為**核定的非主題呈現 token**並逐一斷言其固定值,`04_UI_GUIDELINES` 亦寫明「跨主題固定的 pending、entry-secondary、Shopping category」。實作時該測試當場擋下,遂全數撤回。`.ledger-proxy-switch` 的寫死值同屬此類,一併維持原狀。**這是自動測試擋下一次基於錯誤前提的「修正」。**
 - 2026-09-11:backlog #27 完成。測試檔的 shell generation 硬編碼遷移:74 處 `shell/v114/...` 全數改由 `tests/support/version.js` 推導,涵蓋 58 個測試檔。helper 新增 `shellPath(file)` 與 `appHtml()`,把主流的 `fs.readFileSync('shell/vNNN/index.html','utf8')` 收斂為 `appHtml()`;順帶移除 39 個因此不再需要的 `fs`／`path` require。合成 fixture 依 Bar 2026-07-30 裁定保留字面(`doc-generation` 的 v898–v900、版本完整性 fixture 的 v111)。**以竄改 `sw.js` 版本為 v999 實證解耦**:75 個測試跟著推導失敗(72 個路徑 ENOENT + 3 個 generation 一致性斷言),20 個不碰 shell 故不受影響;還原後 95/95 與四個 gate 全過。
+  - **⚠ 2026-09-23 補記(做 v131 時發現)**:#27 的遷移是掃 `tests/*.test.js` 裡的 `shell/vNNN` 字面,所以**掃不到本來就沒寫 generation 路徑的檔案**。`tests/preview-date.test.js` 與 `tests/trip-presentation.test.js` 讀的是 root `index.html` —— 也就是 byte-locked 的 **v110 bridge**,不是現行 generation。兩檔合計 **13 條斷言**(4 + 9)。
+    - **今天沒有假綠燈**:把兩檔的讀取路徑改指 `shell/v131/index.html` 實測,兩檔仍全過 —— 被斷言的字串在現行 generation 也還在。
+    - **但它們守不到現行 App**:bridge 是凍結的,內容永遠不變,因此無論現行 generation 怎麼漂移,這 13 條都會一直綠。#27 記的「升版一個測試檔都不用改」在這兩檔身上,是因為它們根本沒在看現行世代。
+    - **未處理,留作已知缺口。** 要修就是改用 `appHtml()`,但得先逐條確認斷言在現行 generation 的對應位置;`preview-date.test.js` 另有一點要注意 —— 它結尾沒有像其他測試檔那樣印通過訊息,跑過與沒跑過在輸出上看不出差別。
 - 2026-09-10:backlog #26 完成。`qa.yml` 的 `actions/checkout` 與 `actions/setup-node` 由已棄用 Node 20 的 `@v4` 升到 `@v7`(四處),兩個 action 自 v5 起即以 node24 執行,GitHub 的棄用 annotation 消除。**未採 backlog 原文寫的 `@v5`**:該建議寫於 2026-07-31,當時 v5 是最新;現行最新為 checkout v7.0.1／setup-node v7.0.0,升到 v7 可避免三個月後再修一次,且 v5–v7 的 runtime 同為 node24。已核對破壞性變更:setup-node v5／v6 的自動快取只在 `package.json` 有 `packageManager` 欄位時觸發,本專案沒有該欄位且 `package-lock.json` 存在,`browser-qa` 的顯式 `cache: npm` 行為不變;checkout v7 只新增 fork PR 於 `pull_request_target`／`workflow_run` 的封鎖,本 workflow 未使用這兩個事件。
 - 2026-08-11：backlog #22 完成。採用專用 HID 而非 PID 作為 Hotel profile join key：公開 Places L1 新增 `HID`,L4／L15／L24／L33／L42 分別讓 P002／P013／P022／P031／P040 引用 H001；五筆 travel 值原樣保留。Schema 3.0、BUILTIN、條件式 Validator 與 runtime exact resolver 已同步,住宿／Hotels 名稱改為只供顯示；Ledger 維持位置式 21 欄 Schema 2.9,個人備份維持 v9。
 - 2026-08-10：backlog #24 於 v99／v100 完成雙版本實驗後，由 Bar 裁定取消而非功能完成。實機顯示時機與使用者已看到新版內容的時間軸不一致，必要性不足以支持跨資源 generation 協議；v101 完整移除全域更新提示與明確 reload action，保留原 SW lifecycle、cache strategy、離線 fallback 與設定頁版本資訊。未來若重啟須視為新需求重新設計。

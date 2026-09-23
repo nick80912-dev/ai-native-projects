@@ -8,6 +8,33 @@
 - **G6 完成**:annotated tag `production-v124` 指向 `2e11c48`,訊息明文記錄 G1 未執行**以及真機觀感尚未回報**。
 - 本批不含 backlog #39(已於 v125 收斂)。
 
+## 2026-09-23 — v131:交通 chip 保留資料原文的換行(backlog #47,candidate 未發布)
+
+- **回報的症狀**:行程頁 Day 1 的 9:00 卡片,交通資訊在 375px 下顯示為 `9:00開櫃 11:30(TPE台灣桃` / `園)-15:05(OKJ日本岡山)` —— 地名 `桃園` 被拆成兩行。
+- **根因不是斷行規則,是資料原文的換行被吃掉了**。P000 的「交通時間」欄本來就寫成兩行:
+
+  ```
+  9:00開櫃
+  11:30(TPE台灣桃園)-15:05(OKJ日本岡山)
+  ```
+
+  `.drive-chip` 沒宣告 `white-space`,那個換行被折成一個空白,整串變成一個長 run,瀏覽器就依 CJK 規則在任意字元之間斷開 —— 剛好斷在「桃|園」。
+- **改法是一個宣告**:`.drive-chip` 加 `white-space:pre-line`。**同一份 CMS 的多行慣例在 `.detail .sec`(資訊面板)早就以 `pre-line` 保留** —— 本次只是讓交通 chip 與它一致,不是新發明的規則。
+- **影響面先量再改**:全 App **28 個不重複交通字串只有 1 個含換行字元**,其餘 27 個渲染逐字不變(`pre-line` 對無換行文字與 `normal` 行為相同,已實測比對)。68 個行程項目的「交通」欄**全為空**,一律退回資料庫的 `travel` 欄。不動 JS、不動計數、不動資料。
+- **實測(以真實 App 量測,非離線推算)**:
+
+  | 寬度 | 改前 | 改後 |
+  |---|---|---|
+  | 375px(chip 內容寬 213px) | `🚗 9:00開櫃 11:30(TPE台灣桃` / `園)-15:05(OKJ日本岡山)` | `🚗 9:00開櫃` / `11:30(TPE台灣桃園)-15:05(OKJ日本岡山)` |
+  | 320px(chip 內容寬 159px) | 同樣斷在「桃\|園」 | `🚗 9:00開櫃` / `11:30(TPE台灣桃園)-15:05(OKJ` / `日本岡山)` |
+
+  320px 下該字串仍得斷(208px 的 token 塞不進 159px),但斷點從中文地名內部移到 `OKJ` 與 `日本岡山` 的拉丁／中文交界。chip 高度 38px 不變、無溢出。
+- **否決的做法(已實測,不是推論)**:`word-break:keep-all` 在 320px 下讓整串**溢出 chip**(`scrollWidth > clientWidth` 為 true);補 `overflow-wrap:anywhere` 止血後,兩個純中文交通說明反而各多一行,`🚶` 還被獨自留在第一行。**為了一個字串讓另外 27 個變差,不划算。** 另外 `-15:05` 依 UAX #14 是「減號接數字」不提供斷點,所以無法讓它斷在兩段航程之間。
+- 測試:`tests/theme-system.test.js` 新增一條斷言(`.drive-chip` 必須帶 `white-space:pre-line`),**已以拿掉該宣告實測確認會紅**;五筆發布說明視窗滾動為 `v131`＋`['v130','v129','v128','v127']`,v126 那筆滾出。
+- **順手更正兩處假的歷史路徑**:`tasks/current.md` 的 v122 與 v126 段落記的是「當時」的線上核對,路徑卻被活文件 generation gate 每次升版一起 bump,變成 `shell/v130/`。已改回 `shell/v122/`／`shell/v126/` 並為 v122 那行補 `generation-exempt` 理由,churn 到此為止。
+- **本批順帶查到、但未處理的一件事**:`tests/preview-date.test.js` 與 `tests/trip-presentation.test.js` 讀的是 root `index.html`(凍結的 v110 bridge)而非現行 generation,合計 13 條斷言守不到現行 App。已補記在 `tasks/done.md` 的 backlog #27 條目底下,連同「今天沒有假綠燈」的實測結果。
+- 四個 gate、**95/95 Node**、**191/191 Playwright** 通過。
+
 ## 2026-09-23 — v127 + v128 + v129 + v130 正式發布(released,未經 G1)+ G6 tag;同日真機驗證通過
 
 - PR [#29](https://github.com/nick80912-dev/ai-native-projects/pull/29) 以 merge 合併 `dev` `f8b6dc8` → `main`,merge commit **`b4182e9`**。**v127／v128／v129 先前建置但未發布,故本次四個版本一併上線**(同 v120＋v121 的處理)。
