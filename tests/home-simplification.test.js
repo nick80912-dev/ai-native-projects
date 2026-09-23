@@ -37,6 +37,15 @@ for (const file of [shellPath('index.html')]) {
      aria-label 原本就用了正確措辭,本次只是把它搬到看得見的地方,計數邏輯未動。 */
   assert.match(renderToday, /aria-label="'\+escapeHtml\(progressLabel\)\+'">已處理 '\+completed/, `${file} shows the 已處理 wording on screen, not a bare count`);
   assert.doesNotMatch(renderToday, /'\">'\+completed\+' \/ '/, `${file} no longer renders the ambiguous bare N / N`);
+  /* v128(backlog #44):同區串點的決策鈕原本把站名夾進可見文字
+     (`完成：'+escapeHtml(clusterItemName(current))+'`),在 375px 下被
+     text-overflow 切成「完成：廣島和平…」。站名本來就無條件顯示在按鈕正上方的
+     `<b>目前</b> 10:10 廣島和平紀念資料館` 那行,重複又截斷等於資訊沒增加、可讀性
+     反而變差。改為可見文字只留「完成／跳過」(與非串點卡片一致),完整站名移到
+     aria-label,螢幕閱讀器拿到的內容不變。 */
+  assert.match(html, /aria-label="完成：'\+escapeHtml\(clusterItemName\(current\)\)\+'">完成</,
+    `${file} cluster done button keeps the stop name only in its accessible name`);
+  assert.doesNotMatch(html, /[>]完成：'\+escapeHtml\(clusterItemName/, `${file} no longer puts the stop name in the visible button label`);
   assert.match(
     renderToday,
     /var currentStop=clusterPick&&clusterPick\.item\?clusterPick\.item:pick\.item;[\s\S]*var currentStopRef=currentStop&&currentStop\.id\?currentStop\.id:'';/,
