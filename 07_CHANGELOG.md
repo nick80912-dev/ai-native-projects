@@ -7,6 +7,73 @@
 - **§F5 線上核對五項全過**:`sw.js` v124;`shell/v124/` 三件組皆 v124;root bridge 維持 v110;三處 `Cache-Control` 正確;**v111–v123 十三個舊世代皆回 200**(ADR 0019)。
 - **G6 完成**:annotated tag `production-v124` 指向 `2e11c48`,訊息明文記錄 G1 未執行**以及真機觀感尚未回報**。
 - 本批不含 backlog #39(已於 v125 收斂)。
+## 2026-09-23 — v130:鍵盤焦點通則(backlog #40,candidate 未發布)
+
+- 原本全 App **235 個 `<button>` 只有 13 條 `:focus-visible`**,而且全是個別元素的窄選擇器(`.chk`／`.trip-back-now`／`.store-row`…),沒有通則。其餘按鈕吃瀏覽器預設焦點環 —— 在 `.btn.cta`／`.btn.danger`／`.qa-btn.drv` 這些深色實心鈕上對比很差。
+- 加入兩條規則:通則 `outline:2px solid var(--sea);outline-offset:2px`,以及六個深色容器內的 `outline-color:#fff` 覆寫。
+- **關鍵設計判斷**:`outline-offset:2px` 讓焦點環落在按鈕**外面**的頁面底色上,因此**深色按鈕本身不需要例外** —— 真正需要白環的是深色**容器**裡的按鈕。動手前先以指令碼盤出全部深色背景規則(22 條),確認其中多數是按鈕自身而非容器,才收斂成 `.topbar`／`.daybar`／`.today-hero`／`.ledger-summary-card`／`.ledger-selection-toolbar`／`.shopping-selection-toolbar` 六個。
+- 既有 13 條都是 class 選擇器,特異性高於 `button:focus-visible`,**不受影響**;實測 `.today-pretrip-day` 仍吃自己的 `outline-offset:3px`。
+- **驗證方式值得記下**:程式呼叫 `.focus()` **不會**觸發 `:focus-visible`(瀏覽器只對真實鍵盤互動啟用),第一次量測因此全部讀到 `outline-style:none`,一度誤以為規則沒套用。改用真實 Tab 鍵後,`.today-jump`(在 `.today-hero` 內)`:focus-visible` 為 true、拿到 `solid 2px rgb(255,255,255)` offset 2px;再以級聯分析補驗 `.totop`／`.tabbar-btn`／`.settings-btn`。
+- 測試:`tests/theme-system.test.js` 新增兩條斷言(通則必須存在、深色容器必須切白環),**兩處皆以破壞選擇器實測確認會紅**。
+- 四個 gate、**95/95 Node**、**191/191 Playwright** 通過。backlog **#40 移入 `tasks/done.md`**。
+## 2026-09-23 — v129:串點卡片的用詞與站數(backlog #44 收尾,candidate 未發布)
+
+- **「目前」一詞兩義**:卡片寫 `9:00 - 11:30` 與 `目前 11:30 廣島紙鶴塔`,而當下時鐘可能是 10:00 —— 這裡的「目前」指的是**該站的排定時間**,不是「現在幾點」。改為 **「這一站」**。
+- **剩餘站數要心算**:原為 `4 站` 與 `2 站已自動略過` 兩顆 chip 並排,沒有直接說還剩幾站。改為 **「共 N 站」**,並在 `childPick.remaining > 0` 時補一顆 **「還有 N 站」**。`childPick` 在 chips 之前就已定義,不需改動任何計算。
+- 實測(320px,清空 `trip_checks`／`trip_next_stop_progress` 後):`這一站 9:00 廣島城`;chips `共 4 站`(53px)＋`還有 3 站`(65px)同一行共 118px,容器 234px;決策鈕維持 v128 的「完成／跳過」不截斷、`aria-label` 正確。
+- **驗證時發現的事實**:自動略過狀態存在 localStorage(`trip_next_stop_progress`),不隨模擬時鐘重算 —— 因此要看到「還有 N 站」必須先清空進度。這不是缺陷,但驗證這類 UI 時要知道。
+- 測試:`tests/home-simplification.test.js` 新增四條斷言(`這一站` 必須存在、`目前` 不得再出現、`共 N 站`、`還有 N 站`),**三處改動逐一以改回舊寫法實測確認會紅**。
+- 四個 gate、**95/95 Node**、**191/191 Playwright** 通過。backlog **#44 移入 `tasks/done.md`**。
+## 2026-09-23 — v128:串點決策鈕不再截斷(backlog #44 之一,candidate 未發布)
+
+- 同區串點卡片的「完成」「跳過」原本把站名夾進可見文字(`完成：'+escapeHtml(clusterItemName(current))+'`),在 375px 下被 `text-overflow:ellipsis` 切成「完成：廣島和平…」「跳過：廣…」。實測 `scrollWidth > clientWidth` 兩顆皆為 true。
+- **站名本來就無條件顯示在按鈕正上方**:`<div class="nx-ticket-line"><b>目前</b> 11:30 廣島紙鶴塔</div>`。按鈕再重複一次又截斷,**資訊沒增加、可讀性反而更差**。
+- **非串點的下一站卡片本來就只寫「完成／跳過」** —— 本次是讓串點卡片與它一致,不是新設計。
+- 改法:可見文字只留「完成／跳過」,完整站名移到 `aria-label`(`完成：廣島紙鶴塔`)。**螢幕閱讀器拿到的內容不變** —— 原本讀的是完整 textContent,現在讀 aria-label,兩者相同。
+- 實測(375px,Day 2 串點):兩顆 `截斷:false`,`完成` 192px／`跳過` 88px,`aria-label` 正確帶入站名,上方「目前 11:30 廣島紙鶴塔」仍在。
+- 測試:`tests/home-simplification.test.js` 新增一正一負兩條斷言(`aria-label` 必須帶站名、可見文字不得再夾站名),**已以改回舊寫法實測確認會紅**。
+- 四個 gate、**95/95 Node**、**191/191 Playwright** 通過。
+- **#44 未完**:另兩項仍在 backlog ——「目前」一詞兩義(指排定時間不是現在幾點)、剩餘站數要使用者自己減(`4 站` 與 `2 站已自動略過` 並排)。
+## 2026-09-23 — v127:今天頁進度改用「已處理」措辭(backlog #43,candidate 未發布)
+
+- **前情**:2026-09-23 的 active-trip 走查發現同一天的進度數字在三個畫面互相矛盾(hero `1 / 8`、day-head `完成 0・略過 3／共 14`、實際渲染 11 張卡)。**追查後確認三個數字各自都對,不存在計數錯誤**:
+
+  | | 分母來源 | 條件 | 值 |
+  |---|---|---|---|
+  | hero | `homeNextStopItems(day.items)` | 只取 `item.act`,**串點併為一站** | 8 |
+  | day-head | `day.items.filter(isTripCheckableItem)` | `act｜place｜ref` 任一,**子站各算一站** | 14 |
+  | 渲染 | `tripHideDone` 濾掉已清除項 | 14 − 3 略過 | 11 |
+
+  分子差異更關鍵 —— hero 的 `completed = items.length - (pick.remaining + (pick.item?1:0))` 是「**已經走過的**」、**含自動略過**;day-head 的 `doneN` 只算真的打卡完成,略過另以 `skipN` 顯示。所以 hero 的「1」就是那個被自動略過的站。
+
+- **關鍵發現:hero 早就有正確的 `aria-label`**:
+
+  ```js
+  var progressLabel='今日已處理 '+completed+' 站，共 '+items.length+' 站';
+  ```
+
+  「已處理」正是能和「完成」區分、涵蓋略過的詞。但畫面上只印裸的 `1 / 8` —— **螢幕閱讀器使用者拿到的資訊比看得見的人更準確**。
+
+- **Bar 2026-09-23 裁定採「已處理」措辭。** v127 只改一行的可見文字:
+
+  ```
+  改前  '">'+completed+' / '+items.length+'</div>'
+  改後  '">已處理 '+completed+'/'+items.length+'</div>'
+  ```
+
+  **`aria-label` 與所有計數邏輯一律未動。** 320px 實測:左側 `TODAY · DAY 2` 97px、右側 `已處理 1/8` 63px、間距 108px,無溢出。
+
+- **刻意沒做的事**:未把兩個分母「統一」成同一個數字。兩者各有用途(hero 服務下一站流程、day-head 服務打卡清單),硬統一會讓其中一邊失去意義 —— 呼應 #31／#37 的教訓。day-head 本來就寫明「完成／略過／共」,語意清楚,不需改。
+- 測試:`tests/home-simplification.test.js` 新增兩條斷言(可見文字必須帶「已處理」、不得再出現裸的 `N / N`),並**以改回舊寫法實測確認會紅**;`tests/browser/today-live-info.spec.js` 的 `toHaveText` 由 `/^\d+\s*\/\s*\d+$/` 改為 `/^已處理 \d+\s*\/\s*\d+$/`。原本守著 `progressLabel` 的斷言未動,因為該行沒變。
+- 四個 gate、**95/95 Node**、**191/191 Playwright** 通過。backlog **#43 移入 `tasks/done.md`**。
+
+## 2026-09-23 — v126 正式發布(released,未經 G1)+ G6 tag;同日真機掃查通過
+
+- PR [#28](https://github.com/nick80912-dev/ai-native-projects/pull/28) 以 merge 合併 `dev` `9d0afa8` → `main`,merge commit **`4c9233e`**。合併前等該 head 的**兩輪** CI 全綠。
+- **§F5 線上核對五項全過**:`sw.js` v126;`shell/v126/` 三件組皆 v126;root bridge 維持 v110;三處 `Cache-Control` 正確;**v111–v125 十五個舊世代皆回 200**(ADR 0019)。另線上實查五個代表性死 class 皆 **0 次**。
+- **G6 完成**:annotated tag `production-v126` 指向 `4c9233e`。
+- **真機驗證通過(2026-09-23)**:Bar 在手機上掃過,**沒有畫面掉樣式**。純內部整理的刪除獲得實機確認。`production-v126` 的 tag 訊息仍寫「未經真機確認」—— **tag 不改寫,以本文件為準**(同 v125 的處理)。
+- 同批推上 `dev` 的文件變更(尚未進 `main`):backlog **#40–#49** 記錄 2026-09-23 新模型複審與 active-trip 實機走查的發現;**#41** 以實機渲染量測修正原本的 CSS 宣告值,並加註「新增消費表單的金額欄(67px／30px)是好範例,不得為了一致把它縮小」;**#43** 由 BUG 降為呈現口徑裁定 —— 追查後確認三個進度數字各自都對,`hero` 用 `homeNextStopItems`(串點併為一站)且分子含自動略過,`day-head` 用 `isTripCheckableItem`(子站各算一站)且略過另計,而 hero 的 `aria-label` 早已使用正確措辭「今日已處理 N 站」。
 ## 2026-09-23 — v126:清除死 CSS(candidate,未發布)
 
 - 新模型複審全專案時量到:stylesheet 裡有一整層**從未被任何 markup 或 runtime module 輸出過**的樣式。清除結果:

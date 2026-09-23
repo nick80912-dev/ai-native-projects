@@ -295,12 +295,16 @@ function extractThemeIds(html){
      守著它的斷言完成任務後移除 —— 與 v111 的離線啟動說明同一處理。 */
   /* 滾動的五筆視窗:最新一筆是目前版本,其餘四筆是緊接在後的歷史版本。
      歷史版本刻意寫死字面值(見 tests/support/version.js 的適用範圍說明)。 */
-  assert.deepStrictEqual(Array.from(notes.slice(1),function(note){return note.version;}),['v125','v124','v123','v122']);
+  assert.deepStrictEqual(Array.from(notes.slice(1),function(note){return note.version;}),['v129','v128','v127','v126']);
   /* v117 的選取表達說明已於 2026-09-12 隨 v122 加入而滾出五筆視窗，同前一個處理。
   /* v118 的顏色語意收斂說明已於 2026-09-13 隨 v123 加入而滾出五筆視窗,同前一個處理。
   /* v119 的攤疊區塊說明已於 2026-09-13 隨 v124 加入而滾出五筆視窗,同前一個處理。
   /* v120 的攤疊外框說明已於 2026-09-13 隨 v125 加入而滾出五筆視窗,同前一個處理。
   /* v121 的選取色說明已於 2026-09-23 隨 v126 加入而滾出五筆視窗,同前一個處理。
+  /* v122 的採買存檔鈕說明已於 2026-09-23 隨 v127 加入而滾出五筆視窗,同前一個處理。
+  /* v123 的篩選面板說明已於 2026-09-23 隨 v128 加入而滾出五筆視窗,同前一個處理。
+  /* v124 的低對比字色說明已於 2026-09-23 隨 v129 加入而滾出五筆視窗,同前一個處理。
+  /* v125 的刪除鈕定色說明已於 2026-09-23 隨 v130 加入而滾出五筆視窗,同前一個處理。
   /* v111 的離線啟動說明已於 2026-09-12 隨 v116 加入而滾出五筆視窗(v72 核定的固定視窗設計),
      原本守著它的斷言完成任務後移除。日後若要保留某一筆說明,應改變視窗規則而非加回斷言。 */
   notes.forEach(note=>{
@@ -342,6 +346,14 @@ assert.doesNotMatch(html,/\.qa-btn\.mo\{[^}]*color:var\(--ink-faint\)|\.nx-decis
 /* v124:.settings-member-add 只有一個 + 字符、靠 aria-label 命名、38x38 近正方,
    條件上就是 04_UI_GUIDELINES 形狀語意節的「純圖示按鈕」,應為正圓。 */
 assert.match(html,/\.settings-member-add\{[^}]*border-radius:50%/,'the identity add button is a round icon button');
+
+/* v130(backlog #40):鍵盤焦點通則。原本 235 個 <button> 只有 13 條 :focus-visible,
+   其餘吃瀏覽器預設焦點環,在深色實心鈕上對比很差。outline-offset:2px 讓環落在按鈕
+   外面的頁面底色上,所以深色「按鈕」本身不需例外;需要白環的是深色「容器」裡的按鈕。 */
+assert.match(html,/button:focus-visible,[^{]*\{outline:2px solid var\(--sea\);outline-offset:2px\}/,
+  'every button gets a visible keyboard focus ring');
+assert.match(html,/\.topbar button:focus-visible[^{]*\{outline-color:#fff\}/,
+  'buttons on dark surfaces switch to a white focus ring');
 
 console.log('theme system tests passed');
 })();

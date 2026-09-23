@@ -30,6 +30,30 @@ for (const file of [shellPath('index.html')]) {
   assert.match(renderToday, /renderTodayWeatherArt\(weather\)[\s\S]*renderTodayHeroSummary\(weather,renderShoppingTodayEntry\(day,currentStopRef\)\)/, `${file} composes weather and Shopping inside the active Hero`);
   assert.doesNotMatch(renderToday, /h\+=renderShoppingTodayEntry\(day,currentStopRef\)/, `${file} no longer renders active Shopping below the Hero`);
   assert.match(renderToday, /var progressLabel='今日已處理 '\+completed\+' 站，共 '\+items\.length\+' 站';/, `${file} gives active progress the approved accessible name`);
+  /* v127(backlog #43):可見文字必須帶「已處理」。Bar 2026-09-23 裁定。
+     成因:hero 的分母是 homeNextStopItems(串點併為一站),分子含自動略過;
+     行程頁 day-head 的分母是 isTripCheckableItem(子站各算一站),分子只算真的
+     打卡完成。兩個數字各自都對,但畫面上都印裸數字時使用者會以為矛盾。
+     aria-label 原本就用了正確措辭,本次只是把它搬到看得見的地方,計數邏輯未動。 */
+  assert.match(renderToday, /aria-label="'\+escapeHtml\(progressLabel\)\+'">已處理 '\+completed/, `${file} shows the 已處理 wording on screen, not a bare count`);
+  assert.doesNotMatch(renderToday, /'\">'\+completed\+' \/ '/, `${file} no longer renders the ambiguous bare N / N`);
+  /* v128(backlog #44):同區串點的決策鈕原本把站名夾進可見文字
+     (`完成：'+escapeHtml(clusterItemName(current))+'`),在 375px 下被
+     text-overflow 切成「完成：廣島和平…」。站名本來就無條件顯示在按鈕正上方的
+     `<b>目前</b> 10:10 廣島和平紀念資料館` 那行,重複又截斷等於資訊沒增加、可讀性
+     反而變差。改為可見文字只留「完成／跳過」(與非串點卡片一致),完整站名移到
+     aria-label,螢幕閱讀器拿到的內容不變。 */
+  assert.match(html, /aria-label="完成：'\+escapeHtml\(clusterItemName\(current\)\)\+'">完成</,
+    `${file} cluster done button keeps the stop name only in its accessible name`);
+  assert.doesNotMatch(html, /[>]完成：'\+escapeHtml\(clusterItemName/, `${file} no longer puts the stop name in the visible button label`);
+  /* v129(backlog #44 收尾):
+     (a)「目前」一詞兩義 —— 旁邊那個時間是該站的排定時間,不是現在幾點。改為「這一站」。
+     (b) 剩餘站數原本要使用者自己減(`4 站` 與 `2 站已自動略過` 並排)。改為
+         「共 N 站」並在 childPick.remaining > 0 時補一顆「還有 N 站」。 */
+  assert.match(html, /<b>這一站<\/b>/, `${file} labels the cluster stop line without implying the current clock time`);
+  assert.doesNotMatch(html, /<b>目前<\/b>/, `${file} drops the ambiguous 目前 wording`);
+  assert.match(html, /nx-ticket-tag">共 '\+cluster\.items\.length/, `${file} marks the cluster total as a total`);
+  assert.match(html, /nx-ticket-tag">還有 '\+childPick\.remaining/, `${file} states the remaining stops instead of making the user subtract`);
   assert.match(
     renderToday,
     /var currentStop=clusterPick&&clusterPick\.item\?clusterPick\.item:pick\.item;[\s\S]*var currentStopRef=currentStop&&currentStop\.id\?currentStop\.id:'';/,

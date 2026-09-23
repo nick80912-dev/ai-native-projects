@@ -3,6 +3,25 @@
 > 更新於 2026-09-12。完成事項來自 `.ai-manifest.json` status.done、既有 CHANGELOG 與 Bar 驗收確認；細節仍以 07_CHANGELOG.md 為準。
 
 ## 已完成
+- 2026-09-23:backlog **#40 隨 v130 完成**。原記「全 App 235 個 `<button>` 只有 13 條 `:focus-visible`,而且全是個別元素的窄選擇器」。加入兩條通則:
+  - `button:focus-visible,[role="button"]:focus-visible,summary:focus-visible,.qa-btn/.nav-btn/.nx-navbtn/.nx-drive-btn:focus-visible{outline:2px solid var(--sea);outline-offset:2px}`
+  - `.topbar/.daybar/.today-hero/.ledger-summary-card/.ledger-selection-toolbar/.shopping-selection-toolbar` **內的** button 改 `outline-color:#fff`
+  - **關鍵設計判斷**:`outline-offset:2px` 讓焦點環落在按鈕**外面**的頁面底色上,所以 `.btn.cta`／`.btn.danger`／`.qa-btn.drv` 這些**深色按鈕本身不需要例外**;真正需要白環的是深色**容器**裡的按鈕。先以指令碼盤出全部深色背景規則,確認多數是按鈕自身而非容器,才收斂成六個容器。
+  - 既有 13 條都是 class 選擇器,特異性高於 `button:focus-visible`,**不受影響**(實測 `.today-pretrip-day` 仍吃自己的 offset 3px 規則)。
+  - 驗證:以**真實 Tab 鍵**測到 `.today-jump`(在 `.today-hero` 內)`:focus-visible` 為 true、拿到 `solid 2px rgb(255,255,255)` offset 2px;再以級聯分析確認 `.totop`／`.tabbar-btn` 吃通則、`.settings-btn` 吃白環覆寫。**程式呼叫 `.focus()` 不會觸發 `:focus-visible`**,必須用真實鍵盤事件,這點在驗證這類規則時要知道。
+- 2026-09-23:backlog **#44 隨 v128／v129 完成**,下一站串點卡片的三處呈現問題全數處理:
+  - **決策鈕截斷(v128)**:原本把站名夾進可見文字(`完成：'+escapeHtml(clusterItemName(current))+'`),375px 下被 `text-overflow` 切成「完成：廣島和平…」。站名本來就無條件顯示在按鈕正上方那行,重複又截斷等於資訊沒增加。改為可見文字只留「完成／跳過」(**與非串點卡片本來的寫法一致**),完整站名移到 `aria-label` —— 螢幕閱讀器拿到的內容不變。
+  - **「目前」一詞兩義(v129)**:旁邊的時間是**該站的排定時間**,不是現在幾點。改為「這一站」。
+  - **剩餘站數要心算(v129)**:原為 `4 站` 與 `2 站已自動略過` 並排,使用者得自己減。改為「共 N 站」並在 `childPick.remaining > 0` 時補一顆「還有 N 站」。
+  - 實測(320px,清空進度後):`這一站 9:00 廣島城`、chips `共 4 站`＋`還有 3 站` 同一行共 118px(容器 234px)、決策鈕 `截斷:false` 且 `aria-label` 正確。六條新增斷言**逐一以改回舊寫法實測確認會紅**。
+- 2026-09-23:backlog **#45 經 Bar 裁定採方案 b 關閉,無程式變更**。原記「v125 的副作用:採買清單空狀態裡 ＋ FAB(`--coral`)與『新增第一項採買』(`--t-cta-bg`)兩種橘」。以 v127 真實 CSS 產出六主題對照頁供 Bar 檢視後裁定:**正圓圖示鈕屬 accent 裝飾層,不屬動作角色**,吃 `--coral` 是正確的。
+  - **只有海洋(`#df5f3a` vs `#c05232`)與象牙(`#e25a0f` vs `#c74f0d`)兩組會差一階**;其餘四組 `--t-cta-bg` 等於 accent,本來就同色。成因是 v125 只壓深了白字未過 AA 的那兩組,而圓鈕上沒有白色文字標籤(只有一個 `＋`),不受該對比要求約束。
+  - 已寫入 `04_UI_GUIDELINES.md` 的「動作角色色」節,並明文寫下**不要為了一致把圓鈕改吃 `--action-cta-bg`** —— 那會連帶改動 `.ledger-fab`,且讓「正圓＝裝飾層」的界線失效。
+  - **本項純文件,未動 shell,因此不需 forward bump。**
+- 2026-09-23:backlog **#43 隨 v127 完成**。原記為「同一天的進度數字三個畫面互相矛盾」,追查後確認**三個數字各自都對,不存在計數錯誤** —— hero 的分母是 `homeNextStopItems`(只取 `item.act`,**串點併為一站**)且分子 `items.length-(remaining+current)` **含自動略過**;行程頁 day-head 的分母是 `isTripCheckableItem`(`act||place||ref`,**子站各算一站**)且 `doneN` 只算真的打卡完成、略過另計 `skipN`;渲染的 11 張則是 `tripHideDone` 濾掉 3 個略過項的結果。
+  - **關鍵發現**:hero 那個數字**早就有正確的 `aria-label`** —— `'今日已處理 '+completed+' 站，共 '+items.length+' 站'`。「已處理」正是能和「完成」區分、涵蓋略過的詞。但畫面上只印裸的 `1 / 8`,**螢幕閱讀器使用者拿到的資訊比看得見的人更準確**。
+  - **Bar 2026-09-23 裁定採「已處理」措辭**。v127 只把可見文字由 `'+completed+' / '+items.length+'` 改為 `已處理 '+completed+'/'+items.length+'`,**`aria-label` 與所有計數邏輯一律未動**。320px 實測:左側 `TODAY · DAY 2` 97px、右側 `已處理 1/8` 63px,間距 108px,無溢出。
+  - **刻意沒做的事**:未把兩個分母「統一」成同一個數字。兩者各有用途(hero 服務下一站流程、day-head 服務打卡清單),硬統一會讓其中一邊失去意義。
 - 2026-09-13:backlog **#39 隨 v125 完成**。`--action-destructive-*` 名實不符的收斂,依 Bar 2026-09-13 裁定採「**改名＋定色**」而非原記的「純改名、零視覺變更」—— 因為 `--coral` 就是 `--t-accent`,**它從來不是固定紅**:六主題下分別是橙紅／橙／粉紅／橙／琥珀／**藍**(焙茶 `#405c7a`)。刪除鈕的顏色跟著佈景主題跑,與「高風險操作要有穩定訊號」正好相反;而且 coral 同時是提交色,刪除與儲存永遠同色。
   - **destructive 改為不隨主題的固定紅 `#8c1d2c`**(白字 9.02:1,紅字對各主題卡片 8.63–9.02),比照既有的 `--green`／`--gold` 固定語意色慣例。
   - **CTA 另立 `--action-cta-*`**,由新增的第 15 個主題 token `--t-cta-bg` 供色(照 v121 加 `--t-select-bg` 的同一手法)。只有海洋 `#df5f3a→#c05232`、象牙 `#e25a0f→#c74f0d` 需要壓深以通過 AA(白字 3.60／3.68 → 4.67／4.61),**色相位移 0–1°**;其餘四組沿用原 accent。這同時解掉 F1 最後一組對比缺陷。
