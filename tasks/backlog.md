@@ -39,5 +39,13 @@
     - 改動會撐開既有版面(`.ledger-item-control-row` 的 grid 欄寬、popover 高度),需逐一評估。屬 Tier 2,需 forward bump。
     - 來源:2026-09-23 新模型全專案複審。
 
+42. **`ubuntu-latest` 將於 2026-10-19 起移轉到 Ubuntu 26**:`.github/workflows/qa.yml` 的兩個 job(`sanity` L24、`browser-qa` L45)都用 `runs-on: ubuntu-latest`。GitHub 已在 CI log 以 annotation 預告(`actions/runner-images#14748`)。
+
+    - **不是現在要改**:移轉是 GitHub 端自動發生,`ubuntu-latest` 這個標籤本身不需要動。本項的用途是**留一個已知的變因**,日後 CI 若出現「程式沒改卻突然紅」,先來看這裡而不是從頭 debug。
+    - **本專案的實際暴露面**:`browser-qa` 跑 `npx playwright install --with-deps chromium` —— **系統層相依由 runner 的 OS 版本決定**,這是最可能受影響的一步。`@playwright/test` 目前固定在 `1.62.0`,若該版的 `--with-deps` 不支援 Ubuntu 26 的套件名,安裝會失敗。
+    - **actions 版本無虞**:`checkout@v7` 與 `setup-node@v7` 已於 backlog #26(2026-09-10)升到當時最新,runtime 為 node24。`node-version: '20'` 是 App 端測試用的 Node,與 runner OS 無關。
+    - **若真的出事**:短期釘住 `runs-on: ubuntu-24.04` 即可止血(GitHub 保證舊標籤在移轉後仍可用一段時間),再從容升 Playwright。**不要在沒壞之前先釘版** —— 釘住反而會錯過日後的安全性更新。
+    - 來源:2026-09-23 v126 的 CI log annotation。
+
 ## 想法池(未承諾)
 - 社群內容抓取(Facebook 等)——需 Firecrawl/Playwright MCP,尚未配置
