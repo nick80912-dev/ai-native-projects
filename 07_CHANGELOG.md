@@ -7,6 +7,15 @@
 - **§F5 線上核對五項全過**:`sw.js` v124;`shell/v124/` 三件組皆 v124;root bridge 維持 v110;三處 `Cache-Control` 正確;**v111–v123 十三個舊世代皆回 200**(ADR 0019)。
 - **G6 完成**:annotated tag `production-v124` 指向 `2e11c48`,訊息明文記錄 G1 未執行**以及真機觀感尚未回報**。
 - 本批不含 backlog #39(已於 v125 收斂)。
+## 2026-09-23 — v130:鍵盤焦點通則(backlog #40,candidate 未發布)
+
+- 原本全 App **235 個 `<button>` 只有 13 條 `:focus-visible`**,而且全是個別元素的窄選擇器(`.chk`／`.trip-back-now`／`.store-row`…),沒有通則。其餘按鈕吃瀏覽器預設焦點環 —— 在 `.btn.cta`／`.btn.danger`／`.qa-btn.drv` 這些深色實心鈕上對比很差。
+- 加入兩條規則:通則 `outline:2px solid var(--sea);outline-offset:2px`,以及六個深色容器內的 `outline-color:#fff` 覆寫。
+- **關鍵設計判斷**:`outline-offset:2px` 讓焦點環落在按鈕**外面**的頁面底色上,因此**深色按鈕本身不需要例外** —— 真正需要白環的是深色**容器**裡的按鈕。動手前先以指令碼盤出全部深色背景規則(22 條),確認其中多數是按鈕自身而非容器,才收斂成 `.topbar`／`.daybar`／`.today-hero`／`.ledger-summary-card`／`.ledger-selection-toolbar`／`.shopping-selection-toolbar` 六個。
+- 既有 13 條都是 class 選擇器,特異性高於 `button:focus-visible`,**不受影響**;實測 `.today-pretrip-day` 仍吃自己的 `outline-offset:3px`。
+- **驗證方式值得記下**:程式呼叫 `.focus()` **不會**觸發 `:focus-visible`(瀏覽器只對真實鍵盤互動啟用),第一次量測因此全部讀到 `outline-style:none`,一度誤以為規則沒套用。改用真實 Tab 鍵後,`.today-jump`(在 `.today-hero` 內)`:focus-visible` 為 true、拿到 `solid 2px rgb(255,255,255)` offset 2px;再以級聯分析補驗 `.totop`／`.tabbar-btn`／`.settings-btn`。
+- 測試:`tests/theme-system.test.js` 新增兩條斷言(通則必須存在、深色容器必須切白環),**兩處皆以破壞選擇器實測確認會紅**。
+- 四個 gate、**95/95 Node**、**191/191 Playwright** 通過。backlog **#40 移入 `tasks/done.md`**。
 ## 2026-09-23 — v129:串點卡片的用詞與站數(backlog #44 收尾,candidate 未發布)
 
 - **「目前」一詞兩義**:卡片寫 `9:00 - 11:30` 與 `目前 11:30 廣島紙鶴塔`,而當下時鐘可能是 10:00 —— 這裡的「目前」指的是**該站的排定時間**,不是「現在幾點」。改為 **「這一站」**。

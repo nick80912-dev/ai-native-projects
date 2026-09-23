@@ -3,6 +3,12 @@
 > 更新於 2026-09-12。完成事項來自 `.ai-manifest.json` status.done、既有 CHANGELOG 與 Bar 驗收確認；細節仍以 07_CHANGELOG.md 為準。
 
 ## 已完成
+- 2026-09-23:backlog **#40 隨 v130 完成**。原記「全 App 235 個 `<button>` 只有 13 條 `:focus-visible`,而且全是個別元素的窄選擇器」。加入兩條通則:
+  - `button:focus-visible,[role="button"]:focus-visible,summary:focus-visible,.qa-btn/.nav-btn/.nx-navbtn/.nx-drive-btn:focus-visible{outline:2px solid var(--sea);outline-offset:2px}`
+  - `.topbar/.daybar/.today-hero/.ledger-summary-card/.ledger-selection-toolbar/.shopping-selection-toolbar` **內的** button 改 `outline-color:#fff`
+  - **關鍵設計判斷**:`outline-offset:2px` 讓焦點環落在按鈕**外面**的頁面底色上,所以 `.btn.cta`／`.btn.danger`／`.qa-btn.drv` 這些**深色按鈕本身不需要例外**;真正需要白環的是深色**容器**裡的按鈕。先以指令碼盤出全部深色背景規則,確認多數是按鈕自身而非容器,才收斂成六個容器。
+  - 既有 13 條都是 class 選擇器,特異性高於 `button:focus-visible`,**不受影響**(實測 `.today-pretrip-day` 仍吃自己的 offset 3px 規則)。
+  - 驗證:以**真實 Tab 鍵**測到 `.today-jump`(在 `.today-hero` 內)`:focus-visible` 為 true、拿到 `solid 2px rgb(255,255,255)` offset 2px;再以級聯分析確認 `.totop`／`.tabbar-btn` 吃通則、`.settings-btn` 吃白環覆寫。**程式呼叫 `.focus()` 不會觸發 `:focus-visible`**,必須用真實鍵盤事件,這點在驗證這類規則時要知道。
 - 2026-09-23:backlog **#44 隨 v128／v129 完成**,下一站串點卡片的三處呈現問題全數處理:
   - **決策鈕截斷(v128)**:原本把站名夾進可見文字(`完成：'+escapeHtml(clusterItemName(current))+'`),375px 下被 `text-overflow` 切成「完成：廣島和平…」。站名本來就無條件顯示在按鈕正上方那行,重複又截斷等於資訊沒增加。改為可見文字只留「完成／跳過」(**與非串點卡片本來的寫法一致**),完整站名移到 `aria-label` —— 螢幕閱讀器拿到的內容不變。
   - **「目前」一詞兩義(v129)**:旁邊的時間是**該站的排定時間**,不是現在幾點。改為「這一站」。

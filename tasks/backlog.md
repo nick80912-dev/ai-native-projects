@@ -2,7 +2,7 @@
 
 > 更新於 2026-09-12(v116 後)。做完或經 Bar 裁定不再需要的項目移到 done.md,正在做的移到 current.md。
 
-> **編號刻意不連續,不得重排**:`tasks/current.md`、`tasks/done.md` 與 `07_CHANGELOG.md` 都以編號互相引用,重排會打斷既有交叉引用。已歸檔項目的編號一律**留空不回收**(目前缺號:1、2、3b、4、5、6–11、13–19、21–24、26、27、30–37、39、43、44、45);新項目接在現有最大號之後。
+> **編號刻意不連續,不得重排**:`tasks/current.md`、`tasks/done.md` 與 `07_CHANGELOG.md` 都以編號互相引用,重排會打斷既有交叉引用。已歸檔項目的編號一律**留空不回收**(目前缺號:1、2、3b、4、5、6–11、13–19、21–24、26、27、30–37、39、40、43、44、45);新項目接在現有最大號之後。
 
 ## 中優先(已核准正式待辦)
 3. **驗收後 UI/內容微調**(最小修改,不動 schema)。
@@ -24,13 +24,6 @@
 
     - **狀態(2026-09-12)**:**Bar 明示先保留,待實機看過再決定**。本項不是懸而未決的疑問,而是**刻意等待一個特定輸入** —— 焙茶／象牙下實際使用的觀感。在那之前不應因為色相數字好看或難看而自行推進。
     - **前車之鑑**:同日的 #31 與 #37 都是「看起來像疏漏就去修」而被自動測試擋下的前提錯誤。`--entry-secondary-bg` 與它們同屬**已核定的固定色**,推翻需要的是明確裁定,不是分析。
-
-40. **鍵盤焦點樣式覆蓋率過低**:全 App **235 個 `<button>`,只有 13 條 `:focus-visible` 規則**,而且全是個別元素的窄選擇器(`.chk`／`.trip-back-now`／`.nx-buy-badge`／`.store-row`…),沒有 `.btn:focus-visible` 這種通則。
-
-    - **現況不是「完全沒有焦點環」**:`outline:none` 只有四處,且都配了替代樣式;其餘按鈕仍吃瀏覽器預設焦點環。問題是**不一致** —— 13 顆有自訂的 2px `var(--sea)` 環,其餘看瀏覽器臉色。
-    - **風險集中在深色實心鈕**:`.btn.cta`(各主題 CTA 底色)與 `.btn.danger`(固定紅 `#8c1d2c`)上,預設焦點環的對比通常很差。v125 才把這兩類的底色定深,這個問題隨之變明顯。
-    - **成本低**:加一條 `.btn:focus-visible{outline:2px solid ...;outline-offset:2px}` 通則即可覆蓋主要缺口;深色底可考慮改用 `outline-color:#fff` 或雙層 `box-shadow`。屬 Tier 2,需 forward bump。
-    - 來源:2026-09-23 新模型全專案複審。
 
 41. **Ledger 表單一批觸控目標低於 44px**:`.ledger-participant-choice` **28px**、`.ledger-proxy-add-row button` 30px、`.ledger-category-apply-actions button` 34px、`.ledger-history-compact-options .ledger-sheet-choice` 34px、`.ledger-option-row button`／`.ledger-action-popover button`／`.ledger-form-open-choice`／`.ledger-entry-heading-row .ledger-sheet-toggle` 36px、`.travel-note-kind button` 36px、`.settings-identity-actions .btn` 38px。
 
