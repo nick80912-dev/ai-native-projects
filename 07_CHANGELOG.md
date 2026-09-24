@@ -8,6 +8,16 @@
 - **G6 完成**:annotated tag `production-v124` 指向 `2e11c48`,訊息明文記錄 G1 未執行**以及真機觀感尚未回報**。
 - 本批不含 backlog #39(已於 v125 收斂)。
 
+## 2026-09-24 — v134 正式發布(released,未經 G1)+ G6 tag;同日真機驗證通過
+
+- PR [#33](https://github.com/nick80912-dev/ai-native-projects/pull/33) 以 merge 合併 `dev` `a6784a9` → `main`,merge commit **`7d42886`**。本 PR 同時帶入 v133 發布紀錄的補寫 commit(`d4c24fe`)。兩輪 CI 共 7 項全綠後合併,合併時以 `--match-head-commit` 釘住 head。
+- Netlify deploy **`6ab4a140c3b849000815dfa6`**、`ready`、`commit_ref` = `7d42886` 相符、`published_at` `2026-09-24T04:04:24Z`、`manual_deploy: false`,21 個新檔(含 `shell/v134/index.html`)、6 條 header rule 全過。`main` 上 merge commit 的 `sanity` 與 `browser-qa` 皆 success。
+- **§F5 線上核對五項全過**:`sw.js` v134;`shell/v134/` 三件組皆 v134;root bridge 維持 **v110 未被誤升**;三處 `Cache-Control` 正確;**v111–v133 二十三個舊世代皆回 200**(ADR 0019)。另線上實查兩欄營業時間 markup 與 `.sm-hours-list` 的 `pre-line` 已上線,舊的單串 markup 0 次,v129 那筆已滾出五筆視窗。
+- **G6 完成**:annotated tag `production-v134` 指向 `7d42886`。tag 在真機回報之後才建立,訊息直接寫入驗證結果。
+- **G1 經 Bar 裁定跳過**(同 v114–v133)。
+- **真機驗證通過(2026-09-24)**:Bar 在手機上回報驗證 OK。**本版改動在出發前即可完整看到,沒有真機驗不到的部分**(對照 v133 的「回到現在」要出發後才出現)。BB4 八項維持未驗。
+- **backlog 狀態**:#49 已結案。剩餘 **#3／#12／#20／#25／#28／#29／#38／#41／#42**,外加 **E1**、**E2** 兩項大型重構;#27 底下另記一個已知缺口。**#40–#49 這一批 2026-09-23 複審與走查的發現,除 #41(等真實展開樣貌)與 #42(預告性質,不需現在改)外全數結案。**
+
 ## 2026-09-24 — v134:商場營業時間一段一行(backlog #49 之 (a),candidate 未發布)
 
 - **先查證前提(375px 實測),兩項一成立、一不成立**:
