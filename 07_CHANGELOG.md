@@ -8,6 +8,18 @@
 - **G6 完成**:annotated tag `production-v124` 指向 `2e11c48`,訊息明文記錄 G1 未執行**以及真機觀感尚未回報**。
 - 本批不含 backlog #39(已於 v125 收斂)。
 
+## 2026-09-24 — v133 正式發布(released,未經 G1)+ G6 tag;同日真機驗證通過
+
+- PR [#32](https://github.com/nick80912-dev/ai-native-projects/pull/32) 以 merge 合併 `dev` `d7d184b` → `main`,merge commit **`e36d298`**。本 PR 同時帶入 v132 發布紀錄的補寫 commit(`0c9da8f`)。兩輪 CI 共 7 項全綠後合併,合併時以 `--match-head-commit` 釘住 head。
+- Netlify deploy **`6ab4921a1b92c70008ace144`**、`ready`、`commit_ref` = `e36d298` 相符、`published_at` `2026-09-24T02:59:45Z`、`manual_deploy: false`,21 個新檔(含 `shell/v133/index.html`)、6 條 header rule 全過。`main` 上 merge commit 的 `sanity` 與 `browser-qa` 皆 success。
+- **§F5 線上核對五項全過**:`sw.js` v133;`shell/v133/` 三件組皆 v133;root bridge 維持 **v110 未被誤升**;三處 `Cache-Control` 正確;**v111–v132 二十二個舊世代皆回 200**(ADR 0019)。另線上實查 track 與 `role="group"`、兩處 `aria-pressed` 綁定、44px 覆寫皆已上線,舊獨立膠囊規則 0 次,v128 那筆已滾出五筆視窗。
+- **G6 完成**:annotated tag `production-v133` 指向 `e36d298`。tag 在真機回報之後才建立,訊息直接寫入驗證結果。
+- **G1 經 Bar 裁定跳過**(同 v114–v132)。
+- **真機驗證通過(2026-09-24)**:Bar 在手機上回報驗證 OK。
+  - **一項真機驗不到**:目前在出發前,「⏱ 回到現在」只在旅程中、且看的不是今天那天時才出現,手機上看不到。**三顆同列的版面只在本機以 `?previewDate=2026-10-19` 模擬旅程中驗過**(375／320px 皆無截斷),未經真機確認。出發後(10/18 起)在行程頁切到別天即可補看。
+  - **BB4 八項維持未驗**。
+- **backlog 狀態**:#46 已結案。剩餘 **#3／#12／#20／#25／#28／#29／#38／#41／#42／#49**,外加 **E1**、**E2** 兩項大型重構;#27 底下另記一個已知缺口。
+
 ## 2026-09-24 — v133:行程篩選改為 segmented track(backlog #46,candidate 未發布)
 
 - **先查證前提,backlog 原記有一半不成立**:
