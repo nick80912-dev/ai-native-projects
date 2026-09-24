@@ -8,6 +8,34 @@
 - **G6 完成**:annotated tag `production-v124` 指向 `2e11c48`,訊息明文記錄 G1 未執行**以及真機觀感尚未回報**。
 - 本批不含 backlog #39(已於 v125 收斂)。
 
+## 2026-09-24 — v134:商場營業時間一段一行(backlog #49 之 (a),candidate 未發布)
+
+- **先查證前提(375px 實測),兩項一成立、一不成立**:
+  - (a)「營業時間擠成一行,站在門口想確認超市幾點關要從頭讀到尾」—— **成立,且比原記更糟**。永旺的換行把「美食廣場」與它的時間拆到兩行;**Ario 換行直接切在「美食廣|場」中間**,與 #47 切開「桃園」是同一類缺陷。
+  - (b)「永旺夢樂城有 **11** 個樓層列、每列 45px、合計 **495px**,光摺疊標題就超過一個半螢幕」—— **不成立**。實測永旺只有 **6 列**(1F／2F／3F／4F／5F／6F),每列 45px,收合後合計 **312px**,不到半個螢幕。「5F／6F 各只有 1 家」屬實。
+- **Bar 2026-09-24 裁定只做 (a)**。(b) 不做的理由:把 5F／6F 併成一列只省約 53px,代價是打破「一列 = 一層樓」—— 在店裡找「5F」時會找不到那一列。
+- **資料查證**:57 筆營業時間中,**只有 P001 永旺與 P039 Ario 兩筆使用 ` / `**,其餘沒有任何 `/`;唯一含換行的是 P003 廣島城(景點,不在購物頁)。以 ` / `(前後含空格)切分不會誤傷其他資料。餐廳常見的 `11:00-14:00、17:00-21:00` 是同一項目的兩個時段,刻意不依 `、` 切分。
+- **改法**:
+  - markup:`<div class="sm-hours"><span>🕒</span><span class="sm-hours-list">'+escapeHtml(p.hours).split(' / ').join('<br>')+'</span></div>`。
+  - CSS:`.sm-hours` 加 `display:flex;gap:4px`(**接在既有宣告之後**,`ui-ux-v112` 守的 `.sm-hours{font-size:13px` 不受影響);新增 `.sm-hours-list{white-space:pre-line;min-width:0}`。
+  - **為什麼不用懸掛縮排**:原型先以 `padding-left:1.5em;text-indent:-1.5em` 實作,實測第一段在 x=49、續行在 x=47,差 2px —— 1.5em 是在猜 🕒 的寬度,而 emoji 寬度在 iOS／Android／Windows 各不相同。改為圖示與清單分兩欄後,四段一律對齊在 x=50,與 emoji 寬度無關。
+  - `04_UI_GUIDELINES`「CMS 欄位的換行」一節補上 `.sm-hours-list`,並明文寫下 ` / ` 是分段符號、`、` 不得切分。
+- **實測(SW 服務的真 v134,乾淨分頁 console 零錯誤)**:375px 永旺卡 558→597px(+39)、Ario 299→318px(+19),其餘三張卡高度不變;每段對齊於 x=50;320px 下每段仍為一行、無截斷。
+- 測試:`tests/ui-ux-v112.test.js` 新增四條斷言(一段一行的 markup、舊的單串 markup 不得再出現、兩欄 flex、清單 pre-line),**四條逐一以拿掉對應改動實測確認會紅**;五筆發布說明視窗滾到 `v134` + `['v133','v132','v131','v130']`,v129 那筆滾出。
+- 四個 gate、**95/95 Node**、**191/191 Playwright** 通過。
+
+## 2026-09-24 — v133 正式發布(released,未經 G1)+ G6 tag;同日真機驗證通過
+
+- PR [#32](https://github.com/nick80912-dev/ai-native-projects/pull/32) 以 merge 合併 `dev` `d7d184b` → `main`,merge commit **`e36d298`**。本 PR 同時帶入 v132 發布紀錄的補寫 commit(`0c9da8f`)。兩輪 CI 共 7 項全綠後合併,合併時以 `--match-head-commit` 釘住 head。
+- Netlify deploy **`6ab4921a1b92c70008ace144`**、`ready`、`commit_ref` = `e36d298` 相符、`published_at` `2026-09-24T02:59:45Z`、`manual_deploy: false`,21 個新檔(含 `shell/v133/index.html`)、6 條 header rule 全過。`main` 上 merge commit 的 `sanity` 與 `browser-qa` 皆 success。
+- **§F5 線上核對五項全過**:`sw.js` v133;`shell/v133/` 三件組皆 v133;root bridge 維持 **v110 未被誤升**;三處 `Cache-Control` 正確;**v111–v132 二十二個舊世代皆回 200**(ADR 0019)。另線上實查 track 與 `role="group"`、兩處 `aria-pressed` 綁定、44px 覆寫皆已上線,舊獨立膠囊規則 0 次,v128 那筆已滾出五筆視窗。
+- **G6 完成**:annotated tag `production-v133` 指向 `e36d298`。tag 在真機回報之後才建立,訊息直接寫入驗證結果。
+- **G1 經 Bar 裁定跳過**(同 v114–v132)。
+- **真機驗證通過(2026-09-24)**:Bar 在手機上回報驗證 OK。
+  - **一項真機驗不到**:目前在出發前,「⏱ 回到現在」只在旅程中、且看的不是今天那天時才出現,手機上看不到。**三顆同列的版面只在本機以 `?previewDate=2026-10-19` 模擬旅程中驗過**(375／320px 皆無截斷),未經真機確認。出發後(10/18 起)在行程頁切到別天即可補看。
+  - **BB4 八項維持未驗**。
+- **backlog 狀態**:#46 已結案。剩餘 **#3／#12／#20／#25／#28／#29／#38／#41／#42／#49**,外加 **E1**、**E2** 兩項大型重構;#27 底下另記一個已知缺口。
+
 ## 2026-09-24 — v133:行程篩選改為 segmented track(backlog #46,candidate 未發布)
 
 - **先查證前提,backlog 原記有一半不成立**:
