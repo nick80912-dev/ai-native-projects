@@ -1,22 +1,14 @@
+/* 讀現行 generation(tests/support/source.js),不是 root index.html。
+   root index.html 是 byte-locked 的 v110 bridge,內容永遠不變 —— 斷言放在那裡
+   永遠會綠,守不到使用者實際跑的 App。2026-09-24 實測:在現行 generation 把
+   previewDate 參數改名,本檔原本照樣通過。
+   backlog #27 當時是掃 shell/vNNN 字面來遷移,本檔從未寫過 generation 路徑,
+   所以沒被掃到;這裡補上。 */
 const assert = require('assert');
-const fs = require('fs');
-const path = require('path');
 const vm = require('vm');
+const { readIndexHtml, extractFunction } = require('./support/source');
 
-const html = fs.readFileSync(path.join('.', 'index.html'), 'utf8');
-
-function extractFunction(name) {
-  const start = html.indexOf('function ' + name + '(');
-  assert.notStrictEqual(start, -1, name + ' exists');
-  let i = html.indexOf('{', start);
-  let depth = 0;
-  for (; i < html.length; i++) {
-    if (html[i] === '{') depth++;
-    if (html[i] === '}') depth--;
-    if (depth === 0) return html.slice(start, i + 1);
-  }
-  throw new Error('Could not extract ' + name);
-}
+const html = readIndexHtml();
 
 function runWithSearch(search) {
   const sandbox = {
@@ -28,9 +20,9 @@ function runWithSearch(search) {
   };
   vm.createContext(sandbox);
   vm.runInContext([
-    extractFunction('lsGet'),
-    extractFunction('appNow'),
-    extractFunction('todayMD'),
+    extractFunction(html, 'lsGet'),
+    extractFunction(html, 'appNow'),
+    extractFunction(html, 'todayMD'),
   ].join('\n'), sandbox);
   return sandbox.todayMD();
 }
@@ -46,3 +38,5 @@ assert.strictEqual(
   '10/23',
   'previewDate works alongside other query parameters'
 );
+
+console.log('preview date tests passed');

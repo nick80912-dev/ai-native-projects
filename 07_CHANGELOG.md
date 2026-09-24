@@ -8,6 +8,25 @@
 - **G6 完成**:annotated tag `production-v124` 指向 `2e11c48`,訊息明文記錄 G1 未執行**以及真機觀感尚未回報**。
 - 本批不含 backlog #39(已於 v125 收斂)。
 
+## 2026-09-24 — backlog #27 殘留缺口補齊:兩個測試檔改讀現行 generation(無 runtime 變更)
+
+- **缺口來源**:v131 時查到,`tests/preview-date.test.js` 與 `tests/trip-presentation.test.js` 讀的是 root `index.html` —— 也就是 byte-locked 的 **v110 bridge**,不是現行 generation。backlog #27 當時是掃 `tests/*.test.js` 裡的 `shell/vNNN` 字面來遷移,這兩檔**從未寫過 generation 路徑**,所以掃不到。已記於 `tasks/done.md` 的 #27 條目底下。
+- **先證明缺口是真的(改前)**:在現行 generation(`shell/v134/index.html`)做五種破壞,舊測試**全部照樣通過**:
+
+  | 破壞 | 改前 | 改後 |
+  |---|---|---|
+  | `tripHideDone` 預設值翻成 `false` | 漏掉 | **抓到** |
+  | 拿掉「現在」徽章 | 漏掉 | **抓到** |
+  | 加油資訊標籤改名 | 漏掉 | **抓到** |
+  | 機場標籤改名 | 漏掉 | **抓到** |
+  | `previewDate` 參數改名 | 漏掉 | **抓到** |
+
+  每個破壞案例結束都還原原檔,並以 `git diff --quiet shell/` 確認 shell 未被留下改動。
+- **改法**:兩檔改用 `tests/support/source.js` 的 `readIndexHtml()` 與 `extractFunction(html,name)`,不再各自讀 root `index.html`、各自寫一份不跳過字串的括號配對器。**所有斷言的內容一條未改** —— 只換了它們看的是哪一份檔。`preview-date.test.js` 另補上結尾的通過訊息(原本跑過與沒跑過在輸出上看不出差別)。
+- **共用擷取器的已知限制已確認不影響**:`source.js` 不處理 regex 常值內的括號。`appNow()` 內的 `/^\d{4}-\d{2}-\d{2}$/` 大括號成對,淨值為零,擷取結果正確(兩檔在現行 generation 皆通過)。
+- **確認沒有第三個**:全 `tests/*.test.js` 掃過直接 `readFileSync` 的來源。`home-safety.test.js` 走 `shellPath()`(現行);`pwa-shell.test.js` 同時讀現行與 bridge,且 bridge 那份明確標為 `bridgeIndexPath`(predecessor bridge 本來就是它要驗的對象);`builtin-snapshot-refresh.test.js` 讀的是暫存 fixture 根目錄。**只有這兩檔是缺口。**
+- 不涉及 runtime,不升版;`tests/` 屬 Tier 1。四個 gate、**95/95 Node** 通過。
+
 ## 2026-09-24 — v134 正式發布(released,未經 G1)+ G6 tag;同日真機驗證通過
 
 - PR [#33](https://github.com/nick80912-dev/ai-native-projects/pull/33) 以 merge 合併 `dev` `a6784a9` → `main`,merge commit **`7d42886`**。本 PR 同時帶入 v133 發布紀錄的補寫 commit(`d4c24fe`)。兩輪 CI 共 7 項全綠後合併,合併時以 `--match-head-commit` 釘住 head。
