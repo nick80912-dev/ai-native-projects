@@ -8,6 +8,16 @@
 - **G6 完成**:annotated tag `production-v124` 指向 `2e11c48`,訊息明文記錄 G1 未執行**以及真機觀感尚未回報**。
 - 本批不含 backlog #39(已於 v125 收斂)。
 
+## 2026-09-24 — v131 正式發布(released,未經 G1)+ G6 tag;同日真機驗證通過
+
+- PR [#30](https://github.com/nick80912-dev/ai-native-projects/pull/30) 以 merge 合併 `dev` `79489a4` → `main`,merge commit **`347d1a0`**。本 PR 同時帶入 v127–v130 發布紀錄的補寫 commit(`20ebf4e`)。合併前等該 head 的**兩輪** CI(push + pull_request)共 7 項全綠,並於合併當下重查 head 未變、`main` 無新 commit、`mergeStateStatus: CLEAN` —— 綠燈與合併之間隔了一天,不以前一天的結果為準。
+- Netlify deploy **`6ab47b74f7755800087b591f`**、`ready`、`commit_ref` = `347d1a0` 相符、`published_at` `2026-09-24T01:23:07Z`、`manual_deploy: false`,20 個新檔(含 `shell/v131/index.html`)、6 條 header rule 全過。`main` 上 merge commit 的 `sanity` 與 `browser-qa` 亦皆 success。
+- **§F5 線上核對五項全過**:`sw.js` v131;`shell/v131/` 三件組皆 v131;root bridge 維持 **v110 未被誤升**;三處 `Cache-Control` 正確;**v111–v130 二十個舊世代皆回 200**(ADR 0019)。另線上實查 `.drive-chip` 帶 `white-space:pre-line`、v131 發布說明已上線、v126 那筆已滾出五筆視窗。
+- **G6 完成**:annotated tag `production-v131` 指向 `347d1a0`。tag 在真機回報之後才建立,訊息直接寫入驗證結果(同 v130)。
+- **G1 經 Bar 裁定跳過**(同 v114–v130)。
+- **真機驗證通過(2026-09-24)**:Bar 在手機上回報驗證 OK。**BB4 八項維持未驗**。
+- **backlog 狀態**:#47 已結案。剩餘 **#3／#12／#20／#25／#28／#29／#38／#41／#42／#46／#48／#49**,外加 **E1**(角色 token 採用率)與 **E2**(寫死 hex)兩項大型重構;#27 底下另記一個已知缺口(兩個測試檔讀凍結的 v110 bridge)。
+
 ## 2026-09-23 — v131:交通 chip 保留資料原文的換行(backlog #47,candidate 未發布)
 
 - **回報的症狀**:行程頁 Day 1 的 9:00 卡片,交通資訊在 375px 下顯示為 `9:00開櫃 11:30(TPE台灣桃` / `園)-15:05(OKJ日本岡山)` —— 地名 `桃園` 被拆成兩行。
