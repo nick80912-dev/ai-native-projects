@@ -8,6 +8,35 @@
 - **G6 完成**:annotated tag `production-v124` 指向 `2e11c48`,訊息明文記錄 G1 未執行**以及真機觀感尚未回報**。
 - 本批不含 backlog #39(已於 v125 收斂)。
 
+## 2026-09-24 — backlog #27 殘留缺口補齊:兩個測試檔改讀現行 generation(無 runtime 變更)
+
+- **缺口來源**:v131 時查到,`tests/preview-date.test.js` 與 `tests/trip-presentation.test.js` 讀的是 root `index.html` —— 也就是 byte-locked 的 **v110 bridge**,不是現行 generation。backlog #27 當時是掃 `tests/*.test.js` 裡的 `shell/vNNN` 字面來遷移,這兩檔**從未寫過 generation 路徑**,所以掃不到。已記於 `tasks/done.md` 的 #27 條目底下。
+- **先證明缺口是真的(改前)**:在現行 generation(`shell/v134/index.html`)做五種破壞,舊測試**全部照樣通過**:
+
+  | 破壞 | 改前 | 改後 |
+  |---|---|---|
+  | `tripHideDone` 預設值翻成 `false` | 漏掉 | **抓到** |
+  | 拿掉「現在」徽章 | 漏掉 | **抓到** |
+  | 加油資訊標籤改名 | 漏掉 | **抓到** |
+  | 機場標籤改名 | 漏掉 | **抓到** |
+  | `previewDate` 參數改名 | 漏掉 | **抓到** |
+
+  每個破壞案例結束都還原原檔,並以 `git diff --quiet shell/` 確認 shell 未被留下改動。
+- **改法**:兩檔改用 `tests/support/source.js` 的 `readIndexHtml()` 與 `extractFunction(html,name)`,不再各自讀 root `index.html`、各自寫一份不跳過字串的括號配對器。**所有斷言的內容一條未改** —— 只換了它們看的是哪一份檔。`preview-date.test.js` 另補上結尾的通過訊息(原本跑過與沒跑過在輸出上看不出差別)。
+- **共用擷取器的已知限制已確認不影響**:`source.js` 不處理 regex 常值內的括號。`appNow()` 內的 `/^\d{4}-\d{2}-\d{2}$/` 大括號成對,淨值為零,擷取結果正確(兩檔在現行 generation 皆通過)。
+- **確認沒有第三個**:全 `tests/*.test.js` 掃過直接 `readFileSync` 的來源。`home-safety.test.js` 走 `shellPath()`(現行);`pwa-shell.test.js` 同時讀現行與 bridge,且 bridge 那份明確標為 `bridgeIndexPath`(predecessor bridge 本來就是它要驗的對象);`builtin-snapshot-refresh.test.js` 讀的是暫存 fixture 根目錄。**只有這兩檔是缺口。**
+- 不涉及 runtime,不升版;`tests/` 屬 Tier 1。四個 gate、**95/95 Node** 通過。
+
+## 2026-09-24 — v134 正式發布(released,未經 G1)+ G6 tag;同日真機驗證通過
+
+- PR [#33](https://github.com/nick80912-dev/ai-native-projects/pull/33) 以 merge 合併 `dev` `a6784a9` → `main`,merge commit **`7d42886`**。本 PR 同時帶入 v133 發布紀錄的補寫 commit(`d4c24fe`)。兩輪 CI 共 7 項全綠後合併,合併時以 `--match-head-commit` 釘住 head。
+- Netlify deploy **`6ab4a140c3b849000815dfa6`**、`ready`、`commit_ref` = `7d42886` 相符、`published_at` `2026-09-24T04:04:24Z`、`manual_deploy: false`,21 個新檔(含 `shell/v134/index.html`)、6 條 header rule 全過。`main` 上 merge commit 的 `sanity` 與 `browser-qa` 皆 success。
+- **§F5 線上核對五項全過**:`sw.js` v134;`shell/v134/` 三件組皆 v134;root bridge 維持 **v110 未被誤升**;三處 `Cache-Control` 正確;**v111–v133 二十三個舊世代皆回 200**(ADR 0019)。另線上實查兩欄營業時間 markup 與 `.sm-hours-list` 的 `pre-line` 已上線,舊的單串 markup 0 次,v129 那筆已滾出五筆視窗。
+- **G6 完成**:annotated tag `production-v134` 指向 `7d42886`。tag 在真機回報之後才建立,訊息直接寫入驗證結果。
+- **G1 經 Bar 裁定跳過**(同 v114–v133)。
+- **真機驗證通過(2026-09-24)**:Bar 在手機上回報驗證 OK。**本版改動在出發前即可完整看到,沒有真機驗不到的部分**(對照 v133 的「回到現在」要出發後才出現)。BB4 八項維持未驗。
+- **backlog 狀態**:#49 已結案。剩餘 **#3／#12／#20／#25／#28／#29／#38／#41／#42**,外加 **E1**、**E2** 兩項大型重構;#27 底下另記一個已知缺口。**#40–#49 這一批 2026-09-23 複審與走查的發現,除 #41(等真實展開樣貌)與 #42(預告性質,不需現在改)外全數結案。**
+
 ## 2026-09-24 — v134:商場營業時間一段一行(backlog #49 之 (a),candidate 未發布)
 
 - **先查證前提(375px 實測),兩項一成立、一不成立**:
