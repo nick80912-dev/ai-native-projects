@@ -18,6 +18,16 @@ const typeColumn = schema.sheets.places.columns.find(function(column) {
 });
 
 assert.strictEqual(schema.version, '3.0 (2026-08-11)');
+/* v136:Ledger Default Currency 同時是全團結算幣別(ADR 0007)。說明原寫「分帳預設輸入幣別」,
+   只講了一半 —— v135 查到有人照字面改成另一幣別,已還清的人會重新被要求付款。
+   只改說明文字,欄位名稱、合法值與驗證規則不變。 */
+const ledgerCurrencyKey = schema.sheets.cfg.keys.find(function(key) {
+  return key.field === 'ledgerDefaultCurrency';
+});
+assert.strictEqual(ledgerCurrencyKey.header, 'Ledger Default Currency', 'the Sheet key name is unchanged');
+assert.strictEqual(ledgerCurrencyKey.desc, '全團結算幣別,也是新增記帳的預設幣別;只允許 JPY/TWD',
+  'the schema describes the key as the group settlement currency, not just the default input');
+assert.deepStrictEqual(Object.keys(ledgerCurrencyKey.values).sort(), ['JPY', 'TWD', 'jpy', 'twd'], 'accepted values are unchanged');
 const hotelIdColumn = schema.sheets.places.columns.find(function(column) {
   return column.field === 'hotelId';
 });

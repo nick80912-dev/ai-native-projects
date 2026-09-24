@@ -8,6 +8,15 @@
 - **G6 完成**:annotated tag `production-v124` 指向 `2e11c48`,訊息明文記錄 G1 未執行**以及真機觀感尚未回報**。
 - 本批不含 backlog #39(已於 v125 收斂)。
 
+## 2026-09-24 — v136:schema 說明改為「全團結算幣別」(candidate 未發布)
+
+- **來源**:v135 上線核對時發現,`Ledger Default Currency` 的 schema 欄位說明仍寫 `分帳預設輸入幣別;只允許 JPY/TWD`。它同時是全團結算幣別(ADR 0007),v135 已把設定頁改正,這裡還沒跟上。依憲章改 schema 須先確認,v135 未動;Bar 2026-09-24 裁定改掉,並選定新說明。
+- **改法**:說明改為 `全團結算幣別,也是新增記帳的預設幣別;只允許 JPY/TWD`,並加一行註解指向 ADR 0007 與 v135 的鎖定。**只改說明文字** —— 欄位名稱 `ledgerDefaultCurrency`、Sheet 鍵 `Ledger Default Currency`、合法值與驗證規則皆不變,畫面與操作不變(`desc` 只用來產生欄位對照文件)。
+- **三處同步**:`schema.js`(唯一資料規格);`shell/v136` 的內嵌副本(`schema-types.test.js` 要求與 `schema.js` 逐字物件一致);`09_SCHEMA_MAPPING.md` 對照表。root 的 v110 bridge 另有一份內嵌 schema,屬 byte-locked,**刻意不動**(一致性斷言讀的是現行 generation,不是 bridge)。
+- **為什麼一行說明也要完整升版**:`schema.js` 列在 `sw.js` 的 App Shell 與 `runtime-assets.json`,會被 SW 快取。依 ADR 0019 不支援同版本熱替換,故 forward bump v135→v136。
+- 測試:`tests/schema-types.test.js` 新增斷言(Sheet 鍵名不變、說明為新文字、合法值不變);**單獨把 `schema.js` 改回舊說明實測會紅**(新斷言與逐字一致檢查皆擋下)。五筆發布說明視窗滾到 `v136` + `['v135','v134','v133','v132']`,v131 那筆滾出。
+- 四個 gate、**95/95 Node**、**196/196 Playwright** 通過。
+
 ## 2026-09-24 — v135 正式發布(released,未經 G1)+ G6 tag;同日真機驗證通過
 
 - PR [#35](https://github.com/nick80912-dev/ai-native-projects/pull/35) 以 merge 合併 `dev` `8fbefdd` → `main`,merge commit **`67916c7`**。兩輪 CI 共 7 項全綠後合併,合併時以 `--match-head-commit` 釘住 head。

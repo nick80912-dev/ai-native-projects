@@ -111,5 +111,5 @@
 | Travel Mode(別名:transport/交通模式) | travelmode | Driving→drive(🚗導航+停車卡);Transit/Train→transit(🚃路線) |
 | Currency | currency |  |
 | Exchange Rate | exchangeRate | 1 JPY 對應的 TWD 金額;必須大於 0 |
-| Ledger Default Currency | ledgerDefaultCurrency | 分帳預設輸入幣別;只允許 JPY/TWD |
+| Ledger Default Currency | ledgerDefaultCurrency | 全團結算幣別,也是新增記帳的預設幣別;只允許 JPY/TWD |
 | Home Page | homepage | 預設分頁(⚠️ 目前**未啟用**,App 固定 Today;填寫無效果) |
