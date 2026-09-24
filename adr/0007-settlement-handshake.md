@@ -70,3 +70,17 @@ Bar 核准「歷史不可改寫」：canonical 還款確認是已發生的真實
 更正事件沿用現有 21 欄與 append-only 管線,新增 `expense_correction_item`、`expense_correction_commit`、`expense_void_commit` 三種 `recordType`,不新增 Google Sheet 欄位、不修改 Apps Script API。item 先入 durable queue,commit 最後入列；沒有完整 commit 的部分版本不得影響餘額。跨裝置對同一上一版本並行更正時,commit 依 `time ASC → id ASC` 選唯一 canonical,losing correction 永遠 inert、不自動升格。
 
 完整欄位契約、版本投影、失敗處理、UI 與測試標準見 `docs/superpowers/specs/2026-07-29-settlement-consistency-guided-correction-design.md`。
+
+## 修訂 — 結算幣別鎖定(v135,2026-09-24)
+
+本 ADR 的 Trade-offs 已寫明「沿用 `Ledger Default Currency` 兼作結算幣別,假設兩者相等」。2026-09-24 分帳稽核以真實資料實測,這個假設在介面上沒有被守住:設定頁把它標為「預設輸入幣別 —— 新增記帳時預先選擇的幣別」,完全沒提到它同時決定全團結算幣別,且儲存後跨裝置生效。
+
+實測後果:兩筆以 JPY 確認的還款(哈囉祺 → Jane ¥500、哈囉祺 → 黃柏 ¥1,000)只會調整 JPY 淨額。若有人把該設定改為 TWD,結算改讀 TWD 淨額,已還清的哈囉祺會被要求再付 NT$315、黃柏由已結清變回應收 NT$210 —— 正是本 ADR 否決 Alternative C 時要避免的「結算幣別已結清、另一幣仍掛帳」幻影,只是換了一個入口。
+
+v135 的處置(不改 Sheet schema、不改 Apps Script 白名單,仍屬本 ADR 範圍內):
+
+- 設定頁改標為「結算幣別」,說明「全團共用:團體帳以這個幣別結算,也是新增記帳時預先選好的幣別」。
+- 只要存在任何還款紀錄(`settlement_claim` 或 `settlement_confirm`,正式與 TEST 皆算),另一個幣別按鈕即停用並說明原因;`saveLedgerSettings()` 在送出網路請求前另有同條件的守門,不依賴介面。
+- 直接在 Google Sheet 修改 `Ledger Default Currency` 不在 App 的守門範圍內,這條路徑仍須由人自律。
+
+Future Impact 不變:若日後真的需要「輸入幣別 ≠ 結算幣別」,仍應升級為獨立的 `Ledger Settlement Currency` 鍵;屆時本鎖定可改為只鎖結算幣別。

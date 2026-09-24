@@ -234,13 +234,17 @@ function response(payload){
   assert(!splitSource.includes('id="ledgerJpy"')&&!splitSource.includes('id="ledgerTwd"'),'legacy dual amount inputs are removed');
   assert(entrySource.includes('convertLedgerAmounts'),'Split entry converts the selected currency into both stored amounts');
   assert(settingsLedgerPageSource.includes('id="ledgerExchangeRate"'),'Settings exposes the current exchange rate');
-  assert(settingsLedgerPageSource.includes('預設輸入幣別'),'Settings exposes the localized default ledger currency');
+  /* v135:Ledger Default Currency 同時是全團結算幣別(ADR 0007),原標籤「預設輸入幣別」只講了一半。
+     改為「結算幣別」並說明全團共用;有還款紀錄時鎖定(行為由 ledger-money-integrity.spec.js 守)。 */
+  assert(settingsLedgerPageSource.includes('結算幣別'),'Settings names the shared settlement currency');
   assert(html.includes("header:'Ledger Default Currency'"),'internal Ledger Default Currency contract remains unchanged');
   assert(settingsLedgerPageSource.includes('saveLedgerSettings'),'Settings saves through the confirmed cloud settings helper');
   assert(settingsLedgerPageSource.includes('>匯率<'),'Settings shows the localized exchange-rate label');
   assert(settingsLedgerPageSource.includes('1 日幣可換算多少台幣'),'Settings explains the exchange-rate direction');
-  assert(settingsLedgerPageSource.includes('>預設輸入幣別<'),'Settings shows the localized default-currency label');
-  assert(settingsLedgerPageSource.includes('新增記帳時預先選擇的幣別'),'Settings explains the default input currency');
+  assert(settingsLedgerPageSource.includes('<b>結算幣別</b>'),'Settings shows the settlement-currency label');
+  assert(settingsLedgerPageSource.includes('全團共用：團體帳以這個幣別結算'),'Settings explains the currency applies to the whole group');
+  assert(!settingsLedgerPageSource.includes('預設輸入幣別'),'the half-true default-input-only label is gone');
+  assert(settingsLedgerPageSource.includes('currencyLocked=ledgerSettlementCurrencyLocked()'),'Settings checks the settlement lock before rendering the currency choice');
   assert(!settingsLedgerPageSource.includes('Exchange Rate（'),'Settings does not expose the internal Exchange Rate key as a label');
   assert(!settingsLedgerPageSource.includes('Ledger Default Currency（'),'Settings does not expose the internal default-currency key as a label');
   assert(settingsRootSource.includes('目前身分'),'Settings displays the current member identity');
