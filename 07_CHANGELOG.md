@@ -8,6 +8,25 @@
 - **G6 完成**:annotated tag `production-v124` 指向 `2e11c48`,訊息明文記錄 G1 未執行**以及真機觀感尚未回報**。
 - 本批不含 backlog #39(已於 v125 收斂)。
 
+## 2026-09-24 — v133:行程篩選改為 segmented track(backlog #46,candidate 未發布)
+
+- **先查證前提,backlog 原記有一半不成立**:
+  - 原記「兩顆等寬 `.btn` 並排……狀態卻用了動作的形狀」—— **不成立**。實測兩顆的 `border-radius` 本來就是 `999px` 膠囊,且 `04_UI_GUIDELINES.md` 形狀語意節明列 `.trip-filter-btn` 為「②可選取的 chip／toggle」。形狀語意沒有違規。
+  - 原記「active-trip 下三個控制擠在一列」—— **不成立**。以 `?previewDate=2026-10-19` 模擬旅程中、看 Day 1(使「回到現在」出現)實測:375px 為 121／121／93px,320px 為 93／94／93px,**三顆都放得下、無截斷**。「回到現在」為 9px 矩形,本來就是動作的形狀。
+  - 原記「採買用 segmented,兩種做法並存」—— **成立**。
+- **仍成立、並據此修正的兩個問題**:
+  1. **看起來像兩顆按鈕,不像二選一**。選中的「隱藏已完成」是一顆填滿 `--sea` 的獨立膠囊,跟旁邊的主要動作鈕長得一樣,讀不出「兩個選項中選了哪個」。
+  2. **backlog 沒寫、本次查到的 a11y 缺口**:兩顆**沒有 `aria-pressed`**,也沒有 `type="button"`。螢幕閱讀器念不出目前生效的是哪個篩選,選中狀態只能靠顏色分辨。採買的 segment 兩者都有。
+- **改法**:
+  - markup:兩顆包進 `<div class="trip-filter-track" role="group" aria-label="行程篩選">`,各自補 `type="button"` 與隨 `tripHideDone` 切換的 `aria-pressed`。「⏱ 回到現在」留在 track 外面。
+  - CSS:**把 `.trip-filter-track` 與 `.trip-filter-track .trip-filter-btn(.on)` 加進 ledger 區既有的共用 segmented 規則**,不複製宣告(同「表單存檔鈕」一節的慣例)。舊的獨立膠囊規則(`.trip-filter-btn{…border:1px solid…}` 與 `.trip-filter-btn.on{…}`)刪除。
+  - 兩處刻意偏離共用規則,皆以緊接其後的覆寫表達:按鈕 `min-height:44px`(共用為 40px —— 這是走路時單手用的控制,不因改 segmented 而縮小觸控區);track `flex:1;min-width:0`。`.trip-filter` 加 `align-items:center`,「回到現在」維持 44px、不被拉成 track 的 53px。
+  - **`.trip-filter-btn` 這個 class 名稱刻意保留**:`restoreTripCheckFocus()` 在「沒有下一筆」時退回篩選按鈕,`view-context.spec.js` 與 `trip-checkin-a11y.test.js` 都靠它。
+  - `04_UI_GUIDELINES.md`:`.trip-filter-btn` 由「②chip」清單移出,`.trip-filter-track` 列入「③segmented track」,並補一句「二選一的狀態用 segmented track,不用兩顆獨立膠囊」。
+- **實測(SW 服務的真 v133,乾淨分頁 console 零錯誤)**:375px track 251×53px、按鈕 119×44px、「回到現在」92×44px;320px 按鈕 91／91／92px,皆無截斷。整列高度 44→53px。點「顯示全部」後 `tripHideDone` 為 false、`aria-pressed` 隨之翻轉。
+- 測試:`tests/trip-checkin-a11y.test.js` 新增七條斷言(具名群組、兩顆 `aria-pressed` 綁定、track 與選中樣式走共用規則、44px 覆寫、舊獨立膠囊規則已移除),**七條逐一以拿掉對應改動實測確認會紅**;五筆發布說明視窗滾到 `v133` + `['v132','v131','v130','v129']`,v128 那筆滾出。
+- 四個 gate、**95/95 Node**、**191/191 Playwright** 通過(含 `view-context.spec.js` 的「沒有下一筆時焦點退回篩選按鈕」)。
+
 ## 2026-09-24 — v132 正式發布(released,未經 G1)+ G6 tag;同日真機驗證通過
 
 - PR [#31](https://github.com/nick80912-dev/ai-native-projects/pull/31) 以 merge 合併 `dev` `7713efb` → `main`,merge commit **`9c4239f`**。本 PR 同時帶入 v131 發布紀錄的補寫 commit(`cfccc37`)。兩輪 CI 共 7 項全綠後合併,合併時以 `--match-head-commit` 釘住 head,確保合併的就是驗過的那個 commit。
