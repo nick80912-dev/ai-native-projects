@@ -59,4 +59,20 @@ assert(restoreSource.indexOf('trip-filter-btn') > 0,
 /* ---- 焦點看得見 ---- */
 assert.match(html, /\.chk:focus-visible\{[^}]*outline:/, '打卡控制有可見的鍵盤焦點外框');
 
+/* ---- 行程篩選是二選一的狀態(v133,backlog #46) ----
+   原本是兩顆獨立膠囊,選中的那顆填滿 --sea,看起來跟主要動作鈕一樣;而且沒有
+   aria-pressed,選中狀態只能靠顏色分辨。改入 segmented track,並把選中狀態交給
+   輔助技術。class 名稱 .trip-filter-btn 刻意保留 —— 上面的焦點還原退路靠它。 */
+assert.match(html, /<div class="trip-filter-track" role="group" aria-label="行程篩選">/,
+  '篩選的兩個選項包在同一個具名群組裡');
+assert.match(html, /class="trip-filter-btn '\+\(!tripHideDone\?'on':''\)\+'" aria-pressed="'\+\(!tripHideDone\?'true':'false'\)\+'"/,
+  '「顯示全部」以 aria-pressed 暴露選中狀態');
+assert.match(html, /class="trip-filter-btn '\+\(tripHideDone\?'on':''\)\+'" aria-pressed="'\+\(tripHideDone\?'true':'false'\)\+'"/,
+  '「隱藏已完成」以 aria-pressed 暴露選中狀態');
+/* 加入共用的 segmented 規則,而不是複製宣告;按鈕維持 44px(共用規則是 40px)。 */
+assert.match(html, /,\.trip-filter-track\{display:flex;gap:4px;/, '篩選 track 走共用的 segmented 規則');
+assert.match(html, /,\.trip-filter-track \.trip-filter-btn\.on\{background:var\(--sea\)/, '選中樣式走共用的 segmented 規則');
+assert.match(html, /\.trip-filter-track \.trip-filter-btn\{min-height:44px\}/, '篩選按鈕維持 44px 觸控高度');
+assert.doesNotMatch(html, /\.trip-filter-btn\{flex:1;min-height:44px;border:1px solid/, '舊的獨立膠囊規則已移除');
+
 console.log('trip check-in a11y tests passed');
