@@ -275,14 +275,17 @@
 - **§F5 線上核對五項全過**:`sw.js` v131;`shell/v131/` 三件組皆 v131;root bridge 維持 v110;三處 `Cache-Control` 正確;**v111–v130 二十個舊世代皆回 200**(ADR 0019)。Netlify deploy `6ab47b74`、`commit_ref` 相符。 <!-- generation-exempt: 這是 v131 發布當下的線上核對結果,不隨後續升版變動 -->
 - **G6 完成**:`production-v131` 指向 `347d1a0`。
 - **真機驗證通過(2026-09-24)**:Bar 在手機上回報驗證 OK。BB4 八項維持未驗。
-## v132 candidate(2026-09-24,未發布)
+## v132 已正式發布(2026-09-24,未經 G1,真機驗證通過)
 
 - **backlog #48 完成**:出發前的今天頁,預覽清單上方補「出發當天 · DAY 1 · 10/18 (日)」標頭;「還有 N 站,查看完整行程」只留「還有 N 站」,後半句交給正下方按鈕。
 - 標頭沿用 hero 的 `.lbl`,但 `.75` 在 mist／tea 只有 4.45／4.47:1,改用同一張 hero 內文 `.empty` 的 `.9`,六主題最低 5.59:1。
 - 只動 `renderPreTripBrief()`,它唯一的呼叫點在出發前分支;**旅程中的今天頁不受影響**。清單項目數不變,既有斷言不需改。
 - 實測:375px hero +24px;320px 標頭一行;乾淨分頁 console 零錯誤。
 - 四個 gate、**Node 95/95**、**Playwright 191/191** 通過,三條新斷言已逐一以拿掉改動實測會紅。
-- **待 Bar 決定是否發正式站**。真機重點:出發前的今天頁,預覽清單上方是否出現「出發當天 · DAY 1 · 10/18 (日)」,讀起來不再矛盾。
+- **2026-09-24 發布**:PR [#31](https://github.com/nick80912-dev/ai-native-projects/pull/31) 以 merge 合併 `dev` `7713efb` → `main`,merge commit **`9c4239f`**;兩輪 CI 共 7 項全綠,合併時釘住 head。
+- **§F5 線上核對五項全過**:`sw.js` v132;`shell/v132/` 三件組皆 v132;root bridge 維持 v110;三處 `Cache-Control` 正確;**v111–v131 二十一個舊世代皆回 200**(ADR 0019)。Netlify deploy `6ab48b31`、`commit_ref` 相符。 <!-- generation-exempt: 這是 v132 發布當下的線上核對結果,不隨後續升版變動 -->
+- **G6 完成**:`production-v132` 指向 `9c4239f`。
+- **真機驗證通過(2026-09-24)**:Bar 在手機上回報驗證 OK。**mist／tea 主題下的新標頭是否切換看過,回報未逐項指明。** BB4 八項維持未驗。
 ## 下一棒
 
 → **由 Bar 在實體 Android 上完成 BB4 共 8 項**(判準版本現為 **v121**),另有 v115 6／v116 10／v117 4／v118 6／v119 5／v120 4／v121 7 項待 iPhone 補驗。**合計 50 項,全部在使用者已拿得到的版本上。**`docs/device-acceptance-log.md` 的 v114 段 22 項中,BB1–BB3 共 14 項已於 **2026-09-11** 由 Bar 在 iPhone 上確認通過;**剩下的 BB4 是併入的 v112 遺留項,只能在實體 Android 上驗。**
