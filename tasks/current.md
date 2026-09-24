@@ -181,7 +181,7 @@
 - 採買表單主存檔 `btn` → `btn coral`；次存檔去掉 `ghost`，改與 `.ledger-save-another-quiet` **共用同一條規則**。取消鈕未動。
 - 四個 gate、**Node 95/95**、**Playwright 191/191** 通過。三條新增外觀斷言已逐一以「改回舊寫法」實測會失敗。
 - PR [#24](https://github.com/nick80912-dev/ai-native-projects/pull/24) merge commit **`b34d4b9`**;Netlify deploy **`6aa573842a2a6f000829a985`**、`ready`、`commit_ref` 相符、`published_at` 有值。
-- **§F5 全過**:`sw.js` 與 `shell/v130/` 三件組皆 v122;root bridge v110;兩處 `Cache-Control` 正確;**v111–v121 十一個舊世代皆回 200**。
+- **§F5 全過**:`sw.js` 與 `shell/v122/` 三件組皆 v122; <!-- generation-exempt: v122 發布當下的路徑就是 shell/v122,不隨後續升版變動 -->root bridge v110;兩處 `Cache-Control` 正確;**v111–v121 十一個舊世代皆回 200**。
 - **G6 完成**:`production-v122` 指向 `b34d4b9`。**G1 未執行**,v122 裝置驗收項維持未勾。
 - 順帶記下 backlog **#39**：`--action-destructive-*` 被當主要 CTA 用，名實不符，本次變更把這個錯配擴散到第二處。
 
@@ -226,37 +226,52 @@
 - **更正 v124 的 D4**:`.payer-opt` 與 `.sw-opt` 從未被渲染,v124 那次「把分攤成員對齊付款人」對使用者是零效果。成因是只憑 CSS 選擇器名稱推論 UI 結構。
 - 四個 gate、**Node 95/95**、**Playwright 191/191** 通過。
 - **2026-09-23 發布**:PR [#28](https://github.com/nick80912-dev/ai-native-projects/pull/28) 以 merge 合併 `dev` `9d0afa8` → `main`,merge commit **`4c9233e`**;合併前等該 head 的**兩輪** CI(push + pull_request)全綠才動手。
-- **§F5 線上核對全數通過**:`sw.js` v126;`shell/v130/` 三件組皆 v126;root `app-version.js` 維持 v110 bridge;三處 `Cache-Control` 正確;**v111–v125 十五個舊世代皆回 200**(ADR 0019)。另線上實查 `.payer-opt`／`.sw-opt`／`.nx-hero`／`.exp-item`／`.st-l` 皆 **0 次**,確認死碼確實不在線上。 <!-- generation-exempt: 這是 v126 §F5 線上核對當下的量測結果,不隨後續升版變動 -->
+- **§F5 線上核對全數通過**:`sw.js` v126;`shell/v126/` 三件組皆 v126;root `app-version.js` 維持 v110 bridge;三處 `Cache-Control` 正確;**v111–v125 十五個舊世代皆回 200**(ADR 0019)。另線上實查 `.payer-opt`／`.sw-opt`／`.nx-hero`／`.exp-item`／`.st-l` 皆 **0 次**,確認死碼確實不在線上。 <!-- generation-exempt: 這是 v126 §F5 線上核對當下的量測結果,不隨後續升版變動 -->
 - **G6 完成**:`production-v126` 指向 `4c9233e`。
 - **真機驗證通過(2026-09-23)**:Bar 在手機上掃過,**沒有畫面掉樣式**。這是 100 條規則的一次性刪除,掃查重點為被刪最多的分帳頁與下一站卡片。至此 v126 的刪除獲得實機確認 —— 「被刪的規則本來就匹配不到任何元素」不再只是推論。
 - **剩餘未結**:E1(角色 token 採用率 5/103)與 E2(寫死 hex)兩項大型重構;另有新模型複審提出的三項未進 backlog —— 鍵盤焦點只有 13 條 `:focus-visible` 覆蓋 235 個 button、45 處 `font-size < 11px`(最小 8.5px)、Ledger 表單一批 28–36px 的觸控目標。
 
-## v127 candidate(2026-09-23,未發布)
+## v127 已正式發布(2026-09-23,未經 G1,真機驗證通過)
 
 - **backlog #43 完成**,依 Bar 裁定採「已處理」措辭。今天頁右上的進度由裸的 `1 / 8` 改為 `已處理 1/8`,**`aria-label` 與所有計數邏輯未動** —— 那句「今日已處理 N 站，共 N 站」本來就存在,本次只是把它搬到看得見的地方。
 - 追查結論:三個進度數字各自都對,分母分別來自 `homeNextStopItems`(串點併為一站)與 `isTripCheckableItem`(子站各算一站),分子對「自動略過」的處理也不同。**未統一數字** —— 兩個分母各有用途。
 - 320px 實測無溢出(左 97px／右 63px／間距 108px)。四個 gate、**Node 95/95**、**Playwright 191/191** 通過,新增斷言已以改回舊寫法實測會紅。
-- **待 Bar 決定是否發正式站**。真機重點:今天頁右上角的文字是否讀得順、320px 小螢幕有沒有被擠。
+- **2026-09-23 發布**:PR [#29](https://github.com/nick80912-dev/ai-native-projects/pull/29) 以 merge 合併 `dev` `f8b6dc8` → `main`,merge commit **`b4182e9`**;**v127／v128／v129／v130 四個版本一批上線**。
+- **真機驗證通過(2026-09-23)**:Bar 在手機上回報驗證 OK。
 
-## v128 candidate(2026-09-23,未發布)
+## v128 已正式發布(2026-09-23,未經 G1,真機驗證通過)
 
 - **backlog #44 的「決策鈕截斷」已修**:串點卡片的「完成／跳過」可見文字不再夾站名,完整站名移到 `aria-label`。與非串點卡片一致。實測 375px 下兩顆皆不截斷。
 - 四個 gate、**Node 95/95**、**Playwright 191/191** 通過,新增斷言已以改回舊寫法實測會紅。
-- **待 Bar 決定是否發正式站**。真機重點:同區串點那張卡的兩顆鈕是否讀得清楚、上方「目前 …」那行是否仍看得到站名。
-- **#44 未完**:「目前」一詞兩義、剩餘站數要心算,兩項仍在 backlog。
-## v129 candidate(2026-09-23,未發布)
+- **2026-09-23 發布**:PR [#29](https://github.com/nick80912-dev/ai-native-projects/pull/29) 以 merge 合併 `dev` `f8b6dc8` → `main`,merge commit **`b4182e9`**;**v127／v128／v129／v130 四個版本一批上線**。
+- **真機驗證通過(2026-09-23)**:Bar 在手機上回報驗證 OK。
+- **#44 已於 v129 收尾**:「目前」一詞兩義、剩餘站數要心算兩項皆由 v129 處理,**#44 已在 `tasks/done.md`**。
+## v129 已正式發布(2026-09-23,未經 G1,真機驗證通過)
 
 - **backlog #44 收尾**:串點卡片的「目前」改為「這一站」(旁邊的時間是該站排定時間,不是現在幾點);站數改為「共 N 站」並補「還有 N 站」,不用自己減。
 - 實測 320px:`這一站 9:00 廣島城`、chips 同一行 118px／容器 234px、決策鈕維持不截斷。
 - 四個 gate、**Node 95/95**、**Playwright 191/191** 通過,三處改動逐一以改回舊寫法實測會紅。
-- **待 Bar 決定是否發正式站**。`dev` 上目前累積 **v127／v128／v129** 三個未發布版本。
-## v130 candidate(2026-09-23,未發布)
+- **2026-09-23 發布**:PR [#29](https://github.com/nick80912-dev/ai-native-projects/pull/29) 以 merge 合併 `dev` `f8b6dc8` → `main`,merge commit **`b4182e9`**;**v127／v128／v129／v130 四個版本一批上線**。
+- **真機驗證通過(2026-09-23)**:Bar 在手機上回報驗證 OK。
+## v130 已正式發布(2026-09-23,未經 G1,真機驗證通過)
 
 - **backlog #40 完成**:加入鍵盤焦點通則(`outline:2px solid var(--sea);outline-offset:2px`)與六個深色容器的白環覆寫。原本 235 個 button 只有 13 條窄選擇器規則。
 - `outline-offset:2px` 讓環落在按鈕外面的頁面底色上,所以深色**按鈕**不需例外,只有深色**容器**裡的按鈕要白環。既有 13 條特異性較高,不受影響。
 - 四個 gate、**Node 95/95**、**Playwright 191/191** 通過,兩條新斷言以破壞選擇器實測會紅。
-- **待 Bar 決定是否發正式站**。`dev` 上目前累積 **v127／v128／v129／v130** 四個未發布版本。
-- 真機重點:接外接鍵盤(或 iPad + 鍵盤)按 Tab,確認每顆鈕都看得到環、深色區塊裡是白環。
+- **2026-09-23 發布**:PR [#29](https://github.com/nick80912-dev/ai-native-projects/pull/29) 以 merge 合併 `dev` `f8b6dc8` → `main`,merge commit **`b4182e9`**;**v127／v128／v129／v130 四個版本一批上線**。
+- **§F5 線上核對五項全過**:`sw.js` v130;`shell/v130/` 三件組皆 v130;root bridge 維持 v110;三處 `Cache-Control` 正確;**v111–v129 十九個舊世代皆回 200**(ADR 0019)。另線上實查「已處理」3 次、「這一站」5 次、「還有」5 次、`button:focus-visible` 8 次、`outline-color:#fff` 1 次。 <!-- generation-exempt: 這是 v130 發布當下的線上核對結果,不隨後續升版變動 -->
+- **G6 完成**:`production-v130` 指向 `b4182e9`。**v127／v128／v129 未單獨建 tag**(與 v130 同批發布)。
+- **真機驗證通過(2026-09-23)**:Bar 在手機上回報驗證 OK。**但鍵盤焦點環需外接鍵盤按 Tab 才驗得到,回報未逐項指明是否走過** —— 日後若發現某處焦點環失效,先確認該項當初是否真的驗過。
+- **剩餘未結**:backlog #3／#12／#20／#25／#28／#29／#38／#41／#42／#46／#47／#48／#49,外加 E1(角色 token 採用率 5/103)與 E2(寫死 hex)兩項大型重構。
+## v131 candidate(2026-09-23,未發布)
+
+- **backlog #47 完成**:行程頁交通 chip 加 `white-space:pre-line`,保留 CMS 原文的換行。回報的症狀是 Day 1 的航班時刻在 375px 下把 `桃園` 拆成兩行。
+- **根因是換行被折成空白**,不是斷行規則有問題。`.detail .sec`(資訊面板)早就用 `pre-line` 保留同一份 CMS 的多行寫法,本次讓交通 chip 與它一致。
+- 影響面:28 個不重複交通字串**只有 1 個含換行**,其餘 27 個渲染逐字不變;68 個行程項目的「交通」欄全為空。
+- 實測:375px 改後為 `🚗 9:00開櫃` / `11:30(TPE台灣桃園)-15:05(OKJ日本岡山)`,高度 38px 不變;320px 仍需斷行,但斷點移到 `OKJ` 與 `日本岡山` 的拉丁／中文交界,不再切開中文地名。
+- 否決 `word-break:keep-all`:320px 下整串溢出 chip;補 `overflow-wrap:anywhere` 後兩個純中文說明各多一行。已實測,非推論。
+- 四個 gate、**Node 95/95**、**Playwright 191/191** 通過,新增斷言已以拿掉宣告實測會紅。
+- **待 Bar 決定是否發正式站**。真機重點:行程頁 Day 1 第一張卡的交通資訊是否分成兩行、讀得順。
 ## 下一棒
 
 → **由 Bar 在實體 Android 上完成 BB4 共 8 項**(判準版本現為 **v121**),另有 v115 6／v116 10／v117 4／v118 6／v119 5／v120 4／v121 7 項待 iPhone 補驗。**合計 50 項,全部在使用者已拿得到的版本上。**`docs/device-acceptance-log.md` 的 v114 段 22 項中,BB1–BB3 共 14 項已於 **2026-09-11** 由 Bar 在 iPhone 上確認通過;**剩下的 BB4 是併入的 v112 遺留項,只能在實體 Android 上驗。**

@@ -73,6 +73,13 @@
 - 下一站 `.nx-hero`(coral 外框)+特大導航鈕 `.nx-navbtn`
 - 底部四分頁 `.tabbar`:今天/行程/購物/分帳;吸頂 `.hdr`(單一容器,勿拆回兩段 sticky)
 
+## CMS 欄位的換行(2026-09-23,v131 核定)
+
+- **Sheet 儲存格裡的換行是作者的排版意圖,顯示時以 `white-space:pre-line` 保留**,不要讓它折成空白。適用元件目前為 `.detail .sec`(資訊面板)與 `.drive-chip`(交通 chip)。新增會渲染 CMS 自由文字的元件時比照辦理。
+- **理由(v131 實測)**:P000 的「交通時間」欄寫成兩行 `9:00開櫃` / `11:30(TPE台灣桃園)-15:05(OKJ日本岡山)`。`.drive-chip` 當時沒宣告 `white-space`,換行折成空白後整串變成一個長 run,瀏覽器就依 CJK 規則在任意字元之間斷開 —— 375px 下斷在「桃|園」,把地名切成兩半。保留換行之後,兩段各自成行就不再發生。
+- **不要改用 `word-break:keep-all` 解這類問題**。v131 實測:320px 下它讓整串**溢出 chip**(`scrollWidth > clientWidth`);補 `overflow-wrap:anywhere` 止血後,純中文的交通說明反而各多一行、emoji 前綴被獨自留在第一行。**中文本來就該能在任意字元斷行**,keep-all 是在跟正確的中文排版對抗,只為了救少數幾個結構化字串。
+- **真正斷不開的字串要認**:`-15:05` 依 UAX #14 是「減號接數字」,不提供斷點,所以無法強迫航班時刻斷在兩段航程之間。320px 下該行仍會斷,但斷點會落在拉丁與中文的交界(`OKJ` / `日本岡山`),不再切開中文詞。**這是可接受的結果,不要再往下加規則。**
+
 ## 形狀語意(2026-09-12 核定:圓角區分「狀態」與「動作」,不得互換)
 
 - **`border-radius:999px` 膠囊 = 狀態**。三種用途:①純顯示的 badge／tag(`.now-badge`、`.ledger-tag`、`.shop-list-count`、`.ledger-pending`、`.ledger-status-pill`)②可選取的 chip／toggle(`.ledger-track-btn`、`.shopping-chip`、`.trip-filter-btn`、`.shop-filter-btn`、`.ledger-choice`)③segmented control 的 track(`.ledger-track-grid`、`.ledger-segment`、`.ledger-sheet-track`、`.ledger-currency-grid`)。
