@@ -321,13 +321,16 @@
 - **G6 完成**:`production-v135` 指向 `67916c7`。
 - **真機驗證通過(2026-09-24)**:Bar 回報手機驗證 OK;三個驗收重點回報未逐項指明。BB4 八項維持未驗。
 - 殘留字樣:`預設輸入幣別` 仍在 schema 欄位內部說明(非使用者可見),改 schema 須先確認,未動。**→ 已由 v136 改掉。**
-## v136 candidate(2026-09-24,未發布)
+## v136 已正式發布(2026-09-24,未經 G1,真機驗證通過)
 
 - **schema 說明改為「全團結算幣別,也是新增記帳的預設幣別」**,補上 v135 上線核對時發現的殘留字樣。只改說明文字,欄位、合法值、驗證與畫面皆不變。
 - `schema.js`、`shell/v136` 內嵌副本、`09_SCHEMA_MAPPING.md` 三處同步;root v110 bridge 刻意不動。
 - `schema.js` 會被 SW 快取,依 ADR 0019 仍需完整升版。
 - 四個 gate、**Node 95/95**、**Playwright 196/196** 通過;新斷言以改回舊說明實測會紅。
-- **待 Bar 決定是否發正式站**。真機無可見變化,只需確認 SW 顯示 v136、畫面正常。
+- **2026-09-24 發布**:PR [#36](https://github.com/nick80912-dev/ai-native-projects/pull/36) 以 merge 合併 `dev` `be7495c` → `main`,merge commit **`6706ebb`**;兩輪 CI 共 7 項全綠,合併時釘住 head。
+- **§F5 線上核對五項全過**:`sw.js` v136;`shell/v136/` 三件組皆 v136;root bridge 維持 v110;三處 `Cache-Control` 正確;**v111–v135 二十五個舊世代皆回 200**(ADR 0019)。Netlify deploy `6ab4e109`、`commit_ref` 相符。 <!-- generation-exempt: 這是 v136 發布當下的線上核對結果,不隨後續升版變動 -->
+- **G6 完成**:`production-v136` 指向 `6706ebb`。
+- **真機驗證通過(2026-09-24)**:Bar 回報手機驗證 OK(本版無可見變化)。BB4 八項維持未驗。
 ## 下一棒
 
 → **由 Bar 在實體 Android 上完成 BB4 共 8 項**(判準版本現為 **v121**),另有 v115 6／v116 10／v117 4／v118 6／v119 5／v120 4／v121 7 項待 iPhone 補驗。**合計 50 項,全部在使用者已拿得到的版本上。**`docs/device-acceptance-log.md` 的 v114 段 22 項中,BB1–BB3 共 14 項已於 **2026-09-11** 由 Bar 在 iPhone 上確認通過;**剩下的 BB4 是併入的 v112 遺留項,只能在實體 Android 上驗。**

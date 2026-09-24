@@ -8,6 +8,15 @@
 - **G6 完成**:annotated tag `production-v124` 指向 `2e11c48`,訊息明文記錄 G1 未執行**以及真機觀感尚未回報**。
 - 本批不含 backlog #39(已於 v125 收斂)。
 
+## 2026-09-24 — v136 正式發布(released,未經 G1)+ G6 tag;同日真機驗證通過
+
+- PR [#36](https://github.com/nick80912-dev/ai-native-projects/pull/36) 以 merge 合併 `dev` `be7495c` → `main`,merge commit **`6706ebb`**。本 PR 同時帶入 v135 發布紀錄(`a0ca9cc`)與 backlog #50 裁定(`7fa7afc`)兩個純文件 commit。兩輪 CI 共 7 項全綠後合併,合併時以 `--match-head-commit` 釘住 head。
+- Netlify deploy **`6ab4e109194cc20008adc90d`**、`ready`、`commit_ref` = `6706ebb` 相符、`published_at` `2026-09-24T08:36:32Z`、`manual_deploy: false`,21 個新檔(含 `shell/v136/index.html`)、6 條 header rule 全過。`main` 上 merge commit 的 `sanity` 與 `browser-qa` 皆 success。
+- **§F5 線上核對五項全過**:`sw.js` v136;`shell/v136/` 三件組皆 v136;root bridge 維持 **v110 未被誤升**;三處 `Cache-Control` 正確;**v111–v135 二十五個舊世代皆回 200**(ADR 0019)。另線上實查 shell 內嵌 schema 與線上 `schema.js` 皆為新說明、舊字樣 `分帳預設輸入幣別` 0 處。
+- **G6 完成**:annotated tag `production-v136` 指向 `6706ebb`。tag 在真機回報之後才建立。
+- **G1 經 Bar 裁定跳過**(同 v114–v135)。
+- **真機驗證通過(2026-09-24)**:Bar 在手機上回報驗證 OK。本版無可見變化,驗收重點為 App 正常載入到 v136。BB4 八項維持未驗。
+
 ## 2026-09-24 — v136:schema 說明改為「全團結算幣別」(candidate 未發布)
 
 - **來源**:v135 上線核對時發現,`Ledger Default Currency` 的 schema 欄位說明仍寫 `分帳預設輸入幣別;只允許 JPY/TWD`。它同時是全團結算幣別(ADR 0007),v135 已把設定頁改正,這裡還沒跟上。依憲章改 schema 須先確認,v135 未動;Bar 2026-09-24 裁定改掉,並選定新說明。
