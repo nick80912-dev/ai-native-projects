@@ -8,6 +8,26 @@
 - **G6 完成**:annotated tag `production-v124` 指向 `2e11c48`,訊息明文記錄 G1 未執行**以及真機觀感尚未回報**。
 - 本批不含 backlog #39(已於 v125 收斂)。
 
+## 2026-09-24 — v136:schema 說明改為「全團結算幣別」(candidate 未發布)
+
+- **來源**:v135 上線核對時發現,`Ledger Default Currency` 的 schema 欄位說明仍寫 `分帳預設輸入幣別;只允許 JPY/TWD`。它同時是全團結算幣別(ADR 0007),v135 已把設定頁改正,這裡還沒跟上。依憲章改 schema 須先確認,v135 未動;Bar 2026-09-24 裁定改掉,並選定新說明。
+- **改法**:說明改為 `全團結算幣別,也是新增記帳的預設幣別;只允許 JPY/TWD`,並加一行註解指向 ADR 0007 與 v135 的鎖定。**只改說明文字** —— 欄位名稱 `ledgerDefaultCurrency`、Sheet 鍵 `Ledger Default Currency`、合法值與驗證規則皆不變,畫面與操作不變(`desc` 只用來產生欄位對照文件)。
+- **三處同步**:`schema.js`(唯一資料規格);`shell/v136` 的內嵌副本(`schema-types.test.js` 要求與 `schema.js` 逐字物件一致);`09_SCHEMA_MAPPING.md` 對照表。root 的 v110 bridge 另有一份內嵌 schema,屬 byte-locked,**刻意不動**(一致性斷言讀的是現行 generation,不是 bridge)。
+- **為什麼一行說明也要完整升版**:`schema.js` 列在 `sw.js` 的 App Shell 與 `runtime-assets.json`,會被 SW 快取。依 ADR 0019 不支援同版本熱替換,故 forward bump v135→v136。
+- 測試:`tests/schema-types.test.js` 新增斷言(Sheet 鍵名不變、說明為新文字、合法值不變);**單獨把 `schema.js` 改回舊說明實測會紅**(新斷言與逐字一致檢查皆擋下)。五筆發布說明視窗滾到 `v136` + `['v135','v134','v133','v132']`,v131 那筆滾出。
+- 四個 gate、**95/95 Node**、**196/196 Playwright** 通過。
+
+## 2026-09-24 — v135 正式發布(released,未經 G1)+ G6 tag;同日真機驗證通過
+
+- PR [#35](https://github.com/nick80912-dev/ai-native-projects/pull/35) 以 merge 合併 `dev` `8fbefdd` → `main`,merge commit **`67916c7`**。兩輪 CI 共 7 項全綠後合併,合併時以 `--match-head-commit` 釘住 head。
+- Netlify deploy **`6ab4d752eb13f80008f7c429`**、`ready`、`commit_ref` = `67916c7` 相符、`published_at` `2026-09-24T07:55:06Z`、`manual_deploy: false`,22 個新檔(含 `shell/v135/index.html`)、6 條 header rule 全過。`main` 上 merge commit 的 `sanity` 與 `browser-qa` 皆 success。
+- **§F5 線上核對五項全過**:`sw.js` v135;`shell/v135/` 三件組皆 v135;root bridge 維持 **v110 未被誤升**;三處 `Cache-Control` 正確;**v111–v134 二十四個舊世代皆回 200**(ADR 0019)。另線上實查:`ledgerAdoptFinalAmounts` 定義 1、呼叫 2;結算幣別鎖定兩個 helper 與送出前守門;設定頁「結算幣別」;單品「僅記錄」說明;分頁 key;保留代購的說明註解;v130 那筆已滾出。
+- **線上實查時發現的一處殘留字樣**:`預設輸入幣別` 仍出現在 schema 欄位的內部說明 `desc:'分帳預設輸入幣別;只允許 JPY/TWD'`(shell 內嵌 schema 與 `schema.js:167`)。非使用者可見文案;依憲章改 schema 須先確認,本次未動,留待 Bar 決定。
+- **G6 完成**:annotated tag `production-v135` 指向 `67916c7`。tag 在真機回報之後才建立,訊息直接寫入驗證結果。
+- **G1 經 Bar 裁定跳過**(同 v114–v134)。
+- **真機驗證通過(2026-09-24)**:Bar 在手機上回報驗證 OK。請 Bar 看的三處為設定頁結算幣別鎖定、分帳頁首次進入的分頁、税抜多品項帳編輯前後金額不變;**回報未逐項指明**。BB4 八項維持未驗。
+- **backlog 狀態**:本版新開 **#50**(税抜帳編輯後換算幣別的品項間挪動)。剩餘 **#3／#12／#20／#25／#28／#29／#38／#41／#42／#50**,外加 **E1**、**E2**。
+
 ## 2026-09-24 — v135:分帳稽核 —— 編輯重複加稅、結算幣別鎖定、分頁記憶(candidate 未發布)
 
 ### 稽核範圍與方法

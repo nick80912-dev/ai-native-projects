@@ -164,7 +164,8 @@ var SCHEMA = {
         { field:'exchangeRate', header:'Exchange Rate', desc:'1 JPY 對應的 TWD 金額;必須大於 0' },
         { field:'ledgerDefaultCurrency', header:'Ledger Default Currency',
           values:{'JPY':'JPY','jpy':'JPY','TWD':'TWD','twd':'TWD'},
-          desc:'分帳預設輸入幣別;只允許 JPY/TWD' },
+          /* 同時是全團結算幣別(ADR 0007);v135 起有還款紀錄即鎖定,不得切換 */
+          desc:'全團結算幣別,也是新增記帳的預設幣別;只允許 JPY/TWD' },
         { field:'homepage',   header:'Home Page',   desc:'預設分頁(⚠️ 目前**未啟用**,App 固定 Today;填寫無效果)' }
       ]
     }
