@@ -8,6 +8,30 @@
 - **G6 完成**:annotated tag `production-v124` 指向 `2e11c48`,訊息明文記錄 G1 未執行**以及真機觀感尚未回報**。
 - 本批不含 backlog #39(已於 v125 收斂)。
 
+## 2026-09-24 — v132:出發前的今天頁標明預覽是哪一天(backlog #48,candidate 未發布)
+
+- **回報的症狀**:出發前的今天頁 hero 先寫「今天沒有排定行程 🗓️／出發當天這裡會自動顯示當日安排與下一站。」,緊接著卻列出 `9:00 桃園機場第一航廈1樓`、`15:05 ORIX租車 岡山機場`、`還有 4 站` —— 那是 Day 1 的預覽,但**沒說是哪一天**,讀起來是「沒行程」然後看到行程。另外「還有 4 站,查看完整行程」(純文字)與「查看完整行程 →」(按鈕)上下相鄰,同一件事講兩次。
+- **改法(只動 `renderPreTripBrief()`)**:
+  1. 預覽清單上方補一行標頭 **「出發當天 · DAY 1 · 10/18 (日)」**。沿用 hero 既有的 `.lbl` 樣式(與最上方 `TODAY · 09/24` 同一套),日期格式與明日預告卡的 `DAY 2 · 10/19 (一)` 一致;開頭的「出發當天」呼應上一句「出發當天這裡會自動顯示…」。
+  2. 「還有 N 站,查看完整行程」只留「還有 N 站」,後半句交給正下方的按鈕。
+- **量測時發現、並一併處理的對比問題**:直接沿用 `.lbl` 的 `opacity:.75` 時,新標頭比 `TODAY` 那行低、落在漸層較亮的位置,**mist 4.45:1、tea 4.47:1,未達 AA 的 4.5:1**(以標頭四角中最亮的漸層位置估算,保守值)。改用 `opacity:.9` —— 這正是同一張 hero 內文 `.today-hero .empty` 本來的值。六主題改後為 ocean 6.19／ivory 11.07／wisteria 7.92／cedar 6.59／mist 5.59／tea 5.62。原本的 `TODAY` 標籤維持 `.75`(最低 mist 4.9,本來就過),未動。
+- **標頭刻意不用 `.tomorrow-item`**:清單項目數維持 3 個,既有的 `android-pwa-ui` 斷言(3 個項目、最後一個含「還有」)與 `ui-ux-v112` 斷言(`/還有 .+ 站/`)都不需要改。
+- **影響面**:`renderPreTripBrief()` 只有一個呼叫點,位於 `renderToday()` 的 `ti===null`(出發前)分支。**旅程中的今天頁完全不受影響。**
+- 實測(跑在 SW 服務的真 v132,乾淨分頁 console 零錯誤):375px 下 hero 由 377px 增為 401px(+24px);320px 下標頭仍為一行。
+- 測試:`tests/home-simplification.test.js` 新增三條斷言(標頭必須帶「出發當天 · DAY 1 · 日期」、不得再出現「站,查看完整行程」、標頭的 `opacity:.9` 規則必須存在),**三條逐一以拿掉對應改動實測確認會紅**;五筆發布說明視窗滾到 `v132` + `['v131','v130','v129','v128']`,v127 那筆滾出。
+- **過程中踩到的一件事**:產生測試斷言的輔助腳本以 heredoc 寫入,regex 裡的 `\` 被吃掉,新斷言變成語法錯誤的 regex(Node 當場報 `Unterminated group`,沒有變成假綠燈)。改以精確字串編輯修正。shell 本身的改動不受影響 —— 已以 diff 逐 hunk 確認 6 處皆為預期內容。
+- 四個 gate、**95/95 Node**、**191/191 Playwright** 通過。
+
+## 2026-09-24 — v131 正式發布(released,未經 G1)+ G6 tag;同日真機驗證通過
+
+- PR [#30](https://github.com/nick80912-dev/ai-native-projects/pull/30) 以 merge 合併 `dev` `79489a4` → `main`,merge commit **`347d1a0`**。本 PR 同時帶入 v127–v130 發布紀錄的補寫 commit(`20ebf4e`)。合併前等該 head 的**兩輪** CI(push + pull_request)共 7 項全綠,並於合併當下重查 head 未變、`main` 無新 commit、`mergeStateStatus: CLEAN` —— 綠燈與合併之間隔了一天,不以前一天的結果為準。
+- Netlify deploy **`6ab47b74f7755800087b591f`**、`ready`、`commit_ref` = `347d1a0` 相符、`published_at` `2026-09-24T01:23:07Z`、`manual_deploy: false`,20 個新檔(含 `shell/v131/index.html`)、6 條 header rule 全過。`main` 上 merge commit 的 `sanity` 與 `browser-qa` 亦皆 success。
+- **§F5 線上核對五項全過**:`sw.js` v131;`shell/v131/` 三件組皆 v131;root bridge 維持 **v110 未被誤升**;三處 `Cache-Control` 正確;**v111–v130 二十個舊世代皆回 200**(ADR 0019)。另線上實查 `.drive-chip` 帶 `white-space:pre-line`、v131 發布說明已上線、v126 那筆已滾出五筆視窗。
+- **G6 完成**:annotated tag `production-v131` 指向 `347d1a0`。tag 在真機回報之後才建立,訊息直接寫入驗證結果(同 v130)。
+- **G1 經 Bar 裁定跳過**(同 v114–v130)。
+- **真機驗證通過(2026-09-24)**:Bar 在手機上回報驗證 OK。**BB4 八項維持未驗**。
+- **backlog 狀態**:#47 已結案。剩餘 **#3／#12／#20／#25／#28／#29／#38／#41／#42／#46／#48／#49**,外加 **E1**(角色 token 採用率)與 **E2**(寫死 hex)兩項大型重構;#27 底下另記一個已知缺口(兩個測試檔讀凍結的 v110 bridge)。
+
 ## 2026-09-23 — v131:交通 chip 保留資料原文的換行(backlog #47,candidate 未發布)
 
 - **回報的症狀**:行程頁 Day 1 的 9:00 卡片,交通資訊在 375px 下顯示為 `9:00開櫃 11:30(TPE台灣桃` / `園)-15:05(OKJ日本岡山)` —— 地名 `桃園` 被拆成兩行。

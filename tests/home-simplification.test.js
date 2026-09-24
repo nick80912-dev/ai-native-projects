@@ -27,6 +27,13 @@ for (const file of [shellPath('index.html')]) {
   );
   const preTripBrief = html.slice(html.indexOf('function renderPreTripBrief'), html.indexOf('var TOMORROW_PREVIEW_HOUR'));
   assert.doesNotMatch(preTripBrief, /pretrip-count/, `${file} renders the countdown only in the title row`);
+  /* v132(backlog #48):出發前 hero 先寫「今天沒有排定行程」,下方卻直接列出 Day 1 的站點、
+     沒說是哪一天,讀起來自相矛盾。預覽上方補「出發當天 · DAY 1 · 日期」標頭;標頭不用
+     .tomorrow-item,清單項目數不變。「還有 N 站」不再重複正下方按鈕的「查看完整行程」。 */
+  assert.match(preTripBrief, /today-pretrip-preview-lbl">出發當天 · DAY 1 · '\+escapeHtml\(day\.date/, `${file} says which day the pre-trip preview is`);
+  assert.doesNotMatch(preTripBrief, /站，查看完整行程/, `${file} leaves 查看完整行程 to the button below instead of repeating it`);
+  /* 標頭沿用 hero 的 .lbl,但位置比 TODAY 低、漸層較亮,.75 在 mist/tea 只有 4.45/4.47:1。 */
+  assert.match(html, /\.today-hero \.lbl\.today-pretrip-preview-lbl\{opacity:\.9\}/, `${file} keeps the preview label at AA contrast on every theme`);
   assert.match(renderToday, /renderTodayWeatherArt\(weather\)[\s\S]*renderTodayHeroSummary\(weather,renderShoppingTodayEntry\(day,currentStopRef\)\)/, `${file} composes weather and Shopping inside the active Hero`);
   assert.doesNotMatch(renderToday, /h\+=renderShoppingTodayEntry\(day,currentStopRef\)/, `${file} no longer renders active Shopping below the Hero`);
   assert.match(renderToday, /var progressLabel='今日已處理 '\+completed\+' 站，共 '\+items\.length\+' 站';/, `${file} gives active progress the approved accessible name`);
