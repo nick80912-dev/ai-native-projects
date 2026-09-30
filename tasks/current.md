@@ -1,5 +1,7 @@
 # CURRENT(現在正在做的)
 
+> 現況基準(2026-09-30):正式站與 `origin/main` 為 v136，`origin/dev` 亦為 v136；下方 v114 起的逐版段落保留歷史發布事實，最新發布記錄見「v136 已正式發布」。下一項產品工作為個人旅程紀錄重置、清除打包與過往旅程的第一階段設計，尚未動工。
+
 ## v114 已正式發布(2026-09-10)
 - PR #16 以 **merge**(非 squash／rebase)合併 `dev` `064e932` → `main`,merge commit **`39c96b2`**;合併前確認 head 未變,且該 head 的遠端 CI `sanity` 與 **`browser-qa`** 皆 success。
 - Netlify 由 `main` 自動部署 deploy **`6aa25e07`**,`commit_ref` = `39c96b2`、`published_at` 有值。§F5 線上核對五項全過(SW v114／generation 三件組 v114／root bridge v110／兩處 cache header 正確)。
@@ -44,21 +46,21 @@
 
 
 
-> 更新於 2026-09-10。細任務層;里程碑看 `06_ROADMAP.md`,**逐版交付紀錄一律看 `07_CHANGELOG.md`**,正式待辦看 `tasks/backlog.md`。
+> 現況更新於 2026-09-30。細任務層;里程碑看 `06_ROADMAP.md`,**逐版交付紀錄一律看 `07_CHANGELOG.md`**,正式待辦看 `tasks/backlog.md`。
 > 本檔只回答三件事:**現在線上是什麼、dev 上是什麼、下一批要做什麼**。歷史流水帳不放這裡。
 
 ## 📌 現況
 
 | 項目 | 值 |
 |---|---|
-| **`origin/main` 原始碼** | **SW v126**;merge commit `4c9233e`(PR #28) |
-| **正式站** | `https://trippilot-jp.netlify.app/` — **SW v114**(2026-09-10 實查:deploy `6aa25e07`,`commit_ref` = `39c96b2` = main HEAD,`published_at` 有值,tag `production-v114`);**v114 發布後補驗**:BB1–BB3 共 14 項 iPhone 已於 2026-09-11 通過,**BB4 共 8 項實體 Android 未驗** |
-| **`origin/dev` candidate** | **SW v126**;已與 `main` 同步於 `4c9233e`,另有數筆 backlog 文件 commit |
+| **`origin/main` 原始碼** | **SW v136**;merge commit `6706ebb`(PR #36) |
+| **正式站** | `https://trippilot-jp.netlify.app/` — **SW v136**(2026-09-24 §F5 實查:deploy `6ab4e109`,`commit_ref` = `6706ebb`,tag `production-v136`);Bar 已回報手機驗證 OK，**BB4 共 8 項實體 Android 專項仍未驗** |
+| **`origin/dev` candidate** | **SW v136**;HEAD `e2e2ad8`，包含 v136 發布紀錄與 backlog #50 裁定文件 |
 | 個人備份格式 | **v9**(`PERSONAL_STATE_SUPPORTED_VERSIONS = [1..9]`)—— v81 因想逛 key 識別語意變更而升版 |
-| candidate automated validation | Node **95/95**、Chromium Playwright **191/191**；三種啟動情境 `healthCheck()=[]`、`pageerror=0` |
-| 既有 tag | `production-v18`、`production-v73`、`production-v110`、`production-v111`、`production-v113`、`production-v114`、`production-v115`、`production-v116`、`production-v117`、`production-v118`、`production-v119`、`production-v121`、`production-v122`、`production-v123`、`production-v124`、`production-v125`、**`production-v126`** |
+| 最近一次 v136 發版驗證 | Node **95/95**、Chromium Playwright **196/196**；四個 gate 通過(2026-09-24 紀錄，非本次重跑) |
+| 最新正式 tag | **`production-v136`**，指向 `6706ebb` |
 
-**v114 已發布至正式站(2026-09-10,deploy `6aa25e07`),`production-v114` tag 已建立。G1 的 iPhone 半邊於 2026-09-11 補驗通過,Android 半邊(BB4)仍未驗。**
+**v136 已發布至正式站(2026-09-24,deploy `6ab4e109`),`production-v136` tag 已建立。Bar 已回報手機驗證 OK；Android BB4 八項專項仍未驗。**
 
 ### v74–v98 已折疊的主要能力
 
@@ -333,11 +335,13 @@
 - **真機驗證通過(2026-09-24)**:Bar 回報手機驗證 OK(本版無可見變化)。BB4 八項維持未驗。
 ## 下一棒
 
-→ **由 Bar 在實體 Android 上完成 BB4 共 8 項**(判準版本現為 **v121**),另有 v115 6／v116 10／v117 4／v118 6／v119 5／v120 4／v121 7 項待 iPhone 補驗。**合計 50 項,全部在使用者已拿得到的版本上。**`docs/device-acceptance-log.md` 的 v114 段 22 項中,BB1–BB3 共 14 項已於 **2026-09-11** 由 Bar 在 iPhone 上確認通過;**剩下的 BB4 是併入的 v112 遺留項,只能在實體 Android 上驗。**
+→ **第一階段產品工作**:設計並實作個人「重置紀錄」、「清除並打包旅程」、「過往旅程」；完整「連接新旅程」留待後續。需求範圍已確認，尚未修改功能程式。
 
-> 最關鍵的是 **BB4-a**:Service Worker 能否在實體 Android 上安裝並接管。v112 修的連線槽耗盡缺陷**只在真機發生**,桌機與 Playwright 的 Android 模擬都重現不出來。判斷方式:開啟網站 → 關掉 → 再開,設定的版本資訊顯示 **v114** 才算通過(顯示 v110 代表 SW 沒接管)。
+→ **裝置驗收遺留**:由 Bar 在實體 Android 上完成 BB4 共 8 項；目前正式 App 為 **v136**。另有 v115 6／v116 10／v117 4／v118 6／v119 5／v120 4／v121 7 項待 iPhone 補驗。**合計 50 項,全部在使用者已拿得到的版本上。**`docs/device-acceptance-log.md` 的 v114 段 22 項中,BB1–BB3 共 14 項已於 **2026-09-11** 由 Bar 在 iPhone 上確認通過;**剩下的 BB4 是併入的 v112 遺留項,只能在實體 Android 上驗。**
+
+> 最關鍵的是 **BB4-a**:Service Worker 能否在實體 Android 上安裝並接管。v112 修的連線槽耗盡缺陷**只在真機發生**,桌機與 Playwright 的 Android 模擬都重現不出來。以目前正式版驗證時,開啟網站 → 關掉 → 再開,設定的版本資訊應顯示 **v136**(顯示 v110 代表 SW 沒接管)。
 >
-> 補驗發現問題時,依 `16_OPS_PLAYBOOK.md` §A2 **forward bump 到 v115**,不得倒退覆寫 —— 已經有裝置接管 v114 了。
+> 補驗發現問題時,依 `16_OPS_PLAYBOOK.md` §A2 **forward bump 到下一個未使用版本**,不得倒退覆寫 —— 已經有裝置接管 v136 了。
 
 > GitHub Actions 與 Netlify production **已於 2026-09-08 接管 v113** —— deploy `6a9fb443`、`commit_ref` = `745bb6f`、線上 `sw.js`／`app-version.js` 皆 v113、`qa-sanity` 於 `main` `745bb6f` 與 `dev` `f0444cb` 皆 success。**這一步已完成，不需再確認。**
 >

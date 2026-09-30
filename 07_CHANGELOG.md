@@ -1,5 +1,10 @@
 # 07 版本紀錄
 
+## 2026-09-30 — 現況文件校正(無 runtime 變更)
+
+- 依 Bar 核准,將 `.ai-manifest.json` 與 `tasks/current.md` 的現況描述對齊已發布的 v136；保留逐版歷史紀錄。
+- `origin/main`／`origin/dev`、`production-v136` 與 v136 發版驗證數據以 2026-09-30 本地 `git fetch` 後狀態及既有 v136 發布紀錄核對；本次未重跑裝置驗收或改動 App。
+
 ## 2026-09-13 — v124 正式發布(released,未經 G1)+ G6 tag
 
 - PR [#26](https://github.com/nick80912-dev/ai-native-projects/pull/26) 以 merge 合併 `dev` `e7cd524` → `main`,merge commit **`2e11c48`**。合併前確認 PR head 等於 `origin/dev`,並**等 PR 觸發的那輪 `browser-qa` 跑完才動手** —— 該 commit 在 push 事件已綠一次,但不以「同一個 commit 已經綠過」為由在 pending 狀態下 merge。
