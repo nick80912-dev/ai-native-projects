@@ -2,7 +2,7 @@
 
 ## 2026-09-30 — 現況文件校正(無 runtime 變更)
 
-- 依 Bar 核准,將 `.ai-manifest.json` 與 `tasks/current.md` 的現況描述對齊已發布的 v136；保留逐版歷史紀錄。
+- 依 Bar 核准,將 `.ai-manifest.json`、`tasks/current.md` 與 `README.md` 的現況描述對齊已發布的 v136；保留逐版歷史紀錄。
 - `origin/main`／`origin/dev`、`production-v136` 與 v136 發版驗證數據以 2026-09-30 本地 `git fetch` 後狀態及既有 v136 發布紀錄核對；本次未重跑裝置驗收或改動 App。
 
 ## 2026-09-13 — v124 正式發布(released,未經 G1)+ G6 tag
