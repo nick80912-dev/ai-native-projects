@@ -116,6 +116,7 @@
       put:function(record){return transact('readwrite',function(store){return store.put(record);}).then(function(){return record;});},
       get:function(id){return transact('readonly',function(store){return store.get(id);});},
       remove:function(id){return transact('readwrite',function(store){return store.delete(id);}).then(function(){return null;});},
+      clearAll:function(){return transact('readwrite',function(store){return store.clear();}).then(function(){return undefined;});},
       list:function(){return transact('readonly',function(store){return store.getAll();});}
     };
   }
@@ -144,6 +145,7 @@
         if(!id)return Promise.resolve();
         return Promise.resolve(driver.remove(id)).then(function(){return undefined;});
       },
+      clearAll:function(){return Promise.resolve().then(function(){return driver.clearAll();}).then(function(){return undefined;});},
       listMetadata:function(){
         return Promise.resolve(driver.list()).then(function(records){
           return (records||[]).map(recordMetadata).filter(function(record){return !!record.id;}).sort(function(a,b){return a.id.localeCompare(b.id);});

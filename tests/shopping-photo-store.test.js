@@ -14,6 +14,7 @@ function memoryDriver(){
     put(record){records.set(record.id,record);return Promise.resolve(record);},
     get(id){return Promise.resolve(records.get(id)||null);},
     remove(id){records.delete(id);return Promise.resolve();},
+    clearAll(){records.clear();return Promise.resolve();},
     list(){return Promise.resolve(Array.from(records.values()));},
     ids(){return Array.from(records.keys());}
   };
@@ -97,6 +98,14 @@ function memoryDriver(){
   assert.strictEqual(await store.get(firstId),null,'removed photos read as null');
   assert.strictEqual(await store.get(secondId),secondBlob,'removing one photo does not affect another');
   assert.strictEqual(await store.get(''),null,'empty references degrade to no attachment');
+
+  await store.clearAll();
+  assert.deepStrictEqual(driver.ids(),[],'clearAll removes every photo before a new trip starts');
+  await assert.rejects(
+    createStore({driver:{clearAll(){return Promise.reject(new Error('CLEAR_BLOCKED'));}}}).clearAll(),
+    /CLEAR_BLOCKED/,
+    'blocked IndexedDB cleanup is not reported as success'
+  );
 
   console.log('shopping photo store tests passed');
 })().catch(error=>{

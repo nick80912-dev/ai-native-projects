@@ -65,6 +65,15 @@ function fakeServer(){
 
 (async function(){
   const server=fakeServer(),scopes=[];
+  let gestureStarted=false;
+  const gestureClient=TripDrive.createClient({fetch:server.fetch,clientId:'test-client-id',requestAccessToken:function(){
+    gestureStarted=true;
+    return Promise.resolve({access_token:'token-one',expires_in:3600});
+  }});
+  const gestureConnection=gestureClient.connect();
+  assert.strictEqual(gestureStarted,true,'OAuth popup request starts in the user click task, before the first await');
+  await gestureConnection;
+
   const client=TripDrive.createClient({fetch:server.fetch,clientId:'test-client-id',requestAccessToken:function(options){
     scopes.push(options.scope);
     return Promise.resolve({access_token:'token-one',expires_in:3600});

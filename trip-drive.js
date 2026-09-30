@@ -39,7 +39,10 @@
     function json(url,settings,overrideToken){return request(url,settings,overrideToken).then(function(response){return response.json();});}
     function connect(){
       if(!options.clientId) return Promise.reject(new Error('Google OAuth client ID is not configured'));
-      return Promise.resolve().then(function(){return options.requestAccessToken({clientId:options.clientId,scope:SCOPE});}).then(function(grant){
+      var grantRequest;
+      try{grantRequest=options.requestAccessToken({clientId:options.clientId,scope:SCOPE});}
+      catch(error){return Promise.reject(error);}
+      return Promise.resolve(grantRequest).then(function(grant){
         if(!grant||typeof grant.access_token!=='string'||!grant.access_token)throw new Error('Google authorization was cancelled');
         var newToken=grant.access_token;
         return json(BASE+'/about?fields='+encodeURIComponent('user(emailAddress,permissionId)'),null,newToken).then(function(about){
