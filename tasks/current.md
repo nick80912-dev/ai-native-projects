@@ -326,7 +326,7 @@
 ## v136 已正式發布(2026-09-24,未經 G1,真機驗證通過)
 
 - **schema 說明改為「全團結算幣別,也是新增記帳的預設幣別」**,補上 v135 上線核對時發現的殘留字樣。只改說明文字,欄位、合法值、驗證與畫面皆不變。
-- `schema.js`、`shell/v136` 內嵌副本、`09_SCHEMA_MAPPING.md` 三處同步;root v110 bridge 刻意不動。
+- `schema.js`、`shell/v136` 內嵌副本、`09_SCHEMA_MAPPING.md` 三處同步;root v110 bridge 刻意不動。 <!-- generation-exempt: 這是 v136 發布時的歷史紀錄 -->
 - `schema.js` 會被 SW 快取,依 ADR 0019 仍需完整升版。
 - 四個 gate、**Node 95/95**、**Playwright 196/196** 通過;新斷言以改回舊說明實測會紅。
 - **2026-09-24 發布**:PR [#36](https://github.com/nick80912-dev/ai-native-projects/pull/36) 以 merge 合併 `dev` `be7495c` → `main`,merge commit **`6706ebb`**;兩輪 CI 共 7 項全綠,合併時釘住 head。

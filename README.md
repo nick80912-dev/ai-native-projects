@@ -31,8 +31,8 @@
 
 ## 專案檔案
 - `index.html` / `app-version.js` — 保留 v110 predecessor bridge；讓尚未更新的 v110 worker 在 current generation 安裝失敗時仍可運作
-- `shell/v136/index.html` / `shell/v136/app-version.js` — v136 不可變文件與 App runtime 版本來源；成功啟用的 `sw.js` 才接管 root 導覽
-- `shell/v136/builtin-snapshot.js` — 由刷新工具產生的版本綁定離線資料資產；禁止手動修改
+- `shell/v137/index.html` / `shell/v137/app-version.js` — v137 候選版文件與 App runtime 版本來源；成功啟用的 `sw.js` 才接管 root 導覽；v136 保持不可變
+- `shell/v137/builtin-snapshot.js` — 由刷新工具以已核准 v136 CSV 產生的版本綁定離線資料資產；禁止手動修改
 - `navigation-intent.js` — 明確導覽目的地的 session-only state module；DOM 定位與回饋 adapter 位於 `index.html`
 - `diagnostic-impact.js` — AppLog 原始紀錄的 display-only impact projection；顯示 adapter 位於 `index.html`
 - `today-view.js` — Today Hero 採買摘要的純 model／renderer module；資料選擇與 DOM effects 留在 `index.html`
@@ -41,6 +41,10 @@
 - `ledger-ui-state.js` — Ledger history、entry 與 correction session 的不可變 state／ordered effects workflow module
 - `shopping-ui-state.js` — Shopping list selection 與 form session 的不可變 state／ordered effects workflow module
 - `trip-progression.js` — 下一站選擇、cluster blocker 與一次性 auto-skip reconciliation module
+- `trip-lifecycle.js` — 個人旅程狀態、預檢條件與本機清理 policy
+- `trip-archive.js` — 八表及個人狀態封存格式與讀回驗證
+- `trip-drive.js` — Google Drive 個人封存及追加式回顧筆記邊界
+- `trip-lifecycle-flow.js` — 重置、清除及中斷後恢復的流程協調
 - `schema.js` / `validator.js` — 資料規格 SSoT / 防錯與健康檢查
 - `tests/` / `tools/` — 可重跑測試與文件一致性檢查
 - `tasks/` — 即時工作狀態唯一權威

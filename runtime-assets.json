@@ -1,7 +1,7 @@
 {
   "assets": [
-    "shell/v136/app-version.js",
-    "shell/v136/builtin-snapshot.js",
+    "shell/v137/app-version.js",
+    "shell/v137/builtin-snapshot.js",
     "navigation-intent.js",
     "diagnostic-impact.js",
     "today-view.js",
@@ -10,6 +10,10 @@
     "ledger-ui-state.js",
     "shopping-ui-state.js",
     "trip-progression.js",
+    "trip-lifecycle.js",
+    "trip-archive.js",
+    "trip-drive.js",
+    "trip-lifecycle-flow.js",
     "schema.js",
     "validator.js"
   ]
