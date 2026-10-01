@@ -208,8 +208,8 @@ test('健康同步 header 保持精簡，partial 與設定健康摘要顯示人�
     openSettings('root');
   });
   await expect(page.locator('#syncTxt')).toHaveText('部分同步 · 剛剛');
-  await expect(page.getByRole('button',{name:/備份、還原與版本資訊/})).toContainText('2 項需注意');
-  await page.getByRole('button',{name:/備份、還原與版本資訊/}).click();
+  await expect(page.getByRole('button',{name:/^資料健康狀態/})).toContainText('2 項需注意');
+  await page.getByRole('button',{name:/^資料健康狀態/}).click();
   await expect(page.getByRole('heading',{name:'資料健康狀態'})).toBeVisible();
   await expect(page.locator('.data-health-trip')).toContainText('部分同步 · 剛剛');
   await expect(page.locator('.data-health-trip')).toContainText('未更新：分帳資料');

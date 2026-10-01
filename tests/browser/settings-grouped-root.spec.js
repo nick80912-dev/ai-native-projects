@@ -293,8 +293,15 @@ test('根頁與各子頁(含 test-mode)各自保存捲動位置',async({page})=>
     /* captureSettingsScroll() 是在「離開某頁」時才寫入該頁的 slot,
        所以 test-mode 的 slot 要等返回根頁之後才存在 —— 這裡刻意在離開後才讀。 */
     backToSettingsRoot();
+    openSettingsPage('health');
+    panel().scrollTop=10;
+    const healthScroll=Math.round(panel().scrollTop);
+    backToSettingsRoot();
+    openSettingsPage('health');
+    const healthRestored=Math.round(panel().scrollTop);
+    backToSettingsRoot();
     const slots=Object.keys(settingsUiState.scrollTopByPage);
-    return {scrollable,rootScroll,dataStart,dataScroll,rootRestored,dataRestored,slots};
+    return {scrollable,rootScroll,dataStart,dataScroll,rootRestored,dataRestored,healthScroll,healthRestored,slots};
   });
 
   expect(state.scrollable,'面板在此視窗下必須可捲動,否則本測試無效').toBe(true);
@@ -302,6 +309,8 @@ test('根頁與各子頁(含 test-mode)各自保存捲動位置',async({page})=>
   expect(state.rootRestored,'返回根頁恢復根頁捲動位置').toBe(state.rootScroll);
   expect(state.dataRestored,'重新進入子頁恢復子頁捲動位置').toBe(state.dataScroll);
   expect(state.slots).toContain('test-mode');
+  expect(state.slots).toContain('health');
+  expect(state.healthRestored).toBe(state.healthScroll);
 
   await page.evaluate(()=>openSettings('options'));
   const categoryCount=await page.evaluate(()=>ledgerCategoryStore.all().length);
@@ -352,7 +361,7 @@ test('照片健康狀態維持在資料群組並通過子頁路由與三種手�
     const dataGroup=Array.from(document.querySelectorAll('#settingsOverlay .settings-group')).find(group=>group.querySelector('.settings-group-title').textContent==='資料');
     return Array.from(dataGroup.querySelectorAll('.settings-row-main b'),node=>node.textContent);
   });
-  expect(ordering).toEqual(['照片健康狀態','過往旅程','備份、還原與版本資訊']);
+  expect(ordering).toEqual(['資料健康狀態','照片健康狀態','過往旅程','備份、還原與版本資訊']);
   await storageRow.click();
   await expect(page.getByRole('heading',{name:'照片健康狀態'})).toBeVisible();
 
@@ -379,61 +388,47 @@ test('照片健康狀態維持在資料群組並通過子頁路由與三種手�
   expect(pageErrors).toEqual([]);
 });
 
-test('健康狀態原生 toggle 事件尚未送達時立即重繪仍保留操作',async({page})=>{
+test('健康子頁立即重繪或關閉重開仍直接顯示所有明細',async({page})=>{
   await installOfflineAppNetwork(page);await openApp(page);await waitForSyncToSettle(page);
-  await page.evaluate(()=>openSettings('data'));
-  for(const expected of [true,false,true,false]){
-    const observation=await page.evaluate(()=>{
-      const health=document.querySelector('.settings-data-health');
-      const stateBefore=settingsUiState.dataHealthOpen;
-      health.querySelector('summary').click();
-      const nativeOpen=health.open;
-      rerenderOpenSettingsPage();
-      return {stateBefore,nativeOpen,renderedOpen:document.querySelector('.settings-data-health').open};
-    });
-    expect(observation.nativeOpen).toBe(expected);
-    expect(observation.renderedOpen).toBe(expected);
-    await expect(page.locator('.settings-data-health')).toHaveJSProperty('open',expected);
+  await page.evaluate(()=>openSettings('health'));
+  for(let attempt=0;attempt<4;attempt++){
+    await page.evaluate(()=>rerenderOpenSettingsPage());
+    await expect(page.locator('.settings-health-row')).toHaveCount(4);
+    await expect(page.locator('.settings-health-list')).toBeVisible();
   }
   await page.evaluate(()=>{
-    document.querySelector('.settings-data-health summary').click();
-    closeSettings();openSettings('data');
+    closeSettings();openSettings('health');
   });
-  await expect(page.locator('.settings-data-health')).toHaveJSProperty('open',true);
+  await expect(page.locator('.settings-health-list')).toBeVisible();
 });
 
-test('資料健康狀態預設收合，摘要保留警告且支援鍵盤與重繪',async({page})=>{
+test('資料健康入口保留警告，明細更新與三種手機寬度正常',async({page})=>{
   const pageErrors=collectPageErrors(page);
   await installOfflineAppNetwork(page);await openApp(page);await waitForSyncToSettle(page);
   await page.evaluate(()=>{
-    ledgerRepository.pendingCount=()=>2;
-    openSettings('data');
+    localStorage.setItem('trip_ledger_queue',JSON.stringify([{id:'health-1'},{id:'health-2'}]));
+    openSettings('root');
   });
+  const entry=page.getByRole('button',{name:/^資料健康狀態/});
+  await expect(entry).toContainText('1 項需注意');
+  await entry.focus();await page.keyboard.press('Space');
   const health=page.locator('.settings-data-health');
-  const toggle=health.locator('summary');
-  await expect(toggle).toContainText('資料健康狀態');
-  await expect(toggle).toContainText('1 項需注意');
-  await expect(health.locator('.settings-health-list')).toBeHidden();
-  await toggle.focus();await page.keyboard.press('Enter');
   await expect(health.locator('.settings-health-list')).toBeVisible();
   await expect(health).toContainText('2 筆待同步');
-  await page.evaluate(()=>rerenderOpenSettingsPage());
+  await page.evaluate(()=>{
+    localStorage.removeItem('trip_ledger_queue');rerenderOpenSettingsPage();
+  });
+  await expect(health).toContainText('資料狀態正常');
+  await expect(health.locator('.data-health-shared')).toContainText('已送出');
   await expect(health.locator('.settings-health-list')).toBeVisible();
-  await toggle.focus();await page.keyboard.press('Space');
-  await expect(health.locator('.settings-health-list')).toBeHidden();
-  await page.evaluate(()=>rerenderOpenSettingsPage());
-  await expect(health.locator('.settings-health-list')).toBeHidden();
   for(const size of WIDTHS){
     await page.setViewportSize({width:size.w,height:size.h});
-    await toggle.click();
     const layout=await page.evaluate(()=>{
       const panel=document.querySelector('#settingsOverlay .settings-panel');
-      const summary=panel.querySelector('.settings-data-health summary');
-      return {overflow:panel.scrollWidth>panel.clientWidth||document.documentElement.scrollWidth>document.documentElement.clientWidth,
-        height:summary.getBoundingClientRect().height};
+      return {overflow:panel.scrollWidth>panel.clientWidth||document.documentElement.scrollWidth>document.documentElement.clientWidth};
     });
-    expect(layout.overflow).toBe(false);expect(layout.height).toBeGreaterThanOrEqual(48);
-    await toggle.click();
+    expect(layout.overflow).toBe(false);
+    await expect(health.locator('.settings-health-list')).toBeVisible();
   }
   await expect(page.getByRole('button',{name:'過往旅程',exact:true})).toHaveCount(0);
   expect(pageErrors).toEqual([]);

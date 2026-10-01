@@ -70,6 +70,8 @@ assert(at('>主題<')>at('>個人<')&&at('>主題<')<at('>記帳<'),'theme row s
 });
 assert(at('>備份、還原與版本資訊<')>at('>資料<'),'data row sits in 資料');
 assert(at('>照片健康狀態<')>at('>資料<'),'photo health row sits in 資料');
+assert(at('>資料健康狀態<')>at('>資料<')&&at('>資料健康狀態<')<at('>照片健康狀態<'),'health has its own first data-group entry');
+assert(out.includes("openSettingsPage('health')"),'health summary opens the dedicated health page');
 assert(at('>照片健康狀態<')<at('>備份、還原與版本資訊<'),'photo health precedes backup and version');
 assert(at('>過往旅程<')>at('>照片健康狀態<')&&at('>過往旅程<')<at('>備份、還原與版本資訊<'),
   'past trips is a direct data-group child between photo health and backup');

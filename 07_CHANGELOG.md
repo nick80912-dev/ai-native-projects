@@ -1,5 +1,12 @@
 # 07 版本紀錄
 
+## 2026-10-01 — v140 資料健康獨立子頁（dev candidate）
+
+- 「設定 → 資料」新增第一項「資料健康狀態」，首頁保留正常／需注意摘要，獨立子頁直接顯示行程、團體帳、個人資料與照片四項狀態。資料與版本不再重複，生命週期、備份與版本功能原樣；照片詳細檢查與修復留在照片頁。
+- 移除新 generation 已無用途的健康 details／展開狀態；維持既有健康 model 和 inactive 邊界。不改同步、帳務、八表、照片、Drive 授權或封存內容。
+- Node 與 browser 新入口測試先 RED；重繪／摘要警告、鍵盤進出、三種手機寬度、inactive 空狀態與舊功能回歸納入驗證。已發布 v139 三件組加 byte-lock；v140 snapshot 由核准資料 generator preview／write／readback，不取 live Ledger。
+- 最終本機 Node **100/100**、Chromium Playwright **222/222**（6.6 分鐘）、三情境 healthCheck／pageerror、SW／離線回歸與四項 gate／diff check 通過；獨立審查無 Critical／Important／Minor，CUA 本機 v140 四入口與四明細已核對。僅推 dev，遠端 CI／Pages 於推送後確認；正式站 v136 不變。實體 PWA 驗收不代勾，回復以 v141 forward bump。
+
 ## 2026-10-01 — v139 資料健康收合競態修正（dev candidate）
 
 - v138 遠端 CI `36810889354` 的 browser-qa 218/219，鍵盤收合後立即重繪會再展開；原生 details 先修改 open，再延後送 toggle，render 讀到舊 state。本機原 219/219 與先前審查不視為排除此問題的證據。

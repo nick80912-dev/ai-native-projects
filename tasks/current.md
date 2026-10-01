@@ -1,6 +1,6 @@
 # CURRENT(現在正在做的)
 
-> 現況基準(2026-10-01):正式站與 `origin/main` 為 v136；v139 修正 v138 遠端 CI 發現的健康收合重繪競態，本機全量 QA 與複審通過，按原核准範圍交付 dev。真機封存流程驗收待完成。下方逐版段落保留歷史發布事實，最新正式發布記錄見「v136 已正式發布」。
+> 現況基準(2026-10-01):正式站與 `origin/main` 為 v136；v140 依 Bar 核准將資料健康移為獨立子頁，僅交付 dev。真機封存流程驗收待完成。下方逐版段落保留歷史發布事實，最新正式發布記錄見「v136 已正式發布」。
 
 ## v114 已正式發布(2026-09-10)
 - PR #16 以 **merge**(非 squash／rebase)合併 `dev` `064e932` → `main`,merge commit **`39c96b2`**;合併前確認 head 未變,且該 head 的遠端 CI `sanity` 與 **`browser-qa`** 皆 success。
@@ -55,14 +55,21 @@
 |---|---|
 | **`origin/main` 原始碼** | **SW v136**;merge commit `6706ebb`(PR #36) |
 | **正式站** | `https://trippilot-jp.netlify.app/` — **SW v136**(2026-09-24 §F5 實查:deploy `6ab4e109`,`commit_ref` = `6706ebb`,tag `production-v136`);Bar 已回報手機驗證 OK，**BB4 共 8 項實體 Android 專項仍未驗** |
-| **`dev` candidate** | **v139 收合競態修正**；本機 Node 100/100、Playwright 220/220 與獨立複審通過，接續 v138 `89a4424` 交付 dev；真機封存與 OAuth 對外發布仍待驗 |
+| **`dev` candidate** | **v140 資料健康獨立子頁**；本機 Node 100/100、Playwright 222/222、四項 gate 與獨立審查通過，按 Bar 核准交付 dev；遠端 CI／Pages 於推送後核對，正式站不變；真機封存與 OAuth 對外發布仍待驗 |
 | 個人備份格式 | **v9**(`PERSONAL_STATE_SUPPORTED_VERSIONS = [1..9]`)—— v81 因想逛 key 識別語意變更而升版 |
 | 最近一次 v136 發版驗證 | Node **95/95**、Chromium Playwright **196/196**；四個 gate 通過(2026-09-24 紀錄，非本次重跑) |
 | 最新正式 tag | **`production-v136`**，指向 `6706ebb` |
 
 **v136 已發布至正式站(2026-09-24,deploy `6ab4e109`),`production-v136` tag 已建立。Bar 已回報手機驗證 OK；Android BB4 八項專項仍未驗。**
 
-## v139 健康收合重繪競態修正（dev candidate；尚未正式發布）
+## v140 資料健康獨立子頁（dev candidate；尚未正式發布）
+
+- Bar 核准「資料健康狀態」與照片健康同層，設定資料區四個入口固定排序；根頁保留健康摘要，子頁直接顯示既有四項明細，不需再展開，返回設定首頁。
+- 資料與版本移除重複健康區塊；重置、清除並打包、備份／還原、版本、照片檢查與過往旅程行為不變。不改健康 model、八表／Ledger、個人資料、Drive／OAuth 或生命週期契約。
+- C 級／Tier 2 已核准，重用隔離 worktree，以 v140 forward bump 保留 v139 原樣；BUILTIN 只用核准八表資料經 generator preview／write／readback，無 live Ledger。回復只能 v141 forward bump，不刪 SW。
+- 最終本機 Node **100/100**、Chromium Playwright **222/222**（6.6 分鐘）、三情境 healthCheck／pageerror、SW 換代／離線與四項 gate／diff check 通過；獨立審查無 Critical／Important／Minor。CUA 已核對本機 v140 四入口及直接四明細。遠端 CI／Pages 於推送後核對；實體 iPhone／Android 待驗，見裝置驗收清單。
+
+## v139 健康收合重繪競態修正（dev 交付歷史；尚未正式發布）
 
 - 遠端 CI `36810889354` 在 v138 鍵盤收合後立即重繪案例失敗（218/219）；本機 219/219 曾通過，但不能當作遠端全綠。原生 details 的 open 屬性先更新、toggle 事件後到，renderer 讀到舊記憶體狀態。
 - 新增同一 task 中原生 summary.click 與立即重繪的確定性 RED，v138 原生展開 true 被重繪成 false；v139 重繪／切頁／關閉前先讀 open，忽略已移除 details 的晚到 toggle。維持 session-only，未修改資料、帳務或 OAuth 契約。
@@ -359,7 +366,7 @@
 - **真機驗證通過(2026-09-24)**:Bar 回報手機驗證 OK(本版無可見變化)。BB4 八項維持未驗。
 ## 下一棒
 
-→ **v139 驗收**:本機 QA 與複審已完成，按 Bar 核准交付 `dev`；Bar 先驗設定資料子項與健康狀態收合，再在 iPhone 與 Android 實體 PWA 完成 TP137-a～i 的 Google 授權、Drive 上傳讀回、清除後重啟與過往旅程筆記。其他旅伴使用前須加入 OAuth 測試名單或另行完成對外發布。完整「連接新旅程」仍留待第二階段。
+→ **v140 驗收**:按 Bar 核准交付 `dev`；Bar 先驗 TP140-a～c 的設定資料四子項、健康明細直接顯示及返回，再在 iPhone 與 Android 實體 PWA 完成 TP137-a～i 的 Google 授權、Drive 上傳讀回、清除後重啟與過往旅程筆記。其他旅伴使用前須加入 OAuth 測試名單或另行完成對外發布。完整「連接新旅程」仍留待第二階段。
 
 → **裝置驗收遺留**:由 Bar 在實體 Android 上完成 BB4 共 8 項；目前正式 App 為 **v136**。另有 v115 6／v116 10／v117 4／v118 6／v119 5／v120 4／v121 7 項待 iPhone 補驗。**合計 50 項,全部在使用者已拿得到的版本上。**`docs/device-acceptance-log.md` 的 v114 段 22 項中,BB1–BB3 共 14 項已於 **2026-09-11** 由 Bar 在 iPhone 上確認通過;**剩下的 BB4 是併入的 v112 遺留項,只能在實體 Android 上驗。**
 

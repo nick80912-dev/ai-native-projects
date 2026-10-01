@@ -73,7 +73,7 @@ assert.doesNotThrow(() => { markup = dataPage.renderSettingsDataPage(); },
 assert.ok(markup.includes('SW 未知'), 'a missing version degrades to SW 未知 instead of throwing');
 assert.ok(markup.includes('複製備份 JSON') && markup.includes('從 JSON 還原'),
   'backup and restore stay reachable without the version file');
-assert.ok(markup.includes('資料健康狀態'),'the v88 data-health summary remains reachable without the version file');
+assert.ok(!markup.includes('資料健康狀態'),'backup/version no longer duplicates health details');
 
 /* 有版本時顯示真實版本 */
 const dataPageOk = vm.createContext({
