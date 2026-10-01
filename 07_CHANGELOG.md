@@ -1,5 +1,12 @@
 # 07 版本紀錄
 
+## 2026-10-01 — v140 已正式發布（PR #37；G1 明確跳過）
+
+- `dev` exact head `d557f1c` 經 PR #37 merge 至 `main`，merge commit `e4d4eca`；dev push CI `36839405312`、PR CI `36839411769`、main CI `36840115115` 的 sanity／browser-qa 全數 success，三輪 browser 各 222/222。本機 Node 100/100、browser 222/222 與四項 gate 全過。
+- Netlify production deploy `6abe21926205bc00087f9ad0` 已於 `2026-10-01T09:02:18.316Z` 發布，`commit_ref` 與 merge commit 相符。§F5 五項通過：SW／三件組 v140、root bridge v110、快取標頭正確；隔離瀏覽器實查 `okayama-trip-v140` 的 28 個 SHELL 資產齊全，三件組標記一致，新頁由 SW 載入 v140、pageerror 0。CUA 正式站設定頁四個資料入口與 v140 已核對。首次 bootstrap 舊頁不算新版驗證；檢查腳本須等安裝與快取完成再開新頁。
+- annotated tag `production-v140` 指向 `e4d4eca`，只推 tag；訊息明記 G1 跳過與 v141 forward-bump 回復方式。TP137／TP138／TP140 真機項目及 Android BB4 保持未勾，跳過不等於通過。
+- 採買分類仍只有設計文件，尚未實作；個人備份 v9、封存 v1 不變。OAuth 仍為 External Testing、僅 Bar 測試帳號；其他旅伴的真實 Drive 封存未對外驗證。Minor 晚到同步失敗 key 已列 backlog #51；無 runtime 修改。
+
 ## 2026-10-01 — v140 正式發布核准（準備中；G1 明確跳過）
 
 - Bar 選擇發布完整 v140，包含 v137 個人旅程生命週期與 v138～v140 設定調整，透過 `dev → main` PR 合併；明確跳過本次實體手機驗收。TP137-a～i、TP138-c、TP140-a～c 與 Android BB4 保持未勾，跳過不等於通過。
