@@ -1,5 +1,11 @@
 # 07 版本紀錄
 
+## 2026-10-01 — v140 正式發布核准（準備中；G1 明確跳過）
+
+- Bar 選擇發布完整 v140，包含 v137 個人旅程生命週期與 v138～v140 設定調整，透過 `dev → main` PR 合併；明確跳過本次實體手機驗收。TP137-a～i、TP138-c、TP140-a～c 與 Android BB4 保持未勾，跳過不等於通過。
+- 新增採買分類只有設計文件 `docs/superpowers/specs/2026-10-01-shopping-custom-categories-design.md`，尚未實作；個人備份仍為 v9、封存仍為 v1。OAuth 仍為 External Testing，不因發布而對其他帳號開放。
+- 發布前重跑本機 Node **100/100**、Chromium Playwright **222/222**（7.1 分鐘）與四項 gate／diff check，全部通過；包含三情境 healthCheck／pageerror 與 SW 原子換代／離線。獨立發布審查無 Critical／Important，Minor 晚到同步失敗可重建錯誤提示 key 記入 backlog #51，不就地改 v140。待 exact-head push／PR CI 全綠後合併；合併與正式站部署證據另行記錄，不以本段核准冒充完成。
+
 ## 2026-10-01 — v140 資料健康獨立子頁（dev candidate）
 
 - 「設定 → 資料」新增第一項「資料健康狀態」，首頁保留正常／需注意摘要，獨立子頁直接顯示行程、團體帳、個人資料與照片四項狀態。資料與版本不再重複，生命週期、備份與版本功能原樣；照片詳細檢查與修復留在照片頁。
