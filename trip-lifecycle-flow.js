@@ -121,42 +121,55 @@
     function end(input){
       input=input||{};
       var saveArchive=input.saveArchive===true;
+      function assertCurrent(){
+        if(typeof input.isCancelled==='function'&&input.isCancelled())throw new Error('Trip lifecycle operation was cancelled');
+      }
       return exclusive(function(){
+        assertCurrent();
         if(TripLifecycle.readState(storage).mode!=='active')throw new Error('Trip is already inactive');
         // Start GIS while still in the caller's click task; all network preflights follow.
         var connection=saveArchive?drive.connect():null;
         var expectedAccount=null,archiveId=null,firstResult=null,uploadedChecksum=null;
         return Promise.resolve(connection).then(function(account){
+          assertCurrent();
           expectedAccount=account;
           return checkedPreflight();
         }).then(function(first){
+          assertCurrent();
           firstResult=first;
           if(!saveArchive)return null;
           sameAccount(expectedAccount);
           var retry=retryArchive(first);archiveId=retry.id;
           var inputCopy=stableArchiveInput(first,retry);
           return archive.serialize(inputCopy).then(function(text){
+            assertCurrent();
             uploadedChecksum=JSON.parse(text).checksum;
             return drive.upsertPrepared(archiveId,text);
           }).then(function(fileId){
+            assertCurrent();
             return drive.readArchive(fileId).then(function(readback){return archive.parseVerified(readback);}).then(function(parsed){
+              assertCurrent();
               if(parsed.archiveId!==archiveId||parsed.checksum!==uploadedChecksum)throw new Error('Drive archive readback does not match this trip');
               sameAccount(expectedAccount);
               return fileId;
             });
           });
         }).then(function(fileId){
+          assertCurrent();
           return checkedPreflight().then(function(second){
+            assertCurrent();
             if(firstResult.digest!==second.digest)throw new Error('Trip data changed while preparing archive');
             if(saveArchive){
               sameAccount(expectedAccount);
               return checkLocalPending(second.policyInput).then(function(){
+                assertCurrent();
                 return drive.markComplete(fileId);
-              }).then(function(){sameAccount(expectedAccount);return second;});
+              }).then(function(){assertCurrent();sameAccount(expectedAccount);return second;});
             }
             return second;
           });
         }).then(function(second){
+          assertCurrent();
           if(saveArchive)sameAccount(expectedAccount);
           assertOwned();
           assertFinalLocalState(second);

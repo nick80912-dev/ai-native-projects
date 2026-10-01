@@ -55,7 +55,7 @@
 |---|---|
 | **`origin/main` 原始碼** | **SW v140**；merge commit `e4d4eca`（PR #37） |
 | **正式站** | `https://trippilot-jp.netlify.app/` — **SW v140**；deploy `6abe21926205bc00087f9ad0`，`commit_ref` = `e4d4eca`，§F5 五項與正式站設定 UI 已核對。G1 明確跳過，真機封存與 Android BB4 仍待驗 |
-| **`dev`** | **v140 已發布**；發布 head `d557f1c`，後續僅補文件。採買分類只有設計，尚未實作；OAuth 仍 External Testing、僅 Bar 測試帳號 |
+| **`dev` candidate** | **v141 過往旅程授權體驗（本機驗證完成，推送後核對遠端）**；有效記憶體授權重用、取消／逾時／重試、離頁舊封存失效。Node 102/102、Chromium 227/227、四項 gate 與獨立審查通過；正式站保持 v140。採買分類只有設計，尚未實作；OAuth 仍 External Testing、僅 Bar 測試帳號 |
 | 個人備份格式 | **v9**(`PERSONAL_STATE_SUPPORTED_VERSIONS = [1..9]`)—— v81 因想逛 key 識別語意變更而升版 |
 | 最近一次 v140 發版驗證 | 本機 Node **100/100**、Chromium Playwright **222/222**、四項 gate 通過；dev／PR／main 三輪 CI sanity 和 browser-qa 全過 |
 | 最新正式 tag | **`production-v140`**，指向 `e4d4eca`；訊息明記 G1 跳過 |

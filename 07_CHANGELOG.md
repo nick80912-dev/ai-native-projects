@@ -1,5 +1,13 @@
 # 07 版本紀錄
 
+## 2026-10-01 — v141 過往旅程授權重用與取消／逾時（dev candidate）
+
+- Bar 核准 C 級／Tier 2 範圍，改善過往旅程授權體驗，先交付 dev、不發布 main。已重現關閉設定再進授權計數為 2 的 RED；登入／讀取共用 loading 且無逾時是等待缺失。Google 400 無完整錯誤資料、之後重開成功，本版不聲稱解決該外部 400。
+- 同次 App 重入以 `resume()` 重用未過期的記憶體授權；關閉設定仍丟棄歷史 UI 並取消 pending connect，晚到 grant 不建立 session。401／過期／disconnect／重載不可重用；`connect()` 的原強制授權語意保留。不持久化 token、不擴大 `drive.file`、備份 v9／封存 v1 不變。
+- 登入等待與 Drive 讀取分開，提供頁內取消、明確錯誤及重試；90 秒授權逾時、20 秒 Drive 讀取／內容逾時，generation 保護晚到回應。v140 三件組與 root v110 不變，v141 原八表種子由既有 generator preview／write／readback 產生，沒有抓 live Ledger。
+- 新增 Node session／body guards 與五條 browser 回歸；晚到 JSON 不繼續寫入、筆記內容讀取受逾時保護。離開封存流程以 operation fence 失效，即使重新授權同帳號，舊流程也不再 complete／清除；各缺陷先 RED 再 GREEN。Drive GET 逾時不改上傳等待語意，SDK 初次準備仍沿用既有行為。
+- 最終本機 Node **102/102**、Chromium Playwright **227/227**（7.4 分鐘）、三情境 healthCheck／pageerror、SW 原子換代／離線及四項 gate／diff check 通過。獨立審查三項 Important 已修正並複驗，無剩餘 Critical／Important。僅推 dev，遠端 CI／Pages 於推送後核對；真實 iPhone／Android PWA 與 Google OAuth 保持待驗。採買分類、多旅程清單外觀本次未改；回復只能 v142 forward bump。
+
 ## 2026-10-01 — v140 已正式發布（PR #37；G1 明確跳過）
 
 - `dev` exact head `d557f1c` 經 PR #37 merge 至 `main`，merge commit `e4d4eca`；dev push CI `36839405312`、PR CI `36839411769`、main CI `36840115115` 的 sanity／browser-qa 全數 success，三輪 browser 各 222/222。本機 Node 100/100、browser 222/222 與四項 gate 全過。

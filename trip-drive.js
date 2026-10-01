@@ -16,34 +16,53 @@
   }
   function createClient(options){
     if(!options||typeof options.fetch!=='function'||typeof options.requestAccessToken!=='function')throw new Error('Drive dependencies are required');
-    var fetchFn=options.fetch,token=null,expiresAt=0,currentAccount=null,folderId=null,generation=0,noteFlights={};
+    var fetchFn=options.fetch,token=null,expiresAt=0,currentAccount=null,folderId=null,generation=0,noteFlights={},connectionCancel=null;
+    function cancelConnect(){generation++;if(connectionCancel)connectionCancel(new Error('Google authorization was cancelled'));}
     function forget(){generation++;token=null;expiresAt=0;currentAccount=null;folderId=null;}
+    function hasSession(){return !!(token&&currentAccount&&Date.now()<expiresAt);}
+    function bounded(promise,milliseconds,message){
+      return new Promise(function(resolve,reject){
+        var timer=setTimeout(function(){reject(new Error(message));},milliseconds);
+        Promise.resolve(promise).then(function(value){clearTimeout(timer);resolve(value);},function(error){clearTimeout(timer);reject(error);});
+      });
+    }
     function validToken(){
       if(!token||Date.now()>=expiresAt){forget();throw new Error('Google authorization expired; connect again');}
       return token;
     }
     function request(url,settings,overrideToken){
-      var params=settings||{},headers={};
+      var params=settings||{},headers={},requestGeneration=generation;
       Object.keys(params.headers||{}).forEach(function(key){headers[key]=params.headers[key];});
-      return Promise.resolve().then(function(){
+      var operation=Promise.resolve().then(function(){
+        if(requestGeneration!==generation)throw new Error('Google Drive request was cancelled');
         headers.Authorization='Bearer '+(overrideToken||validToken());
         return fetchFn(url,{method:params.method||'GET',headers:headers,body:params.body});
       }).then(function(response){
+        if(requestGeneration!==generation)throw new Error('Google Drive request was cancelled');
         if(!response||!response.ok){
           if(response&&response.status===401)forget();
           throw new Error('Google Drive request failed: '+(response?response.status:'network'));
         }
         return response;
       });
+      return !params.method||params.method==='GET'?bounded(operation,20000,'Google Drive request timed out'):operation;
     }
-    function json(url,settings,overrideToken){return request(url,settings,overrideToken).then(function(response){return response.json();});}
+    function json(url,settings,overrideToken){
+      var requestGeneration=generation;
+      var operation=request(url,settings,overrideToken).then(function(response){return response.json();}).then(function(value){
+        if(requestGeneration!==generation)throw new Error('Google Drive response was cancelled');
+        return value;
+      });
+      return !settings||!settings.method||settings.method==='GET'?bounded(operation,20000,'Google Drive response timed out'):operation;
+    }
     function connect(){
       if(!options.clientId) return Promise.reject(new Error('Google OAuth client ID is not configured'));
-      var requestGeneration=++generation;
+      cancelConnect();
+      var requestGeneration=generation;
       var grantRequest;
       try{grantRequest=options.requestAccessToken({clientId:options.clientId,scope:SCOPE});}
       catch(error){return Promise.reject(error);}
-      return Promise.resolve(grantRequest).then(function(grant){
+      var operation=Promise.resolve(grantRequest).then(function(grant){
         if(requestGeneration!==generation)throw new Error('Google authorization was cancelled by disconnect');
         if(!grant||typeof grant.access_token!=='string'||!grant.access_token)throw new Error('Google authorization was cancelled');
         var newToken=grant.access_token;
@@ -57,11 +76,27 @@
           currentAccount={accountId:String(user.permissionId),email:String(user.emailAddress)};
           return account();
         });
+      });
+      return new Promise(function(resolve,reject){
+        var settled=false;
+        var timer=setTimeout(function(){
+          if(requestGeneration===generation)generation++;
+          finish(new Error('Google authorization timed out'));
+        },90000);
+        function finish(error,value){
+          if(settled)return;settled=true;clearTimeout(timer);
+          if(connectionCancel===cancel)connectionCancel=null;
+          if(error)reject(error);else resolve(value);
+        }
+        function cancel(error){finish(error);}
+        connectionCancel=cancel;
+        operation.then(function(value){finish(null,value);},function(error){finish(error);});
       }).catch(function(error){
         if(currentAccount&&/switch/i.test(String(error&&error.message)))forget();
         throw error;
       });
     }
+    function resume(){return hasSession()?Promise.resolve(account()):connect();}
     function account(){return currentAccount?{accountId:currentAccount.accountId,email:currentAccount.email}:null;}
     function list(properties){
       var query="trashed = false and "+propertyQuery(properties);
@@ -118,7 +153,11 @@
     }
     function readArchive(fileId){
       if(!fileId)return Promise.reject(new Error('Archive file ID is required'));
-      return request(BASE+'/files/'+encodeURIComponent(fileId)+'?alt=media').then(function(response){return response.text();});
+      var requestGeneration=generation;
+      return bounded(request(BASE+'/files/'+encodeURIComponent(fileId)+'?alt=media').then(function(response){return response.text();}).then(function(text){
+        if(requestGeneration!==generation)throw new Error('Google Drive response was cancelled');
+        return text;
+      }),20000,'Google Drive response timed out');
     }
     function markComplete(fileId){
       if(!fileId)return Promise.reject(new Error('Archive file ID is required'));
@@ -175,14 +214,14 @@
       if(!archiveId)return Promise.reject(new Error('Archive ID is required'));
       return list({trippilot_kind:'note',trippilot_archive_id:String(archiveId),trippilot_status:'complete'}).then(function(found){
         return Promise.all(found.map(function(file){
-          return request(BASE+'/files/'+encodeURIComponent(file.id)+'?alt=media').then(function(response){return response.text();}).then(function(content){
+          return readArchive(file.id).then(function(content){
             return {id:file.id,createdTime:file.createdTime,content:content};
           });
         }));
       });
     }
-    function disconnect(){forget();}
-    return {connect:connect,account:account,upsertPrepared:upsertPrepared,readArchive:readArchive,
+    function disconnect(){cancelConnect();forget();}
+    return {connect:connect,resume:resume,hasSession:hasSession,cancelConnect:cancelConnect,account:account,upsertPrepared:upsertPrepared,readArchive:readArchive,
       markComplete:markComplete,listComplete:listComplete,appendNote:appendNote,listNotes:listNotes,disconnect:disconnect};
   }
   return {createClient:createClient,SCOPE:SCOPE};

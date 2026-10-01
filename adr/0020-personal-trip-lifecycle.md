@@ -37,4 +37,9 @@ localStorage 不是跨分頁交易資料庫；互斥鎖、互動守門及同步�
 
 ## Future Impact
 
+### v141 授權生命週期補充（2026-10-01）
+
+過往旅程重入可重用同次 App 的有效記憶體授權；UI 離頁取消尚未完成的 connect 並丟棄歷史內容，而非每次清除已完成的授權。離開結束旅程操作另使該次流程失效並 disconnect；重新授權相同帳號也不能讓舊流程繼續 complete／清除。inactive、重載、disconnect、401 或到期後不可重用。授權不回應時 90 秒逾時，Drive GET 讀取（含內容）20 秒逾時，阻擋取消後晚到的 grant 或舊 generation 回應。上傳寫入的等待語意不變；已送出的寫入無法撤回。SDK 初次載入準備仍沿用既有行為，非所有等待階段都有新增逾時。權限、備份／封存格式、inactive 與雲端唯讀契約不變。真實 iPhone／Android PWA 的外部登入仍需獨立驗收。
+
+
 第二階段才提供連接／切換新 Google Sheets；本 ADR 不授權顯示未實作的「連接新旅程」。正式使用前須由 Bar 在 iPhone 與 Android 實體 PWA 各驗 Google 授權、Drive 上傳讀回、清除重啟與筆記；v137 仍按 ADR 0019 的不可變 generation 與 forward-bump 回滾。變更 Drive scope、封存格式、團體帳預檢或 inactive 邊界需更新本 ADR 與回歸測試。
