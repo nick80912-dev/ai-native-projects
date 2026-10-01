@@ -1,6 +1,6 @@
 # CURRENT(現在正在做的)
 
-> 現況基準(2026-10-01):正式站與 `origin/main` 已為 v140（PR #37／`e4d4eca`）。Bar 明確跳過本次 G1；真機封存與 Android 專項仍待驗。下方逐版段落保留歷史事實，最新發布證據見 `07_CHANGELOG.md` 的 v140 正式發布紀錄。
+> 現況基準(2026-10-01):正式站與 `origin/main` 已為 v141（PR #38／`ead11ff`）。Bar 明確跳過本次 G1；真機封存與 Android 專項仍待驗。下方逐版段落保留歷史事實，最新發布證據見 `07_CHANGELOG.md` 的 v141 正式發布紀錄。
 
 ## v114 已正式發布(2026-09-10)
 - PR #16 以 **merge**(非 squash／rebase)合併 `dev` `064e932` → `main`,merge commit **`39c96b2`**;合併前確認 head 未變,且該 head 的遠端 CI `sanity` 與 **`browser-qa`** 皆 success。
@@ -51,18 +51,18 @@
 
 ## 📌 現況
 
-v141 發布已由 Bar 核准：透過 `dev → main` PR 合併，G1 本次明確跳過。完整發布前 QA／PR CI 與部署核對進行中；在正式站驗證前，下表仍記錄實際 v140。TP141-a～d 與既有真機項目保持待驗，OAuth Testing 不變。
+v141 已透過 `dev → main` PR #38 合併並完成正式站部署核對；G1 本次明確跳過。TP141-a～d 與既有真機項目保持待驗，OAuth Testing 不變。發布後 main CI 另核對 Actions `36878885081`。
 
 | 項目 | 值 |
 |---|---|
-| **`origin/main` 原始碼** | **SW v140**；merge commit `e4d4eca`（PR #37） |
-| **正式站** | `https://trippilot-jp.netlify.app/` — **SW v140**；deploy `6abe21926205bc00087f9ad0`，`commit_ref` = `e4d4eca`，§F5 五項與正式站設定 UI 已核對。G1 明確跳過，真機封存與 Android BB4 仍待驗 |
-| **`dev` candidate** | **v141 過往旅程授權體驗（本機驗證完成，推送後核對遠端）**；有效記憶體授權重用、取消／逾時／重試、離頁舊封存失效。Node 102/102、Chromium 227/227、四項 gate 與獨立審查通過；正式站保持 v140。採買分類只有設計，尚未實作；OAuth 仍 External Testing、僅 Bar 測試帳號 |
+| **`origin/main` 原始碼** | **SW v141**；merge commit `ead11ff`（PR #38） |
+| **正式站** | `https://trippilot-jp.netlify.app/` — **SW v141**；deploy `6abe72157de1330008ed8125`，`commit_ref` = `ead11ff`，§F5 五項與正式站版本 UI 已核對。G1 明確跳過，真機封存與 Android BB4 仍待驗 |
+| **`dev` 內容** | **v141 與正式版相同 runtime**，另補發布現況文件。有效記憶體授權重用、取消／逾時／重試、離頁舊封存失效；Node 102/102、Chromium 227/227、四項 gate／獨立審查與 dev／PR CI 通過。採買分類只有設計，尚未實作；OAuth 仍 External Testing、僅 Bar 測試帳號 |
 | 個人備份格式 | **v9**(`PERSONAL_STATE_SUPPORTED_VERSIONS = [1..9]`)—— v81 因想逛 key 識別語意變更而升版 |
-| 最近一次 v140 發版驗證 | 本機 Node **100/100**、Chromium Playwright **222/222**、四項 gate 通過；dev／PR／main 三輪 CI sanity 和 browser-qa 全過 |
-| 最新正式 tag | **`production-v140`**，指向 `e4d4eca`；訊息明記 G1 跳過 |
+| 最近一次 v141 發版驗證 | 本機 Node **102/102**、Chromium Playwright **227/227**、四項 gate 通過；dev／PR CI sanity 和 browser-qa 全過，main CI 另核對 Actions `36878885081` |
+| 最新正式 tag | **`production-v141`**，指向 `ead11ff`；訊息明記 G1 跳過 |
 
-**v140 已發布至正式站，`production-v140` tag 已建立；G1 跳過不等於通過，實體手機驗收清單保持待驗。**
+**v141 已發布至正式站，`production-v141` tag 已建立；G1 跳過不等於通過，實體手機驗收清單保持待驗。**
 
 ## v140 資料健康獨立子頁（已隨 PR #37 正式發布；下列保留開發階段紀錄）
 

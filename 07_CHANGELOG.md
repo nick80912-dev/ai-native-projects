@@ -1,5 +1,12 @@
 # 07 版本紀錄
 
+## 2026-10-01 — v141 已正式發布（PR #38；G1 明確跳過）
+
+- `dev` exact head `9b6f24a` 經 PR #38 merge 至 `main`，merge commit `ead11ff`。dev CI `36877887162`、PR CI `36877900233` 的 sanity／browser-qa 全數 success；兩輪 browser 各 227/227。本機發布前 Node 102/102、browser 227/227、四項 gate／diff check 與獨立審查通過。
+- Netlify production deploy `6abe72157de1330008ed8125` 於 `2026-10-01T14:45:53.981Z` 發布，`commit_ref` 與 merge commit 相符。§F5 五項通過：SW／三件組 v141、18 個文字資產 exact parity、root bridge v110、兩處 cache header 正確、前一代 v140 可服務；隔離瀏覽器實查 28 個 SHELL cache、三件組 v141、非空畫面及 pageerror 0。CUA 已核對正式站「SW v141」及最近更新。
+- annotated tag `production-v141` 指向 `ead11ff`，單獨推送；訊息明記 G1 跳過與 v142 forward-bump 復原。TP141-a～d、既有封存與 Android 真機項目均保持未勾，跳過不等於通過。OAuth External Testing、備份 v9／封存 v1 不變。
+- 發布後 main CI `36878885081` 另於 Actions 核對，不以 Netlify ready 冒充 CI 通過。這次僅補發布證據與現況文件，runtime 不再修改。
+
 ## 2026-10-01 — v141 正式發布核准（準備中；G1 明確跳過）
 
 - Bar 核准將 v141 由 `dev → main` PR 合併發布，並明確選擇本次跳過 iPhone／Android 實體 PWA 驗收。TP141-a～d、既有旅程封存與 Android BB4 仍保留待驗，不把跳過記為通過。
