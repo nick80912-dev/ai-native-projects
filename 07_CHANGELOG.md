@@ -1,5 +1,27 @@
 # 07 版本紀錄
 
+## 2026-10-01 — v141 正式發布核准（準備中；G1 明確跳過）
+
+- Bar 核准將 v141 由 `dev → main` PR 合併發布，並明確選擇本次跳過 iPhone／Android 實體 PWA 驗收。TP141-a～d、既有旅程封存與 Android BB4 仍保留待驗，不把跳過記為通過。
+- 本次只發布既有 v141 授權重用、取消／逾時與晚到操作防護，不新增功能、不改 Google Cloud 權限、OAuth Testing、備份 v9 或封存 v1。runtime 與 frozen generation 不再修改；回復以 v142 forward bump，不刪 SW。
+- `ccfee1e` 的 dev CI `36874252536` 與 Pages `36874251015` 已 success；測試站三件組 v141、28 個 SHELL 快取及無 pageerror 已核對。發布前完整本機 QA／獨立審查重新執行，合併前要求 exact-head PR CI 全綠；正式部署與 tag 另記實際證據。
+- 發布前新一輪本機 Node **102/102**、Chromium Playwright **227/227**（6.6 分鐘）、三情境 healthCheck／pageerror、SW 換代／離線及四項 gate／diff check 通過。獨立 exact-range 發布審查無 Critical／Important；本輪只增加核准與驗證文件，不改 runtime。
+
+## 2026-10-01 — v141 過往旅程授權重用與取消／逾時（dev candidate）
+
+- Bar 核准 C 級／Tier 2 範圍，改善過往旅程授權體驗，先交付 dev、不發布 main。已重現關閉設定再進授權計數為 2 的 RED；登入／讀取共用 loading 且無逾時是等待缺失。Google 400 無完整錯誤資料、之後重開成功，本版不聲稱解決該外部 400。
+- 同次 App 重入以 `resume()` 重用未過期的記憶體授權；關閉設定仍丟棄歷史 UI 並取消 pending connect，晚到 grant 不建立 session。401／過期／disconnect／重載不可重用；`connect()` 的原強制授權語意保留。不持久化 token、不擴大 `drive.file`、備份 v9／封存 v1 不變。
+- 登入等待與 Drive 讀取分開，提供頁內取消、明確錯誤及重試；90 秒授權逾時、20 秒 Drive 讀取／內容逾時，generation 保護晚到回應。v140 三件組與 root v110 不變，v141 原八表種子由既有 generator preview／write／readback 產生，沒有抓 live Ledger。
+- 新增 Node session／body guards 與五條 browser 回歸；晚到 JSON 不繼續寫入、筆記內容讀取受逾時保護。離開封存流程以 operation fence 失效，即使重新授權同帳號，舊流程也不再 complete／清除；各缺陷先 RED 再 GREEN。Drive GET 逾時不改上傳等待語意，SDK 初次準備仍沿用既有行為。
+- 最終本機 Node **102/102**、Chromium Playwright **227/227**（7.4 分鐘）、三情境 healthCheck／pageerror、SW 原子換代／離線及四項 gate／diff check 通過。獨立審查三項 Important 已修正並複驗，無剩餘 Critical／Important。僅推 dev，遠端 CI／Pages 於推送後核對；真實 iPhone／Android PWA 與 Google OAuth 保持待驗。採買分類、多旅程清單外觀本次未改；回復只能 v142 forward bump。
+
+## 2026-10-01 — v140 已正式發布（PR #37；G1 明確跳過）
+
+- `dev` exact head `d557f1c` 經 PR #37 merge 至 `main`，merge commit `e4d4eca`；dev push CI `36839405312`、PR CI `36839411769`、main CI `36840115115` 的 sanity／browser-qa 全數 success，三輪 browser 各 222/222。本機 Node 100/100、browser 222/222 與四項 gate 全過。
+- Netlify production deploy `6abe21926205bc00087f9ad0` 已於 `2026-10-01T09:02:18.316Z` 發布，`commit_ref` 與 merge commit 相符。§F5 五項通過：SW／三件組 v140、root bridge v110、快取標頭正確；隔離瀏覽器實查 `okayama-trip-v140` 的 28 個 SHELL 資產齊全，三件組標記一致，新頁由 SW 載入 v140、pageerror 0。CUA 正式站設定頁四個資料入口與 v140 已核對。首次 bootstrap 舊頁不算新版驗證；檢查腳本須等安裝與快取完成再開新頁。
+- annotated tag `production-v140` 指向 `e4d4eca`，只推 tag；訊息明記 G1 跳過與 v141 forward-bump 回復方式。TP137／TP138／TP140 真機項目及 Android BB4 保持未勾，跳過不等於通過。
+- 採買分類仍只有設計文件，尚未實作；個人備份 v9、封存 v1 不變。OAuth 仍為 External Testing、僅 Bar 測試帳號；其他旅伴的真實 Drive 封存未對外驗證。Minor 晚到同步失敗 key 已列 backlog #51；無 runtime 修改。
+
 ## 2026-10-01 — v140 正式發布核准（準備中；G1 明確跳過）
 
 - Bar 選擇發布完整 v140，包含 v137 個人旅程生命週期與 v138～v140 設定調整，透過 `dev → main` PR 合併；明確跳過本次實體手機驗收。TP137-a～i、TP138-c、TP140-a～c 與 Android BB4 保持未勾，跳過不等於通過。

@@ -45,6 +45,58 @@ async function installDriveFixture(page,{corrupt=false,unsupported=false,unautho
   },{corrupt,unsupported,unauthorized,noteText,failUploadOnce});
 }
 
+test('已登入後關閉設定再進歷史不重複授權，重載 App 才重新登入',async({page})=>{
+  await installOfflineAppNetwork(page);await openApp(page);await waitForSyncToSettle(page);await installDriveFixture(page);
+  await page.evaluate(()=>{const original=google.accounts.oauth2.initTokenClient;window.__qaGrants=0;google.accounts.oauth2.initTokenClient=config=>{window.__qaGrants++;return original(config);};openSettings('root');});
+  await page.getByRole('button',{name:'過往旅程'}).click();await expect(page.getByRole('button',{name:/岡山回憶/})).toBeVisible();
+  await page.getByRole('button',{name:'關閉',exact:true}).click();
+  await page.getByRole('button',{name:'設定',exact:true}).click();await page.getByRole('button',{name:/^過往旅程/}).click();
+  await expect(page.getByRole('button',{name:/岡山回憶/})).toBeVisible();expect(await page.evaluate(()=>window.__qaGrants)).toBe(1);
+  await page.reload({waitUntil:'domcontentloaded'});await waitForSyncToSettle(page);
+  expect(await page.evaluate(()=>tripDriveClient&&tripDriveClient.account())).toBeNull();
+});
+
+test('Google 關閉授權或未回應時結束等待並可重新登入，晚到授權不復活',async({page})=>{
+  await installOfflineAppNetwork(page);await openApp(page);await waitForSyncToSettle(page);await installDriveFixture(page);
+  await page.clock.install();
+  await page.evaluate(()=>{google.accounts.oauth2.initTokenClient=config=>({requestAccessToken(){window.__qaGrantConfig=config;}});openSettings('root');});
+  await page.getByRole('button',{name:'過往旅程'}).click();
+  await expect(page.locator('#settingsOverlay')).toContainText('等待 Google 登入');
+  await page.evaluate(()=>window.__qaGrantConfig.error_callback({type:'popup_closed'}));
+  await expect(page.locator('#settingsOverlay')).toContainText('登入已取消');
+  await page.getByRole('button',{name:'重新登入並重試'}).click();
+  await page.clock.fastForward(90001);
+  await expect(page.locator('#settingsOverlay')).toContainText('登入逾時');
+  await page.evaluate(()=>window.__qaGrantConfig.callback({access_token:'late-token',expires_in:3600}));
+  expect(await page.evaluate(()=>tripDrive().account())).toBeNull();
+  await expect(page.getByRole('button',{name:'重新登入並重試'})).toBeVisible();
+});
+
+test('頁內取消登入可立即重試，舊授權回應不會覆蓋新連線',async({page})=>{
+  await installOfflineAppNetwork(page);await openApp(page);await waitForSyncToSettle(page);await installDriveFixture(page);
+  await page.evaluate(()=>{window.__qaConfigs=[];google.accounts.oauth2.initTokenClient=config=>({requestAccessToken(){window.__qaConfigs.push(config);}});openSettings('root');});
+  await page.getByRole('button',{name:'過往旅程'}).click();await page.getByRole('button',{name:'取消登入',exact:true}).click();
+  await expect(page.locator('#settingsOverlay')).toContainText('登入已取消');
+  await page.getByRole('button',{name:'重新登入並重試'}).click();
+  await page.evaluate(()=>window.__qaConfigs[0].callback({access_token:'old-grant',expires_in:3600}));
+  expect(await page.evaluate(()=>tripDrive().account())).toBeNull();
+  await expect(page.getByRole('button',{name:'取消登入',exact:true})).toBeVisible();
+  await page.evaluate(()=>window.__qaConfigs[1].callback({access_token:'new-grant',expires_in:3600}));
+  await expect(page.getByRole('button',{name:/岡山回憶/})).toBeVisible();
+  expect(await page.evaluate(()=>personalStateJson())).not.toContain('new-grant');
+  expect(await page.evaluate(()=>JSON.stringify(localStorage))).not.toContain('new-grant');
+});
+
+test('Drive 請求沒有回應時顯示逾時，重試仍重用有效授權',async({page})=>{
+  await installOfflineAppNetwork(page);await openApp(page);await waitForSyncToSettle(page);await installDriveFixture(page);await page.clock.install();
+  await page.evaluate(()=>{const init=google.accounts.oauth2.initTokenClient;window.__qaGrants=0;google.accounts.oauth2.initTokenClient=config=>{window.__qaGrants++;return init(config);};const original=window.fetch;window.__qaOriginalFetch=original;window.__qaHangStarted=false;window.fetch=(input,options)=>String(input).includes('/files?')?(window.__qaHangStarted=true,new Promise(()=>{})):original(input,options);openSettings('root');});
+  await page.getByRole('button',{name:'過往旅程'}).click();await expect.poll(()=>page.evaluate(()=>window.__qaHangStarted)).toBe(true);
+  await expect(page.locator('#settingsOverlay')).toContainText('正在從 Google Drive');await page.clock.fastForward(20001);
+  await expect(page.locator('#settingsOverlay')).toContainText('讀取逾時');await page.evaluate(()=>window.fetch=window.__qaOriginalFetch);
+  await page.getByRole('button',{name:'重新登入並重試'}).click();await expect(page.getByRole('button',{name:/岡山回憶/})).toBeVisible();
+  expect(await page.evaluate(()=>window.__qaGrants)).toBe(1);
+});
+
 test('設定資料子項直達過往旅程，返回設定首頁',async({page})=>{
   const errors=collectPageErrors(page);
   await installOfflineAppNetwork(page);await openApp(page);await waitForSyncToSettle(page);
@@ -58,6 +110,25 @@ test('設定資料子項直達過往旅程，返回設定首頁',async({page})=>
   await page.getByRole('button',{name:/備份、還原與版本資訊/}).click();
   await expect(page.getByRole('button',{name:/^過往旅程/})).toHaveCount(0);
   expect(errors).toEqual([]);
+});
+
+test('保留歷史授權不會讓離頁後的封存流程清除旅程',async({page})=>{
+  await installOfflineAppNetwork(page);await openApp(page);await waitForSyncToSettle(page);await installDriveFixture(page);
+  await page.evaluate(()=>{
+    window.__qaPreflightCount=0;
+    const input={digest:'unchanged',policyInput:{online:true,sheetsComplete:true,queueCount:0,bridgeCounts:{delivery:0,deletion:0,settings:0},formalBalances:{},pendingClaims:0},archiveInput:{archivedAt:'2026-10-01',sheets:{}},personalJson:JSON.stringify(tripPersonalArchiveState())};
+    freshEndPreflight=()=>++window.__qaPreflightCount===1?Promise.resolve(input):new Promise(resolve=>{window.__qaSecondPreflight=()=>resolve(input);});
+    const drive=tripDrive();drive.upsertPrepared=()=>Promise.resolve('archive-file');drive.readArchive=()=>Promise.resolve('{"archiveId":"archive-1","checksum":"same"}');
+    drive.markComplete=()=>{window.__qaCompleted=true;return Promise.resolve();};
+    TripArchive.serialize=()=>Promise.resolve('{"archiveId":"archive-1","checksum":"same"}');TripArchive.parseVerified=text=>Promise.resolve(JSON.parse(text));
+    localStorage.setItem('trip_archive_retry_id',JSON.stringify({id:'archive-1',digest:'unchanged',archivedAt:'2026-10-01',sourceTimes:{}}));
+    openSettings('data');window.__qaEnd=finishTripEnd(true);
+  });
+  await expect.poll(()=>page.evaluate(()=>typeof window.__qaSecondPreflight)).toBe('function');
+  await page.getByRole('button',{name:'關閉',exact:true}).click();
+  await page.evaluate(()=>tripDrive().connect());
+  await page.evaluate(async()=>{window.__qaSecondPreflight();await window.__qaEnd;});
+  expect(await page.evaluate(()=>({mode:TripLifecycle.readState(localStorage).mode,completed:!!window.__qaCompleted,member:getCurrentMember()}))).toEqual({mode:'active',completed:false,member:'Bar'});
 });
 
 test('直接進入過往旅程時先準備 Google 登入，下一次點擊才發起授權',async({page})=>{

@@ -9,6 +9,9 @@ const root = path.resolve(__dirname, '..');
 const read = (file) => fs.readFileSync(path.join(root, file), 'utf8');
 const hash = (file) => crypto.createHash('sha256').update(read(file).replace(/\r\n/g, '\n')).digest('hex');
 const immutable = {
+  "shell/v140/index.html": "9fa16da11ee3192480ddf3e0eb17b787bafeda9ae5667495e000d5bd3ffe45e6",
+  "shell/v140/app-version.js": "8c5090504bc17b1b8f79008e626cd796a744cd314ecc0aeaa353506c7014a3a3",
+  "shell/v140/builtin-snapshot.js": "852d6efd06ee6850ce4e1a59a1373ed706960770f2b8592869643320a2af0eda",
   'shell/v139/index.html': 'be63905dae86d4ce4bb9781deb9f38e7d4397db7f71cf41fda2fa8d3b72dd528',
   'shell/v139/app-version.js': '0f97742212689d88c6e3cbfd5056ab0acfd133aa666a3f8489a43253b3ac9776',
   'shell/v139/builtin-snapshot.js': '5351bff8d19ba5e70084ea29d10a70b8c324d6f342d8a5c82ba2431a653f355f',
