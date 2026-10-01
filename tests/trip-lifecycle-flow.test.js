@@ -31,19 +31,25 @@ function archiveInput(){
 function harness(overrides){
   overrides=overrides||{};
   const saved=originalStorage(),events=[];
-  let clearFailure=false,uploaded='',complete=false,currentAccount={accountId:'person-1',email:'bar@example.com'};
+  let clearFailure=false,uploaded='',complete=false,markCalls=0,archiveSequence=0,currentAccount={accountId:'person-1',email:'bar@example.com'};
   const photoStore={clearAll:function(){events.push('photos-clear');return clearFailure?Promise.reject(new Error('IDB_BLOCKED')):Promise.resolve();}};
   const drive={
     connect:function(){events.push('connect');return overrides.connectError?Promise.reject(new Error('OAUTH_CANCELLED')):Promise.resolve(currentAccount);},
     account:function(){return currentAccount;},
-    upsertPrepared:function(id,text){events.push('upload');uploaded=text;return Promise.resolve('file-1');},
+    upsertPrepared:function(id,text){events.push('upload');if(!complete)uploaded=text;return Promise.resolve('file-1');},
     readArchive:function(){events.push('readback');if(overrides.accountSwitch)currentAccount={accountId:'person-2',email:'other@example.com'};return Promise.resolve(overrides.readbackText||uploaded);},
-    markComplete:function(){events.push('mark-complete');complete=true;return Promise.resolve('file-1');}
+    markComplete:function(){events.push('mark-complete');complete=true;markCalls++;
+      if(overrides.mutateAfterMark)saved.setItem('trip_travel_notes','[{"body":"late note"}]');
+      if(overrides.markResponseLost&&markCalls===1)return Promise.reject(new Error('response lost after completion'));
+      return Promise.resolve('file-1');}
   };
   let preflightCalls=0,localCalls=0;
   const preflight=function(){
     events.push('preflight');preflightCalls++;
-    const input={policyInput:safePolicy(),archiveInput:archiveInput(),digest:'same-digest'};
+    const personalJson=JSON.stringify({travelNotes:JSON.parse(saved.getItem('trip_travel_notes')||'[]')});
+    const archiveState=archiveInput();archiveState.personal.travelNotes=JSON.parse(saved.getItem('trip_travel_notes')||'[]');
+    if(overrides.varyTimestamp){archiveState.archivedAt='2026-10-24T00:00:0'+preflightCalls+'Z';Object.keys(archiveState.sheets).forEach(key=>archiveState.sheets[key].sourceTime=archiveState.archivedAt);}
+    const input={policyInput:safePolicy(),archiveInput:archiveState,digest:'same-digest',personalJson:personalJson};
     if(overrides.firstPolicy&&preflightCalls===1)input.policyInput=overrides.firstPolicy;
     if(overrides.secondDigest&&preflightCalls===2)input.digest=overrides.secondDigest;
     if(overrides.secondQueue&&preflightCalls===2)input.policyInput.queueCount=1;
@@ -55,7 +61,8 @@ function harness(overrides){
     return overrides.localQueue?{queueCount:1,bridgeCounts:{delivery:0,deletion:0,settings:0}}:{queueCount:0,bridgeCounts:{delivery:0,deletion:0,settings:0}};
   };
   const flow=TripLifecycleFlow.create({storage:saved,photoStore:photoStore,preflight:preflight,archive:archive,drive:drive,
-    localPending:localPending,newArchiveId:function(){return 'archive-1';}});
+    localPending:localPending,localPersonalState:function(){return {travelNotes:JSON.parse(saved.getItem('trip_travel_notes')||'[]')};},
+    newArchiveId:function(){return 'archive-'+(++archiveSequence);}});
   return {flow:flow,storage:saved,events:events,drive:drive,setClearFailure:function(value){clearFailure=value;},
     setAccount:function(value){currentAccount=value;},getComplete:function(){return complete;},getUploaded:function(){return uploaded;},
     preflightCalls:function(){return preflightCalls;},localCalls:function(){return localCalls;}};
@@ -129,6 +136,19 @@ function harness(overrides){
   assert.deepStrictEqual(TripLifecycle.readState(cleaning.storage),{mode:'complete',archiveId:'archive-1'});
   assert.strictEqual(cleaning.preflightCalls(),2,'cleanup retry does not re-fetch or re-upload');
   assert.strictEqual(cleaning.events.filter(function(item){return item==='upload';}).length,1);
+
+  const lateEdit=harness({mutateAfterMark:true});
+  await assert.rejects(lateEdit.flow.end({saveArchive:true}),/personal|changed/i);
+  assert.deepStrictEqual(TripLifecycle.readState(lateEdit.storage),{mode:'active',archiveId:null},'late local edit must not be cleared');
+  assert.strictEqual(lateEdit.storage.getItem('trip_travel_notes'),'[{"body":"late note"}]');
+
+  const responseLost=harness({markResponseLost:true,varyTimestamp:true});
+  await assert.rejects(responseLost.flow.end({saveArchive:true}),/response lost/);
+  const originalUpload=responseLost.getUploaded();
+  assert.deepStrictEqual(TripLifecycle.readState(responseLost.storage),{mode:'active',archiveId:null});
+  await responseLost.flow.end({saveArchive:true});
+  assert.strictEqual(responseLost.getUploaded(),originalUpload,'retry verifies the same complete checksum despite fresh timestamps');
+  assert.deepStrictEqual(TripLifecycle.readState(responseLost.storage),{mode:'complete',archiveId:'archive-1'});
 
   const concurrent=harness();
   let release;

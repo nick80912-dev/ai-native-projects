@@ -580,6 +580,9 @@ button:focus-visible,[role="button"]:focus-visible,summary:focus-visible,.qa-btn
 .ledger-duplicate-overlay{display:grid;place-items:center;padding:16px;background:rgba(10,45,50,.38)}.ledger-duplicate-panel{width:min(100%,320px);padding:16px;border-radius:10px;background:var(--paper);box-shadow:var(--shadow-lg)}
 .ledger-delete-copy{font-size:14px;color:var(--ink);margin:8px 0 14px}.ledger-delete-label{display:block;font-size:13px;font-weight:800;color:var(--ink);margin-bottom:6px}.ledger-delete-reason{width:100%;min-height:48px;border:1px solid var(--line);border-radius:10px;padding:10px 12px;font:inherit;font-size:16px;background:#fff}.ledger-delete-error{min-height:18px;color:var(--coral);font-size:12px;font-weight:800;margin-top:6px}
 .toggle-row{display:flex;align-items:center;justify-content:space-between;gap:12px}.toggle-row input{width:22px;height:22px}.settings-help{font-size:12px;color:var(--ink-faint);margin-top:6px}
+.trip-lifecycle-actions{display:grid;gap:9px;margin-top:12px}.trip-lifecycle-actions .btn{width:100%;min-height:48px}.trip-lifecycle-status{margin-top:10px;font-size:13px;line-height:1.5;color:var(--ink-soft);overflow-wrap:anywhere}.trip-lifecycle-status.error{color:var(--coral)}.trip-inactive .tabbar,.trip-inactive .trip-tabs,.trip-inactive .daybar,.trip-inactive #syncBtn{display:none}.trip-inactive .view:not(#view-today){display:none!important}.trip-inactive .view#view-today{display:block!important}.trip-inactive-card{margin:28px auto;max-width:520px;padding:24px;border:1px solid var(--line);border-radius:16px;background:var(--card);text-align:center}.trip-inactive-card h1{font-size:20px;margin-bottom:8px}.trip-inactive-card p{color:var(--ink-soft);font-size:13px;line-height:1.6}
+.past-trip-raw{max-width:100%;white-space:pre-wrap;overflow-wrap:anywhere;font-size:11px;line-height:1.5;padding:10px;background:var(--paper);border-radius:8px}.settings-section details{padding:9px 0;border-top:1px solid var(--line-soft)}.settings-section details summary{cursor:pointer;font-weight:800}.past-trip-notes p{white-space:pre-wrap;overflow-wrap:anywhere}
+.past-trip-record{padding:12px 0;border-bottom:1px solid var(--line-soft);font-size:13px;line-height:1.6;overflow-wrap:anywhere}.past-trip-record p{white-space:pre-wrap;margin-top:4px}.past-trip-record dl{margin:0}.past-trip-record dl>div{display:grid;grid-template-columns:90px minmax(0,1fr);gap:8px;margin:3px 0}.past-trip-record dt{color:var(--ink-soft)}.past-trip-record dd{margin:0;white-space:pre-wrap;overflow-wrap:anywhere}.past-trip-readable h4{margin-top:14px}
 .ledger-record.pending{background:#fffaf0}.ledger-tag{display:inline-flex;border-radius:999px;background:var(--line-soft);color:var(--ink-faint);padding:2px 6px;font-size:10px;font-weight:800;margin-left:5px}.ledger-summary{display:grid;gap:7px}.legacy-ledger{background:#fff7dc;border:1px solid #ead88e;border-radius:12px;padding:12px;margin-bottom:12px;font-size:13px;color:#73580f}.legacy-ledger .btn{margin-top:8px}
 .ledger-test-warning{background:#fff3e8;color:#793b20;border:1px solid #efb28e;border-radius:12px;padding:12px;margin-bottom:12px}.ledger-test-warning strong{display:block;color:var(--coral);margin-bottom:3px}.ledger-test-warning .btn{margin-top:9px}
 .ledger-track-grid,.ledger-segment,.ledger-sheet-track,.ledger-currency-grid,.trip-filter-track{display:flex;gap:4px;background:var(--line-soft);border:1px solid var(--line);border-radius:999px;padding:4px}.ledger-track-grid{margin:0 0 12px}.ledger-track-btn,.ledger-segment-btn,.ledger-segment .ledger-sheet-choice,.ledger-sheet-track .ledger-sheet-choice,.ledger-currency-grid .ledger-choice,.trip-filter-track .trip-filter-btn{flex:1;min-width:0;min-height:40px;border:0;border-radius:999px;background:transparent;color:var(--ink-soft);padding:7px 8px;font:inherit;font-size:13px;font-weight:900}.ledger-track-btn.on,.ledger-segment-btn.on,.ledger-segment .ledger-sheet-choice.on,.ledger-sheet-track .ledger-sheet-choice.on,.ledger-currency-grid .ledger-choice.on,.trip-filter-track .trip-filter-btn.on{background:var(--sea);color:#fff;box-shadow:var(--shadow)}
@@ -1775,9 +1778,11 @@ function downloadAllSheets(){
 }
 var syncInFlight=null;
 function syncAll(showToast){
+  if(TripLifecycle.readState(localStorage).mode!=='active')return Promise.resolve({ok:false,inactive:true});
   if(syncInFlight) return syncInFlight;
   setSyncState('syncing');
   syncInFlight=downloadAllSheets().then(function(download){
+    if(TripLifecycle.readState(localStorage).mode!=='active')return {ok:false,inactive:true};
     var now=Date.now(), generation='sheet-'+now;
     var candidate=prepareSheetCandidate(download.raw,'online',now,generation);
     var current;
@@ -3872,7 +3877,13 @@ function selectShoppingPhoto(input){
   if(!file||!session||!shoppingUiState.form||session.savePending||shoppingPhotoAuditState.unavailable)return Promise.resolve(false);
   var requested=shoppingUiWorkflow.dispatch({type:'photo-save-requested',sessionId:session.sessionId,requestId:requestId});
   if(!requested.changed)return Promise.resolve(false);
-  return TripShoppingPhotos.compressImage(file).then(function(blob){return shoppingPhotoStore.put(blob);}).then(function(photoId){
+  return TripShoppingPhotos.compressImage(file).then(function(blob){
+    if(typeof TripLifecycle!=='undefined'&&TripLifecycle.readState(localStorage).mode!=='active')return null;
+    if(!shoppingUiState.formSession||shoppingUiState.formSession.sessionId!==session.sessionId)return null;
+    return shoppingPhotoStore.put(blob);
+  }).then(function(photoId){
+    if(!photoId)return false;
+    if(typeof TripLifecycle!=='undefined'&&TripLifecycle.readState(localStorage).mode!=='active')return shoppingPhotoStore.remove(photoId).then(function(){return false;});
     var completed=shoppingUiWorkflow.dispatch({type:'photo-save-succeeded',sessionId:session.sessionId,requestId:requestId,photoId:photoId,notification:'照片附件已加入'});
     if(!completed.changed){cleanupShoppingPhotoIds([photoId]);return false;}
     return true;
@@ -4077,11 +4088,18 @@ function setShoppingPhotoRepairPending(pending){
 function repairShoppingPhoto(input){
   var file=input&&input.files&&input.files[0],itemId=shoppingPhotoRepairState.itemId;
   if(!file||!itemId||shoppingPhotoRepairState.pending)return Promise.resolve(false);
+  var repairSession=shoppingPhotoRepairState;
   setShoppingPhotoRepairPending(true);
-  return TripShoppingPhotos.compressImage(file).then(function(blob){return shoppingPhotoStore.put(blob);}).then(function(photoId){
+  return TripShoppingPhotos.compressImage(file).then(function(blob){
+    if(shoppingPhotoRepairState!==repairSession||typeof TripLifecycle!=='undefined'&&TripLifecycle.readState(localStorage).mode!=='active')return null;
+    return shoppingPhotoStore.put(blob);
+  }).then(function(photoId){
+    if(!photoId)return null;
+    if(shoppingPhotoRepairState!==repairSession||typeof TripLifecycle!=='undefined'&&TripLifecycle.readState(localStorage).mode!=='active')return shoppingPhotoStore.remove(photoId).then(function(){return null;});
     shoppingListStore.update(itemId,{photoId:photoId});
     return refreshShoppingPhotoAudit({force:true,reason:'repair'}).then(function(){return photoId;});
-  }).then(function(){
+  }).then(function(photoId){
+    if(!photoId||shoppingPhotoRepairState!==repairSession||typeof TripLifecycle!=='undefined'&&TripLifecycle.readState(localStorage).mode!=='active')return false;
     closeShoppingPhotoRepair(false);renderToday();renderShoppingListOverlay();toast('照片附件已更新');return true;
   }).catch(function(error){
     setShoppingPhotoRepairPending(false);showShoppingPhotoSaveFailure(error);return false;
@@ -8045,22 +8063,40 @@ function postLedgerSettings(settings){
 
 function saveLedgerSettings(source){
   var settings=normalizeLedgerSettings(source),lockedCurrency=ledgerLockedSettlementCurrency();
+  if(typeof TripLifecycle!=='undefined'&&TripLifecycle.readState(localStorage).mode!=='active')return Promise.reject(new Error('目前沒有進行中的旅程'));
   if(lockedCurrency&&settings.defaultCurrency!==lockedCurrency)return Promise.reject(new Error('已有還款紀錄，結算幣別已鎖定為 '+lockedCurrency));
+  var previous=localStorage.getItem(LEDGER_SETTINGS_BRIDGE_KEY),sending,denied=false;
+  try{
+    var existing=previous?JSON.parse(previous):null;
+    if(existing&&existing.status==='sending'&&existing.expiresAt>Date.now())throw new Error('分帳設定正在更新，請稍候');
+    sending=JSON.stringify({exchangeRate:settings.exchangeRate,defaultCurrency:settings.defaultCurrency,status:'sending',expiresAt:Date.now()+FETCH_TIMEOUT+5000});
+    localStorage.setItem(LEDGER_SETTINGS_BRIDGE_KEY,sending);
+    if(localStorage.getItem(LEDGER_SETTINGS_BRIDGE_KEY)!==sending)throw new Error('無法保存待同步設定，尚未送出');
+  }catch(error){return Promise.reject(error);}
   return postLedgerSettings(settings).then(function(result){
-    if(!result||result.ok!==true)throw new Error(result&&result.error||'伺服器未確認設定');
+    if(!result||result.ok!==true){denied=true;throw new Error(result&&result.error||'伺服器未確認設定');}
+    if(typeof TripLifecycle!=='undefined'&&TripLifecycle.readState(localStorage).mode!=='active')throw new Error('旅程已清除，停止套用晚到的設定回應');
+    localStorage.setItem(LEDGER_SETTINGS_BRIDGE_KEY,JSON.stringify({exchangeRate:settings.exchangeRate,defaultCurrency:settings.defaultCurrency}));
     if(!DB.cfg)DB.cfg={};
     DB.cfg.exchangeRate=settings.exchangeRate;
     DB.cfg.ledgerDefaultCurrency=settings.defaultCurrency;
-    lsSet(LEDGER_SETTINGS_BRIDGE_KEY,{exchangeRate:settings.exchangeRate,defaultCurrency:settings.defaultCurrency});
     if(typeof openSettings==='function')openSettings();
     if(typeof renderSplit==='function')renderSplit();
     return result;
+  }).catch(function(error){
+    if(typeof TripLifecycle!=='undefined'&&TripLifecycle.readState(localStorage).mode!=='active')throw error;
+    if(localStorage.getItem(LEDGER_SETTINGS_BRIDGE_KEY)===sending){
+      if(denied){if(previous===null)localStorage.removeItem(LEDGER_SETTINGS_BRIDGE_KEY);else localStorage.setItem(LEDGER_SETTINGS_BRIDGE_KEY,previous);}
+      else localStorage.setItem(LEDGER_SETTINGS_BRIDGE_KEY,JSON.stringify({exchangeRate:settings.exchangeRate,defaultCurrency:settings.defaultCurrency,status:'unconfirmed'}));
+    }
+    throw error;
   });
 }
 
 function reconcileLedgerSettingsBridge(){
   var bridge=lsGet(LEDGER_SETTINGS_BRIDGE_KEY,null), published, confirmed;
   if(!bridge)return false;
+  if(bridge.status==='sending'&&bridge.expiresAt>Date.now())return false;
   try{
     published=normalizeLedgerSettings(DB.cfg||{});
     confirmed=normalizeLedgerSettings(bridge);
@@ -8749,6 +8785,9 @@ function closeSettings(){
   var shoppingForm=document.getElementById('shoppingFormSheet');
   if(shoppingForm){shoppingForm.removeAttribute('inert');shoppingForm.removeAttribute('aria-hidden');}
   shoppingPhotoSettingsEntered=false;
+  if(typeof pastTripsRequestId==='number')pastTripsRequestId++;
+  if(typeof pastTripsUi!=='undefined'&&pastTripsUi){pastTripsUi={status:'idle',account:null,archives:[],selected:null,notes:[],noteDraft:null,noteSaving:false,error:''};}
+  if(typeof tripDriveClient!=='undefined'&&tripDriveClient)tripDriveClient.disconnect();
 }
 function shoppingItemsWithoutPhotoRefs(items){
   return (items||[]).map(function(item){var copy=Object.assign({},item);delete copy.photoId;return copy;});
@@ -8952,9 +8991,10 @@ function openSettings(targetId){
     },0);
   }
   if(settingsUiState.page==='storage')setTimeout(enterShoppingPhotoSettings,0);
+  if(settingsUiState.page==='data')loadTripGoogleIdentity().catch(function(){});
 }
 var settingsUiState={page:'root',scrollTopByPage:{},anchorId:''};
-var SETTINGS_PAGE_IDS=['root','theme','proxy','ledger','options','options-category','options-pay-method','options-shopping-unit','storage','data','test-mode'];
+var SETTINGS_PAGE_IDS=['root','theme','proxy','ledger','options','options-category','options-pay-method','options-shopping-unit','storage','data','past','test-mode'];
 function settingsOptionPageForKind(kind){
   if(kind==='category')return 'options-category';
   if(kind==='payMethod')return 'options-pay-method';
@@ -9014,6 +9054,7 @@ function settingsNavRow(page,iconKey,title,summary){
 }
 /* 設定根頁 = 三個常駐群組(個人／記帳／資料)。子頁內容與資料語意完全不變,只重排根頁。 */
 function renderSettingsRoot(ledgerSettings){
+  if(TripLifecycle.readState(localStorage).mode!=='active')return renderSettingsHeader('設定',true)+settingsGroup('資料',settingsNavRow('data','data','過往旅程','查看已封存的旅程'));
   var proxyCount=ledgerProxyTargetStore.all().length;
   /* 採買單位仍完整保留於自訂項目子頁,只是不再擠進根頁摘要(設計規格 §2.2.4)。 */
   var optionSummary=ledgerCategoryStore.all().length+' 類別 · '+ledgerPayMethodStore.all().length+' 支付方式';
@@ -9196,7 +9237,7 @@ function renderSettingsDataHealth(){
 }
 var APP_RELEASE_NOTES=[
   {version:'v137',date:'2026-09-30',title:'個人旅程生命週期',items:[
-    '準備重置紀錄、清除並打包旅程及唯讀過往旅程；啟用前仍需 Google 帳號授權設定與裝置驗證。'
+    '新增重置紀錄、清除並打包旅程及唯讀過往旅程；目前為測試候選版，Google 授權與封存仍待實體手機驗證。'
   ]},
   {version:'v136',date:'2026-09-24',title:'資料規格說明更新',items:[
     '內部資料規格中「結算幣別」的說明改為全團共用的用語，與設定頁一致。畫面與操作不變。'
@@ -9220,8 +9261,285 @@ function renderAppReleaseNotes(){
     return '<article class="settings-release"><div class="settings-release-head"><strong>'+escapeHtml(note.version+' '+note.title)+'</strong><span>'+escapeHtml(note.date)+'</span></div><ul>'+note.items.map(function(item){return '<li>'+escapeHtml(item)+'</li>';}).join('')+'</ul></article>';
   }).join('')+'</div>';
 }
+var TRIP_GOOGLE_CLIENT_ID='812330004270-6limrm2sl15s3aohum4nrnas97kopfma.apps.googleusercontent.com';
+var TRIP_SOURCE_SHEET_ID='1B5g7KuVi2WaFVVSdhqRMeTQV_tBpgnzOAv6aMQdFZJw';
+var tripGoogleScriptPromise=null,tripDriveClient=null,tripFlowClient=null;
+function loadTripGoogleIdentity(){
+  if(window.google&&google.accounts&&google.accounts.oauth2)return Promise.resolve();
+  if(tripGoogleScriptPromise)return tripGoogleScriptPromise;
+  tripGoogleScriptPromise=new Promise(function(resolve,reject){
+    if(!navigator.onLine){reject(new Error('離線時無法載入 Google 登入'));return;}
+    var script=document.createElement('script');
+    script.src='https://accounts.google.com/gsi/client';script.async=true;
+    script.onload=function(){window.google&&google.accounts&&google.accounts.oauth2?resolve():reject(new Error('Google 登入元件不可用'));};
+    script.onerror=function(){reject(new Error('無法載入 Google 登入'));};
+    document.head.appendChild(script);
+  }).catch(function(error){tripGoogleScriptPromise=null;throw error;});
+  return tripGoogleScriptPromise;
+}
+function tripRequestAccessToken(request){
+  if(!window.google||!google.accounts||!google.accounts.oauth2)throw new Error('Google 登入尚未準備好，請連線後重試');
+  return new Promise(function(resolve,reject){
+    var client=google.accounts.oauth2.initTokenClient({client_id:request.clientId,scope:request.scope,
+      callback:function(response){response&&response.access_token?resolve(response):reject(new Error('Google 授權未完成'));},
+      error_callback:function(error){reject(new Error('Google 授權已取消或失敗：'+String(error&&error.type||'unknown')));}
+    });
+    client.requestAccessToken({prompt:'consent'});
+  });
+}
+function tripDrive(){
+  if(!tripDriveClient)tripDriveClient=TripDrive.createClient({clientId:TRIP_GOOGLE_CLIENT_ID,
+    fetch:function(url,options){return window.fetch(url,options);},requestAccessToken:tripRequestAccessToken});
+  return tripDriveClient;
+}
+function tripLocalPending(){
+  function listCount(key){
+    var text=localStorage.getItem(key);if(!text)return 0;
+    var list=JSON.parse(text);if(!Array.isArray(list))throw new Error('待同步資料格式無法確認');
+    return list.length;
+  }
+  var settings=localStorage.getItem(LEDGER_SETTINGS_BRIDGE_KEY),settingsCount=0;
+  if(settings){var parsed=JSON.parse(settings);if(!parsed||typeof parsed!=='object')throw new Error('設定待同步資料格式無法確認');settingsCount=1;}
+  return {queueCount:listCount(LEDGER_QUEUE_KEY),bridgeCounts:{delivery:listCount(LEDGER_DELIVERY_BRIDGE_KEY),deletion:listCount(LEDGER_DELETION_BRIDGE_KEY),settings:settingsCount}};
+}
+function tripPersonalArchiveState(){
+  return {checks:lsGet('trip_checks',{}),nextStopProgress:lsGet('trip_next_stop_progress',{}),
+    wants:lsGet('trip_shop_wants',{}),shoppingItems:shoppingItemsWithoutPhotoRefs(shoppingListStore.all()),
+    personalLedger:personalLedgerRepository.all(),proxyTargets:ledgerProxyTargetStore.all(),
+    ledgerCategories:ledgerCategoryStore.all(),ledgerPayMethods:ledgerPayMethodStore.all(),shoppingUnits:shoppingUnitStore.all(),
+    travelNotes:travelNoteStore.all(),member:getCurrentMember(),themeId:currentThemeId()};
+}
+function tripSha256(text){
+  if(!window.crypto||!crypto.subtle||!window.TextEncoder)return Promise.reject(new Error('此裝置不支援封存驗證'));
+  return crypto.subtle.digest('SHA-256',new TextEncoder().encode(text)).then(function(bytes){
+    return Array.prototype.map.call(new Uint8Array(bytes),function(value){return ('0'+value.toString(16)).slice(-2);}).join('');
+  });
+}
+function freshEndPreflight(){
+  if(!navigator.onLine)return Promise.reject(new Error('離線時無法驗證全部工作表，不能清除旅程'));
+  var raw={},times={};
+  return Promise.all(SHEETS.map(function(sheet){return fetchSheet(sheet).then(function(csv){raw[sheet.key]=csv;times[sheet.key]=timestampDate(Date.now()).toISOString();});})).then(function(){
+    var orderedRaw={};SHEETS.forEach(function(sheet){orderedRaw[sheet.key]=raw[sheet.key];});raw=orderedRaw;
+    var candidate=prepareSheetCandidate(raw,'online',Date.now(),'archive-preflight-'+Date.now());
+    var records=candidate.db.ledger||[],balance=buildMemberBalances(records,null,function(){},'formal');
+    if(balance.invalidRecords&&balance.invalidRecords.length)throw new Error('正式分帳資料無法完整結算');
+    var handshake=deriveSettlements(records,function(){},'formal');
+    var settled=applyConfirmedSettlements(balance,handshake.confirmed);
+    var settings=normalizeLedgerSettings(candidate.db.cfg||{}),field=settings.defaultCurrency==='TWD'?'netTwd':'netJpy';
+    var formalBalances={};settled.members.forEach(function(member){formalBalances[member.member]=member[field];});
+    var pending=tripLocalPending(),personal=tripPersonalArchiveState();
+    var sheets={};SHEETS.forEach(function(sheet){sheets[sheet.key]={csv:raw[sheet.key],sourceTime:times[sheet.key]};});
+    var archiveInput={sourceSheetId:TRIP_SOURCE_SHEET_ID,trip:{name:candidate.db.cfg.tripname,
+      startDate:candidate.db.cfg.startdate,endDate:candidate.db.cfg.enddate},
+      archivedAt:timestampDate(Date.now()).toISOString(),sheets:sheets,personal:personal};
+    var policyInput={online:true,sheetsComplete:true,queueCount:pending.queueCount,
+      bridgeCounts:pending.bridgeCounts,formalBalances:formalBalances,pendingClaims:handshake.pending.length};
+    return tripSha256(JSON.stringify({raw:raw,personal:personal,pending:pending})).then(function(digest){
+      return {policyInput:policyInput,archiveInput:archiveInput,digest:digest,personalJson:JSON.stringify(personal)};
+    });
+  });
+}
+function tripFlow(){
+  if(!tripFlowClient)tripFlowClient=TripLifecycleFlow.create({storage:localStorage,photoStore:shoppingPhotoStore,
+    preflight:freshEndPreflight,archive:TripArchive,drive:tripDrive(),localPending:tripLocalPending,
+    localPersonalState:tripPersonalArchiveState});
+  return tripFlowClient;
+}
+function tripEndStatus(message,error){
+  var target=document.getElementById('tripEndStatus');
+  if(target){target.textContent=message||'';target.className='trip-lifecycle-status'+(error?' error':'');}
+}
+function resetTripRecords(){
+  if(!confirm('重置本裝置的打卡、下一站、想逛、採買、個人帳與旅途紀錄？團體帳及待同步資料會保留。'))return;
+  if(!confirm('再次確認：這些個人紀錄無法復原。'))return;
+  tripEndStatus('正在重置紀錄…');
+  return tripFlow().reset().then(function(){renderAll();openSettings('data');tripEndStatus('個人紀錄已重置。');},function(error){tripEndStatus('重置失敗：'+String(error&&error.message||error),true);});
+}
+function beginTripEnd(){
+  tripEndStatus('正在重新下載八張工作表並檢查帳務…');
+  var choices=document.getElementById('tripEndChoices');if(choices)choices.innerHTML='';
+  return freshEndPreflight().then(function(result){
+    var decision=TripLifecycle.evaluateEndPreflight(result.policyInput);
+    if(!decision.ok)throw new Error('無法清除：'+decision.reasons.join('、'));
+    tripEndStatus('預檢通過。仍無法得知其他旅伴手機的離線紀錄，且 CSV 發布可能延遲數分鐘。要保存到過往旅程嗎？');
+    if(choices)choices.innerHTML='<button type="button" class="btn" onclick="finishTripEnd(true)">保存到過往旅程</button><button type="button" class="btn ghost" onclick="finishTripEnd(false)">不保存，直接清除</button>';
+  }).catch(function(error){tripEndStatus('無法清除：'+String(error&&error.message||error),true);});
+}
+function finishTripEnd(saveArchive){
+  if(!saveArchive){
+    if(!confirm('不保存到過往旅程？本裝置的旅程資料將永久清除。'))return;
+    if(!confirm('最後確認：清除後目前無法在此版本連接新旅程。'))return;
+  }
+  var choices=document.getElementById('tripEndChoices');if(choices)choices.innerHTML='';
+  tripEndStatus(saveArchive?'正在授權、封存並再次驗證帳務…':'正在再次驗證帳務並清除…');
+  return tripFlow().end({saveArchive:saveArchive}).then(function(){closeSettings();renderInactiveHome();},function(error){
+    if(TripLifecycle.readState(localStorage).mode!=='active'){
+      closeSettings();renderInactiveHome('本機清理未完成：'+String(error&&error.message||error));
+    }else tripEndStatus('操作未完成，原旅程已保留：'+String(error&&error.message||error),true);
+  });
+}
+var pastTripsUi={status:'idle',account:null,archives:[],selected:null,notes:[],noteDraft:null,noteSaving:false,error:''};
+var pastTripsRequestId=0,pastTripsSelectionId=0;
+function pastTripSheetLabel(key){
+  return {itin:'行程',places:'地點',rest:'餐廳',shop:'購物資料',hotels:'住宿',exp:'旅程費用',cfg:'旅程設定',ledger:'團體分帳'}[key]||key;
+}
+function pastTripErrorLabel(error){
+  var message=String(error&&error.message||error||'');
+  if(/401|authorization expired/i.test(message))return 'Google 授權已過期，請重新登入並重試';
+  if(/checksum/i.test(message))return '封存完整性校驗失敗，內容可能已損壞';
+  if(/format|version/i.test(message))return '封存格式不支援';
+  if(/incomplete|required|invalid/i.test(message))return '封存資料不完整';
+  return message||'未知錯誤';
+}
+function pastTripFieldLabel(key){
+  return {id:'紀錄 ID',name:'品名',detail:'明細',time:'日期／時間',member:'成員',category:'類別',
+    amountJpy:'日幣',amountTwd:'台幣',note:'備註',payMethod:'支付方式',isProxy:'代購',proxyTarget:'代購對象',
+    inputCurrency:'輸入幣別',isTaxFree:'免稅',priceMode:'價格模式',taxRate:'稅率',couponAmount:'折扣',
+    batchId:'收據 ID',storeName:'店家',replacesRecordId:'更正來源',unit:'單位',legacyQtyText:'原數量',
+    allocations:'採買分配／記帳關聯',allocationId:'分配 ID',target:'對象',quantity:'數量',ledgerLinks:'記帳關聯',
+    recordId:'帳務 ID',track:'帳本',stopRef:'行程站點',done:'已購買',createdAt:'建立時間',completedAt:'完成時間',
+    splitGroupId:'分配群組',participants:'分帳成員',type:'紀錄類型',status:'狀態',text:'內容',kind:'類型',
+    updatedAt:'更新時間',targetId:'對應紀錄',currency:'幣別',amount:'金額'}[key]||key;
+}
+function pastTripFieldValue(value){
+  if(value===true)return '是';if(value===false)return '否';
+  if(Array.isArray(value))return value.map(pastTripFieldValue).join('；');
+  if(value&&typeof value==='object')return Object.keys(value).map(function(key){return pastTripFieldLabel(key)+'：'+pastTripFieldValue(value[key]);}).join(' · ');
+  return value==null?'':String(value);
+}
+function pastTripObjectCards(records){
+  if(!Array.isArray(records)||!records.length)return '<p class="settings-help">沒有紀錄</p>';
+  return records.map(function(record){
+    return '<article class="past-trip-record"><dl>'+Object.keys(record||{}).filter(function(key){
+      return key!=='photoId'&&record[key]!==''&&record[key]!=null&&(!Array.isArray(record[key])||record[key].length);
+    }).map(function(key){return '<div><dt>'+escapeHtml(pastTripFieldLabel(key))+'</dt><dd>'+escapeHtml(pastTripFieldValue(record[key]))+'</dd></div>';}).join('')+'</dl></article>';
+  }).join('');
+}
+function renderPastTripSnapshot(archive){
+  var itinerary=buildItin(parseCSV(archive.sheets.itin.csv)),personal=archive.personal;
+  var days=itinerary.days.map(function(day,index){
+    return '<h4>DAY '+(index+1)+' · '+escapeHtml(day.date)+' '+escapeHtml(day.dow)+'</h4>'+day.items.map(function(item){
+      return '<article class="past-trip-record"><strong>'+escapeHtml([item.time,item.act,item.place].filter(Boolean).join(' · '))+'</strong>'+
+        (personal.checks&&personal.checks[item.id]?'<span class="settings-help"> · 已打卡</span>':'')+
+        (item.move?'<p>'+escapeHtml(item.move)+'</p>':'')+(item.note?'<p>'+escapeHtml(item.note)+'</p>':'')+'</article>';
+    }).join('');
+  }).join('');
+  var shared=[];try{shared=parseLedgerSheetCsv(archive.sheets.ledger.csv);}catch(error){}
+  return '<div class="past-trip-readable"><p class="settings-help">封存成員：'+escapeHtml(personal.member||'未選擇')+' · 採買 '+personal.shoppingItems.length+' 筆 · 個人帳 '+personal.personalLedger.length+' 筆</p>'+
+    '<details open><summary>行程紀錄</summary>'+(days||'<p class="settings-help">沒有行程紀錄</p>')+'</details>'+
+    '<details><summary>採買紀錄</summary>'+pastTripObjectCards(personal.shoppingItems)+'</details>'+
+    '<details><summary>個人帳務</summary>'+pastTripObjectCards(personal.personalLedger)+'</details>'+
+    '<details><summary>團體分帳紀錄</summary><p class="settings-help">保存當時的完整紀錄，包含更正、刪除與結算紀錄。</p>'+pastTripObjectCards(shared)+'</details>'+
+    '<details><summary>旅途紀錄</summary>'+pastTripObjectCards(personal.travelNotes)+'</details></div>';
+}
+function renderPastTripsPage(){
+  var state=pastTripsUi,body='';
+  if(state.status==='loading')body='<p class="settings-help">正在從 Google Drive 讀取過往旅程…</p>';
+  else if(state.status==='error')body='<p class="trip-lifecycle-status error" role="alert">'+escapeHtml(state.error||'無法讀取過往旅程')+'</p><button type="button" class="btn" onclick="loadPastTrips()">重新登入並重試</button>';
+  else if(state.status==='ready'){
+    body='<p class="settings-help">目前帳號：'+escapeHtml(state.account&&state.account.email||'未知')+'。封存唯讀；回顧筆記只能新增。</p>';
+    if(!state.archives.length)body+='<p class="settings-help">尚無過往旅程。</p>';
+    else body+='<div class="trip-lifecycle-actions">'+state.archives.map(function(item,index){
+      return item.error?'<div class="trip-lifecycle-status error">封存 '+escapeHtml(item.name||item.fileId)+' 無法讀取：'+escapeHtml(item.error)+'</div>':
+        '<button type="button" class="btn ghost" onclick="selectPastTrip('+index+')">'+escapeHtml(item.archive.trip.name)+' · '+escapeHtml(item.archive.trip.startDate)+'</button>';
+    }).join('')+'</div>';
+    if(state.selected!==null&&state.archives[state.selected]&&state.archives[state.selected].archive){
+      var archive=state.archives[state.selected].archive;
+      body+='<section class="settings-section"><h2>'+escapeHtml(archive.trip.name)+'</h2><p class="settings-help">'+escapeHtml(archive.trip.startDate)+' ～ '+escapeHtml(archive.trip.endDate)+' · 封存日期 '+escapeHtml(archive.archivedAt)+'</p>';
+      body+=renderPastTripSnapshot(archive);
+      body+='<details><summary>完整原始資料</summary>'+TripArchive.SHEETS.map(function(key){return '<details><summary>'+escapeHtml(pastTripSheetLabel(key))+'</summary><pre class="past-trip-raw">'+escapeHtml(archive.sheets[key].csv)+'</pre></details>';}).join('')+
+        '<details><summary>個人紀錄與設定</summary><pre class="past-trip-raw">'+escapeHtml(JSON.stringify(archive.personal,null,2))+'</pre></details></details>';
+      body+='<h3>回顧筆記</h3><div class="past-trip-notes">'+(state.notes.length?state.notes.map(function(note){return '<article class="settings-section"><p>'+escapeHtml(note.text)+'</p><small>'+escapeHtml(note.createdAt)+'</small></article>';}).join(''):'<p class="settings-help">尚無回顧筆記</p>')+'</div>';
+      body+='<textarea id="pastTripNoteText" class="state-box" maxlength="2000" placeholder="寫下這趟旅行的回顧…"'+(state.noteSaving||state.notesLoading?' disabled':'')+'>'+escapeHtml(state.noteDraft&&state.noteDraft.archiveId===archive.archiveId?state.noteDraft.text:'')+'</textarea><button type="button" class="btn" onclick="addPastTripNote()"'+(state.noteSaving||state.notesLoading?' disabled':'')+'>新增回顧筆記</button><div id="pastTripNoteStatus" class="trip-lifecycle-status" role="status"></div></section>';
+    }
+  }else body='<p class="settings-help">按下方按鈕連接自己的 Google 帳號。</p><button type="button" class="btn" onclick="loadPastTrips()">連接 Google Drive</button>';
+  return renderSettingsHeader('過往旅程',false,'data','資料與版本')+'<div class="settings-section">'+body+'</div>';
+}
+function openPastTrips(){
+  openSettings('past');
+  loadPastTrips();
+}
+function loadPastTrips(){
+  var requestId=++pastTripsRequestId;
+  pastTripsUi={status:'loading',account:null,archives:[],selected:null,notes:[],noteDraft:null,noteSaving:false,error:''};
+  rerenderOpenSettingsPage();
+  if(!navigator.onLine){pastTripsUi.status='error';pastTripsUi.error='目前離線，無法讀取過往旅程；連線後請重試。';rerenderOpenSettingsPage();return Promise.resolve();}
+  return tripDrive().connect().then(function(account){
+    if(requestId!==pastTripsRequestId)throw new Error('stale-past-trip-request');
+    pastTripsUi.account=account;
+    return tripDrive().listComplete();
+  }).then(function(files){
+    if(requestId!==pastTripsRequestId)throw new Error('stale-past-trip-request');
+    return Promise.all(files.map(function(file){return tripDrive().readArchive(file.id).then(function(text){return TripArchive.parseVerified(text);}).then(function(archive){
+      if(archive.archiveId!==file.appProperties.trippilot_archive_id)throw new Error('封存身分與 Drive 標記不一致');
+      return {fileId:file.id,archive:archive};
+    },function(error){return {fileId:file.id,name:file.name,error:pastTripErrorLabel(error)};});}));
+  }).then(function(archives){
+    if(requestId!==pastTripsRequestId)return;
+    pastTripsUi.archives=archives;pastTripsUi.status='ready';rerenderOpenSettingsPage();
+  }).catch(function(error){
+    if(requestId!==pastTripsRequestId)return;
+    pastTripsUi={status:'error',account:null,archives:[],selected:null,notes:[],noteDraft:null,noteSaving:false,error:pastTripErrorLabel(error)};
+    rerenderOpenSettingsPage();
+  });
+}
+function selectPastTrip(index,rethrowError){
+  var item=pastTripsUi.archives[index];if(!item||!item.archive)return;
+  if(pastTripsUi.selected===index&&!rethrowError&&!pastTripsUi.notesError)return Promise.resolve();
+  var requestId=pastTripsRequestId;
+  if(pastTripsUi.selected!==index){pastTripsSelectionId++;pastTripsUi.noteDraft=null;pastTripsUi.noteSaving=false;}
+  var selectionId=pastTripsSelectionId;
+  pastTripsUi.selected=index;pastTripsUi.notes=[];pastTripsUi.notesLoading=true;pastTripsUi.notesError=false;rerenderOpenSettingsPage();
+  return tripDrive().listNotes(item.archive.archiveId).then(function(files){
+    if(requestId!==pastTripsRequestId||selectionId!==pastTripsSelectionId||pastTripsUi.selected!==index)return;
+    pastTripsUi.notes=files.map(function(file){var note=JSON.parse(file.content);return {id:String(note.id||''),text:String(note.text||''),createdAt:String(note.createdAt||file.createdTime||'')};})
+      .sort(function(a,b){return a.createdAt.localeCompare(b.createdAt);});
+    pastTripsUi.notesLoading=false;
+    rerenderOpenSettingsPage();
+  }).catch(function(error){
+    if(requestId!==pastTripsRequestId||selectionId!==pastTripsSelectionId)return;
+    pastTripsUi.notesLoading=false;pastTripsUi.notesError=true;rerenderOpenSettingsPage();
+    var target=document.getElementById('pastTripNoteStatus');if(target)target.textContent='回顧筆記讀取失敗：'+String(error&&error.message||error);
+    if(rethrowError)throw error;
+  });
+}
+function addPastTripNote(){
+  if(pastTripsUi.noteSaving||pastTripsUi.notesLoading)return;
+  var item=pastTripsUi.archives[pastTripsUi.selected],input=document.getElementById('pastTripNoteText');
+  var text=input&&input.value.trim();if(!item||!item.archive||!text)return;
+  var note=pastTripsUi.noteDraft;
+  if(!note||note.text!==text||note.archiveId!==item.archive.archiveId){
+    note={id:'note-'+Date.now()+'-'+Math.floor(Math.random()*0x100000000).toString(36),text:text,createdAt:timestampDate(Date.now()).toISOString(),archiveId:item.archive.archiveId};
+    pastTripsUi.noteDraft=note;
+  }
+  var requestId=pastTripsRequestId,selectionId=pastTripsSelectionId,index=pastTripsUi.selected,accountId=pastTripsUi.account&&pastTripsUi.account.accountId;
+  function stillCurrent(){return requestId===pastTripsRequestId&&selectionId===pastTripsSelectionId&&settingsUiState.page==='past'&&
+    pastTripsUi.account&&pastTripsUi.account.accountId===accountId&&pastTripsUi.selected===index&&
+    pastTripsUi.archives[index]&&pastTripsUi.archives[index].archive&&pastTripsUi.archives[index].archive.archiveId===note.archiveId;}
+  pastTripsUi.noteSaving=true;
+  if(input)input.disabled=true;
+  var button=document.querySelector('#settingsOverlay button[onclick="addPastTripNote()"]');if(button)button.disabled=true;
+  var status=document.getElementById('pastTripNoteStatus');if(status)status.textContent='正在儲存筆記…';
+  return tripDrive().appendNote(item.archive.archiveId,note).then(function(){
+    if(!stillCurrent())return;
+    return selectPastTrip(index,true).then(function(){
+      if(!stillCurrent())return;
+      if(!pastTripsUi.notes.some(function(saved){return saved.id===note.id&&saved.text===note.text&&saved.createdAt===note.createdAt;}))throw new Error('筆記讀回內容不一致');
+      pastTripsUi.noteDraft=null;pastTripsUi.noteSaving=false;rerenderOpenSettingsPage();
+    });
+  }).catch(function(error){
+    if(!stillCurrent())return;
+    pastTripsUi.noteSaving=false;rerenderOpenSettingsPage();
+    var target=document.getElementById('pastTripNoteStatus');if(target)target.textContent='筆記未儲存：'+String(error&&error.message||error);
+  });
+}
 function renderSettingsDataPage(){
-  return renderSettingsHeader('資料與版本',false)+renderSettingsDataHealth()+'<div class="settings-section"><h3>本機資料備份／還原</h3><div class="settings-help">換手機、重裝 App 或清除瀏覽器資料前使用。備份包含主題、採買單位與旅途紀錄；還原會覆蓋目前裝置上的個人資料及待同步記帳。照片附件只保存在本裝置，不包含於備份。</div><div class="settings-actions"><button class="btn ghost" onclick="exportPersonalState()">複製備份 JSON</button><button class="btn" onclick="openPersonalStateRestore()">從 JSON 還原</button></div></div><div class="settings-section"><div class="settings-version-row"><b>版本</b><span>SW '+escapeHtml(appVersionLabel())+'</span></div><h3>最近更新</h3>'+renderAppReleaseNotes()+'</div>';
+  var active=TripLifecycle.readState(localStorage).mode==='active';
+  var version='<div class="settings-section"><div class="settings-version-row"><b>版本</b><span>SW '+escapeHtml(appVersionLabel())+'</span></div>';
+  var lifecycle=active?'<div class="settings-section"><h3>目前旅程</h3><div class="settings-help">重置只清除本裝置的個人紀錄；清除會斷開目前旅程，無法在此版本重新連接。團體帳未結清或待同步時不可清除。</div><div class="trip-lifecycle-actions"><button type="button" class="btn ghost" onclick="resetTripRecords()">重置紀錄</button><button type="button" class="btn" onclick="beginTripEnd()">清除並打包旅程</button></div><div id="tripEndStatus" class="trip-lifecycle-status" role="status" aria-live="polite"></div><div id="tripEndChoices" class="trip-lifecycle-actions"></div></div>':'';
+  var history='<div class="settings-section"><h3>過往旅程</h3><div class="settings-help">以同一 Google 帳號查看儲存在個人 Drive 的唯讀旅程。</div><button type="button" class="btn ghost" onclick="openPastTrips()">過往旅程</button></div>';
+  if(!active)return renderSettingsHeader('資料與版本',false)+history+version+'</div>';
+  return renderSettingsHeader('資料與版本',false)+lifecycle+history+renderSettingsDataHealth()+'<div class="settings-section"><h3>本機資料備份／還原</h3><div class="settings-help">換手機、重裝 App 或清除瀏覽器資料前使用。備份包含主題、採買單位與旅途紀錄；還原會覆蓋目前裝置上的個人資料及待同步記帳。照片附件只保存在本裝置，不包含於備份。</div><div class="settings-actions"><button class="btn ghost" onclick="exportPersonalState()">複製備份 JSON</button><button class="btn" onclick="openPersonalStateRestore()">從 JSON 還原</button></div></div>'+version+'<h3>最近更新</h3>'+renderAppReleaseNotes()+'</div>';
 }
 function renderSettingsPage(page,ledgerSettings,settingsError){
   if(page==='theme')return renderSettingsThemePage();
@@ -9231,6 +9549,7 @@ function renderSettingsPage(page,ledgerSettings,settingsError){
   if(page==='options-category'||page==='options-pay-method'||page==='options-shopping-unit')return renderSettingsOptionEditorPage(page);
   if(page==='storage')return renderSettingsStoragePage();
   if(page==='data')return renderSettingsDataPage();
+  if(page==='past')return renderPastTripsPage();
   if(page==='test-mode')return renderSettingsTestModePage();
   return renderSettingsRoot(ledgerSettings);
 }
@@ -9273,6 +9592,7 @@ function parseLedgerSheetCsv(csvText){
 }
 function ledgerFastPullUrl(after){return LEDGER_POST_URL+'?action=ledger&after='+encodeURIComponent(String(after));}
 function ledgerFastPull(reason){
+  if(TripLifecycle.readState(localStorage).mode!=='active')return Promise.resolve({ok:false,newRecords:0,inactive:true});
   if(typeof fetch!=='function')return Promise.resolve({ok:false,newRecords:0});
   var startedAt=Date.now(),after=Number(ledgerFastPullState.after)||0;
   var timeout=new Promise(function(_,reject){setTimeout(function(){reject(new Error('ledger 增量讀取逾時'));},FETCH_TIMEOUT);});
@@ -9281,6 +9601,7 @@ function ledgerFastPull(reason){
     return response.text();
   });
   return Promise.race([request,timeout]).then(function(text){
+    if(TripLifecycle.readState(localStorage).mode!=='active')return {ok:false,newRecords:0,inactive:true};
     var payload=readLedgerFastPullResponse(text);
     if(!payload.ok){
       // 非 JSON(配額用盡／部署失效／權限錯誤的 HTML 錯誤頁)或 ok:false → 降級回 CSV。
@@ -9327,10 +9648,12 @@ var ledgerFastPullController=createLedgerFastPullController({
 });
 /* 面板開關、簡易模式切換、bridge 清空與否,都只透過這個入口重新決定 polling 節奏。 */
 function ledgerFastPullLifecycle(){
+  if(TripLifecycle.readState(localStorage).mode!=='active'){ledgerFastPullController.stop();return;}
   if(ledgerSettlementPanelOpen()||ledgerDeliveryBridgeHasRecords())ledgerFastPullController.start();
   else ledgerFastPullController.stop();
 }
 function triggerLedgerFastPull(reason){
+  if(TripLifecycle.readState(localStorage).mode!=='active')return Promise.resolve({ok:false,newRecords:0,inactive:true});
   var work=ledgerFastPullController.trigger(reason);
   ledgerFastPullLifecycle();
   return work;
@@ -9358,7 +9681,7 @@ function refreshLedgerSyncPanel(){
   if(body)body.outerHTML=renderLedgerSyncPanelBody();
 }
 function retryLedgerQueueSync(){return ledgerSyncCoordinator.flush('manual');}
-function autoRetryLedgerQueue(trigger){return ledgerSyncCoordinator.flush(trigger||'auto');}
+function autoRetryLedgerQueue(trigger){if(TripLifecycle.readState(localStorage).mode!=='active')return Promise.resolve({ok:false,inactive:true});return ledgerSyncCoordinator.flush(trigger||'auto');}
 function updateLedgerPendingStatus(){
   var node=document.getElementById('ledgerPendingStatus'), count=ledgerRepository.pendingCount();
   if(!node)return;
@@ -11123,6 +11446,26 @@ function renderCurrent(v){
   }
 }
 function renderAll(){ renderDaybar(); renderCurrent(); }
+function renderInactiveHome(message){
+  if(document.getElementById('settingsOverlay'))closeSettings();
+  if(typeof shoppingUiWorkflow!=='undefined')shoppingUiWorkflow.dispatch({type:'clear-form',cleanup:true});
+  if(typeof shoppingPhotoRepairState!=='undefined')closeShoppingPhotoRepair(false);
+  document.querySelectorAll('[id$="Overlay"],[id$="Dialog"],[id$="Sheet"],[id$="Popover"]').forEach(function(layer){layer.remove();});
+  document.body.classList.add('trip-inactive');
+  RAW={};SRC={};CURRENT_SNAPSHOT=null;
+  DB={places:{},placeList:[],rest:[],shop:[],hotels:[],expCMS:[],expMembers:[],ledger:[],cfg:{},trip:null};
+  document.querySelectorAll('.view:not(#view-today)').forEach(function(view){view.innerHTML='';});
+  var title=document.getElementById('brandTitle');if(title)title.textContent='TripPilot';
+  var today=document.getElementById('view-today');
+  var pending=TripLifecycle.readState(localStorage).mode==='cleanup-pending';
+  if(today)today.innerHTML='<div class="trip-inactive-card"><h1>目前沒有進行中的旅程</h1><p>'+escapeHtml(message||'這部手機的舊旅程已清除。若先前封存，可到過往旅程查看。')+'</p>'+(pending?'<button type="button" class="btn" onclick="retryTripCleanup()">重試本機清理</button>':'')+'<button type="button" class="btn ghost" onclick="openSettings(\'data\')">過往旅程</button></div>';
+  var tabs=document.getElementById('tripTabs');if(tabs)tabs.innerHTML='';
+  var daybar=document.getElementById('daybar');if(daybar)daybar.innerHTML='';
+  if(typeof ledgerFastPullController!=='undefined')ledgerFastPullController.stop();
+}
+function retryTripCleanup(){
+  return tripFlow().resumeCleanup().then(function(){renderInactiveHome();},function(error){renderInactiveHome('本機清理未完成：'+String(error&&error.message||error));});
+}
 function copyBuiltinRecoveryDiagnostics(){
   var state=builtinAssetState();
   copyText(['Trip Pilot 啟動診斷','App：'+appVersionLabel(),'BUILTIN：'+(state.version||'未載入'),'原因：'+(state.reason||'未知')].join('\n'),'啟動診斷');
@@ -11135,6 +11478,14 @@ function renderBuiltinRecovery(error){
   target.innerHTML='<div class="empty-state" id="builtinRecovery"><strong>資料資產無法載入</strong><br><small>目前沒有可安全使用的本機行程資料，請在連線後重新載入。</small><div class="empty-actions"><button class="btn" onclick="location.reload()">重新載入</button><button class="btn" onclick="copyBuiltinRecoveryDiagnostics()">複製診斷資訊</button></div></div>';
 }
 function init(){
+  var lifecycleState=TripLifecycle.readState(localStorage);
+  if(lifecycleState.mode!=='active'){
+    renderInactiveHome(lifecycleState.mode==='cleanup-pending'?'本機清理尚未完成，請稍候；若失敗可重試。':'這部手機的舊旅程已清除。');
+    if(lifecycleState.mode==='cleanup-pending')tripFlow().resumeCleanup().then(function(){renderInactiveHome();},function(error){
+      renderInactiveHome('本機清理未完成：'+String(error&&error.message||error));
+    });
+    return;
+  }
   var ok=false,bootError=null;
   try{ok=bootLocal();}catch(error){bootError=error;}
   if(ok){
@@ -11163,12 +11514,27 @@ window.addEventListener('scroll',function(){
 });
 /* 回前景／恢復連線／pageshow:補送離線佇列,並立即拉一次 ledger 增量後重啟對應 polling 節奏。
    hidden 或 offline 期間 5／15／60／30 秒節奏一律暫停(見 createLedgerFastPullController)。 */
-window.addEventListener('online',function(){autoRetryLedgerQueue('online');ledgerFastPullController.resume('online');});
+window.addEventListener('online',function(){if(TripLifecycle.readState(localStorage).mode!=='active')return;autoRetryLedgerQueue('online');ledgerFastPullController.resume('online');});
 document.addEventListener('visibilitychange',function(){
+  if(TripLifecycle.readState(localStorage).mode!=='active')return;
   if(document.hidden){ledgerFastPullController.reschedule();return;}
   autoRetryLedgerQueue('foreground');ledgerFastPullController.resume('visibilitychange');
 });
-window.addEventListener('pageshow',function(){autoRetryLedgerQueue('pageshow');ledgerFastPullController.resume('pageshow');});
+window.addEventListener('pageshow',function(){if(TripLifecycle.readState(localStorage).mode!=='active'){renderInactiveHome();return;}autoRetryLedgerQueue('pageshow');ledgerFastPullController.resume('pageshow');});
+window.addEventListener('storage',function(event){
+  if(event.key!=='trip_lifecycle_state')return;
+  if(TripLifecycle.readState(localStorage).mode!=='active')renderInactiveHome();
+});
+function guardTripLifecycleInteraction(event){
+  var active=TripLifecycle.readState(localStorage).mode==='active',locked=false;
+  if(active){
+    try{var lock=JSON.parse(localStorage.getItem('trip_lifecycle_lock')||'null');locked=!!(lock&&lock.expiresAt>Date.now());}catch(error){}
+    if(!locked)return;
+    if(event.target&&event.target.closest&&event.target.closest('[onclick="closeSettings()"]'))return;
+  }else if(event.target&&event.target.closest&&event.target.closest('.trip-inactive-card,#settingsOverlay'))return;
+  event.preventDefault();event.stopImmediatePropagation();
+}
+['click','input','change','submit'].forEach(function(type){document.addEventListener(type,guardTripLifecycleInteraction,true);});
 window.addEventListener('offline',function(){ledgerFastPullController.reschedule();});
 function isTimeSimulationActive(){ var s=lsGet('trip_time_simulation',null); return !!(s&&((s.mode==='offset'&&typeof s.offsetMs==='number')||(s.mode==='custom'&&s.value))); }
 function updateSimulationMarker(){ var on=isTimeSimulationActive(),logo=document.getElementById('diagnosticBadge'),marker=document.getElementById('simMarker'); if(logo) logo.classList.toggle('simulating',on); if(marker) marker.classList.toggle('on',on); }

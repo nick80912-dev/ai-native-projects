@@ -16,8 +16,8 @@
   }
   function createClient(options){
     if(!options||typeof options.fetch!=='function'||typeof options.requestAccessToken!=='function')throw new Error('Drive dependencies are required');
-    var fetchFn=options.fetch,token=null,expiresAt=0,currentAccount=null,folderId=null;
-    function forget(){token=null;expiresAt=0;currentAccount=null;folderId=null;}
+    var fetchFn=options.fetch,token=null,expiresAt=0,currentAccount=null,folderId=null,generation=0,noteFlights={};
+    function forget(){generation++;token=null;expiresAt=0;currentAccount=null;folderId=null;}
     function validToken(){
       if(!token||Date.now()>=expiresAt){forget();throw new Error('Google authorization expired; connect again');}
       return token;
@@ -39,13 +39,16 @@
     function json(url,settings,overrideToken){return request(url,settings,overrideToken).then(function(response){return response.json();});}
     function connect(){
       if(!options.clientId) return Promise.reject(new Error('Google OAuth client ID is not configured'));
+      var requestGeneration=++generation;
       var grantRequest;
       try{grantRequest=options.requestAccessToken({clientId:options.clientId,scope:SCOPE});}
       catch(error){return Promise.reject(error);}
       return Promise.resolve(grantRequest).then(function(grant){
+        if(requestGeneration!==generation)throw new Error('Google authorization was cancelled by disconnect');
         if(!grant||typeof grant.access_token!=='string'||!grant.access_token)throw new Error('Google authorization was cancelled');
         var newToken=grant.access_token;
         return json(BASE+'/about?fields='+encodeURIComponent('user(emailAddress,permissionId)'),null,newToken).then(function(about){
+          if(requestGeneration!==generation)throw new Error('Google authorization was cancelled by disconnect');
           var user=about&&about.user;
           if(!user||!user.permissionId||!user.emailAddress)throw new Error('Google account identity is unavailable');
           if(currentAccount&&currentAccount.accountId!==user.permissionId){forget();throw new Error('Google account switched during this operation');}
@@ -100,12 +103,14 @@
     }
     function upsertPrepared(archiveId,content){
       if(typeof archiveId!=='string'||!archiveId||typeof content!=='string'||!content) return Promise.reject(new Error('Archive upload input is incomplete'));
+      var parsed;try{parsed=JSON.parse(content);}catch(error){return Promise.reject(new Error('Archive upload JSON is invalid'));}
+      if(parsed.archiveId!==archiveId||!parsed.sourceSheetId)return Promise.reject(new Error('Archive provenance is incomplete'));
       return list({trippilot_kind:'archive',trippilot_archive_id:archiveId}).then(function(found){
         var existing=found[0];
         if(existing&&existing.appProperties&&existing.appProperties.trippilot_status==='complete')return existing.id;
         return ensureFolder().then(function(parent){
           var metadata={name:'TripPilot-'+archiveId+'.json',mimeType:'application/json',
-            appProperties:{trippilot_kind:'archive',trippilot_archive_id:archiveId,trippilot_status:'prepared',trippilot_format:'1'}};
+            appProperties:{trippilot_kind:'archive',trippilot_archive_id:archiveId,trippilot_source_sheet_id:String(parsed.sourceSheetId),trippilot_status:'prepared',trippilot_format:'1'}};
           if(!existing)metadata.parents=[parent];
           return uploadJson(existing,metadata,content);
         });
@@ -132,12 +137,17 @@
     function listComplete(){return list({trippilot_kind:'archive',trippilot_status:'complete'}).then(function(found){
       return found.filter(function(file){return file.appProperties&&file.appProperties.trippilot_status==='complete';});
     });}
-    function appendNote(archiveId,note){
+    function appendNoteOnce(archiveId,note){
       if(!archiveId||!note||!note.id||typeof note.text!=='string'||!note.createdAt)return Promise.reject(new Error('Archive note is incomplete'));
       var properties={trippilot_kind:'note',trippilot_archive_id:String(archiveId),trippilot_note_id:String(note.id)};
+      function verifyNote(id){return readArchive(id).then(function(content){
+        var saved;try{saved=JSON.parse(content);}catch(error){throw new Error('Archive note readback is invalid');}
+        if(String(saved.id)!==String(note.id)||saved.text!==note.text||String(saved.createdAt)!==String(note.createdAt))throw new Error('Archive note readback does not match');
+        return id;
+      });}
       return list(properties).then(function(found){
         var existing=found[0];
-        if(existing&&existing.appProperties&&existing.appProperties.trippilot_status==='complete')return existing.id;
+        if(existing&&existing.appProperties&&existing.appProperties.trippilot_status==='complete')return verifyNote(existing.id);
         return ensureFolder().then(function(parent){
           var metadata={name:'TripPilot-note-'+note.id+'.json',mimeType:'application/json',appProperties:{
             trippilot_kind:'note',trippilot_archive_id:String(archiveId),trippilot_note_id:String(note.id),trippilot_status:'prepared'
@@ -149,10 +159,17 @@
             appProperties:{trippilot_kind:'note',trippilot_archive_id:String(archiveId),trippilot_note_id:String(note.id),trippilot_status:'complete'}
           })}).then(function(updated){
             if(!updated||!updated.appProperties||updated.appProperties.trippilot_status!=='complete')throw new Error('Archive note was not confirmed');
-            return id;
+            return verifyNote(id);
           });
         });
       });
+    }
+    function appendNote(archiveId,note){
+      var key=String(archiveId)+'\u0000'+String(note&&note.id);
+      if(noteFlights[key])return noteFlights[key];
+      var pending=appendNoteOnce(archiveId,note);
+      noteFlights[key]=pending;
+      return pending.then(function(value){delete noteFlights[key];return value;},function(error){delete noteFlights[key];throw error;});
     }
     function listNotes(archiveId){
       if(!archiveId)return Promise.reject(new Error('Archive ID is required'));

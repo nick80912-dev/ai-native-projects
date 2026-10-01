@@ -82,7 +82,7 @@ function fakeServer(){
   assert.deepStrictEqual(client.account(),{accountId:'user-one',email:'one@example.com'});
   assert.deepStrictEqual(scopes,['https://www.googleapis.com/auth/drive.file']);
 
-  const archiveText='{"archiveId":"archive-1"}';
+  const archiveText='{"archiveId":"archive-1","sourceSheetId":"sheet-1"}';
   const first=await client.upsertPrepared('archive-1',archiveText);
   const retry=await client.upsertPrepared('archive-1',archiveText);
   assert.strictEqual(first,retry,'same archive ID reuses the prepared file');
@@ -125,6 +125,37 @@ function fakeServer(){
   await expired.connect();
   await assert.rejects(expired.listComplete(),/expired|authorization/i,'expired token must reject through the Promise interface');
   assert.strictEqual(expired.account(),null);
+
+  let releaseGrant;
+  const late=TripDrive.createClient({fetch:server.fetch,clientId:'test-client-id',requestAccessToken:function(){
+    return new Promise(function(resolve){releaseGrant=resolve;});
+  }});
+  const lateConnection=late.connect();
+  late.disconnect();
+  releaseGrant({access_token:'token-one',expires_in:3600});
+  await assert.rejects(lateConnection,/cancel|disconnect|stale/i);
+  assert.strictEqual(late.account(),null,'closing the viewer invalidates an outstanding grant');
+
+  const noteServer=fakeServer();
+  const verifiedClient=TripDrive.createClient({fetch:noteServer.fetch,clientId:'test-client-id',requestAccessToken:function(){
+    return Promise.resolve({access_token:'token-one',expires_in:3600});
+  }});
+  await verifiedClient.connect();
+  const duplicate=await Promise.all([verifiedClient.appendNote('archive-2',note),verifiedClient.appendNote('archive-2',note)]);
+  assert.strictEqual(duplicate[0],duplicate[1]);
+  assert.strictEqual(noteServer.files.filter(function(item){return item.appProperties&&item.appProperties.trippilot_kind==='note';}).length,1,'concurrent retry cannot make duplicate files');
+
+  const badReadback=fakeServer();
+  const originalFetch=badReadback.fetch;
+  badReadback.fetch=function(url,settings){
+    if(String(url).indexOf('alt=media')>=0)return Promise.resolve(response(200,'{"id":"wrong","text":"wrong","createdAt":"wrong"}'));
+    return originalFetch(url,settings);
+  };
+  const invalidNoteClient=TripDrive.createClient({fetch:badReadback.fetch,clientId:'test-client-id',requestAccessToken:function(){
+    return Promise.resolve({access_token:'token-one',expires_in:3600});
+  }});
+  await invalidNoteClient.connect();
+  await assert.rejects(invalidNoteClient.appendNote('archive-3',note),/readback|match|verify/i);
 
   console.log('trip Drive repository tests passed');
 })().catch(function(error){console.error(error);process.exitCode=1;});

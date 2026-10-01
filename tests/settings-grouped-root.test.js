@@ -25,6 +25,7 @@ function escapeHtml(value){
    指向的是根頁渲染邏輯,不是 store 或主題系統。 */
 function renderRoot(overrides,ledgerSettings){
   const sandbox = Object.assign({
+    TripLifecycle:{readState:function(){return {mode:'active'};}},localStorage:{},
     escapeHtml:escapeHtml,
     renderSettingsHeader:function(title,isRoot){ return '<HEAD title="'+title+'" root="'+!!isRoot+'">'; },
     getCurrentMember:function(){ return 'Bar'; },

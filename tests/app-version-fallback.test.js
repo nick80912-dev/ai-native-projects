@@ -58,6 +58,7 @@ for (const bad of ['', null, undefined, 0, {}]) {
 
 /* ---- 2. 資料與版本頁在沒有 APP_VERSION 時仍可算出 HTML ---- */
 const dataPage = vm.createContext({
+  TripLifecycle:{readState(){return {mode:'active'};}},localStorage:{},
   escapeHtml(value) { return String(value); },
   renderSettingsHeader(title) { return '<h2>' + title + '</h2>'; },
   renderSettingsDataHealth() { return '<section><h3>資料健康狀態</h3></section>'; },
@@ -76,6 +77,7 @@ assert.ok(markup.includes('資料健康狀態'),'the v88 data-health summary rem
 
 /* 有版本時顯示真實版本 */
 const dataPageOk = vm.createContext({
+  TripLifecycle:{readState(){return {mode:'active'};}},localStorage:{},
   APP_VERSION: 'v99',
   escapeHtml(value) { return String(value); },
   renderSettingsHeader(title) { return '<h2>' + title + '</h2>'; },

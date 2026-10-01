@@ -82,14 +82,37 @@
         if(!decision.ok)throw new Error('Local pending data changed: '+decision.reasons.join(','));
       });
     }
-    function retryArchiveId(){
-      var id=storage.getItem(RETRY_KEY);
-      if(id)return id;
-      id=options.newArchiveId?options.newArchiveId():'archive-'+Date.now()+'-'+Math.floor(Math.random()*0x100000000).toString(36);
-      if(!id)throw new Error('Archive ID is missing');
-      storage.setItem(RETRY_KEY,id);
-      if(storage.getItem(RETRY_KEY)!==id)throw new Error('Archive retry ID did not persist');
-      return id;
+    function retryArchive(first){
+      var previous=null;
+      try{previous=JSON.parse(storage.getItem(RETRY_KEY)||'null');}catch(error){}
+      if(previous&&previous.digest===first.digest&&previous.id&&previous.archivedAt&&previous.sourceTimes)return previous;
+      var id=options.newArchiveId?options.newArchiveId():'archive-'+Date.now()+'-'+Math.floor(Math.random()*0x100000000).toString(36);
+      if(!id||previous&&id===previous.id)throw new Error('A fresh archive ID is required for changed trip data');
+      var sourceTimes={};Object.keys(first.archiveInput.sheets||{}).forEach(function(key){sourceTimes[key]=first.archiveInput.sheets[key].sourceTime;});
+      var next={id:id,digest:first.digest,archivedAt:first.archiveInput.archivedAt,sourceTimes:sourceTimes};
+      var serialized=JSON.stringify(next);storage.setItem(RETRY_KEY,serialized);
+      if(storage.getItem(RETRY_KEY)!==serialized)throw new Error('Archive retry metadata did not persist');
+      return next;
+    }
+    function stableArchiveInput(first,retry){
+      var source=first.archiveInput,copy={},sheets={};
+      Object.keys(source).forEach(function(key){copy[key]=source[key];});
+      Object.keys(source.sheets||{}).forEach(function(key){
+        var sheet=source.sheets[key];sheets[key]={csv:sheet.csv,sourceTime:retry.sourceTimes[key]};
+      });
+      copy.sheets=sheets;copy.archivedAt=retry.archivedAt;copy.archiveId=retry.id;
+      return copy;
+    }
+    function assertFinalLocalState(second){
+      var pending=localPending(),latest={};
+      if(!pending)throw new Error('Local pending data could not be checked');
+      Object.keys(second.policyInput).forEach(function(key){latest[key]=second.policyInput[key];});
+      latest.queueCount=pending.queueCount;latest.bridgeCounts=pending.bridgeCounts;
+      var decision=TripLifecycle.evaluateEndPreflight(latest);
+      if(!decision.ok)throw new Error('Local pending data changed: '+decision.reasons.join(','));
+      if(typeof options.localPersonalState==='function'&&second.personalJson!==JSON.stringify(options.localPersonalState())){
+        throw new Error('Local personal data changed during archive');
+      }
     }
     function sameAccount(expected){
       var current=drive.account();
@@ -110,9 +133,8 @@
           firstResult=first;
           if(!saveArchive)return null;
           sameAccount(expectedAccount);
-          archiveId=retryArchiveId();
-          var inputCopy={};Object.keys(first.archiveInput).forEach(function(key){inputCopy[key]=first.archiveInput[key];});
-          inputCopy.archiveId=archiveId;
+          var retry=retryArchive(first);archiveId=retry.id;
+          var inputCopy=stableArchiveInput(first,retry);
           return archive.serialize(inputCopy).then(function(text){
             uploadedChecksum=JSON.parse(text).checksum;
             return drive.upsertPrepared(archiveId,text);
@@ -135,12 +157,12 @@
             return second;
           });
         }).then(function(second){
-          return checkLocalPending(second.policyInput).then(function(){
-            if(saveArchive)sameAccount(expectedAccount);
-            assertOwned();
-            TripLifecycle.writeState(storage,{mode:'cleanup-pending',archiveId:archiveId});
-            return cleanup();
-          });
+          if(saveArchive)sameAccount(expectedAccount);
+          assertOwned();
+          assertFinalLocalState(second);
+          assertOwned();
+          TripLifecycle.writeState(storage,{mode:'cleanup-pending',archiveId:archiveId});
+          return cleanup();
         });
       });
     }
