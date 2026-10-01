@@ -379,6 +379,29 @@ test('照片健康狀態維持在資料群組並通過子頁路由與三種手�
   expect(pageErrors).toEqual([]);
 });
 
+test('健康狀態原生 toggle 事件尚未送達時立即重繪仍保留操作',async({page})=>{
+  await installOfflineAppNetwork(page);await openApp(page);await waitForSyncToSettle(page);
+  await page.evaluate(()=>openSettings('data'));
+  for(const expected of [true,false,true,false]){
+    const observation=await page.evaluate(()=>{
+      const health=document.querySelector('.settings-data-health');
+      const stateBefore=settingsUiState.dataHealthOpen;
+      health.querySelector('summary').click();
+      const nativeOpen=health.open;
+      rerenderOpenSettingsPage();
+      return {stateBefore,nativeOpen,renderedOpen:document.querySelector('.settings-data-health').open};
+    });
+    expect(observation.nativeOpen).toBe(expected);
+    expect(observation.renderedOpen).toBe(expected);
+    await expect(page.locator('.settings-data-health')).toHaveJSProperty('open',expected);
+  }
+  await page.evaluate(()=>{
+    document.querySelector('.settings-data-health summary').click();
+    closeSettings();openSettings('data');
+  });
+  await expect(page.locator('.settings-data-health')).toHaveJSProperty('open',true);
+});
+
 test('資料健康狀態預設收合，摘要保留警告且支援鍵盤與重繪',async({page})=>{
   const pageErrors=collectPageErrors(page);
   await installOfflineAppNetwork(page);await openApp(page);await waitForSyncToSettle(page);

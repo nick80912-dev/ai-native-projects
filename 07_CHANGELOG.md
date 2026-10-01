@@ -1,5 +1,11 @@
 # 07 版本紀錄
 
+## 2026-10-01 — v139 資料健康收合競態修正（dev candidate）
+
+- v138 遠端 CI `36810889354` 的 browser-qa 218/219，鍵盤收合後立即重繪會再展開；原生 details 先修改 open，再延後送 toggle，render 讀到舊 state。本機原 219/219 與先前審查不視為排除此問題的證據。
+- 新增確定性同一 task summary.click→重繪 RED；v139 在重繪／切頁／關閉前同步讀目前 open，且已移除元件的晚到 toggle 不得覆寫 session state。未修改健康判定、旅程、帳務或 OAuth。
+- 已部署 v138 不覆寫，新增 v139 三件組，v138 byte-lock 加入測試；原核准八表 snapshot 用 generator preview／write／readback 升版本，不取 live Ledger。最終本機 Node **100/100**、Chromium Playwright **220/220**（6.5 分鐘）、四項 gate 與 diff check 全過；獨立複審無 Critical／Important／Minor，另驗快速切頁與 detached toggle。只推 dev，正式站仍 v136；真機驗收不代勾。
+
 ## 2026-10-01 — v138 設定入口與資料健康收合（dev candidate）
 
 - 依 Bar 確認，把「過往旅程」移為設定「資料」群組的獨立子項，介於照片健康狀態與備份／還原／版本；返回設定首頁，清除後首頁也直接進過往旅程。「資料與版本」移除重複的歷史入口。
