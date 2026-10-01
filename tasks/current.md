@@ -51,6 +51,8 @@
 
 ## 📌 現況
 
+v141 發布已由 Bar 核准：透過 `dev → main` PR 合併，G1 本次明確跳過。完整發布前 QA／PR CI 與部署核對進行中；在正式站驗證前，下表仍記錄實際 v140。TP141-a～d 與既有真機項目保持待驗，OAuth Testing 不變。
+
 | 項目 | 值 |
 |---|---|
 | **`origin/main` 原始碼** | **SW v140**；merge commit `e4d4eca`（PR #37） |

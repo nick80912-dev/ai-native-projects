@@ -1,5 +1,12 @@
 # 07 版本紀錄
 
+## 2026-10-01 — v141 正式發布核准（準備中；G1 明確跳過）
+
+- Bar 核准將 v141 由 `dev → main` PR 合併發布，並明確選擇本次跳過 iPhone／Android 實體 PWA 驗收。TP141-a～d、既有旅程封存與 Android BB4 仍保留待驗，不把跳過記為通過。
+- 本次只發布既有 v141 授權重用、取消／逾時與晚到操作防護，不新增功能、不改 Google Cloud 權限、OAuth Testing、備份 v9 或封存 v1。runtime 與 frozen generation 不再修改；回復以 v142 forward bump，不刪 SW。
+- `ccfee1e` 的 dev CI `36874252536` 與 Pages `36874251015` 已 success；測試站三件組 v141、28 個 SHELL 快取及無 pageerror 已核對。發布前完整本機 QA／獨立審查重新執行，合併前要求 exact-head PR CI 全綠；正式部署與 tag 另記實際證據。
+- 發布前新一輪本機 Node **102/102**、Chromium Playwright **227/227**（6.6 分鐘）、三情境 healthCheck／pageerror、SW 換代／離線及四項 gate／diff check 通過。獨立 exact-range 發布審查無 Critical／Important；本輪只增加核准與驗證文件，不改 runtime。
+
 ## 2026-10-01 — v141 過往旅程授權重用與取消／逾時（dev candidate）
 
 - Bar 核准 C 級／Tier 2 範圍，改善過往旅程授權體驗，先交付 dev、不發布 main。已重現關閉設定再進授權計數為 2 的 RED；登入／讀取共用 loading 且無逾時是等待缺失。Google 400 無完整錯誤資料、之後重開成功，本版不聲稱解決該外部 400。
