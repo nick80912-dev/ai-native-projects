@@ -1,6 +1,6 @@
 # CURRENT(現在正在做的)
 
-> 現況基準(2026-10-01):正式站與 `origin/main` 為 v136；`dev` 交付 v137 個人旅程生命週期候選版（runtime `95d82f8`），真機驗收待完成。下方 v114 起的逐版段落保留歷史發布事實，最新正式發布記錄見「v136 已正式發布」。
+> 現況基準(2026-10-01):正式站與 `origin/main` 為 v136；v138 設定整理候選版已完成本機 QA 與審查，按 Bar 核准交付 dev，延續 v137 個人旅程生命週期。真機封存流程驗收待完成。下方逐版段落保留歷史發布事實，最新正式發布記錄見「v136 已正式發布」。
 
 ## v114 已正式發布(2026-09-10)
 - PR #16 以 **merge**(非 squash／rebase)合併 `dev` `064e932` → `main`,merge commit **`39c96b2`**;合併前確認 head 未變,且該 head 的遠端 CI `sanity` 與 **`browser-qa`** 皆 success。
@@ -55,14 +55,22 @@
 |---|---|
 | **`origin/main` 原始碼** | **SW v136**;merge commit `6706ebb`(PR #36) |
 | **正式站** | `https://trippilot-jp.netlify.app/` — **SW v136**(2026-09-24 §F5 實查:deploy `6ab4e109`,`commit_ref` = `6706ebb`,tag `production-v136`);Bar 已回報手機驗證 OK，**BB4 共 8 項實體 Android 專項仍未驗** |
-| **`dev` candidate** | **v137 個人旅程生命週期候選版**（runtime `95d82f8`）；本機 Node **100/100** 檔、Chromium Playwright **215/215**，Astra 重要發現已修；真機與 OAuth 對外發布仍待驗 |
+| **`dev` candidate** | **v138 設定整理候選版**；本機 Node 100/100、Playwright 219/219 與獨立審查通過，按 Bar 核准交付 dev；真機封存與 OAuth 對外發布仍待驗 |
 | 個人備份格式 | **v9**(`PERSONAL_STATE_SUPPORTED_VERSIONS = [1..9]`)—— v81 因想逛 key 識別語意變更而升版 |
 | 最近一次 v136 發版驗證 | Node **95/95**、Chromium Playwright **196/196**；四個 gate 通過(2026-09-24 紀錄，非本次重跑) |
 | 最新正式 tag | **`production-v136`**，指向 `6706ebb` |
 
 **v136 已發布至正式站(2026-09-24,deploy `6ab4e109`),`production-v136` tag 已建立。Bar 已回報手機驗證 OK；Android BB4 八項專項仍未驗。**
 
-## v137 個人旅程生命週期(dev candidate；尚未正式發布)
+## v138 設定整理（dev candidate；尚未正式發布）
+
+- 「設定 → 資料」增加獨立「過往旅程」子項，位於照片健康狀態和備份／還原／版本之間；返回設定首頁，清除後首頁亦直達同頁，移除資料與版本內的重複入口。
+- 資料健康狀態預設收合、摘要常駐，支援鍵盤開關與當次 session 展開狀態；不修改資料或摘要判定來源。Google SDK 冷載入後由明確點擊授權，不在非使用者手勢的 callback 開 popup。
+- 最終本機 QA：Node **100/100** 測試檔、Chromium Playwright **219/219**（6.4 分鐘），包含三情境 healthCheck／pageerror 與 SW 換代／離線 gate；四項文件／版本／資產檢查與 diff check 通過。獨立審查無 Critical／Important／Minor；v110／v136／v137 與原八表快照保持不可變。
+- Bar 已在 Codex 內建瀏覽器實際登入 `nick80912@gmail.com`，助手確認過往旅程列表顯示「尚無過往旅程」。這只證明該瀏覽器登入／列表讀取，不代表 iPhone／Android PWA、封存上傳或清除驗收通過。
+- 延續 TP137-a～i 的真機待驗項目；新增 UI delta 見 `docs/device-acceptance-log.md` v138。正式站仍為 v136；問題回復以 v139 forward bump，不覆寫 v137／v138，不刪 Service Worker。
+
+## v137 個人旅程生命週期（dev 交付歷史；尚未正式發布）
 
 - 設定頁新增「重置紀錄」、「清除並打包旅程」、「過往旅程」；清除後首頁顯示無進行中旅程，不提供第一階段尚未完成的串接新旅程。
 - 重置保留團體帳 Queue／鎖定帳務。清除前兩次完整抓取八表並檢查正式帳結清、pending claim、Queue／bridge 和摘要；可選 Drive 個人封存或直接清除，兩者都只清本機資料。封存唯讀，筆記追加。
@@ -344,7 +352,7 @@
 - **真機驗證通過(2026-09-24)**:Bar 回報手機驗證 OK(本版無可見變化)。BB4 八項維持未驗。
 ## 下一棒
 
-→ **v137 驗收**:完成本機全量 gate 後推 `dev` 候選版；Bar 在 iPhone 與 Android 實體 PWA 驗 Google 授權、Drive 上傳讀回、清除後重啟與過往旅程筆記。其他旅伴使用前須加入 OAuth 測試名單或另行完成對外發布。完整「連接新旅程」仍留待第二階段。
+→ **v138 驗收**:按 Bar 核准交付 `dev` 設定整理候選版；Bar 先驗設定資料子項與健康狀態收合，再在 iPhone 與 Android 實體 PWA 完成 TP137-a～i 的 Google 授權、Drive 上傳讀回、清除後重啟與過往旅程筆記。其他旅伴使用前須加入 OAuth 測試名單或另行完成對外發布。完整「連接新旅程」仍留待第二階段。
 
 → **裝置驗收遺留**:由 Bar 在實體 Android 上完成 BB4 共 8 項；目前正式 App 為 **v136**。另有 v115 6／v116 10／v117 4／v118 6／v119 5／v120 4／v121 7 項待 iPhone 補驗。**合計 50 項,全部在使用者已拿得到的版本上。**`docs/device-acceptance-log.md` 的 v114 段 22 項中,BB1–BB3 共 14 項已於 **2026-09-11** 由 Bar 在 iPhone 上確認通過;**剩下的 BB4 是併入的 v112 遺留項,只能在實體 Android 上驗。**
 

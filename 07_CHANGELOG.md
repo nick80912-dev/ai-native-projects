@@ -1,5 +1,13 @@
 # 07 版本紀錄
 
+## 2026-10-01 — v138 設定入口與資料健康收合（dev candidate）
+
+- 依 Bar 確認，把「過往旅程」移為設定「資料」群組的獨立子項，介於照片健康狀態與備份／還原／版本；返回設定首頁，清除後首頁也直接進過往旅程。「資料與版本」移除重複的歷史入口。
+- 資料健康狀態改原生 details／summary，預設收合、正常／需注意摘要常駐；鍵盤 Enter／Space 可操作，展開狀態只在記憶體。仍使用原健康 model，不改同步、帳務、照片、封存或筆記契約。
+- 直接進歷史時，Google SDK 未就緒先顯示準備狀態，完成後提供明確登入按鈕；不在非使用者手勢的非同步 callback 開授權 popup，離頁後不重開舊畫面。帳號／scope／Client ID 未變。
+- 已發布 v137、正式 v136 與 root v110 bridge 保持不可變，建立 v138 generation；BUILTIN 經既有 generator preview／write／readback，八表內容與已核准 v137 完全相同，無 live Ledger 抓取。SW 與 Netlify header 只同步版本路徑，原快取策略不變。
+- 最終本機 Node **100/100** 測試檔、Chromium Playwright **219/219**（6.4 分鐘）、四項文件／版本／資產 gate 與 diff check 通過；獨立審查無 Critical／Important／Minor。Node 回歸抓到「最近更新恰好五筆」限制，已將 v133 滾出、保留 v138～v134，並同步歷史版本預期。真機 PWA 封存／清除／筆記仍待驗；只交付 dev，不發布 main 或 production tag。已由使用者與助手在 Codex 瀏覽器確認真實登入及空歷史列表，但不視為手機驗收。
+
 ## 2026-10-01 — ⭐ v137 個人旅程生命週期（dev candidate；真機待驗）
 
 - 新增「重置紀錄」、「清除並打包旅程」、「過往旅程」。重置只清個人紀錄與採買照片；清除需完整八表線上預檢、正式團體帳結清、無 pending claim／本機 Queue／bridge，並在清除前再預檢與比對摘要。

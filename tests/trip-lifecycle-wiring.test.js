@@ -3,6 +3,7 @@ const crypto = require('crypto');
 const fs = require('fs');
 const path = require('path');
 const snapshotTool = require('../tools/refresh-builtin-snapshot');
+const {appVersion:currentVersion,shellPath} = require('./support/version');
 
 const root = path.resolve(__dirname, '..');
 const read = (file) => fs.readFileSync(path.join(root, file), 'utf8');
@@ -13,25 +14,28 @@ const immutable = {
   'shell/v136/index.html': 'e51ad7b72f64dd2cde062989ada0490bcf502c35a721de72b1cbc7c106e12170',
   'shell/v136/app-version.js': '8059935d5c49efa583f3ad74e56ee10d9d3c4b4419cc3102554e05882cd72919',
   'shell/v136/builtin-snapshot.js': 'b714ab267c737de51933c7aa01446a20b23c90719a59f5d009635c3ea5441025',
+  'shell/v137/index.html': '8d8d98bc06f5c1d4a86585650a3933867c9b08dbcc96b37fa91d2c7b2a3695b1',
+  'shell/v137/app-version.js': '9af19d6e63aaa46575bd52251f688126198e3f68753bfc5418b3377f438cd371',
+  'shell/v137/builtin-snapshot.js': '0731d5ab566a20f1df1b6eef1ff29ad3b780f0bf665d74892396dba2bc55a09e',
 };
 Object.keys(immutable).forEach((file) => assert.strictEqual(hash(file), immutable[file], file + ' remains immutable'));
 
-const html = read('shell/v137/index.html');
-const appVersion = read('shell/v137/app-version.js');
+const version = currentVersion();
+const html = read(shellPath('index.html'));
+const appVersion = read(shellPath('app-version.js'));
 const sw = read('sw.js');
 const assets = JSON.parse(read('runtime-assets.json')).assets;
-assert.match(appVersion, /^var APP_VERSION='v137';\s*$/);
-assert.match(sw, /^var SW_VERSION='v137';$/m);
-assert.match(sw, /var CURRENT_DOCUMENT='\.\/shell\/v137\/index\.html';/);
-assert.match(html, /<script src="shell\/v137\/app-version\.js"><\/script>/);
-assert.match(html, /<script id="builtinSnapshotMarker">var BUILTIN_HTML_VERSION='v137';var BUILTIN_HTML_TS=\d+;<\/script>/);
-assert.match(html, /<script src="shell\/v137\/builtin-snapshot\.js"><\/script>/);
-assert.match(html, /\{version:'v137'/);
-assert.ok(assets.includes('shell/v137/app-version.js'));
-assert.ok(assets.includes('shell/v137/builtin-snapshot.js'));
+assert.strictEqual(appVersion.trim(),"var APP_VERSION='"+version+"';");
+assert.ok(sw.includes("var CURRENT_DOCUMENT='./"+shellPath('index.html')+"';"));
+assert.ok(html.includes('<script src="'+shellPath('app-version.js')+'"></script>'));
+assert.strictEqual(snapshotTool.readBuiltinMarker(html).appVersion,version);
+assert.ok(html.includes('<script src="'+shellPath('builtin-snapshot.js')+'"></script>'));
+assert.ok(html.includes("{version:'"+version+"'"));
+assert.ok(assets.includes(shellPath('app-version.js')));
+assert.ok(assets.includes(shellPath('builtin-snapshot.js')));
 const approvedSnapshot = snapshotTool.readBuiltinAsset(read('shell/v136/builtin-snapshot.js')).snapshot;
-const candidateSnapshot = snapshotTool.readBuiltinAsset(read('shell/v137/builtin-snapshot.js')).snapshot;
-assert.deepStrictEqual(candidateSnapshot, approvedSnapshot, 'v137 BUILTIN keeps the approved v136 CSV content');
+const candidateSnapshot = snapshotTool.readBuiltinAsset(read(shellPath('builtin-snapshot.js'))).snapshot;
+assert.deepStrictEqual(candidateSnapshot, approvedSnapshot, 'current BUILTIN keeps the approved v136 CSV content');
 
 const modules = ['trip-lifecycle.js', 'trip-archive.js', 'trip-drive.js', 'trip-lifecycle-flow.js'];
 let previous = html.indexOf('<script src="trip-progression.js"></script>');
@@ -42,7 +46,7 @@ modules.forEach((file) => {
   assert.ok(assets.includes(file), file + ' is in runtime assets');
   assert.ok(sw.includes("'./" + file + "'"), file + ' is in the atomic shell cache');
 });
-['shell/v137/index.html', 'shell/v137/app-version.js', 'shell/v137/builtin-snapshot.js'].forEach((file) => {
+['index.html', 'app-version.js', 'builtin-snapshot.js'].map(shellPath).forEach((file) => {
   assert.ok(sw.includes("'./" + file + "'"), file + ' is in the atomic shell cache');
 });
-console.log('trip lifecycle v137 wiring passed');
+console.log('trip lifecycle '+version+' wiring passed');

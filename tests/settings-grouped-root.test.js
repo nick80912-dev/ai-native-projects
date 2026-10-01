@@ -71,6 +71,11 @@ assert(at('>主題<')>at('>個人<')&&at('>主題<')<at('>記帳<'),'theme row s
 assert(at('>備份、還原與版本資訊<')>at('>資料<'),'data row sits in 資料');
 assert(at('>照片健康狀態<')>at('>資料<'),'photo health row sits in 資料');
 assert(at('>照片健康狀態<')<at('>備份、還原與版本資訊<'),'photo health precedes backup and version');
+assert(at('>過往旅程<')>at('>照片健康狀態<')&&at('>過往旅程<')<at('>備份、還原與版本資訊<'),
+  'past trips is a direct data-group child between photo health and backup');
+const inactiveRoot=renderRoot({TripLifecycle:{readState:function(){return {mode:'inactive'};}}});
+assert(inactiveRoot.includes("openSettingsPage('past')"),'inactive settings goes directly to past trips');
+assert(!inactiveRoot.includes("openSettingsPage('data')"),'inactive settings does not detour through data/version');
 
 /* ---- §8 新 E2:摘要格式 ---- */
 assert(out.includes('2 位常用對象'),'proxy summary counts the stored targets');

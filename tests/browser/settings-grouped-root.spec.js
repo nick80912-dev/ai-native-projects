@@ -352,7 +352,7 @@ test('照片健康狀態維持在資料群組並通過子頁路由與三種手�
     const dataGroup=Array.from(document.querySelectorAll('#settingsOverlay .settings-group')).find(group=>group.querySelector('.settings-group-title').textContent==='資料');
     return Array.from(dataGroup.querySelectorAll('.settings-row-main b'),node=>node.textContent);
   });
-  expect(ordering).toEqual(['照片健康狀態','備份、還原與版本資訊']);
+  expect(ordering).toEqual(['照片健康狀態','過往旅程','備份、還原與版本資訊']);
   await storageRow.click();
   await expect(page.getByRole('heading',{name:'照片健康狀態'})).toBeVisible();
 
@@ -376,5 +376,42 @@ test('照片健康狀態維持在資料群組並通過子頁路由與三種手�
 
   await page.getByRole('button',{name:/返回/}).click();
   await expect(page.getByRole('button',{name:/照片健康狀態/})).toBeVisible();
+  expect(pageErrors).toEqual([]);
+});
+
+test('資料健康狀態預設收合，摘要保留警告且支援鍵盤與重繪',async({page})=>{
+  const pageErrors=collectPageErrors(page);
+  await installOfflineAppNetwork(page);await openApp(page);await waitForSyncToSettle(page);
+  await page.evaluate(()=>{
+    ledgerRepository.pendingCount=()=>2;
+    openSettings('data');
+  });
+  const health=page.locator('.settings-data-health');
+  const toggle=health.locator('summary');
+  await expect(toggle).toContainText('資料健康狀態');
+  await expect(toggle).toContainText('1 項需注意');
+  await expect(health.locator('.settings-health-list')).toBeHidden();
+  await toggle.focus();await page.keyboard.press('Enter');
+  await expect(health.locator('.settings-health-list')).toBeVisible();
+  await expect(health).toContainText('2 筆待同步');
+  await page.evaluate(()=>rerenderOpenSettingsPage());
+  await expect(health.locator('.settings-health-list')).toBeVisible();
+  await toggle.focus();await page.keyboard.press('Space');
+  await expect(health.locator('.settings-health-list')).toBeHidden();
+  await page.evaluate(()=>rerenderOpenSettingsPage());
+  await expect(health.locator('.settings-health-list')).toBeHidden();
+  for(const size of WIDTHS){
+    await page.setViewportSize({width:size.w,height:size.h});
+    await toggle.click();
+    const layout=await page.evaluate(()=>{
+      const panel=document.querySelector('#settingsOverlay .settings-panel');
+      const summary=panel.querySelector('.settings-data-health summary');
+      return {overflow:panel.scrollWidth>panel.clientWidth||document.documentElement.scrollWidth>document.documentElement.clientWidth,
+        height:summary.getBoundingClientRect().height};
+    });
+    expect(layout.overflow).toBe(false);expect(layout.height).toBeGreaterThanOrEqual(48);
+    await toggle.click();
+  }
+  await expect(page.getByRole('button',{name:'過往旅程',exact:true})).toHaveCount(0);
   expect(pageErrors).toEqual([]);
 });
