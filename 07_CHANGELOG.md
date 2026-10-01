@@ -1,5 +1,13 @@
 # 07 版本紀錄
 
+## 2026-10-01 — ⭐ v137 個人旅程生命週期（dev candidate；真機待驗）
+
+- 新增「重置紀錄」、「清除並打包旅程」、「過往旅程」。重置只清個人紀錄與採買照片；清除需完整八表線上預檢、正式團體帳結清、無 pending claim／本機 Queue／bridge，並在清除前再預檢與比對摘要。
+- 選擇封存時以 Google `drive.file` 寫入個人 Drive，讀回驗證八表與 SHA-256 後才清本機；封存唯讀，回顧筆記獨立追加。Client ID 是公開前端設定，沒有提交 Client Secret 或 access token。清除先耐久寫入 inactive，失敗可重試本機清理；目前版本不提供新旅程串接。
+- Google Cloud 獨立專案 `trippilot-510301` 已啟用 Drive API、Web OAuth client 與兩站 JavaScript 來源，OAuth 仍為 External Testing 且只有 Bar 測試使用者。瀏覽器自動化採假的 Drive 網路回應；真實 iPhone／Android PWA 的授權、上傳讀回、清除後重啟與筆記仍待 Bar 驗收。正式站仍是 v136，不建立 main PR／production tag。
+- runtime commit `95d82f8`。最終本機 Node **100/100** 測試檔、Chromium Playwright **215/215**（6.0 分鐘）與四項文件／版本／資產 gate 全過；root v110 bridge 與 v136 generation byte-lock 不變。Astra review 發現的跨分頁晚到設定／照片、封存重試校驗碼、晚到 Google 授權及筆記連點／讀回／切換競態皆已修正；最終指定複審無未解 Critical／Important。
+- 過往旅程有行程、採買分配、個人／團體帳與旅途紀錄的唯讀卡片；保留原始八表／個人設定展開區。架構決策見 ADR 0020，真機清單見 `docs/device-acceptance-log.md` TP137-a～i；不把自動化測試誤記為真實 OAuth 或正式可用。
+
 ## 2026-09-30 — 現況文件校正(無 runtime 變更)
 
 - 依 Bar 核准,將 `.ai-manifest.json`、`tasks/current.md` 與 `README.md` 的現況描述對齊已發布的 v136；保留逐版歷史紀錄。

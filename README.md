@@ -4,7 +4,7 @@
 六天五夜日本自駕旅遊的手機 PWA。Google Sheets 當 CMS，以單頁 App 搭配少量獨立 runtime module，部署於 Netlify。
 - 正式站:https://trippilot-jp.netlify.app/
 - 使用者:Bar(產品負責人,非工程師)與同行友人
-- **權威來源**:程式與文件以 **GitHub 本 repo 為唯一權威**;Google Drive 僅為備份。內容資料來源為 Drive 試算表「261018-261023岡山四國六天五夜」(發布 CSV,見 03/schema.js)。
+- **權威來源**:程式與文件以 **GitHub 本 repo 為唯一權威**;個人 Google Drive 只存唯讀過往旅程，不是即時帳務權威。內容資料來源為 Drive 試算表「261018-261023岡山四國六天五夜」(發布 CSV,見 03/schema.js)。
 
 ## 快速開始(給 AI / 開發者)
 第一閱讀順序:以 `08_AI_HANDOVER.md` 的「閱讀順序」為唯一權威;首次接手依其「接手第一步」輸出理解報告。
@@ -48,6 +48,14 @@
 - `schema.js` / `validator.js` — 資料規格 SSoT / 防錯與健康檢查
 - `tests/` / `tools/` — 可重跑測試與文件一致性檢查
 - `tasks/` — 即時工作狀態唯一權威
+
+## v137 個人旅程生命週期候選版
+
+設定的「資料與版本」提供「重置紀錄」、「清除並打包旅程」及「過往旅程」。重置只清本機個人紀錄與採買照片；不清團體 Queue、已鎖定帳務或身分。清除需八表線上預檢、無本機待同步／橋接、正式團體帳結清且無待回覆 claim；可選先封存至個人 Drive 或不保存直接清除。清除只移除本裝置的 `trip_*`、`v2_cache_*` 與採買照片，保留 inactive 標記；不刪共用 Sheet、其他旅伴手機、Drive 檔案或 SW App Shell。封存不含採買照片、Queue、token 或診斷資料，只有回顧筆記可追加。完整連接新旅程留待第二階段。
+
+過往旅程以唯讀區塊呈現每日行程、採買分配／記帳關聯、個人帳、團體紀錄及旅途紀錄；完整八表與個人設定另保留原始資料展開區。筆記確認上傳與讀回後才清草稿，失敗重試沿用同 note ID。真機清單見 `docs/device-acceptance-log.md` 的 v137 區段。
+
+Google Cloud 專案 `trippilot-510301` 已啟用 Drive API，OAuth Web client「TripPilot Web PWA」的公開 Client ID 已配置於 v137；JavaScript 來源為 `https://nick80912-dev.github.io` 與 `https://trippilot-jp.netlify.app`。只使用 `drive.file`，Client Secret 不進前端或 repo。OAuth 目前為 External Testing，測試使用者只有 Bar；其他旅伴需加入測試使用者或完成 Google 對外發布流程，才可自行授權。v137 在真實 iPhone／Android PWA 的 Google 授權、上傳讀回、清除後重啟與筆記仍待驗，不能視為正式可用。若已發布版本有問題，依 `16_OPS_PLAYBOOK.md` §A2 forward-bump，不覆寫 v136／v137 檔案。
 
 ## 正式部署
 - `main` 是正式 Production Branch;日常開發與驗收於 `dev` 分支完成。
