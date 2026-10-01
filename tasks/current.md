@@ -1,5 +1,7 @@
 # CURRENT(現在正在做的)
 
+> 現況基準(2026-10-01):正式站與 `origin/main` 為 v136；v140 依 Bar 核准將資料健康移為獨立子頁，僅交付 dev。真機封存流程驗收待完成。下方逐版段落保留歷史發布事實，最新正式發布記錄見「v136 已正式發布」。
+
 ## v114 已正式發布(2026-09-10)
 - PR #16 以 **merge**(非 squash／rebase)合併 `dev` `064e932` → `main`,merge commit **`39c96b2`**;合併前確認 head 未變,且該 head 的遠端 CI `sanity` 與 **`browser-qa`** 皆 success。
 - Netlify 由 `main` 自動部署 deploy **`6aa25e07`**,`commit_ref` = `39c96b2`、`published_at` 有值。§F5 線上核對五項全過(SW v114／generation 三件組 v114／root bridge v110／兩處 cache header 正確)。
@@ -44,21 +46,52 @@
 
 
 
-> 更新於 2026-09-10。細任務層;里程碑看 `06_ROADMAP.md`,**逐版交付紀錄一律看 `07_CHANGELOG.md`**,正式待辦看 `tasks/backlog.md`。
+> 現況更新於 2026-10-01。細任務層;里程碑看 `06_ROADMAP.md`,**逐版交付紀錄一律看 `07_CHANGELOG.md`**,正式待辦看 `tasks/backlog.md`。
 > 本檔只回答三件事:**現在線上是什麼、dev 上是什麼、下一批要做什麼**。歷史流水帳不放這裡。
 
 ## 📌 現況
 
 | 項目 | 值 |
 |---|---|
-| **`origin/main` 原始碼** | **SW v126**;merge commit `4c9233e`(PR #28) |
-| **正式站** | `https://trippilot-jp.netlify.app/` — **SW v114**(2026-09-10 實查:deploy `6aa25e07`,`commit_ref` = `39c96b2` = main HEAD,`published_at` 有值,tag `production-v114`);**v114 發布後補驗**:BB1–BB3 共 14 項 iPhone 已於 2026-09-11 通過,**BB4 共 8 項實體 Android 未驗** |
-| **`origin/dev` candidate** | **SW v126**;已與 `main` 同步於 `4c9233e`,另有數筆 backlog 文件 commit |
+| **`origin/main` 原始碼** | **SW v136**;merge commit `6706ebb`(PR #36) |
+| **正式站** | `https://trippilot-jp.netlify.app/` — **SW v136**(2026-09-24 §F5 實查:deploy `6ab4e109`,`commit_ref` = `6706ebb`,tag `production-v136`);Bar 已回報手機驗證 OK，**BB4 共 8 項實體 Android 專項仍未驗** |
+| **`dev` candidate** | **v140 資料健康獨立子頁**；本機 Node 100/100、Playwright 222/222、四項 gate 與獨立審查通過，按 Bar 核准交付 dev；遠端 CI／Pages 於推送後核對，正式站不變；真機封存與 OAuth 對外發布仍待驗 |
 | 個人備份格式 | **v9**(`PERSONAL_STATE_SUPPORTED_VERSIONS = [1..9]`)—— v81 因想逛 key 識別語意變更而升版 |
-| candidate automated validation | Node **95/95**、Chromium Playwright **191/191**；三種啟動情境 `healthCheck()=[]`、`pageerror=0` |
-| 既有 tag | `production-v18`、`production-v73`、`production-v110`、`production-v111`、`production-v113`、`production-v114`、`production-v115`、`production-v116`、`production-v117`、`production-v118`、`production-v119`、`production-v121`、`production-v122`、`production-v123`、`production-v124`、`production-v125`、**`production-v126`** |
+| 最近一次 v136 發版驗證 | Node **95/95**、Chromium Playwright **196/196**；四個 gate 通過(2026-09-24 紀錄，非本次重跑) |
+| 最新正式 tag | **`production-v136`**，指向 `6706ebb` |
 
-**v114 已發布至正式站(2026-09-10,deploy `6aa25e07`),`production-v114` tag 已建立。G1 的 iPhone 半邊於 2026-09-11 補驗通過,Android 半邊(BB4)仍未驗。**
+**v136 已發布至正式站(2026-09-24,deploy `6ab4e109`),`production-v136` tag 已建立。Bar 已回報手機驗證 OK；Android BB4 八項專項仍未驗。**
+
+## v140 資料健康獨立子頁（dev candidate；尚未正式發布）
+
+- Bar 核准「資料健康狀態」與照片健康同層，設定資料區四個入口固定排序；根頁保留健康摘要，子頁直接顯示既有四項明細，不需再展開，返回設定首頁。
+- 資料與版本移除重複健康區塊；重置、清除並打包、備份／還原、版本、照片檢查與過往旅程行為不變。不改健康 model、八表／Ledger、個人資料、Drive／OAuth 或生命週期契約。
+- C 級／Tier 2 已核准，重用隔離 worktree，以 v140 forward bump 保留 v139 原樣；BUILTIN 只用核准八表資料經 generator preview／write／readback，無 live Ledger。回復只能 v141 forward bump，不刪 SW。
+- 最終本機 Node **100/100**、Chromium Playwright **222/222**（6.6 分鐘）、三情境 healthCheck／pageerror、SW 換代／離線與四項 gate／diff check 通過；獨立審查無 Critical／Important／Minor。CUA 已核對本機 v140 四入口及直接四明細。遠端 CI／Pages 於推送後核對；實體 iPhone／Android 待驗，見裝置驗收清單。
+
+## v139 健康收合重繪競態修正（dev 交付歷史；尚未正式發布）
+
+- 遠端 CI `36810889354` 在 v138 鍵盤收合後立即重繪案例失敗（218/219）；本機 219/219 曾通過，但不能當作遠端全綠。原生 details 的 open 屬性先更新、toggle 事件後到，renderer 讀到舊記憶體狀態。
+- 新增同一 task 中原生 summary.click 與立即重繪的確定性 RED，v138 原生展開 true 被重繪成 false；v139 重繪／切頁／關閉前先讀 open，忽略已移除 details 的晚到 toggle。維持 session-only，未修改資料、帳務或 OAuth 契約。
+- v138 保持不可變、增加 byte-lock；v139 BUILTIN 只由既有 generator 以已核准八表 snapshot preview／write／readback，不取 live Ledger。最終本機 Node **100/100**、Playwright **220/220**（6.5 分鐘）、四項 gate 與 diff check 通過；獨立複審無 Critical／Important／Minor，另驗快速切頁與 detached toggle。按原核准範圍推 dev；不發布正式站。
+
+## v138 設定整理（dev 交付歷史；尚未正式發布）
+
+- 「設定 → 資料」增加獨立「過往旅程」子項，位於照片健康狀態和備份／還原／版本之間；返回設定首頁，清除後首頁亦直達同頁，移除資料與版本內的重複入口。
+- 資料健康狀態預設收合、摘要常駐，支援鍵盤開關與當次 session 展開狀態；不修改資料或摘要判定來源。Google SDK 冷載入後由明確點擊授權，不在非使用者手勢的 callback 開 popup。
+- 最終本機 QA：Node **100/100** 測試檔、Chromium Playwright **219/219**（6.4 分鐘），包含三情境 healthCheck／pageerror 與 SW 換代／離線 gate；四項文件／版本／資產檢查與 diff check 通過。獨立審查無 Critical／Important／Minor；v110／v136／v137 與原八表快照保持不可變。
+- `89a4424` 已推 dev，Pages 部署 `36810889093` 成功，線上 v138 三件組與 root v110／舊 v137 核對通過；正式站 v136 與 main 未變。遠端 sanity 通過，但 browser-qa 218/219，故由上方 v139 修正，不宣稱遠端全綠。
+- Bar 已在 Codex 內建瀏覽器實際登入 `nick80912@gmail.com`，助手確認過往旅程列表顯示「尚無過往旅程」。這只證明該瀏覽器登入／列表讀取，不代表 iPhone／Android PWA、封存上傳或清除驗收通過。
+- 延續 TP137-a～i 的真機待驗項目；新增 UI delta 見 `docs/device-acceptance-log.md` v138。正式站仍為 v136；問題回復以 v139 forward bump，不覆寫 v137／v138，不刪 Service Worker。
+
+## v137 個人旅程生命週期（dev 交付歷史；尚未正式發布）
+
+- 設定頁新增「重置紀錄」、「清除並打包旅程」、「過往旅程」；清除後首頁顯示無進行中旅程，不提供第一階段尚未完成的串接新旅程。
+- 重置保留團體帳 Queue／鎖定帳務。清除前兩次完整抓取八表並檢查正式帳結清、pending claim、Queue／bridge 和摘要；可選 Drive 個人封存或直接清除，兩者都只清本機資料。封存唯讀，筆記追加。
+- Google Cloud 專案 `trippilot-510301` 的 Drive API、OAuth External Testing、`drive.file` 與兩站 Web client 來源已設定；只有 Bar 是測試使用者。真實 iPhone／Android PWA OAuth、Drive 上傳讀回與清除重啟尚未驗，不宣稱正式可用。
+- 最終本機 QA：Node **100/100** 測試檔、Chromium Playwright **215/215**（三情境及 pageerror gate 包含於套件），文件標題／版本／generation／runtime assets 四項檢查與 diff check 通過。Drive 使用假網路回應；Astra 複審的跨分頁、封存重試、晚到授權／照片／共用設定與筆記競態均已修復。
+- 真機逐項清單見 `docs/device-acceptance-log.md` TP137-a～i；先驗登入，正式帳未結清時清除被阻擋是預期，不改團體帳來湊驗收條件。
+- 驗收與回滾依 ADR 0020 及 `16_OPS_PLAYBOOK.md` §A2。正式站仍為 v136，不自行 merge main、建 production tag 或公開發布 OAuth app。
 
 ### v74–v98 已折疊的主要能力
 
@@ -321,20 +354,25 @@
 - **G6 完成**:`production-v135` 指向 `67916c7`。
 - **真機驗證通過(2026-09-24)**:Bar 回報手機驗證 OK;三個驗收重點回報未逐項指明。BB4 八項維持未驗。
 - 殘留字樣:`預設輸入幣別` 仍在 schema 欄位內部說明(非使用者可見),改 schema 須先確認,未動。**→ 已由 v136 改掉。**
-## v136 candidate(2026-09-24,未發布)
+## v136 已正式發布(2026-09-24,未經 G1,真機驗證通過)
 
 - **schema 說明改為「全團結算幣別,也是新增記帳的預設幣別」**,補上 v135 上線核對時發現的殘留字樣。只改說明文字,欄位、合法值、驗證與畫面皆不變。
-- `schema.js`、`shell/v136` 內嵌副本、`09_SCHEMA_MAPPING.md` 三處同步;root v110 bridge 刻意不動。
+- `schema.js`、`shell/v136` 內嵌副本、`09_SCHEMA_MAPPING.md` 三處同步;root v110 bridge 刻意不動。 <!-- generation-exempt: 這是 v136 發布時的歷史紀錄 -->
 - `schema.js` 會被 SW 快取,依 ADR 0019 仍需完整升版。
 - 四個 gate、**Node 95/95**、**Playwright 196/196** 通過;新斷言以改回舊說明實測會紅。
-- **待 Bar 決定是否發正式站**。真機無可見變化,只需確認 SW 顯示 v136、畫面正常。
+- **2026-09-24 發布**:PR [#36](https://github.com/nick80912-dev/ai-native-projects/pull/36) 以 merge 合併 `dev` `be7495c` → `main`,merge commit **`6706ebb`**;兩輪 CI 共 7 項全綠,合併時釘住 head。
+- **§F5 線上核對五項全過**:`sw.js` v136;`shell/v136/` 三件組皆 v136;root bridge 維持 v110;三處 `Cache-Control` 正確;**v111–v135 二十五個舊世代皆回 200**(ADR 0019)。Netlify deploy `6ab4e109`、`commit_ref` 相符。 <!-- generation-exempt: 這是 v136 發布當下的線上核對結果,不隨後續升版變動 -->
+- **G6 完成**:`production-v136` 指向 `6706ebb`。
+- **真機驗證通過(2026-09-24)**:Bar 回報手機驗證 OK(本版無可見變化)。BB4 八項維持未驗。
 ## 下一棒
 
-→ **由 Bar 在實體 Android 上完成 BB4 共 8 項**(判準版本現為 **v121**),另有 v115 6／v116 10／v117 4／v118 6／v119 5／v120 4／v121 7 項待 iPhone 補驗。**合計 50 項,全部在使用者已拿得到的版本上。**`docs/device-acceptance-log.md` 的 v114 段 22 項中,BB1–BB3 共 14 項已於 **2026-09-11** 由 Bar 在 iPhone 上確認通過;**剩下的 BB4 是併入的 v112 遺留項,只能在實體 Android 上驗。**
+→ **v140 驗收**:按 Bar 核准交付 `dev`；Bar 先驗 TP140-a～c 的設定資料四子項、健康明細直接顯示及返回，再在 iPhone 與 Android 實體 PWA 完成 TP137-a～i 的 Google 授權、Drive 上傳讀回、清除後重啟與過往旅程筆記。其他旅伴使用前須加入 OAuth 測試名單或另行完成對外發布。完整「連接新旅程」仍留待第二階段。
 
-> 最關鍵的是 **BB4-a**:Service Worker 能否在實體 Android 上安裝並接管。v112 修的連線槽耗盡缺陷**只在真機發生**,桌機與 Playwright 的 Android 模擬都重現不出來。判斷方式:開啟網站 → 關掉 → 再開,設定的版本資訊顯示 **v114** 才算通過(顯示 v110 代表 SW 沒接管)。
+→ **裝置驗收遺留**:由 Bar 在實體 Android 上完成 BB4 共 8 項；目前正式 App 為 **v136**。另有 v115 6／v116 10／v117 4／v118 6／v119 5／v120 4／v121 7 項待 iPhone 補驗。**合計 50 項,全部在使用者已拿得到的版本上。**`docs/device-acceptance-log.md` 的 v114 段 22 項中,BB1–BB3 共 14 項已於 **2026-09-11** 由 Bar 在 iPhone 上確認通過;**剩下的 BB4 是併入的 v112 遺留項,只能在實體 Android 上驗。**
+
+> 最關鍵的是 **BB4-a**:Service Worker 能否在實體 Android 上安裝並接管。v112 修的連線槽耗盡缺陷**只在真機發生**,桌機與 Playwright 的 Android 模擬都重現不出來。以目前正式版驗證時,開啟網站 → 關掉 → 再開,設定的版本資訊應顯示 **v136**(顯示 v110 代表 SW 沒接管)。
 >
-> 補驗發現問題時,依 `16_OPS_PLAYBOOK.md` §A2 **forward bump 到 v115**,不得倒退覆寫 —— 已經有裝置接管 v114 了。
+> 補驗發現問題時,依 `16_OPS_PLAYBOOK.md` §A2 **forward bump 到下一個未使用版本**,不得倒退覆寫 —— 已經有裝置接管 v136 了。
 
 > GitHub Actions 與 Netlify production **已於 2026-09-08 接管 v113** —— deploy `6a9fb443`、`commit_ref` = `745bb6f`、線上 `sw.js`／`app-version.js` 皆 v113、`qa-sanity` 於 `main` `745bb6f` 與 `dev` `f0444cb` 皆 success。**這一步已完成，不需再確認。**
 >

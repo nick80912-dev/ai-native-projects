@@ -1,4 +1,5 @@
 const {defineConfig}=require('@playwright/test');
+const port=Number(process.env.PORT)||4173;
 
 module.exports=defineConfig({
   testDir:'./tests/browser',
@@ -10,14 +11,14 @@ module.exports=defineConfig({
   expect:{timeout:5000},
   reporter:'list',
   use:{
-    baseURL:'http://127.0.0.1:4173',
+    baseURL:'http://127.0.0.1:'+port,
     viewport:{width:390,height:844},
     trace:'retain-on-failure',
     screenshot:'only-on-failure'
   },
   webServer:{
     command:'node tests/browser/support/static-server.js',
-    url:'http://127.0.0.1:4173',
+    url:'http://127.0.0.1:'+port,
     reuseExistingServer:!process.env.CI,
     timeout:10000
   }

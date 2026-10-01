@@ -1,5 +1,45 @@
 # 07 版本紀錄
 
+## 2026-10-01 — v140 正式發布核准（準備中；G1 明確跳過）
+
+- Bar 選擇發布完整 v140，包含 v137 個人旅程生命週期與 v138～v140 設定調整，透過 `dev → main` PR 合併；明確跳過本次實體手機驗收。TP137-a～i、TP138-c、TP140-a～c 與 Android BB4 保持未勾，跳過不等於通過。
+- 新增採買分類只有設計文件 `docs/superpowers/specs/2026-10-01-shopping-custom-categories-design.md`，尚未實作；個人備份仍為 v9、封存仍為 v1。OAuth 仍為 External Testing，不因發布而對其他帳號開放。
+- 發布前重跑本機 Node **100/100**、Chromium Playwright **222/222**（7.1 分鐘）與四項 gate／diff check，全部通過；包含三情境 healthCheck／pageerror 與 SW 原子換代／離線。獨立發布審查無 Critical／Important，Minor 晚到同步失敗可重建錯誤提示 key 記入 backlog #51，不就地改 v140。待 exact-head push／PR CI 全綠後合併；合併與正式站部署證據另行記錄，不以本段核准冒充完成。
+
+## 2026-10-01 — v140 資料健康獨立子頁（dev candidate）
+
+- 「設定 → 資料」新增第一項「資料健康狀態」，首頁保留正常／需注意摘要，獨立子頁直接顯示行程、團體帳、個人資料與照片四項狀態。資料與版本不再重複，生命週期、備份與版本功能原樣；照片詳細檢查與修復留在照片頁。
+- 移除新 generation 已無用途的健康 details／展開狀態；維持既有健康 model 和 inactive 邊界。不改同步、帳務、八表、照片、Drive 授權或封存內容。
+- Node 與 browser 新入口測試先 RED；重繪／摘要警告、鍵盤進出、三種手機寬度、inactive 空狀態與舊功能回歸納入驗證。已發布 v139 三件組加 byte-lock；v140 snapshot 由核准資料 generator preview／write／readback，不取 live Ledger。
+- 最終本機 Node **100/100**、Chromium Playwright **222/222**（6.6 分鐘）、三情境 healthCheck／pageerror、SW／離線回歸與四項 gate／diff check 通過；獨立審查無 Critical／Important／Minor，CUA 本機 v140 四入口與四明細已核對。僅推 dev，遠端 CI／Pages 於推送後確認；正式站 v136 不變。實體 PWA 驗收不代勾，回復以 v141 forward bump。
+
+## 2026-10-01 — v139 資料健康收合競態修正（dev candidate）
+
+- v138 遠端 CI `36810889354` 的 browser-qa 218/219，鍵盤收合後立即重繪會再展開；原生 details 先修改 open，再延後送 toggle，render 讀到舊 state。本機原 219/219 與先前審查不視為排除此問題的證據。
+- 新增確定性同一 task summary.click→重繪 RED；v139 在重繪／切頁／關閉前同步讀目前 open，且已移除元件的晚到 toggle 不得覆寫 session state。未修改健康判定、旅程、帳務或 OAuth。
+- 已部署 v138 不覆寫，新增 v139 三件組，v138 byte-lock 加入測試；原核准八表 snapshot 用 generator preview／write／readback 升版本，不取 live Ledger。最終本機 Node **100/100**、Chromium Playwright **220/220**（6.5 分鐘）、四項 gate 與 diff check 全過；獨立複審無 Critical／Important／Minor，另驗快速切頁與 detached toggle。只推 dev，正式站仍 v136；真機驗收不代勾。
+
+## 2026-10-01 — v138 設定入口與資料健康收合（dev candidate）
+
+- 依 Bar 確認，把「過往旅程」移為設定「資料」群組的獨立子項，介於照片健康狀態與備份／還原／版本；返回設定首頁，清除後首頁也直接進過往旅程。「資料與版本」移除重複的歷史入口。
+- 資料健康狀態改原生 details／summary，預設收合、正常／需注意摘要常駐；鍵盤 Enter／Space 可操作，展開狀態只在記憶體。仍使用原健康 model，不改同步、帳務、照片、封存或筆記契約。
+- 直接進歷史時，Google SDK 未就緒先顯示準備狀態，完成後提供明確登入按鈕；不在非使用者手勢的非同步 callback 開授權 popup，離頁後不重開舊畫面。帳號／scope／Client ID 未變。
+- 已發布 v137、正式 v136 與 root v110 bridge 保持不可變，建立 v138 generation；BUILTIN 經既有 generator preview／write／readback，八表內容與已核准 v137 完全相同，無 live Ledger 抓取。SW 與 Netlify header 只同步版本路徑，原快取策略不變。
+- 最終本機 Node **100/100** 測試檔、Chromium Playwright **219/219**（6.4 分鐘）、四項文件／版本／資產 gate 與 diff check 通過；獨立審查無 Critical／Important／Minor。Node 回歸抓到「最近更新恰好五筆」限制，已將 v133 滾出、保留 v138～v134，並同步歷史版本預期。真機 PWA 封存／清除／筆記仍待驗；只交付 dev，不發布 main 或 production tag。已由使用者與助手在 Codex 瀏覽器確認真實登入及空歷史列表，但不視為手機驗收。
+
+## 2026-10-01 — ⭐ v137 個人旅程生命週期（dev candidate；真機待驗）
+
+- 新增「重置紀錄」、「清除並打包旅程」、「過往旅程」。重置只清個人紀錄與採買照片；清除需完整八表線上預檢、正式團體帳結清、無 pending claim／本機 Queue／bridge，並在清除前再預檢與比對摘要。
+- 選擇封存時以 Google `drive.file` 寫入個人 Drive，讀回驗證八表與 SHA-256 後才清本機；封存唯讀，回顧筆記獨立追加。Client ID 是公開前端設定，沒有提交 Client Secret 或 access token。清除先耐久寫入 inactive，失敗可重試本機清理；目前版本不提供新旅程串接。
+- Google Cloud 獨立專案 `trippilot-510301` 已啟用 Drive API、Web OAuth client 與兩站 JavaScript 來源，OAuth 仍為 External Testing 且只有 Bar 測試使用者。瀏覽器自動化採假的 Drive 網路回應；真實 iPhone／Android PWA 的授權、上傳讀回、清除後重啟與筆記仍待 Bar 驗收。正式站仍是 v136，不建立 main PR／production tag。
+- runtime commit `95d82f8`。最終本機 Node **100/100** 測試檔、Chromium Playwright **215/215**（6.0 分鐘）與四項文件／版本／資產 gate 全過；root v110 bridge 與 v136 generation byte-lock 不變。Astra review 發現的跨分頁晚到設定／照片、封存重試校驗碼、晚到 Google 授權及筆記連點／讀回／切換競態皆已修正；最終指定複審無未解 Critical／Important。
+- 過往旅程有行程、採買分配、個人／團體帳與旅途紀錄的唯讀卡片；保留原始八表／個人設定展開區。架構決策見 ADR 0020，真機清單見 `docs/device-acceptance-log.md` TP137-a～i；不把自動化測試誤記為真實 OAuth 或正式可用。
+
+## 2026-09-30 — 現況文件校正(無 runtime 變更)
+
+- 依 Bar 核准,將 `.ai-manifest.json`、`tasks/current.md` 與 `README.md` 的現況描述對齊已發布的 v136；保留逐版歷史紀錄。
+- `origin/main`／`origin/dev`、`production-v136` 與 v136 發版驗證數據以 2026-09-30 本地 `git fetch` 後狀態及既有 v136 發布紀錄核對；本次未重跑裝置驗收或改動 App。
+
 ## 2026-09-13 — v124 正式發布(released,未經 G1)+ G6 tag
 
 - PR [#26](https://github.com/nick80912-dev/ai-native-projects/pull/26) 以 merge 合併 `dev` `e7cd524` → `main`,merge commit **`2e11c48`**。合併前確認 PR head 等於 `origin/dev`,並**等 PR 觸發的那輪 `browser-qa` 跑完才動手** —— 該 commit 在 push 事件已綠一次,但不以「同一個 commit 已經綠過」為由在 pending 狀態下 merge。
@@ -7,6 +47,15 @@
 - **§F5 線上核對五項全過**:`sw.js` v124;`shell/v124/` 三件組皆 v124;root bridge 維持 v110;三處 `Cache-Control` 正確;**v111–v123 十三個舊世代皆回 200**(ADR 0019)。
 - **G6 完成**:annotated tag `production-v124` 指向 `2e11c48`,訊息明文記錄 G1 未執行**以及真機觀感尚未回報**。
 - 本批不含 backlog #39(已於 v125 收斂)。
+
+## 2026-09-24 — v136 正式發布(released,未經 G1)+ G6 tag;同日真機驗證通過
+
+- PR [#36](https://github.com/nick80912-dev/ai-native-projects/pull/36) 以 merge 合併 `dev` `be7495c` → `main`,merge commit **`6706ebb`**。本 PR 同時帶入 v135 發布紀錄(`a0ca9cc`)與 backlog #50 裁定(`7fa7afc`)兩個純文件 commit。兩輪 CI 共 7 項全綠後合併,合併時以 `--match-head-commit` 釘住 head。
+- Netlify deploy **`6ab4e109194cc20008adc90d`**、`ready`、`commit_ref` = `6706ebb` 相符、`published_at` `2026-09-24T08:36:32Z`、`manual_deploy: false`,21 個新檔(含 `shell/v136/index.html`)、6 條 header rule 全過。`main` 上 merge commit 的 `sanity` 與 `browser-qa` 皆 success。
+- **§F5 線上核對五項全過**:`sw.js` v136;`shell/v136/` 三件組皆 v136;root bridge 維持 **v110 未被誤升**;三處 `Cache-Control` 正確;**v111–v135 二十五個舊世代皆回 200**(ADR 0019)。另線上實查 shell 內嵌 schema 與線上 `schema.js` 皆為新說明、舊字樣 `分帳預設輸入幣別` 0 處。
+- **G6 完成**:annotated tag `production-v136` 指向 `6706ebb`。tag 在真機回報之後才建立。
+- **G1 經 Bar 裁定跳過**(同 v114–v135)。
+- **真機驗證通過(2026-09-24)**:Bar 在手機上回報驗證 OK。本版無可見變化,驗收重點為 App 正常載入到 v136。BB4 八項維持未驗。
 
 ## 2026-09-24 — v136:schema 說明改為「全團結算幣別」(candidate 未發布)
 

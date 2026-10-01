@@ -493,6 +493,7 @@ function snapshotFor(app,raw,generation,source){
 function loadCoordinator(){
   const storage=memoryStorage();
   const runtime={
+    TripLifecycle:{readState:function(){return {mode:'active'};}},
     console:{log:function(){},warn:function(){},error:function(){}},
     Promise:Promise,
     Date:{now:function(){return 100;}},

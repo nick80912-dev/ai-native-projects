@@ -58,6 +58,7 @@ for (const bad of ['', null, undefined, 0, {}]) {
 
 /* ---- 2. 資料與版本頁在沒有 APP_VERSION 時仍可算出 HTML ---- */
 const dataPage = vm.createContext({
+  TripLifecycle:{readState(){return {mode:'active'};}},localStorage:{},
   escapeHtml(value) { return String(value); },
   renderSettingsHeader(title) { return '<h2>' + title + '</h2>'; },
   renderSettingsDataHealth() { return '<section><h3>資料健康狀態</h3></section>'; },
@@ -72,10 +73,11 @@ assert.doesNotThrow(() => { markup = dataPage.renderSettingsDataPage(); },
 assert.ok(markup.includes('SW 未知'), 'a missing version degrades to SW 未知 instead of throwing');
 assert.ok(markup.includes('複製備份 JSON') && markup.includes('從 JSON 還原'),
   'backup and restore stay reachable without the version file');
-assert.ok(markup.includes('資料健康狀態'),'the v88 data-health summary remains reachable without the version file');
+assert.ok(!markup.includes('資料健康狀態'),'backup/version no longer duplicates health details');
 
 /* 有版本時顯示真實版本 */
 const dataPageOk = vm.createContext({
+  TripLifecycle:{readState(){return {mode:'active'};}},localStorage:{},
   APP_VERSION: 'v99',
   escapeHtml(value) { return String(value); },
   renderSettingsHeader(title) { return '<h2>' + title + '</h2>'; },

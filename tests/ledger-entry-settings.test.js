@@ -203,6 +203,20 @@ function response(payload){
   assert.strictEqual(failed.settingsRenders,0,'failed save does not rerender Settings');
   assert.strictEqual(failed.splitRenders,0,'failed save does not rerender Split');
 
+  let releaseSettings;
+  const inFlightSettings=loadModule(function(){return new Promise(resolve=>{releaseSettings=resolve;});});
+  const pendingSettings=inFlightSettings.saveLedgerSettings({exchangeRate:0.23,defaultCurrency:'TWD'});
+  assert(inFlightSettings.lsGet(inFlightSettings.LEDGER_SETTINGS_BRIDGE_KEY,null),'settings request is durably pending before POST completes');
+  inFlightSettings.DB.cfg={exchangeRate:0.23,ledgerDefaultCurrency:'TWD'};
+  assert.strictEqual(inFlightSettings.reconcileLedgerSettingsBridge(),false,'a published value cannot remove a live in-flight operation');
+  inFlightSettings.TripLifecycle={readState(){return {mode:'complete'};}};
+  inFlightSettings.localStorage.removeItem(inFlightSettings.LEDGER_SETTINGS_BRIDGE_KEY);
+  const endedCfg=JSON.stringify(inFlightSettings.DB.cfg);
+  releaseSettings({ok:true,status:200,json(){return Promise.resolve({ok:true});}});
+  await assert.rejects(pendingSettings,/inactive|清除|旅程/i);
+  assert.strictEqual(JSON.stringify(inFlightSettings.DB.cfg),endedCfg,'late response cannot rebuild inactive DB');
+  assert.strictEqual(inFlightSettings.lsGet(inFlightSettings.LEDGER_SETTINGS_BRIDGE_KEY,null),null,'late response cannot recreate cleared settings bridge');
+
   const html = mod.__htmlSource;
   const settingsNavSource = extractFunction(html,'openSettings');
   const settingsRootSource = extractFunction(html,'renderSettingsRoot');

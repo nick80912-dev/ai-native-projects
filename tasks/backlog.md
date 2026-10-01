@@ -56,5 +56,7 @@
       - 做法只需改 `calculateMultiItemAmounts()` 一行:`secondary=allocateWeightedLargestRemainder(totalSecondary,primary)`。
     - **Bar 2026-09-24 裁定先不做,維持 v135**。現況影響面很窄(税抜多品項帳、編輯或更正後、換算幣別、總額不變),不值得為此改變約 17% 新帳的換算幣別分配。日後若出現「以非結算幣別輸入、且品項分攤成員不同」的實際爭議,再以上面的數據重新評估。
 
+51. **旅程清除後的晚到同步失敗可重建錯誤提示 key（v140 發布審查，Minor）**：`syncAll()` 的 reject continuation 未重查 inactive；下載開始於 active、清除完成後才失敗時，`saveSyncFailure()` 仍可能寫入 `trip_sync_last_failure`。獨立 reviewer 以真實函式 VM 重現；沒有恢復舊行程、成員或帳務，現行 inactive UI 仍維持無旅程，因此不是本次發布阻擋項。下次經 Tier 2 核准並 forward bump 時，補 inactive rejection guard 與確定性回歸測試；不就地覆寫已發布 v140、不刪資料湊驗收。
+
 ## 想法池(未承諾)
 - 社群內容抓取(Facebook 等)——需 Firecrawl/Playwright MCP,尚未配置
