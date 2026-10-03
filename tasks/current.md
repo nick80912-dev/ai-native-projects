@@ -1,6 +1,20 @@
 # CURRENT(現在正在做的)
 
-> 現況基準(2026-10-01):正式站與 `origin/main` 已為 v140（PR #37／`e4d4eca`）。Bar 明確跳過本次 G1；真機封存與 Android 專項仍待驗。下方逐版段落保留歷史事實，最新發布證據見 `07_CHANGELOG.md` 的 v140 正式發布紀錄。
+> 現況基準(2026-10-01):正式站與 `origin/main` 已為 v141（PR #38／`ead11ff`）。Bar 明確跳過本次 G1；真機封存與 Android 專項仍待驗。下方逐版段落保留歷史事實，最新發布證據見 `07_CHANGELOG.md` 的 v141 正式發布紀錄。
+
+## 2026-10-03 — v142 已推 dev，PR #39 等待發布 gate
+
+- Bar 指示推送 dev 並合併 main；`f06d2c5` 已非 force 推送至 dev，PR [#39](https://github.com/nick80912-dev/ai-native-projects/pull/39) 已建立。此次發布前重新驗證 Node **106/106**、Chromium **237/237**（7.7 分鐘）、四項 gate 與 diff check 全過。
+- 此紀錄當下 dev／PR exact-head CI 與 Pages 正在執行，尚不宣稱通過。正式 main 仍 `ead11ff`／v141；尚未合併、部署或建立 v142 production tag。
+- v142 G1 真機未驗；已詢問 Bar 是否本次明確跳過，尚待裁定。v141 豁免不沿用；TP142-a～d、既有 PWA 與 Android 待驗保持未勾。A 實際使用驗收後才進 B／C。
+
+## 2026-10-03 — A 批 v142 本機候選完成（以下為推送前紀錄）
+
+- 使用者同意開始設計，要求字體／尺寸不要過大而影響操作與視覺。設計分為狀態與摘要、本機寫入可靠性、天氣資訊三個可獨立驗收子批次。
+- 使用者已確認設計、選擇 Native 逐步實作及整批獨立審查，核准 A 執行；另核准以原 v141 CSV 輸入經既有 generator 重產 v142 版本綁定種子，不抓 live CSV／Ledger。原內容及 timestamp 深度相等；v141／root v110 均未修改。
+- A 區分想逛店家／待買商品及採買記帳狀態；帳務詳情以本機、待送出、接收待讀回、已讀回的現有證據呈現。金額／數量／allocation／schema／備份 v9／封存 v1／OAuth 不變。只調整四個已量測小字 selector 為 11px，主要尺寸保留，見[字體盤點](../docs/ui-font-audit-2026-10-03.md)。
+- runtime commit `38da9a3` 最終 Node **106/106**、Chromium Playwright **237/237**（6.4 分鐘）、四項 gate／diff check 全過；三情境 healthCheck／pageerror、SW 更新／混世代防線、離線與六主題／三寬度都有回歸。此為本機證據，不代表已部署。runtime 推 dev 與 main 發布尚未核准；正式站仍 v141。A 驗收後才進 B，本輪不進 C／分類管理／備份／過往旅程列表。
+- Astra 審查的三項 Important 經一輪 RED→GREEN 修正並完整複驗；原中斷日誌不算通過。永久行程狀態、split-group 購買進度及真實可見帳務詳情測試已補齊。資料健康跨模式 backlog 未註記列為 Minor #52 待後續處理。裁定／限制與測試證據見[交付驗證](../docs/trippilot-v142-a-verification.md)；真機不代勾。
 
 ## v114 已正式發布(2026-09-10)
 - PR #16 以 **merge**(非 squash／rebase)合併 `dev` `064e932` → `main`,merge commit **`39c96b2`**;合併前確認 head 未變,且該 head 的遠端 CI `sanity` 與 **`browser-qa`** 皆 success。
@@ -51,18 +65,18 @@
 
 ## 📌 現況
 
-v141 發布已由 Bar 核准：透過 `dev → main` PR 合併，G1 本次明確跳過。完整發布前 QA／PR CI 與部署核對進行中；在正式站驗證前，下表仍記錄實際 v140。TP141-a～d 與既有真機項目保持待驗，OAuth Testing 不變。
+v141 已透過 `dev → main` PR #38 合併並完成正式站部署核對；G1 本次明確跳過。TP141-a～d 與既有真機項目保持待驗，OAuth Testing 不變。發布後 main CI 另核對 Actions `36878885081`。
 
 | 項目 | 值 |
 |---|---|
-| **`origin/main` 原始碼** | **SW v140**；merge commit `e4d4eca`（PR #37） |
-| **正式站** | `https://trippilot-jp.netlify.app/` — **SW v140**；deploy `6abe21926205bc00087f9ad0`，`commit_ref` = `e4d4eca`，§F5 五項與正式站設定 UI 已核對。G1 明確跳過，真機封存與 Android BB4 仍待驗 |
-| **`dev` candidate** | **v141 過往旅程授權體驗（本機驗證完成，推送後核對遠端）**；有效記憶體授權重用、取消／逾時／重試、離頁舊封存失效。Node 102/102、Chromium 227/227、四項 gate 與獨立審查通過；正式站保持 v140。採買分類只有設計，尚未實作；OAuth 仍 External Testing、僅 Bar 測試帳號 |
+| **`origin/main` 原始碼** | **SW v141**；merge commit `ead11ff`（PR #38） |
+| **正式站** | `https://trippilot-jp.netlify.app/` — **SW v141**；deploy `6abe72157de1330008ed8125`，`commit_ref` = `ead11ff`，§F5 五項與正式站版本 UI 已核對。G1 明確跳過，真機封存與 Android BB4 仍待驗 |
+| **`dev` 內容** | **v142 A 批**，runtime `38da9a3`、推送 `f06d2c5`；本機 Node 106/106、Chromium 237/237、四項 gate 通過。PR #39／遠端 CI 與 G1 裁定見最上方最新段落；採買分類尚未實作，OAuth 仍 External Testing |
 | 個人備份格式 | **v9**(`PERSONAL_STATE_SUPPORTED_VERSIONS = [1..9]`)—— v81 因想逛 key 識別語意變更而升版 |
-| 最近一次 v140 發版驗證 | 本機 Node **100/100**、Chromium Playwright **222/222**、四項 gate 通過；dev／PR／main 三輪 CI sanity 和 browser-qa 全過 |
-| 最新正式 tag | **`production-v140`**，指向 `e4d4eca`；訊息明記 G1 跳過 |
+| 最近一次 v141 發版驗證 | 本機 Node **102/102**、Chromium Playwright **227/227**、四項 gate 通過；dev／PR CI sanity 和 browser-qa 全過，main CI 另核對 Actions `36878885081` |
+| 最新正式 tag | **`production-v141`**，指向 `ead11ff`；訊息明記 G1 跳過 |
 
-**v140 已發布至正式站，`production-v140` tag 已建立；G1 跳過不等於通過，實體手機驗收清單保持待驗。**
+**v141 已發布至正式站，`production-v141` tag 已建立；G1 跳過不等於通過，實體手機驗收清單保持待驗。**
 
 ## v140 資料健康獨立子頁（已隨 PR #37 正式發布；下列保留開發階段紀錄）
 

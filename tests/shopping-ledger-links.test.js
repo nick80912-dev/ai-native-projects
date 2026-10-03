@@ -42,6 +42,8 @@ function loadModule(){
   };
   vm.createContext(sandbox);
   vm.runInContext(html.slice(start,end),sandbox);
+  vm.runInContext(extractFunction(html,'shoppingStatusPresentation'),sandbox);
+  vm.runInContext(extractFunction(html,'shoppingPurchaseSummary'),sandbox);
   vm.runInContext(extractFunction(html,'renderShoppingItemDetail'),sandbox);
   sandbox.__html=html;
   return sandbox;
@@ -332,7 +334,7 @@ function renderShoppingDetail(itemValue,context){
 }
 const mixedDetailHtml=renderShoppingDetail(mixedDetail,mixedDetailContext);
 assert(!mixedDetailHtml.includes('<dt>記帳進度</dt>'),'明細不再另列記帳進度');
-assert(mixedDetailHtml.includes('<dt>狀態</dt><dd>已買 · 已記帳 1 · 待確認 1 · 未記帳 1</dd>'),'合併狀態由真實 renderer 輸出');
+assert(mixedDetailHtml.includes('<dt>狀態</dt><dd>已購買 · 已記帳 1 · 待確認 1 · 未記帳 1</dd>'),'合併狀態由真實 renderer 輸出；購買與記帳筆數分開');
 assert(mixedDetailHtml.includes('disabled>等待狀態確認</button>'),'待確認 action 使用原生 disabled');
 assert(!mixedDetailHtml.includes('onclick="openShoppingIncompleteLedgerEntry'),'待確認 action 不暴露可呼叫的記帳入口');
 assert(!mixedDetailHtml.includes('記帳未完成對象'),'明細不再以對象描述記帳進度');

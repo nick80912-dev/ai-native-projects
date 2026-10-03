@@ -997,6 +997,8 @@ const cardSandbox={
   shoppingPhotoStatus(){return 'none';},
   shoppingCardTargetModel(){return {prefix:'',names:[],overflow:'',suffix:'',ariaLabel:''};},
   shoppingItemQuantitySummary(){return '1 個';},
+  shoppingListStore:{all(){return [];}},
+  shoppingPurchaseSummary(){return '';},
   shoppingItemLocationLine:mod.shoppingItemLocationLine,
   escapeHtml(value){return String(value);},
   jsString(value){return String(value);}

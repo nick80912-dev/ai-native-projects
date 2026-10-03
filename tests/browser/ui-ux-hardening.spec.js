@@ -1,4 +1,5 @@
 const { test, expect } = require('./support/test');
+const {swVersion}=require('../support/version');
 const {
   installFixedDate,
   installOfflineAppNetwork,
@@ -291,4 +292,68 @@ test('reduced-motion preference disables smooth scrolling and view animation', a
   }));
   expect(motion.scroll).toBe('auto');
   expect(parseFloat(motion.animation)).toBeLessThanOrEqual(0.001);
+});
+
+for(const width of [320,375,390])test('supporting text stays compact and readable at '+width+'px',async({page},testInfo)=>{
+ await page.setViewportSize({width,height:844});
+ await installFixedDate(page,'2026-10-18T13:30:00+09:00');
+ await page.reload();await waitForSyncToSettle(page);
+ await page.evaluate(()=>switchView('trip'));
+ const weekday=page.locator('.day-chip .dow').first();
+ await expect(weekday).toBeVisible();
+ const metrics=await page.evaluate(()=>({
+  weekday:getComputedStyle(document.querySelector('.day-chip .dow')).fontSize,
+  body:getComputedStyle(document.body).fontSize,
+  settings:document.querySelector('.settings-btn').getBoundingClientRect().width,
+  overflow:document.documentElement.scrollWidth>window.innerWidth
+ }));
+ console.log('FONT_AUDIT '+JSON.stringify({generation:swVersion(),width,...metrics}));
+ await page.screenshot({path:testInfo.outputPath('trip-font-'+swVersion()+'.png'),fullPage:false});
+ expect(metrics.weekday).toBe('11px');
+ expect(metrics.body).toBe('15px');expect(metrics.settings).toBe(44);expect(metrics.overflow).toBe(false);
+ await page.evaluate(()=>switchView('today'));
+ await page.evaluate(()=>{
+  const fixture=document.createElement('section');fixture.id='fontWeatherFixture';
+  fixture.innerHTML=renderTodayWeatherSummary({city:'岡山',temp:23,code:1,rain:10});
+  document.getElementById('view-today').appendChild(fixture);
+ });
+ const hero=page.locator('.today-hero-summary-label').first();
+ await expect(hero).toBeVisible();
+ expect(await hero.evaluate(el=>getComputedStyle(el).fontSize)).toBe('11px');
+ await page.evaluate(()=>document.getElementById('fontWeatherFixture').remove());
+ await page.evaluate(()=>{
+  localStorage.setItem('trip_member','Bar');
+  memberRegistrationBridge.push({id:'font-member',time:new Date().toISOString(),member:'Bar',recordType:'identity_registration'});
+  personalLedgerRepository.add({member:'Bar',time:new Date().toISOString(),storeName:'岡山超長中文商店名稱測試',category:'購物',detail:'很長的中文品項名稱與代購摘要',amountJpy:9999999,amountTwd:2222222,isProxy:true,proxyTarget:'很長的中文代購對象名字'});
+  ledgerUiState.track='personal';switchView('split');
+ });
+ await expect(page.locator('.ledger-dual-amounts').first()).toBeVisible();
+ console.log('LEDGER_FONT_AUDIT '+JSON.stringify(await page.evaluate(()=>Array.from(document.querySelectorAll('.ledger-recent-context span,.ledger-recent-statuses span'),el=>({text:el.textContent,font:getComputedStyle(el).fontSize})))));
+ expect(await page.locator('.ledger-recent-context .shopping-target-affix').first().evaluate(el=>getComputedStyle(el).fontSize)).toBe('11px');
+ expect(await page.locator('.ledger-recent-context .shopping-target-badge').first().evaluate(el=>getComputedStyle(el).fontSize)).toBe('11px');
+ expect(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth)).toBe(true);
+ await page.screenshot({path:testInfo.outputPath('ledger-font-'+swVersion()+'.png'),fullPage:false});
+ if(width===390){
+  for(const theme of await page.evaluate(()=>THEME_IDS)){
+   await page.evaluate(theme=>applyTheme(theme,{persist:false}),theme);
+   await page.screenshot({path:testInfo.outputPath('ledger-theme-'+theme+'.png'),fullPage:false});
+   expect(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth)).toBe(true);
+  }
+ }
+ await page.evaluate(()=>openLedgerQuickEntryFromFab());
+ expect(await page.locator('#ledgerDetail').evaluate(el=>getComputedStyle(el).fontSize)).toBe('16px');
+ const disclosure=page.locator('#ledgerOptionalSummary');
+ await disclosure.focus();await page.keyboard.press('Enter');
+ await expect(disclosure).toHaveAttribute('aria-expanded','true');
+ expect(await page.evaluate(()=>document.activeElement!==document.body)).toBe(true);
+ await page.evaluate(()=>closeLedgerEntrySheet());
+ await page.evaluate(()=>switchView('trip'));
+ const beforeSize=await weekday.evaluate(el=>parseFloat(getComputedStyle(el).fontSize));
+ await page.evaluate(()=>{
+  const sizes=Array.from(document.querySelectorAll('#daybar *,#view-trip *'),el=>[el,getComputedStyle(el).fontSize]);
+  sizes.forEach(([el,size])=>{el.style.fontSize=(parseFloat(size)*1.5)+'px';});
+ });
+ expect(await weekday.evaluate(el=>parseFloat(getComputedStyle(el).fontSize))).toBe(beforeSize*1.5);
+ expect(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth)).toBe(true);
+ await page.screenshot({path:testInfo.outputPath('text-resize-150-'+width+'.png'),fullPage:false});
 });

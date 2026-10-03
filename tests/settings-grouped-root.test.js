@@ -161,7 +161,7 @@ const healthy=JSON.parse(JSON.stringify(healthSandbox.settingsDataHealthModel({
 assert.strictEqual(healthy.summary,'資料狀態正常');
 assert.deepStrictEqual(healthy.rows,[
   {key:'trip',label:'行程資料',value:'同步正常 · 3 分鐘前',detail:''},
-  {key:'shared',label:'團體帳',value:'已送出',detail:'團體紀錄會跨裝置同步'},
+  {key:'shared',label:'團體帳',value:'本機無待送紀錄',detail:'伺服器接收後仍需讀回；不代表其他旅伴已讀'},
   {key:'personal',label:'個人資料',value:'僅此裝置',detail:'個人記帳、採買與設定不會同步'},
   {key:'photos',label:'照片附件',value:'0 張 · 0 B',detail:'照片只保存在此裝置'}
 ]);
@@ -180,7 +180,7 @@ const localAttention=JSON.parse(JSON.stringify(healthSandbox.settingsDataHealthM
   pendingCount:2,photoSummary:'1 個附件待修復',photoAttention:true
 })));
 assert.strictEqual(localAttention.summary,'2 項需注意','offline use itself is healthy; queue and broken photo each count once');
-assert.strictEqual(localAttention.rows[1].value,'2 筆待同步');
+assert.strictEqual(localAttention.rows[1].value,'2 筆待送出');
 assert.strictEqual(localAttention.rows[3].value,'1 個附件待修復');
 
 console.log('settings grouped root tests passed');

@@ -1,0 +1,17 @@
+const assert=require('assert'),vm=require('vm');
+const {readIndexHtml,extractFunction}=require('./support/source');
+const html=readIndexHtml();
+assert(html.includes('function shoppingPurchaseSummary('),'split purchase presentation exists');
+const context={shoppingSplitGroupAllocationTotals(items){return {total:items.some(item=>item.quantity==null)?null:items.reduce((total,item)=>total+item.quantity,0)};}};
+vm.createContext(context);vm.runInContext(extractFunction(html,'shoppingPurchaseSummary'),context);
+const bought={id:'peach',splitGroupId:'peach',name:'白桃',unit:'盒',done:true,quantity:2};
+const rest={id:'rest',splitGroupId:'peach',name:'白桃',unit:'盒',done:false,quantity:3};
+const group=[bought,rest],before=JSON.stringify(group);
+assert.strictEqual(context.shoppingPurchaseSummary(bought,group),'部分購買 · 已買 2/5 盒');
+assert.strictEqual(context.shoppingPurchaseSummary(rest,group),'部分購買 · 已買 2/5 盒');
+assert.strictEqual(context.shoppingPurchaseSummary(bought,[bought,{...rest,done:true}]),'全部已購買 · 已買 5/5 盒');
+assert.strictEqual(context.shoppingPurchaseSummary(bought,[bought,{...rest,unit:'袋'}]),'');
+assert.strictEqual(context.shoppingPurchaseSummary(bought,[bought,{...rest,quantity:null}]),'');
+assert.strictEqual(context.shoppingPurchaseSummary({...bought,splitGroupId:''},group),'');
+assert.strictEqual(JSON.stringify(group),before);
+console.log('Purchase progress presentation tests passed');

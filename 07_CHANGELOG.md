@@ -1,5 +1,38 @@
 # 07 版本紀錄
 
+## 2026-10-03 — v142 推送 dev／建立 PR #39（main 尚未合併）
+
+- 依 Bar 指示將 `f06d2c5` 非 force 推送 dev，建立 [PR #39](https://github.com/nick80912-dev/ai-native-projects/pull/39)。發布前重新跑 Node 106/106、Chromium 237/237（7.7 分鐘）、四項 gate／diff check，全數通過；v141／v110 bytes 與離線 snapshot 內容／timestamp 保持不變。
+- 此紀錄當下 dev CI `37130086948`、PR CI `37130090250`、Pages `37130086415` 正在執行，不計為通過。v142 G1 未驗且尚待 Bar 本次裁定，不沿用 v141 豁免；main／正式站仍 v141。沒有 main merge、v142 production tag 或手動 Netlify 部署。
+
+## 2026-10-03 — v142 A 批本機候選完成（未推送）
+
+- 狀態／摘要用語調整，不更改 domain resolver、allocation、帳務計算或持久化契約。想逛店家與待買商品分開；採買已購買／未記帳／部分已記帳／已記帳／待確認保留真實來源，記帳覆蓋仍以筆數而非商品件數呈現。
+- 帳務詳情新增儲存狀態；queue 優先於 bridge／cloud，bridge 優先於舊 cloud，不宣稱其他旅伴已讀。資料健康無待送時改為「本機無待送紀錄」，照片正常保持安靜，容量估算不足測試不改照片 renderer。
+- Astra 獨立審查指出三項 Important：略過只有短暫提示、部分購買缺少群組進度、delivery browser test 沒開真實詳情。修正以既有 progress 顯示已完成／已略過／自動略過；以現存 split-group 安全數量及一致單位顯示購買進度，未知／混合單位不推算；真實點擊帳務卡、可見對話框、同 ID 多來源、正式／TEST 及下載失敗保留 queue 均加入回歸。未改 progression、分帳計算或儲存契約。
+- 審查另有一項 Minor 暫緩：資料健康的本機團體 backlog 含其他帳務模式，尚無模式註記；單筆詳情已正確隔離。此項不影響帳務金額／操作權限，但可能讓摘要令人困惑。
+- 四個具名輔助文字 selector 試 11px；主要文字、金額、按鈕及輸入框不放大。字體盤點、三寬度／六配色、150% DOM 文字放大與鍵盤回歸附測試；實體 PWA／閱讀器仍待驗。
+- 新 generation v142 以 v141 為來源；generator 只使用原八表 CSV，changedKeys=[]、原 timestamp 保留，不刷新 live 資料。v141 三件組及 frozen v110 bytes 不變；無 dev／main runtime 推送。
+- 最終 runtime `38da9a3`：Node **106/106**、Chromium Playwright **237/237**（6.4 分鐘）、四項 gate／diff check、三情境 healthCheck／pageerror 及 SW 離線／混世代防線全過。Astra 三項 Important 修正經 RED→GREEN 及全套 QA 複驗，Minor #52 保留；iPhone／Android 與閱讀器仍待驗。[完整裁定與證據](docs/trippilot-v142-a-verification.md)。
+
+## 2026-10-03 — 第一批 A／B／C 實作計畫（文件；待執行核准）
+
+- 使用者確認第一批設計並要求繼續；新增三份獨立實作計畫與共用索引，列出檔案、helper 契約、RED／GREEN 測試、字體盤點、局部儲存失敗與天氣有效性情境。
+- 本輪僅文件，不改 runtime、不升版、不推送；v141、備份 v9／封存 v1 與 OAuth 不變。計畫的測試命令與預期結果不是已執行的功能驗證。
+
+## 2026-10-03 — 第一批可靠性與資訊清晰度設計（文件；待審閱）
+
+- 新增第一批設計：狀態與購買／帳務摘要、局部進度寫入失敗提示、天氣城市／取得時間／資料有效性；列出保守字體候選，禁止全面放大。
+- 明確區分設計、實作與發布核准；後續分類管理／檔案備份、過往旅程列表與新旅程串接不併入第一批。
+- 本輪不改 runtime、不升版、不更動資料或 OAuth；正式版保持 v141。文件檢查不代表 App 全套 QA 或真機驗收已重新通過。
+
+## 2026-10-01 — v141 已正式發布（PR #38；G1 明確跳過）
+
+- `dev` exact head `9b6f24a` 經 PR #38 merge 至 `main`，merge commit `ead11ff`。dev CI `36877887162`、PR CI `36877900233` 的 sanity／browser-qa 全數 success；兩輪 browser 各 227/227。本機發布前 Node 102/102、browser 227/227、四項 gate／diff check 與獨立審查通過。
+- Netlify production deploy `6abe72157de1330008ed8125` 於 `2026-10-01T14:45:53.981Z` 發布，`commit_ref` 與 merge commit 相符。§F5 五項通過：SW／三件組 v141、18 個文字資產 exact parity、root bridge v110、兩處 cache header 正確、前一代 v140 可服務；隔離瀏覽器實查 28 個 SHELL cache、三件組 v141、非空畫面及 pageerror 0。CUA 已核對正式站「SW v141」及最近更新。
+- annotated tag `production-v141` 指向 `ead11ff`，單獨推送；訊息明記 G1 跳過與 v142 forward-bump 復原。TP141-a～d、既有封存與 Android 真機項目均保持未勾，跳過不等於通過。OAuth External Testing、備份 v9／封存 v1 不變。
+- 發布後 main CI `36878885081` 另於 Actions 核對，不以 Netlify ready 冒充 CI 通過。這次僅補發布證據與現況文件，runtime 不再修改。
+
 ## 2026-10-01 — v141 正式發布核准（準備中；G1 明確跳過）
 
 - Bar 核准將 v141 由 `dev → main` PR 合併發布，並明確選擇本次跳過 iPhone／Android 實體 PWA 驗收。TP141-a～d、既有旅程封存與 Android BB4 仍保留待驗，不把跳過記為通過。

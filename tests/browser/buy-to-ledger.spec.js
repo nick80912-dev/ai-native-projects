@@ -190,7 +190,7 @@ test('mixed unverified Shopping detail disables duplicate ledger entry before cl
   },{itemId:MIXED_DETAIL_ITEM.id,record:MIXED_PERSONAL_RECORD});
 
   const statusRow=page.locator('#shoppingItemDetail .ledger-detail-row').filter({has:page.locator('dt',{hasText:'狀態'})});
-  await expect(statusRow.locator('dd')).toHaveText('已買 · 已記帳 1 · 待確認 1 · 未記帳 1');
+  await expect(statusRow.locator('dd')).toHaveText('已購買 · 已記帳 1 · 待確認 1 · 未記帳 1');
   await expect(page.getByRole('button',{name:'等待狀態確認'})).toBeDisabled();
   await expect(page.getByText('有 1 筆仍在確認同步狀態，完成後才能繼續，避免重複記帳。')).toBeVisible();
   await expect(page.getByText('記帳進度',{exact:true})).toHaveCount(0);

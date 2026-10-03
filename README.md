@@ -29,10 +29,14 @@
 4. 每次修改需通過 QA(斷網/連網/旅行日情境),更新 `07_CHANGELOG.md`
 5. 資料內容改動走 Google Sheets,不改程式;程式只在功能/邏輯變動時修改
 
+## 改善設計與計畫
+
+- [2026-10-03 第一批設計](docs/superpowers/specs/2026-10-03-trippilot-reliability-and-clarity-batch1-design.md)已確認；[A／B／C 實作計畫](docs/superpowers/plans/2026-10-03-trippilot-batch1-index.md)待審閱與執行方式確認。包含狀態／摘要、本機寫入失敗、天氣資訊與保守字體盤點；尚未實作、升版或發布。
+
 ## 專案檔案
 - `index.html` / `app-version.js` — 保留 v110 predecessor bridge；讓尚未更新的 v110 worker 在 current generation 安裝失敗時仍可運作
-- `shell/v141/index.html` / `shell/v141/app-version.js` — v141 候選版文件與 App runtime 版本來源；成功啟用的 `sw.js` 才接管 root 導覽；v136～v140 保持不可變
-- `shell/v141/builtin-snapshot.js` — 由刷新工具以已核准 v136 CSV 產生的版本綁定離線資料資產；禁止手動修改
+- `shell/v142/index.html` / `shell/v142/app-version.js` — v142 本機候選版文件與 App runtime 版本來源；成功啟用的 `sw.js` 才接管 root 導覽；v136～v141 保持不可變
+- `shell/v142/builtin-snapshot.js` — 由刷新工具以已核准 v136 CSV 產生的版本綁定離線資料資產；禁止手動修改
 - `navigation-intent.js` — 明確導覽目的地的 session-only state module；DOM 定位與回饋 adapter 位於 `index.html`
 - `diagnostic-impact.js` — AppLog 原始紀錄的 display-only impact projection；顯示 adapter 位於 `index.html`
 - `today-view.js` — Today Hero 採買摘要的純 model／renderer module；資料選擇與 DOM effects 留在 `index.html`

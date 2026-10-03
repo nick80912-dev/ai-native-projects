@@ -13,6 +13,7 @@
 28. **打卡控制觸控目標過小**:行程頁的 `.chk` 打卡方塊為 **24×24px**,整列不是熱區(往右 80px 落在 `.item-main`,不觸發)。`04_UI_GUIDELINES.md` 自訂的門檻是「所有清單觸控列 ≥44px 高」,24×24 約為建議面積的 30%,而這是走路中單手操作的元件。同頁 `.qa-btn` 為 38–41px,但準則對它有 ≥38px 的明文豁免,不在此項範圍。**Bar 於 2026-09-10 裁定暫不處理。** 屬 Tier 2,動工前需四項確認並 forward bump。
 29. **多處字級低於準則下限**:`04_UI_GUIDELINES.md` 寫「輔助 11-13px」,實測行程頁 `.dow` 星期為 **9.5px**(6 處)、`.drive-chip`／`.tag` 10.5px(13 處)、今天頁 `.h-lbl` 10.5px(6 處)、購物頁 `.fl-arw` 10px(11 處)、分帳 `ledger-status-pill`／`ledger-summary-helper` 10px。改動散布廣,需逐一評估會不會撐破既有版面。**Bar 於 2026-09-10 裁定暫不處理。** 屬 Tier 2。
     - **2026-09-23 複審補量(v126)**:全 stylesheet 共 **45 處** `font-size < 11px`,最小 **8.5px**,分佈 8.5／9／9.5／10／10.5px。原記錄只涵蓋其中一部分。清除死 CSS 後這個數字已是活規則的實數。**本項範圍因此比原記述大**,動工前重新盤點。
+    - **2026-10-03 A 批部分處理（v142 本機候選，未推送）**：依 Bar 的保守尺寸要求，星期、今天摘要標籤與最近帳務代買前後字／對象共四個 selector 改為 11px；其餘候選保留。見 `docs/ui-font-audit-2026-10-03.md`，不表示本項全面完成或真機驗收通過。
 
 38. **重新評估 `--entry-secondary-bg` 是否該主題化(Bar 2026-09-12 裁定:待實機確認後再決定)**:`#f3f8f6` 目前是**核定的非主題呈現 token**,`presentationTokens` 有斷言把關,`04_UI_GUIDELINES` 亦明載。backlog #31 就是因為誤判它為疏漏而被關閉。**本項不主張推翻,只記錄一個新事實供重新評估。**
 
@@ -58,5 +59,8 @@
 
 51. **旅程清除後的晚到同步失敗可重建錯誤提示 key（v140 發布審查，Minor）**：`syncAll()` 的 reject continuation 未重查 inactive；下載開始於 active、清除完成後才失敗時，`saveSyncFailure()` 仍可能寫入 `trip_sync_last_failure`。獨立 reviewer 以真實函式 VM 重現；沒有恢復舊行程、成員或帳務，現行 inactive UI 仍維持無旅程，因此不是本次發布阻擋項。下次經 Tier 2 核准並 forward bump 時，補 inactive rejection guard 與確定性回歸測試；不就地覆寫已發布 v140、不刪資料湊驗收。
 
+52. **資料健康的團體 backlog 模式註記（v142 A 批 Astra 審查，Minor）**：本機 queue／delivery bridge 摘要包含正式與 TEST 模式，但沒有模式註記；單筆詳情已正確依目前模式隔離。可能造成摘要混淆，不改變金額、操作權限或待同步保護。本批重要修正完成後保留後續處理；先決定健康頁是全裝置待送概況或目前模式，再一致調整文案／計數，不只改其中一個來源。
+
 ## 想法池(未承諾)
+
 - 社群內容抓取(Facebook 等)——需 Firecrawl/Playwright MCP,尚未配置

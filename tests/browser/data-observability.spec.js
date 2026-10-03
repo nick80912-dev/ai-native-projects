@@ -213,7 +213,7 @@ test('健康同步 header 保持精簡，partial 與設定健康摘要顯示人�
   await expect(page.getByRole('heading',{name:'資料健康狀態'})).toBeVisible();
   await expect(page.locator('.data-health-trip')).toContainText('部分同步 · 剛剛');
   await expect(page.locator('.data-health-trip')).toContainText('未更新：分帳資料');
-  await expect(page.locator('.data-health-shared')).toContainText('1 筆待同步');
+  await expect(page.locator('.data-health-shared')).toContainText('1 筆待送出');
   await expect(page.locator('.data-health-personal')).toContainText('僅此裝置');
   await expect(page.locator('.settings-data-health')).not.toContainText('ledger');
 
