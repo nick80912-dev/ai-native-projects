@@ -1,8 +1,15 @@
 # CURRENT(現在正在做的)
 
-> 現況基準(2026-10-01):正式站與 `origin/main` 已為 v141（PR #38／`ead11ff`）。Bar 明確跳過本次 G1；真機封存與 Android 專項仍待驗。下方逐版段落保留歷史事實，最新發布證據見 `07_CHANGELOG.md` 的 v141 正式發布紀錄。
+> 現況基準(2026-10-03):正式站與 `origin/main` 已為 v142（PR #39／`07d4581`）。本次依 Bar 在 G1 提醒後再次指示 merge 發布；真機待驗不代勾。下方逐版段落保留歷史事實，最新證據見本節及 `07_CHANGELOG.md`。
 
-## 2026-10-03 — v142 已推 dev，PR #39 等待發布 gate
+## 2026-10-03 — v142 已正式發布（PR #39）
+
+- dev exact head `11cd2e6` 經一般 merge 合併至 main `07d4581`；dev CI `37130214421`、PR CI `37130217277`、main CI `37130726114` 全數 success，各 browser 237/237；本輪重新跑 Node 106/106 與四項 gate 全過。
+- Netlify deploy `6ac114efbcf7f4000841eb69` 的 `commit_ref` 精確等於 merge commit，`published_at=2026-10-03T14:45:13.177Z`。§F5 核對通過：31 個資產與 merge commit bytes 相等、兩處 cache header 正確、root bridge v110／前代 v141 保留；隔離 Chromium 的 28 個 cache 資產完整、三件組 v142、非空畫面、離線重開及 pageerror 0。
+- annotated tag `production-v142` 已推送，指向 `07d4581`。Bar 在明示本次 G1 尚未驗及可選先驗／跳過的提醒後，再指定「merge into main」；據此本次跳過 G1 發布，不等於驗收通過、不適用下一版。TP142-a～d、既有封存／Android／閱讀器與實體鍵盤項目仍待驗。
+- 僅 A 批已發布；B／C 仍待 A 使用者驗收。分類管理、備份檔案匯入／下載、旅程列表及連接新旅程尚未實作；OAuth Testing、備份 v9／封存 v1 保持不變。發布後僅補文件，不就地修改 v142 runtime。
+
+## 2026-10-03 — v142 已推 dev，PR #39 等待發布 gate（合併前紀錄）
 
 - Bar 指示推送 dev 並合併 main；`f06d2c5` 已非 force 推送至 dev，PR [#39](https://github.com/nick80912-dev/ai-native-projects/pull/39) 已建立。此次發布前重新驗證 Node **106/106**、Chromium **237/237**（7.7 分鐘）、四項 gate 與 diff check 全過。
 - 此紀錄當下 dev／PR exact-head CI 與 Pages 正在執行，尚不宣稱通過。正式 main 仍 `ead11ff`／v141；尚未合併、部署或建立 v142 production tag。
@@ -65,18 +72,18 @@
 
 ## 📌 現況
 
-v141 已透過 `dev → main` PR #38 合併並完成正式站部署核對；G1 本次明確跳過。TP141-a～d 與既有真機項目保持待驗，OAuth Testing 不變。發布後 main CI 另核對 Actions `36878885081`。
+v142 已透過 `dev → main` PR #39 合併並完成正式站部署核對。G1 本次跳過；TP142-a～d 與既有真機項目保持待驗，OAuth Testing 不變。
 
 | 項目 | 值 |
 |---|---|
-| **`origin/main` 原始碼** | **SW v141**；merge commit `ead11ff`（PR #38） |
-| **正式站** | `https://trippilot-jp.netlify.app/` — **SW v141**；deploy `6abe72157de1330008ed8125`，`commit_ref` = `ead11ff`，§F5 五項與正式站版本 UI 已核對。G1 明確跳過，真機封存與 Android BB4 仍待驗 |
+| **`origin/main` 原始碼** | **SW v142**；merge commit `07d4581`（PR #39） |
+| **正式站** | `https://trippilot-jp.netlify.app/` — **SW v142**；deploy `6ac114efbcf7f4000841eb69`，`commit_ref` = `07d4581`，§F5／快取／離線核對通過。G1 跳過，真機封存與 Android BB4 仍待驗 |
 | **`dev` 內容** | **v142 A 批**，runtime `38da9a3`、推送 `f06d2c5`；本機 Node 106/106、Chromium 237/237、四項 gate 通過。PR #39／遠端 CI 與 G1 裁定見最上方最新段落；採買分類尚未實作，OAuth 仍 External Testing |
 | 個人備份格式 | **v9**(`PERSONAL_STATE_SUPPORTED_VERSIONS = [1..9]`)—— v81 因想逛 key 識別語意變更而升版 |
 | 最近一次 v141 發版驗證 | 本機 Node **102/102**、Chromium Playwright **227/227**、四項 gate 通過；dev／PR CI sanity 和 browser-qa 全過，main CI 另核對 Actions `36878885081` |
-| 最新正式 tag | **`production-v141`**，指向 `ead11ff`；訊息明記 G1 跳過 |
+| 最新正式 tag | **`production-v142`**，指向 `07d4581`；訊息明記 G1 跳過 |
 
-**v141 已發布至正式站，`production-v141` tag 已建立；G1 跳過不等於通過，實體手機驗收清單保持待驗。**
+**v142 已發布至正式站，`production-v142` tag 已建立；G1 跳過不等於通過，實體手機驗收清單保持待驗。**
 
 ## v140 資料健康獨立子頁（已隨 PR #37 正式發布；下列保留開發階段紀錄）
 
