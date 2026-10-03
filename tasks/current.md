@@ -2,6 +2,12 @@
 
 > 現況基準(2026-10-01):正式站與 `origin/main` 已為 v141（PR #38／`ead11ff`）。Bar 明確跳過本次 G1；真機封存與 Android 專項仍待驗。下方逐版段落保留歷史事實，最新發布證據見 `07_CHANGELOG.md` 的 v141 正式發布紀錄。
 
+## 2026-10-03 — 第一批改善設計待審閱
+
+- 使用者同意開始設計，要求字體／尺寸不要過大而影響操作與視覺。設計分為狀態與摘要、本機寫入可靠性、天氣資訊三個可獨立驗收子批次。
+- 文件：[第一批設計](../docs/superpowers/specs/2026-10-03-trippilot-reliability-and-clarity-batch1-design.md)。下一步為使用者審閱後撰寫實作計畫；runtime 修改與正式發布尚未核准。
+- 本輪只有文件變更；v141、備份 v9、封存 v1、OAuth 與實體 PWA 待驗事項不變。分類管理／備份及過往旅程列表留在後續批次。
+
 ## v114 已正式發布(2026-09-10)
 - PR #16 以 **merge**(非 squash／rebase)合併 `dev` `064e932` → `main`,merge commit **`39c96b2`**;合併前確認 head 未變,且該 head 的遠端 CI `sanity` 與 **`browser-qa`** 皆 success。
 - Netlify 由 `main` 自動部署 deploy **`6aa25e07`**,`commit_ref` = `39c96b2`、`published_at` 有值。§F5 線上核對五項全過(SW v114／generation 三件組 v114／root bridge v110／兩處 cache header 正確)。
