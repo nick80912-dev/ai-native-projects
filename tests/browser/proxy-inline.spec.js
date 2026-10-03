@@ -109,7 +109,7 @@ test('消費與採買卡同行顯示共用代購標記，消費卡窄螢幕維�
     const ledger=await ledgerGeometry(page,'#ledgerHistoryResults .ledger-recent-row');
     expect(ledger,`ledger @${viewport.width}`).toEqual({
       documentOverflow:false,rowOverflow:false,bodyOverflow:false,titleInside:true,summaryInside:true,
-      amountClear:true,menuInside:true,affixSize:'8.5px',badgeSize:'9px'
+      amountClear:true,menuInside:true,affixSize:'11px',badgeSize:'11px'
     });
 
     await page.evaluate(()=>openShoppingList());

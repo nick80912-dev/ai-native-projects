@@ -414,12 +414,12 @@ test('資料健康入口保留警告，明細更新與三種手機寬度正常',
   await entry.focus();await page.keyboard.press('Space');
   const health=page.locator('.settings-data-health');
   await expect(health.locator('.settings-health-list')).toBeVisible();
-  await expect(health).toContainText('2 筆待同步');
+  await expect(health).toContainText('2 筆待送出');
   await page.evaluate(()=>{
     localStorage.removeItem('trip_ledger_queue');rerenderOpenSettingsPage();
   });
   await expect(health).toContainText('資料狀態正常');
-  await expect(health.locator('.data-health-shared')).toContainText('已送出');
+  await expect(health.locator('.data-health-shared')).toContainText('本機無待送紀錄');
   await expect(health.locator('.settings-health-list')).toBeVisible();
   for(const size of WIDTHS){
     await page.setViewportSize({width:size.w,height:size.h});
