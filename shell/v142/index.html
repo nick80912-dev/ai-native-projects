@@ -663,6 +663,8 @@ input:not([type="hidden"]),select,textarea{font-size:16px!important}
 .shopping-target-affix{font-size:9.5px;line-height:1.3}
 .day-chip .dow,.today-hero-summary-label{font-size:11px}
 .ledger-recent-context .shopping-target-affix,.ledger-recent-context .shopping-target-badge{font-size:11px}
+.trip-status-badge{display:inline-flex;align-items:center;margin-left:6px;border-radius:5px;padding:2px 6px;font-size:10px;font-weight:900;background:var(--line-soft);color:var(--ink-soft)}
+.trip-status-completed{background:var(--mint);color:var(--sea-deep)}
 .shopping-target-overflow{color:var(--ink-soft);font-weight:400}
 </style>
 <script src="shell/v142/app-version.js"></script>
@@ -2690,10 +2692,17 @@ function tripItemPresentation(it,res){
   var title=place||activity||'行程';
   return {title:title,meta:activity&&activity.replace(/\s+/g,'')!==title.replace(/\s+/g,'')?activity:''};
 }
+function tripStatusPresentation(itemId,checks,progress){
+  if(checks&&checks[itemId])return {state:'completed',label:'已完成'};
+  if(progress&&progress.skip&&progress.skip[itemId]){
+    return progress.autoSkip&&progress.autoSkip[itemId]?{state:'auto-skipped',label:'自動略過'}:{state:'skipped',label:'已略過'};
+  }
+  return {state:'pending',label:'待完成'};
+}
 function renderItem(it,checks,currentItemId,dayProgress){
   var done=checks[it.id];
   var isNow=currentItemId&&it.id===currentItemId;
-  var autoSkipped=isAutoSkipped(it.id,dayProgress);
+  var status=tripStatusPresentation(it.id,checks,dayProgress);
   var res=resolveRef(it);
   var presentation=tripItemPresentation(it,res);
   var cat=typeTag(res);
@@ -2751,7 +2760,7 @@ function renderItem(it,checks,currentItemId,dayProgress){
         '<span aria-hidden="true">'+(done?'✓':'')+'</span></div>'+
       '<div class="time '+(it.time?'':'blank')+'">'+escapeHtml(it.time||'·')+'</div>'+
       '<div class="body">'+
-        '<div class="act">'+escapeHtml(presentation.title)+(isNow?'<span class="now-badge">現在</span>':'')+(autoSkipped?'<span class="auto-skip-badge" title="時間已過,系統自動略過;點左側打卡可修正為完成">⏱ 自動略過</span>':'')+'</div>'+
+        '<div class="act">'+escapeHtml(presentation.title)+(isNow?'<span class="now-badge">現在</span>':'')+(status.state==='auto-skipped'?'<span class="auto-skip-badge" title="時間已過,系統自動略過;點左側打卡可修正為完成">⏱ 自動略過</span>':status.state!=='pending'?'<span class="trip-status-badge trip-status-'+status.state+'">'+escapeHtml(status.label)+'</span>':'')+'</div>'+
         (presentation.meta?'<div class="place-row"><span class="place item-meta">'+escapeHtml(presentation.meta)+'</span></div>':'')+
         '<div class="chip-row">'+
           (cat?'<span class="tag '+cat.cls+'">'+cat.label+'</span>':'')+
@@ -3895,6 +3904,17 @@ function selectShoppingPhoto(input){
     shoppingUiWorkflow.dispatch({type:'photo-save-failed',sessionId:session.sessionId,requestId:requestId,message:message});return false;
   });
 }
+function shoppingPurchaseSummary(item,allItems){
+  var groupId=String(item&&item.splitGroupId||'');
+  if(!groupId)return '';
+  var group=(allItems||[]).filter(function(candidate){return String(candidate&&candidate.splitGroupId||candidate&&candidate.id||'')===groupId;});
+  if(group.length<2||group.some(function(candidate){return String(candidate.unit||'')!==String(item.unit||'')||candidate.name!==item.name;}))return '';
+  var total=shoppingSplitGroupAllocationTotals(group,item).total;
+  var purchased=shoppingSplitGroupAllocationTotals(group.filter(function(candidate){return candidate.done;}),item).total;
+  if(!Number.isSafeInteger(total)||total<=0||!Number.isSafeInteger(purchased)||purchased<0||purchased>total)return '';
+  var label=purchased===total?'全部已購買':purchased?'部分購買':'尚未購買';
+  return label+' · 已買 '+purchased+'/'+total+(item.unit?' '+item.unit:'');
+}
 function shoppingStatusPresentation(item,inspection){
   var labels={unlinked:'未記帳',partial:'部分已記帳',linked:'已記帳',unverified:'待確認'};
   var purchaseLabel=item&&item.done?'已購買':'待購買';
@@ -3938,6 +3958,7 @@ function renderShoppingItem(item,context){
     photoIndicator='<span class="shopping-photo-indicator" role="img" aria-label="有照片附件"><svg class="app-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m9.5 12.5 5.7-5.7a3 3 0 0 1 4.2 4.2l-8.1 8.1a5 5 0 0 1-7.1-7.1l8.5-8.5"></path></svg></span>';
   }
   var targetModel=shoppingCardTargetModel(item),quantitySummary=shoppingItemQuantitySummary(item);
+  var purchaseSummary=item.splitGroupId?shoppingPurchaseSummary(item,shoppingListStore.all()):'';
   var targetMarkup=renderProxyTargetMarkup(targetModel,'shopping-card-target-summary');
   /* 待買頁的群組標題已是位置來源，不把同一地點再放進卡片與無障礙樹；
      已買頁只有單一平鋪群組，因此仍由卡片保留地點。 */
@@ -3951,6 +3972,7 @@ function renderShoppingItem(item,context){
     '<div class="shopping-item-body" role="button" tabindex="0" aria-label="查看 '+escapeHtml(item.name)+' 詳情" onclick="handleShoppingItemBodyClick(\''+jsString(item.id)+'\',event)" onkeydown="handleShoppingItemBodyClick(\''+jsString(item.id)+'\',event)"><div class="shopping-item-title-row"><strong>'+escapeHtml(item.name)+'</strong>'+
       targetMarkup+photoIndicator+badge+'</div>'+
       (item.category||quantitySummary?'<div class="shopping-item-meta">'+(item.category?'<span class="shopping-category-badge">'+escapeHtml(item.category)+'</span>':'')+(quantitySummary?'<span>'+escapeHtml(quantitySummary)+'</span>':'')+'</div>':'')+
+      (purchaseSummary?'<div class="shopping-item-meta shopping-purchase-summary">'+escapeHtml(purchaseSummary)+'</div>':'')+
       (location?'<div class="shopping-item-location">'+escapeHtml(location)+'</div>':'')+
     '</div><div class="shopping-item-actions">'+inlineAction+menu+'</div></article>';
 }
@@ -4002,6 +4024,7 @@ function renderShoppingItemDetail(item){
     ['分類',model.category||'未分類'],
     ['數量',model.quantitySummary||'—'],
     ['原需求',model.originalTotal==null?'—':model.originalTotal+(model.unit?' '+model.unit:'')],
+    ['購買進度',shoppingPurchaseSummary(item,allItems)],
     ['狀態',shoppingStatusPresentation(item,model.linkSummary).purchaseLabel+' · '+shoppingDetailLedgerSummary(model.linkSummary)],
     ['完成時間',completed],
     ['行程站點',model.locationText]

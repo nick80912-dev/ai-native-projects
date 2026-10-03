@@ -4,6 +4,8 @@
 
 - 狀態／摘要用語調整，不更改 domain resolver、allocation、帳務計算或持久化契約。想逛店家與待買商品分開；採買已購買／未記帳／部分已記帳／已記帳／待確認保留真實來源，記帳覆蓋仍以筆數而非商品件數呈現。
 - 帳務詳情新增儲存狀態；queue 優先於 bridge／cloud，bridge 優先於舊 cloud，不宣稱其他旅伴已讀。資料健康無待送時改為「本機無待送紀錄」，照片正常保持安靜，容量估算不足測試不改照片 renderer。
+- Astra 獨立審查指出三項 Important：略過只有短暫提示、部分購買缺少群組進度、delivery browser test 沒開真實詳情。修正以既有 progress 顯示已完成／已略過／自動略過；以現存 split-group 安全數量及一致單位顯示購買進度，未知／混合單位不推算；真實點擊帳務卡、可見對話框、同 ID 多來源、正式／TEST 及下載失敗保留 queue 均加入回歸。未改 progression、分帳計算或儲存契約。
+- 審查另有一項 Minor 暫緩：資料健康的本機團體 backlog 含其他帳務模式，尚無模式註記；單筆詳情已正確隔離。此項不影響帳務金額／操作權限，但可能讓摘要令人困惑。
 - 四個具名輔助文字 selector 試 11px；主要文字、金額、按鈕及輸入框不放大。字體盤點、三寬度／六配色、150% DOM 文字放大與鍵盤回歸附測試；實體 PWA／閱讀器仍待驗。
 - 新 generation v142 以 v141 為來源；generator 只使用原八表 CSV，changedKeys=[]、原 timestamp 保留，不刷新 live 資料。v141 三件組及 frozen v110 bytes 不變；無 dev／main runtime 推送。
 

@@ -8,6 +8,7 @@
 - 使用者已確認設計、選擇 Native 逐步實作及整批獨立審查，核准 A 執行；另核准以原 v141 CSV 輸入經既有 generator 重產 v142 版本綁定種子，不抓 live CSV／Ledger。原內容及 timestamp 深度相等；v141／root v110 均未修改。
 - A 區分想逛店家／待買商品及採買記帳狀態；帳務詳情以本機、待送出、接收待讀回、已讀回的現有證據呈現。金額／數量／allocation／schema／備份 v9／封存 v1／OAuth 不變。只調整四個已量測小字 selector 為 11px，主要尺寸保留，見[字體盤點](../docs/ui-font-audit-2026-10-03.md)。
 - 本機完整 QA 與獨立審查進行中，不代表已交付或已部署。runtime 推 dev 與 main 發布尚未核准；正式站仍 v141。A 驗收後才進 B，本輪不進 C／分類管理／備份／過往旅程列表。
+- Astra 審查的三項 Important 已完成修正並通過指定 browser 32/32，最終完整 QA 尚在重跑；原中斷日誌不算通過。永久行程狀態、split-group 購買進度及真實可見帳務詳情測試已補齊。資料健康跨模式 backlog 未註記列為一項 Minor 待後續處理。
 
 ## v114 已正式發布(2026-09-10)
 - PR #16 以 **merge**(非 squash／rebase)合併 `dev` `064e932` → `main`,merge commit **`39c96b2`**;合併前確認 head 未變,且該 head 的遠端 CI `sanity` 與 **`browser-qa`** 皆 success。

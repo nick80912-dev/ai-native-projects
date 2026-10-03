@@ -43,6 +43,7 @@ function loadModule(){
   vm.createContext(sandbox);
   vm.runInContext(html.slice(start,end),sandbox);
   vm.runInContext(extractFunction(html,'shoppingStatusPresentation'),sandbox);
+  vm.runInContext(extractFunction(html,'shoppingPurchaseSummary'),sandbox);
   vm.runInContext(extractFunction(html,'renderShoppingItemDetail'),sandbox);
   sandbox.__html=html;
   return sandbox;
