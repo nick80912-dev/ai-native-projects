@@ -2,10 +2,10 @@
 
 > 現況基準(2026-10-01):正式站與 `origin/main` 已為 v141（PR #38／`ead11ff`）。Bar 明確跳過本次 G1；真機封存與 Android 專項仍待驗。下方逐版段落保留歷史事實，最新發布證據見 `07_CHANGELOG.md` 的 v141 正式發布紀錄。
 
-## 2026-10-03 — 第一批改善設計待審閱
+## 2026-10-03 — 第一批設計已確認，實作計畫待審閱
 
 - 使用者同意開始設計，要求字體／尺寸不要過大而影響操作與視覺。設計分為狀態與摘要、本機寫入可靠性、天氣資訊三個可獨立驗收子批次。
-- 文件：[第一批設計](../docs/superpowers/specs/2026-10-03-trippilot-reliability-and-clarity-batch1-design.md)。下一步為使用者審閱後撰寫實作計畫；runtime 修改與正式發布尚未核准。
+- 使用者已確認[第一批設計](../docs/superpowers/specs/2026-10-03-trippilot-reliability-and-clarity-batch1-design.md)。已新增[三份實作計畫與索引](../docs/superpowers/plans/2026-10-03-trippilot-batch1-index.md)；下一步審閱計畫、選擇 Native／Subagent-driven 並確認 runtime 執行。推送與正式發布尚未核准。
 - 本輪只有文件變更；v141、備份 v9、封存 v1、OAuth 與實體 PWA 待驗事項不變。分類管理／備份及過往旅程列表留在後續批次。
 
 ## v114 已正式發布(2026-09-10)

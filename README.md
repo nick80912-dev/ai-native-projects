@@ -29,9 +29,9 @@
 4. 每次修改需通過 QA(斷網/連網/旅行日情境),更新 `07_CHANGELOG.md`
 5. 資料內容改動走 Google Sheets,不改程式;程式只在功能/邏輯變動時修改
 
-## 改善設計（待審閱）
+## 改善設計與計畫
 
-- [2026-10-03 第一批：可靠性與資訊清晰度](docs/superpowers/specs/2026-10-03-trippilot-reliability-and-clarity-batch1-design.md)：狀態／摘要、本機寫入失敗、天氣資訊與保守字體盤點。僅書面設計，尚未實作、升版或發布。
+- [2026-10-03 第一批設計](docs/superpowers/specs/2026-10-03-trippilot-reliability-and-clarity-batch1-design.md)已確認；[A／B／C 實作計畫](docs/superpowers/plans/2026-10-03-trippilot-batch1-index.md)待審閱與執行方式確認。包含狀態／摘要、本機寫入失敗、天氣資訊與保守字體盤點；尚未實作、升版或發布。
 
 ## 專案檔案
 - `index.html` / `app-version.js` — 保留 v110 predecessor bridge；讓尚未更新的 v110 worker 在 current generation 安裝失敗時仍可運作
