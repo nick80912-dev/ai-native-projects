@@ -64,6 +64,8 @@
 
 v141 過往旅程以 `TripDrive.resume()` 重用同次 App 尚未過期的記憶體授權，重載後須重新授權。關閉設定取消 pending connect／清除歷史 UI；離開結束旅程流程會使該次操作失效並清除授權，重新登入也不能恢復舊操作。inactive 清除憑證；401／過期不得重用。登入等待與 Drive 讀取分開呈現，頁內可取消登入，90 秒授權逾時／20 秒 Drive 讀取逾時可重試。request／selection generation 保護晚到回應（含回應內容）；token 不進 localStorage、備份或封存。真實 PWA 重入仍待驗，外部 400 原因未捕捉，不宣稱已修正。
 
+v142 A 本機候選（未推送）：狀態 helper 僅投影現存事實。`tripStatusPresentation` 依 checks／skip／autoSkip 區分已完成、已略過與自動略過，不更改 progression；`shoppingPurchaseSummary` 只在同 split-group 的名稱／單位一致、安全數量可證明時顯示購買進度，不能以 ledgerLinks 推算商品件數。記帳覆蓋仍以 allocation 筆數呈現。`ledgerDeliveryPresentation` 採 queue → bridge → cloud 優先序，詳情依目前正式／TEST 模式過濾，不代表其他旅伴已讀。資料健康維持全裝置 backlog，跨模式未註記是 backlog #52（Minor），不得偷偷改成只保護目前模式的待送資料。
+
 ## Ledger Schema 2.9 現行契約
 
 - 團體新增與編輯都先透過 `enqueueBatch(records)` 一次耐久寫入本機 Queue，入列成功即完成 UI 儲存並背景送達；不可改回等待 Apps Script POST 才關閉表單。公開 CSV 跨裝置可見延遲 1–5 分鐘是已接受取捨。

@@ -84,7 +84,9 @@ assert.deepStrictEqual(plain(ledgerDeliveryPresentation('r1', {track:'shared',qu
 
 **Interfaces:** 交付上述 helper 與測試結果；B／C 不依賴其 API。
 
-- [ ] 更新現況／changelog／真機驗收記錄，列出實際調整 selector，不宣稱所有候選都已增大。
-- [ ] 執行索引全部 QA 命令；審查 scope、主題、長文字、未改 shared 計算與資料契約。
-- [ ] 依核准的執行方法安排獨立整批審查，修正後重跑受影響測試；審查未通過不交付。
-- [ ] 只在取得 push 指示後推 dev，核對 exact-head CI 與測試站 G；請使用者驗收後再開始 B。main 發布不是此步的預設動作。
+- [x] 更新現況／changelog／真機驗收記錄，列出實際調整 selector，不宣稱所有候選都已增大。
+- [x] 執行索引全部 QA 命令；審查 scope、主題、長文字、未改 shared 計算與資料契約。
+- [x] 依核准的執行方法安排獨立整批審查，修正後重跑受影響測試；審查未通過不交付。
+- [x] 只在取得 push 指示後推 dev，核對 exact-head CI 與測試站 G；請使用者驗收後再開始 B。main 發布不是此步的預設動作。
+
+交付註記：本機 Node106/106、browser237/237 與 gates 通過；獨立審查 Important 已修正，Minor #52 暫緩。最後一項核取的是「保留推送核准界線」，不代表已 push、遠端 CI／站台通過。runtime 尚未取得推送指示，故保留隔離分支；手機及 A 使用者驗收仍待完成。

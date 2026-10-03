@@ -2,13 +2,13 @@
 
 > 現況基準(2026-10-01):正式站與 `origin/main` 已為 v141（PR #38／`ead11ff`）。Bar 明確跳過本次 G1；真機封存與 Android 專項仍待驗。下方逐版段落保留歷史事實，最新發布證據見 `07_CHANGELOG.md` 的 v141 正式發布紀錄。
 
-## 2026-10-03 — A 批 v142 本機候選實作／驗證中（未推送）
+## 2026-10-03 — A 批 v142 本機候選完成（未推送）
 
 - 使用者同意開始設計，要求字體／尺寸不要過大而影響操作與視覺。設計分為狀態與摘要、本機寫入可靠性、天氣資訊三個可獨立驗收子批次。
 - 使用者已確認設計、選擇 Native 逐步實作及整批獨立審查，核准 A 執行；另核准以原 v141 CSV 輸入經既有 generator 重產 v142 版本綁定種子，不抓 live CSV／Ledger。原內容及 timestamp 深度相等；v141／root v110 均未修改。
 - A 區分想逛店家／待買商品及採買記帳狀態；帳務詳情以本機、待送出、接收待讀回、已讀回的現有證據呈現。金額／數量／allocation／schema／備份 v9／封存 v1／OAuth 不變。只調整四個已量測小字 selector 為 11px，主要尺寸保留，見[字體盤點](../docs/ui-font-audit-2026-10-03.md)。
-- 本機完整 QA 與獨立審查進行中，不代表已交付或已部署。runtime 推 dev 與 main 發布尚未核准；正式站仍 v141。A 驗收後才進 B，本輪不進 C／分類管理／備份／過往旅程列表。
-- Astra 審查的三項 Important 已完成修正並通過指定 browser 32/32，最終完整 QA 尚在重跑；原中斷日誌不算通過。永久行程狀態、split-group 購買進度及真實可見帳務詳情測試已補齊。資料健康跨模式 backlog 未註記列為一項 Minor 待後續處理。
+- runtime commit `38da9a3` 最終 Node **106/106**、Chromium Playwright **237/237**（6.4 分鐘）、四項 gate／diff check 全過；三情境 healthCheck／pageerror、SW 更新／混世代防線、離線與六主題／三寬度都有回歸。此為本機證據，不代表已部署。runtime 推 dev 與 main 發布尚未核准；正式站仍 v141。A 驗收後才進 B，本輪不進 C／分類管理／備份／過往旅程列表。
+- Astra 審查的三項 Important 經一輪 RED→GREEN 修正並完整複驗；原中斷日誌不算通過。永久行程狀態、split-group 購買進度及真實可見帳務詳情測試已補齊。資料健康跨模式 backlog 未註記列為 Minor #52 待後續處理。裁定／限制與測試證據見[交付驗證](../docs/trippilot-v142-a-verification.md)；真機不代勾。
 
 ## v114 已正式發布(2026-09-10)
 - PR #16 以 **merge**(非 squash／rebase)合併 `dev` `064e932` → `main`,merge commit **`39c96b2`**;合併前確認 head 未變,且該 head 的遠端 CI `sanity` 與 **`browser-qa`** 皆 success。
