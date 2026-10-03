@@ -1,6 +1,8 @@
 # TripPilot 第一批實作計畫索引
 
-日期：2026-10-03。使用者已確認[設計](../specs/2026-10-03-trippilot-reliability-and-clarity-batch1-design.md)，本輪只撰寫計畫。**尚未執行 runtime 修改，尚未授權推送或正式發布。**
+日期：2026-10-03。使用者已確認[設計](../specs/2026-10-03-trippilot-reliability-and-clarity-batch1-design.md)，選擇 Native 執行 A、整批獨立審查。**A 的 v142 runtime 已在隔離 worktree 實作；尚未授權 runtime 推送或正式發布。** B／C 待前批使用者驗收。
+
+執行核准補充：原計畫禁止未核准重產種子；使用者另確認可透過既有 generator 用 v141 原八表 CSV 重產 v142，禁止 live CSV／Ledger fetch。內容及 timestamp parity 必須驗證，不以此核准刷新行程資料。
 
 ## 執行順序
 

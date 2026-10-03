@@ -1,6 +1,6 @@
 # TripPilot A：狀態、摘要與保守字體 Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** 用可信狀態與精簡摘要改善閱讀，不改紀錄及帳務計算。
 
@@ -46,12 +46,12 @@ assert.strictEqual(shoppingStatusPresentation(item, {state:'partial', allocation
 assert.deepStrictEqual(item, originalItem);
 ```
 
-- [ ] **Step 1 — RED test:** 在 `tests/status-clarity.test.js` 以 source helper／vm 執行 adapter；斷言已完成／已略過／自動略過不同；`inspection.state==='unverified'` 的 `ledgerLabel==='待確認'`；partial 顯示「部分已記帳」；unlinked 顯示「未記帳」。legacy 無 allocation 不輸出「0 件已記帳」；執行前後 item 深度相等。
-- [ ] **Step 2 — Verify RED:** `node tests/status-clarity.test.js`，預期新 helper 尚不存在或文案斷言失敗，不是 fixture／語法錯。
-- [ ] **Step 3 — Minimal implementation:** 建立 G 並登記；加入上述 helper，卡片及詳細頁共用。行程展示用「已完成／已略過」，自動原因保留。商品保留既有 quantity summary；僅所有相關 allocation 數量有效且語意可證明時補已記帳數量，否則使用部分／待確認文字。店家區塊／空白狀態明示「想逛店家」，商品明示「待買商品」，不改購買／收藏 effect。
-- [ ] **Step 4 — Browser test:** 在 `tests/browser/status-clarity.spec.js` 以 qa-fixture 建立零／部分／全部購買、多 allocations、已刪除／待確認帳務；比對卡片與詳細頁一致、沒有新的 storage key、金額與數量不變。採用原生按鈕操作，DOM 文案斷言，不只比 source。
-- [ ] **Step 5 — Verify GREEN:** `node tests/status-clarity.test.js`、`node tests/shopping-ledger-links.test.js`、`node tests/trip-presentation.test.js`、`npx playwright test tests/browser/status-clarity.spec.js tests/browser/buy-to-ledger.spec.js`，全部通過。
-- [ ] **Step 6 — Commit:** 明列新 generation、generation 登記、上述測試及實際修改文件；訊息 `feat: clarify trip and shopping status summaries`。
+- [x] **Step 1 — RED test:** 在 `tests/status-clarity.test.js` 以 source helper／vm 執行 adapter；斷言已完成／已略過／自動略過不同；`inspection.state==='unverified'` 的 `ledgerLabel==='待確認'`；partial 顯示「部分已記帳」；unlinked 顯示「未記帳」。legacy 無 allocation 不輸出「0 件已記帳」；執行前後 item 深度相等。
+- [x] **Step 2 — Verify RED:** `node tests/status-clarity.test.js`，預期新 helper 尚不存在或文案斷言失敗，不是 fixture／語法錯。
+- [x] **Step 3 — Minimal implementation:** 建立 G 並登記；加入上述 helper，卡片及詳細頁共用。行程展示用「已完成／已略過」，自動原因保留。商品保留既有 quantity summary；僅所有相關 allocation 數量有效且語意可證明時補已記帳數量，否則使用部分／待確認文字。店家區塊／空白狀態明示「想逛店家」，商品明示「待買商品」，不改購買／收藏 effect。
+- [x] **Step 4 — Browser test:** 在 `tests/browser/status-clarity.spec.js` 以 qa-fixture 建立零／部分／全部購買、多 allocations、已刪除／待確認帳務；比對卡片與詳細頁一致、沒有新的 storage key、金額與數量不變。採用原生按鈕操作，DOM 文案斷言，不只比 source。
+- [x] **Step 5 — Verify GREEN:** `node tests/status-clarity.test.js`、`node tests/shopping-ledger-links.test.js`、`node tests/trip-presentation.test.js`、`npx playwright test tests/browser/status-clarity.spec.js tests/browser/buy-to-ledger.spec.js`，全部通過。
+- [x] **Step 6 — Commit:** 明列新 generation、generation 登記、上述測試及實際修改文件；訊息 `feat: clarify trip and shopping status summaries`。
 
 ### Task 2: 同步證據與照片健康
 
@@ -62,23 +62,23 @@ assert.deepStrictEqual(plain(ledgerDeliveryPresentation('r1', {track:'shared',qu
 assert.deepStrictEqual(plain(ledgerDeliveryPresentation('r1', {track:'shared',queue:[],bridge:[],cloud:[{id:'r1'}]})), {state:'readback',label:'已從伺服器讀回'});
 ```
 
-- [ ] **Step 1 — RED test:** 新建 `tests/ledger-delivery-presentation.test.js`，以相同 ID 覆蓋 queue／bridge／cloud 組合、personal 與空 evidence；精確斷言上述 state／label。cloud 沒有該 ID 時，一般 sync success 不得產生 readback。
-- [ ] **Step 2 — Verify RED:** `node tests/ledger-delivery-presentation.test.js`，helper 缺失或誤判須失敗。
-- [ ] **Step 3 — Minimal implementation:** 從現有 `ledgerRepository.queuedRecords()`、`ledgerDeliveryBridgeRecords()`、`DB.ledger` 取資料，限 shared／目前正式或 TEST 模式。更新帳務狀態摘要／同步面板；列表不疊所有階段徽章。無法判定單筆時顯示待確認，不更改 flush／bridge reconciliation。照片正常行為若已符合只補測試，不改 renderer。
-- [ ] **Step 4 — Browser test:** 擴充 `status-clarity.spec.js`：pending、bridge、cloud readback、部分下載失敗仍保留 pending evidence；照片正常無告警，無容量估算不是錯誤，invalid 仍有修復入口。斷言沒有「其他裝置已讀到」；不呼叫真遠端 write。
-- [ ] **Step 5 — Verify GREEN:** `node tests/ledger-delivery-presentation.test.js`、`node tests/ledger-sync.test.js`、`npx playwright test tests/browser/status-clarity.spec.js tests/browser/settings-health-page.spec.js tests/browser/shopping-photo.spec.js`；全部通過。
-- [ ] **Step 6 — Commit:** UI 與上述測試，訊息 `feat: clarify ledger delivery evidence`。
+- [x] **Step 1 — RED test:** 新建 `tests/ledger-delivery-presentation.test.js`，以相同 ID 覆蓋 queue／bridge／cloud 組合、personal 與空 evidence；精確斷言上述 state／label。cloud 沒有該 ID 時，一般 sync success 不得產生 readback。
+- [x] **Step 2 — Verify RED:** `node tests/ledger-delivery-presentation.test.js`，helper 缺失或誤判須失敗。
+- [x] **Step 3 — Minimal implementation:** 從現有 `ledgerRepository.queuedRecords()`、`ledgerDeliveryBridgeRecords()`、`DB.ledger` 取資料，限 shared／目前正式或 TEST 模式。更新帳務狀態摘要／同步面板；列表不疊所有階段徽章。無法判定單筆時顯示待確認，不更改 flush／bridge reconciliation。照片正常行為若已符合只補測試，不改 renderer。
+- [x] **Step 4 — Browser test:** 擴充 `status-clarity.spec.js`：pending、bridge、cloud readback、部分下載失敗仍保留 pending evidence；照片正常無告警，無容量估算不是錯誤，invalid 仍有修復入口。斷言沒有「其他裝置已讀到」；不呼叫真遠端 write。
+- [x] **Step 5 — Verify GREEN:** `node tests/ledger-delivery-presentation.test.js`、`node tests/ledger-sync.test.js`、`npx playwright test tests/browser/status-clarity.spec.js tests/browser/settings-health-page.spec.js tests/browser/shopping-photo.spec.js`；全部通過。
+- [x] **Step 6 — Commit:** UI 與上述測試，訊息 `feat: clarify ledger delivery evidence`。
 
 ### Task 3: 字體盤點與限定候選的畫面驗證
 
 **Interfaces:** 不新增 runtime API。CSS 候選：`.today-hero-summary-label`、`.today-hero-summary-value small`、`.day-chip .dow`、`.ledger-recent-context .shopping-target-affix`、`.ledger-recent-context .shopping-target-badge`、`.ledger-recent-statuses .ledger-recent-badge`、`.ledger-recent-context .ledger-recent-badge`。其餘設計字體表列入盤點，沒有畫面證據不直接調整。
 
-- [ ] **Step 1 — Inventory:** `docs/ui-font-audit-2026-10-03.md` 記下設計九組候選的 CSS／computed size、320／375／390px 截圖、cascade、是否難讀及決定。主要金額、主按鈕、input／select／textarea 記為保留；不要修改照片健康或回顧頁來製造工作。
-- [ ] **Step 2 — RED tests:** `ui-font.test.js` 保留 local font stack／input 16px 契約。`ui-ux-hardening.spec.js` 加候選 computed 11px（僅盤點確認要改者）、document 無橫向溢出、主操作可見、input size 與基準相同；320／375／390px、長中文、大金額。候選測試須在舊字級失敗。
-- [ ] **Step 3 — Minimal implementation:** 僅修改盤點確認需要的具名 selector 為 11px，不改 body、root font-size、主題、間距或 controls 大小。若壓縮操作／破壞摘要則撤回該候選並記原因；12px 另提案，不自動採用。
-- [ ] **Step 4 — A11y:** Browser 加 Enter／Space 勾選、展開後 aria-expanded、焦點不回 body、錯誤訊息可及名稱；較大文字以實測 CSS 文字放大情境加人工系統設定驗證，不只調 deviceScaleFactor。閱讀器真機走查仍列待驗。
-- [ ] **Step 5 — Verify GREEN:** `node tests/ui-font.test.js`、`node tests/trip-checkin-a11y.test.js`、`npx playwright test tests/browser/ui-ux-hardening.spec.js tests/browser/shop-row-a11y.spec.js tests/browser/status-clarity.spec.js`；全部通過，六主題人工截圖對照。
-- [ ] **Step 6 — Commit:** UI、字體盤點與上述測試，訊息 `style: tune small supporting text conservatively`。
+- [x] **Step 1 — Inventory:** `docs/ui-font-audit-2026-10-03.md` 記下設計九組候選的 CSS／computed size、320／375／390px 截圖、cascade、是否難讀及決定。主要金額、主按鈕、input／select／textarea 記為保留；不要修改照片健康或回顧頁來製造工作。
+- [x] **Step 2 — RED tests:** `ui-font.test.js` 保留 local font stack／input 16px 契約。`ui-ux-hardening.spec.js` 加候選 computed 11px（僅盤點確認要改者）、document 無橫向溢出、主操作可見、input size 與基準相同；320／375／390px、長中文、大金額。候選測試須在舊字級失敗。
+- [x] **Step 3 — Minimal implementation:** 僅修改盤點確認需要的具名 selector 為 11px，不改 body、root font-size、主題、間距或 controls 大小。若壓縮操作／破壞摘要則撤回該候選並記原因；12px 另提案，不自動採用。
+- [x] **Step 4 — A11y:** Browser 加 Enter／Space 勾選、展開後 aria-expanded、焦點不回 body、錯誤訊息可及名稱；較大文字以實測 CSS 文字放大情境加人工系統設定驗證，不只調 deviceScaleFactor。閱讀器真機走查仍列待驗。
+- [x] **Step 5 — Verify GREEN:** `node tests/ui-font.test.js`、`node tests/trip-checkin-a11y.test.js`、`npx playwright test tests/browser/ui-ux-hardening.spec.js tests/browser/shop-row-a11y.spec.js tests/browser/status-clarity.spec.js`；全部通過，六主題人工截圖對照。
+- [x] **Step 6 — Commit:** UI、字體盤點與上述測試，訊息 `style: tune small supporting text conservatively`。
 
 ### Task 4: A 交付 gate
 
