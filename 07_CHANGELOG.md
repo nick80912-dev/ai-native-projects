@@ -1,5 +1,10 @@
 # 07 版本紀錄
 
+## 2026-10-03 — v142 推送 dev／建立 PR #39（main 尚未合併）
+
+- 依 Bar 指示將 `f06d2c5` 非 force 推送 dev，建立 [PR #39](https://github.com/nick80912-dev/ai-native-projects/pull/39)。發布前重新跑 Node 106/106、Chromium 237/237（7.7 分鐘）、四項 gate／diff check，全數通過；v141／v110 bytes 與離線 snapshot 內容／timestamp 保持不變。
+- 此紀錄當下 dev CI `37130086948`、PR CI `37130090250`、Pages `37130086415` 正在執行，不計為通過。v142 G1 未驗且尚待 Bar 本次裁定，不沿用 v141 豁免；main／正式站仍 v141。沒有 main merge、v142 production tag 或手動 Netlify 部署。
+
 ## 2026-10-03 — v142 A 批本機候選完成（未推送）
 
 - 狀態／摘要用語調整，不更改 domain resolver、allocation、帳務計算或持久化契約。想逛店家與待買商品分開；採買已購買／未記帳／部分已記帳／已記帳／待確認保留真實來源，記帳覆蓋仍以筆數而非商品件數呈現。
