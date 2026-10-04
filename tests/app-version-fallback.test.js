@@ -65,6 +65,7 @@ const dataPage = vm.createContext({
   renderAppReleaseNotes() { return '<div class="settings-release-list"></div>'; },
 });
 vm.runInContext(helperSource, dataPage);
+vm.runInContext(extractFunction(html, 'settingsInfoButton'), dataPage);
 vm.runInContext(extractFunction(html, 'renderSettingsDataPage'), dataPage);
 
 let markup;
@@ -85,6 +86,7 @@ const dataPageOk = vm.createContext({
   renderAppReleaseNotes() { return ''; },
 });
 vm.runInContext(helperSource, dataPageOk);
+vm.runInContext(extractFunction(html, 'settingsInfoButton'), dataPageOk);
 vm.runInContext(extractFunction(html, 'renderSettingsDataPage'), dataPageOk);
 assert.ok(dataPageOk.renderSettingsDataPage().includes('SW v99'), 'the real version is shown when available');
 

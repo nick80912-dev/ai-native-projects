@@ -1,5 +1,12 @@
 # 07 版本紀錄
 
+## 2026-10-04 — v143 個人帳匯出與說明視窗（本機完成）
+
+- 資料與版本新增「匯出本趟個人帳」JSON：只讀本機個人帳白名單，保留日期、原金額、店家、代購及穩定來源識別；排除團體帳／Queue／照片／token，不改原資料或換算。
+- 目前旅程／個人帳／備份的補充說明改 ⓘ modal，保留直接可見的清除／覆蓋／照片排除警告。Esc、焦點圈限／返回及背景 inert 還原，字級維持精簡。
+- 依本次核准建立 immutable v143 並同步 generation 登錄／活文件；原 v142 種子透過 generator 版本綁定再產生，無 live CSV／Ledger fetch；前代及 root v110 byte-lock 不動。記序匯入未實作，未推送／發布。
+- 最終 Node **107/107**、Chromium **243/243**（6.9 分鐘）、四項 gate／diff check 全過；獨立 reviewer 的兩項 Important（選填欄位損壞、modal 層級）及截圖發現的 full-height 繼承皆補 RED→GREEN 並覆核；無重要問題殘留。完整紀錄見 docs/trippilot-v143-verification.md；真機存檔／閱讀器待驗。
+
 ## 2026-10-03 — v142 已正式發布（PR #39）
 
 - dev `11cd2e6` 經 PR #39 一般 merge 至 main `07d4581`。dev CI `37130214421`／PR CI `37130217277`／main CI `37130726114` 全部 success，各 browser 237/237（5.8 分鐘）；本輪 Node 106/106／四項 gate 全過。

@@ -1,5 +1,12 @@
 # CURRENT(現在正在做的)
 
+## 2026-10-04 — v143 本機完成，未推送
+
+- Bar 核准獨立個人帳 JSON 下載及 ⓘ 說明 modal；限定資料與版本，不實作記序匯入，不更動備份 v9／封存 v1／CMS／帳務計算。
+- 已核准 Tier 2 generation 群組：建立 v143，SW／assets／header 同步；generator 僅採 v142 種子 CSV，沒有 live fetch。v142 與 root v110 保持不可變；復原採下一個未使用版本 forward bump，不刪 SW。
+- 最終 Node **107/107**、Chromium **243/243**（6.9 分鐘，0 retry）、四項 gate／diff check 全過；獨立審查兩項 Important 經一輪修正覆核已解決。詳見 [交付驗證](../docs/trippilot-v143-verification.md)。本機完成，未 push dev／main、未部署；正式站仍 v142。
+- TP143-a：真機下載後確認檔案可開啟、筆數／金額／代購正確且原帳完整；TP143-b：ⓘ 關閉、閱讀器及鍵盤焦點；TP143-c：清除前先保存檔案。以上均未驗，不代勾。
+
 > 現況基準(2026-10-03):正式站與 `origin/main` 已為 v142（PR #39／`07d4581`）。本次依 Bar 在 G1 提醒後再次指示 merge 發布；真機待驗不代勾。下方逐版段落保留歷史事實，最新證據見本節及 `07_CHANGELOG.md`。
 
 ## 2026-10-03 — v142 已正式發布（PR #39）

@@ -8,7 +8,7 @@
 
 ## 你是誰、專案是什麼
 你是 Bar 的 AI 工程團隊(CTO/工程師/設計/QA 合一)。Bar **不會程式**,用白話下需求;你負責全部技術決策與實作,不教學、不解釋程式概念(除非被問)。
-專案:日本旅遊 PWA。Google Sheets 是 CMS,vanilla JS App 在使用者手機端抓 8 張公開 CSV 渲染,Netlify 託管。CMS 現行 Schema 3.0 以 Places.HID 精確關聯 Hotels.HID；住宿名稱只供顯示。current `shell/v142/index.html` 是 UI 與 DOM adapter；root `index.html`／`app-version.js` 是禁止當日常程式修改的 frozen v110 predecessor bridge。獨立 runtime modules 由 `runtime-assets.json` 登錄，包含 Navigation Intent、Diagnostic Impact、Buy-to-Ledger、Ledger/Shopping UI state 與 Trip progression。`schema.js`、`validator.js`、`sw.js` 等部署檔均在 repo 根目錄,經 GitHub 連動由 Netlify 部署(流程見 16 §E)。
+專案:日本旅遊 PWA。Google Sheets 是 CMS,vanilla JS App 在使用者手機端抓 8 張公開 CSV 渲染,Netlify 託管。CMS 現行 Schema 3.0 以 Places.HID 精確關聯 Hotels.HID；住宿名稱只供顯示。current `shell/v143/index.html` 是 UI 與 DOM adapter；root `index.html`／`app-version.js` 是禁止當日常程式修改的 frozen v110 predecessor bridge。獨立 runtime modules 由 `runtime-assets.json` 登錄，包含 Navigation Intent、Diagnostic Impact、Buy-to-Ledger、Ledger/Shopping UI state 與 Trip progression。`schema.js`、`validator.js`、`sw.js` 等部署檔均在 repo 根目錄,經 GitHub 連動由 Netlify 部署(流程見 16 §E)。
 
 ## 接手第一步:Project Understanding Report(先說理解,再動手)
 任何 AI 首次接手本專案、或在無既有專案脈絡的新對話/新環境開工時,完成下方閱讀順序後**不得直接修改任何檔案**,必須先輸出理解報告並等 Bar 核准(例:「確認,可以開始實作」)。此要求是「每個 AI 接手時做一次」,不是每個任務都做;同一脈絡內的後續任務依 15 的任務分級與 14 的 Tier 規則執行。
@@ -26,7 +26,7 @@
 
 ## 閱讀順序(最省 token)
 1. `.ai-manifest.json` → 2. `PROJECT_CONSTITUTION.md` → 3. 本文件 → 4. 相關 `adr/` → 5. **必讀** `15_AI_EXECUTION_RULES.md`(決策權限/指令效力/任務分級)→ 6. 依任務讀 `03_DATABASE.md` / `09_SCHEMA_MAPPING.md` / `05_CODING_RULES.md` / `11_CODING_CONVENTION.md` / `12_DEV_WORKFLOW.md` / `14_FILE_TIERS_AND_GATE.md` / `16_OPS_PLAYBOOK.md`
-程式碼本體主要在 current generation `shell/v142/index.html` 內嵌 JS(區塊順序見 02)；root `index.html`／`app-version.js` 必須維持 frozen v110 bridge bytes。`navigation-intent.js`、`diagnostic-impact.js`、`today-view.js`、`buy-to-ledger.js`、`ledger-ui-state.js`、`shopping-ui-state.js`、`trip-progression.js` 是 production-used module seams，`schema.js` / `validator.js` 是獨立權威來源。
+程式碼本體主要在 current generation `shell/v143/index.html` 內嵌 JS(區塊順序見 02)；root `index.html`／`app-version.js` 必須維持 frozen v110 bridge bytes。`navigation-intent.js`、`diagnostic-impact.js`、`today-view.js`、`buy-to-ledger.js`、`ledger-ui-state.js`、`shopping-ui-state.js`、`trip-progression.js` 是 production-used module seams，`schema.js` / `validator.js` 是獨立權威來源。
 
 ## 工作流程(必守)
 0. 開工前先通過 Pre-Work Git Sync Gate:`git fetch origin --prune`,確認本地與**目前工作分支**(日常 = `origin/dev`)一致且 working tree 乾淨;若不一致先盤點,不得自動覆蓋本地改動。
@@ -67,6 +67,8 @@ v141 過往旅程以 `TripDrive.resume()` 重用同次 App 尚未過期的記憶
 v142 A 本機候選（未推送）：狀態 helper 僅投影現存事實。`tripStatusPresentation` 依 checks／skip／autoSkip 區分已完成、已略過與自動略過，不更改 progression；`shoppingPurchaseSummary` 只在同 split-group 的名稱／單位一致、安全數量可證明時顯示購買進度，不能以 ledgerLinks 推算商品件數。記帳覆蓋仍以 allocation 筆數呈現。`ledgerDeliveryPresentation` 採 queue → bridge → cloud 優先序，詳情依目前正式／TEST 模式過濾，不代表其他旅伴已讀。資料健康維持全裝置 backlog，跨模式未註記是 backlog #52（Minor），不得偷偷改成只保護目前模式的待送資料。
 
 ## Ledger Schema 2.9 現行契約
+
+v143 個人帳匯出只讀本裝置個人帳，保留原金額、代購與來源識別，不含團體／Queue／照片／token，不改備份 v9 或封存 v1；契約見 `docs/personal-ledger-export.md`。記序匯入尚未實作。資料與版本的 ⓘ 為 modal，重要清除／還原警告仍直接顯示。
 
 - 團體新增與編輯都先透過 `enqueueBatch(records)` 一次耐久寫入本機 Queue，入列成功即完成 UI 儲存並背景送達；不可改回等待 Apps Script POST 才關閉表單。公開 CSV 跨裝置可見延遲 1–5 分鐘是已接受取捨。
 - TEST 模式是獨立平行帳本：開啟時團體儀表板、今日、結算與明細只計算 `[TEST]`，關閉時只計算正式資料；個人帳不受 TEST 模式影響。

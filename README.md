@@ -1,5 +1,9 @@
 # 日本旅遊 App — README
 
+個人帳獨立匯出格式與限制見 [匯出契約](docs/personal-ledger-export.md)（v143 本機開發；發布狀態以 tasks/current.md 為準）。
+
+本機驗證與審查：[v143 交付驗證](docs/trippilot-v143-verification.md)。
+
 ## 這是什麼
 六天五夜日本自駕旅遊的手機 PWA。Google Sheets 當 CMS，以單頁 App 搭配少量獨立 runtime module，部署於 Netlify。
 - 正式站:https://trippilot-jp.netlify.app/
@@ -35,8 +39,8 @@
 
 ## 專案檔案
 - `index.html` / `app-version.js` — 保留 v110 predecessor bridge；讓尚未更新的 v110 worker 在 current generation 安裝失敗時仍可運作
-- `shell/v142/index.html` / `shell/v142/app-version.js` — v142 本機候選版文件與 App runtime 版本來源；成功啟用的 `sw.js` 才接管 root 導覽；v136～v141 保持不可變
-- `shell/v142/builtin-snapshot.js` — 由刷新工具以已核准 v136 CSV 產生的版本綁定離線資料資產；禁止手動修改
+- `shell/v143/index.html` / `shell/v143/app-version.js` — v143 本機候選版文件與 App runtime 版本來源；成功啟用的 `sw.js` 才接管 root 導覽；v136～v141 保持不可變
+- `shell/v143/builtin-snapshot.js` — 由刷新工具以已核准 v136 CSV 產生的版本綁定離線資料資產；禁止手動修改
 - `navigation-intent.js` — 明確導覽目的地的 session-only state module；DOM 定位與回饋 adapter 位於 `index.html`
 - `diagnostic-impact.js` — AppLog 原始紀錄的 display-only impact projection；顯示 adapter 位於 `index.html`
 - `today-view.js` — Today Hero 採買摘要的純 model／renderer module；資料選擇與 DOM effects 留在 `index.html`
