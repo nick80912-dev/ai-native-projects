@@ -1,5 +1,11 @@
 # 07 版本紀錄
 
+## 2026-10-04 — v143 已正式發布（PR #40）
+
+- a54b22b 經 PR #40 一般 merge 至 main 13f46c3；dev CI 37175537927／PR CI 37175540832／main CI 37175940208 全 success，各 browser 243/243。本機發布前 Node 107/107、六項匯出／modal browser、四項 gate 通過。
+- Netlify6ac1d06230acd90008a24a16 的 commit_ref=13f46c370f5ea4bafd3226b4f7b1af27ef846ff4、published_at=2026-10-04T04:04:59.963Z、manual_deploy=false。31 資產逐位元組相等、兩處 header 正確、前代 v142／root v110 保留；28 cache 資產齊全、v143 三件組、非空、離線重開及 pageerror0；正式站匯出入口／modal 核對通過。
+- production-v143 已推送至 merge commit。Bar 明確選項 2，本次跳過 G1；TP143-a～c 與既有真機待驗不代勾，不適用下一版。記序匯入未實作。本次发布後僅補文件／同步 dev，無 runtime 熱修。
+
 ## 2026-10-04 — v143 發布核准（尚待合併／部署）
 
 - Bar 在 G1 待驗提醒後明確選擇方案 2，核准本次跳過 G1，待 CI 通過合併 main 並核對正式部署；不沿用至其他版本、不代勾 TP143-a～c 或既有真機項目。

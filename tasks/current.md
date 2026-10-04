@@ -1,5 +1,11 @@
 # CURRENT(現在正在做的)
 
+## 2026-10-04 — v143 已正式發布（PR #40）
+
+- dev exact head a54b22b 經一般 merge 合併至 main 13f46c3。dev CI 37175537927／PR CI 37175540832／main CI 37175940208 皆 success，各 browser 243/243；本機發布前 Node 107/107、匯出六項 browser、四項 gate／diff check 全過。
+- Netlify deploy 6ac1d06230acd90008a24a16 的 commit_ref 精確等於 13f46c370f5ea4bafd3226b4f7b1af27ef846ff4，published_at=2026-10-04T04:04:59.963Z。§F5 實測：31 資產與 merge commit bytes 相等、兩處 header 正確、v142／v110 保留；28 個 cache 資產齊全、三件組 v143、離線重開／非空／pageerror 0，匯出入口與說明 dialog 於正式站確認。
+- annotated production-v143 已推送，指向 13f46c3。G1 僅本次依 Bar 選項 2 跳過，TP143-a～c 與既有真機清單保持未勾。記序匯入未實作，備份 v9／封存 v1／OAuth Testing 不變。發布後僅補文件並同步 dev，不熱修 v143 runtime。
+
 ## 2026-10-04 — v143 發布核准，待遠端 CI／合併
 
 - Bar 明確選擇方案 2：本次跳過 G1，待 CI 通過後合併 main 並核對正式部署。此裁定僅適用 v143，TP143-a～c 與既有真機清單保持未勾；跳過不等於驗收通過。
@@ -84,18 +90,18 @@
 
 ## 📌 現況
 
-v142 已透過 `dev → main` PR #39 合併並完成正式站部署核對。G1 本次跳過；TP142-a～d 與既有真機項目保持待驗，OAuth Testing 不變。
+v143 已透過 `dev → main` PR #40 合併並完成正式站部署核對。G1 本次跳過；TP143-a～c 與既有真機項目保持待驗，OAuth Testing 不變。
 
 | 項目 | 值 |
 |---|---|
-| **`origin/main` 原始碼** | **SW v142**；merge commit `07d4581`（PR #39） |
-| **正式站** | `https://trippilot-jp.netlify.app/` — **SW v142**；deploy `6ac114efbcf7f4000841eb69`，`commit_ref` = `07d4581`，§F5／快取／離線核對通過。G1 跳過，真機封存與 Android BB4 仍待驗 |
-| **`dev` 內容** | **v142 A 批**，runtime `38da9a3`、推送 `f06d2c5`；本機 Node 106/106、Chromium 237/237、四項 gate 通過。PR #39／遠端 CI 與 G1 裁定見最上方最新段落；採買分類尚未實作，OAuth 仍 External Testing |
+| **`origin/main` 原始碼** | **SW v143**；merge commit `13f46c3`（PR #40） |
+| **正式站** | `https://trippilot-jp.netlify.app/` — **SW v143**；deploy `6ac1d06230acd90008a24a16`，`commit_ref` = `13f46c3`，§F5／快取／離線核對通過。G1 跳過，真機封存與 Android BB4 仍待驗 |
+| **`dev` 內容** | **v143**，runtime `fb90ed4`、推送 `a54b22b`；本機 Node 107/107、Chromium 243/243、四項 gate 通過；main merge 已同步，發布後僅補文件。採買分類尚未實作，OAuth 仍 External Testing |
 | 個人備份格式 | **v9**(`PERSONAL_STATE_SUPPORTED_VERSIONS = [1..9]`)—— v81 因想逛 key 識別語意變更而升版 |
 | 最近一次 v141 發版驗證 | 本機 Node **102/102**、Chromium Playwright **227/227**、四項 gate 通過；dev／PR CI sanity 和 browser-qa 全過，main CI 另核對 Actions `36878885081` |
-| 最新正式 tag | **`production-v142`**，指向 `07d4581`；訊息明記 G1 跳過 |
+| 最新正式 tag | **`production-v143`**，指向 `13f46c3`；訊息明記 G1 跳過 |
 
-**v142 已發布至正式站，`production-v142` tag 已建立；G1 跳過不等於通過，實體手機驗收清單保持待驗。**
+**v143 已發布至正式站，`production-v143` tag 已建立；G1 跳過不等於通過，實體手機驗收清單保持待驗。**
 
 ## v140 資料健康獨立子頁（已隨 PR #37 正式發布；下列保留開發階段紀錄）
 

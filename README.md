@@ -1,6 +1,6 @@
 # 日本旅遊 App — README
 
-個人帳獨立匯出格式與限制見 [匯出契約](docs/personal-ledger-export.md)（v143 本機開發；發布狀態以 tasks/current.md 為準）。
+個人帳獨立匯出格式與限制見 [匯出契約](docs/personal-ledger-export.md)（v143 起提供；發布狀態以 tasks/current.md 為準）。
 
 本機驗證與審查：[v143 交付驗證](docs/trippilot-v143-verification.md)。
 
