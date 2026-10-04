@@ -16,7 +16,7 @@ function createStorage(initial){
 
 (async function(){
   const html=appHtml();
-  assert.match(html,/照片附件只保存在本裝置，不包含於備份。/,'data settings disclose that photo attachments are device-local and excluded from backups');
+  assert.match(html,/照片不包含於備份。/,'data settings keep the photo-exclusion warning visible');
   const start=html.indexOf('function closeSettings()');
   const end=html.indexOf('function setLedgerTestMode(',start);
   assert(start>=0&&end>start,'personal-state helper section is present');

@@ -1,6 +1,13 @@
 # TripPilot v142 A Verification
 
-日期：2026-10-03；本機候選，未推 dev／main。正式站仍 v141。
+日期：2026-10-03；已經 PR #39 發布至正式站 v142。下方「最終驗證」及裁定保留本機交付當下的範圍，發布證據另列如下。
+
+## 正式發布核對
+
+- dev `11cd2e6` → main `07d4581`，dev／PR／main CI `37130214421`／`37130217277`／`37130726114` 全數 success，各 browser 237/237。本輪 Node 106/106 與四項 gate 重新通過。
+- Netlify deploy `6ac114efbcf7f4000841eb69`，commit_ref 等於 merge commit，published_at `2026-10-03T14:45:13.177Z`。31 資產與 merge commit bytes 相等，root v110／v141 保留、cache header 正確。隔離 Chromium 的 28 Shell 資產完整、runtime／HTML／asset v142、離線重開與 pageerror 0。
+- `production-v142` 指向 `07d4581`。本次在 G1 明示提醒後依 Bar 再次指示 merge 發布，G1 跳過但真機待驗不代勾。此證據不認證手機、OAuth 對外開放或 live CMS 新鮮度。
+- Release-only 腳本的 CRLF 工作檔比較與非同步等待缺陷已定位，改比對 Git merge blob 並 await evaluate 條件輪詢後通過。沒有 production runtime 改動；既有類似 helper 稽核留 backlog #53。
 
 ## 最終驗證
 

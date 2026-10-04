@@ -61,6 +61,8 @@
 
 52. **資料健康的團體 backlog 模式註記（v142 A 批 Astra 審查，Minor）**：本機 queue／delivery bridge 摘要包含正式與 TEST 模式，但沒有模式註記；單筆詳情已正確依目前模式隔離。可能造成摘要混淆，不改變金額、操作權限或待同步保護。本批重要修正完成後保留後續處理；先決定健康頁是全裝置待送概況或目前模式，再一致調整文案／計數，不只改其中一個來源。
 
+53. **非同步 Playwright readiness helper 稽核（v142 發布核對發現）**：release-only 腳本的 `waitForFunction(async...)` 可因 Promise truthy 提早結束，未等 SW／cache 完成便開新版而逾時。已查目前 Playwright 1.62 的 `predicate()` 條件實作，並以 await evaluate 條件輪詢完成線上 v142 cache／離線核對；沒有 production 缺陷或 runtime 熱修。既有 `sw-update-cache.spec.js` 的同類等待 helper 需另批確認改用 `expect.poll` 或明確 await 輪詢，稽核依賴該 helper 的證據強度；本輪不順手重寫既有測試或宣稱所有非同步等待皆有問題。
+
 ## 想法池(未承諾)
 
 - 社群內容抓取(Facebook 等)——需 Firecrawl/Playwright MCP,尚未配置

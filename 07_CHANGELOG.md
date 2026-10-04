@@ -1,5 +1,25 @@
 # 07 版本紀錄
 
+## 2026-10-04 — v143 發布核准（尚待合併／部署）
+
+- Bar 在 G1 待驗提醒後明確選擇方案 2，核准本次跳過 G1，待 CI 通過合併 main 並核對正式部署；不沿用至其他版本、不代勾 TP143-a～c 或既有真機項目。
+- fb90ed4 推送前重新驗證 Node 107/107、個人帳匯出六項 browser、四項 gate／diff check 通過；全套 243 項遠端 CI 將以 exact head 作 merge 守門。本節為文件記錄，無 runtime 熱修。
+
+## 2026-10-04 — v143 個人帳匯出與說明視窗（本機完成）
+
+- 資料與版本新增「匯出本趟個人帳」JSON：只讀本機個人帳白名單，保留日期、原金額、店家、代購及穩定來源識別；排除團體帳／Queue／照片／token，不改原資料或換算。
+- 目前旅程／個人帳／備份的補充說明改 ⓘ modal，保留直接可見的清除／覆蓋／照片排除警告。Esc、焦點圈限／返回及背景 inert 還原，字級維持精簡。
+- 依本次核准建立 immutable v143 並同步 generation 登錄／活文件；原 v142 種子透過 generator 版本綁定再產生，無 live CSV／Ledger fetch；前代及 root v110 byte-lock 不動。記序匯入未實作，未推送／發布。
+- 最終 Node **107/107**、Chromium **243/243**（6.9 分鐘）、四項 gate／diff check 全過；獨立 reviewer 的兩項 Important（選填欄位損壞、modal 層級）及截圖發現的 full-height 繼承皆補 RED→GREEN 並覆核；無重要問題殘留。完整紀錄見 docs/trippilot-v143-verification.md；真機存檔／閱讀器待驗。
+
+## 2026-10-03 — v142 已正式發布（PR #39）
+
+- dev `11cd2e6` 經 PR #39 一般 merge 至 main `07d4581`。dev CI `37130214421`／PR CI `37130217277`／main CI `37130726114` 全部 success，各 browser 237/237（5.8 分鐘）；本輪 Node 106/106／四項 gate 全過。
+- Netlify production deploy `6ac114efbcf7f4000841eb69`，`commit_ref` = `07d45818c319ee8fa249e8db6ece9433a7f6969c`，`published_at=2026-10-03T14:45:13.177Z`，非手動部署。§F5 核對：31 個線上資產與 merge commit 逐位元組相等，兩處快取標頭正確，v110 bridge／v141 保留；隔離 Chromium 的 28 個 Shell cache 完整、三件組 v142、非空畫面、離線重開與 pageerror 0。
+- 發布核對腳本首輪誤以 Windows CRLF 工作檔比較 Git LF blob；改為比對 merge commit。另 async `waitForFunction` 提早返回，使尚未裝完 SW 就開下一頁；確認 Playwright 實作後改為 await evaluate 的條件輪詢，實際 worker／cache 完成後核對通過。未改 production runtime；既有測試同類等待 helper 的稽核列 backlog #53，不把其檢查範圍擴成真機認證。
+- Bar 在本次 G1 明示提醒與兩方案後再指定「merge into main」，據此跳過本次 G1 發布；TP142-a～d 及既有待驗保持未勾，不延用至未來版本。annotated `production-v142` 已單獨推送，指向 merge commit，附 G1 限制與 v143 forward-bump 復原指引。
+- 發布後僅補紀錄／同步 dev，無 v142 runtime 熱修。B／C、分類管理、備份檔案與過往旅程列表／新旅程串接不在本次發布。
+
 ## 2026-10-03 — v142 推送 dev／建立 PR #39（main 尚未合併）
 
 - 依 Bar 指示將 `f06d2c5` 非 force 推送 dev，建立 [PR #39](https://github.com/nick80912-dev/ai-native-projects/pull/39)。發布前重新跑 Node 106/106、Chromium 237/237（7.7 分鐘）、四項 gate／diff check，全數通過；v141／v110 bytes 與離線 snapshot 內容／timestamp 保持不變。
