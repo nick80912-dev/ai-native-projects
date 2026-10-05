@@ -1,5 +1,7 @@
 const {test,expect}=require('./support/test');
 const {installFixedDate,installOfflineAppNetwork,openApp,waitForSyncToSettle}=require('./support/qa-fixture');
+// Keep the next-stop fixture stable when the CI runner defaults to UTC.
+test.use({timezoneId:'Asia/Tokyo'});
 test.beforeEach(async({page})=>{
   await page.addInitScript(()=>{window.qaWeatherNativeFetch=window.fetch.bind(window);});
   await installFixedDate(page,'2026-10-18T13:30:00+09:00');

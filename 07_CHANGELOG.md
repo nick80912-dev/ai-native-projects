@@ -4,6 +4,7 @@
 
 - Bar 明確選項 2：本次跳過 G1，待 dev／PR exact-head CI 通過合併 main 並核對正式部署。包含 v144 保存可靠性與 v145 天氣改善；TP144-a～c、TP145-a～c 及既有真機清單保持未勾，不沿用至下一版。
 - 本輪本機基準 `c331a1b`、runtime `64b66ac`；發布前完整 QA 重新執行通過：Node 109 個檔案、Chromium 275/275（8.5 分鐘、0 retry）、四項 gate／diff check 全過。授權文件另行提交；遠端 CI／合併／部署仍待完成。按 dev → PR → 一般 merge → Netlify 自動部署 → §F5 的次序；不直接 push main、不修改凍結 runtime 或種子。
+- dev `758a0c0`／PR #41 首輪遠端 sanity 通過、browser 各 264 passed／11 failed，暫停合併。UTC probe 重現未出發日／城市 fixture 差異，日本時區對照通過；僅兩份新增 browser spec 固定 Asia/Tokyo，不放寬斷言／retry、不動 runtime。修正後預設 UTC 的 B/C 32/32（56.3 秒）、完整 Node 109 檔／Chromium 275/275（8.5 分鐘、0 retry）、四項 gate／diff check 通過，待新 exact-head 遠端 CI；未宣稱已正式發布。
 
 ## 2026-10-05 — v145 C 天氣有效性（本機完成，未推送）
 

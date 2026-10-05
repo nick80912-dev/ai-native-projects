@@ -2,6 +2,12 @@
 
 日期：2026-10-05。Current status authority：`tasks/current.md`。本文件是本批證據與限制，不是發布核准。
 
+## 發布續驗（2026-10-05；待新 exact-head CI／合併）
+
+Bar 明確選擇方案 2，僅本次跳過 G1；真機清單保持未勾。PR [#41](https://github.com/nick80912-dev/ai-native-projects/pull/41) 首輪 head `758a0c0` 的 dev push `37278302918`／PR `37278373307` sanity 通過，但 browser 各 264 passed／11 failed，合併暫停，沒有把本機綠燈替代遠端結果。
+
+原因是新增 B/C browser fixture 固定了 `+09:00` 的 instant，卻繼承主機 timezone；UTC 下 B 顯示 10/17 未出發、C 下一站選擇不同。隔離 UTC config 的既有兩項測試重現相同失敗，僅切 Asia/Tokyo 對照後 2/2 通過。只在兩份新增 spec 設定 `test.use({timezoneId:'Asia/Tokyo'})`，不修改全域 config、斷言、retry、timeout 或 runtime。相同 UTC config 下完整 B/C 32/32（56.3 秒）通過；修正後完整 Node 109 檔、Chromium 275/275（8.5 分鐘、0 retry）、四項 gate／diff check 通過。v145 runtime 仍為 `64b66ac`，既有前代、root bridge、種子／schema／domain 不變；以下本機階段的歷史範圍不改寫。新 remote exact-head CI 與正式部署仍需完成。
+
 ## 核准與範圍
 
 Bar 確認 C 四點：保留 B 五筆本機提交、沿用隔離 worktree；v144 → 未使用 v145；原八表 CSV／timestamp；原來源／6500ms timeout／城市 resolver／3h TTL。僅本機實作與提交，未 push、merge 或部署。主題／全域字體、帳務、schema／Apps Script、備份 v9／封存 v1、OAuth 與旅行內容不變。

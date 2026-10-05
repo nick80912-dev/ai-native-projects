@@ -1,5 +1,7 @@
 const {test,expect}=require('./support/test');
 const {installFixedDate,openApp,waitForSyncToSettle}=require('./support/qa-fixture');
+// These itinerary fixtures use Japan local dates/times, not the runner's timezone.
+test.use({timezoneId:'Asia/Tokyo'});
 
 async function setup(page){
   await installFixedDate(page,'2026-10-18T08:00:00+09:00');

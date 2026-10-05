@@ -4,7 +4,8 @@
 
 - Bar 選擇方案 2，明確核准本次跳過 G1 真機驗收，待 dev push／PR exact-head CI 通過後以一般 merge 合併 main，再核對正式部署。發布包含 v144 B 保存可靠性與 v145 C 天氣改善；舊版豁免不沿用，此核准亦不適用後續版本。
 - TP144-a～c、TP145-a～c 與既有裝置／閱讀器待驗保持未勾。跳過不是通過；本機／遠端 CI 不代替真機。本輪本機基準 `c331a1b`、runtime `64b66ac`：完整 QA 重新執行通過，Node 109 個檔案、Chromium 275/275（8.5 分鐘、0 retry）、四項 gate／diff check 全過。發布授權文件另行提交，不修改已驗 runtime。
-- 此刻尚未 push／merge／部署，不宣稱正式站已更新。既有一項 manifest B 證據索引 Minor 保持暫緩，沒有順便修改 runtime／旅行內容／OAuth。復原採下一未使用 generation forward-bump，不覆寫已發布外殼、不刪 SW／個人資料。
+- 已 non-force push dev `758a0c0` 並建立 PR #41，尚未 merge／正式部署。首輪 dev CI `37278302918`／PR CI `37278373307` sanity 通過、browser 各 264 passed／11 failed，因此暫停合併。隔離 UTC probe 重現「10/17 未出發」與下一站城市 fixture 差異，只改瀏覽器 timezone 為 Asia/Tokyo 後兩項通過；兩份新增 spec 補固定時區，斷言／retry／runtime 不變。修正後預設 UTC 的 B/C 32/32（56.3 秒）、完整 Node 109 檔／Chromium 275/275（8.5 分鐘、0 retry）與四項 gate／diff check 通過；仍須新 exact-head 遠端 CI 通過才合併。
+- 既有一項 manifest B 證據索引 Minor 保持暫緩，沒有順便修改 runtime／旅行內容／OAuth。復原採下一未使用 generation forward-bump，不覆寫已發布外殼、不刪 SW／個人資料。
 
 ## 2026-10-05 — v145 C：天氣有效性與重試（本機完成，未推送）
 
