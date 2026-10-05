@@ -1,5 +1,14 @@
 # CURRENT(現在正在做的)
 
+## 2026-10-05 — v144 B：本機行程保存可靠性（本機候選，未推送）
+
+- Bar 確認 B 的 Tier 2 PWA 群組：從已發布 v143 建立未使用 v144，限定打卡／完成／略過／自動略過與復原；不改帳務、格式、主題、字體或天氣。隔離 worktree 基準 765f710=origin/dev，未 push／merge／部署。
+- Checked reader 拒絕讀取失敗／壞 JSON／錯誤型別，不以空值覆寫；writer 先序列化、保留原 bytes／不存在狀態，再寫入與讀回核對。失败盡力恢復並核對，不能恢復則提示可能不完整；不是跨分頁交易。
+- 成功才更新成功提示與 undo。復原失敗保留快照及重試按鈕，包含原 autoSkip；失敗重繪只讀真實紀錄，無法讀取不宣稱已完成。自動失敗在本次 session 暫停自動寫入，成功手動操作解除；不新增持久化 journal／鎖。資料健康既有個人列顯示 session 錯誤。
+- 既有 generator 僅用 v143 原 CSV preview／write／readback，八表與 timestamp 深度相等、未讀 live CSV／Ledger。v143、root v110 與純 progression module 均未改；SW／header／assets／活文件對齊 v144。
+- 本機 Node 108 個檔案、新增 23 個故障／行為案例、相關 browser 45/45，四項 gate 與 diff check 通過。全套 browser 與獨立審查進行中；不宣稱本批完成或已發布。詳見 [驗證記錄](../docs/trippilot-v144-b-verification.md)。
+- TP144-a～c 真機待驗；本次核准不含 push dev 或 main 發布。B 使用者驗收後才開始 C 天氣；後續配色／modal／分類／備份／旅程歷史及新旅程仍待排程。
+
 ## 2026-10-04 — v143 已正式發布（PR #40）
 
 - dev exact head a54b22b 經一般 merge 合併至 main 13f46c3。dev CI 37175537927／PR CI 37175540832／main CI 37175940208 皆 success，各 browser 243/243；本機發布前 Node 107/107、匯出六項 browser、四項 gate／diff check 全過。

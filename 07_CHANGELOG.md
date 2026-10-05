@@ -1,5 +1,13 @@
 # 07 版本紀錄
 
+## 2026-10-05 — v144 B 本機行程保存可靠性（候選，未發布）
+
+- ⭐ 局部 checked 保存介面只處理 trip_checks／trip_next_stop_progress，不改全域 lsSet、帳務／購物願望／備份 v9／封存 v1。讀取失敗／壞內容停止 mutation；先序列化與保存 raw bytes，寫後逐鍵及整批核對；失敗盡力 rollback、核對全部原值，不宣稱資料庫級原子性。
+- 打卡／完成／略過／自動略過／群組 controller 的提示依確認結果；自動略過合併一次最終保存，不留中間狀態。復原保留原 autoSkip，失敗保留快照及重試。失敗重繪不重新自動寫入；本次 session 抑制自動重試，手動成功解除。讀取未知不顯示今日完成。
+- 沿用 toast 的 live status、行程鍵盤焦點與既有資料健康頁的個人狀態列；正常狀態無新增提示，不改 CSS／字體／配色。錯誤只在 session／AppLog，無持久化診斷或交易紀錄。
+- Bar 核准 v144 PWA 群組；從 v143 seed 經 generator preview／write／readback 保持原八表內容與 timestamp，未 live fetch。已發布 v143／root v110 不變；SW／header／assets 及活文件同步。復原採下一個未使用 generation forward-bump，不清個人資料、不刪 SW。
+- 初步驗證：Node 108 檔案、新故障／行為 23 案例、browser 45/45 與四項 gate／diff check 通過；完整 browser／獨立審查待完成，見 [交付證據](docs/trippilot-v144-b-verification.md)。本次未 push、merge 或部署；真機 TP144-a～c 未驗。
+
 ## 2026-10-04 — v143 已正式發布（PR #40）
 
 - a54b22b 經 PR #40 一般 merge 至 main 13f46c3；dev CI 37175537927／PR CI 37175540832／main CI 37175940208 全 success，各 browser 243/243。本機發布前 Node 107/107、六項匯出／modal browser、四項 gate 通過。

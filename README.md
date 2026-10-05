@@ -3,6 +3,7 @@
 個人帳獨立匯出格式與限制見 [匯出契約](docs/personal-ledger-export.md)（v143 起提供；發布狀態以 tasks/current.md 為準）。
 
 本機驗證與審查：[v143 交付驗證](docs/trippilot-v143-verification.md)。
+v144 B 本機保存候選與限制：[驗證記錄](docs/trippilot-v144-b-verification.md)（未推送；完成狀態以 tasks/current.md 為準）。
 
 ## 這是什麼
 六天五夜日本自駕旅遊的手機 PWA。Google Sheets 當 CMS，以單頁 App 搭配少量獨立 runtime module，部署於 Netlify。
