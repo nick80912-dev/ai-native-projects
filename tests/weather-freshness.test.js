@@ -63,6 +63,16 @@ assert.equal(JSON.parse(raw).data.rain,90);
 assert.equal(JSON.parse(raw).t,now);
 assert.equal(sandbox.rainChanceFromNow({time:['invalid'],precipitation_probability:[90]},new Date(now)),null);
 assert.equal(sandbox.rainChanceFromNow({time:['2026-10-18T12:00'],precipitation_probability:[NaN]},new Date(now)),null);
+for(const missing of [null,'',undefined]){
+  const futureUnknown=present(envelope({data:{city:'廣島',temp:21,code:1,hours:{
+    time:['2026-10-18T09:00','2026-10-18T12:00','2026-10-18T13:00'],precipitation_probability:[0,missing,missing]
+  }}}));
+  assert.equal(futureUnknown.rain,null,'past zero must not substitute for missing future rainfall');
+  assert.equal(futureUnknown.temp,21);
+  const futureMarkup=sandbox.renderTodayWeatherSummary(futureUnknown);
+  assert(futureMarkup.includes('降雨機率未知'));
+  assert(!futureMarkup.includes('0%'));assert(!futureMarkup.includes('適合出發'));
+}
 console.log('weather freshness projection tests passed');
 
 function requestFixture(){
@@ -77,7 +87,8 @@ function requestFixture(){
     }},
     AppLog:{data:message=>logs.push(message),repo:message=>logs.push(message)},
     inferWeatherCityForDay:(day,item)=>item.city,
-    renderToday:()=>{renders++;},document:{activeElement:null,querySelector:()=>null},
+    paintHomeWeather:()=>{renders++;},homeWeatherExpiryTimer:null,setTimeout:()=>1,clearTimeout:()=>{},
+    document:{activeElement:null,querySelector:()=>null},
     fetchWithTimeout:(url,timeout)=>{assert.equal(timeout,6500);return new Promise((resolve,reject)=>pending.push({url,resolve,reject}));}
   };
   context.lsGet=key=>{try{return JSON.parse(context.localStorage.getItem(key));}catch(ignore){return null;}};
@@ -85,7 +96,7 @@ function requestFixture(){
   vm.createContext(context);
   for(const name of ['weatherCacheKey','weatherIcon','rainChanceFromNow','weatherPresentation','readWeatherEnvelope','getCachedWeather',
     'setCachedWeather','fetchWeather','loadWeatherEnvelope','loadWeatherForCity','requestHomeWeather','homeWeatherFor',
-    'refreshHomeWeather','weatherDiagnostic','weatherTripActive']){
+    'refreshHomeWeather','cancelHomeWeatherExpiry','scheduleHomeWeatherExpiry','revalidateHomeWeather','weatherDiagnostic','weatherTripActive']){
     if(html.includes('function '+name+'('))vm.runInContext(extractFunction(html,name),context);
   }
   const item={city},other={city:{key:'okayama',label:'岡山',lat:34,lon:133}};

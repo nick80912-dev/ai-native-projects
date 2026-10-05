@@ -3119,22 +3119,23 @@ function weatherCacheKey(city){ return 'trip_weather_'+city.key; }
 function rainChanceFromNow(hours,now){
   if(!hours||!hours.time||!hours.precipitation_probability) return null;
   var times=hours.time,values=hours.precipitation_probability;
-  var len=Math.min(times.length,values.length);
+  var len=times.length;
   if(!len) return null;
-  var cutoff=(now||appNow()).getTime(),best=null,all=null,i,v,t;
+  var cutoff=(now||appNow()).getTime(),best=null,all=null,hasFuture=false,i,v,t;
   for(i=0;i<len;i++){
-    v=values[i];
-    if(typeof v!=='number'||!isFinite(v)||v<0||v>100) continue;
     /* Open-Meteo timezone=Asia/Tokyo returns offset-free local ISO times. */
     var stamp=String(times[i]||'');
     if(/^\d{4}-\d\d-\d\dT\d\d:\d\d(?::\d\d)?$/.test(stamp))stamp+='+09:00';
     t=Date.parse(stamp);
     if(!isFinite(t))continue;
+    if(t>=cutoff)hasFuture=true;
+    v=values[i];
+    if(typeof v!=='number'||!isFinite(v)||v<0||v>100) continue;
     all=(all===null||v>all)?v:all;
     if(t<cutoff) continue;   /* 已經過去的時段不算 */
     if(best===null||v>best) best=v;
   }
-  return best!==null?best:all;
+  return best!==null?best:hasFuture?null:all;
 }
 function weatherPresentation(envelope,city,now){
   var result={status:'unavailable',cityLabel:city&&city.label||'',updatedAt:null,temp:null,rain:null};
@@ -3573,6 +3574,20 @@ var homeWeatherState={};
 var homeWeatherRequestId=0;
 var homeWeatherEpoch=0;
 var homeWeatherVisibleKey=null;
+var homeWeatherExpiryTimer=null;
+function cancelHomeWeatherExpiry(){
+  if(homeWeatherExpiryTimer!==null)clearTimeout(homeWeatherExpiryTimer);
+  homeWeatherExpiryTimer=null;
+}
+function scheduleHomeWeatherExpiry(weather){
+  if(!weather||weather.status!=='fresh'||curView!=='today'||!homeWeatherVisibleKey)return;
+  var key=homeWeatherVisibleKey.key,epoch=homeWeatherEpoch;
+  homeWeatherExpiryTimer=setTimeout(function(){
+    homeWeatherExpiryTimer=null;
+    if(epoch!==homeWeatherEpoch||!homeWeatherVisibleKey||homeWeatherVisibleKey.key!==key||document.hidden)return;
+    refreshHomeWeather(key);
+  },Math.max(1,weather.updatedAt+10800000-Date.now()));
+}
 function requestHomeWeather(dayIndex,item,force){
   if(!item||!weatherTripActive()) return;
   var day=DB.trip&&DB.trip.days?DB.trip.days[dayIndex]:null;
@@ -3597,6 +3612,7 @@ function requestHomeWeather(dayIndex,item,force){
   });
 }
 function homeWeatherFor(dayIndex,item){
+  cancelHomeWeatherExpiry();
   homeWeatherVisibleKey=null;
   if(!item) return null;
   var day=DB.trip&&DB.trip.days?DB.trip.days[dayIndex]:null;
@@ -3607,19 +3623,39 @@ function homeWeatherFor(dayIndex,item){
   var state=homeWeatherState[key];
   var view=weatherPresentation(state?state.envelope:readWeatherEnvelope(city),city,Date.now());
   if(view.status==='unavailable'&&state&&state.status==='loading')view.status='loading';
-  if(state&&(state.status==='failed'||state.status==='loading')){
-    view.retryKey=key;view.busy=state.status==='loading';
+  if(view.status!=='fresh'){
+    view.retryKey=key;view.busy=!!(state&&state.status==='loading');
   }
+  scheduleHomeWeatherExpiry(view);
   return view;
+}
+function paintHomeWeather(weather){
+  var summary=document.querySelector('#view-today .today-hero-weather-summary');
+  if(!summary)return;
+  var focused=document.activeElement,restore=focused&&summary.contains(focused);
+  var wasRetry=restore&&focused.classList.contains('today-weather-retry');
+  var hero=summary.closest('.today-hero'),main=hero&&hero.querySelector('.today-hero-main');
+  summary.outerHTML=renderTodayWeatherSummary(weather);
+  if(hero){
+    hero.classList.toggle('weather-on',weather.status==='fresh');
+    var art=hero.querySelector('.today-weather-art');if(art)art.remove();
+    if(main)main.insertAdjacentHTML('beforeend',renderTodayWeatherArt(weather));
+  }
+  if(restore){
+    var target=wasRetry&&document.querySelector('#view-today .today-weather-retry')||document.querySelector('#view-today .today-hero-weather-summary');
+    if(target){if(!target.classList.contains('today-weather-retry'))target.setAttribute('tabindex','-1');target.focus({preventScroll:true});}
+  }
 }
 function refreshHomeWeather(key){
   if(curView!=='today'||!weatherTripActive()||!homeWeatherVisibleKey||homeWeatherVisibleKey.key!==key)return;
-  var retry=document.querySelector('.today-weather-retry'),restore=retry&&document.activeElement===retry;
-  renderToday();
-  if(restore){
-    var target=document.querySelector('.today-weather-retry')||document.querySelector('.today-hero-weather-summary');
-    if(target)target.focus({preventScroll:true});
-  }
+  var visible=homeWeatherVisibleKey;
+  paintHomeWeather(homeWeatherFor(visible.dayIndex,visible.item));
+}
+function revalidateHomeWeather(){
+  if(document.hidden||curView!=='today'||!weatherTripActive()||!homeWeatherVisibleKey)return;
+  var visible=homeWeatherVisibleKey;
+  requestHomeWeather(visible.dayIndex,visible.item);
+  refreshHomeWeather(visible.key);
 }
 function retryHomeWeather(button){
   var visible=homeWeatherVisibleKey;
@@ -11883,6 +11919,7 @@ function renderCurrent(v){
 }
 function renderAll(){ renderDaybar(); renderCurrent(); }
 function renderInactiveHome(message){
+  cancelHomeWeatherExpiry();
   homeWeatherEpoch++;homeWeatherState={};homeWeatherVisibleKey=null;
   if(tripEndInFlight)tripEndRequestId++;
   if(tripDriveClient)tripDriveClient.disconnect();
@@ -11951,6 +11988,10 @@ startSyncRelativeClock();
 window.addEventListener('scroll',function(){
   document.getElementById('totop').classList.toggle('show',window.scrollY>400);
 });
+/* Weather has one expiry deadline, not polling; foreground events project the
+   original acquired time and update only weather DOM, never trip progress. */
+document.addEventListener('visibilitychange',revalidateHomeWeather);
+window.addEventListener('pageshow',revalidateHomeWeather);
 /* 回前景／恢復連線／pageshow:補送離線佇列,並立即拉一次 ledger 增量後重啟對應 polling 節奏。
    hidden 或 offline 期間 5／15／60／30 秒節奏一律暫停(見 createLedgerFastPullController)。 */
 window.addEventListener('online',function(){if(TripLifecycle.readState(localStorage).mode!=='active')return;autoRetryLedgerQueue('online');ledgerFastPullController.resume('online');});

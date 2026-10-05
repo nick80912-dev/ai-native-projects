@@ -64,6 +64,69 @@ test('re-entering after three hours refreshes once without showing old numbers',
   release();await expect(page.locator('.today-hero-weather-summary')).toContainText('18°');
   await expect(page.locator('.today-hero-weather-summary')).toContainText('更新於 16:30');
 });
+for(const resume of ['visibilitychange','pageshow'])test(resume+' revalidates the same Today screen and retains next-stop focus',async({page})=>{
+  const city=await seed(page,{temp:27,rain:80});let calls=0,release;
+  await page.route('https://api.open-meteo.com/**',async route=>{
+    calls++;await new Promise(resolve=>{release=resolve;});await route.fulfill({json:response(18,0)});
+  });
+  await useWeatherNetwork(page);
+  const next=page.locator('#view-today .nx-decision-btn.done');await next.focus();
+  await page.evaluate(resume=>{
+    window.qaBeforeWeatherWrites=[localStorage.getItem('trip_checks'),localStorage.getItem('trip_day_progress')];
+    const original=Date.now();Date.now=()=>original+10800000;
+    if(resume==='visibilitychange'){
+      Object.defineProperty(document,'hidden',{configurable:true,get:()=>false});
+      document.dispatchEvent(new Event('visibilitychange'));document.dispatchEvent(new Event('visibilitychange'));
+    }else{window.dispatchEvent(new PageTransitionEvent('pageshow'));window.dispatchEvent(new PageTransitionEvent('pageshow'));}
+  },resume);
+  await expect(page.locator('.today-hero-weather-summary')).not.toContainText('27°');
+  await expect.poll(()=>calls).toBe(1);await expect(next).toBeFocused();
+  release();await expect(page.locator('.today-hero-weather-summary')).toContainText('18°');
+  await expect(next).toBeFocused();
+  expect(await page.evaluate(()=>[localStorage.getItem('trip_checks'),localStorage.getItem('trip_day_progress')])).toEqual(await page.evaluate(()=>qaBeforeWeatherWrites));
+  expect(await page.evaluate(()=>JSON.parse(localStorage.getItem(weatherCacheKey(qaWeatherCity))).t)).toBe(city.t+10800000);
+});
+test('visible weather expires at its deadline without a tab switch or periodic fetch',async({page})=>{
+  await page.clock.install({time:new Date('2026-10-18T13:30:00+09:00')});await seed(page,{age:10799900,temp:27,rain:80});let calls=0,release;
+  await page.route('https://api.open-meteo.com/**',async route=>{
+    calls++;await new Promise(resolve=>{release=resolve;});await route.fulfill({json:response(18,0)});
+  });
+  await useWeatherNetwork(page);
+  await page.evaluate(()=>{const original=Date.now();Date.now=()=>original+100;});
+  await page.clock.runFor(101);
+  await expect(page.locator('.today-hero-weather-summary')).not.toContainText('27°');
+  await expect(page.getByRole('button',{name:'重試天氣'})).toBeVisible();expect(calls).toBe(0);
+  await page.getByRole('button',{name:'重試天氣'}).click();await expect.poll(()=>calls).toBe(1);
+  release();await expect(page.locator('.today-hero-weather-summary')).toContainText('18°');
+  await page.clock.runFor(60000);expect(calls).toBe(1);
+});
+test('resume stays quiet after failure and cannot alter an off-page or cleared trip',async({page})=>{
+  await seed(page,{age:10800000});let calls=0;
+  const retry=page.getByRole('button',{name:'重試天氣'});await retry.focus();
+  await page.route('https://api.open-meteo.com/**',route=>{calls++;return route.fulfill({json:response()});});await useWeatherNetwork(page);
+  await page.evaluate(()=>{
+    Object.defineProperty(document,'hidden',{configurable:true,get:()=>false});
+    document.dispatchEvent(new Event('visibilitychange'));window.dispatchEvent(new PageTransitionEvent('pageshow'));
+  });
+  await expect(retry).toHaveAttribute('aria-disabled','false');expect(calls).toBe(0);
+  await expect(retry).toBeFocused();await expect(retry).not.toHaveAttribute('tabindex','-1');
+  await page.evaluate(()=>{switchView('trip');window.qaWeatherTodayHtml=document.getElementById('view-today').innerHTML;});
+  await page.evaluate(()=>{document.dispatchEvent(new Event('visibilitychange'));window.dispatchEvent(new PageTransitionEvent('pageshow'));});
+  expect(await page.evaluate(()=>document.getElementById('view-today').innerHTML)).toBe(await page.evaluate(()=>qaWeatherTodayHtml));expect(calls).toBe(0);
+  await page.evaluate(()=>{TripLifecycle.writeState(localStorage,{mode:'complete',archiveId:null});renderInactiveHome();window.dispatchEvent(new PageTransitionEvent('pageshow'));});
+  await expect(page.locator('.trip-inactive-card')).toBeVisible();expect(calls).toBe(0);
+});
+test('past zero with missing future rainfall remains unknown in the screen reader summary',async({page})=>{
+  await seed(page,{rain:0});
+  await page.evaluate(()=>{
+    const key=weatherCacheKey(qaWeatherCity),envelope=JSON.parse(localStorage.getItem(key));
+    envelope.data.hours={time:['2026-10-18T12:00','2026-10-18T14:00','2026-10-18T15:00'],precipitation_probability:[0,null,'']};
+    localStorage.setItem(key,JSON.stringify(envelope));homeWeatherState={};renderToday();
+  });
+  const summary=page.locator('.today-hero-weather-summary');await expect(summary).toContainText('21°');
+  await expect(summary).toHaveAttribute('aria-label',/降雨機率未知/);
+  await expect(summary).not.toHaveAttribute('aria-label',/0%/);await expect(summary).not.toContainText('適合出發');
+});
 test('failed requests remain quiet until keyboard manual retry',async({page})=>{
   await seed(page,{age:10800000});let calls=0;
   await page.route('https://api.open-meteo.com/**',route=>{calls++;return route.fulfill({json:response(24,null)});});
