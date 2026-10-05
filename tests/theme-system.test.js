@@ -295,7 +295,7 @@ function extractThemeIds(html){
      守著它的斷言完成任務後移除 —— 與 v111 的離線啟動說明同一處理。 */
   /* 滾動的五筆視窗:最新一筆是目前版本,其餘四筆是緊接在後的歷史版本。
      歷史版本刻意寫死字面值(見 tests/support/version.js 的適用範圍說明)。 */
-  assert.deepStrictEqual(Array.from(notes.slice(1),function(note){return note.version;}),['v143','v142','v141','v140']);
+  assert.deepStrictEqual(Array.from(notes.slice(1),function(note){return note.version;}),['v144','v143','v142','v141']);
   /* v117 的選取表達說明已於 2026-09-12 隨 v122 加入而滾出五筆視窗，同前一個處理。
   /* v118 的顏色語意收斂說明已於 2026-09-13 隨 v123 加入而滾出五筆視窗,同前一個處理。
   /* v119 的攤疊區塊說明已於 2026-09-13 隨 v124 加入而滾出五筆視窗,同前一個處理。

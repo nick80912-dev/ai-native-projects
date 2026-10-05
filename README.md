@@ -40,8 +40,8 @@ v144 B 本機保存候選與限制：[驗證記錄](docs/trippilot-v144-b-verifi
 
 ## 專案檔案
 - `index.html` / `app-version.js` — 保留 v110 predecessor bridge；讓尚未更新的 v110 worker 在 current generation 安裝失敗時仍可運作
-- `shell/v144/index.html` / `shell/v144/app-version.js` — v144 本機候選版文件與 App runtime 版本來源；成功啟用的 `sw.js` 才接管 root 導覽；已發布 generation 保持不可變
-- `shell/v144/builtin-snapshot.js` — 由刷新工具以既有 v143 種子 CSV 產生的版本綁定離線資料資產，內容與時間戳保持不變；禁止手動修改
+- `shell/v145/index.html` / `shell/v145/app-version.js` — v145 本機候選版文件與 App runtime 版本來源；成功啟用的 `sw.js` 才接管 root 導覽；已發布 generation 保持不可變
+- `shell/v145/builtin-snapshot.js` — 由刷新工具以既有 v144 種子 CSV 產生的版本綁定離線資料資產，內容與時間戳保持不變；禁止手動修改
 - `navigation-intent.js` — 明確導覽目的地的 session-only state module；DOM 定位與回饋 adapter 位於 `index.html`
 - `diagnostic-impact.js` — AppLog 原始紀錄的 display-only impact projection；顯示 adapter 位於 `index.html`
 - `today-view.js` — Today Hero 採買摘要的純 model／renderer module；資料選擇與 DOM effects 留在 `index.html`
