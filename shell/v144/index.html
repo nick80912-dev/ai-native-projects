@@ -1372,9 +1372,16 @@ function clearToast(){
 function runToastAction(){
   if(!toastAction) return;
   var fn=toastAction;
+  var el=document.getElementById('toast');
+  var undoFocused=fn===undoNextStopAction&&el&&el.contains(document.activeElement);
   clearTimeout(toastTimer);
   clearToast();
   fn();
+  /* 原 action 被移除前記住焦點；只在復原失敗保留的重試上接回。 */
+  if(undoFocused&&toastAction===undoNextStopAction){
+    var retry=el.querySelector('button');
+    if(retry) retry.focus();
+  }
 }
 function toast(msg,actionText,actionFn,durationMs){
   var el=document.getElementById('toast');
@@ -2161,10 +2168,12 @@ function toggleCheck(id){
 var tripProgressFailureSeen={},tripProgressErrorMessage='',tripProgressRenderReadOnly=false;
 function reportTripProgressFailure(result,operationKey,retryAction){
   var code=result&&result.error||'write-failed';
+  var automatic=String(operationKey||'').indexOf('auto-')===0;
+  /* 自動重繪不得覆蓋手動失敗的重試入口；本次 session 已有錯誤時保持安靜。 */
+  if(automatic&&tripProgressErrorMessage) return;
   tripProgressErrorMessage=code==='restore-unverified'?'紀錄可能未完整儲存，請查看資料健康狀態':
     code==='read-failed'||code==='invalid-state'?'目前無法讀取行程紀錄，請查看資料健康狀態':
     code==='inactive'?'目前沒有進行中的旅程':'這次操作未能儲存，請稍後重試';
-  var automatic=String(operationKey||'').indexOf('auto-')===0;
   var key=String(operationKey||'')+':'+code;
   if(automatic&&tripProgressFailureSeen[key]) return;
   if(automatic) tripProgressFailureSeen[key]=true;
@@ -2215,22 +2224,25 @@ function hasDayProgress(progress){
   progress=normalizeDayProgress(progress);
   return Object.keys(progress.done).length>0 || Object.keys(progress.skip).length>0;
 }
-function setItemCompletion(day,dayIndex,itemId,status){
-  var state=readTripProgressChecked(localStorage);
-  if(!state.ok) return {ok:false,restored:false,error:state.error};
-  var all=state.progress;
-  var key=dayProgressKey(day,dayIndex);
-  var progress=normalizeDayProgress(all[key]);
+function applyItemCompletion(progress,checks,itemId,status){
   delete progress.done[itemId];
   delete progress.skip[itemId];
   delete progress.autoSkip[itemId];
   if(status==='done') progress.done[itemId]=true;
   if(status==='skip'||status==='auto-skip') progress.skip[itemId]=true;
   if(status==='auto-skip') progress.autoSkip[itemId]=true;
-  all[key]=progress;
-  var checks=state.checks;
   if(status==='done') checks[itemId]=true;
   else delete checks[itemId];
+}
+function setItemCompletion(day,dayIndex,itemId,status){
+  var state=readTripProgressChecked(localStorage);
+  if(!state.ok) return {ok:false,restored:false,error:state.error};
+  var all=state.progress;
+  var key=dayProgressKey(day,dayIndex);
+  var progress=normalizeDayProgress(all[key]);
+  var checks=state.checks;
+  applyItemCompletion(progress,checks,itemId,status);
+  all[key]=progress;
   return writeTripProgressChecked(localStorage,[{key:'trip_next_stop_progress',value:all},{key:'trip_checks',value:checks}]);
 }
 function markNextStop(day,dayIndex,itemId,status){
@@ -2792,7 +2804,9 @@ function onCheck(id,fromKeyboard){
   if(wasDone&&day){
     var item=(day.items||[]).find(function(it){return it.id===id;});
     var crossDay=findToday()!==curDay;
-    var timePick=item?pickNextStop([item],getDayProgress(day,curDay),{},currentMinutes(),null):null;
+    /* 只在記憶體候選狀態取消完成，再套原時間規則；最後仍一次 checked 保存。 */
+    applyItemCompletion(progress,state.checks,id,'clear');
+    var timePick=item?pickNextStop([item],progress,state.checks,currentMinutes(),null):null;
     var timePast=!!(item&&parseStartMinutes(item.time)!==null&&timePick&&timePick.source==='time-stale');
     cancelledPast=crossDay||timePast;
     if(timePast&&!crossDay) status='auto-skip';
@@ -3233,23 +3247,21 @@ function pickClusterChild(cluster,progress,checks,nowMinutes,dayRef){
   if(pick.item) pick.item=cluster.items.find(function(item){ return item.id===pick.item.id; })||null;
   return pick;
 }
+function clusterCompletionChange(cluster,progress,checks){
+  if(!cluster||!cluster.controllerId) return '';
+  progress=normalizeDayProgress(progress);checks=checks||{};
+  var cleared=cluster.items.every(function(item){return isNextStopCleared(item,progress,checks);});
+  var controllerCleared=isNextStopCleared({id:cluster.controllerId},progress,checks);
+  return cleared&&!controllerCleared?'done':!cleared&&controllerCleared?'clear':'';
+}
 function reconcileClusterController(day,dayIndex,cluster,progress,checks){
   if(!cluster||!cluster.controllerId) return false;
   if(tripProgressRenderReadOnly||tripProgressErrorMessage) return false;
   var state=readTripProgressChecked(localStorage);
   if(!state.ok){reportTripProgressFailure(state,'auto-cluster-read');return false;}
-  progress=normalizeDayProgress(progress);
-  checks=checks||{};
-  var cleared=cluster.items.every(function(item){ return isNextStopCleared(item,progress,checks); });
-  var controller={id:cluster.controllerId};
-  var controllerCleared=isNextStopCleared(controller,progress,checks);
-  if(cleared&&!controllerCleared){
-    var result=markNextStop(day,dayIndex,cluster.controllerId,'done');
-    if(!result.ok) reportTripProgressFailure(result,'auto-cluster-'+cluster.controllerId);
-    return result.ok;
-  }
-  if(!cleared&&controllerCleared){
-    var result=setItemCompletion(day,dayIndex,cluster.controllerId,'clear');
+  var status=clusterCompletionChange(cluster,progress,checks);
+  if(status){
+    var result=setItemCompletion(day,dayIndex,cluster.controllerId,status);
     if(!result.ok) reportTripProgressFailure(result,'auto-cluster-'+cluster.controllerId);
     return result.ok;
   }
@@ -3464,6 +3476,14 @@ function undoNextStopAction(){
   var checks=state.checks;
   if(action.prevCheck) checks[action.itemId]=true;
   else delete checks[action.itemId];
+  /* 同批恢復受影響的群組 controller，重繪仍只讀以免立刻再自動略過。 */
+  (day.items||[]).forEach(function(parent){
+    if(!parent.act) return;
+    var cluster=getChildStopCluster(day.items,parent);
+    if(!cluster||!cluster.items.some(function(item){return item.id===action.itemId;})) return;
+    var status=clusterCompletionChange(cluster,progress,checks);
+    if(status) applyItemCompletion(progress,checks,cluster.controllerId,status);
+  });
   var result=writeTripProgressChecked(localStorage,[{key:'trip_next_stop_progress',value:all},{key:'trip_checks',value:checks}]);
   if(!result.ok){reportTripProgressFailure(result,'manual-undo',undoNextStopAction);renderTripProgressAfterFailure();return;}
   lastNextStopAction=null;

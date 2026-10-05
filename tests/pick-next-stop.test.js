@@ -63,6 +63,7 @@ function makeSandbox(){
     extractFunction('getDayProgress'),
     extractFunction('markNextStop'),
     extractFunction('setItemCompletion'),
+    extractFunction('applyItemCompletion'),
     extractFunction('autoSkipStaleItem'),
     extractFunction('isAutoSkipped'),
     extractFunction('isNextStopCleared'),
@@ -74,7 +75,8 @@ function makeSandbox(){
     extractFunction('homeNextStopItems'),
     extractFunction('pickClusterChild'),
     extractFunction('completeClusterParent'),
-    extractFunction('reconcileClusterController')
+    extractFunction('reconcileClusterController'),
+    extractFunction('clusterCompletionChange')
   ].join('\n'), sandbox);
   sandbox._store = store;
   sandbox._writes = writes;

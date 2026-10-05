@@ -61,6 +61,64 @@ test('failed undo preserves the action and its retry restores persisted state',a
   expect(await page.evaluate(()=>lastNextStopAction)).toBeNull();
   expect(await page.evaluate(()=>JSON.parse(localStorage.getItem('trip_checks'))['qa-a']||false)).toBe(false);
 });
+test('cancelling a completed past stop retains the established auto-skip state',async({page})=>{
+  await setup(page);
+  await page.evaluate(()=>{
+    setItemCompletion(DB.trip.days[0],0,'qa-b','done');
+    currentMinutes=()=>12*60;
+    onCheck('qa-b',false);
+  });
+  await expect(page.locator('#toast')).toContainText('該行程時間已過');
+  const state=await page.evaluate(()=>({checks:getChecks(),progress:getDayProgress(DB.trip.days[0],0)}));
+  expect(state.checks['qa-b']).toBeUndefined();expect(state.progress.done['qa-b']).toBeUndefined();
+  expect(state.progress.skip['qa-b']).toBe(true);expect(state.progress.autoSkip['qa-b']).toBe(true);
+});
+test('undo of the final completed cluster child reopens the controller immediately',async({page})=>{
+  await setup(page);
+  await page.evaluate(()=>{
+    DB.trip.days[0].items[1].act='';
+    setItemCompletion(DB.trip.days[0],0,'qa-a','done');renderToday();
+  });
+  await page.locator('.nx-decision-btn.done').click();
+  expect(await page.evaluate(()=>getChecks()['qa-a__cluster'])).toBe(true);
+  await page.locator('#toast button').click();
+  await expect(page.locator('#toast')).toContainText('已復原完成');
+  const state=await page.evaluate(()=>({checks:getChecks(),progress:getDayProgress(DB.trip.days[0],0)}));
+  expect(state.checks['qa-b']).toBeUndefined();expect(state.checks['qa-a__cluster']).toBeUndefined();
+  expect(state.progress.done['qa-b']).toBeUndefined();expect(state.progress.done['qa-a__cluster']).toBeUndefined();
+  await expect(page.getByRole('button',{name:'完成：午餐',exact:true})).toBeVisible();
+  await expect(page.locator('.nx-cluster-ticket .nx-ticket-line').first()).toContainText('這一站 11:00 午餐');
+});
+test('denied-read undo retains an accessible retry through repeated redraws',async({page})=>{
+  await setup(page);await page.locator('.nx-decision-btn.done').click();
+  const before=await bytes(page);
+  await page.evaluate(()=>{
+    Storage.prototype.getItem=function(key){
+      if(key==='trip_checks')throw new DOMException('QA denied read','SecurityError');
+      return qaNativeGet.call(this,key);
+    };
+  });
+  await page.locator('#toast button').click();
+  await expect(page.locator('#toast button')).toHaveText('重試復原');
+  await page.evaluate(()=>renderToday());
+  await expect(page.locator('#toast button')).toHaveText('重試復原');
+  expect(await bytes(page)).toEqual(before);
+  expect(await page.evaluate(()=>lastNextStopAction.itemId)).toBe('qa-a');
+  await page.evaluate(()=>{Storage.prototype.getItem=qaNativeGet;});
+  await page.locator('#toast button').click();
+  await expect(page.locator('#toast')).toContainText('已復原完成');
+  expect(await page.evaluate(()=>getChecks()['qa-a'])).toBeUndefined();
+});
+test('keyboard failed undo keeps focus on the retry action',async({page})=>{
+  await setup(page);await page.locator('.nx-decision-btn.done').click();await fault(page,'all');
+  await page.locator('#toast button').focus();await page.locator('#toast button').press('Enter');
+  await expect(page.locator('#toast button')).toHaveText('重試復原');
+  await expect(page.locator('#toast button')).toBeFocused();
+  await page.evaluate(()=>{Storage.prototype.setItem=qaNativeSet;});
+  await page.locator('#toast button').press('Enter');
+  await expect(page.locator('#toast')).toContainText('已復原完成');
+  expect(await page.evaluate(()=>getChecks()['qa-a'])).toBeUndefined();
+});
 test('unverified rollback explains the partial state rather than claiming success',async({page})=>{
   await setup(page);await fault(page,'rollback');await page.locator('.nx-decision-btn.done').click();
   await expect(page.locator('#toast')).toContainText('紀錄可能未完整儲存');

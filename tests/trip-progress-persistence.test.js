@@ -5,7 +5,7 @@ const vm=require('vm');
 const {readIndexHtml,extractFunction}=require('./support/source');
 const html=readIndexHtml();
 const names=['tripProgressObject','tripProgressShapeValid','readTripProgressChecked','writeTripProgressChecked',
-  'dayProgressKey','normalizeDayProgress','setItemCompletion'];
+  'dayProgressKey','normalizeDayProgress','applyItemCompletion','setItemCompletion'];
 const source=names.map(name=>extractFunction(html,name)).join('\n');
 const plain=value=>JSON.parse(JSON.stringify(value));
 
@@ -38,6 +38,7 @@ function uiContext(storage){
   });
   const uiNames=['getChecks','getNextStopProgress','getDayProgress','toggleCheck','saveNextStopProgress','markNextStop',
     'autoSkipStaleItem','isAutoSkipped','isNextStopCleared','parseStartMinutes','pickNextStop','reconcileClusterController',
+    'getChildStopCluster','clusterControllerId','clusterCompletionChange',
     'snapshotNextStopState','undoNextStopAction','onNextStopDone','onNextStopSkip','onCheck'];
   // New UI helpers, if present, are loaded rather than mocked.
   for(const name of ['reportTripProgressFailure','clearTripProgressFailure','renderTripProgressAfterFailure','tripProgressReadFailure']){
@@ -165,5 +166,38 @@ test('cluster controller stays uncompleted if persistence fails',()=>{
   storage.configure(op=>{if(op==='set')throw Error('quota');});
   assert.strictEqual(sb.reconcileClusterController(day,0,{controllerId:'a__cluster',items:day.items.slice(0,2)},{},{a:true,b:true}),false);
   assert.strictEqual(storage.raw.trip_next_stop_progress,undefined);
+});
+test('past completed check-in cancellation remains automatically skipped',()=>{
+  const storage=storageDouble(),sb=uiContext(storage),day=sb.DB.trip.days[0];
+  sb.setItemCompletion(day,0,'b','done');sb.onCheck('b',false);
+  const progress=JSON.parse(storage.raw.trip_next_stop_progress).day_1_10_18;
+  assert.strictEqual(progress.done.b,undefined);assert.strictEqual(progress.skip.b,true);assert.strictEqual(progress.autoSkip.b,true);
+  assert.strictEqual(JSON.parse(storage.raw.trip_checks).b,undefined);
+});
+test('cluster undo restores child autoSkip and reopens its completed controller in one checked batch',()=>{
+  const storage=storageDouble({trip_checks:'{"a":true,"b":true,"a__cluster":true}',
+    trip_next_stop_progress:'{"day_1_10_18":{"done":{"a":true,"b":true,"a__cluster":true},"skip":{},"autoSkip":{}}}'}),sb=uiContext(storage);
+  sb.DB.trip.days[0].items.forEach(item=>{item.place=item.act;});sb.DB.trip.days[0].items[1].act='';
+  sb.lastNextStopAction={dayIndex:0,itemId:'a',status:'done',prevDone:false,prevSkip:true,prevAutoSkip:true,prevCheck:false};
+  // A skipped child still clears its controller; the target's exact previous status wins.
+  sb.undoNextStopAction();
+  let progress=JSON.parse(storage.raw.trip_next_stop_progress).day_1_10_18;
+  assert.strictEqual(progress.autoSkip.a,true);assert.strictEqual(progress.skip.a,true);assert.strictEqual(progress.done.a__cluster,true);
+  sb.lastNextStopAction={dayIndex:0,itemId:'b',status:'done',prevDone:false,prevSkip:false,prevAutoSkip:false,prevCheck:false};
+  const before=storage.calls.set;sb.undoNextStopAction();
+  progress=JSON.parse(storage.raw.trip_next_stop_progress).day_1_10_18;
+  assert.strictEqual(progress.done.b,undefined);assert.strictEqual(progress.done.a__cluster,undefined);
+  assert.strictEqual(JSON.parse(storage.raw.trip_checks).a__cluster,undefined);assert.strictEqual(storage.calls.set-before,2);
+  assert.strictEqual(progress.autoSkip.a,true);
+});
+test('failed cluster undo rolls back both child and controller and retains its snapshot',()=>{
+  const storage=storageDouble({trip_checks:'{ "a":true,"b":true,"a__cluster":true }',
+    trip_next_stop_progress:'{ "day_1_10_18":{"done":{"a":true,"b":true,"a__cluster":true},"skip":{}} }'}),sb=uiContext(storage);
+  sb.DB.trip.days[0].items.forEach(item=>{item.place=item.act;});sb.DB.trip.days[0].items[1].act='';
+  const action={dayIndex:0,itemId:'b',status:'done',prevDone:false,prevSkip:false,prevAutoSkip:false,prevCheck:false};sb.lastNextStopAction=action;
+  const before=storage.snapshot();let failed=false;
+  storage.configure((op,key)=>{if(op==='set'&&key==='trip_checks'&&!failed){failed=true;throw Error('quota');}});
+  sb.undoNextStopAction();assert.strictEqual(storage.snapshot(),before);assert.strictEqual(sb.lastNextStopAction,action);
+  assert.ok(sb.messages.every(args=>!/^已復原/.test(args[0])));
 });
 console.log('trip progress persistence: '+count+' tests passed');
