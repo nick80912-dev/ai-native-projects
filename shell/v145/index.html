@@ -199,6 +199,8 @@ input,select,textarea{font-size:16px}
 .today-hero-summary-value small{flex:0 0 auto;font-size:10px;color:var(--today-hero-emphasis)}
 .today-weather-meta,.today-weather-message{font-size:11px;line-height:1.45;overflow-wrap:anywhere}
 .today-weather-meta{margin-top:2px}
+.today-weather-retry{align-self:flex-start;min-height:44px;min-width:44px;padding:0 8px;margin-top:2px;border:1px solid currentColor;border-radius:8px;background:transparent;color:inherit;font:inherit;font-size:11px;cursor:pointer}
+.today-weather-retry[aria-disabled="true"]{opacity:.7;cursor:default}
 .today-hero-weather-summary .today-hero-summary-value{white-space:normal;overflow:visible}
 .today-hero-shopping-summary{appearance:none;width:100%;min-height:44px;border:0;background:transparent;padding:0;text-align:right;font:inherit;align-items:flex-end;cursor:pointer}
 .today-hero-shopping-summary .today-hero-summary-value{justify-content:flex-end}
@@ -3091,13 +3093,14 @@ function renderTodayWeatherSummary(weather){
       weather.status==='loading'?'正在讀取天氣…':'暫無天氣資料';
     return '<div class="today-hero-summary-item today-hero-weather-summary" role="group" aria-label="'+escapeHtmlAttr(label+message)+'">'+
       '<span class="today-hero-summary-label" aria-hidden="true">'+escapeHtml(city||'天氣')+'</span>'+
-      '<span class="today-weather-message" aria-hidden="true">'+message+'</span></div>';
+      '<span class="today-weather-message" aria-hidden="true">'+message+'</span>'+
+      (weather.retryKey?'<button type="button" class="today-weather-retry" data-weather-key="'+escapeHtmlAttr(weather.retryKey)+'" aria-label="重試天氣" aria-disabled="'+(weather.busy?'true':'false')+'" onclick="retryHomeWeather(this)">'+(weather.busy?'讀取中…':'重試')+'</button>':'')+'</div>';
   }
   var hint=weatherTravelHint(weather);
   var time=weatherUpdatedTime(weather.updatedAt);
   label+=Math.round(weather.temp)+' 度，'+(weather.rain===null?'降雨機率未知':'現在之後最高降雨機率 '+Math.round(weather.rain)+'%')+
     (hint?'，'+hint:'')+'，手機取得時間：日本時間 '+time;
-  return '<div class="today-hero-summary-item today-hero-weather-summary" role="group" aria-label="'+escapeHtmlAttr(label)+'">'+
+  return '<div class="today-hero-summary-item today-hero-weather-summary" role="group" tabindex="-1" aria-label="'+escapeHtmlAttr(label)+'">'+
     '<span class="today-hero-summary-label" aria-hidden="true">'+escapeHtml(city)+' · 外出提醒</span>'+
     '<span class="today-hero-summary-value" aria-hidden="true">'+Math.round(weather.temp)+'°'+(hint?' · '+escapeHtml(hint):'')+'</span>'+
     '<span class="today-weather-meta" aria-hidden="true">更新於 '+time+'</span></div>';
@@ -3160,7 +3163,20 @@ function getCachedWeather(city){
   copy.rain=view.rain;return copy;
 }
 function setCachedWeather(city,data,timestamp){
-  lsSet(weatherCacheKey(city),{ t:timestamp===undefined?Date.now():timestamp, data:data });
+  try{
+    var key=weatherCacheKey(city),bytes=JSON.stringify({t:timestamp===undefined?Date.now():timestamp,data:data});
+    localStorage.setItem(key,bytes);
+    if(localStorage.getItem(key)===bytes)return true;
+  }catch(ignore){}
+  weatherDiagnostic('cache');return false;
+}
+function weatherDiagnostic(kind){
+  if(typeof AppLog!=='undefined'&&AppLog&&AppLog.data){
+    AppLog.data(kind==='cache'?'天氣快取未能保存；目前資料僅在本次開啟期間可用。':'天氣讀取未完成；可於首頁重試。');
+  }
+}
+function weatherTripActive(){
+  try{return TripLifecycle.readState(localStorage).mode==='active';}catch(ignore){return false;}
 }
 function fetchWeather(city){
   var url='https://api.open-meteo.com/v1/forecast?latitude='+encodeURIComponent(city.lat)+
@@ -3183,15 +3199,18 @@ function fetchWeather(city){
     return { city:city.label, temp:temp, rain:rain, icon:typeof code==='number'&&isFinite(code)?weatherIcon(code):'☁️', code:code, hours:hours };
   });
 }
-function loadWeatherEnvelope(city){
+function loadWeatherEnvelope(city,canUse,force){
+  var epoch=homeWeatherEpoch;
+  var allowed=function(){return homeWeatherEpoch===epoch&&weatherTripActive()&&(!canUse||canUse());};
+  if(!allowed())return Promise.resolve(null);
   var cached=readWeatherEnvelope(city);
-  if(weatherPresentation(cached,city,Date.now()).status==='fresh')return Promise.resolve(cached);
+  if(!force&&weatherPresentation(cached,city,Date.now()).status==='fresh')return Promise.resolve(cached);
   return fetchWeather(city).then(function(data){
-    if(!data)return null;
+    if(!allowed()||!data)return null;
     var envelope={t:Date.now(),data:data};
     setCachedWeather(city,data,envelope.t);return envelope;
   }).catch(function(err){
-    AppLog&&AppLog.data&&AppLog.data('天氣讀取失敗:'+city.label+' '+(err.message||err));
+    if(allowed())weatherDiagnostic('network');
     return null;
   });
 }
@@ -3551,33 +3570,62 @@ function onNextStopSkip(dayIndex,itemId){
   toast('已略過這站','復原',undoNextStopAction);
 }
 var homeWeatherState={};
-function requestHomeWeather(dayIndex,item){
-  if(!item) return;
+var homeWeatherRequestId=0;
+var homeWeatherEpoch=0;
+var homeWeatherVisibleKey=null;
+function requestHomeWeather(dayIndex,item,force){
+  if(!item||!weatherTripActive()) return;
   var day=DB.trip&&DB.trip.days?DB.trip.days[dayIndex]:null;
   var city=inferWeatherCityForDay(day,item);
   if(!city) return;
   var key='day_'+dayIndex+'_'+city.key;
-  if(homeWeatherState[key]) return;
-  var cached=readWeatherEnvelope(city);
-  if(weatherPresentation(cached,city,Date.now()).status==='fresh'){
-    homeWeatherState[key]={status:'ready',envelope:cached};return;
+  var state=homeWeatherState[key];
+  if(state&&state.status==='loading')return;
+  var cached=state?state.envelope:readWeatherEnvelope(city);
+  if(!force&&state&&state.status==='failed')return;
+  if(!force&&weatherPresentation(cached,city,Date.now()).status==='fresh'){
+    homeWeatherState[key]={status:'ready',envelope:cached,requestId:0,error:null};return;
   }
-  homeWeatherState[key]={status:'loading',envelope:cached};
-  loadWeatherEnvelope(city).then(function(envelope){
-    homeWeatherState[key]={status:envelope?'ready':'failed',envelope:envelope||cached};
-    if(curView==='today')renderToday();
+  var requestId=++homeWeatherRequestId,epoch=homeWeatherEpoch;
+  homeWeatherState[key]={status:'loading',envelope:cached,requestId:requestId,error:null};
+  var canUse=function(){return epoch===homeWeatherEpoch&&weatherTripActive()&&
+    homeWeatherState[key]&&homeWeatherState[key].requestId===requestId;};
+  return loadWeatherEnvelope(city,canUse,force).then(function(envelope){
+    if(!canUse())return;
+    homeWeatherState[key]={status:envelope?'ready':'failed',envelope:envelope||cached,requestId:requestId,error:envelope?null:'unavailable'};
+    refreshHomeWeather(key);
   });
 }
 function homeWeatherFor(dayIndex,item){
+  homeWeatherVisibleKey=null;
   if(!item) return null;
   var day=DB.trip&&DB.trip.days?DB.trip.days[dayIndex]:null;
   var city=inferWeatherCityForDay(day,item);
   if(!city) return null;
   var key='day_'+dayIndex+'_'+city.key;
+  homeWeatherVisibleKey={key:key,dayIndex:dayIndex,item:item};
   var state=homeWeatherState[key];
   var view=weatherPresentation(state?state.envelope:readWeatherEnvelope(city),city,Date.now());
   if(view.status==='unavailable'&&state&&state.status==='loading')view.status='loading';
+  if(state&&(state.status==='failed'||state.status==='loading')){
+    view.retryKey=key;view.busy=state.status==='loading';
+  }
   return view;
+}
+function refreshHomeWeather(key){
+  if(curView!=='today'||!weatherTripActive()||!homeWeatherVisibleKey||homeWeatherVisibleKey.key!==key)return;
+  var retry=document.querySelector('.today-weather-retry'),restore=retry&&document.activeElement===retry;
+  renderToday();
+  if(restore){
+    var target=document.querySelector('.today-weather-retry')||document.querySelector('.today-hero-weather-summary');
+    if(target)target.focus({preventScroll:true});
+  }
+}
+function retryHomeWeather(button){
+  var visible=homeWeatherVisibleKey;
+  if(!visible||!button||button.dataset.weatherKey!==visible.key||!weatherTripActive())return;
+  requestHomeWeather(visible.dayIndex,visible.item,true);
+  refreshHomeWeather(visible.key);
 }
 function daysUntilStart(){
   var raw=DB&&DB.cfg&&DB.cfg.startdate?String(DB.cfg.startdate):'';
@@ -11835,6 +11883,7 @@ function renderCurrent(v){
 }
 function renderAll(){ renderDaybar(); renderCurrent(); }
 function renderInactiveHome(message){
+  homeWeatherEpoch++;homeWeatherState={};homeWeatherVisibleKey=null;
   if(tripEndInFlight)tripEndRequestId++;
   if(tripDriveClient)tripDriveClient.disconnect();
   if(document.getElementById('settingsOverlay'))closeSettings();

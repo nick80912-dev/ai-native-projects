@@ -64,3 +64,72 @@ assert.equal(JSON.parse(raw).t,now);
 assert.equal(sandbox.rainChanceFromNow({time:['invalid'],precipitation_probability:[90]},new Date(now)),null);
 assert.equal(sandbox.rainChanceFromNow({time:['2026-10-18T12:00'],precipitation_probability:[NaN]},new Date(now)),null);
 console.log('weather freshness projection tests passed');
+
+function requestFixture(){
+  let time=now,active=true,writeDenied=false,renders=0;
+  const storage=new Map(),pending=[],logs=[];
+  class RequestDate extends Date{static now(){return time;}}
+  const context={Date:RequestDate,Intl,Promise,console,homeWeatherState:{},homeWeatherEpoch:0,homeWeatherRequestId:0,
+    homeWeatherVisibleKey:null,curView:'today',DB:{trip:{days:[{items:[]}]},},appNow:()=>new Date(time),
+    TripLifecycle:{readState:()=>({mode:active?'active':'inactive'})},
+    localStorage:{getItem:key=>storage.get(key)||null,setItem:(key,value)=>{
+      if(writeDenied)throw Error('QUOTA_PRIVATE_PAYLOAD');storage.set(key,value);
+    }},
+    AppLog:{data:message=>logs.push(message),repo:message=>logs.push(message)},
+    inferWeatherCityForDay:(day,item)=>item.city,
+    renderToday:()=>{renders++;},document:{activeElement:null,querySelector:()=>null},
+    fetchWithTimeout:(url,timeout)=>{assert.equal(timeout,6500);return new Promise((resolve,reject)=>pending.push({url,resolve,reject}));}
+  };
+  context.lsGet=key=>{try{return JSON.parse(context.localStorage.getItem(key));}catch(ignore){return null;}};
+  context.lsSet=(key,value)=>{try{context.localStorage.setItem(key,JSON.stringify(value));}catch(ignore){}};
+  vm.createContext(context);
+  for(const name of ['weatherCacheKey','weatherIcon','rainChanceFromNow','weatherPresentation','readWeatherEnvelope','getCachedWeather',
+    'setCachedWeather','fetchWeather','loadWeatherEnvelope','loadWeatherForCity','requestHomeWeather','homeWeatherFor',
+    'refreshHomeWeather','weatherDiagnostic','weatherTripActive']){
+    if(html.includes('function '+name+'('))vm.runInContext(extractFunction(html,name),context);
+  }
+  const item={city},other={city:{key:'okayama',label:'岡山',lat:34,lon:133}};
+  function reply(index,temp=21,rain=null){pending[index].resolve({ok:true,json:()=>Promise.resolve({
+    current:{temperature_2m:temp,weather_code:1},hourly:{time:['2026-10-18T20:00'],precipitation_probability:[rain]}
+  })});}
+  return {context,storage,pending,logs,item,other,reply,get renders(){return renders;},
+    advance:ms=>{time+=ms;},clear:()=>{active=false;context.homeWeatherEpoch++;context.homeWeatherState={};storage.clear();},
+    deny:()=>{writeDenied=true;},tick:()=>new Promise(resolve=>setImmediate(resolve))};
+}
+(async()=>{
+  const cached=requestFixture();cached.storage.set('trip_weather_hiroshima',JSON.stringify(envelope()));
+  cached.context.homeWeatherFor(0,cached.item);cached.context.requestHomeWeather(0,cached.item);
+  assert.equal(cached.pending.length,0,'valid cache avoids fetch');
+  cached.advance(10800000);
+  assert.equal(cached.context.homeWeatherFor(0,cached.item).status,'expired');
+  cached.context.requestHomeWeather(0,cached.item);cached.context.requestHomeWeather(0,cached.item);
+  assert.equal(cached.pending.length,1,'expired session triggers exactly one refresh');
+  cached.pending[0].reject(Error('network'));await cached.tick();
+  cached.context.requestHomeWeather(0,cached.item);assert.equal(cached.pending.length,1,'failed re-render never auto retries');
+  cached.context.requestHomeWeather(0,cached.item,true);assert.equal(cached.pending.length,2,'manual retry starts one request');
+  cached.context.requestHomeWeather(0,cached.item,true);assert.equal(cached.pending.length,2,'even force cannot duplicate loading request');
+  cached.reply(1,0,0);await cached.tick();
+  assert.equal(cached.context.homeWeatherFor(0,cached.item).temp,0);
+  assert.equal(cached.context.homeWeatherFor(0,cached.item).rain,0);
+  const saved=JSON.parse(cached.storage.get('trip_weather_hiroshima')).t;
+  await cached.context.loadWeatherForCity(city);
+  assert.equal(JSON.parse(cached.storage.get('trip_weather_hiroshima')).t,saved,'data wrapper retains acquired time');
+  const denied=requestFixture();denied.deny();denied.context.homeWeatherFor(0,denied.item);
+  denied.context.requestHomeWeather(0,denied.item);denied.reply(0,22,null);await denied.tick();
+  assert.equal(denied.context.homeWeatherFor(0,denied.item).temp,22,'valid network survives denied cache write');
+  assert.equal(denied.storage.size,0);assert(denied.logs.some(line=>line.includes('天氣快取')));
+  assert(!denied.logs.join('').includes('PRIVATE_PAYLOAD'),'diagnostics omit raw exceptions');
+  const clear=requestFixture();clear.context.homeWeatherFor(0,clear.item);clear.context.requestHomeWeather(0,clear.item);
+  clear.clear();clear.reply(0);await clear.tick();
+  assert.equal(clear.storage.size,0,'late response cannot resurrect cleared cache');
+  assert.equal(Object.keys(clear.context.homeWeatherState).length,0);assert.equal(clear.renders,0);
+  const cities=requestFixture();cities.context.homeWeatherFor(0,cities.item);cities.context.requestHomeWeather(0,cities.item);
+  cities.context.homeWeatherFor(0,cities.other);cities.context.requestHomeWeather(0,cities.other);
+  cities.reply(1,25,0);await cities.tick();cities.reply(0,10,90);await cities.tick();
+  assert.equal(cities.context.homeWeatherFor(0,cities.other).temp,25);assert.equal(cities.renders,1,'old city never re-renders current city');
+  assert.equal(cities.context.homeWeatherFor(0,cities.item).temp,10);
+  const leave=requestFixture();leave.context.homeWeatherFor(0,leave.item);leave.context.requestHomeWeather(0,leave.item);
+  leave.context.curView='trip';leave.reply(0);await leave.tick();assert.equal(leave.renders,0,'off-page replies do not render');
+  assert.equal(leave.context.homeWeatherFor(0,leave.item).status,'fresh','off-page result can be reused while active');
+  console.log('weather session / requests / failure guard tests passed');
+})().catch(error=>{console.error(error);process.exitCode=1;});
