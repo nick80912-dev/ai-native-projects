@@ -1,5 +1,9 @@
 # TripPilot v143 本機交付驗證
 
+## 後續正式發布（2026-10-04）
+
+以下本機階段紀錄保留當時事實。其後 Bar 明確選擇方案 2、跳過本次 G1；PR #40 一般 merge 至 13f46c3，dev／PR／main CI 皆 success，各 Chromium243/243。Netlify6ac1d06230acd90008a24a16 published_at=2026-10-04T04:04:59.963Z、commit_ref 精確相符；31 資產 byte parity、28 cache 齊全、header／前代／bridge／離線／pageerror0 與正式站入口及 modal 通過。production-v143 指向 merge commit。真機待驗不代勾，記序匯入未實作。
+
 2026-10-04，隔離 worktree `codex/personal-trip-lifecycle`，基準 `d04017f479eb75fd7904c76b04288f90da9acad6`（origin/dev）。本輪未授權 push／部署。範圍是個人帳獨立 JSON 下載、資料與版本的 ⓘ 說明 dialog，不含記序匯入。
 
 ## 實作及 TDD

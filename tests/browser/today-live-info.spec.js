@@ -7,6 +7,7 @@
    也就沒有「一個商場對多個不同日期站點」的問題。
    ============================================================ */
 const { test, expect } = require('./support/test');
+const {observeNavigationPhases,navigationPhases}=require('./support/navigation-phases');
 const {
   installFixedDate,
   installOfflineAppNetwork,
@@ -156,27 +157,12 @@ test.describe('Shopping target acceptance matrix',()=>{
       await launcher.scrollIntoViewIfNeeded();
       await launcher.focus();
       const source=await page.evaluate((selector)=>({scrollY:Math.round(document.scrollingElement.scrollTop),curView,focused:document.activeElement===document.querySelector(selector)}),seeded.launcherSelector);
+      await observeNavigationPhases(page,seeded.targetId);
       await activateShoppingLauncher(launcher,testCase.activation);
       await expect(page.locator('#shoppingListOverlay')).toBeVisible();
       const target=page.locator(`#${seeded.targetId}`),status=page.locator('#shoppingListOverlay .navigation-target-status');
       await expect(target).toHaveClass(/is-navigation-target/);
-      const phasesPromise=page.evaluate((targetId)=>new Promise((resolve,reject)=>{
-        const targetElement=document.getElementById(targetId),started=performance.now();
-        let fadeAt=null;
-        const observer=new MutationObserver(()=>{
-          const active=targetElement.classList.contains('is-navigation-target');
-          const fading=targetElement.classList.contains('is-navigation-target-fading');
-          if(fading&&fadeAt===null)fadeAt=performance.now()-started;
-          if(!active&&!fading&&navigationIntentState.active===null){
-            observer.disconnect();clearTimeout(timeoutId);
-            resolve({fadeAt,clearAt:performance.now()-started});
-          }
-        });
-        observer.observe(targetElement,{attributes:true,attributeFilter:['class']});
-        const timeoutId=setTimeout(()=>{
-          observer.disconnect();reject(new Error('navigation target phases did not complete'));
-        },1800);
-      }),seeded.targetId);
+      const phasesPromise=navigationPhases(page);
       await expect(status).toHaveCount(1);
       await expect(status).toHaveAttribute('role','status');
       await expect(status).toHaveAttribute('aria-live','polite');
@@ -397,14 +383,14 @@ test.describe('blank category Hero fallback',()=>{
 test('Today weather uses a decorative mood and actionable accessible summary', async ({ page }) => {
   await page.evaluate(()=>{
     requestHomeWeather=function(){};
-    homeWeatherFor=function(){return {city:'Hiroshima',temp:21,rain:40,icon:'rain',code:61};};
+    homeWeatherFor=function(){return {status:'fresh',cityLabel:'Hiroshima',updatedAt:Date.now(),temp:21,rain:40,icon:'rain',code:61};};
     renderToday();
   });
   await expect(page.locator('#view-today .today-weather-art')).toHaveText('rain');
   await expect(page.locator('#view-today .today-weather-art')).toHaveAttribute('aria-hidden','true');
   const weather=page.locator('#view-today .today-hero-weather-summary');
   await expect(weather).toContainText('21');
-  await expect(weather).toHaveAttribute('aria-label','Hiroshima 21 度，現在之後最高降雨機率 40%，記得帶傘');
+  await expect(weather).toHaveAttribute('aria-label','Hiroshima，21 度，現在之後最高降雨機率 40%，記得帶傘，手機取得時間：日本時間 13:30');
   const progress=page.locator('#view-today .today-hero-top .loc');
   /* v127(backlog #43):可見文字由裸的「N / N」改為「已處理 N/N」。
      它算的是走過的站(含自動略過),與行程頁 day-head 的「完成」不是同一件事;
@@ -538,7 +524,7 @@ test('320, 375 and 390px keep the merged Hero summary on one row', async ({ page
       shoppingListStore.update(item.id,{category:'生活用品'});
     });
     requestHomeWeather=function(){};
-    homeWeatherFor=function(){return {city:'Hiroshima',temp:21,rain:40,icon:'rain',code:61};};
+    homeWeatherFor=function(){return {status:'fresh',cityLabel:'Hiroshima',updatedAt:Date.now(),temp:21,rain:40,icon:'rain',code:61};};
     renderToday();
   },seeded.otherRefs[0]);
   for(const width of [320,375,390]){

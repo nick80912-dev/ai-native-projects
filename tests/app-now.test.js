@@ -59,7 +59,9 @@ assert.ok(!html.includes('function previewNow()'), '舊 previewNow 已移除');
 const appNowStart = html.indexOf('function appNow()');
 const appNowEnd = html.indexOf('\nfunction todayMD()', appNowStart);
 const outsideAppNow = html.slice(0, appNowStart) + html.slice(appNowEnd);
-const outsideDateCalls = outsideAppNow.match(/new Date\(/g) || [];
+// Weather formatting and projection construct explicit timestamps, never a new current-time source.
+const outsideWeather=outsideAppNow.replace(extractFunction('weatherUpdatedTime'),'').replace(extractFunction('weatherPresentation'),'');
+const outsideDateCalls = outsideWeather.match(/new Date\(/g) || [];
 assert.strictEqual(outsideDateCalls.length, 1, 'appNow 以外僅保留同步時間戳的 Date 建構');
 
 console.log('appNow tests passed');

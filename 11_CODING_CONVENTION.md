@@ -26,7 +26,7 @@
 
 ## Storage 規則
 - 個人狀態(打卡/想逛/成員/記帳)存 localStorage,**不回寫 CMS**。
-- 存取一律經 `lsGet/lsSet`(內含 try/catch → Repository Error)。
+- 一般個人狀態存取經 `lsGet/lsSet`(內含 try/catch → Repository Error)。v144 起打卡／行程進度改由局部 `readTripProgressChecked/writeTripProgressChecked` 確認結果與恢復；不把全域 lsSet 改成拋例外、不另建平行完成判定。
 - 個人狀態的讀取、寫入與完成／略過等判定必須走單一入口;禁止在不同 Renderer、事件處理器或 Service 另建平行狀態邏輯。
 
 ## Schema 規則

@@ -1,8 +1,10 @@
 # 日本旅遊 App — README
 
-個人帳獨立匯出格式與限制見 [匯出契約](docs/personal-ledger-export.md)（v143 本機開發；發布狀態以 tasks/current.md 為準）。
+個人帳獨立匯出格式與限制見 [匯出契約](docs/personal-ledger-export.md)（v143 起提供；發布狀態以 tasks/current.md 為準）。
 
 本機驗證與審查：[v143 交付驗證](docs/trippilot-v143-verification.md)。
+v144 B 本機保存候選與限制：[驗證記錄](docs/trippilot-v144-b-verification.md)（未推送；完成狀態以 tasks/current.md 為準）。
+v145 C 天氣改善與限制：[驗證記錄](docs/trippilot-v145-c-verification.md)（本機完成，未推送；以 tasks/current.md 為準）。
 
 ## 這是什麼
 六天五夜日本自駕旅遊的手機 PWA。Google Sheets 當 CMS，以單頁 App 搭配少量獨立 runtime module，部署於 Netlify。
@@ -35,12 +37,12 @@
 
 ## 改善設計與計畫
 
-- [2026-10-03 第一批設計](docs/superpowers/specs/2026-10-03-trippilot-reliability-and-clarity-batch1-design.md)已確認；[A／B／C 實作計畫](docs/superpowers/plans/2026-10-03-trippilot-batch1-index.md)待審閱與執行方式確認。包含狀態／摘要、本機寫入失敗、天氣資訊與保守字體盤點；尚未實作、升版或發布。
+- [2026-10-03 第一批設計](docs/superpowers/specs/2026-10-03-trippilot-reliability-and-clarity-batch1-design.md)與 [A／B／C 實作計畫](docs/superpowers/plans/2026-10-03-trippilot-batch1-index.md)：分批處理狀態／摘要、本機保存可靠性及天氣資訊，保守調整字體；每批核准、驗證與發布狀態以 `tasks/current.md` 為唯一權威。
 
 ## 專案檔案
 - `index.html` / `app-version.js` — 保留 v110 predecessor bridge；讓尚未更新的 v110 worker 在 current generation 安裝失敗時仍可運作
-- `shell/v143/index.html` / `shell/v143/app-version.js` — v143 本機候選版文件與 App runtime 版本來源；成功啟用的 `sw.js` 才接管 root 導覽；v136～v141 保持不可變
-- `shell/v143/builtin-snapshot.js` — 由刷新工具以已核准 v136 CSV 產生的版本綁定離線資料資產；禁止手動修改
+- `shell/v145/index.html` / `shell/v145/app-version.js` — v145 本機候選版文件與 App runtime 版本來源；成功啟用的 `sw.js` 才接管 root 導覽；已發布 generation 保持不可變
+- `shell/v145/builtin-snapshot.js` — 由刷新工具以既有 v144 種子 CSV 產生的版本綁定離線資料資產，內容與時間戳保持不變；禁止手動修改
 - `navigation-intent.js` — 明確導覽目的地的 session-only state module；DOM 定位與回饋 adapter 位於 `index.html`
 - `diagnostic-impact.js` — AppLog 原始紀錄的 display-only impact projection；顯示 adapter 位於 `index.html`
 - `today-view.js` — Today Hero 採買摘要的純 model／renderer module；資料選擇與 DOM effects 留在 `index.html`

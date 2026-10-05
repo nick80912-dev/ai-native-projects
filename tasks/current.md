@@ -1,5 +1,36 @@
 # CURRENT(現在正在做的)
 
+## 2026-10-05 — v145 發布核准（本機 QA 通過，待遠端 CI／合併）
+
+- Bar 選擇方案 2，明確核准本次跳過 G1 真機驗收，待 dev push／PR exact-head CI 通過後以一般 merge 合併 main，再核對正式部署。發布包含 v144 B 保存可靠性與 v145 C 天氣改善；舊版豁免不沿用，此核准亦不適用後續版本。
+- TP144-a～c、TP145-a～c 與既有裝置／閱讀器待驗保持未勾。跳過不是通過；本機／遠端 CI 不代替真機。本輪本機基準 `c331a1b`、runtime `64b66ac`：完整 QA 重新執行通過，Node 109 個檔案、Chromium 275/275（8.5 分鐘、0 retry）、四項 gate／diff check 全過。發布授權文件另行提交，不修改已驗 runtime。
+- 已 non-force push dev `758a0c0` 並建立 PR #41，尚未 merge／正式部署。首輪 dev CI `37278302918`／PR CI `37278373307` sanity 通過、browser 各 264 passed／11 failed，因此暫停合併。隔離 UTC probe 重現「10/17 未出發」與下一站城市 fixture 差異，只改瀏覽器 timezone 為 Asia/Tokyo 後兩項通過；兩份新增 spec 補固定時區，斷言／retry／runtime 不變。修正後預設 UTC 的 B/C 32/32（56.3 秒）、完整 Node 109 檔／Chromium 275/275（8.5 分鐘、0 retry）與四項 gate／diff check 通過；仍須新 exact-head 遠端 CI 通過才合併。
+- 既有一項 manifest B 證據索引 Minor 保持暫緩，沒有順便修改 runtime／旅行內容／OAuth。復原採下一未使用 generation forward-bump，不覆寫已發布外殼、不刪 SW／個人資料。
+
+## 2026-10-05 — v145 C：天氣有效性與重試（本機完成，未推送）
+
+- Bar 明確確認 C 四點／Tier 2 PWA 群組：保留 B 五筆本機提交，從 v144 建立未使用 v145；沿用原 CSV／timestamp、來源及 3h TTL，不做 live fetch、不放大全域字體。本次只實作／提交，不 push、merge 或部署。
+- 城市、取得時間（日本時間）、fresh／expired／unavailable／loading 共用同一品質投影；不顯示過期數字，合法 0°C／0% 保留，未知降雨不補 0% 或宣稱適合出發。每小時資料依 API 的日本本地時間解讀，不依手機時區。
+- 每次首頁讀取重新判斷 session 年齡；loading 去重、failed 保留至手動重試。request identity／epoch／active trip 在 cache write 前守門，只有目前城市及 Today 可 redraw。清除 UI 使舊請求失效；cache 寫入拒絕仍可用本 session 資料，只記去敏診斷。
+- 審查前 runtime `b0f88b4`／QA fixture `f105bc5`：Node 109 個檔案、完整 Chromium 270/270（8.2 分鐘，0 retry）、四項 gate／diff check 通過。第一輪因舊導航 observer 起點錯誤中止，修正測試後從零重跑；導航 runtime 不變。前代／B／schema/domain／種子核對通過。
+- 單次 Astra xhigh fresh-context 審查指出兩項 Important，已先 RED 再集中修正：同頁 foreground／pageshow 也失效；過去 0% 不補未來缺值。單次到期 timer 只失效、不背景抓取；只更新天氣 DOM，保留下一站焦點／紀錄與 retry Tab 順序。最終 runtime `64b66ac`：Node 109 檔、天氣 18/18、受影響 browser 53/53、完整 Chromium 275/275（8.8 分鐘，0 retry）、四項 gate／diff check 全過；未派第二輪 reviewer。一項文件索引 Minor 暫緩。裁定、保留限制與證據見 [C 驗證記錄](../docs/trippilot-v145-c-verification.md)。
+- TP145-a～c 與既有 B／其他真機項目仍待驗；沒有沿用 v143 的發布豁免。分類管理／備份檔案／過往旅程列表／連接新旅程不在本批。
+
+## 2026-10-05 — v144 B：本機行程保存可靠性（本機完成，未推送）
+
+- Bar 確認 B 的 Tier 2 PWA 群組：從已發布 v143 建立未使用 v144，限定打卡／完成／略過／自動略過與復原；不改帳務、格式、主題、字體或天氣。隔離 worktree 基準 765f710=origin/dev，未 push／merge／部署。
+- Checked reader 拒絕讀取失敗／壞 JSON／錯誤型別，不以空值覆寫；writer 先序列化、保留原 bytes／不存在狀態，再寫入與讀回核對。失败盡力恢復並核對，不能恢復則提示可能不完整；不是跨分頁交易。
+- 成功才更新成功提示與 undo。復原失敗保留快照及重試按鈕，包含原 autoSkip；失敗重繪只讀真實紀錄，無法讀取不宣稱已完成。自動失敗在本次 session 暫停自動寫入，成功手動操作解除；不新增持久化 journal／鎖。資料健康既有個人列顯示 session 錯誤。
+- 既有 generator 僅用 v143 原 CSV preview／write／readback，八表與 timestamp 深度相等、未讀 live CSV／Ledger。v143、root v110 與純 progression module 均未改；SW／header／assets／活文件對齊 v144。
+- 最終 runtime `900109c`：Node 108 個檔案、persistence 26/26、故障 browser 14/14 與完整 Chromium 257/257（10.7 分鐘、0 retry），四項 gate／diff check／保護範圍核對通過。Astra 整批審查四項 Important 全部先 RED 再單輪修正：過時取消、群組復原、拒絕讀取的重試及鍵盤焦點；修正後完整 QA 複驗，無暫緩 Minor。本機完成，不等於發布。詳見 [驗證記錄](../docs/trippilot-v144-b-verification.md)。
+- TP144-a～c 真機待驗；本次核准不含 push dev 或 main 發布。B 使用者驗收後才開始 C 天氣；後續配色／modal／分類／備份／旅程歷史及新旅程仍待排程。
+
+## 2026-10-04 — v143 已正式發布（PR #40）
+
+- dev exact head a54b22b 經一般 merge 合併至 main 13f46c3。dev CI 37175537927／PR CI 37175540832／main CI 37175940208 皆 success，各 browser 243/243；本機發布前 Node 107/107、匯出六項 browser、四項 gate／diff check 全過。
+- Netlify deploy 6ac1d06230acd90008a24a16 的 commit_ref 精確等於 13f46c370f5ea4bafd3226b4f7b1af27ef846ff4，published_at=2026-10-04T04:04:59.963Z。§F5 實測：31 資產與 merge commit bytes 相等、兩處 header 正確、v142／v110 保留；28 個 cache 資產齊全、三件組 v143、離線重開／非空／pageerror 0，匯出入口與說明 dialog 於正式站確認。
+- annotated production-v143 已推送，指向 13f46c3。G1 僅本次依 Bar 選項 2 跳過，TP143-a～c 與既有真機清單保持未勾。記序匯入未實作，備份 v9／封存 v1／OAuth Testing 不變。發布後僅補文件並同步 dev，不熱修 v143 runtime。
+
 ## 2026-10-04 — v143 發布核准，待遠端 CI／合併
 
 - Bar 明確選擇方案 2：本次跳過 G1，待 CI 通過後合併 main 並核對正式部署。此裁定僅適用 v143，TP143-a～c 與既有真機清單保持未勾；跳過不等於驗收通過。
@@ -84,18 +115,18 @@
 
 ## 📌 現況
 
-v142 已透過 `dev → main` PR #39 合併並完成正式站部署核對。G1 本次跳過；TP142-a～d 與既有真機項目保持待驗，OAuth Testing 不變。
+v143 已透過 `dev → main` PR #40 合併並完成正式站部署核對。G1 本次跳過；TP143-a～c 與既有真機項目保持待驗，OAuth Testing 不變。
 
 | 項目 | 值 |
 |---|---|
-| **`origin/main` 原始碼** | **SW v142**；merge commit `07d4581`（PR #39） |
-| **正式站** | `https://trippilot-jp.netlify.app/` — **SW v142**；deploy `6ac114efbcf7f4000841eb69`，`commit_ref` = `07d4581`，§F5／快取／離線核對通過。G1 跳過，真機封存與 Android BB4 仍待驗 |
-| **`dev` 內容** | **v142 A 批**，runtime `38da9a3`、推送 `f06d2c5`；本機 Node 106/106、Chromium 237/237、四項 gate 通過。PR #39／遠端 CI 與 G1 裁定見最上方最新段落；採買分類尚未實作，OAuth 仍 External Testing |
+| **`origin/main` 原始碼** | **SW v143**；merge commit `13f46c3`（PR #40） |
+| **正式站** | `https://trippilot-jp.netlify.app/` — **SW v143**；deploy `6ac1d06230acd90008a24a16`，`commit_ref` = `13f46c3`，§F5／快取／離線核對通過。G1 跳過，真機封存與 Android BB4 仍待驗 |
+| **`dev` 內容** | **v143**，runtime `fb90ed4`、推送 `a54b22b`；本機 Node 107/107、Chromium 243/243、四項 gate 通過；main merge 已同步，發布後僅補文件。採買分類尚未實作，OAuth 仍 External Testing |
 | 個人備份格式 | **v9**(`PERSONAL_STATE_SUPPORTED_VERSIONS = [1..9]`)—— v81 因想逛 key 識別語意變更而升版 |
 | 最近一次 v141 發版驗證 | 本機 Node **102/102**、Chromium Playwright **227/227**、四項 gate 通過；dev／PR CI sanity 和 browser-qa 全過，main CI 另核對 Actions `36878885081` |
-| 最新正式 tag | **`production-v142`**，指向 `07d4581`；訊息明記 G1 跳過 |
+| 最新正式 tag | **`production-v143`**，指向 `13f46c3`；訊息明記 G1 跳過 |
 
-**v142 已發布至正式站，`production-v142` tag 已建立；G1 跳過不等於通過，實體手機驗收清單保持待驗。**
+**v143 已發布至正式站，`production-v143` tag 已建立；G1 跳過不等於通過，實體手機驗收清單保持待驗。**
 
 ## v140 資料健康獨立子頁（已隨 PR #37 正式發布；下列保留開發階段紀錄）
 

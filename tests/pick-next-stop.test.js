@@ -34,14 +34,27 @@ function makeSandbox(){
   const writes = {};
   const sandbox = {
     TripProgression,
+    tripProgressRenderReadOnly:false,
+    tripProgressErrorMessage:'',
+    tripProgressFailureSeen:{},
     lsGet: function(k, f){ return Object.prototype.hasOwnProperty.call(store, k) ? store[k] : f; },
     lsSet: function(k, v){ store[k] = v; writes[k]=(writes[k]||0)+1; },
     toast: function(){ sandbox._lastToast = Array.prototype.slice.call(arguments); },
     AppLog: { repo:function(){}, sync:function(){}, schema:function(){}, parser:function(){}, data:function(){}, render:function(){} }
   };
+  sandbox.localStorage={
+    getItem:k=>Object.prototype.hasOwnProperty.call(store,k)?JSON.stringify(store[k]):null,
+    setItem:(k,v)=>{store[k]=JSON.parse(v);writes[k]=(writes[k]||0)+1;},
+    removeItem:k=>{delete store[k];}
+  };
   sandbox.getChecks = function(){ return sandbox.lsGet('trip_checks', {}); };
   vm.createContext(sandbox);
   vm.runInContext([
+    extractFunction('tripProgressObject'),
+    extractFunction('tripProgressShapeValid'),
+    extractFunction('readTripProgressChecked'),
+    extractFunction('writeTripProgressChecked'),
+    extractFunction('reportTripProgressFailure'),
     extractFunction('parseStartMinutes'),
     extractFunction('normalizeDayProgress'),
     extractFunction('dayProgressKey'),
@@ -50,6 +63,7 @@ function makeSandbox(){
     extractFunction('getDayProgress'),
     extractFunction('markNextStop'),
     extractFunction('setItemCompletion'),
+    extractFunction('applyItemCompletion'),
     extractFunction('autoSkipStaleItem'),
     extractFunction('isAutoSkipped'),
     extractFunction('isNextStopCleared'),
@@ -61,7 +75,8 @@ function makeSandbox(){
     extractFunction('homeNextStopItems'),
     extractFunction('pickClusterChild'),
     extractFunction('completeClusterParent'),
-    extractFunction('reconcileClusterController')
+    extractFunction('reconcileClusterController'),
+    extractFunction('clusterCompletionChange')
   ].join('\n'), sandbox);
   sandbox._store = store;
   sandbox._writes = writes;

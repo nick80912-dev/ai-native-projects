@@ -75,6 +75,7 @@ vm.runInContext([
   extractFunction('todayViewActionAttribute'),
   extractFunction('renderTodayShoppingSummary'),
   extractFunction('weatherTravelHint'),
+  extractFunction('weatherUpdatedTime'),
   extractFunction('renderTodayWeatherSummary'),
   extractFunction('renderTodayHeroSummary'),
   extractFunction('nextStopMeta'),
@@ -165,15 +166,15 @@ assert(!quotedCategoryHeroOut.includes('<svg'),'category values cannot inject ma
 assert(!quotedCategoryHeroOut.includes('SECRET_PRODUCT'),'category output excludes product names');
 
 const heroSummaryOut=sandbox.renderTodayHeroSummary(
-  {city:'Hiroshima',temp:21,rain:40,icon:'rain',code:61}, heroShoppingOut
+  {status:'fresh',cityLabel:'Hiroshima',updatedAt:1792285200000,temp:21,rain:40,icon:'rain',code:61}, heroShoppingOut
 );
 assert(heroSummaryOut.includes('class="today-hero-summary"'));
 assert(heroSummaryOut.includes('class="today-hero-summary-divider"'));
 assert(heroSummaryOut.indexOf('today-hero-weather-summary')<heroSummaryOut.indexOf('today-hero-shopping-summary'));
 assert.strictEqual((heroSummaryOut.match(/today-hero-summary-divider/g)||[]).length,1);
 
-const quotedWeatherOut=sandbox.renderTodayWeatherSummary({city:'Quoted "City"',temp:21,rain:40,code:61});
-assert(quotedWeatherOut.includes('aria-label="Quoted &quot;City&quot; 21 度，現在之後最高降雨機率 40%，記得帶傘"'),'weather accessible name escapes quoted cities in attribute context');
+const quotedWeatherOut=sandbox.renderTodayWeatherSummary({status:'fresh',cityLabel:'Quoted "City"',updatedAt:1792285200000,temp:21,rain:40,code:61});
+assert(quotedWeatherOut.includes('aria-label="Quoted &quot;City&quot;，21 度，現在之後最高降雨機率 40%，記得帶傘'),'weather accessible name escapes quoted cities in attribute context');
 assert.strictEqual((quotedWeatherOut.match(/\saria-label=/g)||[]).length,1,'weather summary keeps one aria-label attribute');
 
 /* v86 next-stop entry is a sibling-safe compact button and keeps row-count semantics. */

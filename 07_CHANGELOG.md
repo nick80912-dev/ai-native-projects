@@ -1,5 +1,35 @@
 # 07 版本紀錄
 
+## 2026-10-05 — v145 發布核准（尚待合併／部署）
+
+- Bar 明確選項 2：本次跳過 G1，待 dev／PR exact-head CI 通過合併 main 並核對正式部署。包含 v144 保存可靠性與 v145 天氣改善；TP144-a～c、TP145-a～c 及既有真機清單保持未勾，不沿用至下一版。
+- 本輪本機基準 `c331a1b`、runtime `64b66ac`；發布前完整 QA 重新執行通過：Node 109 個檔案、Chromium 275/275（8.5 分鐘、0 retry）、四項 gate／diff check 全過。授權文件另行提交；遠端 CI／合併／部署仍待完成。按 dev → PR → 一般 merge → Netlify 自動部署 → §F5 的次序；不直接 push main、不修改凍結 runtime 或種子。
+- dev `758a0c0`／PR #41 首輪遠端 sanity 通過、browser 各 264 passed／11 failed，暫停合併。UTC probe 重現未出發日／城市 fixture 差異，日本時區對照通過；僅兩份新增 browser spec 固定 Asia/Tokyo，不放寬斷言／retry、不動 runtime。修正後預設 UTC 的 B/C 32/32（56.3 秒）、完整 Node 109 檔／Chromium 275/275（8.5 分鐘、0 retry）、四項 gate／diff check 通過，待新 exact-head 遠端 CI；未宣稱已正式發布。
+
+## 2026-10-05 — v145 C 天氣有效性（本機完成，未推送）
+
+- ⭐ 首頁顯示 resolver 城市、溫度及「更新於 HH:mm」；取得時間採 Asia/Tokyo，aria 明示手機取得／日本時間。三小時邊界、missing／future timestamp、city mismatch／無效溫度共用品質投影；過期與無資料不輸出舊數字，未知降雨不補零或產生適合出發摘要。
+- 保留原 cache keys／`{t,data}`、Open-Meteo、6500ms timeout、城市 resolver；不輪詢、不刷新讀取時間。session 到期可重新取得；failed 不連續自動重試，天氣列提供键盤可操作的重試／焦點接回。網路有效但 cache 被拒絕仍在 session 可用，診斷不含原始例外。
+- request identity／epoch 與 active state 在寫入前核對，晚到舊城市不重繪目前城市、離頁不重繪 Today、清除後不恢復快取；lifecycle module 未改。只補 11px 天氣輔助文字、44px 重試 hit area，既有主題／字體／導航／帳務不變。
+- 經 Bar 核准從 v144 建立 v145；generator 僅用原八表 seed preview／write／readback 保持 CSV／timestamp。root v110、v143／v144、B 保存介面、schema／domain 不變；SW／header／assets／活文件對齊，無 live CSV／Ledger、OAuth mutation 或部署。
+- 審查前完整 Node 109 檔與 Chromium 270/270（8.2 分鐘，0 retry）、四項 gate 通過。第一輪三項舊導航計時測試失敗後中止；共用 observer 從實際 DOM 啟動計時，保留原門檻與 production timers，18/18 專項與完整套件從零複驗通過。
+- 單次 Astra xhigh fresh-context 審查的兩項 Important 先 RED 再單輪修正：實際同頁 visibilitychange／pageshow 重新核對；未來 rain 缺值不再使用過去 0%。單次到期 timer 只失效、不輪詢；天氣 DOM 局部更新不碰 B 紀錄或下一站焦點。最終 runtime `64b66ac`：Node 109 檔、天氣 18/18、受影響 browser 53/53、完整 Chromium 275/275（8.8 分鐘，0 retry）、四項 gate／diff check 全過，未派第二輪審查；一項文件索引 Minor 暫緩。TP145-a～c 待真機；本機完成不等於發布。詳見 [驗證證據](docs/trippilot-v145-c-verification.md)。
+
+## 2026-10-05 — v144 B 本機行程保存可靠性（候選，未發布）
+
+- ⭐ 局部 checked 保存介面只處理 trip_checks／trip_next_stop_progress，不改全域 lsSet、帳務／購物願望／備份 v9／封存 v1。讀取失敗／壞內容停止 mutation；先序列化與保存 raw bytes，寫後逐鍵及整批核對；失敗盡力 rollback、核對全部原值，不宣稱資料庫級原子性。
+- 打卡／完成／略過／自動略過／群組 controller 的提示依確認結果；自動略過合併一次最終保存，不留中間狀態。復原保留原 autoSkip，失敗保留快照及重試。失敗重繪不重新自動寫入；本次 session 抑制自動重試，手動成功解除。讀取未知不顯示今日完成。
+- 沿用 toast 的 live status、行程鍵盤焦點與既有資料健康頁的個人狀態列；正常狀態無新增提示，不改 CSS／字體／配色。錯誤只在 session／AppLog，無持久化診斷或交易紀錄。
+- Bar 核准 v144 PWA 群組；從 v143 seed 經 generator preview／write／readback 保持原八表內容與 timestamp，未 live fetch。已發布 v143／root v110 不變；SW／header／assets 及活文件同步。復原採下一個未使用 generation forward-bump，不清個人資料、不刪 SW。
+- Astra 新上下文整批審查指出四項 Important，逐項新增故障測試 RED→GREEN、一輪修正：過時取消先清除記憶體候選的完成狀態再套原時間規則；子行程復原同批保持 controller 一致；自動重繪不覆蓋手動重試；消耗 undo toast 前記住焦點，失敗接回重試。無 Critical／Minor，不另派第二輪審查。
+- 最終 runtime `900109c`：Node 108 個檔案、persistence 26/26、故障 browser 14/14、完整 Chromium 257/257（10.7 分鐘，0 retry）及四項 gate／diff check 通過；CSS／主題／字體、全域保存、帳務／domain／Schema、已發布外殼及 seed／timestamp 保護範圍核對通過。見 [交付證據與裁定](docs/trippilot-v144-b-verification.md)。本機完成，未 push、merge 或部署；TP144-a～c 真機未驗，B 驗收後才進 C。
+
+## 2026-10-04 — v143 已正式發布（PR #40）
+
+- a54b22b 經 PR #40 一般 merge 至 main 13f46c3；dev CI 37175537927／PR CI 37175540832／main CI 37175940208 全 success，各 browser 243/243。本機發布前 Node 107/107、六項匯出／modal browser、四項 gate 通過。
+- Netlify6ac1d06230acd90008a24a16 的 commit_ref=13f46c370f5ea4bafd3226b4f7b1af27ef846ff4、published_at=2026-10-04T04:04:59.963Z、manual_deploy=false。31 資產逐位元組相等、兩處 header 正確、前代 v142／root v110 保留；28 cache 資產齊全、v143 三件組、非空、離線重開及 pageerror0；正式站匯出入口／modal 核對通過。
+- production-v143 已推送至 merge commit。Bar 明確選項 2，本次跳過 G1；TP143-a～c 與既有真機待驗不代勾，不適用下一版。記序匯入未實作。本次发布後僅補文件／同步 dev，無 runtime 熱修。
+
 ## 2026-10-04 — v143 發布核准（尚待合併／部署）
 
 - Bar 在 G1 待驗提醒後明確選擇方案 2，核准本次跳過 G1，待 CI 通過合併 main 並核對正式部署；不沿用至其他版本、不代勾 TP143-a～c 或既有真機項目。

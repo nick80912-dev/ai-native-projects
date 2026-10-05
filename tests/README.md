@@ -4,6 +4,18 @@
 
 v143 驗證與審查紀錄：[交付驗證](../docs/trippilot-v143-verification.md)。
 
+## v145 weather coverage
+
+- `weather-freshness.test.js`：品質投影、3h 邊界、未知值、原 timestamp 不變、城市／時間格式、session expiry、去重、failed／manual retry、cache denied、epoch 與 late reply。
+- `browser/weather-freshness.spec.js`：18 項實際 DOM／鍵盤／Open-Meteo route／Storage 故障案例；320／375／390px、6500ms timeout、切城市／離頁／清除與容量不足；同頁 visibilitychange／pageshow、單次到期失效（不輪詢）、下一站與重試焦點，以及過去 0%＋未來缺值。僅使用 QA context，不修改使用者資料。
+- [C 驗證記錄](../docs/trippilot-v145-c-verification.md)如實區分自動化、独立審查與未驗真機。
+
+## v144 checked trip-progress coverage
+
+- `trip-progress-persistence.test.js`：26 個 writer／reader／caller 案例；逐鍵拒絕、精確原 bytes／不存在恢復、讀回不符、rollback 不確定、壞 JSON／拒絕讀取、無旅程不復活、undo 保留 autoSkip／重試，以及同批群組 controller 一致性。
+- `browser/trip-progress-persistence.spec.js`：14 個真實點擊／鍵盤故障案例，涵蓋 reload 後紀錄、健康提示、自動去重、過時取消、最後子站復原、讀取失敗不移除重試及焦點接回。固定時間、Storage 注入及測試行程僅限隔離 QA context。
+- [v144 驗證記錄](../docs/trippilot-v144-b-verification.md)區分本機全套、獨立審查與未驗真機／遠端部署；localStorage 不是跨分頁交易。
+
 ## v141 Drive session coverage
 
 - `trip-drive-session.test.js`：有效授權重用、過期／disconnect 重新授權、取消及逾時的晚到 grant 不建立 session、Drive 請求逾時。
@@ -45,7 +57,7 @@ v143 驗證與審查紀錄：[交付驗證](../docs/trippilot-v143-verification.
 - `browser/today-live-info.spec.js` exercises Hero／badge target confirmation at 320／375／390px with tap／Enter／Space, sticky-safe geometry, live status, reduced motion, missing targets, stale timers, source scroll, connected／replacement／fallback focus, and blank-category behavior. Focused WebKit uses `--grep "target|定位|blank category"`.
 - `browser/navigation-target-matrix.spec.js` exercises the actual expanded cluster-stop, pre-trip day, mall-floor, and back-to-now controls at 320／375／390px with rotating Tap／Enter／Space. It asserts exact target and live status, native keyboard focus, sticky-header-safe target／status geometry, 1.2-second clear, reduced-motion static treatment, zero horizontal overflow, and current-day return behavior. Run focused WebKit together with the existing Today target selection.
 - `diagnostic-impact-module.test.js` and `diagnostics-app-log.test.js` protect exact timeout classification, conservative unknown handling, input immutability, escaped raw／projected output, and byte-for-byte raw copied reports; `browser/diagnostics-app-log.spec.js` verifies the same boundary in Chromium.
-- `manifest-status-authority.test.js` plus `tools/check-doc-titles.js` require `.ai-manifest.json` to name `tasks/current.md` as the sole current-status authority, identify changelog／task archives only as history, reject stale `tasks/(current/backlog/done)`／`manifest.status` prose, and omit volatile candidate／next-action／automated-test snapshots. Current version authority is `shell/v143/app-version.js`／root `sw.js`; root `app-version.js` is the byte-locked v110 bridge.
+- `manifest-status-authority.test.js` plus `tools/check-doc-titles.js` require `.ai-manifest.json` to name `tasks/current.md` as the sole current-status authority, identify changelog／task archives only as history, reject stale `tasks/(current/backlog/done)`／`manifest.status` prose, and omit volatile candidate／next-action／automated-test snapshots. Current version authority is `shell/v145/app-version.js`／root `sw.js`; root `app-version.js` is the byte-locked v110 bridge.
 
 
 

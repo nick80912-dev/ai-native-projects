@@ -23,6 +23,7 @@ vm.runInContext(extractFunction(html, 'escapeHtml'), sandbox);
 vm.runInContext(extractFunction(html, 'escapeHtmlAttr'), sandbox);
 vm.runInContext(extractFunction(html, 'weatherTravelHint'), sandbox);
 vm.runInContext(extractFunction(html, 'renderTodayWeatherArt'), sandbox);
+vm.runInContext(extractFunction(html, 'weatherUpdatedTime'), sandbox);
 vm.runInContext(extractFunction(html, 'renderTodayWeatherSummary'), sandbox);
 
 assert.strictEqual(sandbox.weatherTravelHint({temp:21,rain:10,code:95}),'留意雷雨');
@@ -36,16 +37,16 @@ assert.strictEqual(sandbox.weatherTravelHint({temp:21,rain:10,code:1}),'適合�
 assert.strictEqual(sandbox.weatherTravelHint(null),'');
 assert.strictEqual(sandbox.weatherTravelHint({temp:null,rain:40,code:61}),'' );
 
-const weather={city:'廣島',icon:'🌧️',temp:21,rain:40,code:61};
+const weather={status:'fresh',cityLabel:'廣島',updatedAt:Date.parse('2026-10-18T10:00+09:00'),icon:'🌧️',temp:21,rain:40,code:61};
 const art=sandbox.renderTodayWeatherArt(weather);
 assert(art.includes('class="today-weather-art"'));
 assert(art.includes('aria-hidden="true"'));
 assert(art.includes('🌧️'));
-assert(sandbox.renderTodayWeatherArt({}).includes('☁️'));
+assert.strictEqual(sandbox.renderTodayWeatherArt({status:'unavailable'}),'');
 const summary=sandbox.renderTodayWeatherSummary(weather);
 assert(summary.includes('外出提醒'));
 assert(summary.includes('21° · 記得帶傘'));
-assert(summary.includes('aria-label="廣島 21 度，現在之後最高降雨機率 40%，記得帶傘"'));
+assert(summary.includes('現在之後最高降雨機率 40%，記得帶傘，手機取得時間：日本時間 10:00'));
 assert.strictEqual(sandbox.renderTodayWeatherArt(null),'');
 assert.strictEqual(sandbox.renderTodayWeatherSummary(null),'');
 
@@ -56,19 +57,19 @@ const series = {
 };
 
 /* ---- 只看現在之後 ---- */
-assert.strictEqual(rainChanceFromNow(series, new Date('2026-10-18T10:00:00')), 20,
+assert.strictEqual(rainChanceFromNow(series, new Date('2026-10-18T10:00:00+09:00')), 20,
   '早上的 90／80 已經過去,之後的最大值是 20');
-assert.strictEqual(rainChanceFromNow(series, new Date('2026-10-18T05:00:00')), 90,
+assert.strictEqual(rainChanceFromNow(series, new Date('2026-10-18T05:00:00+09:00')), 90,
   '一天還沒開始時,整天最大值就是 90');
-assert.strictEqual(rainChanceFromNow(series, new Date('2026-10-18T16:00:00')), 5,
+assert.strictEqual(rainChanceFromNow(series, new Date('2026-10-18T16:00:00+09:00')), 5,
   '傍晚之後只剩 5 與 0');
 
 /* ---- 邊界:當下這個小時要算在內 ---- */
-assert.strictEqual(rainChanceFromNow(series, new Date('2026-10-18T12:00:00')), 20,
+assert.strictEqual(rainChanceFromNow(series, new Date('2026-10-18T12:00:00+09:00')), 20,
   '正好在整點時,該時段本身仍算「現在之後」');
 
 /* ---- 全部都過去了:退回當日最大值,不得回 null 造成空白 ---- */
-assert.strictEqual(rainChanceFromNow(series, new Date('2026-10-18T23:30:00')), 90,
+assert.strictEqual(rainChanceFromNow(series, new Date('2026-10-18T23:30:00+09:00')), 90,
   '時段全部過去時退回當日最大值,而不是顯示空白');
 
 /* ---- 殘缺資料不得炸掉 ---- */
@@ -78,12 +79,12 @@ assert.strictEqual(rainChanceFromNow({ time: [], precipitation_probability: [] }
   '空序列安全回傳 null');
 /* 長度不一致時只取兩者都有的部分,不得讀到 undefined */
 assert.strictEqual(rainChanceFromNow({ time: [H(9), H(12)], precipitation_probability: [30] },
-  new Date('2026-10-18T08:00:00')), 30, '長度不一致時只取對得起來的部分');
+  new Date('2026-10-18T08:00:00+09:00')), 30, '長度不一致時只取對得起來的部分');
 
 /* ---- 快取契約:必須存得下原始序列 ---- */
 const fetchSource = extractFunction(html, 'fetchWeather');
 assert(fetchSource.indexOf('hours') > 0, 'fetchWeather 必須把原始 hourly 序列帶進快取資料');
-const cacheSource = extractFunction(html, 'getCachedWeather');
+const cacheSource = extractFunction(html, 'weatherPresentation');
 assert(cacheSource.indexOf('rainChanceFromNow(') > 0,
   '讀快取時依當下重算 —— 否則三小時 TTL 內的「現在之後」會是錯的');
 assert(/hours/.test(cacheSource), '舊格式(沒有 hours)必須安全降級,不能讓畫面空白');

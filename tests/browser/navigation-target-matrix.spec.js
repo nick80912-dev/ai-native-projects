@@ -1,4 +1,5 @@
 const { test, expect } = require('./support/test');
+const {observeNavigationPhases,navigationPhases}=require('./support/navigation-phases');
 const {
   installFixedDate,
   installOfflineAppNetwork,
@@ -103,25 +104,7 @@ async function expectConfirmedTarget(page, expected, viewportCase) {
     const targetElement = document.getElementById(targetId);
     return targetElement ? targetElement.classList.contains('is-navigation-target') : null;
   }, expected.targetId)).toBe(true);
-  const phasesPromise=page.evaluate(({targetId,reducedMotion})=>new Promise((resolve,reject)=>{
-    const targetElement=document.getElementById(targetId);
-    const started=performance.now();
-    let fadeAt=null;
-    const observer=new MutationObserver(()=>{
-      const active=targetElement.classList.contains('is-navigation-target');
-      const fading=targetElement.classList.contains('is-navigation-target-fading');
-      if(fading&&fadeAt===null)fadeAt=performance.now()-started;
-      if(!active&&!fading&&navigationIntentState.active===null){
-        observer.disconnect();clearTimeout(timeoutId);
-        resolve({fadeAt,clearAt:performance.now()-started,reducedMotion});
-      }
-    });
-    observer.observe(targetElement,{attributes:true,attributeFilter:['class']});
-    const timeoutId=setTimeout(()=>{
-      observer.disconnect();
-      reject(new Error('navigation target phases did not complete'));
-    },1800);
-  }),{targetId:expected.targetId,reducedMotion:!!viewportCase.reducedMotion});
+  const phasesPromise=navigationPhases(page);
   await expect(status).toHaveCount(1);
   await expect(status).toHaveAttribute('role', 'status');
   await expect(status).toHaveAttribute('aria-live', 'polite');
@@ -202,6 +185,7 @@ test.describe('remaining navigation target acceptance matrix', () => {
         const expected = await prepareLauncher(page, targetCase.type);
         await expected.launcher.focus();
         await expect(expected.launcher).toBeFocused();
+        await observeNavigationPhases(page,expected.targetId,!!viewportCase.reducedMotion);
         await activateRealControl(expected.launcher, viewportCase.activation);
         await expectConfirmedTarget(page, expected, viewportCase);
         if (targetCase.type === 'backToNow') {

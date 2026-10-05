@@ -314,7 +314,7 @@ for(const width of [320,375,390])test('supporting text stays compact and readabl
  await page.evaluate(()=>switchView('today'));
  await page.evaluate(()=>{
   const fixture=document.createElement('section');fixture.id='fontWeatherFixture';
-  fixture.innerHTML=renderTodayWeatherSummary({city:'岡山',temp:23,code:1,rain:10});
+  fixture.innerHTML=renderTodayWeatherSummary({status:'fresh',cityLabel:'岡山',updatedAt:Date.now(),temp:23,code:1,rain:10});
   document.getElementById('view-today').appendChild(fixture);
  });
  const hero=page.locator('.today-hero-summary-label').first();
