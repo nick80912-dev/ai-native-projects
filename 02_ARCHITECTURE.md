@@ -11,7 +11,7 @@ Netlify 靜態託管(HTTPS)+ Service Worker(PWA 離線)
 無自架後端、無額外資料庫伺服器、零前端相依套件。
 ```
 
-root `index.html`／`app-version.js` 保留 v110 bridge；成功啟用的 v114 Service Worker 才把 root 導覽映射到 `shell/v144/index.html`。該 generation document 是 App 與 DOM effect adapter；依 ADR 0018，`navigation-intent.js` 只管理 session-only 明確目的地 intent，`diagnostic-impact.js` 只把原始 AppLog entry 投影為顯示用影響說明，`today-view.js` 只建立與渲染 Today Hero 採買摘要。裝置照片儲存邊界獨立在 `shopping-photo-store.js`，採買轉記帳的純資料與 workflow 邊界獨立在 `buy-to-ledger.js`，Ledger 歷史瀏覽與 create／edit entry session 的 UI state／effect 邊界獨立在 `ledger-ui-state.js`。
+root `index.html`／`app-version.js` 保留 v110 bridge；成功啟用的 current Service Worker 才把 root 導覽映射到 `shell/v144/index.html`。該 generation document 是 App 與 DOM effect adapter；依 ADR 0018，`navigation-intent.js` 只管理 session-only 明確目的地 intent，`diagnostic-impact.js` 只把原始 AppLog entry 投影為顯示用影響說明，`today-view.js` 只建立與渲染 Today Hero 採買摘要。裝置照片儲存邊界獨立在 `shopping-photo-store.js`，採買轉記帳的純資料與 workflow 邊界獨立在 `buy-to-ledger.js`，Ledger 歷史瀏覽與 create／edit entry session 的 UI state／effect 邊界獨立在 `ledger-ui-state.js`。
 
 ## 資料流:三層防線(絕不空白頁)
 1. **內建資料**(`shell/v144/builtin-snapshot.js`,由工具產生並與 App／SW 同版)→ 版本一致才啟用

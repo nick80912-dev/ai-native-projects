@@ -2151,13 +2151,57 @@ function writeTripProgressChecked(storage,entries){
     return {ok:false,restored:restored,error:restored?'write-failed':'restore-unverified'};
   }
 }
-function toggleCheck(id){ var c=getChecks(); if(c[id]) delete c[id]; else c[id]=true; lsSet('trip_checks',c); }
+function toggleCheck(id){
+  var state=readTripProgressChecked(localStorage);
+  if(!state.ok) return {ok:false,restored:false,error:state.error};
+  var checks=state.checks;
+  if(checks[id]) delete checks[id]; else checks[id]=true;
+  return writeTripProgressChecked(localStorage,[{key:'trip_checks',value:checks}]);
+}
+var tripProgressFailureSeen={},tripProgressErrorMessage='',tripProgressRenderReadOnly=false;
+function reportTripProgressFailure(result,operationKey,retryAction){
+  var code=result&&result.error||'write-failed';
+  tripProgressErrorMessage=code==='restore-unverified'?'紀錄可能未完整儲存，請查看資料健康狀態':
+    code==='read-failed'||code==='invalid-state'?'目前無法讀取行程紀錄，請查看資料健康狀態':
+    code==='inactive'?'目前沒有進行中的旅程':'這次操作未能儲存，請稍後重試';
+  var automatic=String(operationKey||'').indexOf('auto-')===0;
+  var key=String(operationKey||'')+':'+code;
+  if(automatic&&tripProgressFailureSeen[key]) return;
+  if(automatic) tripProgressFailureSeen[key]=true;
+  AppLog.repo('行程進度未保存 ('+code+')；未顯示成功，不清空個人資料');
+  toast(tripProgressErrorMessage,retryAction?'重試復原':null,retryAction||null,6000);
+}
+function clearTripProgressFailure(){
+  tripProgressFailureSeen={};tripProgressErrorMessage='';
+}
+function renderTripProgressAfterFailure(){
+  var active=document.activeElement,focusId=active&&active.id,focusLabel=active&&active.getAttribute&&active.getAttribute('aria-label');
+  var previous=tripProgressRenderReadOnly;
+  tripProgressRenderReadOnly=true;
+  try{
+    var state=readTripProgressChecked(localStorage);
+    if(!state.ok&&state.error==='inactive'){
+      if(typeof renderInactiveHome==='function') renderInactiveHome();
+      return;
+    }
+    renderToday();
+    if(curView==='trip') renderTrip();
+  }finally{tripProgressRenderReadOnly=previous;}
+  var target=focusId?document.getElementById(focusId):null;
+  if(!target&&focusLabel){
+    var candidates=document.querySelectorAll('[aria-label]');
+    for(var i=0;i<candidates.length;i++){
+      if(candidates[i].getAttribute('aria-label')===focusLabel){target=candidates[i];break;}
+    }
+  }
+  if(target&&target.focus) target.focus();
+}
 function dayProgressKey(day,dayIndex){
   var d=(day&&day.date)?day.date:('day'+(dayIndex+1));
   return 'day_'+(dayIndex+1)+'_'+String(d).replace(/[^0-9A-Za-z]/g,'_');
 }
 function getNextStopProgress(){ return lsGet('trip_next_stop_progress',{}); }
-function saveNextStopProgress(progress){ lsSet('trip_next_stop_progress',progress); }
+function saveNextStopProgress(progress){ return writeTripProgressChecked(localStorage,[{key:'trip_next_stop_progress',value:progress}]); }
 function emptyDayProgress(){ return { done:{}, skip:{} }; }
 function normalizeDayProgress(progress){
   progress=progress||{};
@@ -2181,7 +2225,8 @@ function setItemCompletion(day,dayIndex,itemId,status){
   delete progress.skip[itemId];
   delete progress.autoSkip[itemId];
   if(status==='done') progress.done[itemId]=true;
-  if(status==='skip') progress.skip[itemId]=true;
+  if(status==='skip'||status==='auto-skip') progress.skip[itemId]=true;
+  if(status==='auto-skip') progress.autoSkip[itemId]=true;
   all[key]=progress;
   var checks=state.checks;
   if(status==='done') checks[itemId]=true;
@@ -2189,20 +2234,21 @@ function setItemCompletion(day,dayIndex,itemId,status){
   return writeTripProgressChecked(localStorage,[{key:'trip_next_stop_progress',value:all},{key:'trip_checks',value:checks}]);
 }
 function markNextStop(day,dayIndex,itemId,status){
-  setItemCompletion(day,dayIndex,itemId,status);
+  return setItemCompletion(day,dayIndex,itemId,status);
 }
 /* 時間不能重來、行程不會同天回訪:已過時間且從未手動處理的項目,除了「最後一個」保留待確認外,
    其餘自動標記為略過(寫入 progress.skip,並記錄於 autoSkip 供 UI 顯示標籤與一鍵修正)。
    回傳 true 代表這次呼叫「新」標記了(用於決定是否要 toast),false 代表本來就已清除過,不重複動作。 */
 function autoSkipStaleItem(day,dayIndex,itemId){
   if(typeof findToday==='function'&&findToday()!==dayIndex) return false;
-  var all=getNextStopProgress();
-  var key=dayProgressKey(day,dayIndex);
-  var progress=normalizeDayProgress(all[key]);
+  if(tripProgressRenderReadOnly||tripProgressErrorMessage) return false;
+  var state=readTripProgressChecked(localStorage);
+  if(!state.ok){reportTripProgressFailure(state,'auto-skip-read');return false;}
+  var progress=normalizeDayProgress(state.progress[dayProgressKey(day,dayIndex)]);
   if(progress.done[itemId]||progress.skip[itemId]) return false;
-  setItemCompletion(day,dayIndex,itemId,'skip');
-  all=getNextStopProgress(); progress=normalizeDayProgress(all[key]); progress.autoSkip[itemId]=true; all[key]=progress; saveNextStopProgress(all);
-  return true;
+  var result=setItemCompletion(day,dayIndex,itemId,'auto-skip');
+  if(!result.ok) reportTripProgressFailure(result,'auto-skip-'+dayProgressKey(day,dayIndex)+'-'+itemId);
+  return result.ok;
 }
 function isAutoSkipped(itemId,progress){
   return !!(progress&&progress.autoSkip&&progress.autoSkip[itemId]);
@@ -2732,35 +2778,36 @@ function onCheck(id,fromKeyboard){
     for(var i=0;i<rows.length;i++){ if(rows[i].id==='it_'+id){ prevIndex=i; break; } }
   }
   var day=DB.trip&&DB.trip.days?DB.trip.days[curDay]:null;
-  if(day){
-    var progress=getDayProgress(day,curDay);
-    if(isAutoSkipped(id,progress)){
-      /* 這站被系統自動略過(時間已過但你沒手動處理);現在點打卡 = 你確認其實有完成,修正為完成 */
-      markNextStop(day,curDay,id,'done');
-      if(curView==='trip') renderTrip();
-      else if(curView==='today') renderToday();
-      if(fromKeyboard&&curView==='trip') restoreTripCheckFocus(id,prevIndex);
-      toast('已修正為完成 ✓');
-      return;
-    }
+  var state=readTripProgressChecked(localStorage);
+  if(!state.ok){
+    reportTripProgressFailure(state,'manual-check');renderTripProgressAfterFailure();
+    if(fromKeyboard&&curView==='trip') restoreTripCheckFocus(id,prevIndex);
+    return;
   }
-  var progress=day?getDayProgress(day,curDay):null;
-  var wasDone=!!(getChecks()[id]||(progress&&progress.done[id]));
-  if(day) setItemCompletion(day,curDay,id,wasDone?'clear':'done');
-  else toggleCheck(id);
+  var progress=day?normalizeDayProgress(state.progress[dayProgressKey(day,curDay)]):null;
+  var corrected=!!(day&&isAutoSkipped(id,progress));
+  var wasDone=!corrected&&!!(state.checks[id]||(progress&&progress.done[id]));
   var cancelledPast=false;
+  var status=wasDone?'clear':'done';
   if(wasDone&&day){
     var item=(day.items||[]).find(function(it){return it.id===id;});
     var crossDay=findToday()!==curDay;
     var timePick=item?pickNextStop([item],getDayProgress(day,curDay),{},currentMinutes(),null):null;
     var timePast=!!(item&&parseStartMinutes(item.time)!==null&&timePick&&timePick.source==='time-stale');
     cancelledPast=crossDay||timePast;
-    if(cancelledPast) autoSkipStaleItem(day,curDay,id);
+    if(timePast&&!crossDay) status='auto-skip';
   }
+  var result=day?setItemCompletion(day,curDay,id,status):toggleCheck(id);
+  if(!result.ok){
+    reportTripProgressFailure(result,'manual-check');renderTripProgressAfterFailure();
+    if(fromKeyboard&&curView==='trip') restoreTripCheckFocus(id,prevIndex);
+    return;
+  }
+  clearTripProgressFailure();
   renderToday();
   if(curView==='trip') renderTrip();
   if(fromKeyboard&&curView==='trip') restoreTripCheckFocus(id,prevIndex);
-  toast(cancelledPast?'已取消,該行程時間已過,列於已略過':(getChecks()[id]?'已打卡 ✓':'取消打卡'));
+  toast(corrected?'已修正為完成 ✓':cancelledPast?'已取消,該行程時間已過,列於已略過':(getChecks()[id]?'已打卡 ✓':'取消打卡'));
 }
 function tripItemPresentation(it,res){
   var resolved=res&&res.kind==='place'&&res.p?res.p.name:res&&res.kind==='rest'&&res.r?res.r.name:'';
@@ -3107,14 +3154,30 @@ function loadWeatherForCity(city){
 }
 function pickNextStop(items,progress,checks,nowMinutes,dayRef){
   var canReconcile=!!(dayRef&&dayRef.day)&&
+    !tripProgressRenderReadOnly&&!tripProgressErrorMessage&&
     (typeof findToday!=='function'||findToday()===dayRef.dayIndex);
+  if(dayRef&&dayRef.day){
+    var state=readTripProgressChecked(localStorage);
+    if(!state.ok){
+      reportTripProgressFailure(state,'auto-pick-read');
+      return {item:null,remaining:0,source:'storage-error'};
+    }
+    progress=normalizeDayProgress(state.progress[dayProgressKey(dayRef.day,dayRef.dayIndex)]);
+    checks=state.checks;
+  }
   var outcome=TripProgression.reconcile({
     items:items,progress:progress,checks:checks,nowMinutes:nowMinutes,isToday:canReconcile
   });
   if(outcome.changed&&dayRef&&dayRef.day){
-    var all=getNextStopProgress();
+    var all=state.progress;
     all[dayProgressKey(dayRef.day,dayRef.dayIndex)]=outcome.progress;
-    saveNextStopProgress(all);
+    var result=saveNextStopProgress(all);
+    if(!result.ok){
+      reportTripProgressFailure(result,'auto-pick-'+dayProgressKey(dayRef.day,dayRef.dayIndex));
+      var actual=readTripProgressChecked(localStorage);
+      if(!actual.ok) return {item:null,remaining:0,source:'storage-error'};
+      return TripProgression.reconcile({items:items,progress:normalizeDayProgress(actual.progress[dayProgressKey(dayRef.day,dayRef.dayIndex)]),checks:actual.checks,nowMinutes:nowMinutes,isToday:false}).pick;
+    }
   }
   if(outcome.notification)toast(outcome.notification);
   return outcome.pick;
@@ -3172,18 +3235,23 @@ function pickClusterChild(cluster,progress,checks,nowMinutes,dayRef){
 }
 function reconcileClusterController(day,dayIndex,cluster,progress,checks){
   if(!cluster||!cluster.controllerId) return false;
+  if(tripProgressRenderReadOnly||tripProgressErrorMessage) return false;
+  var state=readTripProgressChecked(localStorage);
+  if(!state.ok){reportTripProgressFailure(state,'auto-cluster-read');return false;}
   progress=normalizeDayProgress(progress);
   checks=checks||{};
   var cleared=cluster.items.every(function(item){ return isNextStopCleared(item,progress,checks); });
   var controller={id:cluster.controllerId};
   var controllerCleared=isNextStopCleared(controller,progress,checks);
   if(cleared&&!controllerCleared){
-    markNextStop(day,dayIndex,cluster.controllerId,'done');
-    return true;
+    var result=markNextStop(day,dayIndex,cluster.controllerId,'done');
+    if(!result.ok) reportTripProgressFailure(result,'auto-cluster-'+cluster.controllerId);
+    return result.ok;
   }
   if(!cleared&&controllerCleared){
-    setItemCompletion(day,dayIndex,cluster.controllerId,'clear');
-    return true;
+    var result=setItemCompletion(day,dayIndex,cluster.controllerId,'clear');
+    if(!result.ok) reportTripProgressFailure(result,'auto-cluster-'+cluster.controllerId);
+    return result.ok;
   }
   return false;
 }
@@ -3316,6 +3384,7 @@ function setNextStopMoreOpen(itemId,open){
   else delete viewUiState.today.openMore[String(itemId)];
 }
 function renderNextStopCard(day,dayIndex,pick){
+  if(pick.source==='storage-error') return '<div class="nx-empty-ticket"><div class="nx-ticket-title">行程紀錄暫時無法讀取</div><div class="nx-ticket-line">請查看資料健康狀態，不會清空原有紀錄。</div></div>';
   var it=pick.item;
   if(!it){
     return '<div class="nx-empty-ticket"><div class="nx-ticket-title" style="font-size:20px">今日行程完成</div><div class="nx-ticket-line">可以慢慢休息，或切到完整行程查看後續安排。</div></div>';
@@ -3361,14 +3430,17 @@ function renderNextStopCard(day,dayIndex,pick){
 }
 var lastNextStopAction=null;
 function snapshotNextStopState(day,dayIndex,itemId,status){
-  var progress=getDayProgress(day,dayIndex);
-  var checks=getChecks();
+  var state=readTripProgressChecked(localStorage);
+  if(!state.ok) return null;
+  var progress=normalizeDayProgress(state.progress[dayProgressKey(day,dayIndex)]);
+  var checks=state.checks;
   return {
     dayIndex:dayIndex,
     itemId:itemId,
     status:status,
     prevDone:!!progress.done[itemId],
     prevSkip:!!progress.skip[itemId],
+    prevAutoSkip:!!progress.autoSkip[itemId],
     prevCheck:!!checks[itemId]
   };
 }
@@ -3377,36 +3449,47 @@ function undoNextStopAction(){
   if(!action) return;
   var day=DB.trip&&DB.trip.days?DB.trip.days[action.dayIndex]:null;
   if(!day) return;
-  var all=getNextStopProgress();
+  var state=readTripProgressChecked(localStorage);
+  if(!state.ok){reportTripProgressFailure(state,'manual-undo',undoNextStopAction);renderTripProgressAfterFailure();return;}
+  var all=state.progress;
   var key=dayProgressKey(day,action.dayIndex);
   var progress=normalizeDayProgress(all[key]);
   delete progress.done[action.itemId];
   delete progress.skip[action.itemId];
+  delete progress.autoSkip[action.itemId];
   if(action.prevDone) progress.done[action.itemId]=true;
   if(action.prevSkip) progress.skip[action.itemId]=true;
+  if(action.prevAutoSkip) progress.autoSkip[action.itemId]=true;
   all[key]=progress;
-  saveNextStopProgress(all);
-  var checks=getChecks();
+  var checks=state.checks;
   if(action.prevCheck) checks[action.itemId]=true;
   else delete checks[action.itemId];
-  lsSet('trip_checks',checks);
+  var result=writeTripProgressChecked(localStorage,[{key:'trip_next_stop_progress',value:all},{key:'trip_checks',value:checks}]);
+  if(!result.ok){reportTripProgressFailure(result,'manual-undo',undoNextStopAction);renderTripProgressAfterFailure();return;}
   lastNextStopAction=null;
-  renderToday();
+  clearTripProgressFailure();
+  /* 復原當下不立刻再自動略過，保留剛恢復的原始狀態。 */
+  var readOnly=tripProgressRenderReadOnly;tripProgressRenderReadOnly=true;
+  try{renderToday();}finally{tripProgressRenderReadOnly=readOnly;}
   toast(action.status==='skip'?'已復原略過':'已復原完成');
 }
 function onNextStopDone(dayIndex,itemId){
   var day=DB.trip&&DB.trip.days?DB.trip.days[dayIndex]:null;
   if(!day) return;
-  lastNextStopAction=snapshotNextStopState(day,dayIndex,itemId,'done');
-  markNextStop(day,dayIndex,itemId,'done');
+  var action=snapshotNextStopState(day,dayIndex,itemId,'done');
+  var result=markNextStop(day,dayIndex,itemId,'done');
+  if(!result.ok){reportTripProgressFailure(result,'manual-done');renderTripProgressAfterFailure();return;}
+  lastNextStopAction=action;clearTripProgressFailure();
   renderToday();
   toast('已完成這站','復原',undoNextStopAction);
 }
 function onNextStopSkip(dayIndex,itemId){
   var day=DB.trip&&DB.trip.days?DB.trip.days[dayIndex]:null;
   if(!day) return;
-  lastNextStopAction=snapshotNextStopState(day,dayIndex,itemId,'skip');
-  markNextStop(day,dayIndex,itemId,'skip');
+  var action=snapshotNextStopState(day,dayIndex,itemId,'skip');
+  var result=markNextStop(day,dayIndex,itemId,'skip');
+  if(!result.ok){reportTripProgressFailure(result,'manual-skip');renderTripProgressAfterFailure();return;}
+  lastNextStopAction=action;clearTripProgressFailure();
   renderToday();
   toast('已略過這站','復原',undoNextStopAction);
 }
@@ -3494,6 +3577,13 @@ function renderTomorrowPreview(dayIndex,compact){
 }
 function renderToday(){
   var view=document.getElementById('view-today');
+  var stored=readTripProgressChecked(localStorage);
+  if(!stored.ok){
+    if(stored.error==='inactive'){renderInactiveHome();return;}
+    reportTripProgressFailure(stored,'auto-today-read');
+    view.innerHTML='<div class="today-hero"><div class="date">行程紀錄暫時無法讀取</div><div class="empty" id="tripProgressError" role="alert">'+escapeHtml(tripProgressErrorMessage)+'</div><button class="today-jump" onclick="switchView(\'trip\')">查看完整行程 →</button></div>';
+    return;
+  }
   var ti=findToday();
   var checks=getChecks();
   if(ti===null){
@@ -3518,6 +3608,10 @@ function renderToday(){
   checks=getChecks();
   var nowMinutes=currentMinutes();
   var pick=pickNextStop(items,progress,checks,nowMinutes,{day:day,dayIndex:ti});
+  if(pick.source==='storage-error'){
+    view.innerHTML='<div class="empty" id="tripProgressError" role="alert">'+escapeHtml(tripProgressErrorMessage)+'</div>'+renderNextStopCard(day,ti,pick);
+    return;
+  }
   var completed=items.length-(pick.remaining+(pick.item?1:0));
   var clusterParent=clusterParentForPick(day.items,pick.item);
   var cluster=getChildStopCluster(day.items,clusterParent);
@@ -3538,7 +3632,7 @@ function renderToday(){
     else if(shouldShowCompactTomorrowPreview(pick,nowMinutes)) h+=renderTomorrowPreview(ti,true);
   }
   h+='<button class="today-jump dark" onclick="gotoDay('+ti+')">看今日完整細節 →</button>';
-  view.innerHTML=h;
+  view.innerHTML=(tripProgressErrorMessage?'<div class="empty" id="tripProgressError" role="alert">'+escapeHtml(tripProgressErrorMessage)+'</div>':'')+h;
 }
 
 /* ================= 採買清單(純 localStorage) ================= */
@@ -9404,14 +9498,15 @@ function settingsDataHealthModel(input){
   var photoAttention=source.photoAttention;
   if(photoAttention==null){var photoState=shoppingPhotoAuditState||{};photoAttention=!!(photoState.ready&&(photoState.unavailable||(photoState.invalidReferences||[]).length));}
   var failedLabels=(sync.failedSources||[]).map(function(item){return String(item&&item.label||'').trim();}).filter(Boolean);
-  var tripAttention=sync.state==='partial'||sync.state==='failed',attention=(tripAttention?1:0)+(pending?1:0)+(photoAttention?1:0);
+  var progressError=supplied?String(source.progressError||''):(typeof tripProgressErrorMessage==='string'?tripProgressErrorMessage:'');
+  var tripAttention=sync.state==='partial'||sync.state==='failed',attention=(tripAttention?1:0)+(pending?1:0)+(photoAttention?1:0)+(progressError?1:0);
   var relative=sync.relative&&sync.relative!=='時間未知'?' · '+sync.relative:'';
   return {
     summary:attention?attention+' 項需注意':'資料狀態正常',attentionCount:attention,
     rows:[
       {key:'trip',label:'行程資料',value:String(sync.label||'資料狀態未知')+relative,detail:failedLabels.length?'未更新：'+failedLabels.join('、'):''},
       {key:'shared',label:'團體帳',value:pending?pending+' 筆待送出':bridgeCount?bridgeCount+' 筆等待讀回':'本機無待送紀錄',detail:'伺服器接收後仍需讀回；不代表其他旅伴已讀'},
-      {key:'personal',label:'個人資料',value:'僅此裝置',detail:'個人記帳、採買與設定不會同步'},
+      {key:'personal',label:'個人資料',value:progressError?'行程紀錄需注意':'僅此裝置',detail:progressError||'個人記帳、採買與設定不會同步'},
       {key:'photos',label:'照片附件',value:photoSummary,detail:'照片只保存在此裝置'}
     ]
   };

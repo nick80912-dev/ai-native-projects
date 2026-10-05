@@ -34,6 +34,9 @@ function makeSandbox(){
   const writes = {};
   const sandbox = {
     TripProgression,
+    tripProgressRenderReadOnly:false,
+    tripProgressErrorMessage:'',
+    tripProgressFailureSeen:{},
     lsGet: function(k, f){ return Object.prototype.hasOwnProperty.call(store, k) ? store[k] : f; },
     lsSet: function(k, v){ store[k] = v; writes[k]=(writes[k]||0)+1; },
     toast: function(){ sandbox._lastToast = Array.prototype.slice.call(arguments); },
@@ -51,6 +54,7 @@ function makeSandbox(){
     extractFunction('tripProgressShapeValid'),
     extractFunction('readTripProgressChecked'),
     extractFunction('writeTripProgressChecked'),
+    extractFunction('reportTripProgressFailure'),
     extractFunction('parseStartMinutes'),
     extractFunction('normalizeDayProgress'),
     extractFunction('dayProgressKey'),

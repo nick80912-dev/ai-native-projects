@@ -25,6 +25,27 @@ function context(storage){
   const sb={localStorage:storage,TripLifecycle:require('../trip-lifecycle')};
   vm.createContext(sb);vm.runInContext(source,sb);return sb;
 }
+function uiContext(storage){
+  const sb=context(storage),day={date:'10/18',items:[{id:'a',time:'09:00',act:'早餐'},{id:'b',time:'11:00',act:'午餐'},{id:'c',time:'17:00',act:'晚餐'}]};
+  Object.assign(sb,{
+    DB:{trip:{days:[day]}},curDay:0,curView:'trip',lastNextStopAction:null,
+    tripProgressAutoFailures:{},tripProgressFailureSeen:{},tripProgressErrorMessage:'',tripProgressRenderReadOnly:false,
+    TripProgression:require('../trip-progression'),findToday:()=>0,currentMinutes:()=>12*60,
+    lsGet:(key,fallback)=>{try{const raw=storage.getItem(key);return raw===null?fallback:JSON.parse(raw);}catch(ignore){return fallback;}},
+    document:{querySelectorAll:()=>[],getElementById:()=>null},
+    AppLog:{repo:()=>{}},renderToday:()=>{},renderTrip:()=>{},restoreTripCheckFocus:()=>{},
+    toast:(...args)=>sb.messages.push(args),messages:[]
+  });
+  const uiNames=['getChecks','getNextStopProgress','getDayProgress','toggleCheck','saveNextStopProgress','markNextStop',
+    'autoSkipStaleItem','isAutoSkipped','isNextStopCleared','parseStartMinutes','pickNextStop','reconcileClusterController',
+    'snapshotNextStopState','undoNextStopAction','onNextStopDone','onNextStopSkip','onCheck'];
+  // New UI helpers, if present, are loaded rather than mocked.
+  for(const name of ['reportTripProgressFailure','clearTripProgressFailure','renderTripProgressAfterFailure','tripProgressReadFailure']){
+    if(html.includes('function '+name+'('))uiNames.push(name);
+  }
+  vm.runInContext(uiNames.map(name=>extractFunction(html,name)).join('\n'),sb);
+  return sb;
+}
 const initial={trip_checks:'{ "old": true }',trip_next_stop_progress:'{ "day_1_10_18": {"done":{"old":true},"skip":{}} }'};
 const next=[{key:'trip_next_stop_progress',value:{day_1_10_18:{done:{next:true},skip:{},autoSkip:{}}}},
   {key:'trip_checks',value:{next:true}}];
@@ -101,5 +122,48 @@ test('inactive trip cannot recreate progress',()=>{
   const storage=storageDouble({trip_lifecycle_state:'{"mode":"complete"}'}),sb=context(storage),before=storage.snapshot();
   assert.strictEqual(sb.setItemCompletion({date:'10/18'},0,'next','done').ok,false);
   assert.strictEqual(storage.snapshot(),before);
+});
+for(const method of ['onNextStopDone','onNextStopSkip','onCheck'])test(method+' failure has no success notification or undo replacement',()=>{
+  const storage=storageDouble(),sb=uiContext(storage),before=storage.snapshot(),prior={itemId:'prior'};
+  sb.lastNextStopAction=prior;
+  storage.configure(op=>{if(op==='set')throw Error('quota');});
+  if(method==='onCheck')sb[method]('b',true);else sb[method](0,'b');
+  assert.strictEqual(storage.snapshot(),before);assert.strictEqual(sb.lastNextStopAction,prior);
+  assert.ok(sb.messages.some(args=>args[0].includes('未能儲存')));
+  assert.ok(sb.messages.every(args=>!/^已完成|^已略過|^已打卡|^已修正/.test(args[0])));
+});
+test('failed undo retains snapshot and offers retry which restores autoSkip',()=>{
+  const storage=storageDouble({trip_checks:'{}',trip_next_stop_progress:'{"day_1_10_18":{"done":{},"skip":{"b":true},"autoSkip":{"b":true}}}'}),sb=uiContext(storage);
+  sb.onNextStopDone(0,'b');
+  const action=sb.lastNextStopAction;assert.strictEqual(action.prevAutoSkip,true);
+  storage.configure(op=>{if(op==='set')throw Error('quota');});sb.messages=[];
+  sb.undoNextStopAction();
+  assert.strictEqual(sb.lastNextStopAction,action);assert.strictEqual(JSON.parse(storage.raw.trip_checks).b,true);
+  assert.ok(sb.messages.some(args=>args[1]==='重試復原'&&typeof args[2]==='function'));
+  assert.ok(sb.messages.every(args=>!/^已復原/.test(args[0])));
+  storage.configure(()=>{});sb.undoNextStopAction();
+  assert.strictEqual(sb.lastNextStopAction,null);assert.deepStrictEqual(JSON.parse(storage.raw.trip_checks),{});
+  assert.deepStrictEqual(JSON.parse(storage.raw.trip_next_stop_progress).day_1_10_18,{done:{},skip:{b:true},autoSkip:{b:true}});
+});
+test('automatic reconcile failure is read-only on repeated render and has no success toast',()=>{
+  const storage=storageDouble(),sb=uiContext(storage),day=sb.DB.trip.days[0];
+  storage.configure(op=>{if(op==='set')throw Error('quota');});
+  const first=sb.pickNextStop(day.items,{},{},12*60,{day,dayIndex:0}),writes=storage.calls.set;
+  assert.strictEqual(first.item.id,'b');assert.strictEqual(storage.snapshot(),'{}');
+  const notifications=sb.messages.length;
+  sb.pickNextStop(day.items,{},{},12*60,{day,dayIndex:0});
+  assert.strictEqual(storage.calls.set,writes);assert.strictEqual(sb.messages.length,notifications);
+  assert.ok(sb.messages.every(args=>!/^已自動略過/.test(args[0])));
+});
+test('automatic single-item skip does not report success after rejection',()=>{
+  const storage=storageDouble(),sb=uiContext(storage);storage.configure(op=>{if(op==='set')throw Error('quota');});
+  assert.strictEqual(sb.autoSkipStaleItem(sb.DB.trip.days[0],0,'a'),false);
+  assert.strictEqual(storage.snapshot(),'{}');
+});
+test('cluster controller stays uncompleted if persistence fails',()=>{
+  const storage=storageDouble({trip_checks:'{"a":true,"b":true}'}),sb=uiContext(storage),day=sb.DB.trip.days[0];
+  storage.configure(op=>{if(op==='set')throw Error('quota');});
+  assert.strictEqual(sb.reconcileClusterController(day,0,{controllerId:'a__cluster',items:day.items.slice(0,2)},{},{a:true,b:true}),false);
+  assert.strictEqual(storage.raw.trip_next_stop_progress,undefined);
 });
 console.log('trip progress persistence: '+count+' tests passed');
