@@ -47,27 +47,27 @@ assert.strictEqual(weatherPresentation(envelope,city,1000).rain,null);
 assert.strictEqual(weatherPresentation(envelope,city,1000).temp,0);
 ```
 
-- [ ] **Step 1 — RED tests:** Node vm helper test 精確斷言 age `10799999` fresh、`10800000` expired；未來／缺 t、城市不符、null temp unavailable；合法 temp 0 fresh、rain 0 保留0、null／空／NaN rain 為null。呼叫後 envelope.t 與 bytes 不變。讀取 denied／bad JSON 為 unavailable 不 pageerror。
-- [ ] **Step 2 — Verify RED:** `node tests/weather-freshness.test.js`，新 helper 缺失或舊零值／有效期處理導致失敗。
-- [ ] **Step 3 — Minimal implementation:** 建立 G／登記；新增兩個 helper。fetch 保留缺失降雨為 null，不 `rain||0`；讀快取不刷新 t。renderer 對 fresh 顯示城市／溫度／更新時間，expired「天氣資料已過期，暫無最新資料」，unavailable「暫無天氣資料」，loading「正在讀取天氣…」。過期／無資料不輸出數字；aria 使用同一結果。未知降雨可省略，但 hint 不能默認適合出發。
-- [ ] **Step 4 — Verify GREEN:** `node tests/weather-freshness.test.js`；browser 新 spec 驗 DOM 可見城市／時間及 aria、合法 0°C 不遺失、未知不出0%、過期無舊數字。`npx playwright test tests/browser/weather-freshness.spec.js tests/browser/today-live-info.spec.js` 通過。
-- [ ] **Step 5 — Commit:** UI、登記、上述測試，訊息 `feat: expose weather freshness and unknown data`。
+- [x] **Step 1 — RED tests:** Node vm helper test 精確斷言 age `10799999` fresh、`10800000` expired；未來／缺 t、城市不符、null temp unavailable；合法 temp 0 fresh、rain 0 保留0、null／空／NaN rain 為null。呼叫後 envelope.t 與 bytes 不變。讀取 denied／bad JSON 為 unavailable 不 pageerror。
+- [x] **Step 2 — Verify RED:** `node tests/weather-freshness.test.js`，新 helper 缺失或舊零值／有效期處理導致失敗。
+- [x] **Step 3 — Minimal implementation:** 建立 G／登記；新增兩個 helper。fetch 保留缺失降雨為 null，不 `rain||0`；讀快取不刷新 t。renderer 對 fresh 顯示城市／溫度／更新時間，expired「天氣資料已過期，暫無最新資料」，unavailable「暫無天氣資料」，loading「正在讀取天氣…」。過期／無資料不輸出數字；aria 使用同一結果。未知降雨可省略，但 hint 不能默認適合出發。
+- [x] **Step 4 — Verify GREEN:** `node tests/weather-freshness.test.js`；browser 新 spec 驗 DOM 可見城市／時間及 aria、合法 0°C 不遺失、未知不出0%、過期無舊數字。`npx playwright test tests/browser/weather-freshness.spec.js tests/browser/today-live-info.spec.js` 通過。
+- [x] **Step 5 — Commit:** UI、登記、上述測試，訊息 `feat: expose weather freshness and unknown data`。
 
 ### Task 2: Session 年齡、請求去重與重試
 
 **Interfaces:** `homeWeatherState[key]` session envelope `{status,envelope,requestId,error}`；key 維持 dayIndex＋city.key。新增單調 session `homeWeatherRequestId` 與 `homeWeatherEpoch`；每筆 request 捕捉 epoch，既有旅程清理成功的 UI adapter 增加 epoch 並清空 session 狀態，不改 lifecycle module。回應前核對 epoch 與 lifecycle active。`requestHomeWeather(dayIndex,item,force)` 中 force 僅手動重試；其他既有兩參數 caller 不需修改契約。`homeWeatherFor` 每次投影 `Date.now()`，不因 state 存在而永遠 fresh。
 
-- [ ] **Step 1 — RED tests:** Node mock clock／deferred fetch：同 key loading 只發一次；valid cache 不發；expired 進頁一次fetch；failed render 不自動再發；手動 retry 再發一次。network success storage denied 保留 session data；旅程 clear epoch 改變後舊 request 不寫 cache。不同城市各自 envelope 不串用。
-- [ ] **Step 2 — Verify RED:** 新 Node test 新案例須失敗；先區分 session guard 問題與 fixture Date 錯誤。
-- [ ] **Step 3 — Minimal implementation:** loading／failed 狀態保留避免 render loop；進入 today 觸發對新 key 或剛過期資料一次請求，失敗需使用者按天氣內「重試」才能再次發起，不增加設定頁。late response 只更新對應 request identity；render 前確認目前 key／curView／active trip，clear 後忽略且不寫 cache。網路有效而 cache save failed 只記診斷，不丟棄 session有效天氣。維持6500ms逾時，無 AbortController。
-- [ ] **Step 4 — Browser tests:** route stub Open-Meteo，固定時鐘後前進3h、切today／trip、快速換城市、離頁晚到、manual retry、clear旅程後晚到、timeout及cache denied；斷言請求次數／畫面／cache。320／375／390px 城市與時間不擠掉下一站操作，沿用11px候選規則，不變更全域字體。
-- [ ] **Step 5 — Verify GREEN:** `node tests/weather-freshness.test.js`、`npx playwright test tests/browser/weather-freshness.spec.js tests/browser/today-live-info.spec.js tests/browser/trip-three-scenarios.spec.js`；全部通過。
-- [ ] **Step 6 — Commit:** UI 與測試，訊息 `fix: guard weather requests and session expiry`。
+- [x] **Step 1 — RED tests:** Node mock clock／deferred fetch：同 key loading 只發一次；valid cache 不發；expired 進頁一次fetch；failed render 不自動再發；手動 retry 再發一次。network success storage denied 保留 session data；旅程 clear epoch 改變後舊 request 不寫 cache。不同城市各自 envelope 不串用。
+- [x] **Step 2 — Verify RED:** 新 Node test 新案例須失敗；先區分 session guard 問題與 fixture Date 錯誤。
+- [x] **Step 3 — Minimal implementation:** loading／failed 狀態保留避免 render loop；進入 today 觸發對新 key 或剛過期資料一次請求，失敗需使用者按天氣內「重試」才能再次發起，不增加設定頁。late response 只更新對應 request identity；render 前確認目前 key／curView／active trip，clear 後忽略且不寫 cache。網路有效而 cache save failed 只記診斷，不丟棄 session有效天氣。維持6500ms逾時，無 AbortController。
+- [x] **Step 4 — Browser tests:** route stub Open-Meteo，固定時鐘後前進3h、切today／trip、快速換城市、離頁晚到、manual retry、clear旅程後晚到、timeout及cache denied；斷言請求次數／畫面／cache。320／375／390px 城市與時間不擠掉下一站操作，沿用11px候選規則，不變更全域字體。
+- [x] **Step 5 — Verify GREEN:** `node tests/weather-freshness.test.js`、`npx playwright test tests/browser/weather-freshness.spec.js tests/browser/today-live-info.spec.js tests/browser/trip-three-scenarios.spec.js`；全部通過。
+- [x] **Step 6 — Commit:** UI 與測試，訊息 `fix: guard weather requests and session expiry`。
 
 ### Task 3: C 交付 gate
 
 **Interfaces:** 天氣狀態供現有 UI，不改遠端 API／備份格式。
 
-- [ ] 更新現況／changelog／裝置待驗；確認沒有 CSV／官方旅行內容／OAuth mutation。
-- [ ] 索引全套 QA 與核准方法獨立審查；核對天氣缺資料仍有非空行程與操作。
-- [ ] 收到指示才推 dev，核對 exact-head CI／測試站，請使用者驗收。後續第二批需另寫計畫，不自動接著實作。
+- [x] 更新現況／changelog／裝置待驗；確認沒有 CSV／官方旅行內容／OAuth mutation。
+- [x] 索引全套 QA 與核准方法獨立審查；核對天氣缺資料仍有非空行程與操作。證據見 [v145 C 驗證](../../trippilot-v145-c-verification.md)：單次 Astra review、兩項 Important RED→GREEN，最終 Node 109 檔／Chromium 275/275／四項 gate 通過。
+- [ ] 收到指示才推 dev，核對 exact-head CI／測試站，請使用者驗收。本輪未核准、不執行。後續第二批需另寫計畫，不自動接著實作。

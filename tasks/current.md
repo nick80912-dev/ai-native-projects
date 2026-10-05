@@ -1,11 +1,12 @@
 # CURRENT(現在正在做的)
 
-## 2026-10-05 — v145 C：天氣有效性與重試（本機候選，獨立審查進行中）
+## 2026-10-05 — v145 C：天氣有效性與重試（本機完成，未推送）
 
 - Bar 明確確認 C 四點／Tier 2 PWA 群組：保留 B 五筆本機提交，從 v144 建立未使用 v145；沿用原 CSV／timestamp、來源及 3h TTL，不做 live fetch、不放大全域字體。本次只實作／提交，不 push、merge 或部署。
 - 城市、取得時間（日本時間）、fresh／expired／unavailable／loading 共用同一品質投影；不顯示過期數字，合法 0°C／0% 保留，未知降雨不補 0% 或宣稱適合出發。每小時資料依 API 的日本本地時間解讀，不依手機時區。
 - 每次首頁讀取重新判斷 session 年齡；loading 去重、failed 保留至手動重試。request identity／epoch／active trip 在 cache write 前守門，只有目前城市及 Today 可 redraw。清除 UI 使舊請求失效；cache 寫入拒絕仍可用本 session 資料，只記去敏診斷。
-- Runtime `b0f88b4`／QA fixture `f105bc5`：Node 109 個檔案、完整 Chromium 270/270（8.2 分鐘，0 retry）、四項 gate／diff check 通過。第一輪因舊導航 observer 起點錯誤中止，修正測試後從零重跑；導航 runtime 不變。前代／B／schema/domain／種子核對通過。Astra 整批独立審查待完成，不冒充交付完成。見 [C 驗證記錄](../docs/trippilot-v145-c-verification.md)。
+- 審查前 runtime `b0f88b4`／QA fixture `f105bc5`：Node 109 個檔案、完整 Chromium 270/270（8.2 分鐘，0 retry）、四項 gate／diff check 通過。第一輪因舊導航 observer 起點錯誤中止，修正測試後從零重跑；導航 runtime 不變。前代／B／schema/domain／種子核對通過。
+- 單次 Astra xhigh fresh-context 審查指出兩項 Important，已先 RED 再集中修正：同頁 foreground／pageshow 也失效；過去 0% 不補未來缺值。單次到期 timer 只失效、不背景抓取；只更新天氣 DOM，保留下一站焦點／紀錄與 retry Tab 順序。最終 runtime `64b66ac`：Node 109 檔、天氣 18/18、受影響 browser 53/53、完整 Chromium 275/275（8.8 分鐘，0 retry）、四項 gate／diff check 全過；未派第二輪 reviewer。一項文件索引 Minor 暫緩。裁定、保留限制與證據見 [C 驗證記錄](../docs/trippilot-v145-c-verification.md)。
 - TP145-a～c 與既有 B／其他真機項目仍待驗；沒有沿用 v143 的發布豁免。分類管理／備份檔案／過往旅程列表／連接新旅程不在本批。
 
 ## 2026-10-05 — v144 B：本機行程保存可靠性（本機完成，未推送）

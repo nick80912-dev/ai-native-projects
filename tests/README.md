@@ -7,7 +7,7 @@ v143 驗證與審查紀錄：[交付驗證](../docs/trippilot-v143-verification.
 ## v145 weather coverage
 
 - `weather-freshness.test.js`：品質投影、3h 邊界、未知值、原 timestamp 不變、城市／時間格式、session expiry、去重、failed／manual retry、cache denied、epoch 與 late reply。
-- `browser/weather-freshness.spec.js`：13 項實際 DOM／鍵盤／Open-Meteo route／Storage 故障案例；320／375／390px、6500ms timeout、切城市／離頁／清除與容量不足。僅使用 QA context，不修改使用者資料。
+- `browser/weather-freshness.spec.js`：18 項實際 DOM／鍵盤／Open-Meteo route／Storage 故障案例；320／375／390px、6500ms timeout、切城市／離頁／清除與容量不足；同頁 visibilitychange／pageshow、單次到期失效（不輪詢）、下一站與重試焦點，以及過去 0%＋未來缺值。僅使用 QA context，不修改使用者資料。
 - [C 驗證記錄](../docs/trippilot-v145-c-verification.md)如實區分自動化、独立審查與未驗真機。
 
 ## v144 checked trip-progress coverage
