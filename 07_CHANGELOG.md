@@ -1,5 +1,12 @@
 # 07 版本紀錄
 
+## 2026-10-05 — v145 已正式發布（PR #41）
+
+- ⭐ v144 本機行程保存可靠性與 v145 天氣城市／更新時間／有效性／手動重試隨一般 merge 正式發布；不放大全域字體、不改帳務／備份 v9／封存 v1／OAuth 或旅行種子。
+- dev `0658516` → main `9ce1c94`，merged tree 等於已測 dev；dev `37281008592`／PR `37281014747`／main `37281943628` CI 全數 success，各 Chromium 275/275。首輪 11 項失敗已保留，確認為新增 fixture 未固定時區；兩份 spec 固定 Asia/Tokyo 後預設 UTC B/C 32/32、完整本機 Node 109 檔／Chromium 275/275（8.5 分鐘、0 retry）及四項 gate／diff check 通過，runtime 未修改。
+- Netlify deploy `6ac35b5a3da9cf00087a02c0` matching commit_ref=`9ce1c940fca7e443653671cdc68051e0920e08c3`、published_at=`2026-10-05T08:10:12.015Z`。31 Git bytes／header／28 cache 資產／v145 三件組／離線重開／health 0／pageerror 0 均驗證；v144／v143 與 root v110 保留。annotated `production-v145` 已推送。
+- G1 本次由 Bar 明確選項 2 跳過，不視為通過、不沿用至後續版本。TP144／TP145 及既有真機清單保持未勾；manifest B 證據索引 Minor 暫緩。只補發布文件同步 dev，沒有熱修已發布 runtime、清資料、刪 SW 或工作樹。
+
 ## 2026-10-05 — v145 發布核准（尚待合併／部署）
 
 - Bar 明確選項 2：本次跳過 G1，待 dev／PR exact-head CI 通過合併 main 並核對正式部署。包含 v144 保存可靠性與 v145 天氣改善；TP144-a～c、TP145-a～c 及既有真機清單保持未勾，不沿用至下一版。

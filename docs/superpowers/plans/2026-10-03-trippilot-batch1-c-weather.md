@@ -70,4 +70,4 @@ assert.strictEqual(weatherPresentation(envelope,city,1000).temp,0);
 
 - [x] 更新現況／changelog／裝置待驗；確認沒有 CSV／官方旅行內容／OAuth mutation。
 - [x] 索引全套 QA 與核准方法獨立審查；核對天氣缺資料仍有非空行程與操作。證據見 [v145 C 驗證](../../trippilot-v145-c-verification.md)：單次 Astra review、兩項 Important RED→GREEN，最終 Node 109 檔／Chromium 275/275／四項 gate 通過。
-- [ ] 收到指示才推 dev，核對 exact-head CI／測試站，請使用者驗收。本輪未核准、不執行。後續第二批需另寫計畫，不自動接著實作。
+- [x] 收到本次方案 2 核准後已推 dev，核對 dev／PR exact-head CI 並經一般 merge PR #41 發布 main，完成正式站 §F5／main CI／production-v145 tag。本次 G1 明確跳過、真機項目仍待使用者驗收且未代勾。後續第二批需另寫計畫，不自動接著實作。

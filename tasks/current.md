@@ -1,5 +1,12 @@
 # CURRENT(現在正在做的)
 
+## 2026-10-05 — v145 已正式發布（PR #41）
+
+- dev exact head `0658516` 經一般 merge 合併至 main `9ce1c94`；兩個 parent 與 merged tree 核對，內容精確等於已測 dev。dev CI `37281008592`／PR CI `37281014747`／main CI `37281943628` sanity＋browser-qa 全部 success，各 browser 275/275（6.6／6.8／6.6 分鐘，0 retry）。本輪修正後本機 Node 109 檔／Chromium 275/275（8.5 分鐘）、四項 gate／保護範圍／diff check 通過。
+- 首輪 dev／PR 各 264 passed／11 failed，暫停合併後確認新增 fixture 繼承 UTC，導致未出發日／下一站不同；隔離 probe RED→GREEN，只在兩份 spec 固定 Asia/Tokyo，預設 UTC 的 B/C 32/32 通過。原斷言／retry／runtime 不變，失敗證據保留；v145 runtime 仍為 `64b66ac`。
+- Netlify automatic deploy `6ac35b5a3da9cf00087a02c0` 的 commit_ref 精確等於 `9ce1c940fca7e443653671cdc68051e0920e08c3`，published_at=`2026-10-05T08:10:12.015Z`，不是 manual deploy。§F5 實測：31 資產與 merge Git bytes 相等、兩處 no-cache／no-store header 正確；v144／v143 與 root v110 保留；28 個 cache 資產齊全、三件組 v145、離線重開非空、health／pageerror 均 0。
+- annotated `production-v145` 已推送並指向 `9ce1c94`；G1 僅本次依 Bar 選項 2 跳過，TP144-a～c、TP145-a～c 與既有真機／閱讀器清單仍未勾。已知 manifest B 文件索引 Minor 暫緩；不擴大主題、字體、旅行內容、OAuth 或帳務範圍，不清資料、不刪 SW。發布後只補文件並同步 dev；工作樹與 QA 證據保留。第二批與後续功能須另核准。
+
 ## 2026-10-05 — v145 發布核准（本機 QA 通過，待遠端 CI／合併）
 
 - Bar 選擇方案 2，明確核准本次跳過 G1 真機驗收，待 dev push／PR exact-head CI 通過後以一般 merge 合併 main，再核對正式部署。發布包含 v144 B 保存可靠性與 v145 C 天氣改善；舊版豁免不沿用，此核准亦不適用後續版本。

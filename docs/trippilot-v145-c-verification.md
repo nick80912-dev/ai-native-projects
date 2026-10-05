@@ -2,6 +2,12 @@
 
 日期：2026-10-05。Current status authority：`tasks/current.md`。本文件是本批證據與限制，不是發布核准。
 
+## 正式發布續記（2026-10-05；PR #41）
+
+- 下節首輪失敗修正後，dev exact head `0658516` 的 CI `37281008592` 與 PR CI `37281014747` sanity／browser-qa success，各 275/275（6.6／6.8 分鐘）；main merge `9ce1c94` 的 CI `37281943628` 同樣 success、275/275（6.6 分鐘）。合併前重新 fetch 核對 head、base、兩組 jobs，一般 merge 保留歷史；merged tree 等於已測 dev。
+- Automatic Netlify deploy `6ac35b5a3da9cf00087a02c0`：ready、commit_ref=`9ce1c940fca7e443653671cdc68051e0920e08c3`、published_at=`2026-10-05T08:10:12.015Z`、manual_deploy=false。獨立空白 Chromium context 核對 31 資產的 Git LF bytes、兩處 no-cache/no-store header、v144／v143 前代及 root v110；全部 28 個 cache 資產、v145 三件組／timestamp、非空離線重開、health 0／pageerror 0。沒有使用個人瀏覽器 profile 或 Google 授權，亦非真機／live weather 服務驗收。
+- `production-v145` annotated tag 指向 merge `9ce1c94` 並已推送，含日期、SW cache、發布原因及 §A2 recovery 指引。G1 本次明確跳過而非通過，所有真機 checkbox 保持未勾；一項 manifest B 索引 Minor 保持暫緩。runtime `64b66ac` 凍結不熱修；後續只補發布文件與 dev 同步，保留 worktree／QA scratch。
+
 ## 發布續驗（2026-10-05；待新 exact-head CI／合併）
 
 Bar 明確選擇方案 2，僅本次跳過 G1；真機清單保持未勾。PR [#41](https://github.com/nick80912-dev/ai-native-projects/pull/41) 首輪 head `758a0c0` 的 dev push `37278302918`／PR `37278373307` sanity 通過，但 browser 各 264 passed／11 failed，合併暫停，沒有把本機綠燈替代遠端結果。

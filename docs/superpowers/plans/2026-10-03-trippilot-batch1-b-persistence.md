@@ -72,4 +72,4 @@ assert.strictEqual(storage.snapshot(),before);
 
 - [x] 更新現況／changelog／裝置待驗與 writer 非原子性限制；查 diff 確認沒有全域 lsSet、購物願望或 ledger 改動。
 - [x] 索引全套 QA 與核准方法的獨立審查；加入 reload 後持久化核對、離線／旅行日及清除旅程後不重新生成進度紀錄的回歸。
-- [ ] 按使用者 push 指示推 dev、核對 exact-head CI 與測試站；驗收通過才進 C。正式 main 不自動發布。
+- [x] 按使用者本次方案 2 明確核准，B 隨 v145 推 dev、核對 dev／PR exact-head CI，經一般 merge PR #41 發布 main 並完成 §F5。C 已另獲核准；本次 G1 跳過不是驗收通過，裝置項目仍未勾。沒有未經指示自動發布。
