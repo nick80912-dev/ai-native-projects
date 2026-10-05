@@ -6,7 +6,8 @@
 - 打卡／完成／略過／自動略過／群組 controller 的提示依確認結果；自動略過合併一次最終保存，不留中間狀態。復原保留原 autoSkip，失敗保留快照及重試。失敗重繪不重新自動寫入；本次 session 抑制自動重試，手動成功解除。讀取未知不顯示今日完成。
 - 沿用 toast 的 live status、行程鍵盤焦點與既有資料健康頁的個人狀態列；正常狀態無新增提示，不改 CSS／字體／配色。錯誤只在 session／AppLog，無持久化診斷或交易紀錄。
 - Bar 核准 v144 PWA 群組；從 v143 seed 經 generator preview／write／readback 保持原八表內容與 timestamp，未 live fetch。已發布 v143／root v110 不變；SW／header／assets 及活文件同步。復原採下一個未使用 generation forward-bump，不清個人資料、不刪 SW。
-- 初步驗證：Node 108 檔案、新故障／行為 23 案例、browser 45/45 與四項 gate／diff check 通過；完整 browser／獨立審查待完成，見 [交付證據](docs/trippilot-v144-b-verification.md)。本次未 push、merge 或部署；真機 TP144-a～c 未驗。
+- Astra 新上下文整批審查指出四項 Important，逐項新增故障測試 RED→GREEN、一輪修正：過時取消先清除記憶體候選的完成狀態再套原時間規則；子行程復原同批保持 controller 一致；自動重繪不覆蓋手動重試；消耗 undo toast 前記住焦點，失敗接回重試。無 Critical／Minor，不另派第二輪審查。
+- 最終 runtime `900109c`：Node 108 個檔案、persistence 26/26、故障 browser 14/14、完整 Chromium 257/257（10.7 分鐘，0 retry）及四項 gate／diff check 通過；CSS／主題／字體、全域保存、帳務／domain／Schema、已發布外殼及 seed／timestamp 保護範圍核對通過。見 [交付證據與裁定](docs/trippilot-v144-b-verification.md)。本機完成，未 push、merge 或部署；TP144-a～c 真機未驗，B 驗收後才進 C。
 
 ## 2026-10-04 — v143 已正式發布（PR #40）
 

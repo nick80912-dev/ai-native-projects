@@ -4,6 +4,12 @@
 
 v143 驗證與審查紀錄：[交付驗證](../docs/trippilot-v143-verification.md)。
 
+## v144 checked trip-progress coverage
+
+- `trip-progress-persistence.test.js`：26 個 writer／reader／caller 案例；逐鍵拒絕、精確原 bytes／不存在恢復、讀回不符、rollback 不確定、壞 JSON／拒絕讀取、無旅程不復活、undo 保留 autoSkip／重試，以及同批群組 controller 一致性。
+- `browser/trip-progress-persistence.spec.js`：14 個真實點擊／鍵盤故障案例，涵蓋 reload 後紀錄、健康提示、自動去重、過時取消、最後子站復原、讀取失敗不移除重試及焦點接回。固定時間、Storage 注入及測試行程僅限隔離 QA context。
+- [v144 驗證記錄](../docs/trippilot-v144-b-verification.md)區分本機全套、獨立審查與未驗真機／遠端部署；localStorage 不是跨分頁交易。
+
 ## v141 Drive session coverage
 
 - `trip-drive-session.test.js`：有效授權重用、過期／disconnect 重新授權、取消及逾時的晚到 grant 不建立 session、Drive 請求逾時。

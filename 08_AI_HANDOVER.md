@@ -68,7 +68,7 @@ v142 A 本機候選（未推送）：狀態 helper 僅投影現存事實。`trip
 
 ## Ledger Schema 2.9 現行契約
 
-v144 B 局部 checked reader／writer 僅處理 trip_checks／trip_next_stop_progress。讀取失敗／壞 JSON／map 型別錯誤停止 mutation，寫後核對、失敗盡力恢復原 bytes／不存在狀態，不能确认則保守提醒。只有成功才替換／清除 undo；原 autoSkip 保留，失敗提供重試。自动失敗本次 session 暫停自动寫入，手動成功解除；失敗重繪只讀实际紀錄，未知不顯示今日完成。資料健康個人列顯示 session 錯誤。這不是跨分頁交易，沒有 journal／新鎖；全域 lsSet、帳務、備份與封存契約不變。現況及實測見 tasks/current.md 與 docs/trippilot-v144-b-verification.md。
+v144 B 局部 checked reader／writer 僅處理 trip_checks／trip_next_stop_progress。讀取失敗／壞 JSON／map 型別錯誤停止 mutation，寫後核對、失敗盡力恢復原 bytes／不存在狀態，不能確認則保守提醒。只有成功才替換／清除 undo；原 autoSkip 保留，復原子站同批更新受影響群組 controller，仍沿用原完成規則。失敗提供重試，自動 redraw 不覆蓋手動重試，鍵盤焦點接回重試按鈕。自動失敗本次 session 暫停自動寫入，手動成功解除；失敗重繪只讀實際紀錄，未知不顯示今日完成。資料健康個人列顯示 session 錯誤。這不是跨分頁交易，沒有 journal／新鎖；全域 lsSet、帳務、備份與封存契約不變。現況及實測見 tasks/current.md 與 docs/trippilot-v144-b-verification.md。
 
 v143 個人帳匯出只讀本裝置個人帳，保留原金額、代購與來源識別，不含團體／Queue／照片／token，不改備份 v9 或封存 v1；契約見 `docs/personal-ledger-export.md`。記序匯入尚未實作。資料與版本的 ⓘ 為 modal，重要清除／還原警告仍直接顯示。
 
