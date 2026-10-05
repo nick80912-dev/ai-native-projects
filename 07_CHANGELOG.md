@@ -1,5 +1,18 @@
 # 07 版本紀錄
 
+## 2026-10-05 — v146 發布核准（待 CI／合併／部署）
+
+- Bar 明確選擇方案 2：本版跳過 G1，待 dev／PR exact-head CI 通過後一般 merge main 並核對 Netlify 自動部署。TP146-a～c 及既有真機待驗均未代勾；豁免僅本次。
+- 重新驗證已審查 v146 的本機完整 QA 後提交／推送，不修改 runtime 或原八表種子；依 dev → PR → CI → merge → production verification，尚未宣稱已發布。已知 manifest B 文件索引 Minor 不順手修正。
+- 本輪發布前發現既有 SW browser readiness 的 async Promise truthiness 競態，兩個有效 RED 後只改 spec 等待為 resolved boolean polling，原產品／timeout／快取斷言／retry 不動。原審查者延續確認無 issue，專項 5/5、Node 110 檔／完整 Chromium 295/295（10.8 分鐘、0 retry）及四 gate 通過；失敗 log／trace 保留。
+
+## 2026-10-05 — v146 首頁三項調整（本機完成，未推送）
+
+- 完整日期結束後邀請清除並打包，點擊走原設定與八表預檢；不自動授權／封存／清除。最後旅行日、年份及 invalid dates 保守處理；單次午夜 deadline／回前景核對，ongoing 不重繪／改寫，hidden／離首頁／inactive 取消。
+- 補足尾道／福山／祖谷／琴平／丸龜天氣區域；目的地優先於交通提醒，未知比較前後最近站點（含子站、等距取前），仍未知明示無資料。不新增 GPS／runtime geocoding。
+- 串點主標題／時間對應實際下一站，群組次要且子站仍可展開。全部略過、計數、progression、導航與決策目標不動，CSS／字級／主題保留。
+- 新 v146 經既有 generator 重產原八表及 timestamp；v145／v110、帳務與封存 modules 保留。單次獨立審查的 timezone fixture／跨午夜 finding 已先 RED 再修正，無未解事項；Home／weather／progress 51/51、Node 110 檔、四 gate／diff check 通過。修正後首次全套 293 passed／1 冷啟動總時限失敗已保留 trace；隔離同測試十次 6.4 秒通過，停止並行 probe 後完整 Chromium 294/294（8.9 分鐘、零重試）通過，原 timeout／斷言／retry／runtime 不改。六主題三寬度 36 組零 overflow／pageerror／health finding，120 個保護檔案／CSS／9 函式不變。變更留隔離 worktree、未提交／push／merge／部署；TP146-a～c 與既有真機待驗，不沿用 v145 G1 豁免。詳見 [驗證記錄](docs/trippilot-v146-verification.md)。
+
 ## 2026-10-05 — v145 已正式發布（PR #41）
 
 - ⭐ v144 本機行程保存可靠性與 v145 天氣城市／更新時間／有效性／手動重試隨一般 merge 正式發布；不放大全域字體、不改帳務／備份 v9／封存 v1／OAuth 或旅行種子。

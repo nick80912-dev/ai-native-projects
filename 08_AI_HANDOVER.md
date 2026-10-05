@@ -8,7 +8,7 @@
 
 ## 你是誰、專案是什麼
 你是 Bar 的 AI 工程團隊(CTO/工程師/設計/QA 合一)。Bar **不會程式**,用白話下需求;你負責全部技術決策與實作,不教學、不解釋程式概念(除非被問)。
-專案:日本旅遊 PWA。Google Sheets 是 CMS,vanilla JS App 在使用者手機端抓 8 張公開 CSV 渲染,Netlify 託管。CMS 現行 Schema 3.0 以 Places.HID 精確關聯 Hotels.HID；住宿名稱只供顯示。current `shell/v145/index.html` 是 UI 與 DOM adapter；root `index.html`／`app-version.js` 是禁止當日常程式修改的 frozen v110 predecessor bridge。獨立 runtime modules 由 `runtime-assets.json` 登錄，包含 Navigation Intent、Diagnostic Impact、Buy-to-Ledger、Ledger/Shopping UI state 與 Trip progression。`schema.js`、`validator.js`、`sw.js` 等部署檔均在 repo 根目錄,經 GitHub 連動由 Netlify 部署(流程見 16 §E)。
+專案:日本旅遊 PWA。Google Sheets 是 CMS,vanilla JS App 在使用者手機端抓 8 張公開 CSV 渲染,Netlify 託管。CMS 現行 Schema 3.0 以 Places.HID 精確關聯 Hotels.HID；住宿名稱只供顯示。current `shell/v146/index.html` 是 UI 與 DOM adapter；root `index.html`／`app-version.js` 是禁止當日常程式修改的 frozen v110 predecessor bridge。獨立 runtime modules 由 `runtime-assets.json` 登錄，包含 Navigation Intent、Diagnostic Impact、Buy-to-Ledger、Ledger/Shopping UI state 與 Trip progression。`schema.js`、`validator.js`、`sw.js` 等部署檔均在 repo 根目錄,經 GitHub 連動由 Netlify 部署(流程見 16 §E)。
 
 ## 接手第一步:Project Understanding Report(先說理解,再動手)
 任何 AI 首次接手本專案、或在無既有專案脈絡的新對話/新環境開工時,完成下方閱讀順序後**不得直接修改任何檔案**,必須先輸出理解報告並等 Bar 核准(例:「確認,可以開始實作」)。此要求是「每個 AI 接手時做一次」,不是每個任務都做;同一脈絡內的後續任務依 15 的任務分級與 14 的 Tier 規則執行。
@@ -26,7 +26,7 @@
 
 ## 閱讀順序(最省 token)
 1. `.ai-manifest.json` → 2. `PROJECT_CONSTITUTION.md` → 3. 本文件 → 4. 相關 `adr/` → 5. **必讀** `15_AI_EXECUTION_RULES.md`(決策權限/指令效力/任務分級)→ 6. 依任務讀 `03_DATABASE.md` / `09_SCHEMA_MAPPING.md` / `05_CODING_RULES.md` / `11_CODING_CONVENTION.md` / `12_DEV_WORKFLOW.md` / `14_FILE_TIERS_AND_GATE.md` / `16_OPS_PLAYBOOK.md`
-程式碼本體主要在 current generation `shell/v145/index.html` 內嵌 JS(區塊順序見 02)；root `index.html`／`app-version.js` 必須維持 frozen v110 bridge bytes。`navigation-intent.js`、`diagnostic-impact.js`、`today-view.js`、`buy-to-ledger.js`、`ledger-ui-state.js`、`shopping-ui-state.js`、`trip-progression.js` 是 production-used module seams，`schema.js` / `validator.js` 是獨立權威來源。
+程式碼本體主要在 current generation `shell/v146/index.html` 內嵌 JS(區塊順序見 02)；root `index.html`／`app-version.js` 必須維持 frozen v110 bridge bytes。`navigation-intent.js`、`diagnostic-impact.js`、`today-view.js`、`buy-to-ledger.js`、`ledger-ui-state.js`、`shopping-ui-state.js`、`trip-progression.js` 是 production-used module seams，`schema.js` / `validator.js` 是獨立權威來源。
 
 ## 工作流程(必守)
 0. 開工前先通過 Pre-Work Git Sync Gate:`git fetch origin --prune`,確認本地與**目前工作分支**(日常 = `origin/dev`)一致且 working tree 乾淨;若不一致先盤點,不得自動覆蓋本地改動。
@@ -57,6 +57,8 @@
 - **Tier 2 復原**：若某版已推送並由裝置接管後需要退回內容,依 `16_OPS_PLAYBOOK.md` §A2 採 forward bump：以最後正常內容建立下一個未使用版本,並讓 `app-version.js`／`sw.js` 同步升版以觸發清除壞快取；不得把版本倒退覆寫,**絕不刪除 `sw.js`**。
 
 ## 個人旅程生命週期(v137 起；ADR 0020)
+
+v146 首頁按 cfg 完整日期從 enddate 翌日起邀請打包；最後一天僅單次午夜 deadline，回前景核對，hidden／離首頁／inactive 取消，ongoing 卡片與紀錄不重繪／改寫。渲染不做 OAuth／預檢／清除，按鈕才開資料與版本並走原 beginTripEnd。所有帳務／Queue／雙確認守門、全部略過文案與計數不變。天氣優先目的地名稱／Hotel HID 地址，未知依當天前後最近站點（含子站、等距取前）回退，不取 GPS／新增 runtime geocoding。串點主標題為實際子站，群組次要；導航／progression／字級不改。現況與驗證見 tasks/current.md、docs/trippilot-v146-verification.md。
 
 「重置紀錄」只清本機個人狀態與採買照片；團體 Queue、已鎖帳務、身分和主題保留。「清除並打包旅程」以完整八表線上預檢、正式帳零餘額／無 pending claim、所有本機 Queue／bridge 收斂為守門；封存前後各預檢一次並比對摘要。可選個人 Drive 封存或不保存直接清除，兩者都只影響這部手機。封存八表與個人白名單資料，沒有照片、token、Queue 或診斷資料；過往旅程唯讀，筆記另檔追加。清除先寫 inactive，再刪本機旅程 keys 與照片；cleanup-pending 時 boot／sync／補送不得讓舊資料復活。完整連接新旅程仍屬第二階段。OAuth 公開 Client ID 可在 v137 前端，Client Secret 永遠不得提交；`drive.file` 是唯一 Drive scope。Cloud consent 目前 External Testing，只允許 Bar 測試，實體 iPhone／Android PWA 仍待驗。
 

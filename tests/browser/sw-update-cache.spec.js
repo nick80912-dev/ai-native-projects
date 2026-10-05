@@ -57,25 +57,52 @@ async function activeCacheReport(page) {
 }
 
 async function waitForActiveWorker(page) {
-  await page.waitForFunction(async () => {
+  await expect.poll(()=>page.evaluate(async () => {
     const registration = await navigator.serviceWorker.getRegistration();
     return !!(registration && registration.active && navigator.serviceWorker.controller);
-  }, null, { timeout: 20000 });
+  }),{timeout:20000}).toBe(true);
 }
 
 /* 在「關掉伺服器模擬斷網」之前必須確定 SHELL 真的已經落進 CacheStorage。
    只等 registration.active 不夠保險 —— 一旦搶在 install 完成前斷網,
    失敗原因會長得像產品缺陷,其實是測試自己的競態。 */
 async function waitForShellCached(page,expectedKey,expectedAssets) {
-  await page.waitForFunction(async ({expected,assets}) => {
+  await expect.poll(()=>page.evaluate(async ({expected,assets}) => {
     const keys = await caches.keys();
     if (!keys.length || (expected && !keys.includes(expected))) return false;
     const cache = await caches.open(expected||keys[0]);
     const cached = (await cache.keys()).map((request) => new URL(request.url).pathname);
     return !!navigator.serviceWorker.controller&&assets.every((asset) => cached.some(pathname=>pathname.endsWith('/'+asset)));
-  }, {expected:expectedKey||'',assets:expectedAssets||['index.html','app-version.js','builtin-snapshot.js','shopping-photo-store.js','buy-to-ledger.js','schema.js']}, { timeout: 20000 });
+  }, {expected:expectedKey||'',assets:expectedAssets||['index.html','app-version.js','builtin-snapshot.js','shopping-photo-store.js','buy-to-ledger.js','schema.js']}),{timeout:20000}).toBe(true);
   await page.waitForTimeout(200);
 }
+
+test('readiness helpers stay pending until the controller and requested cache assets actually exist',async({page})=>{
+  let releaseWorker;
+  const workerGate=new Promise(resolve=>{releaseWorker=resolve;});
+  await page.route('**/sw.js',async route=>{await workerGate;await route.continue();});
+  await page.goto(ORIGIN+'/index.html');
+  let workerReady=false;
+  const workerWait=waitForActiveWorker(page).then(()=>{workerReady=true;});
+  try{
+    await page.waitForTimeout(300);
+    expect(workerReady,'a Promise resolving false must not count as an active controller').toBe(false);
+  }finally{releaseWorker();await workerWait;}
+  const key='readiness-probe';
+  await page.evaluate(async key=>{await caches.open(key);},key);
+  let cacheReady=false;
+  const cacheWait=waitForShellCached(page,key,['readiness-asset.js']).then(()=>{cacheReady=true;});
+  try{
+    await page.waitForTimeout(350);
+    expect(cacheReady,'an empty cache must not satisfy the requested asset precondition').toBe(false);
+  }finally{
+    await page.evaluate(async key=>{
+      const cache=await caches.open(key);
+      await cache.put('./readiness-asset.js',new Response('readiness-probe'));
+    },key);
+    await cacheWait;
+  }
+});
 
 test('SW 更新後新快取實際裝入新版資源,且 index／版本檔／schema 不混版本', async ({ page }) => {
   if(server)await server.close();
