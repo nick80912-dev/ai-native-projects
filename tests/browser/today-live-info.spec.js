@@ -7,6 +7,7 @@
    也就沒有「一個商場對多個不同日期站點」的問題。
    ============================================================ */
 const { test, expect } = require('./support/test');
+const {observeNavigationPhases,navigationPhases}=require('./support/navigation-phases');
 const {
   installFixedDate,
   installOfflineAppNetwork,
@@ -156,30 +157,12 @@ test.describe('Shopping target acceptance matrix',()=>{
       await launcher.scrollIntoViewIfNeeded();
       await launcher.focus();
       const source=await page.evaluate((selector)=>({scrollY:Math.round(document.scrollingElement.scrollTop),curView,focused:document.activeElement===document.querySelector(selector)}),seeded.launcherSelector);
-      // Observe from the actual highlight start; post-tap assertions can consume part of its lifetime.
-      await page.evaluate(targetId=>{
-        window.qaNavigationPhases=new Promise((resolve,reject)=>{
-          let started=null,fadeAt=null;
-          const observer=new MutationObserver(()=>{
-            const element=document.getElementById(targetId);
-            if(!element)return;
-            const active=element.classList.contains('is-navigation-target');
-            const fading=element.classList.contains('is-navigation-target-fading');
-            if(active&&started===null)started=performance.now();
-            if(fading&&fadeAt===null&&started!==null)fadeAt=performance.now()-started;
-            if(started!==null&&!active&&!fading&&navigationIntentState.active===null){
-              observer.disconnect();clearTimeout(timeoutId);resolve({fadeAt,clearAt:performance.now()-started});
-            }
-          });
-          observer.observe(document.body,{subtree:true,childList:true,attributes:true,attributeFilter:['class']});
-          const timeoutId=setTimeout(()=>{observer.disconnect();reject(new Error('navigation target phases did not complete'));},5000);
-        });
-      },seeded.targetId);
+      await observeNavigationPhases(page,seeded.targetId);
       await activateShoppingLauncher(launcher,testCase.activation);
       await expect(page.locator('#shoppingListOverlay')).toBeVisible();
       const target=page.locator(`#${seeded.targetId}`),status=page.locator('#shoppingListOverlay .navigation-target-status');
       await expect(target).toHaveClass(/is-navigation-target/);
-      const phasesPromise=page.evaluate(()=>window.qaNavigationPhases);
+      const phasesPromise=navigationPhases(page);
       await expect(status).toHaveCount(1);
       await expect(status).toHaveAttribute('role','status');
       await expect(status).toHaveAttribute('aria-live','polite');
