@@ -1,5 +1,10 @@
 # 07 版本紀錄
 
+## 2026-10-05 — v145 發布核准（尚待合併／部署）
+
+- Bar 明確選項 2：本次跳過 G1，待 dev／PR exact-head CI 通過合併 main 並核對正式部署。包含 v144 保存可靠性與 v145 天氣改善；TP144-a～c、TP145-a～c 及既有真機清單保持未勾，不沿用至下一版。
+- 本輪本機基準 `c331a1b`、runtime `64b66ac`；發布前完整 QA 重新執行通過：Node 109 個檔案、Chromium 275/275（8.5 分鐘、0 retry）、四項 gate／diff check 全過。授權文件另行提交；遠端 CI／合併／部署仍待完成。按 dev → PR → 一般 merge → Netlify 自動部署 → §F5 的次序；不直接 push main、不修改凍結 runtime 或種子。
+
 ## 2026-10-05 — v145 C 天氣有效性（本機完成，未推送）
 
 - ⭐ 首頁顯示 resolver 城市、溫度及「更新於 HH:mm」；取得時間採 Asia/Tokyo，aria 明示手機取得／日本時間。三小時邊界、missing／future timestamp、city mismatch／無效溫度共用品質投影；過期與無資料不輸出舊數字，未知降雨不補零或產生適合出發摘要。
