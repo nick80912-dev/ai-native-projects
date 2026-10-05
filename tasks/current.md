@@ -1,5 +1,11 @@
 # CURRENT(現在正在做的)
 
+## 2026-10-05 — v146 已正式發布（PR #42）
+
+- dev exact head `61583971c6b7a034edfb9e8365ded1da0ba6552e` 經一般 merge 至 main `0f24f7404f88df366c7071325c9698ee127efa76`；兩 parent／merged tree 核對，內容等於已測 dev。dev CI `37321296072`／PR CI `37321310300`／main CI `37322574707` sanity＋browser-qa 全部 success，各 Chromium 295/295（7.2／7.1／6.7 分鐘、0 retry）。本機 Node 110 檔／Chromium 295/295（10.8 分鐘、0 retry）與四 gate 通過。
+- Netlify automatic deploy `6ac3afd5197d520007663830` 的 commit_ref 等於上述 merge SHA，published_at=`2026-10-05T14:10:44.527Z`、非 manual deploy。§F5 正式站實測：35 資產與 merge Git bytes 相等，SW／current version 兩處 no-cache／no-store／must-revalidate header 正確；root v110／v145 三件組／v144 version 保留，28 cache 資產 hash 與 Git 全數相符、v146 三件組一致、離線重開非空、health／pageerror 均 0。main CI 完成後再次確認 current deploy 未變；annotated `production-v146` 已推送並指向 merge SHA。
+- G1 僅本次依 Bar 選項 2 跳過，不視為通過、不延續至下一版；TP146-a～c 與既有真機／閱讀器清單保持未勾。真實 OAuth／Drive、iPhone／Android PWA 尚未代驗。原 CSS／字級／主題、全部略過、八表種子、帳務與封存不變；manifest B 索引 Minor 繼續暫緩。QA 失敗證據／工作樹保留，只補發布文件同步 dev；runtime／tests 與已測 `6158397` 不變，不清資料／刪 SW。詳見 [v146 驗證](../docs/trippilot-v146-verification.md)。
+
 ## 2026-10-05 — v146 發布核准（待 dev／PR exact-head CI／合併）
 
 - Bar 指示 merge main，於明示本版 G1 未驗後選擇方案 2：本次跳過 G1，待 dev／PR 的 CI 通過才一般 merge 到 main，核對 Netlify 自動部署及正式站。跳過不是通過，不沿用至後續版本；TP146-a～c 與既有真機／閱讀器清單保持未勾。

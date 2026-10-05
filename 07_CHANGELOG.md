@@ -1,5 +1,12 @@
 # 07 版本紀錄
 
+## 2026-10-05 — v146 已正式發布（PR #42）
+
+- ⭐ 首頁結束後邀請清除並打包、目的地天氣區域／最近站點回退、串點突出實際下一站已經一般 merge 正式發布。CSS／字級／主題、全部略過、帳務／封存／OAuth、原八表及 timestamp 不動。
+- dev `6158397` → main `0f24f74`，merged tree 相同；dev CI `37321296072`／PR CI `37321310300`／main CI `37322574707` 全數 success，各 Chromium 295/295（7.2／7.1／6.7 分鐘、0 retry）。本機 Node 110 檔／完整 Chromium 295/295（10.8 分鐘、0 retry）與四 gate 通過；QA readiness 兩個 RED 及所有失敗／通過證據保留。
+- Netlify deploy `6ac3afd5197d520007663830` matching commit_ref=`0f24f7404f88df366c7071325c9698ee127efa76`，published_at=`2026-10-05T14:10:44.527Z`。正式站 35 Git bytes／兩 header／28 cache hashes／v146 三件組／離線重開／health 0／pageerror 0 核對通過，root v110／v145／v144 保留。
+- annotated `production-v146` 已推送，指向 main `0f24f74`。G1 依 Bar 明確選項 2 僅本次跳過，TP146 與既有真機清單仍未勾，非驗收通過。manifest B 文件索引 Minor 不順手修正；發布後只補文件同步 dev，runtime／tests 不變，不清資料／刪 SW／工作樹。
+
 ## 2026-10-05 — v146 發布核准（待 CI／合併／部署）
 
 - Bar 明確選擇方案 2：本版跳過 G1，待 dev／PR exact-head CI 通過後一般 merge main 並核對 Netlify 自動部署。TP146-a～c 及既有真機待驗均未代勾；豁免僅本次。
