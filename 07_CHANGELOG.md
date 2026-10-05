@@ -1,5 +1,13 @@
 # 07 版本紀錄
 
+## 2026-10-05 — v145 C 天氣有效性（本機候選，獨立審查進行中）
+
+- ⭐ 首頁顯示 resolver 城市、溫度及「更新於 HH:mm」；取得時間採 Asia/Tokyo，aria 明示手機取得／日本時間。三小時邊界、missing／future timestamp、city mismatch／無效溫度共用品質投影；過期與無資料不輸出舊數字，未知降雨不補零或產生適合出發摘要。
+- 保留原 cache keys／`{t,data}`、Open-Meteo、6500ms timeout、城市 resolver；不輪詢、不刷新讀取時間。session 到期可重新取得；failed 不連續自動重試，天氣列提供键盤可操作的重試／焦點接回。網路有效但 cache 被拒絕仍在 session 可用，診斷不含原始例外。
+- request identity／epoch 與 active state 在寫入前核對，晚到舊城市不重繪目前城市、離頁不重繪 Today、清除後不恢復快取；lifecycle module 未改。只補 11px 天氣輔助文字、44px 重試 hit area，既有主題／字體／導航／帳務不變。
+- 經 Bar 核准從 v144 建立 v145；generator 僅用原八表 seed preview／write／readback 保持 CSV／timestamp。root v110、v143／v144、B 保存介面、schema／domain 不變；SW／header／assets／活文件對齊，無 live CSV／Ledger、OAuth mutation 或部署。
+- 天氣 13/13、受影響 browser 48/48、完整 Node 109 檔與 Chromium 270/270（8.2 分鐘，0 retry）、四項 gate 通過。第一輪三項舊導航計時測試失敗後中止；共用 observer 從實際 DOM 啟動計時，保留原門檻與 production timers，18/18 專項與完整套件從零複驗通過。單次 Astra fresh-context 整批審查待完成。TP145-a～c 待真機；本機候選不等於發布。詳見 [驗證證據](docs/trippilot-v145-c-verification.md)。
+
 ## 2026-10-05 — v144 B 本機行程保存可靠性（候選，未發布）
 
 - ⭐ 局部 checked 保存介面只處理 trip_checks／trip_next_stop_progress，不改全域 lsSet、帳務／購物願望／備份 v9／封存 v1。讀取失敗／壞內容停止 mutation；先序列化與保存 raw bytes，寫後逐鍵及整批核對；失敗盡力 rollback、核對全部原值，不宣稱資料庫級原子性。

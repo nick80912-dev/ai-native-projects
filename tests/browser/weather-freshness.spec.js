@@ -42,12 +42,13 @@ test('unknown rain does not claim zero percent or safe departure',async({page})=
   await expect(summary).toContainText('21°');await expect(summary).not.toContainText('適合出發');
   await expect(summary).not.toHaveAttribute('aria-label',/0%/);
 });
-test('expired cache never displays old temperature or rain',async({page})=>{
+test('expired cache never displays old temperature or rain',async({page},testInfo)=>{
   await seed(page,{age:10800000,temp:27,rain:80});
   await expect(page.locator('.today-hero-weather-summary')).toContainText('天氣資料已過期，暫無最新資料');
   await expect(page.locator('.today-hero-weather-summary')).not.toContainText('27°');
   await expect(page.locator('.today-hero-weather-summary')).not.toHaveAttribute('aria-label',/80%/);
   await expect(page.locator('#view-today .nx-ticket')).toBeVisible();
+  await page.screenshot({path:testInfo.outputPath('weather-v145-expired.png')});
 });
 test('re-entering after three hours refreshes once without showing old numbers',async({page})=>{
   await seed(page,{temp:27,rain:80});let calls=0,release;
