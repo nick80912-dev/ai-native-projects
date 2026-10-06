@@ -1,5 +1,20 @@
 # 07 版本紀錄
 
+## 2026-10-06 — 真機驗收全部完成（Bar 整批回報；無 runtime 變更）
+
+- Bar 回報**所有真機驗收已完成**。範圍為 `docs/device-acceptance-log.md` 截至此日所有未勾項目：TP141～TP146 清單、v137／v138／v140／v142 兩平台表格、**BB4 Android 八項**（含最關鍵的 BB4-a：Service Worker 在實體 Android 安裝並接管），以及 v115～v121 的 iPhone 補驗。
+- 依 2026-08-03「G1' 整批確認」的記法，16 個清單項與 88 個表格格子一律記為 `✅ 2026-10-06 整批回報`。**這是整批回報，未逐項記錄操作細節與當時版本**；檔頭已註明，日後某項出現異常時先以此為線索確認是否實際走過。
+- **BB4 結案**：自 v114（2026-09-10）起掛著、2026-09-15 Bar 曾裁定「整體試用無異常不等同逐項走過」而維持未驗的八項，至此由 Bar 明確回報完成。
+- 活文件同步：`.ai-manifest.json`、`08_AI_HANDOVER.md`、`README.md` 的「實體 PWA 待驗」改為已於本日驗收完成；**OAuth External Testing（只允許 Bar 帳號）與「外部 400 原因未捕捉」兩項限制與驗收無關，原文保留**。`tasks/current.md` 的「下一棒」原本仍寫正式 App 為 v136、停在 v140 驗收，已改寫為現況（v146），並提醒出發前裁定 backlog #42（`ubuntu-latest` 自 10/19 移轉，正落在旅程期間）。
+- 純文件；四個 gate 與 Node 測試通過。
+
+## 2026-10-05 — v146 已正式發布（PR #42）
+
+- ⭐ 首頁結束後邀請清除並打包、目的地天氣區域／最近站點回退、串點突出實際下一站已經一般 merge 正式發布。CSS／字級／主題、全部略過、帳務／封存／OAuth、原八表及 timestamp 不動。
+- dev `6158397` → main `0f24f74`，merged tree 相同；dev CI `37321296072`／PR CI `37321310300`／main CI `37322574707` 全數 success，各 Chromium 295/295（7.2／7.1／6.7 分鐘、0 retry）。本機 Node 110 檔／完整 Chromium 295/295（10.8 分鐘、0 retry）與四 gate 通過；QA readiness 兩個 RED 及所有失敗／通過證據保留。
+- Netlify deploy `6ac3afd5197d520007663830` matching commit_ref=`0f24f7404f88df366c7071325c9698ee127efa76`，published_at=`2026-10-05T14:10:44.527Z`。正式站 35 Git bytes／兩 header／28 cache hashes／v146 三件組／離線重開／health 0／pageerror 0 核對通過，root v110／v145／v144 保留。
+- annotated `production-v146` 已推送，指向 main `0f24f74`。G1 依 Bar 明確選項 2 僅本次跳過，TP146 與既有真機清單仍未勾，非驗收通過。manifest B 文件索引 Minor 不順手修正；發布後只補文件同步 dev，runtime／tests 不變，不清資料／刪 SW／工作樹。
+
 ## 2026-10-05 — v146 發布核准（待 CI／合併／部署）
 
 - Bar 明確選擇方案 2：本版跳過 G1，待 dev／PR exact-head CI 通過後一般 merge main 並核對 Netlify 自動部署。TP146-a～c 及既有真機待驗均未代勾；豁免僅本次。

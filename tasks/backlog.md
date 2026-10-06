@@ -2,7 +2,7 @@
 
 > 更新於 2026-09-12(v116 後)。做完或經 Bar 裁定不再需要的項目移到 done.md,正在做的移到 current.md。
 
-> **編號刻意不連續,不得重排**:`tasks/current.md`、`tasks/done.md` 與 `07_CHANGELOG.md` 都以編號互相引用,重排會打斷既有交叉引用。已歸檔項目的編號一律**留空不回收**(目前缺號:1、2、3b、4、5、6–11、13–19、21–24、26、27、30–37、39、40、43、44、45、46、47、48、49);新項目接在現有最大號之後。
+> **編號刻意不連續,不得重排**:`tasks/current.md`、`tasks/done.md` 與 `07_CHANGELOG.md` 都以編號互相引用,重排會打斷既有交叉引用。已歸檔項目的編號一律**留空不回收**(目前缺號:1、2、3b、4、5、6–11、13–19、21–24、26、27、30–37、39、40、43、44、42、45、46、47、48、49);新項目接在現有最大號之後。
 
 ## 中優先(已核准正式待辦)
 3. **驗收後 UI/內容微調**(最小修改,不動 schema)。
@@ -37,14 +37,6 @@
     - **不要動的部分 —— 新增消費表單的金額欄是好範例**:實測 `金額 (¥)` 輸入框 **67px 高、30px 字級**,`明細` 46px／16px,表單總高 694px(視窗 812)不需捲動即可看到儲存鈕,次要資訊收在「其他資訊(選填)· 今天 · 餐飲 · 現金 · 無備註 ⌄」一行摺疊。**這正是站在店裡單手輸入該有的樣子**,調整周邊控制項時不得為了「一致」把它縮小。
     - 來源:2026-09-23 新模型全專案複審(CSS 量測)+ 同日 active-trip 實機走查(渲染量測)。
 
-42. **`ubuntu-latest` 將於 2026-10-19 起移轉到 Ubuntu 26**:`.github/workflows/qa.yml` 的兩個 job(`sanity` L24、`browser-qa` L45)都用 `runs-on: ubuntu-latest`。GitHub 已在 CI log 以 annotation 預告(`actions/runner-images#14748`)。
-
-    - **不是現在要改**:移轉是 GitHub 端自動發生,`ubuntu-latest` 這個標籤本身不需要動。本項的用途是**留一個已知的變因**,日後 CI 若出現「程式沒改卻突然紅」,先來看這裡而不是從頭 debug。
-    - **本專案的實際暴露面**:`browser-qa` 跑 `npx playwright install --with-deps chromium` —— **系統層相依由 runner 的 OS 版本決定**,這是最可能受影響的一步。`@playwright/test` 目前固定在 `1.62.0`,若該版的 `--with-deps` 不支援 Ubuntu 26 的套件名,安裝會失敗。
-    - **actions 版本無虞**:`checkout@v7` 與 `setup-node@v7` 已於 backlog #26(2026-09-10)升到當時最新,runtime 為 node24。`node-version: '20'` 是 App 端測試用的 Node,與 runner OS 無關。
-    - **若真的出事**:短期釘住 `runs-on: ubuntu-24.04` 即可止血(GitHub 保證舊標籤在移轉後仍可用一段時間),再從容升 Playwright。**不要在沒壞之前先釘版** —— 釘住反而會錯過日後的安全性更新。
-    - 來源:2026-09-23 v126 的 CI log annotation。
-
 50. **税抜 帳編輯／更正後,換算幣別在品項間最多挪動 ±5**:v135 修掉「每編輯一次就再加一次稅」之後,總額與輸入幣別的每個品項都已精確不變(1,500 例隨機);殘留的是**換算幣別**的品項間分配。成因:`calculateMultiItemAmounts()` 以原始未稅權重(含 basis points)分配換算幣別,這組權重沒有存進紀錄,重載時只能用含稅金額當權重,四捨五入落點因此不同。
 
     - **影響面很窄**:只在 税抜 多品項帳、編輯或更正之後、換算幣別;税込 帳完全不受影響;總額不變。依 ADR 0007 另一幣純參考,只有「以非結算幣別輸入(例如結算用 JPY、卻用 TWD 記帳)且各品項分攤成員不同」時,才會讓成員間的結算差到幾塊錢。
@@ -62,6 +54,13 @@
 52. **資料健康的團體 backlog 模式註記（v142 A 批 Astra 審查，Minor）**：本機 queue／delivery bridge 摘要包含正式與 TEST 模式，但沒有模式註記；單筆詳情已正確依目前模式隔離。可能造成摘要混淆，不改變金額、操作權限或待同步保護。本批重要修正完成後保留後續處理；先決定健康頁是全裝置待送概況或目前模式，再一致調整文案／計數，不只改其中一個來源。
 
 53. **非同步 Playwright readiness helper 稽核（v142 發布核對發現）**：release-only 腳本的 `waitForFunction(async...)` 可因 Promise truthy 提早結束，未等 SW／cache 完成便開新版而逾時。已查目前 Playwright 1.62 的 `predicate()` 條件實作，並以 await evaluate 條件輪詢完成線上 v142 cache／離線核對；沒有 production 缺陷或 runtime 熱修。既有 `sw-update-cache.spec.js` 的同類等待 helper 需另批確認改用 `expect.poll` 或明確 await 輪詢，稽核依賴該 helper 的證據強度；本輪不順手重寫既有測試或宣稱所有非同步等待皆有問題。
+
+54. **回程後驗證 Ubuntu 26.04,解除 CI 的 ubuntu-24.04 釘版(#42 後續)**:2026-10-06 為避開旅程期間的分批移轉,`qa.yml` 兩個 job 暫時釘 `ubuntu-24.04`。回程後(10/24 起)處理:
+
+    - **先驗再解**:另開分支把兩個 job 改成 `ubuntu-26.04`,看 `browser-qa` 的 `npx playwright install --with-deps chromium`(`@playwright/test` 1.62.0)能否裝好系統套件、完整 Chromium 套件是否全綠。
+    - **全綠**:改回 `ubuntu-latest`(屆時已指向 26.04),刪掉 `qa.yml` 裡的釘版註解。
+    - **不綠**:維持 24.04,先升 Playwright 再試;24.04 標籤在移轉完成後仍會保留一段時間,不急。
+    - **時限**:GitHub 預計 11/19 完成移轉,之後 24.04 會逐步淘汰,勿無限期擱置。
 
 ## 想法池(未承諾)
 

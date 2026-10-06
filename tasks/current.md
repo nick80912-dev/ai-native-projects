@@ -1,5 +1,11 @@
 # CURRENT(現在正在做的)
 
+## 2026-10-05 — v146 已正式發布（PR #42）
+
+- dev exact head `61583971c6b7a034edfb9e8365ded1da0ba6552e` 經一般 merge 至 main `0f24f7404f88df366c7071325c9698ee127efa76`；兩 parent／merged tree 核對，內容等於已測 dev。dev CI `37321296072`／PR CI `37321310300`／main CI `37322574707` sanity＋browser-qa 全部 success，各 Chromium 295/295（7.2／7.1／6.7 分鐘、0 retry）。本機 Node 110 檔／Chromium 295/295（10.8 分鐘、0 retry）與四 gate 通過。
+- Netlify automatic deploy `6ac3afd5197d520007663830` 的 commit_ref 等於上述 merge SHA，published_at=`2026-10-05T14:10:44.527Z`、非 manual deploy。§F5 正式站實測：35 資產與 merge Git bytes 相等，SW／current version 兩處 no-cache／no-store／must-revalidate header 正確；root v110／v145 三件組／v144 version 保留，28 cache 資產 hash 與 Git 全數相符、v146 三件組一致、離線重開非空、health／pageerror 均 0。main CI 完成後再次確認 current deploy 未變；annotated `production-v146` 已推送並指向 merge SHA。
+- G1 僅本次依 Bar 選項 2 跳過，不視為通過、不延續至下一版；TP146-a～c 與既有真機／閱讀器清單保持未勾。真實 OAuth／Drive、iPhone／Android PWA 尚未代驗。原 CSS／字級／主題、全部略過、八表種子、帳務與封存不變；manifest B 索引 Minor 繼續暫緩。QA 失敗證據／工作樹保留，只補發布文件同步 dev；runtime／tests 與已測 `6158397` 不變，不清資料／刪 SW。詳見 [v146 驗證](../docs/trippilot-v146-verification.md)。
+
 ## 2026-10-05 — v146 發布核准（待 dev／PR exact-head CI／合併）
 
 - Bar 指示 merge main，於明示本版 G1 未驗後選擇方案 2：本次跳過 G1，待 dev／PR 的 CI 通過才一般 merge 到 main，核對 Netlify 自動部署及正式站。跳過不是通過，不沿用至後續版本；TP146-a～c 與既有真機／閱讀器清單保持未勾。
@@ -451,13 +457,13 @@ v143 已透過 `dev → main` PR #40 合併並完成正式站部署核對。G1 �
 - **真機驗證通過(2026-09-24)**:Bar 回報手機驗證 OK(本版無可見變化)。BB4 八項維持未驗。
 ## 下一棒
 
-→ **v140 驗收**:按 Bar 核准交付 `dev`；Bar 先驗 TP140-a～c 的設定資料四子項、健康明細直接顯示及返回，再在 iPhone 與 Android 實體 PWA 完成 TP137-a～i 的 Google 授權、Drive 上傳讀回、清除後重啟與過往旅程筆記。其他旅伴使用前須加入 OAuth 測試名單或另行完成對外發布。完整「連接新旅程」仍留待第二階段。
+→ **現況(2026-10-06)**:正式站為 **v146**(`production-v146` → `main` `0f24f74`)。**Bar 回報所有真機驗收已完成** —— TP141～TP146、v137／v138／v140／v142、BB4 Android 八項(含 BB4-a)與 v115～v121 iPhone 補驗,`docs/device-acceptance-log.md` 已整批勾選。長期掛著的 BB4 至此結案。
 
-→ **裝置驗收遺留**:由 Bar 在實體 Android 上完成 BB4 共 8 項；目前正式 App 為 **v136**。另有 v115 6／v116 10／v117 4／v118 6／v119 5／v120 4／v121 7 項待 iPhone 補驗。**合計 50 項,全部在使用者已拿得到的版本上。**`docs/device-acceptance-log.md` 的 v114 段 22 項中,BB1–BB3 共 14 項已於 **2026-09-11** 由 Bar 在 iPhone 上確認通過;**剩下的 BB4 是併入的 v112 遺留項,只能在實體 Android 上驗。**
+→ **#42 已處理(2026-10-06)**:CI 兩個 job 暫時釘 `ubuntu-24.04`,避開 10/19 起分批移轉 Ubuntu 26.04 落在旅程期間。**回程後依 #54 驗證 26.04 再解除**(GitHub 預計 11/19 完成移轉)。
 
-> 最關鍵的是 **BB4-a**:Service Worker 能否在實體 Android 上安裝並接管。v112 修的連線槽耗盡缺陷**只在真機發生**,桌機與 Playwright 的 Android 模擬都重現不出來。以目前正式版驗證時,開啟網站 → 關掉 → 再開,設定的版本資訊應顯示 **v136**(顯示 v110 代表 SW 沒接管)。
->
-> 補驗發現問題時,依 `16_OPS_PLAYBOOK.md` §A2 **forward bump 到下一個未使用版本**,不得倒退覆寫 —— 已經有裝置接管 v136 了。
+→ **其餘 backlog**:#54(回程後解除 CI 釘版)、#51／#52／#53(v140／v142 審查的 Minor)、#41／#38(待實際使用回饋)、#50(已裁定先不做)、#28／#29(已裁定暫不處理)、#3／#12／#20／#25(長期)、E1／E2(大型重構)。
+
+> 發現問題時依 `16_OPS_PLAYBOOK.md` §A2 **forward bump 到下一個未使用版本**,不得倒退覆寫 —— 已經有裝置接管 v146 了。
 
 > GitHub Actions 與 Netlify production **已於 2026-09-08 接管 v113** —— deploy `6a9fb443`、`commit_ref` = `745bb6f`、線上 `sw.js`／`app-version.js` 皆 v113、`qa-sanity` 於 `main` `745bb6f` 與 `dev` `f0444cb` 皆 success。**這一步已完成，不需再確認。**
 >

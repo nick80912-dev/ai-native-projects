@@ -1,6 +1,16 @@
 # TripPilot v146 首頁調整驗證
 
-2026-10-05 發布授權：Bar 在明示 v146 G1 未驗後選擇方案 2，僅本次跳過；待 dev／PR exact-head CI 通過一般 merge main 並核對 Netlify 自動部署。下文「未推送／本機限定」描述原實作交付，非否定後續授權；真機清單仍未勾。發布結果與 runtime／merge identity 後續按證據追加。
+2026-10-05 發布授權：Bar 在明示 v146 G1 未驗後選擇方案 2，僅本次跳過；dev／PR exact-head CI 通過後一般 merge main 並核對 Netlify 自動部署。下文「未推送／本機限定」描述原實作交付，非否定後續授權；真機清單仍未勾。正式結果見下節。
+
+## 正式發布證據（2026-10-05）
+
+- PR [#42](https://github.com/nick80912-dev/ai-native-projects/pull/42) 一般 merge，candidate/runtime `61583971c6b7a034edfb9e8365ded1da0ba6552e` → main `0f24f7404f88df366c7071325c9698ee127efa76`；merged tree 精確相等、parent 為原 main `9ce1c94` 與 candidate，非 squash／rebase／direct main push。
+- dev CI [37321296072](https://github.com/nick80912-dev/ai-native-projects/actions/runs/37321296072)／PR CI [37321310300](https://github.com/nick80912-dev/ai-native-projects/actions/runs/37321310300) exact candidate head 的 sanity／browser-qa 全 success，分別 295/295（7.2／7.1 分鐘、0 retry）；main CI [37322574707](https://github.com/nick80912-dev/ai-native-projects/actions/runs/37322574707) exact merge head 亦全 success，295/295（6.7 分鐘、0 retry）。完整輸出 `dev-ci.log`／`pr-ci.log`／`main-ci.log` 保留。Pages build／deploy 通過，六個 dev 實際資產（SW／v146 三件組／root bridge 二件組）與 candidate Git bytes 相等。
+- Netlify authenticated read API 確認 site `db758c0d-484a-4496-9770-6886a7831eed`／`trippilot-jp` 的 current deploy `6ac3afd5197d520007663830` ready，commit_ref=`0f24f7404f88df366c7071325c9698ee127efa76`、published_at=`2026-10-05T14:10:44.527Z`、branch main、manual_deploy=false。未觸發手動 deploy／修改 site 設定。
+- §F5 實際 HTTPS GET：28 SHELL 資產＋SW＋root bridge 二件組＋v145 三件組＋v144 version，共 35 個 response 全 200 且 buffer 與 merge Git blobs 精確相等；SW 與 `shell/v146/app-version.js` 的 Cache-Control 都含 no-cache／no-store／must-revalidate。root version 仍為 v110，predecessor generation 保留。
+- 獨立 fresh Chromium context：真正 SW 下載，唯一 cache `okayama-trip-v146` 的 28 個資產 SHA-256 全等於 Git；current document／version／builtin 都 v146。online reload 及原生 offline 後關頁重新開啟都有非空首頁、health=[]、pageerrors=0。只封鎖外部服務、用獨立 QA 身分與資料，沒有操作 Bar 的既有瀏覽器／本機帳務，亦不算真機／真實 OAuth 驗收。
+- main CI 完成後再次確認 current deploy 仍為 `6ac3afd5197d520007663830`。annotated `production-v146` 已推送，peeled target 為精確 merge SHA；message 含日期、cache 名稱、驗證理由與 forward-bump 復原規則。
+- `production-verification.log` 及可重跑的 `verify-production.cjs` 位於原 QA temp folder。G1 本次跳過非通過；TP146-a～c 與既有裝置清單未勾。後續僅補發布文件同步 dev，runtime／tests 與已測 candidate 不變；不熱修改已發布 v146、不刪 SW／資料／工作樹，復原仍採下一未使用 generation forward bump。
 
 ## 核准範圍
 
@@ -35,7 +45,7 @@ Bar 確認三項 bounded 首頁調整及 Tier 2 PWA 群組：結束後打包邀�
 - 修正後兩首頁情境 × 六主題 × 320／375／390px 共 36 組：零橫向溢位、pageerror、health finding；截圖另行目視核對。CSS 全塊與 v145 相等；9 個 checked writer／progression／preflight／check-in 函式精確相等，120 個既有保護檔案 Git canonical bytes 不變。Windows checkout CRLF／原 generator LF 混用以 Git clean filter 核對，不把換行轉換誤報為改檔。
 - 修正後首輪完整 Chromium 293 passed／1 failed（13.1 分鐘）：既有十次冷啟動 probe 超過 30 秒總時限，沒有放寬 timeout／斷言／retry。保留整批 log、trace／screenshots；trace 第十次 goto 在 28.83 秒開始，poll 在 29.615 秒開始後撞總時限，前九次均取得非零 first-render。當時並行 Git 逐檔核對及另組瀏覽器量測可能造成負載，屬推論，不冒稱已證實根因。同一測試隔離重跑 1/1（十次共 6.4 秒，整體 8.3 秒）；全為 v146 四件組、無空白，Today 中位 114.3ms、最大 160.2ms。停止其它 probe 後從零完整重跑 294/294（8.9 分鐘、零重試）通過；runtime、原 timeout／斷言／retry 不變。
 
-最終為本機完成、未推送／合併／部署；變更保留在 `codex/personal-trip-lifecycle` 隔離 worktree，未提交。QA 證據位於 `C:/Users/Aaron Huang/AppData/Local/Temp/trippilot-v146-91af73b8243143509157722e41cf493c`：首輪／失敗／隔離／最終整批 log、RED／失敗 trace 與 UI screenshots 保留，沒有刪除來只留通過結果。
+原本機實作交付時尚未推送／合併／部署，變更保留在 `codex/personal-trip-lifecycle` 隔離 worktree；後續發布依上方新授權及正式證據。QA 證據位於 `C:/Users/Aaron Huang/AppData/Local/Temp/trippilot-v146-91af73b8243143509157722e41cf493c`：首輪／失敗／隔離／最終整批 log、RED／失敗 trace 與 UI screenshots 保留，沒有刪除來只留通過結果。
 
 ## PWA 與保護範圍
 
@@ -50,4 +60,4 @@ Bar 確認三項 bounded 首頁調整及 Tier 2 PWA 群組：結束後打包邀�
 
 ## 未驗證
 
-實體 iPhone／Android PWA、真實 Google OAuth／Drive 上傳與閱讀器／真機鍵盤待 Bar 驗收；Playwright 假回應不等於真實授權通過。TP146-a～c 與既有清單保持未勾，見 [裝置驗收記錄](device-acceptance-log.md)。本次不沿用前版 G1 豁免、不發布正式站。
+實體 iPhone／Android PWA、真實 Google OAuth／Drive 上傳與閱讀器／真機鍵盤待 Bar 驗收；Playwright 假回應不等於真實授權通過。TP146-a～c 與既有清單保持未勾，見 [裝置驗收記錄](device-acceptance-log.md)。本版正式發布使用 Bar 本次明示的 G1 跳過授權，不沿用前版豁免，也不延續至下一版。

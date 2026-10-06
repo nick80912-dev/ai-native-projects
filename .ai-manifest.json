@@ -69,7 +69,7 @@
     "shopping-ui-state.js": "Shopping list selection 與 form session state／workflow runtime module",
     "shopping-photo-store.js": "採買照片壓縮與裝置本機 IndexedDB runtime module",
     "trip-progression.js": "下一站選擇與進度調和 runtime module",
-    "trip-lifecycle.js + trip-archive.js + trip-drive.js + trip-lifecycle-flow.js": "個人旅程生命週期 v137 runtime modules；OAuth External Testing 與實體 PWA 待驗",
+    "trip-lifecycle.js + trip-archive.js + trip-drive.js + trip-lifecycle-flow.js": "個人旅程生命週期 v137 runtime modules；OAuth External Testing；實體 PWA 已於 2026-10-06 經 Bar 回報驗收完成",
     "index.html + shell/v146/index.html": "v110 bridge 正式入口 + v146 本機候選版 App document；已發布 generation 保留歷史",
     "buy-to-ledger.js": "採買轉記帳純domain／workflow runtime module",
     "schema.js + validator.js": "資料規格與防錯來源",

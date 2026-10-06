@@ -60,11 +60,11 @@
 
 v146 首頁按 cfg 完整日期從 enddate 翌日起邀請打包；最後一天僅單次午夜 deadline，回前景核對，hidden／離首頁／inactive 取消，ongoing 卡片與紀錄不重繪／改寫。渲染不做 OAuth／預檢／清除，按鈕才開資料與版本並走原 beginTripEnd。所有帳務／Queue／雙確認守門、全部略過文案與計數不變。天氣優先目的地名稱／Hotel HID 地址，未知依當天前後最近站點（含子站、等距取前）回退，不取 GPS／新增 runtime geocoding。串點主標題為實際子站，群組次要；導航／progression／字級不改。現況與驗證見 tasks/current.md、docs/trippilot-v146-verification.md。
 
-「重置紀錄」只清本機個人狀態與採買照片；團體 Queue、已鎖帳務、身分和主題保留。「清除並打包旅程」以完整八表線上預檢、正式帳零餘額／無 pending claim、所有本機 Queue／bridge 收斂為守門；封存前後各預檢一次並比對摘要。可選個人 Drive 封存或不保存直接清除，兩者都只影響這部手機。封存八表與個人白名單資料，沒有照片、token、Queue 或診斷資料；過往旅程唯讀，筆記另檔追加。清除先寫 inactive，再刪本機旅程 keys 與照片；cleanup-pending 時 boot／sync／補送不得讓舊資料復活。完整連接新旅程仍屬第二階段。OAuth 公開 Client ID 可在 v137 前端，Client Secret 永遠不得提交；`drive.file` 是唯一 Drive scope。Cloud consent 目前 External Testing，只允許 Bar 測試，實體 iPhone／Android PWA 仍待驗。
+「重置紀錄」只清本機個人狀態與採買照片；團體 Queue、已鎖帳務、身分和主題保留。「清除並打包旅程」以完整八表線上預檢、正式帳零餘額／無 pending claim、所有本機 Queue／bridge 收斂為守門；封存前後各預檢一次並比對摘要。可選個人 Drive 封存或不保存直接清除，兩者都只影響這部手機。封存八表與個人白名單資料，沒有照片、token、Queue 或診斷資料；過往旅程唯讀，筆記另檔追加。清除先寫 inactive，再刪本機旅程 keys 與照片；cleanup-pending 時 boot／sync／補送不得讓舊資料復活。完整連接新旅程仍屬第二階段。OAuth 公開 Client ID 可在 v137 前端，Client Secret 永遠不得提交；`drive.file` 是唯一 Drive scope。Cloud consent 目前 External Testing，只允許 Bar 測試；實體 iPhone／Android PWA 已於 2026-10-06 經 Bar 回報驗收完成。
 
 設定首頁的「資料」群組依序為資料健康狀態、照片健康狀態、過往旅程、備份／還原與版本。資料健康入口保留摘要，子頁直接顯示既有四項狀態、不再收合，返回設定首頁；照片詳細檢查／修復留在照片頁。獨立過往旅程亦返回設定首頁；inactive 首頁直達歷史，設定根頁只留歷史入口，直接進健康頁不顯示舊資料。「資料與版本」不重複健康或歷史入口，生命週期及備份功能不變。Google SDK 冷載入完成後不自動開 popup，必須由下一次使用者點擊發起授權；準備期間離頁時不重開舊頁。
 
-v141 過往旅程以 `TripDrive.resume()` 重用同次 App 尚未過期的記憶體授權，重載後須重新授權。關閉設定取消 pending connect／清除歷史 UI；離開結束旅程流程會使該次操作失效並清除授權，重新登入也不能恢復舊操作。inactive 清除憑證；401／過期不得重用。登入等待與 Drive 讀取分開呈現，頁內可取消登入，90 秒授權逾時／20 秒 Drive 讀取逾時可重試。request／selection generation 保護晚到回應（含回應內容）；token 不進 localStorage、備份或封存。真實 PWA 重入仍待驗，外部 400 原因未捕捉，不宣稱已修正。
+v141 過往旅程以 `TripDrive.resume()` 重用同次 App 尚未過期的記憶體授權，重載後須重新授權。關閉設定取消 pending connect／清除歷史 UI；離開結束旅程流程會使該次操作失效並清除授權，重新登入也不能恢復舊操作。inactive 清除憑證；401／過期不得重用。登入等待與 Drive 讀取分開呈現，頁內可取消登入，90 秒授權逾時／20 秒 Drive 讀取逾時可重試。request／selection generation 保護晚到回應（含回應內容）；token 不進 localStorage、備份或封存。真實 PWA 重入已於 2026-10-06 經 Bar 回報驗收完成；外部 400 原因仍未捕捉，不宣稱已修正。
 
 v142 A 本機候選（未推送）：狀態 helper 僅投影現存事實。`tripStatusPresentation` 依 checks／skip／autoSkip 區分已完成、已略過與自動略過，不更改 progression；`shoppingPurchaseSummary` 只在同 split-group 的名稱／單位一致、安全數量可證明時顯示購買進度，不能以 ledgerLinks 推算商品件數。記帳覆蓋仍以 allocation 筆數呈現。`ledgerDeliveryPresentation` 採 queue → bridge → cloud 優先序，詳情依目前正式／TEST 模式過濾，不代表其他旅伴已讀。資料健康維持全裝置 backlog，跨模式未註記是 backlog #52（Minor），不得偷偷改成只保護目前模式的待送資料。
 
