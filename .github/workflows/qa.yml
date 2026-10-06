@@ -21,7 +21,11 @@ on:
 
 jobs:
   sanity:
-    runs-on: ubuntu-latest
+    # 2026-10-06(backlog #42):暫時釘 ubuntu-24.04。ubuntu-latest 自 2026-10-19 起「分批」移轉到
+    # Ubuntu 26.04、預計 11/19 完成(actions/runner-images#14748),正落在旅程 10/18–10/23。
+    # 分批期間同一支 workflow 可能時而跑 24.04、時而跑 26.04;旅途中若 CI 時好時壞,hotfix 會卡住。
+    # 24.04 映像仍由 GitHub 例行更新,釘的只是 OS 大版本。回程後依 backlog #54 驗證 26.04 再解除。
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
@@ -42,7 +46,9 @@ jobs:
           done
 
   browser-qa:
-    runs-on: ubuntu-latest
+    # 同上(backlog #42)。本 job 的 `playwright install --with-deps` 依 runner OS 裝系統套件,
+    # 是 Ubuntu 26.04 最可能出事的一步;@playwright/test 固定 1.62.0。
+    runs-on: ubuntu-24.04
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v7
