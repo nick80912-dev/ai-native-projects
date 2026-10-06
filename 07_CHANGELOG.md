@@ -1,5 +1,14 @@
 # 07 版本紀錄
 
+## 2026-10-06 — v147 清除旅程後不再誤報同步失敗（backlog #51；候選，未發布）
+
+- **缺陷（v140 發布審查 Minor，已由獨立 reviewer 以真實函式 VM 重現）**：`syncAll()` 的成功路徑在下載完成後會重查 `TripLifecycle.readState(localStorage).mode`，旅程已非 active 就靜默回傳 `{ok:false,inactive:true}`；**失敗路徑沒有這道重查**。下載開始於 active、旅程清除後才失敗時，會 (1) 把清除時已移除的 `trip_sync_last_failure` 寫回，(2) 把同步狀態設為 `failed`，(3) 在 `showToast` 時跳「同步失敗」toast —— 全都在談一個已不存在的旅程。不恢復舊行程、成員或帳務，inactive UI 仍維持無旅程，故當時不阻擋發布。
+- **修正**：失敗 continuation 開頭補上與成功路徑相同的 inactive 重查；已非 active 時釋放 `syncInFlight`、重繪狀態列並回傳 `{ok:false,inactive:true}`，不寫 key、不改狀態、不 toast。**旅程仍 active 的失敗處理完全不變。**
+- **回歸測試（確定性）**：`tests/atomic-sheet-sync.test.js` 新增 `testLateFailureAfterTripClear`，沿用既有 `loadCoordinator()`（真實 `syncAll`／`saveSyncFailure`／`downloadAllSheets` 置於 VM），以可控 gate 決定下載何時失敗，讓「清除發生在下載途中」成為確定性時序。斷言：回傳 inactive、key 不被重建、無 `failed` 狀態、無 toast、`syncInFlight` 釋放；**對照組**旅程仍 active 時照常記錄 key、顯示 `failed` 與 toast。**先在 v146 實測為紅（重現缺陷），修正後轉綠；再單獨拿掉 guard 實測又紅。**
+- 完整 forward bump v146→v147（shell 三件組、`sw.js`、`netlify.toml`、`runtime-assets.json`、活文件路徑；`builtin-snapshot.js` 經工具產生，資料無漂移）。shell diff 4 個 hunk（路徑、修正、發布說明新增、v142 滾出）。root v110 bridge 與 `docs/trippilot-v146-verification.md`（v146 專屬紀錄）不動。
+- Tier 2 四項確認已於動工前取得 Bar 確認；回滾依 `16_OPS_PLAYBOOK.md` §A2 往前 bump。
+- 五筆發布說明視窗滾到 `v147` + `['v146','v145','v144','v143']`，v142 那筆滾出。四個 gate、**110/110 Node**、**295/295 Playwright**(9.9 分鐘)通過。
+
 ## 2026-10-06 — 真機驗收全部完成（Bar 整批回報；無 runtime 變更）
 
 - Bar 回報**所有真機驗收已完成**。範圍為 `docs/device-acceptance-log.md` 截至此日所有未勾項目：TP141～TP146 清單、v137／v138／v140／v142 兩平台表格、**BB4 Android 八項**（含最關鍵的 BB4-a：Service Worker 在實體 Android 安裝並接管），以及 v115～v121 的 iPhone 補驗。

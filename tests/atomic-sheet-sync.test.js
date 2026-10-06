@@ -911,7 +911,47 @@ async function testAtomicSync(){
   assert.strictEqual(app.renderCount,0);
 }
 
-Promise.resolve().then(testBootSelection).then(testAtomicSync).then(testSyncStatus).then(testBackgroundSyncStatusSettles).then(function(){
+/* backlog #51:下載在旅程 active 時開始,旅程清除後才失敗。
+   成功路徑本來就會在下載後重查 inactive 並靜默返回;失敗路徑原本沒有,會把清除時已移除的
+   trip_sync_last_failure 寫回去、把同步狀態設成 failed,還可能跳「同步失敗」toast。
+   以可控的 gate 決定下載何時失敗,讓「清除發生在下載途中」這個時序成為確定性的。 */
+async function testLateFailureAfterTripClear(){
+  async function run(clearDuringDownload){
+    const app=loadCoordinator();
+    let mode='active', release;
+    const gate=new Promise(function(resolve){release=resolve;});
+    const toasts=[];
+    app.TripLifecycle.readState=function(){return {mode:mode};};
+    app.toast=function(message){toasts.push(message);};
+    app.fetchSheet=function(){return gate.then(function(){throw new Error('offline');});};
+    const pending=app.syncAll(true);
+    if(clearDuringDownload){
+      mode='inactive';
+      delete app.localStorage.memory.trip_sync_last_failure;
+    }
+    release();
+    const result=await pending;
+    return {app:app,result:result,toasts:toasts};
+  }
+
+  const cleared=await run(true);
+  assert.strictEqual(cleared.result.ok,false);
+  assert.strictEqual(cleared.result.inactive,true,'a failure that lands after the trip was cleared reports inactive, like the success path');
+  assert.strictEqual(cleared.app.localStorage.memory.trip_sync_last_failure,undefined,'a late failure must not recreate the cleared failure key');
+  assert.strictEqual(cleared.app.syncStates.indexOf('failed'),-1,'a late failure must not mark sync as failed for a trip that no longer exists');
+  assert.deepStrictEqual(cleared.toasts,[],'a late failure must not toast about a trip that no longer exists');
+  assert.strictEqual(cleared.app.syncInFlight,null,'the in-flight sync is released either way');
+
+  /* 對照組:旅程仍 active 時,失敗照舊記錄並提示 —— 修正不得把正常的失敗也吞掉。 */
+  const active=await run(false);
+  assert.strictEqual(active.result.ok,false);
+  assert.strictEqual(active.result.error.stage,'download');
+  assert.notStrictEqual(active.app.localStorage.memory.trip_sync_last_failure,undefined,'an active trip still records the failure');
+  assert(active.app.syncStates.indexOf('failed')>=0,'an active trip still shows the failed sync state');
+  assert.deepStrictEqual(active.toasts,['同步失敗，繼續顯示目前版本'],'an active trip still gets the failure toast');
+}
+
+Promise.resolve().then(testBootSelection).then(testAtomicSync).then(testSyncStatus).then(testBackgroundSyncStatusSettles).then(testLateFailureAfterTripClear).then(function(){
   console.log('atomic sheet sync tests passed');
 }).catch(function(error){
   console.error(error&&error.stack||error);
