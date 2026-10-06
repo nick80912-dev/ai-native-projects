@@ -457,13 +457,13 @@ v143 已透過 `dev → main` PR #40 合併並完成正式站部署核對。G1 �
 - **真機驗證通過(2026-09-24)**:Bar 回報手機驗證 OK(本版無可見變化)。BB4 八項維持未驗。
 ## 下一棒
 
-→ **v140 驗收**:按 Bar 核准交付 `dev`；Bar 先驗 TP140-a～c 的設定資料四子項、健康明細直接顯示及返回，再在 iPhone 與 Android 實體 PWA 完成 TP137-a～i 的 Google 授權、Drive 上傳讀回、清除後重啟與過往旅程筆記。其他旅伴使用前須加入 OAuth 測試名單或另行完成對外發布。完整「連接新旅程」仍留待第二階段。
+→ **現況(2026-10-06)**:正式站為 **v146**(`production-v146` → `main` `0f24f74`)。**Bar 回報所有真機驗收已完成** —— TP141～TP146、v137／v138／v140／v142、BB4 Android 八項(含 BB4-a)與 v115～v121 iPhone 補驗,`docs/device-acceptance-log.md` 已整批勾選。長期掛著的 BB4 至此結案。
 
-→ **裝置驗收遺留**:由 Bar 在實體 Android 上完成 BB4 共 8 項；目前正式 App 為 **v136**。另有 v115 6／v116 10／v117 4／v118 6／v119 5／v120 4／v121 7 項待 iPhone 補驗。**合計 50 項,全部在使用者已拿得到的版本上。**`docs/device-acceptance-log.md` 的 v114 段 22 項中,BB1–BB3 共 14 項已於 **2026-09-11** 由 Bar 在 iPhone 上確認通過;**剩下的 BB4 是併入的 v112 遺留項,只能在實體 Android 上驗。**
+→ **出發前要決定:backlog #42**。GitHub `ubuntu-latest` 自 **2026-10-19** 起移轉 Ubuntu 26,正落在旅程期間(10/18～10/23)。若 CI 在旅途中突然紅,hotfix 流程(dev → PR → CI → merge)會被卡住。原記「不要在沒壞之前先釘版」;時間點特殊,值得出發前重新裁定。
 
-> 最關鍵的是 **BB4-a**:Service Worker 能否在實體 Android 上安裝並接管。v112 修的連線槽耗盡缺陷**只在真機發生**,桌機與 Playwright 的 Android 模擬都重現不出來。以目前正式版驗證時,開啟網站 → 關掉 → 再開,設定的版本資訊應顯示 **v136**(顯示 v110 代表 SW 沒接管)。
->
-> 補驗發現問題時,依 `16_OPS_PLAYBOOK.md` §A2 **forward bump 到下一個未使用版本**,不得倒退覆寫 —— 已經有裝置接管 v136 了。
+→ **其餘 backlog**:#51／#52／#53(v140／v142 審查的 Minor)、#41／#38(待實際使用回饋)、#50(已裁定先不做)、#28／#29(已裁定暫不處理)、#3／#12／#20／#25(長期)、E1／E2(大型重構)。
+
+> 發現問題時依 `16_OPS_PLAYBOOK.md` §A2 **forward bump 到下一個未使用版本**,不得倒退覆寫 —— 已經有裝置接管 v146 了。
 
 > GitHub Actions 與 Netlify production **已於 2026-09-08 接管 v113** —— deploy `6a9fb443`、`commit_ref` = `745bb6f`、線上 `sw.js`／`app-version.js` 皆 v113、`qa-sanity` 於 `main` `745bb6f` 與 `dev` `f0444cb` 皆 success。**這一步已完成，不需再確認。**
 >

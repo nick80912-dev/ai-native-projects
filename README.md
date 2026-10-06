@@ -69,7 +69,7 @@ v145 C 天氣改善與限制：[驗證記錄](docs/trippilot-v145-c-verification
 
 v140 只整理健康資訊的入口與呈現，健康 model、旅程與帳務契約不變。已發布 v139 不覆寫；新 generation 的健康區塊不再使用 details，亦不保留已無用途的展開狀態。
 
-Google Cloud 專案 `trippilot-510301` 已啟用 Drive API，OAuth Web client「TripPilot Web PWA」的公開 Client ID 已配置於 v137；JavaScript 來源為 `https://nick80912-dev.github.io` 與 `https://trippilot-jp.netlify.app`。只使用 `drive.file`，Client Secret 不進前端或 repo。OAuth 目前為 External Testing，測試使用者只有 Bar；其他旅伴需加入測試使用者或完成 Google 對外發布流程，才可自行授權。v137 在真實 iPhone／Android PWA 的 Google 授權、上傳讀回、清除後重啟與筆記仍待驗，不能視為正式可用。若已發布版本有問題，依 `16_OPS_PLAYBOOK.md` §A2 forward-bump，不覆寫 v136／v137 檔案。
+Google Cloud 專案 `trippilot-510301` 已啟用 Drive API，OAuth Web client「TripPilot Web PWA」的公開 Client ID 已配置於 v137；JavaScript 來源為 `https://nick80912-dev.github.io` 與 `https://trippilot-jp.netlify.app`。只使用 `drive.file`，Client Secret 不進前端或 repo。OAuth 目前為 External Testing，測試使用者只有 Bar；其他旅伴需加入測試使用者或完成 Google 對外發布流程，才可自行授權。v137 起在真實 iPhone／Android PWA 的 Google 授權、上傳讀回、清除後重啟與筆記，已於 2026-10-06 經 Bar 回報驗收完成；驗收帳號只有 Bar，其他旅伴仍受上一句 External Testing 的限制。若已發布版本有問題，依 `16_OPS_PLAYBOOK.md` §A2 forward-bump，不覆寫 v136／v137 檔案。
 
 ## 正式部署
 - `main` 是正式 Production Branch;日常開發與驗收於 `dev` 分支完成。
