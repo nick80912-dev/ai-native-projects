@@ -1,5 +1,14 @@
 # 07 版本紀錄
 
+## 2026-10-06 — v147 正式發布（released，未經 G1）+ G6 tag；同日真機驗證通過
+
+- PR [#44](https://github.com/nick80912-dev/ai-native-projects/pull/44) 以 merge 合併 `dev` `41c90ec` → `main`，merge commit **`26f00a1`**。兩輪 CI 共 7 項全綠後合併，合併時以 `--match-head-commit` 釘住 head。
+- Netlify deploy **`6ac46c2285e5340008c3166e`**、`ready`、`commit_ref` = `26f00a1` 相符、`published_at` `2026-10-06T03:34:04Z`、`manual_deploy: false`，20 個新檔（含 `shell/v147/index.html`）、6 條 header rule 全過。`main` 上 merge commit 的 `sanity` 與 `browser-qa` 皆 success。
+- **§F5 線上核對五項全過**：`sw.js` v147；`shell/v147/` 三件組皆 v147；root bridge 維持 **v110 未被誤升**；`sw.js` 與 `shell/v147/` 的 `app-version.js`、`builtin-snapshot.js` 皆 `no-cache,no-store,must-revalidate`；**v111–v146 三十六個舊世代皆回 200**（ADR 0019）。線上 `shell/v147/index.html` 含修正與 v147 發布說明。
+- **G6 完成**：annotated tag `production-v147` 指向 `26f00a1`。tag 在真機回報之後才建立。
+- 發布前未另做 G1；以合併後 §F5 線上核對與 Bar 真機確認代替。
+- **真機驗證通過（2026-10-06）**：Bar 在手機上回報驗證 OK。本版一般情境下無可見變化，驗收重點為 App 正常載入到 v147。
+
 ## 2026-10-06 — v147 清除旅程後不再誤報同步失敗（backlog #51；候選，未發布）
 
 - **缺陷（v140 發布審查 Minor，已由獨立 reviewer 以真實函式 VM 重現）**：`syncAll()` 的成功路徑在下載完成後會重查 `TripLifecycle.readState(localStorage).mode`，旅程已非 active 就靜默回傳 `{ok:false,inactive:true}`；**失敗路徑沒有這道重查**。下載開始於 active、旅程清除後才失敗時，會 (1) 把清除時已移除的 `trip_sync_last_failure` 寫回，(2) 把同步狀態設為 `failed`，(3) 在 `showToast` 時跳「同步失敗」toast —— 全都在談一個已不存在的旅程。不恢復舊行程、成員或帳務，inactive UI 仍維持無旅程，故當時不阻擋發布。

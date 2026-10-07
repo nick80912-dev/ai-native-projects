@@ -457,15 +457,15 @@ v143 已透過 `dev → main` PR #40 合併並完成正式站部署核對。G1 �
 - **真機驗證通過(2026-09-24)**:Bar 回報手機驗證 OK(本版無可見變化)。BB4 八項維持未驗。
 ## 下一棒
 
-→ **現況(2026-10-06)**:正式站為 **v146**(`production-v146` → `main` `0f24f74`)。**Bar 回報所有真機驗收已完成** —— TP141～TP146、v137／v138／v140／v142、BB4 Android 八項(含 BB4-a)與 v115～v121 iPhone 補驗,`docs/device-acceptance-log.md` 已整批勾選。長期掛著的 BB4 至此結案。
+→ **現況(2026-10-06)**:正式站為 **v147**(`production-v147` → `main` `26f00a1`)。 <!-- generation-exempt: 發布當下的正式站錨點 -->**Bar 回報所有真機驗收已完成** —— TP141～TP146、v137／v138／v140／v142、BB4 Android 八項(含 BB4-a)與 v115～v121 iPhone 補驗,`docs/device-acceptance-log.md` 已整批勾選。長期掛著的 BB4 至此結案。
 
 → **#42 已處理(2026-10-06)**:CI 兩個 job 暫時釘 `ubuntu-24.04`,避開 10/19 起分批移轉 Ubuntu 26.04 落在旅程期間。**回程後依 #54 驗證 26.04 再解除**(GitHub 預計 11/19 完成移轉)。
 
-→ **v147 候選(2026-10-06)**:backlog #51 —— 旅程清除後才失敗的同步不再重建錯誤提示 key、不誤報。待 Bar 決定是否發正式站。
+→ **v147 已正式發布(2026-10-06)**:backlog #51 —— 旅程清除後才失敗的同步不再重建錯誤提示 key、不誤報。PR [#44](https://github.com/nick80912-dev/ai-native-projects/pull/44) 合併為 `26f00a1`;Netlify deploy `6ac46c22`、`commit_ref` 相符;§F5 五項全過(v111–v146 舊世代皆回 200);Bar 真機驗證 OK;`production-v147` 已建立。
 
 → **其餘 backlog**:#54(回程後解除 CI 釘版)、#52／#53(v140／v142 審查的 Minor)、#41／#38(待實際使用回饋)、#50(已裁定先不做)、#28／#29(已裁定暫不處理)、#3／#12／#20／#25(長期)、E1／E2(大型重構)。
 
-> 發現問題時依 `16_OPS_PLAYBOOK.md` §A2 **forward bump 到下一個未使用版本**,不得倒退覆寫 —— 已經有裝置接管 v146 了。
+> 發現問題時依 `16_OPS_PLAYBOOK.md` §A2 **forward bump 到下一個未使用版本**,不得倒退覆寫 —— 已經有裝置接管 v147 了。
 
 > GitHub Actions 與 Netlify production **已於 2026-09-08 接管 v113** —— deploy `6a9fb443`、`commit_ref` = `745bb6f`、線上 `sw.js`／`app-version.js` 皆 v113、`qa-sanity` 於 `main` `745bb6f` 與 `dev` `f0444cb` 皆 success。**這一步已完成，不需再確認。**
 >
