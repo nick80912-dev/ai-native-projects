@@ -1,5 +1,14 @@
 # 07 版本紀錄
 
+## 2026-10-07 — v148 正式發布（released）
+
+- PR [#47](https://github.com/nick80912-dev/ai-native-projects/pull/47) 以 merge 合併 `dev` `ccb6f52` → `main`，merge commit **`48d787c`**。發布 PR 的 sanity 與 browser-qa 全綠後合併，合併時釘住 head；merged tree 與已測 dev 相同，root v110 bridge 與 `shell/v147/` 不變。
+- Netlify deploy **`6ac658c6c2a99c0008061882`**、`ready`、`commit_ref` = `48d787c` 相符、`published_at` `2026-10-07T14:36:02Z`、`manual_deploy: false`，21 個新檔（含 `shell/v148/index.html`）、6 條 header rule 全過。
+- `main` CI run `37638029955`：第一次 browser-qa 因「安裝 Chromium」耗時 8 分 50 秒（平常約 25 秒）觸發 15 分鐘 job 上限而被取消，沒有任何測試失敗；重跑一次後 sanity 與 browser-qa 皆 success（Chromium 安裝 24 秒、Playwright 6 分 34 秒）。
+- **G1**：Bar 於 2026-10-07 在 GitHub Pages（dev）以手機驗收 v148 後核准發布。
+- **§F5 線上內容核對未於本次執行**：本次工作環境的網路政策封鎖正式站網域，無法讀取線上 `sw.js`、header 與舊世代回應。以 Netlify 部署資料、merged tree 比對與 Pages 手機驗收代替；正式站載入 v148 以 Bar 手機確認為準。
+- **G6 待補**：annotated tag `production-v148`（指向 `48d787c`）已在工作環境本機建立，但推送 tag 被 GitHub 以 403 拒絕，遠端尚無此 tag；需由 Bar 或可推送 tag 的環境補建。
+
 ## 2026-10-07 — v148 同區串點在下一個行程開始後整區自動略過（候選，未發布）
 
 - **問題（2026-10-07 實測，v147）**：串點 controller 依原設計不會被主佇列自動略過（`tests/pick-next-stop.test.js` 原斷言「controller 不可被主佇列自動略過」）。沒有人按「完成」時，今天頁整天停在早上那一區：10/19 16:00 仍顯示廣島紙鶴塔、10/21 17:15 仍顯示小步危（天氣也停在祖谷）、10/22 全天停在阿智神社、10/23 14:50 仍顯示後樂園而看不到加油與還車。打開行程頁也不會解除（主佇列只看有「行程」欄的列，串點子站不在其中）。
