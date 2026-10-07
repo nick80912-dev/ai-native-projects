@@ -8,6 +8,8 @@
 - **測試**：`tests/trip-progression.test.js` 新增串點案例（下一個行程開始前維持、開始時整區略過且保留已完成／已打卡的站、非今天不寫入、全部已處理時交給完成同步、與一般站在同一次 commit）；`tests/pick-next-stop.test.js` 情境 7 依 Bar 裁定改為新規則。新測試在舊 module 上失敗、新 module 上通過。`tests/browser/home-v146.spec.js` 的串點卡片測試原本開在 10/19 13:30，只在「串點永不略過」下成立，改開在 12:00（紙鶴塔已到、12:30 午餐未開始）以維持原測試目的；另新增 12:30 午餐開始時整區自動略過的瀏覽器測試。
 - 完整 forward bump v147→v148（shell 三件組、`sw.js`、`netlify.toml`、`runtime-assets.json`、活文件路徑）。`builtin-snapshot.js` 以工具離線重產（輸入為 v147 asset 的八表，未連網、未讀 Ledger），內容與 timestamp `1790861998387` 不變，只換版本。shell diff 6 個 hunk（路徑與 marker、`clusterController`、`homeNextStopItems`、發布說明新增、v143 滾出）。root v110 bridge 與 `shell/v147/` 不動。
 - 五筆發布說明視窗滾到 `v148` + `['v147','v146','v145','v144']`，v143 那筆滾出。
+- **驗證**：四個 gate、**110/110 Node**、`git diff --check` 通過。本機完整 Chromium **294/296**（7.5 分鐘）；失敗的 2 項（`personal-ledger-export` 下載檔名變成 `download`、`sw-update-cache` 離線時未快取子資源回 404）以**未修改的 v147** 在同一環境重跑也同樣失敗，原因是本機預裝 Chromium 與 Playwright 1.62 版本不一致，與本變更無關；以 PR CI 的官方 Chromium 結果為準。
+- **真實行程 12 個串點逐一模擬**（10/01 內建資料、Asia/Tokyo、完全不點擊）：下一個行程開始前一分鐘仍顯示該區最後一站；開始當下改顯示下一個行程，整區站點皆標為自動略過。24 個檢查點全數符合、pageerror 0。原本卡住的時點改為：10/19 16:00 宮島表参道（天氣宮島）、10/21 17:15 奧社（天氣琴平）、10/23 14:50 吉備津神社，15:00 起顯示加油站。**10/22 倉敷美觀地區有 4 站沒有時間（「--」），該區內仍停在阿智神社，直到 16:00 整區略過** —— 屬 Sheet 內容，補上時間或手動按完成即可。
 - Tier 2 確認書於動工前取得 Bar 核准（範圍：本機實作與完整測試，工作分支開 PR 到 `dev`；不合併、不發布）。回滾：合併前關閉 PR 即可；發布後依 `16_OPS_PLAYBOOK.md` §A2 往前 bump。
 
 ## 2026-10-06 — v147 正式發布（released，未經 G1）+ G6 tag；同日真機驗證通過
