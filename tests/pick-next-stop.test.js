@@ -210,10 +210,32 @@ assert.strictEqual(makeSandbox().parseStartMinutes(''), null, '未填時間不�
   const homeItems = sb.homeNextStopItems(items);
   assert.deepStrictEqual(Array.from(homeItems).map(function(item){ return item.id; }), ['parent__cluster','next']);
   assert.strictEqual(homeItems[0].sourceId, 'parent');
+  assert.deepStrictEqual(Array.from(homeItems[0].clusterItemIds), ['parent','child'], 'controller 帶著整區站點，供整區自動略過');
   assert.strictEqual(sb.clusterParentForPick(items, homeItems[0]).id, 'parent');
-  const lateMainPick = sb.pickNextStop(homeItems, sb.getDayProgress(day, dayIndex), sb.getChecks(), 23*60, {day:day,dayIndex:dayIndex});
-  assert.strictEqual(lateMainPick.item.id, 'parent__cluster', '未清除的 controller 不會因後續行程時間已過而消失');
-  assert.strictEqual(!!sb.getDayProgress(day, dayIndex).skip['parent__cluster'], false, 'controller 不可被主佇列自動略過');
+  const openPick = sb.pickNextStop(homeItems, sb.getDayProgress(day, dayIndex), sb.getChecks(), 21*60, {day:day,dayIndex:dayIndex});
+  assert.strictEqual(openPick.item.id, 'parent__cluster', '下一個行程(22:00)開始前，未完成的串點維持目前這一區');
+  assert.strictEqual(!!sb.getDayProgress(day, dayIndex).skip['parent__cluster'], false, '下一個行程開始前不會略過串點');
+
+  /* v148(Bar 2026-10-07):下一個行程開始後，未按完成的串點整區自動略過；已完成的站維持完成。 */
+  {
+    const late = makeSandbox();
+    late.markNextStop(day, dayIndex, 'parent', 'done');
+    const latePick = late.pickNextStop(late.homeNextStopItems(items), late.getDayProgress(day, dayIndex), late.getChecks(), 22*60, {day:day,dayIndex:dayIndex});
+    assert.strictEqual(latePick.item.id, 'next', '下一個行程開始時改為顯示下一個行程');
+    const lateProgress = late.getDayProgress(day, dayIndex);
+    assert.strictEqual(!!lateProgress.done['parent'], true, '已按完成的站維持完成');
+    assert.strictEqual(!!lateProgress.skip['parent'], false);
+    ['parent__cluster','child'].forEach(function(id){
+      assert.strictEqual(!!lateProgress.skip[id], true, id + ' 整區自動略過');
+      assert.strictEqual(!!lateProgress.autoSkip[id], true, id + ' 標記為自動略過');
+    });
+    assert.strictEqual(late._writes.trip_next_stop_progress, 2, '整區略過與手動完成各只寫一次 progress');
+    assert.strictEqual(
+      late.reconcileClusterController(day, dayIndex, cluster, lateProgress, late.getChecks()),
+      false,
+      '整區略過後 controller 已與站點一致，完成同步不會再改寫'
+    );
+  }
 
   sb.markNextStop(day, dayIndex, 'parent', 'done');
   let progress = sb.getDayProgress(day, dayIndex);
