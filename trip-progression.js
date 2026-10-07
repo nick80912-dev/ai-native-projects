@@ -50,9 +50,13 @@
       var minutes=parseStartMinutes(item.time);if(minutes!==null&&minutes<=now)cutoff=index;
     });
     if(cutoff>=0){
+      /* A cluster controller that lists its stops (clusterItemIds) follows the ordinary rule:
+         once a later item has started, the whole cluster is auto-skipped in this same commit.
+         Controllers without that list (the root v110 bridge loads this module too) keep the
+         legacy rule and block every later item until they are cleared. */
       var blocker=-1;
       remaining.some(function(item,index){
-        if(index<=cutoff&&item.clusterController){blocker=index;return true;}
+        if(index<=cutoff&&item.clusterController&&!Array.isArray(item.clusterItemIds)){blocker=index;return true;}
         return false;
       });
       if(blocker>=0)cutoff=blocker;
@@ -60,6 +64,14 @@
       if(source.isToday===true)stale.forEach(function(item){
         var id=text(item.id).trim();
         if(!id||progress.done[id]||progress.skip[id])return;
+        if(Array.isArray(item.clusterItemIds)){
+          var openStops=item.clusterItemIds.map(function(stopId){return text(stopId).trim();}).filter(function(stopId){
+            return stopId&&!(progress.done[stopId]||progress.skip[stopId]||checks[stopId]);
+          });
+          // Every stop already cleared: the caller's completion sync marks the controller done.
+          if(!openStops.length)return;
+          openStops.forEach(function(stopId){progress.skip[stopId]=true;progress.autoSkip[stopId]=true;});
+        }
         progress.skip[id]=true;progress.autoSkip[id]=true;
         skipped.push({id:id,label:text(item.act||item.place).trim()});
       });
