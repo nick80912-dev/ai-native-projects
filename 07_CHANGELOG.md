@@ -1,5 +1,17 @@
 # 07 版本紀錄
 
+## 2026-10-07 — v148 同區串點在下一個行程開始後整區自動略過（候選，未發布）
+
+- **問題（2026-10-07 實測，v147）**：串點 controller 依原設計不會被主佇列自動略過（`tests/pick-next-stop.test.js` 原斷言「controller 不可被主佇列自動略過」）。沒有人按「完成」時，今天頁整天停在早上那一區：10/19 16:00 仍顯示廣島紙鶴塔、10/21 17:15 仍顯示小步危（天氣也停在祖谷）、10/22 全天停在阿智神社、10/23 14:50 仍顯示後樂園而看不到加油與還車。打開行程頁也不會解除（主佇列只看有「行程」欄的列，串點子站不在其中）。
+- **Bar 裁定（2026-10-07）**：採「下一個行程開始才略過」，未採另一選項「最後一站時間一過就略過」。串點與一般站同一規則：下一個行程開始前維持目前這一區；開始後仍未按完成，整區（controller 與所有未處理的站）在同一次寫入中標為自動略過；已按完成或已打卡的站維持原狀；被略過的站可在行程頁點打卡改成完成。
+- **實作**：規則只在 `trip-progression.js` 的 `reconcile()`（ADR 0014 的唯一權威）。v148 的 `clusterController()` 帶上整區站點 `clusterItemIds`；沒有這份清單的 controller 維持舊的 blocker —— root v110 bridge 也載入同一個 root module，必須保持原行為。所有站都已處理的串點交給既有完成同步標為完成，不另行略過。行程頁規則、帳務、Sheet、個人備份格式不變。
+- **測試**：`tests/trip-progression.test.js` 新增串點案例（下一個行程開始前維持、開始時整區略過且保留已完成／已打卡的站、非今天不寫入、全部已處理時交給完成同步、與一般站在同一次 commit）；`tests/pick-next-stop.test.js` 情境 7 依 Bar 裁定改為新規則。新測試在舊 module 上失敗、新 module 上通過。`tests/browser/home-v146.spec.js` 的串點卡片測試原本開在 10/19 13:30，只在「串點永不略過」下成立，改開在 12:00（紙鶴塔已到、12:30 午餐未開始）以維持原測試目的；另新增 12:30 午餐開始時整區自動略過的瀏覽器測試。
+- 完整 forward bump v147→v148（shell 三件組、`sw.js`、`netlify.toml`、`runtime-assets.json`、活文件路徑）。`builtin-snapshot.js` 以工具離線重產（輸入為 v147 asset 的八表，未連網、未讀 Ledger），內容與 timestamp `1790861998387` 不變，只換版本。shell diff 6 個 hunk（路徑與 marker、`clusterController`、`homeNextStopItems`、發布說明新增、v143 滾出）。root v110 bridge 與 `shell/v147/` 不動。
+- 五筆發布說明視窗滾到 `v148` + `['v147','v146','v145','v144']`，v143 那筆滾出。
+- **驗證**：四個 gate、**110/110 Node**、`git diff --check` 通過。本機完整 Chromium **294/296**（7.5 分鐘）；失敗的 2 項（`personal-ledger-export` 下載檔名變成 `download`、`sw-update-cache` 離線時未快取子資源回 404）以**未修改的 v147** 在同一環境重跑也同樣失敗，原因是本機預裝 Chromium 與 Playwright 1.62 版本不一致，與本變更無關；以 PR CI 的官方 Chromium 結果為準。
+- **真實行程 12 個串點逐一模擬**（10/01 內建資料、Asia/Tokyo、完全不點擊）：下一個行程開始前一分鐘仍顯示該區最後一站；開始當下改顯示下一個行程，整區站點皆標為自動略過。24 個檢查點全數符合、pageerror 0。原本卡住的時點改為：10/19 16:00 宮島表参道（天氣宮島）、10/21 17:15 奧社（天氣琴平）、10/23 14:50 吉備津神社，15:00 起顯示加油站。**10/22 倉敷美觀地區有 4 站沒有時間（「--」），該區內仍停在阿智神社，直到 16:00 整區略過** —— 屬 Sheet 內容，補上時間或手動按完成即可。
+- Tier 2 確認書於動工前取得 Bar 核准（範圍：本機實作與完整測試，工作分支開 PR 到 `dev`；不合併、不發布）。回滾：合併前關閉 PR 即可；發布後依 `16_OPS_PLAYBOOK.md` §A2 往前 bump。
+
 ## 2026-10-06 — v147 正式發布（released，未經 G1）+ G6 tag；同日真機驗證通過
 
 - PR [#44](https://github.com/nick80912-dev/ai-native-projects/pull/44) 以 merge 合併 `dev` `41c90ec` → `main`，merge commit **`26f00a1`**。兩輪 CI 共 7 項全綠後合併，合併時以 `--match-head-commit` 釘住 head。

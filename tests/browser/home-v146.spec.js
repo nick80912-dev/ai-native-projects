@@ -161,7 +161,9 @@ test('unknown regions explicitly show unavailable weather instead of a guessed c
 
 for(const width of [320,390])test('cluster Home promotes the actual navigation stop without enlarging typography: '+width,async({page})=>{
   await page.setViewportSize({width,height:844});
-  await boot(page,'2026-10-19T13:30:00+09:00');
+  // 12:00: the last stop (11:30) has started and lunch (12:30) has not, so the cluster is still current.
+  // Before v148 this booted at 13:30, which only worked because clusters never auto-skipped.
+  await boot(page,'2026-10-19T12:00:00+09:00');
   const card=page.locator('.nx-cluster-ticket');
   await expect(card.locator('.nx-ticket-title')).toHaveText('廣島紙鶴塔');
   await expect(card.locator('.nx-cluster-summary')).toContainText('廣島市區走馬看花');
@@ -172,6 +174,22 @@ for(const width of [320,390])test('cluster Home promotes the actual navigation s
   await expect(card.locator('.nx-cluster-stop')).toHaveCount(4);
   await expect(card.getByRole('button',{name:'完成：廣島紙鶴塔',exact:true})).toBeVisible();
   expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+});
+
+// v148 (Bar 2026-10-07): once the next item starts, an unfinished cluster is auto-skipped as a whole.
+// Breaks: a cluster that blocks the rest of the day until someone taps 完成.
+test('cluster Home moves on to the next item once it starts',async({page})=>{
+  await boot(page,'2026-10-19T12:30:00+09:00');
+  const home=page.locator('#view-today');
+  await expect(home.locator('.nx-cluster-ticket')).toHaveCount(0);
+  await expect(home.locator('.nx-ticket-title')).toContainText('みっちゃん');
+  expect(await page.evaluate(()=>{
+    const index=findToday(),day=DB.trip.days[index],progress=getDayProgress(day,index);
+    return ['廣島城','原爆圓頂館','廣島和平紀念資料館','廣島紙鶴塔'].map(name=>{
+      const item=day.items.find(candidate=>candidate.place===name);
+      return !!(item&&progress.skip[item.id]&&progress.autoSkip[item.id]);
+    });
+  })).toEqual([true,true,true,true]);
 });
 
 test('all-skipped wording and completion counts remain unchanged',async({page})=>{
