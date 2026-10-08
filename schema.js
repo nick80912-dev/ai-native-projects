@@ -14,7 +14,7 @@
    ============================================================ */
 
 var SCHEMA = {
-  version: '3.0 (2026-08-11)',
+  version: '3.1 (2026-10-08)',
 
   /* 發布來源(換試算表只改這裡) */
   pubBase: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRenmV8UxEzWbzSjKJKi4rSpYt63geBqhEkKsl1GemWVPmFKTcvv3Uk71Hjla3TGBpGIjC7bQDDdI00/pub?single=true&output=csv&gid=',
@@ -33,7 +33,10 @@ var SCHEMA = {
         { field:'place', header:'地點',     desc:'地點顯示名稱(給人看)' },
         { field:'ref',   header:'ID',       desc:'Pxxx=地點 / Rxxx=餐廳(給程式讀)' },
         { field:'move',  header:'交通',     desc:'交通說明;空值時卡片退回資料庫交通時間' },
-        { field:'note',  header:'備註',     desc:'自由備註' }
+        { field:'note',  header:'備註',     desc:'自由備註' },
+        /* v149(ADR 0021):新旅程範本的第 8 欄。依標題名稱尋找,不依位置;岡山試算表沒有這欄。 */
+        { field:'stopId', header:'行程ID', optional:true,
+          desc:'選填;英數字、- 或 _(最多 40 字),整份行程不可重複。有填就當作站點 ID,增刪列時打卡與下一站不會錯位;沒填沿用「日期_第幾列」' }
       ]
     },
 
@@ -166,7 +169,15 @@ var SCHEMA = {
           values:{'JPY':'JPY','jpy':'JPY','TWD':'TWD','twd':'TWD'},
           /* 同時是全團結算幣別(ADR 0007);v135 起有還款紀錄即鎖定,不得切換 */
           desc:'全團結算幣別,也是新增記帳的預設幣別;只允許 JPY/TWD' },
-        { field:'homepage',   header:'Home Page',   desc:'預設分頁(⚠️ 目前**未啟用**,App 固定 Today;填寫無效果)' }
+        { field:'homepage',   header:'Home Page',   desc:'預設分頁(⚠️ 目前**未啟用**,App 固定 Today;填寫無效果)' },
+        /* v149 連接新旅程(ADR 0021):舊的岡山試算表沒有這兩鍵,所以標為 optional;
+           新旅程由 trip-source.js 在連接時強制檢查。 */
+        { field:'tripId',     header:'Trip ID',     optional:true,
+          desc:'選填(新旅程必填);3–40 個英數字、- 或 _,每趟旅程不同,用來分開快取、待送帳與備份' },
+        { field:'ledgerEndpoint', header:'Ledger Endpoint', optional:true,
+          desc:'選填(新旅程必填);這份試算表部署的 Apps Script 網頁應用程式 /exec 網址' },
+        { field:'weatherRegionsGid', header:'Weather Regions GID', optional:true,
+          desc:'選填;「天氣地區」分頁的 gid(欄位:地區名稱、緯度、經度、關鍵字)。新旅程沒填就不顯示天氣;岡山沿用內建城市清單' }
       ]
     }
   }

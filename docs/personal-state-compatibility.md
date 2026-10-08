@@ -1,4 +1,4 @@
-# 個人狀態備份 v1–v9 相容策略
+# 個人狀態備份 v1–v10 相容策略
 
 > 由 Bar 於 2026-07-30 核可(批次一 P3)。本檔是**契約定義**,不是說明文;與程式衝突時以 `index.html` 為準,但衝突本身即為缺陷,必須修到一致。
 > 對應的可執行契約在 `tests/personal-state-restore-matrix.test.js` —— 該檔注入 `index.html` 的**真實** store 實作,斷言還原後 `localStorage` 的實際內容,不是只驗版本號被接受。改本檔而不改測試(或反之)一律視為交付缺陷。
@@ -11,11 +11,11 @@
 
 | 項目 | 值 |
 |---|---|
-| 目前匯出版本 | `PERSONAL_STATE_VERSION = 9` |
-| 可還原版本 | `PERSONAL_STATE_SUPPORTED_VERSIONS = [1,2,3,4,5,6,7,8,9]` |
+| 目前匯出版本 | `PERSONAL_STATE_VERSION = 10` |
+| 可還原版本 | `PERSONAL_STATE_SUPPORTED_VERSIONS = [1,2,3,4,5,6,7,8,9,10]`(另需旅程相符,見「旅程身分(v10)」) |
 | 格式標記 | `format: 'trip-personal-state'`(不符即拒絕) |
 
-## 一、向後相容:v1–v9 還原到 v9 的行為
+## 一、向後相容:v1–v10 還原到 v10 的行為
 
 **原則:缺欄位補該版本當時的語意預設值;`version` 欄位是唯一權威,payload 夾帶的欄位若不屬於該版本一律忽略。**
 
@@ -30,6 +30,7 @@
 | v7 | `allocations[]` 逐人分配 | 無 `allocations` 時由 `buyFor`／`targets` 遷移成單筆;缺 `allocationId` 自動補發 |
 | v8 | `themeId`／`shoppingUnits`／`travelNotes` | **v<8 一律保留裝置現值,不重設為預設值** |
 | v9 | `wants` 的 key 由索引型改為 placeId 型 | v<9 一律對 `payload.wants` 執行 key 轉換,見下方「想逛 key 的識別語意變更」 |
+| v10 | `trip:{sourceKey,tripId,tripName}` 旅程身分 | v<10 沒有旅程身分,**只能還原到岡山舊旅程**(`sourceKey === 'legacy'`)的裝置,見下方「旅程身分(v10)」 |
 
 ### 三項 v8 新狀態的保留規則(最容易誤解的一條)
 
@@ -83,11 +84,31 @@ w2:p<encoded placeId>:<encoded floor>:<encoded store name>
 
 轉換是**冪等**的:舊格式 key 第一次就被消化完,重跑不會再變更資料。本機轉換發生在購物頁渲染時;有無法安全轉換的標記時,吐一次「有 N 筆舊想逛標記無法安全對應，請重新勾選。」匯出時亦會先轉換,確保 v9 備份不帶出索引型 key。
 
+### 旅程身分(v10)
+
+v149 起 App 可以連接下一趟旅程(ADR 0021)。打卡、想逛與待送團體帳都只對匯出它的那一趟有意義:把岡山的待送帳還原到九州的手機,補送時就會寫進九州的試算表。因此 v10 匯出時帶上目前旅程:
+
+```text
+trip: { sourceKey: 'legacy' | 'sheet:<Trip ID>', tripId: '<Trip ID 或空字串>', tripName: '<旅程名稱或空字串>' }
+```
+
+| 備份 | 裝置目前的旅程 | 結果 |
+|---|---|---|
+| v10,`trip.sourceKey` 與裝置相同 | 任一 | 照常還原;待送帳非空時把 `trip_ledger_queue_owner` 設為目前旅程,空的就移除 |
+| v10,`trip.sourceKey` 不同 | 任一 | **拒絕**,吐「這份備份屬於另一趟旅程「<名稱>」，不能還原到目前的旅程」 |
+| v10,缺 `trip` 或 `sourceKey` 不是非空字串 | 任一 | **拒絕**,吐「個人狀態格式驗證失敗」 |
+| v1–v9(沒有 `trip`) | 岡山舊旅程(`legacy`) | 照常還原(行為與 v9 時代相同) |
+| v1–v9(沒有 `trip`) | 新旅程(`sheet:…`) | **拒絕**,吐「這是舊版備份，只能還原到岡山旅程」 |
+
+旅程比對排在成員名單檢查**之前**:別趟旅程的成員名單本來就不同,先講清楚「旅程不符」才不會讓使用者以為是檔案壞了。拒絕時同樣全有或全無,裝置一字不動。
+
 ## 二、向前相容:未來版本被舊 App 讀到
 
 **裁定:拒絕,不忽略未知欄位。**
 
-`isSupportedPersonalStateVersion()` 只接受 `[1..9]`。v10 或更高的 payload 會在 `restorePersonalState()` 的第一道驗證就被擋下,吐「個人狀態格式驗證失敗」,**裝置原狀態一字不動**。
+`isSupportedPersonalStateVersion()` 只接受 `[1..10]`。v11 或更高的 payload 會在 `restorePersonalState()` 的第一道驗證就被擋下,吐「個人狀態格式驗證失敗」,**裝置原狀態一字不動**。
+
+**v10 對舊版 App 的實際影響**:v148 以前的 App 其 `SUPPORTED` 仍是 `[1..9]`,會直接拒絕 v10 備份。這是刻意的:舊 App 看不懂 `trip`,若照單全收就無從阻擋跨旅程還原。
 
 **v9 對舊版 App 的實際影響**:v8 版本的 App 其 `SUPPORTED` 仍是 `[1..8]`,會直接拒絕 v9 備份 —— 這正是升版的目的。若不升版,舊 App 會把 v9 當成 v8 照單全收那些它無法解讀的 key,使用者看到的是「還原成功但想逛全空」。
 
@@ -134,6 +155,12 @@ w2:p<encoded placeId>:<encoded floor>:<encoded store name>
 - **升版原因是識別語意變更,不是新增欄位**:`wants` 欄位本身沒變,但 key 的意義變了。若讓新舊格式都宣稱是 v8,兩種互不相容的 key 會共用同一個版本號,還原時無從判斷該不該轉換。
 - **轉換不採信任何 index**:本機與備份的舊 key 都只以「樓層＋店名」搜尋候選,唯一才轉、模糊即棄。已由測試鎖住(`tests/shop-want-stable-key.test.js` 與還原矩陣的模糊案例)。
 - **`shopWantKey()` 更名為 `shopWantListStateKey()`**:原名同時暗示「想逛清單展開狀態」與「想逛標記」兩種用途,而它其實只負責前者。更名以免日後再被誤用為 store want key。
+
+## 七、複驗紀錄(2026-10-08,v10)
+
+- **升版原因是新增旅程身分**:Bar 於 2026-10-08 核准第二階段「連接新旅程」。待送團體帳若跨旅程還原,會在補送時寫進另一份試算表;舊版 App 若不拒絕 v10,也就擋不住。
+- **舊備份的處理**:v1–v9 沒有旅程身分,只可能來自岡山旅程,因此只允許還原到岡山舊旅程的裝置。
+- **測試**:`tests/personal-state-restore-matrix.test.js` 新增 v10 共同契約與六種旅程比對情境,並以刪除比對的對照實驗確認測試會失敗。
 
 ## 未來新增備份欄位時
 

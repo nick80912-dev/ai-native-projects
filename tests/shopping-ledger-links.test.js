@@ -487,16 +487,17 @@ assert.strictEqual(domain.inspectItem(item([link({recordId:'r-a'})]),ctx({person
 assert.strictEqual(domain.inspectItem(Object.assign(item([]),{done:true}),ctx()).canSplit,false,'已完成需先退回待買才可拆分');
 assert.strictEqual(domain.inspectItem(item([]),ctx()).canSplit,true,'未完成且未記帳可拆分');
 
-/* ================= 備份 v9 ================= */
-assert.strictEqual(mod.PERSONAL_STATE_VERSION,9,'個人狀態備份升為 v9(想逛 key 識別語意變更)');
-assert.strictEqual(mod.PERSONAL_STATE_SUPPORTED_VERSIONS.join(','),'1,2,3,4,5,6,7,8,9','v1～v9 皆可還原');
+/* ================= 備份 v10 ================= */
+assert.strictEqual(mod.PERSONAL_STATE_VERSION,10,'個人狀態備份升為 v10(v149 加入旅程身分;v9 為想逛 key 識別語意變更)');
+assert.strictEqual(mod.PERSONAL_STATE_SUPPORTED_VERSIONS.join(','),'1,2,3,4,5,6,7,8,9,10','v1～v10 皆可還原(旅程身分另行比對)');
 assert.strictEqual(mod.isSupportedPersonalStateVersion(4),true);
 assert.strictEqual(mod.isSupportedPersonalStateVersion(5),true);
 assert.strictEqual(mod.isSupportedPersonalStateVersion(6),true);
 assert.strictEqual(mod.isSupportedPersonalStateVersion(7),true);
 assert.strictEqual(mod.isSupportedPersonalStateVersion(8),true);
 assert.strictEqual(mod.isSupportedPersonalStateVersion(9),true);
-assert.strictEqual(mod.isSupportedPersonalStateVersion(10),false,'未知未來版本明確拒絕');
+assert.strictEqual(mod.isSupportedPersonalStateVersion(10),true);
+assert.strictEqual(mod.isSupportedPersonalStateVersion(11),false,'未知未來版本明確拒絕');
 assert.strictEqual(mod.isSupportedPersonalStateVersion('9'),false,'版本必須是數字');
 
 const v4Item=mod.normalizeShoppingItem({id:'v4',name:'舊備份項目',createdAt:NOW,done:true});

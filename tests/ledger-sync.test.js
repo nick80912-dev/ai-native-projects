@@ -135,6 +135,26 @@ function loadLedgerModule(){
   assert.strictEqual(flushed.sent,1,'flush sends the queued record');
   assert.strictEqual(repo.pendingCount(),0,'delivered record leaves the local queue');
 
+  /* v149 (ADR 0021): the queue remembers which trip its records belong to. */
+  let ownerTrip='sheet:kyushu-2027', ownerOnline=false, ownerPosts=0;
+  const ownerStorage=createStorage();
+  const ownerRepo=mod.createLedgerRepository({
+    storage:ownerStorage,ownerKey(){return ownerTrip;},
+    post(){ownerPosts++;return ownerOnline?Promise.resolve({ok:true}):Promise.reject(new Error('offline'));},
+    now(){return 1784250000000;}
+  });
+  await ownerRepo.add({member:'黃柏',category:'餐飲',detail:'拉麵',amountJpy:1200,amountTwd:0,note:''});
+  assert.strictEqual(ownerStorage.getItem('trip_ledger_queue_owner'),'sheet:kyushu-2027','a queued record is tagged with the current trip');
+  ownerTrip='sheet:other-trip'; ownerOnline=true; ownerPosts=0;
+  const foreignFlush=await ownerRepo.flushQueue();
+  assert.strictEqual(foreignFlush.foreign,true,'a queue from another trip is held back');
+  assert.strictEqual(ownerPosts,0,'nothing is posted to the other trip\'s endpoint');
+  assert.strictEqual(ownerRepo.pendingCount(),1,'held-back records are kept, never dropped');
+  ownerTrip='sheet:kyushu-2027';
+  const ownFlush=await ownerRepo.flushQueue();
+  assert.strictEqual(ownFlush.sent,1,'the owning trip sends its own records');
+  assert.strictEqual(ownerStorage.getItem('trip_ledger_queue_owner'),null,'an empty queue drops its owner tag');
+
   let releaseConcurrentPost;
   let concurrentPosts=0;
   const concurrentRepo=mod.createLedgerRepository({

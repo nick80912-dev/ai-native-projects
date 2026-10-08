@@ -1,7 +1,7 @@
 {
   "assets": [
-    "shell/v148/app-version.js",
-    "shell/v148/builtin-snapshot.js",
+    "shell/v149/app-version.js",
+    "shell/v149/builtin-snapshot.js",
     "navigation-intent.js",
     "diagnostic-impact.js",
     "today-view.js",
@@ -13,6 +13,7 @@
     "trip-lifecycle.js",
     "trip-archive.js",
     "trip-drive.js",
+    "trip-source.js",
     "trip-lifecycle-flow.js",
     "schema.js",
     "validator.js"

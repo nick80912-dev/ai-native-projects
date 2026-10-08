@@ -1,5 +1,19 @@
 # 07 版本紀錄
 
+## 2026-10-08 — v149 連接下一趟旅程（候選，未合併 dev、未發布）
+
+- **需求**：Bar 問「未來換新旅程時要怎麼讓專案接上」。規格 PR [#51](https://github.com/nick80912-dev/ai-native-projects/pull/51)；Bar 2026-10-08 回覆「照建議」核准七項決定，並核准 Tier 2 範圍：只在工作分支實作與完整測試、更新 PR #51，**不合併 dev、不發布、不改 Google Sheet 與已部署的 Apps Script**，合併時機待 10/24 旅程結束後確認。決策見 [ADR 0021](adr/0021-connect-new-trip.md)，操作見[換旅程手冊](docs/new-trip-handbook.md)。
+- **目前旅程**：新模組 `trip-source.js` 管 `trip_source` 紀錄、開機分類與連接交易。有打卡等紀錄的舊手機自動記為岡山（`legacy`），行為不變；沒有紀錄的新手機首頁顯示「尚未連接旅程」。lifecycle 新增 `unconnected` 模式與 `activate()`。
+- **連接新旅程**：清除旅程後或尚未連接時，設定與首頁出現「連接新旅程」。貼上發布連結 → 下載八表並檢查範本、TripConfig、Apps Script `?action=info` 的 Trip ID → 預覽 → 確認後清掉舊旅程本機資料與照片、寫入快照與來源並重新開啟。任何一步失敗手機不變；中斷後下次開機完成或復原。
+- **資料綁定旅程**：八表下載、團體帳寫入與快速拉取改用目前旅程的發布表與 Endpoint；快照帶 `sourceKey`，開機拒絕別趟快照，新旅程沒有快照時顯示「下載行程」而不是岡山 BUILTIN。待送帳以 `trip_ledger_queue_owner` 標記，不符時暫停送出。
+- **個人備份 v10**：加入 `trip` 身分，別趟的備份與舊版 v1–v9（在新旅程上）整批拒絕；契約見 `docs/personal-state-compatibility.md`。封存與個人帳匯出：新旅程記 `sheet:<Trip ID>`，岡山不變，封存格式維持 v1。
+- **Schema 3.1**：TripConfig 新增選填 `Trip ID`、`Ledger Endpoint`、`Weather Regions GID`；行程總表新增選填「行程ID」欄（依標題名稱找欄，格式與重複由 validator 擋下）。`09_SCHEMA_MAPPING.md` 依 `schemaDoc()` 重產；BUILTIN 刷新工具略過選填鍵與尾端選填欄。新旅程的天氣只用 Sheet 的「天氣地區」分頁，岡山沿用內建城市清單。
+- **Apps Script（只改 repo）**：`ledger-sync.gs` 新增唯讀 `doGet?action=info`，回報 Trip ID 與分帳紀錄標題是否正確；不取鎖、不回傳 Spreadsheet ID。岡山的部署不需更新。
+- **PWA**：forward bump v148→v149（`shell/v149/`、`sw.js`、`netlify.toml`、`runtime-assets.json`、活文件路徑）；`manifest.webmanifest` 的 `name` 改為 `TripPilot`。`builtin-snapshot.js` 離線重產，內容與 timestamp `1790861998387` 不變。五筆發布說明視窗為 `v149` + `['v148','v147','v146','v145']`。
+- **順手修正**：開發中發現 `trip-source.js` 以小寫讀匯率與結算幣別，真實試算表會永遠卡在幣別檢查；已改用 Schema 欄位名稱，並新增「測試資料的欄位必須是 schema.js 欄位」的契約測試。
+- **驗證**：四個 gate 通過；Node 113 個檔案全過（新增 `trip-source`、`itinerary-stop-id`、`weather-regions`）；新 `browser/trip-connect.spec.js` 9 項（新手機、連接、Endpoint 不符、岡山升級、無快照、待送帳隔離、備份拒絕、天氣地區）全過。本機 Chromium 另有 2 項失敗（個人帳匯出下載檔名、SW 離線子資源狀態碼），在未修改的已推送版本上同樣失敗，PR CI 的 browser-qa 在同一份程式上是綠的，判定為本機 Chromium 差異。
+- **已知限制**：清除需全團結清；只有快取或成員名稱的手機會變成「尚未連接」，所以 v149 要在岡山結算並清除後才發布；root v110 bridge 不能改，極舊裝置第一次開啟仍可能先看到岡山；頂欄徽章仍是岡山桃子圖示。回滾：合併前關閉 PR；發布後依 `16_OPS_PLAYBOOK.md` §A2 往前 bump。
+
 ## 2026-10-07 — v148 正式發布（released）+ G6 tag；2026-10-08 真機驗證通過
 
 - PR [#47](https://github.com/nick80912-dev/ai-native-projects/pull/47) 以 merge 合併 `dev` `ccb6f52` → `main`，merge commit **`48d787c`**。發布 PR 的 sanity 與 browser-qa 全綠後合併，合併時釘住 head；merged tree 與已測 dev 相同，root v110 bridge 與 `shell/v147/` 不變。

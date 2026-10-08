@@ -25,4 +25,18 @@ for(const change of [{isProxy:'false'},{proxyTarget:{token:'private'}},{note:['p
 raw=JSON.stringify([{id:record.id,time:record.time,amountJpy:0,amountTwd:0,taxRate:null}]);const legacy=JSON.parse(ctx.personalLedgerExportJson()).records[0];assert.equal(legacy.taxRate,null);assert.equal(legacy.proxyTarget,undefined);
 raw=JSON.stringify([record]);mode='inactive';assert.throws(()=>ctx.personalLedgerExportJson());mode='cleanup-pending';assert.throws(()=>ctx.personalLedgerExportJson());
 mode='active';ctx.localStorage.getItem=()=>{throw new Error('read failed');};assert.throws(()=>ctx.personalLedgerExportJson(),/read failed/);
+/* v149:新旅程的匯出用 sheet:<Trip ID> 識別來源,岡山沿用編輯用 ID */
+{
+ const sheetCtx={...ctx,localStorage:{getItem(){return JSON.stringify([record]);}},currentTripSourceSheetId:()=>'sheet:kyushu-2027'};
+ vm.createContext(sheetCtx);
+ vm.runInContext(extractFunction(html,'projectPersonalLedgerExportRecord')+'\n'+extractFunction(html,'personalLedgerExportJson'),sheetCtx);
+ mode='active';
+ const sheetExport=JSON.parse(sheetCtx.personalLedgerExportJson());
+ assert.equal(sheetExport.trip.sourceSheetId,'sheet:kyushu-2027');
+ assert.equal(sheetExport.trip.sourceKey,JSON.stringify(['sheet:kyushu-2027','2026-10-18','2026-10-23']));
+ assert.ok(sheetExport.records[0].sourceKey.indexOf('sheet:kyushu-2027')>=0,'records carry the new trip identity');
+ assert.equal(exported.trip.sourceSheetId,'sheet-A','legacy export keeps TRIP_SOURCE_SHEET_ID');
+}
+assert.match(html,/function currentTripSourceSheetId\(\)\{return isLegacyTripSource\(\)\?TRIP_SOURCE_SHEET_ID:currentTripSourceKey\(\);\}/,'archive and export share one source-id rule');
+assert.match(html,/var archiveInput=\{sourceSheetId:currentTripSourceSheetId\(\),/,'archives record the current trip');
 console.log('Personal ledger export projection and fail-closed tests passed');

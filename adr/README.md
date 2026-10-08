@@ -33,5 +33,6 @@ Decision · Context · Alternatives Considered · Why This Decision · Expected 
 | 0018 | 導覽、診斷與 Today 呈現模組邊界 | Accepted |
 | 0019 | 版本綁定的 Generated BUILTIN 離線資產 | Accepted |
 | 0020 | 個人旅程生命週期與 Drive 唯讀封存 | Accepted（v137 candidate；真機待驗） |
+| 0021 | 連接下一趟旅程（每趟一份 Sheet） | Accepted（v149 候選；未合併、未發布） |
 
 新增 ADR:複製格式、編號遞增、更新本索引。

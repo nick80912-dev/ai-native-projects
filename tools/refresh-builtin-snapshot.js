@@ -49,7 +49,9 @@ function headersFor(sheet){
 
 function rowMatchesSchema(actual,sheet){
   const columns=sheet.columns||[];
-  return actual.length===columns.length&&actual.every((value,index)=>{
+  /* v149:選填欄(例如行程ID)放在最後,岡山試算表沒有也算相符 */
+  const required=columns.filter(column=>!column.optional).length;
+  return actual.length>=required&&actual.length<=columns.length&&actual.every((value,index)=>{
     const column=columns[index];
     return [column.header].concat(column.aliases||[]).some(header=>String(header||'')===value);
   });
@@ -91,6 +93,7 @@ function validateBuiltinCandidate(options){
   const cfgRows=parseCsv(candidate.cfg);
   const cfg=cfgValues(cfgRows);
   (schema.sheets.cfg.keys||[]).forEach(definition=>{
+    if(definition.optional)return;
     if(!cfg.has(definition.header)||!cfg.get(definition.header))throw new Error('cfg CSV is missing '+definition.header);
   });
   const start=Date.parse(cfg.get('Start Date')+'T00:00:00Z');

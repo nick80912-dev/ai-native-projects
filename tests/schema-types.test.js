@@ -17,7 +17,18 @@ const typeColumn = schema.sheets.places.columns.find(function(column) {
   return column.field === 'type';
 });
 
-assert.strictEqual(schema.version, '3.0 (2026-08-11)');
+assert.strictEqual(schema.version, '3.1 (2026-10-08)');
+/* v149:新旅程的 TripConfig 多了 Trip ID 與 Ledger Endpoint。舊試算表沒有,所以是 optional;
+   連接新旅程時由 trip-source.js 強制檢查。 */
+[['tripId','Trip ID'],['ledgerEndpoint','Ledger Endpoint'],['weatherRegionsGid','Weather Regions GID']].forEach(function(pair){
+  const key = schema.sheets.cfg.keys.find(function(candidate){ return candidate.field === pair[0]; });
+  assert(key, pair[1] + ' key exists');
+  assert.strictEqual(key.header, pair[1]);
+  assert.strictEqual(key.optional, true, pair[1] + ' stays optional for the Okayama Sheet');
+});
+schema.sheets.cfg.keys.filter(function(key){ return ['tripId','ledgerEndpoint','weatherRegionsGid'].indexOf(key.field) < 0; }).forEach(function(key){
+  assert.notStrictEqual(key.optional, true, key.header + ' is still required by the refresh tool');
+});
 /* v136:Ledger Default Currency 同時是全團結算幣別(ADR 0007)。說明原寫「分帳預設輸入幣別」,
    只講了一半 —— v135 查到有人照字面改成另一幣別,已還清的人會重新被要求付款。
    只改說明文字,欄位名稱、合法值與驗證規則不變。 */

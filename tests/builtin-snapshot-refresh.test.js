@@ -9,7 +9,7 @@ function schemaFixture(pubBase='https://example.test/?gid='){
     pubBase,
     fetchTimeoutMs:1000,
     sheets:{
-      itin:{gid:'1',kind:'itinerary',columns:['日期','時間','行程','地點','ID','交通','備註'].map(header=>({header}))},
+      itin:{gid:'1',kind:'itinerary',columns:['日期','時間','行程','地點','ID','交通','備註'].map(header=>({header})).concat([{header:'行程ID',optional:true}])},
       places:{gid:'2',kind:'table',columns:['PID','地點','HID'].map(header=>({header}))},
       rest:{gid:'3',kind:'table',columns:['RID','餐廳名稱'].map(header=>({header}))},
       shop:{gid:'4',kind:'table',columns:['SID','PID','品牌名稱'].map(header=>({header}))},
@@ -20,7 +20,10 @@ function schemaFixture(pubBase='https://example.test/?gid='){
         ['tripname','Trip Name'],['startdate','Start Date'],['enddate','End Date'],
         ['travelmode','Travel Mode'],['currency','Currency'],['homepage','Home Page'],
         ['exchangerate','Exchange Rate'],['ledgerdefaultcurrency','Ledger Default Currency']
-      ].map(([field,header])=>({field,header}))}
+      ].map(([field,header])=>({field,header})).concat([
+        /* v149:新旅程才有的鍵是 optional,岡山試算表沒有也要能刷新 BUILTIN */
+        {field:'tripId',header:'Trip ID',optional:true},{field:'ledgerEndpoint',header:'Ledger Endpoint',optional:true}
+      ])}
     }
   };
 }

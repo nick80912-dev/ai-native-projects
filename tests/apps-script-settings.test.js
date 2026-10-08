@@ -327,4 +327,29 @@ assert.deepStrictEqual(
 );
 assert.strictEqual(postApp.lock.waited, true, 'doPost 仍取 script lock');
 
+/* ================= v149 doGet?action=info(連接新旅程,ADR 0021) ================= */
+const infoApp = loadAppScript();
+assert.deepStrictEqual(infoApp.get({action:'info'}), {ok:true, tripId:'', ledgerHeaderOk:true}, '岡山試算表沒有 Trip ID 時回空字串');
+infoApp.cfg.data.push(['Trip ID', ' kyushu-2027 ']);
+assert.deepStrictEqual(infoApp.get({action:'info'}), {ok:true, tripId:'kyushu-2027', ledgerHeaderOk:true}, '回報 TripConfig 的 Trip ID');
+assert.strictEqual(infoApp.lock.waited, false, 'info 不取 script lock');
+infoApp.ledger.data[0][4] = '品項';
+assert.strictEqual(infoApp.get({action:'info'}).ledgerHeaderOk, false, '分帳紀錄標題被改過時回報 false');
+const narrowInfoApp = loadAppScript();
+narrowInfoApp.ledger.data[0] = narrowInfoApp.ledger.data[0].slice(0, 16);
+assert.strictEqual(narrowInfoApp.get({action:'info'}).ledgerHeaderOk, false, '欄數不足 21 時回報 false');
+const noCfgApp = loadAppScript();
+delete noCfgApp.sheets.TripConfig;
+assert.deepStrictEqual(noCfgApp.get({action:'info'}), {ok:true, tripId:'', ledgerHeaderOk:true}, '沒有 TripConfig 分頁時 Trip ID 為空,App 會拒絕連接');
+const infoSource = gsSource.slice(gsSource.indexOf('function tripInfo('), gsSource.indexOf('function appendLedger('));
+assert.ok(infoSource.length > 0 && infoSource.indexOf('LockService') < 0 && infoSource.indexOf('appendRow') < 0 && infoSource.indexOf('setValue') < 0 && infoSource.indexOf('getId') < 0,
+  'info 唯讀、不取鎖、不回傳 Spreadsheet ID');
+(function(){
+  const schemaSandbox = {};
+  vm.createContext(schemaSandbox);
+  vm.runInContext(fs.readFileSync('schema.js','utf8'), schemaSandbox);
+  const headers = schemaSandbox.SCHEMA.sheets.ledger.columns.map(function(column){ return column.header; });
+  assert.deepStrictEqual(Array.from(infoApp.sandbox.LEDGER_HEADERS), Array.from(headers), 'Apps Script 的分帳紀錄標題與 schema.js 一致');
+})();
+
 console.log('Apps Script settings tests passed');

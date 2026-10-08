@@ -15,6 +15,7 @@ async function installPersistentOfflineMode(page){
 }
 
 async function openPhotoQaApp(page){
+  await page.addInitScript(()=>{if(!localStorage.getItem('trip_source'))localStorage.setItem('trip_source','{"version":1,"kind":"legacy","migratedAt":0}');}); /* v149: an existing Okayama device */
   await page.route('**/*',route=>{
     const url=new URL(route.request().url());
     if(url.hostname==='127.0.0.1')return route.continue();

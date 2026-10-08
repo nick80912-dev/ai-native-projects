@@ -70,7 +70,7 @@ const builtinSource = read(shellPath('builtin-snapshot.js')).replace(/\r\n/g,'\n
 const schemaSandbox = {};
 vm.createContext(schemaSandbox);
 vm.runInContext(fs.readFileSync('schema.js','utf8'),schemaSandbox);
-assert.strictEqual(schemaSandbox.SCHEMA.version,'3.0 (2026-08-11)','production Schema version identifies the HID linkage contract');
+assert.strictEqual(schemaSandbox.SCHEMA.version,'3.1 (2026-10-08)','production Schema version identifies the connect-new-trip TripConfig keys (3.0 added the HID linkage)');
 assert.strictEqual(schemaSandbox.SCHEMA.sheets.ledger.columns.length,21,'Ledger 2.2 appends five structured UX fields');
 assert.strictEqual(schemaSandbox.SCHEMA.sheets.ledger.columns[14].field,'storeName');
 assert.strictEqual(schemaSandbox.SCHEMA.sheets.ledger.columns[15].field,'replacesRecordId');
@@ -80,7 +80,7 @@ assert(cfgKeys.some(function(key){return key.field==='ledgerDefaultCurrency'&&ke
 const itineraryActColumn = schemaSandbox.SCHEMA.sheets.itin.columns.find(function(column){ return column.field==='act'; });
 assert.strictEqual(itineraryActColumn.header,'行程','production Schema uses the confirmed itinerary Header');
 assert.strictEqual((itineraryActColumn.aliases||[]).indexOf('詳細行程'),-1,'obsolete Header is not retained as an alias');
-assert.match(htmlSource,/version:\s*'3\.0 \(2026-08-11\)'/,'inline fallback Schema version identifies the HID linkage contract');
+assert.match(htmlSource,/version:\s*'3\.1 \(2026-10-08\)'/,'inline fallback Schema version identifies the connect-new-trip TripConfig keys');
 assert(builtinSource.includes('Exchange Rate,0.2'),'BUILTIN TripConfig contains the initial exchange rate');
 assert(builtinSource.includes('Ledger Default Currency,JPY'),'BUILTIN TripConfig contains the initial ledger currency');
 assert.match(htmlSource,/field:'act',\s*header:'行程'/,'inline fallback Schema uses the confirmed itinerary Header');
@@ -851,6 +851,23 @@ async function testBootSelection(){
   storage.memory.v2_cache_cfg=JSON.stringify({text:orchestrationRaw('blocked').cfg,ts:80});
   selected=app.selectBootData(storage,orchestrationRaw('builtin'));
   assert.strictEqual(selected.source,'builtin','invalid legacy cache falls back to BUILTIN');
+
+  /* v149 (ADR 0021): snapshots are bound to the trip they were downloaded for. */
+  assert.strictEqual(active.sourceKey,'legacy','without a connected trip, new snapshots belong to the built-in Okayama trip');
+  delete active.sourceKey;
+  storage=memoryStorage({trip_data_snapshot_state:JSON.stringify({formatVersion:1,active:active,previous:null})});
+  assert.strictEqual(app.selectBootData(storage,orchestrationRaw('builtin')).snapshot.generationId,'g-active','a v148 snapshot without sourceKey still boots the Okayama trip');
+  app.currentTripSourceKey=function(){return 'sheet:kyushu-2027';};
+  const otherTrip=snapshotFor(app,orchestrationRaw('kyushu'),'g-kyushu');
+  assert.strictEqual(otherTrip.sourceKey,'sheet:kyushu-2027');
+  storage=memoryStorage({trip_data_snapshot_state:JSON.stringify({formatVersion:1,active:otherTrip,previous:previous})});
+  selected=app.selectBootData(storage,orchestrationRaw('builtin'));
+  assert.strictEqual(selected.snapshot.generationId,'g-kyushu','the connected trip boots its own snapshot');
+  storage=memoryStorage({trip_data_snapshot_state:JSON.stringify({formatVersion:1,active:previous,previous:previous})});
+  app.SHEETS.forEach(function(sheet){storage.memory['v2_cache_'+sheet.key]=JSON.stringify({text:legacy[sheet.key],ts:80});});
+  assert.throws(function(){app.selectBootData(storage,orchestrationRaw('builtin'));},function(error){return error.code==='SOURCE_SNAPSHOT_MISSING';},
+    'a connected trip never falls back to the Okayama snapshot, legacy cache or BUILTIN');
+  delete app.currentTripSourceKey;
 }
 
 async function testAtomicSync(){

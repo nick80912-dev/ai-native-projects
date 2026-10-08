@@ -13,6 +13,7 @@ test.beforeEach(async({page})=>{
   await installFixedDate(page,'2026-09-07T10:00:00+08:00');
   await page.addInitScript(()=>{
     localStorage.clear();
+    localStorage.setItem('trip_source','{"version":1,"kind":"legacy","migratedAt":0}'); /* v149: an existing Okayama device */
     try{Object.defineProperty(window.navigator,'onLine',{configurable:true,get:()=>false});}catch(ignore){}
     window.fetch=()=>Promise.reject(new TypeError('QA_ANDROID_OFFLINE'));
   });

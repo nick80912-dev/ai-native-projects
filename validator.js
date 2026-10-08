@@ -212,6 +212,7 @@ function validateSnapshotData(db,raw,schema){
     var pid=String(shop.placeId||'').toUpperCase().trim();
     if(pid&&!pids[pid]) block('BROKEN_REF','shop','懸空引用:Shopping ' + shop.shopId + ' → ' + pid + ' 不存在於 Places');
   });
+  var stopIds={};
   tripDays.forEach(function(day,dayIndex){
     if(!Array.isArray(day.items)){
       block('DB_STRUCTURE','itin','trip.days 的每一天都必須包含 items 陣列');
@@ -219,6 +220,12 @@ function validateSnapshotData(db,raw,schema){
     }
     validObjects(day.items,'itin','trip.days[' + dayIndex + '].items').forEach(function(item){
       var ref=String(item.ref||'').toUpperCase().trim(), linked=null;
+      var stopId=String(item.stopId||'');
+      if(stopId){
+        if(!/^[A-Za-z0-9_-]{1,40}$/.test(stopId)) block('STOP_ID_FORMAT','itin','行程ID 格式錯誤:' + day.date + '「' + item.act + '」的「' + stopId + '」只能用英數字、- 與 _(最多 40 字)');
+        else if(stopIds[stopId]) block('STOP_ID_DUPLICATE','itin','行程ID 重複:「' + stopId + '」同時出現在 ' + stopIds[stopId] + ' 與 ' + day.date + '「' + item.act + '」');
+        else stopIds[stopId]=day.date + '「' + item.act + '」';
+      }
       if(/^P\d+/.test(ref)&&!pids[ref]) block('BROKEN_REF','itin','懸空引用:行程 ' + day.date + '「' + item.act + '」→ ' + ref + ' 不存在於 Places');
       if(/^R\d+/.test(ref)){
         if(!rids[ref]) block('BROKEN_REF','itin','懸空引用:行程 ' + day.date + '「' + item.act + '」→ ' + ref + ' 不存在於 Restaurants');

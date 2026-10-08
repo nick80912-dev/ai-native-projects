@@ -80,6 +80,20 @@ GET {WEB_APP_URL}?action=ledger&after=<N>
 - `serverTime` 僅供時鐘偏移診斷，**不得**用於改寫 Ledger record、canonical ordering、settlement event server timestamp 或 server arrival ordering。
 - `doGet` 唯讀且**不取 `LockService`**，避免與 `doPost` 搶鎖或額外消耗配額。`doPost` 既有契約與驗證邏輯完全不動。
 
+## GET 契約（v149 旅程資訊，連接新旅程用）
+
+```text
+GET {WEB_APP_URL}?action=info
+```
+
+成功回應：`{"ok":true,"tripId":"kyushu-2027","ledgerHeaderOk":true}`。
+
+- `tripId` 是這個 Apps Script 所屬試算表 TripConfig 的 `Trip ID`（去掉前後空白）；沒有這列或沒有 TripConfig 時為空字串，App 會拒絕連接。
+- `ledgerHeaderOk` 表示「分帳紀錄」第一列的 21 個標題與 `schema.js` 完全相同；欄數不足或任何一欄被改過即為 `false`。
+- 唯讀、不取 `LockService`、不回傳 Spreadsheet ID 或其他設定；例外時回 `{"ok":false,"error":"info read failed"}`。
+- App 連接新旅程前比對 CSV 的 Trip ID 與這裡回報的 Trip ID，避免「行程讀 A 表、帳寫進 B 表」。岡山（`legacy`）不呼叫此端點，所以岡山的既有部署**不需要更新**。
+- 新旅程：範本的 Apps Script 貼上新版 `ledger-sync.gs` 一次，之後每份副本各自「新增部署作業」並把 `/exec` 網址填進 TripConfig 的 `Ledger Endpoint`。步驟見 `docs/new-trip-handbook.md`。
+
 ## 部署
 
 1. Bar 先在 Google Sheet「分帳紀錄」既有 16 欄末端依序新增：`輸入幣別`、`免稅品`、`價格方式`、`稅率`、`優惠券金額`，不可改序或插入既有欄位中間。

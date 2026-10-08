@@ -1,5 +1,15 @@
 # tests — 測試資產(交付必附)
 
+## v149 connect-new-trip coverage
+
+- `trip-source.test.js`：連結解析（發布／編輯／無效）、來源紀錄正規化與讀回、開機分類（沿用／岡山遷移／尚未連接／損壞）、`unconnected`／`activate`、inspect 的每個錯誤碼、commit 成功與中途失敗復原、中斷標記復原、分頁鎖；並鎖住測試用 TripConfig 欄位必須是 `schema.js` 真正產生的欄位名稱。
+- `itinerary-stop-id.test.js`：「行程ID」依標題名稱找欄、空白退回位置型 ID、岡山 7 欄不受第 8 欄雜訊影響、格式與重複被 validator 擋下、結構檢查視為選填欄。
+- `weather-regions.test.js`：天氣地區 CSV 解析（關鍵字分隔、日本範圍、重複座標）、岡山用內建清單、新旅程只用自己的清單、別趟或損壞清單被忽略。
+- `personal-state-restore-matrix.test.js` 擴充 v10 與六種旅程比對；`apps-script-settings.test.js` 新增 `doGet?action=info`；`personal-ledger-export.test.js` 新增新旅程來源識別。
+- `browser/trip-connect.spec.js`：新手機「尚未連接旅程」、貼連結→預覽→確認→重新開啟、Endpoint 屬於別份試算表、岡山舊手機升級、新旅程無快照時的下載畫面、舊旅程待送帳不送出、新旅程拒絕岡山舊備份、同步後讀取天氣地區。此 spec 自行管理 localStorage（連接後會重新載入），不用 `qa-fixture` 的每次清空。
+- 其他 browser spec 的 fixture 都預先寫入 `trip_source` 為岡山（`legacy`），代表既有的岡山手機；沒有它的「新手機」在 v149 會是「尚未連接」。
+- 執行：`node tests/trip-source.test.js`、`npx playwright test tests/browser/trip-connect.spec.js`。
+
 ## v146 Home coverage
 
 - `home-v146.test.js`：完整日曆日期／閏年、目的地優先、路線區域及前後最近／等距／未知結果。
@@ -64,7 +74,7 @@ v143 驗證與審查紀錄：[交付驗證](../docs/trippilot-v143-verification.
 - `browser/today-live-info.spec.js` exercises Hero／badge target confirmation at 320／375／390px with tap／Enter／Space, sticky-safe geometry, live status, reduced motion, missing targets, stale timers, source scroll, connected／replacement／fallback focus, and blank-category behavior. Focused WebKit uses `--grep "target|定位|blank category"`.
 - `browser/navigation-target-matrix.spec.js` exercises the actual expanded cluster-stop, pre-trip day, mall-floor, and back-to-now controls at 320／375／390px with rotating Tap／Enter／Space. It asserts exact target and live status, native keyboard focus, sticky-header-safe target／status geometry, 1.2-second clear, reduced-motion static treatment, zero horizontal overflow, and current-day return behavior. Run focused WebKit together with the existing Today target selection.
 - `diagnostic-impact-module.test.js` and `diagnostics-app-log.test.js` protect exact timeout classification, conservative unknown handling, input immutability, escaped raw／projected output, and byte-for-byte raw copied reports; `browser/diagnostics-app-log.spec.js` verifies the same boundary in Chromium.
-- `manifest-status-authority.test.js` plus `tools/check-doc-titles.js` require `.ai-manifest.json` to name `tasks/current.md` as the sole current-status authority, identify changelog／task archives only as history, reject stale `tasks/(current/backlog/done)`／`manifest.status` prose, and omit volatile candidate／next-action／automated-test snapshots. Current version authority is `shell/v148/app-version.js`／root `sw.js`; root `app-version.js` is the byte-locked v110 bridge.
+- `manifest-status-authority.test.js` plus `tools/check-doc-titles.js` require `.ai-manifest.json` to name `tasks/current.md` as the sole current-status authority, identify changelog／task archives only as history, reject stale `tasks/(current/backlog/done)`／`manifest.status` prose, and omit volatile candidate／next-action／automated-test snapshots. Current version authority is `shell/v149/app-version.js`／root `sw.js`; root `app-version.js` is the byte-locked v110 bridge.
 
 
 
