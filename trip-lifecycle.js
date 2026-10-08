@@ -49,21 +49,27 @@
     if(text===null)return {mode:'active',archiveId:null};
     try{
       var state=JSON.parse(text);
-      if(state&&(state.mode==='cleanup-pending'||state.mode==='complete')){
+      if(state&&(state.mode==='cleanup-pending'||state.mode==='complete'||state.mode==='unconnected')){
         return {mode:state.mode,archiveId:typeof state.archiveId==='string'?state.archiveId:null};
       }
     }catch(error){}
     return {mode:'cleanup-pending',archiveId:null};
   }
   function writeState(storage,state){
-    if(!state||['cleanup-pending','complete'].indexOf(state.mode)<0)throw new Error('Invalid trip lifecycle state');
+    if(!state||['cleanup-pending','complete','unconnected'].indexOf(state.mode)<0)throw new Error('Invalid trip lifecycle state');
     var value=JSON.stringify({mode:state.mode,archiveId:state.archiveId||null});
     storage.setItem(STATE_KEY,value);
     if(storage.getItem(STATE_KEY)!==value)throw new Error('Trip lifecycle state did not persist on read-back');
   }
+  /* v149: a device becomes active again only by connecting a trip (trip-source.js). Active is
+     stored as the absence of the key, so older generations keep reading it the same way. */
+  function activate(storage){
+    storage.removeItem(STATE_KEY);
+    if(storage.getItem(STATE_KEY)!==null)throw new Error('Trip lifecycle state did not clear on read-back');
+  }
 
   return {
     evaluateEndPreflight:evaluateEndPreflight,resetKeys:resetKeys,clearKeys:clearKeys,
-    readState:readState,writeState:writeState,STATE_KEY:STATE_KEY
+    readState:readState,writeState:writeState,activate:activate,STATE_KEY:STATE_KEY
   };
 });

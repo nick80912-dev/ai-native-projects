@@ -44,6 +44,7 @@ var SHELL = [
   './trip-lifecycle.js',
   './trip-archive.js',
   './trip-drive.js',
+  './trip-source.js',
   './trip-lifecycle-flow.js',
   './schema.js',
   './validator.js',

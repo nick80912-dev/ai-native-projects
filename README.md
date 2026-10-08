@@ -57,6 +57,7 @@ v145 C 天氣改善與限制：[驗證記錄](docs/trippilot-v145-c-verification
 - `trip-archive.js` — 八表及個人狀態封存格式與讀回驗證
 - `trip-drive.js` — Google Drive 個人封存及追加式回顧筆記邊界；同次 App 重用有效記憶體授權，取消／逾時可重試，不持久化 token
 - `trip-lifecycle-flow.js` — 重置、清除及中斷後恢復的流程協調
+- `trip-source.js` — 目前連接的旅程來源、開機分類與「連接新旅程」交易（v149）
 - `schema.js` / `validator.js` — 資料規格 SSoT / 防錯與健康檢查
 - `tests/` / `tools/` — 可重跑測試與文件一致性檢查
 - `tasks/` — 即時工作狀態唯一權威
