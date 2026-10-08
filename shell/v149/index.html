@@ -852,7 +852,10 @@ var SCHEMA = {
         { field:'place', header:'地點',     desc:'地點顯示名稱(給人看)' },
         { field:'ref',   header:'ID',       desc:'Pxxx=地點 / Rxxx=餐廳(給程式讀)' },
         { field:'move',  header:'交通',     desc:'交通說明;空值時卡片退回資料庫交通時間' },
-        { field:'note',  header:'備註',     desc:'自由備註' }
+        { field:'note',  header:'備註',     desc:'自由備註' },
+        /* v149(ADR 0021):新旅程範本的第 8 欄。依標題名稱尋找,不依位置;岡山試算表沒有這欄。 */
+        { field:'stopId', header:'行程ID', optional:true,
+          desc:'選填;英數字、- 或 _(最多 40 字),整份行程不可重複。有填就當作站點 ID,增刪列時打卡與下一站不會錯位;沒填沿用「日期_第幾列」' }
       ]
     },
 
@@ -991,7 +994,9 @@ var SCHEMA = {
         { field:'tripId',     header:'Trip ID',     optional:true,
           desc:'選填(新旅程必填);3–40 個英數字、- 或 _,每趟旅程不同,用來分開快取、待送帳與備份' },
         { field:'ledgerEndpoint', header:'Ledger Endpoint', optional:true,
-          desc:'選填(新旅程必填);這份試算表部署的 Apps Script 網頁應用程式 /exec 網址' }
+          desc:'選填(新旅程必填);這份試算表部署的 Apps Script 網頁應用程式 /exec 網址' },
+        { field:'weatherRegionsGid', header:'Weather Regions GID', optional:true,
+          desc:'選填;「天氣地區」分頁的 gid(欄位:地區名稱、緯度、經度、關鍵字)。新旅程沒填就不顯示天氣;岡山沿用內建城市清單' }
       ]
     }
   }
@@ -1245,6 +1250,7 @@ function validateSnapshotData(db,raw,schema){
     var pid=String(shop.placeId||'').toUpperCase().trim();
     if(pid&&!pids[pid]) block('BROKEN_REF','shop','懸空引用:Shopping ' + shop.shopId + ' → ' + pid + ' 不存在於 Places');
   });
+  var stopIds={};
   tripDays.forEach(function(day,dayIndex){
     if(!Array.isArray(day.items)){
       block('DB_STRUCTURE','itin','trip.days 的每一天都必須包含 items 陣列');
@@ -1252,6 +1258,12 @@ function validateSnapshotData(db,raw,schema){
     }
     validObjects(day.items,'itin','trip.days[' + dayIndex + '].items').forEach(function(item){
       var ref=String(item.ref||'').toUpperCase().trim(), linked=null;
+      var stopId=String(item.stopId||'');
+      if(stopId){
+        if(!/^[A-Za-z0-9_-]{1,40}$/.test(stopId)) block('STOP_ID_FORMAT','itin','行程ID 格式錯誤:' + day.date + '「' + item.act + '」的「' + stopId + '」只能用英數字、- 與 _(最多 40 字)');
+        else if(stopIds[stopId]) block('STOP_ID_DUPLICATE','itin','行程ID 重複:「' + stopId + '」同時出現在 ' + stopIds[stopId] + ' 與 ' + day.date + '「' + item.act + '」');
+        else stopIds[stopId]=day.date + '「' + item.act + '」';
+      }
       if(/^P\d+/.test(ref)&&!pids[ref]) block('BROKEN_REF','itin','懸空引用:行程 ' + day.date + '「' + item.act + '」→ ' + ref + ' 不存在於 Places');
       if(/^R\d+/.test(ref)){
         if(!rids[ref]) block('BROKEN_REF','itin','懸空引用:行程 ' + day.date + '「' + item.act + '」→ ' + ref + ' 不存在於 Restaurants');
@@ -1516,13 +1528,17 @@ function schemaType(raw){
 
 /* ================= 行程解析(7欄:日期/時間/活動/地點/ID/交通/備註) ================= */
 function buildItin(rows){
-  var meta={ title:'' }, days=[], cur=null;
+  var meta={ title:'' }, days=[], cur=null, stopIdCol=-1;
   var dayRe=/第.+天\s*(\d{1,2})\/(\d{1,2})\s*[\(（]?([日一二三四五六])?/;
   rows.forEach(function(r,idx){
     var c=[]; for(var i=0;i<7;i++) c.push((r[i]||'').trim());
     if(idx===0&&c[0]&&!meta.title){ meta.title=c[0]; return; }
     if(c[0]==='飯店') return;
-    if(c[0]==='日期'&&c[1]==='時間') return;
+    if(c[0]==='日期'&&c[1]==='時間'){
+      /* v149:選填的「行程ID」欄依標題名稱尋找(新旅程範本放在第 8 欄) */
+      stopIdCol=r.map(function(cell){return String(cell||'').trim();}).indexOf('行程ID');
+      return;
+    }
     var dtext=c[0]||c[1];
     var m=dtext.match(dayRe);
     if(/第.+天/.test(dtext)&&m){
@@ -1533,9 +1549,12 @@ function buildItin(rows){
     if(!cur) return;
     var it={ time:c[1], act:c[2], place:c[3], ref:c[4], move:c[5], note:c[6] };
     if(!it.act&&!it.place&&!it.move&&!it.note) return;
+    var stopId=stopIdCol>=0?String(r[stopIdCol]||'').trim():'';
+    if(stopId) it.stopId=stopId;
     cur.items.push(it);
   });
-  days.forEach(function(d){ d.items.forEach(function(it,i){ it.id=d.date+'_'+i; }); });
+  /* 有行程ID 就用它(驗證保證格式與唯一);沒有就沿用位置型 ID。位置型含「/」,不會和行程ID 撞名。 */
+  days.forEach(function(d){ d.items.forEach(function(it,i){ it.id=it.stopId||d.date+'_'+i; }); });
   return { meta:meta, days:days };
 }
 
@@ -1682,7 +1701,7 @@ function validateCandidateStructure(raw){
     }
     if(def.kind==='itinerary'){
       strictDef={label:def.label,columns:def.columns.map(function(column){
-        return {field:column.field,header:column.header,aliases:column.aliases||[],required:true};
+        return {field:column.field,header:column.header,aliases:column.aliases||[],required:column.optional!==true};
       })};
       mapped=buildHeaderMap(rows,strictDef);
       result.blockers=result.blockers.concat(mapped.blockers||[]);
@@ -1858,7 +1877,9 @@ function syncAll(showToast){
     return {ok:true,generationId:generation,warnings:candidate.validation.warnings,partialSheets:download.partialSheets};
   });
   syncInFlight=syncInFlight.then(function(result){
-    syncInFlight=null; renderSyncStatusBody(); return result;
+    syncInFlight=null; renderSyncStatusBody();
+    if(result&&result.ok&&typeof refreshWeatherRegions==='function')refreshWeatherRegions();
+    return result;
   },function(error){
     /* v147(backlog #51):成功路徑在下載後會重查 inactive 並靜默返回;失敗路徑原本沒有。
        下載開始於 active、旅程清除後才失敗時,會把清除時移除的 trip_sync_last_failure 寫回、
@@ -3016,10 +3037,74 @@ var WEATHER_CITIES=[
   { key:'kamakura', label:'鎌倉', lat:35.3192, lon:139.5467, words:['鎌倉','Kamakura','江之島','藤澤','七里濱'] },
   { key:'narita', label:'成田', lat:35.7767, lon:140.3183, words:['成田','Narita','京成','Skyliner'] }
 ];
+/* v149(ADR 0021):新旅程的天氣地區來自試算表「天氣地區」分頁(地區名稱、緯度、經度、關鍵字),
+   分頁 gid 填在 TripConfig 的 Weather Regions GID。岡山舊旅程沿用上面的固定清單;新旅程沒有分頁時
+   不顯示天氣,不拿別趟旅程的城市清單猜。清單存在 trip_ key,清除或換旅程時一起移除。 */
+var WEATHER_REGIONS_KEY='trip_weather_regions';
+var WEATHER_REGIONS_MAX=30;
+function weatherRegionValid(region){
+  return !!region&&typeof region.key==='string'&&typeof region.label==='string'&&region.label&&
+    typeof region.lat==='number'&&isFinite(region.lat)&&region.lat>=20&&region.lat<=46&&
+    typeof region.lon==='number'&&isFinite(region.lon)&&region.lon>=122&&region.lon<=154&&
+    Array.isArray(region.words)&&region.words.length>0;
+}
+function parseWeatherRegionsCsv(text){
+  var regions=[],seen={},skipped=0;
+  parseCSV(text||'').forEach(function(row){
+    var label=String(row[0]||'').trim();
+    if(!label||label==='地區名稱')return;
+    var lat=Number(String(row[1]||'').trim()),lon=Number(String(row[2]||'').trim());
+    var words=[label].concat(String(row[3]||'').split(/[、,，\/|;；]/)).map(function(word){return word.trim();})
+      .filter(function(word,index,list){return word&&list.indexOf(word)===index;});
+    var region={key:'r_'+lat.toFixed(3)+'_'+lon.toFixed(3),label:label,lat:lat,lon:lon,words:words};
+    if(!weatherRegionValid(region)||seen[region.key]||regions.length>=WEATHER_REGIONS_MAX){skipped++;return;}
+    seen[region.key]=true;
+    regions.push(region);
+  });
+  return {regions:regions,skipped:skipped};
+}
+function readWeatherRegions(){
+  var stored;
+  try{stored=JSON.parse(localStorage.getItem(WEATHER_REGIONS_KEY)||'null');}catch(ignore){return [];}
+  if(!stored||stored.version!==1||stored.sourceKey!==currentTripSourceKey()||!Array.isArray(stored.regions))return [];
+  return stored.regions.filter(weatherRegionValid);
+}
+function weatherCities(){
+  return typeof isLegacyTripSource!=='function'||isLegacyTripSource()?WEATHER_CITIES:readWeatherRegions();
+}
+var weatherRegionsInFlight=null;
+function refreshWeatherRegions(){
+  if(isLegacyTripSource())return Promise.resolve(null);
+  if(weatherRegionsInFlight)return weatherRegionsInFlight;
+  var gid=String(DB&&DB.cfg&&DB.cfg.weatherRegionsGid||'').trim(),sourceKey=currentTripSourceKey();
+  var before=localStorage.getItem(WEATHER_REGIONS_KEY);
+  function store(next){
+    if(next===before)return;
+    try{if(next===null)localStorage.removeItem(WEATHER_REGIONS_KEY);else localStorage.setItem(WEATHER_REGIONS_KEY,next);}
+    catch(error){AppLog.data('天氣地區無法保存：'+String(error&&error.message||error));return;}
+    if(typeof renderAll==='function')renderAll();
+  }
+  if(!/^\d{1,12}$/.test(gid)){store(null);return Promise.resolve([]);}
+  weatherRegionsInFlight=fetchWithTimeout(currentPubBase()+gid,FETCH_TIMEOUT).then(function(response){
+    if(!response.ok)throw new Error('HTTP '+response.status);
+    return response.text();
+  }).then(function(text){
+    if(currentTripSourceKey()!==sourceKey)return null;
+    var parsed=parseWeatherRegionsCsv(text);
+    if(parsed.skipped)AppLog.data('天氣地區有 '+parsed.skipped+' 列無法使用(緯度經度需在日本範圍內、不可重複,最多 '+WEATHER_REGIONS_MAX+' 個)');
+    store(JSON.stringify({version:1,sourceKey:sourceKey,gid:gid,regions:parsed.regions}));
+    return parsed.regions;
+  }).catch(function(error){
+    AppLog.data('天氣地區讀取失敗，沿用上次的清單：'+String(error&&error.message||error));
+    return null;
+  }).then(function(result){weatherRegionsInFlight=null;return result;});
+  return weatherRegionsInFlight;
+}
 function weatherCityFromText(text){
   text=String(text||'');
-  for(var i=0;i<WEATHER_CITIES.length;i++){
-    var city=WEATHER_CITIES[i];
+  var cities=typeof weatherCities==='function'?weatherCities():WEATHER_CITIES;
+  for(var i=0;i<cities.length;i++){
+    var city=cities[i];
     for(var j=0;j<city.words.length;j++){
       if(text.indexOf(city.words[j])>=0) return city;
     }

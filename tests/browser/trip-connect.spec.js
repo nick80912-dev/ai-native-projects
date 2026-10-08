@@ -38,12 +38,15 @@ async function installDevice(page,{seed={},online=true,info={ok:true,tripId:'kyu
         return Promise.reject(new TypeError('QA_LEDGER_OFFLINE'));
       }
       if(url.hostname==='docs.google.com'&&url.pathname.indexOf(pub)>=0){
+        if(url.searchParams.get('gid')==='999'){
+          return Promise.resolve(new Response('地區名稱,緯度,經度,關鍵字\n岡山測試區,34.6618,133.935,"岡山、倉敷"\n',{status:200,headers:{'Content-Type':'text/csv; charset=utf-8'}}));
+        }
         const sheet=window.SHEETS&&window.SHEETS.find(candidate=>String(candidate.gid)===url.searchParams.get('gid'));
         if(!sheet)return Promise.reject(new TypeError('QA_UNKNOWN_GID'));
         let csv=window.BUILTIN[sheet.key];
         if(sheet.key==='cfg'){
           csv=csv.replace('Trip Name,岡山四國六天五夜','Trip Name,九州測試旅程').replace(/\s*$/,'\n')+
-            'Trip ID,kyushu-2027\nLedger Endpoint,'+endpoint+'\n';
+            'Trip ID,kyushu-2027\nLedger Endpoint,'+endpoint+'\nWeather Regions GID,999\n';
         }
         return Promise.resolve(new Response(csv,{status:200,headers:{'Content-Type':'text/csv; charset=utf-8'}}));
       }
@@ -205,5 +208,25 @@ test('新旅程的手機拒絕還原岡山的舊備份，資料一字不動',asy
   await page.getByRole('button',{name:'驗證並還原'}).click();
   await expect(page.locator('#toast')).toContainText('這是舊版備份，只能還原到岡山旅程');
   expect(await page.evaluate(()=>localStorage.getItem('trip_checks'))).toBe('{"10/19_1":true}');
+  expect(errors).toEqual([]);
+});
+
+test('新旅程同步後讀取「天氣地區」分頁，不再用岡山的固定城市清單',async({page})=>{
+  const errors=collectPageErrors(page);
+  const source=JSON.stringify({version:1,kind:'sheet',pubId:NEW_PUB,ledgerEndpoint:ENDPOINT,tripId:'kyushu-2027',tripName:'九州測試旅程',startDate:'2026-10-18',endDate:'2026-10-23',connectedAt:1});
+  await installDevice(page,{seed:{trip_member:'Bar',trip_source:source}});
+  await page.goto('/',{waitUntil:'domcontentloaded'});
+  expect(await page.evaluate(()=>weatherCityFromText('廣島本通'))).toBeNull();
+  await Promise.all([page.waitForEvent('load'),page.getByRole('button',{name:'下載行程'}).click()]);
+  await page.waitForFunction(()=>typeof CURRENT_SNAPSHOT!=='undefined'&&CURRENT_SNAPSHOT&&DB.cfg.weatherRegionsGid==='999');
+  await expect.poll(()=>page.evaluate(()=>localStorage.getItem('trip_weather_regions'))).not.toBeNull();
+  const result=await page.evaluate(()=>({
+    stored:JSON.parse(localStorage.getItem('trip_weather_regions')),
+    kurashiki:weatherCityFromText('倉敷美觀地區'),
+    hiroshima:weatherCityFromText('廣島本通')
+  }));
+  expect(result.stored).toMatchObject({version:1,sourceKey:'sheet:kyushu-2027',gid:'999'});
+  expect(result.kurashiki).toMatchObject({label:'岡山測試區',key:'r_34.662_133.935'});
+  expect(result.hiroshima).toBeNull();
   expect(errors).toEqual([]);
 });

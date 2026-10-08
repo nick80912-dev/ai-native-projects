@@ -49,7 +49,9 @@ function headersFor(sheet){
 
 function rowMatchesSchema(actual,sheet){
   const columns=sheet.columns||[];
-  return actual.length===columns.length&&actual.every((value,index)=>{
+  /* v149:選填欄(例如行程ID)放在最後,岡山試算表沒有也算相符 */
+  const required=columns.filter(column=>!column.optional).length;
+  return actual.length>=required&&actual.length<=columns.length&&actual.every((value,index)=>{
     const column=columns[index];
     return [column.header].concat(column.aliases||[]).some(header=>String(header||'')===value);
   });

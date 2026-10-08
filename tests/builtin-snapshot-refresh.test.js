@@ -9,7 +9,7 @@ function schemaFixture(pubBase='https://example.test/?gid='){
     pubBase,
     fetchTimeoutMs:1000,
     sheets:{
-      itin:{gid:'1',kind:'itinerary',columns:['日期','時間','行程','地點','ID','交通','備註'].map(header=>({header}))},
+      itin:{gid:'1',kind:'itinerary',columns:['日期','時間','行程','地點','ID','交通','備註'].map(header=>({header})).concat([{header:'行程ID',optional:true}])},
       places:{gid:'2',kind:'table',columns:['PID','地點','HID'].map(header=>({header}))},
       rest:{gid:'3',kind:'table',columns:['RID','餐廳名稱'].map(header=>({header}))},
       shop:{gid:'4',kind:'table',columns:['SID','PID','品牌名稱'].map(header=>({header}))},
