@@ -1,14 +1,14 @@
 # 07 版本紀錄
 
-## 2026-10-07 — v148 正式發布（released）
+## 2026-10-07 — v148 正式發布（released）+ G6 tag；2026-10-08 真機驗證通過
 
 - PR [#47](https://github.com/nick80912-dev/ai-native-projects/pull/47) 以 merge 合併 `dev` `ccb6f52` → `main`，merge commit **`48d787c`**。發布 PR 的 sanity 與 browser-qa 全綠後合併，合併時釘住 head；merged tree 與已測 dev 相同，root v110 bridge 與 `shell/v147/` 不變。
 - Netlify deploy **`6ac658c6c2a99c0008061882`**、`ready`、`commit_ref` = `48d787c` 相符、`published_at` `2026-10-07T14:36:02Z`、`manual_deploy: false`，21 個新檔（含 `shell/v148/index.html`）、6 條 header rule 全過。
 - `main` CI run `37638029955`：第一次 browser-qa 因「安裝 Chromium」耗時 8 分 50 秒（平常約 25 秒）觸發 15 分鐘 job 上限而被取消，沒有任何測試失敗；重跑一次後 sanity 與 browser-qa 皆 success（Chromium 安裝 24 秒、Playwright 6 分 34 秒）。
 - **G1**：Bar 於 2026-10-07 在 GitHub Pages（dev）以手機驗收 v148 後核准發布。
 - **§F5 線上內容核對未於本次執行**：本次工作環境的網路政策封鎖正式站網域，無法讀取線上 `sw.js`、header 與舊世代回應。以 Netlify 部署資料、merged tree 比對與 Pages 手機驗收代替；正式站載入 v148 以 Bar 手機確認為準。
-- **G6 待補**：annotated tag `production-v148`（指向 `48d787c`）已在工作環境本機建立，但推送 tag 被 GitHub 以 403 拒絕，遠端尚無此 tag；需由 Bar 或可推送 tag 的環境補建。
-- **真機驗證（2026-10-08）**：Bar 回報正式站手機已更新至 v148，運作正常；正式站載入 v148 以此為準。同日 Bar 回報已補 tag，但以 `git ls-remote` 與 GitHub API 查詢遠端皆無 `production-v148`（最新仍為 `production-v147`），工作環境重試推送仍 403，**G6 仍待補**。
+- **真機驗證（2026-10-08）**：Bar 回報正式站手機已更新至 v148，運作正常；正式站載入 v148 以此為準。
+- **G6 完成（2026-10-08）**：工作環境推送 tag 兩次皆被 GitHub 以 403 拒絕，改由 Bar 在 GitHub 建立 `production-v148`，指向 `48d787c`（`git ls-remote` 與 GitHub API 皆確認）。此 tag 為 lightweight tag，不帶訊息，與先前 annotated 慣例不同；發布內容、驗證與回滾資訊以本則紀錄為準。tag 在真機回報之後才建立。
 
 ## 2026-10-07 — v148 同區串點在下一個行程開始後整區自動略過（候選，未發布）
 
