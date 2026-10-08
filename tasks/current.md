@@ -467,6 +467,8 @@ v143 已透過 `dev → main` PR #40 合併並完成正式站部署核對。G1 �
 
 → **其餘 backlog**:#54(回程後解除 CI 釘版)、#52／#53(v140／v142 審查的 Minor)、#41／#38(待實際使用回饋)、#50(已裁定先不做)、#28／#29(已裁定暫不處理)、#3／#12／#20／#25(長期)、E1／E2(大型重構)。
 
+→ **v149 候選(2026-10-08,未合併、未發布)**:第二階段「連接下一趟旅程」(ADR 0021、[換旅程手冊](../docs/new-trip-handbook.md))已在工作分支 `claude/trusting-pascal-bld58l` 實作完成,PR [#51](https://github.com/nick80912-dev/ai-native-projects/pull/51)(draft,目標 `dev`)。Bar 核准的範圍只到工作分支與測試;**不合併 dev、不發布、不改 Google Sheet 與已部署 Apps Script**。合併時機:岡山旅程結束、全團結清並清除後,再與 Bar 確認。 <!-- generation-exempt: 候選分支狀態 -->
+
 > 發現問題時依 `16_OPS_PLAYBOOK.md` §A2 **forward bump 到下一個未使用版本**,不得倒退覆寫 —— 已經有裝置接管 v148 了。
 
 > GitHub Actions 與 Netlify production **已於 2026-09-08 接管 v113** —— deploy `6a9fb443`、`commit_ref` = `745bb6f`、線上 `sw.js`／`app-version.js` 皆 v113、`qa-sanity` 於 `main` `745bb6f` 與 `dev` `f0444cb` 皆 success。**這一步已完成，不需再確認。**

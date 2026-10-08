@@ -1,5 +1,15 @@
 # tests — 測試資產(交付必附)
 
+## v149 connect-new-trip coverage
+
+- `trip-source.test.js`：連結解析（發布／編輯／無效）、來源紀錄正規化與讀回、開機分類（沿用／岡山遷移／尚未連接／損壞）、`unconnected`／`activate`、inspect 的每個錯誤碼、commit 成功與中途失敗復原、中斷標記復原、分頁鎖；並鎖住測試用 TripConfig 欄位必須是 `schema.js` 真正產生的欄位名稱。
+- `itinerary-stop-id.test.js`：「行程ID」依標題名稱找欄、空白退回位置型 ID、岡山 7 欄不受第 8 欄雜訊影響、格式與重複被 validator 擋下、結構檢查視為選填欄。
+- `weather-regions.test.js`：天氣地區 CSV 解析（關鍵字分隔、日本範圍、重複座標）、岡山用內建清單、新旅程只用自己的清單、別趟或損壞清單被忽略。
+- `personal-state-restore-matrix.test.js` 擴充 v10 與六種旅程比對；`apps-script-settings.test.js` 新增 `doGet?action=info`；`personal-ledger-export.test.js` 新增新旅程來源識別。
+- `browser/trip-connect.spec.js`：新手機「尚未連接旅程」、貼連結→預覽→確認→重新開啟、Endpoint 屬於別份試算表、岡山舊手機升級、新旅程無快照時的下載畫面、舊旅程待送帳不送出、新旅程拒絕岡山舊備份、同步後讀取天氣地區。此 spec 自行管理 localStorage（連接後會重新載入），不用 `qa-fixture` 的每次清空。
+- 其他 browser spec 的 fixture 都預先寫入 `trip_source` 為岡山（`legacy`），代表既有的岡山手機；沒有它的「新手機」在 v149 會是「尚未連接」。
+- 執行：`node tests/trip-source.test.js`、`npx playwright test tests/browser/trip-connect.spec.js`。
+
 ## v146 Home coverage
 
 - `home-v146.test.js`：完整日曆日期／閏年、目的地優先、路線區域及前後最近／等距／未知結果。

@@ -125,6 +125,13 @@
 - 設定寫入為 online-only,不進 ledger 離線佇列；伺服器確認後的本機 bridge 只用於涵蓋公開 CSV 約 1–5 分鐘延遲。
 - Apps Script 設定契約:`POST {action:'updateSettings',exchangeRate,defaultCurrency}`；固定白名單禁止 payload 指定任意 TripConfig key。
 
+## 每趟一份 Sheet（v149，ADR 0021）
+- 每趟旅程從範本複製一份新的試算表。TripConfig 新增三個選填鍵：`Trip ID`（3–40 個英數字、`-`、`_`，每趟不同）、`Ledger Endpoint`（這份試算表部署的 Apps Script `/exec` 網址）、`Weather Regions GID`（「天氣地區」分頁的 gid）。岡山試算表沒有這三鍵，照常運作；新旅程連接時強制檢查前兩鍵。
+- 行程總表可加選填「行程ID」欄（依標題名稱尋找）：有填就當作站點 ID，格式為英數字、`-`、`_`（最多 40 字）且整份不可重複；沒填沿用「日期_第幾列」。
+- 「天氣地區」分頁欄位：`地區名稱,緯度,經度,關鍵字`；緯度 20–46、經度 122–154、最多 30 個地區。只在新旅程使用，岡山沿用 App 內建城市清單。
+- 本機旅程紀錄：`trip_source`（`legacy` 或 `sheet` + 發布 ID、Endpoint、Trip ID、名稱、日期）、`trip_connect_pending`（連接中斷標記）、`trip_ledger_queue_owner`（待送帳所屬旅程）、`trip_weather_regions`（天氣地區清單）。後三者是 `trip_` key，清除旅程時一起移除；`trip_source` 由連接流程覆寫。
+- 個人備份 v10 帶 `trip` 身分，旅程不符整批拒絕；見 `docs/personal-state-compatibility.md`。
+
 ## 禁止事項
 - 不要把完整欄位清單手寫在本文件作為權威。
 - 不要繞過 `schema.js` 新增或改名欄位。
