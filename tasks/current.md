@@ -463,7 +463,7 @@ v143 已透過 `dev → main` PR #40 合併並完成正式站部署核對。G1 �
 
 → **v147 已正式發布(2026-10-06)**:backlog #51 —— 旅程清除後才失敗的同步不再重建錯誤提示 key、不誤報。PR [#44](https://github.com/nick80912-dev/ai-native-projects/pull/44) 合併為 `26f00a1`;Netlify deploy `6ac46c22`、`commit_ref` 相符;§F5 五項全過(v111–v146 舊世代皆回 200);Bar 真機驗證 OK;`production-v147` 已建立。
 
-→ **v148 已正式發布(2026-10-07)**:同區串點在下一個行程開始後,若仍未按完成就整區自動略過(Bar 裁定採「下一個行程開始才略過」),今天頁不再整天停在早上那一區。PR [#46](https://github.com/nick80912-dev/ai-native-projects/pull/46) 合併 `dev`;Bar 以 GitHub Pages 手機驗收後,PR [#47](https://github.com/nick80912-dev/ai-native-projects/pull/47) 合併為 `48d787c`;Netlify deploy `6ac658c6`、`commit_ref` 相符;main CI 首次因安裝 Chromium 過慢逾時取消,重跑全綠。§F5 線上內容核對因工作環境網路封鎖未執行,正式站載入 v148 以 Bar 手機確認為準。**`production-v148` tag 待補推**(工作環境推送 tag 被 403 拒絕)。10/22 倉敷美觀地區 4 站沒有時間,需在 Sheet 補上。
+→ **v148 已正式發布(2026-10-07)**:同區串點在下一個行程開始後,若仍未按完成就整區自動略過(Bar 裁定採「下一個行程開始才略過」),今天頁不再整天停在早上那一區。PR [#46](https://github.com/nick80912-dev/ai-native-projects/pull/46) 合併 `dev`;Bar 以 GitHub Pages 手機驗收後,PR [#47](https://github.com/nick80912-dev/ai-native-projects/pull/47) 合併為 `48d787c`;Netlify deploy `6ac658c6`、`commit_ref` 相符;main CI 首次因安裝 Chromium 過慢逾時取消,重跑全綠。§F5 線上內容核對因工作環境網路封鎖未執行;**Bar 2026-10-08 回報正式站手機已更新至 v148、運作正常**。**`production-v148` tag 待補推**(工作環境推送 tag 被 403 拒絕;2026-10-08 查遠端仍無此 tag)。10/22 倉敷美觀地區 4 站沒有時間,需在 Sheet 補上。
 
 → **其餘 backlog**:#54(回程後解除 CI 釘版)、#52／#53(v140／v142 審查的 Minor)、#41／#38(待實際使用回饋)、#50(已裁定先不做)、#28／#29(已裁定暫不處理)、#3／#12／#20／#25(長期)、E1／E2(大型重構)。
 

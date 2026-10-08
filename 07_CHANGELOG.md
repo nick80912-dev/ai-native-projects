@@ -8,6 +8,7 @@
 - **G1**：Bar 於 2026-10-07 在 GitHub Pages（dev）以手機驗收 v148 後核准發布。
 - **§F5 線上內容核對未於本次執行**：本次工作環境的網路政策封鎖正式站網域，無法讀取線上 `sw.js`、header 與舊世代回應。以 Netlify 部署資料、merged tree 比對與 Pages 手機驗收代替；正式站載入 v148 以 Bar 手機確認為準。
 - **G6 待補**：annotated tag `production-v148`（指向 `48d787c`）已在工作環境本機建立，但推送 tag 被 GitHub 以 403 拒絕，遠端尚無此 tag；需由 Bar 或可推送 tag 的環境補建。
+- **真機驗證（2026-10-08）**：Bar 回報正式站手機已更新至 v148，運作正常；正式站載入 v148 以此為準。同日 Bar 回報已補 tag，但以 `git ls-remote` 與 GitHub API 查詢遠端皆無 `production-v148`（最新仍為 `production-v147`），工作環境重試推送仍 403，**G6 仍待補**。
 
 ## 2026-10-07 — v148 同區串點在下一個行程開始後整區自動略過（候選，未發布）
 
