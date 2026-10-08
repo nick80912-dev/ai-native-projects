@@ -190,3 +190,20 @@ test('舊岡山手機的來源仍指向岡山的發布表與 Endpoint',async({pa
   expect(await page.evaluate(()=>({key:currentTripSourceKey(),endpoint:currentLedgerEndpoint()===LEDGER_POST_URL}))).toEqual({key:'legacy',endpoint:true});
   expect(errors).toEqual([]);
 });
+
+test('新旅程的手機拒絕還原岡山的舊備份，資料一字不動',async({page})=>{
+  const errors=collectPageErrors(page);
+  const source=JSON.stringify({version:1,kind:'sheet',pubId:NEW_PUB,ledgerEndpoint:ENDPOINT,tripId:'kyushu-2027',tripName:'九州測試旅程',startDate:'2026-10-18',endDate:'2026-10-23',connectedAt:1});
+  await installDevice(page,{seed:{trip_member:'Bar',trip_source:source,trip_checks:'{"10/19_1":true}'}});
+  await page.goto('/',{waitUntil:'domcontentloaded'});
+  await Promise.all([page.waitForEvent('load'),page.getByRole('button',{name:'下載行程'}).click()]);
+  await page.waitForFunction(()=>typeof CURRENT_SNAPSHOT!=='undefined'&&CURRENT_SNAPSHOT);
+  const exported=await page.evaluate(()=>JSON.parse(personalStateJson()).trip);
+  expect(exported).toEqual({sourceKey:'sheet:kyushu-2027',tripId:'kyushu-2027',tripName:'九州測試旅程'});
+  await page.evaluate(()=>openPersonalStateRestore());
+  await page.locator('#personalStateBox').fill(JSON.stringify({format:'trip-personal-state',version:9,checks:{'10/18_0':true},wants:{},member:'Bar',ledgerQueue:[]}));
+  await page.getByRole('button',{name:'驗證並還原'}).click();
+  await expect(page.locator('#toast')).toContainText('這是舊版備份，只能還原到岡山旅程');
+  expect(await page.evaluate(()=>localStorage.getItem('trip_checks'))).toBe('{"10/19_1":true}');
+  expect(errors).toEqual([]);
+});

@@ -69,9 +69,9 @@ function createStorage(initial){
        v7 將對象、數量與 ledgerLinks 收進 allocations[]。
        備份必須連帶升版,否則舊版 App 會把新格式當成相容,還原時靜默丟掉這些欄位:
        已記帳項目會重新顯示成未記帳而重複入帳,數量也會整批消失。 */
-    PERSONAL_STATE_VERSION:9,
-    PERSONAL_STATE_SUPPORTED_VERSIONS:[1,2,3,4,5,6,7,8,9],
-    isSupportedPersonalStateVersion(version){return typeof version==='number'&&[1,2,3,4,5,6,7,8,9].indexOf(version)>=0;},
+    PERSONAL_STATE_VERSION:10,
+    PERSONAL_STATE_SUPPORTED_VERSIONS:[1,2,3,4,5,6,7,8,9,10],
+    isSupportedPersonalStateVersion(version){return typeof version==='number'&&[1,2,3,4,5,6,7,8,9,10].indexOf(version)>=0;},
     LEDGER_QUEUE_KEY:'trip_ledger_queue',
     PERSONAL_LEDGER_KEY:'trip_personal_ledger',
     LEDGER_CATEGORY_OPTIONS_KEY:'trip_ledger_categories',
@@ -156,12 +156,13 @@ function createStorage(initial){
   await sandbox.exportPersonalState();
   const exported=JSON.parse(copied[0]);
   assert.strictEqual(exported.format,'trip-personal-state');
-  assert.strictEqual(exported.version,9,'新匯出一律使用 v9');
+  assert.strictEqual(exported.version,10,'新匯出一律使用 v10');
+  assert.deepStrictEqual(JSON.parse(JSON.stringify(exported.trip)),{sourceKey:'legacy',tripId:'',tripName:''},'v10 備份帶有旅程身分(岡山舊旅程)');
   assert.strictEqual(sandbox.PERSONAL_STATE_VERSION,Number(html.match(/var PERSONAL_STATE_VERSION=(\d+);/)[1]),'sandbox 版本常數與 index.html 一致,避免測試與實作漂移');
   assert.strictEqual(exported.themeId,'mist');
   assert.deepStrictEqual(exported.shoppingUnits,['個','盒','袋']);
   assert.strictEqual(exported.travelNotes[0].kind,'suggestion');
-  assert.deepStrictEqual(Object.keys(exported).sort(),['checks','exportedAt','format','ledgerCategories','ledgerPayMethods','ledgerQueue','member','personalLedger','proxyTargets','shoppingItems','shoppingUnits','themeId','travelNotes','version','wants'].sort());
+  assert.deepStrictEqual(Object.keys(exported).sort(),['checks','exportedAt','format','ledgerCategories','ledgerPayMethods','ledgerQueue','member','personalLedger','proxyTargets','shoppingItems','shoppingUnits','themeId','travelNotes','trip','version','wants'].sort());
   assert.strictEqual(exported.personalLedger[0].id,'personal-1');
   assert.deepStrictEqual(exported.ledgerCategories,['餐飲','咖啡']);
   assert.deepStrictEqual(exported.ledgerPayMethods,['現金','Suica']);

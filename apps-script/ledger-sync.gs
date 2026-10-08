@@ -3,6 +3,12 @@
  * GitHub 內此檔為唯一維護來源；部署內容必須與此檔一致。
  */
 var LEDGER_COLUMNS = 21;
+/* 與 schema.js 分帳紀錄 21 欄的 header 一致(tests/apps-script-settings.test.js 鎖住)。 */
+var LEDGER_HEADERS = [
+  '紀錄ID','時間','成員','類別','明細','日幣','台幣','備註',
+  '分攤成員','支付方式','紀錄類型','目標紀錄ID','刪除原因','批次ID',
+  '店名','取代紀錄ID','輸入幣別','免稅品','價格方式','稅率','優惠券金額'
+];
 
 function doPost(e) {
   var lock = LockService.getScriptLock();
@@ -26,6 +32,7 @@ function doPost(e) {
 function doGet(e) {
   try {
     var params = (e && e.parameter) || {};
+    if (String(params.action) === 'info') return tripInfo();
     if (String(params.action) !== 'ledger') return out({ok:false,error:'unsupported action'});
 
     var sh = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('分帳紀錄');
@@ -53,6 +60,36 @@ function normalizeLedgerAfter(value) {
   var n = Number(value);
   if (!isFinite(n) || n < 0) return 0;
   return Math.floor(n);
+}
+
+/**
+ * v149 連接新旅程(GET ?action=info,ADR 0021):唯讀回報這個 Apps Script 所屬試算表的
+ * TripConfig「Trip ID」,以及「分帳紀錄」標題列是否和範本一致。App 連接前會拿它和發布 CSV
+ * 的 Trip ID 比對,避免行程讀 A 表、帳卻寫進 B 表。不回傳 Spreadsheet ID 或其他設定,也不取鎖。
+ */
+function tripInfo() {
+  try {
+    var book = SpreadsheetApp.getActiveSpreadsheet();
+    var cfg = book.getSheetByName('TripConfig');
+    var tripId = '';
+    var last = cfg ? cfg.getLastRow() : 0;
+    var rows = last ? cfg.getRange(1, 1, last, 2).getValues() : [];
+    for (var i = 0; i < rows.length; i++) {
+      if (String(rows[i][0]).trim() === 'Trip ID') { tripId = String(rows[i][1]).trim(); break; }
+    }
+    var ledger = book.getSheetByName('分帳紀錄');
+    var headerOk = false;
+    if (ledger && ledger.getLastColumn() >= LEDGER_COLUMNS) {
+      var header = ledger.getRange(1, 1, 1, LEDGER_COLUMNS).getValues()[0];
+      headerOk = true;
+      for (var c = 0; c < LEDGER_COLUMNS; c++) {
+        if (String(header[c]).trim() !== LEDGER_HEADERS[c]) { headerOk = false; break; }
+      }
+    }
+    return out({ok:true,tripId:tripId,ledgerHeaderOk:headerOk});
+  } catch (err) {
+    return out({ok:false,error:'info read failed'});
+  }
 }
 
 function appendLedger(d) {

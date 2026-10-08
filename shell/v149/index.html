@@ -5411,8 +5411,10 @@ var SHOPPING_CATEGORIES=['必買','伴手禮','生活用品','其他'];
 /* v9 起想逛標記的 key 由 `w_<mallIndex>_...` 改為以 placeId 為主的 `w2:...`。
    這是既有欄位的**識別語意變更**,不是新增欄位 —— 若不升版,舊版 App 會把 v9 當成 v8,
    把它無法解讀的 key 照單全收,使用者看到的是「還原成功但想逛全空」。 */
-var PERSONAL_STATE_VERSION=9;
-var PERSONAL_STATE_SUPPORTED_VERSIONS=[1,2,3,4,5,6,7,8,9];
+/* v10 起(v149,ADR 0021)加入 trip:{sourceKey,tripId,tripName}。打卡、想逛與待送帳只屬於匯出它的那一趟;
+   還原時旅程不符就整批拒絕,避免把岡山的待送帳送進新旅程的 Sheet。沒有 trip 的 v1–v9 只能還原到岡山舊旅程。 */
+var PERSONAL_STATE_VERSION=10;
+var PERSONAL_STATE_SUPPORTED_VERSIONS=[1,2,3,4,5,6,7,8,9,10];
 function isSupportedPersonalStateVersion(version){
   return typeof version==='number'&&PERSONAL_STATE_SUPPORTED_VERSIONS.indexOf(version)>=0;
 }
@@ -9240,9 +9242,10 @@ function personalLedgerExportJson(){
   if(!name||!startDate||!endDate)throw new Error('旅程資訊不完整');
   var raw=localStorage.getItem(PERSONAL_LEDGER_KEY),records=raw===null?[]:JSON.parse(raw);
   if(!Array.isArray(records))throw new Error('個人帳資料格式無法確認');
-  var tripKey=JSON.stringify([TRIP_SOURCE_SHEET_ID,startDate,endDate]),seen=Object.create(null);
+  var sourceSheetId=typeof currentTripSourceSheetId==='function'?currentTripSourceSheetId():TRIP_SOURCE_SHEET_ID;
+  var tripKey=JSON.stringify([sourceSheetId,startDate,endDate]),seen=Object.create(null);
   var projected=records.map(function(record){var out=projectPersonalLedgerExportRecord(record,tripKey);if(seen[out.id])throw new Error('個人帳紀錄 ID 重複');seen[out.id]=true;return out;});
-  return JSON.stringify({format:'trippilot-personal-ledger',version:1,exportedAt:appNow().toISOString(),trip:{name:name,startDate:startDate,endDate:endDate,sourceSheetId:TRIP_SOURCE_SHEET_ID,sourceKey:tripKey},records:projected},null,2);
+  return JSON.stringify({format:'trippilot-personal-ledger',version:1,exportedAt:appNow().toISOString(),trip:{name:name,startDate:startDate,endDate:endDate,sourceSheetId:sourceSheetId,sourceKey:tripKey},records:projected},null,2);
 }
 function exportTripPersonalLedger(){
   var status=document.getElementById('personalLedgerExportStatus'),url='',link=null;
@@ -9299,10 +9302,25 @@ function closeSettings(){
 function shoppingItemsWithoutPhotoRefs(items){
   return (items||[]).map(function(item){var copy=Object.assign({},item);delete copy.photoId;return copy;});
 }
+function personalStateTripIdentity(){
+  var key=typeof currentTripSourceKey==='function'?currentTripSourceKey():'legacy';
+  var source=typeof CURRENT_TRIP_SOURCE!=='undefined'&&CURRENT_TRIP_SOURCE&&CURRENT_TRIP_SOURCE.kind==='sheet'?CURRENT_TRIP_SOURCE:null;
+  return {sourceKey:key,tripId:source?String(source.tripId||''):'',tripName:source?String(source.tripName||''):''};
+}
+/* 回傳拒絕原因;空字串代表這份備份屬於目前的旅程 */
+function personalStateTripMismatch(payload){
+  var current=personalStateTripIdentity().sourceKey;
+  if(payload.version<10)return current==='legacy'?'':'這是舊版備份，只能還原到岡山旅程';
+  var trip=payload.trip;
+  if(!trip||typeof trip!=='object'||typeof trip.sourceKey!=='string'||!trip.sourceKey)return '個人狀態格式驗證失敗';
+  if(trip.sourceKey===current)return '';
+  var name=typeof trip.tripName==='string'&&trip.tripName?'「'+trip.tripName+'」':(trip.sourceKey==='legacy'?'「岡山旅程」':'');
+  return '這份備份屬於另一趟旅程'+name+'，不能還原到目前的旅程';
+}
 function personalStateJson(){
   /* 匯出前先轉換:使用者可能還沒進過購物頁,本機仍是索引型 key ——
      v9 備份不得帶出索引型 key。轉換是冪等的,已轉換過的資料不受影響。 */
-  var payload={format:'trip-personal-state',version:PERSONAL_STATE_VERSION,exportedAt:timestampDate(Date.now()).toISOString(),checks:lsGet('trip_checks',{}),wants:migrateShopWantKeys(lsGet('trip_shop_wants',{}),shopMalls()).wants,member:getCurrentMember(),ledgerQueue:ledgerRepository.queuedRecords(),personalLedger:personalLedgerRepository.all(),ledgerCategories:ledgerCategoryStore.all(),ledgerPayMethods:ledgerPayMethodStore.all(),proxyTargets:ledgerProxyTargetStore.all(),shoppingItems:shoppingItemsWithoutPhotoRefs(shoppingListStore.all()),themeId:currentThemeId(),shoppingUnits:shoppingUnitStore.all(),travelNotes:travelNoteStore.all()};
+  var payload={format:'trip-personal-state',version:PERSONAL_STATE_VERSION,exportedAt:timestampDate(Date.now()).toISOString(),checks:lsGet('trip_checks',{}),wants:migrateShopWantKeys(lsGet('trip_shop_wants',{}),shopMalls()).wants,member:getCurrentMember(),ledgerQueue:ledgerRepository.queuedRecords(),personalLedger:personalLedgerRepository.all(),ledgerCategories:ledgerCategoryStore.all(),ledgerPayMethods:ledgerPayMethodStore.all(),proxyTargets:ledgerProxyTargetStore.all(),shoppingItems:shoppingItemsWithoutPhotoRefs(shoppingListStore.all()),themeId:currentThemeId(),shoppingUnits:shoppingUnitStore.all(),travelNotes:travelNoteStore.all(),trip:personalStateTripIdentity()};
   return JSON.stringify(payload,null,2);
 }
 function copyPersonalStateText(text,timeoutMs){
@@ -9346,7 +9364,7 @@ function openPersonalStateRestore(){
   closePersonalStateDialog();
   var overlay=document.createElement('div');
   overlay.id='personalStateDialog'; overlay.className='settings-overlay state-dialog-overlay'; overlay.setAttribute('data-dialog-kind','restore');
-  overlay.innerHTML='<section class="settings-panel state-dialog-panel" role="dialog" aria-modal="true" aria-labelledby="personalStateDialogTitle"><div class="settings-head"><h2 id="personalStateDialogTitle">從 JSON 還原</h2><button class="settings-close" aria-label="關閉" onclick="closePersonalStateDialog()">×</button></div><p class="settings-help">還原會覆蓋目前裝置上的打卡、想逛、採買清單、身分、個人帳、代購對象、自訂選項、主題、採買單位、旅途紀錄及待同步記帳。</p><textarea class="state-dialog-copy" id="personalStateBox" placeholder="貼上備份 JSON"></textarea><div class="settings-actions"><button class="btn ghost" onclick="closePersonalStateDialog()">取消</button><button class="btn" onclick="restorePersonalState()">驗證並還原</button></div></section>';
+  overlay.innerHTML='<section class="settings-panel state-dialog-panel" role="dialog" aria-modal="true" aria-labelledby="personalStateDialogTitle"><div class="settings-head"><h2 id="personalStateDialogTitle">從 JSON 還原</h2><button class="settings-close" aria-label="關閉" onclick="closePersonalStateDialog()">×</button></div><p class="settings-help">還原會覆蓋目前裝置上的打卡、想逛、採買清單、身分、個人帳、代購對象、自訂選項、主題、採買單位、旅途紀錄及待同步記帳。只能還原同一趟旅程匯出的備份。</p><textarea class="state-dialog-copy" id="personalStateBox" placeholder="貼上備份 JSON"></textarea><div class="settings-actions"><button class="btn ghost" onclick="closePersonalStateDialog()">取消</button><button class="btn" onclick="restorePersonalState()">驗證並還原</button></div></section>';
   document.body.appendChild(overlay);
   var box=document.getElementById('personalStateBox'); if(box)box.focus();
 }
@@ -9370,13 +9388,16 @@ function validatePersonalStatePayload(payload){
   return payload;
 }
 function applyPersonalStatePayload(payload){
-  var keys=['trip_checks','trip_shop_wants','trip_member',LEDGER_QUEUE_KEY,PERSONAL_LEDGER_KEY,LEDGER_CATEGORY_OPTIONS_KEY,LEDGER_PAY_METHOD_OPTIONS_KEY,LEDGER_PROXY_TARGETS_KEY,SHOPPING_LIST_KEY,THEME_STORAGE_KEY,SHOPPING_UNIT_OPTIONS_KEY,TRAVEL_NOTES_KEY];
+  var keys=['trip_checks','trip_shop_wants','trip_member',LEDGER_QUEUE_KEY,'trip_ledger_queue_owner',PERSONAL_LEDGER_KEY,LEDGER_CATEGORY_OPTIONS_KEY,LEDGER_PAY_METHOD_OPTIONS_KEY,LEDGER_PROXY_TARGETS_KEY,SHOPPING_LIST_KEY,THEME_STORAGE_KEY,SHOPPING_UNIT_OPTIONS_KEY,TRAVEL_NOTES_KEY];
   var before=keys.map(function(key){return {key:key,value:localStorage.getItem(key)};});
   try{
     lsSet('trip_checks',payload.checks);
     lsSet('trip_shop_wants',payload.wants);
     localStorage.setItem('trip_member',String(payload.member));
     localStorage.setItem(LEDGER_QUEUE_KEY,JSON.stringify(payload.ledgerQueue));
+    /* 旅程已在 restorePersonalState 比對過,還原的待送帳屬於目前這一趟 */
+    if(payload.ledgerQueue.length)localStorage.setItem('trip_ledger_queue_owner',personalStateTripIdentity().sourceKey);
+    else localStorage.removeItem('trip_ledger_queue_owner');
     localStorage.setItem(PERSONAL_LEDGER_KEY,JSON.stringify(payload.personalLedger));
     localStorage.setItem(LEDGER_CATEGORY_OPTIONS_KEY,JSON.stringify(payload.ledgerCategories));
     localStorage.setItem(LEDGER_PAY_METHOD_OPTIONS_KEY,JSON.stringify(payload.ledgerPayMethods));
@@ -9397,7 +9418,11 @@ function applyPersonalStatePayload(payload){
 function restorePersonalState(){
   var box=document.getElementById('personalStateBox'), payload;
   try{ payload=JSON.parse(box&&box.value||''); }catch(error){ toast('JSON 格式錯誤'); return; }
-  if(!payload||payload.format!=='trip-personal-state'||!isSupportedPersonalStateVersion(payload.version)||!payload.checks||Array.isArray(payload.checks)||typeof payload.checks!=='object'||!payload.wants||Array.isArray(payload.wants)||typeof payload.wants!=='object'||!Array.isArray(payload.ledgerQueue)||!memberIsAllowed(String(payload.member||''))){ toast('個人狀態格式驗證失敗'); return; }
+  if(!payload||payload.format!=='trip-personal-state'||!isSupportedPersonalStateVersion(payload.version)){ toast('個人狀態格式驗證失敗'); return; }
+  /* 先比對旅程:別趟的備份連成員名單都不同,要直接說清楚原因 */
+  var tripMismatch=personalStateTripMismatch(payload);
+  if(tripMismatch){ toast(tripMismatch); return; }
+  if(!payload.checks||Array.isArray(payload.checks)||typeof payload.checks!=='object'||!payload.wants||Array.isArray(payload.wants)||typeof payload.wants!=='object'||!Array.isArray(payload.ledgerQueue)||!memberIsAllowed(String(payload.member||''))){ toast('個人狀態格式驗證失敗'); return; }
   if(payload.version===1){payload.personalLedger=[];payload.ledgerCategories=DEFAULT_LEDGER_CATEGORIES.slice();payload.ledgerPayMethods=DEFAULT_LEDGER_PAY_METHODS.slice();}
   /* v<9 的想逛 key 是索引型,必須在寫入前轉換(保持全有或全無的原子語意)。
      模糊候選一律移除 —— 備份裡的 index 同樣不可信,拿它猜測只會把錯誤映射固定下來。 */
@@ -9785,6 +9810,9 @@ function renderAppReleaseNotes(){
 }
 var TRIP_GOOGLE_CLIENT_ID='812330004270-6limrm2sl15s3aohum4nrnas97kopfma.apps.googleusercontent.com';
 var TRIP_SOURCE_SHEET_ID='1B5g7KuVi2WaFVVSdhqRMeTQV_tBpgnzOAv6aMQdFZJw';
+/* v149(ADR 0021):封存與個人帳匯出的來源識別。岡山沿用上面的編輯用 ID;新旅程用 sheet:<Trip ID>,
+   與快照、待送帳和備份的旅程識別一致,也不會超過 Drive appProperties 每項 124 bytes 的上限。 */
+function currentTripSourceSheetId(){return isLegacyTripSource()?TRIP_SOURCE_SHEET_ID:currentTripSourceKey();}
 var tripGoogleScriptPromise=null,tripDriveClient=null,tripFlowClient=null;
 function loadTripGoogleIdentity(){
   if(window.google&&google.accounts&&google.accounts.oauth2)return Promise.resolve();
@@ -9851,7 +9879,7 @@ function freshEndPreflight(){
     var formalBalances={};settled.members.forEach(function(member){formalBalances[member.member]=member[field];});
     var pending=tripLocalPending(),personal=tripPersonalArchiveState();
     var sheets={};SHEETS.forEach(function(sheet){sheets[sheet.key]={csv:raw[sheet.key],sourceTime:times[sheet.key]};});
-    var archiveInput={sourceSheetId:TRIP_SOURCE_SHEET_ID,trip:{name:candidate.db.cfg.tripname,
+    var archiveInput={sourceSheetId:currentTripSourceSheetId(),trip:{name:candidate.db.cfg.tripname,
       startDate:candidate.db.cfg.startdate,endDate:candidate.db.cfg.enddate},
       archivedAt:timestampDate(Date.now()).toISOString(),sheets:sheets,personal:personal};
     var policyInput={online:true,sheetsComplete:true,queueCount:pending.queueCount,
