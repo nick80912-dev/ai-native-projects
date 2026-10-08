@@ -35,8 +35,8 @@
     "docs/trippilot-v145-b-verification.md": "v145 B checked 行程保存、故障／復原測試、整批審查及真機限制",
     "docs/personal-ledger-export.md": "個人帳獨立匯出 v1 格式、來源識別、下載及說明 dialog 契約；不等於備份 v9，記序匯入尚未實作",
     "docs/trippilot-v143-verification.md": "v143 本機 TDD、獨立審查裁定、QA 結果與真機限制",
-    "shell/v148/builtin-snapshot.js": "由 tools/refresh-builtin-snapshot.js 產生的版本綁定離線資料資產；禁止手動修改",
-    "shell/v148/app-version.js": "v146 本機候選版 App 版本來源；與 root sw.js 原子驗證，使用不可變 generation path",
+    "shell/v149/builtin-snapshot.js": "由 tools/refresh-builtin-snapshot.js 產生的版本綁定離線資料資產；禁止手動修改",
+    "shell/v149/app-version.js": "v146 本機候選版 App 版本來源；與 root sw.js 原子驗證，使用不可變 generation path",
     "navigation-intent.js": "明確導覽目的地的不可變 session-only state module；不讀 DOM、storage 或 navigation history，DOM adapter 位於 index.html",
     "diagnostic-impact.js": "AppLog 原始紀錄的 display-only impact projection；不改寫、隱藏或重新分類儲存內容，DOM adapter 位於 index.html",
     "today-view.js": "Today Hero 採買摘要的純 model／renderer module；不讀 DOM、storage、clock 或 repository，資料與 effect adapter 位於 index.html",
@@ -45,7 +45,7 @@
     "trip-progression.js": "下一站選擇、cluster blocker 與一次性 auto-skip reconciliation runtime module",
     "tools/refresh-builtin-snapshot.js": "BUILTIN 離線種子安全刷新 CLI；預設只讀 preview、明確 --write、HTML marker／generated asset 雙檔 staging 與 rollback；七張公開 CSV 原子驗證，Ledger 只由 schema 產生空 header",
     "index.html": "v110 bridge 入口；current worker 安裝成功前保留 predecessor 文件與 inline BUILTIN",
-    "shell/v148/index.html": "v146 本機候選版 App UI 與 DOM adapter；由成功啟用的 v146 worker 映射到 root 導覽；已發布 generation 不可變",
+    "shell/v149/index.html": "v146 本機候選版 App UI 與 DOM adapter；由成功啟用的 v146 worker 映射到 root 導覽；已發布 generation 不可變",
     "trip-lifecycle.js": "個人旅程狀態、清理 key policy 與預檢純政策 module",
     "trip-archive.js": "個人旅程封存格式、投影與 SHA-256 讀回驗證 module",
     "trip-drive.js": "Google Drive 個人封存與回顧筆記存取邊界；token 僅保留記憶體",
@@ -60,8 +60,8 @@
     "docs/device-acceptance-log.md": "累積裝置／PWA 驗收記錄;起於批次二v73,其後append v74/v75/v76/v88各版delta(2026-09-10由batch2-device-acceptance.md更名)"
   },
   "deploy_files": {
-    "shell/v148/builtin-snapshot.js": "版本綁定的 generated BUILTIN offline runtime asset",
-    "shell/v148/app-version.js": "v146 本機候選版 App runtime version identity",
+    "shell/v149/builtin-snapshot.js": "版本綁定的 generated BUILTIN offline runtime asset",
+    "shell/v149/app-version.js": "v146 本機候選版 App runtime version identity",
     "navigation-intent.js": "明確導覽目的地的 session-only runtime module",
     "diagnostic-impact.js": "AppLog display-only impact projection runtime module",
     "today-view.js": "Today Hero 採買摘要的純 model／renderer runtime module",
@@ -70,10 +70,10 @@
     "shopping-photo-store.js": "採買照片壓縮與裝置本機 IndexedDB runtime module",
     "trip-progression.js": "下一站選擇與進度調和 runtime module",
     "trip-lifecycle.js + trip-archive.js + trip-drive.js + trip-lifecycle-flow.js": "個人旅程生命週期 v137 runtime modules；OAuth External Testing；實體 PWA 已於 2026-10-06 經 Bar 回報驗收完成",
-    "index.html + shell/v148/index.html": "v110 bridge 正式入口 + v146 本機候選版 App document；已發布 generation 保留歷史",
+    "index.html + shell/v149/index.html": "v110 bridge 正式入口 + v146 本機候選版 App document；已發布 generation 保留歷史",
     "buy-to-ledger.js": "採買轉記帳純domain／workflow runtime module",
     "schema.js + validator.js": "資料規格與防錯來源",
-    "sw.js + shell/v148/app-version.js": "current candidate generation 的 SW_VERSION 與 APP_VERSION 必須一致；root app-version.js 保留 v110 bridge，不參與 current identity",
+    "sw.js + shell/v149/app-version.js": "current candidate generation 的 SW_VERSION 與 APP_VERSION 必須一致；root app-version.js 保留 v110 bridge，不參與 current identity",
     "manifest.webmanifest + icon-*.png": "PWA 安裝資產"
   },
   "cms": {
