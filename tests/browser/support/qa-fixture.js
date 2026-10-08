@@ -8,6 +8,8 @@ async function installBaseLocalState(page){
   await page.addInitScript(()=>{
     localStorage.clear();
     localStorage.setItem('trip_member','Bar');
+    /* v149: an existing Okayama device. A fresh device (no trip data, no source) now starts unconnected. */
+    localStorage.setItem('trip_source','{"version":1,"kind":"legacy","migratedAt":0}');
   });
 }
 

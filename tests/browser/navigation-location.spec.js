@@ -3,6 +3,7 @@ const {collectPageErrors,waitForSyncToSettle}=require('./support/qa-fixture');
 
 async function openNavigationQaApp(page){
   await page.addInitScript(()=>{
+    if(!localStorage.getItem('trip_source'))localStorage.setItem('trip_source','{"version":1,"kind":"legacy","migratedAt":0}'); /* v149: an existing Okayama device */
     try{Object.defineProperty(window.navigator,'onLine',{configurable:true,get:()=>false});}catch(ignore){}
     window.fetch=()=>Promise.reject(new TypeError('QA_OFFLINE'));
   });

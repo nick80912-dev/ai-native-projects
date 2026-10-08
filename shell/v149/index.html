@@ -1338,6 +1338,14 @@ var SHEETS = Object.keys(SCHEMA.sheets).map(function(k){
   return { key:k, gid:SCHEMA.sheets[k].gid };
 });
 var FETCH_TIMEOUT = SCHEMA.fetchTimeoutMs, FETCH_RETRIES = SCHEMA.fetchRetries;
+/* v149：資料來源改由「目前連接的旅程」決定（trip-source.js、ADR 0021）。沒有來源紀錄時是內建的
+   岡山舊旅程，沿用 SCHEMA.pubBase 與 LEDGER_POST_URL；連接新旅程後改用該 Sheet 的發布網址與
+   TripConfig 的 Ledger Endpoint。來源只在開機時讀一次，切換一律經過「連接新旅程」並重新載入。 */
+var CURRENT_TRIP_SOURCE=null;
+function currentTripSourceKey(){return typeof TripSource==='object'&&TripSource?TripSource.sourceKey(CURRENT_TRIP_SOURCE):'legacy';}
+function isLegacyTripSource(){return currentTripSourceKey()==='legacy';}
+function currentPubBase(){return isLegacyTripSource()?PUB:TripSource.pubBaseFor(CURRENT_TRIP_SOURCE.pubId);}
+function currentLedgerEndpoint(){return isLegacyTripSource()?LEDGER_POST_URL:CURRENT_TRIP_SOURCE.ledgerEndpoint;}
 
 /* 內建後備資料(產生檔案時注入) */
 /* BUILTIN payload is generated in builtin-snapshot.js. */
@@ -1541,9 +1549,10 @@ function fetchWithTimeout(url,ms){
   });
   return Promise.race([attempt,timeout]);
 }
-function fetchSheet(s){
+function fetchSheet(s,base){
+  var pubBase=base||(typeof currentPubBase==='function'?currentPubBase():PUB);
   var tryOnce=function(){
-    return fetchWithTimeout(PUB+s.gid,FETCH_TIMEOUT).then(function(res){
+    return fetchWithTimeout(pubBase+s.gid,FETCH_TIMEOUT).then(function(res){
       if(!res.ok) throw new Error('HTTP '+res.status);
       return res.text();
     }).then(function(text){
@@ -1589,10 +1598,11 @@ function verifyControllingShellGeneration(){
   },function(){return 'Service Worker cache generation unavailable';});
 }
 
-function createDataSnapshot(raw,source,createdAt,generationId,validation){
+function createDataSnapshot(raw,source,createdAt,generationId,validation,sourceKey){
   var sheets={};
   SHEETS.forEach(function(sheet){ sheets[sheet.key]=String(raw[sheet.key]||''); });
-  return {formatVersion:1,generationId:generationId,createdAt:createdAt,source:source,sheets:sheets,sheetMeta:{},validation:{warnings:(validation&&validation.warnings)||[]}};
+  /* v149：sourceKey 標記這份快照屬於哪一趟旅程；v148 以前的快照沒有這欄，視為岡山舊旅程。 */
+  return {formatVersion:1,generationId:generationId,createdAt:createdAt,source:source,sourceKey:sourceKey||(typeof currentTripSourceKey==='function'?currentTripSourceKey():'legacy'),sheets:sheets,sheetMeta:{},validation:{warnings:(validation&&validation.warnings)||[]}};
 }
 function hydrateSnapshotLedger(snapshot){
   if(!snapshot||!snapshot.sheets||!SCHEMA.sheets.ledger||typeof snapshot.sheets.ledger==='string') return snapshot;
@@ -1675,7 +1685,7 @@ function validateCandidateStructure(raw){
   });
   return result;
 }
-function prepareSheetCandidate(raw,source,now,generationId){
+function prepareSheetCandidate(raw,source,now,generationId,sourceKey){
   var structure=validateCandidateStructure(raw), db, validation, error;
   if(structure.blockers.length){
     error=new Error(structure.blockers.map(function(f){return f.message;}).join('；'));
@@ -1689,7 +1699,7 @@ function prepareSheetCandidate(raw,source,now,generationId){
     error.stage='validation'; error.findings=validation.blockers; throw error;
   }
   generationId=generationId||source+'-'+now;
-  return {db:db,validation:validation,snapshot:createDataSnapshot(raw,source,now,generationId,validation)};
+  return {db:db,validation:validation,snapshot:createDataSnapshot(raw,source,now,generationId,validation,sourceKey)};
 }
 function bootFailure(error){
   var failure=new Error(error&&error.message||'啟動資料驗證失敗');
@@ -1700,9 +1710,12 @@ function bootFailure(error){
 }
 function selectBootData(storage,builtin,builtinTimestamp){
   var state=readSnapshotState(storage), activeError=null, candidate, source, legacyRaw={}, legacyReady=true, legacyAt=0;
+  var tripKey=typeof currentTripSourceKey==='function'?currentTripSourceKey():'legacy';
   function selectSnapshot(snapshot){
     if(!validSnapshotShape(snapshot)) throw new Error('Invalid snapshot shape');
-    candidate=prepareSheetCandidate(snapshot.sheets,snapshot.source,snapshot.createdAt,snapshot.generationId);
+    /* v149：別趟旅程的快照一律不用，避免把上一趟的行程或帳顯示在這一趟。 */
+    if((typeof snapshot.sourceKey==='string'&&snapshot.sourceKey?snapshot.sourceKey:'legacy')!==tripKey) throw new Error('Snapshot belongs to another trip');
+    candidate=prepareSheetCandidate(snapshot.sheets,snapshot.source,snapshot.createdAt,snapshot.generationId,tripKey);
     return {raw:snapshot.sheets,db:candidate.db,source:snapshot.source,snapshot:snapshot};
   }
   if(state&&state.active){
@@ -1717,6 +1730,14 @@ function selectBootData(storage,builtin,builtinTimestamp){
     }catch(previousError){
       if(!activeError) activeError=bootFailure(previousError);
     }
+  }
+  /* v149：舊版 v2_cache 與內建 BUILTIN 都是岡山舊旅程的資料，只有舊旅程可以用。
+     新連接的旅程沒有可用快照時，要求連網重新下載，絕不退回舊旅程。 */
+  if(tripKey!=='legacy'){
+    var missing=new Error('這趟旅程的資料還沒下載到這部手機');
+    missing.code='SOURCE_SNAPSHOT_MISSING';
+    missing.cause=activeError;
+    throw missing;
   }
   SHEETS.forEach(function(sheet){
     var stored, parsed;
@@ -1778,10 +1799,10 @@ function saveSyncFailure(error,storage,activeSnapshot){
   };
   try{ target.setItem(SNAPSHOT_FAILURE_KEY,JSON.stringify(failure)); }catch(ignore){}
 }
-function downloadAllSheets(){
+function downloadAllSheets(base){
   var raw={}, meta={}, partialSheets=[];
   return Promise.all(SHEETS.map(function(sheet){
-    return fetchSheet(sheet).then(function(text){
+    return fetchSheet(sheet,base).then(function(text){
       raw[sheet.key]=text;
       meta[sheet.key]={fetchedAt:Date.now()};
     },function(error){
@@ -8261,13 +8282,31 @@ function createLedgerRepository(options){
       return Array.isArray(parsed)?parsed:[];
     }catch(error){ AppLog.repo('分帳佇列讀取失敗:'+(error.message||error)); return []; }
   }
+  /* v149（ADR 0021）：記下待送紀錄屬於哪一趟旅程。換旅程前佇列必須是空的，所以正常不會不符；
+     萬一不符（例如還原了別趟的備份），整批暫停送出，不會把舊帳寫進新 Sheet。 */
+  var QUEUE_OWNER_KEY='trip_ledger_queue_owner';
+  function queueOwnerKey(){ return typeof opts.ownerKey==='function'?String(opts.ownerKey()||''):''; }
   function writeQueue(queue){
     storage.setItem(LEDGER_QUEUE_KEY,JSON.stringify(queue));
+    var owner=queueOwnerKey();
+    if(owner){
+      if(!queue.length) storage.removeItem(QUEUE_OWNER_KEY);
+      else if(!storage.getItem(QUEUE_OWNER_KEY)) storage.setItem(QUEUE_OWNER_KEY,owner);
+    }
     if(typeof opts.onChange==='function') opts.onChange(queue.length);
+  }
+  function foreignQueueOwner(){
+    var owner=queueOwnerKey(), stored=owner?storage.getItem(QUEUE_OWNER_KEY):null;
+    return stored&&stored!==owner?stored:'';
   }
   function pendingCount(){ return readQueue().length; }
   function flushQueue(){
     if(flushInFlight) return flushInFlight;
+    var foreign=foreignQueueOwner();
+    if(foreign){
+      AppLog.repo('分帳佇列屬於其他旅程（'+foreign+'），已暫停送出');
+      return Promise.resolve({ok:false,sent:0,dup:false,pending:pendingCount(),foreign:true,error:new Error('待送紀錄屬於其他旅程，已暫停送出')});
+    }
     var sent=0, sawDup=false;
     function sendNext(){
       var queue=readQueue();
@@ -8383,11 +8422,11 @@ function postLedgerRecord(record){
   var request=new Promise(function(resolve,reject){
     var promise, body=JSON.stringify(record);
     try{
-      promise=fetch(LEDGER_POST_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:body});
+      promise=fetch((typeof currentLedgerEndpoint==='function'?currentLedgerEndpoint():LEDGER_POST_URL),{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:body});
     }catch(error){ reject(error); return; }
     promise=promise.catch(function(error){
       if(!/clone|DataCloneError/i.test(String(error))) throw error;
-      return fetch(LEDGER_POST_URL,{method:'POST',body:body});
+      return fetch((typeof currentLedgerEndpoint==='function'?currentLedgerEndpoint():LEDGER_POST_URL),{method:'POST',body:body});
     });
     promise.then(function(response){
       if(!response.ok) throw new Error('HTTP '+response.status);
@@ -8440,11 +8479,11 @@ function postLedgerSettings(settings){
       handler(value);
     }
     try{
-      promise=fetch(LEDGER_POST_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:body});
+      promise=fetch((typeof currentLedgerEndpoint==='function'?currentLedgerEndpoint():LEDGER_POST_URL),{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:body});
     }catch(error){finish(reject,error);return;}
     promise=promise.catch(function(error){
       if(!/clone|DataCloneError/i.test(String(error)))throw error;
-      return fetch(LEDGER_POST_URL,{method:'POST',body:body});
+      return fetch((typeof currentLedgerEndpoint==='function'?currentLedgerEndpoint():LEDGER_POST_URL),{method:'POST',body:body});
     });
     promise.then(function(response){
       if(!response.ok)throw new Error('HTTP '+response.status);
@@ -8501,6 +8540,7 @@ function reconcileLedgerSettingsBridge(){
 var ledgerRepository=createLedgerRepository({
   storage:localStorage,
   post:postLedgerRecord,
+  ownerKey:function(){return currentTripSourceKey();},
   isTestMode:function(){return !!lsGet('trip_ledger_test_mode',false);},
   onDelivered:function(record){return rememberLedgerDeliveryBridge(record);},
   onChange:function(){if(typeof updateLedgerPendingStatus==='function') updateLedgerPendingStatus();}
@@ -10092,7 +10132,7 @@ function parseLedgerSheetCsv(csvText){
     return record;
   });
 }
-function ledgerFastPullUrl(after){return LEDGER_POST_URL+'?action=ledger&after='+encodeURIComponent(String(after));}
+function ledgerFastPullUrl(after){return (typeof currentLedgerEndpoint==='function'?currentLedgerEndpoint():LEDGER_POST_URL)+'?action=ledger&after='+encodeURIComponent(String(after));}
 function ledgerFastPull(reason){
   if(TripLifecycle.readState(localStorage).mode!=='active')return Promise.resolve({ok:false,newRecords:0,inactive:true});
   if(typeof fetch!=='function')return Promise.resolve({ok:false,newRecords:0});
@@ -11998,10 +12038,64 @@ function renderBuiltinRecovery(error){
   target.classList.add('active');
   target.innerHTML='<div class="empty-state" id="builtinRecovery"><strong>資料資產無法載入</strong><br><small>目前沒有可安全使用的本機行程資料，請在連線後重新載入。</small><div class="empty-actions"><button class="btn" onclick="location.reload()">重新載入</button><button class="btn" onclick="copyBuiltinRecoveryDiagnostics()">複製診斷資訊</button></div></div>';
 }
+/* v149（ADR 0021）：開機先決定這部手機接的是哪一趟旅程，之後所有讀寫都依這個來源。
+   - 連接到一半被打斷：完成或退回原狀（TripSource.recoverPendingConnect）。
+   - 本機已有這趟的紀錄：寫入「岡山舊旅程」來源，之後即使重置紀錄也不會變成未連接。
+   - 新手機：標記為「尚未連接旅程」。 */
+function resolveTripSourceAtBoot(){
+  try{
+    TripSource.recoverPendingConnect(localStorage,TripLifecycle);
+    var action=TripSource.classifyBoot(localStorage,TripLifecycle);
+    if(action==='corrupt'){CURRENT_TRIP_SOURCE=null;return {action:action,error:new Error('旅程連接資料無法讀取')};}
+    if(action==='migrate-legacy'){
+      TripSource.writeSource(localStorage,TripSource.legacyRecord(Date.now()));
+      AppLog.data('這部手機已有岡山旅程的紀錄，沿用岡山旅程');
+    }else if(action==='mark-unconnected'){
+      TripLifecycle.writeState(localStorage,{mode:'unconnected',archiveId:null});
+    }
+    var source=TripSource.readSource(localStorage);
+    CURRENT_TRIP_SOURCE=source.status==='ok'?source.record:null;
+    return {action:action,error:null};
+  }catch(error){
+    CURRENT_TRIP_SOURCE=null;
+    return {action:'error',error:error};
+  }
+}
+function renderTripSourceProblem(error){
+  AppLog.data('旅程來源無法使用：'+String(error&&error.message||error));
+  var target=document.getElementById('view-today');
+  if(!target)return;
+  target.classList.add('active');
+  target.innerHTML='<div class="empty-state" id="tripSourceProblem"><strong>這部手機的旅程連接資料無法讀取</strong><br><small>為了不把資料寫錯地方，App 先停在這裡。請截圖給旅程負責人，或稍後重新開啟。</small><div class="empty-actions"><button class="btn" onclick="location.reload()">重新開啟</button></div></div>';
+}
+function renderTripSourceDownload(message){
+  var target=document.getElementById('view-today');
+  if(!target)return;
+  target.classList.add('active');
+  var name=CURRENT_TRIP_SOURCE&&CURRENT_TRIP_SOURCE.tripName||'這趟旅程';
+  target.innerHTML='<div class="empty-state" id="tripSourceDownload"><strong>需要連網下載'+escapeHtml(name)+'的行程</strong><br><small>'+
+    escapeHtml(message||'這部手機還沒有這趟旅程的資料。連上網路後按「下載行程」。')+'</small><div class="empty-actions"><button class="btn" id="tripSourceDownloadBtn" onclick="retryTripSourceDownload()">下載行程</button></div></div>';
+}
+function retryTripSourceDownload(){
+  var button=document.getElementById('tripSourceDownloadBtn');
+  if(button){button.disabled=true;button.textContent='下載中…';}
+  return downloadAllSheets().then(function(download){
+    if(download.partialSheets.length)throw new Error('分帳紀錄下載失敗，請再試一次');
+    var now=Date.now(),candidate=prepareSheetCandidate(download.raw,'online',now,'sheet-'+now);
+    candidate.snapshot.sheetMeta=download.sheetMeta;
+    candidate.snapshot.lastCompleteAt=now;
+    writeSnapshotState(localStorage,{formatVersion:1,active:candidate.snapshot,previous:null});
+    location.reload();
+  }).catch(function(error){
+    renderTripSourceDownload('下載失敗：'+String(error&&error.message||error)+'。請確認網路後再試一次。');
+  });
+}
 function init(){
+  var sourceBoot=resolveTripSourceAtBoot();
+  if(sourceBoot.error){renderTripSourceProblem(sourceBoot.error);return;}
   var lifecycleState=TripLifecycle.readState(localStorage);
   if(lifecycleState.mode!=='active'){
-    renderInactiveHome(lifecycleState.mode==='cleanup-pending'?'本機清理尚未完成，請稍候；若失敗可重試。':'這部手機的舊旅程已清除。');
+    renderInactiveHome(lifecycleState.mode==='cleanup-pending'?'本機清理尚未完成，請稍候；若失敗可重試。':lifecycleState.mode==='unconnected'?'':'這部手機的舊旅程已清除。');
     if(lifecycleState.mode==='cleanup-pending')tripFlow().resumeCleanup().then(function(){renderInactiveHome();},function(error){
       renderInactiveHome('本機清理未完成：'+String(error&&error.message||error));
     });
@@ -12025,6 +12119,8 @@ startSyncRelativeClock();
     // 開啟 App 時 bridge 若仍有未讀回紀錄,直接進入 7.5 的 30 秒低頻 polling。
     ledgerFastPullLifecycle();
     if(ledgerDeliveryBridgeHasRecords())triggerLedgerFastPull('startup');
+  }else if(bootError&&bootError.code==='SOURCE_SNAPSHOT_MISSING'){
+    renderTripSourceDownload();
   }else{
     renderBuiltinRecovery(bootError);
   }
@@ -12053,6 +12149,8 @@ window.addEventListener('pageshow',function(){if(TripLifecycle.readState(localSt
 window.addEventListener('storage',function(event){
   if(event.key!=='trip_lifecycle_state')return;
   if(TripLifecycle.readState(localStorage).mode!=='active')renderInactiveHome();
+  /* v149：另一個分頁剛連接新旅程時，這個分頁重新載入，才會改用新的來源。 */
+  else if(document.body.classList.contains('trip-inactive'))location.reload();
 });
 function guardTripLifecycleInteraction(event){
   var active=TripLifecycle.readState(localStorage).mode==='active',locked=false;

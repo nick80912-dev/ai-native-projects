@@ -851,6 +851,23 @@ async function testBootSelection(){
   storage.memory.v2_cache_cfg=JSON.stringify({text:orchestrationRaw('blocked').cfg,ts:80});
   selected=app.selectBootData(storage,orchestrationRaw('builtin'));
   assert.strictEqual(selected.source,'builtin','invalid legacy cache falls back to BUILTIN');
+
+  /* v149 (ADR 0021): snapshots are bound to the trip they were downloaded for. */
+  assert.strictEqual(active.sourceKey,'legacy','without a connected trip, new snapshots belong to the built-in Okayama trip');
+  delete active.sourceKey;
+  storage=memoryStorage({trip_data_snapshot_state:JSON.stringify({formatVersion:1,active:active,previous:null})});
+  assert.strictEqual(app.selectBootData(storage,orchestrationRaw('builtin')).snapshot.generationId,'g-active','a v148 snapshot without sourceKey still boots the Okayama trip');
+  app.currentTripSourceKey=function(){return 'sheet:kyushu-2027';};
+  const otherTrip=snapshotFor(app,orchestrationRaw('kyushu'),'g-kyushu');
+  assert.strictEqual(otherTrip.sourceKey,'sheet:kyushu-2027');
+  storage=memoryStorage({trip_data_snapshot_state:JSON.stringify({formatVersion:1,active:otherTrip,previous:previous})});
+  selected=app.selectBootData(storage,orchestrationRaw('builtin'));
+  assert.strictEqual(selected.snapshot.generationId,'g-kyushu','the connected trip boots its own snapshot');
+  storage=memoryStorage({trip_data_snapshot_state:JSON.stringify({formatVersion:1,active:previous,previous:previous})});
+  app.SHEETS.forEach(function(sheet){storage.memory['v2_cache_'+sheet.key]=JSON.stringify({text:legacy[sheet.key],ts:80});});
+  assert.throws(function(){app.selectBootData(storage,orchestrationRaw('builtin'));},function(error){return error.code==='SOURCE_SNAPSHOT_MISSING';},
+    'a connected trip never falls back to the Okayama snapshot, legacy cache or BUILTIN');
+  delete app.currentTripSourceKey;
 }
 
 async function testAtomicSync(){

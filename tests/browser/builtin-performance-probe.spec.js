@@ -7,6 +7,7 @@ test('records ten cold boot samples',async ({browser})=>{
     const page=await context.newPage();
     const pageErrors=trackPageErrors(page);
     await page.addInitScript(()=>{
+      if(!localStorage.getItem('trip_source'))localStorage.setItem('trip_source','{"version":1,"kind":"legacy","migratedAt":0}'); /* v149: measure the Okayama BUILTIN boot, not the unconnected home */
       window.__firstTodayRender=0;
       new MutationObserver(function(){
         const today=document.getElementById('view-today');
