@@ -833,7 +833,7 @@ function selectTheme(themeId){
    ============================================================ */
 
 var SCHEMA = {
-  version: '3.0 (2026-08-11)',
+  version: '3.1 (2026-10-08)',
 
   /* 發布來源(換試算表只改這裡) */
   pubBase: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRenmV8UxEzWbzSjKJKi4rSpYt63geBqhEkKsl1GemWVPmFKTcvv3Uk71Hjla3TGBpGIjC7bQDDdI00/pub?single=true&output=csv&gid=',
@@ -985,7 +985,13 @@ var SCHEMA = {
           values:{'JPY':'JPY','jpy':'JPY','TWD':'TWD','twd':'TWD'},
           /* 同時是全團結算幣別(ADR 0007);v135 起有還款紀錄即鎖定,不得切換 */
           desc:'全團結算幣別,也是新增記帳的預設幣別;只允許 JPY/TWD' },
-        { field:'homepage',   header:'Home Page',   desc:'預設分頁(⚠️ 目前**未啟用**,App 固定 Today;填寫無效果)' }
+        { field:'homepage',   header:'Home Page',   desc:'預設分頁(⚠️ 目前**未啟用**,App 固定 Today;填寫無效果)' },
+        /* v149 連接新旅程(ADR 0021):舊的岡山試算表沒有這兩鍵,所以標為 optional;
+           新旅程由 trip-source.js 在連接時強制檢查。 */
+        { field:'tripId',     header:'Trip ID',     optional:true,
+          desc:'選填(新旅程必填);3–40 個英數字、- 或 _,每趟旅程不同,用來分開快取、待送帳與備份' },
+        { field:'ledgerEndpoint', header:'Ledger Endpoint', optional:true,
+          desc:'選填(新旅程必填);這份試算表部署的 Apps Script 網頁應用程式 /exec 網址' }
       ]
     }
   }
@@ -9495,7 +9501,7 @@ function openSettings(targetId){
   if(settingsUiState.page==='data')loadTripGoogleIdentity().catch(function(){});
 }
 var settingsUiState={page:'root',scrollTopByPage:{},anchorId:''};
-var SETTINGS_PAGE_IDS=['root','theme','proxy','ledger','options','options-category','options-pay-method','options-shopping-unit','storage','health','data','past','test-mode'];
+var SETTINGS_PAGE_IDS=['root','theme','proxy','ledger','options','options-category','options-pay-method','options-shopping-unit','storage','health','data','past','test-mode','connect'];
 function settingsOptionPageForKind(kind){
   if(kind==='category')return 'options-category';
   if(kind==='payMethod')return 'options-pay-method';
@@ -9527,7 +9533,7 @@ function captureSettingsScroll(){
   var panel=document.querySelector('#settingsOverlay .settings-panel');
   if(panel)settingsUiState.scrollTopByPage[settingsUiState.page]=Math.max(0,Number(panel.scrollTop)||0);
 }
-function openSettingsPage(pageId){if(pageId==='past')return openPastTrips();openSettings(pageId);}
+function openSettingsPage(pageId){if(pageId==='past')return openPastTrips();if(pageId==='connect')return openConnectTrip();openSettings(pageId);}
 function backToSettingsRoot(){openSettings('root');}
 function renderSettingsHeader(title,isRoot,backPage,backLabel){
   var target=backPage||'root';
@@ -9557,7 +9563,10 @@ function settingsNavRow(page,iconKey,title,summary){
 }
 /* 設定根頁 = 三個常駐群組(個人／記帳／資料)。子頁內容與資料語意完全不變,只重排根頁。 */
 function renderSettingsRoot(ledgerSettings){
-  if(TripLifecycle.readState(localStorage).mode!=='active')return renderSettingsHeader('設定',true)+settingsGroup('資料',settingsNavRow('past','history','過往旅程','查看已封存的旅程'));
+  var lifecycleMode=TripLifecycle.readState(localStorage).mode;
+  if(lifecycleMode!=='active')return renderSettingsHeader('設定',true)+settingsGroup('資料',
+    (lifecycleMode==='cleanup-pending'?'':settingsNavRow('connect','data','連接新旅程','貼上新旅程試算表的發布連結'))+
+    settingsNavRow('past','history','過往旅程','查看已封存的旅程'));
   var proxyCount=ledgerProxyTargetStore.all().length;
   /* 採買單位仍完整保留於自訂項目子頁,只是不再擠進根頁摘要(設計規格 §2.2.4)。 */
   var optionSummary=ledgerCategoryStore.all().length+' 類別 · '+ledgerPayMethodStore.all().length+' 支付方式';
@@ -9978,6 +9987,103 @@ function renderPastTripsPage(){
   }else body='<p class="settings-help">按下方按鈕連接自己的 Google 帳號。</p><button type="button" class="btn" onclick="loadPastTrips()">連接 Google Drive</button>';
   return renderSettingsHeader('過往旅程',false)+'<div class="settings-section">'+body+'</div>';
 }
+/* ================= v149 連接新旅程（ADR 0021） =================
+   只在「已清除」或「尚未連接」時提供。貼上發布連結 → TripSource.inspect 下載全部分頁並檢查
+   範本、TripConfig 與 Ledger Endpoint → 預覽 → 確認後 commit 並重新載入 App。
+   任何一步失敗都不改變手機（交易與復原見 trip-source.js）。 */
+var connectTripUi={status:'idle',link:'',error:'',candidate:null,requestId:0};
+function fetchLedgerEndpointInfo(endpoint){
+  return fetchWithTimeout(endpoint+'?action=info',FETCH_TIMEOUT).then(function(response){
+    if(!response.ok)throw new Error('HTTP '+response.status);
+    return response.json();
+  });
+}
+function tripConnectFlow(){
+  return TripSource.createConnectFlow({
+    storage:localStorage,lifecycle:TripLifecycle,
+    download:function(pubBase){
+      return downloadAllSheets(pubBase).then(function(download){
+        if(download.partialSheets.length)throw new Error('「分帳紀錄」分頁下載失敗');
+        return download;
+      });
+    },
+    prepare:function(raw){var now=Date.now();var prepared=prepareSheetCandidate(raw,'online',now,'sheet-'+now);prepared.snapshot.lastCompleteAt=now;return prepared;},
+    fetchInfo:fetchLedgerEndpointInfo,
+    clearPhotos:function(){return shoppingPhotoStore.clearAll();},
+    writeSnapshot:function(snapshot){writeSnapshotState(localStorage,{formatVersion:1,active:snapshot,previous:null});},
+    members:function(db){return registeredMemberEntries(db&&db.ledger||[],false).map(function(entry){return entry.name;});}
+  });
+}
+function openConnectTrip(){
+  connectTripUi={status:'idle',link:'',error:'',candidate:null,requestId:connectTripUi.requestId+1};
+  openSettings('connect');
+}
+function resetConnectTrip(){
+  connectTripUi={status:'idle',link:connectTripUi.link,error:'',candidate:null,requestId:connectTripUi.requestId+1};
+  rerenderOpenSettingsPage();
+}
+function connectTripStillOpen(requestId){
+  return requestId===connectTripUi.requestId&&settingsUiState.page==='connect'&&!!document.getElementById('settingsOverlay');
+}
+function connectTripErrorMessage(error){
+  return error&&error.code?String(error.message):'連接失敗：'+String(error&&error.message||error);
+}
+function inspectConnectTrip(){
+  var input=document.getElementById('connectTripLink');
+  if(input)connectTripUi.link=input.value;
+  var requestId=++connectTripUi.requestId;
+  connectTripUi.status='checking';connectTripUi.error='';connectTripUi.candidate=null;
+  rerenderOpenSettingsPage();
+  return tripConnectFlow().inspect(connectTripUi.link).then(function(candidate){
+    if(!connectTripStillOpen(requestId))return;
+    connectTripUi.status='preview';connectTripUi.candidate=candidate;
+    rerenderOpenSettingsPage();
+  },function(error){
+    if(!connectTripStillOpen(requestId))return;
+    AppLog.data('連接新旅程檢查失敗：'+String(error&&error.code||'')+' '+String(error&&error.message||error));
+    connectTripUi.status='error';connectTripUi.error=connectTripErrorMessage(error);
+    rerenderOpenSettingsPage();
+  });
+}
+function confirmConnectTrip(){
+  var candidate=connectTripUi.candidate,requestId=++connectTripUi.requestId;
+  if(!candidate)return Promise.resolve();
+  connectTripUi.status='connecting';
+  rerenderOpenSettingsPage();
+  return tripConnectFlow().commit(candidate).then(function(){
+    AppLog.data('已連接新旅程：'+candidate.tripName+'（'+candidate.tripId+'）');
+    toast('已連接「'+candidate.tripName+'」');
+    setTimeout(function(){location.reload();},400);
+  },function(error){
+    AppLog.data('連接新旅程失敗：'+String(error&&error.message||error));
+    if(requestId!==connectTripUi.requestId)return;
+    connectTripUi.status='error';connectTripUi.error=connectTripErrorMessage(error)+'（手機維持原本的狀態）';connectTripUi.candidate=null;
+    rerenderOpenSettingsPage();
+  });
+}
+function renderConnectTripPage(){
+  var mode=TripLifecycle.readState(localStorage).mode,state=connectTripUi,body='';
+  if(mode==='active')body='<p class="settings-help">這部手機還有進行中的旅程。要接新旅程，請先到「資料與版本」清除並打包旅程。</p>';
+  else if(mode==='cleanup-pending')body='<p class="settings-help">本機清理尚未完成，完成後才能連接新旅程。</p>';
+  else if(state.status==='checking')body='<p class="settings-help" role="status">正在下載並檢查試算表…</p>';
+  else if(state.status==='connecting')body='<p class="settings-help" role="status">正在連接…</p>';
+  else if(state.status==='preview'&&state.candidate){
+    var preview=state.candidate.preview;
+    body='<h3>'+escapeHtml(preview.tripName||'未命名旅程')+'</h3>'+
+      '<p class="settings-help">'+escapeHtml(preview.startDate)+' ～ '+escapeHtml(preview.endDate)+' · '+preview.dayCount+' 天 · '+preview.stopCount+' 個行程</p>'+
+      '<ul class="settings-help connect-trip-days">'+preview.days.map(function(day){return '<li>'+escapeHtml(day.date)+'：'+day.count+' 個行程</li>';}).join('')+'</ul>'+
+      '<p class="settings-help">已加入的成員：'+(preview.members.length?escapeHtml(preview.members.join('、')):'還沒有人加入')+'</p>'+
+      '<p class="settings-help">確認後這部手機會改用這份試算表，並重新開啟 App。</p>'+
+      '<div class="trip-lifecycle-actions"><button type="button" class="btn" onclick="confirmConnectTrip()">確認連接</button><button type="button" class="btn ghost" onclick="resetConnectTrip()">改貼其他連結</button></div>';
+  }else{
+    body='<p class="settings-help">貼上旅程負責人分享的 Google 試算表「發布到網路」連結，網址以 https://docs.google.com/spreadsheets/d/e/ 開頭。</p>'+
+      '<label class="settings-help" for="connectTripLink"><b>發布連結</b></label>'+
+      '<textarea id="connectTripLink" class="state-box" rows="3" autocomplete="off" autocapitalize="off" spellcheck="false" oninput="connectTripUi.link=this.value">'+escapeHtml(state.link)+'</textarea>'+
+      (state.status==='error'&&state.error?'<p class="trip-lifecycle-status error" role="alert">'+escapeHtml(state.error)+'</p>':'')+
+      '<div class="trip-lifecycle-actions"><button type="button" class="btn" onclick="inspectConnectTrip()">檢查連結</button></div>';
+  }
+  return renderSettingsHeader('連接新旅程',false)+'<div class="settings-section">'+body+'</div>';
+}
 function openPastTrips(){
   openSettings('past');
   if(window.google&&google.accounts&&google.accounts.oauth2)return loadPastTrips();
@@ -10092,6 +10198,7 @@ function renderSettingsPage(page,ledgerSettings,settingsError){
   if(page==='health')return renderSettingsHealthPage();
   if(page==='data')return renderSettingsDataPage();
   if(page==='past')return renderPastTripsPage();
+  if(page==='connect')return renderConnectTripPage();
   if(page==='test-mode')return renderSettingsTestModePage();
   return renderSettingsRoot(ledgerSettings);
 }
@@ -12018,8 +12125,13 @@ function renderInactiveHome(message){
   document.querySelectorAll('.view:not(#view-today)').forEach(function(view){view.innerHTML='';});
   var title=document.getElementById('brandTitle');if(title)title.textContent='TripPilot';
   var today=document.getElementById('view-today');
-  var pending=TripLifecycle.readState(localStorage).mode==='cleanup-pending';
-  if(today)today.innerHTML='<div class="trip-inactive-card"><h1>目前沒有進行中的旅程</h1><p>'+escapeHtml(message||'這部手機的舊旅程已清除。若先前封存，可到過往旅程查看。')+'</p>'+(pending?'<button type="button" class="btn" onclick="retryTripCleanup()">重試本機清理</button>':'')+'<button type="button" class="btn ghost" onclick="openPastTrips()">過往旅程</button></div>';
+  var lifecycleMode=TripLifecycle.readState(localStorage).mode,pending=lifecycleMode==='cleanup-pending',unconnected=lifecycleMode==='unconnected';
+  /* v149：「已清除」與「尚未連接」都可以連接新旅程；清理未完成時先完成清理。 */
+  var heading=unconnected?'尚未連接旅程':'目前沒有進行中的旅程';
+  var defaultMessage=unconnected?'請向旅程負責人索取新旅程試算表的「發布到網路」連結，貼上後就能開始使用。':'這部手機的舊旅程已清除。可以連接下一趟旅程；若先前封存，可到過往旅程查看。';
+  if(today)today.innerHTML='<div class="trip-inactive-card"><h1>'+heading+'</h1><p>'+escapeHtml(message||defaultMessage)+'</p>'+
+    (pending?'<button type="button" class="btn" onclick="retryTripCleanup()">重試本機清理</button>':'<div class="trip-lifecycle-actions"><button type="button" class="btn" onclick="openConnectTrip()">連接新旅程</button></div>')+
+    '<button type="button" class="btn ghost" onclick="openPastTrips()">過往旅程</button></div>';
   var tabs=document.getElementById('tripTabs');if(tabs)tabs.innerHTML='';
   var daybar=document.getElementById('daybar');if(daybar)daybar.innerHTML='';
   if(typeof ledgerFastPullController!=='undefined')ledgerFastPullController.stop();

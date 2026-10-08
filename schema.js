@@ -14,7 +14,7 @@
    ============================================================ */
 
 var SCHEMA = {
-  version: '3.0 (2026-08-11)',
+  version: '3.1 (2026-10-08)',
 
   /* 發布來源(換試算表只改這裡) */
   pubBase: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRenmV8UxEzWbzSjKJKi4rSpYt63geBqhEkKsl1GemWVPmFKTcvv3Uk71Hjla3TGBpGIjC7bQDDdI00/pub?single=true&output=csv&gid=',
@@ -166,7 +166,13 @@ var SCHEMA = {
           values:{'JPY':'JPY','jpy':'JPY','TWD':'TWD','twd':'TWD'},
           /* 同時是全團結算幣別(ADR 0007);v135 起有還款紀錄即鎖定,不得切換 */
           desc:'全團結算幣別,也是新增記帳的預設幣別;只允許 JPY/TWD' },
-        { field:'homepage',   header:'Home Page',   desc:'預設分頁(⚠️ 目前**未啟用**,App 固定 Today;填寫無效果)' }
+        { field:'homepage',   header:'Home Page',   desc:'預設分頁(⚠️ 目前**未啟用**,App 固定 Today;填寫無效果)' },
+        /* v149 連接新旅程(ADR 0021):舊的岡山試算表沒有這兩鍵,所以標為 optional;
+           新旅程由 trip-source.js 在連接時強制檢查。 */
+        { field:'tripId',     header:'Trip ID',     optional:true,
+          desc:'選填(新旅程必填);3–40 個英數字、- 或 _,每趟旅程不同,用來分開快取、待送帳與備份' },
+        { field:'ledgerEndpoint', header:'Ledger Endpoint', optional:true,
+          desc:'選填(新旅程必填);這份試算表部署的 Apps Script 網頁應用程式 /exec 網址' }
       ]
     }
   }

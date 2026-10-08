@@ -6,7 +6,7 @@
 > 同步時 Validator 會在 console 以 `[Schema Error]` 前綴警告(六類日誌定義見 `validator.js`):缺少必要欄位/未知欄位/未知型別值/未知設定鍵,一律不崩潰。
 > 檔頭註解為手寫維護;下方表格區由 `schemaDoc()` 產生,**禁止手改表格**(見 14 的 Tier 3 規則)。
 
-版本:3.0 (2026-08-11)
+版本:3.1 (2026-10-08)
 
 ## 行程總表(gid=1169222358,kind=itinerary)
 | Google Sheet 欄位 | App Property | 必填 | 說明 |
@@ -113,3 +113,5 @@
 | Exchange Rate | exchangeRate | 1 JPY 對應的 TWD 金額;必須大於 0 |
 | Ledger Default Currency | ledgerDefaultCurrency | 全團結算幣別,也是新增記帳的預設幣別;只允許 JPY/TWD |
 | Home Page | homepage | 預設分頁(⚠️ 目前**未啟用**,App 固定 Today;填寫無效果) |
+| Trip ID | tripId | 選填(新旅程必填);3–40 個英數字、- 或 _,每趟旅程不同,用來分開快取、待送帳與備份 |
+| Ledger Endpoint | ledgerEndpoint | 選填(新旅程必填);這份試算表部署的 Apps Script 網頁應用程式 /exec 網址 |

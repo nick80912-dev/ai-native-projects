@@ -196,12 +196,12 @@
           try{prepared=options.prepare(download.raw);}
           catch(error){throw failure(error&&error.stage==='structure'?'STRUCTURE':'VALIDATION','試算表內容不符合範本：'+String(error&&error.message||error),error);}
           var cfg=prepared.db&&prepared.db.cfg||{};
-          var tripId=text(cfg.tripid),endpoint=text(cfg.ledgerendpoint);
+          var tripId=text(cfg.tripId),endpoint=text(cfg.ledgerEndpoint);
           if(!validTripId(tripId))throw failure('CFG_TRIP_ID','TripConfig 的 Trip ID 需要 3–40 個英數字（可含 - 與 _）');
           if(!validEndpoint(endpoint))throw failure('CFG_ENDPOINT','TripConfig 的 Ledger Endpoint 不是已部署的 Apps Script 網址');
           var start=text(cfg.startdate),end=text(cfg.enddate);
           if(!DATE_RE.test(start)||!DATE_RE.test(end)||start>end)throw failure('CFG_DATES','TripConfig 的 Start Date／End Date 需為 YYYY-MM-DD，且開始不晚於結束');
-          var rate=Number(cfg.exchangerate),currency=text(cfg.ledgerdefaultcurrency).toUpperCase();
+          var rate=Number(cfg.exchangeRate),currency=text(cfg.ledgerDefaultCurrency).toUpperCase();
           if(!(rate>0)||(currency!=='JPY'&&currency!=='TWD'))throw failure('CFG_CURRENCY','TripConfig 的匯率需大於 0，結算幣別只支援 JPY 或 TWD');
           return Promise.resolve().then(function(){return options.fetchInfo(endpoint);}).catch(function(error){
             throw failure('INFO_FAILED','無法連到這份試算表的 Apps Script，請確認已部署為網頁應用程式',error);

@@ -91,6 +91,7 @@ function validateBuiltinCandidate(options){
   const cfgRows=parseCsv(candidate.cfg);
   const cfg=cfgValues(cfgRows);
   (schema.sheets.cfg.keys||[]).forEach(definition=>{
+    if(definition.optional)return;
     if(!cfg.has(definition.header)||!cfg.get(definition.header))throw new Error('cfg CSV is missing '+definition.header);
   });
   const start=Date.parse(cfg.get('Start Date')+'T00:00:00Z');

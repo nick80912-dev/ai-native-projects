@@ -91,7 +91,15 @@ assert.strictEqual(TripLifecycle.readState(storage).mode,'active');
 assert.strictEqual(storage.getItem(TripLifecycle.STATE_KEY),null);
 
 /* ---- 連接交易 ---- */
-function goodCfg(){return {tripname:'九州五日',startdate:'2027-03-01',enddate:'2027-03-05',tripid:'kyushu-2027',ledgerendpoint:ENDPOINT,exchangerate:'0.21',ledgerdefaultcurrency:'JPY'};}
+function goodCfg(){return {tripname:'九州五日',startdate:'2027-03-01',enddate:'2027-03-05',tripId:'kyushu-2027',ledgerEndpoint:ENDPOINT,exchangeRate:'0.21',ledgerDefaultCurrency:'JPY'};}
+/* goodCfg 的每個欄位名稱都必須是 schema.js 真正產生的 TripConfig 欄位（parseKeyValue 以 field 為鍵）。
+   早期版本把 exchangeRate 寫成小寫，真實試算表會永遠卡在幣別檢查。 */
+(function(){
+  const fs=require('fs'),vm=require('vm'),sandbox={};
+  vm.createContext(sandbox);vm.runInContext(fs.readFileSync(require('path').join(__dirname,'..','schema.js'),'utf8'),sandbox);
+  const fields=sandbox.SCHEMA.sheets.cfg.keys.map(function(key){return key.field;});
+  Object.keys(goodCfg()).forEach(function(field){assert(fields.indexOf(field)>=0,'schema.js defines TripConfig field '+field);});
+})();
 function harness(options){
   options=options||{};
   const s=memoryStorage(options.seed||{trip_snap_old:'x',trip_checks:'{"10/18_2":true}',v2_cache_itin:'{}',unrelated:'keep'});
@@ -152,10 +160,11 @@ function expectCode(promise,code,label){
   await expectCode(harness().flow.inspect('hello'),'LINK_INVALID','garbage link');
   await expectCode(harness({download:function(){return Promise.reject(new Error('offline'));}}).flow.inspect(PUB),'DOWNLOAD','offline');
   await expectCode(harness({prepare:function(){const e=new Error('缺少欄位');e.stage='structure';throw e;}}).flow.inspect(PUB),'STRUCTURE','missing columns');
-  await expectCode(harness({cfg:Object.assign(goodCfg(),{tripid:''})}).flow.inspect(PUB),'CFG_TRIP_ID','no Trip ID');
-  await expectCode(harness({cfg:Object.assign(goodCfg(),{ledgerendpoint:'https://example.com/x'})}).flow.inspect(PUB),'CFG_ENDPOINT','bad endpoint');
+  await expectCode(harness({cfg:Object.assign(goodCfg(),{tripId:''})}).flow.inspect(PUB),'CFG_TRIP_ID','no Trip ID');
+  await expectCode(harness({cfg:Object.assign(goodCfg(),{ledgerEndpoint:'https://example.com/x'})}).flow.inspect(PUB),'CFG_ENDPOINT','bad endpoint');
   await expectCode(harness({cfg:Object.assign(goodCfg(),{startdate:'2027-03-05',enddate:'2027-03-01'})}).flow.inspect(PUB),'CFG_DATES','reversed dates');
-  await expectCode(harness({cfg:Object.assign(goodCfg(),{ledgerdefaultcurrency:'USD'})}).flow.inspect(PUB),'CFG_CURRENCY','unsupported currency');
+  await expectCode(harness({cfg:Object.assign(goodCfg(),{ledgerDefaultCurrency:'USD'})}).flow.inspect(PUB),'CFG_CURRENCY','unsupported currency');
+  await expectCode(harness({cfg:Object.assign(goodCfg(),{exchangeRate:'0'})}).flow.inspect(PUB),'CFG_CURRENCY','zero exchange rate');
   await expectCode(harness({info:function(){return Promise.reject(new Error('blocked'));}}).flow.inspect(PUB),'INFO_FAILED','endpoint unreachable');
   await expectCode(harness({info:function(){return Promise.resolve({ok:true,tripId:'other-trip',ledgerHeaderOk:true});}}).flow.inspect(PUB),'INFO_MISMATCH','endpoint belongs to another Sheet');
   await expectCode(harness({info:function(){return Promise.resolve({ok:true,tripId:'kyushu-2027',ledgerHeaderOk:false});}}).flow.inspect(PUB),'LEDGER_HEADER','ledger header wrong');

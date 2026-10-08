@@ -20,7 +20,10 @@ function schemaFixture(pubBase='https://example.test/?gid='){
         ['tripname','Trip Name'],['startdate','Start Date'],['enddate','End Date'],
         ['travelmode','Travel Mode'],['currency','Currency'],['homepage','Home Page'],
         ['exchangerate','Exchange Rate'],['ledgerdefaultcurrency','Ledger Default Currency']
-      ].map(([field,header])=>({field,header}))}
+      ].map(([field,header])=>({field,header})).concat([
+        /* v149:新旅程才有的鍵是 optional,岡山試算表沒有也要能刷新 BUILTIN */
+        {field:'tripId',header:'Trip ID',optional:true},{field:'ledgerEndpoint',header:'Ledger Endpoint',optional:true}
+      ])}
     }
   };
 }
