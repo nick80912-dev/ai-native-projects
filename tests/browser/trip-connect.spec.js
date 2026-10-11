@@ -2,7 +2,10 @@
    這裡不用 qa-fixture 的 installBaseLocalState：它每次載入都會清空 localStorage，
    而連接成功後 App 會重新載入，必須保留剛寫入的旅程來源。 */
 const {test,expect}=require('./support/test');
-const {collectPageErrors}=require('./support/qa-fixture');
+const {collectPageErrors,installFixedDate}=require('./support/qa-fixture');
+/* 岡山保護期（TripSource.LEGACY_GRACE_UNTIL）：台灣時間 10/24 以前，沒有紀錄的新手機也沿用岡山。
+   測「尚未連接」的情境一律把時鐘固定在保護期之後，不受執行測試當天的日期影響。 */
+const AFTER_GRACE='2026-10-24T09:00:00+08:00';
 
 const NEW_PUB='2PACX-1vQ'+'k'.repeat(70);
 const NEW_LINK='https://docs.google.com/spreadsheets/d/e/'+NEW_PUB+'/pubhtml';
@@ -69,6 +72,7 @@ function storageSnapshot(page){
 
 test('全新手機顯示「尚未連接旅程」，首頁與設定都能進入連接頁',async({page})=>{
   const errors=collectPageErrors(page);
+  await installFixedDate(page,AFTER_GRACE);
   await installDevice(page,{online:false});
   await page.goto('/',{waitUntil:'domcontentloaded'});
   await expect(page.getByRole('heading',{name:'尚未連接旅程'})).toBeVisible();
@@ -87,6 +91,7 @@ test('全新手機顯示「尚未連接旅程」，首頁與設定都能進入�
 
 test('貼上發布連結 → 預覽 → 確認後重新開啟並改用新旅程',async({page})=>{
   const errors=collectPageErrors(page);
+  await installFixedDate(page,AFTER_GRACE);
   await installDevice(page);
   await page.goto('/',{waitUntil:'domcontentloaded'});
   await page.getByRole('button',{name:'連接新旅程'}).click();
@@ -122,6 +127,7 @@ test('貼上發布連結 → 預覽 → 確認後重新開啟並改用新旅程'
 
 test('Ledger Endpoint 屬於另一份試算表時拒絕連接，手機維持未連接',async({page})=>{
   const errors=collectPageErrors(page);
+  await installFixedDate(page,AFTER_GRACE);
   await installDevice(page,{info:{ok:true,tripId:'someone-else',ledgerHeaderOk:true}});
   await page.goto('/',{waitUntil:'domcontentloaded'});
   await page.getByRole('button',{name:'連接新旅程'}).click();
@@ -130,6 +136,21 @@ test('Ledger Endpoint 屬於另一份試算表時拒絕連接，手機維持未�
   await expect(page.getByRole('alert')).toContainText('另一份試算表');
   await expect(page.getByRole('button',{name:'確認連接'})).toHaveCount(0);
   expect(await storageSnapshot(page)).toEqual({mode:'unconnected',source:null,pending:null,snapshotKey:null});
+  expect(errors).toEqual([]);
+});
+
+test('岡山旅程結束前第一次開啟的新手機沿用岡山行程，不顯示「尚未連接旅程」',async({page})=>{
+  const errors=collectPageErrors(page);
+  await installFixedDate(page,'2026-10-23T23:30:00+08:00');
+  await installDevice(page,{online:false});
+  await page.goto('/',{waitUntil:'domcontentloaded'});
+  await page.waitForFunction(()=>typeof CURRENT_SNAPSHOT!=='undefined'&&CURRENT_SNAPSHOT);
+  await expect(page.getByRole('heading',{name:'尚未連接旅程'})).toHaveCount(0);
+  await expect(page.locator('#brandTitle')).toHaveText('岡山四國六天五夜');
+  const state=await storageSnapshot(page);
+  expect(state.mode).toBe('active');
+  expect(state.source).toMatchObject({version:1,kind:'legacy'});
+  expect(await page.evaluate(()=>currentTripSourceKey())).toBe('legacy');
   expect(errors).toEqual([]);
 });
 

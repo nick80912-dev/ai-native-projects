@@ -9898,7 +9898,7 @@ function renderSettingsHealthPage(){
 var APP_RELEASE_NOTES=[
   {version:'v150',date:'2026-10-11',title:'可以接上下一趟旅程',items:[
     '旅程清除後，可在 App 內貼上新旅程 Sheet 的發布連結，檢查與預覽後再接上。',
-    '新安裝的手機先顯示「尚未連接旅程」；每趟旅程的帳只會寫回自己的 Sheet。'
+    '岡山旅程期間所有手機照常顯示岡山；10/24 起新安裝的手機才顯示「尚未連接旅程」。每趟旅程的帳只會寫回自己的 Sheet。'
   ]},
   {version:'v149',date:'2026-10-11',title:'首頁、交通標籤與字型更新',items:[
     '出發前的首頁直接顯示第一站的日期、時間與內容。',
@@ -12296,15 +12296,15 @@ function renderBuiltinRecovery(error){
 /* v150（ADR 0021）：開機先決定這部手機接的是哪一趟旅程，之後所有讀寫都依這個來源。
    - 連接到一半被打斷：完成或退回原狀（TripSource.recoverPendingConnect）。
    - 本機已有這趟的紀錄：寫入「岡山舊旅程」來源，之後即使重置紀錄也不會變成未連接。
-   - 新手機：標記為「尚未連接旅程」。 */
+   - 新手機：台灣時間 10/24 以前沿用岡山（岡山保護期，見 TripSource.LEGACY_GRACE_UNTIL），之後標記為「尚未連接旅程」。 */
 function resolveTripSourceAtBoot(){
   try{
     TripSource.recoverPendingConnect(localStorage,TripLifecycle);
     var action=TripSource.classifyBoot(localStorage,TripLifecycle);
     if(action==='corrupt'){CURRENT_TRIP_SOURCE=null;return {action:action,error:new Error('旅程連接資料無法讀取')};}
-    if(action==='migrate-legacy'){
+    if(action==='migrate-legacy'||action==='legacy-grace'){
       TripSource.writeSource(localStorage,TripSource.legacyRecord(Date.now()));
-      AppLog.data('這部手機已有岡山旅程的紀錄，沿用岡山旅程');
+      AppLog.data(action==='legacy-grace'?'岡山旅程結束前開啟的新手機，沿用岡山旅程':'這部手機已有岡山旅程的紀錄，沿用岡山旅程');
     }else if(action==='mark-unconnected'){
       TripLifecycle.writeState(localStorage,{mode:'unconnected',archiveId:null});
     }

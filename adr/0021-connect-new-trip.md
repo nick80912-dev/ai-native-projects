@@ -1,6 +1,6 @@
 # ADR 0021 — 連接下一趟旅程（每趟一份 Sheet）
 
-> 狀態：Accepted（2026-10-08，Bar 回覆「照建議」核准七項決定與 Tier 2 範圍；v150 候選在工作分支，未合併 dev、未發布，合併時機待旅程結束後與 Bar 確認）。規格：[connect-new-trip-design](../docs/superpowers/specs/2026-10-08-connect-new-trip-design.md)。
+> 狀態：Accepted（2026-10-08，Bar 回覆「照建議」核准七項決定與 Tier 2 範圍；v150 候選在工作分支；2026-10-11 Bar 改為出發前上線，條件是先加岡山保護期，Tier 2 確認書經 Bar「核准」）。規格：[connect-new-trip-design](../docs/superpowers/specs/2026-10-08-connect-new-trip-design.md)。
 
 ## Decision
 
@@ -8,6 +8,7 @@
 
 - 舊岡山手機（已有打卡、想逛、個人帳或待送帳等紀錄）升級後自動記為 `legacy`，行為與 v148 相同。
 - 沒有任何紀錄的新手機記為 `unconnected`，首頁顯示「尚未連接旅程」，不再顯示岡山內建資料。
+- **岡山保護期**：台灣時間 2026-10-24 00:00（`TripSource.LEGACY_GRACE_UNTIL`）以前，沒有紀錄的新手機也記為 `legacy`，讓 v150 可以在岡山旅程前上線。
 - 進行中的旅程不能直接切換，必須先「清除並打包旅程」（ADR 0020）。
 
 ## Context
@@ -31,6 +32,7 @@ v149 以前發布 ID、Apps Script 網址、編輯 ID、內建資料（BUILTIN�
 
 - **待送帳的旅程標記是「每個佇列」而不是「每筆」**：換旅程前佇列必須是空的（清除前預檢會擋），所以每筆標記沒有額外保護，反而要改動 21 欄的 Ledger payload。以佇列層級的 owner 實作。
 - **封存的 `sourceSheetId`**：岡山沿用原本的編輯用 ID；新旅程用 `sheet:<Trip ID>`，而不是發布 ID。Drive `appProperties` 每項上限 124 bytes，發布 ID 加前綴可能超過；Trip ID 也與快照、待送帳、備份的識別一致。封存格式維持 v1。
+- **岡山保護期（2026-10-11 追加）**：原決定是「v150 在岡山結算、清除之後才發布」。Bar 改為出發前上線，因此 `classifyBoot` 在保護期內把沒有紀錄的新手機也分類為 `legacy-grace`，開機時與 `migrate-legacy` 一樣寫入 `legacy`。保護期寫死在 `trip-source.js`，岡山以後的旅程不需要它，之後可以在不影響已分類手機的情況下移除。
 - **天氣地區分頁**以 TripConfig 的 `Weather Regions GID` 指向分頁，因為範本尚未建立、無法事先知道 gid；清單在同步成功後另外下載並存在 `trip_weather_regions`，不進八表原子快照與封存。
 
 ## Expected Benefits
@@ -43,7 +45,7 @@ v149 以前發布 ID、Apps Script 網址、編輯 ID、內建資料（BUILTIN�
 
 - 連接一定要連網，而且要等「清除並打包旅程」完成；清除要求全團結清，若結清在 App 外完成，仍需在 App 內補記還款才能清除。
 - 範本的 Apps Script 每份 Sheet 要各自部署一次，Ledger Endpoint 要手動填進 TripConfig。
-- v150 起只有打卡等紀錄的手機才被視為岡山；只有快取或成員名稱的手機會變成「尚未連接」。因此 v150 應在岡山旅程結算、清除之後才發布。
+- 保護期以手機時鐘判斷：10/24 以後才第一次開啟 v150、又沒有紀錄的手機（例如重裝 App 來結帳），或日期錯設到 10/24 以後的新手機，會變成「尚未連接」且接不回岡山（岡山試算表沒有 Trip ID）。保護期內開啟過一次的手機會永久記為岡山，不受影響。
 - root v110 bridge 不能修改，極舊裝置第一次開啟時仍可能短暫看到岡山，之後才切到 v150。
 - 只支援日本（JPY↔TWD、天氣時區 Asia/Tokyo）；旅伴的 Google OAuth 測試名單另案處理。
 

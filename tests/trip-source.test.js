@@ -60,10 +60,13 @@ const noPersist=memoryStorage();noPersist.setItem=function(){};
 assert.throws(function(){TripSource.writeSource(noPersist,sheetRecord);},/persist/i);
 
 /* ---- 開機分類：用過這趟的手機沿用岡山；新手機為「尚未連接」 ---- */
-function classify(seed,mode){
+/* 岡山保護期在台灣時間 2026-10-24 00:00 結束。下面的規則都以保護期之後為準，保護期另外測。 */
+const AFTER_GRACE=Date.parse('2026-10-24T00:00:00+08:00');
+const IN_GRACE=Date.parse('2026-10-11T09:00:00+08:00');
+function classify(seed,mode,now){
   const s=memoryStorage(seed);
   if(mode)TripLifecycle.writeState(s,{mode:mode,archiveId:null});
-  return TripSource.classifyBoot(s,TripLifecycle);
+  return TripSource.classifyBoot(s,TripLifecycle,now===undefined?AFTER_GRACE:now);
 }
 assert.strictEqual(classify({}),'mark-unconnected','a fresh device starts unconnected');
 assert.strictEqual(classify({trip_data_snapshot_state:'{"formatVersion":1}',trip_member:'Amy',trip_theme:'ocean',trip_checks:'{}',
@@ -81,6 +84,27 @@ assert.strictEqual(classify({trip_checks:'{"10/18_2":true}'},'complete'),'inacti
 assert.strictEqual(classify({},'unconnected'),'inactive');
 assert.strictEqual(classify({trip_source:JSON.stringify(sheetRecord)}),'use');
 assert.strictEqual(classify({trip_source:'{broken'}),'corrupt');
+
+/* ---- 岡山保護期：10/24 以前沒有紀錄的手機也沿用岡山 ---- */
+assert.strictEqual(TripSource.LEGACY_GRACE_UNTIL,AFTER_GRACE,'the grace period ends at 2026-10-24 00:00 Taiwan time');
+assert.strictEqual(classify({},null,IN_GRACE),'legacy-grace','a fresh device before the Okayama trip ends stays on Okayama');
+assert.strictEqual(classify({trip_member:'Amy',trip_data_snapshot_state:'{"formatVersion":1}'},null,AFTER_GRACE-1),'legacy-grace',
+  'the last millisecond of 10/23 is still inside the grace period');
+assert.strictEqual(classify({},null,AFTER_GRACE),'mark-unconnected','from 10/24 a fresh device starts unconnected');
+assert.strictEqual(classify({trip_checks:'{"10/18_2":true}'},null,IN_GRACE),'migrate-legacy','a device with records is legacy for its own reason');
+assert.strictEqual(classify({},'unconnected',IN_GRACE),'inactive','the grace period never reopens an inactive device');
+assert.strictEqual(classify({},'complete',IN_GRACE),'inactive','a cleared device can still connect a new trip during the grace period');
+assert.strictEqual(classify({trip_source:JSON.stringify(sheetRecord)},null,IN_GRACE),'use','a connected device keeps its trip');
+assert.strictEqual(classify({trip_source:'{broken'},null,IN_GRACE),'corrupt','damage is never hidden by the grace period');
+{
+  const realNow=Date.now;
+  try{
+    Date.now=function(){return IN_GRACE;};
+    assert.strictEqual(TripSource.classifyBoot(memoryStorage({}),TripLifecycle),'legacy-grace','without an explicit time the device clock is used');
+    Date.now=function(){return AFTER_GRACE;};
+    assert.strictEqual(TripSource.classifyBoot(memoryStorage({}),TripLifecycle),'mark-unconnected');
+  }finally{Date.now=realNow;}
+}
 
 /* ---- lifecycle：unconnected 與 activate ---- */
 storage=memoryStorage();

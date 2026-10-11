@@ -26,6 +26,9 @@
     'trip_travel_notes','trip_ledger_queue','trip_ledger_delivery_bridge','trip_ledger_deletion_bridge',
     'trip_ledger_settings_bridge'
   ];
+  /* 岡山保護期（Bar 2026-10-11 核准）：v150 在岡山旅程前上線，旅伴手機大多還沒有紀錄。
+     台灣時間 10/24 00:00 以前，沒有紀錄的手機也沿用岡山；之後第一次開啟的新手機才是「尚未連接」。 */
+  var LEGACY_GRACE_UNTIL=Date.parse('2026-10-24T00:00:00+08:00');
 
   function text(value){return String(value==null?'':value).trim();}
   function failure(code,message,cause){
@@ -104,12 +107,14 @@
       try{return meaningful(JSON.parse(raw));}catch(error){return true;}
     });
   }
-  function classifyBoot(storage,lifecycle){
+  function classifyBoot(storage,lifecycle,now){
     if(lifecycle.readState(storage).mode!=='active')return 'inactive';
     var source=readSource(storage);
     if(source.status==='ok')return 'use';
     if(source.status==='corrupt')return 'corrupt';
-    return hasLegacyTripData(storage)?'migrate-legacy':'mark-unconnected';
+    if(hasLegacyTripData(storage))return 'migrate-legacy';
+    var time=typeof now==='number'?now:Date.now();
+    return time<LEGACY_GRACE_UNTIL?'legacy-grace':'mark-unconnected';
   }
 
   function readPending(storage){
@@ -251,7 +256,7 @@
   }
 
   return {
-    SOURCE_KEY:SOURCE_KEY,PENDING_KEY:PENDING_KEY,LEGACY_KEY:LEGACY_KEY,
+    SOURCE_KEY:SOURCE_KEY,PENDING_KEY:PENDING_KEY,LEGACY_KEY:LEGACY_KEY,LEGACY_GRACE_UNTIL:LEGACY_GRACE_UNTIL,
     parsePublishedLink:parsePublishedLink,pubBaseFor:pubBaseFor,validEndpoint:validEndpoint,validTripId:validTripId,
     sourceKey:sourceKey,normalizeRecord:normalizeRecord,legacyRecord:legacyRecord,readSource:readSource,writeSource:writeSource,
     hasLegacyTripData:hasLegacyTripData,classifyBoot:classifyBoot,recoverPendingConnect:recoverPendingConnect,
