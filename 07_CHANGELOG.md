@@ -1,12 +1,13 @@
 # 07 版本紀錄
 
-## 2026-10-11 — v149 正式發布（released）
+## 2026-10-11 — v149 正式發布（released）+ G6 tag，同日真機驗證通過
 
 - **G1**：Bar 2026-10-11 在 GitHub Pages（dev）以手機驗收 v149 後，回覆「看過了，沒問題」並要求合併進 `main`。
 - PR [#53](https://github.com/nick80912-dev/ai-native-projects/pull/53) 以 merge 合併 `dev` `1500ca5` → `main`，merge commit **`f82f817`**。合併前 PR 的 sanity 與 browser-qa 全綠，合併時釘住 head `1500ca5`；`main` 與 `dev` 之間只有 PR #52 的三個 commit。
 - Netlify deploy **`6acb65e22ffa62000807db3b`**：`ready`，`commit_ref` = `f82f817` 相符，`published_at` `2026-10-11T10:33:17Z`，`manual_deploy: false`。22 個新檔（含 `shell/v149/index.html`），6 條 header rule 全過。
 - **§F5 線上內容核對未執行**：工作環境的網路政策仍封鎖正式站網域（CONNECT 403）。以 Netlify 部署資料與 Pages 手機驗收代替；正式站載入 v149 以 Bar 手機確認為準。
-- **G6 待辦**：請 Bar 在 GitHub 建立 tag `production-v149`，指向 `f82f817`（工作環境推送 tag 會被 403 拒絕）。
+- **真機驗證（2026-10-11）**：Bar 回報正式站手機已更新，「設定 → 資料與版本」顯示 v149；正式站載入 v149 以此為準。
+- **G6 完成（2026-10-11）**：Bar 在 GitHub 以 Release 建立 `production-v149`，指向 `f82f817`（GitHub API 與 `git ls-remote` 皆確認，release 發布於 `2026-10-11T10:39:10Z`）。第一次建立時 tag 沒有產生，Bar 重建後才出現。
 - 回滾：依 `16_OPS_PLAYBOOK.md` §A1 在 Netlify Publish 上一個部署（v148，`commit_ref` `bdb4925`），錨點 `production-v148`。
 
 ## 2026-10-11 — v149 出發前小改版：第一站、交通彩色標籤、Huninn 字型（已於同日發布，見上一則）
