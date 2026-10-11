@@ -1,5 +1,16 @@
 # 07 版本紀錄
 
+## 2026-10-11 — v149 出發前小改版：第一站、交通彩色標籤、Huninn 字型（候選，待 CI／手機驗收）
+
+- **來源**：Bar 參考他人提供的日系繪本風 prompt，請 Claude 提優化建議並做預覽。Bar 2026-10-11 裁定出發前上線三項：首頁第一站、交通彩色標籤、全站 Huninn；出發倒數放大不做（首頁會過長）、線框與圓角評估後不做、繪本主題旅程後研究（backlog #55）。Tier 2 四項確認書經 Bar「核准」，含新開工作分支 `claude/pretrip-v149-ui`。
+- **首頁（出發前）**：拿掉「今天沒有排定行程／出發當天這裡會自動顯示…」兩行，改在標題下列「第一站：10/18（日） 9:00 機場check in」。D-7 倒數不變。
+- **交通標籤**：新增 `transportModeOf()`，依交通說明給圖示與顏色（開車綠、步行黃、渡輪藍、飛機粉、接駁／巴士紫），文字一律深色（對比 5.6–7.7:1），顏色是 `:root` 固定 token，不隨主題變。順手修正 v148 以前「判斷不到就給 🚗」讓 10/18 航班顯示成汽車的問題。
+- **Huninn 字型**：v78 曾為離線首屏移除 Google Fonts。這次改由 `loadHuninnFont()` 在 `load` 事件之後才加入樣式表，下載目前畫面用到的字、全部到齊才在 `<html>` 加 `font-huninn` 整頁換字；離線、連不上或失敗都維持系統字，字型不進 SW 快取。實測今天、六天行程、購物、分帳、設定共下載約 400 KB；Huninn 數字等寬，帳務金額仍對齊；只有一種粗細，粗體由瀏覽器合成。`font-huninn` 下頂欄標題字距歸零，390px 可放下完整旅程名稱。
+- **排版檢查**：真實 Huninn 在 320／375／390px 走過出發前今天、旅程中今天、六天行程、購物、分帳、設定共 66 個組合，沒有橫向捲動或被推出畫面的按鈕／標籤。頂欄旅程名稱在 375／320px 本來就會被截斷（系統字 11 個畫面中 8 個、Huninn 11 個），390px 兩者都完整。測試環境沒有 iPhone 的蘋方字型，iPhone 實際寬度請以手機驗收為準。
+- **PWA**：forward bump v148→v149（`shell/v149/`、`sw.js`、`netlify.toml`、`runtime-assets.json`、活文件路徑），`builtin-snapshot.js` 離線重產、內容與 timestamp 不變；發布說明視窗為 `v149` + `['v148','v147','v146','v145']`。換旅程的 PR #51 原本也用 v149，合併前需往前改成 v150。
+- **測試**：新增 `tests/pretrip-ui-v149.test.js`、`tests/browser/pretrip-ui-v149.spec.js`；`ui-font.test.js` 改為「可以連 Google Fonts，但不能擋第一個畫面」並涵蓋所有失敗情境；`theme-system.test.js` 改查新的交通 Emoji 來源。Node 111 個檔案全過、四個 gate 與 `git diff --check` 通過；新 browser spec 6/6。
+- **回滾**：合併前關閉 PR；發布後依 `16_OPS_PLAYBOOK.md` §A2 往前 bump，畫面回到 v148，資料不受影響。
+
 ## 2026-10-07 — v148 正式發布（released）+ G6 tag；2026-10-08 真機驗證通過
 
 - PR [#47](https://github.com/nick80912-dev/ai-native-projects/pull/47) 以 merge 合併 `dev` `ccb6f52` → `main`，merge commit **`48d787c`**。發布 PR 的 sanity 與 browser-qa 全綠後合併，合併時釘住 head；merged tree 與已測 dev 相同，root v110 bridge 與 `shell/v147/` 不變。

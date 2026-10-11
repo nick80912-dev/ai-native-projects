@@ -467,6 +467,8 @@ v143 已透過 `dev → main` PR #40 合併並完成正式站部署核對。G1 �
 
 → **其餘 backlog**:#54(回程後解除 CI 釘版)、#52／#53(v140／v142 審查的 Minor)、#41／#38(待實際使用回饋)、#50(已裁定先不做)、#28／#29(已裁定暫不處理)、#3／#12／#20／#25(長期)、E1／E2(大型重構)。
 
+→ **v149 出發前小改版(2026-10-11,候選)**:首頁第一站、交通彩色標籤、全站 Huninn(不擋第一個畫面)。Bar 核准 Tier 2 確認書,於新分支 `claude/pretrip-v149-ui` 實作,PR 進 `dev` → GitHub Pages 手機驗收 → 發布,目標 10/15 前。換旅程的 PR #51 改用 v150。 <!-- generation-exempt: 候選分支狀態 -->
+
 > 發現問題時依 `16_OPS_PLAYBOOK.md` §A2 **forward bump 到下一個未使用版本**,不得倒退覆寫 —— 已經有裝置接管 v148 了。
 
 > GitHub Actions 與 Netlify production **已於 2026-09-08 接管 v113** —— deploy `6a9fb443`、`commit_ref` = `745bb6f`、線上 `sw.js`／`app-version.js` 皆 v113、`qa-sanity` 於 `main` `745bb6f` 與 `dev` `f0444cb` 皆 success。**這一步已完成，不需再確認。**

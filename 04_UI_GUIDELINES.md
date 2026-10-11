@@ -105,6 +105,12 @@
 
 表單控制項(`input` / `select` / `textarea`)最小字級為 16px,此規則優先於內文字級表,避免 iOS focus 時自動放大。
 
+**v149 Huninn(2026-10-11,Bar 核准)**:全站改用 Google Fonts 的 Huninn 圓體,但**不得擋第一個畫面**(v78 拿掉 Google Fonts 的理由仍成立)。`--font-ui` 本身維持系統字 stack;`loadHuninnFont()` 在 `load` 事件之後才加入樣式表,以 `document.fonts.load` 下載目前畫面用到的字,全部到齊才在 `<html>` 加 `font-huninn`,整頁一次換字。離線、連不上或任何失敗都維持系統字;字型不進 SW 快取。Huninn 只有一種粗細,粗體由瀏覽器合成。`font-huninn` 下頂欄標題字距歸零,讓 390px 寬能放下完整旅程名稱。契約在 `tests/ui-font.test.js`。
+
+## 交通方式標籤(v149)
+- `transportModeOf()` 依交通說明判斷:飛機(TPE／OKJ／航班)→ 開車 → 步行 → 渡輪 → 大眾運輸;都不符時自駕旅程沿用開車。圖示＋文字＋顏色三者並存,不只靠顏色。
+- 顏色是 `:root` 的固定 token `--mode-*-bg`(不隨六組主題變),文字一律 `--mode-ink`,對比 5.6–7.7:1。分類標籤(機場、景點等)仍隨主題變色。
+
 ## 行動手勢
 - App 採單一 Scroll-only 政策：`html,body { touch-action:pan-x pan-y; }`，只允許水平與垂直捲動，不提供雙擊或捏合縮放。
 - 禁止恢復 `.wrap` transform 縮放、回彈、`setupPinchZoom()` 或 JavaScript 雙擊攔截器，避免與 WebKit visual viewport 形成雙重縮放狀態。

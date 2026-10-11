@@ -280,7 +280,11 @@ function extractThemeIds(html){
   assert.match(navMarkup,/aria-hidden="true"/);
   assert.match(settingsButtonMarkup,/aria-label="設定"/);
   assert.match(html,/<img class="logo" id="diagnosticBadge" src="okayama-peach-badge\.png"/);
-  assert(html.includes("var driveIcon = /開車/.test(drive) ? '🚗'"),'content transport Emoji remains');
+  /* v149:交通 Emoji 改由 transportModeOf() 決定(並加上顏色),內容 Emoji 仍保留 */
+  assert(html.includes("var mode=transportModeOf(drive),driveIcon=mode.icon;"),'content transport Emoji remains');
+  ["{key:'flight',icon:'✈️'}","{key:'drive',icon:'🚗'}","{key:'walk',icon:'🚶'}","{key:'ferry',icon:'⛴'}","{key:'transit',icon:'🚌'}"].forEach(function(fragment){
+    assert(html.includes(fragment),'transport Emoji kept: '+fragment);
+  });
 
   assert.match(html,/var APP_RELEASE_NOTES=\[/);
   assert.match(html,/function renderAppReleaseNotes\(/);

@@ -42,6 +42,8 @@
   --z-member-over-settings:180;
   --tabbar-height:62px;
   --font-ui:"PingFang TC","Microsoft JhengHei",system-ui,-apple-system,sans-serif;
+  /* v149 交通方式標籤:跨主題固定的淡色底＋深色字(對比 5.6–7.7:1),不隨六組主題變化 */
+  --mode-ink:#3e3a39;--mode-drive-bg:#b9daa5;--mode-walk-bg:#f6d27a;--mode-ferry-bg:#a8d3e6;--mode-flight-bg:#f2a497;--mode-transit-bg:#d9cceb;
   --t-paper:#f5f1e8;--t-card:#fffdf8;--t-chrome:#0e3a44;--t-action:#12707f;--t-select-bg:#d5e6e8;
   --t-cta-bg:#c05232;--t-accent:#df5f3a;--t-accent-bg:#fbeee7;--t-ink:#22303a;--t-ink-soft:#5c6b73;
   --t-ink-faint:#7c8a90;--t-line:#e5ddcd;--t-line-soft:#eee8db;
@@ -368,6 +370,13 @@ button:focus-visible,[role="button"]:focus-visible,summary:focus-visible,.qa-btn
    整串變成一個長 run,瀏覽器就在 CJK 任意位置斷開 —— 375px 下斷在「桃|園」。
    28 個不重複交通字串只有這 1 個含換行,其餘 27 個渲染完全不變。 */
 .drive-chip{display:inline-block;white-space:pre-line;font-size:10.5px;font-weight:700;border-radius:5px;padding:2px 7px;margin-top:5px;background:#e7f0f2;color:var(--sea)}
+.drive-chip.mode-drive{background:var(--mode-drive-bg);color:var(--mode-ink)}.drive-chip.mode-walk{background:var(--mode-walk-bg);color:var(--mode-ink)}
+.drive-chip.mode-ferry{background:var(--mode-ferry-bg);color:var(--mode-ink)}.drive-chip.mode-flight{background:var(--mode-flight-bg);color:var(--mode-ink)}
+.drive-chip.mode-transit{background:var(--mode-transit-bg);color:var(--mode-ink)}
+.pretrip-first-stop{position:relative;font-size:14px;opacity:.88;margin-top:2px;line-height:1.5}
+/* v149 Huninn:載好才由 loadHuninnFont() 加上 html.font-huninn,整頁一次換字;失敗則維持上面的系統字 */
+html.font-huninn{--font-ui:"Huninn","PingFang TC","Microsoft JhengHei",system-ui,-apple-system,sans-serif}
+html.font-huninn .brand .t{letter-spacing:0}
 .qa-row{display:flex;gap:7px;padding:0 13px 12px 48px;flex-wrap:wrap}
 .qa-btn{display:inline-flex;align-items:center;gap:4px;font-size:13px;font-weight:700;border:1px solid var(--line);background:#fff;border-radius:10px;padding:9px 13px;cursor:pointer;font-family:inherit;color:var(--ink-soft);text-decoration:none;transition:.15s;min-height:38px}
 .qa-btn:active{transform:scale(.96)}
@@ -2850,6 +2859,18 @@ function tripStatusPresentation(itemId,checks,progress){
   }
   return {state:'pending',label:'待完成'};
 }
+/* v149:交通方式 → 圖示與標籤顏色(圖示＋文字＋顏色,不只靠顏色)。依序判斷:
+   飛機(航班代碼/機場代碼)→ 開車 → 步行 → 渡輪 → 大眾運輸;都不符時,自駕旅程沿用開車,
+   其他旅程用中性色。v148 以前的 else 一律是 🚗,所以 10/18 的航班顯示成汽車。 */
+function transportModeOf(text){
+  text=String(text||'');
+  if(/TPE|OKJ|航班|飛機|起飛|降落/.test(text)) return {key:'flight',icon:'✈️'};
+  if(/開車|租車|自駕/.test(text)) return {key:'drive',icon:'🚗'};
+  if(/步行|走路/.test(text)) return {key:'walk',icon:'🚶'};
+  if(/渡輪|航程|搭船/.test(text)) return {key:'ferry',icon:'⛴'};
+  if(/電車|JR|新幹線|地鐵|巴士|公車|接駁|纜車/.test(text)) return {key:'transit',icon:'🚌'};
+  return transport()==='drive'?{key:'drive',icon:'🚗'}:{key:'other',icon:'🧭'};
+}
 function renderItem(it,checks,currentItemId,dayProgress){
   var done=checks[it.id];
   var isNow=currentItemId&&it.id===currentItemId;
@@ -2867,7 +2888,7 @@ function renderItem(it,checks,currentItemId,dayProgress){
   var p=res&&res.kind==='place'?res.p:null;
   /* 交通 chip:行程「交通」欄優先;空值時退回資料庫的「交通/交通時間」欄 */
   var drive=extractDrive(it.move) || (p&&p.travel) || (res&&res.kind==='rest'&&res.r.travel) || '';
-  var driveIcon = /開車/.test(drive) ? '🚗' : /步行|走路/.test(drive) ? '🚶' : /渡輪|航程|搭船/.test(drive) ? '⛴' : '🚗';
+  var mode=transportModeOf(drive),driveIcon=mode.icon;
 
   var qa='';
   if(hasPlaceTxt||res){
@@ -2915,7 +2936,7 @@ function renderItem(it,checks,currentItemId,dayProgress){
         (presentation.meta?'<div class="place-row"><span class="place item-meta">'+escapeHtml(presentation.meta)+'</span></div>':'')+
         '<div class="chip-row">'+
           (cat?'<span class="tag '+cat.cls+'">'+cat.label+'</span>':'')+
-          (drive?'<span class="drive-chip">'+driveIcon+' '+escapeHtml(drive)+'</span>':'')+
+          (drive?'<span class="drive-chip mode-'+mode.key+'">'+driveIcon+' '+escapeHtml(drive)+'</span>':'')+
         '</div>'+
       '</div>'+
     '</div>'+
@@ -3659,6 +3680,14 @@ function daysUntilStart(){
   var todayStamp=Date.UTC(now.getFullYear(),now.getMonth(),now.getDate());
   return Math.ceil((startStamp-todayStamp)/86400000);
 }
+/* v149(Bar 2026-10-11):出發前首頁不再寫「今天沒有排定行程」,改在標題下列出第一站的日期、時間與內容。 */
+function renderPreTripFirstStop(days){
+  var first=days&&days[0],item=first&&first.items&&first.items[0];
+  if(!item) return '';
+  var when=first.date+(first.dow?'（'+first.dow+'）':'');
+  var what=[item.time,item.act||item.place].filter(Boolean).join(' ');
+  return '<div class="pretrip-first-stop">第一站：'+escapeHtml(when+' '+what)+'</div>';
+}
 function renderPreTripCountdown(){
   var d=daysUntilStart();
   return d!==null&&d>0?'<div class="pretrip-count">D-'+d+'</div>':'';
@@ -3776,7 +3805,7 @@ function renderToday(){
     var days=DB.trip?DB.trip.days:[];
     view.innerHTML='<div class="today-hero"><div class="lbl">TODAY · '+todayMD()+'</div>'+
       '<div class="today-pretrip-title-row"><div class="date">還沒到出發日</div>'+renderPreTripCountdown()+'</div>'+
-      '<div class="empty">今天沒有排定行程 🗓️<br>出發當天這裡會自動顯示當日安排與下一站。</div>'+
+      renderPreTripFirstStop(days)+
       renderShoppingTodayEntry(null,'')+
       renderPreTripBrief()+
       '<button class="today-jump today-hero-action" onclick="switchView(\'trip\')">查看完整行程 →</button></div>'+
@@ -12194,6 +12223,53 @@ function setupViewportReflow(){
     if(e.target&&e.target.closest&&e.target.closest('#diagnosticOverlay')) forceViewportReflow();
   });
 }
+/* ================= v149 Huninn 字型(Bar 2026-10-11 核准) =================
+   v78 曾為離線首屏移除 Google Fonts:放在 <head> 的字型樣式表會讓第一個畫面等它下載。
+   這裡改成 load 事件之後才由程式加入樣式表,第一個畫面一定先用系統字(--font-ui)。
+   樣式表到了之後,先用 document.fonts.load 下載「目前畫面上用到的字」,全部到齊才在 <html>
+   加上 font-huninn,整頁一次換字,不會同一行混兩種字。離線、連不上或任何失敗都維持系統字。
+   字型是跨網域資源,sw.js 不攔截也不快取,交給瀏覽器自己的快取。 */
+var HUNINN_CSS_URL='https://fonts.googleapis.com/css2?family=Huninn&display=swap';
+var huninnFontState='idle';
+function huninnSampleText(doc){
+  var text=String(doc&&doc.body&&(doc.body.innerText||doc.body.textContent)||''),seen={},out='';
+  for(var i=0;i<text.length&&out.length<4000;i++){
+    var ch=text.charAt(i);
+    if(!seen[ch]&&!/\s/.test(ch)){seen[ch]=true;out+=ch;}
+  }
+  return out||'旅程';
+}
+function loadHuninnFont(doc,nav){
+  doc=doc||document;nav=nav||navigator;
+  if(huninnFontState==='loading'||huninnFontState==='ready')return Promise.resolve(huninnFontState);
+  if(nav&&nav.onLine===false){huninnFontState='offline';return Promise.resolve(huninnFontState);}
+  if(!doc.fonts||typeof doc.fonts.load!=='function'||!doc.head){huninnFontState='unsupported';return Promise.resolve(huninnFontState);}
+  huninnFontState='loading';
+  return new Promise(function(resolve){
+    var link=doc.createElement('link');
+    link.id='huninnFontCss';link.rel='stylesheet';link.href=HUNINN_CSS_URL;
+    link.onload=function(){resolve(true);};
+    link.onerror=function(){resolve(false);};
+    doc.head.appendChild(link);
+  }).then(function(loaded){
+    if(!loaded)throw new Error('Huninn stylesheet unavailable');
+    return doc.fonts.load('16px "Huninn"',huninnSampleText(doc));
+  }).then(function(faces){
+    if(!faces||!faces.length)throw new Error('Huninn font unavailable');
+    doc.documentElement.classList.add('font-huninn');
+    huninnFontState='ready';
+    return huninnFontState;
+  }).catch(function(){
+    var link=doc.getElementById('huninnFontCss');
+    if(link&&link.parentNode)link.parentNode.removeChild(link);
+    huninnFontState='failed';
+    return huninnFontState;
+  });
+}
+window.addEventListener('load',function(){setTimeout(function(){loadHuninnFont();},0);});
+window.addEventListener('online',function(){
+  if(huninnFontState==='offline'||huninnFontState==='failed'){huninnFontState='idle';loadHuninnFont();}
+});
 setupDiagnostics();
 setupViewportReflow();
 verifyControllingShellGeneration().then(function(reason){
