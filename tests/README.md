@@ -1,5 +1,12 @@
 # tests — 測試資產(交付必附)
 
+## v149 pre-trip UI coverage
+
+- `pretrip-ui-v149.test.js`:交通方式判斷(含岡山資料每一種交通說明,只有 P000 判成飛機)、標籤顏色 token 與 AA 對比、出發前首頁第一站一行、不再出現「今天沒有排定行程」。
+- `ui-font.test.js`:Huninn 只能由 `loadHuninnFont()` 在 `load` 之後加入,`<head>` 不得有靜態 Google Fonts 連結;離線、樣式表失敗、字型失敗、無字型都維持系統字。
+- `browser/pretrip-ui-v149.spec.js`:第一站與 D-7、標籤實際顏色、字型樣式表不回應時第一個畫面照常出現、下載失敗移除樣式表、離線不下載、成功時整頁換字且標題字距歸零。
+- 測試環境擋掉外部網路,所以其他 browser spec 都以系統字執行;Huninn 實際排版另以 320／375／390px 手動檢查。
+
 ## v146 Home coverage
 
 - `home-v146.test.js`：完整日曆日期／閏年、目的地優先、路線區域及前後最近／等距／未知結果。
@@ -64,7 +71,7 @@ v143 驗證與審查紀錄：[交付驗證](../docs/trippilot-v143-verification.
 - `browser/today-live-info.spec.js` exercises Hero／badge target confirmation at 320／375／390px with tap／Enter／Space, sticky-safe geometry, live status, reduced motion, missing targets, stale timers, source scroll, connected／replacement／fallback focus, and blank-category behavior. Focused WebKit uses `--grep "target|定位|blank category"`.
 - `browser/navigation-target-matrix.spec.js` exercises the actual expanded cluster-stop, pre-trip day, mall-floor, and back-to-now controls at 320／375／390px with rotating Tap／Enter／Space. It asserts exact target and live status, native keyboard focus, sticky-header-safe target／status geometry, 1.2-second clear, reduced-motion static treatment, zero horizontal overflow, and current-day return behavior. Run focused WebKit together with the existing Today target selection.
 - `diagnostic-impact-module.test.js` and `diagnostics-app-log.test.js` protect exact timeout classification, conservative unknown handling, input immutability, escaped raw／projected output, and byte-for-byte raw copied reports; `browser/diagnostics-app-log.spec.js` verifies the same boundary in Chromium.
-- `manifest-status-authority.test.js` plus `tools/check-doc-titles.js` require `.ai-manifest.json` to name `tasks/current.md` as the sole current-status authority, identify changelog／task archives only as history, reject stale `tasks/(current/backlog/done)`／`manifest.status` prose, and omit volatile candidate／next-action／automated-test snapshots. Current version authority is `shell/v148/app-version.js`／root `sw.js`; root `app-version.js` is the byte-locked v110 bridge.
+- `manifest-status-authority.test.js` plus `tools/check-doc-titles.js` require `.ai-manifest.json` to name `tasks/current.md` as the sole current-status authority, identify changelog／task archives only as history, reject stale `tasks/(current/backlog/done)`／`manifest.status` prose, and omit volatile candidate／next-action／automated-test snapshots. Current version authority is `shell/v149/app-version.js`／root `sw.js`; root `app-version.js` is the byte-locked v110 bridge.
 
 
 
