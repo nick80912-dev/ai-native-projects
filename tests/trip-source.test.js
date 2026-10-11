@@ -1,4 +1,4 @@
-/* tests/trip-source.test.js — 第二階段「連接新旅程」的來源紀錄與連接交易（v149）
+/* tests/trip-source.test.js — 第二階段「連接新旅程」的來源紀錄與連接交易（v150）
    規格：docs/superpowers/specs/2026-10-08-connect-new-trip-design.md §3、§5、§6、§7。 */
 const assert=require('assert');
 const TripLifecycle=require('../trip-lifecycle.js');

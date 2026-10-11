@@ -61,7 +61,7 @@
     storage.setItem(STATE_KEY,value);
     if(storage.getItem(STATE_KEY)!==value)throw new Error('Trip lifecycle state did not persist on read-back');
   }
-  /* v149: a device becomes active again only by connecting a trip (trip-source.js). Active is
+  /* v150: a device becomes active again only by connecting a trip (trip-source.js). Active is
      stored as the absence of the key, so older generations keep reading it the same way. */
   function activate(storage){
     storage.removeItem(STATE_KEY);

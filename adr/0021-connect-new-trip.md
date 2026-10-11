@@ -1,6 +1,6 @@
 # ADR 0021 — 連接下一趟旅程（每趟一份 Sheet）
 
-> 狀態：Accepted（2026-10-08，Bar 回覆「照建議」核准七項決定與 Tier 2 範圍；v149 候選在工作分支，未合併 dev、未發布，合併時機待旅程結束後與 Bar 確認）。規格：[connect-new-trip-design](../docs/superpowers/specs/2026-10-08-connect-new-trip-design.md)。
+> 狀態：Accepted（2026-10-08，Bar 回覆「照建議」核准七項決定與 Tier 2 範圍；v150 候選在工作分支，未合併 dev、未發布，合併時機待旅程結束後與 Bar 確認）。規格：[connect-new-trip-design](../docs/superpowers/specs/2026-10-08-connect-new-trip-design.md)。
 
 ## Decision
 
@@ -12,7 +12,7 @@
 
 ## Context
 
-v148 以前發布 ID、Apps Script 網址、編輯 ID、內建資料（BUILTIN）與天氣城市都寫死在程式裡。換旅程等於改程式、發新版，而且所有旅伴必須同時更新；舊快取、待送帳與備份也沒有旅程識別，換錯 Sheet 會讓帳寫進別趟旅程。
+v149 以前發布 ID、Apps Script 網址、編輯 ID、內建資料（BUILTIN）與天氣城市都寫死在程式裡。換旅程等於改程式、發新版，而且所有旅伴必須同時更新；舊快取、待送帳與備份也沒有旅程識別，換錯 Sheet 會讓帳寫進別趟旅程。
 
 ## Alternatives Considered
 
@@ -43,8 +43,8 @@ v148 以前發布 ID、Apps Script 網址、編輯 ID、內建資料（BUILTIN�
 
 - 連接一定要連網，而且要等「清除並打包旅程」完成；清除要求全團結清，若結清在 App 外完成，仍需在 App 內補記還款才能清除。
 - 範本的 Apps Script 每份 Sheet 要各自部署一次，Ledger Endpoint 要手動填進 TripConfig。
-- v149 起只有打卡等紀錄的手機才被視為岡山；只有快取或成員名稱的手機會變成「尚未連接」。因此 v149 應在岡山旅程結算、清除之後才發布。
-- root v110 bridge 不能修改，極舊裝置第一次開啟時仍可能短暫看到岡山，之後才切到 v149。
+- v150 起只有打卡等紀錄的手機才被視為岡山；只有快取或成員名稱的手機會變成「尚未連接」。因此 v150 應在岡山旅程結算、清除之後才發布。
+- root v110 bridge 不能修改，極舊裝置第一次開啟時仍可能短暫看到岡山，之後才切到 v150。
 - 只支援日本（JPY↔TWD、天氣時區 Asia/Tokyo）；旅伴的 Google OAuth 測試名單另案處理。
 
 ## Future Impact

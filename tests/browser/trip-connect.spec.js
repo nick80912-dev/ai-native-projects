@@ -1,4 +1,4 @@
-/* v149 連接新旅程（ADR 0021，規格 docs/superpowers/specs/2026-10-08-connect-new-trip-design.md）。
+/* v150 連接新旅程（ADR 0021，規格 docs/superpowers/specs/2026-10-08-connect-new-trip-design.md）。
    這裡不用 qa-fixture 的 installBaseLocalState：它每次載入都會清空 localStorage，
    而連接成功後 App 會重新載入，必須保留剛寫入的旅程來源。 */
 const {test,expect}=require('./support/test');

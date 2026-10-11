@@ -1,6 +1,17 @@
 # 07 版本紀錄
 
-## 2026-10-08 — v149 連接下一趟旅程（候選，未合併 dev、未發布）
+## 2026-10-11 — v149 出發前小改版：第一站、交通彩色標籤、Huninn 字型（候選，待 CI／手機驗收）
+
+- **來源**：Bar 參考他人提供的日系繪本風 prompt，請 Claude 提優化建議並做預覽。Bar 2026-10-11 裁定出發前上線三項：首頁第一站、交通彩色標籤、全站 Huninn；出發倒數放大不做（首頁會過長）、線框與圓角評估後不做、繪本主題旅程後研究（backlog #55）。Tier 2 四項確認書經 Bar「核准」，含新開工作分支 `claude/pretrip-v149-ui`。
+- **首頁（出發前）**：拿掉「今天沒有排定行程／出發當天這裡會自動顯示…」兩行，改在標題下列「第一站：10/18（日） 9:00 機場check in」。D-7 倒數不變。
+- **交通標籤**：新增 `transportModeOf()`，依交通說明給圖示與顏色（開車綠、步行黃、渡輪藍、飛機粉、接駁／巴士紫），文字一律深色（對比 5.6–7.7:1），顏色是 `:root` 固定 token，不隨主題變。順手修正 v148 以前「判斷不到就給 🚗」讓 10/18 航班顯示成汽車的問題。
+- **Huninn 字型**：v78 曾為離線首屏移除 Google Fonts。這次改由 `loadHuninnFont()` 在 `load` 事件之後才加入樣式表，下載目前畫面用到的字、全部到齊才在 `<html>` 加 `font-huninn` 整頁換字；離線、連不上或失敗都維持系統字，字型不進 SW 快取。實測今天、六天行程、購物、分帳、設定共下載約 400 KB；Huninn 數字等寬，帳務金額仍對齊；只有一種粗細，粗體由瀏覽器合成。`font-huninn` 下頂欄標題字距歸零，390px 可放下完整旅程名稱。
+- **排版檢查**：真實 Huninn 在 320／375／390px 走過出發前今天、旅程中今天、六天行程、購物、分帳、設定共 66 個組合，沒有橫向捲動或被推出畫面的按鈕／標籤。頂欄旅程名稱在 375／320px 本來就會被截斷（系統字 11 個畫面中 8 個、Huninn 11 個），390px 兩者都完整。測試環境沒有 iPhone 的蘋方字型，iPhone 實際寬度請以手機驗收為準。
+- **PWA**：forward bump v148→v149（`shell/v149/`、`sw.js`、`netlify.toml`、`runtime-assets.json`、活文件路徑），`builtin-snapshot.js` 離線重產、內容與 timestamp 不變；發布說明視窗為 `v149` + `['v148','v147','v146','v145']`。換旅程的 PR #51 原本也用 v149，合併前需往前改成 v150。
+- **測試**：新增 `tests/pretrip-ui-v149.test.js`、`tests/browser/pretrip-ui-v149.spec.js`；`ui-font.test.js` 改為「可以連 Google Fonts，但不能擋第一個畫面」並涵蓋所有失敗情境；`theme-system.test.js` 改查新的交通 Emoji 來源。Node 111 個檔案全過、四個 gate 與 `git diff --check` 通過；新 browser spec 6/6。
+- **回滾**：合併前關閉 PR；發布後依 `16_OPS_PLAYBOOK.md` §A2 往前 bump，畫面回到 v148，資料不受影響。
+
+## 2026-10-08 — v150 連接下一趟旅程（候選，未合併 dev、未發布；原編為 v149）
 
 - **需求**：Bar 問「未來換新旅程時要怎麼讓專案接上」。規格 PR [#51](https://github.com/nick80912-dev/ai-native-projects/pull/51)；Bar 2026-10-08 回覆「照建議」核准七項決定，並核准 Tier 2 範圍：只在工作分支實作與完整測試、更新 PR #51，**不合併 dev、不發布、不改 Google Sheet 與已部署的 Apps Script**，合併時機待 10/24 旅程結束後確認。決策見 [ADR 0021](adr/0021-connect-new-trip.md)，操作見[換旅程手冊](docs/new-trip-handbook.md)。
 - **目前旅程**：新模組 `trip-source.js` 管 `trip_source` 紀錄、開機分類與連接交易。有打卡等紀錄的舊手機自動記為岡山（`legacy`），行為不變；沒有紀錄的新手機首頁顯示「尚未連接旅程」。lifecycle 新增 `unconnected` 模式與 `activate()`。
@@ -9,10 +20,11 @@
 - **個人備份 v10**：加入 `trip` 身分，別趟的備份與舊版 v1–v9（在新旅程上）整批拒絕；契約見 `docs/personal-state-compatibility.md`。封存與個人帳匯出：新旅程記 `sheet:<Trip ID>`，岡山不變，封存格式維持 v1。
 - **Schema 3.1**：TripConfig 新增選填 `Trip ID`、`Ledger Endpoint`、`Weather Regions GID`；行程總表新增選填「行程ID」欄（依標題名稱找欄，格式與重複由 validator 擋下）。`09_SCHEMA_MAPPING.md` 依 `schemaDoc()` 重產；BUILTIN 刷新工具略過選填鍵與尾端選填欄。新旅程的天氣只用 Sheet 的「天氣地區」分頁，岡山沿用內建城市清單。
 - **Apps Script（只改 repo）**：`ledger-sync.gs` 新增唯讀 `doGet?action=info`，回報 Trip ID 與分帳紀錄標題是否正確；不取鎖、不回傳 Spreadsheet ID。岡山的部署不需更新。
-- **PWA**：forward bump v148→v149（`shell/v149/`、`sw.js`、`netlify.toml`、`runtime-assets.json`、活文件路徑）；`manifest.webmanifest` 的 `name` 改為 `TripPilot`。`builtin-snapshot.js` 離線重產，內容與 timestamp `1790861998387` 不變。五筆發布說明視窗為 `v149` + `['v148','v147','v146','v145']`。
+- **版本號改為 v150（2026-10-11）**：v149 已由出發前小改版（PR #52）使用並合併 dev。本分支合併 dev 後，`shell/v149/` 與 dev 完全相同，連接新旅程改放在以 v149 為基礎的 `shell/v150/`，發布說明視窗為 `v150` + `v149`…`v146`。
+- **PWA**：forward bump v149→v150（`shell/v150/`、`sw.js`、`netlify.toml`、`runtime-assets.json`、活文件路徑）；`manifest.webmanifest` 的 `name` 改為 `TripPilot`。`builtin-snapshot.js` 由 v149 asset 離線重產，內容與 timestamp `1790861998387` 不變。五筆發布說明視窗為 `v150` + `['v149','v148','v147','v146']`。
 - **順手修正**：開發中發現 `trip-source.js` 以小寫讀匯率與結算幣別，真實試算表會永遠卡在幣別檢查；已改用 Schema 欄位名稱，並新增「測試資料的欄位必須是 schema.js 欄位」的契約測試。
 - **驗證**：四個 gate 通過；Node 113 個檔案全過（新增 `trip-source`、`itinerary-stop-id`、`weather-regions`）；新 `browser/trip-connect.spec.js` 9 項（新手機、連接、Endpoint 不符、岡山升級、無快照、待送帳隔離、備份拒絕、天氣地區）全過。本機 Chromium 另有 2 項失敗（個人帳匯出下載檔名、SW 離線子資源狀態碼），在未修改的已推送版本上同樣失敗，PR CI 的 browser-qa 在同一份程式上是綠的，判定為本機 Chromium 差異。
-- **已知限制**：清除需全團結清；只有快取或成員名稱的手機會變成「尚未連接」，所以 v149 要在岡山結算並清除後才發布；root v110 bridge 不能改，極舊裝置第一次開啟仍可能先看到岡山；頂欄徽章仍是岡山桃子圖示。回滾：合併前關閉 PR；發布後依 `16_OPS_PLAYBOOK.md` §A2 往前 bump。
+- **已知限制**：清除需全團結清；只有快取或成員名稱的手機會變成「尚未連接」，所以 v150 要在岡山結算並清除後才發布；root v110 bridge 不能改，極舊裝置第一次開啟仍可能先看到岡山；頂欄徽章仍是岡山桃子圖示。回滾：合併前關閉 PR；發布後依 `16_OPS_PLAYBOOK.md` §A2 往前 bump。
 
 ## 2026-10-07 — v148 正式發布（released）+ G6 tag；2026-10-08 真機驗證通過
 

@@ -18,7 +18,7 @@ const typeColumn = schema.sheets.places.columns.find(function(column) {
 });
 
 assert.strictEqual(schema.version, '3.1 (2026-10-08)');
-/* v149:新旅程的 TripConfig 多了 Trip ID 與 Ledger Endpoint。舊試算表沒有,所以是 optional;
+/* v150:新旅程的 TripConfig 多了 Trip ID 與 Ledger Endpoint。舊試算表沒有,所以是 optional;
    連接新旅程時由 trip-source.js 強制檢查。 */
 [['tripId','Trip ID'],['ledgerEndpoint','Ledger Endpoint'],['weatherRegionsGid','Weather Regions GID']].forEach(function(pair){
   const key = schema.sheets.cfg.keys.find(function(candidate){ return candidate.field === pair[0]; });

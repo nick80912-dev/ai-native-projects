@@ -1,4 +1,4 @@
-/* trip-source.js — 目前連接的旅程來源（v149，第二階段「連接新旅程」）
+/* trip-source.js — 目前連接的旅程來源（v150，第二階段「連接新旅程」）
    規格：docs/superpowers/specs/2026-10-08-connect-new-trip-design.md；決策：ADR 0021。
    - 一台手機同時只連接一份 Sheet。來源紀錄 trip_source 是唯一依據；沒有紀錄時視為內建的岡山舊旅程。
    - 連接只能從「已清除」或「尚未連接」開始；任何一步失敗都不改變手機。

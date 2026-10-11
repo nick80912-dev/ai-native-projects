@@ -86,7 +86,7 @@ w2:p<encoded placeId>:<encoded floor>:<encoded store name>
 
 ### 旅程身分(v10)
 
-v149 起 App 可以連接下一趟旅程(ADR 0021)。打卡、想逛與待送團體帳都只對匯出它的那一趟有意義:把岡山的待送帳還原到九州的手機,補送時就會寫進九州的試算表。因此 v10 匯出時帶上目前旅程:
+v150 起 App 可以連接下一趟旅程(ADR 0021)。打卡、想逛與待送團體帳都只對匯出它的那一趟有意義:把岡山的待送帳還原到九州的手機,補送時就會寫進九州的試算表。因此 v10 匯出時帶上目前旅程:
 
 ```text
 trip: { sourceKey: 'legacy' | 'sheet:<Trip ID>', tripId: '<Trip ID 或空字串>', tripName: '<旅程名稱或空字串>' }
@@ -108,7 +108,7 @@ trip: { sourceKey: 'legacy' | 'sheet:<Trip ID>', tripId: '<Trip ID 或空字串>
 
 `isSupportedPersonalStateVersion()` 只接受 `[1..10]`。v11 或更高的 payload 會在 `restorePersonalState()` 的第一道驗證就被擋下,吐「個人狀態格式驗證失敗」,**裝置原狀態一字不動**。
 
-**v10 對舊版 App 的實際影響**:v148 以前的 App 其 `SUPPORTED` 仍是 `[1..9]`,會直接拒絕 v10 備份。這是刻意的:舊 App 看不懂 `trip`,若照單全收就無從阻擋跨旅程還原。
+**v10 對舊版 App 的實際影響**:v149 以前的 App 其 `SUPPORTED` 仍是 `[1..9]`,會直接拒絕 v10 備份。這是刻意的:舊 App 看不懂 `trip`,若照單全收就無從阻擋跨旅程還原。
 
 **v9 對舊版 App 的實際影響**:v8 版本的 App 其 `SUPPORTED` 仍是 `[1..8]`,會直接拒絕 v9 備份 —— 這正是升版的目的。若不升版,舊 App 會把 v9 當成 v8 照單全收那些它無法解讀的 key,使用者看到的是「還原成功但想逛全空」。
 

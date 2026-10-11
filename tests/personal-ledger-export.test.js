@@ -25,7 +25,7 @@ for(const change of [{isProxy:'false'},{proxyTarget:{token:'private'}},{note:['p
 raw=JSON.stringify([{id:record.id,time:record.time,amountJpy:0,amountTwd:0,taxRate:null}]);const legacy=JSON.parse(ctx.personalLedgerExportJson()).records[0];assert.equal(legacy.taxRate,null);assert.equal(legacy.proxyTarget,undefined);
 raw=JSON.stringify([record]);mode='inactive';assert.throws(()=>ctx.personalLedgerExportJson());mode='cleanup-pending';assert.throws(()=>ctx.personalLedgerExportJson());
 mode='active';ctx.localStorage.getItem=()=>{throw new Error('read failed');};assert.throws(()=>ctx.personalLedgerExportJson(),/read failed/);
-/* v149:新旅程的匯出用 sheet:<Trip ID> 識別來源,岡山沿用編輯用 ID */
+/* v150:新旅程的匯出用 sheet:<Trip ID> 識別來源,岡山沿用編輯用 ID */
 {
  const sheetCtx={...ctx,localStorage:{getItem(){return JSON.stringify([record]);}},currentTripSourceSheetId:()=>'sheet:kyushu-2027'};
  vm.createContext(sheetCtx);

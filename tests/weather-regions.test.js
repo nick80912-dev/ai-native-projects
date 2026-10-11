@@ -1,4 +1,4 @@
-/* tests/weather-regions.test.js — v149 新旅程的天氣地區（ADR 0021，規格 §4 決策 5）
+/* tests/weather-regions.test.js — v150 新旅程的天氣地區（ADR 0021，規格 §4 決策 5）
    岡山沿用內建城市清單；新旅程只用試算表「天氣地區」分頁，沒有分頁就不顯示天氣。 */
 const assert=require('assert');
 const vm=require('vm');

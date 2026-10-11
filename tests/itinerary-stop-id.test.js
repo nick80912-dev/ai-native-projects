@@ -1,4 +1,4 @@
-/* tests/itinerary-stop-id.test.js — v149 選填「行程ID」欄（ADR 0021，規格 §4 決策 5）
+/* tests/itinerary-stop-id.test.js — v150 選填「行程ID」欄（ADR 0021，規格 §4 決策 5）
    位置型 ID「MM/DD_第幾列」在增刪列時會讓打卡與下一站錯位；新旅程範本可在第 8 欄填行程ID。
    這裡用 index.html 與 validator.js 的真實實作驗證：依標題名稱找欄、沒填就退回位置型、
    格式與重複由驗證擋下、岡山試算表（沒有這欄）照常通過。 */

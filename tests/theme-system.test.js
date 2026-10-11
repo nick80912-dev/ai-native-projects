@@ -280,7 +280,11 @@ function extractThemeIds(html){
   assert.match(navMarkup,/aria-hidden="true"/);
   assert.match(settingsButtonMarkup,/aria-label="設定"/);
   assert.match(html,/<img class="logo" id="diagnosticBadge" src="okayama-peach-badge\.png"/);
-  assert(html.includes("var driveIcon = /開車/.test(drive) ? '🚗'"),'content transport Emoji remains');
+  /* v149:交通 Emoji 改由 transportModeOf() 決定(並加上顏色),內容 Emoji 仍保留 */
+  assert(html.includes("var mode=transportModeOf(drive),driveIcon=mode.icon;"),'content transport Emoji remains');
+  ["{key:'flight',icon:'✈️'}","{key:'drive',icon:'🚗'}","{key:'walk',icon:'🚶'}","{key:'ferry',icon:'⛴'}","{key:'transit',icon:'🚌'}"].forEach(function(fragment){
+    assert(html.includes(fragment),'transport Emoji kept: '+fragment);
+  });
 
   assert.match(html,/var APP_RELEASE_NOTES=\[/);
   assert.match(html,/function renderAppReleaseNotes\(/);
@@ -295,7 +299,9 @@ function extractThemeIds(html){
      守著它的斷言完成任務後移除 —— 與 v111 的離線啟動說明同一處理。 */
   /* 滾動的五筆視窗:最新一筆是目前版本,其餘四筆是緊接在後的歷史版本。
      歷史版本刻意寫死字面值(見 tests/support/version.js 的適用範圍說明)。 */
-  assert.deepStrictEqual(Array.from(notes.slice(1),function(note){return note.version;}),['v148','v147','v146','v145']);
+  /* v144 的保存可靠性說明已於 2026-10-11 隨 v149 加入而滾出五筆視窗,同前一個處理。
+     v145 的天氣說明隨 v150 加入而滾出,同前一個處理。 */
+  assert.deepStrictEqual(Array.from(notes.slice(1),function(note){return note.version;}),['v149','v148','v147','v146']);
   /* v117 的選取表達說明已於 2026-09-12 隨 v122 加入而滾出五筆視窗，同前一個處理。
   /* v118 的顏色語意收斂說明已於 2026-09-13 隨 v123 加入而滾出五筆視窗,同前一個處理。
   /* v119 的攤疊區塊說明已於 2026-09-13 隨 v124 加入而滾出五筆視窗,同前一個處理。

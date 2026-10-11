@@ -852,7 +852,7 @@ async function testBootSelection(){
   selected=app.selectBootData(storage,orchestrationRaw('builtin'));
   assert.strictEqual(selected.source,'builtin','invalid legacy cache falls back to BUILTIN');
 
-  /* v149 (ADR 0021): snapshots are bound to the trip they were downloaded for. */
+  /* v150 (ADR 0021): snapshots are bound to the trip they were downloaded for. */
   assert.strictEqual(active.sourceKey,'legacy','without a connected trip, new snapshots belong to the built-in Okayama trip');
   delete active.sourceKey;
   storage=memoryStorage({trip_data_snapshot_state:JSON.stringify({formatVersion:1,active:active,previous:null})});

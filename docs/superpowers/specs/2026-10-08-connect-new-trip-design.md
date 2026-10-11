@@ -129,7 +129,7 @@
 
 參考：ADR 0003、0006、0007、0016、0019、0020；`docs/superpowers/specs/2026-09-30-personal-trip-lifecycle-design.md`；`14_FILE_TIERS_AND_GATE.md`；`15_AI_EXECUTION_RULES.md`；`16_OPS_PLAYBOOK.md` §A2 與 BUILTIN 刷新章節；`tasks/backlog.md` #12、#54。
 
-## 10. 實作紀錄（2026-10-08，v149 候選）
+## 10. 實作紀錄（2026-10-08，v150 候選）
 
 依 Bar 核准的 Tier 2 範圍在工作分支完成，PR #51，未合併 dev、未發布。決策記錄於 [ADR 0021](../../../adr/0021-connect-new-trip.md)，操作見[換旅程手冊](../../new-trip-handbook.md)。與本規格文字不同的地方：
 

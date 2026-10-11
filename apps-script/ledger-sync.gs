@@ -63,7 +63,7 @@ function normalizeLedgerAfter(value) {
 }
 
 /**
- * v149 連接新旅程(GET ?action=info,ADR 0021):唯讀回報這個 Apps Script 所屬試算表的
+ * v150 連接新旅程(GET ?action=info,ADR 0021):唯讀回報這個 Apps Script 所屬試算表的
  * TripConfig「Trip ID」,以及「分帳紀錄」標題列是否和範本一致。App 連接前會拿它和發布 CSV
  * 的 Trip ID 比對,避免行程讀 A 表、帳卻寫進 B 表。不回傳 Spreadsheet ID 或其他設定,也不取鎖。
  */

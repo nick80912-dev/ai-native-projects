@@ -327,7 +327,7 @@ assert.deepStrictEqual(
 );
 assert.strictEqual(postApp.lock.waited, true, 'doPost 仍取 script lock');
 
-/* ================= v149 doGet?action=info(連接新旅程,ADR 0021) ================= */
+/* ================= v150 doGet?action=info(連接新旅程,ADR 0021) ================= */
 const infoApp = loadAppScript();
 assert.deepStrictEqual(infoApp.get({action:'info'}), {ok:true, tripId:'', ledgerHeaderOk:true}, '岡山試算表沒有 Trip ID 時回空字串');
 infoApp.cfg.data.push(['Trip ID', ' kyushu-2027 ']);

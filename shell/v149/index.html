@@ -42,6 +42,8 @@
   --z-member-over-settings:180;
   --tabbar-height:62px;
   --font-ui:"PingFang TC","Microsoft JhengHei",system-ui,-apple-system,sans-serif;
+  /* v149 交通方式標籤:跨主題固定的淡色底＋深色字(對比 5.6–7.7:1),不隨六組主題變化 */
+  --mode-ink:#3e3a39;--mode-drive-bg:#b9daa5;--mode-walk-bg:#f6d27a;--mode-ferry-bg:#a8d3e6;--mode-flight-bg:#f2a497;--mode-transit-bg:#d9cceb;
   --t-paper:#f5f1e8;--t-card:#fffdf8;--t-chrome:#0e3a44;--t-action:#12707f;--t-select-bg:#d5e6e8;
   --t-cta-bg:#c05232;--t-accent:#df5f3a;--t-accent-bg:#fbeee7;--t-ink:#22303a;--t-ink-soft:#5c6b73;
   --t-ink-faint:#7c8a90;--t-line:#e5ddcd;--t-line-soft:#eee8db;
@@ -368,6 +370,13 @@ button:focus-visible,[role="button"]:focus-visible,summary:focus-visible,.qa-btn
    整串變成一個長 run,瀏覽器就在 CJK 任意位置斷開 —— 375px 下斷在「桃|園」。
    28 個不重複交通字串只有這 1 個含換行,其餘 27 個渲染完全不變。 */
 .drive-chip{display:inline-block;white-space:pre-line;font-size:10.5px;font-weight:700;border-radius:5px;padding:2px 7px;margin-top:5px;background:#e7f0f2;color:var(--sea)}
+.drive-chip.mode-drive{background:var(--mode-drive-bg);color:var(--mode-ink)}.drive-chip.mode-walk{background:var(--mode-walk-bg);color:var(--mode-ink)}
+.drive-chip.mode-ferry{background:var(--mode-ferry-bg);color:var(--mode-ink)}.drive-chip.mode-flight{background:var(--mode-flight-bg);color:var(--mode-ink)}
+.drive-chip.mode-transit{background:var(--mode-transit-bg);color:var(--mode-ink)}
+.pretrip-first-stop{position:relative;font-size:14px;opacity:.88;margin-top:2px;line-height:1.5}
+/* v149 Huninn:載好才由 loadHuninnFont() 加上 html.font-huninn,整頁一次換字;失敗則維持上面的系統字 */
+html.font-huninn{--font-ui:"Huninn","PingFang TC","Microsoft JhengHei",system-ui,-apple-system,sans-serif}
+html.font-huninn .brand .t{letter-spacing:0}
 .qa-row{display:flex;gap:7px;padding:0 13px 12px 48px;flex-wrap:wrap}
 .qa-btn{display:inline-flex;align-items:center;gap:4px;font-size:13px;font-weight:700;border:1px solid var(--line);background:#fff;border-radius:10px;padding:9px 13px;cursor:pointer;font-family:inherit;color:var(--ink-soft);text-decoration:none;transition:.15s;min-height:38px}
 .qa-btn:active{transform:scale(.96)}
@@ -691,7 +700,6 @@ input:not([type="hidden"]),select,textarea{font-size:16px!important}
 <script src="trip-lifecycle.js"></script>
 <script src="trip-archive.js"></script>
 <script src="trip-drive.js"></script>
-<script src="trip-source.js"></script>
 <script src="trip-lifecycle-flow.js"></script>
 <script>
 /* ---- APP_VERSION SAFE ACCESS (C2) ----
@@ -833,7 +841,7 @@ function selectTheme(themeId){
    ============================================================ */
 
 var SCHEMA = {
-  version: '3.1 (2026-10-08)',
+  version: '3.0 (2026-08-11)',
 
   /* 發布來源(換試算表只改這裡) */
   pubBase: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRenmV8UxEzWbzSjKJKi4rSpYt63geBqhEkKsl1GemWVPmFKTcvv3Uk71Hjla3TGBpGIjC7bQDDdI00/pub?single=true&output=csv&gid=',
@@ -852,10 +860,7 @@ var SCHEMA = {
         { field:'place', header:'地點',     desc:'地點顯示名稱(給人看)' },
         { field:'ref',   header:'ID',       desc:'Pxxx=地點 / Rxxx=餐廳(給程式讀)' },
         { field:'move',  header:'交通',     desc:'交通說明;空值時卡片退回資料庫交通時間' },
-        { field:'note',  header:'備註',     desc:'自由備註' },
-        /* v149(ADR 0021):新旅程範本的第 8 欄。依標題名稱尋找,不依位置;岡山試算表沒有這欄。 */
-        { field:'stopId', header:'行程ID', optional:true,
-          desc:'選填;英數字、- 或 _(最多 40 字),整份行程不可重複。有填就當作站點 ID,增刪列時打卡與下一站不會錯位;沒填沿用「日期_第幾列」' }
+        { field:'note',  header:'備註',     desc:'自由備註' }
       ]
     },
 
@@ -988,15 +993,7 @@ var SCHEMA = {
           values:{'JPY':'JPY','jpy':'JPY','TWD':'TWD','twd':'TWD'},
           /* 同時是全團結算幣別(ADR 0007);v135 起有還款紀錄即鎖定,不得切換 */
           desc:'全團結算幣別,也是新增記帳的預設幣別;只允許 JPY/TWD' },
-        { field:'homepage',   header:'Home Page',   desc:'預設分頁(⚠️ 目前**未啟用**,App 固定 Today;填寫無效果)' },
-        /* v149 連接新旅程(ADR 0021):舊的岡山試算表沒有這兩鍵,所以標為 optional;
-           新旅程由 trip-source.js 在連接時強制檢查。 */
-        { field:'tripId',     header:'Trip ID',     optional:true,
-          desc:'選填(新旅程必填);3–40 個英數字、- 或 _,每趟旅程不同,用來分開快取、待送帳與備份' },
-        { field:'ledgerEndpoint', header:'Ledger Endpoint', optional:true,
-          desc:'選填(新旅程必填);這份試算表部署的 Apps Script 網頁應用程式 /exec 網址' },
-        { field:'weatherRegionsGid', header:'Weather Regions GID', optional:true,
-          desc:'選填;「天氣地區」分頁的 gid(欄位:地區名稱、緯度、經度、關鍵字)。新旅程沒填就不顯示天氣;岡山沿用內建城市清單' }
+        { field:'homepage',   header:'Home Page',   desc:'預設分頁(⚠️ 目前**未啟用**,App 固定 Today;填寫無效果)' }
       ]
     }
   }
@@ -1250,7 +1247,6 @@ function validateSnapshotData(db,raw,schema){
     var pid=String(shop.placeId||'').toUpperCase().trim();
     if(pid&&!pids[pid]) block('BROKEN_REF','shop','懸空引用:Shopping ' + shop.shopId + ' → ' + pid + ' 不存在於 Places');
   });
-  var stopIds={};
   tripDays.forEach(function(day,dayIndex){
     if(!Array.isArray(day.items)){
       block('DB_STRUCTURE','itin','trip.days 的每一天都必須包含 items 陣列');
@@ -1258,12 +1254,6 @@ function validateSnapshotData(db,raw,schema){
     }
     validObjects(day.items,'itin','trip.days[' + dayIndex + '].items').forEach(function(item){
       var ref=String(item.ref||'').toUpperCase().trim(), linked=null;
-      var stopId=String(item.stopId||'');
-      if(stopId){
-        if(!/^[A-Za-z0-9_-]{1,40}$/.test(stopId)) block('STOP_ID_FORMAT','itin','行程ID 格式錯誤:' + day.date + '「' + item.act + '」的「' + stopId + '」只能用英數字、- 與 _(最多 40 字)');
-        else if(stopIds[stopId]) block('STOP_ID_DUPLICATE','itin','行程ID 重複:「' + stopId + '」同時出現在 ' + stopIds[stopId] + ' 與 ' + day.date + '「' + item.act + '」');
-        else stopIds[stopId]=day.date + '「' + item.act + '」';
-      }
       if(/^P\d+/.test(ref)&&!pids[ref]) block('BROKEN_REF','itin','懸空引用:行程 ' + day.date + '「' + item.act + '」→ ' + ref + ' 不存在於 Places');
       if(/^R\d+/.test(ref)){
         if(!rids[ref]) block('BROKEN_REF','itin','懸空引用:行程 ' + day.date + '「' + item.act + '」→ ' + ref + ' 不存在於 Restaurants');
@@ -1356,14 +1346,6 @@ var SHEETS = Object.keys(SCHEMA.sheets).map(function(k){
   return { key:k, gid:SCHEMA.sheets[k].gid };
 });
 var FETCH_TIMEOUT = SCHEMA.fetchTimeoutMs, FETCH_RETRIES = SCHEMA.fetchRetries;
-/* v149：資料來源改由「目前連接的旅程」決定（trip-source.js、ADR 0021）。沒有來源紀錄時是內建的
-   岡山舊旅程，沿用 SCHEMA.pubBase 與 LEDGER_POST_URL；連接新旅程後改用該 Sheet 的發布網址與
-   TripConfig 的 Ledger Endpoint。來源只在開機時讀一次，切換一律經過「連接新旅程」並重新載入。 */
-var CURRENT_TRIP_SOURCE=null;
-function currentTripSourceKey(){return typeof TripSource==='object'&&TripSource?TripSource.sourceKey(CURRENT_TRIP_SOURCE):'legacy';}
-function isLegacyTripSource(){return currentTripSourceKey()==='legacy';}
-function currentPubBase(){return isLegacyTripSource()?PUB:TripSource.pubBaseFor(CURRENT_TRIP_SOURCE.pubId);}
-function currentLedgerEndpoint(){return isLegacyTripSource()?LEDGER_POST_URL:CURRENT_TRIP_SOURCE.ledgerEndpoint;}
 
 /* 內建後備資料(產生檔案時注入) */
 /* BUILTIN payload is generated in builtin-snapshot.js. */
@@ -1528,17 +1510,13 @@ function schemaType(raw){
 
 /* ================= 行程解析(7欄:日期/時間/活動/地點/ID/交通/備註) ================= */
 function buildItin(rows){
-  var meta={ title:'' }, days=[], cur=null, stopIdCol=-1;
+  var meta={ title:'' }, days=[], cur=null;
   var dayRe=/第.+天\s*(\d{1,2})\/(\d{1,2})\s*[\(（]?([日一二三四五六])?/;
   rows.forEach(function(r,idx){
     var c=[]; for(var i=0;i<7;i++) c.push((r[i]||'').trim());
     if(idx===0&&c[0]&&!meta.title){ meta.title=c[0]; return; }
     if(c[0]==='飯店') return;
-    if(c[0]==='日期'&&c[1]==='時間'){
-      /* v149:選填的「行程ID」欄依標題名稱尋找(新旅程範本放在第 8 欄) */
-      stopIdCol=r.map(function(cell){return String(cell||'').trim();}).indexOf('行程ID');
-      return;
-    }
+    if(c[0]==='日期'&&c[1]==='時間') return;
     var dtext=c[0]||c[1];
     var m=dtext.match(dayRe);
     if(/第.+天/.test(dtext)&&m){
@@ -1549,12 +1527,9 @@ function buildItin(rows){
     if(!cur) return;
     var it={ time:c[1], act:c[2], place:c[3], ref:c[4], move:c[5], note:c[6] };
     if(!it.act&&!it.place&&!it.move&&!it.note) return;
-    var stopId=stopIdCol>=0?String(r[stopIdCol]||'').trim():'';
-    if(stopId) it.stopId=stopId;
     cur.items.push(it);
   });
-  /* 有行程ID 就用它(驗證保證格式與唯一);沒有就沿用位置型 ID。位置型含「/」,不會和行程ID 撞名。 */
-  days.forEach(function(d){ d.items.forEach(function(it,i){ it.id=it.stopId||d.date+'_'+i; }); });
+  days.forEach(function(d){ d.items.forEach(function(it,i){ it.id=d.date+'_'+i; }); });
   return { meta:meta, days:days };
 }
 
@@ -1574,10 +1549,9 @@ function fetchWithTimeout(url,ms){
   });
   return Promise.race([attempt,timeout]);
 }
-function fetchSheet(s,base){
-  var pubBase=base||(typeof currentPubBase==='function'?currentPubBase():PUB);
+function fetchSheet(s){
   var tryOnce=function(){
-    return fetchWithTimeout(pubBase+s.gid,FETCH_TIMEOUT).then(function(res){
+    return fetchWithTimeout(PUB+s.gid,FETCH_TIMEOUT).then(function(res){
       if(!res.ok) throw new Error('HTTP '+res.status);
       return res.text();
     }).then(function(text){
@@ -1623,11 +1597,10 @@ function verifyControllingShellGeneration(){
   },function(){return 'Service Worker cache generation unavailable';});
 }
 
-function createDataSnapshot(raw,source,createdAt,generationId,validation,sourceKey){
+function createDataSnapshot(raw,source,createdAt,generationId,validation){
   var sheets={};
   SHEETS.forEach(function(sheet){ sheets[sheet.key]=String(raw[sheet.key]||''); });
-  /* v149：sourceKey 標記這份快照屬於哪一趟旅程；v148 以前的快照沒有這欄，視為岡山舊旅程。 */
-  return {formatVersion:1,generationId:generationId,createdAt:createdAt,source:source,sourceKey:sourceKey||(typeof currentTripSourceKey==='function'?currentTripSourceKey():'legacy'),sheets:sheets,sheetMeta:{},validation:{warnings:(validation&&validation.warnings)||[]}};
+  return {formatVersion:1,generationId:generationId,createdAt:createdAt,source:source,sheets:sheets,sheetMeta:{},validation:{warnings:(validation&&validation.warnings)||[]}};
 }
 function hydrateSnapshotLedger(snapshot){
   if(!snapshot||!snapshot.sheets||!SCHEMA.sheets.ledger||typeof snapshot.sheets.ledger==='string') return snapshot;
@@ -1701,7 +1674,7 @@ function validateCandidateStructure(raw){
     }
     if(def.kind==='itinerary'){
       strictDef={label:def.label,columns:def.columns.map(function(column){
-        return {field:column.field,header:column.header,aliases:column.aliases||[],required:column.optional!==true};
+        return {field:column.field,header:column.header,aliases:column.aliases||[],required:true};
       })};
       mapped=buildHeaderMap(rows,strictDef);
       result.blockers=result.blockers.concat(mapped.blockers||[]);
@@ -1710,7 +1683,7 @@ function validateCandidateStructure(raw){
   });
   return result;
 }
-function prepareSheetCandidate(raw,source,now,generationId,sourceKey){
+function prepareSheetCandidate(raw,source,now,generationId){
   var structure=validateCandidateStructure(raw), db, validation, error;
   if(structure.blockers.length){
     error=new Error(structure.blockers.map(function(f){return f.message;}).join('；'));
@@ -1724,7 +1697,7 @@ function prepareSheetCandidate(raw,source,now,generationId,sourceKey){
     error.stage='validation'; error.findings=validation.blockers; throw error;
   }
   generationId=generationId||source+'-'+now;
-  return {db:db,validation:validation,snapshot:createDataSnapshot(raw,source,now,generationId,validation,sourceKey)};
+  return {db:db,validation:validation,snapshot:createDataSnapshot(raw,source,now,generationId,validation)};
 }
 function bootFailure(error){
   var failure=new Error(error&&error.message||'啟動資料驗證失敗');
@@ -1735,12 +1708,9 @@ function bootFailure(error){
 }
 function selectBootData(storage,builtin,builtinTimestamp){
   var state=readSnapshotState(storage), activeError=null, candidate, source, legacyRaw={}, legacyReady=true, legacyAt=0;
-  var tripKey=typeof currentTripSourceKey==='function'?currentTripSourceKey():'legacy';
   function selectSnapshot(snapshot){
     if(!validSnapshotShape(snapshot)) throw new Error('Invalid snapshot shape');
-    /* v149：別趟旅程的快照一律不用，避免把上一趟的行程或帳顯示在這一趟。 */
-    if((typeof snapshot.sourceKey==='string'&&snapshot.sourceKey?snapshot.sourceKey:'legacy')!==tripKey) throw new Error('Snapshot belongs to another trip');
-    candidate=prepareSheetCandidate(snapshot.sheets,snapshot.source,snapshot.createdAt,snapshot.generationId,tripKey);
+    candidate=prepareSheetCandidate(snapshot.sheets,snapshot.source,snapshot.createdAt,snapshot.generationId);
     return {raw:snapshot.sheets,db:candidate.db,source:snapshot.source,snapshot:snapshot};
   }
   if(state&&state.active){
@@ -1755,14 +1725,6 @@ function selectBootData(storage,builtin,builtinTimestamp){
     }catch(previousError){
       if(!activeError) activeError=bootFailure(previousError);
     }
-  }
-  /* v149：舊版 v2_cache 與內建 BUILTIN 都是岡山舊旅程的資料，只有舊旅程可以用。
-     新連接的旅程沒有可用快照時，要求連網重新下載，絕不退回舊旅程。 */
-  if(tripKey!=='legacy'){
-    var missing=new Error('這趟旅程的資料還沒下載到這部手機');
-    missing.code='SOURCE_SNAPSHOT_MISSING';
-    missing.cause=activeError;
-    throw missing;
   }
   SHEETS.forEach(function(sheet){
     var stored, parsed;
@@ -1824,10 +1786,10 @@ function saveSyncFailure(error,storage,activeSnapshot){
   };
   try{ target.setItem(SNAPSHOT_FAILURE_KEY,JSON.stringify(failure)); }catch(ignore){}
 }
-function downloadAllSheets(base){
+function downloadAllSheets(){
   var raw={}, meta={}, partialSheets=[];
   return Promise.all(SHEETS.map(function(sheet){
-    return fetchSheet(sheet,base).then(function(text){
+    return fetchSheet(sheet).then(function(text){
       raw[sheet.key]=text;
       meta[sheet.key]={fetchedAt:Date.now()};
     },function(error){
@@ -1877,9 +1839,7 @@ function syncAll(showToast){
     return {ok:true,generationId:generation,warnings:candidate.validation.warnings,partialSheets:download.partialSheets};
   });
   syncInFlight=syncInFlight.then(function(result){
-    syncInFlight=null; renderSyncStatusBody();
-    if(result&&result.ok&&typeof refreshWeatherRegions==='function')refreshWeatherRegions();
-    return result;
+    syncInFlight=null; renderSyncStatusBody(); return result;
   },function(error){
     /* v147(backlog #51):成功路徑在下載後會重查 inactive 並靜默返回;失敗路徑原本沒有。
        下載開始於 active、旅程清除後才失敗時,會把清除時移除的 trip_sync_last_failure 寫回、
@@ -2899,6 +2859,18 @@ function tripStatusPresentation(itemId,checks,progress){
   }
   return {state:'pending',label:'待完成'};
 }
+/* v149:交通方式 → 圖示與標籤顏色(圖示＋文字＋顏色,不只靠顏色)。依序判斷:
+   飛機(航班代碼/機場代碼)→ 開車 → 步行 → 渡輪 → 大眾運輸;都不符時,自駕旅程沿用開車,
+   其他旅程用中性色。v148 以前的 else 一律是 🚗,所以 10/18 的航班顯示成汽車。 */
+function transportModeOf(text){
+  text=String(text||'');
+  if(/TPE|OKJ|航班|飛機|起飛|降落/.test(text)) return {key:'flight',icon:'✈️'};
+  if(/開車|租車|自駕/.test(text)) return {key:'drive',icon:'🚗'};
+  if(/步行|走路/.test(text)) return {key:'walk',icon:'🚶'};
+  if(/渡輪|航程|搭船/.test(text)) return {key:'ferry',icon:'⛴'};
+  if(/電車|JR|新幹線|地鐵|巴士|公車|接駁|纜車/.test(text)) return {key:'transit',icon:'🚌'};
+  return transport()==='drive'?{key:'drive',icon:'🚗'}:{key:'other',icon:'🧭'};
+}
 function renderItem(it,checks,currentItemId,dayProgress){
   var done=checks[it.id];
   var isNow=currentItemId&&it.id===currentItemId;
@@ -2916,7 +2888,7 @@ function renderItem(it,checks,currentItemId,dayProgress){
   var p=res&&res.kind==='place'?res.p:null;
   /* 交通 chip:行程「交通」欄優先;空值時退回資料庫的「交通/交通時間」欄 */
   var drive=extractDrive(it.move) || (p&&p.travel) || (res&&res.kind==='rest'&&res.r.travel) || '';
-  var driveIcon = /開車/.test(drive) ? '🚗' : /步行|走路/.test(drive) ? '🚶' : /渡輪|航程|搭船/.test(drive) ? '⛴' : '🚗';
+  var mode=transportModeOf(drive),driveIcon=mode.icon;
 
   var qa='';
   if(hasPlaceTxt||res){
@@ -2964,7 +2936,7 @@ function renderItem(it,checks,currentItemId,dayProgress){
         (presentation.meta?'<div class="place-row"><span class="place item-meta">'+escapeHtml(presentation.meta)+'</span></div>':'')+
         '<div class="chip-row">'+
           (cat?'<span class="tag '+cat.cls+'">'+cat.label+'</span>':'')+
-          (drive?'<span class="drive-chip">'+driveIcon+' '+escapeHtml(drive)+'</span>':'')+
+          (drive?'<span class="drive-chip mode-'+mode.key+'">'+driveIcon+' '+escapeHtml(drive)+'</span>':'')+
         '</div>'+
       '</div>'+
     '</div>'+
@@ -3037,74 +3009,10 @@ var WEATHER_CITIES=[
   { key:'kamakura', label:'鎌倉', lat:35.3192, lon:139.5467, words:['鎌倉','Kamakura','江之島','藤澤','七里濱'] },
   { key:'narita', label:'成田', lat:35.7767, lon:140.3183, words:['成田','Narita','京成','Skyliner'] }
 ];
-/* v149(ADR 0021):新旅程的天氣地區來自試算表「天氣地區」分頁(地區名稱、緯度、經度、關鍵字),
-   分頁 gid 填在 TripConfig 的 Weather Regions GID。岡山舊旅程沿用上面的固定清單;新旅程沒有分頁時
-   不顯示天氣,不拿別趟旅程的城市清單猜。清單存在 trip_ key,清除或換旅程時一起移除。 */
-var WEATHER_REGIONS_KEY='trip_weather_regions';
-var WEATHER_REGIONS_MAX=30;
-function weatherRegionValid(region){
-  return !!region&&typeof region.key==='string'&&typeof region.label==='string'&&region.label&&
-    typeof region.lat==='number'&&isFinite(region.lat)&&region.lat>=20&&region.lat<=46&&
-    typeof region.lon==='number'&&isFinite(region.lon)&&region.lon>=122&&region.lon<=154&&
-    Array.isArray(region.words)&&region.words.length>0;
-}
-function parseWeatherRegionsCsv(text){
-  var regions=[],seen={},skipped=0;
-  parseCSV(text||'').forEach(function(row){
-    var label=String(row[0]||'').trim();
-    if(!label||label==='地區名稱')return;
-    var lat=Number(String(row[1]||'').trim()),lon=Number(String(row[2]||'').trim());
-    var words=[label].concat(String(row[3]||'').split(/[、,，\/|;；]/)).map(function(word){return word.trim();})
-      .filter(function(word,index,list){return word&&list.indexOf(word)===index;});
-    var region={key:'r_'+lat.toFixed(3)+'_'+lon.toFixed(3),label:label,lat:lat,lon:lon,words:words};
-    if(!weatherRegionValid(region)||seen[region.key]||regions.length>=WEATHER_REGIONS_MAX){skipped++;return;}
-    seen[region.key]=true;
-    regions.push(region);
-  });
-  return {regions:regions,skipped:skipped};
-}
-function readWeatherRegions(){
-  var stored;
-  try{stored=JSON.parse(localStorage.getItem(WEATHER_REGIONS_KEY)||'null');}catch(ignore){return [];}
-  if(!stored||stored.version!==1||stored.sourceKey!==currentTripSourceKey()||!Array.isArray(stored.regions))return [];
-  return stored.regions.filter(weatherRegionValid);
-}
-function weatherCities(){
-  return typeof isLegacyTripSource!=='function'||isLegacyTripSource()?WEATHER_CITIES:readWeatherRegions();
-}
-var weatherRegionsInFlight=null;
-function refreshWeatherRegions(){
-  if(isLegacyTripSource())return Promise.resolve(null);
-  if(weatherRegionsInFlight)return weatherRegionsInFlight;
-  var gid=String(DB&&DB.cfg&&DB.cfg.weatherRegionsGid||'').trim(),sourceKey=currentTripSourceKey();
-  var before=localStorage.getItem(WEATHER_REGIONS_KEY);
-  function store(next){
-    if(next===before)return;
-    try{if(next===null)localStorage.removeItem(WEATHER_REGIONS_KEY);else localStorage.setItem(WEATHER_REGIONS_KEY,next);}
-    catch(error){AppLog.data('天氣地區無法保存：'+String(error&&error.message||error));return;}
-    if(typeof renderAll==='function')renderAll();
-  }
-  if(!/^\d{1,12}$/.test(gid)){store(null);return Promise.resolve([]);}
-  weatherRegionsInFlight=fetchWithTimeout(currentPubBase()+gid,FETCH_TIMEOUT).then(function(response){
-    if(!response.ok)throw new Error('HTTP '+response.status);
-    return response.text();
-  }).then(function(text){
-    if(currentTripSourceKey()!==sourceKey)return null;
-    var parsed=parseWeatherRegionsCsv(text);
-    if(parsed.skipped)AppLog.data('天氣地區有 '+parsed.skipped+' 列無法使用(緯度經度需在日本範圍內、不可重複,最多 '+WEATHER_REGIONS_MAX+' 個)');
-    store(JSON.stringify({version:1,sourceKey:sourceKey,gid:gid,regions:parsed.regions}));
-    return parsed.regions;
-  }).catch(function(error){
-    AppLog.data('天氣地區讀取失敗，沿用上次的清單：'+String(error&&error.message||error));
-    return null;
-  }).then(function(result){weatherRegionsInFlight=null;return result;});
-  return weatherRegionsInFlight;
-}
 function weatherCityFromText(text){
   text=String(text||'');
-  var cities=typeof weatherCities==='function'?weatherCities():WEATHER_CITIES;
-  for(var i=0;i<cities.length;i++){
-    var city=cities[i];
+  for(var i=0;i<WEATHER_CITIES.length;i++){
+    var city=WEATHER_CITIES[i];
     for(var j=0;j<city.words.length;j++){
       if(text.indexOf(city.words[j])>=0) return city;
     }
@@ -3772,6 +3680,14 @@ function daysUntilStart(){
   var todayStamp=Date.UTC(now.getFullYear(),now.getMonth(),now.getDate());
   return Math.ceil((startStamp-todayStamp)/86400000);
 }
+/* v149(Bar 2026-10-11):出發前首頁不再寫「今天沒有排定行程」,改在標題下列出第一站的日期、時間與內容。 */
+function renderPreTripFirstStop(days){
+  var first=days&&days[0],item=first&&first.items&&first.items[0];
+  if(!item) return '';
+  var when=first.date+(first.dow?'（'+first.dow+'）':'');
+  var what=[item.time,item.act||item.place].filter(Boolean).join(' ');
+  return '<div class="pretrip-first-stop">第一站：'+escapeHtml(when+' '+what)+'</div>';
+}
 function renderPreTripCountdown(){
   var d=daysUntilStart();
   return d!==null&&d>0?'<div class="pretrip-count">D-'+d+'</div>':'';
@@ -3889,7 +3805,7 @@ function renderToday(){
     var days=DB.trip?DB.trip.days:[];
     view.innerHTML='<div class="today-hero"><div class="lbl">TODAY · '+todayMD()+'</div>'+
       '<div class="today-pretrip-title-row"><div class="date">還沒到出發日</div>'+renderPreTripCountdown()+'</div>'+
-      '<div class="empty">今天沒有排定行程 🗓️<br>出發當天這裡會自動顯示當日安排與下一站。</div>'+
+      renderPreTripFirstStop(days)+
       renderShoppingTodayEntry(null,'')+
       renderPreTripBrief()+
       '<button class="today-jump today-hero-action" onclick="switchView(\'trip\')">查看完整行程 →</button></div>'+
@@ -5496,10 +5412,8 @@ var SHOPPING_CATEGORIES=['必買','伴手禮','生活用品','其他'];
 /* v9 起想逛標記的 key 由 `w_<mallIndex>_...` 改為以 placeId 為主的 `w2:...`。
    這是既有欄位的**識別語意變更**,不是新增欄位 —— 若不升版,舊版 App 會把 v9 當成 v8,
    把它無法解讀的 key 照單全收,使用者看到的是「還原成功但想逛全空」。 */
-/* v10 起(v149,ADR 0021)加入 trip:{sourceKey,tripId,tripName}。打卡、想逛與待送帳只屬於匯出它的那一趟;
-   還原時旅程不符就整批拒絕,避免把岡山的待送帳送進新旅程的 Sheet。沒有 trip 的 v1–v9 只能還原到岡山舊旅程。 */
-var PERSONAL_STATE_VERSION=10;
-var PERSONAL_STATE_SUPPORTED_VERSIONS=[1,2,3,4,5,6,7,8,9,10];
+var PERSONAL_STATE_VERSION=9;
+var PERSONAL_STATE_SUPPORTED_VERSIONS=[1,2,3,4,5,6,7,8,9];
 function isSupportedPersonalStateVersion(version){
   return typeof version==='number'&&PERSONAL_STATE_SUPPORTED_VERSIONS.indexOf(version)>=0;
 }
@@ -8375,31 +8289,13 @@ function createLedgerRepository(options){
       return Array.isArray(parsed)?parsed:[];
     }catch(error){ AppLog.repo('分帳佇列讀取失敗:'+(error.message||error)); return []; }
   }
-  /* v149（ADR 0021）：記下待送紀錄屬於哪一趟旅程。換旅程前佇列必須是空的，所以正常不會不符；
-     萬一不符（例如還原了別趟的備份），整批暫停送出，不會把舊帳寫進新 Sheet。 */
-  var QUEUE_OWNER_KEY='trip_ledger_queue_owner';
-  function queueOwnerKey(){ return typeof opts.ownerKey==='function'?String(opts.ownerKey()||''):''; }
   function writeQueue(queue){
     storage.setItem(LEDGER_QUEUE_KEY,JSON.stringify(queue));
-    var owner=queueOwnerKey();
-    if(owner){
-      if(!queue.length) storage.removeItem(QUEUE_OWNER_KEY);
-      else if(!storage.getItem(QUEUE_OWNER_KEY)) storage.setItem(QUEUE_OWNER_KEY,owner);
-    }
     if(typeof opts.onChange==='function') opts.onChange(queue.length);
-  }
-  function foreignQueueOwner(){
-    var owner=queueOwnerKey(), stored=owner?storage.getItem(QUEUE_OWNER_KEY):null;
-    return stored&&stored!==owner?stored:'';
   }
   function pendingCount(){ return readQueue().length; }
   function flushQueue(){
     if(flushInFlight) return flushInFlight;
-    var foreign=foreignQueueOwner();
-    if(foreign){
-      AppLog.repo('分帳佇列屬於其他旅程（'+foreign+'），已暫停送出');
-      return Promise.resolve({ok:false,sent:0,dup:false,pending:pendingCount(),foreign:true,error:new Error('待送紀錄屬於其他旅程，已暫停送出')});
-    }
     var sent=0, sawDup=false;
     function sendNext(){
       var queue=readQueue();
@@ -8515,11 +8411,11 @@ function postLedgerRecord(record){
   var request=new Promise(function(resolve,reject){
     var promise, body=JSON.stringify(record);
     try{
-      promise=fetch((typeof currentLedgerEndpoint==='function'?currentLedgerEndpoint():LEDGER_POST_URL),{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:body});
+      promise=fetch(LEDGER_POST_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:body});
     }catch(error){ reject(error); return; }
     promise=promise.catch(function(error){
       if(!/clone|DataCloneError/i.test(String(error))) throw error;
-      return fetch((typeof currentLedgerEndpoint==='function'?currentLedgerEndpoint():LEDGER_POST_URL),{method:'POST',body:body});
+      return fetch(LEDGER_POST_URL,{method:'POST',body:body});
     });
     promise.then(function(response){
       if(!response.ok) throw new Error('HTTP '+response.status);
@@ -8572,11 +8468,11 @@ function postLedgerSettings(settings){
       handler(value);
     }
     try{
-      promise=fetch((typeof currentLedgerEndpoint==='function'?currentLedgerEndpoint():LEDGER_POST_URL),{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:body});
+      promise=fetch(LEDGER_POST_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:body});
     }catch(error){finish(reject,error);return;}
     promise=promise.catch(function(error){
       if(!/clone|DataCloneError/i.test(String(error)))throw error;
-      return fetch((typeof currentLedgerEndpoint==='function'?currentLedgerEndpoint():LEDGER_POST_URL),{method:'POST',body:body});
+      return fetch(LEDGER_POST_URL,{method:'POST',body:body});
     });
     promise.then(function(response){
       if(!response.ok)throw new Error('HTTP '+response.status);
@@ -8633,7 +8529,6 @@ function reconcileLedgerSettingsBridge(){
 var ledgerRepository=createLedgerRepository({
   storage:localStorage,
   post:postLedgerRecord,
-  ownerKey:function(){return currentTripSourceKey();},
   isTestMode:function(){return !!lsGet('trip_ledger_test_mode',false);},
   onDelivered:function(record){return rememberLedgerDeliveryBridge(record);},
   onChange:function(){if(typeof updateLedgerPendingStatus==='function') updateLedgerPendingStatus();}
@@ -9327,10 +9222,9 @@ function personalLedgerExportJson(){
   if(!name||!startDate||!endDate)throw new Error('旅程資訊不完整');
   var raw=localStorage.getItem(PERSONAL_LEDGER_KEY),records=raw===null?[]:JSON.parse(raw);
   if(!Array.isArray(records))throw new Error('個人帳資料格式無法確認');
-  var sourceSheetId=typeof currentTripSourceSheetId==='function'?currentTripSourceSheetId():TRIP_SOURCE_SHEET_ID;
-  var tripKey=JSON.stringify([sourceSheetId,startDate,endDate]),seen=Object.create(null);
+  var tripKey=JSON.stringify([TRIP_SOURCE_SHEET_ID,startDate,endDate]),seen=Object.create(null);
   var projected=records.map(function(record){var out=projectPersonalLedgerExportRecord(record,tripKey);if(seen[out.id])throw new Error('個人帳紀錄 ID 重複');seen[out.id]=true;return out;});
-  return JSON.stringify({format:'trippilot-personal-ledger',version:1,exportedAt:appNow().toISOString(),trip:{name:name,startDate:startDate,endDate:endDate,sourceSheetId:sourceSheetId,sourceKey:tripKey},records:projected},null,2);
+  return JSON.stringify({format:'trippilot-personal-ledger',version:1,exportedAt:appNow().toISOString(),trip:{name:name,startDate:startDate,endDate:endDate,sourceSheetId:TRIP_SOURCE_SHEET_ID,sourceKey:tripKey},records:projected},null,2);
 }
 function exportTripPersonalLedger(){
   var status=document.getElementById('personalLedgerExportStatus'),url='',link=null;
@@ -9387,25 +9281,10 @@ function closeSettings(){
 function shoppingItemsWithoutPhotoRefs(items){
   return (items||[]).map(function(item){var copy=Object.assign({},item);delete copy.photoId;return copy;});
 }
-function personalStateTripIdentity(){
-  var key=typeof currentTripSourceKey==='function'?currentTripSourceKey():'legacy';
-  var source=typeof CURRENT_TRIP_SOURCE!=='undefined'&&CURRENT_TRIP_SOURCE&&CURRENT_TRIP_SOURCE.kind==='sheet'?CURRENT_TRIP_SOURCE:null;
-  return {sourceKey:key,tripId:source?String(source.tripId||''):'',tripName:source?String(source.tripName||''):''};
-}
-/* 回傳拒絕原因;空字串代表這份備份屬於目前的旅程 */
-function personalStateTripMismatch(payload){
-  var current=personalStateTripIdentity().sourceKey;
-  if(payload.version<10)return current==='legacy'?'':'這是舊版備份，只能還原到岡山旅程';
-  var trip=payload.trip;
-  if(!trip||typeof trip!=='object'||typeof trip.sourceKey!=='string'||!trip.sourceKey)return '個人狀態格式驗證失敗';
-  if(trip.sourceKey===current)return '';
-  var name=typeof trip.tripName==='string'&&trip.tripName?'「'+trip.tripName+'」':(trip.sourceKey==='legacy'?'「岡山旅程」':'');
-  return '這份備份屬於另一趟旅程'+name+'，不能還原到目前的旅程';
-}
 function personalStateJson(){
   /* 匯出前先轉換:使用者可能還沒進過購物頁,本機仍是索引型 key ——
      v9 備份不得帶出索引型 key。轉換是冪等的,已轉換過的資料不受影響。 */
-  var payload={format:'trip-personal-state',version:PERSONAL_STATE_VERSION,exportedAt:timestampDate(Date.now()).toISOString(),checks:lsGet('trip_checks',{}),wants:migrateShopWantKeys(lsGet('trip_shop_wants',{}),shopMalls()).wants,member:getCurrentMember(),ledgerQueue:ledgerRepository.queuedRecords(),personalLedger:personalLedgerRepository.all(),ledgerCategories:ledgerCategoryStore.all(),ledgerPayMethods:ledgerPayMethodStore.all(),proxyTargets:ledgerProxyTargetStore.all(),shoppingItems:shoppingItemsWithoutPhotoRefs(shoppingListStore.all()),themeId:currentThemeId(),shoppingUnits:shoppingUnitStore.all(),travelNotes:travelNoteStore.all(),trip:personalStateTripIdentity()};
+  var payload={format:'trip-personal-state',version:PERSONAL_STATE_VERSION,exportedAt:timestampDate(Date.now()).toISOString(),checks:lsGet('trip_checks',{}),wants:migrateShopWantKeys(lsGet('trip_shop_wants',{}),shopMalls()).wants,member:getCurrentMember(),ledgerQueue:ledgerRepository.queuedRecords(),personalLedger:personalLedgerRepository.all(),ledgerCategories:ledgerCategoryStore.all(),ledgerPayMethods:ledgerPayMethodStore.all(),proxyTargets:ledgerProxyTargetStore.all(),shoppingItems:shoppingItemsWithoutPhotoRefs(shoppingListStore.all()),themeId:currentThemeId(),shoppingUnits:shoppingUnitStore.all(),travelNotes:travelNoteStore.all()};
   return JSON.stringify(payload,null,2);
 }
 function copyPersonalStateText(text,timeoutMs){
@@ -9449,7 +9328,7 @@ function openPersonalStateRestore(){
   closePersonalStateDialog();
   var overlay=document.createElement('div');
   overlay.id='personalStateDialog'; overlay.className='settings-overlay state-dialog-overlay'; overlay.setAttribute('data-dialog-kind','restore');
-  overlay.innerHTML='<section class="settings-panel state-dialog-panel" role="dialog" aria-modal="true" aria-labelledby="personalStateDialogTitle"><div class="settings-head"><h2 id="personalStateDialogTitle">從 JSON 還原</h2><button class="settings-close" aria-label="關閉" onclick="closePersonalStateDialog()">×</button></div><p class="settings-help">還原會覆蓋目前裝置上的打卡、想逛、採買清單、身分、個人帳、代購對象、自訂選項、主題、採買單位、旅途紀錄及待同步記帳。只能還原同一趟旅程匯出的備份。</p><textarea class="state-dialog-copy" id="personalStateBox" placeholder="貼上備份 JSON"></textarea><div class="settings-actions"><button class="btn ghost" onclick="closePersonalStateDialog()">取消</button><button class="btn" onclick="restorePersonalState()">驗證並還原</button></div></section>';
+  overlay.innerHTML='<section class="settings-panel state-dialog-panel" role="dialog" aria-modal="true" aria-labelledby="personalStateDialogTitle"><div class="settings-head"><h2 id="personalStateDialogTitle">從 JSON 還原</h2><button class="settings-close" aria-label="關閉" onclick="closePersonalStateDialog()">×</button></div><p class="settings-help">還原會覆蓋目前裝置上的打卡、想逛、採買清單、身分、個人帳、代購對象、自訂選項、主題、採買單位、旅途紀錄及待同步記帳。</p><textarea class="state-dialog-copy" id="personalStateBox" placeholder="貼上備份 JSON"></textarea><div class="settings-actions"><button class="btn ghost" onclick="closePersonalStateDialog()">取消</button><button class="btn" onclick="restorePersonalState()">驗證並還原</button></div></section>';
   document.body.appendChild(overlay);
   var box=document.getElementById('personalStateBox'); if(box)box.focus();
 }
@@ -9473,16 +9352,13 @@ function validatePersonalStatePayload(payload){
   return payload;
 }
 function applyPersonalStatePayload(payload){
-  var keys=['trip_checks','trip_shop_wants','trip_member',LEDGER_QUEUE_KEY,'trip_ledger_queue_owner',PERSONAL_LEDGER_KEY,LEDGER_CATEGORY_OPTIONS_KEY,LEDGER_PAY_METHOD_OPTIONS_KEY,LEDGER_PROXY_TARGETS_KEY,SHOPPING_LIST_KEY,THEME_STORAGE_KEY,SHOPPING_UNIT_OPTIONS_KEY,TRAVEL_NOTES_KEY];
+  var keys=['trip_checks','trip_shop_wants','trip_member',LEDGER_QUEUE_KEY,PERSONAL_LEDGER_KEY,LEDGER_CATEGORY_OPTIONS_KEY,LEDGER_PAY_METHOD_OPTIONS_KEY,LEDGER_PROXY_TARGETS_KEY,SHOPPING_LIST_KEY,THEME_STORAGE_KEY,SHOPPING_UNIT_OPTIONS_KEY,TRAVEL_NOTES_KEY];
   var before=keys.map(function(key){return {key:key,value:localStorage.getItem(key)};});
   try{
     lsSet('trip_checks',payload.checks);
     lsSet('trip_shop_wants',payload.wants);
     localStorage.setItem('trip_member',String(payload.member));
     localStorage.setItem(LEDGER_QUEUE_KEY,JSON.stringify(payload.ledgerQueue));
-    /* 旅程已在 restorePersonalState 比對過,還原的待送帳屬於目前這一趟 */
-    if(payload.ledgerQueue.length)localStorage.setItem('trip_ledger_queue_owner',personalStateTripIdentity().sourceKey);
-    else localStorage.removeItem('trip_ledger_queue_owner');
     localStorage.setItem(PERSONAL_LEDGER_KEY,JSON.stringify(payload.personalLedger));
     localStorage.setItem(LEDGER_CATEGORY_OPTIONS_KEY,JSON.stringify(payload.ledgerCategories));
     localStorage.setItem(LEDGER_PAY_METHOD_OPTIONS_KEY,JSON.stringify(payload.ledgerPayMethods));
@@ -9503,11 +9379,7 @@ function applyPersonalStatePayload(payload){
 function restorePersonalState(){
   var box=document.getElementById('personalStateBox'), payload;
   try{ payload=JSON.parse(box&&box.value||''); }catch(error){ toast('JSON 格式錯誤'); return; }
-  if(!payload||payload.format!=='trip-personal-state'||!isSupportedPersonalStateVersion(payload.version)){ toast('個人狀態格式驗證失敗'); return; }
-  /* 先比對旅程:別趟的備份連成員名單都不同,要直接說清楚原因 */
-  var tripMismatch=personalStateTripMismatch(payload);
-  if(tripMismatch){ toast(tripMismatch); return; }
-  if(!payload.checks||Array.isArray(payload.checks)||typeof payload.checks!=='object'||!payload.wants||Array.isArray(payload.wants)||typeof payload.wants!=='object'||!Array.isArray(payload.ledgerQueue)||!memberIsAllowed(String(payload.member||''))){ toast('個人狀態格式驗證失敗'); return; }
+  if(!payload||payload.format!=='trip-personal-state'||!isSupportedPersonalStateVersion(payload.version)||!payload.checks||Array.isArray(payload.checks)||typeof payload.checks!=='object'||!payload.wants||Array.isArray(payload.wants)||typeof payload.wants!=='object'||!Array.isArray(payload.ledgerQueue)||!memberIsAllowed(String(payload.member||''))){ toast('個人狀態格式驗證失敗'); return; }
   if(payload.version===1){payload.personalLedger=[];payload.ledgerCategories=DEFAULT_LEDGER_CATEGORIES.slice();payload.ledgerPayMethods=DEFAULT_LEDGER_PAY_METHODS.slice();}
   /* v<9 的想逛 key 是索引型,必須在寫入前轉換(保持全有或全無的原子語意)。
      模糊候選一律移除 —— 備份裡的 index 同樣不可信,拿它猜測只會把錯誤映射固定下來。 */
@@ -9611,7 +9483,7 @@ function openSettings(targetId){
   if(settingsUiState.page==='data')loadTripGoogleIdentity().catch(function(){});
 }
 var settingsUiState={page:'root',scrollTopByPage:{},anchorId:''};
-var SETTINGS_PAGE_IDS=['root','theme','proxy','ledger','options','options-category','options-pay-method','options-shopping-unit','storage','health','data','past','test-mode','connect'];
+var SETTINGS_PAGE_IDS=['root','theme','proxy','ledger','options','options-category','options-pay-method','options-shopping-unit','storage','health','data','past','test-mode'];
 function settingsOptionPageForKind(kind){
   if(kind==='category')return 'options-category';
   if(kind==='payMethod')return 'options-pay-method';
@@ -9643,7 +9515,7 @@ function captureSettingsScroll(){
   var panel=document.querySelector('#settingsOverlay .settings-panel');
   if(panel)settingsUiState.scrollTopByPage[settingsUiState.page]=Math.max(0,Number(panel.scrollTop)||0);
 }
-function openSettingsPage(pageId){if(pageId==='past')return openPastTrips();if(pageId==='connect')return openConnectTrip();openSettings(pageId);}
+function openSettingsPage(pageId){if(pageId==='past')return openPastTrips();openSettings(pageId);}
 function backToSettingsRoot(){openSettings('root');}
 function renderSettingsHeader(title,isRoot,backPage,backLabel){
   var target=backPage||'root';
@@ -9673,10 +9545,7 @@ function settingsNavRow(page,iconKey,title,summary){
 }
 /* 設定根頁 = 三個常駐群組(個人／記帳／資料)。子頁內容與資料語意完全不變,只重排根頁。 */
 function renderSettingsRoot(ledgerSettings){
-  var lifecycleMode=TripLifecycle.readState(localStorage).mode;
-  if(lifecycleMode!=='active')return renderSettingsHeader('設定',true)+settingsGroup('資料',
-    (lifecycleMode==='cleanup-pending'?'':settingsNavRow('connect','data','連接新旅程','貼上新旅程試算表的發布連結'))+
-    settingsNavRow('past','history','過往旅程','查看已封存的旅程'));
+  if(TripLifecycle.readState(localStorage).mode!=='active')return renderSettingsHeader('設定',true)+settingsGroup('資料',settingsNavRow('past','history','過往旅程','查看已封存的旅程'));
   var proxyCount=ledgerProxyTargetStore.all().length;
   /* 採買單位仍完整保留於自訂項目子頁,只是不再擠進根頁摘要(設計規格 §2.2.4)。 */
   var optionSummary=ledgerCategoryStore.all().length+' 類別 · '+ledgerPayMethodStore.all().length+' 支付方式';
@@ -9867,9 +9736,10 @@ function renderSettingsHealthPage(){
   return header+renderSettingsDataHealth();
 }
 var APP_RELEASE_NOTES=[
-  {version:'v149',date:'2026-10-08',title:'可以接上下一趟旅程',items:[
-    '旅程清除後，可在 App 內貼上新旅程 Sheet 的發布連結，檢查與預覽後再接上。',
-    '新安裝的手機先顯示「尚未連接旅程」；每趟旅程的帳只會寫回自己的 Sheet。'
+  {version:'v149',date:'2026-10-11',title:'首頁、交通標籤與字型更新',items:[
+    '出發前的首頁直接顯示第一站的日期、時間與內容。',
+    '行程的交通標籤依開車、步行、渡輪、飛機、接駁車分色，航班改用飛機圖示。',
+    '全站改用 Huninn 圓體字；沒有網路或下載失敗時維持原本字型。'
   ]},
   {version:'v148',date:'2026-10-07',title:'同區串點到時間會自動往下走',items:[
     '下一個行程的時間到了，還沒按完成的同區串點會整區自動略過，首頁直接顯示下一個行程。',
@@ -9895,9 +9765,6 @@ function renderAppReleaseNotes(){
 }
 var TRIP_GOOGLE_CLIENT_ID='812330004270-6limrm2sl15s3aohum4nrnas97kopfma.apps.googleusercontent.com';
 var TRIP_SOURCE_SHEET_ID='1B5g7KuVi2WaFVVSdhqRMeTQV_tBpgnzOAv6aMQdFZJw';
-/* v149(ADR 0021):封存與個人帳匯出的來源識別。岡山沿用上面的編輯用 ID;新旅程用 sheet:<Trip ID>,
-   與快照、待送帳和備份的旅程識別一致,也不會超過 Drive appProperties 每項 124 bytes 的上限。 */
-function currentTripSourceSheetId(){return isLegacyTripSource()?TRIP_SOURCE_SHEET_ID:currentTripSourceKey();}
 var tripGoogleScriptPromise=null,tripDriveClient=null,tripFlowClient=null;
 function loadTripGoogleIdentity(){
   if(window.google&&google.accounts&&google.accounts.oauth2)return Promise.resolve();
@@ -9964,7 +9831,7 @@ function freshEndPreflight(){
     var formalBalances={};settled.members.forEach(function(member){formalBalances[member.member]=member[field];});
     var pending=tripLocalPending(),personal=tripPersonalArchiveState();
     var sheets={};SHEETS.forEach(function(sheet){sheets[sheet.key]={csv:raw[sheet.key],sourceTime:times[sheet.key]};});
-    var archiveInput={sourceSheetId:currentTripSourceSheetId(),trip:{name:candidate.db.cfg.tripname,
+    var archiveInput={sourceSheetId:TRIP_SOURCE_SHEET_ID,trip:{name:candidate.db.cfg.tripname,
       startDate:candidate.db.cfg.startdate,endDate:candidate.db.cfg.enddate},
       archivedAt:timestampDate(Date.now()).toISOString(),sheets:sheets,personal:personal};
     var policyInput={online:true,sheetsComplete:true,queueCount:pending.queueCount,
@@ -10100,103 +9967,6 @@ function renderPastTripsPage(){
   }else body='<p class="settings-help">按下方按鈕連接自己的 Google 帳號。</p><button type="button" class="btn" onclick="loadPastTrips()">連接 Google Drive</button>';
   return renderSettingsHeader('過往旅程',false)+'<div class="settings-section">'+body+'</div>';
 }
-/* ================= v149 連接新旅程（ADR 0021） =================
-   只在「已清除」或「尚未連接」時提供。貼上發布連結 → TripSource.inspect 下載全部分頁並檢查
-   範本、TripConfig 與 Ledger Endpoint → 預覽 → 確認後 commit 並重新載入 App。
-   任何一步失敗都不改變手機（交易與復原見 trip-source.js）。 */
-var connectTripUi={status:'idle',link:'',error:'',candidate:null,requestId:0};
-function fetchLedgerEndpointInfo(endpoint){
-  return fetchWithTimeout(endpoint+'?action=info',FETCH_TIMEOUT).then(function(response){
-    if(!response.ok)throw new Error('HTTP '+response.status);
-    return response.json();
-  });
-}
-function tripConnectFlow(){
-  return TripSource.createConnectFlow({
-    storage:localStorage,lifecycle:TripLifecycle,
-    download:function(pubBase){
-      return downloadAllSheets(pubBase).then(function(download){
-        if(download.partialSheets.length)throw new Error('「分帳紀錄」分頁下載失敗');
-        return download;
-      });
-    },
-    prepare:function(raw){var now=Date.now();var prepared=prepareSheetCandidate(raw,'online',now,'sheet-'+now);prepared.snapshot.lastCompleteAt=now;return prepared;},
-    fetchInfo:fetchLedgerEndpointInfo,
-    clearPhotos:function(){return shoppingPhotoStore.clearAll();},
-    writeSnapshot:function(snapshot){writeSnapshotState(localStorage,{formatVersion:1,active:snapshot,previous:null});},
-    members:function(db){return registeredMemberEntries(db&&db.ledger||[],false).map(function(entry){return entry.name;});}
-  });
-}
-function openConnectTrip(){
-  connectTripUi={status:'idle',link:'',error:'',candidate:null,requestId:connectTripUi.requestId+1};
-  openSettings('connect');
-}
-function resetConnectTrip(){
-  connectTripUi={status:'idle',link:connectTripUi.link,error:'',candidate:null,requestId:connectTripUi.requestId+1};
-  rerenderOpenSettingsPage();
-}
-function connectTripStillOpen(requestId){
-  return requestId===connectTripUi.requestId&&settingsUiState.page==='connect'&&!!document.getElementById('settingsOverlay');
-}
-function connectTripErrorMessage(error){
-  return error&&error.code?String(error.message):'連接失敗：'+String(error&&error.message||error);
-}
-function inspectConnectTrip(){
-  var input=document.getElementById('connectTripLink');
-  if(input)connectTripUi.link=input.value;
-  var requestId=++connectTripUi.requestId;
-  connectTripUi.status='checking';connectTripUi.error='';connectTripUi.candidate=null;
-  rerenderOpenSettingsPage();
-  return tripConnectFlow().inspect(connectTripUi.link).then(function(candidate){
-    if(!connectTripStillOpen(requestId))return;
-    connectTripUi.status='preview';connectTripUi.candidate=candidate;
-    rerenderOpenSettingsPage();
-  },function(error){
-    if(!connectTripStillOpen(requestId))return;
-    AppLog.data('連接新旅程檢查失敗：'+String(error&&error.code||'')+' '+String(error&&error.message||error));
-    connectTripUi.status='error';connectTripUi.error=connectTripErrorMessage(error);
-    rerenderOpenSettingsPage();
-  });
-}
-function confirmConnectTrip(){
-  var candidate=connectTripUi.candidate,requestId=++connectTripUi.requestId;
-  if(!candidate)return Promise.resolve();
-  connectTripUi.status='connecting';
-  rerenderOpenSettingsPage();
-  return tripConnectFlow().commit(candidate).then(function(){
-    AppLog.data('已連接新旅程：'+candidate.tripName+'（'+candidate.tripId+'）');
-    toast('已連接「'+candidate.tripName+'」');
-    setTimeout(function(){location.reload();},400);
-  },function(error){
-    AppLog.data('連接新旅程失敗：'+String(error&&error.message||error));
-    if(requestId!==connectTripUi.requestId)return;
-    connectTripUi.status='error';connectTripUi.error=connectTripErrorMessage(error)+'（手機維持原本的狀態）';connectTripUi.candidate=null;
-    rerenderOpenSettingsPage();
-  });
-}
-function renderConnectTripPage(){
-  var mode=TripLifecycle.readState(localStorage).mode,state=connectTripUi,body='';
-  if(mode==='active')body='<p class="settings-help">這部手機還有進行中的旅程。要接新旅程，請先到「資料與版本」清除並打包旅程。</p>';
-  else if(mode==='cleanup-pending')body='<p class="settings-help">本機清理尚未完成，完成後才能連接新旅程。</p>';
-  else if(state.status==='checking')body='<p class="settings-help" role="status">正在下載並檢查試算表…</p>';
-  else if(state.status==='connecting')body='<p class="settings-help" role="status">正在連接…</p>';
-  else if(state.status==='preview'&&state.candidate){
-    var preview=state.candidate.preview;
-    body='<h3>'+escapeHtml(preview.tripName||'未命名旅程')+'</h3>'+
-      '<p class="settings-help">'+escapeHtml(preview.startDate)+' ～ '+escapeHtml(preview.endDate)+' · '+preview.dayCount+' 天 · '+preview.stopCount+' 個行程</p>'+
-      '<ul class="settings-help connect-trip-days">'+preview.days.map(function(day){return '<li>'+escapeHtml(day.date)+'：'+day.count+' 個行程</li>';}).join('')+'</ul>'+
-      '<p class="settings-help">已加入的成員：'+(preview.members.length?escapeHtml(preview.members.join('、')):'還沒有人加入')+'</p>'+
-      '<p class="settings-help">確認後這部手機會改用這份試算表，並重新開啟 App。</p>'+
-      '<div class="trip-lifecycle-actions"><button type="button" class="btn" onclick="confirmConnectTrip()">確認連接</button><button type="button" class="btn ghost" onclick="resetConnectTrip()">改貼其他連結</button></div>';
-  }else{
-    body='<p class="settings-help">貼上旅程負責人分享的 Google 試算表「發布到網路」連結，網址以 https://docs.google.com/spreadsheets/d/e/ 開頭。</p>'+
-      '<label class="settings-help" for="connectTripLink"><b>發布連結</b></label>'+
-      '<textarea id="connectTripLink" class="state-box" rows="3" autocomplete="off" autocapitalize="off" spellcheck="false" oninput="connectTripUi.link=this.value">'+escapeHtml(state.link)+'</textarea>'+
-      (state.status==='error'&&state.error?'<p class="trip-lifecycle-status error" role="alert">'+escapeHtml(state.error)+'</p>':'')+
-      '<div class="trip-lifecycle-actions"><button type="button" class="btn" onclick="inspectConnectTrip()">檢查連結</button></div>';
-  }
-  return renderSettingsHeader('連接新旅程',false)+'<div class="settings-section">'+body+'</div>';
-}
 function openPastTrips(){
   openSettings('past');
   if(window.google&&google.accounts&&google.accounts.oauth2)return loadPastTrips();
@@ -10311,7 +10081,6 @@ function renderSettingsPage(page,ledgerSettings,settingsError){
   if(page==='health')return renderSettingsHealthPage();
   if(page==='data')return renderSettingsDataPage();
   if(page==='past')return renderPastTripsPage();
-  if(page==='connect')return renderConnectTripPage();
   if(page==='test-mode')return renderSettingsTestModePage();
   return renderSettingsRoot(ledgerSettings);
 }
@@ -10352,7 +10121,7 @@ function parseLedgerSheetCsv(csvText){
     return record;
   });
 }
-function ledgerFastPullUrl(after){return (typeof currentLedgerEndpoint==='function'?currentLedgerEndpoint():LEDGER_POST_URL)+'?action=ledger&after='+encodeURIComponent(String(after));}
+function ledgerFastPullUrl(after){return LEDGER_POST_URL+'?action=ledger&after='+encodeURIComponent(String(after));}
 function ledgerFastPull(reason){
   if(TripLifecycle.readState(localStorage).mode!=='active')return Promise.resolve({ok:false,newRecords:0,inactive:true});
   if(typeof fetch!=='function')return Promise.resolve({ok:false,newRecords:0});
@@ -12238,13 +12007,8 @@ function renderInactiveHome(message){
   document.querySelectorAll('.view:not(#view-today)').forEach(function(view){view.innerHTML='';});
   var title=document.getElementById('brandTitle');if(title)title.textContent='TripPilot';
   var today=document.getElementById('view-today');
-  var lifecycleMode=TripLifecycle.readState(localStorage).mode,pending=lifecycleMode==='cleanup-pending',unconnected=lifecycleMode==='unconnected';
-  /* v149：「已清除」與「尚未連接」都可以連接新旅程；清理未完成時先完成清理。 */
-  var heading=unconnected?'尚未連接旅程':'目前沒有進行中的旅程';
-  var defaultMessage=unconnected?'請向旅程負責人索取新旅程試算表的「發布到網路」連結，貼上後就能開始使用。':'這部手機的舊旅程已清除。可以連接下一趟旅程；若先前封存，可到過往旅程查看。';
-  if(today)today.innerHTML='<div class="trip-inactive-card"><h1>'+heading+'</h1><p>'+escapeHtml(message||defaultMessage)+'</p>'+
-    (pending?'<button type="button" class="btn" onclick="retryTripCleanup()">重試本機清理</button>':'<div class="trip-lifecycle-actions"><button type="button" class="btn" onclick="openConnectTrip()">連接新旅程</button></div>')+
-    '<button type="button" class="btn ghost" onclick="openPastTrips()">過往旅程</button></div>';
+  var pending=TripLifecycle.readState(localStorage).mode==='cleanup-pending';
+  if(today)today.innerHTML='<div class="trip-inactive-card"><h1>目前沒有進行中的旅程</h1><p>'+escapeHtml(message||'這部手機的舊旅程已清除。若先前封存，可到過往旅程查看。')+'</p>'+(pending?'<button type="button" class="btn" onclick="retryTripCleanup()">重試本機清理</button>':'')+'<button type="button" class="btn ghost" onclick="openPastTrips()">過往旅程</button></div>';
   var tabs=document.getElementById('tripTabs');if(tabs)tabs.innerHTML='';
   var daybar=document.getElementById('daybar');if(daybar)daybar.innerHTML='';
   if(typeof ledgerFastPullController!=='undefined')ledgerFastPullController.stop();
@@ -12263,64 +12027,10 @@ function renderBuiltinRecovery(error){
   target.classList.add('active');
   target.innerHTML='<div class="empty-state" id="builtinRecovery"><strong>資料資產無法載入</strong><br><small>目前沒有可安全使用的本機行程資料，請在連線後重新載入。</small><div class="empty-actions"><button class="btn" onclick="location.reload()">重新載入</button><button class="btn" onclick="copyBuiltinRecoveryDiagnostics()">複製診斷資訊</button></div></div>';
 }
-/* v149（ADR 0021）：開機先決定這部手機接的是哪一趟旅程，之後所有讀寫都依這個來源。
-   - 連接到一半被打斷：完成或退回原狀（TripSource.recoverPendingConnect）。
-   - 本機已有這趟的紀錄：寫入「岡山舊旅程」來源，之後即使重置紀錄也不會變成未連接。
-   - 新手機：標記為「尚未連接旅程」。 */
-function resolveTripSourceAtBoot(){
-  try{
-    TripSource.recoverPendingConnect(localStorage,TripLifecycle);
-    var action=TripSource.classifyBoot(localStorage,TripLifecycle);
-    if(action==='corrupt'){CURRENT_TRIP_SOURCE=null;return {action:action,error:new Error('旅程連接資料無法讀取')};}
-    if(action==='migrate-legacy'){
-      TripSource.writeSource(localStorage,TripSource.legacyRecord(Date.now()));
-      AppLog.data('這部手機已有岡山旅程的紀錄，沿用岡山旅程');
-    }else if(action==='mark-unconnected'){
-      TripLifecycle.writeState(localStorage,{mode:'unconnected',archiveId:null});
-    }
-    var source=TripSource.readSource(localStorage);
-    CURRENT_TRIP_SOURCE=source.status==='ok'?source.record:null;
-    return {action:action,error:null};
-  }catch(error){
-    CURRENT_TRIP_SOURCE=null;
-    return {action:'error',error:error};
-  }
-}
-function renderTripSourceProblem(error){
-  AppLog.data('旅程來源無法使用：'+String(error&&error.message||error));
-  var target=document.getElementById('view-today');
-  if(!target)return;
-  target.classList.add('active');
-  target.innerHTML='<div class="empty-state" id="tripSourceProblem"><strong>這部手機的旅程連接資料無法讀取</strong><br><small>為了不把資料寫錯地方，App 先停在這裡。請截圖給旅程負責人，或稍後重新開啟。</small><div class="empty-actions"><button class="btn" onclick="location.reload()">重新開啟</button></div></div>';
-}
-function renderTripSourceDownload(message){
-  var target=document.getElementById('view-today');
-  if(!target)return;
-  target.classList.add('active');
-  var name=CURRENT_TRIP_SOURCE&&CURRENT_TRIP_SOURCE.tripName||'這趟旅程';
-  target.innerHTML='<div class="empty-state" id="tripSourceDownload"><strong>需要連網下載'+escapeHtml(name)+'的行程</strong><br><small>'+
-    escapeHtml(message||'這部手機還沒有這趟旅程的資料。連上網路後按「下載行程」。')+'</small><div class="empty-actions"><button class="btn" id="tripSourceDownloadBtn" onclick="retryTripSourceDownload()">下載行程</button></div></div>';
-}
-function retryTripSourceDownload(){
-  var button=document.getElementById('tripSourceDownloadBtn');
-  if(button){button.disabled=true;button.textContent='下載中…';}
-  return downloadAllSheets().then(function(download){
-    if(download.partialSheets.length)throw new Error('分帳紀錄下載失敗，請再試一次');
-    var now=Date.now(),candidate=prepareSheetCandidate(download.raw,'online',now,'sheet-'+now);
-    candidate.snapshot.sheetMeta=download.sheetMeta;
-    candidate.snapshot.lastCompleteAt=now;
-    writeSnapshotState(localStorage,{formatVersion:1,active:candidate.snapshot,previous:null});
-    location.reload();
-  }).catch(function(error){
-    renderTripSourceDownload('下載失敗：'+String(error&&error.message||error)+'。請確認網路後再試一次。');
-  });
-}
 function init(){
-  var sourceBoot=resolveTripSourceAtBoot();
-  if(sourceBoot.error){renderTripSourceProblem(sourceBoot.error);return;}
   var lifecycleState=TripLifecycle.readState(localStorage);
   if(lifecycleState.mode!=='active'){
-    renderInactiveHome(lifecycleState.mode==='cleanup-pending'?'本機清理尚未完成，請稍候；若失敗可重試。':lifecycleState.mode==='unconnected'?'':'這部手機的舊旅程已清除。');
+    renderInactiveHome(lifecycleState.mode==='cleanup-pending'?'本機清理尚未完成，請稍候；若失敗可重試。':'這部手機的舊旅程已清除。');
     if(lifecycleState.mode==='cleanup-pending')tripFlow().resumeCleanup().then(function(){renderInactiveHome();},function(error){
       renderInactiveHome('本機清理未完成：'+String(error&&error.message||error));
     });
@@ -12344,8 +12054,6 @@ startSyncRelativeClock();
     // 開啟 App 時 bridge 若仍有未讀回紀錄,直接進入 7.5 的 30 秒低頻 polling。
     ledgerFastPullLifecycle();
     if(ledgerDeliveryBridgeHasRecords())triggerLedgerFastPull('startup');
-  }else if(bootError&&bootError.code==='SOURCE_SNAPSHOT_MISSING'){
-    renderTripSourceDownload();
   }else{
     renderBuiltinRecovery(bootError);
   }
@@ -12374,8 +12082,6 @@ window.addEventListener('pageshow',function(){if(TripLifecycle.readState(localSt
 window.addEventListener('storage',function(event){
   if(event.key!=='trip_lifecycle_state')return;
   if(TripLifecycle.readState(localStorage).mode!=='active')renderInactiveHome();
-  /* v149：另一個分頁剛連接新旅程時，這個分頁重新載入，才會改用新的來源。 */
-  else if(document.body.classList.contains('trip-inactive'))location.reload();
 });
 function guardTripLifecycleInteraction(event){
   var active=TripLifecycle.readState(localStorage).mode==='active',locked=false;
@@ -12517,6 +12223,53 @@ function setupViewportReflow(){
     if(e.target&&e.target.closest&&e.target.closest('#diagnosticOverlay')) forceViewportReflow();
   });
 }
+/* ================= v149 Huninn 字型(Bar 2026-10-11 核准) =================
+   v78 曾為離線首屏移除 Google Fonts:放在 <head> 的字型樣式表會讓第一個畫面等它下載。
+   這裡改成 load 事件之後才由程式加入樣式表,第一個畫面一定先用系統字(--font-ui)。
+   樣式表到了之後,先用 document.fonts.load 下載「目前畫面上用到的字」,全部到齊才在 <html>
+   加上 font-huninn,整頁一次換字,不會同一行混兩種字。離線、連不上或任何失敗都維持系統字。
+   字型是跨網域資源,sw.js 不攔截也不快取,交給瀏覽器自己的快取。 */
+var HUNINN_CSS_URL='https://fonts.googleapis.com/css2?family=Huninn&display=swap';
+var huninnFontState='idle';
+function huninnSampleText(doc){
+  var text=String(doc&&doc.body&&(doc.body.innerText||doc.body.textContent)||''),seen={},out='';
+  for(var i=0;i<text.length&&out.length<4000;i++){
+    var ch=text.charAt(i);
+    if(!seen[ch]&&!/\s/.test(ch)){seen[ch]=true;out+=ch;}
+  }
+  return out||'旅程';
+}
+function loadHuninnFont(doc,nav){
+  doc=doc||document;nav=nav||navigator;
+  if(huninnFontState==='loading'||huninnFontState==='ready')return Promise.resolve(huninnFontState);
+  if(nav&&nav.onLine===false){huninnFontState='offline';return Promise.resolve(huninnFontState);}
+  if(!doc.fonts||typeof doc.fonts.load!=='function'||!doc.head){huninnFontState='unsupported';return Promise.resolve(huninnFontState);}
+  huninnFontState='loading';
+  return new Promise(function(resolve){
+    var link=doc.createElement('link');
+    link.id='huninnFontCss';link.rel='stylesheet';link.href=HUNINN_CSS_URL;
+    link.onload=function(){resolve(true);};
+    link.onerror=function(){resolve(false);};
+    doc.head.appendChild(link);
+  }).then(function(loaded){
+    if(!loaded)throw new Error('Huninn stylesheet unavailable');
+    return doc.fonts.load('16px "Huninn"',huninnSampleText(doc));
+  }).then(function(faces){
+    if(!faces||!faces.length)throw new Error('Huninn font unavailable');
+    doc.documentElement.classList.add('font-huninn');
+    huninnFontState='ready';
+    return huninnFontState;
+  }).catch(function(){
+    var link=doc.getElementById('huninnFontCss');
+    if(link&&link.parentNode)link.parentNode.removeChild(link);
+    huninnFontState='failed';
+    return huninnFontState;
+  });
+}
+window.addEventListener('load',function(){setTimeout(function(){loadHuninnFont();},0);});
+window.addEventListener('online',function(){
+  if(huninnFontState==='offline'||huninnFontState==='failed'){huninnFontState='idle';loadHuninnFont();}
+});
 setupDiagnostics();
 setupViewportReflow();
 verifyControllingShellGeneration().then(function(reason){

@@ -135,7 +135,7 @@ function loadLedgerModule(){
   assert.strictEqual(flushed.sent,1,'flush sends the queued record');
   assert.strictEqual(repo.pendingCount(),0,'delivered record leaves the local queue');
 
-  /* v149 (ADR 0021): the queue remembers which trip its records belong to. */
+  /* v150 (ADR 0021): the queue remembers which trip its records belong to. */
   let ownerTrip='sheet:kyushu-2027', ownerOnline=false, ownerPosts=0;
   const ownerStorage=createStorage();
   const ownerRepo=mod.createLedgerRepository({

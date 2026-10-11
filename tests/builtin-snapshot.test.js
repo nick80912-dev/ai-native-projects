@@ -85,7 +85,7 @@ assert.deepStrictEqual(lodgingStops.map(function(place){ return place.hotelId; }
 assert.strictEqual(new Set(lodgingStops.map(function(place){ return place.travel; })).size,5,'route-specific travel remains distinct');
 
 const cfgRows=builtin.cfg.trim().split(/\r?\n/).slice(1).map(line=>line.split(',')[0]);
-/* v149:Trip ID 與 Ledger Endpoint 是 optional,岡山試算表沒有;有的話也只能出現一次。 */
+/* v150:Trip ID 與 Ledger Endpoint 是 optional,岡山試算表沒有;有的話也只能出現一次。 */
 loaded.schema.sheets.cfg.keys.filter(item=>item.optional).forEach(item=>{
   assert(cfgRows.filter(value=>value===item.header).length<=1,'optional cfg key appears at most once: '+item.header);
 });

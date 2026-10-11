@@ -80,7 +80,7 @@ GET {WEB_APP_URL}?action=ledger&after=<N>
 - `serverTime` 僅供時鐘偏移診斷，**不得**用於改寫 Ledger record、canonical ordering、settlement event server timestamp 或 server arrival ordering。
 - `doGet` 唯讀且**不取 `LockService`**，避免與 `doPost` 搶鎖或額外消耗配額。`doPost` 既有契約與驗證邏輯完全不動。
 
-## GET 契約（v149 旅程資訊，連接新旅程用）
+## GET 契約（v150 旅程資訊，連接新旅程用）
 
 ```text
 GET {WEB_APP_URL}?action=info

@@ -467,7 +467,9 @@ v143 已透過 `dev → main` PR #40 合併並完成正式站部署核對。G1 �
 
 → **其餘 backlog**:#54(回程後解除 CI 釘版)、#52／#53(v140／v142 審查的 Minor)、#41／#38(待實際使用回饋)、#50(已裁定先不做)、#28／#29(已裁定暫不處理)、#3／#12／#20／#25(長期)、E1／E2(大型重構)。
 
-→ **v149 候選(2026-10-08,未合併、未發布)**:第二階段「連接下一趟旅程」(ADR 0021、[換旅程手冊](../docs/new-trip-handbook.md))已在工作分支 `claude/trusting-pascal-bld58l` 實作完成,PR [#51](https://github.com/nick80912-dev/ai-native-projects/pull/51)(draft,目標 `dev`)。Bar 核准的範圍只到工作分支與測試;**不合併 dev、不發布、不改 Google Sheet 與已部署 Apps Script**。合併時機:岡山旅程結束、全團結清並清除後,再與 Bar 確認。 <!-- generation-exempt: 候選分支狀態 -->
+→ **v149 出發前小改版(2026-10-11,候選)**:首頁第一站、交通彩色標籤、全站 Huninn(不擋第一個畫面)。Bar 核准 Tier 2 確認書,於新分支 `claude/pretrip-v149-ui` 實作,PR 進 `dev` → GitHub Pages 手機驗收 → 發布,目標 10/15 前。換旅程的 PR #51 改用 v150。 <!-- generation-exempt: 候選分支狀態 -->
+
+→ **v150 候選(2026-10-08 實作;2026-10-11 由 v149 改為 v150,未合併、未發布)**:第二階段「連接下一趟旅程」(ADR 0021、[換旅程手冊](../docs/new-trip-handbook.md))已在工作分支 `claude/trusting-pascal-bld58l` 實作完成,PR [#51](https://github.com/nick80912-dev/ai-native-projects/pull/51)(draft,目標 `dev`)。Bar 核准的範圍只到工作分支與測試;**不合併 dev、不發布、不改 Google Sheet 與已部署 Apps Script**。合併時機:岡山旅程結束、全團結清並清除後,再與 Bar 確認。 <!-- generation-exempt: 候選分支狀態 -->
 
 > 發現問題時依 `16_OPS_PLAYBOOK.md` §A2 **forward bump 到下一個未使用版本**,不得倒退覆寫 —— 已經有裝置接管 v148 了。
 

@@ -125,7 +125,7 @@
 - 設定寫入為 online-only,不進 ledger 離線佇列；伺服器確認後的本機 bridge 只用於涵蓋公開 CSV 約 1–5 分鐘延遲。
 - Apps Script 設定契約:`POST {action:'updateSettings',exchangeRate,defaultCurrency}`；固定白名單禁止 payload 指定任意 TripConfig key。
 
-## 每趟一份 Sheet（v149，ADR 0021）
+## 每趟一份 Sheet（v150，ADR 0021）
 - 每趟旅程從範本複製一份新的試算表。TripConfig 新增三個選填鍵：`Trip ID`（3–40 個英數字、`-`、`_`，每趟不同）、`Ledger Endpoint`（這份試算表部署的 Apps Script `/exec` 網址）、`Weather Regions GID`（「天氣地區」分頁的 gid）。岡山試算表沒有這三鍵，照常運作；新旅程連接時強制檢查前兩鍵。
 - 行程總表可加選填「行程ID」欄（依標題名稱尋找）：有填就當作站點 ID，格式為英數字、`-`、`_`（最多 40 字）且整份不可重複；沒填沿用「日期_第幾列」。
 - 「天氣地區」分頁欄位：`地區名稱,緯度,經度,關鍵字`；緯度 20–46、經度 122–154、最多 30 個地區。只在新旅程使用，岡山沿用 App 內建城市清單。
