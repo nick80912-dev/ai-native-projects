@@ -9,7 +9,7 @@ async function setup(page){
     Object.defineProperty(navigator,'onLine',{configurable:true,get:()=>false});
     window.fetch=()=>Promise.reject(new TypeError('QA_OFFLINE'));
     if(!sessionStorage.getItem('qa-progress-started')){
-      localStorage.clear();localStorage.setItem('trip_member','Bar');sessionStorage.setItem('qa-progress-started','1');
+      localStorage.clear();localStorage.setItem('trip_member','Bar');localStorage.setItem('trip_source','{"version":1,"kind":"legacy","migratedAt":0}');sessionStorage.setItem('qa-progress-started','1');
     }
   });
   await openApp(page);await waitForSyncToSettle(page);
