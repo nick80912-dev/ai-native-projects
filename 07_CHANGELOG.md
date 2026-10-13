@@ -1,6 +1,17 @@
 # 07 版本紀錄
 
-## 2026-10-13 — v152 診斷面板：目前旅程、完整的除錯報告、易讀的紀錄（候選，待 CI／手機驗收）
+## 2026-10-13 — v152 正式發布（released）+ G6 tag，同日真機驗證通過
+
+- **G1（略過 Pages 驗收，Bar 指示）**：v152 合併 `dev` 前 Bar 回報「手機看過了，沒問題」；經提醒當時 GitHub Pages 仍是 v151 後，Bar 仍指示「merge into main」。因此本版**沒有在 GitHub Pages 上驗收 v152**，改以發布後的正式站手機驗收為準。PR [#58](https://github.com/nick80912-dev/ai-native-projects/pull/58) 的 sanity／browser-qa 全綠後合併 `dev`（`0d099e4`），本機完整 Chromium 313/315（兩項為已知本機差異）。
+- PR [#59](https://github.com/nick80912-dev/ai-native-projects/pull/59) 以 merge 合併 `dev` `0d099e4` → `main`，merge commit **`1b43c95`**。合併前 PR 的 sanity 與 browser-qa 全綠，合併時釘住 head `0d099e4`。
+- Netlify deploy **`6acdcce038f1243c7162a83a`**：`ready`，`commit_ref` = `1b43c95` 相符，`published_at` `2026-10-13T06:17:14Z`，`manual_deploy: false`。23 個新檔（含 `shell/v152/index.html`），6 條 header rule 全過。
+- `main` CI run `38355841367`（qa-sanity）：success。
+- **§F5 線上內容核對未執行**：工作環境的網路政策仍封鎖正式站網域；正式站載入 v152 以 Bar 手機確認為準。
+- **真機驗證（2026-10-13）**：Bar 回報正式站手機已更新到 v152。
+- **G6 完成（2026-10-13）**：Bar 在 GitHub 以 Release 建立 `production-v152`，指向 `1b43c95`（GitHub API 與 `git ls-remote` 皆確認，release 發布於 `2026-10-13T06:22:41Z`）。第一次在 v152 合併 `main` 前建立，指向 `6689bfd`（v151 程式）；第二次只刪了 release、沿用舊 tag；第三次刪除 tag 後重建才正確。之後建 tag 前先確認 `main` 最新 commit 是發布 PR 的 merge commit。
+- 回滾：依 `16_OPS_PLAYBOOK.md` §A1 在 Netlify Publish 上一個部署（v151，`commit_ref` `6689bfd`；程式與 `291c300` 相同），錨點 `production-v151`，再往前 bump。不影響任何資料。
+
+## 2026-10-13 — v152 診斷面板：目前旅程、完整的除錯報告、易讀的紀錄（已於同日發布，見上一則）
 
 - **來源**：Bar 問「診斷面板建議怎麼修正優化」。建議六項，Bar 裁定出發前做 A、B、C，D（測試工具收合）、E（旅途紀錄入口）、F（設定入口、Esc、dialog 語意）旅程後再做；Tier 2 四項確認書經 Bar「approve」核准。
 - **A. 目前旅程**：面板版本下方新增唯讀區塊，列出連接的旅程（岡山舊旅程或新旅程名稱與 Trip ID）、旅程狀態、岡山保護期（到台灣時間 10/24 00:00 或已結束）、行程資料（同步狀態、資料更新與最近完整同步時間、失敗原因）、團體帳（待送筆數、等待讀回筆數；待送屬於其他旅程時寫明已暫停送出）。Ledger repository 新增唯讀的 `foreignOwner()`，送出邏輯不變。任一列讀不到時顯示「無法讀取」，不擋面板。
