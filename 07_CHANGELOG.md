@@ -1,6 +1,17 @@
 # 07 版本紀錄
 
-## 2026-10-13 — v153 診斷面板重新整理（候選，尚未發布）
+## 2026-10-13 — v153 正式發布（released）+ G6 tag
+
+- **G1**：PR [#62](https://github.com/nick80912-dev/ai-native-projects/pull/62) 的 sanity／browser-qa 在 head `43d5f7e` 全綠後合併 `dev`（`40fb32d`）。GitHub Pages 部署 `40fb32d` 於 `2026-10-13T12:53:24Z` 完成，之後 Bar 回報「手機看過了，沒問題，合併進 main」。
+- PR [#63](https://github.com/nick80912-dev/ai-native-projects/pull/63) 以 merge 合併 `dev` `40fb32d` → `main`，merge commit **`749f6c3`**。合併前 PR 的 sanity 與 browser-qa 全綠，合併時釘住 head `40fb32d`。
+- Netlify deploy **`6ace2ce6c5a0418049c59c65`**：`ready`，`commit_ref` = `749f6c3` 相符，`published_at` `2026-10-13T13:07:03Z`，`manual_deploy: false`。27 個新檔（含 `shell/v153/index.html`），6 條 header rule 全過。
+- `main` CI run `38402388050`（qa-sanity）：success。
+- **§F5 線上內容核對未執行**：工作環境的網路政策仍封鎖正式站網域；正式站載入 v153 以 Bar 手機確認為準。
+- **真機驗證**：待 Bar 回報正式站手機已更新到 v153。
+- **G6 完成（2026-10-13）**：Bar 在 GitHub 以 Release 建立 `production-v153`，指向 `749f6c3`（GitHub API 與 `git ls-remote` 皆確認，release 發布於 `2026-10-13T13:17:19Z`）。第一次在 `13:02:10Z` 建立，早於 `13:06:46Z` 的合併，指向舊 `main` `e8af76a`（v152 程式）；Bar 依說明刪除 release 與 tag 後重建才正確。這是連續第二版發生，之後要等回報「已合併 main、正式站已部署」後才請 Bar 建 tag。
+- 回滾：依 `16_OPS_PLAYBOOK.md` §A1 在 Netlify Publish 上一個部署（v152，`commit_ref` `e8af76a`；程式與 `1b43c95` 相同），錨點 `production-v152`，再往前 bump。不影響任何資料。
+
+## 2026-10-13 — v153 診斷面板重新整理（已於同日發布，見上一則）
 
 - **來源**：Bar 問「診斷面板 UI/UX 以及優化建議」，接著說「You can do it first.」並選「整個重構現在做」。看過示意圖與四項 Tier 2 確認書後選「核准，但要調整」，調整為「診斷／測試工具裡面的內容稍微濃縮調整一下」。backlog #56 的 D、E、F 因此提前在出發前完成。
 - **最上方摘要**：面板第一塊直接寫「✅ 一切正常」或「⚠️ N 項需注意」，並列出要注意的事：團體帳還沒送出、待送的團體帳屬於其他旅程、行程資料更新失敗或部分沒更新、旅程清理沒完成、尚未連接旅程、資料檢查發現問題、需要處理的紀錄。下方一行是 App 版本（只顯示 `v153`，不帶快取名稱前綴）與資料檢查結果。原本的「App 版本」「健康檢查」兩區併入這裡。
