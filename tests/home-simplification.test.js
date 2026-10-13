@@ -32,6 +32,9 @@ for (const file of [shellPath('index.html')]) {
   );
   assert.match(html, /\.today-hero-actions\{[^}]*display:flex[^}]*flex-wrap:wrap[^}]*gap:var\(--space-2\)/, `${file} spaces the pre-trip actions`);
   assert.match(html, /\.today-hero-actions \.today-hero-action\{margin-top:0\}/, `${file} aligns the pre-trip actions on one line`);
+  /* v151(Bar 2026-10-13):旅程結束後首頁的兩顆鈕同樣放進 action row,不再相黏。 */
+  const endedHome = html.slice(html.indexOf('function renderEndedTripHome'), html.indexOf('function openEndedTripPacking'));
+  assert.match(endedHome, /'<div class="today-hero-actions">'\+\s*'<button[^']*openEndedTripPacking\(\)">清除並打包旅程<\/button>'\+\s*'<button[^']*'trip\\'\)">查看完整行程 →<\/button><\/div><\/div>'/, `${file} puts the ended-trip actions in one spaced row`);
   assert.match(renderToday, /renderTodayWeatherArt\(weather\)[\s\S]*renderTodayHeroSummary\(weather,renderShoppingTodayEntry\(day,currentStopRef\)\)/, `${file} composes weather and Shopping inside the active Hero`);
   assert.doesNotMatch(renderToday, /h\+=renderShoppingTodayEntry\(day,currentStopRef\)/, `${file} no longer renders active Shopping below the Hero`);
   assert.match(renderToday, /var progressLabel='今日已處理 '\+completed\+' 站，共 '\+items\.length\+' 站';/, `${file} gives active progress the approved accessible name`);

@@ -3849,8 +3849,9 @@ function renderEndedTripHome(){
   return '<div class="today-hero" id="endedTripHome"><div class="lbl">TODAY · '+todayMD()+'</div>'+
     '<div class="date">本趟旅程已結束</div>'+
     '<div class="empty">要打包封存這趟旅程嗎？<br>目前紀錄仍保留在這部手機。</div>'+
+    '<div class="today-hero-actions">'+
     '<button type="button" class="today-jump today-hero-action" onclick="openEndedTripPacking()">清除並打包旅程</button>'+
-    '<button type="button" class="today-jump today-hero-action" onclick="switchView(\'trip\')">查看完整行程 →</button></div>';
+    '<button type="button" class="today-jump today-hero-action" onclick="switchView(\'trip\')">查看完整行程 →</button></div></div>';
 }
 function openEndedTripPacking(){
   if(!tripHasEnded()||TripLifecycle.readState(localStorage).mode!=='active') return;
