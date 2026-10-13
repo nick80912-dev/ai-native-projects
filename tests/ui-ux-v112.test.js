@@ -39,9 +39,8 @@ assert.match(renderSplit,/hasRecords/,'empty Ledger can suppress zero-value mana
 
 assert.match(html,/function preTripDestinationHighlights\(day,limit\)/,'pre-trip preview uses destination-first highlights');
 assert.match(extractFunction(html,'preTripDestinationHighlights'),/if\(!String\(place\|\|''\)\.trim\(\)\)return/,'pre-trip highlights omit generic activity-only rows');
-const preTrip=extractFunction(html,'renderPreTripBrief');
-assert.match(preTrip,/preTripDestinationHighlights\(day,2\)/,'Day 1 preview is limited to two destinations');
-assert.match(preTrip,/還有 .+ 站/,'Day 1 preview states the remaining stop count');
+/* v151:出發前 hero 的 Day 1 預覽已拿掉(與「第一站」重複),Day 1 改由下方「行程重點」呈現。 */
+assert(!/function renderPreTripBrief/.test(html),'the duplicate Day 1 preview is gone from the pre-trip hero');
 const today=extractFunction(html,'renderToday');
 assert.match(today,/preTripDestinationHighlights\(d,3\)/,'pre-trip day summaries are destination-first');
 

@@ -19,6 +19,13 @@ test('after the end date Home asks about packing without authorizing or clearing
   await expect(home).not.toContainText('還沒到出發日');
   await expect(home).not.toContainText('出發當天');
   await expect(home.getByRole('button',{name:'清除並打包旅程',exact:true})).toBeVisible();
+  /* v151(Bar 2026-10-13):兩顆鈕同一列且留間距,不再相黏 */
+  const actions=await home.locator('.today-hero-actions .today-hero-action').evaluateAll(nodes=>nodes.map(node=>{
+    const box=node.getBoundingClientRect();return {text:node.textContent,left:box.left,right:box.right,top:box.top};
+  }));
+  expect(actions.map(action=>action.text)).toEqual(['清除並打包旅程','查看完整行程 →']);
+  expect(actions[1].top).toBe(actions[0].top);
+  expect(actions[1].left-actions[0].right).toBeGreaterThanOrEqual(6);
   expect(await page.evaluate(()=>({mode:TripLifecycle.readState(localStorage).mode,member:localStorage.getItem('trip_member'),overlay:!!document.getElementById('settingsOverlay'),drive:!!tripDriveClient})))
     .toEqual({mode:'active',member:'Bar',overlay:false,drive:false});
 });

@@ -457,7 +457,7 @@ v143 已透過 `dev → main` PR #40 合併並完成正式站部署核對。G1 �
 - **真機驗證通過(2026-09-24)**:Bar 回報手機驗證 OK(本版無可見變化)。BB4 八項維持未驗。
 ## 下一棒
 
-→ **現況(2026-10-07)**:正式站為 **v148**(`main` `48d787c`;tag `production-v148`)。 <!-- generation-exempt: 發布當下的正式站錨點 -->(2026-10-06)**Bar 回報所有真機驗收已完成** —— TP141～TP146、v137／v138／v140／v142、BB4 Android 八項(含 BB4-a)與 v115～v121 iPhone 補驗,`docs/device-acceptance-log.md` 已整批勾選。長期掛著的 BB4 至此結案。
+→ **現況(2026-10-11)**:正式站為 **v149**(`main` `f82f817`;tag `production-v149`;上一個錨點 `production-v148` → `48d787c`)。 <!-- generation-exempt: 發布當下的正式站錨點 -->(2026-10-06)**Bar 回報所有真機驗收已完成** —— TP141～TP146、v137／v138／v140／v142、BB4 Android 八項(含 BB4-a)與 v115～v121 iPhone 補驗,`docs/device-acceptance-log.md` 已整批勾選。長期掛著的 BB4 至此結案。
 
 → **#42 已處理(2026-10-06)**:CI 兩個 job 暫時釘 `ubuntu-24.04`,避開 10/19 起分批移轉 Ubuntu 26.04 落在旅程期間。**回程後依 #54 驗證 26.04 再解除**(GitHub 預計 11/19 完成移轉)。
 
@@ -467,7 +467,11 @@ v143 已透過 `dev → main` PR #40 合併並完成正式站部署核對。G1 �
 
 → **其餘 backlog**:#54(回程後解除 CI 釘版)、#52／#53(v140／v142 審查的 Minor)、#41／#38(待實際使用回饋)、#50(已裁定先不做)、#28／#29(已裁定暫不處理)、#3／#12／#20／#25(長期)、E1／E2(大型重構)。
 
-→ **v149 出發前小改版(2026-10-11,候選)**:首頁第一站、交通彩色標籤、全站 Huninn(不擋第一個畫面)。Bar 核准 Tier 2 確認書,於新分支 `claude/pretrip-v149-ui` 實作,PR 進 `dev` → GitHub Pages 手機驗收 → 發布,目標 10/15 前。換旅程的 PR #51 改用 v150。 <!-- generation-exempt: 候選分支狀態 -->
+→ **v149 已正式發布(2026-10-11)**:首頁第一站、交通彩色標籤、全站 Huninn(不擋第一個畫面)。PR [#52](https://github.com/nick80912-dev/ai-native-projects/pull/52) 合併 `dev`;Bar 以 GitHub Pages 手機驗收後,PR [#53](https://github.com/nick80912-dev/ai-native-projects/pull/53) 合併 `main`(`f82f817`),Netlify deploy `6acb65e2` 相符。Bar 回報正式站手機顯示 v149,並建立 tag `production-v149` → `f82f817`。 <!-- generation-exempt: 發布紀錄 -->
+
+→ **v151 候選(2026-10-13)**:Bar 驗收 v150 時發現出發前首頁的第一站與「出發當天」預覽重複,裁定拿掉預覽(選項 A),以 v151 forward bump 執行;v150 不單獨上正式站。流程:PR 進 `dev` → GitHub Pages 手機驗收 → 發布 v151。 <!-- generation-exempt: 候選分支狀態 -->
+
+→ **v150(2026-10-08 實作;2026-10-11 由 v149 改為 v150;2026-10-11 合併 `dev`,將由 v151 一併發布)**:第二階段「連接下一趟旅程」(ADR 0021、[換旅程手冊](../docs/new-trip-handbook.md))已在工作分支 `claude/trusting-pascal-bld58l` 實作完成,PR [#51](https://github.com/nick80912-dev/ai-native-projects/pull/51) 已合併 `dev`(`9d21bd8`)。2026-10-11 Bar 改為出發前上線,條件是先加「岡山保護期」(台灣時間 10/24 以前沒有紀錄的新手機也沿用岡山;Tier 2 確認書經 Bar「核准」)。流程:合併 dev → GitHub Pages 手機驗收 → 發布;**不改 Google Sheet 與已部署 Apps Script**。 <!-- generation-exempt: 候選分支狀態 -->
 
 > 發現問題時依 `16_OPS_PLAYBOOK.md` §A2 **forward bump 到下一個未使用版本**,不得倒退覆寫 —— 已經有裝置接管 v148 了。
 

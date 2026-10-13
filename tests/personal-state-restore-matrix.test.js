@@ -1,4 +1,4 @@
-/* 個人狀態備份 v1–v9 還原矩陣(2026-07-30 P3)
+/* 個人狀態備份 v1–v10 還原矩陣(2026-07-30 P3;v10 於 2026-10-08 加入旅程身分)
    ============================================================
    為什麼要有這個檔:備份格式歷經 v1 → v8 八次演進,但在此之前只有 v1／v2／v4／v8
    四個版本有還原測試,**v3／v5／v6／v7 完全沒有**。而 `settings-backup-ux.test.js`
@@ -123,9 +123,9 @@ function createSandbox() {
     validateLedgerRecord() { return true; },
     currentThemeId() { return storage.getItem(KEYS.theme) || 'ocean'; },
     /* ---- 常數:與 index.html 一致 ---- */
-    PERSONAL_STATE_VERSION: 9,
-    PERSONAL_STATE_SUPPORTED_VERSIONS: [1, 2, 3, 4, 5, 6, 7, 8, 9],
-    isSupportedPersonalStateVersion(version) { return typeof version === 'number' && [1, 2, 3, 4, 5, 6, 7, 8, 9].indexOf(version) >= 0; },
+    PERSONAL_STATE_VERSION: 10,
+    PERSONAL_STATE_SUPPORTED_VERSIONS: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+    isSupportedPersonalStateVersion(version) { return typeof version === 'number' && [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].indexOf(version) >= 0; },
     /* v9 的想逛 key 轉換需要目前的購物地點。固定成 fixture,讓「唯一候選／模糊候選」可控。
        「無印良品 1F」刻意同時存在於 P001 與 P039 —— 這正是不得猜測的模糊案例。 */
     shopMalls() {
@@ -167,8 +167,16 @@ function createSandbox() {
   return sandbox;
 }
 
-function restore(payload) {
+/* v10:裝置目前連接的旅程。不設定時 currentTripSourceKey 不存在,視為岡山舊旅程(legacy)。 */
+function onSheetTrip(sandbox) {
+  sandbox.CURRENT_TRIP_SOURCE = { kind: 'sheet', tripId: 'kyushu-2027', tripName: '九州五日' };
+  sandbox.currentTripSourceKey = function () { return 'sheet:kyushu-2027'; };
+  return sandbox;
+}
+
+function restore(payload, setup) {
   const sandbox = createSandbox();
+  if (setup) setup(sandbox);
   sandbox.__box.value = JSON.stringify(payload);
   sandbox.restorePersonalState();
   /* trip_member 與 trip_theme 以原始字串存放,其餘為 JSON —— 與 applyPersonalStatePayload 一致 */
@@ -239,11 +247,13 @@ const payloads = {
     travelNotes: [{ id: 'note-backup', kind: 'suggestion', text: '備份帶來的紀錄', status: 'resolved', createdAt: '2026-07-28T08:00:00.000Z', updatedAt: '2026-07-28T09:00:00.000Z', view: 'split', appVersion: 'v72', online: true, syncState: 'synced', healthSummary: [] }],
   }),
 };
+/* v10 = v9 + 旅程身分 */
+payloads[10] = Object.assign({}, payloads[9], { version: 10, trip: { sourceKey: 'legacy', tripId: '', tripName: '' } });
 
 /* ============================================================
-   共同契約:v1–v9 全部都必須還原成功
+   共同契約:v1–v10 全部都必須還原成功(岡山舊旅程的裝置)
    ============================================================ */
-for (const version of [1, 2, 3, 4, 5, 6, 7, 8, 9]) {
+for (const version of [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]) {
   const { read, toasts } = restore(payloads[version]);
   assert.deepStrictEqual(toasts, ['個人狀態已還原'], 'v' + version + ' 必須還原成功且只吐一則成功訊息');
   assert.deepStrictEqual(read(KEYS.checks), { P001: true }, 'v' + version + ' 還原打卡狀態');
@@ -430,7 +440,8 @@ const STABLE = { muji: 'w2:pP001:1F:%E7%84%A1%E5%8D%B0%E8%89%AF%E5%93%81', beams
   const sandbox = createSandbox();
   sandbox.__storage.setItem(KEYS.wants, JSON.stringify({ 'w_1_路面店_BEAMS': true, S000: true }));
   const exported = JSON.parse(sandbox.personalStateJson());
-  assert.strictEqual(exported.version, 9, '匯出版本為 9');
+  assert.strictEqual(exported.version, 10, '匯出版本為 10');
+  assert.deepStrictEqual(plain(exported.trip), { sourceKey: 'legacy', tripId: '', tripName: '' }, '匯出帶有旅程身分');
   assert.deepStrictEqual(exported.wants, { [STABLE.beams]: true, S000: true },
     '匯出前先轉換,v9 備份不得帶出索引型 key');
   assert.deepStrictEqual(exported.checks, { P000: true }, '匯出不影響打卡');
@@ -449,8 +460,8 @@ const STABLE = { muji: 'w2:pP001:1F:%E7%84%A1%E5%8D%B0%E8%89%AF%E5%93%81', beams
    向前相容:未來版本的 payload 一律拒絕(不是忽略未知欄位)
    ============================================================ */
 {
-  const { read, toasts } = restore(Object.assign({}, payloads[9], { version: 10 }));
-  assert.deepStrictEqual(toasts, ['個人狀態格式驗證失敗'], 'v10 payload 必須被明確拒絕');
+  const { read, toasts } = restore(Object.assign({}, payloads[10], { version: 11 }));
+  assert.deepStrictEqual(toasts, ['個人狀態格式驗證失敗'], 'v11 payload 必須被明確拒絕');
   assert.deepStrictEqual(read(KEYS.checks), { P000: true }, '拒絕時裝置原狀態一字不動');
   assert.strictEqual(read(KEYS.theme), DEVICE_THEME, '拒絕時不得套用任何主題');
 }
@@ -489,4 +500,43 @@ const STABLE = { muji: 'w2:pP001:1F:%E7%84%A1%E5%8D%B0%E8%89%AF%E5%93%81', beams
   assert.deepStrictEqual(read(KEYS.checks), { P000: true }, '失敗時裝置狀態不得被改動');
 }
 
-console.log('personal state restore matrix (v1–v9) tests passed');
+/* ============================================================
+   v10 旅程身分:不同旅程的備份整批拒絕,裝置一字不動
+   ============================================================ */
+const KYUSHU_TRIP = { sourceKey: 'sheet:kyushu-2027', tripId: 'kyushu-2027', tripName: '九州五日' };
+const QUEUED = { id: 'queued-1', time: '2026-07-18T08:00:00.000Z', member: '黃柏', category: '餐飲', detail: '午餐', amountJpy: 800, amountTwd: 168, note: '' };
+{
+  const { read, toasts } = restore(Object.assign({}, payloads[10], { trip: KYUSHU_TRIP, ledgerQueue: [QUEUED] }));
+  assert.deepStrictEqual(toasts, ['這份備份屬於另一趟旅程「九州五日」，不能還原到目前的旅程'], '岡山裝置拒絕九州的備份');
+  assert.deepStrictEqual(read(KEYS.checks), { P000: true }, '拒絕時打卡不變');
+  assert.strictEqual(read(KEYS.queue), null, '拒絕時待送帳不會被寫入');
+}
+{
+  const { toasts } = restore(Object.assign({}, payloads[10], { trip: undefined }));
+  assert.deepStrictEqual(toasts, ['個人狀態格式驗證失敗'], 'v10 缺少旅程身分視為格式錯誤');
+}
+{
+  const { read, toasts } = restore(payloads[9], onSheetTrip);
+  assert.deepStrictEqual(toasts, ['這是舊版備份，只能還原到岡山旅程'], '新旅程的裝置不接受沒有旅程身分的 v1–v9');
+  assert.deepStrictEqual(read(KEYS.checks), { P000: true }, '拒絕時裝置原狀態一字不動');
+}
+{
+  const { toasts } = restore(payloads[10], onSheetTrip);
+  assert.deepStrictEqual(toasts, ['這份備份屬於另一趟旅程「岡山旅程」，不能還原到目前的旅程'], '新旅程的裝置拒絕岡山的 v10 備份');
+}
+{
+  const { sandbox, read, toasts } = restore(Object.assign({}, payloads[10], { trip: KYUSHU_TRIP, ledgerQueue: [QUEUED] }), onSheetTrip);
+  assert.deepStrictEqual(toasts, ['個人狀態已還原'], '同一趟旅程的備份可以還原');
+  assert.deepStrictEqual(read(KEYS.queue).map(function (record) { return record.id; }), ['queued-1']);
+  assert.strictEqual(sandbox.__storage.getItem('trip_ledger_queue_owner'), 'sheet:kyushu-2027', '還原的待送帳標記為目前旅程');
+}
+{
+  const { read } = restore(payloads[10]);
+  assert.strictEqual(read('trip_ledger_queue_owner'), null, '待送帳是空的就不留旅程標記');
+}
+{
+  const sandbox = onSheetTrip(createSandbox());
+  assert.deepStrictEqual(plain(JSON.parse(sandbox.personalStateJson()).trip), KYUSHU_TRIP, '新旅程裝置匯出的備份帶 Trip ID 與名稱');
+}
+
+console.log('personal state restore matrix (v1–v10) tests passed');

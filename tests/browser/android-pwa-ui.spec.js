@@ -13,6 +13,7 @@ test.beforeEach(async({page})=>{
   await installFixedDate(page,'2026-09-07T10:00:00+08:00');
   await page.addInitScript(()=>{
     localStorage.clear();
+    localStorage.setItem('trip_source','{"version":1,"kind":"legacy","migratedAt":0}'); /* v150: an existing Okayama device */
     try{Object.defineProperty(window.navigator,'onLine',{configurable:true,get:()=>false});}catch(ignore){}
     window.fetch=()=>Promise.reject(new TypeError('QA_ANDROID_OFFLINE'));
   });
@@ -46,8 +47,10 @@ test('Android Chromium receives the complete PWA installability inputs',async({p
 test('first browse is unblocked, itinerary is destination-first, and navigation matches each stop',async({page})=>{
   await expect(page.locator('#memberOverlay')).toHaveCount(0);
   await expect(page.locator('#view-today')).toBeVisible();
-  await expect(page.locator('#view-today .tomorrow-item')).toHaveCount(3);
-  await expect(page.locator('#view-today .tomorrow-item').last()).toContainText('還有');
+  /* v151:出發前 hero 只列第一站(與 Day 1 預覽重複,預覽已拿掉);Day 1 以目的地為主的摘要在「行程重點」 */
+  await expect(page.locator('#view-today .pretrip-first-stop')).toHaveText('第一站：10/18（日） 9:00 機場check in');
+  await expect(page.locator('#view-today .tomorrow-item')).toHaveCount(0);
+  await expect(page.locator('#view-today .today-pretrip-day').first()).toContainText('桃園機場第一航廈1樓、ORIX租車 岡山機場、麵酒一照庵 岡山本店');
 
   await page.getByRole('button',{name:'行程',exact:true}).click();
   const airport=page.locator('.item').filter({hasText:'桃園機場第一航廈1樓'}).first();

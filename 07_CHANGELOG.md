@@ -1,6 +1,27 @@
 # 07 版本紀錄
 
-## 2026-10-11 — v149 出發前小改版：第一站、交通彩色標籤、Huninn 字型（候選，待 CI／手機驗收）
+## 2026-10-13 — v151 出發前首頁拿掉重複的「出發當天」預覽（候選，待 CI／手機驗收）
+
+- **來源**：Bar 在 GitHub Pages 驗收 v150 時問「首頁的第一站與下方出發當天內容是否重複」。確認重複：9:00 機場同一站出現三次——v149 的「第一站」、「出發當天 · DAY 1」預覽的第一列（以地點名稱「桃園機場第一航廈1樓」顯示）、下方「行程重點」的 DAY 1 卡。預覽是 v132 為了補「今天沒有排定行程」的語意而加，v149 拿掉那句並改列第一站後，兩者功能重疊。
+- **Bar 裁定（2026-10-13）**：採 A「拿掉出發當天」，不採 B「從第二站開始列」。選項同時核准以 v151 執行的 Tier 2 確認書。
+- **改動**：出發前 hero 只留倒數、第一站與兩顆動作鈕；`renderPreTripBrief()` 與只供它使用的 `.today-pretrip-preview-lbl` 規則移除。「採買清單」與「查看完整行程」放進新的 `.today-hero-actions`（flex、`gap:var(--space-2)`），不再相黏。DAY 1 完整內容由下方「行程重點」與「查看完整行程」提供。旅程中的首頁不變。
+- **版本**：v150 已上 GitHub Pages，原地改會讓已載入 v150 的手機留在快取，所以 forward bump v150→v151（`shell/v151/`、`sw.js`、`netlify.toml`、`runtime-assets.json`、活文件路徑）。`builtin-snapshot.js` 以 v150 asset 離線重產，內容與 timestamp `1790861998387` 不變。發布說明視窗為 `v151` + `['v150','v149','v148','v147']`（v146 滾出）。v150 不單獨上正式站，由 v151 一併帶上。
+- **測試**：`home-simplification.test.js` 改守「hero 沒有 Day 1 預覽、兩顆鈕在同一個 action row」並加間距規則；`ui-ux-v112.test.js` 改為確認預覽函式已移除（`preTripDestinationHighlights` 仍供行程重點使用）；`theme-system.test.js` 更新五筆視窗；`browser/pretrip-ui-v149.spec.js` 新增 320px 情境：第一站只出現一次、hero 不再出現「出發當天」與「桃園機場」、兩顆鈕同列且間距 ≥ 6px、無橫向捲動、行程重點 DAY 1 仍列出桃園機場；`browser/home-v146.spec.js` 的旅程結束情境加上兩顆鈕同列與間距檢查；`browser/android-pwa-ui.spec.js` 原本要求 hero 有 3 筆預覽（最後一筆「還有」），改為檢查第一站與行程重點 DAY 1 的目的地摘要。任一處的動作列被拿掉時，節點測試會失敗。
+- **旅程結束後首頁（Bar 同日追加）**：「清除並打包旅程」與「查看完整行程」自 v146 起同樣相黏，Bar 要求一併處理；兩顆鈕放進同一個 `.today-hero-actions`。
+- **排版**：出發前首頁在 320／375／390px、旅程結束後首頁在 320／390px 截圖檢查，兩顆鈕同列、間距 8px，無橫向捲動。
+- **回滾**：合併前關閉 PR；發布後依 `16_OPS_PLAYBOOK.md` §A1 退回上一個 Netlify 部署（v149），再往前 bump。
+
+## 2026-10-11 — v149 正式發布（released）+ G6 tag，同日真機驗證通過
+
+- **G1**：Bar 2026-10-11 在 GitHub Pages（dev）以手機驗收 v149 後，回覆「看過了，沒問題」並要求合併進 `main`。
+- PR [#53](https://github.com/nick80912-dev/ai-native-projects/pull/53) 以 merge 合併 `dev` `1500ca5` → `main`，merge commit **`f82f817`**。合併前 PR 的 sanity 與 browser-qa 全綠，合併時釘住 head `1500ca5`；`main` 與 `dev` 之間只有 PR #52 的三個 commit。
+- Netlify deploy **`6acb65e22ffa62000807db3b`**：`ready`，`commit_ref` = `f82f817` 相符，`published_at` `2026-10-11T10:33:17Z`，`manual_deploy: false`。22 個新檔（含 `shell/v149/index.html`），6 條 header rule 全過。
+- **§F5 線上內容核對未執行**：工作環境的網路政策仍封鎖正式站網域（CONNECT 403）。以 Netlify 部署資料與 Pages 手機驗收代替；正式站載入 v149 以 Bar 手機確認為準。
+- **真機驗證（2026-10-11）**：Bar 回報正式站手機已更新，「設定 → 資料與版本」顯示 v149；正式站載入 v149 以此為準。
+- **G6 完成（2026-10-11）**：Bar 在 GitHub 以 Release 建立 `production-v149`，指向 `f82f817`（GitHub API 與 `git ls-remote` 皆確認，release 發布於 `2026-10-11T10:39:10Z`）。第一次建立時 tag 沒有產生，Bar 重建後才出現。
+- 回滾：依 `16_OPS_PLAYBOOK.md` §A1 在 Netlify Publish 上一個部署（v148，`commit_ref` `bdb4925`），錨點 `production-v148`。
+
+## 2026-10-11 — v149 出發前小改版：第一站、交通彩色標籤、Huninn 字型（已於同日發布，見上一則）
 
 - **來源**：Bar 參考他人提供的日系繪本風 prompt，請 Claude 提優化建議並做預覽。Bar 2026-10-11 裁定出發前上線三項：首頁第一站、交通彩色標籤、全站 Huninn；出發倒數放大不做（首頁會過長）、線框與圓角評估後不做、繪本主題旅程後研究（backlog #55）。Tier 2 四項確認書經 Bar「核准」，含新開工作分支 `claude/pretrip-v149-ui`。
 - **首頁（出發前）**：拿掉「今天沒有排定行程／出發當天這裡會自動顯示…」兩行，改在標題下列「第一站：10/18（日） 9:00 機場check in」。D-7 倒數不變。
@@ -10,6 +31,22 @@
 - **PWA**：forward bump v148→v149（`shell/v149/`、`sw.js`、`netlify.toml`、`runtime-assets.json`、活文件路徑），`builtin-snapshot.js` 離線重產、內容與 timestamp 不變；發布說明視窗為 `v149` + `['v148','v147','v146','v145']`。換旅程的 PR #51 原本也用 v149，合併前需往前改成 v150。
 - **測試**：新增 `tests/pretrip-ui-v149.test.js`、`tests/browser/pretrip-ui-v149.spec.js`；`ui-font.test.js` 改為「可以連 Google Fonts，但不能擋第一個畫面」並涵蓋所有失敗情境；`theme-system.test.js` 改查新的交通 Emoji 來源。Node 111 個檔案全過、四個 gate 與 `git diff --check` 通過；新 browser spec 6/6。
 - **回滾**：合併前關閉 PR；發布後依 `16_OPS_PLAYBOOK.md` §A2 往前 bump，畫面回到 v148，資料不受影響。
+
+## 2026-10-08 — v150 連接下一趟旅程（2026-10-11 合併 dev，由 v151 一併發布；原編為 v149）
+
+- **需求**：Bar 問「未來換新旅程時要怎麼讓專案接上」。規格 PR [#51](https://github.com/nick80912-dev/ai-native-projects/pull/51)；Bar 2026-10-08 回覆「照建議」核准七項決定，並核准 Tier 2 範圍：只在工作分支實作與完整測試、更新 PR #51，**不合併 dev、不發布、不改 Google Sheet 與已部署的 Apps Script**，合併時機待 10/24 旅程結束後確認。**2026-10-11 Bar 改為出發前上線**，條件是先加「岡山保護期」（Tier 2 確認書經 Bar「核准」），之後合併 dev → GitHub Pages 手機驗收 → 發布。決策見 [ADR 0021](adr/0021-connect-new-trip.md)，操作見[換旅程手冊](docs/new-trip-handbook.md)。
+- **目前旅程**：新模組 `trip-source.js` 管 `trip_source` 紀錄、開機分類與連接交易。有打卡等紀錄的舊手機自動記為岡山（`legacy`），行為不變；沒有紀錄的新手機首頁顯示「尚未連接旅程」（台灣時間 10/24 起，見下方「岡山保護期」）。lifecycle 新增 `unconnected` 模式與 `activate()`。
+- **岡山保護期（2026-10-11）**：發布說明改寫為「岡山旅程期間所有手機照常顯示岡山；10/24 起新安裝的手機才顯示『尚未連接旅程』」。`TripSource.LEGACY_GRACE_UNTIL` = 台灣時間 2026-10-24 00:00。在這之前第一次開啟 v150、沒有任何紀錄的手機也記為岡山（`classifyBoot` 回傳 `legacy-grace`，與 `migrate-legacy` 一樣寫入 `legacy` 來源），旅伴不會在旅程中看到「尚未連接旅程」。之後第一次開啟的新手機才是「尚未連接」。已清除、已連接或來源損壞的手機不受影響。
+- **連接新旅程**：清除旅程後或尚未連接時，設定與首頁出現「連接新旅程」。貼上發布連結 → 下載八表並檢查範本、TripConfig、Apps Script `?action=info` 的 Trip ID → 預覽 → 確認後清掉舊旅程本機資料與照片、寫入快照與來源並重新開啟。任何一步失敗手機不變；中斷後下次開機完成或復原。
+- **資料綁定旅程**：八表下載、團體帳寫入與快速拉取改用目前旅程的發布表與 Endpoint；快照帶 `sourceKey`，開機拒絕別趟快照，新旅程沒有快照時顯示「下載行程」而不是岡山 BUILTIN。待送帳以 `trip_ledger_queue_owner` 標記，不符時暫停送出。
+- **個人備份 v10**：加入 `trip` 身分，別趟的備份與舊版 v1–v9（在新旅程上）整批拒絕；契約見 `docs/personal-state-compatibility.md`。封存與個人帳匯出：新旅程記 `sheet:<Trip ID>`，岡山不變，封存格式維持 v1。
+- **Schema 3.1**：TripConfig 新增選填 `Trip ID`、`Ledger Endpoint`、`Weather Regions GID`；行程總表新增選填「行程ID」欄（依標題名稱找欄，格式與重複由 validator 擋下）。`09_SCHEMA_MAPPING.md` 依 `schemaDoc()` 重產；BUILTIN 刷新工具略過選填鍵與尾端選填欄。新旅程的天氣只用 Sheet 的「天氣地區」分頁，岡山沿用內建城市清單。
+- **Apps Script（只改 repo）**：`ledger-sync.gs` 新增唯讀 `doGet?action=info`，回報 Trip ID 與分帳紀錄標題是否正確；不取鎖、不回傳 Spreadsheet ID。岡山的部署不需更新。
+- **版本號改為 v150（2026-10-11）**：v149 已由出發前小改版（PR #52）使用並合併 dev。本分支合併 dev 後，`shell/v149/` 與 dev 完全相同，連接新旅程改放在以 v149 為基礎的 `shell/v150/`，發布說明視窗為 `v150` + `v149`…`v146`。
+- **PWA**：forward bump v149→v150（`shell/v150/`、`sw.js`、`netlify.toml`、`runtime-assets.json`、活文件路徑）；`manifest.webmanifest` 的 `name` 改為 `TripPilot`。`builtin-snapshot.js` 由 v149 asset 離線重產，內容與 timestamp `1790861998387` 不變。五筆發布說明視窗為 `v150` + `['v149','v148','v147','v146']`。
+- **順手修正**：開發中發現 `trip-source.js` 以小寫讀匯率與結算幣別，真實試算表會永遠卡在幣別檢查；已改用 Schema 欄位名稱，並新增「測試資料的欄位必須是 schema.js 欄位」的契約測試。
+- **驗證**：四個 gate 通過；Node 114 個檔案全過（新增 `trip-source`、`itinerary-stop-id`、`weather-regions`；`trip-source` 含保護期前後與邊界、手機時鐘）；新 `browser/trip-connect.spec.js` 10 項（新手機（時鐘固定在 10/24 之後）、保護期內的新手機沿用岡山、連接、Endpoint 不符、岡山升級、無快照、待送帳隔離、備份拒絕、天氣地區）全過。拿掉保護期規則時，保護期的單元測試與瀏覽器測試都會失敗。本機 Chromium 另有 2 項失敗（個人帳匯出下載檔名、SW 離線子資源狀態碼），在未修改的已推送版本上同樣失敗，PR CI 的 browser-qa 在同一份程式上是綠的，判定為本機 Chromium 差異。
+- **已知限制**：清除需全團結清；10/24 以後才第一次開啟 v150、又沒有任何紀錄的手機（例如重裝 App 來結帳）會是「尚未連接」，看不到岡山；手機日期錯設到 10/24 以後的新手機也一樣；root v110 bridge 不能改，極舊裝置第一次開啟仍可能先看到岡山；頂欄徽章仍是岡山桃子圖示。回滾：合併前關閉 PR；發布後依 `16_OPS_PLAYBOOK.md` §A2 往前 bump。
 
 ## 2026-10-07 — v148 正式發布（released）+ G6 tag；2026-10-08 真機驗證通過
 
