@@ -1,6 +1,19 @@
 # 07 版本紀錄
 
-## 2026-10-13 — v151 出發前首頁拿掉重複的「出發當天」預覽（候選，待 CI／手機驗收）
+## 2026-10-13 — v151 正式發布（released，含 v150 連接新旅程）+ G6 tag，同日真機驗證通過
+
+- **G1**：Bar 2026-10-13 在 GitHub Pages（dev `620d4cb`）以手機驗收 v151 後回覆「手機看過了，沒問題，合併進 main」。v150 先前已於 Pages 驗收 Okayama 首頁、沒有「尚未連接旅程」與發布說明。
+- PR [#55](https://github.com/nick80912-dev/ai-native-projects/pull/55) 以 merge 合併 `dev` `620d4cb` → `main`，merge commit **`291c300`**。合併前 PR 的 sanity 與 browser-qa 全綠，`dev` 上同一 commit 的 qa-sanity 也全綠；合併時釘住 head `620d4cb`。
+- **正式站從 v149 直接到 v151**：v150（連接新旅程、岡山保護期，PR [#51](https://github.com/nick80912-dev/ai-native-projects/pull/51)）沒有單獨上正式站，由 v151（PR [#54](https://github.com/nick80912-dev/ai-native-projects/pull/54)）一併帶上。
+- Netlify deploy **`6acd91292db2a408cf83a187`**：`ready`，`commit_ref` = `291c300` 相符，`published_at` `2026-10-13T02:02:27Z`，`manual_deploy: false`。60 個新檔（含 `shell/v150/index.html`、`shell/v151/index.html`），6 條 header rule 全過。
+- `main` CI run `38334980958`（qa-sanity）：success。
+- **§F5 線上內容核對未執行**：工作環境的網路政策仍封鎖正式站網域。以 Netlify 部署資料與 Pages 手機驗收代替；正式站載入 v151 以 Bar 手機確認為準。
+- **真機驗證（2026-10-13）**：Bar 回報正式站手機已更新到 v151。
+- **G6 完成（2026-10-13）**：Bar 在 GitHub 以 Release 建立 `production-v151`，指向 `291c300`（GitHub API 與 `git ls-remote` 皆確認，release 發布於 `2026-10-13T02:20:46Z`）。
+- **岡山保護期生效中**：台灣時間 2026-10-24 00:00 以前第一次開啟 v151、沒有紀錄的手機也沿用岡山；Google Sheet 與已部署的 Apps Script 未改動。
+- 回滾：依 `16_OPS_PLAYBOOK.md` §A1 在 Netlify Publish 上一個部署（v149，`commit_ref` `f82f817`），錨點 `production-v149`，再往前 bump。v149 不讀 `trip_source`，手機會回到岡山；v151 做的 v10 個人備份在 v149 無法還原。
+
+## 2026-10-13 — v151 出發前首頁拿掉重複的「出發當天」預覽（已於同日發布，見上一則）
 
 - **來源**：Bar 在 GitHub Pages 驗收 v150 時問「首頁的第一站與下方出發當天內容是否重複」。確認重複：9:00 機場同一站出現三次——v149 的「第一站」、「出發當天 · DAY 1」預覽的第一列（以地點名稱「桃園機場第一航廈1樓」顯示）、下方「行程重點」的 DAY 1 卡。預覽是 v132 為了補「今天沒有排定行程」的語意而加，v149 拿掉那句並改列第一站後，兩者功能重疊。
 - **Bar 裁定（2026-10-13）**：採 A「拿掉出發當天」，不採 B「從第二站開始列」。選項同時核准以 v151 執行的 Tier 2 確認書。
@@ -18,6 +31,7 @@
 - Netlify deploy **`6acb65e22ffa62000807db3b`**：`ready`，`commit_ref` = `f82f817` 相符，`published_at` `2026-10-11T10:33:17Z`，`manual_deploy: false`。22 個新檔（含 `shell/v149/index.html`），6 條 header rule 全過。
 - **§F5 線上內容核對未執行**：工作環境的網路政策仍封鎖正式站網域（CONNECT 403）。以 Netlify 部署資料與 Pages 手機驗收代替；正式站載入 v149 以 Bar 手機確認為準。
 - **真機驗證（2026-10-11）**：Bar 回報正式站手機已更新，「設定 → 資料與版本」顯示 v149；正式站載入 v149 以此為準。
+- `main` CI run `38132351499`（qa-sanity）：success。
 - **G6 完成（2026-10-11）**：Bar 在 GitHub 以 Release 建立 `production-v149`，指向 `f82f817`（GitHub API 與 `git ls-remote` 皆確認，release 發布於 `2026-10-11T10:39:10Z`）。第一次建立時 tag 沒有產生，Bar 重建後才出現。
 - 回滾：依 `16_OPS_PLAYBOOK.md` §A1 在 Netlify Publish 上一個部署（v148，`commit_ref` `bdb4925`），錨點 `production-v148`。
 
@@ -32,7 +46,7 @@
 - **測試**：新增 `tests/pretrip-ui-v149.test.js`、`tests/browser/pretrip-ui-v149.spec.js`；`ui-font.test.js` 改為「可以連 Google Fonts，但不能擋第一個畫面」並涵蓋所有失敗情境；`theme-system.test.js` 改查新的交通 Emoji 來源。Node 111 個檔案全過、四個 gate 與 `git diff --check` 通過；新 browser spec 6/6。
 - **回滾**：合併前關閉 PR；發布後依 `16_OPS_PLAYBOOK.md` §A2 往前 bump，畫面回到 v148，資料不受影響。
 
-## 2026-10-08 — v150 連接下一趟旅程（2026-10-11 合併 dev，由 v151 一併發布；原編為 v149）
+## 2026-10-08 — v150 連接下一趟旅程（2026-10-11 合併 dev，2026-10-13 隨 v151 發布；原編為 v149）
 
 - **需求**：Bar 問「未來換新旅程時要怎麼讓專案接上」。規格 PR [#51](https://github.com/nick80912-dev/ai-native-projects/pull/51)；Bar 2026-10-08 回覆「照建議」核准七項決定，並核准 Tier 2 範圍：只在工作分支實作與完整測試、更新 PR #51，**不合併 dev、不發布、不改 Google Sheet 與已部署的 Apps Script**，合併時機待 10/24 旅程結束後確認。**2026-10-11 Bar 改為出發前上線**，條件是先加「岡山保護期」（Tier 2 確認書經 Bar「核准」），之後合併 dev → GitHub Pages 手機驗收 → 發布。決策見 [ADR 0021](adr/0021-connect-new-trip.md)，操作見[換旅程手冊](docs/new-trip-handbook.md)。
 - **目前旅程**：新模組 `trip-source.js` 管 `trip_source` 紀錄、開機分類與連接交易。有打卡等紀錄的舊手機自動記為岡山（`legacy`），行為不變；沒有紀錄的新手機首頁顯示「尚未連接旅程」（台灣時間 10/24 起，見下方「岡山保護期」）。lifecycle 新增 `unconnected` 模式與 `activate()`。
