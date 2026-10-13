@@ -24,15 +24,15 @@
      非外殼同源 fetch 用 no-cache —— 允許 304,兼顧流量與更新
    已安裝外殼不再逐次打網路,避免舊 worker 把新部署的 runtime module 寫入舊世代快取。
 */
-var SW_VERSION='v151';
+var SW_VERSION='v152';
 var CACHE_NAME='okayama-trip-'+SW_VERSION;
-var CURRENT_DOCUMENT='./shell/v151/index.html';
-var CURRENT_APP_VERSION='./shell/v151/app-version.js';
-var CURRENT_BUILTIN='./shell/v151/builtin-snapshot.js';
+var CURRENT_DOCUMENT='./shell/v152/index.html';
+var CURRENT_APP_VERSION='./shell/v152/app-version.js';
+var CURRENT_BUILTIN='./shell/v152/builtin-snapshot.js';
 var SHELL = [
-  './shell/v151/index.html',
-  './shell/v151/app-version.js',
-  './shell/v151/builtin-snapshot.js',
+  './shell/v152/index.html',
+  './shell/v152/app-version.js',
+  './shell/v152/builtin-snapshot.js',
   './navigation-intent.js',
   './diagnostic-impact.js',
   './today-view.js',
