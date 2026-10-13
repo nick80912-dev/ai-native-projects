@@ -469,6 +469,8 @@ v143 已透過 `dev → main` PR #40 合併並完成正式站部署核對。G1 �
 
 → **v149 已正式發布(2026-10-11)**:首頁第一站、交通彩色標籤、全站 Huninn(不擋第一個畫面)。PR [#52](https://github.com/nick80912-dev/ai-native-projects/pull/52) 合併 `dev`;Bar 以 GitHub Pages 手機驗收後,PR [#53](https://github.com/nick80912-dev/ai-native-projects/pull/53) 合併 `main`(`f82f817`),Netlify deploy `6acb65e2` 相符。Bar 回報正式站手機顯示 v149,並建立 tag `production-v149` → `f82f817`。 <!-- generation-exempt: 發布紀錄 -->
 
+→ **v152 候選(2026-10-13)**:診斷面板新增「目前旅程」、除錯報告附版本與目前旅程、紀錄改手機時間與白話說明(Bar 選 A、B、C,出發前做;D／E／F 旅程後)。流程:PR 進 `dev` → GitHub Pages 手機驗收 → 發布,10/17 前。 <!-- generation-exempt: 候選分支狀態 -->
+
 → **v151 已正式發布(2026-10-13)**:出發前首頁拿掉與「第一站」重複的「出發當天」預覽(Bar 選 A),出發前與旅程結束後首頁的兩顆動作鈕同列並留間距。PR [#54](https://github.com/nick80912-dev/ai-native-projects/pull/54) 合併 `dev`;Bar 以 GitHub Pages 手機驗收後,PR [#55](https://github.com/nick80912-dev/ai-native-projects/pull/55) 合併 `main`(`291c300`),Netlify deploy `6acd9129` 相符;Bar 回報正式站手機為 v151,並建立 tag `production-v151` → `291c300`。v150 沒有單獨上正式站。 <!-- generation-exempt: 發布紀錄 -->
 
 → **v150(2026-10-08 實作;2026-10-11 由 v149 改為 v150;2026-10-11 合併 `dev`;2026-10-13 隨 v151 發布)**:第二階段「連接下一趟旅程」(ADR 0021、[換旅程手冊](../docs/new-trip-handbook.md))已在工作分支 `claude/trusting-pascal-bld58l` 實作完成,PR [#51](https://github.com/nick80912-dev/ai-native-projects/pull/51) 已合併 `dev`(`9d21bd8`)。2026-10-11 Bar 改為出發前上線,條件是先加「岡山保護期」(台灣時間 10/24 以前沒有紀錄的新手機也沿用岡山;Tier 2 確認書經 Bar「核准」)。流程:合併 dev → GitHub Pages 手機驗收 → 發布;**不改 Google Sheet 與已部署 Apps Script**。 <!-- generation-exempt: 候選分支狀態 -->
