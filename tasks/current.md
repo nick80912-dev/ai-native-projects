@@ -457,7 +457,7 @@ v143 已透過 `dev → main` PR #40 合併並完成正式站部署核對。G1 �
 - **真機驗證通過(2026-09-24)**:Bar 回報手機驗證 OK(本版無可見變化)。BB4 八項維持未驗。
 ## 下一棒
 
-→ **現況(2026-10-13)**:正式站為 **v151**(`main` `291c300`;tag `production-v151`;上一個錨點 `production-v149` → `f82f817`)。v151 含 v150 的連接新旅程與岡山保護期(台灣時間 10/24 以前沒有紀錄的新手機也沿用岡山)。 <!-- generation-exempt: 發布當下的正式站錨點 -->(2026-10-06)**Bar 回報所有真機驗收已完成** —— TP141～TP146、v137／v138／v140／v142、BB4 Android 八項(含 BB4-a)與 v115～v121 iPhone 補驗,`docs/device-acceptance-log.md` 已整批勾選。長期掛著的 BB4 至此結案。
+→ **現況(2026-10-13)**:正式站為 **v152**(`main` `1b43c95`;tag `production-v152`;上一個錨點 `production-v151` → `291c300`)。v152 含 v150 的連接新旅程與岡山保護期(台灣時間 10/24 以前沒有紀錄的新手機也沿用岡山)、v151 的出發前首頁精簡、v152 的診斷面板「目前旅程」。 <!-- generation-exempt: 發布當下的正式站錨點 -->(2026-10-06)**Bar 回報所有真機驗收已完成** —— TP141～TP146、v137／v138／v140／v142、BB4 Android 八項(含 BB4-a)與 v115～v121 iPhone 補驗,`docs/device-acceptance-log.md` 已整批勾選。長期掛著的 BB4 至此結案。
 
 → **#42 已處理(2026-10-06)**:CI 兩個 job 暫時釘 `ubuntu-24.04`,避開 10/19 起分批移轉 Ubuntu 26.04 落在旅程期間。**回程後依 #54 驗證 26.04 再解除**(GitHub 預計 11/19 完成移轉)。
 
@@ -469,7 +469,7 @@ v143 已透過 `dev → main` PR #40 合併並完成正式站部署核對。G1 �
 
 → **v149 已正式發布(2026-10-11)**:首頁第一站、交通彩色標籤、全站 Huninn(不擋第一個畫面)。PR [#52](https://github.com/nick80912-dev/ai-native-projects/pull/52) 合併 `dev`;Bar 以 GitHub Pages 手機驗收後,PR [#53](https://github.com/nick80912-dev/ai-native-projects/pull/53) 合併 `main`(`f82f817`),Netlify deploy `6acb65e2` 相符。Bar 回報正式站手機顯示 v149,並建立 tag `production-v149` → `f82f817`。 <!-- generation-exempt: 發布紀錄 -->
 
-→ **v152 候選(2026-10-13)**:診斷面板新增「目前旅程」、除錯報告附版本與目前旅程、紀錄改手機時間與白話說明(Bar 選 A、B、C,出發前做;D／E／F 旅程後)。流程:PR 進 `dev` → GitHub Pages 手機驗收 → 發布,10/17 前。 <!-- generation-exempt: 候選分支狀態 -->
+→ **v152 已正式發布(2026-10-13)**:診斷面板新增「目前旅程」、除錯報告附版本與目前旅程、紀錄改手機時間與白話說明(Bar 選 A、B、C;D／E／F 見 backlog #56)。PR [#58](https://github.com/nick80912-dev/ai-native-projects/pull/58) 合併 `dev`,PR [#59](https://github.com/nick80912-dev/ai-native-projects/pull/59) 合併 `main`(`1b43c95`),Netlify deploy `6acdcce0` 相符;Bar 指示略過 GitHub Pages 驗收,發布後回報正式站手機為 v152,並建立 tag `production-v152` → `1b43c95`。 <!-- generation-exempt: 發布紀錄 -->
 
 → **v151 已正式發布(2026-10-13)**:出發前首頁拿掉與「第一站」重複的「出發當天」預覽(Bar 選 A),出發前與旅程結束後首頁的兩顆動作鈕同列並留間距。PR [#54](https://github.com/nick80912-dev/ai-native-projects/pull/54) 合併 `dev`;Bar 以 GitHub Pages 手機驗收後,PR [#55](https://github.com/nick80912-dev/ai-native-projects/pull/55) 合併 `main`(`291c300`),Netlify deploy `6acd9129` 相符;Bar 回報正式站手機為 v151,並建立 tag `production-v151` → `291c300`。v150 沒有單獨上正式站。 <!-- generation-exempt: 發布紀錄 -->
 
