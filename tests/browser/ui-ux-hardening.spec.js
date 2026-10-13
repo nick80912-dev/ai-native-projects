@@ -167,7 +167,8 @@ test('presentation tokens preserve touched component geometry across all six the
     expect(theme.navigation.fontSize,theme.id+' navigation meta size').toBe('12px');
     expect(theme.navigation.radius,theme.id+' navigation status radius').toBe('8px');
     expect(theme.diagnostic.radius,theme.id+' diagnostic radius').toBe('7px');
-    expect(theme.diagnosticTitle.fontSize,theme.id+' diagnostic title size').toBe('12px');
+    /* v153：診斷紀錄標題改用 --font-body(14px),仍在既有字級 token 內 */
+    expect(theme.diagnosticTitle.fontSize,theme.id+' diagnostic title size').toBe('14px');
     expect(theme.primary.fontSize,theme.id+' primary action size').toBe('13.5px');
     expect(theme.primary.radius,theme.id+' primary action radius').toBe('9px');
     expect(theme.quiet.fontSize,theme.id+' quiet action size').toBe('14px');
