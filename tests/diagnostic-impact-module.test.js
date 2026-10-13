@@ -73,4 +73,28 @@ assert.deepStrictEqual(impact.project({level:'warn',message:'未知的同步警�
   raw:'未知的同步警告'
 });
 
+/* v152：旅途中常見訊息的白話說明。只認確切寫法與分類。 */
+[
+  ['repository','分帳佇列屬於其他旅程（sheet:kyushu-2027），已暫停送出','action-required','待送的分帳屬於其他旅程，已暫停送出','這些紀錄不會送出，也不會刪除；請截圖給旅程負責人',''],
+  ['repository','分帳送出失敗:Failed to fetch — 已留在本機佇列','degraded','分帳紀錄還沒送出','紀錄仍在這支手機','連上網路後會自動補送'],
+  ['repository','背景同步失敗：Failed to fetch','degraded','分帳紀錄背景送出失敗','紀錄仍在這支手機','連上網路後會自動補送'],
+  ['sync','ledger 下載失敗 — 沿用目前分帳快照,其餘工作表繼續更新','degraded','分帳紀錄這次沒有下載成功','分帳暫時顯示上次的資料','其他行程資料已更新'],
+  ['sync','SW 註冊失敗:SecurityError','degraded','離線功能沒有啟用','沒有網路時可能打不開 App','連網重新開啟 App 會再試一次'],
+  ['data','天氣讀取未完成；可於首頁重試。','degraded','天氣暫時讀不到','不影響行程與分帳','可於首頁重試'],
+  ['data','天氣快取未能保存；目前資料僅在本次開啟期間可用。','degraded','天氣資料沒有存到手機','重新開啟 App 後要再讀一次天氣','']
+].forEach(function([category,message,severity,title,impactText,fallback]){
+  assert.deepStrictEqual(impact.project({category:category,level:'warn',message:message}),{severity:severity,title:title,impact:impactText,fallback:fallback,raw:message},message);
+});
+[
+  ['sync','分帳佇列屬於其他旅程（sheet:x），已暫停送出'],
+  ['data','ledger 下載失敗 — 沿用目前分帳快照,其餘工作表繼續更新'],
+  ['repository','天氣讀取未完成；可於首頁重試。'],
+  ['repository','分帳送出失敗:Failed to fetch'],
+  ['sync','ledger 增量讀取降級回 CSV:HTTP 500']
+].forEach(function([category,message]){
+  const projected=impact.project({category:category,level:'warn',message:message});
+  assert.strictEqual(projected.title,message,'a near match or another category keeps the raw text: '+message);
+  assert.strictEqual(projected.impact,'請查看原始紀錄');
+});
+
 console.log('diagnostic impact module tests passed');
