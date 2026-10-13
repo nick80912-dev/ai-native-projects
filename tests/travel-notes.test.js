@@ -177,12 +177,32 @@ function readAppVersionHelpers(){
   assert(fallbackIdA&&fallbackIdB&&fallbackIdA!==fallbackIdB,'older WebKit fallback IDs are non-empty and unique');
 
   sandbox.__storage.setItem('trip_travel_notes',JSON.stringify([first]));
-  const diagnosticsHtml=sandbox.renderTravelNotesSection();
-  assert(diagnosticsHtml.includes('旅途紀錄'),'diagnostics contains the travel-note section');
-  assert(diagnosticsHtml.includes('異常')&&diagnosticsHtml.includes('優化建議'),'note form exposes both approved kinds');
-  assert(diagnosticsHtml.includes('待評估')&&diagnosticsHtml.includes('標記已處理'),'note list exposes both statuses');
-  assert(diagnosticsHtml.includes('maxlength="500"'),'note editor enforces the visible length cap');
-  assert(html.slice(html.indexOf('function openDiagnostics('),html.indexOf('function setupDiagnostics(')).includes('renderTravelNotesSection()'),'the diagnostics panel mounts the real travel-note component');
+  const sectionHtml=sandbox.renderTravelNotesSection();
+  assert(sectionHtml.startsWith('<div id="travelNotesSection">'),'the section has one root that refreshTravelNotes can replace');
+  assert(sectionHtml.includes('新增旅途紀錄'),'the settings page contains the travel-note form');
+  assert(sectionHtml.includes('異常')&&sectionHtml.includes('優化建議'),'note form exposes both approved kinds');
+  assert(sectionHtml.includes('>類型<')&&sectionHtml.includes('>篩選<'),'the kind and filter rows are labelled');
+  assert(sectionHtml.includes('待評估')&&sectionHtml.includes('標記已處理'),'note list exposes both statuses');
+  assert(sectionHtml.includes('已記下 1 筆（1 筆待評估）'),'the list heading counts notes and pending notes');
+  assert(sectionHtml.includes('maxlength="500"'),'note editor enforces the visible length cap');
+  /* v153：卡片時間用手機當地時間，頁面與連線改成中文；不再顯示 UTC 的 ISO 字串 */
+  const stored=new Date(first.updatedAt);
+  const pad=value=>String(value).padStart(2,'0');
+  const localLabel=(stored.getMonth()+1)+'/'+stored.getDate()+' '+pad(stored.getHours())+':'+pad(stored.getMinutes());
+  assert(sectionHtml.includes('<div class="travel-note-meta">'+localLabel+' · 購物 · v72 · 離線 · 離線資料 · 資料提醒 1 項</div>'),'card meta is local time with readable labels');
+  assert(!sectionHtml.includes(first.updatedAt),'the card no longer shows the raw ISO time');
+  assert.strictEqual(sandbox.travelNotePendingCount(),1,'pending notes are counted for the Settings and diagnostics entries');
+  sandbox.updateTravelNoteStatus(first.id,'resolved');
+  assert.strictEqual(sandbox.travelNotePendingCount(),0,'resolved notes are not pending');
+  /* v153：旅途紀錄搬到設定頁；操作只重畫這一區，不再重開診斷面板 */
+  const actionSource=source.slice(source.indexOf('function setTravelNoteKind('),source.indexOf('function travelNotesText('));
+  assert(!actionSource.includes('openDiagnostics()'),'travel-note actions no longer reopen the diagnostics panel');
+  assert.strictEqual((actionSource.match(/refreshTravelNotes\(\);/g)||[]).length,7,'every travel-note action refreshes the settings section');
+  const settingsPageSource=html.slice(html.indexOf('function renderSettingsPage('),html.indexOf('function mergedLedgerRecords('));
+  assert(settingsPageSource.includes("if(page==='travel-notes')return renderSettingsHeader('旅途紀錄',false)+renderTravelNotesSection();"),'Settings mounts the real travel-note component');
+  const openSource=html.slice(html.indexOf('function openDiagnostics('),html.indexOf('function setupDiagnostics('));
+  assert(!openSource.includes('renderTravelNotesSection()'),'the diagnostics panel no longer embeds the travel-note form');
+  assert(openSource.includes('renderDiagnosticTravelNotesLink()'),'the diagnostics panel links to the travel-note page');
 
   console.log('travel notes tests passed');
 })().catch(error=>{
