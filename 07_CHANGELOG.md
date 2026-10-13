@@ -5,7 +5,7 @@
 - **G1（略過 Pages 驗收，Bar 指示）**：v152 合併 `dev` 前 Bar 回報「手機看過了，沒問題」；經提醒當時 GitHub Pages 仍是 v151 後，Bar 仍指示「merge into main」。因此本版**沒有在 GitHub Pages 上驗收 v152**，改以發布後的正式站手機驗收為準。PR [#58](https://github.com/nick80912-dev/ai-native-projects/pull/58) 的 sanity／browser-qa 全綠後合併 `dev`（`0d099e4`），本機完整 Chromium 313/315（兩項為已知本機差異）。
 - PR [#59](https://github.com/nick80912-dev/ai-native-projects/pull/59) 以 merge 合併 `dev` `0d099e4` → `main`，merge commit **`1b43c95`**。合併前 PR 的 sanity 與 browser-qa 全綠，合併時釘住 head `0d099e4`。
 - Netlify deploy **`6acdcce038f1243c7162a83a`**：`ready`，`commit_ref` = `1b43c95` 相符，`published_at` `2026-10-13T06:17:14Z`，`manual_deploy: false`。23 個新檔（含 `shell/v152/index.html`），6 條 header rule 全過。
-- `main` CI run `38355841367`（qa-sanity）：執行中，結果待補。
+- `main` CI run `38355841367`（qa-sanity）：success。
 - **§F5 線上內容核對未執行**：工作環境的網路政策仍封鎖正式站網域；正式站載入 v152 以 Bar 手機確認為準。
 - **真機驗證（2026-10-13）**：Bar 回報正式站手機已更新到 v152。
 - **G6 完成（2026-10-13）**：Bar 在 GitHub 以 Release 建立 `production-v152`，指向 `1b43c95`（GitHub API 與 `git ls-remote` 皆確認，release 發布於 `2026-10-13T06:22:41Z`）。第一次在 v152 合併 `main` 前建立，指向 `6689bfd`（v151 程式）；第二次只刪了 release、沿用舊 tag；第三次刪除 tag 後重建才正確。之後建 tag 前先確認 `main` 最新 commit 是發布 PR 的 merge commit。
