@@ -1,6 +1,6 @@
 # ADR 0021 — 連接下一趟旅程（每趟一份 Sheet）
 
-> 狀態：Accepted（2026-10-08，Bar 回覆「照建議」核准七項決定與 Tier 2 範圍；v150 候選在工作分支；2026-10-11 Bar 改為出發前上線，條件是先加岡山保護期，Tier 2 確認書經 Bar「核准」）。規格：[connect-new-trip-design](../docs/superpowers/specs/2026-10-08-connect-new-trip-design.md)。
+> 狀態：Accepted（2026-10-08，Bar 回覆「照建議」核准七項決定與 Tier 2 範圍；v150 候選在工作分支；2026-10-11 Bar 改為出發前上線，條件是先加岡山保護期，Tier 2 確認書經 Bar「核准」；2026-10-13 隨 v151 發布到正式站，tag `production-v151`）。規格：[connect-new-trip-design](../docs/superpowers/specs/2026-10-08-connect-new-trip-design.md)。
 
 ## Decision
 
