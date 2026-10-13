@@ -6,7 +6,7 @@
 - **Bar 裁定（2026-10-13）**：採 A「拿掉出發當天」，不採 B「從第二站開始列」。選項同時核准以 v151 執行的 Tier 2 確認書。
 - **改動**：出發前 hero 只留倒數、第一站與兩顆動作鈕；`renderPreTripBrief()` 與只供它使用的 `.today-pretrip-preview-lbl` 規則移除。「採買清單」與「查看完整行程」放進新的 `.today-hero-actions`（flex、`gap:var(--space-2)`），不再相黏。DAY 1 完整內容由下方「行程重點」與「查看完整行程」提供。旅程中的首頁不變。
 - **版本**：v150 已上 GitHub Pages，原地改會讓已載入 v150 的手機留在快取，所以 forward bump v150→v151（`shell/v151/`、`sw.js`、`netlify.toml`、`runtime-assets.json`、活文件路徑）。`builtin-snapshot.js` 以 v150 asset 離線重產，內容與 timestamp `1790861998387` 不變。發布說明視窗為 `v151` + `['v150','v149','v148','v147']`（v146 滾出）。v150 不單獨上正式站，由 v151 一併帶上。
-- **測試**：`home-simplification.test.js` 改守「hero 沒有 Day 1 預覽、兩顆鈕在同一個 action row」並加間距規則；`ui-ux-v112.test.js` 改為確認預覽函式已移除（`preTripDestinationHighlights` 仍供行程重點使用）；`theme-system.test.js` 更新五筆視窗；`browser/pretrip-ui-v149.spec.js` 新增 320px 情境：第一站只出現一次、hero 不再出現「出發當天」與「桃園機場」、兩顆鈕同列且間距 ≥ 6px、無橫向捲動、行程重點 DAY 1 仍列出桃園機場；`browser/home-v146.spec.js` 的旅程結束情境加上兩顆鈕同列與間距檢查。任一處的動作列被拿掉時，節點測試會失敗。
+- **測試**：`home-simplification.test.js` 改守「hero 沒有 Day 1 預覽、兩顆鈕在同一個 action row」並加間距規則；`ui-ux-v112.test.js` 改為確認預覽函式已移除（`preTripDestinationHighlights` 仍供行程重點使用）；`theme-system.test.js` 更新五筆視窗；`browser/pretrip-ui-v149.spec.js` 新增 320px 情境：第一站只出現一次、hero 不再出現「出發當天」與「桃園機場」、兩顆鈕同列且間距 ≥ 6px、無橫向捲動、行程重點 DAY 1 仍列出桃園機場；`browser/home-v146.spec.js` 的旅程結束情境加上兩顆鈕同列與間距檢查；`browser/android-pwa-ui.spec.js` 原本要求 hero 有 3 筆預覽（最後一筆「還有」），改為檢查第一站與行程重點 DAY 1 的目的地摘要。任一處的動作列被拿掉時，節點測試會失敗。
 - **旅程結束後首頁（Bar 同日追加）**：「清除並打包旅程」與「查看完整行程」自 v146 起同樣相黏，Bar 要求一併處理；兩顆鈕放進同一個 `.today-hero-actions`。
 - **排版**：出發前首頁在 320／375／390px、旅程結束後首頁在 320／390px 截圖檢查，兩顆鈕同列、間距 8px，無橫向捲動。
 - **回滾**：合併前關閉 PR；發布後依 `16_OPS_PLAYBOOK.md` §A1 退回上一個 Netlify 部署（v149），再往前 bump。
