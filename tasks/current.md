@@ -471,6 +471,8 @@ v143 已透過 `dev → main` PR #40 合併並完成正式站部署核對。G1 �
 
 → **v152 已正式發布(2026-10-13)**:診斷面板新增「目前旅程」、除錯報告附版本與目前旅程、紀錄改手機時間與白話說明(Bar 選 A、B、C;D／E／F 見 backlog #56)。PR [#58](https://github.com/nick80912-dev/ai-native-projects/pull/58) 合併 `dev`,PR [#59](https://github.com/nick80912-dev/ai-native-projects/pull/59) 合併 `main`(`1b43c95`),Netlify deploy `6acdcce0` 相符;Bar 指示略過 GitHub Pages 驗收,發布後回報正式站手機為 v152,並建立 tag `production-v152` → `1b43c95`。 <!-- generation-exempt: 發布紀錄 -->
 
+→ **v153 候選(2026-10-13,尚未發布)**:診斷面板重新整理 —— 最上方摘要、目前旅程狀態小標、紀錄最新 5 則、測試工具收合並濃縮、旅途紀錄搬到設定頁、設定頁可開面板、Esc／dialog 語意(backlog #56 的 D／E／F 提前完成;Bar 核准示意圖並要求測試工具再濃縮)。待開 PR 進 `dev`、CI、Bar 以 GitHub Pages 手機驗收後再發布。 <!-- generation-exempt: 候選紀錄 -->
+
 → **v151 已正式發布(2026-10-13)**:出發前首頁拿掉與「第一站」重複的「出發當天」預覽(Bar 選 A),出發前與旅程結束後首頁的兩顆動作鈕同列並留間距。PR [#54](https://github.com/nick80912-dev/ai-native-projects/pull/54) 合併 `dev`;Bar 以 GitHub Pages 手機驗收後,PR [#55](https://github.com/nick80912-dev/ai-native-projects/pull/55) 合併 `main`(`291c300`),Netlify deploy `6acd9129` 相符;Bar 回報正式站手機為 v151,並建立 tag `production-v151` → `291c300`。v150 沒有單獨上正式站。 <!-- generation-exempt: 發布紀錄 -->
 
 → **v150(2026-10-08 實作;2026-10-11 由 v149 改為 v150;2026-10-11 合併 `dev`;2026-10-13 隨 v151 發布)**:第二階段「連接下一趟旅程」(ADR 0021、[換旅程手冊](../docs/new-trip-handbook.md))已在工作分支 `claude/trusting-pascal-bld58l` 實作完成,PR [#51](https://github.com/nick80912-dev/ai-native-projects/pull/51) 已合併 `dev`(`9d21bd8`)。2026-10-11 Bar 改為出發前上線,條件是先加「岡山保護期」(台灣時間 10/24 以前沒有紀錄的新手機也沿用岡山;Tier 2 確認書經 Bar「核准」)。流程:合併 dev → GitHub Pages 手機驗收 → 發布;**不改 Google Sheet 與已部署 Apps Script**。 <!-- generation-exempt: 候選分支狀態 -->

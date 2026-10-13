@@ -14,7 +14,7 @@
 - 成功抵達後，目標必須捲到有效 sticky header 下方並套用單一 `.is-navigation-target` 樣式 1000ms，再以 `.is-navigation-target-fading` 淡出 200ms；完整「已定位：…」只存在 visually-hidden `role="status" aria-live="polite"`。`prefers-reduced-motion: reduce` 在 1000ms 後直接清除，不播放 transition。
 - `shopping-list` 只開啟既有 overlay，不改 `curView`。關閉後依序回復仍存在的原 launcher、同一穩定身分的 replacement launcher，或來源 tab，並明確回復來源捲動位置；focus options 不支援或被忽略時也不得讓頁面跳位。
 - 找不到目標時仍開啟目的 view 的正常位置，顯示不阻擋操作的「找不到對應地點」、記錄 Render diagnostic 並安全結束 intent；不得 throw 或錯誤套用其他頁面的舊捲動位置。
-- 診斷面板可將原始 AppLog 顯示為 `info`、`degraded` 或 `action-required`，並補上當前影響與可用 fallback；已知 Ledger 增量讀取逾時必須說明目前仍可使用一般 CSV 同步。原始技術 message 必須仍可見、正確 escape，複製報告不得混入投影文案。v152 起：面板以手機當地時間（月/日 時:分:秒）顯示紀錄時間；投影標題與原文相同時不重複顯示「原始：」；面板與複製報告都附「目前旅程」（連接的旅程、旅程狀態、岡山保護期、行程資料、團體帳待送／等待讀回／因屬其他旅程暫停），報告的 AppLog 仍是原始內容與 ISO 時間。
+- 診斷面板可將原始 AppLog 顯示為 `info`、`degraded` 或 `action-required`，並補上當前影響與可用 fallback；已知 Ledger 增量讀取逾時必須說明目前仍可使用一般 CSV 同步。原始技術 message 必須仍可見、正確 escape，複製報告不得混入投影文案。v152 起：面板以手機當地時間（月/日 時:分:秒）顯示紀錄時間；投影標題與原文相同時不重複顯示「原始：」；面板與複製報告都附「目前旅程」（連接的旅程、旅程狀態、岡山保護期、行程資料、團體帳待送／等待讀回／因屬其他旅程暫停），報告的 AppLog 仍是原始內容與 ISO 時間。v153 起：面板是對話框（`role="dialog"`、Esc 關閉、44px 關閉鈕、「複製除錯報告」固定在底部），最上方摘要寫出「一切正常」或需要注意的事；紀錄最新在上、預設 5 則、時間只到分鐘、分類為中文、原文收在「技術細節」；測試工具預設收合；旅途紀錄在「設定 → 旅途紀錄」。
 - navigation intent 與 diagnostic projection 都只存在目前 session／render；不得寫入 localStorage、個人備份、Queue、CMS、Ledger，亦不得改變 Health Check、retry 或 sync 判定。
 
 ## v103 設定「自訂項目」資訊架構

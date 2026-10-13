@@ -12,8 +12,10 @@ assert.match(html,/--radius-sm:6px;--radius-control:10px;--radius-card:14px;--ra
 assert.match(html,/\.today-hero \.lbl\{[^}]*font-size:var\(--font-caption\)/);
 assert.match(html,/\.today-hero \.date\{[^}]*font-size:var\(--font-display\)/);
 assert.match(html,/\.navigation-target-status-visible\{[^}]*margin:0 0 var\(--space-2\)[^}]*font-size:var\(--font-meta\)/);
-assert.match(html,/\.diag-log-entry b\{[^}]*font-size:var\(--font-meta\)/);
-assert.match(html,/\.diag-log-entry span\{[^}]*font-size:var\(--font-caption\)/);
+/* v153：診斷紀錄的標題與說明放大一級（Bar 核准的重新整理），仍只用既有字級 token。 */
+assert.match(html,/\.diag-log-entry b\{[^}]*font-size:var\(--font-body\)/);
+assert.match(html,/\.diag-log-entry span\{[^}]*font-size:var\(--font-meta\)/);
+assert.match(html,/\.diag-log-entry em\{[^}]*font-size:var\(--font-meta\)/);
 
 /* Break caught: a render exception again tells users to perform an unsupported pull gesture. */
 const renderCurrent = extractFunction(html, 'renderCurrent');

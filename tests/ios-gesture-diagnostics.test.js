@@ -31,7 +31,8 @@ assert.match(html, /function resetTripProgress\(/, 'trip progress reset remains'
 assert.match(html, /function readActiveShellVersion\(/, 'the diagnostics panel can read the activated shell version');
 assert.match(html, /caches\.keys\(\)/, 'the version comes from the real Cache Storage, not a hard-coded string');
 assert.match(html, /id="diagShellVersion"/, 'the panel renders a placeholder row for the version');
-assert.match(html, /<h3>App 版本<\/h3>/, 'the version row is labelled');
+/* v153：版本移進最上方摘要，仍以「App 版本」標示。 */
+assert.match(html, /App 版本 <span id="diagShellVersion">/, 'the version row is labelled');
 assert.ok(html.indexOf("okayama-trip-v") < 0, 'index.html must not hard-code the cache name — sw.js stays the single source');
 assert.match(html, /讀取中…/, 'the async read shows a loading state first');
 assert.match(html, /無法讀取/, 'a browser without Cache Storage degrades to an explicit message, never a wrong version');

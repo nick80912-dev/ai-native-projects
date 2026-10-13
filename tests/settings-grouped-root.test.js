@@ -39,6 +39,7 @@ function renderRoot(overrides,ledgerSettings){
     appVersionLabel:function(){ return version; },
     shoppingPhotoStorageSummary:function(){ return '0 張 · 0 B'; },
     settingsDataHealthModel:function(){ return {summary:'資料狀態正常'}; },
+    travelNotePendingCount:function(){ return 2; },
     lsGet:function(key,fallback){ return key==='trip_ledger_test_mode' ? false : fallback; }
   },overrides||{});
   vm.createContext(sandbox);
@@ -75,8 +76,16 @@ assert(out.includes("openSettingsPage('health')"),'health summary opens the dedi
 assert(at('>照片健康狀態<')<at('>備份、還原與版本資訊<'),'photo health precedes backup and version');
 assert(at('>過往旅程<')>at('>照片健康狀態<')&&at('>過往旅程<')<at('>備份、還原與版本資訊<'),
   'past trips is a direct data-group child between photo health and backup');
+/* v153：旅途紀錄與診斷面板成為資料群組的直接入口，位於照片健康狀態與過往旅程之間。 */
+assert(at('>旅途紀錄<')>at('>照片健康狀態<')&&at('>旅途紀錄<')<at('>診斷面板<')&&at('>診斷面板<')<at('>過往旅程<'),
+  'travel notes and diagnostics sit between photo health and past trips');
+assert(out.includes("openSettingsPage('travel-notes')")&&out.includes("openSettingsPage('diagnostics')"),'both rows route through openSettingsPage');
+assert(out.includes('2 筆待評估'),'travel-note summary counts pending notes');
+assert(renderRoot({travelNotePendingCount:function(){return 0;}}).includes('記下異常或建議'),'travel-note summary has a zero state');
 const inactiveRoot=renderRoot({TripLifecycle:{readState:function(){return {mode:'inactive'};}}});
 assert(inactiveRoot.includes("openSettingsPage('past')"),'inactive settings goes directly to past trips');
+assert(inactiveRoot.includes("openSettingsPage('diagnostics')"),'inactive settings can still open the diagnostics panel');
+assert(!inactiveRoot.includes("openSettingsPage('travel-notes')"),'inactive settings has no travel-note entry');
 assert(!inactiveRoot.includes("openSettingsPage('data')"),'inactive settings does not detour through data/version');
 
 /* ---- §8 新 E2:摘要格式 ---- */
