@@ -1,5 +1,16 @@
 # 07 版本紀錄
 
+## 2026-10-13 — v151 出發前首頁拿掉重複的「出發當天」預覽（候選，待 CI／手機驗收）
+
+- **來源**：Bar 在 GitHub Pages 驗收 v150 時問「首頁的第一站與下方出發當天內容是否重複」。確認重複：9:00 機場同一站出現三次——v149 的「第一站」、「出發當天 · DAY 1」預覽的第一列（以地點名稱「桃園機場第一航廈1樓」顯示）、下方「行程重點」的 DAY 1 卡。預覽是 v132 為了補「今天沒有排定行程」的語意而加，v149 拿掉那句並改列第一站後，兩者功能重疊。
+- **Bar 裁定（2026-10-13）**：採 A「拿掉出發當天」，不採 B「從第二站開始列」。選項同時核准以 v151 執行的 Tier 2 確認書。
+- **改動**：出發前 hero 只留倒數、第一站與兩顆動作鈕；`renderPreTripBrief()` 與只供它使用的 `.today-pretrip-preview-lbl` 規則移除。「採買清單」與「查看完整行程」放進新的 `.today-hero-actions`（flex、`gap:var(--space-2)`），不再相黏。DAY 1 完整內容由下方「行程重點」與「查看完整行程」提供。旅程中的首頁不變。
+- **版本**：v150 已上 GitHub Pages，原地改會讓已載入 v150 的手機留在快取，所以 forward bump v150→v151（`shell/v151/`、`sw.js`、`netlify.toml`、`runtime-assets.json`、活文件路徑）。`builtin-snapshot.js` 以 v150 asset 離線重產，內容與 timestamp `1790861998387` 不變。發布說明視窗為 `v151` + `['v150','v149','v148','v147']`（v146 滾出）。v150 不單獨上正式站，由 v151 一併帶上。
+- **測試**：`home-simplification.test.js` 改守「hero 沒有 Day 1 預覽、兩顆鈕在同一個 action row」並加間距規則；`ui-ux-v112.test.js` 改為確認預覽函式已移除（`preTripDestinationHighlights` 仍供行程重點使用）；`theme-system.test.js` 更新五筆視窗；`browser/pretrip-ui-v149.spec.js` 新增 320px 情境：第一站只出現一次、hero 不再出現「出發當天」與「桃園機場」、兩顆鈕同列且間距 ≥ 6px、無橫向捲動、行程重點 DAY 1 仍列出桃園機場；`browser/home-v146.spec.js` 的旅程結束情境加上兩顆鈕同列與間距檢查；`browser/android-pwa-ui.spec.js` 原本要求 hero 有 3 筆預覽（最後一筆「還有」），改為檢查第一站與行程重點 DAY 1 的目的地摘要。任一處的動作列被拿掉時，節點測試會失敗。
+- **旅程結束後首頁（Bar 同日追加）**：「清除並打包旅程」與「查看完整行程」自 v146 起同樣相黏，Bar 要求一併處理；兩顆鈕放進同一個 `.today-hero-actions`。
+- **排版**：出發前首頁在 320／375／390px、旅程結束後首頁在 320／390px 截圖檢查，兩顆鈕同列、間距 8px，無橫向捲動。
+- **回滾**：合併前關閉 PR；發布後依 `16_OPS_PLAYBOOK.md` §A1 退回上一個 Netlify 部署（v149），再往前 bump。
+
 ## 2026-10-11 — v149 正式發布（released）+ G6 tag，同日真機驗證通過
 
 - **G1**：Bar 2026-10-11 在 GitHub Pages（dev）以手機驗收 v149 後，回覆「看過了，沒問題」並要求合併進 `main`。
@@ -21,7 +32,7 @@
 - **測試**：新增 `tests/pretrip-ui-v149.test.js`、`tests/browser/pretrip-ui-v149.spec.js`；`ui-font.test.js` 改為「可以連 Google Fonts，但不能擋第一個畫面」並涵蓋所有失敗情境；`theme-system.test.js` 改查新的交通 Emoji 來源。Node 111 個檔案全過、四個 gate 與 `git diff --check` 通過；新 browser spec 6/6。
 - **回滾**：合併前關閉 PR；發布後依 `16_OPS_PLAYBOOK.md` §A2 往前 bump，畫面回到 v148，資料不受影響。
 
-## 2026-10-08 — v150 連接下一趟旅程（候選，待合併 dev 與手機驗收；原編為 v149）
+## 2026-10-08 — v150 連接下一趟旅程（2026-10-11 合併 dev，由 v151 一併發布；原編為 v149）
 
 - **需求**：Bar 問「未來換新旅程時要怎麼讓專案接上」。規格 PR [#51](https://github.com/nick80912-dev/ai-native-projects/pull/51)；Bar 2026-10-08 回覆「照建議」核准七項決定，並核准 Tier 2 範圍：只在工作分支實作與完整測試、更新 PR #51，**不合併 dev、不發布、不改 Google Sheet 與已部署的 Apps Script**，合併時機待 10/24 旅程結束後確認。**2026-10-11 Bar 改為出發前上線**，條件是先加「岡山保護期」（Tier 2 確認書經 Bar「核准」），之後合併 dev → GitHub Pages 手機驗收 → 發布。決策見 [ADR 0021](adr/0021-connect-new-trip.md)，操作見[換旅程手冊](docs/new-trip-handbook.md)。
 - **目前旅程**：新模組 `trip-source.js` 管 `trip_source` 紀錄、開機分類與連接交易。有打卡等紀錄的舊手機自動記為岡山（`legacy`），行為不變；沒有紀錄的新手機首頁顯示「尚未連接旅程」（台灣時間 10/24 起，見下方「岡山保護期」）。lifecycle 新增 `unconnected` 模式與 `activate()`。
