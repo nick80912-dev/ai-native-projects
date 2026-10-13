@@ -26,6 +26,30 @@ test('出發前首頁列出第一站，不再寫「今天沒有排定行程」�
   expect(errors).toEqual([]);
 });
 
+/* v151(Bar 2026-10-13):第一站與「出發當天」預覽重複同一站,預覽拿掉;兩顆動作鈕同一列、留間距。 */
+test('出發前首頁的第一站只出現一次，採買清單與查看完整行程在同一列且不相黏',async({page})=>{
+  const errors=collectPageErrors(page);
+  await page.setViewportSize({width:320,height:760});
+  await installFixedDate(page,'2026-10-13T09:00:00+08:00');
+  await installOnlineSheetMock(page);
+  await openApp(page);
+  await waitForSyncToSettle(page);
+  const hero=page.locator('#view-today .today-hero');
+  await expect(hero.locator('.pretrip-first-stop')).toHaveText('第一站：10/18（日） 9:00 機場check in');
+  await expect(hero).not.toContainText('出發當天');
+  await expect(hero).not.toContainText('桃園機場');
+  expect((await hero.innerText()).match(/9:00/g)).toHaveLength(1);
+  const actions=await hero.locator('.today-hero-actions .today-hero-action').evaluateAll(nodes=>nodes.map(node=>{
+    const box=node.getBoundingClientRect();return {text:node.textContent,left:box.left,right:box.right,top:box.top};
+  }));
+  expect(actions.map(action=>action.text)).toEqual(['採買清單 →','查看完整行程 →']);
+  expect(actions[1].top).toBe(actions[0].top);
+  expect(actions[1].left-actions[0].right).toBeGreaterThanOrEqual(6);
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth)).toBe(true);
+  await expect(page.locator('#view-today .today-pretrip-day').first()).toContainText('桃園機場第一航廈1樓');
+  expect(errors).toEqual([]);
+});
+
 test('交通標籤依方式上色，10/18 的航班顯示飛機',async({page})=>{
   const errors=collectPageErrors(page);
   await installFixedDate(page,'2026-10-11T09:00:00+09:00');
