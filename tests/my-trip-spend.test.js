@@ -29,7 +29,7 @@ const group=[
   {id:'g7',time:'2026-10-20T04:00:00.000Z',member:'Amy',category:'其他',detail:'金額壞掉',amountJpy:-5,amountTwd:0,participants:P(['Bar','Amy'])}
 ];
 
-/* 「今天」以手機當地日期判斷，與「個人今日支出」相同；固定在 10/20 中午（本機時區）計算 */
+/* 「今天」以手機當地日期判斷（與團體分頁的今日消費相同）；固定在 10/20 中午（本機時區）計算 */
 const NOW=new Date(2026,9,20,12,0,0).getTime();
 const spend=plain(sandbox.buildMyTripSpend(personal,group,'Bar',NOW));
 
@@ -62,7 +62,7 @@ const food=spend.categories[0];
 assert.deepStrictEqual([food.personalJpy,food.groupJpy,food.totalJpy],[680,6000+g2Jpy+1200,680+6000+g2Jpy+1200]);
 assert.strictEqual(spend.categories[2].personalJpy,900,'a blank personal category lands in 其他');
 
-/* v155：今天＝今天的個人（不含代購）＋今天的團體份額 */
+/* v155：今天花費＝今天的個人（不含代購）＋今天的團體份額 */
 const todayKey=sandbox.ledgerLocalDateKey(new Date(NOW));
 const isToday=time=>sandbox.ledgerLocalDateKey(time)===todayKey;
 const expectedPersonalToday=personal.filter(r=>r.member.trim()==='Bar'&&!r.isProxy&&isToday(r.time)).reduce((sum,r)=>sum+r.amountJpy,0);
@@ -82,16 +82,17 @@ assert.deepStrictEqual(plain(sandbox.buildMyTripSpend([],[],'Bar')).categories,[
 assert.strictEqual(group[0].participants,P(['Bar','Amy','Ken','Mei']));
 assert.strictEqual(personal[1].isProxy,true);
 
-/* 接線：資料來源固定是正式帳本、已排除刪除／更正與還款；只在個人分頁顯示；匯出升為 v2 */
+/* 接線：資料來源固定是正式帳本、已排除刪除／更正與還款；v155 起併進個人分頁大卡（今天花費＋整趟旅程列）；匯出為 v2 */
 const snapshot=extractFunction(html,'myTripSpendSnapshot');
 assert(snapshot.includes("ledgerUniverseRecords(spendLedgerRecords(mergedLedgerRecords()),'formal')"),'group shares read the effective formal spend records');
-assert(snapshot.includes('personalLedgerRepository.all()')&&snapshot.includes('getCurrentMember(),Date.now()'),'the snapshot uses the same clock as 個人今日支出');
+assert(snapshot.includes('personalLedgerRepository.all()')&&snapshot.includes('getCurrentMember(),Date.now()'),'today uses the same clock as the rest of the dashboard');
 const split=extractFunction(html,'renderSplit');
-assert(split.includes("var totalSpendCard=shared?'':renderMyTripSpendCard(myTripSpendSnapshot(),currency);"),'the card only renders on the personal track');
-assert(split.includes('settlementCard+totalSpendCard+secondCard+'),'the card sits above the proxy card');
-const card=extractFunction(html,'renderMyTripSpendCard');
-assert(card.includes('個人（不含代購）')&&card.includes('團體份額'),'the card labels both parts (approved wording)');
-assert(card.includes('今天 ')&&card.includes('spend.today[field]'),'v155: the card shows today next to the title');
+assert(split.includes('personalSummaryPresentation(myTripSpendSnapshot(),proxy,currency)'),'the personal summary card reads the trip spend snapshot');
+assert(!/renderMyTripSpendCard|ledger-total-spend-card/.test(html),'v155: the standalone 我的總花費 card is folded into the summary card');
+const presentation=extractFunction(html,'personalSummaryPresentation');
+assert(presentation.includes("'個人 '")&&presentation.includes("' ＋ 團體份額 '")&&presentation.includes("tripNote:'不含代購'"),'approved wording (Bar 2026-10-14, version 2)');
+const panel=extractFunction(html,'renderMyTripSpendPanel');
+assert(panel.includes('個人（不含代購）')&&!panel.includes('ledger-spend-today'),'the panel keeps the v154 trip breakdown; today lives on the card');
 const exporter=extractFunction(html,'personalLedgerExportJson');
 assert(exporter.includes("version:2")&&exporter.includes('groupShare:groupShare')&&exporter.includes('totals:totals'),'export format v2 carries the group share and totals');
 

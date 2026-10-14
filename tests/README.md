@@ -25,7 +25,7 @@
 - `browser/sw-update-cache.spec.js` 的 controller／cache readiness 以 `expect.poll` 等待真正 boolean；新增攔住 SW／空 cache 的 RED→GREEN 保護，避免 async `waitForFunction` 的 Promise truthiness 提前完成。原混世代／前後內容／離線斷言及時限不放寬。
 
 - 個人帳匯出：`node tests/personal-ledger-export.test.js` 與 `npx playwright test tests/browser/personal-ledger-export.spec.js`。涵蓋白名單／來源識別／唯讀／損壞拒絕／下載內容與 ⓘ modal 焦點及窄螢幕。v154 起驗證格式 v2 的 `groupShare` 與 `totals`。
-- 我的總花費（v154）：`node tests/my-trip-spend.test.js` 直接執行 `buildMyTripSpend()` 與結算分攤 helper，驗證不含代購、只算目前身分、只算我在分攤成員內的份額（最大餘數分法）、只先墊的與沒有我的團體帳不算、無法辨識的分攤成員不猜、待同步計數、類別排序與逐筆最新在上；並驗證資料來源固定為正式帳本、只在個人分頁顯示、匯出 v2 接線。`npx playwright test tests/browser/my-trip-spend.spec.js` 驗證卡片金額與精簡高度、卡片位置、團體分頁不顯示、明細的類別與逐筆、刪除／還款／測試帳本／居酒屋（沒有我）／我只先墊的紀錄都不出現、台幣顯示與 320px、只有團體份額時也顯示、測試模式開著仍只算正式帳本。v155 加測「今天」＝今天的個人（不含代購）＋今天的團體份額、沒有紀錄的日子為 0、整趟總額不受今天影響，以及上方大卡改名「個人今日支出」。
+- 我的總花費（v154）：`node tests/my-trip-spend.test.js` 直接執行 `buildMyTripSpend()` 與結算分攤 helper，驗證不含代購、只算目前身分、只算我在分攤成員內的份額（最大餘數分法）、只先墊的與沒有我的團體帳不算、無法辨識的分攤成員不猜、待同步計數、類別排序與逐筆最新在上；並驗證資料來源固定為正式帳本、只在個人分頁顯示、匯出 v2 接線。`npx playwright test tests/browser/my-trip-spend.spec.js` 驗證明細的類別與逐筆、刪除／還款／測試帳本／居酒屋（沒有我）／我只先墊的紀錄都不出現、台幣顯示與 320px、測試模式開著仍只算正式帳本。v155 起「我的總花費」卡與代購卡併進個人分頁大卡：Node 測「今天」＝今天的個人（不含代購）＋今天的團體份額、沒有紀錄的日子為 0、整趟總額不受今天影響；`ledger-dashboard.test.js` 測 `personalSummaryPresentation()` 的文案與幣別；browser 測大卡的今天花費與組成說明、代購列只顯示金額（沒有代購就不顯示）、整趟旅程（不含代購）、點開明細與代購彙總、點大數字切台幣、320px 不溢位、團體分頁不變。
 
 v143 驗證與審查紀錄：[交付驗證](../docs/trippilot-v143-verification.md)。
 
@@ -119,7 +119,7 @@ v143 驗證與審查紀錄：[交付驗證](../docs/trippilot-v143-verification.
 - `settings-grouped-root.test.js`／`browser/settings-grouped-root.spec.js`：驗證設定根頁三個常駐群組（個人／記帳／資料）的順序與歸屬、各列摘要格式與降級、既有子頁入口、身分列可存取名稱，以及測試模式條件列；v88 健康 model 的行程、團體帳、個人本機帳與照片狀態及注意項目計數保持不變。v140 驗健康獨立第一入口、直接顯示四項明細、重繪更新及獨立捲動狀態。Browser 另驗證「自訂項目」三類即時數量入口、單類管理頁、兩層返回、鍵盤 Enter／Space、CRUD 後留在原頁、`個` 的預設／不可刪除契約，以及六主題與 320／375／390px 無溢位或控制重疊。執行：`node tests/settings-grouped-root.test.js`、`npx playwright test tests/browser/settings-grouped-root.spec.js`。
 - `browser/settings-health-page.spec.js`：驗證健康入口鍵盤進入／返回、四項明細直接可見、備份／版本頁無重複而舊功能保留，以及 inactive 不顯示舊旅程資料。執行：`npx playwright test tests/browser/settings-health-page.spec.js`。
 
-- `ledger-dashboard.test.js`：驗證分帳首頁摘要、個人／團體軌與期間切換；v88 鎖定今日支出為主值、旅程累計為次值，並確認團體帳使用「與我相關」脈絡而非全團誤導文案。執行：`node tests/ledger-dashboard.test.js`。
+- `ledger-dashboard.test.js`：驗證分帳首頁摘要、個人／團體軌與期間切換；v88 鎖定今日支出為主值、旅程累計為次值，並確認團體帳使用「與我相關」脈絡而非全團誤導文案；v155 起個人大卡改由 `personalSummaryPresentation()` 產生（今天花費、代購列、整趟旅程列）。執行：`node tests/ledger-dashboard.test.js`。
 - `ledger-225.test.js`：驗證 Ledger 日期群組、顯示單元、選取／批次展開與最近消費 renderer；v98 後續鎖定個人／團體單筆卡第一行「品項／代購或付款分攤」、第二行「店家／類別／免稅／TEST／待同步／鎖帳或更正」，所有清單卡隱藏付款方式；另覆蓋個人／團體批次父卡嚴格兩行、品項／免稅／代購數、單一／多位／缺少付款人的「分攤依品項」摘要及展開子項。執行：`node tests/ledger-225.test.js`。
 
 - `ledger-settlement-reliability.test.js`:結算可靠性總測試。涵蓋 durable delivery bridge(原子交接、持久性、只在遠端讀回同一 `record.id` 才清除、不自動過期)、事件全序與同毫秒競態、跨裝置 confirm／reject 收斂與 losing response inert、狀態機文案與按鈕不復原、退回後重新付款開新 generation、已確認收款的 10 秒一次性復原（資格六項條件、9,999／10,000／10,001ms 邊界、無效或未來 `response.time`、已復原、後續 generation、連點五次只一筆 deletion、歷史不得輸出永久撤銷／復原按鈕）、ledger fast pull 增量與非 JSON 降級、polling 兩層退避與生命週期、待處理徽章、簡易結算模式與時鐘偏移。執行:`node tests/ledger-settlement-reliability.test.js`。

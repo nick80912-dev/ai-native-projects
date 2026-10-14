@@ -471,7 +471,7 @@ v143 已透過 `dev → main` PR #40 合併並完成正式站部署核對。G1 �
 
 → **v152 已正式發布(2026-10-13)**:診斷面板新增「目前旅程」、除錯報告附版本與目前旅程、紀錄改手機時間與白話說明(Bar 選 A、B、C;D／E／F 見 backlog #56)。PR [#58](https://github.com/nick80912-dev/ai-native-projects/pull/58) 合併 `dev`,PR [#59](https://github.com/nick80912-dev/ai-native-projects/pull/59) 合併 `main`(`1b43c95`),Netlify deploy `6acdcce0` 相符;Bar 指示略過 GitHub Pages 驗收,發布後回報正式站手機為 v152,並建立 tag `production-v152` → `1b43c95`。 <!-- generation-exempt: 發布紀錄 -->
 
-→ **v155 候選(2026-10-14,尚未發布)**:「我的總花費」卡加上「今天」(今天的個人不含代購＋今天的團體份額),上方大卡改名「個人今日支出」。待 PR 進 `dev`、CI、Bar 以 GitHub Pages 手機驗收後於出發前發布。 <!-- generation-exempt: 候選紀錄 -->
+→ **v155 候選(2026-10-14,尚未發布)**:個人分頁大卡改成「今天花費」(今天的個人不含代購＋今天的團體份額,旁邊小字寫組成),下方「代購」(只顯示金額)與「整趟旅程(不含代購)」兩列,點開看明細;原本的「我的總花費」卡與代購卡併進大卡。Bar 依示意圖選定第 2 版。待 PR 進 `dev`、CI、Bar 以 GitHub Pages 手機驗收後於出發前發布。 <!-- generation-exempt: 候選紀錄 -->
 
 → **v154 已正式發布(2026-10-14)**:分帳頁「個人」新增「我的總花費」(個人帳不含代購＋團體帳中我分到的份額,點開看類別與逐筆團體份額),匯出本趟個人帳升為格式 v2。PR [#64](https://github.com/nick80912-dev/ai-native-projects/pull/64) 合併 `dev`,PR [#65](https://github.com/nick80912-dev/ai-native-projects/pull/65) 合併 `main`(`75dd345`),Netlify deploy `6acf45c3` 相符;Bar 回報正式站手機為 v154;tag `production-v154` 待建立。 <!-- generation-exempt: 發布紀錄 -->
 

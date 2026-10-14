@@ -75,10 +75,11 @@ test('個人與團體摘要以今日為主、旅程累計為次，三種手機�
     closeMemberSelector();switchView('split');
   });
 
-  await expect(page.locator('.ledger-summary-count')).toHaveText('個人今日支出 · 1 筆');
-  await expect(page.locator('.ledger-summary-amount strong')).toHaveText('¥700');
-  await expect(page.locator('.ledger-summary-trip')).toContainText('旅程累計 · 2 筆');
-  await expect(page.locator('.ledger-summary-trip strong')).toHaveText('¥1,800');
+  /* v155：個人大卡的今天花費不含代購（今天唯一一筆是代購），代購另列；整趟旅程只算昨天的車資 */
+  await expect(page.locator('.ledger-summary-count')).toHaveText('今天花費');
+  await expect(page.locator('.ledger-summary-amount strong')).toHaveText('¥0');
+  await expect(page.locator('.ledger-summary-proxy strong')).toHaveText('¥700');
+  await expect(page.locator('.ledger-summary-total strong')).toHaveText('¥1,100');
   await expect(page.locator('.ledger-today-hint')).toHaveCount(0);
 
   const personal=page.locator('.ledger-recent-row').filter({hasText:'早餐超長品項'}).first();

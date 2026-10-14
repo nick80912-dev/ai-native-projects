@@ -25,7 +25,7 @@ root `index.html`／`app-version.js` 保留 v110 bridge；成功啟用的 curren
 
 Today Hero 的 reminder 選取、目前站排除、Shopping store 與 DOM effect 仍由 `index.html` adapter 負責；`today-view.js` 只接收已準備的資料，正規化 `未分類` 與六個 Unicode code point 的可見地點名稱，產生既有 HTML 及宣告式 `open-shopping-list` action。module 不讀 DOM、storage、clock 或 repository，也不成為跨頁 store。
 
-「我的總花費」（v154，`buildMyTripSpend()`）只讀個人帳 repository 與 `ledgerUniverseRecords(spendLedgerRecords(mergedLedgerRecords()),'formal')`：個人帳只算目前身分、非代購；團體帳只算我在分攤成員內的份額，分法沿用結算的 `allocateAmountByLargestRemainder()`。不寫入任何帳本，也不改結算。
+「我的總花費」（v154，`buildMyTripSpend()`）只讀個人帳 repository 與 `ledgerUniverseRecords(spendLedgerRecords(mergedLedgerRecords()),'formal')`：個人帳只算目前身分、非代購；團體帳只算我在分攤成員內的份額，分法沿用結算的 `allocateAmountByLargestRemainder()`。不寫入任何帳本，也不改結算。v155 起個人分頁大卡由 `personalSummaryPresentation()` 以此投影顯示「今天花費」、代購與整趟旅程；團體分頁大卡仍由 `ledgerSummaryPresentation()` 顯示與我相關的團體帳。
 
 AppLog 與 `healthCheck()` 的原始 entry／finding 保持權威且不變；`diagnostic-impact.js` 只在診斷面板投影 `info`／`degraded`／`action-required`、影響與 fallback，複製報告仍逐字使用 raw message。投影不參與 Health Check 判定、同步重試、Queue 或資料保存。v152 的「目前旅程」（`diagnosticTripModel()`）只讀 `CURRENT_TRIP_SOURCE`、lifecycle、`syncStatusModel()` 與 Ledger repository 的 `pendingCount()`／`foreignOwner()`，任一列讀不到時顯示「無法讀取」，不寫入任何狀態。v153 的最上方摘要（`diagnosticSummaryModel()`）只讀同一組列的 `alert`、`currentHealthFindings()` 與 AppLog 的投影等級；面板的展開狀態（`diagUiState`）只在記憶體，不寫入儲存。旅途紀錄 UI 改掛在設定頁 `travel-notes`，store 與資料格式不變。
 

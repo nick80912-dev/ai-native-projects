@@ -68,27 +68,38 @@ assert.strictEqual(summary.today.amountTwd,records.slice(2).reduce((sum,record)=
 
 /* v88: catches the dashboard regressing to a cumulative-only total or calling
    a shared related amount "my spending". Expectations are hand-derived. */
-assert.strictEqual(typeof mod.ledgerSummaryPresentation,'function','v88 exposes one presentation model for both tracks');
-const personalPresentation=plain(mod.ledgerSummaryPresentation('personal',{
-  count:5,total:{amountJpy:1800,amountTwd:360},today:{count:2,amountJpy:700,amountTwd:140}
-},'JPY'));
-assert.deepStrictEqual(personalPresentation,{
-  todayLabel:'個人今日支出 · 2 筆',todayPrimary:'¥700',todaySecondary:'NT$140',
-  totalLabel:'旅程累計 · 5 筆',totalAmount:'¥1,800'
-});
-const sharedPresentation=plain(mod.ledgerSummaryPresentation('shared',{
+assert.strictEqual(typeof mod.ledgerSummaryPresentation,'function','the shared card keeps the v88 presentation model');
+const sharedPresentation=plain(mod.ledgerSummaryPresentation({
   count:4,total:{amountJpy:2400,amountTwd:480},today:{count:1,amountJpy:900,amountTwd:180}
 },'TWD'));
 assert.deepStrictEqual(sharedPresentation,{
   todayLabel:'與我相關 · 今日消費 · 1 筆',todayPrimary:'NT$180',todaySecondary:'¥900',
   totalLabel:'與我相關旅程累計 · 4 筆',totalAmount:'NT$480'
 });
-assert.deepStrictEqual(plain(mod.ledgerSummaryPresentation('personal',{
+assert.deepStrictEqual(plain(mod.ledgerSummaryPresentation({
   count:3,total:{amountJpy:600,amountTwd:120},today:{count:0,amountJpy:0,amountTwd:0}
 },'JPY')),{
-  todayLabel:'個人今日支出 · 0 筆',todayPrimary:'¥0',todaySecondary:'NT$0',
-  totalLabel:'旅程累計 · 3 筆',totalAmount:'¥600'
+  todayLabel:'與我相關 · 今日消費 · 0 筆',todayPrimary:'¥0',todaySecondary:'NT$0',
+  totalLabel:'與我相關旅程累計 · 3 筆',totalAmount:'¥600'
 },'zero Today spending stays explicit instead of falling back to the cumulative amount');
+
+/* v155（Bar 2026-10-14）：個人大卡＝今天花費（個人不含代購＋團體份額）、代購列、整趟旅程（不含代購）。 */
+assert.strictEqual(typeof mod.personalSummaryPresentation,'function','the personal card has its own presentation model');
+const spend={today:{amountJpy:4200,amountTwd:882,personalJpy:900,personalTwd:189,groupJpy:3300,groupTwd:693},total:{amountJpy:40180,amountTwd:8438}};
+const proxy={proxyCount:2,proxyTotal:{amountJpy:3600,amountTwd:756}};
+assert.deepStrictEqual(plain(mod.personalSummaryPresentation(spend,proxy,'JPY')),{
+  todayLabel:'今天花費',todayNote:'個人 ¥900 ＋ 團體份額 ¥3,300',todayPrimary:'¥4,200',todaySecondary:'NT$882',
+  proxyAmount:'¥3,600',tripLabel:'整趟旅程',tripNote:'不含代購',tripAmount:'¥40,180'
+},'approved wording; the proxy row shows the amount only');
+assert.deepStrictEqual(plain(mod.personalSummaryPresentation(spend,proxy,'TWD')),{
+  todayLabel:'今天花費',todayNote:'個人 NT$189 ＋ 團體份額 NT$693',todayPrimary:'NT$882',todaySecondary:'¥4,200',
+  proxyAmount:'NT$756',tripLabel:'整趟旅程',tripNote:'不含代購',tripAmount:'NT$8,438'
+},'every amount follows the display currency');
+const quiet=plain(mod.personalSummaryPresentation({today:{amountJpy:0,amountTwd:0},total:{amountJpy:600,amountTwd:120}},{proxyCount:0,proxyTotal:{amountJpy:0,amountTwd:0}},'JPY'));
+assert.strictEqual(quiet.todayPrimary,'¥0','zero Today spending stays explicit');
+assert.strictEqual(quiet.todayNote,'','no breakdown note on a day without spending');
+assert.strictEqual(quiet.proxyAmount,'','no proxy row without proxy records');
+assert.strictEqual(quiet.tripAmount,'¥600');
 
 assert.strictEqual(typeof mod.renderLedgerRecentHeading,'function','dashboard exposes one recent heading renderer');
 const recentHeading=mod.renderLedgerRecentHeading('<button>選取</button>');
@@ -124,16 +135,16 @@ assert.strictEqual(TripLedgerUiState.createState().track,'personal','fresh Ledge
 assert(!html.includes("var ledgerTrack='personal'"),'parallel ledgerTrack state is removed');
 assert(splitSource.includes('ledger-status-pill'),'dashboard renders the sync/rate status pill');
 assert(splitSource.includes('ledger-summary-card'),'dashboard renders the primary summary card');
-assert(splitSource.includes("ledgerSummaryPresentation(shared?'shared':'personal',period,currency)"),'both tracks render through the tested v88 presentation model');
+assert(splitSource.includes("presentation=shared?ledgerSummaryPresentation(period,currency):personalSummaryPresentation(myTripSpendSnapshot(),proxy,currency)"),'each track renders through its tested presentation model');
 assert(!splitSource.includes('團體總支出'),'shared primary card no longer implies a whole-group total');
-assert(splitSource.includes('ledger-summary-trip'),'the existing summary card includes the trip cumulative footer');
+assert(splitSource.includes('ledger-summary-trip'),'the shared summary card keeps the trip cumulative footer');
+assert(splitSource.includes('<button class="ledger-summary-row ledger-summary-proxy" onclick="openLedgerProxyPanel()">'),'v155: the personal proxy row opens the proxy panel');
+assert(splitSource.includes('<button class="ledger-summary-row ledger-summary-total" onclick="openMyTripSpendPanel()">'),'v155: the personal trip row opens the trip spend panel');
+assert(splitSource.includes('presentation.proxyAmount?'),'v155: the proxy row is hidden without proxy records');
 assert(!splitSource.includes('ledger-today-card'),'neither ledger track renders a standalone Today card');
-assert.match(splitSource,/<button class="ledger-compact-card ledger-compact-action ledger-home-summary-card ledger-proxy-summary-card" onclick="openLedgerProxyPanel\(\)">/,'personal proxy remains a whole-card button using the shared size contract');
-assert(splitSource.includes('ledger-home-summary-head'),'personal proxy uses the shared title and action row');
-assert(splitSource.includes('ledgerProxyCardSummary(proxy)'),'personal proxy uses a presentation-only summary without changing proxy calculations');
-assert(splitSource.includes('<h3>代購</h3>')&&!splitSource.includes('🛍'),'personal proxy keeps the existing heading typography without an emoji');
-assert(splitSource.includes('proxy&&proxy.proxyCount?'),'shared mode never reads proxy fields after intentionally selecting a null proxy summary');
-assert(splitSource.includes("proxy.proxyTotal.amountJpy")&&splitSource.includes("proxy.proxyTotal.amountTwd"),'personal proxy renders its existing dual-currency total');
+assert(!splitSource.includes('ledger-proxy-summary-card')&&!splitSource.includes('ledger-total-spend-card'),'v155: the standalone proxy and trip-total cards are folded into the summary card');
+assert(splitSource.includes('var proxy=shared?null:buildProxySummary(records,member);'),'shared mode never builds a proxy summary');
+assert(!splitSource.includes('🛍'),'the proxy row has no emoji');
 assert(settlementCardSource.includes('ledger-shared-settlement-card'),'shared dashboard renders the full-width settlement status card');
 assert(settlementCardSource.includes('我的結算狀態'),'shared settlement card uses the approved title');
 assert(!splitSource.includes('ledger-shared-summary-grid'),'shared dashboard no longer reserves a standalone Today-card grid');
@@ -175,9 +186,10 @@ assert(homeSummaryCss.includes('width:100%')&&homeSummaryCss.includes('min-heigh
 assert(homeSummaryCss.includes('display:grid')&&homeSummaryCss.includes('grid-template-rows:'),'both cards align heading, primary information, and footer through one three-row layout');
 assert(homeSummaryCss.includes('grid-template-columns:minmax(0,1fr)'),'the shared grid stretches every summary row and chevron to the full card width');
 assert(!/(^|;)height:\s*\d/.test(homeSummaryCss),'shared size contract does not use a clipping fixed height');
-const proxyCardCss=(html.match(/\.ledger-proxy-summary-card\{([^}]*)\}/)||[])[1]||'';
-assert(!/(padding|min-height|height|gap):/.test(proxyCardCss),'personal proxy card does not override shared dimensions');
-assert(!/(^|;)height:\s*\d/.test(proxyCardCss),'personal proxy card has no clipping fixed height');
+assert(!html.includes('.ledger-proxy-summary-card')&&!html.includes('.ledger-total-spend-card'),'v155: CSS for the removed cards is gone');
+const summaryRowCss=(html.match(/\.ledger-summary-row\{([^}]*)\}/)||[])[1]||'';
+assert(/min-height:44px/.test(summaryRowCss)&&summaryRowCss.includes('width:100%'),'v155: summary rows are full-width 44px tap targets');
+assert.match(html,/\.ledger-summary-note\{[^}]*font-size:11px[^}]*color:rgba\(255,255,255,\.62\)/,'v155: notes are smaller and lighter, still ≥4.5:1 on the lightest theme chrome');
 const settlementCardCss=(html.match(/\.ledger-shared-settlement-card\{([^}]*)\}/)||[])[1]||'';
 assert(!/(padding|min-height|height|gap):/.test(settlementCardCss),'settlement card does not override shared dimensions');
 assert(!/(^|;)height:\s*\d/.test(settlementCardCss),'settlement card has no clipping fixed height');
