@@ -14,11 +14,14 @@ test('downloads only personal ledger with provenance and leaves all original rec
  const payload=JSON.parse(fs.readFileSync(await download.path(),'utf8'));
  expect(payload.records).toHaveLength(1);expect(payload.records[0]).toMatchObject({id:'export-personal',amountJpy:1200,amountTwd:263,isProxy:true,proxyTarget:'媽媽'});
  expect(payload.records[0].sourceKey).toBeTruthy();expect(JSON.stringify(payload)).not.toContain('shared-private');
+ /* v154 格式 v2：代購不算進總花費；沒有分攤成員的待送團體帳不猜，只計數 */
+ expect(payload.version).toBe(2);expect(payload.groupShare.items).toEqual([]);expect(payload.groupShare.unattributedCount).toBe(1);
+ expect(payload.totals).toMatchObject({personalJpy:0,proxyJpy:1200,proxyCount:1,groupShareJpy:0,totalJpy:0});
  expect(await page.evaluate(()=>({personal:localStorage.getItem('trip_personal_ledger'),queue:localStorage.getItem('trip_ledger_queue')}))).toEqual(before);
 });
 test('empty or corrupted ledger produces guidance and no download',async({page})=>{
  let downloads=0;page.on('download',()=>downloads++);
- await page.getByRole('button',{name:'匯出本趟個人帳',exact:true}).click();await expect(page.locator('#personalLedgerExportStatus')).toHaveText('尚無個人帳可匯出');
+ await page.getByRole('button',{name:'匯出本趟個人帳',exact:true}).click();await expect(page.locator('#personalLedgerExportStatus')).toHaveText('尚無個人帳或團體份額可匯出');
  await page.evaluate(()=>localStorage.setItem('trip_personal_ledger','{bad'));
  await page.getByRole('button',{name:'匯出本趟個人帳',exact:true}).click();await expect(page.locator('#personalLedgerExportStatus')).toContainText('無法匯出');expect(downloads).toBe(0);
 });
