@@ -75,7 +75,7 @@ test('個人與團體摘要以今日為主、旅程累計為次，三種手機�
     closeMemberSelector();switchView('split');
   });
 
-  await expect(page.locator('.ledger-summary-count')).toHaveText('今日支出 · 1 筆');
+  await expect(page.locator('.ledger-summary-count')).toHaveText('個人今日支出 · 1 筆');
   await expect(page.locator('.ledger-summary-amount strong')).toHaveText('¥700');
   await expect(page.locator('.ledger-summary-trip')).toContainText('旅程累計 · 2 筆');
   await expect(page.locator('.ledger-summary-trip strong')).toHaveText('¥1,800');

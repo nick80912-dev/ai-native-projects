@@ -25,7 +25,7 @@
 - `browser/sw-update-cache.spec.js` 的 controller／cache readiness 以 `expect.poll` 等待真正 boolean；新增攔住 SW／空 cache 的 RED→GREEN 保護，避免 async `waitForFunction` 的 Promise truthiness 提前完成。原混世代／前後內容／離線斷言及時限不放寬。
 
 - 個人帳匯出：`node tests/personal-ledger-export.test.js` 與 `npx playwright test tests/browser/personal-ledger-export.spec.js`。涵蓋白名單／來源識別／唯讀／損壞拒絕／下載內容與 ⓘ modal 焦點及窄螢幕。v154 起驗證格式 v2 的 `groupShare` 與 `totals`。
-- 我的總花費（v154）：`node tests/my-trip-spend.test.js` 直接執行 `buildMyTripSpend()` 與結算分攤 helper，驗證不含代購、只算目前身分、只算我在分攤成員內的份額（最大餘數分法）、只先墊的與沒有我的團體帳不算、無法辨識的分攤成員不猜、待同步計數、類別排序與逐筆最新在上；並驗證資料來源固定為正式帳本、只在個人分頁顯示、匯出 v2 接線。`npx playwright test tests/browser/my-trip-spend.spec.js` 驗證卡片金額與精簡高度、卡片位置、團體分頁不顯示、明細的類別與逐筆、刪除／還款／測試帳本／居酒屋（沒有我）／我只先墊的紀錄都不出現、台幣顯示與 320px、只有團體份額時也顯示、測試模式開著仍只算正式帳本。
+- 我的總花費（v154）：`node tests/my-trip-spend.test.js` 直接執行 `buildMyTripSpend()` 與結算分攤 helper，驗證不含代購、只算目前身分、只算我在分攤成員內的份額（最大餘數分法）、只先墊的與沒有我的團體帳不算、無法辨識的分攤成員不猜、待同步計數、類別排序與逐筆最新在上；並驗證資料來源固定為正式帳本、只在個人分頁顯示、匯出 v2 接線。`npx playwright test tests/browser/my-trip-spend.spec.js` 驗證卡片金額與精簡高度、卡片位置、團體分頁不顯示、明細的類別與逐筆、刪除／還款／測試帳本／居酒屋（沒有我）／我只先墊的紀錄都不出現、台幣顯示與 320px、只有團體份額時也顯示、測試模式開著仍只算正式帳本。v155 加測「今天」＝今天的個人（不含代購）＋今天的團體份額、沒有紀錄的日子為 0、整趟總額不受今天影響，以及上方大卡改名「個人今日支出」。
 
 v143 驗證與審查紀錄：[交付驗證](../docs/trippilot-v143-verification.md)。
 
@@ -82,7 +82,7 @@ v143 驗證與審查紀錄：[交付驗證](../docs/trippilot-v143-verification.
 - `browser/today-live-info.spec.js` exercises Hero／badge target confirmation at 320／375／390px with tap／Enter／Space, sticky-safe geometry, live status, reduced motion, missing targets, stale timers, source scroll, connected／replacement／fallback focus, and blank-category behavior. Focused WebKit uses `--grep "target|定位|blank category"`.
 - `browser/navigation-target-matrix.spec.js` exercises the actual expanded cluster-stop, pre-trip day, mall-floor, and back-to-now controls at 320／375／390px with rotating Tap／Enter／Space. It asserts exact target and live status, native keyboard focus, sticky-header-safe target／status geometry, 1.2-second clear, reduced-motion static treatment, zero horizontal overflow, and current-day return behavior. Run focused WebKit together with the existing Today target selection.
 - `diagnostic-impact-module.test.js` and `diagnostics-app-log.test.js` protect exact timeout classification, conservative unknown handling, input immutability, escaped raw／projected output, and byte-for-byte raw copied reports; `browser/diagnostics-app-log.spec.js` verifies the same boundary in Chromium.
-- `manifest-status-authority.test.js` plus `tools/check-doc-titles.js` require `.ai-manifest.json` to name `tasks/current.md` as the sole current-status authority, identify changelog／task archives only as history, reject stale `tasks/(current/backlog/done)`／`manifest.status` prose, and omit volatile candidate／next-action／automated-test snapshots. Current version authority is `shell/v154/app-version.js`／root `sw.js`; root `app-version.js` is the byte-locked v110 bridge.
+- `manifest-status-authority.test.js` plus `tools/check-doc-titles.js` require `.ai-manifest.json` to name `tasks/current.md` as the sole current-status authority, identify changelog／task archives only as history, reject stale `tasks/(current/backlog/done)`／`manifest.status` prose, and omit volatile candidate／next-action／automated-test snapshots. Current version authority is `shell/v155/app-version.js`／root `sw.js`; root `app-version.js` is the byte-locked v110 bridge.
 
 
 

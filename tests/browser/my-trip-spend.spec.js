@@ -48,6 +48,9 @@ test.describe('v154 我的總花費',()=>{
     /* 個人 680+5800（白桃果醬是代購，不算）；團體 燒肉 6000＋民宿 12000（車票我只先墊、居酒屋沒有我、門票已刪、測試與還款不算） */
     await expect(card.locator('.ledger-total-spend-amount')).toHaveText('¥24,480');
     await expect(card.locator('.ledger-total-spend-detail')).toHaveText('個人（不含代購）¥6,480 · 團體份額 ¥18,000');
+    /* v155：10/20 只有被刪掉的門票、測試門票與居酒屋（沒有我），所以今天是 ¥0；上方大卡改名「個人今日支出」 */
+    await expect(card.locator('.ledger-total-spend-today')).toHaveText('今天 ¥0');
+    await expect(page.locator('.ledger-summary-count')).toContainText('個人今日支出');
     expect(await card.evaluate(el=>Math.round(el.getBoundingClientRect().height))).toBeLessThanOrEqual(72);
     const order=await page.evaluate(()=>Array.from(document.querySelectorAll('#view-split .ledger-dashboard > *'),el=>el.className.split(' ').find(c=>/ledger-(summary|total-spend|proxy-summary)-card/.test(c))).filter(Boolean));
     expect(order).toEqual(['ledger-summary-card','ledger-total-spend-card','ledger-proxy-summary-card']);
@@ -100,6 +103,25 @@ test.describe('v154 我的總花費',()=>{
     await expect(page.locator('.ledger-total-spend-detail')).toHaveText('個人（不含代購）¥0 · 團體份額 ¥18,000');
     await page.evaluate(()=>{DB.ledger=DB.ledger.filter(r=>r.recordType==='identity_registration');renderSplit();});
     await expect(page.locator('.ledger-total-spend-card')).toHaveCount(0);
+    expect(pageErrors).toEqual([]);
+  });
+
+  test('v155：卡片與明細的「今天」＝今天的個人（不含代購）＋今天的團體份額',async({page})=>{
+    const pageErrors=collectPageErrors(page);
+    await setup(page);
+    await page.evaluate(()=>{
+      const list=JSON.parse(localStorage.getItem('trip_personal_ledger'));
+      list.push({id:'t1',time:'2026-10-20T01:00:00.000Z',member:'Bar',category:'餐飲',detail:'早餐',storeName:'',amountJpy:900,amountTwd:189,note:'',payMethod:'現金'});
+      list.push({id:'t2',time:'2026-10-20T02:00:00.000Z',member:'Bar',category:'購物',detail:'代購伴手禮',storeName:'',amountJpy:1500,amountTwd:315,note:'',payMethod:'現金',isProxy:true,proxyTarget:'媽媽'});
+      localStorage.setItem('trip_personal_ledger',JSON.stringify(list));
+      DB.ledger.push({id:'g9',time:'2026-10-20T03:00:00.000Z',member:'Mei',category:'餐飲',detail:'午餐',storeName:'',amountJpy:4000,amountTwd:840,note:'',participants:JSON.stringify(['Bar','Mei']),payMethod:'現金',recordType:''});
+      renderSplit();
+    });
+    /* 個人今日支出照舊只算個人帳（含代購）；總花費的今天不含代購、加上團體份額 2000 */
+    await expect(page.locator('.ledger-summary-amount strong')).toHaveText('¥2,400');
+    await expect(page.locator('.ledger-total-spend-today')).toHaveText('今天 ¥2,900');
+    await page.locator('.ledger-total-spend-card').click();
+    await expect(page.locator('.ledger-spend-today')).toHaveText('今天 ¥2,900（個人 ¥900 · 團體 ¥2,000）');
     expect(pageErrors).toEqual([]);
   });
 

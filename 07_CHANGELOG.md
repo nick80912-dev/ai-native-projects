@@ -1,6 +1,26 @@
 # 07 版本紀錄
 
-## 2026-10-14 — v154 我的總花費：個人帳加上團體帳中我分到的份額（候選，尚未發布）
+## 2026-10-14 — v155 「我的總花費」加上「今天」，上方大卡改名「個人今日支出」（候選，尚未發布）
+
+- **來源**：v154 上線後 Bar 問「為什麼團體帳增加了個人帳的部分，但個人帳的今日支出部分沒有計算到」。上方深色大卡的今日支出照設計只算個人帳；Bar 選建議方案：大卡維持只算個人帳但改名，合計放在「我的總花費」卡。
+- **上方大卡**：個人分頁的「今日支出」改為「個人今日支出」，計算不變（個人帳當天全部紀錄，含代購）。團體分頁的「與我相關 · 今日消費」不變。
+- **「我的總花費」卡**：標題旁多一個「今天 ¥X」＝今天的個人（不含代購）＋今天的團體份額，日期判斷與「個人今日支出」相同（`ledgerLocalDateKey`、`Date.now()`）。卡片仍是兩行高。點開的明細在總額下多一行「今天 ¥X（個人 ¥a · 團體 ¥b）」。
+- **怎麼算**：`buildMyTripSpend()` 多收 `now`，在原本的個人與團體份額迴圈中另外累計日期等於今天的部分（`result.today`）；整趟總額與其他數字不變。匯出格式不變。
+- **版本**：forward bump v154→v155（`shell/v155/`、`sw.js`、`netlify.toml`、`runtime-assets.json`、活文件路徑）；`builtin-snapshot.js` 以 v154 asset 離線重產，除版本外不變。發布說明視窗為 `v155` + `['v154','v153','v152','v151']`（v150 滾出）。
+- **測試**：`my-trip-spend.test.js` 加今天的個人＋團體合計、沒有紀錄的日子為 0、整趟總額不受今天影響、快照用同一個時鐘、卡片顯示今天；`ledger-dashboard.test.js`、`ledger-member-visibility.test.js`、`browser/data-observability.spec.js` 改用「個人今日支出」；`browser/my-trip-spend.spec.js` 加一項（個人今日支出含代購 ¥2,400、總花費今天不含代購加團體份額 ¥2,900、明細的今天拆分）並在第一項確認今天 ¥0 與大卡新名稱；`theme-system.test.js` 更新發布說明視窗。三個反向驗證（今天漏算團體份額、今天不看日期、大卡沒改名）皆被測試抓到。
+- **回滾**：合併前關閉 PR；發布後依 `16_OPS_PLAYBOOK.md` §A1 退回上一個 Netlify 部署（v154），再往前 bump。不影響任何資料。
+
+## 2026-10-14 — v154 正式發布（released）
+
+- **G1（Pages 驗收未明確確認）**：PR [#64](https://github.com/nick80912-dev/ai-native-projects/pull/64) 的 sanity／browser-qa 在 head `6045ca2` 全綠後合併 `dev`（`5d14c9b`）；GitHub Pages 於 `2026-10-14T08:48:05Z` 起提供 v154。Bar 回報手機仍是 v153（Pages CDN 對 `sw.js` 快取最多 10 分鐘），之後指示「合併進 main」，沒有明確回報在 Pages 看到 v154。
+- PR [#65](https://github.com/nick80912-dev/ai-native-projects/pull/65) 以 merge 合併 `dev` `5d14c9b` → `main`，merge commit **`75dd345`**。合併前 PR 的 sanity 與 browser-qa 全綠，合併時釘住 head `5d14c9b`。
+- Netlify deploy **`6acf45c34e4b2241d14a045f`**：`ready`，`commit_ref` = `75dd345` 相符，`published_at` `2026-10-14T09:05:18Z`，`manual_deploy: false`。22 個新檔（含 `shell/v154/index.html`），6 條 header rule 全過。
+- **線上核對**：工作環境這次可以連到正式站。正式站 `sw.js` 為 `SW_VERSION='v154'`（`age: 0`）；以全新的 Chromium 開正式站與 GitHub Pages，兩者都在約 2 秒內完成安裝，`APP_VERSION` 為 v154、只剩 `okayama-trip-v154` 快取。
+- **真機驗證（2026-10-14）**：Bar 第一次回報正式站手機仍是 v153；說明新版要先在背景下載完、再完全關閉重開後，Bar 回報已是 v154。
+- **G6**：tag `production-v154` 待 Bar 建立（應指向 `75dd345`）。
+- 回滾：依 `16_OPS_PLAYBOOK.md` §A1 在 Netlify Publish 上一個部署（v153，`commit_ref` `749f6c3`），錨點 `production-v153`，再往前 bump。不影響任何資料。
+
+## 2026-10-14 — v154 我的總花費：個人帳加上團體帳中我分到的份額（已於同日發布，見上一則）
 
 - **來源**：Bar 問「團體分帳中有關個人的帳務可以自動整理進個人分帳中嗎」。建議不把團體帳抄進個人帳（兩軌資料不得混用、複本不會跟著團體帳的修改與刪除），改為唯讀加總；Bar 同意並要求出發前完成。看過示意圖後 Bar 確認：只算有自己的團體帳、沒有自己的不顯示；文字用「個人（不含代購）」；明細要列逐筆團體份額，但卡片與明細要精簡；匯出一併附上。
 - **分帳頁「個人」新增「我的總花費」卡**：兩行高的精簡卡，放在代購卡上方。第一行「我的總花費」與總額，第二行「個人（不含代購）¥X · 團體份額 ¥Y」。只在個人分頁顯示；有個人帳或有團體份額時才出現；跟著頁面的日幣／台幣切換。
@@ -18,7 +38,7 @@
 - Netlify deploy **`6ace2ce6c5a0418049c59c65`**：`ready`，`commit_ref` = `749f6c3` 相符，`published_at` `2026-10-13T13:07:03Z`，`manual_deploy: false`。27 個新檔（含 `shell/v153/index.html`），6 條 header rule 全過。
 - `main` CI run `38402388050`（qa-sanity）：success。
 - **§F5 線上內容核對未執行**：工作環境的網路政策仍封鎖正式站網域；正式站載入 v153 以 Bar 手機確認為準。
-- **真機驗證**：待 Bar 回報正式站手機已更新到 v153。
+- **真機驗證（2026-10-14）**：Bar 回報正式站手機已更新到 v153。
 - **G6 完成（2026-10-13）**：Bar 在 GitHub 以 Release 建立 `production-v153`，指向 `749f6c3`（GitHub API 與 `git ls-remote` 皆確認，release 發布於 `2026-10-13T13:17:19Z`）。第一次在 `13:02:10Z` 建立，早於 `13:06:46Z` 的合併，指向舊 `main` `e8af76a`（v152 程式）；Bar 依說明刪除 release 與 tag 後重建才正確。這是連續第二版發生，之後要等回報「已合併 main、正式站已部署」後才請 Bar 建 tag。
 - 回滾：依 `16_OPS_PLAYBOOK.md` §A1 在 Netlify Publish 上一個部署（v152，`commit_ref` `e8af76a`；程式與 `1b43c95` 相同），錨點 `production-v152`，再往前 bump。不影響任何資料。
 

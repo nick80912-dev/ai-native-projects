@@ -73,7 +73,7 @@ const personalPresentation=plain(mod.ledgerSummaryPresentation('personal',{
   count:5,total:{amountJpy:1800,amountTwd:360},today:{count:2,amountJpy:700,amountTwd:140}
 },'JPY'));
 assert.deepStrictEqual(personalPresentation,{
-  todayLabel:'今日支出 · 2 筆',todayPrimary:'¥700',todaySecondary:'NT$140',
+  todayLabel:'個人今日支出 · 2 筆',todayPrimary:'¥700',todaySecondary:'NT$140',
   totalLabel:'旅程累計 · 5 筆',totalAmount:'¥1,800'
 });
 const sharedPresentation=plain(mod.ledgerSummaryPresentation('shared',{
@@ -86,7 +86,7 @@ assert.deepStrictEqual(sharedPresentation,{
 assert.deepStrictEqual(plain(mod.ledgerSummaryPresentation('personal',{
   count:3,total:{amountJpy:600,amountTwd:120},today:{count:0,amountJpy:0,amountTwd:0}
 },'JPY')),{
-  todayLabel:'今日支出 · 0 筆',todayPrimary:'¥0',todaySecondary:'NT$0',
+  todayLabel:'個人今日支出 · 0 筆',todayPrimary:'¥0',todaySecondary:'NT$0',
   totalLabel:'旅程累計 · 3 筆',totalAmount:'¥600'
 },'zero Today spending stays explicit instead of falling back to the cumulative amount');
 
