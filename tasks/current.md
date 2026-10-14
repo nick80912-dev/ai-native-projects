@@ -471,6 +471,8 @@ v143 已透過 `dev → main` PR #40 合併並完成正式站部署核對。G1 �
 
 → **v152 已正式發布(2026-10-13)**:診斷面板新增「目前旅程」、除錯報告附版本與目前旅程、紀錄改手機時間與白話說明(Bar 選 A、B、C;D／E／F 見 backlog #56)。PR [#58](https://github.com/nick80912-dev/ai-native-projects/pull/58) 合併 `dev`,PR [#59](https://github.com/nick80912-dev/ai-native-projects/pull/59) 合併 `main`(`1b43c95`),Netlify deploy `6acdcce0` 相符;Bar 指示略過 GitHub Pages 驗收,發布後回報正式站手機為 v152,並建立 tag `production-v152` → `1b43c95`。 <!-- generation-exempt: 發布紀錄 -->
 
+→ **v154 候選(2026-10-14,尚未發布)**:分帳頁「個人」新增「我的總花費」—— 個人帳(不含代購)加上團體帳中我分到的份額,點開看類別與逐筆團體份額;匯出本趟個人帳升為格式 v2 並附團體份額。唯讀加總,不寫入任何帳本。待 PR 進 `dev`、CI、Bar 以 GitHub Pages 手機驗收後於出發前發布。 <!-- generation-exempt: 候選紀錄 -->
+
 → **v153 已正式發布(2026-10-13)**:診斷面板重新整理 —— 最上方摘要、目前旅程狀態小標、紀錄最新 5 則、測試工具收合並濃縮、旅途紀錄搬到設定頁、設定頁可開面板、Esc／dialog 語意(backlog #56 的 D／E／F 提前完成)。PR [#62](https://github.com/nick80912-dev/ai-native-projects/pull/62) 合併 `dev`;Bar 以 GitHub Pages 手機驗收後,PR [#63](https://github.com/nick80912-dev/ai-native-projects/pull/63) 合併 `main`(`749f6c3`),Netlify deploy `6ace2ce6` 相符;Bar 重建 tag 後 `production-v153` → `749f6c3`。 <!-- generation-exempt: 發布紀錄 -->
 
 → **v151 已正式發布(2026-10-13)**:出發前首頁拿掉與「第一站」重複的「出發當天」預覽(Bar 選 A),出發前與旅程結束後首頁的兩顆動作鈕同列並留間距。PR [#54](https://github.com/nick80912-dev/ai-native-projects/pull/54) 合併 `dev`;Bar 以 GitHub Pages 手機驗收後,PR [#55](https://github.com/nick80912-dev/ai-native-projects/pull/55) 合併 `main`(`291c300`),Netlify deploy `6acd9129` 相符;Bar 回報正式站手機為 v151,並建立 tag `production-v151` → `291c300`。v150 沒有單獨上正式站。 <!-- generation-exempt: 發布紀錄 -->
