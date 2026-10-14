@@ -8,7 +8,7 @@
 - **怎麼算**（`buildMyTripSpend()`，唯讀，不寫入任何帳本）：個人帳只算目前身分、非代購（與既有 `actualSpend` 同規則）；團體帳讀 `ledgerUniverseRecords(spendLedgerRecords(mergedLedgerRecords()),'formal')`，所以刪除、更正、還款、身分註冊與測試帳本都已排除、待同步的有算；我在分攤成員內才算，份額用結算同一個 `allocateAmountByLargestRemainder()`；我只先墊的不算；分攤成員或金額無法辨識的不猜，只計數。個人帳的列表、「旅程累計」、搜尋與結算都不變。
 - **匯出格式 v2**：「匯出本趟個人帳」的 `records` 與 v1 相同，另附 `groupShare`（我分到的團體份額逐筆，含獨立的 sourceKey）與 `totals`；仍不含團體帳原始紀錄、分攤成員名單與 Queue。沒有個人帳也沒有團體份額時才提示尚無資料。契約見 `docs/personal-ledger-export.md`。
 - **版本**：forward bump v153→v154（`shell/v154/`、`sw.js`、`netlify.toml`、`runtime-assets.json`、活文件路徑）；`builtin-snapshot.js` 以 v153 asset 離線重產，除版本外不變。發布說明視窗為 `v154` + `['v153','v152','v151','v150']`（v149 滾出）。
-- **測試**：新增 `my-trip-spend.test.js`（直接執行真實的計算與分攤 helper）與 `browser/my-trip-spend.spec.js`（5 項）；`personal-ledger-export.test.js` 與 browser spec 改驗 v2；`theme-system.test.js` 更新發布說明視窗。六個反向驗證（我只先墊的也算、代購也算、測試帳本跟著模式、改成無條件進位平分、沒套用刪除、團體分頁也顯示卡片）皆被測試抓到。
+- **測試**：新增 `my-trip-spend.test.js`（直接執行真實的計算與分攤 helper）與 `browser/my-trip-spend.spec.js`（5 項）；`personal-ledger-export.test.js` 與 browser spec 改驗 v2；`theme-system.test.js` 更新發布說明視窗。六個反向驗證（我只先墊的也算、代購也算、測試帳本跟著模式、改成無條件進位平分、沒套用刪除、團體分頁也顯示卡片）皆被測試抓到。本機完整 Chromium 323/325，兩項為已知本機差異（個人帳匯出檔名、離線未快取子資源回 504）；個人帳匯出 spec 的 v2 內容另以略過檔名檢查的暫時副本驗證通過。設定頁「個人帳匯出說明」補上附團體份額與總計。
 - **回滾**：合併前關閉 PR；發布後依 `16_OPS_PLAYBOOK.md` §A1 退回上一個 Netlify 部署（v153），再往前 bump。不影響任何資料。
 
 ## 2026-10-13 — v153 正式發布（released）+ G6 tag
