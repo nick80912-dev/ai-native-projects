@@ -1,6 +1,33 @@
 # 07 版本紀錄
 
-## 2026-10-14 — v154 我的總花費：個人帳加上團體帳中我分到的份額（候選，尚未發布）
+## 2026-10-14 — v155 個人分頁大卡改成「今天花費」，代購與整趟旅程併進大卡（候選，尚未發布）
+
+- **來源**：v154 上線後 Bar 問「為什麼團體帳增加了個人帳的部分，但個人帳的今日支出部分沒有計算到」。第一版（大卡改名「個人今日支出」、「我的總花費」卡加「今天」）Bar 看了覺得「有點複雜」：畫面上有兩個「今天」、兩個「累計」，算法各不同。依示意圖比較後，Bar 選方案 A 的併進大卡版，並要求：代購不寫「要收回」、整趟旅程放在代購下面、組成說明放在「今天花費」旁、說明字小一號或淡一點、卡片上不顯示代購對象（點開再看）。最後採我建議的第 2 版：「不含代購」寫在整趟旅程旁。
+- **個人分頁大卡**：
+  - 「今天花費」＝今天的個人帳（不含代購）＋今天在團體帳分到的份額；旁邊小字「個人 ¥a ＋ 團體份額 ¥b」，今天沒有花費時不顯示。點大數字照舊切換日圓／台幣。
+  - 「代購」列只顯示金額，點開是原本的「代購對象彙總」；沒有代購紀錄時不顯示這一列。
+  - 「整趟旅程」列旁小字「不含代購」，點開是「我的總花費」明細（類別、逐筆團體份額，與 v154 相同；第一版加在明細裡的「今天」一行拿掉，今天改看大卡）。
+  - 原本另外的「我的總花費」卡與代購卡移除。兩列都是 44px 高的整列按鈕。
+  - 小字依 Bar 指定，與上方「個人帳留在本機；團體帳跨裝置同步。」同款：10px、一般粗細、白色 56%（在最淺的大卡底色 mist `#314d63` 上對比約 4.0:1，與那行相同）。
+- **團體分頁**：大卡不變（「與我相關 · 今日消費」與「與我相關旅程累計」）。
+- **說明字統一（Bar 要求盤點後核定）**：以「個人帳留在本機；團體帳跨裝置同步。」為準。實測 23 個畫面與樣式表後，一行的短說明（代購說明、稅與優惠券說明、記帳類別套用、結算新帳款小字、鎖帳說明、切換身分確認、資料健康狀態列說明、照片健康狀態的兩句說明）統一為 10px、一般粗細、行高 1.3、淡色；多行段落（設定各頁說明、ⓘ 說明視窗、「我的總花費」底部說明、診斷紀錄影響、時間模擬說明）維持 12px，同樣一般粗細與淡色。淺色底的淡色用新 token `--note-ink`（＝`--ink-soft`）：原本的 `--ink-faint` 在海洋主題紙色上只有 3.2:1，比參考那行（深底白 56%，約 5:1）淡很多；`--ink-soft` 約 4.9:1，六個主題都 ≥ 4.5:1。各元件原本的字級／粗細／顏色移除，只留兩條共用規則。照片健康狀態的兩句說明改用 `shopping-photo-storage-note`，容量與檢查時間等數據行不變。不改：警告、結算進度（「尚待 2 人」等狀態）、計算機「將套用 ¥…」、標籤／徽章、空白狀態、CMS 內容與更新說明列表。規範寫入 `04_UI_GUIDELINES.md`「字體」。
+- **＋按鈕跑位（Bar 回報）**：每次切換分頁，分帳右下角的＋按鈕會先出現在內容尾端，約 0.3 秒後才跳回右下角。原因是換頁淡入動畫帶 `transform: translateY(6px)`，動畫期間 view 成為 `position:fixed` 子元素的定位基準（＋按鈕與選取工具列都在 view 裡）。換頁改用只淡入的 `viewFade`，其他面板的 `fade` 不變。
+- **怎麼算**：`buildMyTripSpend()` 多收 `now`，在原本的個人與團體份額迴圈中另外累計日期等於今天的部分（`result.today`，`ledgerLocalDateKey`、`Date.now()`）；整趟總額與其他數字不變。新的 `personalSummaryPresentation(spend,proxy,currency)` 產生個人大卡文案；`ledgerSummaryPresentation(period,currency)` 只剩團體分頁使用。`ledgerProxyCardSummary()`、`renderMyTripSpendCard()` 與兩張卡的 CSS 移除。只讀投影：個人帳與團體帳的資料、最近消費列表、結算與匯出格式都不變。
+- **版本**：forward bump v154→v155（`shell/v155/`、`sw.js`、`netlify.toml`、`runtime-assets.json`、活文件路徑）；`builtin-snapshot.js` 以 v154 asset 離線重產，除版本外不變。發布說明視窗為 `v155` + `['v154','v153','v152','v151']`（v150 滾出）。
+- **測試**：`ledger-dashboard.test.js` 改測團體大卡的 `ledgerSummaryPresentation` 與新的 `personalSummaryPresentation`（文案、台幣、今天為 0 時不顯示組成、沒有代購時不顯示代購列），並鎖住兩列的按鈕、44px 與小字樣式；`my-trip-spend.test.js` 加今天的個人＋團體合計、沒有紀錄的日子為 0、整趟總額不受今天影響、快照用同一個時鐘與大卡接線；`ledger-proxy.test.js` 移除已刪的代購卡摘要；`ledger-member-visibility.test.js` 改看團體大卡文案；`browser/my-trip-spend.spec.js` 重寫為 6 項（大卡三部分與兩張卡已移除、團體分頁不變、點開明細與代購彙總、點大數字切台幣與 320px 不溢位、沒有代購不顯示代購列、今天花費的組成、測試模式只算正式帳本）；`browser/data-observability.spec.js`、`browser/android-pwa-ui.spec.js` 改用新的大卡；`ledger-dashboard.test.js` 另鎖住小字與「個人帳留在本機…」同字級、粗細與透明度；`browser/ui-ux-hardening.spec.js` 加一項：切到分帳時逐格取樣，view 沒有 transform、＋按鈕位置不動、仍有淡入；新增 `help-note-style.test.js`：兩條共用規則與參考行同字級／粗細／行高、沒有其他規則覆寫說明字、`--note-ink` 在六主題紙色與卡片色都 ≥ 4.5:1、照片健康狀態的說明與數據行分開；`ledger-settlement-reliability`、`ledger-form-223`、`ledger-list-actions` 的舊字級斷言改看共用規則；`theme-system.test.js` 更新發布說明視窗。反向驗證（代購列在沒有代購時仍顯示、今天花費誤用整趟金額、小字改回 11px、換頁動畫恢復位移、個別元件再改說明字級或顏色、`--note-ink` 改回 `--ink-faint`）皆被測試抓到。
+- **回滾**：合併前關閉 PR；發布後依 `16_OPS_PLAYBOOK.md` §A1 退回上一個 Netlify 部署（v154），再往前 bump。不影響任何資料。
+
+## 2026-10-14 — v154 正式發布（released）
+
+- **G1（Pages 驗收未明確確認）**：PR [#64](https://github.com/nick80912-dev/ai-native-projects/pull/64) 的 sanity／browser-qa 在 head `6045ca2` 全綠後合併 `dev`（`5d14c9b`）；GitHub Pages 於 `2026-10-14T08:48:05Z` 起提供 v154。Bar 回報手機仍是 v153（Pages CDN 對 `sw.js` 快取最多 10 分鐘），之後指示「合併進 main」，沒有明確回報在 Pages 看到 v154。
+- PR [#65](https://github.com/nick80912-dev/ai-native-projects/pull/65) 以 merge 合併 `dev` `5d14c9b` → `main`，merge commit **`75dd345`**。合併前 PR 的 sanity 與 browser-qa 全綠，合併時釘住 head `5d14c9b`。
+- Netlify deploy **`6acf45c34e4b2241d14a045f`**：`ready`，`commit_ref` = `75dd345` 相符，`published_at` `2026-10-14T09:05:18Z`，`manual_deploy: false`。22 個新檔（含 `shell/v154/index.html`），6 條 header rule 全過。
+- **線上核對**：工作環境這次可以連到正式站。正式站 `sw.js` 為 `SW_VERSION='v154'`（`age: 0`）；以全新的 Chromium 開正式站與 GitHub Pages，兩者都在約 2 秒內完成安裝，`APP_VERSION` 為 v154、只剩 `okayama-trip-v154` 快取。
+- **真機驗證（2026-10-14）**：Bar 第一次回報正式站手機仍是 v153；說明新版要先在背景下載完、再完全關閉重開後，Bar 回報已是 v154。
+- **G6**：tag `production-v154` 待 Bar 建立（應指向 `75dd345`）。
+- 回滾：依 `16_OPS_PLAYBOOK.md` §A1 在 Netlify Publish 上一個部署（v153，`commit_ref` `749f6c3`），錨點 `production-v153`，再往前 bump。不影響任何資料。
+
+## 2026-10-14 — v154 我的總花費：個人帳加上團體帳中我分到的份額（已於同日發布，見上一則）
 
 - **來源**：Bar 問「團體分帳中有關個人的帳務可以自動整理進個人分帳中嗎」。建議不把團體帳抄進個人帳（兩軌資料不得混用、複本不會跟著團體帳的修改與刪除），改為唯讀加總；Bar 同意並要求出發前完成。看過示意圖後 Bar 確認：只算有自己的團體帳、沒有自己的不顯示；文字用「個人（不含代購）」；明細要列逐筆團體份額，但卡片與明細要精簡；匯出一併附上。
 - **分帳頁「個人」新增「我的總花費」卡**：兩行高的精簡卡，放在代購卡上方。第一行「我的總花費」與總額，第二行「個人（不含代購）¥X · 團體份額 ¥Y」。只在個人分頁顯示；有個人帳或有團體份額時才出現；跟著頁面的日幣／台幣切換。
@@ -18,7 +45,7 @@
 - Netlify deploy **`6ace2ce6c5a0418049c59c65`**：`ready`，`commit_ref` = `749f6c3` 相符，`published_at` `2026-10-13T13:07:03Z`，`manual_deploy: false`。27 個新檔（含 `shell/v153/index.html`），6 條 header rule 全過。
 - `main` CI run `38402388050`（qa-sanity）：success。
 - **§F5 線上內容核對未執行**：工作環境的網路政策仍封鎖正式站網域；正式站載入 v153 以 Bar 手機確認為準。
-- **真機驗證**：待 Bar 回報正式站手機已更新到 v153。
+- **真機驗證（2026-10-14）**：Bar 回報正式站手機已更新到 v153。
 - **G6 完成（2026-10-13）**：Bar 在 GitHub 以 Release 建立 `production-v153`，指向 `749f6c3`（GitHub API 與 `git ls-remote` 皆確認，release 發布於 `2026-10-13T13:17:19Z`）。第一次在 `13:02:10Z` 建立，早於 `13:06:46Z` 的合併，指向舊 `main` `e8af76a`（v152 程式）；Bar 依說明刪除 release 與 tag 後重建才正確。這是連續第二版發生，之後要等回報「已合併 main、正式站已部署」後才請 Bar 建 tag。
 - 回滾：依 `16_OPS_PLAYBOOK.md` §A1 在 Netlify Publish 上一個部署（v152，`commit_ref` `e8af76a`；程式與 `1b43c95` 相同），錨點 `production-v152`，再往前 bump。不影響任何資料。
 

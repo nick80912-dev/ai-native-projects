@@ -328,7 +328,9 @@ test('六主題下附件管理文字、修復文字與警示迴紋針對比皆�
       result[id]={
         icon:iconContrast,
         primary:contrast(getComputedStyle(storage.querySelector('.shopping-photo-storage-primary')).color,storageBg),
-        secondary:contrast(getComputedStyle(storage.querySelector('.shopping-photo-storage-secondary')).color,storageBg),
+        /* v155：說明句改用 .shopping-photo-storage-note（共用說明字樣式）；數據行仍是 secondary，各自量自己的卡片底色 */
+        secondary:(node=>contrast(getComputedStyle(node).color,getComputedStyle(node.closest('.shopping-photo-storage-card')).backgroundColor))(panel.querySelector('.shopping-photo-storage-secondary')),
+        note:contrast(getComputedStyle(storage.querySelector('.shopping-photo-storage-note')).color,storageBg),
         repairTitle,repairCopy,
         overflow:document.documentElement.scrollWidth-document.documentElement.clientWidth,
         actionHeight:Math.min(...Array.from(panel.querySelectorAll('.shopping-photo-storage-action'),node=>node.getBoundingClientRect().height))
@@ -342,6 +344,7 @@ test('六主題下附件管理文字、修復文字與警示迴紋針對比皆�
     expect(reading.icon,`${id} warning paperclip`).toBeGreaterThanOrEqual(4.5);
     expect(reading.primary,`${id} storage primary`).toBeGreaterThanOrEqual(4.5);
     expect(reading.secondary,`${id} storage secondary`).toBeGreaterThanOrEqual(4.5);
+    expect(reading.note,`${id} storage note`).toBeGreaterThanOrEqual(4.5);
     expect(reading.repairTitle,`${id} repair title`).toBeGreaterThanOrEqual(4.5);
     expect(reading.repairCopy,`${id} repair copy`).toBeGreaterThanOrEqual(4.5);
     expect(reading.overflow,`${id} horizontal overflow`).toBe(0);

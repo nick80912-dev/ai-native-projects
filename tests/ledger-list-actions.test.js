@@ -129,7 +129,7 @@ assert(
   recordDetailSource.indexOf('ledger-detail-lock-note')<recordDetailSource.indexOf('查看不可改寫歷史'),
   '說明句排在「查看不可改寫歷史」按鈕之前'
 );
-assert(/\.ledger-detail-lock-note\{[^}]*color:var\(--ink-faint\)/.test(html),'說明句採用既有的次要文字語意色,不新增主題色');
+assert(/[{},]\s*\.ledger-detail-lock-note,[^{}]*\{font-size:10px;font-weight:400;line-height:1\.3;color:var\(--note-ink\)/.test(html),'v155:說明句採用共用的說明字樣式(--note-ink 對應既有 --ink-soft),不新增主題色');
 
 /* 原鎖帳行為不變:判定來源、編輯／刪除守門訊息與不可改寫歷史入口都不得被本項動到 */
 const editGuard=extractFunction(html,'assertCanEditLedgerRecord');
