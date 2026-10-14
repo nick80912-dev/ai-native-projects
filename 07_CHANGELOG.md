@@ -1,6 +1,28 @@
 # 07 版本紀錄
 
-## 2026-10-13 — v153 診斷面板重新整理（候選，尚未發布）
+## 2026-10-14 — v154 我的總花費：個人帳加上團體帳中我分到的份額（候選，尚未發布）
+
+- **來源**：Bar 問「團體分帳中有關個人的帳務可以自動整理進個人分帳中嗎」。建議不把團體帳抄進個人帳（兩軌資料不得混用、複本不會跟著團體帳的修改與刪除），改為唯讀加總；Bar 同意並要求出發前完成。看過示意圖後 Bar 確認：只算有自己的團體帳、沒有自己的不顯示；文字用「個人（不含代購）」；明細要列逐筆團體份額，但卡片與明細要精簡；匯出一併附上。
+- **分帳頁「個人」新增「我的總花費」卡**：兩行高的精簡卡，放在代購卡上方。第一行「我的總花費」與總額，第二行「個人（不含代購）¥X · 團體份額 ¥Y」。只在個人分頁顯示；有個人帳或有團體份額時才出現；跟著頁面的日幣／台幣切換。
+- **點開的明細**：總額與換算、依類別（團體與個人各多少，為 0 的一邊不寫）、團體份額明細（最新在上，每筆一行：日期、品項、誰付、幾人分、你的份額、待同步），以及說明：不含代購的金額、團體帳只算你分到的份額不算先墊的錢、還沒同步的筆數、缺少分攤成員沒有算進來的筆數、測試模式開著時不算測試帳本。
+- **怎麼算**（`buildMyTripSpend()`，唯讀，不寫入任何帳本）：個人帳只算目前身分、非代購（與既有 `actualSpend` 同規則）；團體帳讀 `ledgerUniverseRecords(spendLedgerRecords(mergedLedgerRecords()),'formal')`，所以刪除、更正、還款、身分註冊與測試帳本都已排除、待同步的有算；我在分攤成員內才算，份額用結算同一個 `allocateAmountByLargestRemainder()`；我只先墊的不算；分攤成員或金額無法辨識的不猜，只計數。個人帳的列表、「旅程累計」、搜尋與結算都不變。
+- **匯出格式 v2**：「匯出本趟個人帳」的 `records` 與 v1 相同，另附 `groupShare`（我分到的團體份額逐筆，含獨立的 sourceKey）與 `totals`；仍不含團體帳原始紀錄、分攤成員名單與 Queue。沒有個人帳也沒有團體份額時才提示尚無資料。契約見 `docs/personal-ledger-export.md`。
+- **版本**：forward bump v153→v154（`shell/v154/`、`sw.js`、`netlify.toml`、`runtime-assets.json`、活文件路徑）；`builtin-snapshot.js` 以 v153 asset 離線重產，除版本外不變。發布說明視窗為 `v154` + `['v153','v152','v151','v150']`（v149 滾出）。
+- **測試**：新增 `my-trip-spend.test.js`（直接執行真實的計算與分攤 helper）與 `browser/my-trip-spend.spec.js`（5 項）；`personal-ledger-export.test.js` 與 browser spec 改驗 v2；`theme-system.test.js` 更新發布說明視窗。六個反向驗證（我只先墊的也算、代購也算、測試帳本跟著模式、改成無條件進位平分、沒套用刪除、團體分頁也顯示卡片）皆被測試抓到。本機完整 Chromium 323/325，兩項為已知本機差異（個人帳匯出檔名、離線未快取子資源回 504）；個人帳匯出 spec 的 v2 內容另以略過檔名檢查的暫時副本驗證通過。設定頁「個人帳匯出說明」補上附團體份額與總計。
+- **回滾**：合併前關閉 PR；發布後依 `16_OPS_PLAYBOOK.md` §A1 退回上一個 Netlify 部署（v153），再往前 bump。不影響任何資料。
+
+## 2026-10-13 — v153 正式發布（released）+ G6 tag
+
+- **G1**：PR [#62](https://github.com/nick80912-dev/ai-native-projects/pull/62) 的 sanity／browser-qa 在 head `43d5f7e` 全綠後合併 `dev`（`40fb32d`）。GitHub Pages 部署 `40fb32d` 於 `2026-10-13T12:53:24Z` 完成，之後 Bar 回報「手機看過了，沒問題，合併進 main」。
+- PR [#63](https://github.com/nick80912-dev/ai-native-projects/pull/63) 以 merge 合併 `dev` `40fb32d` → `main`，merge commit **`749f6c3`**。合併前 PR 的 sanity 與 browser-qa 全綠，合併時釘住 head `40fb32d`。
+- Netlify deploy **`6ace2ce6c5a0418049c59c65`**：`ready`，`commit_ref` = `749f6c3` 相符，`published_at` `2026-10-13T13:07:03Z`，`manual_deploy: false`。27 個新檔（含 `shell/v153/index.html`），6 條 header rule 全過。
+- `main` CI run `38402388050`（qa-sanity）：success。
+- **§F5 線上內容核對未執行**：工作環境的網路政策仍封鎖正式站網域；正式站載入 v153 以 Bar 手機確認為準。
+- **真機驗證**：待 Bar 回報正式站手機已更新到 v153。
+- **G6 完成（2026-10-13）**：Bar 在 GitHub 以 Release 建立 `production-v153`，指向 `749f6c3`（GitHub API 與 `git ls-remote` 皆確認，release 發布於 `2026-10-13T13:17:19Z`）。第一次在 `13:02:10Z` 建立，早於 `13:06:46Z` 的合併，指向舊 `main` `e8af76a`（v152 程式）；Bar 依說明刪除 release 與 tag 後重建才正確。這是連續第二版發生，之後要等回報「已合併 main、正式站已部署」後才請 Bar 建 tag。
+- 回滾：依 `16_OPS_PLAYBOOK.md` §A1 在 Netlify Publish 上一個部署（v152，`commit_ref` `e8af76a`；程式與 `1b43c95` 相同），錨點 `production-v152`，再往前 bump。不影響任何資料。
+
+## 2026-10-13 — v153 診斷面板重新整理（已於同日發布，見上一則）
 
 - **來源**：Bar 問「診斷面板 UI/UX 以及優化建議」，接著說「You can do it first.」並選「整個重構現在做」。看過示意圖與四項 Tier 2 確認書後選「核准，但要調整」，調整為「診斷／測試工具裡面的內容稍微濃縮調整一下」。backlog #56 的 D、E、F 因此提前在出發前完成。
 - **最上方摘要**：面板第一塊直接寫「✅ 一切正常」或「⚠️ N 項需注意」，並列出要注意的事：團體帳還沒送出、待送的團體帳屬於其他旅程、行程資料更新失敗或部分沒更新、旅程清理沒完成、尚未連接旅程、資料檢查發現問題、需要處理的紀錄。下方一行是 App 版本（只顯示 `v153`，不帶快取名稱前綴）與資料檢查結果。原本的「App 版本」「健康檢查」兩區併入這裡。
