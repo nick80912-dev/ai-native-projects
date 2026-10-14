@@ -189,7 +189,10 @@ assert(!/(^|;)height:\s*\d/.test(homeSummaryCss),'shared size contract does not 
 assert(!html.includes('.ledger-proxy-summary-card')&&!html.includes('.ledger-total-spend-card'),'v155: CSS for the removed cards is gone');
 const summaryRowCss=(html.match(/\.ledger-summary-row\{([^}]*)\}/)||[])[1]||'';
 assert(/min-height:44px/.test(summaryRowCss)&&summaryRowCss.includes('width:100%'),'v155: summary rows are full-width 44px tap targets');
-assert.match(html,/\.ledger-summary-note\{[^}]*font-size:11px[^}]*color:rgba\(255,255,255,\.62\)/,'v155: notes are smaller and lighter, still ≥4.5:1 on the lightest theme chrome');
+const cssDecls=selector=>{const body=(html.match(new RegExp('(?:^|[}\\n])'+selector.replace(/\./g,'\\.')+'\\{([^}]*)\\}'))||[])[1]||'';return Object.fromEntries(body.split(';').filter(Boolean).map(item=>item.split(':')));};
+const noteCss=cssDecls('.ledger-summary-note'),helperCss=cssDecls('.ledger-summary-helper');
+assert(helperCss['font-size']&&helperCss.color,'the helper rule is found');
+assert.deepStrictEqual(['font-size','font-weight','line-height','color'].map(key=>noteCss[key]),['font-size','font-weight','line-height','color'].map(key=>helperCss[key]),'v155: card notes use the same size, weight and opacity as 「個人帳留在本機…」 (Bar 2026-10-14)');
 const settlementCardCss=(html.match(/\.ledger-shared-settlement-card\{([^}]*)\}/)||[])[1]||'';
 assert(!/(padding|min-height|height|gap):/.test(settlementCardCss),'settlement card does not override shared dimensions');
 assert(!/(^|;)height:\s*\d/.test(settlementCardCss),'settlement card has no clipping fixed height');

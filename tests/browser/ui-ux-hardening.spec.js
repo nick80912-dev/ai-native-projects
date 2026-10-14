@@ -295,6 +295,34 @@ test('reduced-motion preference disables smooth scrolling and view animation', a
   expect(parseFloat(motion.animation)).toBeLessThanOrEqual(0.001);
 });
 
+/* v155（Bar 2026-10-14 回報）：換頁的淡入若帶 transform，view 會成為 position:fixed 子元素的定位基準，
+   分帳的＋按鈕在動畫 0.3 秒內先出現在內容尾端再跳回右下角。換頁只淡入、不位移。 */
+test('the ledger FAB stays in the corner while the split view fades in',async({page})=>{
+  await page.evaluate(()=>{
+    memberRegistrationBridge=[{id:'qa-fab-member',time:'2026-10-17T00:00:00.000Z',member:'QA',recordType:'identity_registration',detail:'[身分註冊]'}];
+    localStorage.setItem('trip_member','QA');closeMemberSelector();switchView('today');
+  });
+  await page.waitForTimeout(400);
+  const run=await page.evaluate(()=>new Promise(resolve=>{
+    switchView('split');
+    const view=document.getElementById('view-split'),samples=[],start=performance.now();
+    const step=()=>{
+      const fab=document.querySelector('.ledger-fab');
+      if(fab)samples.push({t:Math.round(performance.now()-start),bottom:Math.round(fab.getBoundingClientRect().bottom),right:Math.round(fab.getBoundingClientRect().right),opacity:Number(getComputedStyle(view).opacity),transform:getComputedStyle(view).transform});
+      if(performance.now()-start<450)requestAnimationFrame(step);else resolve({samples,animation:getComputedStyle(view).animationName});
+    };
+    requestAnimationFrame(step);
+  }));
+  const last=run.samples[run.samples.length-1];
+  expect(run.animation).toBe('viewFade');
+  expect(run.samples.some(sample=>sample.opacity<1),'the view still fades in').toBe(true);
+  for(const sample of run.samples){
+    expect(sample.transform,'no transform at '+sample.t+'ms').toBe('none');
+    expect(Math.abs(sample.bottom-last.bottom),'FAB bottom at '+sample.t+'ms').toBeLessThanOrEqual(1);
+    expect(Math.abs(sample.right-last.right),'FAB right at '+sample.t+'ms').toBeLessThanOrEqual(1);
+  }
+});
+
 for(const width of [320,375,390])test('supporting text stays compact and readable at '+width+'px',async({page},testInfo)=>{
  await page.setViewportSize({width,height:844});
  await installFixedDate(page,'2026-10-18T13:30:00+09:00');
