@@ -119,6 +119,7 @@ v143 驗證與審查紀錄：[交付驗證](../docs/trippilot-v143-verification.
 - `settings-grouped-root.test.js`／`browser/settings-grouped-root.spec.js`：驗證設定根頁三個常駐群組（個人／記帳／資料）的順序與歸屬、各列摘要格式與降級、既有子頁入口、身分列可存取名稱，以及測試模式條件列；v88 健康 model 的行程、團體帳、個人本機帳與照片狀態及注意項目計數保持不變。v140 驗健康獨立第一入口、直接顯示四項明細、重繪更新及獨立捲動狀態。Browser 另驗證「自訂項目」三類即時數量入口、單類管理頁、兩層返回、鍵盤 Enter／Space、CRUD 後留在原頁、`個` 的預設／不可刪除契約，以及六主題與 320／375／390px 無溢位或控制重疊。執行：`node tests/settings-grouped-root.test.js`、`npx playwright test tests/browser/settings-grouped-root.spec.js`。
 - `browser/settings-health-page.spec.js`：驗證健康入口鍵盤進入／返回、四項明細直接可見、備份／版本頁無重複而舊功能保留，以及 inactive 不顯示舊旅程資料。執行：`npx playwright test tests/browser/settings-health-page.spec.js`。
 
+- `help-note-style.test.js`（v155）：說明字統一的契約——一行短說明與段落各一條共用規則，與「個人帳留在本機…」同粗細與行高（短說明同為 10px、段落 12px）；沒有其他規則覆寫說明字的字級、粗細或顏色；`--note-ink` 在六個主題的紙色與卡片色都 ≥ 4.5:1。執行：`node tests/help-note-style.test.js`。
 - `ledger-dashboard.test.js`：驗證分帳首頁摘要、個人／團體軌與期間切換；v88 鎖定今日支出為主值、旅程累計為次值，並確認團體帳使用「與我相關」脈絡而非全團誤導文案；v155 起個人大卡改由 `personalSummaryPresentation()` 產生（今天花費、代購列、整趟旅程列）。執行：`node tests/ledger-dashboard.test.js`。
 - `ledger-225.test.js`：驗證 Ledger 日期群組、顯示單元、選取／批次展開與最近消費 renderer；v98 後續鎖定個人／團體單筆卡第一行「品項／代購或付款分攤」、第二行「店家／類別／免稅／TEST／待同步／鎖帳或更正」，所有清單卡隱藏付款方式；另覆蓋個人／團體批次父卡嚴格兩行、品項／免稅／代購數、單一／多位／缺少付款人的「分攤依品項」摘要及展開子項。執行：`node tests/ledger-225.test.js`。
 

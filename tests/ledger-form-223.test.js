@@ -157,7 +157,7 @@ assert(!proxyTrackSource.includes('ledger-sheet-label">代購'),'single-item pro
 const proxySwitchCss=(html.match(/\.ledger-sheet-field>label\.ledger-proxy-switch\{([^}]*)\}/)||[])[1]||'';
 assert(proxySwitchCss.includes('display:flex')&&proxySwitchCss.includes('justify-content:space-between')&&proxySwitchCss.includes('background:#f4e9e6')&&proxySwitchCss.includes('border:1px solid #c99c94')&&proxySwitchCss.includes('border-radius:9px'),'single-item proxy uses the approved pale warm-red grouped row with the toggle on the right');
 assert(html.includes('ledger-proxy-heading'),'proxy title and helper copy share one compact heading row');
-assert(/\.ledger-proxy-help\{[^}]*font-size:9px/.test(html),'proxy helper copy is reduced by one size');
+assert(/[{},]\s*\.ledger-proxy-help,[^{}]*\{font-size:10px;font-weight:400/.test(html),'v155: proxy helper copy uses the shared 10px note style (help-note-style.test.js)');
 assert(/\.ledger-item-proxy \.ledger-sheet-choice\{[^}]*min-height:28px[^}]*border-radius:7px[^}]*font-size:10px/.test(html),'proxy target choices use the refined compact size');
 assert(/\.ledger-item-proxy \.ledger-sheet-choice-grid\{[^}]*align-items:center/.test(html),'proxy target choices are vertically centered');
 assert(/\.ledger-proxy-add-row\{[^}]*grid-template-columns:minmax\(0,1fr\) 30px[^}]*gap:5px[^}]*margin-top:6px/.test(html)&&/\.ledger-proxy-add-row\{[^}]*flex:1 0 100%[^}]*width:100%/.test(html),'proxy add-target input and plus button move to their own full-width row');
