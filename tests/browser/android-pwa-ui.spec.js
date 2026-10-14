@@ -78,7 +78,7 @@ test('empty-state actions and deferred Ledger identity fit the Android viewport'
   });
   await expect(page.getByRole('button',{name:'記一筆消費'})).toBeVisible();
   await expect(page.getByText('查看全部 〉')).toHaveCount(0);
-  await expect(page.locator('.ledger-proxy-summary-card')).toHaveCount(0);
+  await expect(page.locator('.ledger-summary-proxy')).toHaveCount(0);
 
   const layout=await page.evaluate(()=>(
     {viewport:document.documentElement.clientWidth,scrollWidth:document.documentElement.scrollWidth,fab:document.querySelector('.ledger-fab').getBoundingClientRect().toJSON()}

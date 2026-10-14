@@ -60,12 +60,8 @@ assert.deepStrictEqual(proxy.targets,[
   {target:'店家',count:1,amountJpy:200,amountTwd:40}
 ],'proxy targets retain first-seen order and exact subtotals');
 
-const cardSummary=plain(mod.ledgerProxyCardSummary({
-  proxyCount:5,
-  targets:[{target:'小明'},{target:'媽媽'},{target:'同事'}]
-}));
-assert.deepStrictEqual(cardSummary,{targetCount:3,targetLabel:'3 人',detail:'5 筆 · 小明、媽媽等'},'proxy card shows record count, unique target count, and at most two names');
-assert.deepStrictEqual(plain(mod.ledgerProxyCardSummary({proxyCount:0,targets:[]})),{targetCount:0,targetLabel:'0 人',detail:'尚無代購紀錄'},'empty proxy card uses the approved empty copy');
+/* v155：代購併進個人大卡，只顯示金額；對象名單只在點開的代購彙總裡（Bar 2026-10-14）。 */
+assert.strictEqual(typeof mod.ledgerProxyCardSummary,'undefined','the separate proxy card summary is removed with the card');
 
 const amy=plain(mod.buildProxySummary(records,'Amy'));
 assert.deepStrictEqual(amy.actualSpend,{amountJpy:500,amountTwd:100},'historical ownership follows each saved member');

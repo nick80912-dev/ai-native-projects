@@ -1285,7 +1285,8 @@ test('#53 付款者列也收成一行:縮短狀態文案、按鈕改用既有詞
 
 test('#53 摘要金額字級小一號', function () {
   assert.ok(/\.ledger-settlement-amount\{[^}]*font-size:13\.5px/.test(html), '摘要金額由 15px 降一級為 13.5px');
-  assert.ok(/\.ledger-settlement-hint\{[^}]*font-size:11px/.test(html), '底下的新帳款小字維持 11px,仍小於金額');
+  /* v155:說明字統一(見 help-note-style.test.js),新帳款小字為 10px,仍小於金額 */
+  assert.ok(/[{},]\s*\.ledger-settlement-hint,[^{}]*\{font-size:10px;font-weight:400/.test(html), '底下的新帳款小字為 10px,仍小於金額');
   const simple = html.slice(html.indexOf('function renderSimpleSettlementPanelBody('), html.indexOf('function openLedgerSettlementPanel('));
   assert.ok(simple.indexOf('ledger-settlement-amount') >= 0, '簡易結算模式的摘要金額套用同一字級,不得兩種模式不一致');
 });
@@ -1422,7 +1423,7 @@ test('#10 新帳款說明移入摘要金額下方,不再自成一塊', function 
     '小字掛在摘要金額同一欄,緊貼應付／應收金額下方');
   assert.ok(/summary\+\s*$/m.test(panel) || panel.indexOf("+summary+\n") >= 0 || !/summary\+settlementNewChargeNotices/.test(panel),
     '主體不再於摘要之後另外插入說明區塊');
-  assert.ok(/\.ledger-settlement-hint\{[^}]*font-size:11px/.test(html), '小字比摘要金額小');
+  assert.ok(/[{},]\s*\.ledger-settlement-hint,[^{}]*\{font-size:10px;font-weight:400/.test(html), '小字比摘要金額小');
   assert.ok(/\.ledger-settlement-amount\{[^}]*flex-direction:column/.test(html), '金額與小字在摘要右側直向堆疊');
   assert.ok(html.indexOf('.ledger-settlement-note{') < 0, '舊的獨立說明樣式必須移除');
 });

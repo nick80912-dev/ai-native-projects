@@ -13,7 +13,7 @@ v143 在設定「資料與版本」提供「匯出本趟個人帳」。由使用
 
 ## 格式 v2（v154 起）
 
-`version: 2`。`records` 與 v1 完全相同，另外多兩段，與分帳頁「我的總花費」是同一份計算（`buildMyTripSpend()`）：
+`version: 2`。`records` 與 v1 完全相同，另外多兩段，與分帳頁個人大卡的「整趟旅程」（點開為「我的總花費」明細）是同一份計算（`buildMyTripSpend()`）：
 
 - `groupShare`：目前身分在團體帳中分到的份額。`member`、`pendingCount`（還沒同步的筆數）、`unattributedCount`（分攤成員或金額格式無法辨識、沒有算進來的筆數）、`items[]`。每筆 `items` 只有：sourceRecordId、sourceKey（旅程 sourceKey 加 `/group/` 與原始 ID，與個人紀錄的 sourceKey 不會重複）、time、category、detail、storeName、payer、participantCount、shareJpy、shareTwd、pending。不含分攤成員名單、支付方式、備註或其他人的份額。
 - `totals`：member、personalJpy／personalTwd（目前身分、不含代購）、proxyJpy／proxyTwd／proxyCount、groupShareJpy／groupShareTwd、totalJpy／totalTwd。
