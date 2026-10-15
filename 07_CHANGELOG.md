@@ -1,6 +1,18 @@
 # 07 版本紀錄
 
-## 2026-10-14 — v155 個人分頁大卡改成「今天花費」，代購與整趟旅程併進大卡（候選，尚未發布）
+## 2026-10-14 — v155 正式發布（released）
+
+- **G1（依 Bar 指示略過 GitHub Pages 驗收）**：Bar 2026-10-14 指示「幫我直接合併到main 因為我的dev已經不在手機上了」，這次沒有在 Pages 做手機驗收。
+- PR [#66](https://github.com/nick80912-dev/ai-native-projects/pull/66) 的 sanity／browser-qa 在 head `3d3d491` 全綠後，以 merge 合併進 `dev`（`ed9e7a7`，釘住 head）。PR [#67](https://github.com/nick80912-dev/ai-native-projects/pull/67) 以 merge 合併 `dev` → `main`，merge commit **`0a9ceb1`**（釘住 head `ed9e7a7`）。
+- **發布內容等同 CI 驗過的版本**：合併前 `main` 與 `dev` 同為 tree `85bd7b6`，且 `dev` 是 `3d3d491` 的祖先；`0a9ceb1` 的 tree `59c9f2b` 與 `3d3d491` 完全相同，因此發布 PR 未再等一輪 CI。
+- Netlify deploy **`6acf8d9ad7df1d5c252df979`**：`ready`，`commit_ref` = `0a9ceb1` 相符，`published_at` `2026-10-14T14:11:48Z`，`manual_deploy: false`。32 個新檔（含 `shell/v155/index.html`），6 條 header rule 全過。
+- **線上核對**：正式站 `sw.js` 為 `SW_VERSION='v155'`、`shell/v155/app-version.js` 為 v155；以全新的 Chromium 開正式站與 GitHub Pages，兩者都在約 2 秒內完成安裝，`APP_VERSION` 為 v155、只剩 `okayama-trip-v155` 快取。
+- **真機驗證**：待 Bar 回報正式站手機已是 v155。
+- **G6**：Bar 2026-10-15 建立 tag `production-v155`（lightweight）→ `0a9ceb1`；以 `git ls-remote` 與 GitHub release 核對相符。
+- **Logo／Icon 檢視（Bar 2026-10-14 裁定暫不修正）**：Bar 問 Icon 是否需要重新設計。檢視結果：主畫面圖示（像素風行李箱）在實際大小下地圖、清單、飛機會糊在一起；像素畫風與 App 的扁平風不一致；Android 用的 maskable 圖四周留白過多，套圓形遮罩後成為「白盤子裝小方塊」；32px 分頁小圖難以辨認。左上角桃子是這趟岡山的徽章，與代表 App 本身的主畫面圖示分工合理。iPhone 加到主畫面後不會更新圖示，要換只能刪掉重加，而刪掉會清掉本機資料，因此不建議出發前改。Bar 裁定 Logo、Icon 暫時不需修正；以上僅留作日後參考，不列待辦。
+- 回滾：依 `16_OPS_PLAYBOOK.md` §A1 在 Netlify Publish 上一個部署（v154，`commit_ref` `75dd345`），錨點 `production-v154`，再往前 bump。不影響任何資料。
+
+## 2026-10-14 — v155 個人分頁大卡改成「今天花費」，代購與整趟旅程併進大卡（已於同日發布，見上一則）
 
 - **來源**：v154 上線後 Bar 問「為什麼團體帳增加了個人帳的部分，但個人帳的今日支出部分沒有計算到」。第一版（大卡改名「個人今日支出」、「我的總花費」卡加「今天」）Bar 看了覺得「有點複雜」：畫面上有兩個「今天」、兩個「累計」，算法各不同。依示意圖比較後，Bar 選方案 A 的併進大卡版，並要求：代購不寫「要收回」、整趟旅程放在代購下面、組成說明放在「今天花費」旁、說明字小一號或淡一點、卡片上不顯示代購對象（點開再看）。最後採我建議的第 2 版：「不含代購」寫在整趟旅程旁。
 - **個人分頁大卡**：
@@ -24,7 +36,7 @@
 - Netlify deploy **`6acf45c34e4b2241d14a045f`**：`ready`，`commit_ref` = `75dd345` 相符，`published_at` `2026-10-14T09:05:18Z`，`manual_deploy: false`。22 個新檔（含 `shell/v154/index.html`），6 條 header rule 全過。
 - **線上核對**：工作環境這次可以連到正式站。正式站 `sw.js` 為 `SW_VERSION='v154'`（`age: 0`）；以全新的 Chromium 開正式站與 GitHub Pages，兩者都在約 2 秒內完成安裝，`APP_VERSION` 為 v154、只剩 `okayama-trip-v154` 快取。
 - **真機驗證（2026-10-14）**：Bar 第一次回報正式站手機仍是 v153；說明新版要先在背景下載完、再完全關閉重開後，Bar 回報已是 v154。
-- **G6**：tag `production-v154` 待 Bar 建立（應指向 `75dd345`）。
+- **G6**：Bar 2026-10-15 建立 tag `production-v154`（lightweight）→ `75dd345`；以 `git ls-remote` 與 GitHub release 核對相符。
 - 回滾：依 `16_OPS_PLAYBOOK.md` §A1 在 Netlify Publish 上一個部署（v153，`commit_ref` `749f6c3`），錨點 `production-v153`，再往前 bump。不影響任何資料。
 
 ## 2026-10-14 — v154 我的總花費：個人帳加上團體帳中我分到的份額（已於同日發布，見上一則）
