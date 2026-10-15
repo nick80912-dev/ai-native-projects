@@ -133,6 +133,15 @@ for(const method of ['onNextStopDone','onNextStopSkip','onCheck'])test(method+' 
   assert.ok(sb.messages.some(args=>args[0].includes('未能儲存')));
   assert.ok(sb.messages.every(args=>!/^已完成|^已略過|^已打卡|^已修正/.test(args[0])));
 });
+/* v156(T12,Bar 2026-10-15):今天頁「完成」「跳過」的復原 toast 留 6 秒;其他 toast 仍用預設 3.5 秒。 */
+test('done and skip keep their undo toast for six seconds',()=>{
+  for(const [method,label] of [['onNextStopDone','已完成這站'],['onNextStopSkip','已略過這站']]){
+    const sb=uiContext(storageDouble({trip_checks:'{}',trip_next_stop_progress:'{}'}));
+    sb[method](0,'b');
+    const last=sb.messages[sb.messages.length-1];
+    assert.deepStrictEqual([last[0],last[1],typeof last[2],last[3]],[label,'復原','function',6000]);
+  }
+});
 test('failed undo retains snapshot and offers retry which restores autoSkip',()=>{
   const storage=storageDouble({trip_checks:'{}',trip_next_stop_progress:'{"day_1_10_18":{"done":{},"skip":{"b":true},"autoSkip":{"b":true}}}'}),sb=uiContext(storage);
   sb.onNextStopDone(0,'b');
