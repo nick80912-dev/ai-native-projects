@@ -1,7 +1,7 @@
 {
   "assets": [
-    "shell/v155/app-version.js",
-    "shell/v155/builtin-snapshot.js",
+    "shell/v156/app-version.js",
+    "shell/v156/builtin-snapshot.js",
     "navigation-intent.js",
     "diagnostic-impact.js",
     "today-view.js",

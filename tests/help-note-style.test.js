@@ -11,7 +11,7 @@ const rules=Array.from(css.matchAll(/([^{}]+)\{([^{}]*)\}/g),m=>({selectors:m[1]
 const decls=body=>Object.fromEntries(body.split(';').filter(item=>item.includes(':')).map(item=>{const i=item.indexOf(':');return [item.slice(0,i).trim(),item.slice(i+1).trim()];}));
 const TYPE=['font-size','font-weight','line-height','color','font'];
 
-const SHORT=['.ledger-category-apply-help','.ledger-proxy-help','.ledger-tax-help','.ledger-settlement-hint','.ledger-detail-lock-note','.member-confirm-note','.settings-health-main span','.shopping-photo-storage-note'];
+const SHORT=['.ledger-category-apply-help','.ledger-proxy-help','.ledger-tax-help','.ledger-settlement-hint','.ledger-detail-lock-note','.member-confirm-note','.settings-health-main span','.shopping-photo-storage-note','.ledger-payer-note'];
 const PARAGRAPH=['.settings-help','.diag-help','.ledger-spend-notes','.diag-log-entry span'];
 
 const helper=decls(rules.find(rule=>rule.selectors.includes('.ledger-summary-helper')).body);
