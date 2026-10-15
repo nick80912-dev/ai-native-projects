@@ -1,6 +1,16 @@
 # 07 版本紀錄
 
-## 2026-10-15 — v156 出發前修正：團體帳不再暫時消失、記帳表單、行程導覽（開發中，未發布）
+## 2026-10-15 — v156 正式發布（released）
+
+- **G1（依 Bar 指示改在正式站以手機審查）**：Bar 2026-10-15 指示「完成後送上main我手機審查」，這次沒有先在 GitHub Pages 驗收。
+- PR [#69](https://github.com/nick80912-dev/ai-native-projects/pull/69) 的 sanity／browser-qa 在 head `9a294ea` 全綠後，以 merge 合併進 `dev`（`bc9e053`，釘住 head）。PR [#70](https://github.com/nick80912-dev/ai-native-projects/pull/70) 以 merge 合併 `dev` → `main`，merge commit **`bc59984`**。
+- **發布內容等同 CI 驗過的版本**：`dev` `bc9e053` 的 tree `ad6da6f` 與 `9a294ea` 完全相同，且 `main` 是 `dev` 的祖先，因此發布 PR 未再等一輪 CI。
+- Netlify deploy **`6ad0cbec0929a04b24927c90`**：`ready`，`commit_ref` = `bc59984` 相符，`published_at` `2026-10-15T12:50:01Z`，`manual_deploy: false`。20 個新檔（含 `shell/v156/index.html`），6 條 header rule 全過。
+- **線上核對**：正式站 `sw.js` 為 `SW_VERSION='v156'`（`no-cache,no-store,must-revalidate`）、`shell/v156/app-version.js` 為 v156；以全新的 Chromium 開正式站，`APP_VERSION` 為 v156、只剩 `okayama-trip-v156` 快取，最新一則發布說明為「出發前的小修正」。
+- **G6**：Bar 2026-10-15 建立 tag `production-v156`（lightweight）→ `bc59984`；以 `git ls-remote` 與 GitHub release 核對相符。
+- 回滾：依 `16_OPS_PLAYBOOK.md` §A1 在 Netlify Publish 上一個部署（v155，deploy `6acf8d9a`，`commit_ref` `0a9ceb1`），錨點 `production-v155`，再往前 bump。不影響任何資料。
+
+## 2026-10-15 — v156 出發前修正：團體帳不再暫時消失、記帳表單、行程導覽（已於同日發布，見上一則）
 
 - **來源**：出發前稽核報告（UI/UX、Bug、多餘程式、用不到的內容、逐項操作）列出 53 項。Bar 2026-10-15 選出發前要修的三組：「團體帳暫時消失」「記帳表單兩項」「行程兩項」，其餘留到回程後。
 - **B1 剛記的團體帳暫時消失（高）**：
