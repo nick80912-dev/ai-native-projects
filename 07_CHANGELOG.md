@@ -7,7 +7,7 @@
 - **發布內容等同 CI 驗過的版本**：合併前 `main` 與 `dev` 同為 tree `85bd7b6`，且 `dev` 是 `3d3d491` 的祖先；`0a9ceb1` 的 tree `59c9f2b` 與 `3d3d491` 完全相同，因此發布 PR 未再等一輪 CI。
 - Netlify deploy **`6acf8d9ad7df1d5c252df979`**：`ready`，`commit_ref` = `0a9ceb1` 相符，`published_at` `2026-10-14T14:11:48Z`，`manual_deploy: false`。32 個新檔（含 `shell/v155/index.html`），6 條 header rule 全過。
 - **線上核對**：正式站 `sw.js` 為 `SW_VERSION='v155'`、`shell/v155/app-version.js` 為 v155；以全新的 Chromium 開正式站與 GitHub Pages，兩者都在約 2 秒內完成安裝，`APP_VERSION` 為 v155、只剩 `okayama-trip-v155` 快取。
-- **真機驗證**：待 Bar 回報正式站手機已是 v155。
+- **真機驗證（2026-10-15）**：Bar 回報正式站手機已是 v155。
 - **G6**：Bar 2026-10-15 建立 tag `production-v155`（lightweight）→ `0a9ceb1`；以 `git ls-remote` 與 GitHub release 核對相符。
 - **Logo／Icon 檢視（Bar 2026-10-14 裁定暫不修正）**：Bar 問 Icon 是否需要重新設計。檢視結果：主畫面圖示（像素風行李箱）在實際大小下地圖、清單、飛機會糊在一起；像素畫風與 App 的扁平風不一致；Android 用的 maskable 圖四周留白過多，套圓形遮罩後成為「白盤子裝小方塊」；32px 分頁小圖難以辨認。左上角桃子是這趟岡山的徽章，與代表 App 本身的主畫面圖示分工合理。iPhone 加到主畫面後不會更新圖示，要換只能刪掉重加，而刪掉會清掉本機資料，因此不建議出發前改。Bar 裁定 Logo、Icon 暫時不需修正；以上僅留作日後參考，不列待辦。
 - 回滾：依 `16_OPS_PLAYBOOK.md` §A1 在 Netlify Publish 上一個部署（v154，`commit_ref` `75dd345`），錨點 `production-v154`，再往前 bump。不影響任何資料。
