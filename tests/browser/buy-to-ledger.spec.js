@@ -88,7 +88,8 @@ test('single personal Shopping save persists a record and one allocation link',a
   const pageErrors=collectPageErrors(page);
   await seedShopping(page,[ITEM_A]);
   await openSingleEntry(page,ITEM_A.id,false);
-  await expect(page.locator('#shoppingListOverlay')).toHaveCount(0);
+  /* v158(T9):卡片上的「記帳」也保留採買清單,記完帳回到清單。 */
+  await expect(page.locator('#shoppingListOverlay')).toHaveCount(1);
   await expect(page.locator('#ledgerDetail')).toHaveValue('白桃');
   await fillAndSaveSingle(page,1200);
 

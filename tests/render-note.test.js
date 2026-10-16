@@ -87,6 +87,10 @@ vm.runInContext([
   /* v84:付款與提醒收進可展開區塊,展開狀態放在 viewUiState */
   extractConst('viewUiState'),
   extractFunction('renderNextStopMore'),
+  /* v158:串點卡與一般卡共用官網／樓層／時刻表按鈕,今日剩餘站數改由 todayStopCounts 統一計算 */
+  extractFunction('renderNextStopSecondaryActions'),
+  extractFunction('todayStopCounts'),
+  extractFunction('renderTodayRemaining'),
   extractFunction('renderNextStopCard'),
   extractFunction('clusterItemName'),
   extractFunction('clusterTimeRange'),
@@ -371,6 +375,7 @@ sandbox.resolveRef = function(){
   };
 };
 
+sandbox.getChecks = function(){ return {}; };
 const nextStopOut = sandbox.renderNextStopCard({}, 0, {
   source:'order',
   item:{
@@ -428,7 +433,9 @@ assert.match(html,/\.today-pretrip-day:focus-visible[^}]*outline:/,'pre-trip day
 
 const clusterCardSource = extractFunction('renderClusterNextStopCard');
 const parentMainSource = clusterCardSource.slice(0, clusterCardSource.indexOf('nx-cluster-expand'));
-assert(!parentMainSource.includes('openTripItem'), 'cluster parent remains non-navigable');
+/* v158(T4):卡片上半部可開「目前這一站」的完整行程(與一般下一站卡相同),但串點的主站本身仍不可導覽。 */
+assert(!/openTripItem\([^;]*cluster\.parent/.test(parentMainSource), 'cluster parent remains non-navigable');
+assert(parentMainSource.includes("jsString(current.id)")&&parentMainSource.includes('role="button"'), 'the cluster card head opens the current stop');
 assert(clusterCardSource.includes('renderClusterStop(item,checks,progress,dayIndex)'), 'child renderer receives the selected day');
 
 /* cluster badge 必須只跟目前 child 的 stopRef，不可誤用 parent 或整組。 */

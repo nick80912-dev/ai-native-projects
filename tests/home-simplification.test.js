@@ -37,7 +37,8 @@ for (const file of [shellPath('index.html')]) {
   assert.match(endedHome, /'<div class="today-hero-actions">'\+\s*'<button[^']*openEndedTripPacking\(\)">清除並打包旅程<\/button>'\+\s*'<button[^']*'trip\\'\)">查看完整行程 →<\/button><\/div><\/div>'/, `${file} puts the ended-trip actions in one spaced row`);
   assert.match(renderToday, /renderTodayWeatherArt\(weather\)[\s\S]*renderTodayHeroSummary\(weather,renderShoppingTodayEntry\(day,currentStopRef\)\)/, `${file} composes weather and Shopping inside the active Hero`);
   assert.doesNotMatch(renderToday, /h\+=renderShoppingTodayEntry\(day,currentStopRef\)/, `${file} no longer renders active Shopping below the Hero`);
-  assert.match(renderToday, /var progressLabel='今日已處理 '\+completed\+' 站，共 '\+items\.length\+' 站';/, `${file} gives active progress the approved accessible name`);
+  /* v158(T10):站數改由 todayStopCounts 計算(串點子站各算一站),與行程頁一致 */
+  assert.match(renderToday, /var progressLabel='今日已處理 '\+completed\+' 站，共 '\+stopCounts\.total\+' 站';/, `${file} gives active progress the approved accessible name`);
   /* v127(backlog #43):可見文字必須帶「已處理」。Bar 2026-09-23 裁定。
      成因:hero 的分母是 homeNextStopItems(串點併為一站),分子含自動略過;
      行程頁 day-head 的分母是 isTripCheckableItem(子站各算一站),分子只算真的

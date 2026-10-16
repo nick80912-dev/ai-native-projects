@@ -202,6 +202,7 @@ test('cluster Home moves on to the next item once it starts',async({page})=>{
 test('all-skipped wording and completion counts remain unchanged',async({page})=>{
   await boot(page,'2026-10-18T09:30:00+09:00');
   await page.evaluate(()=>{const index=findToday(),day=DB.trip.days[index];day.items.forEach(item=>{if(item.id)setItemCompletion(day,index,item.id,'skip');});renderToday();});
-  await expect(page.locator('#view-today')).toContainText('已處理 6/6');
+  /* v158(T10):站數改成和行程頁一樣以每一列計(串點子站各算一站),10/18 共 7 站 —— 原本整區串點只算一站,是 6/6。 */
+  await expect(page.locator('#view-today')).toContainText('已處理 7/7');
   await expect(page.locator('.nx-empty-ticket')).toContainText('今日行程完成');
 });
