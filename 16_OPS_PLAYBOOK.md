@@ -25,35 +25,34 @@
 ### A4. 文件/程式碼(GitHub)
 - 任何檔案退回:`git revert <commit>`(保留歷史,禁用 `reset --hard` 覆蓋遠端,呼應憲章 4.1)。
 
-### A5. 以 tag 回滾至 v18 正式版(2026-07-30 新增)
+### A5. 以 production tag 回滾到上一個正式版(2026-07-30 新增,2026-10-16 改寫)
 
-**用途**:v72 發布(`dev → main`)後若正式站出事,需要退回到 v72 之前的最後一個正式版。
+**用途**:新版發布(`dev → main`)後若正式站出事,需要退回上一個正式版。本節原本寫的是「以 tag 回滾至 v18」(v72 發布時的預案);v18 沒有 `shell/` generation 架構,照做會和現行 SW 衝突,已作廢。
 
-**錨點**:annotated tag `production-v18` → `9eefcb0`(2026-07-18 merge PR #5),Service Worker cache `okayama-trip-v18`。這是本 repo 的第一個 tag;在此之前 `main` 沒有任何可指名的正式版錨點,只能靠 SHA 或 Netlify 快照。
+**錨點**:每個正式版都有 tag `production-v<SW版本>`。目前正式站為 v156(`production-v156` → `bc59984`),**上一個錨點是 `production-v155` → `0a9ceb1`**(Netlify deploy `6acf8d9a`)。最新的錨點以 `tasks/current.md` 為準。
 
-> **先分清兩件事**:`production-v18` 是**程式碼**錨點,回答「該退回哪個內容」;讓使用者實際看到舊版靠的是**部署**動作。緊急時**先做 A1(Netlify Publish deploy),再補 git 層**;A1 是秒級且不動 git 歷史,A5 是把 `main` 的內容真正退回去。
+> **先分清兩件事**:production tag 是**程式碼**錨點,回答「該退回哪個內容」;讓使用者實際看到舊版靠的是**部署**動作。緊急時**先做 A1(Netlify Publish deploy),再補 git 層**;A1 是秒級且不動 git 歷史。
 
 **步驟**
 
-1. **止血(先做)**:依 §A1 在正式站 Netlify 後台 Publish 上一個正常 deploy。此時 `main` 內容仍是壞版,只是沒在線上。
+1. **止血(先做)**:依 §A1 在正式站 Netlify 後台 → Deploys,找到上一個正式版的 deploy(`commit_ref` 等於上一個錨點的 commit,例如 `0a9ceb1`)→ **Publish deploy**。部署快照自帶當時的所有檔案(含它自己那一代的 shell 資料夾),不需要 repo 保留舊世代。此時 `main` 內容仍是壞版,只是沒在線上。
 2. **確認錨點內容就是你要的**:
    ```
    git fetch --all --tags
-   git show -s production-v18
-   git diff --stat production-v18 origin/main
+   git show -s production-v155
+   git diff --stat production-v155 origin/main
    ```
-3. **git 層退回**(依 §A4,**禁用 `reset --hard` 覆蓋遠端**):
-   - 若壞版是一個 merge commit(正常 Release Flow 的情況)→ 開分支做 `git revert -m 1 <merge-sha>`,走 PR 由 Bar merge 回 `main`。
-   - 若需要整棵樹回到 v18 內容 → 開分支後 `git checkout production-v18 -- .`,commit 後同樣走 PR。
-   - **兩種都不得直接 push `main`**;正式站部署由 merge 觸發,繞過 PR 等於繞過 §E Release Flow。
+3. **git 層修正**(依 §A4,**禁用 `reset --hard` 覆蓋遠端**):
+   - 依 §A2,git 層**不得**倒退覆寫或重用已發布過的版本號。正確做法是**往前 bump 到下一個未使用的版本**,內容等同上一個正式版(或已修好問題),走正常 Release Flow。
+   - 若壞版是一個 merge commit(正常 Release Flow 的情況),可開分支 `git revert -m 1 <merge-sha>` 取回舊內容,再在同一分支 forward bump 版本號,走 PR 由 Bar merge 回 `main`。
+   - **不得直接 push `main`**;正式站部署由 merge 觸發,繞過 PR 等於繞過 §E Release Flow。
 4. **Netlify 端**(`main` = 正式站 `trippilot-jp.netlify.app`,單站架構):
-   - 正式站追蹤 `main`,PR merge 後**自動部署**,無需手動觸發。
+   - 正式站追蹤 `main`,PR merge 後**自動部署**,無需手動觸發。forward bump 合併前,線上維持步驟 1 Publish 的舊 deploy。
    - `dev` 分支不受回滾影響 — 壞版程式仍在 `dev` 上,修好後再重新走 Release Flow。
-5. **Service Worker**(依 §A2,回滾最容易踩的一步):
-   - v18 的 `sw.js` 是 `CACHE_NAME = 'okayama-trip-v18'` **硬編碼、無 `importScripts`**;v72 是 `importScripts('./app-version.js')` + `'okayama-trip-'+APP_VERSION`。兩者位元組不同,SW 會判定更新並在 activate 清掉 `okayama-trip-v72`,「開兩次生效」限制仍在。
-   - 回滾後 `app-version.js` 會從部署中消失。v18 的 SW 不引用它,但**已安裝 v72 SW 的裝置**其 SHELL 清單含 `./app-version.js`,該請求會 404 → 依現行 network-first 的 catch 分支退回 `caches.match('./index.html')`。若舊 SW 尚未被替換,這會讓 JS 解析失敗。**回滾後務必以真機(非無痕)確認 SW 已換代**,不要只看無痕視窗。
+5. **Service Worker**(依 §A2):
+   - 裝置換代仍受「開兩次生效」限制;回滾後務必以真機(非無痕)確認 SW 已換代,不要只看無痕視窗。步驟 1 只是止血,仍要盡快完成 forward bump。
    - **禁止**以刪除 `sw.js` 作為回滾手段。
-6. **記錄**:於 `07_CHANGELOG.md` 記回滾時間、原因、退回版本,並更新 `tasks/current.md` 的 Release Gate 狀態。
+6. **記錄**:於 `07_CHANGELOG.md` 記回滾時間、原因、退回版本,並更新 `tasks/current.md`。
 
 **新增正式版 tag 的慣例**:每次 `dev → main` merge 完成並線上驗證通過後,對該 merge commit 建 annotated tag `production-v<SW版本>`,message 需含建立日期、對應 SW cache 名稱、建立原因與回滾指令。tag 只 push tag 本身(`git push origin <tag>`),不夾帶分支。
 
@@ -73,7 +72,7 @@
 2. 修復(依 §A 回滾或重新上傳正確檔案)。
 3. 驗證:`dev` 執行同等本機 CI；Pull Request / `main` 需 Actions 轉綠；再由 AI 核對遠端 commit，才算修復完成。
 4. 事後在 07_CHANGELOG 記一筆 incident:時間、原因、影響、修復方式(不追究、只留痕,供未來防範)。
-**通知**:GitHub 預設會將 Actions 失敗通知寄到 commit 者信箱;Pull Request 或 `main` push 觸發 workflow 後，Bar 應等待並確認 Actions 綠勾(約 1 分鐘),綠了才離開。`dev` push 目前以同等本機 CI 驗證，是否加入 workflow 另見 backlog。
+**通知**:GitHub 預設會將 Actions 失敗通知寄到 commit 者信箱;Pull Request 或 `main` push 觸發 workflow 後，Bar 應等待並確認 Actions 綠勾(約 1 分鐘),綠了才離開。`dev` push 也會觸發同一個 workflow(`qa.yml` 的 `sanity` 與 `browser-qa`,2026-09-12 起)。
 
 ## D. 雙通道交付 SOP(GitHub Desktop 為主、網頁上傳為輔)(2026-07-10 由 Bar 核准)
 兩通道並行,防呆規則如下:
@@ -214,21 +213,23 @@ GitHub Pages URL：https://nick80912-dev.github.io/ai-native-projects/
 # 1. SW 版本(應等於 main 的 sw.js SW_VERSION)
 curl -s https://trippilot-jp.netlify.app/sw.js | grep "^var SW_VERSION"
 
-# 2. Current immutable generation 三件組(下方 v136 是目前 production 範例；發布新版時須換成目標 SW_VERSION)
-curl -s https://trippilot-jp.netlify.app/shell/v136/app-version.js # generation-exempt: production 仍為 v136
-curl -s https://trippilot-jp.netlify.app/shell/v136/index.html | grep BUILTIN_HTML_VERSION # generation-exempt: production 仍為 v136
-curl -s https://trippilot-jp.netlify.app/shell/v136/builtin-snapshot.js | grep BUILTIN_ASSET_VERSION # generation-exempt: production 仍為 v136
+# 2. Current immutable generation 三件組(下方路徑是 current generation,與 sw.js 的 SW_VERSION 相同,升版時隨活文件一起更新)
+curl -s https://trippilot-jp.netlify.app/shell/v156/app-version.js
+curl -s https://trippilot-jp.netlify.app/shell/v156/index.html | grep BUILTIN_HTML_VERSION
+curl -s https://trippilot-jp.netlify.app/shell/v156/builtin-snapshot.js | grep BUILTIN_ASSET_VERSION
 
 # 2b. Root bridge 必須仍是 predecessor v110，不得誤升為 current
 curl -s https://trippilot-jp.netlify.app/app-version.js
 
 # 3. header 行為(測試站刪除後,這是唯一驗得到的地方;GitHub Pages 無法重現)
 curl -sI https://trippilot-jp.netlify.app/sw.js | grep -i cache-control
-curl -sI https://trippilot-jp.netlify.app/shell/v136/app-version.js | grep -i cache-control # generation-exempt: production 仍為 v136
+curl -sI https://trippilot-jp.netlify.app/shell/v156/app-version.js | grep -i cache-control
 
 # 4. 前一代 generation 必須仍可服務(ADR 0019)
-#    尚未升級的裝置靠它繼續運作,回 404 就是把舊裝置打斷。
-#    以「前一代」的版本號代入,例如發布 v114 時查的是 v113。
+#    部署換代的當下,還沒裝完前一代的裝置可能仍在抓它;回 404 會讓那次 install 失敗。
+#    以「前一代」的版本號代入,例如發布 v157 時查的是 v156。
+#    更早的世代不必逐一確認:2026-10-16 Bar 核准刪除 v111–v153,repo 只保留最近幾代(目前 v154 起),
+#    理由見 ADR 0019 增補段(已安裝的 worker 對自己的 SHELL 一律 cache-first,只在 install 時抓網路)。
 curl -s -o /dev/null -w "%{http_code}" https://trippilot-jp.netlify.app/shell/<前一代>/app-version.js
 ```
 
@@ -280,7 +281,7 @@ node tools/refresh-builtin-snapshot.js
 npx playwright test tests/browser/trip-three-scenarios.spec.js
 ```
 
-`--write` 會在 current generation 目錄（目前候選版為 `shell/v156/`）staging `index.html` marker 與 `builtin-snapshot.js`，fsync／close／回讀後才進行雙檔替換；任一步失敗都將兩個 target 回復為原始 bytes。root v110 bridge 不由此工具修改。App、SW 或 asset 升版時也必須透過本工具更新 marker／asset 版本。最後一次 preview 必須顯示已一致。提交前另跑完整 repo gate。
+`--write` 會在 current generation 目錄（目前為 `shell/v156/`）staging `index.html` marker 與 `builtin-snapshot.js`，fsync／close／回讀後才進行雙檔替換；任一步失敗都將兩個 target 回復為原始 bytes。root v110 bridge 不由此工具修改。App、SW 或 asset 升版時也必須透過本工具更新 marker／asset 版本。最後一次 preview 必須顯示已一致。提交前另跑完整 repo gate。
 
 ### G4. 權責與邊界
 

@@ -1,5 +1,12 @@
 # CURRENT(現在正在做的)
 
+## 2026-10-16 — 回程後整理：刪除舊 shell 世代與未使用內容（Bar 核准，分支 `cleanup-v157`）
+
+- **舊 generation 保留規則改變**：Bar 2026-10-16 核准刪除 v111–v153 共 43 個舊世代資料夾。此後 repo 與正式站只保留最近幾代（目前 v154 起，至少 current 與前一代）；§F5 第 4 項仍確認「前一代」回 200，不再要求每個舊世代都回 200。理由與規則見 ADR 0019 增補段、`16_OPS_PLAYBOOK.md` §F5。
+- 為什麼安全：v111 起每一版 SW 對自己的 SHELL 都是 cache-first，只在自己 install 時才從網路抓那一代的檔案；v110 以前的裝置只用 root bridge；Netlify 回滾用部署快照。刪掉的內容仍在 git 歷史與 `production-vNNN` tag。
+- `tests/trip-lifecycle-wiring.test.js` 不再讀舊世代：已核准的 v136 BUILTIN 改存為位元組相同的 `tests/fixtures/builtin-snapshot-v136-approved.js`（以原 sha256 核對），不可變 hash 改守 root bridge 與保留的 v154／v155／v156 三件組。
+- **無 runtime 變更**：`sw.js`、`netlify.toml`、`runtime-assets.json`、root bridge 與保留的世代都沒動。
+
 ## 2026-10-05 — v146 已正式發布（PR #42）
 
 - dev exact head `61583971c6b7a034edfb9e8365ded1da0ba6552e` 經一般 merge 至 main `0f24f7404f88df366c7071325c9698ee127efa76`；兩 parent／merged tree 核對，內容等於已測 dev。dev CI `37321296072`／PR CI `37321310300`／main CI `37322574707` sanity＋browser-qa 全部 success，各 Chromium 295/295（7.2／7.1／6.7 分鐘、0 retry）。本機 Node 110 檔／Chromium 295/295（10.8 分鐘、0 retry）與四 gate 通過。
@@ -282,7 +289,7 @@ v143 已透過 `dev → main` PR #40 合併並完成正式站部署核對。G1 �
 - 2026-09-12 以 chrome-devtools MCP 在 390×844 實測 v114 發現兩處缺陷,**非使用者回報**:
   - 設定頁「簡易結算模式」的 `.settings-row` 是 `<div>`,52px 的列不是熱區,**只有 22×22 的 checkbox 可點**,點文字無反應。改為 `<label>` 後整列可切換;既有 `aria-label` 未動,可及名稱不受影響。
   - 分帳頁待同步指示器 `.ledger-summary-rate.pending` 的命中區僅 **13px 高**。**該處的扁平琥珀樣式是刻意設計**(`rgba(255,240,190,.9)` + `cursor:pointer`),因此只以 padding 撐開命中區至 **31px**、等量負 margin 抵銷,**外觀與版面完全不變**(卡片高度 231px 於兩種狀態相同)。
-- 依 ADR 0019 immutable generation,已發布的 `shell/v114/` 不得就地改,故走完整 forward bump 至 **v115**。`shell/v111`–`v114` 一律保留。 <!-- generation-exempt: 這一行描述的是 v114->v115 升版當下的事實(不得就地改的舊 generation、保留的舊世代),不隨後續升版變動 -->
+- 依 ADR 0019 immutable generation,已發布的 `shell/v114/` 不得就地改,故走完整 forward bump 至 **v115**。`shell/v111`–`v114` 一律保留(2026-10-16 起此規則已改為只保留最近幾代,v111–v153 已刪除,見 ADR 0019 增補段)。 <!-- generation-exempt: 這一行描述的是 v114->v115 升版當下的事實(不得就地改的舊 generation、保留的舊世代),不隨後續升版變動 -->
 - **BB4 的判準版本隨之由 v114 改為 v115** —— 不是重做驗收,BB4 至今仍未執行過;驗 v115 反而等同一次驗完 v112／v113／v114／v115 四版。
 - 本次 forward bump **未改動任何測試檔的 generation 路徑** —— backlog #27 的遷移(2026-09-11)剛好在此回收成本。僅兩處必要維護:`theme-system.test.js` 的五筆滾動視窗尾四筆(歷史 release note,依裁定寫死),以及 `pwa-shell.test.js` 的 7 處轉義形式路徑(#27 當時的 grep 用 `shell/v114` 比對,漏掉正則字面裡的 `shell/v114/`)。 <!-- generation-exempt: 這一行描述的是 v114->v115 升版當下的事實(不得就地改的舊 generation、保留的舊世代),不隨後續升版變動 -->
 - 完整 gate、95/95 Node 與 **191/191 Playwright** 通過;已在 390×844 實測兩處修正生效且無視覺回歸。

@@ -1,6 +1,6 @@
 # ADR 0019 — 版本綁定的 Generated BUILTIN 離線資產
 
-> 狀態：Accepted（2026-08-13；依 Bar 核准的 v111 BUILTIN asset spike 與安全門檻落地）。
+> 狀態：Accepted（2026-08-13；依 Bar 核准的 v111 BUILTIN asset spike 與安全門檻落地）。2026-10-16 增補舊 generation 的保留範圍（見下方增補段）。
 
 ## Decision
 
@@ -13,6 +13,20 @@ Once active, the v111 worker serves every known `SHELL` resource cache-first, re
 BUILTIN 離線種子只由 `tools/refresh-builtin-snapshot.js` 產生為 Tier 3 的 `shell/v111/builtin-snapshot.js`，不再把資料 payload 複製進 v111 document。generated asset 必須宣告 `BUILTIN_ASSET_VERSION`，與 `shell/v111/app-version.js`／`sw.js` 同版，並登錄於 `runtime-assets.json`、HTML script order、SW App Shell、`.ai-manifest.json` 與部署 cache header。
 
 App 只在 `BUILTIN_ASSET_VERSION === APP_VERSION` 且八個 sheet 都完整時啟用 BUILTIN。asset 缺失、內容不完整或版本錯配時，依序嘗試已通過既有 shape／data validation 的 local active、previous 與 legacy snapshot；若全部無效，顯示含重新載入及複製診斷資訊的 recovery UI，不建立空 DB、不啟動背景同步。
+
+## 增補（2026-10-16，Bar 核准）：舊 generation 的保留範圍
+
+上方 Decision 寫的 `shell/v111/` 是本 ADR 落地當時的世代，屬歷史事實；current generation 以 `sw.js` 的 `SW_VERSION` 為準。
+
+原本的慣例是「每個已發布的舊 generation 都留在 repo 與正式站，並在 §F5 逐一確認回 200」。Bar 於 2026-10-16 核准刪除 v111–v153 共 43 個舊世代資料夾，此後**只保留最近的幾代（目前為 v154 起；至少保留 current 與前一代）**，每次發布仍須確認「前一代」可服務（`16_OPS_PLAYBOOK.md` §F5 第 4 項）。更早的世代可在之後的整理中刪除（刪除本身也要 Bar 核准），刪除時同步移除 `tests/trip-lifecycle-wiring.test.js` 保留世代 hash 表中對應的項目。
+
+為什麼安全：
+
+- 自 v111 起每一版 `sw.js` 對已知 SHELL 都是 cache-first，命中失敗只回離線結果（`cachedOrOffline`），不會連網補抓。已安裝的舊 worker 只從自己的 Cache Storage 取用自己那一代的檔案。
+- `shell/vN/*` 只在 SW vN 的 install 階段（`cache:'reload'`）才會從網路抓。部署換代時，裝置上的舊 worker 會改抓新的 `sw.js` 並安裝 current generation，不再需要自己那一代的網路檔。
+- 仍停在 v110 以前（network-first）worker 的裝置只用 root `index.html`／`app-version.js`（v110 bridge）與 root modules，不讀 `shell/`；bridge 不受影響。
+- 回滾不依賴 repo 內的舊資料夾：Netlify §A1「Publish deploy」用的是部署快照，自帶當時所有檔案；git 層回滾到 `production-vNNN` tag 時，該 tag 的樹本身就含它自己的 `shell/vNNN/`。
+- 刪除的內容仍在 git 歷史與各 `production-vNNN` tag 中，可隨時以 `git show production-vNNN:shell/vNNN/<檔名>` 取回。`tests/trip-lifecycle-wiring.test.js` 原本讀取的「已核准 v136 BUILTIN」改存為位元組相同的 `tests/fixtures/builtin-snapshot-v136-approved.js`。
 
 ## Context
 
