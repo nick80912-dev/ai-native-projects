@@ -2,10 +2,6 @@
 
 個人帳獨立匯出格式與限制見 [匯出契約](docs/personal-ledger-export.md)（v143 起提供；發布狀態以 tasks/current.md 為準）。
 
-本機驗證與審查：[v143 交付驗證](docs/trippilot-v143-verification.md)。
-v144 B 本機保存候選與限制：[驗證記錄](docs/trippilot-v144-b-verification.md)（未推送；完成狀態以 tasks/current.md 為準）。
-v145 C 天氣改善與限制：[驗證記錄](docs/trippilot-v145-c-verification.md)（本機完成，未推送；以 tasks/current.md 為準）。
-
 ## 這是什麼
 六天五夜日本自駕旅遊的手機 PWA。Google Sheets 當 CMS，以單頁 App 搭配少量獨立 runtime module，部署於 Netlify。
 - 正式站:https://trippilot-jp.netlify.app/
@@ -36,8 +32,6 @@ v145 C 天氣改善與限制：[驗證記錄](docs/trippilot-v145-c-verification
 5. 資料內容改動走 Google Sheets,不改程式;程式只在功能/邏輯變動時修改
 
 ## 改善設計與計畫
-
-- [v146 首頁驗證](docs/trippilot-v146-verification.md)：結束後打包入口、天氣區域回退及串點目的地主次；保留全部略過、字級、帳務及封存規則。
 
 - [2026-10-03 第一批設計](docs/superpowers/specs/2026-10-03-trippilot-reliability-and-clarity-batch1-design.md)與 [A／B／C 實作計畫](docs/superpowers/plans/2026-10-03-trippilot-batch1-index.md)：分批處理狀態／摘要、本機保存可靠性及天氣資訊，保守調整字體；每批核准、驗證與發布狀態以 `tasks/current.md` 為唯一權威。
 

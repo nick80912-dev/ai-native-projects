@@ -5,6 +5,7 @@
 - **舊 generation 保留規則改變**：Bar 2026-10-16 核准刪除 v111–v153 共 43 個舊世代資料夾。此後 repo 與正式站只保留最近幾代（目前 v154 起，至少 current 與前一代）；§F5 第 4 項仍確認「前一代」回 200，不再要求每個舊世代都回 200。理由與規則見 ADR 0019 增補段、`16_OPS_PLAYBOOK.md` §F5。
 - 為什麼安全：v111 起每一版 SW 對自己的 SHELL 都是 cache-first，只在自己 install 時才從網路抓那一代的檔案；v110 以前的裝置只用 root bridge；Netlify 回滾用部署快照。刪掉的內容仍在 git 歷史與 `production-vNNN` tag。
 - `tests/trip-lifecycle-wiring.test.js` 不再讀舊世代：已核准的 v136 BUILTIN 改存為位元組相同的 `tests/fixtures/builtin-snapshot-v136-approved.js`（以原 sha256 核對），不可變 hash 改守 root bridge 與保留的 v154／v155／v156 三件組。
+- 同批刪除（Bar 核准）：`docs/superpowers/` 中沒有任何其他檔案引用的 150 份計畫／規格（仍被引用的 19 份保留）；`00_CONTEXT_HANDOVER.md` 與兩份 `-old-*_DEPRECATED.md`；v142–v146 的 5 份本機驗證文件；`docs/qa/playwright-worker-experiment-v111.md`、`docs/architecture/ledger-history-deletion-test-v110.md`；沒有任何引用的 `icon-120.png`（`tools/refresh-pwa-icons.py` 不再產生）。v146 驗證文件裡的天氣座標來源已移到 `docs/new-trip-handbook.md` 附錄。
 - **無 runtime 變更**：`sw.js`、`netlify.toml`、`runtime-assets.json`、root bridge 與保留的世代都沒動。
 
 ## 2026-10-05 — v146 已正式發布（PR #42）

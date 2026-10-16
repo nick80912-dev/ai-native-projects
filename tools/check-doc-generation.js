@@ -14,8 +14,8 @@
 
    刻意不檢查的:
      - 歷史文件(adr/、07_CHANGELOG.md、tasks/done.md、docs/superpowers/、
-       00_CONTEXT_HANDOVER.md、-old-*_DEPRECATED.md、
-       docs/device-acceptance-log.md)
+       docs/device-acceptance-log.md;00_CONTEXT_HANDOVER.md 與 -old-*_DEPRECATED.md
+       已於 2026-10-16 刪除)
        → 這些記錄「當時」的事實,寫死舊版本才是對的。
      - tests/*.test.js
        → 測試檔指到舊 generation 會 ENOENT 大聲失敗,不是無聲錯誤;

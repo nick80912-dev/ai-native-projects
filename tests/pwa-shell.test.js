@@ -150,7 +150,8 @@ const releaseNotes = /var APP_RELEASE_NOTES=\[([\s\S]*?)\n\];/.exec(index);
 assert.ok(releaseNotes, 'release notes list is present');
 assert.ok(releaseNotes[1].includes("{version:'" + appVersion() + "'"), 'release notes carry an entry for the current version');
 
-for (const size of [16, 32, 120, 152, 167, 180, 192, 512]) {
+/* icon-120.png 沒有任何 manifest／HTML／SW 引用,2026-10-16 經 Bar 核准刪除(iOS 用 152／167／180)。 */
+for (const size of [16, 32, 152, 167, 180, 192, 512]) {
   const iconPath = path.join(root, `icon-${size}.png`);
   assert.ok(fs.existsSync(iconPath), `icon-${size}.png exists`);
   assertPngSize(iconPath, size);
@@ -160,6 +161,7 @@ for (const size of [192, 512]) {
   assert.ok(fs.existsSync(iconPath), `icon-maskable-${size}.png exists`);
   assertPngSize(iconPath, size);
 }
+assert.ok(!fs.existsSync(path.join(root, 'icon-120.png')), 'unused icon-120.png stays deleted');
 assert.notStrictEqual(
   sha256(path.join(root, 'icon-512.png')),
   '2879A46287F38D9B9AF7DC2E296B54530A41ACA0861B4D2F639C86BDDB061BB6',
