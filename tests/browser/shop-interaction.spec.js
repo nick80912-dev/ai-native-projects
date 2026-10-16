@@ -67,22 +67,33 @@ test('toggling a want updates the row in place without rebuilding the list', asy
   expect(result.storedKeys.length).toBe(2);
 });
 
-/* 第一次標記確實會重繪 —— 這是設計上的邊界,寫成測試以免日後被誤當成缺陷「修掉」 */
-test('the first mark in a mall legitimately re-renders because a new block appears', async ({ page }) => {
+/* 第一次標記確實會重繪 —— 這是設計上的邊界,寫成測試以免日後被誤當成缺陷「修掉」。
+   v158(T16):還沒有想逛店家時已有同高的提示框,重繪後同一列不會往下跳。 */
+test('the first mark in a mall re-renders the want block without moving the rows below', async ({ page }) => {
   const result = await page.evaluate(() => {
     document.querySelector('.floor-head').click();
     const target = document.querySelectorAll('.floor-body.open .store-row')[0];
-    const hadWantBox = !!document.querySelector('.want-box');
+    const placeholder = document.querySelector('.want-box.want-box-empty');
+    const topBefore = target.getBoundingClientRect().top;
+    const placeholderHeight = placeholder ? placeholder.getBoundingClientRect().height : 0;
     target.click();
+    const rowNow = document.querySelectorAll('.floor-body.open .store-row')[0];
+    const box = document.querySelector('.want-box[data-want-box]');
     return {
-      hadWantBox,
-      hasWantBoxNow: !!document.querySelector('.want-box'),
-      rebuilt: document.querySelectorAll('.floor-body.open .store-row')[0] !== target,
+      hadPlaceholder: !!placeholder,
+      hasWantBoxNow: !!box,
+      rebuilt: rowNow !== target,
+      moved: Math.abs(rowNow.getBoundingClientRect().top - topBefore),
+      heights: [Math.round(placeholderHeight), Math.round(box.getBoundingClientRect().height)],
+      headHeight: Math.round(box.querySelector('.want-head').getBoundingClientRect().height),
     };
   });
-  expect(result.hadWantBox).toBe(false);
+  expect(result.hadPlaceholder).toBe(true);
   expect(result.hasWantBoxNow).toBe(true);
   expect(result.rebuilt).toBe(true);
+  expect(result.moved).toBeLessThanOrEqual(1);
+  expect(result.heights[0]).toBe(result.heights[1]);
+  expect(result.headHeight).toBeGreaterThanOrEqual(44);
 });
 
 test('in-place toggle keeps the want total, want-list count and floor count in sync', async ({ page }) => {

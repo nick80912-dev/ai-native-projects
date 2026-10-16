@@ -3,14 +3,14 @@
 > 原則:每個檔案責任單一,命名一致,AI 一眼知道去哪修改。不使用 common/misc/temp 這類模糊命名。
 
 ## 正式 App 與 PWA 檔案(Netlify 部署樹)
-> root `index.html`／`app-version.js` 是 byte-locked v110 bridge；current App 位於 `shell/v157/`，只有 current worker 成功啟用後才接管 root 導覽。裝置照片、採買轉記帳、Ledger UI、Shopping UI 與 Trip progression 各有獨立 runtime 邊界。
+> root `index.html`／`app-version.js` 是 byte-locked v110 bridge；current App 位於 `shell/v158/`，只有 current worker 成功啟用後才接管 root 導覽。裝置照片、採買轉記帳、Ledger UI、Shopping UI 與 Trip progression 各有獨立 runtime 邊界。
 
 ```
 index.html              v110 bridge App（必須維持 origin/main v110 bytes）
 app-version.js          v110 bridge 顯示版本（不代表 current generation，禁止升為 current generation）
-shell/v157/index.html   current App:UI 殼 + CSS + 內嵌 JS（依區塊分層，見下）
-shell/v157/app-version.js current App 顯示版本（必須與 sw.js 的 SW_VERSION 一致）
-shell/v157/builtin-snapshot.js 工具產生、與 current App／SW 同版的 BUILTIN 離線資產（Tier 3，禁手改）
+shell/v158/index.html   current App:UI 殼 + CSS + 內嵌 JS（依區塊分層，見下）
+shell/v158/app-version.js current App 顯示版本（必須與 sw.js 的 SW_VERSION 一致）
+shell/v158/builtin-snapshot.js 工具產生、與 current App／SW 同版的 BUILTIN 離線資產（Tier 3，禁手改）
 shell/<較舊世代>/       已發布、不可就地修改的較舊 generation；只保留最近幾代（目前 v154 起，見下方說明）
 navigation-intent.js    明確導覽目的地的 session-only state module
 diagnostic-impact.js    AppLog 原始紀錄的 display-only impact projection
@@ -43,13 +43,13 @@ okayama-peach-badge.png 診斷徽章圖
 netlify.toml            Netlify 快取 header 設定
 .ai-manifest.json       AI 導航檔(接手第一步只讀這份)
 ```
-> App UI、DOM adapter 與多數流程維持在單一 current generation document `shell/v157/index.html`；獨立 runtime modules 由 `runtime-assets.json` 登錄並以 `tools/check-runtime-assets.js` 驗證入口、SW 與文件一致性。root bridge 不是日常功能修改目標。
+> App UI、DOM adapter 與多數流程維持在單一 current generation document `shell/v158/index.html`；獨立 runtime modules 由 `runtime-assets.json` 登錄並以 `tools/check-runtime-assets.js` 驗證入口、SW 與文件一致性。root bridge 不是日常功能修改目標。
 > **舊 generation 保留範圍(2026-10-16 Bar 核准)**:v111–v153 共 43 個舊世代資料夾已刪除,repo 只保留最近幾代(目前 v154 起,至少 current 與前一代)。已安裝的 worker 對自己的 SHELL 一律 cache-first,只在自己 install 時才從網路抓 `shell/vNNN/`;Netlify 回滾用的是部署快照。刪掉的內容仍在 git 歷史與各 `production-vNNN` tag。詳見 ADR 0019 增補段。
 
-## Current App HTML `shell/v157/index.html` 內部分層(區塊順序,即邏輯模組)
+## Current App HTML `shell/v158/index.html` 內部分層(區塊順序,即邏輯模組)
 ```
 SCHEMA        來自 schema.js(pubBase + sheets.*.gid + 欄位/型別規格)
-BUILTIN       由 shell/v157/builtin-snapshot.js 載入的 8 表離線後備；current HTML 只留安全 guard
+BUILTIN       由 shell/v158/builtin-snapshot.js 載入的 8 表離線後備；current HTML 只留安全 guard
 UTILS         storage / toast / CSV parser / copyText / date
 VALIDATOR     來自 validator.js(表頭驗證 + 六類日誌 + session-only 診斷緩衝)
 PARSER        parseTable / parseKeyValue / parseExpensesFree(Schema 驅動)
@@ -83,7 +83,7 @@ docs/                      現行契約與手冊(personal-state-compatibility、
 docs/superpowers/          仍被引用的功能設計規格與實作計畫(未被引用者已於 2026-10-16 刪除,可由 git 歷史取回)
 schema.js / validator.js   資料規格 SSoT / 防錯防線(Tier 1 原始碼)
 index.html / app-version.js v110 byte-locked bridge 正式入口
-shell/v157/                current App document／version／generated BUILTIN generation
+shell/v158/                current App document／version／generated BUILTIN generation
 shopping-photo-store.js    採買照片的裝置本機 IndexedDB 邊界
 buy-to-ledger.js           採買轉記帳的純 domain／workflow runtime module
 ledger-ui-state.js         Ledger history／entry／correction state／workflow runtime module
