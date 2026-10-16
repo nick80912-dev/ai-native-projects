@@ -202,7 +202,8 @@ function readAppVersionHelpers(){
   assert(settingsPageSource.includes("if(page==='travel-notes')return renderSettingsHeader('旅途紀錄',false)+renderTravelNotesSection();"),'Settings mounts the real travel-note component');
   const openSource=html.slice(html.indexOf('function openDiagnostics('),html.indexOf('function setupDiagnostics('));
   assert(!openSource.includes('renderTravelNotesSection()'),'the diagnostics panel no longer embeds the travel-note form');
-  assert(openSource.includes('renderDiagnosticTravelNotesLink()'),'the diagnostics panel links to the travel-note page');
+  /* v159:旅途紀錄只放在設定,診斷面板連入口列也拿掉 */
+  assert(!openSource.includes('旅途紀錄')&&!openSource.includes('TravelNote'),'the diagnostics panel has no travel-note entry');
 
   console.log('travel notes tests passed');
 })().catch(error=>{

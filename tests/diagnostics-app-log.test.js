@@ -138,7 +138,9 @@ const openSource=html.slice(openStart,openEnd);
 assert(openSource.includes('renderDiagnosticAppLogSection(logEntries)')&&openSource.includes('logEntries=AppLog.snapshot()'),'the real panel mounts the AppLog section');
 assert(openSource.includes('tripRows=diagnosticTripModel()')&&openSource.includes('renderDiagnosticTripSection(tripRows)'),'the real panel mounts the trip section');
 assert(openSource.includes('renderDiagnosticSummary(diagnosticSummaryModel(tripRows,findings,logEntries),findings)'),'the summary reads the same rows, findings and logs as the sections below it');
-assert(openSource.includes("(mode==='active'?renderDiagnosticTravelNotesLink()+renderDiagnosticToolsSection():'')"),'test tools and the travel-note link only appear during an active trip');
+assert(openSource.includes("(mode==='active'?renderDiagnosticToolsSection():'')"),'test tools only appear during an active trip');
+/* v159(Bar 2026-10-16):旅途紀錄只從設定進入,面板不再有入口列。 */
+assert(!html.includes('renderDiagnosticTravelNotesLink')&&!html.includes('openTravelNotesFromDiagnostics')&&!html.includes('diag-link-row'),'the diagnostics panel has no travel-note entry');
 assert(openSource.includes('<div class="diag-foot"><button class="diag-copy" onclick="copyDiagnosticsReport()">複製除錯報告</button></div>'),'copy stays pinned in the footer');
 assert(openSource.includes('role="dialog" aria-modal="true" aria-labelledby="diagTitle"'),'the panel is announced as a dialog');
 assert(openSource.includes('aria-label="關閉診斷面板"'),'the close button has an accessible name');
