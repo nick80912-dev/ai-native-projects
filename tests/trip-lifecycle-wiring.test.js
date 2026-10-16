@@ -8,26 +8,30 @@ const {appVersion:currentVersion,shellPath} = require('./support/version');
 const root = path.resolve(__dirname, '..');
 const read = (file) => fs.readFileSync(path.join(root, file), 'utf8');
 const hash = (file) => crypto.createHash('sha256').update(read(file).replace(/\r\n/g, '\n')).digest('hex');
+/* 已發布 generation 不可就地改(ADR 0019)。2026-10-16 Bar 核准刪除 shell/v111–v153 後,
+   repo 只保留較新的世代;這裡守住 root v110 bridge 與仍保留的已發布世代三件組。
+   刪除某個保留世代時,同步移除它在這裡的 hash(依 ADR 0019「保留範圍」的規則)。 */
 const immutable = {
-  "shell/v140/index.html": "9fa16da11ee3192480ddf3e0eb17b787bafeda9ae5667495e000d5bd3ffe45e6",
-  "shell/v140/app-version.js": "8c5090504bc17b1b8f79008e626cd796a744cd314ecc0aeaa353506c7014a3a3",
-  "shell/v140/builtin-snapshot.js": "852d6efd06ee6850ce4e1a59a1373ed706960770f2b8592869643320a2af0eda",
-  'shell/v139/index.html': 'be63905dae86d4ce4bb9781deb9f38e7d4397db7f71cf41fda2fa8d3b72dd528',
-  'shell/v139/app-version.js': '0f97742212689d88c6e3cbfd5056ab0acfd133aa666a3f8489a43253b3ac9776',
-  'shell/v139/builtin-snapshot.js': '5351bff8d19ba5e70084ea29d10a70b8c324d6f342d8a5c82ba2431a653f355f',
   'index.html': '7e22172860865d343df8061317aa0d231f0323eb296564b10cf871d273e1682f',
   'app-version.js': '085e37a275b03dbc20630a5a500f5e5192db7c5a75f13e4725f788e0d49714cb',
-  'shell/v136/index.html': 'e51ad7b72f64dd2cde062989ada0490bcf502c35a721de72b1cbc7c106e12170',
-  'shell/v136/app-version.js': '8059935d5c49efa583f3ad74e56ee10d9d3c4b4419cc3102554e05882cd72919',
-  'shell/v136/builtin-snapshot.js': 'b714ab267c737de51933c7aa01446a20b23c90719a59f5d009635c3ea5441025',
-  'shell/v137/index.html': '8d8d98bc06f5c1d4a86585650a3933867c9b08dbcc96b37fa91d2c7b2a3695b1',
-  'shell/v137/app-version.js': '9af19d6e63aaa46575bd52251f688126198e3f68753bfc5418b3377f438cd371',
-  'shell/v137/builtin-snapshot.js': '0731d5ab566a20f1df1b6eef1ff29ad3b780f0bf665d74892396dba2bc55a09e',
-  'shell/v138/index.html': 'a9fc0130df0f236cb2a5d3648444d62823ec0bcfc6f041fb7f29c040dfa372f0',
-  'shell/v138/app-version.js': '0d72e6e8ff705cc3f6fd9972e300ac052eeef02e3d5005a3ef556224c4866224',
-  'shell/v138/builtin-snapshot.js': '07ab78fb0ce184a860a58a78bffb9fa15139c7bb54b35d6eee1a75395845133c',
+  'shell/v154/index.html': 'e7120b50bcc513f8e8ec7f7d000603d476e41d6a8d6b6239e6ab296d7e0620a2',
+  'shell/v154/app-version.js': 'fb501de78a1ff1420a240d9fd2f447303e33b50b83e6e1e2f34a8eb141c95d92',
+  'shell/v154/builtin-snapshot.js': '10c28610ecceb269cf9e37e23a1359d0d5d29e8a0b30d3cf9e67bfa14199f156',
+  'shell/v155/index.html': '009d5bbcb03a28c13ae3b19271765c59ceca29423ae8f79da810c577b56957bc',
+  'shell/v155/app-version.js': 'e5e542fb9510a1b1d30d6dab837db60a01d22161081b66f9865527841e87d7c5',
+  'shell/v155/builtin-snapshot.js': '369aaee9ef9c4556290ee5aefe5ca062d1399e35368f390e2b10051c8d1afd84',
+  'shell/v156/index.html': '38321a197345735067d927108dcd300f0a5e028ebae2d461ccda5e426a589a41',
+  'shell/v156/app-version.js': 'd594bf3af63cd685bff33b03e0bb43ed40ad79570c6fe47eb700fa2c33e56978',
+  'shell/v156/builtin-snapshot.js': 'c161c295c2e48f21cf32fc64ee5d1a1b9b78b76a7210356e7647407c7c906415',
 };
 Object.keys(immutable).forEach((file) => assert.strictEqual(hash(file), immutable[file], file + ' remains immutable'));
+
+/* 已核准的 v136 BUILTIN 內容基準。原本直接讀 shell/v136/builtin-snapshot.js;該世代刪除後,
+   以位元組相同的副本保存在 tests/fixtures/,並用原世代的 sha256 證明它就是當時核准、發布的那一份
+   (原檔仍可由 `git show production-v136:shell/v136/builtin-snapshot.js` 取得)。 */
+const APPROVED_SNAPSHOT_FIXTURE = 'tests/fixtures/builtin-snapshot-v136-approved.js';
+assert.strictEqual(hash(APPROVED_SNAPSHOT_FIXTURE), 'b714ab267c737de51933c7aa01446a20b23c90719a59f5d009635c3ea5441025',
+  'approved v136 BUILTIN fixture is byte-identical to the published shell/v136/builtin-snapshot.js');
 
 const version = currentVersion();
 const html = read(shellPath('index.html'));
@@ -42,7 +46,7 @@ assert.ok(html.includes('<script src="'+shellPath('builtin-snapshot.js')+'"></sc
 assert.ok(html.includes("{version:'"+version+"'"));
 assert.ok(assets.includes(shellPath('app-version.js')));
 assert.ok(assets.includes(shellPath('builtin-snapshot.js')));
-const approvedSnapshot = snapshotTool.readBuiltinAsset(read('shell/v136/builtin-snapshot.js')).snapshot;
+const approvedSnapshot = snapshotTool.readBuiltinAsset(read(APPROVED_SNAPSHOT_FIXTURE)).snapshot;
 const candidateSnapshot = snapshotTool.readBuiltinAsset(read(shellPath('builtin-snapshot.js'))).snapshot;
 assert.deepStrictEqual(candidateSnapshot, approvedSnapshot, 'current BUILTIN keeps the approved v136 CSV content');
 

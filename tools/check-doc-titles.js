@@ -6,7 +6,7 @@
    1. NN_*.md(00-16 等編號文件)第一個標題必須以「# NN」開頭。
    2. 具名文件依 MAP 檢查第一行標題前綴。
    3. .ai-manifest.json 必須是有效 JSON 且 project 欄位存在。
-   略過:-old-*_DEPRECATED.md、docs/superpowers/、adr/(自由標題)、FUTURE_PLAN。
+   略過:-old-*_DEPRECATED.md(目前沒有,原有兩份已於 2026-10-16 刪除)、docs/superpowers/、adr/(自由標題)、FUTURE_PLAN。
    零相依,Node 內建模組;執行:node tools/check-doc-titles.js(於 repo 根目錄)
    ============================================================ */
 const fs = require('fs');

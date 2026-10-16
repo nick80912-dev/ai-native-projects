@@ -21,26 +21,22 @@
 
 - `home-v146.test.js`：完整日曆日期／閏年、目的地優先、路線區域及前後最近／等距／未知結果。
 - `browser/home-v146.spec.js`：結束日／年份、同頁跨午夜／回前景／hidden／離頁、ongoing DOM／records 不變、無自動授權清除、鍵盤入原預檢／待同步阻擋、祖谷 request、子站回退、未知提示、320／390px 標題／導航一致、全部略過不變。
-- [v146 驗證記錄](../docs/trippilot-v146-verification.md)保留 RED／回歸／審查與真機限制。
 - `browser/sw-update-cache.spec.js` 的 controller／cache readiness 以 `expect.poll` 等待真正 boolean；新增攔住 SW／空 cache 的 RED→GREEN 保護，避免 async `waitForFunction` 的 Promise truthiness 提前完成。原混世代／前後內容／離線斷言及時限不放寬。
 
 - 個人帳匯出：`node tests/personal-ledger-export.test.js` 與 `npx playwright test tests/browser/personal-ledger-export.spec.js`。涵蓋白名單／來源識別／唯讀／損壞拒絕／下載內容與 ⓘ modal 焦點及窄螢幕。v154 起驗證格式 v2 的 `groupShare` 與 `totals`。
 - 出發前修正（v156）：`npx playwright test tests/browser/pretrip-fixes-v156.spec.js`。B1：fast pull 讀回的團體帳在用舊 CSV 同步後仍在帳本與餘額裡，`syncAll` 自己從第一列重讀、游標走過的列會補回；L3：記帳表單點背景或按 Esc 不關閉、草稿保留；L8：團體帳表單寫「付款人：Bar（你）」與說明小字（320／390px）；T3：從今天頁點已略過的站切到「顯示全部」並定位，未處理的站維持「隱藏已完成」。復原 6 秒由 `trip-progress-persistence.test.js` 驗證。
 - 我的總花費（v154）：`node tests/my-trip-spend.test.js` 直接執行 `buildMyTripSpend()` 與結算分攤 helper，驗證不含代購、只算目前身分、只算我在分攤成員內的份額（最大餘數分法）、只先墊的與沒有我的團體帳不算、無法辨識的分攤成員不猜、待同步計數、類別排序與逐筆最新在上；並驗證資料來源固定為正式帳本、只在個人分頁顯示、匯出 v2 接線。`npx playwright test tests/browser/my-trip-spend.spec.js` 驗證明細的類別與逐筆、刪除／還款／測試帳本／居酒屋（沒有我）／我只先墊的紀錄都不出現、台幣顯示與 320px、測試模式開著仍只算正式帳本。v155 起「我的總花費」卡與代購卡併進個人分頁大卡：Node 測「今天」＝今天的個人（不含代購）＋今天的團體份額、沒有紀錄的日子為 0、整趟總額不受今天影響；`ledger-dashboard.test.js` 測 `personalSummaryPresentation()` 的文案與幣別；browser 測大卡的今天花費與組成說明、代購列只顯示金額（沒有代購就不顯示）、整趟旅程（不含代購）、點開明細與代購彙總、點大數字切台幣、320px 不溢位、團體分頁不變。`ui-ux-hardening.spec.js` 另測換頁淡入時 view 不帶 transform、分帳＋按鈕不跑位（v155）。
 
-v143 驗證與審查紀錄：[交付驗證](../docs/trippilot-v143-verification.md)。
-
 ## v145 weather coverage
 
 - `weather-freshness.test.js`：品質投影、3h 邊界、未知值、原 timestamp 不變、城市／時間格式、session expiry、去重、failed／manual retry、cache denied、epoch 與 late reply。
 - `browser/weather-freshness.spec.js`：18 項實際 DOM／鍵盤／Open-Meteo route／Storage 故障案例；320／375／390px、6500ms timeout、切城市／離頁／清除與容量不足；同頁 visibilitychange／pageshow、單次到期失效（不輪詢）、下一站與重試焦點，以及過去 0%＋未來缺值。僅使用 QA context，不修改使用者資料。
-- [C 驗證記錄](../docs/trippilot-v145-c-verification.md)如實區分自動化、独立審查與未驗真機。
 
 ## v144 checked trip-progress coverage
 
 - `trip-progress-persistence.test.js`：26 個 writer／reader／caller 案例；逐鍵拒絕、精確原 bytes／不存在恢復、讀回不符、rollback 不確定、壞 JSON／拒絕讀取、無旅程不復活、undo 保留 autoSkip／重試，以及同批群組 controller 一致性。
 - `browser/trip-progress-persistence.spec.js`：14 個真實點擊／鍵盤故障案例，涵蓋 reload 後紀錄、健康提示、自動去重、過時取消、最後子站復原、讀取失敗不移除重試及焦點接回。固定時間、Storage 注入及測試行程僅限隔離 QA context。
-- [v144 驗證記錄](../docs/trippilot-v144-b-verification.md)區分本機全套、獨立審查與未驗真機／遠端部署；localStorage 不是跨分頁交易。
+- 已知限制：localStorage 不是跨分頁交易（原 v144 驗證記錄的結論）。
 
 ## v141 Drive session coverage
 
@@ -69,7 +65,7 @@ v143 驗證與審查紀錄：[交付驗證](../docs/trippilot-v143-verification.
 - `theme-system.test.js`, `ui-ux-hardening.test.js`, `browser/ui-ux-hardening.spec.js`, and `browser/today-live-info.spec.js` protect the compact typography／spacing／radius／action-role tokens, fixed pending／entry／Shopping status color roles, exact six-theme palette values, and unchanged computed presentation at 320／375／390px.
 - `today-view-module.test.js` directly protects `TripTodayView.buildModel()`／`render()`／`actionFor()`: immutable input, blank category → `未分類`, six-Unicode-code-point visible cap, full accessible stop name, product-name privacy, generic fallback, and the no-DOM／storage／clock／repository boundary.
 - Production wiring tests require `today-view.js` in the page and eleven-asset offline shell inventory, remove the former inline Hero helper／markup authority, and retain exact Today Shopping targeting and interaction behavior in Chromium and WebKit.
-- `ledger-ui-state.test.js` remains the executable Ledger boundary. The v110 deletion-test decision is documented at `docs/architecture/ledger-history-deletion-test-v110.md`; no new Ledger runtime module or global store is expected.
+- `ledger-ui-state.test.js` remains the executable Ledger boundary. The v110 deletion test rejected a separate `ledger-history-view.js` module (its write-up was deleted on 2026-10-16 and remains in git history); no new Ledger runtime module or global store is expected.
 
 ## v109 navigation-feedback acceptance-fix coverage
 

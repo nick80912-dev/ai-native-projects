@@ -1,6 +1,6 @@
 # 13 Project Status
 
-> 更新於 2026-09-09。
+> 更新於 2026-10-16。
 >
 > **即時狀態的唯一權威是 `tasks/current.md`**(`.ai-manifest.json` 的 `current_status.authority` 明定)。
 > 本檔在 2026-08-01 之前是手抄的狀態快照,結果落後了 40 個版本仍無人察覺 —— 兩份手工維護的狀態表必然漂移。
@@ -16,7 +16,7 @@
 - 內容修訂一律走 Google Sheets,程式端不硬改資料。
 - 天氣摘要失敗時應隱藏,不阻塞首頁。
 - 個人狀態只存 localStorage,不進 CMS;採買照片 Blob 只存目前裝置 IndexedDB,不進備份或跨裝置同步。
-- Hotels 以「名稱比對」掛 Places 是已知脆弱點(名稱異動會懸空),列於 `tasks/backlog.md` 觀察。
+- 住宿關聯只用 `Places.HID → Hotels.HID` 精確對應(ADR 0017,Schema 3.0 起);住宿名稱只供顯示,不得改回名稱或子字串比對。
 - 修改核心架構、schema、Google Sheet 欄位、既有 ADR、或 14 定義的高風險檔案前,必須先取得 Bar 確認。
 - `sw.js`、`shell/v157/app-version.js` 與 `netlify.toml` 的 cache header 屬同一 PWA 風險群組(見 14);升版時版本字串必須同步,否則 CI 的 `tools/check-app-version.js` 會失敗。
 - 文件裡的 `shell/vNNN` 路徑由 `tools/check-doc-generation.js` 守住,活文件不得停在舊 generation;歷史文件(`adr/`、`07_CHANGELOG.md`、`tasks/done.md` 等)刻意豁免。

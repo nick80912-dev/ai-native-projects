@@ -9,7 +9,7 @@
 - **身分註冊紀錄**：明細為 `[身分註冊]`、用來建立團體成員名單來源的專用 Ledger 紀錄；不等同一般消費。
 - **最大餘數法**：分攤整數金額時先取各份額整數，再依小數餘額由大到小補足差額，確保分攤總和等於原金額。
 - **原子快照**：多份 Google Sheet 資料須通過同一批驗證後才整批替換；任一必要資料失敗時不發布混合版本。
-- **BUILTIN 離線種子**：由 `tools/refresh-builtin-snapshot.js` 產生的 Tier 3 `shell/v157/builtin-snapshot.js`，包含完整八 key 並以 `BUILTIN_ASSET_VERSION` 綁定 App／SW；`shell/v157/index.html` 只保留 marker 與安全 boot guard，不複製 payload。root `index.html`／`app-version.js` 是 byte-locked v110 bridge，只在 current worker 安裝前／失敗時續命。v137 候選版沿用已核准 v136 的七張非 Ledger CSV，Ledger 永遠只有 schema 推導的 21 欄空 header，禁止抓取 live Ledger 紀錄。asset 缺失／錯版時只接受有效 local snapshot，否則顯示 recovery 而非空 DB。預設 preview 只讀，經 Bar 核准才可 write；完整 SOP 見 `16_OPS_PLAYBOOK.md` §G，決策見 ADR 0019。
+- **BUILTIN 離線種子**：由 `tools/refresh-builtin-snapshot.js` 產生的 Tier 3 `shell/v157/builtin-snapshot.js`，包含完整八 key 並以 `BUILTIN_ASSET_VERSION` 綁定 App／SW；`shell/v157/index.html` 只保留 marker 與安全 boot guard，不複製 payload。root `index.html`／`app-version.js` 是 byte-locked v110 bridge，只在 current worker 安裝前／失敗時續命。BUILTIN 的七張非 Ledger CSV 沿用已核准的 v136 內容（升版只更新版本標記），Ledger 永遠只有 schema 推導的 21 欄空 header，禁止抓取 live Ledger 紀錄。asset 缺失／錯版時只接受有效 local snapshot，否則顯示 recovery 而非空 DB。預設 preview 只讀，經 Bar 核准才可 write；完整 SOP 見 `16_OPS_PLAYBOOK.md` §G，決策見 ADR 0019。
 - **住宿停靠點（lodging stop）**：Places 中 `Type=住宿` 的行程路線節點；PID 識別該次抵達的交通與導航脈絡。同一實體住宿可因每日里程與時間不同而有多個住宿停靠點，這些 PID 不應被自動合併。
 - **住宿主檔（hotel profile）**：Hotels 中以 HID 識別的實體住宿資料；同一主檔可被多個住宿停靠點引用。住宿或停靠點名稱都是顯示文字，不是關聯鍵。
 - **觀測者效應（no-op dblclick）**：iPhone 相容性 workaround；保留 passive、無副作用的 `dblclick` 監聽器，避免診斷或阻擋手勢本身改變問題。
@@ -17,7 +17,7 @@
 - **下一站調和（next-stop reconciliation）**：以同一份當日行程、既有完成／略過進度與明確傳入的目前分鐘，一次決定下一站並找出 cutoff 前尚未確認的超時項目；同一輪最多形成一筆進度保存與一則自動略過通知。父子行程卡的第一個 blocking controller 會截斷自動略過範圍；已完成項目不重寫 checks。Trip、Today 與 cluster 不得各自實作不同判斷。
 - **Scroll-only**：Modal／Sheet 只允許內容捲動，不以 JavaScript 實作滑動關閉或手勢攔截；觸控行為由 CSS `touch-action` 管理。
 - **封閉集合／開放集合（segmented vs chips）**：互斥且選項固定的狀態使用 segmented control；可多選或可擴充的選項使用 chips。
-- **全站繁中字型鏈**：介面以 Google Fonts `Noto Sans TC` 400／500／700 為第一順位，並使用 `display=swap`；fallback 固定為 `"PingFang TC","Microsoft JhengHei",system-ui,-apple-system,sans-serif`。不得把 Hiragino／Noto Sans JP／Yu Gothic 等日文字型放回 UI font stack，也不得為外部字型另改 Service Worker 快取策略；網路字型失敗或離線時必須可直接退回系統繁中字型。
+- **全站繁中字型鏈**：`--font-ui` 固定為系統繁中 stack `"PingFang TC","Microsoft JhengHei",system-ui,-apple-system,sans-serif`，第一個畫面一律用它。v149 起在 `load` 事件之後才由 `loadHuninnFont()` 載入 Google Fonts 的 Huninn（`display=swap`），目前畫面用到的字全部到齊才在 `<html>` 加 `font-huninn`，整頁一次換成 `"Huninn"` 開頭的 stack（見 `04_UI_GUIDELINES.md`）。不得把 Hiragino／Noto Sans JP／Yu Gothic 等日文字型放回 UI font stack，也不得為外部字型另改 Service Worker 快取策略（字型不進 SW 快取）；網路字型失敗或離線時維持系統繁中字型。
 
 ## 結算同步詞條
 
@@ -64,5 +64,5 @@
 - **`completedAt`**：實際完成時間。首次標記已買時寫入、移回待買時清空、再次完成時重寫、部分購買的已買部分於拆分當下寫入。舊資料缺欄補空字串，`done` 為 true 但無 `completedAt` 屬 legacy 降級，不得自行編造時間。順序分工：store array order 決定清單位置、`completedAt` 表示購買時間、`splitGroupId` 表示同源需求。**`createdAt` 不是購買時間。**
 - **單筆記帳入口**：完成商品後不強制詢問記帳（B 批裁定），但單筆記帳功能沒有取消——入口移到**已買項目列**。只有 `unlinked` 顯示「記帳」（直接呼叫既有 `openShoppingLedgerEntry()`），`linked` 顯示「改回未記帳」，`unverified` 兩者都不提供（必須阻擋再次記帳）。顯示條件一律走共用 resolver，不得以 `ledgerLinks.length` 判斷。
 - **自動改回未記帳**：記帳狀態是每次重繪即時推導，不是存下來的。**把帳本那筆刪掉，採買項目會自動變回「未記帳」**，不需要按任何東西（個人帳 → 讀不到即為權威；團體帳 → 有效墓碑且無 replacement）。手動的「改回未記帳」只補自動化決定不了的兩格：`unverified`（找不到但不能證明已刪除）、以及「消費是真的、只是連錯採買項目」。因此選單只在 `linked` 提供它。**絕不可改成「找不到就自動當作已刪除」**——離線一次就會把所有已記帳項目洗成未記帳，再記一輪即全套重複入帳。
-- **個人狀態備份 v7**：Shopping Item 於 v5 新增 `completedAt`／`splitGroupId`／item-level `ledgerLinks`，v6 改為結構化 item-level `quantity`／`unit`／`legacyQtyText`，v7 再把對象、數量與 links 收進 `allocations[]`。新匯出只使用 v7；v1～v6 皆可還原並經 normalizer 安全補成單一 allocation，未知未來版本必須明確拒絕（含型別檢查，字串 `'7'` 不通過）。`trip_shopping_list` key 不變，不做整批預先 migration，每次 read 經 normalizer 補欄、寫回時自然升格。
+- **個人狀態備份（採買相關 v5–v7）**：Shopping Item 於 v5 新增 `completedAt`／`splitGroupId`／item-level `ledgerLinks`，v6 改為結構化 item-level `quantity`／`unit`／`legacyQtyText`，v7 再把對象、數量與 links 收進 `allocations[]`。新匯出目前為 v10（v8–v10 的變更見 `docs/personal-state-compatibility.md`）；v1～v6 的採買資料皆可還原並經 normalizer 安全補成單一 allocation，未知未來版本必須明確拒絕（含型別檢查，字串 `'10'` 不通過）。`trip_shopping_list` key 不變，不做整批預先 migration，每次 read 經 normalizer 補欄、寫回時自然升格。
 - **代購對象共用名單**：採買表單與 Ledger 代購表單共用 `trip_ledger_proxy_targets`，任一入口新增後另一入口立即可見並依既有規則去重。
