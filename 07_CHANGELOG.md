@@ -1,6 +1,30 @@
 # 07 版本紀錄
 
-## 2026-10-16 — v159 診斷面板拿掉旅途紀錄入口（開發中，未發布）
+## 2026-10-16 — 收斂：出發前最後一版為 v159
+
+- **來源**：Bar 2026-10-16 指示「收斂該專案」。
+- `tasks/current.md` 改寫為只寫現況（線上版本、待 Bar 手機審查與 tag、旅途中原則與已知替代做法、回程後順序）；原本累積的歷史段落原文移到 `tasks/done.md` 檔尾「封存」一節。
+- `16_OPS_PLAYBOOK.md` §A5 的錨點改寫為現況：正式站 v159，最新已建立的 tag 仍是 `production-v156`。
+- 旅途中不再加功能；只在影響使用時依 §A2 forward bump 到 v160。只改文件，不動程式。
+
+## 2026-10-16 — v159 已上線 main（待 Bar 手機審查與 tag）
+
+- PR [#76](https://github.com/nick80912-dev/ai-native-projects/pull/76) 的 sanity／browser-qa 在 head `d275390` 全綠後合併進 `dev`（`091a291`，釘住 head）；PR [#77](https://github.com/nick80912-dev/ai-native-projects/pull/77) 合併 `dev` → `main`，merge commit **`6ae06f2`**。`main`＋`dev` 的合併 tree `a324605` 與 `d275390` 相同。
+- 本機完整 Chromium（`d275390`）346/348，兩項為已知只在本機失敗的項目。
+- **線上核對**：正式站 `sw.js` 為 `SW_VERSION='v159'`、`shell/v159/app-version.js` 為 v159；全新 Chromium 開正式站，`APP_VERSION` 為 v159、只剩 `okayama-trip-v159` 快取。Netlify deploy ID 未另查。
+- 回滾：依 `16_OPS_PLAYBOOK.md` §A1 Publish `commit_ref` = `17c609c`（v158）的部署，再往前 bump。
+
+## 2026-10-16 — v158 已上線 main（待 Bar 手機審查與 tag）
+
+- PR [#74](https://github.com/nick80912-dev/ai-native-projects/pull/74) 的 sanity／browser-qa 在 head `bc955ed` 全綠後合併進 `dev`（`3e11707`）；PR [#75](https://github.com/nick80912-dev/ai-native-projects/pull/75) 合併 `dev` → `main`，merge commit **`17c609c`**。合併 tree `2fdd8b0` 與 `bc955ed` 相同。
+- **線上核對**：正式站 `sw.js` 與 `shell/v158/app-version.js` 皆 v158；全新 Chromium 只剩 `okayama-trip-v158` 快取。
+
+## 2026-10-16 — v157 已上線 main（待 Bar 手機審查與 tag）
+
+- PR [#72](https://github.com/nick80912-dev/ai-native-projects/pull/72) 合併進 `dev`（`fce1e93`）；PR [#73](https://github.com/nick80912-dev/ai-native-projects/pull/73) 合併 `dev` → `main`，merge commit **`63f9bde`**，合併 tree 與 CI 驗過的 `5a607d3` 相同。
+- Netlify deploy `6ad1a693`，`commit_ref` = `63f9bde`；全新 Chromium 顯示 v157、只剩 `okayama-trip-v157` 快取，`shell/v153` 與 `icon-120` 回 404。
+
+## 2026-10-16 — v159 診斷面板拿掉旅途紀錄入口（已上線 main，見上）
 
 - **來源**：Bar 2026-10-16：「診斷面板內的旅途紀錄可以拿掉，旅途紀錄靠設定內就好」。
 - **變更**：診斷面板（進行中旅程時）不再顯示「旅途紀錄」入口列；旅途紀錄只從「設定 → 資料 → 旅途紀錄」進入。刪除 `renderDiagnosticTravelNotesLink`、`openTravelNotesFromDiagnostics` 與 `.diag-link-row` 樣式。旅途紀錄的資料、設定頁畫面、除錯報告與測試工具都不變。
@@ -8,7 +32,7 @@
 - **測試**：`diagnostics-app-log.test.js`、`travel-notes.test.js` 改為斷言面板沒有旅途紀錄入口；瀏覽器 `diagnostics-app-log.spec.js` 的旅途紀錄測試改從設定進入，並確認進行中旅程的面板（有測試工具）不含「旅途紀錄」。
 - **回滾**：合併前關閉 PR；發布後依 `16_OPS_PLAYBOOK.md` §A1 退回上一個 Netlify 部署（v158），再往前 bump。不影響任何資料。
 
-## 2026-10-16 — v158 串點卡資訊、站數一致、購物三項小修（開發中，未發布）
+## 2026-10-16 — v158 串點卡資訊、站數一致、購物三項小修（已上線 main，見上）
 
 - **來源**：Bar 2026-10-16 問還有沒有要修的（例如購物分頁），從出發前稽核再選 T4、T9、T16、T17、T10 出發前做。
 - **T4 同區串點卡**：子站也顯示一般下一站卡的資訊——類別標籤、停車、營業、「其他資訊」（付款／提醒）與官網、樓層、時刻表按鈕。卡片上半部可點開目前這一站的完整行程（鍵盤 Enter／Space 亦可）；展開鈕與子站清單放在可點區之外，展開不會跳頁。例：10/18 永旺顯示停車與四種營業時間、官網、樓層；10/19 嚴島神社顯示營業與官網。
@@ -22,7 +46,7 @@
 - **反向驗證**（各自被測試抓到）：串點卡不顯示停車／營業、上半部不可點、上方改回舊站數、卡片記帳關掉清單、表單一打開就顯示紅字、拿掉想逛提示框。
 - **回滾**：合併前關閉 PR；發布後依 `16_OPS_PLAYBOOK.md` §A1 退回上一個 Netlify 部署（v157），再往前 bump。不影響任何資料。
 
-## 2026-10-16 — v157 代記團體帳、採買記帳取消、行程「現在」對齊今天頁，並清理舊檔（開發中，未發布）
+## 2026-10-16 — v157 代記團體帳、採買記帳取消、行程「現在」對齊今天頁，並清理舊檔（已上線 main，見上）
 
 - **來源**：Bar 2026-10-16 看完出發前稽核後，要求出發前再做五項：採買多選記帳取消（T8）、切換身分與代記帳（L7／L8 後續）、行程頁「現在」（T2）、刪除指定的舊內容、修正高／中優先的過時文件。
 - **團體帳代記（Bar 選「表單直接選付款人」「寫在備註裡」「算進付款人的花費、不重複列」）**：
