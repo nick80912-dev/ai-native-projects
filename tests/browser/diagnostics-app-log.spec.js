@@ -238,10 +238,13 @@ test.describe('v153 診斷面板重新整理',()=>{
     await openApp(page);
     await waitForSyncToSettle(page);
     await page.evaluate(()=>{closeMemberSelector();openDiagnostics();});
-    await expect(page.locator('.diag-link-row')).toContainText('記下異常或優化建議');
-    await page.locator('.diag-link-row').click();
-    await expect(page.locator('#diagnosticOverlay')).toHaveCount(0);
+    /* v159(Bar 2026-10-16):診斷面板不再有旅途紀錄入口,只從設定進入 */
+    await expect(page.locator('#diagToolsSection')).toHaveCount(1);
+    await expect(page.locator('#diagnosticOverlay')).not.toContainText('旅途紀錄');
+    await page.getByRole('button',{name:'關閉診斷面板'}).click();
+    await page.evaluate(()=>openSettings());
     const settings=page.locator('#settingsOverlay');
+    await settings.getByRole('button',{name:/旅途紀錄/}).click();
     await expect(settings.locator('#settingsTitle')).toHaveText('旅途紀錄');
     await settings.getByRole('button',{name:'異常'}).first().click();
     await expect(settings.locator('.travel-note-kind button.on')).toHaveText('異常');
@@ -261,7 +264,7 @@ test.describe('v153 診斷面板重新整理',()=>{
     await expect(card.locator('.travel-note-status')).toHaveText('已處理');
     await expect(settings).toContainText('已記下 1 筆');
     await expect(settings).not.toContainText('筆待評估');
-    /* 設定根頁也有兩個入口 */
+    /* 設定根頁的旅途紀錄與診斷面板兩個入口 */
     await settings.getByRole('button',{name:'返回設定'}).click();
     await expect(settings.getByRole('button',{name:/旅途紀錄/})).toContainText('記下異常或建議');
     await settings.getByRole('button',{name:/診斷面板/}).click();
@@ -292,7 +295,7 @@ test.describe('v153 診斷面板重新整理',()=>{
     await expect(page.locator('#diagTripSection [data-key="mode"] .diag-chip.warn')).toHaveText('尚未連接');
     await expect(page.locator('#diagSummary')).toContainText('這支手機尚未連接旅程');
     await expect(page.locator('#diagToolsSection')).toHaveCount(0);
-    await expect(page.locator('.diag-link-row')).toHaveCount(0);
+    await expect(overlay).not.toContainText('旅途紀錄');
     await page.evaluate(()=>{window.__copied=[];window.copyText=function(text){window.__copied.push(text);};});
     await page.getByRole('button',{name:'複製除錯報告'}).click();
     expect(await page.evaluate(()=>window.__copied.length)).toBe(1);
