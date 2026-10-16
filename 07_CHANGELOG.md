@@ -1,5 +1,13 @@
 # 07 版本紀錄
 
+## 2026-10-16 — v159 診斷面板拿掉旅途紀錄入口（開發中，未發布）
+
+- **來源**：Bar 2026-10-16：「診斷面板內的旅途紀錄可以拿掉，旅途紀錄靠設定內就好」。
+- **變更**：診斷面板（進行中旅程時）不再顯示「旅途紀錄」入口列；旅途紀錄只從「設定 → 資料 → 旅途紀錄」進入。刪除 `renderDiagnosticTravelNotesLink`、`openTravelNotesFromDiagnostics` 與 `.diag-link-row` 樣式。旅途紀錄的資料、設定頁畫面、除錯報告與測試工具都不變。
+- **版本**：forward bump v158→v159；`builtin-snapshot.js` 以 v158 asset 離線重產，除版本外不變。發布說明視窗為 `v159` + `['v158','v157','v156','v155']`（v154 滾出）。`tests/trip-lifecycle-wiring.test.js` 加入已發布 v158 三件組的 hash。
+- **測試**：`diagnostics-app-log.test.js`、`travel-notes.test.js` 改為斷言面板沒有旅途紀錄入口；瀏覽器 `diagnostics-app-log.spec.js` 的旅途紀錄測試改從設定進入，並確認進行中旅程的面板（有測試工具）不含「旅途紀錄」。
+- **回滾**：合併前關閉 PR；發布後依 `16_OPS_PLAYBOOK.md` §A1 退回上一個 Netlify 部署（v158），再往前 bump。不影響任何資料。
+
 ## 2026-10-16 — v158 串點卡資訊、站數一致、購物三項小修（開發中，未發布）
 
 - **來源**：Bar 2026-10-16 問還有沒有要修的（例如購物分頁），從出發前稽核再選 T4、T9、T16、T17、T10 出發前做。
