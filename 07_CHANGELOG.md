@@ -9,7 +9,8 @@
 - **T17**：數量大於 1 的待買卡上「部分購買」改成次要樣式（淡色、無底色、一般粗細），不再比左側勾選更搶眼；部分購買表單一打開不顯示紅字，輸入過數量或按「拆成兩筆」才檢查。
 - **T16**：某商場還沒有想逛店家時，留一個同高的虛線提示框「⭐ 想逛店家：0 家 · 勾選下方店家加入」，第一次勾選時下面的清單不再往下跳；「想逛店家」整塊（至少 44px 高）都可以點，原本只有 18px 高的文字列。
 - **版本**：forward bump v157→v158；`builtin-snapshot.js` 以 v157 asset 離線重產，除版本外不變。發布說明視窗為 `v158` + `['v157','v156','v155','v154']`（v153 滾出）。`tests/trip-lifecycle-wiring.test.js` 加入已發布的 v157 三件組 hash。
-- **測試**：新增 `tests/browser/pretrip-polish-v158.spec.js`（9 項：串點卡資訊與上半部開行程、鍵盤開啟、兩個時間點的三處站數、卡片記帳後回到清單、部分購買次要樣式與延後檢查、輸入後清空才出現紅字）；`shop-interaction.spec.js` 改測第一次勾選時列不移動、提示框與想逛框同高、標題至少 44px；`buy-to-ledger.spec.js`、`render-note.test.js`、`home-simplification.test.js`、`theme-system.test.js` 跟著更新。
+- **測試**：新增 `tests/browser/pretrip-polish-v158.spec.js`（9 項：串點卡資訊與上半部開行程、鍵盤開啟、兩個時間點的三處站數、卡片記帳後回到清單、部分購買次要樣式與延後檢查、輸入後清空才出現紅字）；`shop-interaction.spec.js` 改測第一次勾選時列不移動、提示框與想逛框同高、標題至少 44px；`buy-to-ledger.spec.js`、`render-note.test.js`、`home-simplification.test.js`、`theme-system.test.js` 跟著更新；`home-v146.spec.js` 的「全部略過」站數由 6/6 改為 7/7（10/18 共 7 列，原本整區串點只算一站）。
+- **完整本機 Chromium（`cfb0713`）**：345/348。一項是上述 6/6→7/7 的寫死站數（PR CI 也抓到，已在下一個提交更新，該檔重跑 20/20），另兩項是已知只在本機失敗的（匯出下載檔名、離線未快取子資源 504）。
 - **反向驗證**（各自被測試抓到）：串點卡不顯示停車／營業、上半部不可點、上方改回舊站數、卡片記帳關掉清單、表單一打開就顯示紅字、拿掉想逛提示框。
 - **回滾**：合併前關閉 PR；發布後依 `16_OPS_PLAYBOOK.md` §A1 退回上一個 Netlify 部署（v157），再往前 bump。不影響任何資料。
 
