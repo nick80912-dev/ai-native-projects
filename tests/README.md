@@ -24,6 +24,7 @@
 - `browser/sw-update-cache.spec.js` 的 controller／cache readiness 以 `expect.poll` 等待真正 boolean；新增攔住 SW／空 cache 的 RED→GREEN 保護，避免 async `waitForFunction` 的 Promise truthiness 提前完成。原混世代／前後內容／離線斷言及時限不放寬。
 
 - 個人帳匯出：`node tests/personal-ledger-export.test.js` 與 `npx playwright test tests/browser/personal-ledger-export.spec.js`。涵蓋白名單／來源識別／唯讀／損壞拒絕／下載內容與 ⓘ modal 焦點及窄螢幕。v154 起驗證格式 v2 的 `groupShare` 與 `totals`。
+- 代記團體帳等（v157）：`npx playwright test tests/browser/proxy-recording-v157.spec.js`。採買多選記帳取消後移回待買、存檔後維持已買；團體帳付款人選單（320／390px）、代記紀錄的付款人／「〔Bar 代記〕」備註／小標／記錄者列表與摘要／付款人份額；行程頁「現在」與「回到現在」對齊今天頁。
 - 出發前修正（v156）：`npx playwright test tests/browser/pretrip-fixes-v156.spec.js`。B1：fast pull 讀回的團體帳在用舊 CSV 同步後仍在帳本與餘額裡，`syncAll` 自己從第一列重讀、游標走過的列會補回；L3：記帳表單點背景或按 Esc 不關閉、草稿保留；L8：團體帳表單寫「付款人：Bar（你）」與說明小字（320／390px）；T3：從今天頁點已略過的站切到「顯示全部」並定位，未處理的站維持「隱藏已完成」。復原 6 秒由 `trip-progress-persistence.test.js` 驗證。
 - 我的總花費（v154）：`node tests/my-trip-spend.test.js` 直接執行 `buildMyTripSpend()` 與結算分攤 helper，驗證不含代購、只算目前身分、只算我在分攤成員內的份額（最大餘數分法）、只先墊的與沒有我的團體帳不算、無法辨識的分攤成員不猜、待同步計數、類別排序與逐筆最新在上；並驗證資料來源固定為正式帳本、只在個人分頁顯示、匯出 v2 接線。`npx playwright test tests/browser/my-trip-spend.spec.js` 驗證明細的類別與逐筆、刪除／還款／測試帳本／居酒屋（沒有我）／我只先墊的紀錄都不出現、台幣顯示與 320px、測試模式開著仍只算正式帳本。v155 起「我的總花費」卡與代購卡併進個人分頁大卡：Node 測「今天」＝今天的個人（不含代購）＋今天的團體份額、沒有紀錄的日子為 0、整趟總額不受今天影響；`ledger-dashboard.test.js` 測 `personalSummaryPresentation()` 的文案與幣別；browser 測大卡的今天花費與組成說明、代購列只顯示金額（沒有代購就不顯示）、整趟旅程（不含代購）、點開明細與代購彙總、點大數字切台幣、320px 不溢位、團體分頁不變。`ui-ux-hardening.spec.js` 另測換頁淡入時 view 不帶 transform、分帳＋按鈕不跑位（v155）。
 
