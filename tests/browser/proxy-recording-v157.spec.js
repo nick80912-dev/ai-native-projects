@@ -85,8 +85,8 @@ test('2 a record kept for another payer is theirs, tagged, listed for the record
   expect(saved).toEqual({member:'Amy',note:'〔Bar 代記〕',participants:'["Amy","Ken"]'});
   const row=page.locator('#view-split .ledger-recent-row',{hasText:'咖啡'});
   await expect(row).toContainText('Bar 代記');
-  const totals=await page.evaluate(()=>{const related=mergedLedgerRecords().filter(record=>isLedgerRecordRelatedToMember(record,'Bar'));return related.some(record=>record.detail==='咖啡');});
-  expect(totals).toBe(false);
+  /* Bar 不在分攤裡:團體大卡的「與我相關」金額不算這筆 */
+  await expect(page.locator('#view-split .ledger-summary-card')).not.toContainText('500');
   /* Amy 的手機:這筆是她付的,算在她分到的份額;「整趟旅程」明細看得到 Bar 代記。 */
   const amy=await page.evaluate(()=>{localStorage.setItem('trip_member','Amy');const spend=myTripSpendSnapshot();const item=spend.groupItems.filter(entry=>entry.detail==='咖啡')[0];return {share:item.shareJpy,payerIsMe:item.payerIsMe,recorder:item.recorder,panel:renderMyTripSpendPanel(spend,'JPY').includes('你付（Bar 代記）')};});
   expect(amy).toEqual({share:250,payerIsMe:true,recorder:'Bar',panel:true});
