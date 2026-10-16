@@ -40,7 +40,7 @@
 - 欄位標題應與 Schema header 或 aliases 一致。
 
 ## Commit / 版本規則
-- 版本語意:主架構變更進位(V2→V3),功能微調用小數(V2.1)。
+- 版本語意:App 版本為單調遞增的 `vNNN`(`sw.js` 的 `SW_VERSION` 與 current generation 的 `app-version.js` 必須相同);App Shell 有任何變更就 forward bump 到下一個未使用的號碼,不倒退、不重用(見 `16_OPS_PLAYBOOK.md` §A2)。
 - 每次交付更新 07_CHANGELOG(架構變更標 ⭐);sw.js 有改必 bump VERSION。
 - 交付順序:開發 → commit → push `origin/dev` → Bar 驗收 → Pull Request → Bar Review / Merge → Netlify Deploy。
 

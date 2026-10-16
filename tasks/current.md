@@ -120,7 +120,7 @@
 - v113 只調整杉綠、霧藍、焙茶三組既有 palette；Ocean、Ivory、Wisteria、版面、資料與互動行為不變。
 - 三組 page surface、accent 與 secondary 已拉開；主要文字／操作色維持 WCAG AA，390×844 畫面無 overflow。
 - 本機及 merged tree 的 Node **94/94**、Playwright **185/185** 與三情境健康檢查通過；已推送 `dev`／`main`。
-- **正式部署已完成（2026-09-08）**：Netlify production deploy `6a9fb443`，`commit_ref` = `745bb6f`（與 `origin/main` HEAD 相符），`published_at` 有值；線上 `sw.js` 與 `shell/v121/app-version.js` 皆為 `v113`。**尚待 Bar 對三組主題做裝置驗收。** <!-- generation-exempt: 這是 2026-09-08 v113 正式部署當下的線上事實,不隨後續升版變動 -->
+- **正式部署已完成（2026-09-08）**：Netlify production deploy `6a9fb443`，`commit_ref` = `745bb6f`（與 `origin/main` HEAD 相符），`published_at` 有值；線上 `sw.js` 與 `shell/v113/app-version.js` 皆為 `v113`。**尚待 Bar 對三組主題做裝置驗收。** <!-- generation-exempt: 這是 2026-09-08 v113 正式部署當下的線上事實,不隨後續升版變動 -->
 
 
 ## 治理層 gate:活文件 generation 一致性(2026-09-09,dev)
@@ -143,23 +143,23 @@
 
 
 
-> 現況更新於 2026-10-01。細任務層;里程碑看 `06_ROADMAP.md`,**逐版交付紀錄一律看 `07_CHANGELOG.md`**,正式待辦看 `tasks/backlog.md`。
-> 本檔只回答三件事:**現在線上是什麼、dev 上是什麼、下一批要做什麼**。歷史流水帳不放這裡。
+> 現況更新於 2026-10-16。細任務層;里程碑看 `06_ROADMAP.md`,**逐版交付紀錄一律看 `07_CHANGELOG.md`**,正式待辦看 `tasks/backlog.md`。
+> 本檔只回答三件事:**現在線上是什麼、dev 上是什麼、下一批要做什麼**。各版發布細節在檔尾「下一棒」與 `07_CHANGELOG.md`;本檔其餘段落是保留的歷史紀錄。
 
 ## 📌 現況
 
-v143 已透過 `dev → main` PR #40 合併並完成正式站部署核對。G1 本次跳過；TP143-a～c 與既有真機項目保持待驗，OAuth Testing 不變。
+v156 已透過 PR #69(合併 `dev`)與 PR #70(`dev → main`)發布到正式站。依 Bar 指示改在正式站以手機審查,這次沒有先做 GitHub Pages 驗收。Bar 2026-10-06 回報先前所有真機驗收清單(含 BB4)已完成。
 
 | 項目 | 值 |
 |---|---|
-| **`origin/main` 原始碼** | **SW v143**；merge commit `13f46c3`（PR #40） |
-| **正式站** | `https://trippilot-jp.netlify.app/` — **SW v143**；deploy `6ac1d06230acd90008a24a16`，`commit_ref` = `13f46c3`，§F5／快取／離線核對通過。G1 跳過，真機封存與 Android BB4 仍待驗 |
-| **`dev` 內容** | **v143**，runtime `fb90ed4`、推送 `a54b22b`；本機 Node 107/107、Chromium 243/243、四項 gate 通過；main merge 已同步，發布後僅補文件。採買分類尚未實作，OAuth 仍 External Testing |
-| 個人備份格式 | **v9**(`PERSONAL_STATE_SUPPORTED_VERSIONS = [1..9]`)—— v81 因想逛 key 識別語意變更而升版 |
-| 最近一次 v141 發版驗證 | 本機 Node **102/102**、Chromium Playwright **227/227**、四項 gate 通過；dev／PR CI sanity 和 browser-qa 全過，main CI 另核對 Actions `36878885081` |
-| 最新正式 tag | **`production-v143`**，指向 `13f46c3`；訊息明記 G1 跳過 |
+| **`origin/main` 原始碼** | **SW v156**;merge commit `bc59984`(PR #70) |
+| **正式站** | `https://trippilot-jp.netlify.app/` — **SW v156**;deploy `6ad0cbec0929a04b24927c90`,`commit_ref` = `bc59984`。線上 `sw.js` 與 v156 的 `app-version.js` 皆 v156,全新 Chromium 只剩 `okayama-trip-v156` 快取 |
+| **`dev` 內容** | runtime 與 `main` 相同(v156);其後只有發布文件(PR #71,`58e58fe`)。v156 的 CI(head `9a294ea`)sanity／browser-qa 全綠;本機完整 Chromium 332/334(`b95b6c3`;兩項為已知只在本機失敗的項目) |
+| 個人備份格式 | **v10**(`PERSONAL_STATE_VERSION=10`,`PERSONAL_STATE_SUPPORTED_VERSIONS = [1..10]`)—— v150 加入旅程身分;相容策略見 `docs/personal-state-compatibility.md` |
+| 最新正式 tag | **`production-v156`** → `bc59984`(lightweight,Bar 2026-10-15 建立);上一個錨點 **`production-v155`** → `0a9ceb1`(回滾見 `16_OPS_PLAYBOOK.md` §A1／§A5) |
+| shell 世代 | repo 只保留最近幾代(目前 v154 起);v111–v153 已於 2026-10-16 經 Bar 核准刪除(見檔首與 ADR 0019 增補段) |
 
-**v143 已發布至正式站，`production-v143` tag 已建立；G1 跳過不等於通過，實體手機驗收清單保持待驗。**
+**下一步**:回程後依 `tasks/backlog.md` 與稽核報告處理其餘項目;發現問題時依 `16_OPS_PLAYBOOK.md` §A2 forward bump 到下一個未使用版本。
 
 ## v140 資料健康獨立子頁（已隨 PR #37 正式發布；下列保留開發階段紀錄）
 
@@ -295,7 +295,7 @@ v143 已透過 `dev → main` PR #40 合併並完成正式站部署核對。G1 �
 - 本次 forward bump **未改動任何測試檔的 generation 路徑** —— backlog #27 的遷移(2026-09-11)剛好在此回收成本。僅兩處必要維護:`theme-system.test.js` 的五筆滾動視窗尾四筆(歷史 release note,依裁定寫死),以及 `pwa-shell.test.js` 的 7 處轉義形式路徑(#27 當時的 grep 用 `shell/v114` 比對,漏掉正則字面裡的 `shell/v114/`)。 <!-- generation-exempt: 這一行描述的是 v114->v115 升版當下的事實(不得就地改的舊 generation、保留的舊世代),不隨後續升版變動 -->
 - 完整 gate、95/95 Node 與 **191/191 Playwright** 通過;已在 390×844 實測兩處修正生效且無視覺回歸。
 - **2026-09-12 發布**:PR #17 以 merge(非 squash／rebase)合併 `dev` `4141ae1` → `main`,merge commit **`6094584`**;合併前確認 PR head 等於 `origin/dev` 且該 head 的 `sanity` 與 `browser-qa` 皆 success。Netlify 由 `main` 自動部署 deploy **`6aa4ffff28234900086dd305`**、`state: ready`、`commit_ref` 相符、`published_at` 有值、`manual_deploy: false`。
-- **§F5 線上核對全數通過**:`sw.js` v115;`shell/v121/` 的 app-version／HTML marker／builtin-snapshot 三者皆 v115;root `app-version.js` 維持 v110 bridge;三處 `Cache-Control` 皆為 `no-cache, no-store, must-revalidate`;**v111／v112／v113／v114 四個舊世代皆仍回 200**(ADR 0019)。另以真實瀏覽器確認 SW 接管至 v115、快取換為 `okayama-trip-v115`、兩處修正皆生效。 <!-- generation-exempt: 這是 v115 §F5 線上核對當下的量測結果,不隨後續升版變動 -->
+- **§F5 線上核對全數通過**:`sw.js` v115;`shell/v115/` 的 app-version／HTML marker／builtin-snapshot 三者皆 v115;root `app-version.js` 維持 v110 bridge;三處 `Cache-Control` 皆為 `no-cache, no-store, must-revalidate`;**v111／v112／v113／v114 四個舊世代皆仍回 200**(ADR 0019)。另以真實瀏覽器確認 SW 接管至 v115、快取換為 `okayama-trip-v115`、兩處修正皆生效。 <!-- generation-exempt: 這是 v115 §F5 線上核對當下的量測結果,不隨後續升版變動 -->
 - **G1 經 Bar 裁定跳過**(同 v114 前例),6 項維持未勾 —— 跳過不等於通過。**G6 完成**:`production-v115` 指向 `6094584`。
 
 ## v116 已正式發布(2026-09-12,未經 G1)
@@ -305,7 +305,7 @@ v143 已透過 `dev → main` PR #40 合併並完成正式站部署核對。G1 �
 - 實機驗證抓到一個自造缺陷:移除「取消」後多品項模式只剩 **12px** 可點背景,已將 `.ledger-sheet` 背景保留區加大為 **56px**。
 - 四個 gate、**95/95 Node**、**191/191 Playwright** 通過,並在 390×844 以真實 SW 接管逐項實測。
 - **2026-09-12 發布**:PR #19 以 merge 合併 `dev` `2ff9445` → `main`,merge commit **`9769636`**;合併前確認 PR head 等於 `origin/dev` 且該 head 的 `sanity` 與 `browser-qa` 皆 success。Netlify deploy **`6aa51cd7`**、`state: ready`、`commit_ref` 相符、`published_at` 有值、`manual_deploy: false`。
-- **§F5 全過**:`sw.js`／`shell/v121` 三件組皆 v116;root bridge 維持 v110;三處 `Cache-Control` 正確;**v111–v115 五個舊世代皆回 200**(ADR 0019)。另以真實瀏覽器確認接管至 v116、快取換代、`--mint` 解析為 `#d6e8e4`、兩處形狀修正皆 9px、共用 helper 存在、死碼已除。 <!-- generation-exempt: 這是 v116 §F5 線上核對當下的量測結果,不隨後續升版變動 -->
+- **§F5 全過**:`sw.js`／`shell/v116` 三件組皆 v116;root bridge 維持 v110;三處 `Cache-Control` 正確;**v111–v115 五個舊世代皆回 200**(ADR 0019)。另以真實瀏覽器確認接管至 v116、快取換代、`--mint` 解析為 `#d6e8e4`、兩處形狀修正皆 9px、共用 helper 存在、死碼已除。 <!-- generation-exempt: 這是 v116 §F5 線上核對當下的量測結果,不隨後續升版變動 -->
 - **G1 經 Bar 裁定跳過**(同 v114／v115),10 項維持未勾。**G6 完成**:`production-v116` 指向 `9769636`。
 
 ## v122 已正式發布（2026-09-12，未經 G1）
@@ -324,7 +324,7 @@ v143 已透過 `dev → main` PR #40 合併並完成正式站部署核對。G1 �
 - **backlog #39 的唯一錯用站點先修**:測試帳本提示的「前往設定關閉」是純導覽,`btn coral` → `btn ghost`。`--action-destructive-*` 本身未動,#39 仍待裁定,盤點表已更新為 7 個站點。
 - 四個 gate、**Node 95/95**、**Playwright 191/191** 通過。四項變更**逐一以「改回舊寫法」實測確認新斷言會紅**。
 - **2026-09-13 發布**:PR [#25](https://github.com/nick80912-dev/ai-native-projects/pull/25) 以 merge(非 squash／rebase)合併 `dev` `ff7cae4` → `main`,merge commit **`151f973`**;合併前確認 PR head 等於 `origin/dev` 且該 head 的 `sanity` 與 `browser-qa` 皆 success(7 checks pass / 0 fail)。Netlify 由 `main` 自動部署 deploy **`6aa606e0f24f7a0008e536ed`**、`state: ready`、`commit_ref` = `151f973` 相符、`published_at` 有值、`manual_deploy: false`。
-- **§F5 線上核對全數通過**:`sw.js` v123;`shell/v130/` 的 app-version／HTML marker／builtin-snapshot 三者皆 v123;root `app-version.js` 維持 v110 bridge;三處 `Cache-Control` 皆為 `no-cache, no-store, must-revalidate`;**v111–v122 十二個舊世代皆仍回 200**(ADR 0019)。 <!-- generation-exempt: 這是 v123 §F5 線上核對當下的量測結果,不隨後續升版變動 -->
+- **§F5 線上核對全數通過**:`sw.js` v123;`shell/v123/` 的 app-version／HTML marker／builtin-snapshot 三者皆 v123;root `app-version.js` 維持 v110 bridge;三處 `Cache-Control` 皆為 `no-cache, no-store, must-revalidate`;**v111–v122 十二個舊世代皆仍回 200**(ADR 0019)。 <!-- generation-exempt: 這是 v123 §F5 線上核對當下的量測結果,不隨後續升版變動 -->
 - **真機已確認**:Bar 於 2026-09-13 在正式站確認篩選位移不再發生。**回報過程本身值得記下** —— Bar 第一次回報「還是會位移」時仍停在 v122,`sw.js` 已是 v123 但裝置端的 worker 尚未換代;以同頁對照組(移除 `min-height` → 11.21px;保留 → 0)確認 v123 的修正有效後,請 Bar 重開 App 才換到 v123。**§A2 的「開兩次生效」不只是部署細節,也是回報缺陷時的第一個排除項。**
 - **G1 經 Bar 裁定跳過**(同 v114–v122),v123 的裝置驗收項維持未勾 —— 跳過不等於通過。**G6 完成**:`production-v123` 指向 `151f973`。
 
@@ -344,7 +344,7 @@ v143 已透過 `dev → main` PR #40 合併並完成正式站部署核對。G1 �
 - 連帶結掉 **D1**(退回歸 CTA)、**D2**(「改回未記帳」拿掉 `danger`)與 **F1** 最後一組對比缺陷。
 - 四個 gate、**Node 95/95**、**Playwright 191/191** 通過。五項變更逐一以「改回舊寫法」實測確認斷言會紅。
 - **2026-09-13 發布**:PR [#27](https://github.com/nick80912-dev/ai-native-projects/pull/27) 以 merge 合併 `dev` `b4129b7` → `main`,merge commit **`a0131ce`**;合併前確認 PR head 等於 `origin/dev`,並等該 head 的**兩輪** CI(push + pull_request,各含 `sanity` 與 `browser-qa`)全綠才動手。
-- **§F5 線上核對全數通過**:`sw.js` v125;`shell/v130/` 三件組皆 v125;root `app-version.js` 維持 v110 bridge;三處 `Cache-Control` 正確;**v111–v124 十四個舊世代皆回 200**(ADR 0019)。另以線上實查確認 `--action-destructive-bg:#8c1d2c` 與六組 `--t-cta-bg` 皆已上線。 <!-- generation-exempt: 這是 v125 §F5 線上核對當下的量測結果,不隨後續升版變動 -->
+- **§F5 線上核對全數通過**:`sw.js` v125;`shell/v125/` 三件組皆 v125;root `app-version.js` 維持 v110 bridge;三處 `Cache-Control` 正確;**v111–v124 十四個舊世代皆回 200**(ADR 0019)。另以線上實查確認 `--action-destructive-bg:#8c1d2c` 與六組 `--t-cta-bg` 皆已上線。 <!-- generation-exempt: 這是 v125 §F5 線上核對當下的量測結果,不隨後續升版變動 -->
 - **真機驗收通過**:Bar 於 **2026-09-15 在 Android 實機**確認正式版 v125 驗收 OK。這是本專案**第一次由 Android 實機回報通過**。
   - **BB4 維持掛著(Bar 2026-09-15 裁定)**:G1 的 **BB4 八項清單**(v114 起掛著的實體 Android 項目)**本次並未走過**。Bar 的回報是整體試用無異常,不等於逐項驗收。**BB4 仍為未驗**,`docs/device-acceptance-log.md` 不動。
 - **G6 完成**:`production-v125` 指向 `a0131ce`,訊息記錄 §F5 結果與上述 BB4 待認定事項。

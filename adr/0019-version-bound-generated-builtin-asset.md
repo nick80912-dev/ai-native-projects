@@ -23,7 +23,7 @@ App 只在 `BUILTIN_ASSET_VERSION === APP_VERSION` 且八個 sheet 都完整時�
 為什麼安全：
 
 - 自 v111 起每一版 `sw.js` 對已知 SHELL 都是 cache-first，命中失敗只回離線結果（`cachedOrOffline`），不會連網補抓。已安裝的舊 worker 只從自己的 Cache Storage 取用自己那一代的檔案。
-- `shell/vN/*` 只在 SW vN 的 install 階段（`cache:'reload'`）才會從網路抓。部署換代時，裝置上的舊 worker 會改抓新的 `sw.js` 並安裝 current generation，不再需要自己那一代的網路檔。
+- `shell/vN/*` 只在 SW vN 的 install 階段（`cache:'reload'`）才會從網路抓。部署換代時，瀏覽器抓到新的 `sw.js` 後安裝的是 current generation；已啟用的舊 worker 不會再向網路要自己那一代的檔案。
 - 仍停在 v110 以前（network-first）worker 的裝置只用 root `index.html`／`app-version.js`（v110 bridge）與 root modules，不讀 `shell/`；bridge 不受影響。
 - 回滾不依賴 repo 內的舊資料夾：Netlify §A1「Publish deploy」用的是部署快照，自帶當時所有檔案；git 層回滾到 `production-vNNN` tag 時，該 tag 的樹本身就含它自己的 `shell/vNNN/`。
 - 刪除的內容仍在 git 歷史與各 `production-vNNN` tag 中，可隨時以 `git show production-vNNN:shell/vNNN/<檔名>` 取回。`tests/trip-lifecycle-wiring.test.js` 原本讀取的「已核准 v136 BUILTIN」改存為位元組相同的 `tests/fixtures/builtin-snapshot-v136-approved.js`。

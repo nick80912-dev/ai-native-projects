@@ -26,7 +26,7 @@
 
 ## 閱讀順序(最省 token)
 1. `.ai-manifest.json` → 2. `PROJECT_CONSTITUTION.md` → 3. 本文件 → 4. 相關 `adr/` → 5. **必讀** `15_AI_EXECUTION_RULES.md`(決策權限/指令效力/任務分級)→ 6. 依任務讀 `03_DATABASE.md` / `09_SCHEMA_MAPPING.md` / `05_CODING_RULES.md` / `11_CODING_CONVENTION.md` / `12_DEV_WORKFLOW.md` / `14_FILE_TIERS_AND_GATE.md` / `16_OPS_PLAYBOOK.md`
-程式碼本體主要在 current generation `shell/v156/index.html` 內嵌 JS(區塊順序見 02)；root `index.html`／`app-version.js` 必須維持 frozen v110 bridge bytes。`navigation-intent.js`、`diagnostic-impact.js`、`today-view.js`、`buy-to-ledger.js`、`ledger-ui-state.js`、`shopping-ui-state.js`、`trip-progression.js` 是 production-used module seams，`schema.js` / `validator.js` 是獨立權威來源。
+程式碼本體主要在 current generation `shell/v156/index.html` 內嵌 JS(區塊順序見 02)；root `index.html`／`app-version.js` 必須維持 frozen v110 bridge bytes。`navigation-intent.js`、`diagnostic-impact.js`、`today-view.js`、`shopping-photo-store.js`、`buy-to-ledger.js`、`ledger-ui-state.js`、`shopping-ui-state.js`、`trip-progression.js`、`trip-lifecycle.js`、`trip-archive.js`、`trip-drive.js`、`trip-source.js`、`trip-lifecycle-flow.js` 是 production-used module seams（完整清單以 `runtime-assets.json` 為準），`schema.js` / `validator.js` 是獨立權威來源。
 
 ## 工作流程(必守)
 0. 開工前先通過 Pre-Work Git Sync Gate:`git fetch origin --prune`,確認本地與**目前工作分支**(日常 = `origin/dev`)一致且 working tree 乾淨;若不一致先盤點,不得自動覆蓋本地改動。
@@ -36,7 +36,7 @@
 4. 更新 `07_CHANGELOG.md`(有架構變更標 ⭐),必要時更新 06/03
 
 ## 絕不可改變(除非 Bar 明確要求)
-- CMS 八表結構、CMS Schema 3.0 欄位語意、既有 PID／RID／SID／HID 的意義；Ledger 仍沿用 Schema 2.9 固定 21 欄，`time` 為消費發生時間，末五欄為輸入幣別、免稅品、價格方式、稅率與優惠券金額
+- CMS 八表結構、CMS Schema 3.1 欄位語意、既有 PID／RID／SID／HID 的意義；Ledger 仍沿用 Schema 2.9 固定 21 欄，`time` 為消費發生時間，末五欄為輸入幣別、免稅品、價格方式、稅率與優惠券金額
 - 三層防線(內建→快取→背景同步)與「絕不空白頁」原則
 - BUILTIN 是目前旅程的離線啟動種子，不得手改 JSON 或抓取 live Ledger；刷新一律依 `16_OPS_PLAYBOOK.md` §G 先 preview，Bar 核准後才 `--write`，Ledger 只保留 `schema.js` 推導的 21 欄空 header
 - root `index.html`／`app-version.js` 與 `tests/fixtures/sw-v110-production.js` 是 byte-locked v110 predecessor bridge,不得當作日常程式修改目標;日常修改一律落在 current generation 的 `shell/` 目錄下。依 ADR 0019,新 worker 安裝失敗或版本混雜時,真實 v110 worker、root document、inline BUILTIN 與舊 cache 必須原樣續命
@@ -66,13 +66,13 @@ v146 首頁按 cfg 完整日期從 enddate 翌日起邀請打包；最後一天�
 
 v141 過往旅程以 `TripDrive.resume()` 重用同次 App 尚未過期的記憶體授權，重載後須重新授權。關閉設定取消 pending connect／清除歷史 UI；離開結束旅程流程會使該次操作失效並清除授權，重新登入也不能恢復舊操作。inactive 清除憑證；401／過期不得重用。登入等待與 Drive 讀取分開呈現，頁內可取消登入，90 秒授權逾時／20 秒 Drive 讀取逾時可重試。request／selection generation 保護晚到回應（含回應內容）；token 不進 localStorage、備份或封存。真實 PWA 重入已於 2026-10-06 經 Bar 回報驗收完成；外部 400 原因仍未捕捉，不宣稱已修正。
 
-v142 A 本機候選（未推送）：狀態 helper 僅投影現存事實。`tripStatusPresentation` 依 checks／skip／autoSkip 區分已完成、已略過與自動略過，不更改 progression；`shoppingPurchaseSummary` 只在同 split-group 的名稱／單位一致、安全數量可證明時顯示購買進度，不能以 ledgerLinks 推算商品件數。記帳覆蓋仍以 allocation 筆數呈現。`ledgerDeliveryPresentation` 採 queue → bridge → cloud 優先序，詳情依目前正式／TEST 模式過濾，不代表其他旅伴已讀。資料健康維持全裝置 backlog，跨模式未註記是 backlog #52（Minor），不得偷偷改成只保護目前模式的待送資料。
-
-## Ledger Schema 2.9 現行契約
+v142 A（已隨 PR #39 發布）：狀態 helper 僅投影現存事實。`tripStatusPresentation` 依 checks／skip／autoSkip 區分已完成、已略過與自動略過，不更改 progression；`shoppingPurchaseSummary` 只在同 split-group 的名稱／單位一致、安全數量可證明時顯示購買進度，不能以 ledgerLinks 推算商品件數。記帳覆蓋仍以 allocation 筆數呈現。`ledgerDeliveryPresentation` 採 queue → bridge → cloud 優先序，詳情依目前正式／TEST 模式過濾，不代表其他旅伴已讀。資料健康維持全裝置 backlog，跨模式未註記是 backlog #52（Minor），不得偷偷改成只保護目前模式的待送資料。
 
 v144 B 局部 checked reader／writer 僅處理 trip_checks／trip_next_stop_progress。讀取失敗／壞 JSON／map 型別錯誤停止 mutation，寫後核對、失敗盡力恢復原 bytes／不存在狀態，不能確認則保守提醒。只有成功才替換／清除 undo；原 autoSkip 保留，復原子站同批更新受影響群組 controller，仍沿用原完成規則。失敗提供重試，自動 redraw 不覆蓋手動重試，鍵盤焦點接回重試按鈕。自動失敗本次 session 暫停自動寫入，手動成功解除；失敗重繪只讀實際紀錄，未知不顯示今日完成。資料健康個人列顯示 session 錯誤。這不是跨分頁交易，沒有 journal／新鎖；全域 lsSet、帳務、備份與封存契約不變。現況及實測見 tasks/current.md 與 docs/trippilot-v144-b-verification.md。
 
-v143 個人帳匯出只讀本裝置個人帳，保留原金額、代購與來源識別，不含團體／Queue／照片／token，不改備份 v9 或封存 v1；契約見 `docs/personal-ledger-export.md`。v154 起格式 v2 另附 `groupShare`（我分到的團體份額逐筆）與 `totals`，仍不含團體帳原始紀錄與 Queue。記序匯入尚未實作。資料與版本的 ⓘ 為 modal，重要清除／還原警告仍直接顯示。
+## Ledger Schema 2.9 現行契約
+
+v143 個人帳匯出只讀本裝置個人帳，保留原金額、代購與來源識別，不含團體／Queue／照片／token，不改個人狀態備份格式或封存 v1；契約見 `docs/personal-ledger-export.md`。v154 起格式 v2 另附 `groupShare`（我分到的團體份額逐筆）與 `totals`，仍不含團體帳原始紀錄與 Queue。記序匯入尚未實作。資料與版本的 ⓘ 為 modal，重要清除／還原警告仍直接顯示。
 
 - 團體新增與編輯都先透過 `enqueueBatch(records)` 一次耐久寫入本機 Queue，入列成功即完成 UI 儲存並背景送達；不可改回等待 Apps Script POST 才關閉表單。公開 CSV 跨裝置可見延遲 1–5 分鐘是已接受取捨。
 - TEST 模式是獨立平行帳本：開啟時團體儀表板、今日、結算與明細只計算 `[TEST]`，關閉時只計算正式資料；個人帳不受 TEST 模式影響。
@@ -86,7 +86,7 @@ v143 個人帳匯出只讀本裝置個人帳，保留原金額、代購與來源
 - 老 WebView 無 console.info、fetch 帶 options 會拋 clone 錯誤
 - Google 試算表 `/edit` 連結讀不到,必須用「發布到網路」CSV;web_fetch 可能被 robots 擋,改走 Drive 連接或由使用者瀏覽器端抓
 - item id 含「/」(如 10/19_2),CSS selector 需 escape,DOM 查找用 getElementById
-- **第一次載入拿到的是 root v110 bridge,不是 current generation**。全新裝置、清過網站資料、或 SW 尚未啟用時,第一個畫面由 byte-locked v110 bridge 提供(`APP_VERSION` 顯示 `v110`),要等 v113 worker 啟用後**重新載入**才會換成 current generation。這是 ADR 0019 的設計,不是缺陷,但有兩個實務後果:
+- **第一次載入拿到的是 root v110 bridge,不是 current generation**。全新裝置、清過網站資料、或 SW 尚未啟用時,第一個畫面由 byte-locked v110 bridge 提供(`APP_VERSION` 顯示 `v110`),要等 current worker 啟用後**重新載入**才會換成 current generation。這是 ADR 0019 的設計,不是缺陷,但有兩個實務後果:
   - **驗收前必須先確認實際 runtime 版本再看畫面**。只看畫面會驗到三代之前的 App —— 2026-09-10 實測踩過:第一次截圖拿到的是 v110。
   - **使用者的第一印象是 v110 的行為,不是最新版**。討論「新使用者第一次看到什麼」時,答案一律是 bridge 的行為,不是 current generation 的行為。
 - **身分是選用的,不是進門條件**(v114 起的現行契約)。沒有選身分仍可正常瀏覽四個分頁,分帳頁也能看空狀態。只有真正需要身分的操作才叫得出選擇器:

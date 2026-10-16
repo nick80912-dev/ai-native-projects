@@ -1,8 +1,9 @@
 # DONE(已完成)
 
-> 更新於 2026-09-12。完成事項來自 `.ai-manifest.json` status.done、既有 CHANGELOG 與 Bar 驗收確認；細節仍以 07_CHANGELOG.md 為準。
+> 更新於 2026-10-16。完成事項來自 `.ai-manifest.json` status.done、既有 CHANGELOG 與 Bar 驗收確認；細節仍以 07_CHANGELOG.md 為準。
 
 ## 已完成
+- 2026-10-13:backlog **#56 隨 v153 提前完成**(2026-10-16 自 backlog 移入)。Bar 改為「整個重構現在做」並核准示意圖,另要求測試工具內容再濃縮;診斷面板旅程後優化 D(測試工具收合)、E(旅途紀錄入口)、F(面板入口與無障礙)全數納入 v153,A／B／C 已於 v152 完成。詳見 `07_CHANGELOG.md`。
 - 2026-10-06:backlog **#51 隨 v147 完成**。`syncAll()` 失敗路徑補上與成功路徑相同的 inactive 重查:下載開始於 active、旅程清除後才失敗時,不再重建 `trip_sync_last_failure`、不設 `failed`、不跳 toast;active 時的失敗處理不變。`atomic-sheet-sync.test.js` 以可控 gate 做確定性回歸,先在 v146 紅、修正後綠、拿掉 guard 又紅。
 - 2026-10-06:backlog **#42 處理**:`qa.yml` 的 `sanity`／`browser-qa` 暫時由 `ubuntu-latest` 釘到 `ubuntu-24.04`。查 GitHub 公告(`actions/runner-images#14748`)後發現移轉是 **10/19 起分批、11/19 完成**,整段旅程(10/18–10/23)CI 可能時而 24.04、時而 26.04 —— 最難除錯的時好時壞。今天 `ubuntu-latest` 本來就是 24.04,釘版不改變任何 CI 結果。原記「釘住會錯過安全性更新」不精確:24.04 映像仍由 GitHub 例行更新,釘的只是 OS 大版本。回程後解除另開 **#54**。
 - 2026-10-06:**真機驗收全部完成**(Bar 整批回報)。TP141～TP146、v137／v138／v140／v142、**BB4 Android 八項**(自 v114 起掛著)與 v115～v121 iPhone 補驗,`docs/device-acceptance-log.md` 16 個清單項與 88 個表格格子記為 `✅ 2026-10-06 整批回報`;整批回報未逐項記錄細節,檔頭已註明。

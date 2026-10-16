@@ -101,7 +101,7 @@
 - **已解除(2026-09-13,v125)**:原記「`.btn.coral` 吃的是 `--action-destructive-bg`,而這兩處都不是破壞性操作;不要依 token 名稱把它改成警告紅」。backlog #39 落地後,**主存檔改走 `.btn.cta`**(`--action-cta-*`,由第 15 個主題 token `--t-cta-bg` 供色),`--action-destructive-*` 已回歸字面語意並定為不隨主題的固定紅 `#8c1d2c`。**該限制不再適用**,`.btn.coral` 這個 class 也已移除。
 
 ## 字體
-全站使用 `"Noto Sans TC","PingFang TC","Microsoft JhengHei"` 優先的繁中字體 stack。內文 15px、標題 17-20px、輔助 11-13px。主導覽四個功能圖示與設定入口使用同一組 inline outline SVG（`currentColor`），不引入 icon font；交通、天氣等內容 Emoji 可保留。桃子診斷徽章維持 PNG。
+第一個畫面使用系統繁中字體 stack `"PingFang TC","Microsoft JhengHei",system-ui,-apple-system,sans-serif`(`--font-ui`);Huninn 在載入完成後才整頁套用,見下方「v149 Huninn」。內文 15px、標題 17-20px、輔助 11-13px。主導覽四個功能圖示與設定入口使用同一組 inline outline SVG（`currentColor`），不引入 icon font；交通、天氣等內容 Emoji 可保留。桃子診斷徽章維持 PNG。
 
 表單控制項(`input` / `select` / `textarea`)最小字級為 16px,此規則優先於內文字級表,避免 iOS focus 時自動放大。
 
