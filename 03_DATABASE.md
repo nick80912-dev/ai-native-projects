@@ -19,7 +19,7 @@
 | Restaurants | 1421821084 | table | 餐廳資料,可用 PID 掛到 Place 卡片 |
 | Shopping | 1182059264 | table | 商場店家資料,驅動購物頁樓層/必逛/免稅顯示 |
 | Hotels | 792115203 | table | 住宿 profile；以 HID 被一或多個住宿型 Places 精確引用 |
-| Expenses | 1354339857 | freeform-expense | 行前團費自由格式;同行成員名單來源 |
+| Expenses | 1354339857 | freeform-expense | 行前團費自由格式;只存在試算表,App 不渲染,也不從這裡推導同行成員 |
 | 分帳紀錄 | 896856089 | table | 跨裝置旅途記帳;Apps Script append-only 回寫 |
 | TripConfig | 1070234314 | keyvalue | 旅程名稱、起訖、交通模式、幣別等設定 |
 
@@ -80,6 +80,7 @@
 | 渡船口 | ferry |
 | 渡輪 | ferry |
 | 租車點 | parking |
+| 加油站 | fuel |
 
 - `渡船口` 與 `渡輪` 是兩個可輸入中文值,都會正規化為 `ferry`。
 - `景點`、`機場` 與 `纜車` 都是可輸入中文值,目前共用 `attraction` 景點卡片。
@@ -101,7 +102,7 @@
   - 備註欄:第 6 欄
   - 合計列標記:`小計` / `總計`
 - 行前團費來自 Google Sheet。
-- Expenses 只負責行前團費與同行成員來源；旅途中記帳改走「分帳紀錄」表,不寫入 Expenses。
+- Expenses 只存行前團費；App 不渲染,也不從 Expenses 推導同行成員(`schema.js` 的 exp desc)。團體成員來自「分帳紀錄」的身分註冊紀錄；旅途中記帳改走「分帳紀錄」表,不寫入 Expenses。
 
 ## 分帳紀錄特別規則
 - Schema 2.9 沿用位置式 21 欄:`紀錄ID | 時間 | 成員 | 類別 | 明細 | 日幣 | 台幣 | 備註 | 分攤成員 | 支付方式 | 紀錄類型 | 目標紀錄ID | 刪除原因 | 批次ID | 店名 | 取代紀錄ID | 輸入幣別 | 免稅品 | 價格方式 | 稅率 | 優惠券金額`；2.9 只擴充 `recordType` 白名單，不新增 Sheet 欄位或 Apps Script payload 欄位。

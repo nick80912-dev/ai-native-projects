@@ -8,7 +8,8 @@ from pathlib import Path
 from PIL import Image, ImageChops
 
 
-STANDARD_SIZES = (16, 32, 120, 152, 167, 180, 192, 512)
+# 120 removed on 2026-10-16: no manifest, HTML or SW referenced icon-120.png (iOS uses 152/167/180).
+STANDARD_SIZES = (16, 32, 152, 167, 180, 192, 512)
 MASKABLE_SIZES = (192, 512)
 WHITE_THRESHOLD = 20
 MASKABLE_SCALE = 0.70

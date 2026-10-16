@@ -95,3 +95,12 @@ v150 讓「沒有任何紀錄的手機」顯示「尚未連接旅程」。為了
 
 - v150 的個人備份會記下是哪一趟旅程；還原時旅程不同會被拒絕。舊版（v149 以前）的備份只能還原到岡山旅程。
 - 封存到 Drive 的檔案會記下 `sheet:<Trip ID>`，不同旅程不會混在一起。
+
+## 附錄：岡山旅程固定天氣城市的座標來源
+
+岡山舊旅程不讀「天氣地區」分頁，改用程式內的固定城市清單（`WEATHER_CITIES`）。v154–v156 的 App 程式註解寫「來源見 `docs/trippilot-v146-verification.md`」；該驗證文件已於 2026-10-16 經 Bar 核准刪除（git 歷史仍保留），來源改記於此（內容摘自原文件「區域來源及限制」一節）。
+
+- 代表座標是區域中心，不是精確站點 GPS，也不代表沿途微氣候。既有岡山／倉敷共用區域維持；v146 新增尾道、福山、祖谷、琴平、丸龜。祖谷涵蓋大／小步危，宇多津與呆呆獸公園採鄰近丸龜的代表區域。
+- [尾道觀光協會千光寺](https://www.ononavi.jp/sightseeing/temple/detail.html?detail_id=9)核對區域。尾道 `34.41667,133.2`、廣島福山 `34.48333,133.36667`、香川琴平 `34.18333,133.81667`、丸龜 `34.28333,133.78333` 由 [Open-Meteo Geocoding API](https://open-meteo.com/en/docs/geocoding-api) 在開發時只讀查證，選 JP 且行政區相符的結果；App 沒有因此多呼叫任何 API。
+- 祖谷 `33.87513,133.8251` 為[三好市官方祖谷藤蔓橋](https://miyoshi-tourism.jp/en/spot/46/)地圖中心；[琵琶瀑布官方資料](https://miyoshi-tourism.jp/spot/88/3/)核對區域關係。
+- [香川縣觀光協會金刀比羅宮](https://www.my-kagawa.jp/konpira/feature/kotohiragu/guide3)核對琴平區域；城市代表點不是山頂的精確預報。

@@ -160,7 +160,8 @@ assert(html.includes('查看全部 〉'),'dashboard links to the complete list')
 assert(splitSource.includes('openLedgerQuickEntryFromFab'),'dashboard FAB opens quick entry through the dedicated focus path');
 assert(!splitSource.includes('id="ledgerAmount"'),'amount input no longer lives in the dashboard renderer');
 assert(splitSource.includes('selectLatestLedgerDateExpenses(records)'),'dashboard selects the newest effective local date through the tested selector');
-assert(splitSource.includes("summarizeLedgerRecords(records,ledgerUniverseMode()==='test')"),'TEST dashboard includes only its already-selected universe in totals');
+/* v157:團體帳列表也列出我幫別人代記、自己不在分攤裡的帳;摘要金額仍只算與我相關的。 */
+assert(splitSource.includes("summarizeLedgerRecords(records.filter(function(record){return isLedgerRecordRelatedToMember(record,getCurrentMember());}),ledgerUniverseMode()==='test')"),'TEST dashboard includes only its already-selected universe in totals, and only records related to me');
 assert(splitSource.includes("pending=shared?ledgerRepository.pendingCount():0"),'sync pending count comes only from the repository queue');
 assert(settlementProgressSource.includes('model.pendingCount'),'settlement people count remains a separate settlement-card value');
 assert(ledgerUiSource.includes('groupLedgerExpensesByDate'),'dashboard uses the tested date grouping');
