@@ -4,6 +4,7 @@ const fs=require('fs');
 const vm=require('vm');
 const TripBuyToLedger=require('../buy-to-ledger.js');
 const TripLedgerUiState=require('../ledger-ui-state.js');
+const {extractDeclaration}=require('./support/source');
 
 const html=appHtml();
 const sw=fs.readFileSync('sw.js','utf8');
@@ -128,6 +129,7 @@ const dateSummary=rendererSandbox.renderLedgerDateSummary('2026/07/20',[
 ],true);
 assert(dateSummary.includes('2026/07/20 · 2 筆紀錄'),'latest-day summary includes the physical record count');
 assert(dateSummary.includes('¥3,500 ≈ NT$770'),'latest-day summary includes fixed dual-currency totals');
+vm.runInContext(extractDeclaration(html,'LEDGER_PROXY_RECORDER_PATTERN')+'\n'+extractFunction(html,'ledgerProxyRecorder'),rendererSandbox);
 vm.runInContext(extractFunction(html,'renderProxyTargetMarkup')+'\n'+extractFunction(html,'ledgerBatchSelectionState')+'\n'+extractFunction(html,'renderLedgerRecentRecord')+'\n'+extractFunction(html,'renderLedgerBatchCard'),rendererSandbox);
 const renderedRecord=rendererSandbox.renderLedgerRecentRecord({id:'a',detail:'章魚燒',storeName:'丸五市場',category:'餐飲',payMethod:'現金',isProxy:true,proxyTarget:'Amy'},false,'JPY');
 assert(!renderedRecord.includes('ledger-record-menu-button'),'selection-mode record renderer omits the ellipsis DOM');
@@ -143,6 +145,10 @@ assert(!renderedCategoryOnly.includes('ledger-recent-payment'),'a missing paymen
 assert(renderedCategoryOnly.includes('ledger-recent-primary-line')&&renderedCategoryOnly.includes('ledger-recent-secondary-line'),'optional metadata never removes either content row');
 const renderedSharedRecord=rendererSandbox.renderLedgerRecentRecord({id:'shared-a',member:'Bar',detail:'團體晚餐',storeName:'團體餐廳',category:'餐飲',payMethod:'現金',participants:'["Bar","Amy"]',isTaxFree:true,isTest:true,pending:true,_correctionProtected:true},true,'JPY');
 assert(renderedSharedRecord.includes('我付款 · 全員分攤'),'shared record cards render payer and split context together');
+/* v157:幫別人代記的團體帳,備註尾端的「〔Ken 代記〕」顯示成小標;沒有代記的帳不顯示。 */
+const renderedProxyRecorded=rendererSandbox.renderLedgerRecentRecord({id:'shared-k',member:'Amy',detail:'晚餐',category:'餐飲',payMethod:'現金',participants:'["Amy","Ken"]',note:'〔Ken 代記〕'},true,'JPY');
+assert(renderedProxyRecorded.includes('<span class="ledger-recent-badge">Ken 代記</span>'),'a record kept for someone else shows who recorded it');
+assert(!renderedSharedRecord.includes('代記'),'a record the payer kept shows no recorder badge');
 assert(renderedSharedRecord.includes('class="ledger-shared-participant-summary ledger-recent-context"'),'shared payer and split context uses the compact first-row context seam');
 assert(!renderedSharedRecord.includes('ledger-recent-payment')&&!renderedSharedRecord.includes('現金'),'shared list cards hide payment method');
 assert(renderedSharedRecord.indexOf('團體晚餐')<renderedSharedRecord.indexOf('ledger-shared-participant-summary'),'shared primary row places the item before payer/allocation context');

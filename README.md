@@ -2,10 +2,6 @@
 
 個人帳獨立匯出格式與限制見 [匯出契約](docs/personal-ledger-export.md)（v143 起提供；發布狀態以 tasks/current.md 為準）。
 
-本機驗證與審查：[v143 交付驗證](docs/trippilot-v143-verification.md)。
-v144 B 本機保存候選與限制：[驗證記錄](docs/trippilot-v144-b-verification.md)（未推送；完成狀態以 tasks/current.md 為準）。
-v145 C 天氣改善與限制：[驗證記錄](docs/trippilot-v145-c-verification.md)（本機完成，未推送；以 tasks/current.md 為準）。
-
 ## 這是什麼
 六天五夜日本自駕旅遊的手機 PWA。Google Sheets 當 CMS，以單頁 App 搭配少量獨立 runtime module，部署於 Netlify。
 - 正式站:https://trippilot-jp.netlify.app/
@@ -37,14 +33,12 @@ v145 C 天氣改善與限制：[驗證記錄](docs/trippilot-v145-c-verification
 
 ## 改善設計與計畫
 
-- [v146 首頁驗證](docs/trippilot-v146-verification.md)：結束後打包入口、天氣區域回退及串點目的地主次；保留全部略過、字級、帳務及封存規則。
-
 - [2026-10-03 第一批設計](docs/superpowers/specs/2026-10-03-trippilot-reliability-and-clarity-batch1-design.md)與 [A／B／C 實作計畫](docs/superpowers/plans/2026-10-03-trippilot-batch1-index.md)：分批處理狀態／摘要、本機保存可靠性及天氣資訊，保守調整字體；每批核准、驗證與發布狀態以 `tasks/current.md` 為唯一權威。
 
 ## 專案檔案
 - `index.html` / `app-version.js` — 保留 v110 predecessor bridge；讓尚未更新的 v110 worker 在 current generation 安裝失敗時仍可運作
-- `shell/v156/index.html` / `shell/v156/app-version.js` — v146 本機候選版文件與 App runtime 版本來源；成功啟用的 `sw.js` 才接管 root 導覽；已發布 generation 保持不可變
-- `shell/v156/builtin-snapshot.js` — 由刷新工具以既有 v145 種子 CSV 產生的版本綁定離線資料資產，內容與時間戳保持不變；禁止手動修改
+- `shell/v157/index.html` / `shell/v157/app-version.js` — current generation（正式版）的 App 文件與 runtime 版本來源；成功啟用的 `sw.js` 才接管 root 導覽；已發布 generation 保持不可變，repo 只保留最近幾代（見 ADR 0019 增補段）
+- `shell/v157/builtin-snapshot.js` — 由 `tools/refresh-builtin-snapshot.js` 產生的版本綁定離線資料資產；八表內容沿用已核准的 v136 種子 CSV（`tests/trip-lifecycle-wiring.test.js` 比對），升版只更新版本標記；禁止手動修改
 - `navigation-intent.js` — 明確導覽目的地的 session-only state module；DOM 定位與回饋 adapter 位於 `index.html`
 - `diagnostic-impact.js` — AppLog 原始紀錄的 display-only impact projection；顯示 adapter 位於 `index.html`
 - `today-view.js` — Today Hero 採買摘要的純 model／renderer module；資料選擇與 DOM effects 留在 `index.html`
@@ -62,7 +56,7 @@ v145 C 天氣改善與限制：[驗證記錄](docs/trippilot-v145-c-verification
 - `tests/` / `tools/` — 可重跑測試與文件一致性檢查
 - `tasks/` — 即時工作狀態唯一權威
 
-## v140 設定整理與個人旅程生命週期候選版
+## 設定整理與個人旅程生命週期（v137–v140，已發布）
 
 「設定 → 資料」依序提供「資料健康狀態」、「照片健康狀態」、「過往旅程」、「備份、還原與版本資訊」。資料健康入口保留正常／需注意摘要；獨立子頁直接顯示行程資料、團體帳、個人資料與照片附件四項狀態，不再收合，返回設定首頁。照片詳細檢查／修復仍在照片頁。過往旅程直接開啟列表，返回設定首頁；Google 元件尚未載入時先準備登入，再由使用者點擊授權。「資料與版本」保留「重置紀錄」、「清除並打包旅程」、備份／還原與版本，不再重複健康明細。重置只清本機個人紀錄與採買照片；不清團體 Queue、已鎖定帳務或身分。清除需八表線上預檢、無本機待同步／橋接、正式團體帳結清且無待回覆 claim；可選先封存至個人 Drive 或不保存直接清除。清除只移除本裝置的 `trip_*`、`v2_cache_*` 與採買照片，保留 inactive 標記；不刪共用 Sheet、其他旅伴手機、Drive 檔案或 SW App Shell。封存不含採買照片、Queue、token 或診斷資料，只有回顧筆記可追加。完整連接新旅程留待第二階段。
 

@@ -18,7 +18,7 @@
 3. **不重複邏輯**:渲染用共用元件函式(kvRow/tipBox/storeRow/panel);修 bug 修一處。
 4. **型別不用猜**:卡片型別只看 Places.Type 經 `schema.js` 正規化後的值;文字推測僅限「不在資料庫的雜項列」備援。
 5. **解析容錯**:parseTable / buildHeaderMap 依 SCHEMA 的 header + aliases 做表頭比對;新欄位/欄序變動不得使程式崩潰;壞資料 AppLog 警告不報錯到頂層。
-6. **個人狀態存本機**:localStorage keys 包含 trip_checks、trip_shop_wants、trip_people、trip_expenses;**不進 CMS**。
+6. **個人狀態存本機**:localStorage key 一律以 `trip_` 開頭,例如 `trip_checks`、`trip_shop_wants`、`trip_next_stop_progress`、`trip_shopping_list`、`trip_personal_ledger`;換旅程時要清的 key 以 `trip-lifecycle.js` 的 key policy 為準;**不進 CMS**。V1 遺留的 `trip_people`／`trip_expenses` 已不再使用,只剩偵測與清除舊資料的程式。
 7. **最小必要修改**:只做被要求的修改,不順手重構、不擴大範圍。
 8. **文件同步**:有交付就更新 `07_CHANGELOG.md`;若改欄位或 Schema,同步更新 `09_SCHEMA_MAPPING.md`。
 
@@ -35,4 +35,4 @@
 - JS 函式重定義覆蓋陷阱:同名 function 宣告「後者勝」且提升;包裝舊函式時必須**改名原函式**(如 renderSplitCore),嚴禁 `var old=fn; function fn(){old()}`(無限遞迴)。
 - item id 含特殊字元時,DOM 查找用 getElementById,勿用 CSS selector。
 - 每次修改跑 QA:斷網內建 / 連網同步 / 旅行日(mock Date)三情境,零 pageerror。
-- sw.js 有改 → bump VERSION;交付順序:預覽 HTML → 核可 → ZIP。
+- sw.js 或任何 App Shell 檔案有改 → 依 `16_OPS_PLAYBOOK.md` 升版(新 generation、`sw.js` 的 `SW_VERSION` 同步);交付順序:`dev` 分支驗收 → PR → Bar 核准 merge(見 16 §E Release Flow)。

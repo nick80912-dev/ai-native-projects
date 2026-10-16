@@ -1,6 +1,36 @@
 # 07 版本紀錄
 
-## 2026-10-15 — v156 出發前修正：團體帳不再暫時消失、記帳表單、行程導覽（開發中，未發布）
+## 2026-10-16 — v157 代記團體帳、採買記帳取消、行程「現在」對齊今天頁，並清理舊檔（開發中，未發布）
+
+- **來源**：Bar 2026-10-16 看完出發前稽核後，要求出發前再做五項：採買多選記帳取消（T8）、切換身分與代記帳（L7／L8 後續）、行程頁「現在」（T2）、刪除指定的舊內容、修正高／中優先的過時文件。
+- **團體帳代記（Bar 選「表單直接選付款人」「寫在備註裡」「算進付款人的花費、不重複列」）**：
+  - 新增團體帳時，「付款人：」改成下拉選單，預設是你；選了別人後下面小字寫「會標示『Bar 代記』，之後由 Amy 修改」。只有一位成員時選單停用。編輯與更正不能改付款人。
+  - 存檔時 `record.member` 是選的付款人；記錄的人寫在備註尾端「〔Bar 代記〕」（`ledgerNoteWithProxyRecorder`），不改試算表欄位與 Apps Script。付款人必須是目前正式成員，否則跳出錯誤。
+  - 團體帳列表與多品項卡顯示「Bar 代記」小標。代記的人自己不在分攤裡時，這筆仍列在他的團體帳列表，但不算進他的「與我相關」金額。
+  - 付款人那邊照現有規則：只算她分到的份額，「我的總花費」明細寫「你付（Bar 代記）」。代記的人的個人帳不會有這筆。
+  - 之後只有付款人本人能修改或刪除（與其他團體帳相同）。
+- **採買多選記帳取消（T8）**：待買頁多選「記帳」會先把待買項目標成已買再開表單；現在沒存檔就按 × 關掉時，這一批移回待買並提示「已取消記帳，N 項移回待買」。原本就已買的不動；存檔成功後照舊。
+- **行程頁「現在」（T2）**：`selectCurrentTripItem` 改用今天頁 NEXT STOP 的選法（串點整區算一站，再取區內子站），「回到現在」也跟著。例：10/19 15:45 兩頁都在「宮島表参道商店街」。
+- **刪除（Bar 指定）**：
+  - 程式：V1 的 `trip_expenses` 提示、2026-07 以前的 `v2_cache_*` 開機遷移（舊 key 由結束旅程時清除）、天氣城市表的東京／鎌倉／成田。
+  - 檔案：`shell/v111`–`v153`（43 個，保留 v154 起；ADR 0019 增補保留規則）、`docs/superpowers/` 135 份沒被引用的計畫與規格、`00_CONTEXT_HANDOVER.md`、兩份 `-old-*_DEPRECATED.md`、5 份逐版驗證文件、2 份小筆記、`icon-120.png`。`tests/trip-lifecycle-wiring.test.js` 改用位元組相同的 v136 BUILTIN fixture 與保留世代的 hash。
+- **文件修正（高／中）**：`tasks/current.md` 現況表（v143／備份 v9 → 現況）與被全域取代改壞的 5 行歷史、`16_OPS_PLAYBOOK.md` §A5「回滾至 v18」與 §F5、`.ai-manifest.json`（不存在的檔案、候選版標籤、Schema 3.1、備份 v10）、`README.md`、`CONTEXT.md`（字型鏈、備份 v10）、`03`、`04`、`05`、`06`、`08`、`10`、`11`、`13`、`01` 的過時說明。細節見 `tasks/current.md` 2026-10-16。
+- **版本**：forward bump v156→v157；`builtin-snapshot.js` 以 v156 asset 離線重產，除版本外不變。發布說明視窗為 `v157` + `['v156','v155','v154','v153']`（v152 滾出）。
+- **測試**：新增 `tests/browser/proxy-recording-v157.spec.js`（7 項：取消記帳移回待買、存檔後維持已買、320／390px 付款人選單（16px、不溢出）、代記紀錄的成員／備註／小標／列表／摘要／付款人份額、自己付不加備註、行程頁「現在」與「回到現在」）。`ledger-225.test.js` 加代記小標；`atomic-sheet-sync.test.js` 改為舊 v2_cache 不再遷移；`ledger-dashboard`、`ledger-member-visibility`、`theme-system`、v156 規格的付款人測試跟著更新。
+- **反向驗證**（各自被測試抓到）：取消時不移回、不寫代記備註、代記紀錄不列給記錄者、摘要算進代記紀錄、忽略選的付款人、行程頁用舊選法。
+- **回滾**：合併前關閉 PR；發布後依 `16_OPS_PLAYBOOK.md` §A1 退回上一個 Netlify 部署（v156，錨點 `production-v156`），再往前 bump。資料不受影響；代記的帳在舊版顯示為付款人記的帳，備註照常顯示。
+
+## 2026-10-15 — v156 正式發布（released）
+
+- **G1（依 Bar 指示改在正式站以手機審查）**：Bar 2026-10-15 指示「完成後送上main我手機審查」，這次沒有先在 GitHub Pages 驗收。
+- PR [#69](https://github.com/nick80912-dev/ai-native-projects/pull/69) 的 sanity／browser-qa 在 head `9a294ea` 全綠後，以 merge 合併進 `dev`（`bc9e053`，釘住 head）。PR [#70](https://github.com/nick80912-dev/ai-native-projects/pull/70) 以 merge 合併 `dev` → `main`，merge commit **`bc59984`**。
+- **發布內容等同 CI 驗過的版本**：`dev` `bc9e053` 的 tree `ad6da6f` 與 `9a294ea` 完全相同，且 `main` 是 `dev` 的祖先，因此發布 PR 未再等一輪 CI。
+- Netlify deploy **`6ad0cbec0929a04b24927c90`**：`ready`，`commit_ref` = `bc59984` 相符，`published_at` `2026-10-15T12:50:01Z`，`manual_deploy: false`。20 個新檔（含 `shell/v156/index.html`），6 條 header rule 全過。
+- **線上核對**：正式站 `sw.js` 為 `SW_VERSION='v156'`（`no-cache,no-store,must-revalidate`）、`shell/v156/app-version.js` 為 v156；以全新的 Chromium 開正式站，`APP_VERSION` 為 v156、只剩 `okayama-trip-v156` 快取，最新一則發布說明為「出發前的小修正」。
+- **G6**：Bar 2026-10-15 建立 tag `production-v156`（lightweight）→ `bc59984`；以 `git ls-remote` 與 GitHub release 核對相符。
+- 回滾：依 `16_OPS_PLAYBOOK.md` §A1 在 Netlify Publish 上一個部署（v155，deploy `6acf8d9a`，`commit_ref` `0a9ceb1`），錨點 `production-v155`，再往前 bump。不影響任何資料。
+
+## 2026-10-15 — v156 出發前修正：團體帳不再暫時消失、記帳表單、行程導覽（已於同日發布，見上一則）
 
 - **來源**：出發前稽核報告（UI/UX、Bug、多餘程式、用不到的內容、逐項操作）列出 53 項。Bar 2026-10-15 選出發前要修的三組：「團體帳暫時消失」「記帳表單兩項」「行程兩項」，其餘留到回程後。
 - **B1 剛記的團體帳暫時消失（高）**：

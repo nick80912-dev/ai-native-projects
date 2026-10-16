@@ -3,7 +3,7 @@
    B1  剛記的團體帳被 fast pull 讀回後,交付橋接就清掉了;下一次 syncAll 用延遲 1–5 分鐘的
        公開 CSV 換掉 DB,這筆帳從帳本和餘額消失,而且 after 游標已走過,整個工作階段補不回來。
    L3  記帳表單點背景或按 Esc 會直接關閉,草稿沒有確認就丟掉。
-   L8  團體帳的付款人一律是目前身分,表單卻只寫「目前記帳身分」。
+   L8  團體帳的付款人一律是目前身分,表單卻只寫「目前記帳身分」。(v157 起可改選付款人)
    T3  從今天頁點已完成／已略過的站,「隱藏已完成」把它藏起來,行程頁只說「找不到對應地點」。
    T12 (復原 6 秒)由 tests/trip-progress-persistence.test.js 守著。
    ============================================================ */
@@ -137,8 +137,10 @@ for(const width of [320,390]){
     await openLedgerEntry(page,width);
     const member=page.locator('#ledgerEntrySheet .ledger-sheet-member');
     await page.locator('#ledgerEntrySheet .ledger-sheet-choice',{hasText:'團體'}).click();
-    await expect(member).toHaveText('付款人：Bar（你）別人付的，請付款人自己記');
-    await expect(member.locator('b')).toHaveText('Bar');
+    /* v157:付款人改成可選的下拉選單(見 proxy-recording-v157.spec.js);只有一位成員時不能改,預設是你。 */
+    await expect(member.locator('#ledgerPayer')).toHaveValue('');
+    await expect(member.locator('#ledgerPayer option:checked')).toHaveText('Bar（你）');
+    await expect(member.locator('.ledger-payer-note')).toHaveText('別人付的，請改選付款人');
     const note=await member.locator('.ledger-payer-note').evaluate(element=>{
       const style=getComputedStyle(element),row=element.closest('.ledger-entry-heading-row');
       return {size:style.fontSize,weight:style.fontWeight,display:style.display,fits:row.scrollWidth<=row.clientWidth};
