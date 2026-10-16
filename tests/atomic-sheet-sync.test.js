@@ -838,19 +838,13 @@ async function testBootSelection(){
   assert.strictEqual(committed.ok,true);
   assert.strictEqual(JSON.parse(storage.memory.trip_data_snapshot_state).previous.generationId,'g-previous','effective fallback is retained as previous');
 
+  /* v157 (Bar 2026-10-16): the pre-July v2_cache_* migration was removed; old keys are ignored and BUILTIN is used. */
   storage=memoryStorage();
   const legacy=orchestrationRaw('legacy');
   app.SHEETS.forEach(function(sheet){storage.memory['v2_cache_'+sheet.key]=JSON.stringify({text:legacy[sheet.key],ts:80});});
   selected=app.selectBootData(storage,orchestrationRaw('builtin'));
-  assert.strictEqual(selected.source,'legacy-migrated');
-  assert.strictEqual(selected.snapshot.source,'legacy-migrated');
-  assert.strictEqual(JSON.parse(storage.memory.trip_data_snapshot_state).active.source,'legacy-migrated');
-
-  storage=memoryStorage();
-  app.SHEETS.forEach(function(sheet){storage.memory['v2_cache_'+sheet.key]=JSON.stringify({text:legacy[sheet.key],ts:80});});
-  storage.memory.v2_cache_cfg=JSON.stringify({text:orchestrationRaw('blocked').cfg,ts:80});
-  selected=app.selectBootData(storage,orchestrationRaw('builtin'));
-  assert.strictEqual(selected.source,'builtin','invalid legacy cache falls back to BUILTIN');
+  assert.strictEqual(selected.source,'builtin','an old v2_cache is no longer migrated');
+  assert.strictEqual(storage.memory.trip_data_snapshot_state,undefined,'booting from BUILTIN writes no snapshot');
 
   /* v150 (ADR 0021): snapshots are bound to the trip they were downloaded for. */
   assert.strictEqual(active.sourceKey,'legacy','without a connected trip, new snapshots belong to the built-in Okayama trip');

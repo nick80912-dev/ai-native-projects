@@ -314,7 +314,7 @@ const editSource=html.slice(html.indexOf('function editLedgerRecord('),html.inde
 assert(editSource.includes('isLedgerRecordRelatedToMember('),'#16 編輯入口以同一個判斷重查,不只依賴清單過濾');
 assert(editSource.includes("track==='shared'"),'#16 編輯的相關性檢查只作用於團體帳');
 const deleteDialogSource=html.slice(html.indexOf('function openSharedLedgerDeleteBatch('),html.indexOf('function submitSharedLedgerDeletion('));
-const deleteSubmitSource=html.slice(html.indexOf('function submitSharedLedgerDeletion('),html.indexOf('function clearLegacyExpenses('));
+const deleteSubmitSource=html.slice(html.indexOf('function submitSharedLedgerDeletion('),html.indexOf('function formatLedgerAmounts('));
 const deleteGuardSource=html.slice(html.indexOf('function resolveSharedLedgerDeleteSelection('),html.indexOf('function ledgerSingleDeleteBatchHint('));
 assert(deleteDialogSource.includes('resolveSharedLedgerDeleteSelection('),'#16 刪除對話框透過共用整批守門重查');
 assert(deleteSubmitSource.includes('resolveSharedLedgerDeleteSelection('),'#16 實際寫入墓碑前再次執行整批守門');
