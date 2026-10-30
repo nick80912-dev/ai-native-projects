@@ -1,6 +1,12 @@
 # 07 版本紀錄
 
-## 2026-10-30 — v166 沒有網路時也看得到剛記的團體帳（開發中，未發布）
+## 2026-10-30 — v166 已上線 main（待 Bar 手機審查與 tag）
+
+- PR [#93](https://github.com/nick80912-dev/ai-native-projects/pull/93) 在 head `5c1a503` 的 sanity／browser-qa 全綠後合併進 `dev`（`bb74c2a`，釘住 head）；PR [#94](https://github.com/nick80912-dev/ai-native-projects/pull/94)（並帶 v165 發布紀錄 PR #92）合併 `dev` → `main`，merge commit **`11c0330`**。合併 tree `95e2868` 與 `5c1a503` 相同。本機完整 Chromium 379 passed，只有已知只在本機失敗的兩項，沒有略過的測試。
+- **線上核對**：正式站 `sw.js` 為 `SW_VERSION='v166'`；全新 Chromium 開正式站，`APP_VERSION` 為 v166、只剩 `okayama-trip-v166` 快取，發布說明為「沒有網路時也看得到剛記的團體帳」；線上 `shell/v166/index.html` 含 `restoreLedgerFastPullReadback`。Netlify deploy ID 未另查。
+- 回滾：依 `16_OPS_PLAYBOOK.md` §A1 Publish `commit_ref` = `db2c02a`（v165）的部署，再往前 bump。
+
+## 2026-10-30 — v166 沒有網路時也看得到剛記的團體帳（已上線 main，見上）
 
 - **來源**：Bar 2026-10-30「繼續進行下一批」：出發前稽核 #57 中優先 **B1 剩下的情況**。v156 讓 fast pull 讀回、但公開 CSV（延遲 1–5 分鐘）還沒有的列留在記憶體（`ledgerFastPullReadback`），同步後不再消失；但在 CSV 追上前關掉 App、在沒有網路的地方重開，這筆帳要等連上網路才回來（交付橋接在讀回當下就清掉了，本機快照也還沒有它）。
 - **做法**：
