@@ -5,15 +5,15 @@
 
 ## 📌 現況
 
-**正式站是 v164**（2026-10-30 發布，PR #89，`main` `023a229`；v157–v164 待 Bar 手機審查與 tag）。**v165 開發中**：時間改回跟手機時區（Bar 2026-10-30：不一定都去日本）。之後 v166：#57 中優先 B1 剩下的情況。每批一版、逐版送 main 給 Bar 手機審查（Bar 2026-10-30 選定）。
+**正式站是 v165**（2026-10-30 發布，PR #91，`main` `db2c02a`；v157–v165 待 Bar 手機審查與 tag）。**v166 開發中**：#57 中優先 B1 剩下的情況（沒有網路時重開 App，剛記的團體帳也看得到）。每批一版、逐版送 main 給 Bar 手機審查（Bar 2026-10-30 選定）。
 
 | 項目 | 值 |
 |---|---|
-| **正式站** | `https://trippilot-jp.netlify.app/` — **SW v164** |
-| **`origin/main`** | merge commit `023a229`（PR [#89](https://github.com/nick80912-dev/ai-native-projects/pull/89)） |
-| **`dev`** | 與 `main` 同為 v164（PR [#88](https://github.com/nick80912-dev/ai-native-projects/pull/88) 合併為 `4b11589`） |
+| **正式站** | `https://trippilot-jp.netlify.app/` — **SW v165** |
+| **`origin/main`** | merge commit `db2c02a`（PR [#91](https://github.com/nick80912-dev/ai-native-projects/pull/91)） |
+| **`dev`** | v165（PR [#90](https://github.com/nick80912-dev/ai-native-projects/pull/90) 合併為 `d0866a0`）；v166 開發中 |
 | 個人備份格式 | **v10**（`PERSONAL_STATE_VERSION=10`；相容策略見 `docs/personal-state-compatibility.md`） |
-| 最新正式 tag | **`production-v156`** → `bc59984`。v157（`63f9bde`）、v158（`17c609c`）、v159（`6ae06f2`）、v160（`3c27c22`）、v161（`a9e27c9`）、v162（`460a0f5`）、v163（`af2625c`）、v164（`023a229`）已上線，**等 Bar 手機審查後建立 tag** |
+| 最新正式 tag | **`production-v156`** → `bc59984`。v157（`63f9bde`）、v158（`17c609c`）、v159（`6ae06f2`）、v160（`3c27c22`）、v161（`a9e27c9`）、v162（`460a0f5`）、v163（`af2625c`）、v164（`023a229`）、v165（`db2c02a`）已上線，**等 Bar 手機審查後建立 tag** |
 | shell 世代 | repo 只保留 v154 起（ADR 0019 增補段） |
 | CI | `sanity`／`browser-qa` 跑 `ubuntu-latest`（2026-10-30 驗過 Ubuntu 26.04 後解除釘版，backlog #54） |
 
@@ -52,8 +52,8 @@
 4. ✅ **v163（已上線，待 Bar 手機審查）**：#57 中優先 T1、T7、L4–L7。
 5. ✅ **#54**：驗過 Ubuntu 26.04，CI 已解除釘版（2026-10-30）。
 6. ✅ **v164（已上線，待 Bar 手機審查）**：時間改依旅程時區（#57 中優先）。
-7. **v165（開發中）**：Bar 2026-10-30 裁定時間一律跟手機時區（不一定都去日本），退回 v164 的固定日本時間。
-8. **v166**：#57 中優先 B1 剩下的情況（沒有網路時重開 App，剛記的團體帳看不到）。
+7. ✅ **v165（已上線，待 Bar 手機審查）**：Bar 2026-10-30 裁定時間一律跟手機時區（不一定都去日本），退回 v164 的固定日本時間。
+8. **v166（開發中）**：#57 中優先 B1 剩下的情況（沒有網路時重開 App，剛記的團體帳看不到）。
 9. 其餘依序：#59 分帳收據照片（只存在拍照的手機，Bar 2026-10-19 裁定）、#57 低優先與清理、#58 Logo 與圖示（需 Bar 挑稿）、#55 繪本主題研究，以及長期項目（#3、#12、#20、#25 等）。
 
 > 正式發布仍遵守 §E：PR 與 Actions 通過後才 merge；Netlify 線上驗證通過、Bar 手機審查後才建立 production tag。

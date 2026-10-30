@@ -24,6 +24,7 @@
 - `browser/sw-update-cache.spec.js` 的 controller／cache readiness 以 `expect.poll` 等待真正 boolean；新增攔住 SW／空 cache 的 RED→GREEN 保護，避免 async `waitForFunction` 的 Promise truthiness 提前完成。原混世代／前後內容／離線斷言及時限不放寬。
 
 - 個人帳匯出：`node tests/personal-ledger-export.test.js` 與 `npx playwright test tests/browser/personal-ledger-export.spec.js`。涵蓋白名單／來源識別／唯讀／損壞拒絕／下載內容與 ⓘ modal 焦點及窄螢幕。v154 起驗證格式 v2 的 `groupShare` 與 `totals`。
+- 離線補回讀回的團體帳（v166）：`npx playwright test tests/browser/offline-readback-v166.spec.js`。fast pull 讀回、CSV 還沒追上的列存在 `trip_ledger_readback`（綁旅程），沒有網路時重開仍在帳本與餘額；CSV 追上就移除且不重複；不算待送、不進個人備份；別趟旅程的副本不套用。
 - 手機時區（v165）：`npx playwright test tests/browser/phone-time-zone-v165.spec.js`。今天、下一站與記帳的日期時間跟手機時區走（Bar 2026-10-30 裁定，v164 的固定日本時間已退回）：同一個時間點，手機設在台灣與設在日本各自看到手機的時間。`playwright.config.js` 預設 `timezoneId:'Asia/Tokyo'`（手機在日本），CI runner 是 UTC。
 - 稽核中優先（v163）：`npx playwright test tests/browser/medium-fixes-v163.spec.js` 與 `node tests/trip-progression.test.js`。T1 真實 10/22 倉敷子站順序、T7 沒有身分時從採買清單記帳（可取消、選完接續表單）、L4 至少保留一項／刪除確認／恢復預設、L5 已刪除的支付方式仍可編輯舊紀錄、L6 簡易模式列出待你確認的結清、L7 個人帳的其他身分標示。
 - 付款人選單（v162）：`npx playwright test tests/browser/payer-select-v162.spec.js`。先聚焦再選付款人（模擬手機點選），選單不被重建或重新聚焦（手機上重新聚焦會再打開選擇器），說明文字更新、重畫後保留付款人並正確存檔。
@@ -86,7 +87,7 @@
 - `browser/today-live-info.spec.js` exercises Hero／badge target confirmation at 320／375／390px with tap／Enter／Space, sticky-safe geometry, live status, reduced motion, missing targets, stale timers, source scroll, connected／replacement／fallback focus, and blank-category behavior. Focused WebKit uses `--grep "target|定位|blank category"`.
 - `browser/navigation-target-matrix.spec.js` exercises the actual expanded cluster-stop, pre-trip day, mall-floor, and back-to-now controls at 320／375／390px with rotating Tap／Enter／Space. It asserts exact target and live status, native keyboard focus, sticky-header-safe target／status geometry, 1.2-second clear, reduced-motion static treatment, zero horizontal overflow, and current-day return behavior. Run focused WebKit together with the existing Today target selection.
 - `diagnostic-impact-module.test.js` and `diagnostics-app-log.test.js` protect exact timeout classification, conservative unknown handling, input immutability, escaped raw／projected output, and byte-for-byte raw copied reports; `browser/diagnostics-app-log.spec.js` verifies the same boundary in Chromium.
-- `manifest-status-authority.test.js` plus `tools/check-doc-titles.js` require `.ai-manifest.json` to name `tasks/current.md` as the sole current-status authority, identify changelog／task archives only as history, reject stale `tasks/(current/backlog/done)`／`manifest.status` prose, and omit volatile candidate／next-action／automated-test snapshots. Current version authority is `shell/v165/app-version.js`／root `sw.js`; root `app-version.js` is the byte-locked v110 bridge.
+- `manifest-status-authority.test.js` plus `tools/check-doc-titles.js` require `.ai-manifest.json` to name `tasks/current.md` as the sole current-status authority, identify changelog／task archives only as history, reject stale `tasks/(current/backlog/done)`／`manifest.status` prose, and omit volatile candidate／next-action／automated-test snapshots. Current version authority is `shell/v166/app-version.js`／root `sw.js`; root `app-version.js` is the byte-locked v110 bridge.
 
 
 

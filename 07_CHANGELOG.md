@@ -1,6 +1,26 @@
 # 07 版本紀錄
 
-## 2026-10-30 — v165 時間改回跟手機時區（開發中，未發布）
+## 2026-10-30 — v166 沒有網路時也看得到剛記的團體帳（開發中，未發布）
+
+- **來源**：Bar 2026-10-30「繼續進行下一批」：出發前稽核 #57 中優先 **B1 剩下的情況**。v156 讓 fast pull 讀回、但公開 CSV（延遲 1–5 分鐘）還沒有的列留在記憶體（`ledgerFastPullReadback`），同步後不再消失；但在 CSV 追上前關掉 App、在沒有網路的地方重開，這筆帳要等連上網路才回來（交付橋接在讀回當下就清掉了，本機快照也還沒有它）。
+- **做法**：
+  - 讀回的列同時存進本機 `trip_ledger_readback`（`{version:1,sourceKey,records}`，綁目前旅程）：`ledgerFastPull()` 讀回新列時、`carryLedgerFastPullReadback()` 因 CSV 追上而移除時都寫回；清空時移除這個 key。
+  - 開 App 時 `bootLocal()` 裝好本機快照後呼叫 `restoreLedgerFastPullReadback(DB)`：只取同一趟旅程（`sourceKey` 相同）的列，CSV 已有的略過，其餘補進帳本與結算；接著寫回，CSV 已追上或別趟旅程留下的就此清掉。
+  - 刻意**不**沿用交付橋接：橋接非空會讓 fast pull 持續輪詢、清除旅程預檢會當成待送而擋下，而且讀回也包含別人記的帳。這份資料伺服器上已有，所以不算待送、不進個人備份（備份是明列欄位）、清除旅程時隨其他 `trip_*` 一起清掉（`TripLifecycle.clearKeys()`）。
+  - 寫入失敗只記 AppLog，畫面上的帳不受影響（連上網路後照舊由 CSV 或 fast pull 補回）。
+- **版本**：forward bump v165→v166；`builtin-snapshot.js` 以 v165 asset 離線重產，除版本外不變。發布說明視窗為 `v166` + `['v165','v164','v163','v162']`（v161 滾出）。`tests/trip-lifecycle-wiring.test.js` 加入已發布 v165 三件組的 hash。
+- **測試**：
+  - 新增 `tests/browser/offline-readback-v166.spec.js`（4 項）：線上送出並讀回後（橋接 0、CSV 沒有、本機存了這筆），在沒有網路時重開，帳本有這筆、餘額 ¥1,500、團體帳列表看得到「晚餐」；CSV 追上後本機副本移除、重開後仍只有一筆；本機副本不算待送、不在個人備份；別趟旅程留下的副本不套用並被移除。
+  - 反向驗證：拿掉開 App 時的補回、拿掉讀回時的寫入、拿掉 CSV 追上時的寫回、拿掉旅程比對，新測試各自抓到。
+- **回滾**：合併前關閉 PR；發布後依 `16_OPS_PLAYBOOK.md` §A1 退回 v165 的 Netlify 部署（`commit_ref` `db2c02a`），再往前 bump。舊版不讀 `trip_ledger_readback`，留著的 key 會在清除旅程時清掉，不影響任何資料。
+
+## 2026-10-30 — v165 已上線 main（待 Bar 手機審查與 tag）
+
+- PR [#90](https://github.com/nick80912-dev/ai-native-projects/pull/90)（v165，並帶 v164 發布紀錄）在 head `ad3c0af` 的 sanity／browser-qa 全綠後合併進 `dev`（`d0866a0`，釘住 head）；PR [#91](https://github.com/nick80912-dev/ai-native-projects/pull/91) 合併 `dev` → `main`，merge commit **`db2c02a`**。合併 tree `c3018a6` 與 `ad3c0af` 相同。本機完整 Chromium 375 passed，只有已知只在本機失敗的兩項，沒有略過的測試。
+- **線上核對**：正式站 `sw.js` 為 `SW_VERSION='v165'`；全新 Chromium 開正式站，`APP_VERSION` 為 v165、只剩 `okayama-trip-v165` 快取，發布說明為「時間改回跟手機時區」。另以**台灣時區**的全新 Chromium 開正式站：App 時鐘 22:16，等於手機（台灣）時鐘，當下日本是 23:16；`tripNow` 不存在。Netlify deploy ID 未另查。
+- 回滾：依 `16_OPS_PLAYBOOK.md` §A1 Publish `commit_ref` = `023a229`（v164）的部署，再往前 bump。
+
+## 2026-10-30 — v165 時間改回跟手機時區（已上線 main，見上）
 
 - **來源**：Bar 2026-10-30 看過 v164 後指示：「時區不要一律指定時區，因為不一定都是去日本」。問過三種做法（行程設定填時區、一律跟手機時區、依目的地自動判斷）後，Bar 選**一律跟手機時區**。
 - **做法**：`shell/v165/index.html` 的時間邏輯回到 v163（`appNow()` 的欄位直接當手機時間讀）：移除 v164 的 `TRIP_UTC_OFFSET_MINUTES`、`tripWallDate()`、`tripInstantFromWall()`、`tripWallTextInstant()`、`tripNow()`，今天、下一站、出發倒數、旅程結束、最後一天的午夜計時、時間模擬，以及記帳的預設日期時間、日曆「今天」、`ledgerLocalDateKey()`、`ledgerOccurrenceIso()`、`formatLedgerLocalOccurrence()` 都回到 v163 的寫法。`appNow()` 上方加註這個裁定。與 v164 的差異只有這些時間邏輯、版本標記與發布說明。
