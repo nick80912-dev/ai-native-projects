@@ -1,3 +1,4 @@
+const {installTripTime}=require('./support/trip-time');
 const assert=require('assert');
 const vm=require('vm');
 const TripLedgerUiState=require('../ledger-ui-state.js');
@@ -48,7 +49,7 @@ const summarySandbox={
   },
   appNow(){return new Date(2026,6,28);}
 };
-vm.createContext(summarySandbox);
+vm.createContext(summarySandbox);installTripTime(summarySandbox,html);
 vm.runInContext(dateLabelSource+'\n'+summaryTextSource,summarySandbox);
 assert.strictEqual(summarySandbox.ledgerOptionalDateLabel('2026/07/28',new Date(2026,6,28)),'今天');
 assert.strictEqual(summarySandbox.ledgerOptionalDateLabel('2026/10/18',new Date(2026,6,28)),'10/18');
@@ -87,7 +88,7 @@ const participantTextSandbox={
   canonicalMemberName(value){return String(value||'').trim().toLowerCase();},
   String
 };
-vm.createContext(participantTextSandbox);
+vm.createContext(participantTextSandbox);installTripTime(participantTextSandbox,html);
 vm.runInContext(extractFunction('ledgerParticipantSummaryText'),participantTextSandbox);
 assert.strictEqual(participantTextSandbox.ledgerParticipantSummaryText(['Bar','Jane']),'全員 2 人','exactly every registered member uses the all-members summary');
 assert.strictEqual(participantTextSandbox.ledgerParticipantSummaryText(['Bar','Jane','已移除成員']),'已選 3 人','a retained stale member never produces a misleading all-members count');
@@ -141,7 +142,7 @@ const doneSandbox={
   saveLedgerEntry(addAnother){assert.strictEqual(addAnother,false);saves++;},
   Object,String,Number,Promise
 };
-vm.createContext(doneSandbox);
+vm.createContext(doneSandbox);installTripTime(doneSandbox,html);
 vm.runInContext(inlineErrorSource+'\n'+amountNextSource+'\n'+detailNextSource,doneSandbox);
 doneSandbox.handleLedgerAmountNext({key:'Enter',isComposing:false,currentTarget:amountInput,preventDefault(){prevented++;}});
 doneSandbox.handleLedgerAmountNext({key:'Tab',isComposing:false,currentTarget:amountInput,preventDefault(){prevented++;}});
@@ -211,7 +212,7 @@ const amountDoneSandbox={
   focusLedgerItemField(key,field){const node=itemNodes[(field==='amount'?'ledgerItemAmount_':'ledgerItemName_')+key];if(node)node.focus();},
   String
 };
-vm.createContext(amountDoneSandbox);
+vm.createContext(amountDoneSandbox);installTripTime(amountDoneSandbox,html);
 vm.runInContext(amountDoneSource,amountDoneSandbox);
 amountDoneSandbox.handleLedgerItemAmountDone({key:'Enter',preventDefault(){}},'first');
 assert.strictEqual(itemNodes.focused,'second-name','an item amount advances to the next item name');

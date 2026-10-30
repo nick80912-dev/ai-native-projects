@@ -1,3 +1,4 @@
+const {installTripTime}=require('./support/trip-time');
 /* 讀現行 generation(tests/support/source.js),不是 root index.html。
    root index.html 是 byte-locked 的 v110 bridge,內容永遠不變 —— 斷言放在那裡
    永遠會綠,守不到使用者實際跑的 App。2026-09-24 實測:在現行 generation 把
@@ -18,7 +19,7 @@ function runWithSearch(search) {
     localStorage: { getItem() { return null; } },
     AppLog: { repo() {} },
   };
-  vm.createContext(sandbox);
+  vm.createContext(sandbox);installTripTime(sandbox,html);
   vm.runInContext([
     extractFunction(html, 'lsGet'),
     extractFunction(html, 'appNow'),
