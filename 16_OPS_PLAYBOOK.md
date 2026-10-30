@@ -29,7 +29,7 @@
 
 **用途**:新版發布(`dev → main`)後若正式站出事,需要退回上一個正式版。本節原本寫的是「以 tag 回滾至 v18」(v72 發布時的預案);v18 沒有 `shell/` generation 架構,照做會和現行 SW 衝突,已作廢。
 
-**錨點**:每個正式版都有 tag `production-v<SW版本>`。目前正式站為 v163(`main` `af2625c`,tag 待 Bar 手機審查後建立);**最新已建立的錨點是 `production-v156` → `bc59984`**(Netlify deploy `6ad0cbec`)。v157–v162 雖已上線但尚無 tag;要退回 v162 時以 `commit_ref` = `460a0f5` 找部署。最新的錨點以 `tasks/current.md` 為準。
+**錨點**:每個正式版都有 tag `production-v<SW版本>`。目前正式站為 v164(`main` `023a229`,tag 待 Bar 手機審查後建立);**最新已建立的錨點是 `production-v156` → `bc59984`**(Netlify deploy `6ad0cbec`)。v157–v163 雖已上線但尚無 tag;要退回 v163 時以 `commit_ref` = `af2625c` 找部署。最新的錨點以 `tasks/current.md` 為準。
 
 > **先分清兩件事**:production tag 是**程式碼**錨點,回答「該退回哪個內容」;讓使用者實際看到舊版靠的是**部署**動作。緊急時**先做 A1(Netlify Publish deploy),再補 git 層**;A1 是秒級且不動 git 歷史。
 
