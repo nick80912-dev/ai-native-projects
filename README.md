@@ -37,8 +37,8 @@
 
 ## 專案檔案
 - `index.html` / `app-version.js` — 保留 v110 predecessor bridge；讓尚未更新的 v110 worker 在 current generation 安裝失敗時仍可運作
-- `shell/v159/index.html` / `shell/v159/app-version.js` — current generation（正式版）的 App 文件與 runtime 版本來源；成功啟用的 `sw.js` 才接管 root 導覽；已發布 generation 保持不可變，repo 只保留最近幾代（見 ADR 0019 增補段）
-- `shell/v159/builtin-snapshot.js` — 由 `tools/refresh-builtin-snapshot.js` 產生的版本綁定離線資料資產；八表內容沿用已核准的 v136 種子 CSV（`tests/trip-lifecycle-wiring.test.js` 比對），升版只更新版本標記；禁止手動修改
+- `shell/v160/index.html` / `shell/v160/app-version.js` — current generation（正式版）的 App 文件與 runtime 版本來源；成功啟用的 `sw.js` 才接管 root 導覽；已發布 generation 保持不可變，repo 只保留最近幾代（見 ADR 0019 增補段）
+- `shell/v160/builtin-snapshot.js` — 由 `tools/refresh-builtin-snapshot.js` 產生的版本綁定離線資料資產；八表內容沿用已核准的 v136 種子 CSV（`tests/trip-lifecycle-wiring.test.js` 比對），升版只更新版本標記；禁止手動修改
 - `navigation-intent.js` — 明確導覽目的地的 session-only state module；DOM 定位與回饋 adapter 位於 `index.html`
 - `diagnostic-impact.js` — AppLog 原始紀錄的 display-only impact projection；顯示 adapter 位於 `index.html`
 - `today-view.js` — Today Hero 採買摘要的純 model／renderer module；資料選擇與 DOM effects 留在 `index.html`
@@ -58,7 +58,7 @@
 
 ## 設定整理與個人旅程生命週期（v137–v140，已發布）
 
-「設定 → 資料」依序提供「資料健康狀態」、「照片健康狀態」、「過往旅程」、「備份、還原與版本資訊」。資料健康入口保留正常／需注意摘要；獨立子頁直接顯示行程資料、團體帳、個人資料與照片附件四項狀態，不再收合，返回設定首頁。照片詳細檢查／修復仍在照片頁。過往旅程直接開啟列表，返回設定首頁；Google 元件尚未載入時先準備登入，再由使用者點擊授權。「資料與版本」保留「重置紀錄」、「清除並打包旅程」、備份／還原與版本，不再重複健康明細。重置只清本機個人紀錄與採買照片；不清團體 Queue、已鎖定帳務或身分。清除需八表線上預檢、無本機待同步／橋接、正式團體帳結清且無待回覆 claim；可選先封存至個人 Drive 或不保存直接清除。清除只移除本裝置的 `trip_*`、`v2_cache_*` 與採買照片，保留 inactive 標記；不刪共用 Sheet、其他旅伴手機、Drive 檔案或 SW App Shell。封存不含採買照片、Queue、token 或診斷資料，只有回顧筆記可追加。完整連接新旅程留待第二階段。
+「設定 → 資料」依序提供「資料健康狀態」、「照片健康狀態」、「旅途紀錄」、「診斷面板」、「過往旅程」、「資料與版本」（v160 前名為「備份、還原與版本資訊」）。資料健康入口保留正常／需注意摘要；獨立子頁直接顯示行程資料、團體帳、個人資料與照片附件四項狀態，不再收合，返回設定首頁。照片詳細檢查／修復仍在照片頁。過往旅程直接開啟列表，返回設定首頁；Google 元件尚未載入時先準備登入，再由使用者點擊授權。「資料與版本」保留「重置紀錄」、「清除並打包旅程」、備份／還原與版本，不再重複健康明細。重置只清本機個人紀錄與採買照片；不清團體 Queue、已鎖定帳務或身分。清除需八表線上預檢、無本機待同步／橋接、正式團體帳結清且無待回覆 claim；可選先封存至個人 Drive 或不保存直接清除。清除只移除本裝置的 `trip_*`、`v2_cache_*` 與採買照片，保留 inactive 標記；不刪共用 Sheet、其他旅伴手機、Drive 檔案或 SW App Shell。封存不含採買照片、Queue、token 或診斷資料，只有回顧筆記可追加。完整連接新旅程留待第二階段。
 
 過往旅程以唯讀區塊呈現每日行程、採買分配／記帳關聯、個人帳、團體紀錄及旅途紀錄；完整八表與個人設定另保留原始資料展開區。筆記確認上傳與讀回後才清草稿，失敗重試沿用同 note ID。真機清單見 `docs/device-acceptance-log.md` 的 v137 區段。
 
