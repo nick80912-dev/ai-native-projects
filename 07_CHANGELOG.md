@@ -1,6 +1,16 @@
 # 07 版本紀錄
 
-## 2026-10-30 — v163 下一站順序、採買記帳身分、記帳選項、簡易結算、個人帳身分標示（開發中，未發布）
+## 2026-10-30 — v160–v163 已上線 main（待 Bar 手機審查與 tag）
+
+- **v163**：PR [#85](https://github.com/nick80912-dev/ai-native-projects/pull/85) 第一輪 CI（head `ad89110`）抓到兩個真問題：「恢復預設」按鈕低於 36px 觸控高度；`settings-grouped-root.spec.js` 的捲動測試因同檔前一項失敗而沒跑到，修好後才發現它碰到 L4 新增的刪除確認。`7044924` 補 `min-height:44px` 並讓測試接受確認、核對文字；sanity／browser-qa 全綠後合併進 `dev`（`db233ff`，釘住 head）；PR [#86](https://github.com/nick80912-dev/ai-native-projects/pull/86) 合併 `dev` → `main`，merge commit **`af2625c`**。合併 tree `9371d55` 與 `7044924` 相同。本機完整 Chromium 除已知只在本機失敗的兩項外全過（`settings-grouped-root.spec.js` 修正後 7/7）。
+- **v162**：PR [#83](https://github.com/nick80912-dev/ai-native-projects/pull/83) → `dev`（`ca4bae8`）；PR [#84](https://github.com/nick80912-dev/ai-native-projects/pull/84) → `main`，merge commit **`460a0f5`**。
+- **v161**：PR [#81](https://github.com/nick80912-dev/ai-native-projects/pull/81) → `dev`（`3bc9f2a`）；PR [#82](https://github.com/nick80912-dev/ai-native-projects/pull/82) → `main`，merge commit **`a9e27c9`**。
+- **v160**：PR [#79](https://github.com/nick80912-dev/ai-native-projects/pull/79) → `dev`（`506304d`）；PR [#80](https://github.com/nick80912-dev/ai-native-projects/pull/80) → `main`，merge commit **`3c27c22`**。
+- 每版合併前都核對 `main`＋`dev` 的合併 tree 與 CI 驗過的 head 相同。
+- **線上核對（v163）**：正式站 `sw.js` 為 `SW_VERSION='v163'`；全新 Chromium 開正式站，`APP_VERSION` 為 v163、只剩 `okayama-trip-v163` 快取，發布說明為「下一站與記帳小修正」。v160–v162 發布當下各自以同樣方式核對過。Netlify deploy ID 未另查。
+- 回滾：依 `16_OPS_PLAYBOOK.md` §A1 Publish `commit_ref` = `460a0f5`（v162）的部署，再往前 bump。
+
+## 2026-10-30 — v163 下一站順序、採買記帳身分、記帳選項、簡易結算、個人帳身分標示（已上線 main，見上）
 
 - **來源**：Bar 2026-10-30「繼續進行下一批」：出發前稽核 #57 的中優先項目 T1、T7、L4、L5、L6、L7。
 - **T1**：`trip-progression.js` 選下一站時，沒有時間的站沿用前一個有時間的站的時間；沿用的時間已到的沒有時間的站，照行程順序優先。原本只找「第一個還沒到時間的有時間站」，10/22 倉敷完成 9:00 阿智神社後直接跳到 15:50 常春藤廣場。自動略過仍只看真正寫了時間的站。以真實 10/22 資料驗證：阿智神社 → 倉敷美觀地區 → 林源十郎商店 → 倉敷丹寧街。
@@ -13,7 +23,7 @@
 - **測試**：新增 `tests/browser/medium-fixes-v163.spec.js`（7 項，T1 用真實 10/22 資料）；`trip-progression.test.js` 加入倉敷情境；`ledger-entry-settings.test.js` 加入保留最後一項、取消確認、恢復預設；`ledger-225`、`ledger-form-223` 的沙盒載入新的 helper。反向驗證（T1 改回只看有時間的站、L4 拿掉保留一項、L5 拿掉舊值選項）各自被測試抓到。
 - **回滾**：合併前關閉 PR；發布後依 `16_OPS_PLAYBOOK.md` §A1 退回 v162 的 Netlify 部署（`commit_ref` `460a0f5`），再往前 bump。不影響任何資料。
 
-## 2026-10-30 — v162 付款人選單不再重複跳出（開發中，未發布）
+## 2026-10-30 — v162 付款人選單不再重複跳出（已上線 main，見上）
 
 - **來源**：Bar 2026-10-30 回報：「當團體分帳選擇付款人時會跳出視窗，但點選完付款人後視窗還是會再次跳出」。
 - **原因**：`setLedgerDraftPayer()` 一選就整張記帳表單重畫（`withLedgerSheetPosition(renderLedgerEntrySheet)`），重畫後把焦點還給 id 相同的「新」付款人選單；手機上對 `<select>` 呼叫 `focus()` 會再打開一次選擇器。桌面瀏覽器測試（`selectOption` 不會先聚焦選單）因此沒抓到；先聚焦再選就重現（`focusin` 落在新選單）。
@@ -22,7 +32,7 @@
 - **測試**：新增 `tests/browser/payer-select-v162.spec.js`（2 項：先聚焦再選付款人，選單是同一個元素、沒有被程式重新聚焦、說明文字更新；之後重畫仍保留付款人且不聚焦選單，存檔為付款人＋「〔Bar 代記〕」）。換回舊寫法時兩項都失敗。`proxy-recording-v157`、`pretrip-fixes-v156`、`shop-interaction` 一併通過。
 - **回滾**：合併前關閉 PR；發布後依 `16_OPS_PLAYBOOK.md` §A1 退回 v161 的 Netlify 部署（`commit_ref` `a9e27c9`），再往前 bump。不影響任何資料。
 
-## 2026-10-30 — v161 還原對話框、還原前確認、分帳設定橋接（開發中，未發布）
+## 2026-10-30 — v161 還原對話框、還原前確認、分帳設定橋接（已上線 main，見上）
 
 - **來源**：回程後第二批（Bar 2026-10-30「繼續進行 v161」），出發前稽核的 B2、L1、L2。
 - **L1**：「從 JSON 還原」與剪貼簿失敗時的「手動複製備份」對話框加 `.over-settings`（z 180），不再被設定頁（170）蓋住。原本 `.over-settings` 被後面的 `.state-dialog-overlay{z-index:140}` 蓋過，所以另加 `.state-dialog-overlay.over-settings`；新瀏覽器測試第一次跑就抓到這點。
@@ -32,7 +42,7 @@
 - **測試**：新增 `tests/browser/restore-and-settings-v161.spec.js`（7 項）；`ledger-entry-settings.test.js` 加入寬限期、過期、舊版橋接、未確認、預檢傳入設定五種情況；`settings-backup-ux.test.js` 改讀實際佇列，並加入取消不寫入、確認文字、未送出團體帳被拒。
 - **回滾**：合併前關閉 PR；發布後依 `16_OPS_PLAYBOOK.md` §A1 退回 v160 的 Netlify 部署（`commit_ref` `3c27c22`），再往前 bump。不影響任何資料。
 
-## 2026-10-30 — v160 收款人直接結清、退回後用目前金額、結束後先提醒結清（開發中，未發布）
+## 2026-10-30 — v160 收款人直接結清、退回後用目前金額、結束後先提醒結清（已上線 main，見上）
 
 - **來源**：Bar 2026-10-30 回程，要求開始修正並包含之前的規劃；全團還沒結清、也還沒清除旅程，所以先做結清相關（Bar 選「每批一版，逐版手機審查」）。
 - **#60 收款人直接結清**（Bar 2026-10-30 裁定：按轉帳建議那一列、分「已收到」「不用付了」、花費統計不變）：
