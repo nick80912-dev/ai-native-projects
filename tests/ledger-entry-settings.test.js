@@ -68,7 +68,7 @@ function renderCustomOptionEditor(source,page){
 }
 
 function loadOptionSettingsActions(source){
-  const values={category:['餐飲','交通'],payMethod:['現金'],shoppingUnit:['個','件']};
+  const values={category:['餐飲','交通'],payMethod:['現金','Suica'],shoppingUnit:['個','件']};
   function store(kind){
     return {
       all(){return values[kind].slice();},
@@ -93,6 +93,8 @@ function loadOptionSettingsActions(source){
     ledgerUiState:{draft:null},
     document:{getElementById(){return input;}},
     openSettings(target){routes.push(target);},
+    confirm(){return sandbox.confirmAnswer!==false;},confirmAnswer:true,toasts:[],
+    DEFAULT_LEDGER_CATEGORIES:['餐飲','交通','購物'],DEFAULT_LEDGER_PAY_METHODS:['現金','信用卡'],
     toast(){},
     routes,
     values
@@ -103,6 +105,7 @@ function loadOptionSettingsActions(source){
     extractFunction(source,'ledgerOptionStoreForKind')+'\n'+
     extractFunction(source,'addLedgerOptionFromSettings')+'\n'+
     extractFunction(source,'removeLedgerOptionFromSettings')+'\n'+
+    extractFunction(source,'restoreLedgerOptionDefaults')+'\n'+
     extractFunction(source,'moveLedgerOptionFromSettings'),
     sandbox
   );
@@ -362,6 +365,17 @@ function response(payload){
   assert.strictEqual(optionActions.routes.pop(),'options-category','adding a category stays on its focused editor');
   optionActions.removeLedgerOptionFromSettings('payMethod','現金');
   assert.strictEqual(optionActions.routes.pop(),'options-pay-method','removing a payment method stays on its focused editor');
+  /* v163(稽核 L4):至少保留一項、刪除前確認、可恢復預設 */
+  optionActions.removeLedgerOptionFromSettings('payMethod','Suica');
+  assert.strictEqual(optionActions.routes.length,0,'the last payment method cannot be removed');
+  assert.deepStrictEqual(optionActions.ledgerPayMethodStore.all(),['Suica']);
+  optionActions.confirmAnswer=false;
+  optionActions.removeLedgerOptionFromSettings('category','交通');
+  assert.deepStrictEqual(optionActions.ledgerCategoryStore.all(),['餐飲','交通','旅費'],'cancelling the confirmation keeps the category');
+  optionActions.confirmAnswer=true;
+  optionActions.restoreLedgerOptionDefaults('payMethod');
+  assert.deepStrictEqual(optionActions.ledgerPayMethodStore.all(),['Suica','現金','信用卡'],'restoring defaults adds the missing ones and keeps custom options');
+  assert.strictEqual(optionActions.routes.pop(),'options-pay-method');
   optionActions.moveLedgerOptionFromSettings('shoppingUnit','件',-1);
   assert.strictEqual(optionActions.routes.pop(),'options-shopping-unit','moving a shopping unit stays on its focused editor');
   assert(splitSource.includes('⚠ 目前顯示測試帳本'),'Split renders the test-universe warning');
