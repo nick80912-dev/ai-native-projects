@@ -63,7 +63,8 @@ function createStorage(initial){
     localStorage:storage,
     navigator:{clipboard:{writeText(text){copied.push(text);return Promise.resolve();}}},
     document:{getElementById(id){return id==='personalStateBox'?box:null;}},
-    ledgerRepository:{queuedRecords(){return queued;},flushQueue(){flushes++;return Promise.resolve();}},
+    /* v161:還原前要比對目前的待送佇列,所以讀實際的 storage */
+    ledgerRepository:{queuedRecords(){return JSON.parse(storage.getItem('trip_ledger_queue')||'[]');},flushQueue(){flushes++;return Promise.resolve();}},
     personalLedgerRepository:{all(){return [{id:'personal-1',time:'2026-07-18T08:00:00.000Z',member:'黃柏',category:'餐飲',detail:'早餐',amountJpy:500,amountTwd:105,note:'',payMethod:'現金',isProxy:false,proxyTarget:'',batchId:''}];}},
     /* v5 加了 completedAt／splitGroupId／ledgerLinks,v6 再加結構化 quantity／unit／legacyQtyText，
        v7 將對象、數量與 ledgerLinks 收進 allocations[]。
@@ -143,6 +144,9 @@ function createStorage(initial){
   sandbox.openPersonalStateCopyFallback=function(text){fallbackText=text;};
   sandbox.closePersonalStateDialog=function(){dialogCloses++;};
   sandbox.closeSettings=function(){settingsCloses++;};
+  const confirms=[],alerts=[];let confirmAnswer=true;
+  sandbox.confirm=function(message){confirms.push(message);return confirmAnswer;};
+  sandbox.alert=function(message){alerts.push(message);};
 
   /* 時間模擬進行中不得匯出:回復點 trip_time_simulation_snapshot 不在 payload 內,
      這份備份還原到新裝置後就沒有任何回復機會(2026-07-30 P5 調查 → Bar 裁定) */
@@ -212,6 +216,13 @@ function createStorage(initial){
   assert.strictEqual(storage.snapshot(),beforeStorageFailure,'storage failure rolls back every personal-state key');
   assert.strictEqual(lastToast,'本機資料還原失敗');
 
+  /* v161(L2):還原前先確認,列出會消失的資料;取消就什麼都不寫 */
+  confirmAnswer=false;
+  const beforeCancel=storage.snapshot();
+  sandbox.restorePersonalState();
+  assert.strictEqual(storage.snapshot(),beforeCancel,'cancelling the confirmation writes nothing');
+  assert.strictEqual(confirms[confirms.length-1],'還原會用這份備份取代這支手機目前的打卡、想逛、採買、個人帳與設定。\n目前有 1 筆個人帳、1 個採買項目 不在備份裡，還原後會消失。\n確定要還原嗎？','the confirmation lists what the backup does not contain');
+  confirmAnswer=true;
   sandbox.restorePersonalState();
   assert.deepStrictEqual(JSON.parse(storage.getItem('trip_checks')),{P002:true});
   assert.deepStrictEqual(JSON.parse(storage.getItem('trip_shop_wants')),{S002:true});
@@ -232,6 +243,12 @@ function createStorage(initial){
   assert.strictEqual(flushes,1);
 
   box.value=JSON.stringify({format:'trip-personal-state',version:1,checks:{P003:true},wants:{},member:'黃柏',ledgerQueue:[]});
+  /* v161(L2):還沒送出的團體帳不在備份裡時直接擋下,什麼都不寫 */
+  const beforeQueueLoss=storage.snapshot();
+  sandbox.restorePersonalState();
+  assert.strictEqual(storage.snapshot(),beforeQueueLoss,'a backup that would drop unsent group records is refused');
+  assert.strictEqual(alerts[alerts.length-1],'還有 1 筆團體帳尚未送出，還原會刪掉它們。\n請連上網路，等它們送出後再還原。');
+  storage.setItem('trip_ledger_queue','[]');
   sandbox.restorePersonalState();
   assert.deepStrictEqual(JSON.parse(storage.getItem('trip_personal_ledger')),[],'version 1 backup restores with a safe empty personal ledger');
   assert.deepStrictEqual(JSON.parse(storage.getItem('trip_ledger_categories')),sandbox.DEFAULT_LEDGER_CATEGORIES,'version 1 backup restores default categories');
