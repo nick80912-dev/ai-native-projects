@@ -327,7 +327,10 @@ test('根頁與各子頁(含 test-mode)各自保存捲動位置',async({page})=>
   expect(await page.evaluate(()=>settingsUiState.page)).toBe('options-category');
   await page.getByRole('button',{name:'上移 旅費'}).click();
   expect(await page.evaluate(()=>settingsUiState.page)).toBe('options-category');
+  /* v163 L4:刪除前會確認,並說明舊紀錄仍保留名稱 */
+  const deleteDialog=page.waitForEvent('dialog').then(async dialog=>{const message=dialog.message();await dialog.accept();return message;});
   await page.getByRole('button',{name:'刪除 旅費'}).click();
+  expect(await deleteDialog).toContain('刪除「旅費」');
   await expect(page.locator('.ledger-option-row',{hasText:'旅費'})).toHaveCount(0);
 
   await page.getByRole('button',{name:'返回自訂項目'}).click();
