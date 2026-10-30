@@ -1,6 +1,25 @@
 # 07 版本紀錄
 
-## 2026-10-30 — v164 行程與記帳時間一律用日本時間（開發中，未發布）
+## 2026-10-30 — v165 時間改回跟手機時區（開發中，未發布）
+
+- **來源**：Bar 2026-10-30 看過 v164 後指示：「時區不要一律指定時區，因為不一定都是去日本」。問過三種做法（行程設定填時區、一律跟手機時區、依目的地自動判斷）後，Bar 選**一律跟手機時區**。
+- **做法**：`shell/v165/index.html` 的時間邏輯回到 v163（`appNow()` 的欄位直接當手機時間讀）：移除 v164 的 `TRIP_UTC_OFFSET_MINUTES`、`tripWallDate()`、`tripInstantFromWall()`、`tripWallTextInstant()`、`tripNow()`，今天、下一站、出發倒數、旅程結束、最後一天的午夜計時、時間模擬，以及記帳的預設日期時間、日曆「今天」、`ledgerLocalDateKey()`、`ledgerOccurrenceIso()`、`formatLedgerLocalOccurrence()` 都回到 v163 的寫法。`appNow()` 上方加註這個裁定。與 v164 的差異只有這些時間邏輯、版本標記與發布說明。
+- **使用上**：出國時手機時區要設為「自動」，到當地就會換成當地時間。手機留在台灣時間時，會像 v163 以前一樣慢一小時（日本）。
+- **資料**：紀錄存的一直是真正的時間點（UTC ISO），v164 期間記的帳不需要轉換；只是顯示改回依各自手機的時區。
+- **版本**：forward bump v164→v165；`builtin-snapshot.js` 以 v164 asset 離線重產，除版本外不變。發布說明視窗為 `v165` + `['v164','v163','v162','v161']`（v160 滾出；v164「時間一律用日本時間」保留在視窗內，是已發布的紀錄）。`tests/trip-lifecycle-wiring.test.js` 加入已發布 v164 三件組的 hash。
+- **測試**：
+  - 12 個沙盒測試、`ledger-225`、`app-now`、`preview-date` 回到 v164 之前的版本；移除 `tests/support/trip-time.js`、`tests/trip-time-zone.test.js`、`tests/browser/trip-time-zone-v164.spec.js`。
+  - 新增 `tests/browser/phone-time-zone-v165.spec.js`（3 項）鎖住裁定：同一個時間點（台灣 10/22 23:30），手機設在台灣看到 10/22 23:30、設在日本看到 10/23 00:30；新帳預設手機的日期時間並存成正確時間點；App 不再有 `tripNow`。
+  - `playwright.config.js` 保留預設 `timezoneId:'Asia/Tokyo'`（手機在日本，這趟旅途的實際情況），測試時間才不會隨 CI runner（UTC）偏 9 小時。
+- **回滾**：合併前關閉 PR；發布後依 `16_OPS_PLAYBOOK.md` §A1 退回 v164 的 Netlify 部署（`commit_ref` `023a229`），再往前 bump。不影響任何資料。
+
+## 2026-10-30 — v164 已上線 main（待 Bar 手機審查與 tag）
+
+- PR [#88](https://github.com/nick80912-dev/ai-native-projects/pull/88)（v164 與 backlog #54 CI 解除釘版）在 head `0ebe1ad` 的 sanity／browser-qa（`ubuntu-latest`）全綠後合併進 `dev`（`4b11589`，釘住 head）；PR [#89](https://github.com/nick80912-dev/ai-native-projects/pull/89) 合併 `dev` → `main`，merge commit **`023a229`**。合併 tree `67065ec` 與 `0ebe1ad` 相同。本機完整 Chromium 377 passed，只有已知只在本機失敗的兩項，沒有略過的測試。
+- **線上核對**：正式站 `sw.js` 為 `SW_VERSION='v164'`；全新 Chromium 開正式站，`APP_VERSION` 為 v164、只剩 `okayama-trip-v164` 快取，發布說明為「時間一律用日本時間」。另以**台灣時區**的全新 Chromium 開正式站：手機時鐘 21:46、App 時鐘 22:46，等於當下日本時間。Netlify deploy ID 未另查。
+- 回滾：依 `16_OPS_PLAYBOOK.md` §A1 Publish `commit_ref` = `af2625c`（v163）的部署，再往前 bump。
+
+## 2026-10-30 — v164 行程與記帳時間一律用日本時間（已上線 main，見上）
 
 - **來源**：Bar 2026-10-30「繼續進行下一批」：出發前稽核 #57 中優先「時間改依旅程時區」。日本使用檢查時發現，App 用手機的時區：手機留在台灣時間時，在日本 10/20 08:30 仍顯示「出發」前的狀態（慢一小時），10/23 剛過日本午夜仍算成 10/22；記帳的預設時間也慢一小時，兩支手機看到同一筆帳的時間不一樣。
 - **做法**：新增 `tripWallDate()`（真正的時間點 → 旅程時區的牆上時間，只讀欄位）、`tripInstantFromWall()`（牆上時間 → 真正的時間點）、`tripWallTextInstant()`（沒寫時區的 `YYYY-MM-DDTHH:MM` 當成日本時間）與 `tripNow()`。目前只支援日本（ADR 0021），Asia/Tokyo 沒有夏令時間，固定 UTC+9（`TRIP_UTC_OFFSET_MINUTES=540`）。`appNow()` 仍回傳真正的時間點，時間戳（`toISOString()`、`getTime()`）不受影響。
