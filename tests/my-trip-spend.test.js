@@ -1,3 +1,4 @@
+const {installTripTime}=require('./support/trip-time');
 /* v154（Bar 2026-10-14 核准）「我的總花費」：個人帳（不含代購）＋團體帳中我分到的份額。
    直接執行 index.html 裡真實的 buildMyTripSpend 與它依賴的分攤 helper，不另寫一份假實作。 */
 const assert=require('assert');
@@ -6,7 +7,7 @@ const {readIndexHtml,extractFunction}=require('./support/source');
 
 const html=readIndexHtml();
 const sandbox={Object,Array,String,Number,Math,JSON,isFinite,Date,timestampDate:value=>new Date(value)};
-vm.createContext(sandbox);
+vm.createContext(sandbox);installTripTime(sandbox,html);
 ['canonicalMemberName','ledgerLocalDateKey','ledgerBooleanValue','ledgerRecordMetadata','ledgerAmountValue','settlementWarning','isSafeLedgerInteger','parseParticipants','allocateAmountByLargestRemainder','buildMyTripSpend']
   .forEach(name=>vm.runInContext(extractFunction(html,name),sandbox));
 const plain=value=>JSON.parse(JSON.stringify(value));

@@ -1,3 +1,4 @@
+const {installTripTime}=require('./support/trip-time');
 const assert=require('assert');
 const {appVersion,swVersion,appHtml}=require('./support/version');
 const fs=require('fs');
@@ -15,7 +16,7 @@ function extractFunction(name,nextName){
 }
 
 const dateSandbox={Date,Number,String,isFinite,timestampDate(value){return new Date(Number(value));}};
-vm.createContext(dateSandbox);
+vm.createContext(dateSandbox);installTripTime(dateSandbox,html);
 vm.runInContext(
   extractFunction('ledgerLocalDateFromParts','parseLedgerDateInput')+
   extractFunction('parseLedgerDateInput','ledgerDateInputValue')+
@@ -50,7 +51,7 @@ const helperSandbox={
   timestampDate(value){return new Date(Number(value));},
   AppLog:{repo(){},sync(){}},renderSplit(){},updateLedgerPendingStatus(){}
 };
-vm.createContext(helperSandbox);
+vm.createContext(helperSandbox);installTripTime(helperSandbox,html);
 vm.runInContext(html.slice(helperStart,helperEnd),helperSandbox);
 
 assert.strictEqual(helperSandbox.ledgerVisibleNote({note:'旅途備註'}),'旅途備註');

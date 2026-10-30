@@ -1,9 +1,10 @@
+const {installTripTime}=require('./support/trip-time');
 const assert=require('assert');
 const vm=require('vm');
 const {readIndexHtml,extractFunction,extractDeclaration}=require('./support/source');
 const html=readIndexHtml();
 const context={Date,DB:{cfg:{}},appNow:()=>new Date(2026,9,24,12),resolveRef:()=>null,hotelOf:()=>null};
-vm.createContext(context);
+vm.createContext(context);installTripTime(context,html);
 vm.runInContext(extractDeclaration(html,'WEATHER_CITIES'),context);
 for(const name of ['weatherCityFromText','weatherHotelForItem','weatherTextForItem','inferWeatherCity','weatherCityForItem','inferWeatherCityForDay','tripCalendarStamp','tripHasEnded']){
   vm.runInContext(extractFunction(html,name),context);

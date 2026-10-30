@@ -1,3 +1,4 @@
+const {installTripTime}=require('./support/trip-time');
 const assert=require('assert');
 const vm=require('vm');
 const {appHtml}=require('./support/version');
@@ -29,7 +30,7 @@ const sandbox={
   document:{addEventListener(){},querySelector(){return null;},getElementById(){return null;},activeElement:null},
   JSON,String,Number,Math,Date
 };
-vm.createContext(sandbox);
+vm.createContext(sandbox);installTripTime(sandbox,html);
 vm.runInContext(source,sandbox);
 /* v163(L5):表單的類別／支付方式選項(含編輯舊紀錄沿用的值)定義在分帳 helper 區 */
 vm.runInContext(extract('function ledgerDraftLegacyOptions(','function buildLedgerExpenseRecords('),sandbox);

@@ -1,3 +1,4 @@
+const {installTripTime}=require('./support/trip-time');
 const assert=require('assert');
 const vm=require('vm');
 const TripBuyToLedger=require('../buy-to-ledger.js');
@@ -14,7 +15,7 @@ const start=html.indexOf('/* ================= ledgerRepository');
 const end=html.indexOf('/* ================= 分帳(雲端 Ledger)',start);
 assert(start>=0&&end>start,'ledger helper section exists');
 const sandbox={console,localStorage:{getItem(){return null;},setItem(){},removeItem(){}},fetch(){return Promise.reject(new Error('offline'));},setTimeout,clearTimeout,Date,Math,Promise,JSON,String,Number,isFinite,TripBuyToLedger,buyToLedgerRuntimeAdapter:{},timestampDate(value){return new Date(Number(value));},AppLog:{repo(){},sync(){}},renderSplit(){},updateLedgerPendingStatus(){}};
-vm.createContext(sandbox);vm.runInContext(html.slice(start,end),sandbox);
+vm.createContext(sandbox);installTripTime(sandbox,html);vm.runInContext(html.slice(start,end),sandbox);
 function plain(value){return JSON.parse(JSON.stringify(value));}
 
 const records=[
@@ -61,7 +62,7 @@ assert(categoryBatchHtml.includes('多品項'));
 assert(categoryBatchHtml.includes('¥500 ≈ NT$110'));
 assert.strictEqual((categoryBatchHtml.match(/<batch:batch-1,batch-2>/g)||[]).length,1,'a category group preserves one multi-item batch card');
 
-const summarySandbox={Math,Number};vm.createContext(summarySandbox);
+const summarySandbox={Math,Number};vm.createContext(summarySandbox);installTripTime(summarySandbox,html);
 vm.runInContext(extractFunction(html,'ledgerAmountTotals')+'\n'+extractFunction(html,'formatLedgerInlineTotals')+'\n'+extractFunction(html,'ledgerHistorySummary'),summarySandbox);
 const filteredSummary=summarySandbox.ledgerHistorySummary([
   {amountJpy:1200,amountTwd:264},{amountJpy:2300,amountTwd:506}
@@ -81,7 +82,7 @@ const busyStart=html.indexOf('function setButtonBusy('),busyEnd=html.indexOf('fu
 const attributes={};
 const button={textContent:'立即重新同步',innerHTML:'',disabled:false,setAttribute(name,value){attributes[name]=String(value);},getAttribute(name){return Object.prototype.hasOwnProperty.call(attributes,name)?attributes[name]:null;},removeAttribute(name){delete attributes[name];}};
 const busySandbox={escapeHtml(value){return String(value);}};
-vm.createContext(busySandbox);vm.runInContext(html.slice(busyStart,busyEnd),busySandbox);
+vm.createContext(busySandbox);installTripTime(busySandbox,html);vm.runInContext(html.slice(busyStart,busyEnd),busySandbox);
 busySandbox.setButtonBusy(button,true,'同步中');
 assert.strictEqual(button.disabled,true);assert.strictEqual(attributes['aria-busy'],'true');assert(button.innerHTML.includes('button-spinner'));
 busySandbox.setButtonBusy(button,false);

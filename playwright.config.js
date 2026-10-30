@@ -12,6 +12,9 @@ module.exports=defineConfig({
   reporter:'list',
   use:{
     baseURL:'http://127.0.0.1:'+port,
+    /* v164：App 的行程與記帳時間依旅程時區（日本）。預設以「手機設在日本時間」執行（實際旅途的情況）；
+       手機留在台灣時間另由 trip-time-zone-v164.spec.js 驗證。 */
+    timezoneId:'Asia/Tokyo',
     viewport:{width:390,height:844},
     trace:'retain-on-failure',
     screenshot:'only-on-failure'
