@@ -108,4 +108,19 @@ outcome=TripProgression.reconcile({
 });
 assert.strictEqual(outcome.notification,'已自動略過 3 項超時未確認行程：早餐、午餐 等');
 
+/* v163(稽核 T1):沒有時間的站沿用前一站的時間,照行程順序接在後面(10/22 倉敷) */
+const kurashiki=[{id:'k1',time:'09:00',act:'阿智神社'},{id:'k2',time:'',act:'倉敷美觀地區'},{id:'k3',time:'',act:'林源十郎商店'},
+  {id:'k4',time:'',act:'倉敷丹寧街'},{id:'k5',time:'',act:'SNOOPY Chocolat'},{id:'k6',time:'15:50',act:'倉敷常春藤廣場'}];
+outcome=TripProgression.reconcile({items:kurashiki,progress:{done:{k1:true}},checks:{},nowMinutes:10*60,isToday:true});
+assert.strictEqual(outcome.pick.item.id,'k2','after 阿智神社 the next stop is 倉敷美觀地區, not 15:50');
+assert.strictEqual(outcome.pick.remaining,4,'four stops follow it');
+assert.strictEqual(outcome.changed,false,'untimed stops are never auto-skipped by their inherited time');
+outcome=TripProgression.reconcile({items:kurashiki,progress:{done:{k1:true,k2:true,k3:true}},checks:{},nowMinutes:13*60,isToday:true});
+assert.strictEqual(outcome.pick.item.id,'k4','the order continues through the untimed stops');
+outcome=TripProgression.reconcile({items:kurashiki,progress:{},checks:{},nowMinutes:8*60,isToday:true});
+assert.strictEqual(outcome.pick.item.id,'k1','before the first time the first timed stop is next');
+outcome=TripProgression.reconcile({items:kurashiki,progress:{done:{k1:true}},checks:{},nowMinutes:16*60,isToday:true});
+assert.strictEqual(outcome.pick.item.id,'k6','once 15:50 has started the untimed stops before it are auto-skipped as before');
+assert.deepStrictEqual(outcome.skipped.map(item=>item.id),['k2','k3','k4','k5']);
+
 console.log('trip progression tests passed');

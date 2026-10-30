@@ -31,6 +31,8 @@ const sandbox={
 };
 vm.createContext(sandbox);
 vm.runInContext(source,sandbox);
+/* v163(L5):表單的類別／支付方式選項(含編輯舊紀錄沿用的值)定義在分帳 helper 區 */
+vm.runInContext(extract('function ledgerDraftLegacyOptions(','function buildLedgerExpenseRecords('),sandbox);
 
 const draft=plain(sandbox.createLedgerEntryDraft('personal'));
 const sharedDraft=plain(sandbox.createLedgerEntryDraft('shared'));

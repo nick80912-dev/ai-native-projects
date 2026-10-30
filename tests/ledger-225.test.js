@@ -130,7 +130,7 @@ const dateSummary=rendererSandbox.renderLedgerDateSummary('2026/07/20',[
 assert(dateSummary.includes('2026/07/20 · 2 筆紀錄'),'latest-day summary includes the physical record count');
 assert(dateSummary.includes('¥3,500 ≈ NT$770'),'latest-day summary includes fixed dual-currency totals');
 vm.runInContext(extractDeclaration(html,'LEDGER_PROXY_RECORDER_PATTERN')+'\n'+extractFunction(html,'ledgerProxyRecorder'),rendererSandbox);
-vm.runInContext(extractFunction(html,'renderProxyTargetMarkup')+'\n'+extractFunction(html,'ledgerBatchSelectionState')+'\n'+extractFunction(html,'renderLedgerRecentRecord')+'\n'+extractFunction(html,'renderLedgerBatchCard'),rendererSandbox);
+vm.runInContext(extractFunction(html,'canonicalMemberName')+'\n'+extractFunction(html,'ledgerPersonalRecordOfOtherIdentity')+'\n'+extractFunction(html,'renderProxyTargetMarkup')+'\n'+extractFunction(html,'ledgerBatchSelectionState')+'\n'+extractFunction(html,'renderLedgerRecentRecord')+'\n'+extractFunction(html,'renderLedgerBatchCard'),rendererSandbox);
 const renderedRecord=rendererSandbox.renderLedgerRecentRecord({id:'a',detail:'章魚燒',storeName:'丸五市場',category:'餐飲',payMethod:'現金',isProxy:true,proxyTarget:'Amy'},false,'JPY');
 assert(!renderedRecord.includes('ledger-record-menu-button'),'selection-mode record renderer omits the ellipsis DOM');
 assert.strictEqual((renderedRecord.match(/ledger-recent-primary-line/g)||[]).length,1,'a recent record renders one primary content row');
