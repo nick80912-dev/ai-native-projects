@@ -187,13 +187,34 @@ function response(payload){
   assert.deepStrictEqual(JSON.parse(sent.options.body),{action:'updateSettings',exchangeRate:0.21,defaultCurrency:'TWD'});
   assert.strictEqual(mod.DB.cfg.exchangeRate,0.21,'confirmed rate updates the in-memory cfg');
   assert.strictEqual(mod.DB.cfg.ledgerDefaultCurrency,'TWD','confirmed currency updates the in-memory cfg');
-  assert.deepStrictEqual(plain(mod.lsGet(mod.LEDGER_SETTINGS_BRIDGE_KEY,null)),{exchangeRate:0.21,defaultCurrency:'TWD'});
+  const confirmedBridge=plain(mod.lsGet(mod.LEDGER_SETTINGS_BRIDGE_KEY,null));
+  assert.ok(Number.isFinite(confirmedBridge.savedAt),'v161: the confirmed bridge records when it was saved');
+  delete confirmedBridge.savedAt;
+  assert.deepStrictEqual(confirmedBridge,{exchangeRate:0.21,defaultCurrency:'TWD'});
   assert.strictEqual(mod.settingsRenders,1,'confirmed save rerenders Settings');
   assert.strictEqual(mod.splitRenders,1,'confirmed save rerenders Split');
 
   mod.DB.cfg = {exchangeRate:'0.21',ledgerDefaultCurrency:'TWD'};
   assert.strictEqual(mod.reconcileLedgerSettingsBridge(),true,'published cfg matching the bridge clears it');
   assert.strictEqual(mod.lsGet(mod.LEDGER_SETTINGS_BRIDGE_KEY,null),null,'caught-up bridge is removed');
+
+  /* v161(稽核 B2):發布值和本機值不同時,只在 10 分鐘寬限期內保留(CSV 落後);之後以雲端為準。 */
+  const bridgeKey=mod.LEDGER_SETTINGS_BRIDGE_KEY,setBridge=value=>mod.localStorage.setItem(bridgeKey,JSON.stringify(value));
+  mod.DB.cfg = {exchangeRate:'0.22',ledgerDefaultCurrency:'TWD'};
+  setBridge({exchangeRate:0.205,defaultCurrency:'TWD',savedAt:Date.now()-60*1000});
+  assert.strictEqual(mod.reconcileLedgerSettingsBridge(),false,'a fresh confirmed bridge survives a lagging CSV');
+  setBridge({exchangeRate:0.205,defaultCurrency:'TWD',savedAt:Date.now()-11*60*1000});
+  assert.strictEqual(mod.reconcileLedgerSettingsBridge(),true,'after 10 minutes another phone’s newer value wins');
+  assert.strictEqual(mod.lsGet(bridgeKey,null),null);
+  setBridge({exchangeRate:0.205,defaultCurrency:'TWD'});
+  assert.strictEqual(mod.reconcileLedgerSettingsBridge(),true,'a legacy bridge without a time no longer sticks');
+  setBridge({exchangeRate:0.25,defaultCurrency:'TWD',status:'unconfirmed',savedAt:Date.now()-2*60*1000});
+  assert.strictEqual(mod.reconcileLedgerSettingsBridge(),false,'an unconfirmed save is kept briefly');
+  setBridge({exchangeRate:0.25,defaultCurrency:'TWD',status:'unconfirmed',savedAt:Date.now()-11*60*1000});
+  assert.strictEqual(mod.reconcileLedgerSettingsBridge(),true,'an unconfirmed save older than 10 minutes yields to the published value');
+  setBridge({exchangeRate:0.205,defaultCurrency:'TWD',savedAt:Date.now()-11*60*1000});
+  assert.strictEqual(mod.reconcileLedgerSettingsBridge({exchangeRate:'0.22',ledgerDefaultCurrency:'TWD'}),true,'the clear-trip preflight can pass freshly downloaded settings');
+  assert.strictEqual(mod.lsGet(bridgeKey,null),null);
 
   const failed = loadModule(function(){ return response({ok:false,error:'denied'}); });
   const beforeCfg = JSON.stringify(failed.DB.cfg);
