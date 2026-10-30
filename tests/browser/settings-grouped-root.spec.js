@@ -362,7 +362,7 @@ test('照片健康狀態維持在資料群組並通過子頁路由與三種手�
     return Array.from(dataGroup.querySelectorAll('.settings-row-main b'),node=>node.textContent);
   });
   /* v153：旅途紀錄與診斷面板加在照片健康狀態與過往旅程之間 */
-  expect(ordering).toEqual(['資料健康狀態','照片健康狀態','旅途紀錄','診斷面板','過往旅程','備份、還原與版本資訊']);
+  expect(ordering).toEqual(['資料健康狀態','照片健康狀態','旅途紀錄','診斷面板','過往旅程','資料與版本']);
   await storageRow.click();
   await expect(page.getByRole('heading',{name:'照片健康狀態'})).toBeVisible();
 

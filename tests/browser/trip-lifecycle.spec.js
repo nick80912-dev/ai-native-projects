@@ -75,7 +75,8 @@ test('本機團體佇列未送達時，不顯示保存或直接清除選項',asy
     localStorage.setItem('trip_ledger_queue',JSON.stringify([{id:'not-delivered'}]));
     openSettings('data');
   });
-  await page.getByRole('button',{name:'清除並打包旅程'}).click();
+  /* 10/24 起真實日期已過旅程結束日,首頁也有同名按鈕;限定設定頁 */
+  await page.locator('#settingsOverlay').getByRole('button',{name:'清除並打包旅程'}).click();
   await expect(page.locator('#tripEndStatus')).toContainText(/待同步|佇列|無法清除/);
   await expect(page.getByRole('button',{name:'保存到過往旅程'})).toHaveCount(0);
   await expect(page.getByRole('button',{name:'不保存，直接清除'})).toHaveCount(0);
@@ -95,7 +96,8 @@ test('不保存直接清除後，線上與離線重啟都不恢復舊成員和�
   await openApp(page);
   await waitForSyncToSettle(page);
   await page.evaluate(()=>openSettings('data'));
-  await page.getByRole('button',{name:'清除並打包旅程'}).click();
+  /* 10/24 起真實日期已過旅程結束日,首頁也有同名按鈕;限定設定頁 */
+  await page.locator('#settingsOverlay').getByRole('button',{name:'清除並打包旅程'}).click();
   await expect(page.getByRole('button',{name:'不保存，直接清除'})).toBeVisible();
   page.on('dialog',dialog=>dialog.accept());
   await page.getByRole('button',{name:'不保存，直接清除'}).click();
@@ -141,7 +143,8 @@ test('保存分支以授權帳號上傳讀回後才清除本機旅程',async({pa
     };
     openSettings('data');
   });
-  await page.getByRole('button',{name:'清除並打包旅程'}).click();
+  /* 10/24 起真實日期已過旅程結束日,首頁也有同名按鈕;限定設定頁 */
+  await page.locator('#settingsOverlay').getByRole('button',{name:'清除並打包旅程'}).click();
   await expect(page.getByRole('button',{name:'保存到過往旅程'})).toBeVisible();
   await page.getByRole('button',{name:'保存到過往旅程'}).click();
   await expect(page.getByText('目前沒有進行中的旅程')).toBeVisible();
@@ -166,7 +169,8 @@ test('本機照片清理失敗後保持空白並可重試，不聲稱原旅程�
   await openApp(page);
   await waitForSyncToSettle(page);
   await page.evaluate(()=>openSettings('data'));
-  await page.getByRole('button',{name:'清除並打包旅程'}).click();
+  /* 10/24 起真實日期已過旅程結束日,首頁也有同名按鈕;限定設定頁 */
+  await page.locator('#settingsOverlay').getByRole('button',{name:'清除並打包旅程'}).click();
   await expect(page.getByRole('button',{name:'不保存，直接清除'})).toBeVisible();
   await page.evaluate(()=>{window.__qaOriginalClearAll=shoppingPhotoStore.clearAll;shoppingPhotoStore.clearAll=()=>Promise.reject(new Error('QA_IDB_BLOCKED'));});
   page.on('dialog',dialog=>dialog.accept());

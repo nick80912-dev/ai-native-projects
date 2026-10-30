@@ -1391,13 +1391,13 @@ test('#44 空狀態文案', function () {
   assert.ok(newPanelSlice.indexOf('目前沒有需要你處理的結算') >= 0, '沿用核准的空狀態文案');
 });
 
-test('#40 主面板排序:待你確認 → 需重新付款 → 待你付款 → 已送出 → 同步異常', function () {
+test('#40 主面板排序:待你確認 → 需重新付款 → 待你付款 → 應收(v160 可直接結清) → 已送出 → 同步異常', function () {
   const rows = [
     { sortKind: 'submitted' }, { sortKind: 'sync-error' }, { sortKind: 'awaiting-you' },
-    { sortKind: 'to-pay' }, { sortKind: 'rejected' }
+    { sortKind: 'to-pay' }, { sortKind: 'rejected' }, { sortKind: 'to-receive' }
   ];
   const order = rows.slice().sort(mod.compareSettlementPanelRows).map(function (r) { return r.sortKind; });
-  assert.deepStrictEqual(order, ['awaiting-you', 'rejected', 'to-pay', 'submitted', 'sync-error']);
+  assert.deepStrictEqual(order, ['awaiting-you', 'rejected', 'to-pay', 'to-receive', 'submitted', 'sync-error']);
 });
 
 test('#10 待確認期間的新消費:精簡為摘要金額下方的一行小字', function () {
