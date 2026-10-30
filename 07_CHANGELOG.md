@@ -1,6 +1,12 @@
 # 07 版本紀錄
 
-## 2026-10-30 — v165 時間改回跟手機時區（開發中，未發布）
+## 2026-10-30 — v165 已上線 main（待 Bar 手機審查與 tag）
+
+- PR [#90](https://github.com/nick80912-dev/ai-native-projects/pull/90)（v165，並帶 v164 發布紀錄）在 head `ad3c0af` 的 sanity／browser-qa 全綠後合併進 `dev`（`d0866a0`，釘住 head）；PR [#91](https://github.com/nick80912-dev/ai-native-projects/pull/91) 合併 `dev` → `main`，merge commit **`db2c02a`**。合併 tree `c3018a6` 與 `ad3c0af` 相同。本機完整 Chromium 375 passed，只有已知只在本機失敗的兩項，沒有略過的測試。
+- **線上核對**：正式站 `sw.js` 為 `SW_VERSION='v165'`；全新 Chromium 開正式站，`APP_VERSION` 為 v165、只剩 `okayama-trip-v165` 快取，發布說明為「時間改回跟手機時區」。另以**台灣時區**的全新 Chromium 開正式站：App 時鐘 22:16，等於手機（台灣）時鐘，當下日本是 23:16；`tripNow` 不存在。Netlify deploy ID 未另查。
+- 回滾：依 `16_OPS_PLAYBOOK.md` §A1 Publish `commit_ref` = `023a229`（v164）的部署，再往前 bump。
+
+## 2026-10-30 — v165 時間改回跟手機時區（已上線 main，見上）
 
 - **來源**：Bar 2026-10-30 看過 v164 後指示：「時區不要一律指定時區，因為不一定都是去日本」。問過三種做法（行程設定填時區、一律跟手機時區、依目的地自動判斷）後，Bar 選**一律跟手機時區**。
 - **做法**：`shell/v165/index.html` 的時間邏輯回到 v163（`appNow()` 的欄位直接當手機時間讀）：移除 v164 的 `TRIP_UTC_OFFSET_MINUTES`、`tripWallDate()`、`tripInstantFromWall()`、`tripWallTextInstant()`、`tripNow()`，今天、下一站、出發倒數、旅程結束、最後一天的午夜計時、時間模擬，以及記帳的預設日期時間、日曆「今天」、`ledgerLocalDateKey()`、`ledgerOccurrenceIso()`、`formatLedgerLocalOccurrence()` 都回到 v163 的寫法。`appNow()` 上方加註這個裁定。與 v164 的差異只有這些時間邏輯、版本標記與發布說明。
