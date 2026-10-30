@@ -1,6 +1,12 @@
 # 07 版本紀錄
 
-## 2026-10-30 — v167 記帳可以夾收據照片（開發中，未發布）
+## 2026-10-30 — v167 已上線 main（待 Bar 手機審查與 tag）
+
+- PR [#96](https://github.com/nick80912-dev/ai-native-projects/pull/96) 在 head `1b09e40` 的 sanity／browser-qa 全綠後合併進 `dev`（`c5fea22`，釘住 head）；PR [#97](https://github.com/nick80912-dev/ai-native-projects/pull/97)（並帶 v166 發布紀錄 PR #95）合併 `dev` → `main`，merge commit **`afd65df`**。合併 tree `3717cb6` 與 `1b09e40` 相同。本機完整 Chromium 386 passed，只有已知只在本機失敗的兩項，沒有略過的測試。
+- **線上核對**：正式站 `sw.js` 為 `SW_VERSION='v167'`；全新 Chromium 開正式站，`APP_VERSION` 為 v167、只剩 `okayama-trip-v167` 快取，發布說明為「記帳可以夾收據照片」；`ledger-receipts.js` 回 200 且在 v167 快取內（離線可用）；`TripLedgerReceipts` 已載入（`MAX_PHOTOS` 3），收據照片資料庫存入／列出／刪除一張測試 Blob 正常，沒有 pageerror。Netlify deploy ID 未另查。
+- 回滾：依 `16_OPS_PLAYBOOK.md` §A1 Publish `commit_ref` = `11c0330`（v166）的部署，再往前 bump。
+
+## 2026-10-30 — v167 記帳可以夾收據照片（已上線 main，見上）
 
 - **來源**：backlog #59（Bar 2026-10-19 裁定：照片只存在拍照的那支手機、團體帳與個人帳都可以、每筆最多 3 張）。Bar 2026-10-30 問能否從照片直接讀出日期時間與金額，選「日期時間先做，金額之後用 A（雲端 AI）」——金額另列 backlog #61。
 - **使用上**：
