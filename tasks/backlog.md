@@ -53,7 +53,7 @@
 
 53. **非同步 Playwright readiness helper 稽核（v142 發布核對發現）**：release-only 腳本的 `waitForFunction(async...)` 可因 Promise truthy 提早結束，未等 SW／cache 完成便開新版而逾時。已查目前 Playwright 1.62 的 `predicate()` 條件實作，並以 await evaluate 條件輪詢完成線上 v142 cache／離線核對；沒有 production 缺陷或 runtime 熱修。既有 `sw-update-cache.spec.js` 的同類等待 helper 需另批確認改用 `expect.poll` 或明確 await 輪詢，稽核依賴該 helper 的證據強度；本輪不順手重寫既有測試或宣稱所有非同步等待皆有問題。
 
-54. **回程後驗證 Ubuntu 26.04,解除 CI 的 ubuntu-24.04 釘版(#42 後續)**:2026-10-06 為避開旅程期間的分批移轉,`qa.yml` 兩個 job 暫時釘 `ubuntu-24.04`。回程後(10/24 起)處理:
+54. ✅ **回程後驗證 Ubuntu 26.04,解除 CI 的 ubuntu-24.04 釘版(#42 後續)**(2026-10-30 完成:PR [#88](https://github.com/nick80912-dev/ai-native-projects/pull/88) 先在 `ubuntu-26.04` 跑兩個 job 全綠——映像 `ubuntu26/20261025.179`、`playwright install --with-deps` 正常、browser-qa 374 passed——再改回 `ubuntu-latest`):2026-10-06 為避開旅程期間的分批移轉,`qa.yml` 兩個 job 暫時釘 `ubuntu-24.04`。回程後(10/24 起)處理:
 
     - **先驗再解**:另開分支把兩個 job 改成 `ubuntu-26.04`,看 `browser-qa` 的 `npx playwright install --with-deps chromium`(`@playwright/test` 1.62.0)能否裝好系統套件、完整 Chromium 套件是否全綠。
     - **全綠**:改回 `ubuntu-latest`(屆時已指向 26.04),刪掉 `qa.yml` 裡的釘版註解。
@@ -79,7 +79,7 @@
       - B1 剩下的情況:App 在沒有網路時重開、CSV 還沒追上,剛記的團體帳在恢復連線前看不到。完整解法是把 fast pull 讀回的列存進本機,牽涉旅程資料鍵、備份與清除流程。
     - **低**:B4–B7、T11、T13、T15、T18–T21、L9–L28,細節見稽核報告(T9、T10、T16、T17 已於 v158 完成)。
     - **清理**:v157 已刪除舊外殼世代 v111–v153、沒被引用的計畫與規格、舊交接與作廢文件、逐版驗證文件、icon-120、`trip_expenses` 提示、`v2_cache_*` 遷移與東京天氣城市。其餘沒用的程式(約 3 KB)與試算表 Expenses 分頁仍待 Bar 決定。
-    - 另見 #54(CI 解除 ubuntu-24.04 釘版,11/19 前)。
+    - ✅ #54(CI 解除 ubuntu-24.04 釘版)已於 2026-10-30 完成。
 
 58. **App Logo 與圖示重新設計(Bar 2026-10-16 裁定回程後做)**:Bar 拿到 Gemini 建議的「Logo A」(圓角方底、紅色太陽、紙飛機、富士山,扁平向量,顏色綁主題變數)與下方分頁 4 個圖示的整合建議。
     - **評估**:方向比現行像素風行李箱圖示好 —— 32／16px 仍可辨識,扁平風格與 App 一致(現行圖示在小尺寸會糊,見 2026-10-14 圖示檢視)。待修:紙飛機尾端壓在山頂上像撞山、雪帽呈 M 字形、富士山不在本趟路線且綁死日本(App 可連接其他旅程),是否保留由 Bar 決定。分頁 4 個圖示的 SVG 未提供;現行分頁圖示已是隨主題變色的線條圖示,換掉的效益有限。
