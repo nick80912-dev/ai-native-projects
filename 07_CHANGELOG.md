@@ -1,5 +1,26 @@
 # 07 版本紀錄
 
+## 2026-10-30 — v167 記帳可以夾收據照片（開發中，未發布）
+
+- **來源**：backlog #59（Bar 2026-10-19 裁定：照片只存在拍照的那支手機、團體帳與個人帳都可以、每筆最多 3 張）。Bar 2026-10-30 問能否從照片直接讀出日期時間與金額，選「日期時間先做，金額之後用 A（雲端 AI）」——金額另列 backlog #61。
+- **使用上**：
+  - 記帳表單最後多一欄「收據照片（選填，最多 3 張，只存在這支手機）」：加照片（拍照或相簿）、縮圖可點開放大、× 移除。團體帳、個人帳、單筆與多品項都有；更正收據與從採買記帳時不顯示（採買沿用自己的照片）。
+  - 加照片時讀 EXIF 拍攝時間：新增的帳、日期時間還是預設值就直接帶入，並寫「已用照片的拍攝時間帶入消費時間：10/20 12:34（可以再改）」；編輯、已自己改過、或已經用過另一張照片的時間時只提示，按「改用照片時間」才換。照片沒有拍攝時間就不動。
+  - 列表有照片的帳顯示「📎 收據」；點開那筆帳的明細有「收據照片」，標明「只存在這支手機」。
+- **做法**：
+  - 新模組 `ledger-receipts.js`（純函式）：`readExifDateTime()`（JPEG APP1 → TIFF IFD0／ExifIFD，兩種位元組順序，`DateTimeOriginal` → `DateTimeDigitized` → `DateTime`，日期不合理回 null）、`entryKey()`（`replacesRecordId || batchId || id`）、`relink()`／`forgetKeys()`／`referencedPhotoIds()`。
+  - 照片存在獨立的 IndexedDB `trip-receipt-media/receipt-photos`：`shopping-photo-store.js` 的 `createIndexedDbDriver(indexedDB,names)` 與 `createStore({idPrefix})` 多了選填參數（不給就是採買照片，行為不變）。不升 `trip-local-media` 的版本，舊分頁不會被擋，採買照片的孤兒清理也碰不到收據。
+  - 連結存在 `trip_ledger_receipts`（綁 `sourceKey`）。`commitLedgerEntrySave()` 存檔成功後 `linkLedgerReceiptsAfterSave()`：用實際存下的紀錄算新的對應鍵（`persistLedgerEditedRecords()` 回傳 `savedRecords`；團體帳編輯會產生新紀錄），舊的對應鍵拿掉。
+  - 清理 `sweepLedgerReceiptPhotos()`：只刪沒有任何帳、也不在目前表單上的照片；照片處理中不清理；連結讀取失敗時不清理。存檔後、關掉表單後、本機刪掉那筆帳（`forgetLedgerReceiptsFor()`，個人帳單筆／多筆、團體帳刪除）後執行。
+  - 清除旅程（`TripLifecycleFlow` 的 `photoStore`）與連接新旅程（`clearPhotos`）改用 `localMediaStore()`，採買與收據照片一起清。
+  - 新增 runtime asset `ledger-receipts.js`：`runtime-assets.json`、`sw.js` 預快取、`shell/v167/index.html`、README、`.ai-manifest.json`、`10_FOLDER_STRUCTURE.md`。規則寫進 `03_DATABASE.md`「分帳收據照片本機資料規則」。
+- **版本**：forward bump v166→v167；`builtin-snapshot.js` 以 v166 asset 離線重產，除版本外不變。發布說明視窗為 `v167` + `['v166','v165','v164','v163']`（v162 滾出）。`tests/trip-lifecycle-wiring.test.js` 加入已發布 v166 三件組的 hash。
+- **測試**：
+  - 新增 `tests/ledger-receipts.test.js`：EXIF 兩種位元組順序、DateTime 備援、不是 JPEG／沒有 EXIF／相機時間空白／不可能的日期／截斷的區段都回 null 不丟錯；對應鍵；連結表最多 3 張、編輯搬鍵、全部移除就拿掉連結；收據用獨立資料庫。
+  - 新增 `tests/browser/receipt-photos-v167.spec.js`（7 項，照片是頁面上畫出來的 JPEG 再插入 EXIF）：個人帳帶入拍攝時間、存檔後列表「📎 收據」、明細縮圖、重開 App 還在、點開放大、不進個人備份；團體帳 3 張上限、第二張只提示時間、按「改用照片時間」、照片不跟著團體帳上傳、團體帳編輯後照片跟著新紀錄；320px 不溢出；編輯移除一張後只剩一張、刪掉帳照片也刪；沒存就關表單照片刪掉、沒有拍攝時間不動日期；自己改過的日期不被蓋掉；清除本機媒體連收據一起清。
+  - 反向驗證：拿掉存檔後的連結、拿掉關表單的清理、改成一律覆蓋時間、清除時不清收據、刪帳不放照片，各自被抓到。團體帳編輯不回傳 `savedRecords` 這一項沒被抓到：編輯表單本來就帶 `replacesRecordId=第一筆 id`，與團體帳編輯指回的 id 在實務上相同；保留 `savedRecords` 是為了一定以實際存下的紀錄為準。
+- **回滾**：合併前關閉 PR；發布後依 `16_OPS_PLAYBOOK.md` §A1 退回 v166 的 Netlify 部署（`commit_ref` `11c0330`），再往前 bump。舊版不讀 `trip_ledger_receipts` 與收據資料庫，帳本本身不受影響；照片在清除旅程時一起清掉。
+
 ## 2026-10-30 — v166 已上線 main（待 Bar 手機審查與 tag）
 
 - PR [#93](https://github.com/nick80912-dev/ai-native-projects/pull/93) 在 head `5c1a503` 的 sanity／browser-qa 全綠後合併進 `dev`（`bb74c2a`，釘住 head）；PR [#94](https://github.com/nick80912-dev/ai-native-projects/pull/94)（並帶 v165 發布紀錄 PR #92）合併 `dev` → `main`，merge commit **`11c0330`**。合併 tree `95e2868` 與 `5c1a503` 相同。本機完整 Chromium 379 passed，只有已知只在本機失敗的兩項，沒有略過的測試。
