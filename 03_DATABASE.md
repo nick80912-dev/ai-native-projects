@@ -64,6 +64,13 @@
 - 部分購買拆分會共用原 `photoId`；刪除／移除照片時必須先確認沒有其他採買項目引用,避免提早刪除共用 Blob。
 - 清除瀏覽器網站資料、移除 App 儲存空間或更換裝置都可能遺失照片；這是產品核准的 device-local 語意。
 
+## 分帳收據照片本機資料規則（v167，backlog #59）
+- 團體帳與個人帳都可以夾收據照片，每筆最多 3 張（Bar 2026-10-19 裁定）。Blob 存 IndexedDB `trip-receipt-media/receipt-photos`，與採買照片分開，採買的孤兒照片清理不會刪到收據。壓縮規則同採買照片（長邊 1600px、JPEG 0.82）。
+- 哪一筆帳用哪幾張記在 localStorage `trip_ledger_receipts`：`{version:1,sourceKey,links:{對應鍵:[photoId…]}}`，綁目前旅程。對應鍵是 `replacesRecordId || batchId || id`（`ledger-receipts.js` 的 `entryKey()`），所以同一張收據的多品項共用照片；編輯存檔後依實際存下的紀錄重新對應。
+- **不寫進分帳紀錄、不改試算表與 Apps Script、不進個人備份、不跨裝置同步**：團體帳的照片只有拍照的那支手機看得到（Bar 已知悉）。
+- 照片只在「沒有任何帳、也不在目前表單上」時才刪：存檔後、關掉表單後、本機刪掉那筆帳後清理；別台手機刪掉的帳，照片留在本機直到清除旅程。清除旅程與連接新旅程時，採買照片與收據照片一起清掉（`localMediaStore()`）。
+- 加照片時讀原始檔的 EXIF 拍攝時間（`DateTimeOriginal`，沒有就用 `DateTimeDigitized`／`DateTime`），依手機時區解讀（v165）：新增的帳、日期時間仍是開表單時的預設值才直接帶入；編輯或已改過時只提示「改用照片時間」。讀不到就不動日期時間。
+
 ## Places.Type 規則
 - Places.Type 決定卡片型別,禁止 AI 依名稱或文字自行猜測。
 - Type 值由 `schema.js` 的 values 正規化。

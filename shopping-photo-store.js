@@ -78,17 +78,19 @@
     });
   }
 
-  function createIndexedDbDriver(indexedDB){
+  /* v167：names 讓收據照片用自己的資料庫（不加 names 就是採買照片，行為不變） */
+  function createIndexedDbDriver(indexedDB,names){
     indexedDB=indexedDB||(root&&root.indexedDB);
+    var dbName=names&&names.dbName||DB_NAME,storeName=names&&names.storeName||STORE_NAME;
     var dbPromise=null;
     function open(){
       if(dbPromise)return dbPromise;
       dbPromise=new Promise(function(resolve,reject){
         if(!indexedDB||typeof indexedDB.open!=='function'){reject(new Error('此裝置無法保存照片附件'));return;}
-        var request=indexedDB.open(DB_NAME,DB_VERSION);
+        var request=indexedDB.open(dbName,DB_VERSION);
         request.onupgradeneeded=function(){
           var db=request.result;
-          if(!db.objectStoreNames.contains(STORE_NAME))db.createObjectStore(STORE_NAME,{keyPath:'id'});
+          if(!db.objectStoreNames.contains(storeName))db.createObjectStore(storeName,{keyPath:'id'});
         };
         request.onsuccess=function(){resolve(request.result);};
         request.onerror=function(){dbPromise=null;reject(request.error||new Error('照片資料庫開啟失敗'));};
@@ -100,12 +102,12 @@
       return open().then(function(db){
         return new Promise(function(resolve,reject){
           var tx;
-          try{tx=db.transaction(STORE_NAME,mode);}catch(error){reject(error);return;}
+          try{tx=db.transaction(storeName,mode);}catch(error){reject(error);return;}
           var settled=false,request;
           function fail(error){if(settled)return;settled=true;reject(error||new Error('照片資料庫操作失敗'));}
           tx.onabort=function(){fail(tx.error);};
           tx.onerror=function(){fail(tx.error);};
-          try{request=operation(tx.objectStore(STORE_NAME));}catch(error){fail(error);return;}
+          try{request=operation(tx.objectStore(storeName));}catch(error){fail(error);return;}
           requestResult(request).then(function(value){
             tx.oncomplete=function(){if(settled)return;settled=true;resolve(value);};
           },fail);
@@ -125,9 +127,9 @@
     options=options||{};
     var driver=options.driver||createIndexedDbDriver(options.indexedDB);
     var now=options.now||Date.now;
-    var random=options.random||Math.random;
+    var random=options.random||Math.random,idPrefix=options.idPrefix||'shopping-photo-';
     function createId(){
-      return 'shopping-photo-'+now()+'-'+Math.floor(random()*0x100000000).toString(36);
+      return idPrefix+now()+'-'+Math.floor(random()*0x100000000).toString(36);
     }
     return {
       put:function(blob){
