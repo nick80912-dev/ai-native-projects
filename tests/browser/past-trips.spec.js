@@ -107,7 +107,7 @@ test('設定資料子項直達過往旅程，返回設定首頁',async({page})=>
   await page.getByRole('button',{name:'返回設定',exact:true}).click();
   await expect(page.getByRole('heading',{name:'設定',exact:true})).toBeVisible();
   await expect(page.getByRole('button',{name:/^過往旅程/})).toBeVisible();
-  await page.getByRole('button',{name:/備份、還原與版本資訊/}).click();
+  await page.getByRole('button',{name:/資料與版本/}).click();
   await expect(page.getByRole('button',{name:/^過往旅程/})).toHaveCount(0);
   expect(errors).toEqual([]);
 });
