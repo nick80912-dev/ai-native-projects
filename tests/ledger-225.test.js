@@ -1,4 +1,3 @@
-const {installTripTime}=require('./support/trip-time');
 const assert=require('assert');
 const {appVersion,swVersion,appHtml}=require('./support/version');
 const fs=require('fs');
@@ -47,19 +46,19 @@ const helperSandbox={
   buyToLedgerRuntimeAdapter:{},
   AppLog:{repo(){},sync(){}},renderSplit(){},updateLedgerPendingStatus(){}
 };
-vm.createContext(helperSandbox);installTripTime(helperSandbox,html);
+vm.createContext(helperSandbox);
 vm.runInContext(html.slice(helperStart,helperEnd),helperSandbox);
 
 const dated=[
-  {id:'old',time:'2026-07-18T23:00:00+09:00',member:'Bar',batchId:''},
-  {id:'new-a',time:'2026-07-19T08:00:00+09:00',member:'Bar',batchId:'batch-new'},
-  {id:'new-b',time:'2026-07-19T09:00:00+09:00',member:'Bar',batchId:'batch-new'},
+  {id:'old',time:'2026-07-18T23:00:00+08:00',member:'Bar',batchId:''},
+  {id:'new-a',time:'2026-07-19T08:00:00+08:00',member:'Bar',batchId:'batch-new'},
+  {id:'new-b',time:'2026-07-19T09:00:00+08:00',member:'Bar',batchId:'batch-new'},
   {id:'invalid',time:'not-a-date',member:'Bar',batchId:''}
 ];
 assert.deepStrictEqual(
   Array.from(helperSandbox.selectLatestLedgerDateExpenses(dated),record=>record.id),
   ['new-b','new-a'],
-  'recent expenses contain every valid record from the newest trip-time-zone (Japan) date only'
+  'recent expenses contain every valid record from the newest device-local date only'
 );
 assert.strictEqual(helperSandbox.formatLedgerDateKey('2026-07-19'),'2026/07/19');
 
@@ -87,7 +86,7 @@ const selectionSandbox={
   selectLatestLedgerDateExpenses:helperSandbox.selectLatestLedgerDateExpenses,
   isLedgerRecordActionTarget(){return true;}
 };
-vm.createContext(selectionSandbox);installTripTime(selectionSandbox,html);
+vm.createContext(selectionSandbox);
 vm.runInContext(extractFunction(html,'ledgerSelectionVisibleRecords'),selectionSandbox);
 assert.deepStrictEqual(Array.from(selectionSandbox.ledgerSelectionVisibleRecords(),record=>record.id),['new-b','new-a'],'dashboard selection uses the newest date');
 selectionSandbox.ledgerUiState.page='all';
@@ -99,7 +98,7 @@ assert.deepStrictEqual(Array.from(helperSandbox.ledgerUniverseRecords(universeRe
 
 const selectedClicks=[],openedDetails=[];
 const cardClickSandbox={ledgerUiState:{selectionMode:true},toggleLedgerRecordSelection(id){selectedClicks.push(id);},openLedgerRecordDetail(id){openedDetails.push(id);}};
-vm.createContext(cardClickSandbox);installTripTime(cardClickSandbox,html);
+vm.createContext(cardClickSandbox);
 vm.runInContext(extractFunction(html,'handleLedgerRecordCardClick'),cardClickSandbox);
 cardClickSandbox.handleLedgerRecordCardClick('record-a');
 assert.deepStrictEqual(plain(selectedClicks),['record-a'],'selection-mode card clicks toggle selection');
@@ -116,7 +115,7 @@ const rendererSandbox={
   formatLedgerDualAmounts(){return '<span>amount</span>';},renderLedgerSelectionControl(){return '<input type="checkbox">';},
   renderLedgerRecentRecord(record){return '<article data-child="'+record.id+'"></article>';}
 };
-vm.createContext(rendererSandbox);installTripTime(rendererSandbox,html);
+vm.createContext(rendererSandbox);
 vm.runInContext(extractFunction(html,'ledgerAmountTotals')+'\n'+extractFunction(html,'formatLedgerInlineTotals'),rendererSandbox);
 const dailyTotals=plain(rendererSandbox.ledgerAmountTotals([
   {amountJpy:1200,amountTwd:264},
@@ -208,7 +207,7 @@ batchInteractionSandbox.ledgerUiWorkflow=TripLedgerUiState.createWorkflow({
   closeActions(){batchInteractionSandbox.closeLedgerRecordActions();},
   renderSplit(){batchInteractionSandbox.renderSplit();}
 });
-vm.createContext(batchInteractionSandbox);installTripTime(batchInteractionSandbox,html);
+vm.createContext(batchInteractionSandbox);
 vm.runInContext(extractFunction(html,'enterLedgerSelectionMode')+'\n'+extractFunction(html,'toggleLedgerBatchExpanded'),batchInteractionSandbox);
 batchInteractionSandbox.enterLedgerSelectionMode();
 assert.deepStrictEqual(plain(batchInteractionSandbox.ledgerUiState.expandedBatches),{},'entering selection mode collapses previously expanded batches');
@@ -254,7 +253,7 @@ clearSandbox.ledgerUiWorkflow=TripLedgerUiState.createWorkflow({
   closeActions(){clearSandbox.closeLedgerRecordActions();},
   renderSplit(){clearSandbox.renderSplit();}
 });
-vm.createContext(clearSandbox);installTripTime(clearSandbox,html);
+vm.createContext(clearSandbox);
 vm.runInContext(extractFunction(html,'clearLedgerHistoryFilters'),clearSandbox);
 clearSandbox.clearLedgerHistoryFilters();
 assert.strictEqual(clearSandbox.ledgerUiState.historyQuery,'松屋','clear filters retains search');
@@ -271,7 +270,7 @@ const deleteDispatchSandbox={
   ledgerUiState:{track:'personal'},ledgerSelectedRecords(){return [{id:'p1'},{id:'p2'}];},confirm(){return true;},
   deletePersonalLedgerRecords(ids){deletedPersonalIds=ids.slice();return ids.length;},cancelLedgerSelectionMode(){cancelledSelections++;},toast(){},openSharedLedgerDeleteBatch(ids){openedSharedIds=ids.slice();}
 };
-vm.createContext(deleteDispatchSandbox);installTripTime(deleteDispatchSandbox,html);
+vm.createContext(deleteDispatchSandbox);
 vm.runInContext(extractFunction(html,'deleteSelectedLedgerRecords'),deleteDispatchSandbox);
 deleteDispatchSandbox.deleteSelectedLedgerRecords();
 assert.deepStrictEqual(plain(deletedPersonalIds),['p1','p2'],'history personal deletion reuses the true-delete batch helper');
@@ -285,7 +284,7 @@ const testSwitchSandbox={
   lsSet(key,value){this.stored=[key,value];},closeLedgerRecordActions(){},renderSplit(){},memberIsAllowed(){return true;},getCurrentMember(){return 'Bar';},refreshMemberSelector(){},openMemberSelector(){},toast(){}
 };
 attachLedgerUiWorkflow(testSwitchSandbox);
-vm.createContext(testSwitchSandbox);installTripTime(testSwitchSandbox,html);
+vm.createContext(testSwitchSandbox);
 vm.runInContext(extractFunction(html,'setLedgerTestMode'),testSwitchSandbox);
 testSwitchSandbox.setLedgerTestMode({checked:true});
 assert.strictEqual(testSwitchSandbox.ledgerUiState.selectionMode,false,'TEST switching exits history selection');
@@ -329,7 +328,7 @@ assert.doesNotMatch(sw,/importScripts\('\.\/app-version\.js'\)/,'sw.js 不再以
     closeSharedLedgerDelete(){},ledgerUiState:{selectionMode:true,selectedRecordIds:{s1:true,s2:true}},renderSplit(){},toast(){}
   };
   attachLedgerUiWorkflow(sharedDeleteSandbox);
-  vm.createContext(sharedDeleteSandbox);installTripTime(sharedDeleteSandbox,html);
+  vm.createContext(sharedDeleteSandbox);
   vm.runInContext(extractFunction(html,'submitSharedLedgerDeletion'),sharedDeleteSandbox);
   await sharedDeleteSandbox.submitSharedLedgerDeletion();
   assert.strictEqual(sharedDeleteSandbox.enqueues.length,1,'shared history deletion calls enqueueBatch exactly once');
@@ -350,7 +349,7 @@ assert.doesNotMatch(sw,/importScripts\('\.\/app-version\.js'\)/,'sw.js 不再以
     closeSharedLedgerDelete(){},ledgerUiState:{selectionMode:true,selectedRecordIds:{own:true,other:true}},renderSplit(){},toast(message){mixedMessages.push(message);}
   });
   attachLedgerUiWorkflow(mixedDeleteSandbox);
-  vm.createContext(mixedDeleteSandbox);installTripTime(mixedDeleteSandbox,html);
+  vm.createContext(mixedDeleteSandbox);
   vm.runInContext(extractFunction(html,'submitSharedLedgerDeletion'),mixedDeleteSandbox);
   const mixedResult=await mixedDeleteSandbox.submitSharedLedgerDeletion();
   assert.strictEqual(mixedResult.ok,false,'mixed-owner batch deletion is rejected');
