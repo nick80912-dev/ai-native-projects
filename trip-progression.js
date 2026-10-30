@@ -80,11 +80,20 @@
         skipped:skipped,notification:notificationFor(skipped)
       };
     }
+    /* v163(稽核 T1):沒有時間的站沿用前一個有時間的站的時間。原本只找「第一個還沒到時間的有時間站」,
+       10/22 倉敷完成 9:00 阿智神社後,中間四個沒有時間的子站全被跳過,直接到 15:50 常春藤廣場。
+       現在先照行程順序取「沿用的時間已經到了」的沒有時間的站;自動略過仍只看真正寫了時間的站。 */
+    var inherited=[],lastMinutes=null;
+    items.forEach(function(item){var minutes=parseStartMinutes(item.time);if(minutes!==null)lastMinutes=minutes;inherited.push(minutes!==null?minutes:lastMinutes);});
+    var current=isFinite(now)?remaining.filter(function(item){
+      var minutes=inherited[items.indexOf(item)];
+      return parseStartMinutes(item.time)===null&&minutes!==null&&minutes<=now;
+    })[0]:null;
     var future=remaining.filter(function(item){
       var minutes=parseStartMinutes(item.time);return minutes!==null&&minutes>=now;
     })[0];
     return {
-      pick:resultFor(future||remaining[0],future?'time':'order'),progress:progress,
+      pick:resultFor(current||future||remaining[0],current?'order':future?'time':'order'),progress:progress,
       changed:false,skipped:[],notification:''
     };
   }
