@@ -1,3 +1,4 @@
+const {installTripTime}=require('./support/trip-time');
 const assert=require('assert');
 const vm=require('vm');
 const TripBuyToLedger=require('../buy-to-ledger.js');
@@ -24,7 +25,7 @@ const draftSandbox={
   ledgerPayMethodStore:{all(){return ['現金','Suica'];}},
   JSON,String,Number,Math,Date
 };
-vm.createContext(draftSandbox);
+vm.createContext(draftSandbox);installTripTime(draftSandbox,html);
 vm.runInContext(draftSource,draftSandbox);
 
 const personal=plain(draftSandbox.createLedgerEntryDraft('personal'));
@@ -89,7 +90,7 @@ const stateSandbox={
   escapeHtml(value){return String(value);},jsString(value){return String(value);},getCurrentMember(){return 'Bar';},
   Date,Math,Promise,JSON,String,Number,isFinite
 };
-vm.createContext(stateSandbox);
+vm.createContext(stateSandbox);installTripTime(stateSandbox,html);
 vm.runInContext(stateSource,stateSandbox);
 stateSandbox.ledgerUiState.draft=stateSandbox.createLedgerEntryDraft('personal');
 stateSandbox.setLedgerDraftMulti(true);
@@ -113,7 +114,7 @@ const persistSandbox={
   ledgerRepository:{enqueueBatch(records){sharedEnqueues++;return {ok:true,queued:true,records,pending:records.length};},pendingCount(){return 0;}},
   Date,Math,Promise,JSON,String,Number,isFinite
 };
-vm.createContext(persistSandbox);
+vm.createContext(persistSandbox);installTripTime(persistSandbox,html);
 vm.runInContext(persistSource,persistSandbox);
 
 (async function(){
@@ -184,7 +185,7 @@ const helperSandbox={
   formatLedgerCurrencyAmount(currency,amount){return currency==='TWD'?'NT$'+Math.round(Number(amount||0)).toLocaleString():'¥'+Math.round(Number(amount||0)).toLocaleString();},
   JSON,String,Number,Math,Date,isFinite
 };
-vm.createContext(helperSandbox);
+vm.createContext(helperSandbox);installTripTime(helperSandbox,html);
 vm.runInContext(helperSource,helperSandbox);
 assert.strictEqual(helperSandbox.ledgerClientCreatedAt({id:'1784428800000-abcd'}),1784428800000,'client-created IDs expose their millisecond timestamp');
 assert.strictEqual(helperSandbox.ledgerClientCreatedAt({id:'not-a-client-id'}),null,'non-client IDs do not fabricate a timestamp');
@@ -253,7 +254,7 @@ saveSandbox.ledgerUiWorkflow=TripLedgerUiState.createWorkflow({
   restoreEntryContext(){},
   notifyEntryResult(notification){if(notification&&notification.message)saveMessages.push(notification.message);}
 });
-vm.createContext(saveSandbox);
+vm.createContext(saveSandbox);installTripTime(saveSandbox,html);
 vm.runInContext(saveFlowSource,saveSandbox);
 (async function(){
   const cancelledSave=saveSandbox.saveLedgerEntry(false);

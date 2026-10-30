@@ -1,3 +1,4 @@
+const {installTripTime}=require('./support/trip-time');
 /* ledger-member-visibility.test.js — 團體帳本「只顯示與目前成員相關紀錄」
    規則:目前成員是付款人(record.member)或在 participants 內,任一成立即顯示。
    涵蓋正常資料四象限、legacy participants fail-open、成員無法解析的 fail-safe,
@@ -32,7 +33,7 @@ function loadModule(){
     escapeHtml(value){return String(value);},
     renderSplit(){},updateLedgerPendingStatus(){}
   };
-  vm.createContext(sandbox);
+  vm.createContext(sandbox);installTripTime(sandbox,source);
   vm.runInContext(source.slice(start,end),sandbox);
   sandbox.__htmlSource=source;
   return sandbox;
@@ -203,7 +204,7 @@ function renderActionMenu(record,track,member,records,isBatch){
     },
     window:{innerWidth:390,innerHeight:700}
   };
-  vm.createContext(sandbox);vm.runInContext(actionSource,sandbox);
+  vm.createContext(sandbox);installTripTime(sandbox,html);vm.runInContext(actionSource,sandbox);
   sandbox.openLedgerRecordActions(record.id,{stopPropagation(){},currentTarget:{getBoundingClientRect(){return {left:12,right:56,top:80,bottom:124};}}},!!isBatch);
   return appended&&appended.innerHTML||'';
 }
@@ -248,7 +249,7 @@ const editSandbox={
     body:{appendChild(){editAppends++;},classList:{add(){}}}
   }
 };
-vm.createContext(editSandbox);vm.runInContext(editSourceForBehavior,editSandbox);
+vm.createContext(editSandbox);installTripTime(editSandbox,html);vm.runInContext(editSourceForBehavior,editSandbox);
 editSandbox.editLedgerRecord(participantOnly.id);
 assert.strictEqual(editAppends,0,'分攤者直接呼叫 edit handler 不會開啟編輯表單');
 assert(editMessages.some(message=>/僅付款人可編輯/.test(message)),'分攤者直接呼叫 edit handler 收到可理解錯誤');

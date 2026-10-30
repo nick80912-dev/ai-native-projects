@@ -1,3 +1,4 @@
+const {installTripTime}=require('./support/trip-time');
 const assert=require('assert');
 const vm=require('vm');
 const TripBuyToLedger=require('../buy-to-ledger.js');
@@ -28,7 +29,7 @@ function loadModule(){
     escapeHtml(value){return String(value);},
     renderSplit(){},updateLedgerPendingStatus(){}
   };
-  vm.createContext(sandbox);
+  vm.createContext(sandbox);installTripTime(sandbox,source);
   vm.runInContext(source.slice(start,end),sandbox);
   sandbox.__htmlSource=source;
   return sandbox;

@@ -1,3 +1,4 @@
+const {installTripTime}=require('./support/trip-time');
 const assert = require('assert');
 const vm = require('vm');
 const {appHtml}=require('./support/version');
@@ -30,7 +31,7 @@ function makeSandbox(timeSimulation) {
     },
     AppLog: { repo() {} },
   };
-  vm.createContext(sandbox);
+  vm.createContext(sandbox);installTripTime(sandbox,html);
   vm.runInContext([extractFunction('lsGet'), extractFunction('appNow')].join('\n'), sandbox);
   return sandbox;
 }
