@@ -1,5 +1,14 @@
 # 07 版本紀錄
 
+## 2026-10-30 — v162 付款人選單不再重複跳出（開發中，未發布）
+
+- **來源**：Bar 2026-10-30 回報：「當團體分帳選擇付款人時會跳出視窗，但點選完付款人後視窗還是會再次跳出」。
+- **原因**：`setLedgerDraftPayer()` 一選就整張記帳表單重畫（`withLedgerSheetPosition(renderLedgerEntrySheet)`），重畫後把焦點還給 id 相同的「新」付款人選單；手機上對 `<select>` 呼叫 `focus()` 會再打開一次選擇器。桌面瀏覽器測試（`selectOption` 不會先聚焦選單）因此沒抓到；先聚焦再選就重現（`focusin` 落在新選單）。
+- **修正**：付款人只影響選單下面那行說明，所以改成只更新 `.ledger-payer-note` 的文字（`ledgerPayerNoteText()`），選單不重建、焦點不動。另外 `withLedgerSheetPosition()` 與 `withShoppingSplitFocus()` 重畫後不再把焦點還給任何 `<select>`，避免其他下拉選單出現同樣問題。
+- **版本**：forward bump v161→v162；`builtin-snapshot.js` 以 v161 asset 離線重產，除版本外不變。發布說明視窗為 `v162` + `['v161','v160','v159','v158']`（v157 滾出）。`tests/trip-lifecycle-wiring.test.js` 加入已發布 v161 三件組的 hash。
+- **測試**：新增 `tests/browser/payer-select-v162.spec.js`（2 項：先聚焦再選付款人，選單是同一個元素、沒有被程式重新聚焦、說明文字更新；之後重畫仍保留付款人且不聚焦選單，存檔為付款人＋「〔Bar 代記〕」）。換回舊寫法時兩項都失敗。`proxy-recording-v157`、`pretrip-fixes-v156`、`shop-interaction` 一併通過。
+- **回滾**：合併前關閉 PR；發布後依 `16_OPS_PLAYBOOK.md` §A1 退回 v161 的 Netlify 部署（`commit_ref` `a9e27c9`），再往前 bump。不影響任何資料。
+
 ## 2026-10-30 — v161 還原對話框、還原前確認、分帳設定橋接（開發中，未發布）
 
 - **來源**：回程後第二批（Bar 2026-10-30「繼續進行 v161」），出發前稽核的 B2、L1、L2。
