@@ -131,3 +131,24 @@ test('the simple settlement explanation opens from the ! button',async({page})=>
   await page.locator('#simpleSettlementHelpButton').click();
   await expect(page.locator('#simpleSettlementHelp')).toBeHidden();
 });
+
+/* v174(Bar 2026-10-31「設定內的簡易結算模式下的說明並未改成!資訊」) */
+test('the settings row for simple settlement keeps its explanation behind a ! button',async({page})=>{
+  await boot(page,null);
+  await page.evaluate(()=>openSettings());
+  const overlay=page.locator('#settingsOverlay');
+  const button=overlay.getByRole('button',{name:'簡易結算模式說明'});
+  await expect(button).toHaveText('!');
+  await expect(overlay.locator('#settingsSimpleHelp')).toBeHidden();
+  expect(await overlay.innerText()).not.toContain('只看轉帳建議');
+  const box=await button.boundingBox();
+  expect(box.width).toBeGreaterThanOrEqual(44);expect(box.height).toBeGreaterThanOrEqual(44);
+  /* 按「!」只開說明,不會切換簡易結算模式 */
+  await button.click();
+  await expect(overlay.locator('#settingsSimpleHelp')).toBeVisible();
+  await expect(overlay.locator('#settingsSimpleHelp')).toContainText('只看轉帳建議');
+  expect(await page.evaluate(()=>isSimpleSettlementMode())).toBe(false);
+  /* 開關照常可用 */
+  await overlay.getByRole('checkbox',{name:'簡易結算模式（保留已確認結清）'}).check();
+  expect(await page.evaluate(()=>isSimpleSettlementMode())).toBe(true);
+});

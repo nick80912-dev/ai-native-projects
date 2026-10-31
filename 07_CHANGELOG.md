@@ -1,5 +1,18 @@
 # 07 版本紀錄
 
+## 2026-10-31 — v174 收據辨識結果改用彈出視窗；設定的簡易結算說明收進「!」（開發中，未發布）
+
+- **來源**：Bar 2026-10-31 問辨識結果要不要用提示視窗；我建議表單頂端卡片（不擋畫面），Bar 先選了卡片，看過後改要「可以將這個卡片做成彈出視窗嗎?」——辨識在背景進行，視窗跳出時若正在打字會被打斷，已向 Bar 說明後照做。同一批 Bar 指出「設定內的簡易結算模式下的說明並未改成!資訊」（v169 只改了結算面板）。
+- **使用上**：
+  - 讀取中：表單上方一行「正在讀取收據…」，不跳視窗。
+  - 讀完：跳出視窗「已依收據帶入（請確認）」，逐項列出帶入的時間、金額、店名、支付方式、類別、品項，附註（收據時間只提示、幣別不同、品項加總對不上等）列在下方；「好」、點視窗外面或按 Esc 關閉，「復原」把這次辨識改過的欄位全部改回辨識前（含「改成多品項並帶入」），照片保留。失敗（附「重試」）與看不出收據內容也用同一個視窗。焦點落在「好」。關掉表單時視窗一起消失。
+  - 被收據填過、而且還沒改過的欄位，標籤旁顯示小標「收據」（金額、日期、店家、支付方式、類別）；自己改了就不顯示。收據欄下方原本的訊息保留。
+  - 設定根頁「簡易結算模式」不再常駐說明文字，改成「!」按鈕（44px），點一下才顯示「只看轉帳建議，不用按「我已付款」；別人標記付款時仍可在團體結算確認。已確認的結清照常計入餘額。」；按「!」不會切換開關。
+- **做法**：`renderLedgerReceiptCard()` 只放讀取中；`syncLedgerReceiptDialog()`（`renderLedgerEntrySheet()` 結尾呼叫）建立 `#ledgerReceiptDialog`（`role=dialog`、`aria-modal`），同一個結果不重畫；`showLedgerReceiptCard()`、`dismissLedgerReceiptCard()`、`undoLedgerReceiptRecognition()`、`removeLedgerReceiptDialog()`（`closeLedgerEntrySheet()` 也呼叫）；`applyLedgerReceiptRecognition()` 先存 `ledgerReceiptSnapshot()`（`LEDGER_RECEIPT_UNDO_FIELDS`），回傳 `rows`、`filled`、`undo`；`ledgerReceiptTag()` 依 `receiptFilled` 與目前值比對。設定：`renderSettingsRoot()` 的簡易結算列改為 `div` 列＋`label for`，新增 `simpleSettlementSettingsHelpButton()`／`simpleSettlementSettingsHelpText()`／`toggleSimpleSettlementSettingsHelp()`。
+- **版本**：forward bump v173→v174；`builtin-snapshot.js` 以 v173 asset 離線重產，除版本外不變。發布說明視窗為 `v174` + `['v173','v172','v171','v170']`（v169 滾出）。`tests/trip-lifecycle-wiring.test.js` 加入已發布 v173 三件組的 hash。Apps Script 不變。
+- **測試**：`tests/browser/receipt-recognition-v171.spec.js`：讀取中不跳視窗、視窗列出內容並在畫面內、焦點在「好」、「收據」小標改了就消失、「好」／點外面／Esc／關表單都會關；「復原」改回各欄位與多品項、照片保留；失敗與重試、看不出收據內容；原本要操作表單的測試先按「好」關掉視窗（新增 `closeReceiptDialog()`）。`tests/browser/trip-tax-v169.spec.js` 新增設定根頁的「!」：預設收起、44px、按了只開說明不切換開關、開關照常可用。`tests/settings-grouped-root.test.js` 沙盒補上兩個函式並檢查說明不再常駐。
+- **回滾**：合併前關閉 PR；發布後依 `16_OPS_PLAYBOOK.md` §A1 退回 v173 的 Netlify 部署（`commit_ref` `625fbd0`），再往前 bump。
+
 ## 2026-10-31 — v173 已上線 main（待 Bar 更新岡山 Apps Script、手機審查與 tag）
 
 - PR [#113](https://github.com/nick80912-dev/ai-native-projects/pull/113)（v172 發布紀錄＋v173）在 head `3b6f9c2` 的 sanity／browser-qa 全綠後合併進 `dev`（`c84cc78`，釘住 head）；PR [#114](https://github.com/nick80912-dev/ai-native-projects/pull/114) 合併 `dev` → `main`，merge commit **`625fbd0`**。合併 tree `2be7622` 與 `3b6f9c2` 相同。本機完整 Chromium 415 passed，只有已知只在本機失敗的兩項，沒有略過的測試；反向驗證：把多品項收據欄的修正改回去，對應測試失敗。
