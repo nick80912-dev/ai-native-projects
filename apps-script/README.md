@@ -142,6 +142,8 @@ App 加收據照片後 POST：
 {"ok":true,"receipt":{"date":"2026-10-20","time":"12:41","total":1580,"currency":"JPY","storeName":"ローソン 倉敷店"}}
 ```
 
+v173 起 App 另送 `"payMethods":["現金","信用卡","行動支付",…]`、`"categories":["餐飲","交通",…]`（這支手機的選項），回應多 `"payMethod"`、`"category"`，只會是清單內的值或空字串；PayPay、LINE Pay、TWQR（悠遊付、台灣Pay、icash Pay）等行動支付歸為「行動支付」。沒送清單時兩欄空白。
+
 錯誤代碼：`missing GEMINI_API_KEY`、`invalid image`、`invalid GEMINI_MODEL`、`quota`（免費額度用完）、`not authorized`（還沒授權連到外部服務）、`ai http <狀態>`、`ai unreachable: <原因>`、`unreadable ai reply`。辨識不拿 `LockService` 鎖。
 
 - 金鑰放在「專案設定 → 指令碼屬性」的 `GEMINI_API_KEY`，不寫進程式、不進 GitHub；可選 `GEMINI_MODEL`（預設 `gemini-flash-lite-latest`）。

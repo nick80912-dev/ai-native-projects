@@ -190,3 +190,51 @@ test('the photo-upload note sits behind a ! button next to 收據照片',async({
   await openForm(page);
   await expect(page.locator('#ledgerReceiptHelpButton')).toHaveCount(0);
 });
+
+/* v173(Bar 2026-10-31):收據看得出行動支付(PayPay、LINE Pay、TWQR…)就選「行動支付」;類別也依收據判斷 */
+test('the pay method and category come from the receipt when still at the defaults',async({page})=>{
+  await boot(page,null);
+  await page.evaluate(()=>{window.__aiReply={ok:true,receipt:{total:420,currency:'JPY',storeName:'JR 岡山駅',payMethod:'行動支付',category:'交通'}};});
+  await openForm(page);
+  const before=await page.evaluate(()=>[ledgerUiState.draft.payMethod,ledgerUiState.draft.category]);
+  expect(before).toEqual(['現金','餐飲']);
+  await page.evaluate(()=>window.__addReceipt(null));
+  await expect(scan(page)).toHaveText('已依收據帶入金額 ¥420、店名「JR 岡山駅」、支付方式「行動支付」、類別「交通」，請確認');
+  expect(await page.evaluate(()=>[ledgerUiState.draft.payMethod,ledgerUiState.draft.category])).toEqual(['行動支付','交通']);
+  const sent=await page.evaluate(()=>[window.__aiRequests[0].payMethods,window.__aiRequests[0].categories]);
+  expect(sent[0]).toEqual(['現金','信用卡','行動支付','Suica','其他']);
+  expect(sent[1]).toContain('交通');
+  /* 存成一般的帳 */
+  await page.locator('#ledgerDetail').fill('電車');
+  await page.evaluate(()=>saveLedgerEntry(false));
+  await expect(page.locator('#ledgerEntrySheet')).toHaveCount(0);
+  expect(await page.evaluate(()=>{const r=personalLedgerRepository.all().filter(item=>item.detail==='電車')[0];return [r.payMethod,r.category];})).toEqual(['行動支付','交通']);
+});
+
+test('a pay method or category you picked yourself stays; answers outside your options are ignored',async({page})=>{
+  await boot(page,null);
+  await page.evaluate(()=>{window.__aiReply={ok:true,receipt:{storeName:'カフェ',payMethod:'行動支付',category:'交通'}};});
+  await openForm(page);
+  await page.evaluate(()=>{selectLedgerPayMethod('信用卡');selectLedgerCategory('購物');});
+  await page.evaluate(()=>window.__addReceipt(null));
+  await expect(scan(page)).toHaveText('已依收據帶入店名「カフェ」，請確認');
+  expect(await page.evaluate(()=>[ledgerUiState.draft.payMethod,ledgerUiState.draft.category])).toEqual(['信用卡','購物']);
+  await page.evaluate(()=>closeLedgerEntrySheet());
+  await page.evaluate(()=>{window.__aiReply={ok:true,receipt:{storeName:'屋台',payMethod:'PayPay',category:'Food'}};});
+  await openForm(page);
+  await page.evaluate(()=>window.__addReceipt(null));
+  await expect(scan(page)).toHaveText('已依收據帶入店名「屋台」，請確認');
+  expect(await page.evaluate(()=>[ledgerUiState.draft.payMethod,ledgerUiState.draft.category])).toEqual(['現金','餐飲']);
+});
+
+test('a multi-item receipt sets the shared category for items not adjusted by hand',async({page})=>{
+  await boot(page,null);
+  await page.evaluate(()=>{window.__aiReply={ok:true,receipt:{storeName:'ドン・キホーテ',payMethod:'信用卡',category:'購物'}};});
+  await openForm(page);
+  await page.evaluate(()=>{setLedgerDraftMulti(true);addLedgerDraftItem();const items=ledgerUiState.draft.items;selectLedgerItemCategory(items[1].key,'美妝');});
+  await page.evaluate(()=>window.__addReceipt(null));
+  /* 多品項的收據欄在收起來的「帳單資訊」裡,直接看表單資料 */
+  await expect.poll(()=>page.evaluate(()=>ledgerUiState.draft.receiptScan&&ledgerUiState.draft.receiptScan.message)).toBe('已依收據帶入店名「ドン・キホーテ」、支付方式「信用卡」、類別「購物」，請確認');
+  const state=await page.evaluate(()=>({apply:ledgerUiState.draft.categoryApply,items:ledgerUiState.draft.items.map(item=>item.category),pay:ledgerUiState.draft.payMethod}));
+  expect(state).toEqual({apply:'購物',items:['購物','美妝'],pay:'信用卡'});
+});

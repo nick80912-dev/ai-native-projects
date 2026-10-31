@@ -69,9 +69,9 @@ assert.notStrictEqual(R.DB_NAME,'trip-local-media','receipts use their own datab
 /* v171(backlog #61):AI 讀到的收據內容 */
 const N=R.normalizeRecognition;
 assert.deepStrictEqual(N({date:'2026-10-20',time:'9:05',total:1500,currency:'jpy',storeName:'  ローソン\n倉敷店 '}),
-  {date:'2026/10/20',time:'09:05',total:1500,currency:'JPY',storeName:'ローソン 倉敷店',found:true});
+  {date:'2026/10/20',time:'09:05',total:1500,currency:'JPY',storeName:'ローソン 倉敷店',payMethod:'',category:'',found:true});
 assert.deepStrictEqual(N({date:'2026年10月20日',time:'12:34:56',total:'12.50',currency:'USD'}),
-  {date:'2026/10/20',time:'12:34',total:12.5,currency:'USD',storeName:'',found:true},'年月日與秒數、字串金額');
+  {date:'2026/10/20',time:'12:34',total:12.5,currency:'USD',storeName:'',payMethod:'',category:'',found:true},'年月日與秒數、字串金額');
 assert.strictEqual(N({date:'2026-02-30'}).date,'','不存在的日期當作沒讀到');
 assert.strictEqual(N({date:'1999-12-31'}).date,'','太久以前的日期當作沒讀到');
 assert.strictEqual(N({time:'25:00'}).time,'');
@@ -79,7 +79,10 @@ assert.strictEqual(N({time:'25:00'}).time,'');
 assert.strictEqual(N({total:'1,234'}).total,1234);
 assert.strictEqual(N({currency:'¥'}).currency,'','幣別要是三碼');
 assert.strictEqual(N({storeName:'x'.repeat(60)}).storeName.length,40);
-assert.deepStrictEqual(N(null),{date:'',time:'',total:null,currency:'',storeName:'',found:false});
+assert.deepStrictEqual(N(null),{date:'',time:'',total:null,currency:'',storeName:'',payMethod:'',category:'',found:false});
+/* v173:支付方式與類別 */
+assert.deepStrictEqual([N({payMethod:' 行動支付 ',category:'餐飲'}).payMethod,N({payMethod:' 行動支付 ',category:'餐飲'}).category,N({payMethod:'行動支付'}).found],['行動支付','餐飲',true]);
+assert.strictEqual(N({payMethod:{}}).payMethod,'','不是字串就當沒讀到');
 assert.strictEqual(N([1,2]).found,false);
 assert.strictEqual(N({currency:'JPY'}).found,false,'只有幣別不算讀到');
 

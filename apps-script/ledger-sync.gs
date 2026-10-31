@@ -5,6 +5,7 @@
  * v171(backlog #61):收據辨識 —— doPost action 'recognizeReceipt' 把 App 傳來的收據照片交給 Google Gemini,
  * 只回傳日期、時間、總額、幣別、店名五項;照片不存進試算表。金鑰放在「專案設定 → 指令碼屬性」的
  * GEMINI_API_KEY(不寫在程式裡、不進 GitHub);可選 GEMINI_MODEL 換模型。沒有這段的舊部署照常記帳,只是不能辨識。
+ * v173:App 另送支付方式與類別的選項清單,AI 從清單選一個(行動支付錢包 → 行動支付;餐廳 → 餐飲;電車 → 交通…)。
  * GitHub 內此檔為唯一維護來源；部署內容必須與此檔一致。
  */
 var LEDGER_COLUMNS = 21;
@@ -207,6 +208,31 @@ var RECEIPT_PROMPT = [
   '- storeName: the shop name as printed (at most 40 characters), "" when not printed.',
   '- If the photo is not a receipt, return all fields empty and total null.'
 ].join('\n');
+/* v173(Bar 2026-10-31):支付方式與類別從 App 送來的清單裡選一個(手機上自訂的名稱也適用) */
+var RECEIPT_CHOICE_PROMPT = [
+  '- payMethod: how it was paid, copied exactly from this list: %PAY%. Use "" when the receipt does not show it or nothing fits.',
+  '  QR-code and phone wallets count as the mobile-payment option (for example 行動支付): PayPay, LINE Pay, TWQR cross-border',
+  '  payments such as 悠遊付 / 台灣Pay / icash Pay / 全支付, JKOPAY, Alipay, WeChat Pay, Apple Pay, Google Pay, 楽天ペイ, d払い,',
+  '  au PAY, メルペイ, KakaoPay, Naver Pay, Toss, GrabPay, TrueMoney, GCash and similar. Credit or debit cards (VISA, Master, JCB,',
+  '  AMEX, クレジット, カード) are the card option; 現金 / お預り / お釣り / cash are the cash option; transit IC cards',
+  '  (Suica, ICOCA, PASMO) are the Suica option when the list has one.',
+  '- category: what was bought, copied exactly from this list: %CAT%. For example restaurants, cafes, food and drinks are the',
+  '  food option (餐飲); trains, buses, taxis, fuel, tolls and parking are the transport option (交通); tickets and admissions',
+  '  are 票券. Use "" when unsure or nothing fits.',
+  'Add "payMethod" and "category" to the same JSON object.'
+].join('\n');
+var RECEIPT_MAX_CHOICES = 30;
+
+/* App 送來的選項清單:字串、去重、每項最多 12 字、最多 30 項 */
+function receiptChoices(value) {
+  var seen = {}, list = [];
+  (Array.isArray(value) ? value : []).forEach(function(item) {
+    var text = typeof item === 'string' ? item.trim() : '';
+    if (!text || text.length > 12 || seen[text] || list.length >= RECEIPT_MAX_CHOICES) return;
+    seen[text] = true; list.push(text);
+  });
+  return list;
+}
 
 function recognizeReceipt(d) {
   var props = PropertiesService.getScriptProperties();
@@ -221,6 +247,10 @@ function recognizeReceipt(d) {
   var model = String(props.getProperty('GEMINI_MODEL') || RECEIPT_DEFAULT_MODEL).trim();
   if (!/^[a-z0-9][a-z0-9.\-]*$/.test(model)) return out({ok:false,error:'invalid GEMINI_MODEL'});
   var hint = /^[A-Z]{3}$/.test(String(d.currency || '')) ? '\nThis trip usually pays in ' + d.currency + '.' : '';
+  var payMethods = receiptChoices(d.payMethods), categories = receiptChoices(d.categories);
+  if (payMethods.length || categories.length) {
+    hint += '\n' + RECEIPT_CHOICE_PROMPT.replace('%PAY%', JSON.stringify(payMethods)).replace('%CAT%', JSON.stringify(categories));
+  }
   var request = {
     contents: [{parts: [{text: RECEIPT_PROMPT + hint}, {inline_data: {mime_type: mimeType, data: image}}]}],
     generationConfig: {responseMimeType: 'application/json', temperature: 0}
@@ -249,7 +279,7 @@ function recognizeReceipt(d) {
   } catch (err) {
     return out({ok:false,error:'unreadable ai reply'});
   }
-  return out({ok:true,receipt:receiptFields(parsed)});
+  return out({ok:true,receipt:receiptFields(parsed, payMethods, categories)});
 }
 
 /* 在 Apps Script 編輯器上方的函式選單選 checkReceiptRecognition,按「▶ 執行」:
@@ -276,7 +306,7 @@ function checkReceiptRecognition() {
 }
 
 /* 只回傳五個欄位;格式由 App 再檢查一次(ledger-receipts.js normalizeRecognition) */
-function receiptFields(value) {
+function receiptFields(value, payMethods, categories) {
   var source = value && typeof value === 'object' && !Array.isArray(value) ? value : {};
   function text(name, max) { var v = source[name]; return typeof v === 'string' ? v.trim().slice(0, max) : ''; }
   var total = source.total;
@@ -284,7 +314,10 @@ function receiptFields(value) {
   return {
     date: text('date', 20), time: text('time', 10),
     total: typeof total === 'number' && isFinite(total) ? total : null,
-    currency: text('currency', 3).toUpperCase(), storeName: text('storeName', 40)
+    currency: text('currency', 3).toUpperCase(), storeName: text('storeName', 40),
+    /* v173:只接受 App 送來清單裡的選項 */
+    payMethod: (payMethods || []).indexOf(text('payMethod', 12)) >= 0 ? text('payMethod', 12) : '',
+    category: (categories || []).indexOf(text('category', 12)) >= 0 ? text('category', 12) : ''
   };
 }
 

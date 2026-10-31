@@ -138,7 +138,7 @@
     return ids;
   }
 
-  /* v171：AI 讀到的收據內容 → {date:'YYYY/MM/DD',time:'HH:MM',total:數字或 null,currency:'ABC',storeName,found}。
+  /* v171：AI 讀到的收據內容 → {date:'YYYY/MM/DD',time:'HH:MM',total:數字或 null,currency:'ABC',storeName,payMethod,category,found}。
      日期限 2000–2100 且要是真的日期；總額要是正數；幣別要是三個英文字母；店名最多 40 字。 */
   function normalizeRecognition(raw){
     var source=raw&&typeof raw==='object'&&!Array.isArray(raw)?raw:{};
@@ -156,7 +156,9 @@
     var code=text('currency').toUpperCase();
     if(/^[A-Z]{3}$/.test(code))currency=code;
     storeName=text('storeName').replace(/\s+/g,' ').slice(0,40);
-    return {date:date,time:time,total:total,currency:currency,storeName:storeName,found:!!(date||total!==null||storeName)};
+    /* v173：支付方式與類別是 App 送去的選項名稱之一；這裡只整理字串，是否在清單內由 App 判斷 */
+    var payMethod=text('payMethod').slice(0,12),category=text('category').slice(0,12);
+    return {date:date,time:time,total:total,currency:currency,storeName:storeName,payMethod:payMethod,category:category,found:!!(date||total!==null||storeName||payMethod||category)};
   }
 
   return {
