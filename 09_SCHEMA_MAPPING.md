@@ -113,6 +113,9 @@
 | Currency | currency | 當地幣別,ISO 4217 三碼(JPY、KRW、USD…);沒填是 JPY(v168) |
 | Exchange Rate | exchangeRate | 1 單位當地幣別對應的 TWD 金額;必須大於 0。可不填,在 App「設定 → 分帳設定」補填後全團共用(v168) |
 | Ledger Default Currency | ledgerDefaultCurrency | 全團結算幣別,也是新增記帳的預設幣別;當地幣別代碼或 TWD,沒填是當地幣別(v168) |
+| Tax Rates | taxRates | 這趟的稅率(%),逗號分隔、最多一位小數,例如 10,8;第一個是新記帳的預設。填 0＝不顯示稅。沒填:JPY 是 10,8,其他幣別不顯示稅(v169) |
+| Price Mode | taxPriceMode | 價格預設含稅或未稅:填「含稅」或「未稅」;沒填是含稅(v169) |
+| Tax Free | taxFree | 填 yes 才顯示「免稅品」選項;沒填:JPY 是 yes,其他幣別是 no(v169) |
 | Home Page | homepage | 預設分頁(⚠️ 目前**未啟用**,App 固定 Today;填寫無效果) |
 | Trip ID | tripId | 選填(新旅程必填);3–40 個英數字、- 或 _,每趟旅程不同,用來分開快取、待送帳與備份 |
 | Ledger Endpoint | ledgerEndpoint | 選填(新旅程必填);這份試算表部署的 Apps Script 網頁應用程式 /exec 網址 |

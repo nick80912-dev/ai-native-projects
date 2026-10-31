@@ -69,6 +69,7 @@
 - 欄位名稱 `amountJpy`／`amountTwd`（試算表第 6、7 欄「日幣」「台幣」）維持不變，意思是「當地幣金額」「台幣金額」；新範本第 6 欄標題可寫「當地幣」（schema `aliases`，Apps Script 也接受）。
 - **App 內部**金額一律是最小單位的整數（美金存分、日圓存圓），內部用 `'JPY'`／`'TWD'` 兩個代號代表「當地幣別」「台幣」槽位。**試算表與 Apps Script** 存一般金額（`12.5`）與真正的幣別代碼（`輸入幣別` 寫 `USD`）。換算只在邊界：`ledgerRecordFromSheet()`（讀 CSV／fast pull）、`ledgerRecordForWire()`（送 Apps Script）、表單輸入與畫面（`trip-currency.js`）。
 - 小數位數：日圓、韓元、台幣等為 0；美金、歐元、泰銖等為 2（`trip-currency.js` 的幣別表，表外依瀏覽器 ISO 資料）。小數位數 0 的幣別（含岡山的 JPY）邊界轉換前後完全相同，既有資料不需轉換。
+- 稅（v169）：TripConfig `Tax Rates`（逗號分隔、最多一位小數，第一個是預設；`0`＝不顯示稅）、`Price Mode`（含稅／未稅）、`Tax Free`（yes／no）都是選填；沒填時日圓旅程是 10／8、含稅、可標免稅品，其他幣別不顯示稅（`trip-currency.js` 的 `taxSettings()`）。紀錄欄位（`免稅品`、`價格方式`、`稅率`）不變；沒有稅的旅程存稅率 0、不是免稅品。
 
 ## 分帳收據照片本機資料規則（v167，backlog #59）
 - 團體帳與個人帳都可以夾收據照片，每筆最多 3 張（Bar 2026-10-19 裁定）。Blob 存 IndexedDB `trip-receipt-media/receipt-photos`，與採買照片分開，採買的孤兒照片清理不會刪到收據。壓縮規則同採買照片（長邊 1600px、JPEG 0.82）。

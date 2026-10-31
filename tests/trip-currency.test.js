@@ -47,4 +47,19 @@ assert.ok(unknown.decimals>=0&&unknown.decimals<=3);
 assert.strictEqual(C.HOME,'TWD','settlement is always TWD (Bar 2026-10-31)');
 assert.strictEqual(C.info('JPY').name,'日幣','Okayama keeps the 日幣 wording');
 
+/* v169 稅每趟自己設定(Bar 2026-10-31) */
+assert.deepStrictEqual(C.taxSettings({}),{enabled:true,rates:[10,8],defaultRate:10,priceMode:'included',taxFree:true,japaneseLabels:true},'Okayama (JPY, nothing filled) keeps 10%/8%, 含稅 and 免稅品');
+assert.deepStrictEqual(C.taxSettings({currency:'KRW'}),{enabled:false,rates:[],defaultRate:0,priceMode:'included',taxFree:false,japaneseLabels:false},'other currencies show no tax by default');
+assert.deepStrictEqual(C.taxSettings({currency:'THB',taxRates:'7%',taxPriceMode:'未稅',taxFree:'yes'}),{enabled:true,rates:[7],defaultRate:7,priceMode:'excluded',taxFree:true,japaneseLabels:false});
+assert.strictEqual(C.taxSettings({taxRates:'0'}).enabled,false,'0 turns tax off, even for JPY');
+assert.strictEqual(C.taxSettings({taxRates:'0',taxFree:'yes'}).taxFree,false,'no tax-free option without tax rates');
+assert.strictEqual(C.taxSettings({taxRates:' 8，10 '}).defaultRate,8,'the first listed rate is the default');
+assert.strictEqual(C.taxSettings({taxFree:'no'}).taxFree,false,'a JPY trip may turn tax-free off');
+assert.deepStrictEqual(C.parseTaxRates('10,8,10,abc,8.875,101,5.5'),[10,8,5.5],'bad, repeated and out-of-range rates are skipped');
+assert.strictEqual(C.parsePriceMode('税抜'),'excluded');
+assert.strictEqual(C.parsePriceMode('Included'),'included');
+assert.strictEqual(C.parsePriceMode('看情況'),'');
+assert.strictEqual(C.parseYesNo('是'),true);
+assert.strictEqual(C.parseYesNo('maybe'),null);
+
 console.log('trip currency tests passed');

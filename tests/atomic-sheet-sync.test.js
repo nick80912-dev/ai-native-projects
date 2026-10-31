@@ -253,6 +253,18 @@ const noLedgerCurrency=validDb(); noLedgerCurrency.cfg.ledgerDefaultCurrency='';
 assert(!hasFinding(sb.validateSnapshotData(noLedgerCurrency,validRaw(),schema()),'CFG_LEDGER_CURRENCY','cfg'),'a blank settlement currency means the local currency');
 const badCode=validDb(); badCode.cfg.currency='韓元';
 assert(hasFinding(sb.validateSnapshotData(badCode,validRaw(),schema()),'CFG_CURRENCY','cfg'),'Currency must be a three-letter code');
+/* v169(稅每趟自己設定):三個稅的設定都是選填,看不懂的值只警告、不擋載入 */
+const taxTrip=validDb(); Object.assign(taxTrip.cfg,{currency:'THB',ledgerDefaultCurrency:'THB',taxRates:'7, 0',taxPriceMode:'未稅',taxFree:'no'});
+const taxFindings=sb.validateSnapshotData(taxTrip,validRaw(),schema());
+function hasAnyFinding(result,code){return result.blockers.concat(result.warnings).some(function(item){return item.code===code&&item.sheet==='cfg';});}
+['CFG_TAX_RATES','CFG_PRICE_MODE','CFG_TAX_FREE'].forEach(function(code){assert(!hasAnyFinding(taxFindings,code),'valid tax settings pass: '+code);});
+const badTax=validDb(); Object.assign(badTax.cfg,{taxRates:'10,八',taxPriceMode:'看情況',taxFree:'maybe'});
+const badTaxResult=sb.validateSnapshotData(badTax,validRaw(),schema());
+['CFG_TAX_RATES','CFG_PRICE_MODE','CFG_TAX_FREE'].forEach(function(code){
+  assert(hasAnyFinding(badTaxResult,code),'unreadable tax setting is reported: '+code);
+  assert(!hasFinding(badTaxResult,code,'cfg'),'unreadable tax setting only warns: '+code);
+});
+assert(/八/.test(badTaxResult.warnings.filter(function(item){return item.code==='CFG_TAX_RATES';})[0].message),'the warning names the bad rate');
 
 const finding = sb.makeValidationFinding('warning','CODE','sheet','message');
 assert.deepStrictEqual(Object.keys(finding).sort(), ['code','level','message','sheet']);
