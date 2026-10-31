@@ -1,6 +1,13 @@
 # 07 版本紀錄
 
-## 2026-10-31 — v171 收據照片自動讀取（開發中，未發布）
+## 2026-10-31 — v171 已上線 main（待 Bar 更新岡山 Apps Script、手機審查與 tag）
+
+- PR [#108](https://github.com/nick80912-dev/ai-native-projects/pull/108) 在 head `5c9e5ff` 的 sanity／browser-qa 全綠後合併進 `dev`（`b5d62e0`，釘住 head）；PR [#109](https://github.com/nick80912-dev/ai-native-projects/pull/109)（並帶 v170 發布紀錄 PR #107）合併 `dev` → `main`，merge commit **`e7becff`**。合併 tree `90c12d9` 與 `5c9e5ff` 相同。本機完整 Chromium 406 passed，只有已知只在本機失敗的兩項，沒有略過的測試。
+- **線上核對**：正式站 `sw.js` 為 `SW_VERSION='v171'`；全新 Chromium 開正式站，`APP_VERSION` 為 v171、只剩 `okayama-trip-v171` 快取，發布說明為「收據照片自動讀取」；快取內的 `ledger-receipts.js` 有 `normalizeRecognition`；收據自動辨識預設開啟；對岡山目前的 Apps Script（尚未更新）送 `recognizeReceipt`，回 `missing or invalid ledger fields`、沒有寫入，App 顯示「這份試算表的 Apps Script 還沒更新到能讀收據的版本，請手動輸入」；沒有 pageerror。Netlify deploy ID 未另查。
+- **還差 Bar 一步**：把 `apps-script/ledger-sync.gs` 貼到岡山 Apps Script 並部署新版本（網址不變），之後才會真的讀收據。
+- 回滾：依 `16_OPS_PLAYBOOK.md` §A1 Publish `commit_ref` = `da3cd89`（v170）的部署，再往前 bump。
+
+## 2026-10-31 — v171 收據照片自動讀取（已上線 main，見上）
 
 - **來源**：backlog #61（Bar 2026-10-30 裁定用雲端 AI；2026-10-31 併入讀收據上的日期時間；2026-10-31 Bar 申請好 Gemini API 金鑰並放進岡山 Apps Script 的指令碼屬性，回覆「完成，已使用免費版方式」——免費版的內容可能被 Google 用來改善產品，Bar 已知悉並接受照片傳到 Google 一次）。
 - **使用上**：
