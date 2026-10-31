@@ -606,7 +606,7 @@ html.font-huninn .brand .t{letter-spacing:0}
 .settings-identity-current{min-width:0;flex:1}.settings-identity-current small{display:block;color:var(--ink-faint);font-size:11px}.settings-identity-current b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--ink)}.settings-identity-actions{display:flex;gap:5px;flex:0 0 auto}.settings-identity-actions .btn{min-height:38px;padding:0 9px}.settings-identity-actions .settings-member-add{width:38px;padding:0;font-size:17px;line-height:1;border-radius:50%}
 .settings-menu-chevron{color:var(--ink-faint);font-size:20px}
 /* v74 設定根頁群組列表:一個群組一張卡,列與列之間只用分隔線,不再每項各包一張卡。 */
-.settings-group{margin-bottom:14px}.settings-group-title{font-size:12px;font-weight:900;color:var(--sea-deep);margin:0 0 6px 3px}.settings-group-card{background:var(--card);border:1px solid var(--line);border-radius:13px;box-shadow:var(--shadow);overflow:hidden}.settings-row-toggle{cursor:pointer}.settings-row{width:100%;min-height:52px;border:0;background:transparent;color:var(--ink);padding:8px 13px;text-align:left;font:inherit;display:flex;align-items:center;gap:10px}.settings-row-icon{flex:0 0 auto;display:flex;color:var(--sea-deep)}.settings-row-icon .app-icon{width:19px;height:19px}.settings-row-main{min-width:0;flex:1}.settings-row-main b{display:block;font-size:14px;font-weight:900;color:var(--ink)}.settings-row-main small{display:block;margin-top:2px;font-size:12px;font-weight:400;line-height:1.35;color:var(--ink-soft)}.settings-row-summary{flex:0 1 auto;min-width:0;font-size:12px;color:var(--ink-soft);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.settings-row input[type="checkbox"]{flex:0 0 auto;width:22px;height:22px}.settings-testmode-row .settings-row-main b{color:var(--ink)}
+.settings-group{margin-bottom:14px}.settings-group-title{font-size:12px;font-weight:900;color:var(--sea-deep);margin:0 0 6px 3px}.settings-group-card{background:var(--card);border:1px solid var(--line);border-radius:13px;box-shadow:var(--shadow);overflow:hidden}.settings-row-toggle{cursor:pointer}.settings-row-help{margin:-4px 13px 8px;font-size:12px}label.settings-row-main{cursor:pointer}.settings-row{width:100%;min-height:52px;border:0;background:transparent;color:var(--ink);padding:8px 13px;text-align:left;font:inherit;display:flex;align-items:center;gap:10px}.settings-row-icon{flex:0 0 auto;display:flex;color:var(--sea-deep)}.settings-row-icon .app-icon{width:19px;height:19px}.settings-row-main{min-width:0;flex:1}.settings-row-main b{display:block;font-size:14px;font-weight:900;color:var(--ink)}.settings-row-main small{display:block;margin-top:2px;font-size:12px;font-weight:400;line-height:1.35;color:var(--ink-soft)}.settings-row-summary{flex:0 1 auto;min-width:0;font-size:12px;color:var(--ink-soft);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.settings-row input[type="checkbox"]{flex:0 0 auto;width:22px;height:22px}.settings-testmode-row .settings-row-main b{color:var(--ink)}
 /* 分隔線必須排在 .settings-row 之後:兩者特異性相同,先寫的 border-top 會被 .settings-row 的 border:0 蓋掉。 */
 .settings-group-card>*+*{border-top:1px solid var(--line-soft)}
 .settings-options-hub{margin-bottom:12px}.settings-options-hub>.settings-help{margin:0 3px 9px}.settings-option-editor .ledger-option-group{border-top:0;margin-top:10px;padding-top:0}
@@ -641,6 +641,8 @@ html.font-huninn .brand .t{letter-spacing:0}
 .ledger-receipt-field{display:block}.ledger-receipt-label{display:block;font-size:13px;font-weight:800;color:var(--ink)}
 .ledger-receipt-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:-10px 0}
 .ledger-receipt-card{margin:12px 0 4px;padding:12px;border:1px solid var(--sea-deep);border-radius:10px;background:#fff}
+.ledger-receipt-overlay{position:fixed;inset:0;z-index:140;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(10,45,50,.45)}
+.ledger-receipt-overlay .ledger-receipt-card{width:min(100%,420px);max-height:calc(100vh - 32px);max-height:calc(100dvh - 32px);overflow-y:auto;margin:0;padding:16px;box-shadow:0 14px 36px rgba(0,0,0,.28)}
 .ledger-receipt-card.is-warning{border-color:var(--coral)}
 .ledger-receipt-card strong{display:block;font-size:14px;margin-bottom:6px;color:var(--ink)}
 .ledger-receipt-card-row{display:flex;justify-content:space-between;gap:12px;padding:5px 0;border-top:1px dashed var(--line);font-size:13px}
@@ -10164,7 +10166,8 @@ function renderSettingsRoot(ledgerSettings){
   var travelNotePending=travelNotePendingCount();
   var identityRow='<div class="settings-row"><span class="settings-row-icon">'+SETTINGS_ROW_ICONS.identity+'</span><span class="settings-identity-current"><small>目前身分</small><b id="settingsCurrentMember">'+escapeHtml(getCurrentMember()||'尚未選擇')+'</b></span><span class="settings-identity-actions"><button class="btn ghost settings-member-switch" onclick="openMemberSelector(false,false)">切換</button><button class="btn settings-member-add" aria-label="新增身分" onclick="openMemberSelector(false,true)">＋</button></span></div>';
   /* 「保留已確認結清」不常駐顯示,改掛在 checkbox 的可存取名稱上(設計規格 §2.2.3)。 */
-  var simpleRow='<label class="settings-row settings-row-toggle"><span class="settings-row-icon">'+SETTINGS_ROW_ICONS.settlement+'</span><span class="settings-row-main"><b>簡易結算模式</b><small>只看轉帳建議，不用按「我已付款」；別人標記付款時仍可確認</small></span><span class="settings-row-summary">'+(simpleOn?'已啟用':'已關閉')+'</span><input type="checkbox" '+(simpleOn?'checked ':'')+'aria-label="簡易結算模式（保留已確認結清）" onchange="setSimpleSettlementMode(this)"></label>';
+  /* v174(Bar 2026-10-31「設定內的簡易結算模式下的說明並未改成!資訊」):說明收進「!」,做法同 v169 結算面板 */
+  var simpleRow='<div class="settings-row settings-row-toggle"><span class="settings-row-icon">'+SETTINGS_ROW_ICONS.settlement+'</span><label class="settings-row-main" for="settingsSimpleSettlement"><b>簡易結算模式</b></label>'+simpleSettlementSettingsHelpButton()+'<span class="settings-row-summary">'+(simpleOn?'已啟用':'已關閉')+'</span><input id="settingsSimpleSettlement" type="checkbox" '+(simpleOn?'checked ':'')+'aria-label="簡易結算模式（保留已確認結清）" onchange="setSimpleSettlementMode(this)"></div>'+simpleSettlementSettingsHelpText();
   /* 測試模式關閉時完全不渲染 —— 不留佔位、不留隱藏節點(設計規格 §2.2.5)。
      根頁永遠不放可直接切換的 checkbox,避免誤觸整條團體帳軌道;要切換一律進控制頁。 */
   var testModeRow=lsGet('trip_ledger_test_mode',false)
@@ -10354,10 +10357,11 @@ function renderSettingsHealthPage(){
   return header+renderSettingsDataHealth();
 }
 var APP_RELEASE_NOTES=[
-  {version:'v174',date:'2026-10-31',title:'收據辨識結果改在表單最上方顯示',items:[
-    '讀完收據後，表單最上方出現結果卡片，逐項列出帶入的時間、金額、店名、支付方式、類別與品項；按「好」收起。',
+  {version:'v174',date:'2026-10-31',title:'收據辨識結果改用彈出視窗',items:[
+    '讀完收據後跳出結果視窗，逐項列出帶入的時間、金額、店名、支付方式、類別與品項；按「好」或點視窗外面關閉。',
     '讀錯時按「復原」，這次辨識改過的欄位全部改回去。',
-    '被收據填過、還沒改過的欄位旁邊標「收據」。'
+    '被收據填過、還沒改過的欄位旁邊標「收據」。',
+    '設定裡「簡易結算模式」的說明也收進「!」，點一下才顯示。'
   ]},
   {version:'v173',date:'2026-10-31',title:'收據也幫忙選支付方式與類別',items:[
     '收據上看得出用 PayPay、LINE Pay、TWQR（悠遊付、台灣Pay、icash Pay）等行動支付時，支付方式自動選「行動支付」；信用卡、現金同理。',
@@ -10843,6 +10847,19 @@ function mergedLedgerRecords(){
    個人裝置設定,不同步、各成員可獨立切換。只關閉互動／交握 UI 與面板高頻 polling;
    不改變資料語意、不改變結算計算,已確認 settlement 仍照常計入餘額。 */
 function isSimpleSettlementMode(){return !!lsGet(SIMPLE_SETTLEMENT_MODE_KEY,false);}
+var simpleSettlementSettingsHelpOpen=false;
+function simpleSettlementSettingsHelpButton(){
+  return '<button type="button" class="settings-info-button ledger-help-button" id="settingsSimpleHelpButton" aria-label="簡易結算模式說明" aria-controls="settingsSimpleHelp" aria-expanded="'+(simpleSettlementSettingsHelpOpen?'true':'false')+'" onclick="toggleSimpleSettlementSettingsHelp()"><span aria-hidden="true">!</span></button>';
+}
+function simpleSettlementSettingsHelpText(){
+  return '<p class="settings-help settings-row-help" id="settingsSimpleHelp" '+(simpleSettlementSettingsHelpOpen?'':'hidden')+'>只看轉帳建議，不用按「我已付款」；別人標記付款時仍可在團體結算確認。已確認的結清照常計入餘額。</p>';
+}
+function toggleSimpleSettlementSettingsHelp(){
+  simpleSettlementSettingsHelpOpen=!simpleSettlementSettingsHelpOpen;
+  var button=document.getElementById('settingsSimpleHelpButton'),text=document.getElementById('settingsSimpleHelp');
+  if(button)button.setAttribute('aria-expanded',simpleSettlementSettingsHelpOpen?'true':'false');
+  if(text)text.hidden=!simpleSettlementSettingsHelpOpen;
+}
 function setSimpleSettlementMode(input){
   var on=input&&input.checked!==undefined?!!input.checked:!!input;
   lsSet(SIMPLE_SETTLEMENT_MODE_KEY,on);
@@ -11296,6 +11313,7 @@ function openLedgerCorrectionSheet(recordId){
   });
 }
 function closeLedgerEntrySheet(restoreBackground){
+  removeLedgerReceiptDialog();
   var autoCompleted=shoppingLedgerAutoCompleted.ids.length&&shoppingLedgerAutoCompleted.sessionId===String(ledgerUiState.entrySessionId||'');
   if(ledgerUiState.correction){
     return ledgerUiWorkflow.dispatch({type:'close-correction',sessionId:ledgerUiState.entrySessionId,restoreBackground:restoreBackground!==false});
@@ -12146,38 +12164,55 @@ function applyLedgerReceiptItems(){
     rows:[['品項',found.items.map(function(item){return item.name;}).join('、')]],undo:snapshot};
   showLedgerReceiptCard(draft,draft.receiptScan);
 }
-/* v174(Bar 2026-10-31 選「表單頂端結果卡片」):辨識結果在表單最上方列出,不擋畫面、不打斷打字;
-   「復原」把這次辨識改過的欄位全部改回,「好」收起卡片 */
+/* v174(Bar 2026-10-31):辨識結果先做成表單頂端卡片,Bar 看過後改要彈出視窗。讀取中只在表單上方顯示一行;
+   讀完(成功、失敗、看不出內容)跳出視窗逐項列出,「好」或點視窗外面關閉,「復原」把這次辨識改過的欄位全部改回 */
+var ledgerReceiptCardSequence=0;
 function showLedgerReceiptCard(draft,result){
-  draft.receiptCard={open:true,status:result.status,message:result.message||'',rows:result.rows||[],notes:result.notes||[],undo:result.undo||null};
+  draft.receiptCard={id:++ledgerReceiptCardSequence,open:true,status:result.status,message:result.message||'',rows:result.rows||[],notes:result.notes||[],undo:result.undo||null};
   if(result.filled)draft.receiptFilled=result.filled;
   withLedgerSheetPosition(renderLedgerEntrySheet);
-  var card=document.getElementById('ledgerReceiptCard');
-  if(card&&typeof card.scrollIntoView==='function')card.scrollIntoView({block:'nearest'});
 }
 function dismissLedgerReceiptCard(){
   var draft=ledgerUiState.draft;if(!draft||!draft.receiptCard)return;
-  draft.receiptCard.open=false;withLedgerSheetPosition(renderLedgerEntrySheet);
+  draft.receiptCard.open=false;removeLedgerReceiptDialog();withLedgerSheetPosition(renderLedgerEntrySheet);
 }
 function undoLedgerReceiptRecognition(){
   var draft=ledgerUiState.draft,card=draft&&draft.receiptCard;if(!card||!card.undo)return;
   Object.keys(card.undo).forEach(function(key){draft[key]=card.undo[key];});
   draft.receiptFilled=null;
   draft.receiptScan={status:'done',message:'已復原收據帶入的內容',notes:[]};
-  draft.receiptCard={open:true,status:'undone',message:'已復原，收據帶入的內容都改回去了',rows:[],notes:[],undo:null};
+  draft.receiptCard={id:++ledgerReceiptCardSequence,open:true,status:'undone',message:'已復原，收據帶入的內容都改回去了',rows:[],notes:[],undo:null};
   withLedgerSheetPosition(renderLedgerEntrySheet);
 }
+/* 表單裡只放「讀取中」;結果改用 syncLedgerReceiptDialog() 的彈出視窗 */
 function renderLedgerReceiptCard(draft){
-  var card=draft&&draft.receiptCard;if(!card||!card.open)return '';
-  if(card.status==='reading')return '<div class="ledger-receipt-card" id="ledgerReceiptCard" role="status"><strong>正在讀取收據…</strong></div>';
+  var card=draft&&draft.receiptCard;if(!card||!card.open||card.status!=='reading')return '';
+  return '<div class="ledger-receipt-card ledger-receipt-reading" id="ledgerReceiptReading" role="status"><strong>正在讀取收據…</strong></div>';
+}
+function ledgerReceiptDialogHtml(card){
   var warning=card.status==='failed'||card.status==='empty';
   var title=card.status==='done'&&card.rows.length?'已依收據帶入（請確認）':card.message;
   var rows=card.rows.map(function(row){return '<div class="ledger-receipt-card-row"><span>'+escapeHtml(row[0])+'</span><b>'+escapeHtml(row[1])+'</b></div>';}).join('');
   var notes=card.notes.map(function(text){return '<p class="ledger-receipt-card-note">'+escapeHtml(text)+'</p>';}).join('');
   var undo=card.undo?'<button type="button" class="btn ghost sm" onclick="undoLedgerReceiptRecognition()">復原</button>':'';
   var retry=card.status==='failed'?'<button type="button" class="btn ghost sm" onclick="retryLedgerReceiptRecognition()">重試</button>':'';
-  return '<div class="ledger-receipt-card'+(warning?' is-warning':'')+'" id="ledgerReceiptCard" role="status"><strong>'+escapeHtml(title)+'</strong>'+rows+notes+
-    '<div class="ledger-receipt-card-actions">'+undo+retry+'<button type="button" class="btn sm" onclick="dismissLedgerReceiptCard()">好</button></div></div>';
+  return '<section class="ledger-receipt-card'+(warning?' is-warning':'')+'" id="ledgerReceiptCard" role="dialog" aria-modal="true" aria-labelledby="ledgerReceiptCardTitle"><strong id="ledgerReceiptCardTitle">'+escapeHtml(title)+'</strong>'+rows+notes+
+    '<div class="ledger-receipt-card-actions">'+undo+retry+'<button type="button" class="btn sm ledger-receipt-card-ok" onclick="dismissLedgerReceiptCard()">好</button></div></section>';
+}
+function removeLedgerReceiptDialog(){
+  var overlay=document.getElementById('ledgerReceiptDialog');if(overlay)overlay.remove();
+}
+function syncLedgerReceiptDialog(){
+  var draft=ledgerUiState.draft,card=draft&&draft.receiptCard,overlay=document.getElementById('ledgerReceiptDialog');
+  if(!card||!card.open||card.status==='reading'||!document.getElementById('ledgerEntrySheet')){if(overlay)overlay.remove();return;}
+  if(overlay&&overlay.getAttribute('data-card')===String(card.id))return;   // 同一個結果不重畫,焦點不跳
+  if(overlay)overlay.remove();
+  overlay=document.createElement('div');overlay.id='ledgerReceiptDialog';overlay.className='ledger-receipt-overlay';overlay.setAttribute('data-card',String(card.id));
+  overlay.innerHTML=ledgerReceiptDialogHtml(card);
+  overlay.addEventListener('click',function(event){if(event.target===overlay)dismissLedgerReceiptCard();});
+  overlay.addEventListener('keydown',function(event){if(event.key==='Escape'){event.preventDefault();event.stopPropagation();dismissLedgerReceiptCard();}});
+  document.body.appendChild(overlay);
+  var ok=overlay.querySelector('.ledger-receipt-card-ok');if(ok)ok.focus();
 }
 function renderLedgerReceiptScan(draft){
   var scan=draft&&draft.receiptScan;if(!scan)return '';
@@ -12266,6 +12301,7 @@ function renderLedgerEntrySheet(){
   overlay.innerHTML='<section class="ledger-sheet '+(draft.multi?'ledger-multi-entry ':'')+(correction?'ledger-correction-entry':'')+'" role="dialog" aria-modal="true" aria-labelledby="ledgerEntryTitle"><div class="ledger-sheet-head"><h2 id="ledgerEntryTitle">'+title+'</h2><button class="settings-close" aria-label="關閉" onclick="closeLedgerEntrySheet()">×</button></div><div class="ledger-entry-heading-row ledger-entry-divider">'+renderLedgerEntryMemberLine(draft,correction,editing)+(correction?'':'<label class="toggle-row ledger-sheet-toggle" for="ledgerMulti"><span>多品項</span><input id="ledgerMulti" type="checkbox" '+(draft.multi?'checked':'')+' onchange="setLedgerDraftMulti(this.checked)"></label>')+'</div>'+renderLedgerReceiptCard(draft)+renderLedgerEntrySegments(draft)+fields+standaloneDisclosures+(correction?ledgerCorrectionForm():'')+'<div class="ledger-sheet-actions">'+multiTotal+'<button id="ledgerSave" class="btn cta" onclick="'+saveAction+'">'+saveLabel+'</button>'+voidButton+saveAnother+cancel+'</div></section>';
   if(draft.multi)updateLedgerMultiPreview();else updateLedgerConversionPreview();
   hydrateLedgerReceiptImages(overlay);
+  syncLedgerReceiptDialog();
 }
 var ledgerDuplicateResolve=null;
 function confirmSharedLedgerDuplicate(record){
