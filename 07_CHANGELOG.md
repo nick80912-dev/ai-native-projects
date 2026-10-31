@@ -18,6 +18,9 @@
 - **測試**：
   - `tests/apps-script-settings.test.js`：辨識只回五個欄位、不寫分帳紀錄、不拿鎖；金鑰放 header 不放網址；預設與自訂模型、模型名稱檢查；沒有金鑰不呼叫 AI；圖片格式與大小；429、403、回覆不是 JSON、連不上；程式裡沒有金鑰；一般記帳仍拿鎖。`tests/ledger-receipts.test.js`：`normalizeRecognition()` 各種格式。
   - 新增 `tests/browser/receipt-recognition-v171.spec.js`（5 項，攔截送往 Apps Script 的 POST）：讀到的時間蓋過照片時間、帶入金額與店名並存成一般的帳、第二張照片不再送；自己打的金額店名不被蓋、改過的時間只提示並可改用；韓元旅程收到日圓收據不帶金額、台幣收據切到台幣；舊 Apps Script／免費次數用完／沒放金鑰的說明與重試、看不出收據內容；關閉或離線時不送、設定頁的開關。
+  - 開發中先抓到一個錯：照片存好後引用了不在範圍內的 `results`，加照片會失敗；瀏覽器測試發現後已修正（改用 `compressed`）。
+  - 本機完整 Chromium：406 passed，只有已知只在本機失敗的兩項（個人帳匯出下載檔名、sw-update-cache 離線 504），沒有略過的測試。
+  - 反向驗證：會蓋掉自己打的金額時「已經打的保留」一項失敗；加照片後不送辨識時「帶入空欄位」一項失敗。
 - **回滾**：合併前關閉 PR；發布後依 `16_OPS_PLAYBOOK.md` §A1 退回 v170 的 Netlify 部署（`commit_ref` `da3cd89`），再往前 bump。Apps Script 新版即使不退也不影響記帳（新增的 action 只在 App 呼叫時才用）。
 
 ## 2026-10-31 — v170 已上線 main（待 Bar 手機審查與 tag）
