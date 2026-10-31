@@ -217,9 +217,12 @@ var RECEIPT_CHOICE_PROMPT = [
   '  option (for example 信用卡): VISA, Mastercard / Master, JCB, American Express / AMEX, Diners, UnionPay / 銀聯, クレジット,',
   '  カード, card numbers like ****1234. 現金 / お預り / お釣り / cash are the cash option; transit IC cards',
   '  (Suica, ICOCA, PASMO) are the Suica option when the list has one.',
-  '- category: what was bought, copied exactly from this list: %CAT%. For example restaurants, cafes, food and drinks are the',
-  '  food option (餐飲); trains, buses, taxis, fuel, tolls and parking are the transport option (交通); tickets and admissions',
-  '  are 票券. Use "" when unsure or nothing fits.',
+  '- category: what was bought, copied exactly from this list: %CAT%. When the receipt lists the items, decide by the items',
+  '  themselves rather than the shop type; if items belong to different categories, pick the one with the largest share of',
+  '  the total. For example restaurants, cafes, food and drinks are the food option (餐飲); trains, buses, taxis, fuel, tolls',
+  '  and parking are the transport option (交通); tickets and admissions are 票券; souvenir and gift shops (お土産, 伴手禮,',
+  '  名產) are the shopping option (購物). The list may include categories the user created; choose one of them when its',
+  '  name fits better than the defaults. Use "" when unsure or nothing fits.',
   'Add "payMethod" and "category" to the same JSON object.'
 ].join('\n');
 var RECEIPT_MAX_CHOICES = 30;

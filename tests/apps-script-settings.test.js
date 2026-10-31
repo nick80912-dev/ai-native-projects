@@ -424,6 +424,11 @@ assert.ok(infoSource.length > 0 && infoSource.indexOf('LockService') < 0 && info
   /* Bar 2026-10-31:「VISA、JCB、Master Card 等支付方式就是信用卡」 */
   ['VISA','Mastercard','JCB','American Express','銀聯'].forEach(function(name){ assert.ok(prompt.indexOf(name) > 0, '提示把 '+name+' 歸為信用卡'); });
   assert.ok(/card\s+option \(for example 信用卡\)/.test(prompt.replace(/\n\s*/g, ' ')), '卡片對應「信用卡」');
+  /* Bar 2026-10-31:紀念品店、伴手禮歸購物;有列品項時依品項判斷;自訂類別也會參考 */
+  const flat = prompt.replace(/\n\s*/g, ' ');
+  assert.ok(/souvenir and gift shops \(お土産, 伴手禮, 名產\) are the shopping option \(購物\)/.test(flat), '伴手禮 → 購物');
+  assert.ok(/decide by the items themselves/.test(flat) && /largest share of the total/.test(flat), '依收據上的品項、占總額最多的類別');
+  assert.ok(/categories the user created/.test(flat), '自訂類別也是候選');
   const outside = receiptApp({GEMINI_API_KEY:'k'}, aiReply('{"payMethod":"PayPay","category":"Food"}'));
   assert.strictEqual(outside.call(Object.assign({action:'recognizeReceipt', image}, lists)).receipt.payMethod, '', '清單外的答案不採用');
   assert.strictEqual(receiptApp({GEMINI_API_KEY:'k'}, aiReply('{"category":"Food"}')).call(Object.assign({action:'recognizeReceipt', image}, lists)).receipt.category, '');
