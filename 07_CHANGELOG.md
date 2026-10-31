@@ -17,6 +17,8 @@
 - **測試**：
   - `tests/weather-rain-window.test.js`：曼谷（+7）、檀香山（−10）的「現在之後」；沒有時差欄位的舊快取照舊；`fetchWeather` 用 `timezone=auto` 並存下時差；更新時間跟手機時區、不寫「日本時間」。`tests/weather-freshness.test.js` 同步改成手機時區。`tests/ledger-dual-track.test.js`：日圓旅程有 Suica、韓元旅程沒有、已存的清單不動。`tests/ledger-entry-settings.test.js` 沙盒補上 `defaultLedgerPayMethods`。
   - 新增 `tests/browser/beyond-japan-v170.spec.js`（3 項）：攔截 Open-Meteo，請求是 `timezone=auto`、曼谷的降雨機率依當地時間算成 40%（照舊當日本時間會變 10%）；支付方式在岡山有 Suica、韓元旅程沒有、已存清單不動、恢復預設照這趟；美金旅程的明細是 `US$12.50`／`NT$400`／優惠券 `US$0.50`，岡山仍是 `¥1,500`／`NT$315`。`weather-freshness`、`today-live-info` 的讀屏文字改成「手機取得時間 13:30」，模擬回應補上 `utc_offset_seconds`。
+  - 本機完整 Chromium：401 passed，只有已知只在本機失敗的兩項（個人帳匯出下載檔名、sw-update-cache 離線 504），沒有略過的測試。
+  - 反向驗證：天氣時差一律當 +09:00 時曼谷那一項失敗；支付方式預設不看旅程時 Suica 那一項失敗。
 - **回滾**：合併前關閉 PR；發布後依 `16_OPS_PLAYBOOK.md` §A1 退回 v169 的 Netlify 部署（`commit_ref` `0c4fe6b`），再往前 bump。岡山（JPY）資料與畫面不變（天氣「更新於」改跟手機時區，手機在日本時相同）。
 
 ## 2026-10-31 — v169 已上線 main（待 Bar 手機審查與 tag）
