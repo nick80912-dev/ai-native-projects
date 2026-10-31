@@ -19,6 +19,7 @@ const draftSandbox={
   appNow(){return new Date();},
   timestampDate(value){return new Date(Number(value));},
   currentLedgerSettings(){return {exchangeRate:0.2,defaultCurrency:'JPY'};},
+  tripTaxSettings(){return {enabled:true,rates:[10,8],defaultRate:10,priceMode:'included',taxFree:true,japaneseLabels:true};},   // v169:岡山(日圓)的稅設定
   registeredMembersForCurrentMode(){return [{name:'Bar'},{name:'Amy'}];},
   ledgerCategoryStore:{all(){return ['餐飲','交通'];}},
   ledgerPayMethodStore:{all(){return ['現金','Suica'];}},
@@ -80,6 +81,7 @@ const stateSandbox={
   ledgerDateInputValue(){return '2026/07/19';},ledgerTimeInputValue(){return '12:00';},
   withLedgerSheetPosition(renderFn){return renderFn();},
   currentLedgerSettings(){return {exchangeRate:0.2,defaultCurrency:'JPY'};},
+  tripTaxSettings(){return {enabled:true,rates:[10,8],defaultRate:10,priceMode:'included',taxFree:true,japaneseLabels:true};},
   registeredMembersForCurrentMode(){return [{name:'Bar',key:'bar'},{name:'Amy',key:'amy'}];},
   ledgerCategoryStore:{all(){return ['餐飲','交通'];}},
   ledgerPayMethodStore:{all(){return ['現金','Suica'];}},

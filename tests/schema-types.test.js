@@ -22,8 +22,9 @@ assert.strictEqual(schema.version, '3.1 (2026-10-08)');
    連接新旅程時由 trip-source.js 強制檢查。 */
 /* v168(backlog #62,不限日本):Currency、Exchange Rate、Ledger Default Currency 也改為選填 ——
    Currency 沒填是 JPY;匯率可在 App 補填後全團共用(Bar 2026-10-31);結算幣別沒填是當地幣別。 */
-const OPTIONAL_CFG_KEYS=['tripId','ledgerEndpoint','weatherRegionsGid','currency','exchangeRate','ledgerDefaultCurrency'];
-[['tripId','Trip ID'],['ledgerEndpoint','Ledger Endpoint'],['weatherRegionsGid','Weather Regions GID'],['currency','Currency'],['exchangeRate','Exchange Rate'],['ledgerDefaultCurrency','Ledger Default Currency']].forEach(function(pair){
+/* v169(稅每趟自己設定,Bar 2026-10-31):Tax Rates、Price Mode、Tax Free 都是選填,沒填時日圓旅程照舊。 */
+const OPTIONAL_CFG_KEYS=['tripId','ledgerEndpoint','weatherRegionsGid','currency','exchangeRate','ledgerDefaultCurrency','taxRates','taxPriceMode','taxFree'];
+[['tripId','Trip ID'],['ledgerEndpoint','Ledger Endpoint'],['weatherRegionsGid','Weather Regions GID'],['currency','Currency'],['exchangeRate','Exchange Rate'],['ledgerDefaultCurrency','Ledger Default Currency'],['taxRates','Tax Rates'],['taxPriceMode','Price Mode'],['taxFree','Tax Free']].forEach(function(pair){
   const key = schema.sheets.cfg.keys.find(function(candidate){ return candidate.field === pair[0]; });
   assert(key, pair[1] + ' key exists');
   assert.strictEqual(key.header, pair[1]);
