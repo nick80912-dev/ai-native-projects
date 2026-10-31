@@ -1,5 +1,18 @@
 # 07 版本紀錄
 
+## 2026-10-31 — v177 收據也讀出稅額
+
+- **來源**：Bar 2026-10-31：「或者是把稅額也識別並列出來，之後紀錄退稅金額多少也比較方便。因為未來日本也要改成統一機場或是APP退稅…」。查證：日本 2026/11/1 起免稅店改「リファンド方式」，結帳先付含稅價，出境時海關確認帶出後才退稅；退款由購買的店家或其委託的退稅業者處理（退到卡、App、銀行或在出境港領現金，各家不同），不是統一在機場。Bar 選「兩版都做」：v177 先讀出稅額；v178 再做每筆「預計退稅」、退稅清單、離境前提醒與實際退款（抵掉花費、先只做個人帳）。
+- **使用上**：
+  - 收據辨識多讀「稅額」（各稅率的消費稅合計）。一般收據在結果視窗列「收據上的稅額 ¥X」，不動備註。
+  - 可退稅的收據，備註寫「可退稅（結帳時未扣稅，需另外辦理），稅額 ¥X」；「復原」會改回。
+  - 結帳時已扣稅（免稅）的收據沒有稅可退，不列稅額；收據幣別不是這趟的當地幣別或台幣時也不列。
+- **做法**：Apps Script `recognizeReceipt` 多回 `taxAmount`（正數或 null），提示補上日本 11 月起先付稅、出境後再退的收據（免税対象、免税販売、Tax Refund、リファンド）算 `refundable`；`normalizeRecognition()` 再檢查 `taxAmount`，只讀到稅額也算讀到內容；殼層 `applyLedgerReceiptRecognition()` 列稅額並寫進可退稅備註。帳本欄位不變。
+- **版本**：forward bump v176→v177；`builtin-snapshot.js` 以 v176 asset 離線重產，除版本外不變。發布說明視窗為 `v177` + `['v176','v175','v174','v173']`（v172 滾出）。`tests/trip-lifecycle-wiring.test.js` 加入已發布 v176 三件組的 hash。
+- **Apps Script 要再換一次**：岡山試算表的 Apps Script 換成最新 `apps-script/ledger-sync.gs` 並部署新版本，不需要重新授權（v176 還沒換的話，換一次就兩版都有）。
+- **測試**：`tests/apps-script-settings.test.js`、`tests/ledger-receipts.test.js` 加入 `taxAmount`；`tests/browser/receipt-recognition-v171.spec.js` 新增 2 項（可退稅備註含稅額與復原；一般收據只列稅額、免稅與外幣不列）。
+- **回滾**：合併前關閉 PR；發布後依 `16_OPS_PLAYBOOK.md` §A1 退回 v176 的 Netlify 部署（`commit_ref` `24b5ff3`），再往前 bump。
+
 ## 2026-10-31 — v176 已上線 main（待 Bar 手機審查與 tag）
 
 - PR [#122](https://github.com/nick80912-dev/ai-native-projects/pull/122) 在 head `75116ef` 的 sanity／browser-qa 全綠後合併進 `dev`（`31f2e36`，釘住 head）；PR [#123](https://github.com/nick80912-dev/ai-native-projects/pull/123)（並帶 v175 發布紀錄 PR #121）合併 `dev` → `main`，merge commit **`24b5ff3`**。合併 tree `740e906` 與 `31f2e36` 相同。本機完整 Chromium 428 passed，只有已知只在本機失敗的兩項，沒有略過的測試。

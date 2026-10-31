@@ -175,9 +175,10 @@
       if(number!==null&&number<=100&&taxRates.indexOf(number)<0&&taxRates.length<3)taxRates.push(Math.round(number*10)/10);
     });
     var pricesIncludeTax=typeof source.pricesIncludeTax==='boolean'?source.pricesIncludeTax:null;
+    var taxAmount=positive(source.taxAmount);   // v177：收據上的稅額合計
     return {date:date,time:time,total:total,currency:currency,storeName:storeName,payMethod:payMethod,category:category,items:items,discount:discount,
-      taxFree:taxFree,taxRates:taxRates,pricesIncludeTax:pricesIncludeTax,
-      found:!!(date||total!==null||storeName||payMethod||category||items.length||taxFree||taxRates.length)};
+      taxFree:taxFree,taxRates:taxRates,pricesIncludeTax:pricesIncludeTax,taxAmount:taxAmount,
+      found:!!(date||total!==null||storeName||payMethod||category||items.length||taxFree||taxRates.length||taxAmount!==null)};
   }
 
   return {

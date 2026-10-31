@@ -214,16 +214,16 @@ GitHub Pages URL：https://nick80912-dev.github.io/ai-native-projects/
 curl -s https://trippilot-jp.netlify.app/sw.js | grep "^var SW_VERSION"
 
 # 2. Current immutable generation 三件組(下方路徑是 current generation,與 sw.js 的 SW_VERSION 相同,升版時隨活文件一起更新)
-curl -s https://trippilot-jp.netlify.app/shell/v176/app-version.js
-curl -s https://trippilot-jp.netlify.app/shell/v176/index.html | grep BUILTIN_HTML_VERSION
-curl -s https://trippilot-jp.netlify.app/shell/v176/builtin-snapshot.js | grep BUILTIN_ASSET_VERSION
+curl -s https://trippilot-jp.netlify.app/shell/v177/app-version.js
+curl -s https://trippilot-jp.netlify.app/shell/v177/index.html | grep BUILTIN_HTML_VERSION
+curl -s https://trippilot-jp.netlify.app/shell/v177/builtin-snapshot.js | grep BUILTIN_ASSET_VERSION
 
 # 2b. Root bridge 必須仍是 predecessor v110，不得誤升為 current
 curl -s https://trippilot-jp.netlify.app/app-version.js
 
 # 3. header 行為(測試站刪除後,這是唯一驗得到的地方;GitHub Pages 無法重現)
 curl -sI https://trippilot-jp.netlify.app/sw.js | grep -i cache-control
-curl -sI https://trippilot-jp.netlify.app/shell/v176/app-version.js | grep -i cache-control
+curl -sI https://trippilot-jp.netlify.app/shell/v177/app-version.js | grep -i cache-control
 
 # 4. 前一代 generation 必須仍可服務(ADR 0019)
 #    部署換代的當下,還沒裝完前一代的裝置可能仍在抓它;回 404 會讓那次 install 失敗。
@@ -281,7 +281,7 @@ node tools/refresh-builtin-snapshot.js
 npx playwright test tests/browser/trip-three-scenarios.spec.js
 ```
 
-`--write` 會在 current generation 目錄（目前為 `shell/v176/`）staging `index.html` marker 與 `builtin-snapshot.js`，fsync／close／回讀後才進行雙檔替換；任一步失敗都將兩個 target 回復為原始 bytes。root v110 bridge 不由此工具修改。App、SW 或 asset 升版時也必須透過本工具更新 marker／asset 版本。最後一次 preview 必須顯示已一致。提交前另跑完整 repo gate。
+`--write` 會在 current generation 目錄（目前為 `shell/v177/`）staging `index.html` marker 與 `builtin-snapshot.js`，fsync／close／回讀後才進行雙檔替換；任一步失敗都將兩個 target 回復為原始 bytes。root v110 bridge 不由此工具修改。App、SW 或 asset 升版時也必須透過本工具更新 marker／asset 版本。最後一次 preview 必須顯示已一致。提交前另跑完整 repo gate。
 
 ### G4. 權責與邊界
 

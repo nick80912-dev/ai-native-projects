@@ -532,3 +532,40 @@ test('改成多品項並帶入 sets 未稅 from the receipt too',async({page})=>
   expect(await draftTax(page)).toMatchObject({preset:'10',mode:'excluded'});
   await expect(cardNotes(page)).toHaveCount(0);
 });
+
+/* v177(Bar 2026-10-31「把稅額也識別並列出來，之後紀錄退稅金額多少也比較方便」;日本 11/1 起先付稅、出境後再退) */
+test('the tax amount is listed; a refundable receipt keeps it in 備註',async({page})=>{
+  await boot(page,null);
+  await page.evaluate(()=>{window.__aiReply={ok:true,receipt:{total:12001,currency:'JPY',storeName:'ドラッグストア',taxFree:'refundable',taxAmount:1091}};});
+  await openForm(page);
+  await page.evaluate(()=>window.__addReceipt(null));
+  await expect.poll(()=>scanMessage(page)).toBe('已依收據帶入金額 ¥12,001、店名「ドラッグストア」、備註「可退稅（結帳時未扣稅，需另外辦理），稅額 ¥1,091」，請確認');
+  expect((await draftTax(page)).note).toBe('可退稅（結帳時未扣稅，需另外辦理），稅額 ¥1,091');
+  await expect(card(page).locator('.ledger-receipt-card-row')).toContainText(['備註可退稅（結帳時未扣稅，需另外辦理），稅額 ¥1,091']);
+  await expect(cardNotes(page)).toHaveCount(0);
+  /* 復原把備註改回 */
+  await card(page).getByRole('button',{name:'復原'}).click();
+  expect((await draftTax(page)).note).toBe('');
+});
+
+test('an ordinary receipt shows the tax amount without touching 備註; a tax-free one has no tax line',async({page})=>{
+  await boot(page,null);
+  await page.evaluate(()=>{window.__aiReply={ok:true,receipt:{total:1078,currency:'JPY',taxAmount:98}};});
+  await openForm(page);
+  await page.evaluate(()=>window.__addReceipt(null));
+  await expect.poll(()=>scanMessage(page)).toBe('已依收據帶入金額 ¥1,078，請確認');
+  await expect(cardNotes(page)).toHaveText('收據上的稅額 ¥98');
+  expect((await draftTax(page)).note).toBe('');
+  await closeReceiptDialog(page);
+  /* 結帳時已扣稅:沒有稅可退,不列稅額 */
+  await page.evaluate(()=>{window.__aiReply={ok:true,receipt:{taxFree:'deducted',taxAmount:98}};});
+  await page.evaluate(()=>retryLedgerReceiptRecognition());
+  await expect.poll(()=>scanMessage(page)).toBe('已依收據帶入備註「免稅（結帳時已扣稅）」，請確認');
+  await expect(cardNotes(page)).toHaveCount(0);
+  /* 收據幣別不是這趟的:不列稅額 */
+  await closeReceiptDialog(page);
+  await page.evaluate(()=>{window.__aiReply={ok:true,receipt:{currency:'USD',taxAmount:3.5}};});
+  await page.evaluate(()=>retryLedgerReceiptRecognition());
+  await expect.poll(()=>scanMessage(page)).toBe('收據讀好了，表單已經有填，沒有改動');
+  await expect(cardNotes(page)).toHaveCount(0);
+});
