@@ -206,8 +206,10 @@
           if(!validEndpoint(endpoint))throw failure('CFG_ENDPOINT','TripConfig 的 Ledger Endpoint 不是已部署的 Apps Script 網址');
           var start=text(cfg.startdate),end=text(cfg.enddate);
           if(!DATE_RE.test(start)||!DATE_RE.test(end)||start>end)throw failure('CFG_DATES','TripConfig 的 Start Date／End Date 需為 YYYY-MM-DD，且開始不晚於結束');
-          var rate=Number(cfg.exchangeRate),currency=text(cfg.ledgerDefaultCurrency).toUpperCase();
-          if(!(rate>0)||(currency!=='JPY'&&currency!=='TWD'))throw failure('CFG_CURRENCY','TripConfig 的匯率需大於 0，結算幣別只支援 JPY 或 TWD');
+          /* v168(backlog #62):不限日本。匯率可以不填(之後在 App 補填);結算幣別是台幣或當地幣別 */
+          var rateText=text(cfg.exchangeRate),rate=Number(rateText),local=text(cfg.currency).toUpperCase()||'JPY',currency=text(cfg.ledgerDefaultCurrency).toUpperCase();
+          if(!/^[A-Z]{3}$/.test(local))throw failure('CFG_CURRENCY','TripConfig 的 Currency 需為三個英文字母的幣別代碼（例如 KRW、USD）');
+          if((rateText&&!(rate>0))||(currency&&currency!=='TWD'&&currency!==local))throw failure('CFG_CURRENCY','TripConfig 的匯率需大於 0（也可以不填，之後在 App 補填），結算幣別只能是台幣或這趟的當地幣別');
           return Promise.resolve().then(function(){return options.fetchInfo(endpoint);}).catch(function(error){
             throw failure('INFO_FAILED','無法連到這份試算表的 Apps Script，請確認已部署為網頁應用程式',error);
           }).then(function(info){

@@ -1,3 +1,5 @@
+const {installCurrency}=require('./support/currency');
+const currencyHtml=()=>require('./support/version').appHtml();
 const assert=require('assert');
 const vm=require('vm');
 const TripBuyToLedger=require('../buy-to-ledger.js');
@@ -26,7 +28,7 @@ function loadModule(){
     timestampDate(value){return new Date(Number(value));},AppLog:{repo(){},sync(){}},
     renderSplit(){},updateLedgerPendingStatus(){}
   };
-  vm.createContext(sandbox);
+  vm.createContext(sandbox);installCurrency(sandbox,currencyHtml());
   vm.runInContext(source.slice(start,end),sandbox);
   return sandbox;
 }
@@ -47,7 +49,7 @@ const modeSandbox={
   updateLedgerMultiPreview(){},updateLedgerSaveCount(){},withLedgerSheetPosition(){},renderLedgerEntrySheet(){},
   JSON,String,Object,Array
 };
-vm.createContext(modeSandbox);
+vm.createContext(modeSandbox);installCurrency(modeSandbox,currencyHtml());
 vm.runInContext(uiSource.slice(participantHelperStart,participantHelperEnd)+uiSource.slice(itemModeStart,itemModeEnd),modeSandbox);
 assert.strictEqual(modeSandbox.sameLedgerParticipantSelection(['Amy','Bar'],['bar',' Amy ']),false,'participant identity remains case-sensitive');
 assert.strictEqual(modeSandbox.sameLedgerParticipantSelection(['Amy'],['Amy','Bar']),false);

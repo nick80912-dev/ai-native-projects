@@ -1,12 +1,13 @@
 {
   "assets": [
-    "shell/v167/app-version.js",
-    "shell/v167/builtin-snapshot.js",
+    "shell/v168/app-version.js",
+    "shell/v168/builtin-snapshot.js",
     "navigation-intent.js",
     "diagnostic-impact.js",
     "today-view.js",
     "shopping-photo-store.js",
     "ledger-receipts.js",
+    "trip-currency.js",
     "buy-to-ledger.js",
     "ledger-ui-state.js",
     "shopping-ui-state.js",

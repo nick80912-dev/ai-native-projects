@@ -241,6 +241,18 @@ assert(hasFinding(sb.validateSnapshotData(unsupportedMode,validRaw(),schema()),'
 
 const invalidLedgerCurrency=validDb(); invalidLedgerCurrency.cfg.ledgerDefaultCurrency='USD';
 assert(hasFinding(sb.validateSnapshotData(invalidLedgerCurrency,validRaw(),schema()),'CFG_LEDGER_CURRENCY','cfg'),'unsupported ledger currency is blocked');
+/* v168(backlog #62):不限日本 */
+const noRate=validDb(); noRate.cfg.exchangeRate='';
+assert(!hasFinding(sb.validateSnapshotData(noRate,validRaw(),schema()),'CFG_EXCHANGE_RATE','cfg'),'a blank exchange rate no longer blocks the Sheet (filled in on the phone)');
+const krwTrip=validDb(); krwTrip.cfg.currency='KRW'; krwTrip.cfg.ledgerDefaultCurrency='KRW';
+const krwFindings=sb.validateSnapshotData(krwTrip,validRaw(),schema());
+assert(!hasFinding(krwFindings,'CFG_LEDGER_CURRENCY','cfg')&&!hasFinding(krwFindings,'CFG_CURRENCY','cfg'),'a KRW trip may settle in KRW');
+const krwJpy=validDb(); krwJpy.cfg.currency='KRW'; krwJpy.cfg.ledgerDefaultCurrency='JPY';
+assert(hasFinding(sb.validateSnapshotData(krwJpy,validRaw(),schema()),'CFG_LEDGER_CURRENCY','cfg'),'settling in a third currency is blocked');
+const noLedgerCurrency=validDb(); noLedgerCurrency.cfg.ledgerDefaultCurrency='';
+assert(!hasFinding(sb.validateSnapshotData(noLedgerCurrency,validRaw(),schema()),'CFG_LEDGER_CURRENCY','cfg'),'a blank settlement currency means the local currency');
+const badCode=validDb(); badCode.cfg.currency='韓元';
+assert(hasFinding(sb.validateSnapshotData(badCode,validRaw(),schema()),'CFG_CURRENCY','cfg'),'Currency must be a three-letter code');
 
 const finding = sb.makeValidationFinding('warning','CODE','sheet','message');
 assert.deepStrictEqual(Object.keys(finding).sort(), ['code','level','message','sheet']);

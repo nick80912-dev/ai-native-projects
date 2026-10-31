@@ -1,5 +1,7 @@
 /**
- * 岡山旅行 App：分帳 append-only 寫入與兩項共用設定更新端點。
+ * 旅程 App：分帳 append-only 寫入與兩項共用設定更新端點。
+ * v168(backlog #62):不限日本 —— 幣別是 TripConfig 的 Currency(沒填是 JPY);金額可有兩位小數(美金記到分);
+ * 「分帳紀錄」第 6 欄標題可以是「日幣」(岡山)或「當地幣」(新範本)。岡山的部署不必更新也能繼續用。
  * GitHub 內此檔為唯一維護來源；部署內容必須與此檔一致。
  */
 var LEDGER_COLUMNS = 21;
@@ -9,6 +11,32 @@ var LEDGER_HEADERS = [
   '分攤成員','支付方式','紀錄類型','目標紀錄ID','刪除原因','批次ID',
   '店名','取代紀錄ID','輸入幣別','免稅品','價格方式','稅率','優惠券金額'
 ];
+/* v168:第 6 欄(index 5)的新標題 */
+var LEDGER_HEADER_ALIASES = {5: ['當地幣']};
+
+function ledgerHeaderMatches(index, text) {
+  var value = String(text).trim();
+  if (value === LEDGER_HEADERS[index]) return true;
+  return (LEDGER_HEADER_ALIASES[index] || []).indexOf(value) >= 0;
+}
+
+/* v168:這趟的當地幣別(TripConfig Currency,沒填是 JPY) */
+function tripLocalCurrency() {
+  var cfg = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('TripConfig');
+  var last = cfg ? cfg.getLastRow() : 0;
+  var rows = last ? cfg.getRange(1, 1, last, 2).getValues() : [];
+  for (var i = 0; i < rows.length; i++) {
+    if (String(rows[i][0]).trim() === 'Currency') {
+      var code = String(rows[i][1]).trim().toUpperCase();
+      return /^[A-Z]{3}$/.test(code) ? code : 'JPY';
+    }
+  }
+  return 'JPY';
+}
+
+function tripCurrencyAllowed(code) {
+  return code === 'TWD' || code === tripLocalCurrency();
+}
 
 function doPost(e) {
   var lock = LockService.getScriptLock();
@@ -83,7 +111,7 @@ function tripInfo() {
       var header = ledger.getRange(1, 1, 1, LEDGER_COLUMNS).getValues()[0];
       headerOk = true;
       for (var c = 0; c < LEDGER_COLUMNS; c++) {
-        if (String(header[c]).trim() !== LEDGER_HEADERS[c]) { headerOk = false; break; }
+        if (!ledgerHeaderMatches(c, header[c])) { headerOk = false; break; }
       }
     }
     return out({ok:true,tripId:tripId,ledgerHeaderOk:headerOk});
@@ -104,7 +132,7 @@ function appendLedger(d) {
   var taxRate = d.taxRate === undefined || d.taxRate === '' ? '' : Number(d.taxRate);
   var couponAmount = d.couponAmount === undefined || d.couponAmount === '' ? '' : Number(d.couponAmount);
   var isTaxFree = d.isTaxFree === undefined || d.isTaxFree === '' ? '' : d.isTaxFree;
-  if (inputCurrency && inputCurrency !== 'JPY' && inputCurrency !== 'TWD') return out({ok:false,error:'invalid inputCurrency'});
+  if (inputCurrency && !tripCurrencyAllowed(inputCurrency)) return out({ok:false,error:'invalid inputCurrency'});
   if (priceMode && priceMode !== 'included' && priceMode !== 'excluded') return out({ok:false,error:'invalid priceMode'});
   if (isTaxFree !== '' && typeof isTaxFree !== 'boolean') return out({ok:false,error:'invalid isTaxFree'});
   if (taxRate !== '' && (!isFinite(taxRate) || taxRate < 0 || taxRate > 100)) return out({ok:false,error:'invalid taxRate'});
@@ -133,7 +161,7 @@ function updateSettings(d) {
   var rate = Number(d.exchangeRate);
   var currency = String(d.defaultCurrency || '').toUpperCase();
   if (!isFinite(rate) || rate <= 0) return out({ok:false,error:'invalid exchangeRate'});
-  if (currency !== 'JPY' && currency !== 'TWD') {
+  if (!tripCurrencyAllowed(currency)) {
     return out({ok:false,error:'invalid defaultCurrency'});
   }
 

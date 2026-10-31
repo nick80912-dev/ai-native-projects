@@ -1,3 +1,5 @@
+const {installCurrency}=require('./support/currency');
+const currencyHtml=()=>require('./support/version').appHtml();
 const assert = require('assert');
 const vm = require('vm');
 const TripBuyToLedger = require('../buy-to-ledger.js');
@@ -12,7 +14,7 @@ function plain(value){ return JSON.parse(JSON.stringify(value)); }
    TEST banner 的 deep link 是本次改版最不該失效的路徑,必須用行為證明。 */
 function loadSettingsRouting(source){
   const sandbox = {};
-  vm.createContext(sandbox);
+  vm.createContext(sandbox);installCurrency(sandbox,currencyHtml());
   vm.runInContext(
     extractDeclaration(source,'SETTINGS_PAGE_IDS')+'\n'+
     extractDeclaration(source,'SETTINGS_LEGACY_TARGETS')+'\n'+
@@ -28,7 +30,7 @@ function renderCustomOptionsHub(source){
     ledgerPayMethodStore:{all(){return ['現金','信用卡'];}},
     shoppingUnitStore:{all(){return ['個','件','盒','包'];}}
   };
-  vm.createContext(sandbox);
+  vm.createContext(sandbox);installCurrency(sandbox,currencyHtml());
   vm.runInContext(
     "var SHOPPING_DEFAULT_UNIT='個';\n"+
     extractFunction(source,'escapeHtml')+'\n'+
@@ -51,7 +53,7 @@ function renderCustomOptionEditor(source,page){
     ledgerPayMethodStore:{all(){return ['現金'];}},
     shoppingUnitStore:{all(){return ['個','件'];}}
   };
-  vm.createContext(sandbox);
+  vm.createContext(sandbox);installCurrency(sandbox,currencyHtml());
   vm.runInContext(
     "var SHOPPING_DEFAULT_UNIT='個';\n"+
     extractFunction(source,'escapeHtml')+'\n'+
@@ -99,7 +101,7 @@ function loadOptionSettingsActions(source){
     routes,
     values
   };
-  vm.createContext(sandbox);
+  vm.createContext(sandbox);installCurrency(sandbox,currencyHtml());
   vm.runInContext(
     extractFunction(source,'settingsOptionPageForKind')+'\n'+
     extractFunction(source,'ledgerOptionStoreForKind')+'\n'+
@@ -157,7 +159,7 @@ function loadModule(fetchImpl){
     settingsRenders:0,
     splitRenders:0
   };
-  vm.createContext(sandbox);
+  vm.createContext(sandbox);installCurrency(sandbox,currencyHtml());
   vm.runInContext(source.slice(start,end),sandbox);
   sandbox.__htmlSource = source;
   return sandbox;
@@ -278,7 +280,8 @@ function response(payload){
   assert(html.includes("header:'Ledger Default Currency'"),'internal Ledger Default Currency contract remains unchanged');
   assert(settingsLedgerPageSource.includes('saveLedgerSettings'),'Settings saves through the confirmed cloud settings helper');
   assert(settingsLedgerPageSource.includes('>匯率<'),'Settings shows the localized exchange-rate label');
-  assert(settingsLedgerPageSource.includes('1 日幣可換算多少台幣'),'Settings explains the exchange-rate direction');
+  /* v168:說明用這趟的當地幣別名稱(岡山仍是「1 日幣可換算多少台幣」) */
+  assert(settingsLedgerPageSource.includes("<br>1 '+escapeHtml(ledgerCurrencyInfo('JPY').name)+'可換算多少台幣"),'Settings explains the exchange-rate direction with the trip currency');
   assert(settingsLedgerPageSource.includes('<b>結算幣別</b>'),'Settings shows the settlement-currency label');
   assert(settingsLedgerPageSource.includes('全團共用：團體帳以這個幣別結算'),'Settings explains the currency applies to the whole group');
   assert(!settingsLedgerPageSource.includes('預設輸入幣別'),'the half-true default-input-only label is gone');
