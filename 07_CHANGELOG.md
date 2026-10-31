@@ -1,5 +1,14 @@
 # 07 版本紀錄
 
+## 2026-10-31 — Apps Script：收據辨識的授權檢查（App 不變，仍是 v171）
+
+- **原因**：Bar 更新岡山 Apps Script 後，在編輯器執行 `tripLocalCurrency` 沒有跳出授權畫面；從正式站送 `recognizeReceipt` 回 `ai unreachable`，表示新程式已部署，但呼叫 Gemini（`UrlFetchApp`）時失敗，最可能是還沒授權「連線到外部服務」。
+- **改動**（只有 `apps-script/ledger-sync.gs` 與說明，Bar 要再貼一次並部署新版本）：
+  - 新增 `checkReceiptRecognition()`：在編輯器選它執行，會要求授權，並在執行記錄寫出金鑰／模型能不能用（只查模型資料，不用掉辨識次數，不印出金鑰）。
+  - 呼叫 Gemini 失敗時，沒有權限回 `not authorized`，其他回 `ai unreachable: <原因>`，方便判斷。
+  - `apps-script/README.md` 補上收據辨識的 POST 契約、錯誤代碼與授權步驟（含 `appsscript.json` 有 `oauthScopes` 時要加 `script.external_request`）。
+- **測試**：`tests/apps-script-settings.test.js` 新增沒有權限的錯誤、`checkReceiptRecognition()` 的四種結果（可用、沒放金鑰、找不到模型、金鑰無法使用）、不印出金鑰、只查模型資料。
+
 ## 2026-10-31 — v171 已上線 main（待 Bar 更新岡山 Apps Script、手機審查與 tag）
 
 - PR [#108](https://github.com/nick80912-dev/ai-native-projects/pull/108) 在 head `5c9e5ff` 的 sanity／browser-qa 全綠後合併進 `dev`（`b5d62e0`，釘住 head）；PR [#109](https://github.com/nick80912-dev/ai-native-projects/pull/109)（並帶 v170 發布紀錄 PR #107）合併 `dev` → `main`，merge commit **`e7becff`**。合併 tree `90c12d9` 與 `5c9e5ff` 相同。本機完整 Chromium 406 passed，只有已知只在本機失敗的兩項，沒有略過的測試。

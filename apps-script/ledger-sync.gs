@@ -232,7 +232,10 @@ function recognizeReceipt(d) {
       payload: JSON.stringify(request), muteHttpExceptions: true
     });
   } catch (err) {
-    return out({ok:false,error:'ai unreachable'});
+    /* 最常見的是還沒授權「連線到外部服務」:在編輯器執行 checkReceiptRecognition() 一次 */
+    var reason = String(err && err.message || err);
+    if (/permission|權限|external_request/i.test(reason)) return out({ok:false,error:'not authorized'});
+    return out({ok:false,error:'ai unreachable: ' + reason.slice(0, 200)});
   }
   var status = response.getResponseCode();
   if (status === 429) return out({ok:false,error:'quota'});
@@ -247,6 +250,29 @@ function recognizeReceipt(d) {
     return out({ok:false,error:'unreadable ai reply'});
   }
   return out({ok:true,receipt:receiptFields(parsed)});
+}
+
+/* 在 Apps Script 編輯器上方的函式選單選 checkReceiptRecognition,按「▶ 執行」:
+   第一次會要求「連線到外部服務」的授權(收據辨識要用);「執行記錄」會寫出金鑰與模型能不能用。
+   只查模型資料,不會用掉辨識的免費次數,也不會印出金鑰。 */
+function checkReceiptRecognition() {
+  var props = PropertiesService.getScriptProperties();
+  var key = String(props.getProperty('GEMINI_API_KEY') || '').trim();
+  var model = String(props.getProperty('GEMINI_MODEL') || RECEIPT_DEFAULT_MODEL).trim();
+  var message;
+  if (!key) {
+    message = '還沒放 GEMINI_API_KEY:專案設定 → 指令碼屬性 → 新增';
+  } else {
+    var response = UrlFetchApp.fetch('https://generativelanguage.googleapis.com/v1beta/models/' + encodeURIComponent(model), {
+      headers: {'x-goog-api-key': key}, muteHttpExceptions: true
+    });
+    var status = response.getResponseCode();
+    message = status === 200 ? 'OK:收據辨識可以使用(模型 ' + model + ')' :
+      status === 404 ? '找不到模型 ' + model + ',請檢查 GEMINI_MODEL' :
+      '金鑰無法使用(HTTP ' + status + '),請到 Google AI Studio 確認金鑰';
+  }
+  Logger.log(message);
+  return message;
 }
 
 /* 只回傳五個欄位;格式由 App 再檢查一次(ledger-receipts.js normalizeRecognition) */
