@@ -97,6 +97,7 @@ function loadOptionSettingsActions(source){
     openSettings(target){routes.push(target);},
     confirm(){return sandbox.confirmAnswer!==false;},confirmAnswer:true,toasts:[],
     DEFAULT_LEDGER_CATEGORIES:['餐飲','交通','購物'],DEFAULT_LEDGER_PAY_METHODS:['現金','信用卡'],
+    defaultLedgerPayMethods(){return ['現金','信用卡'];},   // v170:支付方式預設依旅程決定
     toast(){},
     routes,
     values

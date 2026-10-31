@@ -390,7 +390,7 @@ test('Today weather uses a decorative mood and actionable accessible summary', a
   await expect(page.locator('#view-today .today-weather-art')).toHaveAttribute('aria-hidden','true');
   const weather=page.locator('#view-today .today-hero-weather-summary');
   await expect(weather).toContainText('21');
-  await expect(weather).toHaveAttribute('aria-label','Hiroshima，21 度，現在之後最高降雨機率 40%，記得帶傘，手機取得時間：日本時間 13:30');
+  await expect(weather).toHaveAttribute('aria-label','Hiroshima，21 度，現在之後最高降雨機率 40%，記得帶傘，手機取得時間 13:30');
   const progress=page.locator('#view-today .today-hero-top .loc');
   /* v127(backlog #43):可見文字由裸的「N / N」改為「已處理 N/N」。
      它算的是走過的站(含自動略過),與行程頁 day-head 的「完成」不是同一件事;
