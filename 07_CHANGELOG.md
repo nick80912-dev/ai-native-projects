@@ -1,6 +1,13 @@
 # 07 版本紀錄
 
-## 2026-10-31 — v173 收據也幫忙選支付方式與類別（開發中，未發布）
+## 2026-10-31 — v173 已上線 main（待 Bar 更新岡山 Apps Script、手機審查與 tag）
+
+- PR [#113](https://github.com/nick80912-dev/ai-native-projects/pull/113)（v172 發布紀錄＋v173）在 head `3b6f9c2` 的 sanity／browser-qa 全綠後合併進 `dev`（`c84cc78`，釘住 head）；PR [#114](https://github.com/nick80912-dev/ai-native-projects/pull/114) 合併 `dev` → `main`，merge commit **`625fbd0`**。合併 tree `2be7622` 與 `3b6f9c2` 相同。本機完整 Chromium 415 passed，只有已知只在本機失敗的兩項，沒有略過的測試；反向驗證：把多品項收據欄的修正改回去，對應測試失敗。
+- **線上核對**：正式站 `sw.js` 為 `SW_VERSION='v173'`；全新 Chromium 開正式站，`APP_VERSION` 為 v173、只剩 `okayama-trip-v173` 快取，發布說明為「收據也幫忙選支付方式與類別」；快取內的 `ledger-receipts.js` 有品項整理；多品項收據欄的修正在線上；沒有 pageerror。
+- **還差 Bar 一步**：岡山 Apps Script 換成最新 `apps-script/ledger-sync.gs` 並部署新版本（不需重新授權），之後才會選支付方式、類別與逐筆帶入品項；沒換之前照 v172 的行為。
+- 回滾：依 `16_OPS_PLAYBOOK.md` §A1 Publish `commit_ref` = `32c2aed`（v172）的部署，再往前 bump。
+
+## 2026-10-31 — v173 收據也幫忙選支付方式與類別（已上線 main，見上）
 
 - **來源**：Bar 2026-10-31：「如果 Receipt 上有辨識到 PayPay、TWQR 跨境支付（悠遊付、台灣Pay、icash Pay）、Line Pay 等各國關於的行動支付項目，則支付方式協助選至行動支付。類別如果辨識出是有關餐飲則也調整、交通就調至交通以此類推」。
 - **使用上**：加收據照片辨識時，App 一併送出這支手機的支付方式與類別選項；Google 從清單裡選一個：PayPay、LINE Pay、TWQR 跨境支付（悠遊付、台灣Pay、icash Pay、全支付）、街口、支付寶、微信支付、Apple Pay、Google Pay、楽天ペイ、d払い、au PAY、メルペイ、KakaoPay、Naver Pay 等 → 「行動支付」；VISA、Mastercard、JCB、American Express、Diners、銀聯等信用卡／金融卡 → 「信用卡」（Bar 2026-10-31：「有關VISA、JCB、Master Card 等支付方式就是信用卡」）；現金 → 「現金」；Suica／ICOCA／PASMO → 「Suica」（清單有時）。類別：收據有列品項時依品項判斷、品項不同類時選占總額最多的類（Bar 2026-10-31「如果有詳細讀收據內的商品而定也可以」）；餐廳、咖啡、食物 → 「餐飲」；電車、公車、計程車、加油、停車 → 「交通」；門票 → 「票券」；紀念品店、伴手禮 → 「購物」（Bar 2026-10-31）；手機上自訂的類別也是候選，名稱更貼切時選它。只在還是表單預設、自己沒選過、不是編輯舊帳時才換；多品項時改共用類別，不動自己單獨調過的品項；清單外的答案不採用。收據欄下方的訊息會列出換了哪些（例如「…、支付方式「行動支付」、類別「交通」」）。
