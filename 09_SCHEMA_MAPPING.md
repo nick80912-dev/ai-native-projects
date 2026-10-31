@@ -86,7 +86,7 @@
 | 成員 | member | ✅ | 寫入當下的成員身分 |
 | 類別 | category |  |  |
 | 明細 | detail |  |  |
-| 日幣 | amountJpy | ✅ | 日幣金額;沖銷紀錄為負數 |
+| 日幣(別名:當地幣) | amountJpy | ✅ | 當地幣別金額(TripConfig Currency,沒填是日圓;v168 起新範本標題為「當地幣」);沖銷紀錄為負數 |
 | 台幣 | amountTwd |  | 台幣金額;沖銷紀錄為負數 |
 | 備註 | note |  |  |
 | 分攤成員 | participants |  | JSON array 字串 |
@@ -97,7 +97,7 @@
 | 批次ID | batchId |  |  |
 | 店名 | storeName |  | 選填;消費店家名稱,供搜尋與顯示 |
 | 取代紀錄ID | replacesRecordId |  | 選填;團體編輯新筆指向被取代紀錄或 batch 根紀錄 |
-| 輸入幣別 | inputCurrency |  | 選填;JPY 或 TWD,記錄原始輸入與優惠券單位 |
+| 輸入幣別 | inputCurrency |  | 選填;當地幣別代碼(JPY、KRW…)或 TWD,記錄原始輸入與優惠券單位 |
 | 免稅品 | isTaxFree |  | 選填;TRUE/FALSE,每筆品項獨立狀態 |
 | 價格方式 | priceMode |  | 選填;included=税込、excluded=税抜 |
 | 稅率 | taxRate |  | 選填;0–100,最多一位小數 |
@@ -110,9 +110,9 @@
 | Start Date | startdate |  |
 | End Date | enddate |  |
 | Travel Mode(別名:transport/交通模式) | travelmode | Driving→drive(🚗導航+停車卡);Transit/Train→transit(🚃路線) |
-| Currency | currency |  |
-| Exchange Rate | exchangeRate | 1 JPY 對應的 TWD 金額;必須大於 0 |
-| Ledger Default Currency | ledgerDefaultCurrency | 全團結算幣別,也是新增記帳的預設幣別;只允許 JPY/TWD |
+| Currency | currency | 當地幣別,ISO 4217 三碼(JPY、KRW、USD…);沒填是 JPY(v168) |
+| Exchange Rate | exchangeRate | 1 單位當地幣別對應的 TWD 金額;必須大於 0。可不填,在 App「設定 → 分帳設定」補填後全團共用(v168) |
+| Ledger Default Currency | ledgerDefaultCurrency | 全團結算幣別,也是新增記帳的預設幣別;當地幣別代碼或 TWD,沒填是當地幣別(v168) |
 | Home Page | homepage | 預設分頁(⚠️ 目前**未啟用**,App 固定 Today;填寫無效果) |
 | Trip ID | tripId | 選填(新旅程必填);3–40 個英數字、- 或 _,每趟旅程不同,用來分開快取、待送帳與備份 |
 | Ledger Endpoint | ledgerEndpoint | 選填(新旅程必填);這份試算表部署的 Apps Script 網頁應用程式 /exec 網址 |

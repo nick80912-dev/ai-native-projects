@@ -189,6 +189,11 @@ function expectCode(promise,code,label){
   await expectCode(harness({cfg:Object.assign(goodCfg(),{startdate:'2027-03-05',enddate:'2027-03-01'})}).flow.inspect(PUB),'CFG_DATES','reversed dates');
   await expectCode(harness({cfg:Object.assign(goodCfg(),{ledgerDefaultCurrency:'USD'})}).flow.inspect(PUB),'CFG_CURRENCY','unsupported currency');
   await expectCode(harness({cfg:Object.assign(goodCfg(),{exchangeRate:'0'})}).flow.inspect(PUB),'CFG_CURRENCY','zero exchange rate');
+  /* v168(backlog #62):不限日本;匯率可以之後在 App 補填 */
+  await expectCode(harness({cfg:Object.assign(goodCfg(),{currency:'KR'})}).flow.inspect(PUB),'CFG_CURRENCY','Currency must be a three-letter code');
+  await expectCode(harness({cfg:Object.assign(goodCfg(),{currency:'KRW',ledgerDefaultCurrency:'JPY'})}).flow.inspect(PUB),'CFG_CURRENCY','a third currency cannot be the settlement currency');
+  assert.strictEqual((await harness({cfg:Object.assign(goodCfg(),{exchangeRate:''})}).flow.inspect(PUB)).tripId,'kyushu-2027','a Sheet without an exchange rate can be connected');
+  assert.strictEqual((await harness({cfg:Object.assign(goodCfg(),{currency:'KRW',ledgerDefaultCurrency:'KRW'})}).flow.inspect(PUB)).tripId,'kyushu-2027','a KRW trip can be connected');
   await expectCode(harness({info:function(){return Promise.reject(new Error('blocked'));}}).flow.inspect(PUB),'INFO_FAILED','endpoint unreachable');
   await expectCode(harness({info:function(){return Promise.resolve({ok:true,tripId:'other-trip',ledgerHeaderOk:true});}}).flow.inspect(PUB),'INFO_MISMATCH','endpoint belongs to another Sheet');
   await expectCode(harness({info:function(){return Promise.resolve({ok:true,tripId:'kyushu-2027',ledgerHeaderOk:false});}}).flow.inspect(PUB),'LEDGER_HEADER','ledger header wrong');

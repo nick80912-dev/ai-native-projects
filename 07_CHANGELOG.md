@@ -1,6 +1,36 @@
 # 07 版本紀錄
 
-## 2026-10-30 — v167 記帳可以夾收據照片（開發中，未發布）
+## 2026-10-31 — v168 不只日本：可以設定當地幣別（開發中，未發布）
+
+- **來源**：backlog #62（Bar 2026-10-31：「該專案未來不只回去日本，有可能會去其他國家，所以內容需要修正一下比方幣別切換與辨識等，不受限於日本」）。設計與裁定見 `docs/superpowers/specs/2026-10-31-multi-country-trips.md`：結算一律台幣、一趟一種當地幣別、有小數的幣別記到分；另 Bar 確認「Exchange Rate 試算表沒填的話，手機再補填當作基準」。本版是第一批（幣別基礎）；稅在 v169、天氣與文案在 v170。
+- **使用上**：
+  - TripConfig `Currency` 填當地幣別三碼（`KRW`、`USD`…），沒填就是 `JPY`，岡山不變。記帳表單的幣別切換顯示真正的代碼（`USD`／`TWD`），金額、列表、結算、明細都用該幣別符號（`US$12.50`、`₩12,000`）。
+  - 美金、歐元這類幣別可以記到分：金額欄改用有小數點的鍵盤，計算機捨去到分；日圓、韓元、台幣照舊是整數鍵盤。
+  - 試算表沒填匯率：不再擋載入與連接新旅程；記帳表單顯示「還沒設定匯率 去設定」，按了帶到「設定 → 分帳設定」，存下後照原本的分帳設定同步寫回 TripConfig，全團共用。沒有匯率時存帳會被擋下並提示「匯率未設定」。
+- **做法**：
+  - 新模組 `trip-currency.js`（純函式）：幣別表（名稱、符號、小數位數；JPY 名稱維持「日幣」）、`toMinor`／`toMajor`、`parseInput`（小數超過位數回 NaN，與以前一樣不接受千分位）、`inputText`、`format`（負數維持 `¥-1,500`）、當地幣與台幣互換。
+  - App 內部金額一律是最小單位整數，`'JPY'`／`'TWD'` 代表「當地幣別」／「台幣」槽位：`tripLocalCurrencyCode()`、`ledgerCurrencyCodeOf()`、`ledgerCurrencyTokenOf()`。`convertLedgerAmounts()` 依小數位數換算；`formatLedgerCurrencyAmount()` 與原本寫死 `¥`／`NT$` 的 9 處改用幣別格式。
+  - 邊界：`ledgerRecordForWire()`（`postLedgerRecord()` 送出前：最小單位 → 一般金額、輸入幣別 → 真正代碼）、`ledgerRecordFromSheet()`（`parseLedgerSheetCsv()`，含 fast pull）。表單：`ledgerAmountInputMinor()`／`ledgerAmountInputText()`（單筆、多品項、折扣、幣別切換、編輯帶入）、`ledgerAmountInputAttrs()`（鍵盤）、計算機 `ledgerCalculatorFloorValue(value,places)`。
+  - 分帳設定：`normalizeLedgerSettings()` 把試算表的代碼對應回槽位、沒填結算幣別就是當地幣別；`postLedgerSettings()` 與 `DB.cfg` 寫真正代碼；新增 `ledgerExchangeRateMissing()`；`createLedgerEntryDraft()` 沒有匯率也能開表單；設定頁與表單文字用當地幣別（岡山仍是「1 日幣可換算多少台幣」「JPY 日幣」）。
+  - 規則：`validator.js`（與內嵌副本）匯率可不填、填了要大於 0（修正：數字 0 也要擋）、`Currency` 要三碼、結算幣別是台幣或當地幣別；`trip-source.js` 連接新旅程同規則；`schema.js`（與內嵌副本）`Currency`／`Exchange Rate`／`Ledger Default Currency` 改為選填、「日幣」欄加別名「當地幣」，`09_SCHEMA_MAPPING.md` 重新產生。
+  - `apps-script/ledger-sync.gs`：輸入幣別與結算幣別接受 TripConfig `Currency`（沒填是 JPY）或 TWD；「分帳紀錄」第 6 欄標題可為「日幣」或「當地幣」；金額本來就接受小數。**岡山的部署不必更新**；新旅程用這份（v170 手冊會寫步驟）。
+  - 新增 runtime asset `trip-currency.js`（`runtime-assets.json`、`sw.js`、shell、README、`.ai-manifest.json`、`10_FOLDER_STRUCTURE.md`）。`03_DATABASE.md` 新增「分帳金額與幣別」；`docs/new-trip-handbook.md` 的 TripConfig 表與錯誤對照改成任何國家。
+- **版本**：forward bump v167→v168；`builtin-snapshot.js` 以 v167 asset 離線重產，除版本外不變。發布說明視窗為 `v168` + `['v167','v166','v165','v164']`（v163 滾出）。`tests/trip-lifecycle-wiring.test.js` 加入已發布 v167 三件組的 hash。
+- **測試**：
+  - 新增 `tests/trip-currency.test.js`：日圓格式與換算與以前完全相同；美金記到分（`12.50`→1250、`12.505` 不接受、`0.1+0.2` 四捨五入到分）、US$12.50→NT$401；韓元；未列幣別。
+  - 新增 `tests/browser/multi-currency-v168.spec.js`（7 項）：美金旅程記帳（`USD`／`TWD` 切換、`1 USD = NT$32`、小數鍵盤、≈ NT$400、存成 1250／400、列表 US$12.50、編輯顯示 12.50）；切到台幣再切回；送 Apps Script 是 `12.5 USD`（攔截真正的 POST）；讀回試算表換回最小單位；韓元旅程的設定文字與整數鍵盤；沒有匯率時表單可開、存帳被擋、「去設定」帶到分帳設定；岡山畫面不變。
+  - `apps-script-settings`：韓元旅程的結算幣別與輸入幣別、拒絕第三種幣別、美金 12.5 照寫、「當地幣」標題、岡山不變、沒有 Currency 視為 JPY。`atomic-sheet-sync`：匯率可空、韓元旅程、第三種結算幣別被擋、Currency 要三碼。`trip-source`：同上，含沒有匯率也能連接。
+  - `tests/support/currency.js`：9 個沙盒測試載入幣別 helper（沙盒沒有 Currency 就是日圓）。`ledger-entry-settings`、`ledger-entry-p0`、`schema-types` 改成新的文字與規則（仍要求岡山是「1 日幣」與數字鍵盤）。
+  - 反向驗證：換算不看小數位數、送 Apps Script 不轉換、讀回不轉換、輸入一律當日圓解析、忽略當地幣別、沒有匯率就打不開表單，新測試各自抓到。
+- **回滾**：合併前關閉 PR；發布後依 `16_OPS_PLAYBOOK.md` §A1 退回 v167 的 Netlify 部署（`commit_ref` `afd65df`），再往前 bump。岡山（JPY、試算表有匯率）資料與行為不變。
+
+## 2026-10-30 — v167 已上線 main（待 Bar 手機審查與 tag）
+
+- PR [#96](https://github.com/nick80912-dev/ai-native-projects/pull/96) 在 head `1b09e40` 的 sanity／browser-qa 全綠後合併進 `dev`（`c5fea22`，釘住 head）；PR [#97](https://github.com/nick80912-dev/ai-native-projects/pull/97)（並帶 v166 發布紀錄 PR #95）合併 `dev` → `main`，merge commit **`afd65df`**。合併 tree `3717cb6` 與 `1b09e40` 相同。本機完整 Chromium 386 passed，只有已知只在本機失敗的兩項，沒有略過的測試。
+- **線上核對**：正式站 `sw.js` 為 `SW_VERSION='v167'`；全新 Chromium 開正式站，`APP_VERSION` 為 v167、只剩 `okayama-trip-v167` 快取，發布說明為「記帳可以夾收據照片」；`ledger-receipts.js` 回 200 且在 v167 快取內（離線可用）；`TripLedgerReceipts` 已載入（`MAX_PHOTOS` 3），收據照片資料庫存入／列出／刪除一張測試 Blob 正常，沒有 pageerror。Netlify deploy ID 未另查。
+- 回滾：依 `16_OPS_PLAYBOOK.md` §A1 Publish `commit_ref` = `11c0330`（v166）的部署，再往前 bump。
+
+## 2026-10-30 — v167 記帳可以夾收據照片（已上線 main，見上）
 
 - **來源**：backlog #59（Bar 2026-10-19 裁定：照片只存在拍照的那支手機、團體帳與個人帳都可以、每筆最多 3 張）。Bar 2026-10-30 問能否從照片直接讀出日期時間與金額，選「日期時間先做，金額之後用 A（雲端 AI）」——金額另列 backlog #61。
 - **使用上**：

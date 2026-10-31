@@ -327,6 +327,36 @@ assert.deepStrictEqual(
 );
 assert.strictEqual(postApp.lock.waited, true, 'doPost 仍取 script lock');
 
+/* ================= v168 不限日本(backlog #62) ================= */
+(function(){
+  const krw = loadAppScript();
+  krw.cfg.data.forEach(function(row){ if(row[0]==='Currency') row[1]='krw'; });
+  assert.deepStrictEqual(krw.call({action:'updateSettings',exchangeRate:0.024,defaultCurrency:'KRW'}),
+    {ok:true,settings:{exchangeRate:0.024,defaultCurrency:'KRW'}},'a KRW trip can settle in KRW');
+  assert.strictEqual(krw.cfg.valueFor('Ledger Default Currency'),'KRW');
+  assert.strictEqual(krw.call({action:'updateSettings',exchangeRate:0.024,defaultCurrency:'TWD'}).ok,true,'TWD is always allowed');
+  assert.strictEqual(krw.call({action:'updateSettings',exchangeRate:0.024,defaultCurrency:'JPY'}).ok,false,'JPY is not this trip\'s currency');
+  assert.strictEqual(krw.call(Object.assign({},ledger20Payload,{id:'krw-1',inputCurrency:'KRW'})).ok,true,'the trip currency is accepted as input currency');
+  assert.strictEqual(krw.call(Object.assign({},ledger20Payload,{id:'krw-2',inputCurrency:'JPY'})).ok,false,'another currency is rejected');
+  const usd = loadAppScript();
+  usd.cfg.data.forEach(function(row){ if(row[0]==='Currency') row[1]='USD'; });
+  assert.strictEqual(usd.call(Object.assign({},ledger20Payload,{id:'usd-1',inputCurrency:'USD',amountJpy:12.5,amountTwd:401,couponAmount:0.5})).ok,true,'two-decimal amounts are accepted');
+  assert.strictEqual(usd.ledger.rowForId('usd-1')[5],12.5,'US$12.50 is written as 12.5');
+  /* 新範本第 6 欄可以叫「當地幣」 */
+  const header = loadAppScript();
+  header.ledger.data[0][5] = '當地幣';
+  assert.strictEqual(header.get({action:'info'}).ledgerHeaderOk,true,'the new 當地幣 header is accepted');
+  header.ledger.data[0][5] = '美金';
+  assert.strictEqual(header.get({action:'info'}).ledgerHeaderOk,false,'other headers are still rejected');
+  /* 岡山(Currency JPY)行為不變 */
+  const okayama = loadAppScript();
+  assert.strictEqual(okayama.call({action:'updateSettings',exchangeRate:0.2,defaultCurrency:'JPY'}).ok,true);
+  assert.strictEqual(okayama.call({action:'updateSettings',exchangeRate:0.2,defaultCurrency:'USD'}).ok,false);
+  const noCurrency = loadAppScript();
+  noCurrency.cfg.data = noCurrency.cfg.data.filter(function(row){ return row[0]!=='Currency'; });
+  assert.strictEqual(noCurrency.call({action:'updateSettings',exchangeRate:0.2,defaultCurrency:'JPY'}).ok,true,'no Currency key means JPY');
+})();
+
 /* ================= v150 doGet?action=info(連接新旅程,ADR 0021) ================= */
 const infoApp = loadAppScript();
 assert.deepStrictEqual(infoApp.get({action:'info'}), {ok:true, tripId:'', ledgerHeaderOk:true}, '岡山試算表沒有 Trip ID 時回空字串');

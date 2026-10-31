@@ -20,13 +20,16 @@ const typeColumn = schema.sheets.places.columns.find(function(column) {
 assert.strictEqual(schema.version, '3.1 (2026-10-08)');
 /* v150:新旅程的 TripConfig 多了 Trip ID 與 Ledger Endpoint。舊試算表沒有,所以是 optional;
    連接新旅程時由 trip-source.js 強制檢查。 */
-[['tripId','Trip ID'],['ledgerEndpoint','Ledger Endpoint'],['weatherRegionsGid','Weather Regions GID']].forEach(function(pair){
+/* v168(backlog #62,不限日本):Currency、Exchange Rate、Ledger Default Currency 也改為選填 ——
+   Currency 沒填是 JPY;匯率可在 App 補填後全團共用(Bar 2026-10-31);結算幣別沒填是當地幣別。 */
+const OPTIONAL_CFG_KEYS=['tripId','ledgerEndpoint','weatherRegionsGid','currency','exchangeRate','ledgerDefaultCurrency'];
+[['tripId','Trip ID'],['ledgerEndpoint','Ledger Endpoint'],['weatherRegionsGid','Weather Regions GID'],['currency','Currency'],['exchangeRate','Exchange Rate'],['ledgerDefaultCurrency','Ledger Default Currency']].forEach(function(pair){
   const key = schema.sheets.cfg.keys.find(function(candidate){ return candidate.field === pair[0]; });
   assert(key, pair[1] + ' key exists');
   assert.strictEqual(key.header, pair[1]);
   assert.strictEqual(key.optional, true, pair[1] + ' stays optional for the Okayama Sheet');
 });
-schema.sheets.cfg.keys.filter(function(key){ return ['tripId','ledgerEndpoint','weatherRegionsGid'].indexOf(key.field) < 0; }).forEach(function(key){
+schema.sheets.cfg.keys.filter(function(key){ return OPTIONAL_CFG_KEYS.indexOf(key.field) < 0; }).forEach(function(key){
   assert.notStrictEqual(key.optional, true, key.header + ' is still required by the refresh tool');
 });
 /* v136:Ledger Default Currency 同時是全團結算幣別(ADR 0007)。說明原寫「分帳預設輸入幣別」,
@@ -36,7 +39,7 @@ const ledgerCurrencyKey = schema.sheets.cfg.keys.find(function(key) {
   return key.field === 'ledgerDefaultCurrency';
 });
 assert.strictEqual(ledgerCurrencyKey.header, 'Ledger Default Currency', 'the Sheet key name is unchanged');
-assert.strictEqual(ledgerCurrencyKey.desc, '全團結算幣別,也是新增記帳的預設幣別;只允許 JPY/TWD',
+assert.strictEqual(ledgerCurrencyKey.desc, '全團結算幣別,也是新增記帳的預設幣別;當地幣別代碼或 TWD,沒填是當地幣別(v168)',
   'the schema describes the key as the group settlement currency, not just the default input');
 assert.deepStrictEqual(Object.keys(ledgerCurrencyKey.values).sort(), ['JPY', 'TWD', 'jpy', 'twd'], 'accepted values are unchanged');
 const hotelIdColumn = schema.sheets.places.columns.find(function(column) {

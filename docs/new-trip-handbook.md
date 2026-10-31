@@ -33,9 +33,9 @@
    | Trip Name | 顯示在 App 標題，例如 `九州五日` |
    | Start Date／End Date | `YYYY-MM-DD`，開始不能晚於結束 |
    | Travel Mode | `Driving` 或 `Transit` |
-   | Currency | `JPY` |
-   | Exchange Rate | 1 日圓等於多少台幣，例如 `0.21` |
-   | Ledger Default Currency | `JPY` 或 `TWD`（全團結算幣別） |
+   | Currency | 當地幣別的三碼，例如日本 `JPY`、韓國 `KRW`、泰國 `THB`、美國 `USD`、歐元區 `EUR`；沒填就是 `JPY`（v168） |
+   | Exchange Rate | 1 單位當地幣等於多少台幣，例如日圓 `0.21`、韓元 `0.024`、美元 `32.1`。**可以先不填**，之後在 App「設定 → 分帳設定」補填，存下後全團共用（v168） |
+   | Ledger Default Currency | 全團結算幣別：這趟的當地幣別（例如 `KRW`）或 `TWD`；沒填就是當地幣別 |
    | Trip ID | **每趟都要不同**，3–40 個英文字母、數字、`-` 或 `_`，例如 `kyushu-2027-03` |
    | Ledger Endpoint | 第 4 步取得的網址 |
    | Weather Regions GID | 第 5 步取得的數字（不需要天氣可留空） |
@@ -76,7 +76,8 @@
 | TripConfig 的 Trip ID… | Trip ID 沒填或格式不對 |
 | TripConfig 的 Ledger Endpoint… | 網址不是 `https://script.google.com/macros/s/…/exec` |
 | TripConfig 的 Start Date／End Date… | 日期格式要 `YYYY-MM-DD` |
-| TripConfig 的匯率… | 匯率要大於 0，結算幣別只能 JPY 或 TWD |
+| TripConfig 的 Currency… | 要是三個英文字母的幣別代碼，例如 `KRW`、`USD` |
+| TripConfig 的匯率… | 有填的話匯率要大於 0（也可以不填）；結算幣別只能是台幣或這趟的當地幣別 |
 | 無法連到這份試算表的 Apps Script | 還沒部署成網頁應用程式，或存取權設錯 |
 | Ledger Endpoint 屬於另一份試算表 | Endpoint 貼成別份試算表的網址（例如範本或岡山的）；換成這份自己部署的網址 |
 | 「分帳紀錄」分頁的標題列和範本不一致 | 分帳紀錄第一列被改過；從範本複製回來 |

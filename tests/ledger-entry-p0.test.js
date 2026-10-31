@@ -107,7 +107,9 @@ assert.match(
 );
 assert.match(html,/\.ledger-single-primary \.ledger-sheet-field\+\.ledger-sheet-field\{[^}]*margin-top:10px/,'required fields use the approved gap without a divider');
 
-assert.match(html,/id="ledgerAmount"[^>]*type="number"[^>]*inputmode="numeric"/,'the approved amount input type and inputmode remain unchanged');
+/* v168:鍵盤依幣別決定 —— 日圓、台幣仍是 inputmode="numeric"(不變);美金這類有小數的幣別用 decimal */
+assert.match(html,/id="ledgerAmount" type="number" '\+ledgerAmountInputAttrs\(draft\.currency\)\+'/,'the amount input keeps type number and takes its keyboard from the currency');
+assert.match(html,/function ledgerAmountInputAttrs\(token\)\{[\s\S]*?'inputmode="numeric"'/,'currencies without decimals keep inputmode numeric');
 assert.match(html,/id="ledgerAmount"[^>]*enterkeyhint="next"[^>]*onkeydown="handleLedgerAmountNext\(event\)"/,'the amount keyboard advances through one shared Next handler');
 assert.match(html,/id="ledgerDetail"[^>]*enterkeyhint="next"[^>]*onkeydown="handleLedgerDetailNext\(event\)"/,'detail advances to the ownership decision instead of saving');
 assert.match(html,/\.ledger-sheet #ledgerAmount\{[^}]*font-size:30px!important/,'the primary amount is visually prominent without weakening the global 16px floor');
