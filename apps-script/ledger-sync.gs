@@ -7,6 +7,7 @@
  * GEMINI_API_KEY(不寫在程式裡、不進 GitHub);可選 GEMINI_MODEL 換模型。沒有這段的舊部署照常記帳,只是不能辨識。
  * v173:App 另送支付方式與類別的選項清單,AI 從清單選一個(行動支付錢包 → 行動支付;餐廳 → 餐飲;電車 → 交通…)。
  * v176:另回 taxFree(deducted 結帳已扣稅／refundable 之後可退稅)、taxRates(印在收據上的稅率)、pricesIncludeTax(品項是否含稅)。
+ * v177:另回 taxAmount(收據上的稅額合計)。
  * GitHub 內此檔為唯一維護來源；部署內容必須與此檔一致。
  */
 var LEDGER_COLUMNS = 21;
@@ -213,11 +214,15 @@ var RECEIPT_PROMPT = [
   '- discount: the total of discount or coupon lines as a positive number, or null when there are none.',
   '- taxFree: "deducted" when the receipt is a tax-free sale where the tax was already taken off at the register (免税,',
   '  Tax Free, 輸出免税, 免税対象 shown as the tax line); "refundable" when the tax was paid but can be claimed back later',
-  '  (Tax Refund / VAT refund form, Global Blue, Planet, 즉시환급 not applied); "" otherwise.',
+  '  (Tax Refund / VAT refund form, Global Blue, Planet, 즉시환급 not applied; from November 2026 Japanese tax-free shops',
+  '  charge the tax first and refund it after departure, so a Japanese receipt marked 免税対象, 免税販売, Tax Refund',
+  '  or リファンド with the tax still charged is "refundable"); "" otherwise.',
   '- taxRates: the consumption or sales tax rates printed on the receipt as numbers, for example [10] or [10, 8]',
   '  (軽減税率 ※ items are 8). [] when no rate is printed.',
   '- pricesIncludeTax: false when the item lines are before tax and a separate tax line is added (外税, 税抜, 本体価格),',
   '  true when the item prices already include tax (内税, 税込), null when unsure.',
+  '- taxAmount: the total consumption or sales tax on this receipt as a positive number (add up 消費税, 内消費税等,',
+  '  (内税), VAT lines across rates), null when no tax amount is printed or the tax was not charged.',
   '- If the photo is not a receipt, return all fields empty and total null.'
 ].join('\n');
 /* v173(Bar 2026-10-31):支付方式與類別從 App 送來的清單裡選一個(手機上自訂的名稱也適用) */
@@ -362,6 +367,8 @@ function receiptFields(value, payMethods, categories) {
     taxFree: source.taxFree === 'deducted' || source.taxFree === 'refundable' ? source.taxFree : '',
     taxRates: receiptTaxRates(source.taxRates),
     pricesIncludeTax: typeof source.pricesIncludeTax === 'boolean' ? source.pricesIncludeTax : null,
+    /* v177(Bar 2026-10-31):稅額列出來,之後核對退稅 */
+    taxAmount: receiptAmount(source.taxAmount),
     /* v173:只接受 App 送來清單裡的選項 */
     payMethod: (payMethods || []).indexOf(text('payMethod', 12)) >= 0 ? text('payMethod', 12) : '',
     category: (categories || []).indexOf(text('category', 12)) >= 0 ? text('category', 12) : ''
