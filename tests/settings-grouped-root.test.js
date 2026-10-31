@@ -47,6 +47,10 @@ function renderRoot(overrides,ledgerSettings){
     extractDeclaration(html,'SETTINGS_ROW_ICONS')+'\n'+
     extractFunction(html,'settingsGroup')+'\n'+
     extractFunction(html,'settingsNavRow')+'\n'+
+    /* v174:簡易結算模式的說明收進「!」 */
+    'var simpleSettlementSettingsHelpOpen=false;\n'+
+    extractFunction(html,'simpleSettlementSettingsHelpButton')+'\n'+
+    extractFunction(html,'simpleSettlementSettingsHelpText')+'\n'+
     extractFunction(html,'renderSettingsRoot'),
     sandbox
   );
@@ -143,6 +147,9 @@ const simpleOn = renderRoot({isSimpleSettlementMode:function(){ return true; }})
 assert(simpleOn.includes('已啟用'),'simple settlement reads 已啟用 while on');
 assert(/checked/.test(simpleOn),'the on state renders a checked box');
 assert(simpleOn.includes('保留已確認結清'),'the 保留已確認結清 explanation survives as an accessible description');
+/* v174(Bar 2026-10-31):說明不再常駐,收進「!」按鈕,預設收起 */
+assert(out.includes('aria-label="簡易結算模式說明"')&&out.includes('id="settingsSimpleHelp" hidden'),'the explanation sits behind a ! button, closed by default');
+assert(!/<small>只看轉帳建議/.test(out),'the explanation is no longer always shown under the title');
 
 /* ---- 版本安全取值(§4):根頁不得裸讀 APP_VERSION ---- */
 const rootSource = extractFunction(html,'renderSettingsRoot');
