@@ -256,13 +256,19 @@ function validateSnapshotData(db,raw,schema){
     if(startValue!==null&&endValue!==null&&endValue<startValue) block('CFG_DATE','cfg','TripConfig enddate 不得早於 startdate');
     var mode=String(cfg.travelmode||'').trim().toLowerCase();
     if(mode&&mode!=='drive'&&mode!=='transit') block('CFG_TRAVELMODE','cfg','TripConfig travelmode 必須是 drive 或 transit');
-    var exchangeRate=Number(cfg.exchangeRate);
-    if(!String(cfg.exchangeRate||'').trim()||!isFinite(exchangeRate)||exchangeRate<=0){
-      block('CFG_EXCHANGE_RATE','cfg','TripConfig exchangeRate 必須是大於 0 的數字');
+    /* v168(backlog #62):不限日本。匯率可以不填(在 App 補填),填了就要大於 0;
+       當地幣別是 Currency(沒填是 JPY);結算幣別是台幣或當地幣別,沒填是當地幣別。 */
+    var exchangeRateText=String(cfg.exchangeRate==null?'':cfg.exchangeRate).trim(),exchangeRate=Number(exchangeRateText);
+    if(exchangeRateText&&(!isFinite(exchangeRate)||exchangeRate<=0)){
+      block('CFG_EXCHANGE_RATE','cfg','TripConfig exchangeRate 必須是大於 0 的數字(也可以不填,之後在 App 補填)');
+    }
+    var localCurrency=String(cfg.currency||'').trim().toUpperCase()||'JPY';
+    if(!/^[A-Z]{3}$/.test(localCurrency)){
+      block('CFG_CURRENCY','cfg','TripConfig Currency 必須是三個英文字母的幣別代碼(例如 JPY、KRW、USD)');
     }
     var ledgerCurrency=String(cfg.ledgerDefaultCurrency||'').trim().toUpperCase();
-    if(ledgerCurrency!=='JPY'&&ledgerCurrency!=='TWD'){
-      block('CFG_LEDGER_CURRENCY','cfg','TripConfig ledgerDefaultCurrency 必須是 JPY 或 TWD');
+    if(ledgerCurrency&&ledgerCurrency!=='TWD'&&ledgerCurrency!==localCurrency){
+      block('CFG_LEDGER_CURRENCY','cfg','TripConfig ledgerDefaultCurrency 必須是 TWD 或這趟的當地幣別('+localCurrency+')');
     }
   }
   return result;

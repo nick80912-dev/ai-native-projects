@@ -1,3 +1,5 @@
+const {installCurrency}=require('./support/currency');
+const currencyHtml=()=>require('./support/version').appHtml();
 const assert=require('assert');
 const vm=require('vm');
 const TripBuyToLedger=require('../buy-to-ledger.js');
@@ -26,7 +28,7 @@ function loadModule(){
     timestampDate(value){return new Date(Number(value));},AppLog:{repo(){},sync(){}},
     renderSplit(){},updateLedgerPendingStatus(){}
   };
-  vm.createContext(sandbox);
+  vm.createContext(sandbox);installCurrency(sandbox,currencyHtml());
   vm.runInContext(source.slice(start,end),sandbox);
   sandbox.__warnings=warnings;
   return sandbox;

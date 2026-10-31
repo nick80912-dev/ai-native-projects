@@ -1,3 +1,5 @@
+const {installCurrency}=require('./support/currency');
+const currencyHtml=()=>require('./support/version').appHtml();
 // Ticket 1 (GitHub #6) — Domain convergence: canonical duplicate suppression.
 // Spec: docs/superpowers/specs/2026-07-24-settlement-reliability-visibility-design.md
 // Covers spec tests #5, #8, #13, #14, #15, #16 and the #7 no-auto-promotion / domain part,
@@ -38,7 +40,7 @@ function loadModule() {
     timestampDate(value) { return new Date(Number(value)); }, AppLog: { repo() {}, sync() {} },
     renderSplit() {}, updateLedgerPendingStatus() {}
   };
-  vm.createContext(sandbox);
+  vm.createContext(sandbox);installCurrency(sandbox,currencyHtml());
   vm.runInContext(source.slice(start, end), sandbox);
   sandbox.__warnings = warnings;
   return sandbox;

@@ -64,6 +64,12 @@
 - 部分購買拆分會共用原 `photoId`；刪除／移除照片時必須先確認沒有其他採買項目引用,避免提早刪除共用 Blob。
 - 清除瀏覽器網站資料、移除 App 儲存空間或更換裝置都可能遺失照片；這是產品核准的 device-local 語意。
 
+## 分帳金額與幣別（v168，backlog #62，不限日本）
+- 一趟一種當地幣別：TripConfig `Currency`（ISO 4217 三碼，沒填是 `JPY`）；結算一律可選台幣或當地幣別（`Ledger Default Currency`，沒填是當地幣別）；`Exchange Rate`＝1 單位當地幣等於多少台幣，可以不填，在 App「設定 → 分帳設定」補填後寫回 TripConfig、全團共用（Bar 2026-10-31）。
+- 欄位名稱 `amountJpy`／`amountTwd`（試算表第 6、7 欄「日幣」「台幣」）維持不變，意思是「當地幣金額」「台幣金額」；新範本第 6 欄標題可寫「當地幣」（schema `aliases`，Apps Script 也接受）。
+- **App 內部**金額一律是最小單位的整數（美金存分、日圓存圓），內部用 `'JPY'`／`'TWD'` 兩個代號代表「當地幣別」「台幣」槽位。**試算表與 Apps Script** 存一般金額（`12.5`）與真正的幣別代碼（`輸入幣別` 寫 `USD`）。換算只在邊界：`ledgerRecordFromSheet()`（讀 CSV／fast pull）、`ledgerRecordForWire()`（送 Apps Script）、表單輸入與畫面（`trip-currency.js`）。
+- 小數位數：日圓、韓元、台幣等為 0；美金、歐元、泰銖等為 2（`trip-currency.js` 的幣別表，表外依瀏覽器 ISO 資料）。小數位數 0 的幣別（含岡山的 JPY）邊界轉換前後完全相同，既有資料不需轉換。
+
 ## 分帳收據照片本機資料規則（v167，backlog #59）
 - 團體帳與個人帳都可以夾收據照片，每筆最多 3 張（Bar 2026-10-19 裁定）。Blob 存 IndexedDB `trip-receipt-media/receipt-photos`，與採買照片分開，採買的孤兒照片清理不會刪到收據。壓縮規則同採買照片（長邊 1600px、JPEG 0.82）。
 - 哪一筆帳用哪幾張記在 localStorage `trip_ledger_receipts`：`{version:1,sourceKey,links:{對應鍵:[photoId…]}}`，綁目前旅程。對應鍵是 `replacesRecordId || batchId || id`（`ledger-receipts.js` 的 `entryKey()`），所以同一張收據的多品項共用照片；編輯存檔後依實際存下的紀錄重新對應。
