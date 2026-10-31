@@ -2,6 +2,9 @@
  * 旅程 App：分帳 append-only 寫入與兩項共用設定更新端點。
  * v168(backlog #62):不限日本 —— 幣別是 TripConfig 的 Currency(沒填是 JPY);金額可有兩位小數(美金記到分);
  * 「分帳紀錄」第 6 欄標題可以是「日幣」(岡山)或「當地幣」(新範本)。岡山的部署不必更新也能繼續用。
+ * v171(backlog #61):收據辨識 —— doPost action 'recognizeReceipt' 把 App 傳來的收據照片交給 Google Gemini,
+ * 只回傳日期、時間、總額、幣別、店名五項;照片不存進試算表。金鑰放在「專案設定 → 指令碼屬性」的
+ * GEMINI_API_KEY(不寫在程式裡、不進 GitHub);可選 GEMINI_MODEL 換模型。沒有這段的舊部署照常記帳,只是不能辨識。
  * GitHub 內此檔為唯一維護來源；部署內容必須與此檔一致。
  */
 var LEDGER_COLUMNS = 21;
@@ -39,6 +42,10 @@ function tripCurrencyAllowed(code) {
 }
 
 function doPost(e) {
+  /* v171:辨識收據不寫試算表、又要等 AI 幾秒,不拿鎖,免得擋住同時間的記帳 */
+  var peek = null;
+  try { peek = JSON.parse(e.postData.contents); } catch (ignore) {}
+  if (peek && peek.action === 'recognizeReceipt') return recognizeReceipt(peek);
   var lock = LockService.getScriptLock();
   lock.waitLock(10000);
   try {
@@ -184,6 +191,75 @@ function upsertSetting(sh, key, value) {
     }
   }
   sh.appendRow([key, value]);
+}
+
+/* ---------- v171 收據辨識(backlog #61) ---------- */
+var RECEIPT_MAX_IMAGE_CHARS = 6000000;   // base64 約 4.5 MB;App 送的是壓縮過的 JPEG(長邊 1600px)
+var RECEIPT_DEFAULT_MODEL = 'gemini-flash-lite-latest';
+var RECEIPT_PROMPT = [
+  'You read one photo of a shop receipt or bill. Reply with JSON only, no other text:',
+  '{"date":"YYYY-MM-DD","time":"HH:MM","total":0,"currency":"XXX","storeName":""}',
+  '- date/time: when the purchase happened, as printed on the receipt (24-hour time). Convert Japanese era years',
+  '  (for example 令和7年 = 2025) and two-digit years to four digits. Use "" when not printed.',
+  '- total: the final amount actually paid, after tax and discounts, as a plain number with "." for decimals.',
+  '  Use null when you cannot find it.',
+  '- currency: ISO 4217 code of that amount (JPY, KRW, TWD, USD, EUR...). Use "" when unsure.',
+  '- storeName: the shop name as printed (at most 40 characters), "" when not printed.',
+  '- If the photo is not a receipt, return all fields empty and total null.'
+].join('\n');
+
+function recognizeReceipt(d) {
+  var props = PropertiesService.getScriptProperties();
+  var key = String(props.getProperty('GEMINI_API_KEY') || '').trim();
+  if (!key) return out({ok:false,error:'missing GEMINI_API_KEY'});
+  var image = String(d.image || '');
+  var mimeType = String(d.mimeType || 'image/jpeg');
+  if (!/^image\/(jpeg|png|webp)$/.test(mimeType) || !image || image.length > RECEIPT_MAX_IMAGE_CHARS ||
+      !/^[A-Za-z0-9+\/]+=*$/.test(image)) {
+    return out({ok:false,error:'invalid image'});
+  }
+  var model = String(props.getProperty('GEMINI_MODEL') || RECEIPT_DEFAULT_MODEL).trim();
+  if (!/^[a-z0-9][a-z0-9.\-]*$/.test(model)) return out({ok:false,error:'invalid GEMINI_MODEL'});
+  var hint = /^[A-Z]{3}$/.test(String(d.currency || '')) ? '\nThis trip usually pays in ' + d.currency + '.' : '';
+  var request = {
+    contents: [{parts: [{text: RECEIPT_PROMPT + hint}, {inline_data: {mime_type: mimeType, data: image}}]}],
+    generationConfig: {responseMimeType: 'application/json', temperature: 0}
+  };
+  var response;
+  try {
+    response = UrlFetchApp.fetch('https://generativelanguage.googleapis.com/v1beta/models/' + model + ':generateContent', {
+      method: 'post', contentType: 'application/json', headers: {'x-goog-api-key': key},
+      payload: JSON.stringify(request), muteHttpExceptions: true
+    });
+  } catch (err) {
+    return out({ok:false,error:'ai unreachable'});
+  }
+  var status = response.getResponseCode();
+  if (status === 429) return out({ok:false,error:'quota'});
+  if (status !== 200) return out({ok:false,error:'ai http ' + status});
+  var parsed;
+  try {
+    var body = JSON.parse(response.getContentText());
+    var parts = body.candidates && body.candidates[0] && body.candidates[0].content && body.candidates[0].content.parts || [];
+    var text = parts.map(function(part) { return part.text || ''; }).join('');
+    parsed = JSON.parse(text.replace(/^\s*```(?:json)?\s*|\s*```\s*$/g, ''));
+  } catch (err) {
+    return out({ok:false,error:'unreadable ai reply'});
+  }
+  return out({ok:true,receipt:receiptFields(parsed)});
+}
+
+/* 只回傳五個欄位;格式由 App 再檢查一次(ledger-receipts.js normalizeRecognition) */
+function receiptFields(value) {
+  var source = value && typeof value === 'object' && !Array.isArray(value) ? value : {};
+  function text(name, max) { var v = source[name]; return typeof v === 'string' ? v.trim().slice(0, max) : ''; }
+  var total = source.total;
+  if (typeof total === 'string') total = Number(total.replace(/[,\s]/g, ''));
+  return {
+    date: text('date', 20), time: text('time', 10),
+    total: typeof total === 'number' && isFinite(total) ? total : null,
+    currency: text('currency', 3).toUpperCase(), storeName: text('storeName', 40)
+  };
 }
 
 function out(obj) {

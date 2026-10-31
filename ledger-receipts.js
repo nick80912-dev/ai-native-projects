@@ -6,6 +6,9 @@
    本檔只放純函式（EXIF 拍攝時間、紀錄對應鍵、連結表），照片本身的 IndexedDB
    沿用 shopping-photo-store.js 的 driver，但放在獨立的資料庫，採買照片的
    孤兒清理不會刪到收據。
+   v171（backlog #61）：加照片後經 Apps Script 請 Google Gemini 讀收據上的日期、時間、總額、
+   幣別、店名（Bar 2026-10-31 選免費版、同意照片傳到 Google 一次）；normalizeRecognition()
+   檢查 AI 回來的內容，格式不對的欄位一律當作沒讀到。
    ============================================================ */
 (function(root,factory){
   var api=factory();
@@ -135,7 +138,29 @@
     return ids;
   }
 
+  /* v171：AI 讀到的收據內容 → {date:'YYYY/MM/DD',time:'HH:MM',total:數字或 null,currency:'ABC',storeName,found}。
+     日期限 2000–2100 且要是真的日期；總額要是正數；幣別要是三個英文字母；店名最多 40 字。 */
+  function normalizeRecognition(raw){
+    var source=raw&&typeof raw==='object'&&!Array.isArray(raw)?raw:{};
+    function text(name){var value=source[name];return typeof value==='string'||typeof value==='number'?String(value).trim():'';}
+    var date='',time='',total=null,currency='',storeName='';
+    var dateMatch=text('date').replace(/[.\-年月]/g,'/').replace(/日$/,'').match(/^(\d{4})\/(\d{1,2})\/(\d{1,2})$/);
+    if(dateMatch){
+      var year=Number(dateMatch[1]),month=Number(dateMatch[2]),day=Number(dateMatch[3]),check=new Date(Date.UTC(year,month-1,day));
+      if(year>=2000&&year<=2100&&check.getUTCMonth()===month-1&&check.getUTCDate()===day)date=year+'/'+pad(month)+'/'+pad(day);
+    }
+    var timeMatch=text('time').match(/^(\d{1,2}):(\d{2})(?::\d{2})?$/);
+    if(timeMatch&&Number(timeMatch[1])<24&&Number(timeMatch[2])<60)time=pad(Number(timeMatch[1]))+':'+timeMatch[2];
+    var totalText=text('total').replace(/[,\s]/g,''),amount=Number(totalText);
+    if(totalText&&isFinite(amount)&&amount>0&&amount<1e10)total=amount;
+    var code=text('currency').toUpperCase();
+    if(/^[A-Z]{3}$/.test(code))currency=code;
+    storeName=text('storeName').replace(/\s+/g,' ').slice(0,40);
+    return {date:date,time:time,total:total,currency:currency,storeName:storeName,found:!!(date||total!==null||storeName)};
+  }
+
   return {
+    normalizeRecognition:normalizeRecognition,
     MAX_PHOTOS:MAX_PHOTOS,
     DB_NAME:DB_NAME,
     STORE_NAME:STORE_NAME,
