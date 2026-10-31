@@ -1,6 +1,24 @@
 # 07 版本紀錄
 
-## 2026-10-31 — v174 收據辨識結果改用彈出視窗；設定的簡易結算說明收進「!」（開發中，未發布）
+## 2026-10-31 — v175 收據照片下方只留品項按鈕（開發中，未發布）
+
+- **來源**：Bar 2026-10-31：「收據照片下方的說明保留剩下"收據上有N個品項"與改成多品項並帶入按鈕就好」。
+- **使用上**：
+  - 收據照片下方只顯示「收據上有 N 個品項」與「改成多品項並帶入」（多品項時「改用這 N 個品項」）；辨識訊息、附註、錯誤都不再列在下面。
+  - 時間建議改放彈出視窗：收據上的時間只提示時，結果視窗多一行「收據上的時間是 …」與「改用收據時間」；照片的拍攝時間只提示、又沒有辨識（關閉或沒網路）時，跳出小視窗「照片的拍攝時間是 …」，按鈕「改用照片時間」「好」。按了之後視窗留著、多一行「已改用…」、按鈕消失。
+  - 照片時間直接帶入、照片沒存下來（含手機空間不足）改用畫面下方的短通知。
+- **做法**：`renderLedgerReceiptField()` 拿掉 `#ledgerReceiptTimeNote` 與錯誤列；`renderLedgerReceiptScan()` 只留品項列；`ledgerReceiptDialogHtml()` 依 `draft.receiptSuggestedTime` 加時間附註與按鈕、新增 `suggest` 狀態；`selectLedgerReceiptPhoto()` 不辨識時用 `showLedgerReceiptCard()` 顯示照片時間建議、錯誤改 `toast()`；`applyLedgerReceiptPhotoTime()` 直接帶入時 `toast()`；`applyLedgerReceiptSuggestedTime()` 有視窗就重畫視窗、沒有就 `toast()`。
+- **版本**：forward bump v174→v175；`builtin-snapshot.js` 以 v174 asset 離線重產，除版本外不變。發布說明視窗為 `v175` + `['v174','v173','v172','v171']`（v170 滾出）。`tests/trip-lifecycle-wiring.test.js` 加入已發布 v174 三件組的 hash。Apps Script 不變。
+- **測試**：`tests/browser/receipt-photos-v167.spec.js` 改成：照片時間帶入看短通知、時間建議在視窗裡按「改用照片時間」、照片下方沒有說明文字。`tests/browser/receipt-recognition-v171.spec.js`：辨識訊息改讀表單資料（`scanMessage()`）、附註改看視窗（`cardNotes()`）、「改用收據時間」在視窗裡；新增一項：照片下方只剩品項列。
+- **回滾**：合併前關閉 PR；發布後依 `16_OPS_PLAYBOOK.md` §A1 退回 v174 的 Netlify 部署（`commit_ref` `ec69925`），再往前 bump。
+
+## 2026-10-31 — v174 已上線 main（待 Bar 手機審查與 tag）
+
+- PR [#116](https://github.com/nick80912-dev/ai-native-projects/pull/116) 在 head `e7dc1d3` 的 sanity／browser-qa 全綠後合併進 `dev`（`ed977b0`，釘住 head）；PR [#117](https://github.com/nick80912-dev/ai-native-projects/pull/117)（並帶 v173 發布紀錄 PR #115）合併 `dev` → `main`，merge commit **`ec69925`**。合併 tree `5ef8032` 與 `e7dc1d3` 相同。本機完整 Chromium 420 passed，只有已知只在本機失敗的兩項，沒有略過的測試。
+- **線上核對**：正式站 `sw.js` 為 `SW_VERSION='v174'`；全新 Chromium 開正式站，`APP_VERSION` 為 v174、只剩 `okayama-trip-v174` 快取，發布說明為「收據辨識結果改用彈出視窗」；彈出視窗與復原的函式在線上，設定根頁的程式含「!」按鈕（全新手機是「尚未連接」，設定只有「資料」群組，看不到簡易結算列，屬正常）；沒有 pageerror。
+- 回滾：依 `16_OPS_PLAYBOOK.md` §A1 Publish `commit_ref` = `625fbd0`（v173）的部署，再往前 bump。
+
+## 2026-10-31 — v174 收據辨識結果改用彈出視窗；設定的簡易結算說明收進「!」（已上線 main，見上）
 
 - **來源**：Bar 2026-10-31 問辨識結果要不要用提示視窗；我建議表單頂端卡片（不擋畫面），Bar 先選了卡片，看過後改要「可以將這個卡片做成彈出視窗嗎?」——辨識在背景進行，視窗跳出時若正在打字會被打斷，已向 Bar 說明後照做。同一批 Bar 指出「設定內的簡易結算模式下的說明並未改成!資訊」（v169 只改了結算面板）。
 - **使用上**：

@@ -67,7 +67,7 @@ test('a personal entry keeps its receipt photo and takes the date and time from 
   await openForm(page,'personal');
   await expect(page.locator('#ledgerEntrySheet .ledger-receipt-label')).toHaveText('收據照片（選填，最多 3 張，只存在這支手機）');
   expect(await page.evaluate(()=>window.__addReceipt('2026:10:20 12:34:56'))).toBe(true);
-  await expect(page.locator('#ledgerReceiptTimeNote')).toHaveText('已用照片的拍攝時間帶入消費時間：10/20 12:34（可以再改）');
+  await expect(page.locator('#toast')).toContainText('已用照片的拍攝時間帶入：10/20 12:34');   // v175:改用畫面下方的短通知
   expect(await page.evaluate(()=>[ledgerUiState.draft.occurredDate,ledgerUiState.draft.occurredTime])).toEqual(['2026/10/20','12:34']);
   await expect.poll(()=>loadedThumbs(page,'#ledgerEntrySheet')).toEqual([true]);
   await page.locator('#ledgerAmount').fill('1200');
@@ -101,10 +101,14 @@ test('a group entry takes up to three photos; a later photo only suggests its ti
   await page.evaluate(()=>window.__addReceipt('2026:10:21 13:05:00'));
   expect(await page.evaluate(()=>ledgerUiState.draft.occurredTime)).toBe('13:05');
   await page.evaluate(()=>window.__addReceipt('2026:10:21 13:40:00'));
-  await expect(page.locator('#ledgerReceiptTimeNote')).toContainText('照片的拍攝時間是 10/21 13:40');
+  /* v175:時間建議改用彈出視窗(這裡沒有網路,不會辨識收據) */
+  await expect(page.locator('#ledgerReceiptCard')).toContainText('照片的拍攝時間是 10/21 13:40');
   expect(await page.evaluate(()=>ledgerUiState.draft.occurredTime)).toBe('13:05');
-  await page.getByRole('button',{name:'改用照片時間'}).click();
+  await page.locator('#ledgerReceiptCard').getByRole('button',{name:'改用照片時間'}).click();
   expect(await page.evaluate(()=>ledgerUiState.draft.occurredTime)).toBe('13:40');
+  await expect(page.locator('#ledgerReceiptCard')).toContainText('已改用照片的拍攝時間：10/21 13:40');
+  await expect(page.locator('#ledgerReceiptCard').getByRole('button',{name:'改用照片時間'})).toHaveCount(0);
+  await page.locator('#ledgerReceiptCard').getByRole('button',{name:'好'}).click();
   await page.evaluate(()=>window.__addReceipt(null));
   await expect(page.locator('#ledgerEntrySheet .ledger-receipt-thumb')).toHaveCount(3);
   await expect(page.locator('#ledgerEntrySheet .ledger-receipt-add')).toHaveCount(0);
@@ -177,7 +181,7 @@ test('closing the form without saving deletes the photo; a photo without a time 
   const before=await page.evaluate(()=>[ledgerUiState.draft.occurredDate,ledgerUiState.draft.occurredTime]);
   await page.evaluate(()=>window.__addReceipt(null));
   expect(await page.evaluate(()=>[ledgerUiState.draft.occurredDate,ledgerUiState.draft.occurredTime])).toEqual(before);
-  await expect(page.locator('#ledgerReceiptTimeNote')).toHaveCount(0);
+  await expect(page.locator('#ledgerReceiptDialog')).toHaveCount(0);
   expect(await page.evaluate(()=>window.__receiptCount())).toBe(1);
   await page.evaluate(()=>closeLedgerEntrySheet());
   await expect.poll(()=>page.evaluate(()=>window.__receiptCount())).toBe(0);
@@ -189,7 +193,9 @@ test('a date changed by hand is not overwritten by the photo time',async({page})
   await page.evaluate(()=>{ledgerUiState.draft.occurredDate='2026/10/19';ledgerUiState.draft.occurredTime='20:00';});
   await page.evaluate(()=>window.__addReceipt('2026:10:20 12:00:00'));
   expect(await page.evaluate(()=>[ledgerUiState.draft.occurredDate,ledgerUiState.draft.occurredTime])).toEqual(['2026/10/19','20:00']);
-  await expect(page.getByRole('button',{name:'改用照片時間'})).toBeVisible();
+  await expect(page.locator('#ledgerReceiptCard').getByRole('button',{name:'改用照片時間'})).toBeVisible();
+  /* v175:照片下方不再有說明文字 */
+  await expect(page.locator('#ledgerEntrySheet .ledger-receipt-field .ledger-receipt-note:not(.ledger-receipt-privacy)')).toHaveCount(0);
 });
 
 test('clearing local media removes receipt photos together with shopping photos',async({page})=>{

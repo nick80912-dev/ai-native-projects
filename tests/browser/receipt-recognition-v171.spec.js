@@ -58,7 +58,9 @@ async function openForm(page){
   await page.evaluate(()=>{switchView('split');openLedgerEntrySheet(false);});
   await page.locator('#ledgerEntrySheet .ledger-sheet-choice',{hasText:'個人'}).click();
 }
-const scan=page=>page.locator('#ledgerEntrySheet .ledger-receipt-scan');
+/* v175:照片下方不再顯示辨識訊息(只在彈出視窗);訊息內容改從表單資料讀 */
+const scanMessage=page=>page.evaluate(()=>{const d=ledgerUiState.draft;return d&&d.receiptScan?d.receiptScan.message||'':'';});
+const cardNotes=page=>page.locator('#ledgerReceiptCard .ledger-receipt-card-note:not(.ledger-receipt-card-time)');
 /* v174:讀完收據會跳出結果視窗,要先按「好」才能操作後面的表單 */
 async function closeReceiptDialog(page){
   const ok=page.locator('#ledgerReceiptDialog .ledger-receipt-card-ok');
@@ -74,9 +76,10 @@ test('a receipt fills the empty fields; the time on the receipt beats the photo 
   await openForm(page);
   await expect(page.locator('#ledgerEntrySheet .ledger-receipt-privacy')).toContainText('照片會傳到 Google');
   await page.evaluate(()=>window.__addReceipt('2026:10:20 12:45:10'));
-  await expect(scan(page)).toHaveText('已依收據帶入時間、金額 ¥1,580、店名「ローソン 倉敷店」，請確認');
+  await expect.poll(()=>scanMessage(page)).toBe('已依收據帶入時間、金額 ¥1,580、店名「ローソン 倉敷店」，請確認');
   expect(await draftFields(page)).toEqual({date:'2026/10/20',time:'12:41',amount:'1580',currency:'JPY',store:'ローソン 倉敷店'});
-  await expect(page.locator('#ledgerReceiptTimeNote')).toHaveText('已用收據上的時間帶入消費時間：10/20 12:41（可以再改）');
+  await expect(page.locator('#ledgerReceiptCard .ledger-receipt-card-row').first()).toHaveText('時間10/20 12:41');
+  expect(await page.evaluate(()=>ledgerUiState.draft.receiptTimeNote)).toBe('已用收據上的時間帶入消費時間：10/20 12:41（可以再改）');
   await expect(page.locator('#ledgerAmount')).toHaveValue('1580');
   const sent=await page.evaluate(()=>window.__aiRequests.map(body=>({action:body.action,mimeType:body.mimeType,currency:body.currency,hasImage:/^[A-Za-z0-9+/]+=*$/.test(body.image)&&body.image.length>100})));
   expect(sent).toEqual([{action:'recognizeReceipt',mimeType:'image/jpeg',currency:'JPY',hasImage:true}]);
@@ -89,7 +92,7 @@ test('a receipt fills the empty fields; the time on the receipt beats the photo 
   /* 第二張照片不再送出 */
   await openForm(page);
   await page.evaluate(()=>window.__addReceipt(null));
-  await expect(scan(page)).toHaveCount(1);
+  await expect.poll(()=>scanMessage(page)).not.toBe('');
   await page.evaluate(()=>window.__addReceipt(null));
   expect(await page.evaluate(()=>window.__aiRequests.length)).toBe(2);
 });
@@ -101,13 +104,14 @@ test('what you already typed stays; a changed time only gets a suggestion',async
   await page.locator('#ledgerAmount').fill('3000');
   await page.evaluate(()=>{const d=ledgerUiState.draft;d.storeName='自己打的店名';d.occurredDate='2026/10/19';d.occurredTime='21:00';});
   await page.evaluate(()=>window.__addReceipt(null));
-  await expect(scan(page)).toHaveText('收據讀好了，表單已經有填，沒有改動');
-  await expect(page.locator('#ledgerEntrySheet .ledger-receipt-scan-note')).toHaveText('收據總額 ¥3,200');
+  await expect.poll(()=>scanMessage(page)).toBe('收據讀好了，表單已經有填，沒有改動');
+  await expect(cardNotes(page)).toHaveText('收據總額 ¥3,200');
   expect(await draftFields(page)).toEqual({date:'2026/10/19',time:'21:00',amount:'3000',currency:'JPY',store:'自己打的店名'});
-  await expect(page.locator('#ledgerReceiptTimeNote')).toContainText('收據上的時間是 10/19 20:05');
-  await closeReceiptDialog(page);
-  await page.getByRole('button',{name:'改用收據時間'}).click();
-  await expect(page.locator('#ledgerReceiptTimeNote')).toHaveText('已改用收據上的時間：10/19 20:05');
+  /* v175:時間建議與「改用收據時間」在彈出視窗裡 */
+  await expect(page.locator('#ledgerReceiptCard .ledger-receipt-card-time')).toHaveText('收據上的時間是 10/19 20:05');
+  await page.locator('#ledgerReceiptCard').getByRole('button',{name:'改用收據時間'}).click();
+  await expect(page.locator('#ledgerReceiptCard')).toContainText('已改用收據上的時間：10/19 20:05');
+  await expect(page.locator('#ledgerReceiptCard').getByRole('button',{name:'改用收據時間'})).toHaveCount(0);
   expect((await draftFields(page)).time).toBe('20:05');
 });
 
@@ -116,14 +120,14 @@ test('a receipt in another currency is not filled in; TWD switches the entry to 
   await page.evaluate(()=>{window.__aiReply={ok:true,receipt:{total:1580,currency:'JPY'}};});
   await openForm(page);
   await page.evaluate(()=>window.__addReceipt(null));
-  await expect(page.locator('#ledgerEntrySheet .ledger-receipt-scan-note')).toHaveText('收據上的幣別是 JPY，不是這趟的 KRW 或 TWD，金額沒有帶入');
+  await expect(cardNotes(page)).toHaveText('收據上的幣別是 JPY，不是這趟的 KRW 或 TWD，金額沒有帶入');
   expect((await draftFields(page)).amount).toBe('');
   expect(await page.evaluate(()=>window.__aiRequests[0].currency)).toBe('KRW');
   await page.evaluate(()=>closeLedgerEntrySheet());
   await page.evaluate(()=>{window.__aiReply={ok:true,receipt:{total:'350',currency:'TWD',storeName:'7-ELEVEN'}};});
   await openForm(page);
   await page.evaluate(()=>window.__addReceipt(null));
-  await expect(scan(page)).toHaveText('已依收據帶入金額 NT$350、店名「7-ELEVEN」，請確認');
+  await expect.poll(()=>scanMessage(page)).toBe('已依收據帶入金額 NT$350、店名「7-ELEVEN」，請確認');
   const fields=await draftFields(page);
   expect([fields.amount,fields.currency]).toEqual(['350','TWD']);
 });
@@ -133,21 +137,21 @@ test('failures say what to do, and 重試 reads the photo again',async({page})=>
   await page.evaluate(()=>{window.__aiReply={ok:false,error:'missing or invalid ledger fields'};});
   await openForm(page);
   await page.evaluate(()=>window.__addReceipt(null));
-  await expect(scan(page)).toContainText('Apps Script 還沒更新到能讀收據的版本');
+  await expect.poll(()=>scanMessage(page)).toContain('Apps Script 還沒更新到能讀收據的版本');
   await page.evaluate(()=>{window.__aiReply={ok:false,error:'quota'};});
   await page.locator('#ledgerReceiptCard').getByRole('button',{name:'重試'}).click();   // v174:結果卡片上的重試
-  await expect(scan(page)).toContainText('今天的免費辨識次數用完了');
+  await expect.poll(()=>scanMessage(page)).toContain('今天的免費辨識次數用完了');
   await page.evaluate(()=>{window.__aiReply={ok:false,error:'missing GEMINI_API_KEY'};});
   await page.locator('#ledgerReceiptCard').getByRole('button',{name:'重試'}).click();   // v174:結果卡片上的重試
-  await expect(scan(page)).toContainText('GEMINI_API_KEY');
+  await expect.poll(()=>scanMessage(page)).toContain('GEMINI_API_KEY');
   await page.evaluate(()=>{window.__aiReply={ok:true,receipt:{storeName:'丸亀製麵'}};});
   await page.locator('#ledgerReceiptCard').getByRole('button',{name:'重試'}).click();   // v174:結果卡片上的重試
-  await expect(scan(page)).toHaveText('已依收據帶入店名「丸亀製麵」，請確認');
+  await expect.poll(()=>scanMessage(page)).toBe('已依收據帶入店名「丸亀製麵」，請確認');
   await page.evaluate(()=>{window.__aiReply={ok:true,receipt:{date:'',total:null,storeName:''}};});
   await page.evaluate(()=>{closeLedgerEntrySheet();});
   await openForm(page);
   await page.evaluate(()=>window.__addReceipt(null));
-  await expect(scan(page)).toHaveText('看不出這張照片上的收據內容，請手動輸入');
+  await expect.poll(()=>scanMessage(page)).toBe('看不出這張照片上的收據內容，請手動輸入');
   expect(await page.evaluate(()=>window.__aiRequests.length)).toBe(5);
 });
 
@@ -163,12 +167,14 @@ test('turned off or offline, nothing is sent',async({page})=>{
   await expect(page.locator('#ledgerEntrySheet .ledger-receipt-privacy')).toHaveCount(0);
   await page.evaluate(()=>window.__addReceipt(null));
   await expect(page.locator('#ledgerEntrySheet .ledger-receipt-thumb')).toHaveCount(1);
-  await expect(scan(page)).toHaveCount(0);
+  await expect(page.locator('#ledgerReceiptDialog')).toHaveCount(0);
+  expect(await scanMessage(page)).toBe('');
   await page.evaluate(()=>{closeLedgerEntrySheet();localStorage.setItem(RECEIPT_RECOGNITION_KEY,JSON.stringify('on'));window.__online=false;});
   await openForm(page);
   await page.evaluate(()=>window.__addReceipt(null));
   await expect(page.locator('#ledgerEntrySheet .ledger-receipt-thumb')).toHaveCount(1);
-  await expect(scan(page)).toHaveCount(0);
+  await expect(page.locator('#ledgerReceiptDialog')).toHaveCount(0);
+  expect(await scanMessage(page)).toBe('');
   expect(await page.evaluate(()=>window.__aiRequests.length)).toBe(0);
 });
 
@@ -208,7 +214,7 @@ test('the pay method and category come from the receipt when still at the defaul
   const before=await page.evaluate(()=>[ledgerUiState.draft.payMethod,ledgerUiState.draft.category]);
   expect(before).toEqual(['現金','餐飲']);
   await page.evaluate(()=>window.__addReceipt(null));
-  await expect(scan(page)).toHaveText('已依收據帶入金額 ¥420、店名「JR 岡山駅」、支付方式「行動支付」、類別「交通」，請確認');
+  await expect.poll(()=>scanMessage(page)).toBe('已依收據帶入金額 ¥420、店名「JR 岡山駅」、支付方式「行動支付」、類別「交通」，請確認');
   expect(await page.evaluate(()=>[ledgerUiState.draft.payMethod,ledgerUiState.draft.category])).toEqual(['行動支付','交通']);
   const sent=await page.evaluate(()=>[window.__aiRequests[0].payMethods,window.__aiRequests[0].categories]);
   expect(sent[0]).toEqual(['現金','信用卡','行動支付','Suica','其他']);
@@ -226,13 +232,13 @@ test('a pay method or category you picked yourself stays; answers outside your o
   await openForm(page);
   await page.evaluate(()=>{selectLedgerPayMethod('信用卡');selectLedgerCategory('購物');});
   await page.evaluate(()=>window.__addReceipt(null));
-  await expect(scan(page)).toHaveText('已依收據帶入店名「カフェ」，請確認');
+  await expect.poll(()=>scanMessage(page)).toBe('已依收據帶入店名「カフェ」，請確認');
   expect(await page.evaluate(()=>[ledgerUiState.draft.payMethod,ledgerUiState.draft.category])).toEqual(['信用卡','購物']);
   await page.evaluate(()=>closeLedgerEntrySheet());
   await page.evaluate(()=>{window.__aiReply={ok:true,receipt:{storeName:'屋台',payMethod:'PayPay',category:'Food'}};});
   await openForm(page);
   await page.evaluate(()=>window.__addReceipt(null));
-  await expect(scan(page)).toHaveText('已依收據帶入店名「屋台」，請確認');
+  await expect.poll(()=>scanMessage(page)).toBe('已依收據帶入店名「屋台」，請確認');
   expect(await page.evaluate(()=>[ledgerUiState.draft.payMethod,ledgerUiState.draft.category])).toEqual(['現金','餐飲']);
 });
 
@@ -274,7 +280,7 @@ test('lines that do not add up to the total get a note about tax or discounts',a
   await page.evaluate(()=>{window.__aiReply={ok:true,receipt:{total:1980,currency:'JPY',items:[{name:'お土産A',amount:1000},{name:'お土産B',amount:800}]}};});
   await openMultiForm(page);
   await page.evaluate(()=>window.__addReceipt(null));
-  await expect(page.locator('#ledgerEntrySheet .ledger-receipt-scan-note')).toHaveText('品項加總 ¥1,800，收據總額 ¥1,980；可能是未稅價或另有折扣，請檢查「稅與優惠券」');
+  await expect(cardNotes(page)).toHaveText('品項加總 ¥1,800，收據總額 ¥1,980；可能是未稅價或另有折扣，請檢查「稅與優惠券」');
 });
 
 test('a single entry keeps 明細 empty and offers to switch to the receipt lines',async({page})=>{
@@ -282,7 +288,7 @@ test('a single entry keeps 明細 empty and offers to switch to the receipt line
   await page.evaluate(reply=>{window.__aiReply=reply;},receiptLines);
   await openForm(page);
   await page.evaluate(()=>window.__addReceipt(null));
-  await expect(scan(page)).toHaveText('已依收據帶入金額 ¥1,780、店名「一蘭」，請確認');
+  await expect.poll(()=>scanMessage(page)).toBe('已依收據帶入金額 ¥1,780、店名「一蘭」，請確認');
   expect(await page.evaluate(()=>[ledgerUiState.draft.multi,ledgerUiState.draft.detail])).toEqual([false,'']);
   await closeReceiptDialog(page);
   await page.getByRole('button',{name:'改成多品項並帶入'}).click();
@@ -400,4 +406,18 @@ test('reading, failure and nothing-found states show in the card',async({page})=
   /* 讀取中只在表單上方,不跳視窗 */
   const reading=await page.evaluate(()=>{const d=ledgerUiState.draft;d.receiptCard={open:true,status:'reading'};renderLedgerEntrySheet();return [document.getElementById('ledgerReceiptReading').textContent,!!document.getElementById('ledgerReceiptDialog')];});
   expect(reading).toEqual(['正在讀取收據…',false]);
+});
+
+
+/* v175(Bar 2026-10-31):收據照片下方只留「收據上有 N 個品項」與按鈕 */
+test('under the receipt photos only the receipt-lines offer remains',async({page})=>{
+  await boot(page,null);
+  await page.evaluate(reply=>{window.__aiReply=reply;},receiptLines);
+  await openForm(page);
+  await page.evaluate(()=>window.__addReceipt('2026:10:20 12:45:10'));
+  await expect(page.locator('#ledgerReceiptDialog')).toHaveCount(1);
+  const notes=page.locator('#ledgerEntrySheet .ledger-receipt-field .ledger-receipt-note:not(.ledger-receipt-privacy)');
+  await expect(notes).toHaveCount(1);
+  await expect(notes).toHaveText('收據上有 2 個品項 改成多品項並帶入');
+  await expect(page.locator('#ledgerEntrySheet .ledger-receipt-field .ledger-receipt-error')).toHaveCount(0);
 });
