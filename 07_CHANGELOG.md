@@ -1,5 +1,25 @@
 # 07 版本紀錄
 
+## 2026-10-31 — v171 收據照片自動讀取（開發中，未發布）
+
+- **來源**：backlog #61（Bar 2026-10-30 裁定用雲端 AI；2026-10-31 併入讀收據上的日期時間；2026-10-31 Bar 申請好 Gemini API 金鑰並放進岡山 Apps Script 的指令碼屬性，回覆「完成，已使用免費版方式」——免費版的內容可能被 Google 用來改善產品，Bar 已知悉並接受照片傳到 Google 一次）。
+- **使用上**：
+  - 記帳加收據照片後，有網路就自動讀取收據上的日期、時間、總額、幣別、店名，只填還空著的欄位，存檔前都可以改；收據欄下方顯示讀到什麼（例如「已依收據帶入時間、金額 ¥1,580、店名「ローソン 倉敷店」，請確認」）。
+  - 收據上的時間優先於照片的拍攝時間（v167）：時間還是預設值或照片時間時直接換；自己改過或編輯舊帳時只提示，按「改用收據時間」才換。
+  - 總額：單品項、金額空白時帶入；收據是台幣就切到台幣；幣別不是這趟的當地幣別或台幣、或是多品項時，只提示總額不自動填。
+  - 讀不到或失敗時說明原因（Apps Script 還沒更新、沒放金鑰、今天免費次數用完、逾時、連不上網路）並可「重試」；沒有網路時不送。一張成功後，同一筆帳的其他照片不再送。
+  - 收據欄下方註明「有網路時，照片會傳到 Google 讀取日期、金額與店名一次」；每支手機可在「設定 → 帳務 → 收據自動辨識」關閉（旅伴的照片也會送出，所以各自決定）。
+- **Bar 要做的事（上線後）**：把最新的 `apps-script/ledger-sync.gs` 貼到岡山試算表的 Apps Script，儲存後「部署 → 管理部署作業 → 編輯 → 新版本 → 部署」（網址不變）；這次會多要求一次「連線到外部服務」的授權。沒更新前 App 會顯示「Apps Script 還沒更新到能讀收據的版本」，記帳照常。
+- **做法**：
+  - `apps-script/ledger-sync.gs`：新增 `recognizeReceipt()`（`doPost` 的 `action:'recognizeReceipt'`，**不拿鎖**，不擋同時間的記帳），從指令碼屬性讀 `GEMINI_API_KEY`（可選 `GEMINI_MODEL`，預設 `gemini-flash-lite-latest`），以 header `x-goog-api-key` 呼叫 `generativelanguage.googleapis.com/v1beta/models/<模型>:generateContent`（`responseMimeType: application/json`、`temperature: 0`），提示這趟的當地幣別；圖片限 JPEG／PNG／WebP 的 base64、約 4.5 MB 以內；回覆只取五個欄位（`receiptFields()`）。429 回 `quota`。舊部署收到這個 action 會因缺少紀錄欄位而回錯誤，不會寫入。
+  - `ledger-receipts.js`：`normalizeRecognition()`（日期 2000–2100 且真實存在、時間 24 小時制、總額正數、幣別三碼、店名 40 字）。
+  - shell：`receiptRecognitionEnabled()`／`setReceiptRecognition()`／`renderReceiptRecognitionSetting()`、`ledgerReceiptShouldRecognize()`、`postLedgerReceiptRecognition()`（30 秒逾時）、`recognizeLedgerReceipt()`、`retryLedgerReceiptRecognition()`、`applyLedgerReceiptRecognition()`、`ledgerReceiptTimeReplaceable()`、`renderLedgerReceiptScan()`；`applyLedgerReceiptPhotoTime()` 記下自動帶入的照片時間（`receiptAutoTime`），讓收據時間可以蓋過；「改用…時間」依來源顯示照片或收據。
+- **版本**：forward bump v170→v171；`builtin-snapshot.js` 以 v170 asset 離線重產，除版本外不變。發布說明視窗為 `v171` + `['v170','v169','v168','v167']`（v166 滾出）。`tests/trip-lifecycle-wiring.test.js` 加入已發布 v170 三件組的 hash。
+- **測試**：
+  - `tests/apps-script-settings.test.js`：辨識只回五個欄位、不寫分帳紀錄、不拿鎖；金鑰放 header 不放網址；預設與自訂模型、模型名稱檢查；沒有金鑰不呼叫 AI；圖片格式與大小；429、403、回覆不是 JSON、連不上；程式裡沒有金鑰；一般記帳仍拿鎖。`tests/ledger-receipts.test.js`：`normalizeRecognition()` 各種格式。
+  - 新增 `tests/browser/receipt-recognition-v171.spec.js`（5 項，攔截送往 Apps Script 的 POST）：讀到的時間蓋過照片時間、帶入金額與店名並存成一般的帳、第二張照片不再送；自己打的金額店名不被蓋、改過的時間只提示並可改用；韓元旅程收到日圓收據不帶金額、台幣收據切到台幣；舊 Apps Script／免費次數用完／沒放金鑰的說明與重試、看不出收據內容；關閉或離線時不送、設定頁的開關。
+- **回滾**：合併前關閉 PR；發布後依 `16_OPS_PLAYBOOK.md` §A1 退回 v170 的 Netlify 部署（`commit_ref` `da3cd89`），再往前 bump。Apps Script 新版即使不退也不影響記帳（新增的 action 只在 App 呼叫時才用）。
+
 ## 2026-10-31 — v170 已上線 main（待 Bar 手機審查與 tag）
 
 - PR [#105](https://github.com/nick80912-dev/ai-native-projects/pull/105) 在 head `2d318c2` 的 sanity／browser-qa 全綠後合併進 `dev`（`b38e3f5`，釘住 head）；PR [#106](https://github.com/nick80912-dev/ai-native-projects/pull/106)（並帶 v169 發布紀錄 PR #104）合併 `dev` → `main`，merge commit **`da3cd89`**。合併 tree `0125e9c` 與 `2d318c2` 相同。本機完整 Chromium 401 passed，只有已知只在本機失敗的兩項，沒有略過的測試。

@@ -5,13 +5,13 @@
 
 ## 📌 現況
 
-**正式站是 v170**（2026-10-31 發布，PR #106，`main` `da3cd89`；v157–v170 待 Bar 手機審查與 tag）。#57 中優先與 #59 收據照片已完成。依 Bar 2026-10-31 裁定先做 #62「不限日本」：v168 幣別基礎、v169 每趟自己的稅、v170 天氣時區／預設支付方式／文案／新旅程手冊都已上線；下一項是 #61 收據辨識（含收據上的日期時間）。每批一版、逐版送 main 給 Bar 手機審查（Bar 2026-10-30 選定）。
+**正式站是 v170**（2026-10-31 發布，PR #106，`main` `da3cd89`；v157–v170 待 Bar 手機審查與 tag）。#57 中優先與 #59 收據照片已完成。依 Bar 2026-10-31 裁定先做 #62「不限日本」：v168 幣別基礎、v169 每趟自己的稅、v170 天氣時區／預設支付方式／文案／新旅程手冊都已上線；**v171 開發中**：#61 收據辨識（Bar 2026-10-31 已申請 Gemini 免費版金鑰並放進岡山 Apps Script）。每批一版、逐版送 main 給 Bar 手機審查（Bar 2026-10-30 選定）。
 
 | 項目 | 值 |
 |---|---|
 | **正式站** | `https://trippilot-jp.netlify.app/` — **SW v170** |
 | **`origin/main`** | merge commit `da3cd89`（PR [#106](https://github.com/nick80912-dev/ai-native-projects/pull/106)） |
-| **`dev`** | 與 `main` 同為 v170（PR [#105](https://github.com/nick80912-dev/ai-native-projects/pull/105) 合併為 `b38e3f5`） |
+| **`dev`** | v170（PR [#105](https://github.com/nick80912-dev/ai-native-projects/pull/105) 合併為 `b38e3f5`）；v171 開發中 |
 | 個人備份格式 | **v10**（`PERSONAL_STATE_VERSION=10`；相容策略見 `docs/personal-state-compatibility.md`） |
 | 最新正式 tag | **`production-v156`** → `bc59984`。v157（`63f9bde`）、v158（`17c609c`）、v159（`6ae06f2`）、v160（`3c27c22`）、v161（`a9e27c9`）、v162（`460a0f5`）、v163（`af2625c`）、v164（`023a229`）、v165（`db2c02a`）、v166（`11c0330`）、v167（`afd65df`）、v168（`4e4b2f0`）、v169（`0c4fe6b`）、v170（`da3cd89`）已上線，**等 Bar 手機審查後建立 tag** |
 | shell 世代 | repo 只保留 v154 起（ADR 0019 增補段） |
