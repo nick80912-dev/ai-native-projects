@@ -1,5 +1,18 @@
 # 07 版本紀錄
 
+## 2026-10-31 — v174 收據辨識結果改在表單最上方顯示（開發中，未發布）
+
+- **來源**：Bar 2026-10-31 問辨識結果要不要用提示視窗；我建議不用擋畫面的視窗（辨識在背景進行，跳窗會打斷正在打字的人），改在表單頂端放結果卡片，Bar 選「表單頂端結果卡片」。
+- **使用上**：
+  - 讀完收據後，表單最上方（「目前記帳身分」下面、帳本／幣別上面）出現卡片，標題「已依收據帶入（請確認）」，逐項列出帶入的時間、金額、店名、支付方式、類別、品項；附註（收據時間只提示、幣別不同、品項加總對不上等）列在下方。卡片出現時捲到看得到的位置。
+  - 「好」收起卡片；「復原」把這次辨識改過的欄位全部改回辨識前（含「改成多品項並帶入」），照片保留。
+  - 被收據填過、而且還沒改過的欄位，標籤旁顯示小標「收據」（金額、日期、店家、支付方式、類別）；自己改了就不顯示。
+  - 讀取中、失敗（附「重試」）、看不出收據內容也都顯示在同一張卡片；收據欄下方原本的訊息保留。
+- **做法**：`renderLedgerReceiptCard()` 放在 `renderLedgerEntrySheet()` 的標題列之後；`showLedgerReceiptCard()`、`dismissLedgerReceiptCard()`、`undoLedgerReceiptRecognition()`；`applyLedgerReceiptRecognition()` 先存 `ledgerReceiptSnapshot()`（`LEDGER_RECEIPT_UNDO_FIELDS`），回傳 `rows`、`filled`、`undo`；`ledgerReceiptTag()` 依 `receiptFilled` 與目前值比對。
+- **版本**：forward bump v173→v174；`builtin-snapshot.js` 以 v173 asset 離線重產，除版本外不變。發布說明視窗為 `v174` + `['v173','v172','v171','v170']`（v169 滾出）。`tests/trip-lifecycle-wiring.test.js` 加入已發布 v173 三件組的 hash。Apps Script 不變。
+- **測試**：`tests/browser/receipt-recognition-v171.spec.js` 新增 4 項：卡片在表單最上方且在畫面內、逐項列出、「收據」小標在改了之後消失、「好」收起；「復原」改回時間金額店名支付方式類別、照片保留；「復原」也改回「改成多品項並帶入」；讀取中、失敗與重試、看不出收據內容。原本重試的測試改按卡片上的「重試」。
+- **回滾**：合併前關閉 PR；發布後依 `16_OPS_PLAYBOOK.md` §A1 退回 v173 的 Netlify 部署（`commit_ref` `625fbd0`），再往前 bump。
+
 ## 2026-10-31 — v173 已上線 main（待 Bar 更新岡山 Apps Script、手機審查與 tag）
 
 - PR [#113](https://github.com/nick80912-dev/ai-native-projects/pull/113)（v172 發布紀錄＋v173）在 head `3b6f9c2` 的 sanity／browser-qa 全綠後合併進 `dev`（`c84cc78`，釘住 head）；PR [#114](https://github.com/nick80912-dev/ai-native-projects/pull/114) 合併 `dev` → `main`，merge commit **`625fbd0`**。合併 tree `2be7622` 與 `3b6f9c2` 相同。本機完整 Chromium 415 passed，只有已知只在本機失敗的兩項，沒有略過的測試；反向驗證：把多品項收據欄的修正改回去，對應測試失敗。

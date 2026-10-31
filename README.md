@@ -37,8 +37,8 @@
 
 ## 專案檔案
 - `index.html` / `app-version.js` — 保留 v110 predecessor bridge；讓尚未更新的 v110 worker 在 current generation 安裝失敗時仍可運作
-- `shell/v173/index.html` / `shell/v173/app-version.js` — current generation（正式版）的 App 文件與 runtime 版本來源；成功啟用的 `sw.js` 才接管 root 導覽；已發布 generation 保持不可變，repo 只保留最近幾代（見 ADR 0019 增補段）
-- `shell/v173/builtin-snapshot.js` — 由 `tools/refresh-builtin-snapshot.js` 產生的版本綁定離線資料資產；八表內容沿用已核准的 v136 種子 CSV（`tests/trip-lifecycle-wiring.test.js` 比對），升版只更新版本標記；禁止手動修改
+- `shell/v174/index.html` / `shell/v174/app-version.js` — current generation（正式版）的 App 文件與 runtime 版本來源；成功啟用的 `sw.js` 才接管 root 導覽；已發布 generation 保持不可變，repo 只保留最近幾代（見 ADR 0019 增補段）
+- `shell/v174/builtin-snapshot.js` — 由 `tools/refresh-builtin-snapshot.js` 產生的版本綁定離線資料資產；八表內容沿用已核准的 v136 種子 CSV（`tests/trip-lifecycle-wiring.test.js` 比對），升版只更新版本標記；禁止手動修改
 - `navigation-intent.js` — 明確導覽目的地的 session-only state module；DOM 定位與回饋 adapter 位於 `index.html`
 - `diagnostic-impact.js` — AppLog 原始紀錄的 display-only impact projection；顯示 adapter 位於 `index.html`
 - `today-view.js` — Today Hero 採買摘要的純 model／renderer module；資料選擇與 DOM effects 留在 `index.html`

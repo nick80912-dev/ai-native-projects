@@ -127,13 +127,13 @@ test('failures say what to do, and 重試 reads the photo again',async({page})=>
   await page.evaluate(()=>window.__addReceipt(null));
   await expect(scan(page)).toContainText('Apps Script 還沒更新到能讀收據的版本');
   await page.evaluate(()=>{window.__aiReply={ok:false,error:'quota'};});
-  await page.getByRole('button',{name:'重試'}).click();
+  await page.locator('#ledgerReceiptCard').getByRole('button',{name:'重試'}).click();   // v174:結果卡片上的重試
   await expect(scan(page)).toContainText('今天的免費辨識次數用完了');
   await page.evaluate(()=>{window.__aiReply={ok:false,error:'missing GEMINI_API_KEY'};});
-  await page.getByRole('button',{name:'重試'}).click();
+  await page.locator('#ledgerReceiptCard').getByRole('button',{name:'重試'}).click();   // v174:結果卡片上的重試
   await expect(scan(page)).toContainText('GEMINI_API_KEY');
   await page.evaluate(()=>{window.__aiReply={ok:true,receipt:{storeName:'丸亀製麵'}};});
-  await page.getByRole('button',{name:'重試'}).click();
+  await page.locator('#ledgerReceiptCard').getByRole('button',{name:'重試'}).click();   // v174:結果卡片上的重試
   await expect(scan(page)).toHaveText('已依收據帶入店名「丸亀製麵」，請確認');
   await page.evaluate(()=>{window.__aiReply={ok:true,receipt:{date:'',total:null,storeName:''}};});
   await page.evaluate(()=>{closeLedgerEntrySheet();});
@@ -304,4 +304,73 @@ test('the receipt field shows on multi-item entries but not on entries from the 
   await expect(page.locator('#ledgerEntrySheet .ledger-receipt-field')).toHaveCount(1);
   const fromShopping=await page.evaluate(()=>{const draft=ledgerUiState.draft;draft.items[0].sourceShoppingItemId='shop-1';draft.items[0].sourceShoppingAllocationId='alloc-1';return ledgerReceiptFieldVisible(draft);});
   expect(fromShopping).toBe(false);
+});
+
+/* v174(Bar 2026-10-31 選「表單頂端結果卡片」):結果在表單最上方、可「好」收起、可「復原」;填過的欄位標「收據」 */
+const card=page=>page.locator('#ledgerReceiptCard');
+test('the result card at the top lists what was filled; 好 closes it',async({page})=>{
+  await page.setViewportSize({width:390,height:844});
+  await boot(page,null);
+  await page.evaluate(()=>{window.__aiReply={ok:true,receipt:{date:'2026-10-20',time:'12:41',total:1580,currency:'JPY',storeName:'ローソン 倉敷店',payMethod:'行動支付',category:'交通'}};});
+  await openForm(page);
+  await page.evaluate(()=>window.__addReceipt(null));
+  await expect(card(page).locator('strong')).toHaveText('已依收據帶入（請確認）');
+  await expect(card(page).locator('.ledger-receipt-card-row')).toHaveText(['時間10/20 12:41','金額¥1,580','店名ローソン 倉敷店','支付方式行動支付','類別交通']);
+  /* 卡片在表單最上面(在帳本／幣別之前),而且在畫面裡 */
+  const order=await page.evaluate(()=>{const sheet=document.querySelector('#ledgerEntrySheet .ledger-sheet');const c=document.getElementById('ledgerReceiptCard'),seg=sheet.querySelector('.ledger-sheet-track');return !!(c.compareDocumentPosition(seg)&Node.DOCUMENT_POSITION_FOLLOWING);});
+  expect(order).toBe(true);
+  await expect(card(page)).toBeInViewport();
+  /* 填過的欄位標「收據」;自己改了就不標 */
+  await expect(page.locator('label[for="ledgerAmount"] .ledger-receipt-tag')).toHaveText('收據');
+  await expect(page.locator('label[for="ledgerOccurredDate"] .ledger-receipt-tag')).toHaveCount(await page.locator('label[for="ledgerOccurredDate"]').count());
+  await page.locator('#ledgerAmount').fill('1600');
+  await page.evaluate(()=>renderLedgerEntrySheet());
+  await expect(page.locator('label[for="ledgerAmount"] .ledger-receipt-tag')).toHaveCount(0);
+  await card(page).getByRole('button',{name:'好'}).click();
+  await expect(card(page)).toHaveCount(0);
+});
+
+test('復原 puts back everything the receipt changed',async({page})=>{
+  await boot(page,null);
+  await page.evaluate(()=>{window.__aiReply={ok:true,receipt:{date:'2026-10-19',time:'20:05',total:3200,currency:'JPY',storeName:'鳥貴',payMethod:'信用卡',category:'購物'}};});
+  await openForm(page);
+  const before=await page.evaluate(()=>{const d=ledgerUiState.draft;return {date:d.occurredDate,time:d.occurredTime,amount:d.amount,store:d.storeName,pay:d.payMethod,category:d.category};});
+  await page.evaluate(()=>window.__addReceipt(null));
+  await expect(card(page).getByRole('button',{name:'復原'})).toBeVisible();
+  await card(page).getByRole('button',{name:'復原'}).click();
+  await expect(card(page).locator('strong')).toHaveText('已復原，收據帶入的內容都改回去了');
+  await expect(card(page).getByRole('button',{name:'復原'})).toHaveCount(0);
+  const after=await page.evaluate(()=>{const d=ledgerUiState.draft;return {date:d.occurredDate,time:d.occurredTime,amount:d.amount,store:d.storeName,pay:d.payMethod,category:d.category};});
+  expect(after).toEqual(before);
+  await expect(page.locator('#ledgerEntrySheet .ledger-receipt-tag')).toHaveCount(0);
+  /* 照片還在,只是內容改回去 */
+  await expect(page.locator('#ledgerEntrySheet .ledger-receipt-thumb')).toHaveCount(1);
+});
+
+test('復原 also undoes switching to the receipt lines',async({page})=>{
+  await boot(page,null);
+  await page.evaluate(reply=>{window.__aiReply=reply;},receiptLines);
+  await openForm(page);
+  await page.evaluate(()=>window.__addReceipt(null));
+  await page.getByRole('button',{name:'改成多品項並帶入'}).click();
+  await expect(card(page).locator('.ledger-receipt-card-row')).toHaveText(['品項醤油ラーメン、生ビール x2']);
+  await card(page).getByRole('button',{name:'復原'}).click();
+  expect(await page.evaluate(()=>[ledgerUiState.draft.multi,ledgerUiState.draft.amount,ledgerUiState.draft.discount])).toEqual([false,'1780','']);
+});
+
+test('reading, failure and nothing-found states show in the card',async({page})=>{
+  await boot(page,null);
+  await page.evaluate(()=>{window.__aiReply={ok:false,error:'quota'};});
+  await openForm(page);
+  await page.evaluate(()=>window.__addReceipt(null));
+  await expect(card(page)).toHaveClass(/is-warning/);
+  await expect(card(page).locator('strong')).toContainText('今天的免費辨識次數用完了');
+  await expect(card(page).getByRole('button',{name:'重試'})).toBeVisible();
+  await page.evaluate(()=>{window.__aiReply={ok:true,receipt:{}};});
+  await card(page).getByRole('button',{name:'重試'}).click();
+  await expect(card(page).locator('strong')).toHaveText('看不出這張照片上的收據內容，請手動輸入');
+  await expect(card(page).getByRole('button',{name:'復原'})).toHaveCount(0);
+  /* 讀取中 */
+  const reading=await page.evaluate(()=>{const d=ledgerUiState.draft;d.receiptCard={open:true,status:'reading'};renderLedgerEntrySheet();return document.getElementById('ledgerReceiptCard').textContent;});
+  expect(reading).toBe('正在讀取收據…');
 });
