@@ -1,6 +1,12 @@
 # 07 版本紀錄
 
-## 2026-10-31 — v169 稅可以每趟自己設定；簡易結算說明收進「!」（開發中，未發布）
+## 2026-10-31 — v169 已上線 main（待 Bar 手機審查與 tag）
+
+- PR [#102](https://github.com/nick80912-dev/ai-native-projects/pull/102) 在 head `141072c` 的 sanity／browser-qa 全綠後合併進 `dev`（`7cec86f`，釘住 head）；PR [#103](https://github.com/nick80912-dev/ai-native-projects/pull/103)（並帶 v168 發布紀錄 PR #101）合併 `dev` → `main`，merge commit **`0c4fe6b`**。合併 tree `b116722` 與 `141072c` 相同。本機完整 Chromium 398 passed，只有已知只在本機失敗的兩項，沒有略過的測試。
+- **線上核對**：正式站 `sw.js` 為 `SW_VERSION='v169'`；全新 Chromium 開正式站，`APP_VERSION` 為 v169、只剩 `okayama-trip-v169` 快取，發布說明為「稅可以每趟自己設定」；快取內的 `trip-currency.js` 已有 `taxSettings`（離線可用）；岡山（沒填）＝10／8、含稅、可標免稅品，韓元沒填＝不顯示稅；簡易結算的「!」按鈕存在；沒有 pageerror。Netlify deploy ID 未另查。
+- 回滾：依 `16_OPS_PLAYBOOK.md` §A1 Publish `commit_ref` = `4e4b2f0`（v168）的部署，再往前 bump。
+
+## 2026-10-31 — v169 稅可以每趟自己設定；簡易結算說明收進「!」（已上線 main，見上）
 
 - **來源**：backlog #62 第二批（設計 `docs/superpowers/specs/2026-10-31-multi-country-trips.md` §3.1、§3.5；Bar 2026-10-31 裁定「稅每趟自己設定，不需要的旅程不顯示稅的選項，日本旅程維持現在的樣子」）。同一批加上 Bar 2026-10-31「簡易結算模式下的說明變成！點開的資訊顯示就好」。
 - **使用上**：
