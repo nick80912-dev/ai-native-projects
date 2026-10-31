@@ -1,6 +1,12 @@
 # 07 版本紀錄
 
-## 2026-10-31 — v168 不只日本：可以設定當地幣別（開發中，未發布）
+## 2026-10-31 — v168 已上線 main（待 Bar 手機審查與 tag）
+
+- PR [#99](https://github.com/nick80912-dev/ai-native-projects/pull/99)（#62 設計＋v168）在 head `93460fe` 的 sanity／browser-qa 全綠後合併進 `dev`（`1294659`，釘住 head）；PR [#100](https://github.com/nick80912-dev/ai-native-projects/pull/100)（並帶 v167 發布紀錄 PR #98）合併 `dev` → `main`，merge commit **`4e4b2f0`**。合併 tree `f058d06` 與 `93460fe` 相同。本機完整 Chromium 393 passed，只有已知只在本機失敗的兩項，沒有略過的測試。
+- **線上核對**：正式站 `sw.js` 為 `SW_VERSION='v168'`；全新 Chromium 開正式站，`APP_VERSION` 為 v168、只剩 `okayama-trip-v168` 快取，發布說明為「不只日本：可以設定當地幣別」；`trip-currency.js` 在快取內（離線可用）；岡山格式不變（`¥1,500`、`NT$315`），`US$12.50` 正確，沒有 pageerror。全新手機已過岡山保護期、狀態為「尚未連接」（`DB.cfg` 為空），所以顯示匯率未設定，與 v167 相同。Netlify deploy ID 未另查。
+- 回滾：依 `16_OPS_PLAYBOOK.md` §A1 Publish `commit_ref` = `afd65df`（v167）的部署，再往前 bump。
+
+## 2026-10-31 — v168 不只日本：可以設定當地幣別（已上線 main，見上）
 
 - **來源**：backlog #62（Bar 2026-10-31：「該專案未來不只回去日本，有可能會去其他國家，所以內容需要修正一下比方幣別切換與辨識等，不受限於日本」）。設計與裁定見 `docs/superpowers/specs/2026-10-31-multi-country-trips.md`：結算一律台幣、一趟一種當地幣別、有小數的幣別記到分；另 Bar 確認「Exchange Rate 試算表沒填的話，手機再補填當作基準」。本版是第一批（幣別基礎）；稅在 v169、天氣與文案在 v170。
 - **使用上**：
