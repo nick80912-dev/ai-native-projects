@@ -1,6 +1,33 @@
 # 07 版本紀錄
 
-## 2026-10-31 — v168 不只日本：可以設定當地幣別（開發中，未發布）
+## 2026-10-31 — v169 稅可以每趟自己設定；簡易結算說明收進「!」（開發中，未發布）
+
+- **來源**：backlog #62 第二批（設計 `docs/superpowers/specs/2026-10-31-multi-country-trips.md` §3.1、§3.5；Bar 2026-10-31 裁定「稅每趟自己設定，不需要的旅程不顯示稅的選項，日本旅程維持現在的樣子」）。同一批加上 Bar 2026-10-31「簡易結算模式下的說明變成！點開的資訊顯示就好」。
+- **使用上**：
+  - TripConfig 新增三個選填 key：`Tax Rates`（這趟的稅率，逗號分隔、最多一位小數，例如 `10,8`；第一個是新記帳的預設；填 `0`＝不顯示稅）、`Price Mode`（`含稅` 或 `未稅`，沒填是含稅）、`Tax Free`（`yes` 才顯示「免稅品」）。三個都沒填時：日圓旅程照舊（10%／8%、含稅、可標免稅品，按鈕仍寫「税込（含稅）」「税抜（未稅）」），其他幣別不顯示稅。
+  - 沒有稅率的旅程：記帳表單的「稅與優惠券」只剩「優惠券」，不顯示價格方式、稅率、品項的「免稅品」勾選、「全部免稅品」與歷史篩選的「免稅品」；存下的紀錄稅率 0、不是免稅品。
+  - 有自己稅率的旅程：稅率按鈕是「無稅」＋這趟的稅率＋「自訂」，價格方式寫「含稅」「未稅」；多品項選未稅時照這趟的稅率加稅（例如泰銖未稅 ฿100、7% → ฿107.00）。編輯舊紀錄時，稅率不在這趟清單上的會以「自訂」帶入原值。
+  - 簡易結算模式：面板底部的說明文字改成「轉帳建議」旁的「!」按鈕，按一下才顯示（說明一併寫清楚「不用按我已付款、別人標記付款仍可確認」）；面板重畫時維持開或關。
+- **做法**：
+  - `trip-currency.js` 新增 `taxSettings(cfg)` 與 `parseTaxRates`／`parsePriceMode`／`parseYesNo`（純函式）；看不懂的值略過。
+  - shell：`tripTaxSettings()`、`ledgerDraftTax(draft)`；`createLedgerEntryDraft()` 把這趟的稅設定存在 `draft.tax`，預設稅率與價格方式照它；`renderLedgerTaxFields()`、`renderLedgerTaxDisclosure()`、單品項的「稅與優惠券」區塊、`renderLedgerDraftItem()` 的免稅品勾選、歷史篩選依它顯示；`ledgerTaxRateBps()` 接受這趟設定的任何稅率（舊格式 `taxMode`／`taxRate` 仍只接受 8／10）；單品項「無稅」只有在這趟可標免稅品時才記成免稅品。沒有 `draft.tax` 的舊 draft 視為日本旅程。
+  - `schema.js`（與內嵌副本）新增 `taxRates`／`taxPriceMode`／`taxFree` 三個選填 key，`09_SCHEMA_MAPPING.md` 重新產生；`validator.js`（與內嵌副本）看不懂的稅設定只發警告（`CFG_TAX_RATES`／`CFG_PRICE_MODE`／`CFG_TAX_FREE`），不擋載入。Apps Script 不用改（紀錄的稅率本來就接受 0–100、一位小數）。
+  - 簡易結算：`renderSimpleSettlementPanelBody()` 改用 `simpleSettlementHelpButton()`／`simpleSettlementHelpText()`／`toggleSimpleSettlementHelp()`，按鈕沿用設定頁 ⓘ 的 44px 樣式（`aria-expanded`／`aria-controls`）。
+- **版本**：forward bump v168→v169；`builtin-snapshot.js` 以 v168 asset 離線重產，除版本外不變。發布說明視窗為 `v169` + `['v168','v167','v166','v165']`（v164 滾出）。`tests/trip-lifecycle-wiring.test.js` 加入已發布 v168 三件組的 hash。
+- **測試**：
+  - `tests/trip-currency.test.js`：岡山沒填＝10／8、含稅、可標免稅品；韓元沒填＝不顯示稅；泰銖自己設定；`0` 關掉稅；沒有稅率就沒有免稅品；第一個稅率是預設；看不懂與重複的稅率略過。`tests/atomic-sheet-sync.test.js`：正確的稅設定沒有警告，看不懂的只警告不擋。`tests/schema-types.test.js`：三個新 key 是選填。
+  - 新增 `tests/browser/trip-tax-v169.spec.js`（5 項）：岡山表單不變；韓元旅程沒有稅的選項、存成稅率 0、單品項只剩優惠券、免稅篩選不生效；泰銖 7%、未稅、不能標免稅品，未稅 ฿100 存成 ฿107.00；日本旅程自己列 `8,10` 時預設 8%、舊紀錄 5% 以自訂帶入；簡易結算說明預設收起、按「!」打開、重畫後維持、再按收起、按鈕 44px。
+  - 本機完整 Chromium：398 passed，只有已知只在本機失敗的兩項（個人帳匯出下載檔名、sw-update-cache 離線 504），沒有略過的測試。
+  - 反向驗證：表單不看這趟的稅設定（一律當日本）時，韓元與泰銖兩項失敗；說明按了不會收起時，簡易結算一項失敗。
+- **回滾**：合併前關閉 PR；發布後依 `16_OPS_PLAYBOOK.md` §A1 退回 v168 的 Netlify 部署（`commit_ref` `4e4b2f0`），再往前 bump。岡山（JPY、沒填稅設定）資料與行為不變。
+
+## 2026-10-31 — v168 已上線 main（待 Bar 手機審查與 tag）
+
+- PR [#99](https://github.com/nick80912-dev/ai-native-projects/pull/99)（#62 設計＋v168）在 head `93460fe` 的 sanity／browser-qa 全綠後合併進 `dev`（`1294659`，釘住 head）；PR [#100](https://github.com/nick80912-dev/ai-native-projects/pull/100)（並帶 v167 發布紀錄 PR #98）合併 `dev` → `main`，merge commit **`4e4b2f0`**。合併 tree `f058d06` 與 `93460fe` 相同。本機完整 Chromium 393 passed，只有已知只在本機失敗的兩項，沒有略過的測試。
+- **線上核對**：正式站 `sw.js` 為 `SW_VERSION='v168'`；全新 Chromium 開正式站，`APP_VERSION` 為 v168、只剩 `okayama-trip-v168` 快取，發布說明為「不只日本：可以設定當地幣別」；`trip-currency.js` 在快取內（離線可用）；岡山格式不變（`¥1,500`、`NT$315`），`US$12.50` 正確，沒有 pageerror。全新手機已過岡山保護期、狀態為「尚未連接」（`DB.cfg` 為空），所以顯示匯率未設定，與 v167 相同。Netlify deploy ID 未另查。
+- 回滾：依 `16_OPS_PLAYBOOK.md` §A1 Publish `commit_ref` = `afd65df`（v167）的部署，再往前 bump。
+
+## 2026-10-31 — v168 不只日本：可以設定當地幣別（已上線 main，見上）
 
 - **來源**：backlog #62（Bar 2026-10-31：「該專案未來不只回去日本，有可能會去其他國家，所以內容需要修正一下比方幣別切換與辨識等，不受限於日本」）。設計與裁定見 `docs/superpowers/specs/2026-10-31-multi-country-trips.md`：結算一律台幣、一趟一種當地幣別、有小數的幣別記到分；另 Bar 確認「Exchange Rate 試算表沒填的話，手機再補填當作基準」。本版是第一批（幣別基礎）；稅在 v169、天氣與文案在 v170。
 - **使用上**：

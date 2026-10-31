@@ -270,6 +270,23 @@ function validateSnapshotData(db,raw,schema){
     if(ledgerCurrency&&ledgerCurrency!=='TWD'&&ledgerCurrency!==localCurrency){
       block('CFG_LEDGER_CURRENCY','cfg','TripConfig ledgerDefaultCurrency 必須是 TWD 或這趟的當地幣別('+localCurrency+')');
     }
+    /* v169(稅每趟自己設定):三個稅的設定都是選填;格式不對只提出警告,App 會略過那一項。 */
+    var taxRatesText=String(cfg.taxRates==null?'':cfg.taxRates).trim();
+    if(taxRatesText){
+      var badRates=taxRatesText.split(/[,，、\s]+/).filter(function(part){
+        var text=part.replace(/[%％]$/,'').trim(),rate=Number(text);
+        return !(text==='0'||(/^\d+(?:\.\d)?$/.test(text)&&rate>0&&rate<=100));
+      });
+      if(badRates.length) warn('CFG_TAX_RATES','cfg','TripConfig Tax Rates 有看不懂的稅率('+badRates.join('、')+'):請填 0–100、最多一位小數,用逗號分開(例如 10,8)');
+    }
+    var priceModeText=String(cfg.taxPriceMode==null?'':cfg.taxPriceMode).trim().toLowerCase();
+    if(priceModeText&&['含稅','含税','税込','内税','included','inclusive','include','未稅','未税','税抜','税別','外税','excluded','exclusive','exclude'].indexOf(priceModeText)<0){
+      warn('CFG_PRICE_MODE','cfg','TripConfig Price Mode 請填「含稅」或「未稅」');
+    }
+    var taxFreeText=String(cfg.taxFree==null?'':cfg.taxFree).trim().toLowerCase();
+    if(taxFreeText&&['yes','y','true','1','是','有','要','no','n','false','0','否','無','没有','沒有','不要'].indexOf(taxFreeText)<0){
+      warn('CFG_TAX_FREE','cfg','TripConfig Tax Free 請填 yes 或 no');
+    }
   }
   return result;
 }

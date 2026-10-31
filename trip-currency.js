@@ -1,9 +1,10 @@
-/* trip-currency.js — 旅程幣別（backlog #62，v168）
+/* trip-currency.js — 旅程幣別與稅（backlog #62，v168 幣別、v169 稅）
    ============================================================
    Bar 2026-10-31：之後不一定去日本。結算一律台幣；一趟一種當地幣別（TripConfig `Currency`，
    沒填就是 JPY，岡山不變）；美金、歐元這類有小數的幣別記到分。
    App 內部金額一律是「最小單位」的整數（美金存分、日圓存圓），既有的整數分攤與結算不用改；
-   本檔只負責幣別資料、最小單位與一般金額的換算、輸入解析與顯示格式。
+   本檔只負責幣別資料、最小單位與一般金額的換算、輸入解析與顯示格式，
+   以及 v169 起每趟旅程自己的稅設定（taxSettings）。
    App 內部仍用 'JPY'／'TWD' 兩個代號代表「當地幣別」／「台幣」兩個槽位（見 shell 的
    ledgerCurrencyCodeOf），真正的幣別代碼只出現在畫面、試算表與 Apps Script。
    ============================================================ */
@@ -113,6 +114,47 @@
     return Math.round(Number(home)/Number(rate)*factor(code));
   }
 
+  /* v169（Bar 2026-10-31：稅每趟自己設定）：TripConfig 的 Tax Rates／Price Mode／Tax Free。
+     Tax Rates 逗號分隔（例如 10,8），第一個是新記帳的預設；填 0 或沒有有效稅率＝這趟不顯示稅。
+     三個都沒填時：日圓旅程照舊（10%、8%、含稅、可標免稅品），其他幣別不顯示稅。
+     格式不對的項目略過（validator 另外提出警告）。 */
+  var TAX_RATE_PATTERN=/^\d+(?:\.\d)?$/;
+  function blank(value){return String(value==null?'':value).trim()==='';}
+  function parseTaxRates(value){
+    var seen={},rates=[];
+    String(value==null?'':value).split(/[,，、\s]+/).forEach(function(part){
+      var text=part.replace(/[%％]$/,'').trim(),rate=Number(text);
+      if(!TAX_RATE_PATTERN.test(text)||!(rate>0&&rate<=100)||seen[rate])return;
+      seen[rate]=true;rates.push(rate);
+    });
+    return rates;
+  }
+  function parsePriceMode(value){
+    var text=String(value==null?'':value).trim().toLowerCase();
+    if(['未稅','未税','税抜','税別','外税','excluded','exclusive','exclude'].indexOf(text)>=0)return 'excluded';
+    if(['含稅','含税','税込','内税','included','inclusive','include'].indexOf(text)>=0)return 'included';
+    return '';
+  }
+  function parseYesNo(value){
+    var text=String(value==null?'':value).trim().toLowerCase();
+    if(['yes','y','true','1','是','有','要'].indexOf(text)>=0)return true;
+    if(['no','n','false','0','否','無','没有','沒有','不要'].indexOf(text)>=0)return false;
+    return null;
+  }
+  function taxSettings(cfg){
+    var source=cfg||{},local=normalizeCode(source.currency)||DEFAULT_LOCAL,japan=local==='JPY';
+    var rates=blank(source.taxRates)?(japan?[10,8]:[]):parseTaxRates(source.taxRates);
+    var taxFree=parseYesNo(source.taxFree);if(taxFree===null)taxFree=japan;
+    return {
+      enabled:rates.length>0,
+      rates:rates,
+      defaultRate:rates.length?rates[0]:0,
+      priceMode:parsePriceMode(source.taxPriceMode)||'included',
+      taxFree:rates.length>0&&taxFree,
+      japaneseLabels:japan
+    };
+  }
+
   return {
     HOME:HOME,
     DEFAULT_LOCAL:DEFAULT_LOCAL,
@@ -128,6 +170,10 @@
     formatNumber:formatNumber,
     format:format,
     localMinorToHome:localMinorToHome,
-    homeToLocalMinor:homeToLocalMinor
+    homeToLocalMinor:homeToLocalMinor,
+    parseTaxRates:parseTaxRates,
+    parsePriceMode:parsePriceMode,
+    parseYesNo:parseYesNo,
+    taxSettings:taxSettings
   };
 });

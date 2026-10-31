@@ -170,6 +170,12 @@ var SCHEMA = {
           /* 同時是全團結算幣別(ADR 0007);v135 起有還款紀錄即鎖定,不得切換 */
           optional:true,
           desc:'全團結算幣別,也是新增記帳的預設幣別;當地幣別代碼或 TWD,沒填是當地幣別(v168)' },
+        { field:'taxRates', header:'Tax Rates', optional:true,
+          desc:'這趟的稅率(%),逗號分隔、最多一位小數,例如 10,8;第一個是新記帳的預設。填 0＝不顯示稅。沒填:JPY 是 10,8,其他幣別不顯示稅(v169)' },
+        { field:'taxPriceMode', header:'Price Mode', optional:true,
+          desc:'價格預設含稅或未稅:填「含稅」或「未稅」;沒填是含稅(v169)' },
+        { field:'taxFree', header:'Tax Free', optional:true,
+          desc:'填 yes 才顯示「免稅品」選項;沒填:JPY 是 yes,其他幣別是 no(v169)' },
         { field:'homepage',   header:'Home Page',   desc:'預設分頁(⚠️ 目前**未啟用**,App 固定 Today;填寫無效果)' },
         /* v150 連接新旅程(ADR 0021):舊的岡山試算表沒有這兩鍵,所以標為 optional;
            新旅程由 trip-source.js 在連接時強制檢查。 */
