@@ -1,6 +1,13 @@
 # 07 版本紀錄
 
-## 2026-10-31 — v175 收據照片下方只留品項按鈕（開發中，未發布）
+## 2026-10-31 — v175 已上線 main（待 Bar 手機審查與 tag）
+
+- Bar 先看過 6 張畫面（結果視窗、照片下方只剩品項按鈕、收據時間建議、按了之後、沒網路時的照片時間建議、照片時間短通知）後回「好，送上main我手機審查」。
+- PR [#119](https://github.com/nick80912-dev/ai-native-projects/pull/119) 在 head `b16acd6` 的 sanity／browser-qa 全綠後合併進 `dev`（`5f9d4ca`，釘住 head）；PR [#120](https://github.com/nick80912-dev/ai-native-projects/pull/120)（並帶 v174 發布紀錄 PR #118）合併 `dev` → `main`，merge commit **`12ee222`**。合併 tree `9f0b21e` 與 `b16acd6` 相同。本機完整 Chromium 421 passed，只有已知只在本機失敗的兩項，沒有略過的測試。
+- **線上核對**：正式站 `sw.js` 為 `SW_VERSION='v175'`；全新 Chromium 開正式站，`APP_VERSION` 為 v175、只剩 `okayama-trip-v175` 快取，發布說明為「收據照片下方只留品項按鈕」；照片下方只畫品項列、時間建議在視窗裡的程式都在線上；沒有 pageerror。
+- 回滾：依 `16_OPS_PLAYBOOK.md` §A1 Publish `commit_ref` = `ec69925`（v174）的部署，再往前 bump。
+
+## 2026-10-31 — v175 收據照片下方只留品項按鈕（已上線 main，見上）
 
 - **來源**：Bar 2026-10-31：「收據照片下方的說明保留剩下"收據上有N個品項"與改成多品項並帶入按鈕就好」。
 - **使用上**：
