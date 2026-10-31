@@ -1,6 +1,12 @@
 # 07 版本紀錄
 
-## 2026-10-31 — v174 收據辨識結果改用彈出視窗；設定的簡易結算說明收進「!」（開發中，未發布）
+## 2026-10-31 — v174 已上線 main（待 Bar 手機審查與 tag）
+
+- PR [#116](https://github.com/nick80912-dev/ai-native-projects/pull/116) 在 head `e7dc1d3` 的 sanity／browser-qa 全綠後合併進 `dev`（`ed977b0`，釘住 head）；PR [#117](https://github.com/nick80912-dev/ai-native-projects/pull/117)（並帶 v173 發布紀錄 PR #115）合併 `dev` → `main`，merge commit **`ec69925`**。合併 tree `5ef8032` 與 `e7dc1d3` 相同。本機完整 Chromium 420 passed，只有已知只在本機失敗的兩項，沒有略過的測試。
+- **線上核對**：正式站 `sw.js` 為 `SW_VERSION='v174'`；全新 Chromium 開正式站，`APP_VERSION` 為 v174、只剩 `okayama-trip-v174` 快取，發布說明為「收據辨識結果改用彈出視窗」；彈出視窗與復原的函式在線上，設定根頁的程式含「!」按鈕（全新手機是「尚未連接」，設定只有「資料」群組，看不到簡易結算列，屬正常）；沒有 pageerror。
+- 回滾：依 `16_OPS_PLAYBOOK.md` §A1 Publish `commit_ref` = `625fbd0`（v173）的部署，再往前 bump。
+
+## 2026-10-31 — v174 收據辨識結果改用彈出視窗；設定的簡易結算說明收進「!」（已上線 main，見上）
 
 - **來源**：Bar 2026-10-31 問辨識結果要不要用提示視窗；我建議表單頂端卡片（不擋畫面），Bar 先選了卡片，看過後改要「可以將這個卡片做成彈出視窗嗎?」——辨識在背景進行，視窗跳出時若正在打字會被打斷，已向 Bar 說明後照做。同一批 Bar 指出「設定內的簡易結算模式下的說明並未改成!資訊」（v169 只改了結算面板）。
 - **使用上**：
