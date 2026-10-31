@@ -238,3 +238,70 @@ test('a multi-item receipt sets the shared category for items not adjusted by ha
   const state=await page.evaluate(()=>({apply:ledgerUiState.draft.categoryApply,items:ledgerUiState.draft.items.map(item=>item.category),pay:ledgerUiState.draft.payMethod}));
   expect(state).toEqual({apply:'購物',items:['購物','美妝'],pay:'信用卡'});
 });
+
+/* v173(Bar 2026-10-31):多品項時把收據上的品項逐筆帶入;單品項不填明細,可按「改成多品項並帶入」 */
+const receiptLines={ok:true,receipt:{total:1780,currency:'JPY',storeName:'一蘭',items:[{name:'醤油ラーメン',amount:980},{name:'生ビール x2',amount:1000}],discount:200}};
+async function openMultiForm(page){
+  await openForm(page);
+  await page.evaluate(()=>{setLedgerDraftMulti(true);ledgerUiState.draft.multiBillDetailsOpen=true;renderLedgerEntrySheet();});
+}
+test('a multi-item entry gets the receipt lines and the discount',async({page})=>{
+  await boot(page,null);
+  await page.evaluate(reply=>{window.__aiReply=reply;},receiptLines);
+  await openMultiForm(page);
+  await page.evaluate(()=>window.__addReceipt(null));
+  await expect.poll(()=>page.evaluate(()=>ledgerUiState.draft.receiptScan&&ledgerUiState.draft.receiptScan.message)).toBe('已依收據帶入店名「一蘭」、2 個品項，請確認');
+  const draft=await page.evaluate(()=>({items:ledgerUiState.draft.items.map(item=>[item.name,item.amount]),discount:ledgerUiState.draft.discount,notes:ledgerUiState.draft.receiptScan.notes,detail:ledgerUiState.draft.detail}));
+  expect(draft).toEqual({items:[['醤油ラーメン','980'],['生ビール x2','1000']],discount:'200',notes:[],detail:''});
+  await page.evaluate(()=>saveLedgerEntry(false));
+  await expect(page.locator('#ledgerEntrySheet')).toHaveCount(0);
+  const saved=await page.evaluate(()=>personalLedgerRepository.all().filter(item=>item.storeName==='一蘭').map(item=>[item.detail,item.amountJpy]));
+  expect(saved.map(row=>row[0]).sort()).toEqual(['生ビール x2','醤油ラーメン']);
+  expect(saved.reduce((sum,row)=>sum+row[1],0)).toBe(1780);
+});
+
+test('lines that do not add up to the total get a note about tax or discounts',async({page})=>{
+  await boot(page,null);
+  await page.evaluate(()=>{window.__aiReply={ok:true,receipt:{total:1980,currency:'JPY',items:[{name:'お土産A',amount:1000},{name:'お土産B',amount:800}]}};});
+  await openMultiForm(page);
+  await page.evaluate(()=>window.__addReceipt(null));
+  await expect(page.locator('#ledgerEntrySheet .ledger-receipt-scan-note')).toHaveText('品項加總 ¥1,800，收據總額 ¥1,980；可能是未稅價或另有折扣，請檢查「稅與優惠券」');
+});
+
+test('a single entry keeps 明細 empty and offers to switch to the receipt lines',async({page})=>{
+  await boot(page,null);
+  await page.evaluate(reply=>{window.__aiReply=reply;},receiptLines);
+  await openForm(page);
+  await page.evaluate(()=>window.__addReceipt(null));
+  await expect(scan(page)).toHaveText('已依收據帶入金額 ¥1,780、店名「一蘭」，請確認');
+  expect(await page.evaluate(()=>[ledgerUiState.draft.multi,ledgerUiState.draft.detail])).toEqual([false,'']);
+  await page.getByRole('button',{name:'改成多品項並帶入'}).click();
+  await expect.poll(()=>page.evaluate(()=>ledgerUiState.draft.receiptScan.message)).toBe('已帶入收據上的 2 個品項，請確認');
+  expect(await page.evaluate(()=>[ledgerUiState.draft.multi,ledgerUiState.draft.items.map(item=>item.name),ledgerUiState.draft.discount])).toEqual([true,['醤油ラーメン','生ビール x2'],'200']);
+  await expect(page.getByRole('button',{name:'改成多品項並帶入'})).toHaveCount(0);
+});
+
+test('items already typed in a multi-item entry are not replaced without asking',async({page})=>{
+  await boot(page,null);
+  await page.evaluate(reply=>{window.__aiReply=reply;},receiptLines);
+  await openMultiForm(page);
+  await page.evaluate(()=>{const item=ledgerUiState.draft.items[0];updateLedgerDraftItem(item.key,{name:'自己打的',amount:'500'});ledgerUiState.draft.multiBillDetailsOpen=true;renderLedgerEntrySheet();});
+  await page.evaluate(()=>window.__addReceipt(null));
+  await expect(page.locator('#ledgerEntrySheet .ledger-receipt-items')).toContainText('收據上有 2 個品項');
+  expect(await page.evaluate(()=>ledgerUiState.draft.items.map(item=>item.name))).toEqual(['自己打的']);
+  page.once('dialog',dialog=>dialog.dismiss());
+  await page.getByRole('button',{name:'改用這 2 個品項'}).click();
+  expect(await page.evaluate(()=>ledgerUiState.draft.items.map(item=>item.name))).toEqual(['自己打的']);
+  page.once('dialog',dialog=>dialog.accept());
+  await page.getByRole('button',{name:'改用這 2 個品項'}).click();
+  await expect.poll(()=>page.evaluate(()=>ledgerUiState.draft.items.map(item=>item.name))).toEqual(['醤油ラーメン','生ビール x2']);
+});
+
+/* v173 修正:多品項以前永遠看不到收據欄(空白品項被當成來自採買);從採買記帳時仍然不顯示 */
+test('the receipt field shows on multi-item entries but not on entries from the shopping list',async({page})=>{
+  await boot(page,null);
+  await openMultiForm(page);
+  await expect(page.locator('#ledgerEntrySheet .ledger-receipt-field')).toHaveCount(1);
+  const fromShopping=await page.evaluate(()=>{const draft=ledgerUiState.draft;draft.items[0].sourceShoppingItemId='shop-1';draft.items[0].sourceShoppingAllocationId='alloc-1';return ledgerReceiptFieldVisible(draft);});
+  expect(fromShopping).toBe(false);
+});

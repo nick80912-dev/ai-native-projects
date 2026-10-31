@@ -142,7 +142,7 @@ App 加收據照片後 POST：
 {"ok":true,"receipt":{"date":"2026-10-20","time":"12:41","total":1580,"currency":"JPY","storeName":"ローソン 倉敷店"}}
 ```
 
-v173 起 App 另送 `"payMethods":["現金","信用卡","行動支付",…]`、`"categories":["餐飲","交通",…]`（這支手機的選項），回應多 `"payMethod"`、`"category"`，只會是清單內的值或空字串；PayPay、LINE Pay、TWQR（悠遊付、台灣Pay、icash Pay）等行動支付歸為「行動支付」。VISA、Mastercard、JCB 等卡片歸為「信用卡」。類別依收據上的品項判斷（品項不同類時選占總額最多的類），紀念品店、伴手禮歸「購物」，手機上自訂的類別也是候選。沒送清單時兩欄空白。
+v173 起 App 另送 `"payMethods":["現金","信用卡","行動支付",…]`、`"categories":["餐飲","交通",…]`（這支手機的選項），回應多 `"payMethod"`、`"category"`，只會是清單內的值或空字串；PayPay、LINE Pay、TWQR（悠遊付、台灣Pay、icash Pay）等行動支付歸為「行動支付」。VISA、Mastercard、JCB 等卡片歸為「信用卡」。類別依收據上的品項判斷（品項不同類時選占總額最多的類），紀念品店、伴手禮歸「購物」，手機上自訂的類別也是候選。沒送清單時兩欄空白。另回 `"items":[{"name":"醤油ラーメン","amount":980},…]`（每行名稱照收據原文 20 字內、該行金額，不含小計／稅／合計／折扣行，最多 30 項）與 `"discount"`（折扣總額或 null），供多品項逐筆帶入。
 
 錯誤代碼：`missing GEMINI_API_KEY`、`invalid image`、`invalid GEMINI_MODEL`、`quota`（免費額度用完）、`not authorized`（還沒授權連到外部服務）、`ai http <狀態>`、`ai unreachable: <原因>`、`unreadable ai reply`。辨識不拿 `LockService` 鎖。
 

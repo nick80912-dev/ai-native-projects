@@ -4,13 +4,16 @@
 
 - **來源**：Bar 2026-10-31：「如果 Receipt 上有辨識到 PayPay、TWQR 跨境支付（悠遊付、台灣Pay、icash Pay）、Line Pay 等各國關於的行動支付項目，則支付方式協助選至行動支付。類別如果辨識出是有關餐飲則也調整、交通就調至交通以此類推」。
 - **使用上**：加收據照片辨識時，App 一併送出這支手機的支付方式與類別選項；Google 從清單裡選一個：PayPay、LINE Pay、TWQR 跨境支付（悠遊付、台灣Pay、icash Pay、全支付）、街口、支付寶、微信支付、Apple Pay、Google Pay、楽天ペイ、d払い、au PAY、メルペイ、KakaoPay、Naver Pay 等 → 「行動支付」；VISA、Mastercard、JCB、American Express、Diners、銀聯等信用卡／金融卡 → 「信用卡」（Bar 2026-10-31：「有關VISA、JCB、Master Card 等支付方式就是信用卡」）；現金 → 「現金」；Suica／ICOCA／PASMO → 「Suica」（清單有時）。類別：收據有列品項時依品項判斷、品項不同類時選占總額最多的類（Bar 2026-10-31「如果有詳細讀收據內的商品而定也可以」）；餐廳、咖啡、食物 → 「餐飲」；電車、公車、計程車、加油、停車 → 「交通」；門票 → 「票券」；紀念品店、伴手禮 → 「購物」（Bar 2026-10-31）；手機上自訂的類別也是候選，名稱更貼切時選它。只在還是表單預設、自己沒選過、不是編輯舊帳時才換；多品項時改共用類別，不動自己單獨調過的品項；清單外的答案不採用。收據欄下方的訊息會列出換了哪些（例如「…、支付方式「行動支付」、類別「交通」」）。
+  - **多品項逐筆帶入**（Bar 2026-10-31 選「要，逐筆帶入」；單品項選「不用填明細」）：收據上的品項（名稱照收據原文、每行的金額）與折扣總額也一併讀出。已經是多品項、品項都還空著時直接帶入（折扣欄空著才填）；品項加總與收據總額對不上時提示「可能是未稅價或另有折扣，請檢查「稅與優惠券」」。單品項或已經打了品項時，收據欄下方顯示「收據上有 N 個品項」與按鈕（「改成多品項並帶入」／「改用這 N 個品項」，有內容時先確認）。單品項的明細一律不自動填。
+  - **順便修正（v167 起的錯）**：多品項記帳時「收據照片」欄位一直不顯示——判斷「從採買記帳」時把空白品項也當成有採買來源。現在只有真的連到採買項目才隱藏。
 - **Bar 要做的事（上線後）**：岡山 Apps Script 再換一次新版（貼上 → 部署新版本，網址不變；這次不需要再授權）。沒換之前照 v172 的行為，只是不會幫忙選支付方式與類別。
 - **做法**：
   - `apps-script/ledger-sync.gs`：`recognizeReceipt` 讀 App 送來的 `payMethods`／`categories`（`receiptChoices()`：字串、去重、每項 12 字、最多 30 項），有清單時在提示加上 `RECEIPT_CHOICE_PROMPT`（列出各國行動支付的例子）；`receiptFields()` 多回 `payMethod`／`category`，只接受清單內的值。舊版 App 不送清單時兩欄空白、提示不變。
   - `ledger-receipts.js`：`normalizeRecognition()` 多整理 `payMethod`／`category`（字串、12 字）。
+  - Apps Script 另回 `items`（`receiptItems()`：名稱 20 字、金額正數、最多 30 項）與 `discount`（`receiptAmount()`）；`normalizeRecognition()` 同樣整理。shell 新增 `ledgerDraftItemsBlank()`、`fillLedgerDraftFromReceiptItems()`、`applyLedgerReceiptItems()`；`ledgerReceiptFieldVisible()` 只把有 `shoppingItemId`／`allocationId` 的來源當成採買。
   - shell：`postLedgerReceiptRecognition()` 帶 `payMethods`／`categories`（`ledgerDraftOptions()`）；`applyLedgerReceiptRecognition()` 依 `payMethodTouched`／`categoryTouched` 判斷（`selectLedgerPayMethod()`、`selectLedgerCategory()`、`selectLedgerCategoryApply()` 設定）；多品項用 `updateLedgerCategoryApply()`。
 - **版本**：forward bump v172→v173；`builtin-snapshot.js` 以 v172 asset 離線重產，除版本外不變。發布說明視窗為 `v173` + `['v172','v171','v170','v169']`（v168 滾出）。`tests/trip-lifecycle-wiring.test.js` 加入已發布 v172 三件組的 hash。
-- **測試**：`tests/apps-script-settings.test.js`：清單整理、提示含 PayPay／LINE Pay／悠遊付／台灣Pay／icash Pay、清單外的答案不採用、沒送清單時不回也不提。`tests/ledger-receipts.test.js`：兩個新欄位。`tests/browser/receipt-recognition-v171.spec.js` 新增 3 項：預設時換成「行動支付」「交通」並存成一般的帳、送出的清單；自己選過的不換、清單外的答案不採用；多品項改共用類別但不動自己調過的品項。
+- **測試**：`tests/apps-script-settings.test.js`：清單整理、提示含 PayPay／LINE Pay／悠遊付／台灣Pay／icash Pay、清單外的答案不採用、沒送清單時不回也不提。`tests/ledger-receipts.test.js`：兩個新欄位。`tests/browser/receipt-recognition-v171.spec.js` 新增 3 項：預設時換成「行動支付」「交通」並存成一般的帳、送出的清單；自己選過的不換、清單外的答案不採用；多品項改共用類別但不動自己調過的品項；多品項逐筆帶入與折扣、存成兩筆合計等於收據總額；加總對不上的提示；單品項不填明細、按鈕改成多品項並帶入；已打的品項要確認才取代；多品項看得到收據欄、從採買記帳時看不到。
 - **回滾**：合併前關閉 PR；發布後依 `16_OPS_PLAYBOOK.md` §A1 退回 v172 的 Netlify 部署（`commit_ref` `32c2aed`），再往前 bump。Apps Script 新版對舊 App 相容。
 
 ## 2026-10-31 — v172 已上線 main（待 Bar 手機審查與 tag）

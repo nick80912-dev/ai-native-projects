@@ -158,7 +158,17 @@
     storeName=text('storeName').replace(/\s+/g,' ').slice(0,40);
     /* v173：支付方式與類別是 App 送去的選項名稱之一；這裡只整理字串，是否在清單內由 App 判斷 */
     var payMethod=text('payMethod').slice(0,12),category=text('category').slice(0,12);
-    return {date:date,time:time,total:total,currency:currency,storeName:storeName,payMethod:payMethod,category:category,found:!!(date||total!==null||storeName||payMethod||category)};
+    /* v173：多品項逐筆帶入用的品項（名稱 20 字、金額正數、最多 30 項）與折扣總額 */
+    function positive(value){var cleaned=String(value==null?'':value).replace(/[,\s]/g,''),number=Number(cleaned);return cleaned&&isFinite(number)&&number>0&&number<1e10?number:null;}
+    var items=[];
+    (Array.isArray(source.items)?source.items:[]).forEach(function(item){
+      if(items.length>=30||!item||typeof item!=='object')return;
+      var name=typeof item.name==='string'?item.name.replace(/\s+/g,' ').trim().slice(0,20):'',amount=positive(item.amount);
+      if(name&&amount!==null)items.push({name:name,amount:amount});
+    });
+    var discount=positive(source.discount);
+    return {date:date,time:time,total:total,currency:currency,storeName:storeName,payMethod:payMethod,category:category,items:items,discount:discount,
+      found:!!(date||total!==null||storeName||payMethod||category||items.length)};
   }
 
   return {

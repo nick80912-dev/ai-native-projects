@@ -206,6 +206,10 @@ var RECEIPT_PROMPT = [
   '  Use null when you cannot find it.',
   '- currency: ISO 4217 code of that amount (JPY, KRW, TWD, USD, EUR...). Use "" when unsure.',
   '- storeName: the shop name as printed (at most 40 characters), "" when not printed.',
+  '- items: the purchased lines as printed, at most 30, as [{"name":"","amount":0}]: name as printed (at most 20 characters,',
+  '  keep a quantity such as x2 in the name), amount = that line\'s total as a plain number. Leave out subtotal, tax, total,',
+  '  discount, deposit and change lines. Use [] when the lines are not readable.',
+  '- discount: the total of discount or coupon lines as a positive number, or null when there are none.',
   '- If the photo is not a receipt, return all fields empty and total null.'
 ].join('\n');
 /* v173(Bar 2026-10-31):支付方式與類別從 App 送來的清單裡選一個(手機上自訂的名稱也適用) */
@@ -309,7 +313,23 @@ function checkReceiptRecognition() {
   return message;
 }
 
-/* 只回傳五個欄位;格式由 App 再檢查一次(ledger-receipts.js normalizeRecognition) */
+/* v173(Bar 2026-10-31:多品項時逐筆帶入):品項名稱 20 字、金額正數,最多 30 項 */
+function receiptAmount(value) {
+  var amount = typeof value === 'string' ? Number(value.replace(/[,\s]/g, '')) : value;
+  return typeof amount === 'number' && isFinite(amount) && amount > 0 ? amount : null;
+}
+function receiptItems(value) {
+  var list = [];
+  (Array.isArray(value) ? value : []).forEach(function(item) {
+    if (list.length >= 30 || !item || typeof item !== 'object') return;
+    var name = typeof item.name === 'string' ? item.name.replace(/\s+/g, ' ').trim().slice(0, 20) : '';
+    var amount = receiptAmount(item.amount);
+    if (name && amount !== null) list.push({name: name, amount: amount});
+  });
+  return list;
+}
+
+/* 只回傳辨識欄位;格式由 App 再檢查一次(ledger-receipts.js normalizeRecognition) */
 function receiptFields(value, payMethods, categories) {
   var source = value && typeof value === 'object' && !Array.isArray(value) ? value : {};
   function text(name, max) { var v = source[name]; return typeof v === 'string' ? v.trim().slice(0, max) : ''; }
@@ -319,6 +339,8 @@ function receiptFields(value, payMethods, categories) {
     date: text('date', 20), time: text('time', 10),
     total: typeof total === 'number' && isFinite(total) ? total : null,
     currency: text('currency', 3).toUpperCase(), storeName: text('storeName', 40),
+    items: receiptItems(source.items),
+    discount: receiptAmount(source.discount),
     /* v173:只接受 App 送來清單裡的選項 */
     payMethod: (payMethods || []).indexOf(text('payMethod', 12)) >= 0 ? text('payMethod', 12) : '',
     category: (categories || []).indexOf(text('category', 12)) >= 0 ? text('category', 12) : ''

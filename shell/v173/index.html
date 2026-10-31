@@ -10347,6 +10347,7 @@ var APP_RELEASE_NOTES=[
   {version:'v173',date:'2026-10-31',title:'收據也幫忙選支付方式與類別',items:[
     '收據上看得出用 PayPay、LINE Pay、TWQR（悠遊付、台灣Pay、icash Pay）等行動支付時，支付方式自動選「行動支付」；信用卡、現金同理。',
     '類別也依收據判斷：餐廳選「餐飲」、電車與計程車選「交通」…；只從你手機上的選項裡挑。',
+    '多品項時把收據上的品項逐筆帶入（名稱與金額）；單品項時可按「改成多品項並帶入」。',
     '自己選過、或編輯舊帳時不會改；需要把岡山 Apps Script 換成新版才會生效。'
   ]},
   {version:'v172',date:'2026-10-31',title:'收據自動讀取的說明收進「!」',items:[
@@ -11847,7 +11848,9 @@ function ledgerReceiptKeys(records){
 }
 function ledgerReceiptFieldVisible(draft){
   if(!ledgerReceiptsAvailable()||!draft||ledgerUiState.correction)return false;
-  return !(typeof buyToLedgerDomain!=='undefined'&&buyToLedgerDomain.sourceRefs(draft).length);   // 從採買記帳時用採買自己的照片
+  /* 從採買記帳時用採買自己的照片。v173 修正:多品項的空白品項也會回一個沒有 shoppingItemId 的 ref,
+     以前因此多品項永遠看不到收據欄;只算真的連到採買項目的 ref。 */
+  return !(typeof buyToLedgerDomain!=='undefined'&&buyToLedgerDomain.sourceRefs(draft).some(function(ref){return ref&&(ref.shoppingItemId||ref.allocationId);}));
 }
 function ledgerReceiptThumbs(ids,removable){
   return (ids||[]).map(function(id,index){
@@ -12072,14 +12075,56 @@ function applyLedgerReceiptRecognition(draft,found){
       filled.push('類別「'+found.category+'」');
     }
   }
+  /* v173(Bar 2026-10-31「多品項:要,逐筆帶入」;單品項不填明細):收據上的品項記下來;
+     已經是多品項且品項都還空著就直接帶入,否則顯示按鈕讓人自己決定 */
+  draft.receiptItemsFound=null;draft.receiptItemsApplied=false;
+  if(found.items&&found.items.length){
+    var itemCode=found.currency||ledgerCurrencyCodeOf(draft.currency),itemSlot=itemCode==='TWD'?'TWD':itemCode===tripLocalCurrencyCode()?'JPY':'';
+    if(itemSlot){
+      draft.receiptItemsFound={slot:itemSlot,code:itemCode,items:found.items,discount:found.discount,total:found.total};
+      if(draft.multi&&ledgerDraftItemsBlank(draft)&&(itemSlot===draft.currency||String(draft.discount==null?'':draft.discount).trim()==='')){
+        var mismatch=fillLedgerDraftFromReceiptItems(draft);
+        notes=notes.filter(function(text){return text.indexOf('（多品項請逐項填寫）')<0;});
+        filled.push(found.items.length+' 個品項');if(mismatch)notes.push(mismatch);
+      }
+    }
+  }
   return {status:'done',message:filled.length?'已依收據帶入'+filled.join('、')+'，請確認':'收據讀好了，表單已經有填，沒有改動',notes:notes};
+}
+function ledgerDraftItemsBlank(draft){
+  return (draft.items||[]).every(function(item){return !String(item.name||'').trim()&&!String(item.amount==null?'':item.amount).trim();});
+}
+/* 把收據上的品項換成表單品項;回傳品項加總與收據總額對不上時的提示(可能是未稅價或另有折扣) */
+function fillLedgerDraftFromReceiptItems(draft){
+  var found=draft.receiptItemsFound;if(!found)return '';
+  draft.currency=found.slot;
+  var category=draft.categoryApply||draft.category||ledgerDefaultCategory();
+  var minors=found.items.map(function(item){return TripCurrency.toMinor(item.amount,found.code);});
+  draft.items=found.items.map(function(item,index){return createLedgerDraftItem(draft,{name:item.name,amount:ledgerAmountInputText(minors[index],found.slot),category:category});});
+  var discountMinor=0;
+  if(found.discount!==null&&String(draft.discount==null?'':draft.discount).trim()===''){discountMinor=TripCurrency.toMinor(found.discount,found.code);draft.discount=ledgerAmountInputText(discountMinor,found.slot);}
+  draft.receiptItemsApplied=true;
+  if(found.total===null)return '';
+  var sum=minors.reduce(function(total,value){return total+value;},0)-discountMinor,totalMinor=TripCurrency.toMinor(found.total,found.code);
+  return sum===totalMinor?'':'品項加總 '+formatLedgerCurrencyAmount(found.slot,sum)+'，收據總額 '+formatLedgerCurrencyAmount(found.slot,totalMinor)+'；可能是未稅價或另有折扣，請檢查「稅與優惠券」';
+}
+function applyLedgerReceiptItems(){
+  var draft=ledgerUiState.draft,found=draft&&draft.receiptItemsFound;if(!found)return;
+  var hasContent=draft.multi?!ledgerDraftItemsBlank(draft):!!String(draft.detail||'').trim();
+  if(hasContent&&!confirm('用收據上的 '+found.items.length+' 個品項取代目前填的品項？'))return;
+  if(!draft.multi){draft.multi=true;draft.categoryApply=draft.category||ledgerDefaultCategory();draft.categoryApplyOpen=false;}
+  draft.multiBillDetailsOpen=true;
+  var mismatch=fillLedgerDraftFromReceiptItems(draft);
+  draft.receiptScan={status:'done',message:'已帶入收據上的 '+found.items.length+' 個品項，請確認',notes:mismatch?[mismatch]:[]};
+  withLedgerSheetPosition(renderLedgerEntrySheet);
 }
 function renderLedgerReceiptScan(draft){
   var scan=draft&&draft.receiptScan;if(!scan)return '';
   if(scan.status==='reading')return '<p class="ledger-receipt-note ledger-receipt-scan" role="status">正在讀取收據…</p>';
   var retry=scan.status==='failed'?' <button type="button" class="ledger-receipt-apply" onclick="retryLedgerReceiptRecognition()">重試</button>':'';
+  var found=draft.receiptItemsFound,items=found&&!draft.receiptItemsApplied?'<p class="ledger-receipt-note ledger-receipt-items">收據上有 '+found.items.length+' 個品項 <button type="button" class="ledger-receipt-apply" onclick="applyLedgerReceiptItems()">'+(draft.multi?'改用這 '+found.items.length+' 個品項':'改成多品項並帶入')+'</button></p>':'';
   return '<p class="ledger-receipt-note ledger-receipt-scan" role="status">'+escapeHtml(scan.message||'')+retry+'</p>'+
-    (scan.notes||[]).map(function(text){return '<p class="ledger-receipt-note ledger-receipt-scan-note">'+escapeHtml(text)+'</p>';}).join('');
+    (scan.notes||[]).map(function(text){return '<p class="ledger-receipt-note ledger-receipt-scan-note">'+escapeHtml(text)+'</p>';}).join('')+items;
 }
 function hydrateLedgerReceiptImages(scope){
   if(!ledgerReceiptsAvailable()||!scope)return;
