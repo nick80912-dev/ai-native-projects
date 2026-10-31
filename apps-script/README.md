@@ -127,3 +127,23 @@ Apps Script 部署完成並通過下列真實驗收後，才可交付使用 Sche
 ## 回滾
 
 在 Apps Script「管理部署」把 Web App 指回上一個已知正常版本，保持同一 `/exec` URL。Schema 2.8 Apps Script 向後相容舊 payload，通常可保留；若仍需回退且前端 Schema 2.8 已發佈，應同時依專案回滾程序回復對應 Netlify 部署並再次 bump Service Worker cache，不可只回退其中一側而留下不相容契約。
+
+## 收據辨識（v171，backlog #61）
+
+App 加收據照片後 POST：
+
+```json
+{"action":"recognizeReceipt","image":"<JPEG 的 base64>","mimeType":"image/jpeg","currency":"JPY"}
+```
+
+成功回應只有五個欄位，不寫試算表、照片不存雲端：
+
+```json
+{"ok":true,"receipt":{"date":"2026-10-20","time":"12:41","total":1580,"currency":"JPY","storeName":"ローソン 倉敷店"}}
+```
+
+錯誤代碼：`missing GEMINI_API_KEY`、`invalid image`、`invalid GEMINI_MODEL`、`quota`（免費額度用完）、`not authorized`（還沒授權連到外部服務）、`ai http <狀態>`、`ai unreachable: <原因>`、`unreadable ai reply`。辨識不拿 `LockService` 鎖。
+
+- 金鑰放在「專案設定 → 指令碼屬性」的 `GEMINI_API_KEY`，不寫進程式、不進 GitHub；可選 `GEMINI_MODEL`（預設 `gemini-flash-lite-latest`）。
+- **第一次使用要授權「連線到外部服務」**：貼上新版、部署新版本後，在編輯器上方的函式選單選 `checkReceiptRecognition` 按「▶ 執行」，照提示授權；「執行記錄」會寫出 `OK:收據辨識可以使用` 或卡在哪裡（不印出金鑰、不用掉辨識次數）。
+- 執行了卻沒有跳出授權、記錄出現沒有權限：到「專案設定」勾「在編輯器中顯示『appsscript.json』資訊清單檔案」，打開 `appsscript.json`，若裡面有 `"oauthScopes"`，在清單加上 `"https://www.googleapis.com/auth/script.external_request"`，儲存後再執行一次。

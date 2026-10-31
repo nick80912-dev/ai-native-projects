@@ -427,7 +427,23 @@ assert.ok(infoSource.length > 0 && infoSource.indexOf('LockService') < 0 && info
   assert.deepStrictEqual(receiptApp({GEMINI_API_KEY:'k'}, {status:429, body:'{}'}).call({action:'recognizeReceipt', image}), {ok:false, error:'quota'}, '免費額度用完');
   assert.deepStrictEqual(receiptApp({GEMINI_API_KEY:'k'}, {status:403, body:'{}'}).call({action:'recognizeReceipt', image}), {ok:false, error:'ai http 403'});
   assert.deepStrictEqual(receiptApp({GEMINI_API_KEY:'k'}, aiReply('這不是 JSON')).call({action:'recognizeReceipt', image}), {ok:false, error:'unreadable ai reply'});
-  assert.deepStrictEqual(receiptApp({GEMINI_API_KEY:'k'}, new Error('dns')).call({action:'recognizeReceipt', image}), {ok:false, error:'ai unreachable'});
+  assert.deepStrictEqual(receiptApp({GEMINI_API_KEY:'k'}, new Error('dns')).call({action:'recognizeReceipt', image}), {ok:false, error:'ai unreachable: dns'});
+  assert.deepStrictEqual(receiptApp({GEMINI_API_KEY:'k'}, new Error('Exception: You do not have permission to call UrlFetchApp.fetch. Required permissions: https://www.googleapis.com/auth/script.external_request')).call({action:'recognizeReceipt', image}), {ok:false, error:'not authorized'}, '還沒授權連到外部服務');
+  /* 編輯器裡執行的檢查:會觸發授權、不印出金鑰、不用掉辨識次數 */
+  function check(props, reply){
+    const scan = receiptApp(props, reply), logs = [];
+    scan.sandbox.Logger = {log(message){ logs.push(String(message)); }};
+    scan.sandbox.encodeURIComponent = encodeURIComponent;
+    const message = scan.sandbox.checkReceiptRecognition();
+    return {message, logs, calls: scan.calls};
+  }
+  const ready = check({GEMINI_API_KEY:'secret-key'}, {status:200, body:'{}'});
+  assert.ok(/^OK/.test(ready.message) && ready.logs[0] === ready.message);
+  assert.strictEqual(ready.calls[0].url, 'https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-lite-latest', '只查模型資料,不呼叫 generateContent');
+  assert.ok(ready.logs.join('').indexOf('secret-key') < 0, '不印出金鑰');
+  assert.ok(/還沒放 GEMINI_API_KEY/.test(check({}, {status:200, body:'{}'}).message));
+  assert.ok(/找不到模型/.test(check({GEMINI_API_KEY:'k', GEMINI_MODEL:'nope'}, {status:404, body:'{}'}).message));
+  assert.ok(/金鑰無法使用\(HTTP 400\)/.test(check({GEMINI_API_KEY:'k'}, {status:400, body:'{}'}).message));
   assert.deepStrictEqual(receiptApp({GEMINI_API_KEY:'k'}, aiReply('[1,2]')).call({action:'recognizeReceipt', image}).receipt, {date:'', time:'', total:null, currency:'', storeName:''}, '不是物件就全部空白');
   assert.ok(gsSource.indexOf("getProperty('GEMINI_API_KEY')") > 0 && !/AIza[0-9A-Za-z_-]{20,}/.test(gsSource), '金鑰只從指令碼屬性讀,程式裡沒有金鑰');
   /* 一般記帳仍照舊拿鎖 */
