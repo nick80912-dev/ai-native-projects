@@ -48,7 +48,9 @@ jobs:
     # 同上(backlog #54)。本 job 的 `playwright install --with-deps` 依 runner OS 裝系統套件,
     # 換 OS 大版本時最可能出事的一步;@playwright/test 固定 1.62.0。
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    # 2026-10-31:測試增加到 432 項,較慢的 runner 在 15 分鐘到時才跑到第 319 項(全部通過),
+    # 同一個 commit 的另一次只要 10.4 分鐘;放寬到 25 分鐘,避免慢機器整批被取消。
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
