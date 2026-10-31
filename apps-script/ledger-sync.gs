@@ -6,6 +6,7 @@
  * 只回傳日期、時間、總額、幣別、店名五項;照片不存進試算表。金鑰放在「專案設定 → 指令碼屬性」的
  * GEMINI_API_KEY(不寫在程式裡、不進 GitHub);可選 GEMINI_MODEL 換模型。沒有這段的舊部署照常記帳,只是不能辨識。
  * v173:App 另送支付方式與類別的選項清單,AI 從清單選一個(行動支付錢包 → 行動支付;餐廳 → 餐飲;電車 → 交通…)。
+ * v176:另回 taxFree(deducted 結帳已扣稅／refundable 之後可退稅)、taxRates(印在收據上的稅率)、pricesIncludeTax(品項是否含稅)。
  * GitHub 內此檔為唯一維護來源；部署內容必須與此檔一致。
  */
 var LEDGER_COLUMNS = 21;
@@ -210,6 +211,13 @@ var RECEIPT_PROMPT = [
   '  keep a quantity such as x2 in the name), amount = that line\'s total as a plain number. Leave out subtotal, tax, total,',
   '  discount, deposit and change lines. Use [] when the lines are not readable.',
   '- discount: the total of discount or coupon lines as a positive number, or null when there are none.',
+  '- taxFree: "deducted" when the receipt is a tax-free sale where the tax was already taken off at the register (免税,',
+  '  Tax Free, 輸出免税, 免税対象 shown as the tax line); "refundable" when the tax was paid but can be claimed back later',
+  '  (Tax Refund / VAT refund form, Global Blue, Planet, 즉시환급 not applied); "" otherwise.',
+  '- taxRates: the consumption or sales tax rates printed on the receipt as numbers, for example [10] or [10, 8]',
+  '  (軽減税率 ※ items are 8). [] when no rate is printed.',
+  '- pricesIncludeTax: false when the item lines are before tax and a separate tax line is added (外税, 税抜, 本体価格),',
+  '  true when the item prices already include tax (内税, 税込), null when unsure.',
   '- If the photo is not a receipt, return all fields empty and total null.'
 ].join('\n');
 /* v173(Bar 2026-10-31):支付方式與類別從 App 送來的清單裡選一個(手機上自訂的名稱也適用) */
@@ -318,6 +326,15 @@ function receiptAmount(value) {
   var amount = typeof value === 'string' ? Number(value.replace(/[,\s]/g, '')) : value;
   return typeof amount === 'number' && isFinite(amount) && amount > 0 ? amount : null;
 }
+function receiptTaxRates(value) {
+  var seen = {}, list = [];
+  (Array.isArray(value) ? value : []).forEach(function(item) {
+    var rate = typeof item === 'string' ? Number(item.replace(/[%\s]/g, '')) : item;
+    if (typeof rate !== 'number' || !isFinite(rate) || rate <= 0 || rate > 100 || seen[rate] || list.length >= 3) return;
+    seen[rate] = true; list.push(Math.round(rate * 10) / 10);
+  });
+  return list;
+}
 function receiptItems(value) {
   var list = [];
   (Array.isArray(value) ? value : []).forEach(function(item) {
@@ -341,6 +358,10 @@ function receiptFields(value, payMethods, categories) {
     currency: text('currency', 3).toUpperCase(), storeName: text('storeName', 40),
     items: receiptItems(source.items),
     discount: receiptAmount(source.discount),
+    /* v176(Bar 2026-10-31):免稅與可退稅寫進備註;多品項依稅率與未稅價設定稅 */
+    taxFree: source.taxFree === 'deducted' || source.taxFree === 'refundable' ? source.taxFree : '',
+    taxRates: receiptTaxRates(source.taxRates),
+    pricesIncludeTax: typeof source.pricesIncludeTax === 'boolean' ? source.pricesIncludeTax : null,
     /* v173:只接受 App 送來清單裡的選項 */
     payMethod: (payMethods || []).indexOf(text('payMethod', 12)) >= 0 ? text('payMethod', 12) : '',
     category: (categories || []).indexOf(text('category', 12)) >= 0 ? text('category', 12) : ''

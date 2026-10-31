@@ -69,9 +69,9 @@ assert.notStrictEqual(R.DB_NAME,'trip-local-media','receipts use their own datab
 /* v171(backlog #61):AI 讀到的收據內容 */
 const N=R.normalizeRecognition;
 assert.deepStrictEqual(N({date:'2026-10-20',time:'9:05',total:1500,currency:'jpy',storeName:'  ローソン\n倉敷店 '}),
-  {date:'2026/10/20',time:'09:05',total:1500,currency:'JPY',storeName:'ローソン 倉敷店',payMethod:'',category:'',items:[],discount:null,found:true});
+  {date:'2026/10/20',time:'09:05',total:1500,currency:'JPY',storeName:'ローソン 倉敷店',payMethod:'',category:'',items:[],discount:null,taxFree:'',taxRates:[],pricesIncludeTax:null,found:true});
 assert.deepStrictEqual(N({date:'2026年10月20日',time:'12:34:56',total:'12.50',currency:'USD'}),
-  {date:'2026/10/20',time:'12:34',total:12.5,currency:'USD',storeName:'',payMethod:'',category:'',items:[],discount:null,found:true},'年月日與秒數、字串金額');
+  {date:'2026/10/20',time:'12:34',total:12.5,currency:'USD',storeName:'',payMethod:'',category:'',items:[],discount:null,taxFree:'',taxRates:[],pricesIncludeTax:null,found:true},'年月日與秒數、字串金額');
 assert.strictEqual(N({date:'2026-02-30'}).date,'','不存在的日期當作沒讀到');
 assert.strictEqual(N({date:'1999-12-31'}).date,'','太久以前的日期當作沒讀到');
 assert.strictEqual(N({time:'25:00'}).time,'');
@@ -79,7 +79,7 @@ assert.strictEqual(N({time:'25:00'}).time,'');
 assert.strictEqual(N({total:'1,234'}).total,1234);
 assert.strictEqual(N({currency:'¥'}).currency,'','幣別要是三碼');
 assert.strictEqual(N({storeName:'x'.repeat(60)}).storeName.length,40);
-assert.deepStrictEqual(N(null),{date:'',time:'',total:null,currency:'',storeName:'',payMethod:'',category:'',items:[],discount:null,found:false});
+assert.deepStrictEqual(N(null),{date:'',time:'',total:null,currency:'',storeName:'',payMethod:'',category:'',items:[],discount:null,taxFree:'',taxRates:[],pricesIncludeTax:null,found:false});
 assert.deepStrictEqual(N({items:[{name:' 拉麵 ',amount:'980'},{name:'',amount:5},{name:'折扣',amount:-100},null,{name:'啤酒',amount:500}],discount:'1,00'}).items,[{name:'拉麵',amount:980},{name:'啤酒',amount:500}],'品項只留有名稱與正數金額的');
 assert.strictEqual(N({discount:'100'}).discount,100);
 assert.strictEqual(N({items:[{name:'拉麵',amount:980}]}).found,true);
@@ -88,5 +88,13 @@ assert.deepStrictEqual([N({payMethod:' 行動支付 ',category:'餐飲'}).payMet
 assert.strictEqual(N({payMethod:{}}).payMethod,'','不是字串就當沒讀到');
 assert.strictEqual(N([1,2]).found,false);
 assert.strictEqual(N({currency:'JPY'}).found,false,'只有幣別不算讀到');
+
+/* v176:免稅、稅率、品項是否含稅 */
+assert.deepStrictEqual((({taxFree,taxRates,pricesIncludeTax})=>({taxFree,taxRates,pricesIncludeTax}))(N({taxFree:'deducted',taxRates:['10%',8,8,0,101],pricesIncludeTax:false})),{taxFree:'deducted',taxRates:[10,8],pricesIncludeTax:false});
+assert.strictEqual(N({taxFree:'maybe'}).taxFree,'');
+assert.strictEqual(N({taxFree:'refundable'}).found,true,'只有可退稅也算讀到');
+assert.strictEqual(N({pricesIncludeTax:'false'}).pricesIncludeTax,null,'不是布林就當不知道');
+assert.strictEqual(N({taxRates:[10]}).found,true,'只有稅率也算讀到');
+assert.strictEqual(N({pricesIncludeTax:true}).found,false,'只知道含稅不算讀到');
 
 console.log('ledger receipts tests passed');
