@@ -1,5 +1,23 @@
 # 07 版本紀錄
 
+## 2026-10-31 — v176 收據也看免稅與稅率
+
+- **來源**：Bar 2026-10-31：「能在辨識內容中辨識該收據是否已退稅或稅金扣抵了嗎？」。追問後 Bar 裁定：免稅「可以在附註填入該收據是免稅」（不自動勾「免稅品」）；稅率「要，多品項時自動設好」。
+- **使用上**：
+  - 收據上看得出免稅（結帳時已扣稅，如「免税」「Tax-Free」）時，備註加上「免稅（結帳時已扣稅）」；看得出可退稅（結帳時未扣稅、要另外辦）時加上「可退稅（結帳時未扣稅，需另外辦理）」。原本有寫備註的接在後面（用「；」隔開），已經有同一句就不重複。不會自動勾「免稅品」。
+  - 收據上只印一種稅率時，「稅與優惠券」的稅率選成那個（不在這趟清單裡就用「自訂」）；多品項而且收據上的品項是未稅價（外税／税抜）時，價格方式選「未稅」，品項加總加稅後與收據總額相同就不再出現「對不上」的提示。單品項只換稅率、不動含稅／未稅（總額本來就是含稅後的錢）。
+  - 收據上有兩種以上稅率（例如 8% 與 10%）時不自動設定，結果視窗提示「可依稅率分開記，或在『稅與優惠券』自己選」。
+  - 自己動過稅的設定、編輯舊帳、這趟沒有稅（例如韓國旅程沒填 Tax Rates）時，稅都不改；免稅一樣寫備註。
+  - 「復原」也會把備註與稅的設定改回去；按「改成多品項並帶入」時也照收據的未稅價設定稅。
+- **做法**：
+  - Apps Script `recognizeReceipt` 多回 `taxFree`（`"deducted"`／`"refundable"`／`""`）、`taxRates`（數字陣列，最多 3 個、0–100、去重）、`pricesIncludeTax`（true／false／null）；新增 `receiptTaxRates()`。
+  - `ledger-receipts.js` 的 `normalizeRecognition()` 再檢查一次這三欄；只讀到免稅或只讀到稅率也算讀到內容。
+  - 殼層：`applyLedgerReceiptRecognition()` 寫備註、設稅率／價格方式；`setLedgerPriceMode()`／`setLedgerTaxPreset()`／`setLedgerCustomTaxRate()` 記 `draft.taxTouched`；`LEDGER_RECEIPT_UNDO_FIELDS` 加 `note`、`priceMode`、`taxPreset`、`customTaxRate`；`fillLedgerDraftFromReceiptItems()` 對不上的檢查改成未稅時先加稅再比。
+- **版本**：forward bump v175→v176；`builtin-snapshot.js` 以 v175 asset 離線重產，除版本外不變。發布說明視窗為 `v176` + `['v175','v174','v173','v172']`（v171 滾出）。`tests/trip-lifecycle-wiring.test.js` 加入已發布 v175 三件組的 hash。
+- **Apps Script 要再換一次**：岡山試算表的 Apps Script 換成最新 `apps-script/ledger-sync.gs` 並「部署 → 管理部署作業 → 編輯 → 新版本」。不需要重新授權。沒換之前 App 照常運作，只是不會有免稅與稅率。
+- **測試**：`tests/apps-script-settings.test.js`、`tests/ledger-receipts.test.js` 加入三個新欄位；`tests/browser/receipt-recognition-v171.spec.js` 新增 7 項（免稅寫備註且不勾免稅品、可退稅、多品項未稅 10% 且加總相符並存檔、多種稅率只提示、自己選過不改、單品項與自訂稅率與沒有稅的旅程、復原、改成多品項並帶入）。
+- **回滾**：合併前關閉 PR；發布後依 `16_OPS_PLAYBOOK.md` §A1 退回 v175 的 Netlify 部署（`commit_ref` `12ee222`），再往前 bump。Apps Script 新版與舊 App 相容（多的欄位舊版不讀）。
+
 ## 2026-10-31 — v175 已上線 main（待 Bar 手機審查與 tag）
 
 - Bar 先看過 6 張畫面（結果視窗、照片下方只剩品項按鈕、收據時間建議、按了之後、沒網路時的照片時間建議、照片時間短通知）後回「好，送上main我手機審查」。

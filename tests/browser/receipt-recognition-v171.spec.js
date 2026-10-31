@@ -421,3 +421,114 @@ test('under the receipt photos only the receipt-lines offer remains',async({page
   await expect(notes).toHaveText('收據上有 2 個品項 改成多品項並帶入');
   await expect(page.locator('#ledgerEntrySheet .ledger-receipt-field .ledger-receipt-error')).toHaveCount(0);
 });
+
+/* v176(Bar 2026-10-31「可以在附註填入該收據是免稅」「要，多品項時自動設好」):
+   收據上看得出免稅(已扣稅)或可退稅時寫進備註,不自動勾免稅品;收據印的稅率與「未稅價」在多品項時設好 */
+const draftTax=page=>page.evaluate(()=>{const d=ledgerUiState.draft;return {note:d.note,preset:d.taxPreset,custom:d.customTaxRate,mode:d.priceMode};});
+test('a tax-free receipt is noted in 備註 without ticking 免稅品',async({page})=>{
+  await boot(page,null);
+  await page.evaluate(()=>{window.__aiReply={ok:true,receipt:{total:5400,currency:'JPY',storeName:'ビックカメラ',taxFree:'deducted'}};});
+  await openForm(page);
+  await page.evaluate(()=>{ledgerUiState.draft.note='幫媽媽買';});
+  await page.evaluate(()=>window.__addReceipt(null));
+  await expect.poll(()=>scanMessage(page)).toBe('已依收據帶入金額 ¥5,400、店名「ビックカメラ」、備註「免稅（結帳時已扣稅）」，請確認');
+  expect((await draftTax(page)).note).toBe('幫媽媽買；免稅（結帳時已扣稅）');
+  await expect(card(page).locator('.ledger-receipt-card-row')).toHaveText(['金額¥5,400','店名ビックカメラ','備註免稅（結帳時已扣稅）']);
+  expect(await page.evaluate(()=>(ledgerUiState.draft.items||[]).some(item=>item.taxExempt))).toBe(false);
+  /* 同一張再讀一次不會重複寫 */
+  await card(page).getByRole('button',{name:'好'}).click();
+  await page.evaluate(()=>retryLedgerReceiptRecognition());
+  await expect.poll(()=>scanMessage(page)).toBe('收據讀好了，表單已經有填，沒有改動');
+  expect((await draftTax(page)).note).toBe('幫媽媽買；免稅（結帳時已扣稅）');
+});
+
+test('a refundable receipt says the refund still has to be claimed',async({page})=>{
+  await boot(page,null);
+  await page.evaluate(()=>{window.__aiReply={ok:true,receipt:{taxFree:'refundable'}};});
+  await openForm(page);
+  await page.evaluate(()=>window.__addReceipt(null));
+  await expect.poll(()=>scanMessage(page)).toBe('已依收據帶入備註「可退稅（結帳時未扣稅，需另外辦理）」，請確認');
+  expect((await draftTax(page)).note).toBe('可退稅（結帳時未扣稅，需另外辦理）');
+});
+
+test('a multi-item receipt with pre-tax prices sets 10% and 未稅, and the taxed sum matches',async({page})=>{
+  await boot(page,null);
+  /* 未稅 ¥1,000＋¥800＝¥1,800，加 10% ＝ ¥1,980 */
+  await page.evaluate(()=>{window.__aiReply={ok:true,receipt:{storeName:'お土産屋',total:1980,currency:'JPY',items:[{name:'お土産A',amount:1000},{name:'お土産B',amount:800}],taxRates:[10],pricesIncludeTax:false}};});
+  await openMultiForm(page);
+  await page.evaluate(()=>{ledgerUiState.draft.taxPreset='8';});
+  await page.evaluate(()=>window.__addReceipt(null));
+  await expect.poll(()=>scanMessage(page)).toBe('已依收據帶入店名「お土産屋」、稅率 10%（品項為未稅價）、2 個品項，請確認');
+  expect(await draftTax(page)).toMatchObject({preset:'10',mode:'excluded'});
+  await expect(cardNotes(page)).toHaveCount(0);
+  await expect(card(page).locator('.ledger-receipt-card-row')).toContainText(['稅率10%，品項為未稅價']);
+  await closeReceiptDialog(page);
+  await page.evaluate(()=>saveLedgerEntry(false));
+  await expect(page.locator('#ledgerEntrySheet')).toHaveCount(0);
+  const saved=await page.evaluate(()=>personalLedgerRepository.all().filter(item=>/^お土産/.test(item.detail)).map(item=>[item.amountJpy,item.taxRate,item.priceMode]));
+  expect(saved.reduce((sum,row)=>sum+row[0],0)).toBe(1980);
+  expect(saved.every(row=>row[1]===10&&row[2]==='excluded')).toBe(true);
+});
+
+test('mixed tax rates only get a reminder; tax settings you picked stay',async({page})=>{
+  await boot(page,null);
+  await page.evaluate(()=>{window.__aiReply={ok:true,receipt:{storeName:'イオン',taxRates:[8,10],pricesIncludeTax:false}};});
+  await openMultiForm(page);
+  const before=await draftTax(page);
+  await page.evaluate(()=>window.__addReceipt(null));
+  await expect(cardNotes(page)).toHaveText('收據上有 8%、10% 不同稅率，稅率沒有自動設定；可依稅率分開記，或在「稅與優惠券」自己選');
+  expect(await draftTax(page)).toEqual(before);
+  await closeReceiptDialog(page);
+  /* 自己選過稅率:單一稅率的收據也不改 */
+  await page.evaluate(()=>{setLedgerTaxPreset('8');window.__aiReply={ok:true,receipt:{storeName:'イオン',taxRates:[10],pricesIncludeTax:false}};});
+  await page.evaluate(()=>retryLedgerReceiptRecognition());
+  await expect.poll(()=>scanMessage(page)).toBe('收據讀好了，表單已經有填，沒有改動');
+  expect(await draftTax(page)).toMatchObject({preset:'8',mode:before.mode});
+});
+
+test('a single entry takes the printed rate but keeps 含稅; a trip without tax ignores it',async({page})=>{
+  await boot(page,null);
+  await page.evaluate(()=>{window.__aiReply={ok:true,receipt:{total:540,currency:'JPY',taxRates:[8],pricesIncludeTax:false}};});
+  await openForm(page);
+  const mode=(await draftTax(page)).mode;
+  await page.evaluate(()=>window.__addReceipt(null));
+  await expect.poll(()=>scanMessage(page)).toBe('已依收據帶入金額 ¥540、稅率 8%，請確認');
+  expect(await draftTax(page)).toMatchObject({preset:'8',mode});
+  /* 收據稅率不在這趟清單裡就用自訂 */
+  await page.evaluate(()=>{closeLedgerEntrySheet();DB.cfg.taxRates='10';window.__aiReply={ok:true,receipt:{taxRates:[5]}};});
+  await openForm(page);
+  await page.evaluate(()=>window.__addReceipt(null));
+  await expect.poll(()=>scanMessage(page)).toBe('已依收據帶入稅率 5%，請確認');
+  expect(await draftTax(page)).toMatchObject({preset:'custom',custom:'5'});
+  /* 韓國旅程沒有稅的設定:不動稅,免稅一樣寫備註 */
+  await page.evaluate(()=>{closeLedgerEntrySheet();Object.assign(DB.cfg,{taxRates:'',currency:'KRW',exchangeRate:'0.024',ledgerDefaultCurrency:'KRW'});window.__aiReply={ok:true,receipt:{taxRates:[10],taxFree:'deducted'}};});
+  await openForm(page);
+  const krw=await draftTax(page);
+  await page.evaluate(()=>window.__addReceipt(null));
+  await expect.poll(()=>scanMessage(page)).toBe('已依收據帶入備註「免稅（結帳時已扣稅）」，請確認');
+  expect(await draftTax(page)).toMatchObject({preset:krw.preset,mode:krw.mode});
+});
+
+test('復原 also puts back 備註 and the tax settings',async({page})=>{
+  await boot(page,null);
+  await page.evaluate(()=>{window.__aiReply={ok:true,receipt:{total:1980,currency:'JPY',items:[{name:'お土産A',amount:1000},{name:'お土産B',amount:800}],taxRates:[10],pricesIncludeTax:false,taxFree:'deducted'}};});
+  await openMultiForm(page);
+  const before=await draftTax(page);
+  await page.evaluate(()=>window.__addReceipt(null));
+  await expect(card(page).getByRole('button',{name:'復原'})).toBeVisible();
+  expect((await draftTax(page)).mode).toBe('excluded');
+  await card(page).getByRole('button',{name:'復原'}).click();
+  expect(await draftTax(page)).toEqual(before);
+});
+
+test('改成多品項並帶入 sets 未稅 from the receipt too',async({page})=>{
+  await boot(page,null);
+  await page.evaluate(()=>{window.__aiReply={ok:true,receipt:{total:1980,currency:'JPY',items:[{name:'お土産A',amount:1000},{name:'お土産B',amount:800}],taxRates:[10],pricesIncludeTax:false}};});
+  await openForm(page);
+  await page.evaluate(()=>window.__addReceipt(null));
+  await closeReceiptDialog(page);
+  await page.getByRole('button',{name:'改成多品項並帶入'}).click();
+  await expect.poll(()=>page.evaluate(()=>ledgerUiState.draft.multi)).toBe(true);
+  expect(await draftTax(page)).toMatchObject({preset:'10',mode:'excluded'});
+  await expect(cardNotes(page)).toHaveCount(0);
+});
