@@ -382,4 +382,58 @@ assert.ok(infoSource.length > 0 && infoSource.indexOf('LockService') < 0 && info
   assert.deepStrictEqual(Array.from(infoApp.sandbox.LEDGER_HEADERS), Array.from(headers), 'Apps Script 的分帳紀錄標題與 schema.js 一致');
 })();
 
+/* ---------- v171(backlog #61):收據辨識 ---------- */
+(function(){
+  function receiptApp(props, reply){
+    const scan = loadAppScript(), calls = [];
+    scan.sandbox.PropertiesService = {getScriptProperties(){ return {getProperty(name){ return Object.prototype.hasOwnProperty.call(props, name) ? props[name] : null; }}; }};
+    scan.sandbox.UrlFetchApp = {fetch(url, options){
+      calls.push({url, options});
+      if (reply instanceof Error) throw reply;
+      return {getResponseCode(){ return reply.status; }, getContentText(){ return reply.body; }};
+    }};
+    scan.calls = calls;
+    return scan;
+  }
+  const image = Buffer.from('fake-jpeg-bytes').toString('base64');
+  const aiReply = text => ({status:200, body:JSON.stringify({candidates:[{content:{parts:[{text}]}}]})});
+  const good = receiptApp({GEMINI_API_KEY:'test-key'}, aiReply('```json\n{"date":"2026-10-20","time":"12:34","total":"1,500","currency":"jpy","storeName":"  ローソン 倉敷店  ","extra":"x"}\n```'));
+  const rowsBefore = good.ledger.data.length;
+  const result = good.call({action:'recognizeReceipt', image, mimeType:'image/jpeg', currency:'KRW'});
+  assert.deepStrictEqual(result, {ok:true, receipt:{date:'2026-10-20', time:'12:34', total:1500, currency:'JPY', storeName:'ローソン 倉敷店'}}, '只回傳五個欄位,總額去掉千分位');
+  assert.strictEqual(good.ledger.data.length, rowsBefore, '辨識不寫入分帳紀錄');
+  assert.strictEqual(good.lock.waited, false, '辨識不拿鎖,不擋同時間的記帳');
+  assert.strictEqual(good.calls.length, 1);
+  const sent = good.calls[0];
+  assert.strictEqual(sent.url, 'https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-lite-latest:generateContent', '預設模型');
+  assert.strictEqual(sent.options.headers['x-goog-api-key'], 'test-key', '金鑰放在 header,不放網址');
+  assert.ok(sent.url.indexOf('test-key') < 0);
+  const request = JSON.parse(sent.options.payload);
+  assert.deepStrictEqual(request.contents[0].parts[1], {inline_data:{mime_type:'image/jpeg', data:image}});
+  assert.ok(/usually pays in KRW/.test(request.contents[0].parts[0].text), '提示這趟的當地幣別');
+  assert.strictEqual(request.generationConfig.responseMimeType, 'application/json');
+
+  const noKey = receiptApp({}, aiReply('{}'));
+  assert.deepStrictEqual(noKey.call({action:'recognizeReceipt', image}), {ok:false, error:'missing GEMINI_API_KEY'});
+  assert.strictEqual(noKey.calls.length, 0, '沒有金鑰就不呼叫 AI');
+  const custom = receiptApp({GEMINI_API_KEY:'k', GEMINI_MODEL:'gemini-2.5-flash'}, aiReply('{"total":12.5,"currency":"USD"}'));
+  assert.deepStrictEqual(custom.call({action:'recognizeReceipt', image}).receipt, {date:'', time:'', total:12.5, currency:'USD', storeName:''});
+  assert.ok(custom.calls[0].url.indexOf('/models/gemini-2.5-flash:generateContent') > 0, 'GEMINI_MODEL 可以換模型');
+  assert.deepStrictEqual(receiptApp({GEMINI_API_KEY:'k', GEMINI_MODEL:'../evil'}, aiReply('{}')).call({action:'recognizeReceipt', image}), {ok:false, error:'invalid GEMINI_MODEL'});
+  ['', 'not base64!', 'a'.repeat(6000001)].forEach(function(bad){
+    assert.deepStrictEqual(receiptApp({GEMINI_API_KEY:'k'}, aiReply('{}')).call({action:'recognizeReceipt', image:bad}), {ok:false, error:'invalid image'});
+  });
+  assert.deepStrictEqual(receiptApp({GEMINI_API_KEY:'k'}, aiReply('{}')).call({action:'recognizeReceipt', image, mimeType:'text/html'}), {ok:false, error:'invalid image'});
+  assert.deepStrictEqual(receiptApp({GEMINI_API_KEY:'k'}, {status:429, body:'{}'}).call({action:'recognizeReceipt', image}), {ok:false, error:'quota'}, '免費額度用完');
+  assert.deepStrictEqual(receiptApp({GEMINI_API_KEY:'k'}, {status:403, body:'{}'}).call({action:'recognizeReceipt', image}), {ok:false, error:'ai http 403'});
+  assert.deepStrictEqual(receiptApp({GEMINI_API_KEY:'k'}, aiReply('這不是 JSON')).call({action:'recognizeReceipt', image}), {ok:false, error:'unreadable ai reply'});
+  assert.deepStrictEqual(receiptApp({GEMINI_API_KEY:'k'}, new Error('dns')).call({action:'recognizeReceipt', image}), {ok:false, error:'ai unreachable'});
+  assert.deepStrictEqual(receiptApp({GEMINI_API_KEY:'k'}, aiReply('[1,2]')).call({action:'recognizeReceipt', image}).receipt, {date:'', time:'', total:null, currency:'', storeName:''}, '不是物件就全部空白');
+  assert.ok(gsSource.indexOf("getProperty('GEMINI_API_KEY')") > 0 && !/AIza[0-9A-Za-z_-]{20,}/.test(gsSource), '金鑰只從指令碼屬性讀,程式裡沒有金鑰');
+  /* 一般記帳仍照舊拿鎖 */
+  const still = receiptApp({GEMINI_API_KEY:'k'}, aiReply('{}'));
+  still.call({action:'updateSettings', exchangeRate:0.2, defaultCurrency:'JPY'});
+  assert.strictEqual(still.lock.waited, true);
+})();
+
 console.log('Apps Script settings tests passed');
