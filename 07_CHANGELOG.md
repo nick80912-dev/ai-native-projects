@@ -1,6 +1,12 @@
 # 07 版本紀錄
 
-## 2026-10-31 — v172 收據自動讀取的說明收進「!」（開發中，未發布）
+## 2026-10-31 — v172 已上線 main（待 Bar 手機審查與 tag）
+
+- PR [#111](https://github.com/nick80912-dev/ai-native-projects/pull/111)（v172＋Apps Script 收據辨識授權檢查）在 head `d58da18` 的 sanity／browser-qa 全綠後合併進 `dev`（`f1897bf`，釘住 head）；PR [#112](https://github.com/nick80912-dev/ai-native-projects/pull/112)（並帶 v171 發布紀錄 PR #110）合併 `dev` → `main`，merge commit **`32c2aed`**。合併 tree `67d34c8` 與 `d58da18` 相同。本機完整 Chromium 407 passed，只有已知只在本機失敗的兩項（個人帳匯出下載檔名、sw-update-cache 離線 504），沒有略過的測試。
+- **線上核對**：正式站 `sw.js` 為 `SW_VERSION='v172'`；全新 Chromium 開正式站，`APP_VERSION` 為 v172、只剩 `okayama-trip-v172` 快取，發布說明為「收據自動讀取的說明收進「!」」；「!」按鈕存在；岡山 Apps Script 已是新版且已授權（Bar 執行 `checkReceiptRecognition` 回 OK；送一張畫出來的測試收據，日期、時間、總額、幣別、店名五項都讀對；送不是圖片的內容回 `ai http 400`，沒有寫入）；沒有 pageerror。
+- 回滾：依 `16_OPS_PLAYBOOK.md` §A1 Publish `commit_ref` = `e7becff`（v171）的部署，再往前 bump。
+
+## 2026-10-31 — v172 收據自動讀取的說明收進「!」（已上線 main，見上）
 
 - **來源**：Bar 2026-10-31 試過收據辨識（`checkReceiptRecognition` 回「OK：收據辨識可以使用」，從這邊送測試收據五項都讀對）後要求：「收據照片下方的有網路時說明，調整成!資訊」。
 - **使用上**：記帳表單「收據照片（選填，最多 3 張，只存在這支手機）」旁邊多一個「!」，點一下才顯示「有網路時，照片會傳到 Google 讀取日期、金額與店名一次，只填還空著的欄位（可在「設定 → 帳務」關閉）」，再點一下收起；表單重畫（例如加照片）時維持開或關。關掉收據自動辨識的手機不顯示「!」。
