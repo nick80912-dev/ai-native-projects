@@ -41,7 +41,8 @@ const zero=present(envelope({data:{city:'廣島',temp:0,rain:0,code:1}}));
 assert.equal(zero.rain,0);
 const markup=sandbox.renderTodayWeatherSummary(zero);
 assert(markup.includes('廣島'));assert(markup.includes('0°'));
-assert(markup.includes('更新於 10:00'));assert(markup.includes('日本時間'));
+const phoneTime=new Intl.DateTimeFormat('en-GB',{hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).format(new Date(now));   // v170:跟手機時區
+assert(markup.includes('更新於 '+phoneTime));assert(markup.includes('手機取得時間 '+phoneTime));assert(!markup.includes('日本時間'));
 assert(markup.includes('0%'));
 assert(!sandbox.renderTodayWeatherSummary(expired).includes('0°'));
 assert(sandbox.renderTodayWeatherSummary(expired).includes('天氣資料已過期，暫無最新資料'));

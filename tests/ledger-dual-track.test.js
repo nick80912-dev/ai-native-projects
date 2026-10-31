@@ -97,6 +97,20 @@ assert.throws(function(){categoryStore.add('超過六個字選項');},/最多 6 
 categoryStore.move('咖啡',-1);
 assert(categoryStore.all().indexOf('咖啡')<categoryStore.all().length-1,'custom options can move upward');
 
+/* v170(backlog #62 不限日本):還沒改過清單時,支付方式預設依旅程的當地幣別決定;已存下的清單不動 */
+assert.deepStrictEqual(Array.from(mod.DEFAULT_LEDGER_PAY_METHODS_ABROAD),['現金','信用卡','行動支付','其他']);
+assert.deepStrictEqual(Array.from(mod.defaultLedgerPayMethods()),['現金','信用卡','行動支付','Suica','其他'],'no trip currency known means Japan (Okayama)');
+let tripCurrency='JPY';
+mod.tripLocalCurrencyCode=function(){return tripCurrency;};
+const payStorage=createStorage();
+const payStore=mod.createLedgerOptionStore({storage:payStorage,key:mod.LEDGER_PAY_METHOD_OPTIONS_KEY,defaults:mod.defaultLedgerPayMethods});
+assert.deepStrictEqual(Array.from(payStore.all()),['現金','信用卡','行動支付','Suica','其他'],'a JPY trip keeps Suica');
+tripCurrency='KRW';
+assert.deepStrictEqual(Array.from(payStore.all()),['現金','信用卡','行動支付','其他'],'other trips have no Suica by default');
+tripCurrency='JPY';payStore.add('PayPay');tripCurrency='KRW';
+assert.deepStrictEqual(Array.from(payStore.all()),['現金','信用卡','行動支付','Suica','其他','PayPay'],'a list already saved on the phone is left as it is');
+delete mod.tripLocalCurrencyCode;
+
 const legacyCategoryModule=loadModule(createStorage({trip_ledger_categories:JSON.stringify(['購物','衣服','衣物','美妝'])}));
 assert.deepStrictEqual(
   Array.from(legacyCategoryModule.ledgerCategoryStore.all()),

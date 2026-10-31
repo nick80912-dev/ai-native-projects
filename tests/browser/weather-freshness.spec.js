@@ -7,7 +7,7 @@ test.beforeEach(async({page})=>{
   await installFixedDate(page,'2026-10-18T13:30:00+09:00');
   await installOfflineAppNetwork(page);await openApp(page);await waitForSyncToSettle(page);
 });
-function response(temp=21,rain=0){return {current:{temperature_2m:temp,weather_code:1},hourly:{
+function response(temp=21,rain=0){return {utc_offset_seconds:32400,current:{temperature_2m:temp,weather_code:1},hourly:{
   time:['2026-10-18T20:00'],precipitation_probability:[rain]}};}
 async function useWeatherNetwork(page){
   await page.evaluate(()=>{
@@ -36,7 +36,7 @@ test('shows resolved city, Japan acquired time and legitimate zero temperature',
   const summary=page.locator('.today-hero-weather-summary');
   await expect(summary).toContainText(city.label);await expect(summary).toContainText('0°');
   await expect(summary).toContainText('更新於 13:30');
-  await expect(summary).toHaveAttribute('aria-label',/日本時間.*13:30/);
+  await expect(summary).toHaveAttribute('aria-label',/手機取得時間 13:30/);   // v170:跟手機時區,不再寫「日本時間」
   await expect(summary).toHaveAttribute('aria-label',/0%/);
 });
 test('unknown rain does not claim zero percent or safe departure',async({page})=>{
