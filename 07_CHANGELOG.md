@@ -1,5 +1,24 @@
 # 07 版本紀錄
 
+## 2026-10-31 — v170 去日本以外的地方也順手（開發中，未發布）
+
+- **來源**：backlog #62 第三批（設計 `docs/superpowers/specs/2026-10-31-multi-country-trips.md` §3.6、§3.7；Bar 2026-10-31「繼續，完成後送上main我手機審查」）。
+- **使用上**：
+  - 天氣：Open-Meteo 改用 `timezone=auto`，依目的地自己的時區算「現在之後」的最高降雨機率（例如手機在日本 13:30、目的地曼谷 11:30，曼谷 11 點的雨就算已經過去）；「更新於」與讀屏的「手機取得時間」跟手機時區，不再寫「日本時間」。
+  - 支付方式：手機上還沒改過支付方式清單時，日圓旅程（含岡山）照舊有 Suica，其他幣別的旅程預設「現金、信用卡、行動支付、其他」；「恢復預設」也照這趟的預設。已存在手機上的清單不動。
+  - 帳目明細：金額改用這趟的幣別（美金旅程顯示 `USD US$12.50`，以前會錯成 `JPY ¥1,250`，v168 漏改）；優惠券金額改成帶符號的金額（以前是最小單位加 `JPY`）。
+  - 文字：「日幣必填」→「當地幣金額必填」；過往旅程欄位名稱「日幣」→「當地幣」；個人帳匯出說明「原有日幣與台幣金額」→「原有當地幣與台幣金額」。
+- **做法**：
+  - `fetchWeather()` 存下 `utcOffsetSeconds`（回應的 `utc_offset_seconds`）；`rainChanceFromNow()` 用它把不帶時差的當地時間換成時間點，v169 以前的快取沒有這個欄位時視為 +09:00；`weatherUpdatedTime()` 不再指定時區。
+  - `createLedgerOptionStore()` 的 `defaults` 可以是函式（每次讀取時決定）；新增 `DEFAULT_LEDGER_PAY_METHODS_ABROAD` 與 `defaultLedgerPayMethods()`（`tripLocalCurrencyCode()` 不是 JPY 時不含 Suica）。`DEFAULT_LEDGER_PAY_METHODS` 不變（v1 備份的移轉照舊用它）。
+  - `ledgerRecordDetailRows()` 改用 `ledgerCurrencyCodeOf()`／`formatLedgerCurrencyAmount()`。
+  - 文件：ADR 0021 增補「不限日本」（解除原 Trade-offs 的「只支援日本」）；`docs/new-trip-handbook.md` 補 Apps Script 部署的逐步說明（授權畫面、更新程式後要部署新版本）、v168 以前建立的範本要重貼最新 `ledger-sync.gs`、「去日本以外的地方」一節（幣別、匯率、稅、支付方式、手機時區）、天氣任何國家都能用。
+- **版本**：forward bump v169→v170；`builtin-snapshot.js` 以 v169 asset 離線重產，除版本外不變。發布說明視窗為 `v170` + `['v169','v168','v167','v166']`（v165 滾出）。`tests/trip-lifecycle-wiring.test.js` 加入已發布 v169 三件組的 hash。
+- **測試**：
+  - `tests/weather-rain-window.test.js`：曼谷（+7）、檀香山（−10）的「現在之後」；沒有時差欄位的舊快取照舊；`fetchWeather` 用 `timezone=auto` 並存下時差；更新時間跟手機時區、不寫「日本時間」。`tests/weather-freshness.test.js` 同步改成手機時區。`tests/ledger-dual-track.test.js`：日圓旅程有 Suica、韓元旅程沒有、已存的清單不動。`tests/ledger-entry-settings.test.js` 沙盒補上 `defaultLedgerPayMethods`。
+  - 新增 `tests/browser/beyond-japan-v170.spec.js`（3 項）：攔截 Open-Meteo，請求是 `timezone=auto`、曼谷的降雨機率依當地時間算成 40%（照舊當日本時間會變 10%）；支付方式在岡山有 Suica、韓元旅程沒有、已存清單不動、恢復預設照這趟；美金旅程的明細是 `US$12.50`／`NT$400`／優惠券 `US$0.50`，岡山仍是 `¥1,500`／`NT$315`。`weather-freshness`、`today-live-info` 的讀屏文字改成「手機取得時間 13:30」，模擬回應補上 `utc_offset_seconds`。
+- **回滾**：合併前關閉 PR；發布後依 `16_OPS_PLAYBOOK.md` §A1 退回 v169 的 Netlify 部署（`commit_ref` `0c4fe6b`），再往前 bump。岡山（JPY）資料與畫面不變（天氣「更新於」改跟手機時區，手機在日本時相同）。
+
 ## 2026-10-31 — v169 已上線 main（待 Bar 手機審查與 tag）
 
 - PR [#102](https://github.com/nick80912-dev/ai-native-projects/pull/102) 在 head `141072c` 的 sanity／browser-qa 全綠後合併進 `dev`（`7cec86f`，釘住 head）；PR [#103](https://github.com/nick80912-dev/ai-native-projects/pull/103)（並帶 v168 發布紀錄 PR #101）合併 `dev` → `main`，merge commit **`0c4fe6b`**。合併 tree `b116722` 與 `141072c` 相同。本機完整 Chromium 398 passed，只有已知只在本機失敗的兩項，沒有略過的測試。

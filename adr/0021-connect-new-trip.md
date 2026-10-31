@@ -47,7 +47,16 @@ v149 以前發布 ID、Apps Script 網址、編輯 ID、內建資料（BUILTIN�
 - 範本的 Apps Script 每份 Sheet 要各自部署一次，Ledger Endpoint 要手動填進 TripConfig。
 - 保護期以手機時鐘判斷：10/24 以後才第一次開啟 v150、又沒有紀錄的手機（例如重裝 App 來結帳），或日期錯設到 10/24 以後的新手機，會變成「尚未連接」且接不回岡山（岡山試算表沒有 Trip ID）。保護期內開啟過一次的手機會永久記為岡山，不受影響。
 - root v110 bridge 不能修改，極舊裝置第一次開啟時仍可能短暫看到岡山，之後才切到 v150。
-- 只支援日本（JPY↔TWD、天氣時區 Asia/Tokyo）；旅伴的 Google OAuth 測試名單另案處理。
+- 只支援日本（JPY↔TWD、天氣時區 Asia/Tokyo）；旅伴的 Google OAuth 測試名單另案處理。（2026-10-31 起已解除，見下方增補段。）
+
+## 增補（2026-10-31，Bar 裁定）：不限日本
+
+Bar 2026-10-31：「該專案未來不只回去日本，有可能會去其他國家」。原本 Trade-offs 的「只支援日本」解除，設計見 [multi-country-trips](../docs/superpowers/specs/2026-10-31-multi-country-trips.md)，分三版上線：
+
+- **v168 幣別**：TripConfig `Currency`（沒填是 JPY）；結算一律可選台幣或當地幣別；有小數的幣別記到分（App 內部存最小單位）；`Exchange Rate` 可以不填，在 App 補填後寫回 TripConfig 全團共用。新旅程要用 v168 以後的 `apps-script/ledger-sync.gs`，岡山的部署不用更新。
+- **v169 稅**：TripConfig `Tax Rates`／`Price Mode`／`Tax Free`，每趟自己設定；日圓旅程沒填時與以前相同，其他幣別沒填不顯示稅。
+- **v170 其他**：天氣改用 Open-Meteo `timezone=auto`，依回應的 `utc_offset_seconds` 算「現在之後」（舊快取視為 +09:00）；日本以外的旅程預設支付方式不含 Suica（手機上已存的清單不動）；文字不再寫死「日幣」「日本時間」。時間一律跟手機時區（v165）。
+- 不變：岡山（沒填 `Currency` 等新 key）的資料、畫面與計算；個人備份格式 v10；`sourceKey`、連接流程與開機分類規則。
 
 ## Future Impact
 

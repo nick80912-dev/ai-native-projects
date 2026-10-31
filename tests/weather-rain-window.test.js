@@ -46,7 +46,10 @@ assert.strictEqual(sandbox.renderTodayWeatherArt({status:'unavailable'}),'');
 const summary=sandbox.renderTodayWeatherSummary(weather);
 assert(summary.includes('外出提醒'));
 assert(summary.includes('21° · 記得帶傘'));
-assert(summary.includes('現在之後最高降雨機率 40%，記得帶傘，手機取得時間：日本時間 10:00'));
+/* v170(不限日本):更新時間跟手機時區,不再寫「日本時間」;測試機的時區不固定,所以用同樣的格式算預期值 */
+const phoneTime=new Intl.DateTimeFormat('en-GB',{hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).format(new Date(weather.updatedAt));
+assert(summary.includes('現在之後最高降雨機率 40%，記得帶傘，手機取得時間 '+phoneTime));
+assert(!summary.includes('日本時間'));
 assert.strictEqual(sandbox.renderTodayWeatherArt(null),'');
 assert.strictEqual(sandbox.renderTodayWeatherSummary(null),'');
 
@@ -72,6 +75,18 @@ assert.strictEqual(rainChanceFromNow(series, new Date('2026-10-18T12:00:00+09:00
 assert.strictEqual(rainChanceFromNow(series, new Date('2026-10-18T23:30:00+09:00')), 90,
   '時段全部過去時退回當日最大值,而不是顯示空白');
 
+/* ---- v170 不限日本:Open-Meteo timezone=auto,當地時間配上回應的 utc_offset_seconds ---- */
+const bangkok = Object.assign({}, series, { utcOffsetSeconds: 7 * 3600 });
+assert.strictEqual(rainChanceFromNow(bangkok, new Date('2026-10-18T10:00:00+07:00')), 20,
+  '曼谷早上 10 點:之後的最大值是 20');
+assert.strictEqual(rainChanceFromNow(bangkok, new Date('2026-10-18T10:00:00+09:00')), 80,
+  '日本 10 點＝曼谷 8 點,曼谷 9 點的 80 還沒過去');
+const honolulu = Object.assign({}, series, { utcOffsetSeconds: -10 * 3600 });
+assert.strictEqual(rainChanceFromNow(honolulu, new Date('2026-10-18T16:00:00-10:00')), 5,
+  '負的時差也照當地時間算');
+assert.strictEqual(rainChanceFromNow(Object.assign({}, series, { utcOffsetSeconds: 9 * 3600 }), new Date('2026-10-18T10:00:00+09:00')),
+  rainChanceFromNow(series, new Date('2026-10-18T10:00:00+09:00')), 'v169 以前的快取沒有時差欄位,照舊當日本時間');
+
 /* ---- 殘缺資料不得炸掉 ---- */
 assert.strictEqual(rainChanceFromNow(null, new Date()), null, 'null 序列安全回傳 null');
 assert.strictEqual(rainChanceFromNow({}, new Date()), null, '缺欄位安全回傳 null');
@@ -84,6 +99,8 @@ assert.strictEqual(rainChanceFromNow({ time: [H(9), H(12)], precipitation_probab
 /* ---- 快取契約:必須存得下原始序列 ---- */
 const fetchSource = extractFunction(html, 'fetchWeather');
 assert(fetchSource.indexOf('hours') > 0, 'fetchWeather 必須把原始 hourly 序列帶進快取資料');
+assert(fetchSource.includes('timezone=auto') && !fetchSource.includes('Asia%2FTokyo'), 'v170:天氣用地點自己的時區');
+assert(fetchSource.includes('utc_offset_seconds') && fetchSource.includes('utcOffsetSeconds'), 'v170:時差跟著 hourly 序列存進快取');
 const cacheSource = extractFunction(html, 'weatherPresentation');
 assert(cacheSource.indexOf('rainChanceFromNow(') > 0,
   '讀快取時依當下重算 —— 否則三小時 TTL 內的「現在之後」會是錯的');
