@@ -421,6 +421,9 @@ assert.ok(infoSource.length > 0 && infoSource.indexOf('LockService') < 0 && info
   assert.ok(prompt.indexOf('["現金","信用卡","行動支付","Suica","其他"]') > 0, '支付方式清單去重、去掉太長與不是字串的項目');
   assert.ok(prompt.indexOf('["餐飲","交通","票券","購物","其他"]') > 0);
   ['PayPay','LINE Pay','悠遊付','台灣Pay','icash Pay'].forEach(function(name){ assert.ok(prompt.indexOf(name) > 0, '提示把 '+name+' 歸為行動支付'); });
+  /* Bar 2026-10-31:「VISA、JCB、Master Card 等支付方式就是信用卡」 */
+  ['VISA','Mastercard','JCB','American Express','銀聯'].forEach(function(name){ assert.ok(prompt.indexOf(name) > 0, '提示把 '+name+' 歸為信用卡'); });
+  assert.ok(/card\s+option \(for example 信用卡\)/.test(prompt.replace(/\n\s*/g, ' ')), '卡片對應「信用卡」');
   const outside = receiptApp({GEMINI_API_KEY:'k'}, aiReply('{"payMethod":"PayPay","category":"Food"}'));
   assert.strictEqual(outside.call(Object.assign({action:'recognizeReceipt', image}, lists)).receipt.payMethod, '', '清單外的答案不採用');
   assert.strictEqual(receiptApp({GEMINI_API_KEY:'k'}, aiReply('{"category":"Food"}')).call(Object.assign({action:'recognizeReceipt', image}, lists)).receipt.category, '');

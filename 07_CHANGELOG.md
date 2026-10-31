@@ -3,7 +3,7 @@
 ## 2026-10-31 — v173 收據也幫忙選支付方式與類別（開發中，未發布）
 
 - **來源**：Bar 2026-10-31：「如果 Receipt 上有辨識到 PayPay、TWQR 跨境支付（悠遊付、台灣Pay、icash Pay）、Line Pay 等各國關於的行動支付項目，則支付方式協助選至行動支付。類別如果辨識出是有關餐飲則也調整、交通就調至交通以此類推」。
-- **使用上**：加收據照片辨識時，App 一併送出這支手機的支付方式與類別選項；Google 從清單裡選一個：PayPay、LINE Pay、TWQR 跨境支付（悠遊付、台灣Pay、icash Pay、全支付）、街口、支付寶、微信支付、Apple Pay、Google Pay、楽天ペイ、d払い、au PAY、メルペイ、KakaoPay、Naver Pay 等 → 「行動支付」；信用卡 → 「信用卡」；現金 → 「現金」；Suica／ICOCA／PASMO → 「Suica」（清單有時）。類別：餐廳、咖啡、食物 → 「餐飲」；電車、公車、計程車、加油、停車 → 「交通」；門票 → 「票券」…。只在還是表單預設、自己沒選過、不是編輯舊帳時才換；多品項時改共用類別，不動自己單獨調過的品項；清單外的答案不採用。收據欄下方的訊息會列出換了哪些（例如「…、支付方式「行動支付」、類別「交通」」）。
+- **使用上**：加收據照片辨識時，App 一併送出這支手機的支付方式與類別選項；Google 從清單裡選一個：PayPay、LINE Pay、TWQR 跨境支付（悠遊付、台灣Pay、icash Pay、全支付）、街口、支付寶、微信支付、Apple Pay、Google Pay、楽天ペイ、d払い、au PAY、メルペイ、KakaoPay、Naver Pay 等 → 「行動支付」；VISA、Mastercard、JCB、American Express、Diners、銀聯等信用卡／金融卡 → 「信用卡」（Bar 2026-10-31：「有關VISA、JCB、Master Card 等支付方式就是信用卡」）；現金 → 「現金」；Suica／ICOCA／PASMO → 「Suica」（清單有時）。類別：餐廳、咖啡、食物 → 「餐飲」；電車、公車、計程車、加油、停車 → 「交通」；門票 → 「票券」…。只在還是表單預設、自己沒選過、不是編輯舊帳時才換；多品項時改共用類別，不動自己單獨調過的品項；清單外的答案不採用。收據欄下方的訊息會列出換了哪些（例如「…、支付方式「行動支付」、類別「交通」」）。
 - **Bar 要做的事（上線後）**：岡山 Apps Script 再換一次新版（貼上 → 部署新版本，網址不變；這次不需要再授權）。沒換之前照 v172 的行為，只是不會幫忙選支付方式與類別。
 - **做法**：
   - `apps-script/ledger-sync.gs`：`recognizeReceipt` 讀 App 送來的 `payMethods`／`categories`（`receiptChoices()`：字串、去重、每項 12 字、最多 30 項），有清單時在提示加上 `RECEIPT_CHOICE_PROMPT`（列出各國行動支付的例子）；`receiptFields()` 多回 `payMethod`／`category`，只接受清單內的值。舊版 App 不送清單時兩欄空白、提示不變。
