@@ -167,8 +167,17 @@
       if(name&&amount!==null)items.push({name:name,amount:amount});
     });
     var discount=positive(source.discount);
+    /* v176：免稅（deducted 結帳已扣稅／refundable 之後可退稅）、印在收據上的稅率、品項是否含稅 */
+    var taxFree=source.taxFree==='deducted'||source.taxFree==='refundable'?source.taxFree:'';
+    var taxRates=[];
+    (Array.isArray(source.taxRates)?source.taxRates:[]).forEach(function(rate){
+      var number=positive(String(rate==null?'':rate).replace(/%$/,''));
+      if(number!==null&&number<=100&&taxRates.indexOf(number)<0&&taxRates.length<3)taxRates.push(Math.round(number*10)/10);
+    });
+    var pricesIncludeTax=typeof source.pricesIncludeTax==='boolean'?source.pricesIncludeTax:null;
     return {date:date,time:time,total:total,currency:currency,storeName:storeName,payMethod:payMethod,category:category,items:items,discount:discount,
-      found:!!(date||total!==null||storeName||payMethod||category||items.length)};
+      taxFree:taxFree,taxRates:taxRates,pricesIncludeTax:pricesIncludeTax,
+      found:!!(date||total!==null||storeName||payMethod||category||items.length||taxFree||taxRates.length)};
   }
 
   return {

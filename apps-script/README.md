@@ -144,6 +144,8 @@ App 加收據照片後 POST：
 
 v173 起 App 另送 `"payMethods":["現金","信用卡","行動支付",…]`、`"categories":["餐飲","交通",…]`（這支手機的選項），回應多 `"payMethod"`、`"category"`，只會是清單內的值或空字串；PayPay、LINE Pay、TWQR（悠遊付、台灣Pay、icash Pay）等行動支付歸為「行動支付」。VISA、Mastercard、JCB 等卡片歸為「信用卡」。類別依收據上的品項判斷（品項不同類時選占總額最多的類），紀念品店、伴手禮歸「購物」，手機上自訂的類別也是候選。沒送清單時兩欄空白。另回 `"items":[{"name":"醤油ラーメン","amount":980},…]`（每行名稱照收據原文 20 字內、該行金額，不含小計／稅／合計／折扣行，最多 30 項）與 `"discount"`（折扣總額或 null），供多品項逐筆帶入。
 
+v176 起回應另有 `"taxFree"`（`"deducted"` 結帳時已扣稅、`"refundable"` 結帳時未扣稅之後可退、看不出來為 `""`）、`"taxRates"`（收據上印的稅率，例如 `[10,8]`，最多 3 個）、`"pricesIncludeTax"`（`false` 品項為未稅價／外税・税抜、`true` 含稅／内税・税込、看不出來為 `null`）。App 把免稅寫進備註；只有一種稅率時設好稅率，多品項且未稅時價格方式選「未稅」。換新版後要「部署 → 管理部署作業 → 編輯 → 新版本」，不需要重新授權。
+
 錯誤代碼：`missing GEMINI_API_KEY`、`invalid image`、`invalid GEMINI_MODEL`、`quota`（免費額度用完）、`not authorized`（還沒授權連到外部服務）、`ai http <狀態>`、`ai unreachable: <原因>`、`unreadable ai reply`。辨識不拿 `LockService` 鎖。
 
 - 金鑰放在「專案設定 → 指令碼屬性」的 `GEMINI_API_KEY`，不寫進程式、不進 GitHub；可選 `GEMINI_MODEL`（預設 `gemini-flash-lite-latest`）。
