@@ -163,3 +163,30 @@ test('turned off or offline, nothing is sent',async({page})=>{
   await expect(scan(page)).toHaveCount(0);
   expect(await page.evaluate(()=>window.__aiRequests.length)).toBe(0);
 });
+
+/* v172(Bar 2026-10-31「收據照片下方的有網路時說明,調整成!資訊」) */
+test('the photo-upload note sits behind a ! button next to 收據照片',async({page})=>{
+  await boot(page,null);
+  await openForm(page);
+  const button=page.locator('#ledgerEntrySheet').getByRole('button',{name:'收據自動讀取說明'});
+  await expect(button).toHaveText('!');
+  await expect(button).toHaveAttribute('aria-expanded','false');
+  await expect(page.locator('#ledgerReceiptHelp')).toBeHidden();
+  await expect(page.locator('#ledgerEntrySheet .ledger-receipt-label')).toHaveText('收據照片（選填，最多 3 張，只存在這支手機）');
+  const box=await button.boundingBox();
+  expect(box.width).toBeGreaterThanOrEqual(44);expect(box.height).toBeGreaterThanOrEqual(44);
+  await button.click();
+  await expect(button).toHaveAttribute('aria-expanded','true');
+  await expect(page.locator('#ledgerReceiptHelp')).toBeVisible();
+  await expect(page.locator('#ledgerReceiptHelp')).toContainText('照片會傳到 Google 讀取日期、金額與店名一次');
+  /* 表單重畫(例如加照片)後維持打開 */
+  await page.evaluate(()=>window.__addReceipt(null));
+  await expect(page.locator('#ledgerEntrySheet .ledger-receipt-thumb')).toHaveCount(1);
+  await expect(page.locator('#ledgerReceiptHelp')).toBeVisible();
+  await page.locator('#ledgerReceiptHelpButton').click();
+  await expect(page.locator('#ledgerReceiptHelp')).toBeHidden();
+  /* 關掉收據辨識時不顯示「!」 */
+  await page.evaluate(()=>{closeLedgerEntrySheet();localStorage.setItem(RECEIPT_RECOGNITION_KEY,JSON.stringify('off'));});
+  await openForm(page);
+  await expect(page.locator('#ledgerReceiptHelpButton')).toHaveCount(0);
+});
