@@ -1,6 +1,16 @@
 # 07 版本紀錄
 
-## 2026-11-01 — v178 退稅追蹤；「稅與優惠券」改成「稅」
+## 2026-11-01 — v178 已上線 main，tag `production-v178`（待 Bar 手機審查）
+
+- PR [#132](https://github.com/nick80912-dev/ai-native-projects/pull/132) 在 head `7e8e32d` 的 sanity／browser-qa 全綠後合併進 `dev`（`893e1fb`）。第一次 push `04ceb0e` 的 browser-qa 有 4 項舊斷言（優惠券欄、「免稅品」、舊標題）沒改到而失敗，`7e8e32d` 改好後全綠。
+- PR [#133](https://github.com/nick80912-dev/ai-native-projects/pull/133)（並帶 PR #131 的 tag 紀錄與清理）合併 `dev` → `main`，merge commit **`e894f12`**；合併 tree `eb4c0c2` 與 `893e1fb` 相同。
+- 本機完整 Chromium 跑在同一份 App：434 passed，失敗的 4 項舊斷言改好後重跑 17 passed；其餘 2 項是已知只在本機失敗的。
+- **線上核對**：正式站 `sw.js` 為 `SW_VERSION='v178'`。全新 Chromium 開正式站，`APP_VERSION` 為 v178、只剩 `okayama-trip-v178` 快取，發布說明為「退稅追蹤」；退稅清單、稅額欄的程式都在線上，`PERSONAL_STATE_VERSION` 為 11；沒有 pageerror。
+- **tag**：以 production-tags workflow 建立 `production-v178` → `e894f12`，`git ls-remote` 核對相符。
+- 不用換 Apps Script（v178 沒改）。
+- 回滾：依 `16_OPS_PLAYBOOK.md` §A1 Publish `commit_ref` = `20c4fe2`（`production-v177`）的部署，再往前 bump。
+
+## 2026-11-01 — v178 退稅追蹤；「稅與優惠券」改成「稅」（已上線 main，見上）
 
 - **來源**：backlog #63。Bar 2026-10-31～11-01 的決定：
   - 日本 2026/11/1 起免稅店先收稅、出境後才退，退稅要能追蹤；兩版都做，實際退回的錢抵掉花費，先只做個人帳。

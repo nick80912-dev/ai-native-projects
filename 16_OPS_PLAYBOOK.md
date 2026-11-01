@@ -29,7 +29,7 @@
 
 **用途**:新版發布(`dev → main`)後若正式站出事,需要退回上一個正式版。本節原本寫的是「以 tag 回滾至 v18」(v72 發布時的預案);v18 沒有 `shell/` generation 架構,照做會和現行 SW 衝突,已作廢。
 
-**錨點**:每個正式版都有 tag `production-v<SW版本>`。目前正式站為 v177,**最新錨點是 `production-v177` → `20c4fe2`**;v157–v177 每一版都已於 2026-11-01 補上 tag(由 production-tags workflow 建立),要退回 v176 時用 `production-v176` → `24b5ff3`。最新的錨點以 `tasks/current.md` 為準。
+**錨點**:每個正式版都有 tag `production-v<SW版本>`。目前正式站為 v178,**最新錨點是 `production-v178` → `e894f12`**;v157–v178 每一版都有 tag(由 production-tags workflow 建立),要退回 v177 時用 `production-v177` → `20c4fe2`。最新的錨點以 `tasks/current.md` 為準。
 
 **建立 tag(2026-11-01 起)**:AI 工作環境推不了 tag,改用 `.github/workflows/production-tags.yml`。GitHub → Actions → **production-tags** → Run workflow,`tags` 填空白分隔的 `vNNN=commit`(例如 `v178=abc1234`),可在 `delete_branches` 填已合併進 main 的舊分支。workflow 先逐筆檢查(commit 在 main 上、該 commit 的 `sw.js` 是同一版、同名 tag 不會被覆寫、分支已完全合併且不是 main／dev),任何一筆不符就整批不動;AI 也可以透過 API 觸發,觸發後以 `git ls-remote --tags origin` 核對。**已知限制**:workflow 的 `GITHUB_TOKEN` 沒有 workflows 權限;若某版 commit 裡的 `.github/workflows/*.yml` 內容和現有所有分支、tag 最新 commit 的都不同,GitHub 會拒絕建立那個 tag(`refusing to allow a GitHub App to create or update workflow`)。2026-11-01 補 v164–v176 時遇到,做法是先把 AI 工作分支(只含已合併內容)暫時指到 v176 的 commit,讓那份 `qa.yml` 出現在某個分支上,再重跑,完成後把工作分支改回 `dev`。正常每版發布後馬上建 tag 不會碰到。
 
