@@ -260,14 +260,15 @@ async function openMultiForm(page){
   await openForm(page);
   await page.evaluate(()=>{setLedgerDraftMulti(true);ledgerUiState.draft.multiBillDetailsOpen=true;renderLedgerEntrySheet();});
 }
-test('a multi-item entry gets the receipt lines and the discount',async({page})=>{
+/* v178(Bar 2026-11-01):優惠券欄拿掉;收據上的折扣寫進備註,並照金額比例從各品項扣掉(¥980／¥1,000 扣 ¥200 → ¥881／¥899) */
+test('a multi-item entry gets the receipt lines with the discount spread over them',async({page})=>{
   await boot(page,null);
   await page.evaluate(reply=>{window.__aiReply=reply;},receiptLines);
   await openMultiForm(page);
   await page.evaluate(()=>window.__addReceipt(null));
-  await expect.poll(()=>page.evaluate(()=>ledgerUiState.draft.receiptScan&&ledgerUiState.draft.receiptScan.message)).toBe('已依收據帶入店名「一蘭」、2 個品項，請確認');
-  const draft=await page.evaluate(()=>({items:ledgerUiState.draft.items.map(item=>[item.name,item.amount]),discount:ledgerUiState.draft.discount,notes:ledgerUiState.draft.receiptScan.notes,detail:ledgerUiState.draft.detail}));
-  expect(draft).toEqual({items:[['醤油ラーメン','980'],['生ビール x2','1000']],discount:'200',notes:[],detail:''});
+  await expect.poll(()=>page.evaluate(()=>ledgerUiState.draft.receiptScan&&ledgerUiState.draft.receiptScan.message)).toBe('已依收據帶入店名「一蘭」、備註「收據折扣 ¥200（優惠券等）」、2 個品項，請確認');
+  const draft=await page.evaluate(()=>({items:ledgerUiState.draft.items.map(item=>[item.name,item.amount]),discount:ledgerUiState.draft.discount,notes:ledgerUiState.draft.receiptScan.notes,detail:ledgerUiState.draft.detail,note:ledgerUiState.draft.note}));
+  expect(draft).toEqual({items:[['醤油ラーメン','881'],['生ビール x2','899']],discount:'',notes:['收據折扣 ¥200 已照金額比例分到 2 個品項（原價 ¥980、¥1,000）'],detail:'',note:'收據折扣 ¥200（優惠券等）'});
   await page.evaluate(()=>saveLedgerEntry(false));
   await expect(page.locator('#ledgerEntrySheet')).toHaveCount(0);
   const saved=await page.evaluate(()=>personalLedgerRepository.all().filter(item=>item.storeName==='一蘭').map(item=>[item.detail,item.amountJpy]));
@@ -280,7 +281,7 @@ test('lines that do not add up to the total get a note about tax or discounts',a
   await page.evaluate(()=>{window.__aiReply={ok:true,receipt:{total:1980,currency:'JPY',items:[{name:'お土産A',amount:1000},{name:'お土産B',amount:800}]}};});
   await openMultiForm(page);
   await page.evaluate(()=>window.__addReceipt(null));
-  await expect(cardNotes(page)).toHaveText('品項加總 ¥1,800，收據總額 ¥1,980；可能是未稅價或另有折扣，請檢查「稅與優惠券」');
+  await expect(cardNotes(page)).toHaveText('品項加總 ¥1,800，收據總額 ¥1,980；可能是未稅價或另有折扣，請檢查品項金額與「稅」');
 });
 
 test('a single entry keeps 明細 empty and offers to switch to the receipt lines',async({page})=>{
@@ -288,12 +289,12 @@ test('a single entry keeps 明細 empty and offers to switch to the receipt line
   await page.evaluate(reply=>{window.__aiReply=reply;},receiptLines);
   await openForm(page);
   await page.evaluate(()=>window.__addReceipt(null));
-  await expect.poll(()=>scanMessage(page)).toBe('已依收據帶入金額 ¥1,780、店名「一蘭」，請確認');
+  await expect.poll(()=>scanMessage(page)).toBe('已依收據帶入金額 ¥1,780、店名「一蘭」、備註「收據折扣 ¥200（優惠券等）」，請確認');
   expect(await page.evaluate(()=>[ledgerUiState.draft.multi,ledgerUiState.draft.detail])).toEqual([false,'']);
   await closeReceiptDialog(page);
   await page.getByRole('button',{name:'改成多品項並帶入'}).click();
   await expect.poll(()=>page.evaluate(()=>ledgerUiState.draft.receiptScan.message)).toBe('已帶入收據上的 2 個品項，請確認');
-  expect(await page.evaluate(()=>[ledgerUiState.draft.multi,ledgerUiState.draft.items.map(item=>item.name),ledgerUiState.draft.discount])).toEqual([true,['醤油ラーメン','生ビール x2'],'200']);
+  expect(await page.evaluate(()=>[ledgerUiState.draft.multi,ledgerUiState.draft.items.map(item=>[item.name,item.amount]),ledgerUiState.draft.discount])).toEqual([true,[['醤油ラーメン','881'],['生ビール x2','899']],'']);
   await expect(page.getByRole('button',{name:'改成多品項並帶入'})).toHaveCount(0);
 });
 
@@ -476,7 +477,7 @@ test('mixed tax rates only get a reminder; tax settings you picked stay',async({
   await openMultiForm(page);
   const before=await draftTax(page);
   await page.evaluate(()=>window.__addReceipt(null));
-  await expect(cardNotes(page)).toHaveText('收據上有 8%、10% 不同稅率，稅率沒有自動設定；可依稅率分開記，或在「稅與優惠券」自己選');
+  await expect(cardNotes(page)).toHaveText('收據上有 8%、10% 不同稅率，稅率沒有自動設定；可依稅率分開記，或在「稅」自己選');
   expect(await draftTax(page)).toEqual(before);
   await closeReceiptDialog(page);
   /* 自己選過稅率:單一稅率的收據也不改 */
@@ -539,22 +540,27 @@ test('the tax amount is listed; a refundable receipt keeps it in 備註',async({
   await page.evaluate(()=>{window.__aiReply={ok:true,receipt:{total:12001,currency:'JPY',storeName:'ドラッグストア',taxFree:'refundable',taxAmount:1091}};});
   await openForm(page);
   await page.evaluate(()=>window.__addReceipt(null));
-  await expect.poll(()=>scanMessage(page)).toBe('已依收據帶入金額 ¥12,001、店名「ドラッグストア」、備註「可退稅（結帳時未扣稅，需另外辦理），稅額 ¥1,091」，請確認');
+  /* v178:稅額填進「稅」的稅額欄,可退稅的帳自動勾「可退稅」 */
+  await expect.poll(()=>scanMessage(page)).toBe('已依收據帶入金額 ¥12,001、店名「ドラッグストア」、稅額 ¥1,091、備註「可退稅（結帳時未扣稅，需另外辦理），稅額 ¥1,091」，請確認');
   expect((await draftTax(page)).note).toBe('可退稅（結帳時未扣稅，需另外辦理），稅額 ¥1,091');
+  expect(await page.evaluate(()=>[ledgerUiState.draft.taxAmount,ledgerUiState.draft.refundable])).toEqual(['1091',true]);
   await expect(card(page).locator('.ledger-receipt-card-row')).toContainText(['備註可退稅（結帳時未扣稅，需另外辦理），稅額 ¥1,091']);
   await expect(cardNotes(page)).toHaveCount(0);
-  /* 復原把備註改回 */
+  /* 復原把備註、稅額與「可退稅」都改回 */
   await card(page).getByRole('button',{name:'復原'}).click();
   expect((await draftTax(page)).note).toBe('');
+  expect(await page.evaluate(()=>[ledgerUiState.draft.taxAmount,ledgerUiState.draft.refundable])).toEqual(['',false]);
 });
 
-test('an ordinary receipt shows the tax amount without touching 備註; a tax-free one has no tax line',async({page})=>{
+test('an ordinary receipt fills the tax amount without touching 備註; a tax-free one has no tax line',async({page})=>{
   await boot(page,null);
   await page.evaluate(()=>{window.__aiReply={ok:true,receipt:{total:1078,currency:'JPY',taxAmount:98}};});
   await openForm(page);
   await page.evaluate(()=>window.__addReceipt(null));
-  await expect.poll(()=>scanMessage(page)).toBe('已依收據帶入金額 ¥1,078，請確認');
-  await expect(cardNotes(page)).toHaveText('收據上的稅額 ¥98');
+  await expect.poll(()=>scanMessage(page)).toBe('已依收據帶入金額 ¥1,078、稅額 ¥98，請確認');
+  await expect(card(page).locator('.ledger-receipt-card-row')).toContainText(['稅額¥98']);
+  await expect(cardNotes(page)).toHaveCount(0);
+  expect(await page.evaluate(()=>[ledgerUiState.draft.taxAmount,ledgerUiState.draft.refundable])).toEqual(['98',false]);
   expect((await draftTax(page)).note).toBe('');
   await closeReceiptDialog(page);
   /* 結帳時已扣稅:沒有稅可退,不列稅額 */

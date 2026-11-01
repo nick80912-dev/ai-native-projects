@@ -149,7 +149,9 @@ assert.match(triggerSource,/aria-label="'\+escapeHtml\(label\|\|'開啟金額計
 assert.match(triggerSource,/<svg[^>]*aria-hidden="true"/,'calculator trigger uses the shared monochrome line SVG style');
 assert.match(singleFieldSource,/ledger-amount-field-head[\s\S]*renderLedgerCalculatorTrigger\(\{type:'single'/,'single amount places the trigger in the label row');
 assert.match(multiFieldSource,/renderLedgerCalculatorTrigger\(\{type:'item',key:item\.key\}/,'every dynamic item amount receives the same trigger renderer');
-assert.match(discountSource,/renderLedgerCalculatorTrigger\(\{type:'discount'/,'discount receives the same trigger renderer');
+/* v178(Bar 2026-11-01):優惠券欄拿掉、換成稅額;稅區塊沒有計算機按鈕 */
+assert.doesNotMatch(discountSource,/renderLedgerCalculatorTrigger/,'the tax section has no calculator trigger once the coupon field is gone');
+assert.match(discountSource,/id="ledgerTaxAmount"/,'the tax section has the tax amount field');
 assert.doesNotMatch(discountSource,/ledgerCustomTaxRate[\s\S]{0,300}renderLedgerCalculatorTrigger/,'tax rate never receives a calculator trigger');
 
 assert.match(sheetMarkup,/role="dialog"[^>]*aria-modal="true"[^>]*aria-labelledby="ledgerCalculatorTitle"/,'calculator is an accessible modal sheet');

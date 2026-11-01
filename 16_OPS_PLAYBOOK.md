@@ -29,9 +29,9 @@
 
 **用途**:新版發布(`dev → main`)後若正式站出事,需要退回上一個正式版。本節原本寫的是「以 tag 回滾至 v18」(v72 發布時的預案);v18 沒有 `shell/` generation 架構,照做會和現行 SW 衝突,已作廢。
 
-**錨點**:每個正式版都有 tag `production-v<SW版本>`。目前正式站為 v177(`main` `20c4fe2`,tag 待 Bar 手機審查後建立);**最新已建立的錨點是 `production-v156` → `bc59984`**(Netlify deploy `6ad0cbec`)。v157–v176 雖已上線但尚無 tag;要退回 v176 時以 `commit_ref` = `24b5ff3` 找部署。最新的錨點以 `tasks/current.md` 為準。
+**錨點**:每個正式版都有 tag `production-v<SW版本>`。目前正式站為 v177,**最新錨點是 `production-v177` → `20c4fe2`**;v157–v177 每一版都已於 2026-11-01 補上 tag(由 production-tags workflow 建立),要退回 v176 時用 `production-v176` → `24b5ff3`。最新的錨點以 `tasks/current.md` 為準。
 
-**建立 tag(2026-11-01 起)**:AI 工作環境推不了 tag,改用 `.github/workflows/production-tags.yml`。GitHub → Actions → **production-tags** → Run workflow,`tags` 填空白分隔的 `vNNN=commit`(例如 `v178=abc1234`),可在 `delete_branches` 填已合併進 main 的舊分支。workflow 先逐筆檢查(commit 在 main 上、該 commit 的 `sw.js` 是同一版、同名 tag 不會被覆寫、分支已完全合併且不是 main／dev),任何一筆不符就整批不動;AI 也可以透過 API 觸發,觸發後以 `git ls-remote --tags origin` 核對。
+**建立 tag(2026-11-01 起)**:AI 工作環境推不了 tag,改用 `.github/workflows/production-tags.yml`。GitHub → Actions → **production-tags** → Run workflow,`tags` 填空白分隔的 `vNNN=commit`(例如 `v178=abc1234`),可在 `delete_branches` 填已合併進 main 的舊分支。workflow 先逐筆檢查(commit 在 main 上、該 commit 的 `sw.js` 是同一版、同名 tag 不會被覆寫、分支已完全合併且不是 main／dev),任何一筆不符就整批不動;AI 也可以透過 API 觸發,觸發後以 `git ls-remote --tags origin` 核對。**已知限制**:workflow 的 `GITHUB_TOKEN` 沒有 workflows 權限;若某版 commit 裡的 `.github/workflows/*.yml` 內容和現有所有分支、tag 最新 commit 的都不同,GitHub 會拒絕建立那個 tag(`refusing to allow a GitHub App to create or update workflow`)。2026-11-01 補 v164–v176 時遇到,做法是先把 AI 工作分支(只含已合併內容)暫時指到 v176 的 commit,讓那份 `qa.yml` 出現在某個分支上,再重跑,完成後把工作分支改回 `dev`。正常每版發布後馬上建 tag 不會碰到。
 
 > **先分清兩件事**:production tag 是**程式碼**錨點,回答「該退回哪個內容」;讓使用者實際看到舊版靠的是**部署**動作。緊急時**先做 A1(Netlify Publish deploy),再補 git 層**;A1 是秒級且不動 git 歷史。
 
@@ -216,16 +216,16 @@ GitHub Pages URL：https://nick80912-dev.github.io/ai-native-projects/
 curl -s https://trippilot-jp.netlify.app/sw.js | grep "^var SW_VERSION"
 
 # 2. Current immutable generation 三件組(下方路徑是 current generation,與 sw.js 的 SW_VERSION 相同,升版時隨活文件一起更新)
-curl -s https://trippilot-jp.netlify.app/shell/v177/app-version.js
-curl -s https://trippilot-jp.netlify.app/shell/v177/index.html | grep BUILTIN_HTML_VERSION
-curl -s https://trippilot-jp.netlify.app/shell/v177/builtin-snapshot.js | grep BUILTIN_ASSET_VERSION
+curl -s https://trippilot-jp.netlify.app/shell/v178/app-version.js
+curl -s https://trippilot-jp.netlify.app/shell/v178/index.html | grep BUILTIN_HTML_VERSION
+curl -s https://trippilot-jp.netlify.app/shell/v178/builtin-snapshot.js | grep BUILTIN_ASSET_VERSION
 
 # 2b. Root bridge 必須仍是 predecessor v110，不得誤升為 current
 curl -s https://trippilot-jp.netlify.app/app-version.js
 
 # 3. header 行為(測試站刪除後,這是唯一驗得到的地方;GitHub Pages 無法重現)
 curl -sI https://trippilot-jp.netlify.app/sw.js | grep -i cache-control
-curl -sI https://trippilot-jp.netlify.app/shell/v177/app-version.js | grep -i cache-control
+curl -sI https://trippilot-jp.netlify.app/shell/v178/app-version.js | grep -i cache-control
 
 # 4. 前一代 generation 必須仍可服務(ADR 0019)
 #    部署換代的當下,還沒裝完前一代的裝置可能仍在抓它;回 404 會讓那次 install 失敗。
@@ -283,7 +283,7 @@ node tools/refresh-builtin-snapshot.js
 npx playwright test tests/browser/trip-three-scenarios.spec.js
 ```
 
-`--write` 會在 current generation 目錄（目前為 `shell/v177/`）staging `index.html` marker 與 `builtin-snapshot.js`，fsync／close／回讀後才進行雙檔替換；任一步失敗都將兩個 target 回復為原始 bytes。root v110 bridge 不由此工具修改。App、SW 或 asset 升版時也必須透過本工具更新 marker／asset 版本。最後一次 preview 必須顯示已一致。提交前另跑完整 repo gate。
+`--write` 會在 current generation 目錄（目前為 `shell/v178/`）staging `index.html` marker 與 `builtin-snapshot.js`，fsync／close／回讀後才進行雙檔替換；任一步失敗都將兩個 target 回復為原始 bytes。root v110 bridge 不由此工具修改。App、SW 或 asset 升版時也必須透過本工具更新 marker／asset 版本。最後一次 preview 必須顯示已一致。提交前另跑完整 repo gate。
 
 ### G4. 權責與邊界
 

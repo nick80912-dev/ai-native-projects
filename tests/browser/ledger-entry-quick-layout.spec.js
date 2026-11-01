@@ -69,7 +69,7 @@ test('personal entry uses one optional-information disclosure and preserves prox
   await expect(page.locator('.ledger-sheet > .ledger-disclosure')).toHaveCount(0);
 
   await optional.click();
-  for(const selector of ['#ledgerStoreName','#ledgerOccurredDate','#ledgerOccurredTime','#ledgerDiscount','#ledgerNote']){
+  for(const selector of ['#ledgerStoreName','#ledgerOccurredDate','#ledgerOccurredTime','#ledgerTaxAmount','#ledgerNote']){   // v178:優惠券欄換成稅額
     await expect(page.locator(selector)).toBeVisible();
   }
   await expect(page.getByText('價格方式',{exact:true})).toBeVisible();

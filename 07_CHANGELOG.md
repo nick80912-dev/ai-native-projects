@@ -1,5 +1,53 @@
 # 07 版本紀錄
 
+## 2026-11-01 — v178 退稅追蹤；「稅與優惠券」改成「稅」
+
+- **來源**：backlog #63。Bar 2026-10-31～11-01 的決定：
+  - 日本 2026/11/1 起免稅店先收稅、出境後才退，退稅要能追蹤；兩版都做，實際退回的錢抵掉花費，先只做個人帳。
+  - 「拿掉優惠券，換成稅額」；「辨識到有優惠券等方式產生折扣金額時，再協助填入備注紀錄」。
+  - 看過畫面草稿後的調整：說明句子改成「!」；「全部可退稅」按鈕不需要；「已收到」移到右邊；離境提醒不要另外一張卡片；不另建退稅表單。
+- **記帳表單**：
+  - 「稅與優惠券」改成「稅」，優惠券那一格換成「稅額」：收據有印就自動帶入（標「收據」），沒有收據時欄位提示照稅率算好的數字，可以自己改。
+  - 選「税抜」時實付＝品項加總＋稅額（8%＋10% 混在一起只要一個數字），多品項的稅額照金額比例分到各品項。單品項的金額就是實付，稅額照稅率從金額算。
+  - 說明收進稅額旁的「!」。
+  - 「免稅品」改叫「可退稅」。新制下可退稅的品項一樣付了稅，計算時不再跳過；舊帳編輯時一律以税込載入，不受影響。單品項也有「可退稅」勾選。「全部免稅品」按鈕拿掉。
+  - 舊帳記過的優惠券只顯示「優惠券 ¥X（舊資料，維持不變）」，金額照舊扣。這趟沒有稅、也沒有舊優惠券時整個區塊不顯示。
+- **收據辨識**：
+  - 稅額填進稅額欄（自己改過就不動）。
+  - 可退稅的收據自動勾「可退稅」。
+  - 收據上的優惠券等折扣寫進備註「收據折扣 ¥X（優惠券等）」；多品項照金額比例從各品項扣掉，原價列在結果視窗。
+  - 有稅額時兩種稅率也能直接設「未稅」，不再要求自己選。
+  - 「復原」也改回稅額與「可退稅」。
+- **退稅追蹤**（只算個人帳）：
+  - 分帳 → 個人卡片多一列「退稅 · 待退 N 張 ¥X 〉」。
+  - 退稅清單分待退／已退，一張收據一列，「已收到」在右邊。按下去記實際退了多少（先帶預計）、退到哪裡（信用卡／App／現金／其他）與日期；已退的可以修改或改回待退。
+  - 實際收到的退稅從「我的總花費」與整趟旅程扣掉（照比例換算台幣）；還在等的不扣。
+  - 旅程最後一天，TODAY 卡片下方一行「今天離境：N 張收據待退稅（預計 ¥X）→」。
+  - 帳的明細多「可退稅」「稅額」「實際退稅」。
+- **資料**：
+  - 個人帳每筆多 `taxAmount`、`refundAmount`（當地幣最小單位）、`refundMethod`、`refundDate`，只存在手機。
+  - **個人備份格式升為 v11**：舊 App 會丟掉這幾欄，所以讓舊 App 明確拒絕。
+  - 團體帳不送稅額，試算表與 Apps Script 都不用改。
+- **版本**：
+  - forward bump v177→v178；`builtin-snapshot.js` 以 v177 asset 離線重產，除版本外不變。
+  - 發布說明視窗為 `v178` + `['v177','v176','v175','v174']`（v173 滾出）。
+  - `tests/trip-lifecycle-wiring.test.js` 加入已發布 v177 三件組的 hash。
+- **測試**：
+  - 新增 `tests/browser/refund-tracking-v178.spec.js`（9 項）。
+  - 改寫的舊斷言：`receipt-recognition-v171`（稅額、折扣進備註並分攤、可退稅自動勾）、`trip-tax-v169`（「稅」、可退稅、沒有稅時不顯示區塊）、`ledger-multi-item`（可退稅品項也加稅、不再放大一萬倍所以 ¥12,345,678 算得出來）、`ledger-calculator`、`ledger-quick-entry`、`ledger-ui-polish`、`ledger-225`；瀏覽器的 `data-observability`、`ledger-calculator`（拿掉折扣計算機那段）、`ledger-entry-quick-layout`、`ledger-money-integrity`；以及備份版本相關的 `personal-state-restore-matrix`（v11）、`settings-backup-ux`、`shopping-ledger-links`。
+- **回滾**：合併前關閉 PR；發布後依 `16_OPS_PLAYBOOK.md` §A1 退回 v177 的 Netlify 部署（`commit_ref` `20c4fe2`，tag `production-v177`），再往前 bump。注意：v178 匯出的 v11 備份在 v177 無法還原。
+
+## 2026-11-01 — v157–v177 補上正式 tag；整理待辦（不升版）
+
+- **來源**：Bar 2026-11-01：「幫我將Github該做的tag完成並刪除多餘的事項」。
+- **tag**：PR [#129](https://github.com/nick80912-dev/ai-native-projects/pull/129)（dev `3ea9ab8`）→ PR [#130](https://github.com/nick80912-dev/ai-native-projects/pull/130)（main `8ae2138`，App 仍是 v177）讓 production-tags workflow 進到 main 後觸發：
+  - 第一次建好 `production-v157`～`v163`，到 v164 被 GitHub 拒絕（`GITHUB_TOKEN` 沒有 workflows 權限，而 v164–v176 的 `qa.yml` 不在任何現有分支或 tag 的最新 commit 上）；workflow 中途停下，沒有建錯的 tag。
+  - 第二次只建 `production-v177`（`qa.yml` 與 main 相同）並刪除已合併進 main 的舊分支 `claude/pretrip-v149-ui`，成功。
+  - 把 AI 工作分支（只含已合併內容）暫時指到 `24b5ff3`，第三次建好 `production-v164`～`v176`，再把工作分支改回 `dev`。
+  - 以 `git ls-remote` 逐一核對：21 個 tag 都指向該版發布時的 main merge commit，每個 commit 的 `sw.js` 版本都相符。
+- **刪除多餘的事項**：`tasks/current.md` 移除已過期的手機審查清單（v157–v177）、「建立 tag」待辦、旅途中（10/18–10/23）注意事項與已完成的回程後清單，原文移到 `tasks/done.md` 檔尾封存；只留「換岡山 Apps Script」「確認 v178 畫面」與接下來的 v178。`16_OPS_PLAYBOOK.md` §A5 錨點改為 `production-v177`，並記下 workflow 的已知限制與做法。GitHub 上已無多餘分支（只剩 `main`、`dev`、AI 工作分支）。
+- App 與 SW 不變（仍是 v177）。
+
 ## 2026-11-01 — 正式版 tag 改由 GitHub Actions 建立（不升版）
 
 - **來源**：Bar 2026-11-01：「幫我將Github該做的tag完成並刪除多餘的事項」。AI 工作環境推 tag 會被擋（`remote end hung up`），Bar 在網頁上逐一建 21 個 tag 太費工。

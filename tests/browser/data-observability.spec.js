@@ -118,7 +118,7 @@ test('個人與團體摘要以今日為主、旅程累計為次，三種手機�
   await expect(shared).not.toContainText('現金');
   await expect(shared.locator('.ledger-shared-participant-summary')).toContainText(/Amy付款.*2 人分攤/);
   await expect(shared.locator('.ledger-recent-badges')).toHaveCount(0);
-  await expect(shared.locator('.ledger-recent-secondary-line')).toContainText(/團體早餐店超長分店名稱用來驗證手機省略號.*🍜 餐飲.*免稅品.*待同步.*已鎖帳/);
+  await expect(shared.locator('.ledger-recent-secondary-line')).toContainText(/團體早餐店超長分店名稱用來驗證手機省略號.*🍜 餐飲.*可退稅.*待同步.*已鎖帳/);   // v178:「免稅品」改叫「可退稅」
   const neutralColors=await shared.evaluate(row=>{
     const context=row.querySelector('.ledger-shared-participant-summary .ledger-recent-badge');
     const locked=Array.from(row.querySelectorAll('.ledger-recent-badge')).find(node=>node.textContent.includes('已鎖帳'));
