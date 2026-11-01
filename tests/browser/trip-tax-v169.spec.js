@@ -27,32 +27,34 @@ async function openPersonalMultiForm(page){
   await page.locator('#ledgerEntrySheet .ledger-sheet-choice',{hasText:'個人'}).click();
   await page.evaluate(()=>setLedgerDraftMulti(true));
 }
+/* v178(Bar 2026-11-01):「稅與優惠券」改成「稅」,優惠券欄換成稅額;「免稅品」改叫「可退稅」 */
 async function openTaxPanel(page){
-  await page.locator('#ledgerEntrySheet .ledger-disclosure-toggle').filter({hasText:'優惠券'}).click();
+  await page.locator('#ledgerEntrySheet .ledger-disclosure-toggle').filter({hasText:'稅（選填）'}).click();
 }
 const sheet=page=>page.locator('#ledgerEntrySheet');
 
-test('the Okayama trip (JPY, nothing filled) keeps 税込／税抜, 8%／10% and 免稅品',async({page})=>{
+test('the Okayama trip (JPY, nothing filled) keeps 税込／税抜 and 8%／10%, with 可退稅 and a tax amount field',async({page})=>{
   await boot(page,null);
   await openPersonalMultiForm(page);
-  await expect(sheet(page).locator('.ledger-item-flag',{hasText:'免稅品'})).toHaveCount(1);
+  await expect(sheet(page).locator('.ledger-item-flag',{hasText:'可退稅'})).toHaveCount(1);
   await openTaxPanel(page);
-  await expect(sheet(page).locator('.ledger-disclosure-toggle').filter({hasText:'優惠券'})).toContainText('稅與優惠券（選填）');
+  await expect(sheet(page).locator('.ledger-disclosure-toggle').filter({hasText:'稅'})).toHaveText(/^稅（選填）/);
+  await expect(sheet(page).locator('#ledgerTaxAmount')).toBeVisible();
+  await expect(sheet(page).locator('#ledgerDiscount')).toHaveCount(0);
   await expect(sheet(page).locator('.ledger-disclosure-body .ledger-segment').nth(0).locator('button')).toHaveText(['税込（含稅）','税抜（未稅）']);
   await expect(sheet(page).locator('.ledger-disclosure-body .ledger-segment').nth(1).locator('button')).toHaveText(['無稅','8%','10%','自訂']);
   await expect(sheet(page).getByRole('button',{name:'10%'})).toHaveAttribute('aria-pressed','true');
-  await expect(sheet(page).getByRole('button',{name:'全部免稅品'})).toHaveCount(1);
+  await expect(sheet(page).getByRole('button',{name:/全部/})).toHaveCount(0);
 });
 
 test('a trip without tax rates shows no tax options and records no tax',async({page})=>{
   await boot(page,{currency:'KRW',exchangeRate:'0.024',ledgerDefaultCurrency:'KRW'});
   await openPersonalMultiForm(page);
-  await expect(sheet(page).locator('.ledger-item-flag',{hasText:'免稅品'})).toHaveCount(0);
-  await openTaxPanel(page);
-  await expect(sheet(page).locator('.ledger-disclosure-toggle').filter({hasText:'優惠券'})).toHaveText(/^優惠券（選填）/);
-  await expect(sheet(page).locator('.ledger-disclosure-body')).not.toContainText('價格方式');
-  await expect(sheet(page).locator('.ledger-disclosure-body')).not.toContainText('稅率');
-  await expect(sheet(page).locator('#ledgerDiscount')).toBeVisible();
+  await expect(sheet(page).locator('.ledger-item-flag',{hasText:'可退稅'})).toHaveCount(0);
+  /* 沒有稅、優惠券欄也拿掉了:整個區塊不顯示 */
+  await expect(sheet(page).locator('.ledger-disclosure-toggle').filter({hasText:'選填'})).toHaveText([/^更多細節/]);
+  await expect(sheet(page).locator('#ledgerDiscount')).toHaveCount(0);
+  await expect(sheet(page).locator('#ledgerTaxAmount')).toHaveCount(0);
   const records=await page.evaluate(()=>{
     const draft=ledgerUiState.draft;draft.storeName='明洞小吃';
     draft.items[0].name='辣炒年糕';draft.items[0].amount='12000';
@@ -60,11 +62,11 @@ test('a trip without tax rates shows no tax options and records no tax',async({p
     return personalLedgerRepository.all().filter(item=>item.detail==='辣炒年糕').map(item=>[item.amountJpy,item.taxRate,item.isTaxFree,item.priceMode]);
   });
   expect(records).toEqual([[12000,0,false,'included']]);
-  /* 單品項的「稅與優惠券」區塊也只剩優惠券 */
+  /* 單品項也沒有「稅」區塊(v178 起沒有優惠券欄) */
   await page.evaluate(()=>openLedgerEntrySheet(false));
   await page.locator('#ledgerEntrySheet .ledger-sheet-choice',{hasText:'個人'}).click();
   await page.evaluate(()=>{ledgerUiState.draft.entryDetailsOpen=true;renderLedgerEntrySheet();});
-  await expect(sheet(page).locator('.ledger-optional-section-title',{hasText:'優惠券'})).toHaveText('優惠券');
+  await expect(sheet(page).locator('.ledger-optional-section-title',{hasText:/稅|優惠券/})).toHaveCount(0);
   await expect(sheet(page)).not.toContainText('價格方式');
   /* 歷史篩選不出現「免稅品」，之前選過的免稅篩選也不再生效 */
   await page.evaluate(()=>closeLedgerEntrySheet());
@@ -79,13 +81,13 @@ test('a trip without tax rates shows no tax options and records no tax',async({p
 test('a trip with its own rate, 未稅 by default and no tax-free',async({page})=>{
   await boot(page,{currency:'THB',exchangeRate:'0.9',ledgerDefaultCurrency:'THB',taxRates:'7',taxPriceMode:'未稅',taxFree:'no'});
   await openPersonalMultiForm(page);
-  await expect(sheet(page).locator('.ledger-item-flag',{hasText:'免稅品'})).toHaveCount(0);
+  await expect(sheet(page).locator('.ledger-item-flag',{hasText:'可退稅'})).toHaveCount(0);
   await openTaxPanel(page);
   await expect(sheet(page).locator('.ledger-disclosure-body .ledger-segment').nth(0).locator('button')).toHaveText(['含稅','未稅']);
   await expect(sheet(page).getByRole('button',{name:'未稅',exact:true})).toHaveAttribute('aria-pressed','true');
   await expect(sheet(page).locator('.ledger-disclosure-body .ledger-segment').nth(1).locator('button')).toHaveText(['無稅','7%','自訂']);
   await expect(sheet(page).getByRole('button',{name:'7%'})).toHaveAttribute('aria-pressed','true');
-  await expect(sheet(page).getByRole('button',{name:'全部免稅品'})).toHaveCount(0);
+  await expect(sheet(page).locator('.ledger-single-refundable')).toHaveCount(0);
   const records=await page.evaluate(()=>{
     const draft=ledgerUiState.draft;draft.storeName='7-Eleven';
     draft.items[0].name='泰式奶茶';draft.items[0].amount='100';

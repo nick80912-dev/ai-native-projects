@@ -92,7 +92,7 @@ test('a 税抜 bill opens for editing as 税込 with its final amounts and says 
     const html=renderLedgerTaxFields(draft);
     const single=renderLedgerTaxFields(createLedgerEntryDraft('personal'));
     return {stored:records.map(r=>r.amountJpy),priceMode:draft.priceMode,sourcePriceMode:draft.sourcePriceMode,
-      items:draft.items.map(i=>Number(i.amount)),explains:html.includes('原紀錄為税抜'),singleRecordOnly:single.includes('只做記錄，不會加稅')};
+      items:draft.items.map(i=>Number(i.amount)),explains:html.includes('原紀錄為税抜'),singleRecordOnly:single.includes('單品項的金額就是實付，價格方式只做記錄')};   // v178:說明收進稅額的「!」
   });
   expect(result.stored).toEqual([1100,550]);
   expect(result.priceMode).toBe('included');

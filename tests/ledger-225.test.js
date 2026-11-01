@@ -155,7 +155,8 @@ assert(renderedSharedRecord.includes('class="ledger-shared-participant-summary l
 assert(!renderedSharedRecord.includes('ledger-recent-payment')&&!renderedSharedRecord.includes('現金'),'shared list cards hide payment method');
 assert(renderedSharedRecord.indexOf('團體晚餐')<renderedSharedRecord.indexOf('ledger-shared-participant-summary'),'shared primary row places the item before payer/allocation context');
 const sharedSecondaryStart=renderedSharedRecord.indexOf('ledger-recent-secondary-line');
-const sharedOrder=['團體餐廳','🍜 餐飲','免稅品','TEST','待同步','已鎖帳'].map(text=>renderedSharedRecord.indexOf(text,sharedSecondaryStart));
+/* v178:「免稅品」改叫「可退稅」(日本 11/1 起先付稅、出境後退) */
+const sharedOrder=['團體餐廳','🍜 餐飲','可退稅','TEST','待同步','已鎖帳'].map(text=>renderedSharedRecord.indexOf(text,sharedSecondaryStart));
 assert(sharedOrder.every((position,index)=>position>=0&&(index===0||position>sharedOrder[index-1])),'shared secondary row follows store, category, tax-free, TEST, pending and lock order');
 assert(renderedSharedRecord.includes('<span class="ledger-shared-participant-summary ledger-recent-context"><span class="ledger-recent-badge">我付款 · 全員分攤</span>'),'shared payer/allocation uses the neutral compact badge');
 assert(renderedSharedRecord.includes('<span class="ledger-recent-badge pending">待同步</span>'),'pending sync keeps its dedicated palette class');

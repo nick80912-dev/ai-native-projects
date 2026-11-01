@@ -1,4 +1,4 @@
-# 個人狀態備份 v1–v10 相容策略
+# 個人狀態備份 v1–v11 相容策略
 
 > 由 Bar 於 2026-07-30 核可(批次一 P3)。本檔是**契約定義**,不是說明文;與程式衝突時以 `index.html` 為準,但衝突本身即為缺陷,必須修到一致。
 > 對應的可執行契約在 `tests/personal-state-restore-matrix.test.js` —— 該檔注入 `index.html` 的**真實** store 實作,斷言還原後 `localStorage` 的實際內容,不是只驗版本號被接受。改本檔而不改測試(或反之)一律視為交付缺陷。
@@ -11,11 +11,11 @@
 
 | 項目 | 值 |
 |---|---|
-| 目前匯出版本 | `PERSONAL_STATE_VERSION = 10` |
-| 可還原版本 | `PERSONAL_STATE_SUPPORTED_VERSIONS = [1,2,3,4,5,6,7,8,9,10]`(另需旅程相符,見「旅程身分(v10)」) |
+| 目前匯出版本 | `PERSONAL_STATE_VERSION = 11` |
+| 可還原版本 | `PERSONAL_STATE_SUPPORTED_VERSIONS = [1,2,3,4,5,6,7,8,9,10,11]`(v10 起另需旅程相符,見「旅程身分(v10)」) |
 | 格式標記 | `format: 'trip-personal-state'`(不符即拒絕) |
 
-## 一、向後相容:v1–v10 還原到 v10 的行為
+## 一、向後相容:v1–v11 還原到 v11 的行為
 
 **原則:缺欄位補該版本當時的語意預設值;`version` 欄位是唯一權威,payload 夾帶的欄位若不屬於該版本一律忽略。**
 
@@ -30,6 +30,7 @@
 | v7 | `allocations[]` 逐人分配 | 無 `allocations` 時由 `buyFor`／`targets` 遷移成單筆;缺 `allocationId` 自動補發 |
 | v8 | `themeId`／`shoppingUnits`／`travelNotes` | **v<8 一律保留裝置現值,不重設為預設值** |
 | v9 | `wants` 的 key 由索引型改為 placeId 型 | v<9 一律對 `payload.wants` 執行 key 轉換,見下方「想逛 key 的識別語意變更」 |
+| v11 | 個人帳每筆可帶 `taxAmount`、`refundAmount`、`refundMethod`、`refundDate`(v178 退稅追蹤) | v<11 的個人帳沒有這幾欄,還原後 `taxAmount`／`refundAmount` 為 `null`、`refundMethod`／`refundDate` 為空字串:**沒有稅額、還沒退**;預計退稅改照稅率從金額算 |
 | v10 | `trip:{sourceKey,tripId,tripName}` 旅程身分 | v<10 沒有旅程身分,**只能還原到岡山舊旅程**(`sourceKey === 'legacy'`)的裝置,見下方「旅程身分(v10)」 |
 
 ### 三項 v8 新狀態的保留規則(最容易誤解的一條)
@@ -94,9 +95,9 @@ trip: { sourceKey: 'legacy' | 'sheet:<Trip ID>', tripId: '<Trip ID 或空字串>
 
 | 備份 | 裝置目前的旅程 | 結果 |
 |---|---|---|
-| v10,`trip.sourceKey` 與裝置相同 | 任一 | 照常還原;待送帳非空時把 `trip_ledger_queue_owner` 設為目前旅程,空的就移除 |
-| v10,`trip.sourceKey` 不同 | 任一 | **拒絕**,吐「這份備份屬於另一趟旅程「<名稱>」，不能還原到目前的旅程」 |
-| v10,缺 `trip` 或 `sourceKey` 不是非空字串 | 任一 | **拒絕**,吐「個人狀態格式驗證失敗」 |
+| v10 起,`trip.sourceKey` 與裝置相同 | 任一 | 照常還原;待送帳非空時把 `trip_ledger_queue_owner` 設為目前旅程,空的就移除 |
+| v10 起,`trip.sourceKey` 不同 | 任一 | **拒絕**,吐「這份備份屬於另一趟旅程「<名稱>」，不能還原到目前的旅程」 |
+| v10 起,缺 `trip` 或 `sourceKey` 不是非空字串 | 任一 | **拒絕**,吐「個人狀態格式驗證失敗」 |
 | v1–v9(沒有 `trip`) | 岡山舊旅程(`legacy`) | 照常還原(行為與 v9 時代相同) |
 | v1–v9(沒有 `trip`) | 新旅程(`sheet:…`) | **拒絕**,吐「這是舊版備份，只能還原到岡山旅程」 |
 
@@ -106,7 +107,9 @@ trip: { sourceKey: 'legacy' | 'sheet:<Trip ID>', tripId: '<Trip ID 或空字串>
 
 **裁定:拒絕,不忽略未知欄位。**
 
-`isSupportedPersonalStateVersion()` 只接受 `[1..10]`。v11 或更高的 payload 會在 `restorePersonalState()` 的第一道驗證就被擋下,吐「個人狀態格式驗證失敗」,**裝置原狀態一字不動**。
+`isSupportedPersonalStateVersion()` 只接受 `[1..11]`。v12 或更高的 payload 會在 `restorePersonalState()` 的第一道驗證就被擋下,吐「個人狀態格式驗證失敗」,**裝置原狀態一字不動**。
+
+**v11 對舊版 App 的實際影響**:v177 以前的 App 其 `SUPPORTED` 仍是 `[1..10]`,會直接拒絕 v11 備份。這是刻意的:舊 App 的 `normalizePersonalLedgerRecord()` 只留白名單欄位,若照單全收,實際收到的退稅會靜默消失、那張收據又變回待退,`我的總花費` 也跟著變多。
 
 **v10 對舊版 App 的實際影響**:v149 以前的 App 其 `SUPPORTED` 仍是 `[1..9]`,會直接拒絕 v10 備份。這是刻意的:舊 App 看不懂 `trip`,若照單全收就無從阻擋跨旅程還原。
 
@@ -161,6 +164,12 @@ trip: { sourceKey: 'legacy' | 'sheet:<Trip ID>', tripId: '<Trip ID 或空字串>
 - **升版原因是新增旅程身分**:Bar 於 2026-10-08 核准第二階段「連接新旅程」。待送團體帳若跨旅程還原,會在補送時寫進另一份試算表;舊版 App 若不拒絕 v10,也就擋不住。
 - **舊備份的處理**:v1–v9 沒有旅程身分,只可能來自岡山旅程,因此只允許還原到岡山舊旅程的裝置。
 - **測試**:`tests/personal-state-restore-matrix.test.js` 新增 v10 共同契約與六種旅程比對情境,並以刪除比對的對照實驗確認測試會失敗。
+
+## 八、複驗紀錄(2026-11-01,v11)
+
+- **升版原因是個人帳的新欄位**:Bar 於 2026-10-31～11-01 核准退稅追蹤(backlog #63)。稅額與實際退稅存在每筆個人帳上(個人帳只在手機,不進試算表),舊版 App 會在正規化時丟掉。
+- **舊備份的處理**:v1–v10 沒有這幾欄,還原後視為「沒有稅額、還沒退」;不編造退稅。
+- **測試**:`tests/personal-state-restore-matrix.test.js` 加入 v11 共同契約與退稅欄位原樣還原;`tests/browser/refund-tracking-v178.spec.js` 以真實的 `personalStateJson()` 與 `normalizePersonalLedgerRecord()` 驗證欄位保留、舊帳補 `null`。
 
 ## 未來新增備份欄位時
 

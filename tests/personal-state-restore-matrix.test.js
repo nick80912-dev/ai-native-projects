@@ -1,4 +1,4 @@
-/* 個人狀態備份 v1–v10 還原矩陣(2026-07-30 P3;v10 於 2026-10-08 加入旅程身分)
+/* 個人狀態備份 v1–v11 還原矩陣(2026-07-30 P3;v10 於 2026-10-08 加入旅程身分;v11 於 2026-11-01 加入個人帳退稅欄位)
    ============================================================
    為什麼要有這個檔:備份格式歷經 v1 → v8 八次演進,但在此之前只有 v1／v2／v4／v8
    四個版本有還原測試,**v3／v5／v6／v7 完全沒有**。而 `settings-backup-ux.test.js`
@@ -123,9 +123,9 @@ function createSandbox() {
     validateLedgerRecord() { return true; },
     currentThemeId() { return storage.getItem(KEYS.theme) || 'ocean'; },
     /* ---- 常數:與 index.html 一致 ---- */
-    PERSONAL_STATE_VERSION: 10,
-    PERSONAL_STATE_SUPPORTED_VERSIONS: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
-    isSupportedPersonalStateVersion(version) { return typeof version === 'number' && [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].indexOf(version) >= 0; },
+    PERSONAL_STATE_VERSION: 11,
+    PERSONAL_STATE_SUPPORTED_VERSIONS: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11],
+    isSupportedPersonalStateVersion(version) { return typeof version === 'number' && [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11].indexOf(version) >= 0; },
     /* v9 的想逛 key 轉換需要目前的購物地點。固定成 fixture,讓「唯一候選／模糊候選」可控。
        「無印良品 1F」刻意同時存在於 P001 與 P039 —— 這正是不得猜測的模糊案例。 */
     shopMalls() {
@@ -249,11 +249,14 @@ const payloads = {
 };
 /* v10 = v9 + 旅程身分 */
 payloads[10] = Object.assign({}, payloads[9], { version: 10, trip: { sourceKey: 'legacy', tripId: '', tripName: '' } });
+/* v11 = v10 + 個人帳的稅額與實際退稅(每筆選填) */
+const REFUNDED_RECORD = Object.assign({}, PERSONAL_RECORD, { id: 'personal-refund', isTaxFree: true, taxAmount: 400, refundAmount: 371, refundMethod: 'App', refundDate: '2026/10/25' });
+payloads[11] = Object.assign({}, payloads[10], { version: 11, personalLedger: [PERSONAL_RECORD, REFUNDED_RECORD] });
 
 /* ============================================================
    共同契約:v1–v10 全部都必須還原成功(岡山舊旅程的裝置)
    ============================================================ */
-for (const version of [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]) {
+for (const version of [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]) {
   const { read, toasts } = restore(payloads[version]);
   assert.deepStrictEqual(toasts, ['個人狀態已還原'], 'v' + version + ' 必須還原成功且只吐一則成功訊息');
   assert.deepStrictEqual(read(KEYS.checks), { P001: true }, 'v' + version + ' 還原打卡狀態');
@@ -440,7 +443,7 @@ const STABLE = { muji: 'w2:pP001:1F:%E7%84%A1%E5%8D%B0%E8%89%AF%E5%93%81', beams
   const sandbox = createSandbox();
   sandbox.__storage.setItem(KEYS.wants, JSON.stringify({ 'w_1_路面店_BEAMS': true, S000: true }));
   const exported = JSON.parse(sandbox.personalStateJson());
-  assert.strictEqual(exported.version, 10, '匯出版本為 10');
+  assert.strictEqual(exported.version, 11, '匯出版本為 11');
   assert.deepStrictEqual(plain(exported.trip), { sourceKey: 'legacy', tripId: '', tripName: '' }, '匯出帶有旅程身分');
   assert.deepStrictEqual(exported.wants, { [STABLE.beams]: true, S000: true },
     '匯出前先轉換,v9 備份不得帶出索引型 key');
@@ -460,8 +463,8 @@ const STABLE = { muji: 'w2:pP001:1F:%E7%84%A1%E5%8D%B0%E8%89%AF%E5%93%81', beams
    向前相容:未來版本的 payload 一律拒絕(不是忽略未知欄位)
    ============================================================ */
 {
-  const { read, toasts } = restore(Object.assign({}, payloads[10], { version: 11 }));
-  assert.deepStrictEqual(toasts, ['個人狀態格式驗證失敗'], 'v11 payload 必須被明確拒絕');
+  const { read, toasts } = restore(Object.assign({}, payloads[11], { version: 12 }));
+  assert.deepStrictEqual(toasts, ['個人狀態格式驗證失敗'], 'v12 payload 必須被明確拒絕');
   assert.deepStrictEqual(read(KEYS.checks), { P000: true }, '拒絕時裝置原狀態一字不動');
   assert.strictEqual(read(KEYS.theme), DEVICE_THEME, '拒絕時不得套用任何主題');
 }
@@ -539,4 +542,12 @@ const QUEUED = { id: 'queued-1', time: '2026-07-18T08:00:00.000Z', member: '黃�
   assert.deepStrictEqual(plain(JSON.parse(sandbox.personalStateJson()).trip), KYUSHU_TRIP, '新旅程裝置匯出的備份帶 Trip ID 與名稱');
 }
 
-console.log('personal state restore matrix (v1–v10) tests passed');
+/* v11:退稅欄位隨個人帳一起還原(實際的欄位保留由 normalizePersonalLedgerRecord 負責,瀏覽器測試 refund-tracking-v178 驗證) */
+{
+  const { read, toasts } = restore(payloads[11]);
+  assert.deepStrictEqual(toasts, ['個人狀態已還原'], 'v11 還原成功');
+  const restored = read(KEYS.personal).find((record) => record.id === 'personal-refund');
+  assert.deepStrictEqual([restored.taxAmount, restored.refundAmount, restored.refundMethod, restored.refundDate], [400, 371, 'App', '2026/10/25'], 'v11 的退稅欄位原樣還原');
+}
+
+console.log('personal state restore matrix (v1–v11) tests passed');
