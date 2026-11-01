@@ -1,0 +1,75 @@
+# 建立正式版 tag(production-vNNN),並可刪除已合併進 main 的舊分支。
+# 為什麼需要:AI 工作環境推不了 tag,Bar 在網頁上一個個建又太費工(2026-11-01 Bar:「幫我將Github該做的tag完成」)。
+# 只能手動觸發(Actions → production-tags → Run workflow,或由 AI 透過 API 觸發)。
+#
+# 安全規則(每一筆都檢查,任何一筆不符就整批不動):
+#   - commit 必須已經在 main 上;
+#   - 該 commit 的 sw.js 必須是 SW_VERSION='vNNN'(tag 名稱與版本一致);
+#   - 同名 tag 已存在且指向別的 commit 時拒絕,不覆寫;指向同一個 commit 則略過;
+#   - 要刪的分支不可是 main／dev,且必須已完全合併進 main。
+name: production-tags
+on:
+  workflow_dispatch:
+    inputs:
+      tags:
+        description: '要建立的 tag,空白分隔的 vNNN=commit,例如 "v176=24b5ff3 v177=20c4fe2"'
+        required: false
+        default: ''
+      delete_branches:
+        description: '要刪除的已合併分支,空白分隔,例如 "claude/old-branch"'
+        required: false
+        default: ''
+
+permissions:
+  contents: write
+
+jobs:
+  tag:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - name: Check every tag and branch first
+        env:
+          TAGS: ${{ inputs.tags }}
+          BRANCHES: ${{ inputs.delete_branches }}
+        run: |
+          set -euo pipefail
+          git fetch --tags --force origin
+          : > create.txt
+          for pair in $TAGS; do
+            version="${pair%%=*}"; ref="${pair#*=}"
+            [[ "$version" =~ ^v[0-9]+$ ]] || { echo "::error::版本格式錯誤:$pair"; exit 1; }
+            sha="$(git rev-parse --verify "$ref^{commit}")" || { echo "::error::找不到 commit:$pair"; exit 1; }
+            git merge-base --is-ancestor "$sha" origin/main || { echo "::error::$version 的 commit $sha 不在 main 上"; exit 1; }
+            git show "$sha:sw.js" | grep -q "SW_VERSION='$version'" || { echo "::error::$sha 的 sw.js 不是 $version"; exit 1; }
+            tag="production-$version"
+            if existing="$(git rev-parse -q --verify "refs/tags/$tag^{commit}")"; then
+              [ "$existing" = "$sha" ] && { echo "$tag 已存在且正確,略過"; continue; }
+              echo "::error::$tag 已存在但指向 $existing,不覆寫"; exit 1
+            fi
+            echo "$tag $sha" >> create.txt
+          done
+          for branch in $BRANCHES; do
+            case "$branch" in main|dev) echo "::error::不可刪除 $branch"; exit 1;; esac
+            git rev-parse -q --verify "origin/$branch" >/dev/null || { echo "::error::找不到分支 $branch"; exit 1; }
+            git merge-base --is-ancestor "origin/$branch" origin/main || { echo "::error::$branch 還有沒合併進 main 的 commit"; exit 1; }
+          done
+          echo "將建立:"; cat create.txt
+      - name: Create tags and delete branches
+        env:
+          BRANCHES: ${{ inputs.delete_branches }}
+        run: |
+          set -euo pipefail
+          while read -r tag sha; do
+            [ -n "$tag" ] || continue
+            git tag "$tag" "$sha"
+            git push origin "refs/tags/$tag"
+            echo "已建立 $tag → $sha"
+          done < create.txt
+          for branch in $BRANCHES; do
+            git push origin --delete "$branch"
+            echo "已刪除分支 $branch"
+          done

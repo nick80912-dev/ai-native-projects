@@ -29,7 +29,9 @@
 
 **用途**:新版發布(`dev → main`)後若正式站出事,需要退回上一個正式版。本節原本寫的是「以 tag 回滾至 v18」(v72 發布時的預案);v18 沒有 `shell/` generation 架構,照做會和現行 SW 衝突,已作廢。
 
-**錨點**:每個正式版都有 tag `production-v<SW版本>`。目前正式站為 v176(`main` `24b5ff3`,tag 待 Bar 手機審查後建立);**最新已建立的錨點是 `production-v156` → `bc59984`**(Netlify deploy `6ad0cbec`)。v157–v175 雖已上線但尚無 tag;要退回 v175 時以 `commit_ref` = `12ee222` 找部署。最新的錨點以 `tasks/current.md` 為準。
+**錨點**:每個正式版都有 tag `production-v<SW版本>`。目前正式站為 v177(`main` `20c4fe2`,tag 待 Bar 手機審查後建立);**最新已建立的錨點是 `production-v156` → `bc59984`**(Netlify deploy `6ad0cbec`)。v157–v176 雖已上線但尚無 tag;要退回 v176 時以 `commit_ref` = `24b5ff3` 找部署。最新的錨點以 `tasks/current.md` 為準。
+
+**建立 tag(2026-11-01 起)**:AI 工作環境推不了 tag,改用 `.github/workflows/production-tags.yml`。GitHub → Actions → **production-tags** → Run workflow,`tags` 填空白分隔的 `vNNN=commit`(例如 `v178=abc1234`),可在 `delete_branches` 填已合併進 main 的舊分支。workflow 先逐筆檢查(commit 在 main 上、該 commit 的 `sw.js` 是同一版、同名 tag 不會被覆寫、分支已完全合併且不是 main／dev),任何一筆不符就整批不動;AI 也可以透過 API 觸發,觸發後以 `git ls-remote --tags origin` 核對。
 
 > **先分清兩件事**:production tag 是**程式碼**錨點,回答「該退回哪個內容」;讓使用者實際看到舊版靠的是**部署**動作。緊急時**先做 A1(Netlify Publish deploy),再補 git 層**;A1 是秒級且不動 git 歷史。
 
