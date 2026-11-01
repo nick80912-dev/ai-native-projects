@@ -1,6 +1,13 @@
 # 07 版本紀錄
 
-## 2026-10-31 — v177 收據也讀出稅額
+## 2026-11-01 — v177 已上線 main（待 Bar 手機審查與 tag）
+
+- PR [#125](https://github.com/nick80912-dev/ai-native-projects/pull/125) 在 head `3761396` 的 sanity／browser-qa 全綠後合併進 `dev`（`70ef7e1`）。release PR [#126](https://github.com/nick80912-dev/ai-native-projects/pull/126) 第一次檢查時，`dev` push 那次的 browser-qa 在 15 分鐘時限到時才跑到第 319／432 項（已跑的全過）被取消；同 commit 的 PR 那次 10.4 分鐘全綠。PR [#127](https://github.com/nick80912-dev/ai-native-projects/pull/127) 把 browser-qa 時限放寬為 25 分鐘（合併為 `c89d711`），#126 在 `c89d711` 重跑 7 項檢查全綠（其中一次 browser-qa 用了 13 分鐘）後合併 `dev` → `main`，merge commit **`20c4fe2`**；合併 tree `7c2cd5f` 與 `c89d711` 相同。本機完整 Chromium 430 passed，只有已知只在本機失敗的兩項，沒有略過的測試。
+- **線上核對**：正式站 `sw.js` 為 `SW_VERSION='v177'`；全新 Chromium 開正式站，`APP_VERSION` 為 v177、只剩 `okayama-trip-v177` 快取，發布說明為「收據也讀出稅額」；`normalizeRecognition` 讀得出 `taxAmount`、列稅額的程式在線上；沒有 pageerror。
+- **岡山 Apps Script 尚待 Bar 換新版**（v176、v177 換一次即可）。
+- 回滾：依 `16_OPS_PLAYBOOK.md` §A1 Publish `commit_ref` = `24b5ff3`（v176）的部署，再往前 bump。
+
+## 2026-10-31 — v177 收據也讀出稅額（已上線 main，見上）
 
 - **來源**：Bar 2026-10-31：「或者是把稅額也識別並列出來，之後紀錄退稅金額多少也比較方便。因為未來日本也要改成統一機場或是APP退稅…」。查證：日本 2026/11/1 起免稅店改「リファンド方式」，結帳先付含稅價，出境時海關確認帶出後才退稅；退款由購買的店家或其委託的退稅業者處理（退到卡、App、銀行或在出境港領現金，各家不同），不是統一在機場。Bar 選「兩版都做」：v177 先讀出稅額；v178 再做每筆「預計退稅」、退稅清單、離境前提醒與實際退款（抵掉花費、先只做個人帳）。
 - **使用上**：
