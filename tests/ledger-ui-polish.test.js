@@ -76,7 +76,7 @@ assert(html.includes('封閉集合給軌道，開放集合放散'),'the segmente
 assert(!html.includes('單項設定 ·'),'retired item override copy is absent');
 assert(html.includes('ledger-item-control-row'),'category, tax-exempt and proxy controls share a compact row');
 assert(html.includes('新增對象')&&html.includes('ledgerProxyTargetInput'),'proxy target entry is inline rather than prompt-only');
-assert(html.includes('稅與優惠券（選填）'),'tax disclosure uses the approved title');
+assert(html.includes("ledgerDraftTax(draft).enabled?'稅'")&&html.includes("'（選填）"),'tax disclosure uses the v178 title 稅（選填）');
 assert(html.includes('更多細節（備註選填）'),'optional details disclosure is note-only');
 
 const sw=fs.readFileSync('sw.js','utf8');

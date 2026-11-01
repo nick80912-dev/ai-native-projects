@@ -104,10 +104,11 @@ assert.strictEqual(modernAmounts('included','10','',0).totalPrimary,1000,'tax-in
 assert.strictEqual(modernAmounts('excluded','10','',0).totalPrimary,1100,'10% excluded tax is added');
 assert.strictEqual(modernAmounts('excluded','8','',0).totalPrimary,1080,'8% excluded tax is added');
 assert.strictEqual(modernAmounts('excluded','custom','7.5',0).totalPrimary,1075,'custom decimal rates use integer basis points');
-assert.strictEqual(modernAmounts('excluded','10','',0,[{amount:1000,taxExempt:true}]).totalPrimary,1000,'tax-exempt items ignore the bill tax rate');
+/* v178(Bar 2026-11-01):日本 11/1 起免稅店先收稅、出境後才退,「可退稅」(原免稅品)的品項一樣加稅 */
+assert.strictEqual(modernAmounts('excluded','10','',0,[{amount:1000,taxExempt:true}]).totalPrimary,1100,'refundable items still pay the bill tax rate');
 const mixedTax=modernAmounts('excluded','10','',100,[{amount:1000,taxExempt:false},{amount:500,taxExempt:true}]);
-assert.strictEqual(mixedTax.totalPrimary,1500,'mixed tax exemption and a fixed discount share one deterministic total');
-assert.strictEqual(mixedTax.items.reduce((sum,item)=>sum+item.amountJpy,0),1500,'item allocation preserves the mixed-tax discounted total');
+assert.strictEqual(mixedTax.totalPrimary,1550,'refundable items and a legacy fixed discount share one deterministic total');
+assert.strictEqual(mixedTax.items.reduce((sum,item)=>sum+item.amountJpy,0),1550,'item allocation preserves the discounted total');
 assert.throws(()=>modernAmounts('excluded','custom','0',0),/自訂稅率/);
 assert.throws(()=>modernAmounts('excluded','custom','100.1',0),/自訂稅率/);
 assert.throws(()=>modernAmounts('excluded','custom','7.55',0),/自訂稅率/);
@@ -122,7 +123,9 @@ assert.throws(()=>amounts('included',10,201),/實付總額/);
 assert.throws(()=>mod.calculateMultiItemAmounts({currency:'JPY',taxMode:'included',taxRate:10,discount:0,items:[]},settings),/至少一個品項/);
 assert.throws(()=>mod.calculateMultiItemAmounts({currency:'JPY',taxMode:'excluded',taxRate:5,discount:0,items:[{amount:100}]},settings),/稅制設定/);
 assert.throws(()=>mod.calculateMultiItemAmounts({currency:'JPY',taxMode:'included',taxRate:10,discount:0,items:[{amount:1.5}]},settings),/請輸入有效金額/);
-assert.throws(()=>mod.calculateMultiItemAmounts({currency:'JPY',taxMode:'included',taxRate:10,discount:0,items:[{amount:12345678}]},settings),/請輸入有效金額/,'allocation overflow uses the short user-facing amount error');
+/* v178:計算不再把金額放大一萬倍,¥12,345,678 已經算得出來;更大的金額才會超出安全整數 */
+assert.strictEqual(mod.calculateMultiItemAmounts({currency:'JPY',taxMode:'included',taxRate:10,discount:0,items:[{amount:12345678}]},settings).totalPrimary,12345678);
+assert.throws(()=>mod.calculateMultiItemAmounts({currency:'JPY',taxMode:'included',taxRate:10,discount:0,items:[{amount:123456789}]},settings),/請輸入有效金額/,'allocation overflow uses the short user-facing amount error');
 ['not-a-number',0,-1].forEach(value=>assert.throws(()=>mod.calculateMultiItemAmounts({currency:'JPY',taxMode:'included',taxRate:10,discount:0,items:[{amount:value}]},settings),/請輸入有效金額/));
 
 assert.strictEqual(mod.validateProxyDraft(false,'任意'),'');
@@ -152,7 +155,8 @@ assert(sharedRecords[0].batchId&&sharedRecords[0].batchId===sharedRecords[1].bat
 assert.strictEqual(sharedRecords[0].participants,'["Bar","Amy"]');
 assert.strictEqual(sharedRecords[1].participants,'["Amy"]','custom participants override the bill snapshot');
 assert(sharedRecords.every(record=>record.recordType==='expense'));
-assert.strictEqual(sharedRecords.reduce((sum,record)=>sum+record.amountJpy,0),290);
+/* v178:可退稅(原免稅品)的品項也加稅:100＋200 加 10% ＝ 330,扣舊優惠券 30 ＝ 300 */
+assert.strictEqual(sharedRecords.reduce((sum,record)=>sum+record.amountJpy,0),300);
 assert.strictEqual(sharedRecords.reduce((sum,record)=>sum+record.couponAmount,0),30,'per-item coupon allocation preserves the bill coupon total');
 assert.strictEqual(sharedRecords[0].isTaxFree,true);
 assert.strictEqual(sharedRecords[1].isTaxFree,false);
@@ -203,7 +207,9 @@ assert(!/ledger-item-editor[\s\S]{0,1200}ledger-currency-option/.test(uiSource),
 assert(!/ledger-item-editor[\s\S]{0,1200}ledger-pay-option/.test(uiSource),'item cards do not render per-item payment controls');
 assert(uiSource.includes('税込（含稅）')&&uiSource.includes('税抜（未稅）'),'price mode uses the confirmed bilingual pill labels');
 assert(uiSource.includes("['none','無稅']")&&uiSource.includes("['custom','自訂']"),'tax rate uses fixed pill choices including custom');
-assert(uiSource.includes('全部免稅品'),'multi-item tax controls expose the bulk tax-exempt action');
+/* v178(Bar 2026-11-01):「全部可退稅」按鈕拿掉,可退稅的收據改由辨識自動勾好 */
+assert(!uiSource.includes('全部免稅品')&&!uiSource.includes('setAllLedgerItemsTaxExempt'),'the bulk tax-exempt action is gone');
+assert(uiSource.includes('<span>可退稅</span>'),'each item shows the 可退稅 flag');
 assert(uiSource.includes('taxExempt'),'each item preserves an independent tax-exempt flag');
 assert(uiSource.includes("renderLedgerParticipantGroup('單項分攤成員',item.participants,item.key,''"),'item participant controls use the shared group renderer');
 assert(uiSource.includes("renderLedgerParticipantGroup('分攤成員',draft.participants,null"),'bill participant controls use the shared group renderer');

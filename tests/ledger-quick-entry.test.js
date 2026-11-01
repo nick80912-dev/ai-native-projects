@@ -154,8 +154,9 @@ vm.runInContext(persistSource,persistSandbox);
   assert(!sheetSource.includes('沿用整單'),'retired inheritance hint is absent');
   assert(sheetSource.includes('税込（含稅）'));
   assert(sheetSource.includes('税抜（未稅）'));
-  assert(sheetSource.includes('全部免稅品'));
-  assert(sheetSource.includes('固定折扣金額')&&sheetSource.includes('優惠券金額'));
+  /* v178:「全部免稅品」按鈕與優惠券欄拿掉;稅區塊有稅額,舊優惠券只顯示 */
+  assert(!sheetSource.includes('全部免稅品')&&!sheetSource.includes('固定折扣金額'));
+  assert(sheetSource.includes('id="ledgerTaxAmount"')&&sheetSource.includes('舊資料，維持不變'));
   assert(!sheetSource.includes('多品項將於本批下一階段啟用'),'multi-item toggle is fully functional');
   assert(!/addEventListener\(['"](?:touchstart|touchmove|touchend|gesturestart)/.test(sheetSource),'sheet adds no JavaScript gesture interceptor');
   assert(!/addEventListener\(['"](?:touchstart|touchmove|touchend|gesturestart)[\s\S]{0,320}preventDefault\(/.test(sheetSource),'sheet never blocks a touch or gesture default action');
