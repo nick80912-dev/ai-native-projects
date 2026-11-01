@@ -1,5 +1,16 @@
 # 07 版本紀錄
 
+## 2026-11-01 — v157–v177 補上正式 tag；整理待辦（不升版）
+
+- **來源**：Bar 2026-11-01：「幫我將Github該做的tag完成並刪除多餘的事項」。
+- **tag**：PR [#129](https://github.com/nick80912-dev/ai-native-projects/pull/129)（dev `3ea9ab8`）→ PR [#130](https://github.com/nick80912-dev/ai-native-projects/pull/130)（main `8ae2138`，App 仍是 v177）讓 production-tags workflow 進到 main 後觸發：
+  - 第一次建好 `production-v157`～`v163`，到 v164 被 GitHub 拒絕（`GITHUB_TOKEN` 沒有 workflows 權限，而 v164–v176 的 `qa.yml` 不在任何現有分支或 tag 的最新 commit 上）；workflow 中途停下，沒有建錯的 tag。
+  - 第二次只建 `production-v177`（`qa.yml` 與 main 相同）並刪除已合併進 main 的舊分支 `claude/pretrip-v149-ui`，成功。
+  - 把 AI 工作分支（只含已合併內容）暫時指到 `24b5ff3`，第三次建好 `production-v164`～`v176`，再把工作分支改回 `dev`。
+  - 以 `git ls-remote` 逐一核對：21 個 tag 都指向該版發布時的 main merge commit，每個 commit 的 `sw.js` 版本都相符。
+- **刪除多餘的事項**：`tasks/current.md` 移除已過期的手機審查清單（v157–v177）、「建立 tag」待辦、旅途中（10/18–10/23）注意事項與已完成的回程後清單，原文移到 `tasks/done.md` 檔尾封存；只留「換岡山 Apps Script」「確認 v178 畫面」與接下來的 v178。`16_OPS_PLAYBOOK.md` §A5 錨點改為 `production-v177`，並記下 workflow 的已知限制與做法。GitHub 上已無多餘分支（只剩 `main`、`dev`、AI 工作分支）。
+- App 與 SW 不變（仍是 v177）。
+
 ## 2026-11-01 — 正式版 tag 改由 GitHub Actions 建立（不升版）
 
 - **來源**：Bar 2026-11-01：「幫我將Github該做的tag完成並刪除多餘的事項」。AI 工作環境推 tag 會被擋（`remote end hung up`），Bar 在網頁上逐一建 21 個 tag 太費工。
