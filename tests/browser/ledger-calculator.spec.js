@@ -110,7 +110,7 @@ test('單品計算器支援小數、購物百分比、等號與無條件捨去',
   expect(errors).toEqual([]);
 });
 
-test('多品項與折扣共用計算器並在窄螢幕保持可操作',async({page})=>{
+test('多品項計算器在窄螢幕保持可操作；稅區塊沒有折扣計算機',async({page})=>{
   const errors=collectPageErrors(page);
   await openEntry(page);
   await page.locator('#ledgerDetail').fill('第一項');
@@ -125,12 +125,11 @@ test('多品項與折扣共用計算器並在窄螢幕保持可操作',async({pa
   await expect(page.locator('[id^="ledgerItemAmount_"]').first()).toHaveValue('630');
   await expect(page.locator('#ledgerBillPreview')).toContainText('¥630');
 
-  await page.getByRole('button',{name:/稅與優惠券/}).click();
-  await page.getByRole('button',{name:'開啟折扣金額計算機',exact:true}).click();
-  await clearAndEnter(page,['0','.','9']);
-  await expect(page.locator('#ledgerCalculatorApplyHint')).toHaveText('將套用 ¥0');
-  await page.getByRole('button',{name:'套用金額 ¥0',exact:true}).click();
-  await expect(page.locator('#ledgerDiscount')).toHaveValue('0');
+  /* v178(Bar 2026-11-01):優惠券欄換成稅額,「稅」區塊不再有折扣計算機 */
+  await page.getByRole('button',{name:/^稅（選填）/}).click();
+  await expect(page.locator('#ledgerTaxAmount')).toBeVisible();
+  await expect(page.locator('#ledgerDiscount')).toHaveCount(0);
+  await expect(page.getByRole('button',{name:'開啟折扣金額計算機',exact:true})).toHaveCount(0);
 
   for(const viewport of WIDTHS){
     await page.setViewportSize(viewport);

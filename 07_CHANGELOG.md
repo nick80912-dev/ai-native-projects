@@ -34,7 +34,7 @@
   - `tests/trip-lifecycle-wiring.test.js` 加入已發布 v177 三件組的 hash。
 - **測試**：
   - 新增 `tests/browser/refund-tracking-v178.spec.js`（9 項）。
-  - 改寫的舊斷言：`receipt-recognition-v171`（稅額、折扣進備註並分攤、可退稅自動勾）、`trip-tax-v169`（「稅」、可退稅、沒有稅時不顯示區塊）、`ledger-multi-item`（可退稅品項也加稅、不再放大一萬倍所以 ¥12,345,678 算得出來）、`ledger-calculator`、`ledger-quick-entry`、`ledger-ui-polish`、`ledger-225`；以及備份版本相關的 `personal-state-restore-matrix`（v11）、`settings-backup-ux`、`shopping-ledger-links`。
+  - 改寫的舊斷言：`receipt-recognition-v171`（稅額、折扣進備註並分攤、可退稅自動勾）、`trip-tax-v169`（「稅」、可退稅、沒有稅時不顯示區塊）、`ledger-multi-item`（可退稅品項也加稅、不再放大一萬倍所以 ¥12,345,678 算得出來）、`ledger-calculator`、`ledger-quick-entry`、`ledger-ui-polish`、`ledger-225`；瀏覽器的 `data-observability`、`ledger-calculator`（拿掉折扣計算機那段）、`ledger-entry-quick-layout`、`ledger-money-integrity`；以及備份版本相關的 `personal-state-restore-matrix`（v11）、`settings-backup-ux`、`shopping-ledger-links`。
 - **回滾**：合併前關閉 PR；發布後依 `16_OPS_PLAYBOOK.md` §A1 退回 v177 的 Netlify 部署（`commit_ref` `20c4fe2`，tag `production-v177`），再往前 bump。注意：v178 匯出的 v11 備份在 v177 無法還原。
 
 ## 2026-11-01 — v157–v177 補上正式 tag；整理待辦（不升版）
