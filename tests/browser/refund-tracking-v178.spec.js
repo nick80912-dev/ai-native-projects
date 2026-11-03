@@ -95,71 +95,80 @@ async function seedRefunds(page){
   });
 }
 
-/* v179(Bar 2026-11-03):退稅清單改成「稅額＋勾選」,勾了扣掉稅額,同一列可改實際退了多少 */
-test('the refund list shows each receipt with its tax amount and a checkbox on the right',async({page})=>{
+/* v179(Bar 2026-11-03):退稅清單改成「稅額＋勾選」,分成待退／已退兩個分頁;勾了扣掉稅額,已退點一張改實際退了多少 */
+test('the refund list has 待退 and 已退 tabs; ticking moves a receipt to 已退',async({page})=>{
   await page.setViewportSize({width:390,height:844});
   await boot(page);
   await seedRefunds(page);
   const spendBefore=await page.evaluate(()=>myTripSpendSnapshot().total.amountJpy);
   const row=page.locator('.ledger-summary-refund');
-  await expect(row).toContainText('退稅');
   await expect(row).toContainText('待退 2 張');
   await expect(row).toContainText('¥1,080');
   await row.click();
   const panel=page.locator('#ledgerInfoSheet');
-  await expect(panel.locator('#ledgerInfoTitle')).toContainText('退稅');
+  await expect(panel.getByRole('tab',{name:'待退 2'})).toHaveAttribute('aria-selected','true');
+  await expect(panel.getByRole('tab',{name:'已退 1'})).toHaveAttribute('aria-selected','false');
   await expect(panel.locator('#ledgerRefundPending .ledger-refund-row')).toHaveCount(2);
-  await expect(panel.locator('#ledgerRefundDone .ledger-refund-row')).toHaveCount(1);
+  await expect(panel.locator('#ledgerRefundDone')).toHaveCount(0);
+  await expect(panel.locator('.ledger-refund-hero')).toContainText('¥1,080');
   /* 說明收在「!」 */
   await expect(panel.locator('#ledgerRefundHelp')).toBeHidden();
   await panel.getByRole('button',{name:'退稅說明'}).click();
   await expect(panel.locator('#ledgerRefundHelp')).toBeVisible();
-  /* 一張收據一列:稅額、右邊勾選框;沒有另外的按鈕或表單 */
+  /* 一張一列:稅額、右邊勾選框;清單裡沒有輸入框 */
   const first=panel.locator('#ledgerRefundPending .ledger-refund-row').first();
   await expect(first).toContainText('マツモトキヨシ');
   await expect(first).toContainText('稅額 ¥700');
-  await expect(panel.getByRole('button',{name:/已收到|修改/})).toHaveCount(0);
+  await expect(panel.locator('input[type="number"]')).toHaveCount(0);
   const check=first.locator('.ledger-refund-check'),rowBox=await first.boundingBox(),checkBox=await check.boundingBox();
   expect(checkBox.x+checkBox.width).toBeGreaterThan(rowBox.x+rowBox.width-4);
   expect(checkBox.width).toBeGreaterThanOrEqual(44);expect(checkBox.height).toBeGreaterThanOrEqual(44);
-  expect(rowBox.height).toBeLessThan(80);
-  /* 勾起來:移到已退,實際退了預設＝稅額,總花費扣掉稅額;清單留在原地 */
+  /* 勾起來:從待退消失、已退多一張,實退＝稅額,總花費扣掉稅額 */
   await check.click();
-  await expect(panel.locator('#ledgerInfoTitle')).toContainText('退稅');
   await expect(panel.locator('#ledgerRefundPending .ledger-refund-row')).toHaveCount(1);
-  const done=panel.locator('#ledgerRefundDone .ledger-refund-row',{hasText:'マツモトキヨシ'});
-  await expect(done.locator('.ledger-refund-check input')).toBeChecked();
-  await expect(done.locator('.ledger-refund-actual input')).toHaveValue('700');
-  let stored=await page.evaluate(()=>personalLedgerRepository.all().filter(r=>r.batchId==='batch-m').map(r=>[r.id,r.refundAmount]).sort());
-  expect(stored).toEqual([['m1',400],['m2',300]]);
+  await expect(panel.getByRole('tab',{name:'已退 2'})).toBeVisible();
+  expect(await page.evaluate(()=>personalLedgerRepository.all().filter(r=>r.batchId==='batch-m').map(r=>[r.id,r.refundAmount]).sort())).toEqual([['m1',400],['m2',300]]);
   expect(spendBefore-await page.evaluate(()=>myTripSpendSnapshot().total.amountJpy)).toBe(700);
-  /* 被扣手續費:改成實際退了 650,照稅額 400:300 分到兩個品項 */
-  await done.locator('.ledger-refund-actual input').fill('650');
-  await done.locator('.ledger-refund-actual input').press('Enter');
-  await done.locator('.ledger-refund-actual input').blur();
-  await expect.poll(()=>page.evaluate(()=>personalLedgerRepository.all().filter(r=>r.batchId==='batch-m').map(r=>[r.id,r.refundAmount]).sort())).toEqual([['m1',371],['m2',279]]);
-  expect(spendBefore-await page.evaluate(()=>myTripSpendSnapshot().total.amountJpy)).toBe(650);
-  /* 分帳卡片跟著更新 */
   await expect(page.locator('.ledger-summary-refund')).toContainText('待退 1 張');
-  /* 取消勾選:回到待退,總花費恢復 */
-  await panel.locator('#ledgerRefundDone .ledger-refund-row',{hasText:'マツモトキヨシ'}).locator('.ledger-refund-check').click();
-  await expect(panel.locator('#ledgerRefundPending .ledger-refund-row')).toHaveCount(2);
-  stored=await page.evaluate(()=>personalLedgerRepository.all().filter(r=>r.batchId==='batch-m').map(r=>r.refundAmount));
-  expect(stored).toEqual([null,null]);
+  /* 已退分頁:一張一行「稅額 → 實退」,不留勾勾 */
+  await panel.getByRole('tab',{name:'已退 2'}).click();
+  const done=panel.locator('#ledgerRefundDone .ledger-refund-done-row',{hasText:'マツモトキヨシ'});
+  await expect(done).toContainText('稅額 ¥700');
+  await expect(done).toContainText('實退 ¥700');
+  await expect(panel.locator('#ledgerRefundDone input')).toHaveCount(0);
+  await expect(panel.locator('.ledger-refund-hero')).toContainText('¥1,340');
+  /* 點一張:改成實際退了 650,照稅額 400:300 分到兩個品項 */
+  await done.click();
+  const dialog=page.getByRole('dialog',{name:/マツモトキヨシ/});
+  await expect(dialog.locator('#ledgerRefundEditAmount')).toHaveValue('700');
+  await dialog.locator('#ledgerRefundEditAmount').fill('650');
+  await dialog.getByRole('button',{name:'儲存'}).click();
+  await expect(page.locator('#ledgerRefundEditDialog')).toHaveCount(0);
+  await expect(panel.locator('#ledgerRefundDone .ledger-refund-done-row',{hasText:'マツモトキヨシ'})).toContainText('實退 ¥650');
+  expect(await page.evaluate(()=>personalLedgerRepository.all().filter(r=>r.batchId==='batch-m').map(r=>[r.id,r.refundAmount]).sort())).toEqual([['m1',371],['m2',279]]);
+  expect(spendBefore-await page.evaluate(()=>myTripSpendSnapshot().total.amountJpy)).toBe(650);
+  /* 改回待退:回到待退分頁,總花費恢復 */
+  await panel.locator('#ledgerRefundDone .ledger-refund-done-row',{hasText:'マツモトキヨシ'}).click();
+  await page.getByRole('dialog',{name:/マツモトキヨシ/}).getByRole('button',{name:'改回待退'}).click();
+  await expect(panel.getByRole('tab',{name:'待退 2'})).toBeVisible();
+  expect(await page.evaluate(()=>personalLedgerRepository.all().filter(r=>r.batchId==='batch-m').map(r=>r.refundAmount))).toEqual([null,null]);
   expect(await page.evaluate(()=>myTripSpendSnapshot().total.amountJpy)).toBe(spendBefore);
 });
 
 test('the actual refund must be a number; the record detail shows tax and refund',async({page})=>{
   await boot(page);
   await seedRefunds(page);
-  await page.evaluate(()=>openLedgerRefundPanel());
+  await page.evaluate(()=>{ledgerRefundTab='done';openLedgerRefundPanel();});
   const panel=page.locator('#ledgerInfoSheet');
-  const done=panel.locator('#ledgerRefundDone .ledger-refund-row',{hasText:'ビックカメラ'});
-  await expect(done.locator('.ledger-refund-actual input')).toHaveValue('640');
-  await done.locator('.ledger-refund-actual input').fill('');
-  await done.locator('.ledger-refund-actual input').blur();
-  await expect(done.locator('.ledger-refund-actual-error')).toHaveText('請輸入實際退回的金額（0 或正數）');
+  await panel.locator('#ledgerRefundDone .ledger-refund-done-row',{hasText:'ビックカメラ'}).click();
+  const dialog=page.getByRole('dialog',{name:/ビックカメラ/});
+  await expect(dialog.locator('#ledgerRefundEditAmount')).toHaveValue('640');
+  await dialog.locator('#ledgerRefundEditAmount').fill('');
+  await dialog.getByRole('button',{name:'儲存'}).click();
+  await expect(dialog.locator('#ledgerRefundEditError')).toHaveText('請輸入實際退回的金額（0 或正數）');
   expect(await page.evaluate(()=>personalLedgerRepository.all().find(r=>r.id==='b1').refundAmount)).toBe(640);
+  await dialog.getByRole('button',{name:'取消'}).click();
+  await expect(page.locator('#ledgerRefundEditDialog')).toHaveCount(0);
   const rows=await page.evaluate(()=>Object.fromEntries(ledgerRecordDetailRows(personalLedgerRepository.all().find(r=>r.id==='b1'),'personal')));
   expect([rows['可退稅'],rows['稅額'],rows['實際退稅']]).toEqual(['是','¥700','¥640（信用卡 · 2026/10/24）']);
 });

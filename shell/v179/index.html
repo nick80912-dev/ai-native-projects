@@ -192,7 +192,7 @@ input,select,textarea{font-size:16px}
 .today-hero-top{grid-area:top;display:flex;align-items:center;justify-content:space-between;gap:10px;min-width:0;position:relative}
 .today-hero-top .lbl{min-width:0}.today-hero-top .loc{flex:0 0 auto;text-align:right;white-space:nowrap}
 .today-refund-reminder{display:flex;justify-content:space-between;align-items:center;gap:8px;width:100%;min-height:44px;margin-top:12px;padding:10px 0 0;border:0;border-top:1px solid var(--today-hero-summary-divider,rgba(255,255,255,.25));background:none;color:inherit;font:inherit;font-size:13px;font-weight:700;text-align:left;cursor:pointer}
-.ledger-refund-row{padding:8px 0;border-bottom:1px solid var(--entry-secondary-border,rgba(0,0,0,.08))}.ledger-refund-line{display:flex;align-items:center;gap:10px}.ledger-refund-copy{display:flex;flex-direction:column;min-width:0;flex:1 1 auto}.ledger-refund-copy small{opacity:.72;font-size:12px}.ledger-refund-amount{white-space:nowrap}.ledger-refund-check{flex:none;display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;cursor:pointer}.ledger-refund-check input{position:absolute;opacity:0;width:1px;height:1px}.ledger-refund-check span{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border:2px solid var(--accent,#167480);border-radius:7px;color:transparent;font-weight:800}.ledger-refund-check input:checked+span{background:var(--accent,#167480);color:#fff}.ledger-refund-check input:focus-visible+span{outline:2px solid var(--accent,#167480);outline-offset:2px}.ledger-refund-row.done .ledger-refund-copy b{opacity:.7}.ledger-refund-figures{flex:none;display:flex;flex-direction:column;align-items:flex-end;gap:4px}.ledger-refund-actual{display:flex;align-items:center;justify-content:flex-end;flex-wrap:wrap;gap:6px;font-size:12px}.ledger-refund-actual label{white-space:nowrap;opacity:.8}.ledger-refund-actual .ledger-sheet-input{flex:none;width:96px;max-width:96px;min-height:40px;padding:6px 8px;text-align:right}.ledger-refund-actual-error{flex-basis:100%;text-align:right;color:var(--danger,#b3261e);font-size:12px}
+.ledger-refund-tabs{margin:4px 0 10px}.ledger-refund-hero{display:flex;flex-direction:column;align-items:center;margin:4px 0 8px}.ledger-refund-hero strong{font-size:28px}.ledger-refund-hero span{font-size:13px;opacity:.75}.ledger-refund-row{padding:8px 0;border-bottom:1px solid var(--entry-secondary-border,rgba(0,0,0,.08))}.ledger-refund-line{display:flex;align-items:center;gap:10px}.ledger-refund-copy{display:flex;flex-direction:column;min-width:0;flex:1 1 auto;text-align:left}.ledger-refund-copy small{opacity:.72;font-size:12px}.ledger-refund-amount{white-space:nowrap}.ledger-refund-check{flex:none;display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;cursor:pointer}.ledger-refund-check input{position:absolute;opacity:0;width:1px;height:1px}.ledger-refund-check span{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border:2px solid var(--accent,#167480);border-radius:7px;color:transparent;font-weight:800}.ledger-refund-check input:checked+span{background:var(--accent,#167480);color:#fff}.ledger-refund-check input:focus-visible+span{outline:2px solid var(--accent,#167480);outline-offset:2px}.ledger-refund-done-row{display:flex;align-items:center;gap:10px;width:100%;min-height:52px;padding:8px 0;border:0;border-bottom:1px solid var(--entry-secondary-border,rgba(0,0,0,.08));background:none;color:inherit;font:inherit;cursor:pointer}.ledger-refund-done-figures{display:flex;flex-direction:column;align-items:flex-end;white-space:nowrap}.ledger-refund-done-figures small{opacity:.7;font-size:12px}.ledger-refund-chevron{opacity:.5;font-size:18px}.ledger-refund-edit-backdrop{position:fixed;inset:0;z-index:1200;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(0,0,0,.35)}.ledger-refund-edit{width:min(360px,100%);padding:18px;border-radius:14px;background:var(--surface,#fffaf2);color:var(--text,#1d2b2f);box-shadow:0 12px 32px rgba(0,0,0,.25)}.ledger-refund-edit h3{margin:0 0 4px;font-size:16px}.ledger-refund-edit-tax{margin:0 0 10px;font-size:13px;opacity:.75}.ledger-refund-edit-actions{display:flex;gap:8px;margin-top:14px}.ledger-refund-edit-actions .btn{flex:1;min-height:44px}.ledger-refund-actual-error{color:var(--danger,#b3261e);font-size:12px;margin:6px 0 0}
 .ledger-refund-title{display:flex;align-items:center;gap:8px}.ledger-tax-amount-field{margin-top:10px}.ledger-tax-amount-head{margin:0 0 4px}.ledger-single-refundable{margin-top:10px;max-width:140px}.ledger-legacy-coupon{margin-top:10px}
 .today-hero-main{display:flex;align-items:center;justify-content:space-between;gap:var(--space-3);min-height:66px;position:relative}
 .today-weather-art{flex:0 0 76px;text-align:center;font-size:46px;line-height:1;filter:drop-shadow(0 5px 8px var(--today-hero-weather-shadow));position:relative}
@@ -13470,24 +13470,34 @@ function ledgerRefundGroupLabel(group){var date=myTripSpendDateLabel(group.time)
    我到時候要退稅時再確認並勾選退稅單據」):一張收據一列,顯示稅額,右邊勾選框;勾了就算已退,
    「我的總花費」扣掉那張的稅額;Bar 選「扣掉稅額並可以有欄位讓我填寫我實際退了多少」——勾了之後同一列出現
    「實際退了」欄,預設是稅額,可以改。不再填退到哪裡與日期,也不另外跳畫面。 */
-function renderLedgerRefundRow(group){
-  var amount=function(value){return formatLedgerCurrencyAmount('JPY',value);},label=ledgerRefundGroupLabel(group),safe=String(group.key).replace(/[^a-zA-Z0-9_-]/g,'_');
-  var actual=group.done?'<div class="ledger-refund-actual"><label for="ledgerRefundActual_'+escapeHtml(safe)+'">實際退了</label><input class="ledger-sheet-input" id="ledgerRefundActual_'+escapeHtml(safe)+'" type="number" '+ledgerAmountInputAttrs('JPY')+' min="0" value="'+escapeHtml(ledgerAmountInputText(group.received,'JPY'))+'" onchange="setLedgerRefundActual(\''+jsString(group.key)+'\',this.value)"><span class="ledger-refund-actual-error" role="alert" hidden></span></div>':'';
-  /* v179(Bar 2026-11-03「實際退了的欄位移至稅額下方並排」):稅額與實際退了疊在同一欄、靠右對齊 */
-  return '<div class="ledger-refund-row'+(group.done?' done':'')+'" data-refund-key="'+escapeHtml(group.key)+'"><div class="ledger-refund-line"><span class="ledger-refund-copy"><b>'+escapeHtml(label)+'</b><small>'+escapeHtml(group.names.join('、'))+'</small></span>'+
-    '<span class="ledger-refund-figures"><b class="ledger-refund-amount">稅額 '+escapeHtml(amount(group.expected))+'</b>'+actual+'</span>'+
-    '<label class="ledger-refund-check"><input type="checkbox" '+(group.done?'checked':'')+' aria-label="'+escapeHtml(label+(group.done?' 已退稅':' 已退稅，勾起來'))+'" onchange="toggleLedgerRefundGroup(\''+jsString(group.key)+'\',this.checked)"><span aria-hidden="true">✓</span></label></div></div>';
+/* v179 第二版(Bar 2026-11-03 選「分頁:待退／已退」):已退的不再佔待退的版面、不留勾勾、實退不跟稅額擠在一起。
+   待退:一張一列＋右邊勾選框,勾了就移到已退(實退先等於稅額);已退:一張一行「稅額 → 實退」,點了才跳小視窗改金額或改回待退。 */
+var ledgerRefundTab='pending';
+function renderLedgerRefundPendingRow(group){
+  var label=ledgerRefundGroupLabel(group);
+  return '<div class="ledger-refund-row" data-refund-key="'+escapeHtml(group.key)+'"><div class="ledger-refund-line"><span class="ledger-refund-copy"><b>'+escapeHtml(label)+'</b><small>'+escapeHtml(group.names.join('、'))+'</small></span>'+
+    '<b class="ledger-refund-amount">稅額 '+escapeHtml(formatLedgerCurrencyAmount('JPY',group.expected))+'</b>'+
+    '<label class="ledger-refund-check"><input type="checkbox" aria-label="'+escapeHtml(label+' 已退稅，勾起來')+'" onchange="toggleLedgerRefundGroup(\''+jsString(group.key)+'\',this.checked)"><span aria-hidden="true">✓</span></label></div></div>';
+}
+function renderLedgerRefundDoneRow(group){
+  var label=ledgerRefundGroupLabel(group),amount=function(value){return formatLedgerCurrencyAmount('JPY',value);};
+  return '<button type="button" class="ledger-refund-done-row" data-refund-key="'+escapeHtml(group.key)+'" aria-label="'+escapeHtml(label+'，稅額 '+amount(group.expected)+'，實退 '+amount(group.received)+'，點一下修改')+'" onclick="openLedgerRefundEdit(\''+jsString(group.key)+'\')"><span class="ledger-refund-copy"><b>'+escapeHtml(label)+'</b><small>'+escapeHtml(group.names.join('、'))+'</small></span>'+
+    '<span class="ledger-refund-done-figures"><small>稅額 '+escapeHtml(amount(group.expected))+'</small><b>實退 '+escapeHtml(amount(group.received))+'</b></span><span class="ledger-refund-chevron" aria-hidden="true">›</span></button>';
 }
 function renderLedgerRefundPanel(summary){
   var amount=function(value){return formatLedgerCurrencyAmount('JPY',value);};
-  var help='<p class="ledger-tax-help ledger-help-text" id="ledgerRefundHelp" '+(ledgerRefundHelpOpen?'':'hidden')+'>離境時讓海關確認商品帶出國，之後由各店或退稅公司退款。退完把那張勾起來，「我的總花費」會扣掉；實際退回的錢可能因手續費比稅額少，可以在「實際退了」改。只算個人帳。</p>';
-  var hero=summary.pending.length?'<strong>'+escapeHtml(amount(summary.pendingTotal))+'</strong><span>待退 '+summary.pending.length+' 張</span>':'<strong>'+escapeHtml(amount(summary.receivedTotal))+'</strong><span>都退完了</span>';
-  var received=summary.done.length&&summary.pending.length?'<p>已退 '+escapeHtml(amount(summary.receivedTotal))+'（'+summary.done.length+' 張）</p>':'';
-  return '<div id="ledgerRefundBody">'+help+'<div class="ledger-spend-hero">'+hero+received+'</div>'+
-    (summary.pending.length?'<h3 class="ledger-spend-heading">待退</h3><div class="ledger-spend-list" id="ledgerRefundPending">'+summary.pending.map(renderLedgerRefundRow).join('')+'</div>':'')+
-    (summary.done.length?'<h3 class="ledger-spend-heading">已退</h3><div class="ledger-spend-list" id="ledgerRefundDone">'+summary.done.map(renderLedgerRefundRow).join('')+'</div>':'')+
-    (summary.groups.length?'':'<div class="empty-state"><strong>還沒有可退稅的帳</strong><div>記帳時勾「可退稅」，稅額就會列在這裡。</div></div>')+'</div>';
+  if(ledgerRefundTab==='done'&&!summary.done.length&&summary.pending.length)ledgerRefundTab='pending';
+  if(ledgerRefundTab==='pending'&&!summary.pending.length&&summary.done.length)ledgerRefundTab='done';
+  var tab=ledgerRefundTab;
+  var help='<p class="ledger-tax-help ledger-help-text" id="ledgerRefundHelp" '+(ledgerRefundHelpOpen?'':'hidden')+'>離境時讓海關確認商品帶出國，之後由各店或退稅公司退款。退完在「待退」把那張勾起來，「我的總花費」會扣掉；實際退回的錢可能因手續費比稅額少，到「已退」點那一張就能改。只算個人帳。</p>';
+  if(!summary.groups.length)return '<div id="ledgerRefundBody">'+help+'<div class="empty-state"><strong>還沒有可退稅的帳</strong><div>記帳時勾「可退稅」，稅額就會列在這裡。</div></div></div>';
+  var tabs='<div class="ledger-segment ledger-refund-tabs" role="tablist">'+[['pending','待退 '+summary.pending.length],['done','已退 '+summary.done.length]].map(function(option){var on=tab===option[0];return '<button type="button" role="tab" class="ledger-sheet-choice '+(on?'on':'')+'" aria-selected="'+(on?'true':'false')+'" onclick="setLedgerRefundTab(\''+option[0]+'\')">'+option[1]+'</button>';}).join('')+'</div>';
+  var hero=tab==='pending'?'<div class="ledger-refund-hero"><strong>'+escapeHtml(amount(summary.pendingTotal))+'</strong><span>還沒退的稅額</span></div>':'<div class="ledger-refund-hero"><strong>'+escapeHtml(amount(summary.receivedTotal))+'</strong><span>已經退回（稅額 '+escapeHtml(amount(summary.receivedExpected))+'）</span></div>';
+  var list=tab==='pending'?(summary.pending.length?'<div class="ledger-spend-list" id="ledgerRefundPending">'+summary.pending.map(renderLedgerRefundPendingRow).join('')+'</div>':'<div class="empty-state"><strong>都退完了</strong></div>'):
+    (summary.done.length?'<div class="ledger-spend-list" id="ledgerRefundDone">'+summary.done.map(renderLedgerRefundDoneRow).join('')+'</div>':'<div class="empty-state"><strong>還沒有已退的單據</strong><div>退完在「待退」把那張勾起來。</div></div>');
+  return '<div id="ledgerRefundBody">'+help+tabs+hero+list+'</div>';
 }
+function setLedgerRefundTab(tab){if(tab!=='pending'&&tab!=='done')return;ledgerRefundTab=tab;refreshLedgerRefundPanel();}
 function ledgerRefundHelpButtonHtml(){return '<button type="button" class="settings-info-button ledger-help-button" id="ledgerRefundHelpButton" aria-label="退稅說明" aria-controls="ledgerRefundHelp" aria-expanded="'+(ledgerRefundHelpOpen?'true':'false')+'" onclick="toggleLedgerRefundHelp()"><span aria-hidden="true">!</span></button>';}
 function openLedgerRefundPanel(){
   openLedgerInfoSheet('退稅',renderLedgerRefundPanel(personalRefundSummary()));
@@ -13514,18 +13524,37 @@ function ledgerRefundGroupByKey(key){return personalRefundGroups().filter(functi
 function toggleLedgerRefundGroup(key,checked){
   var group=ledgerRefundGroupByKey(key);if(!group){toast('找不到這張收據');return;}
   try{
-    if(checked)personalLedgerRepository.setRefunds(ledgerRefundUpdates(group,group.expected,'',ledgerDateInputValue(appNow())));
-    else{var updates={};group.records.forEach(function(record){if(record.refundAmount!=null)updates[record.id]={refundAmount:null};});if(Object.keys(updates).length)personalLedgerRepository.setRefunds(updates);}
+    if(checked){personalLedgerRepository.setRefunds(ledgerRefundUpdates(group,group.expected,'',ledgerDateInputValue(appNow())));toast('已移到「已退」，實退 '+formatLedgerCurrencyAmount('JPY',group.expected)+'（可到已退修改）');}
+    else clearLedgerRefundGroup(group);
   }catch(error){toast(error.message||'沒有存下來，請再試一次');}
   refreshLedgerRefundPanel();
 }
-function setLedgerRefundActual(key,value){
+function clearLedgerRefundGroup(group){var updates={};group.records.forEach(function(record){if(record.refundAmount!=null)updates[record.id]={refundAmount:null};});if(Object.keys(updates).length)personalLedgerRepository.setRefunds(updates);}
+/* 已退:點一張跳出小視窗,改實際退了多少或改回待退 */
+function openLedgerRefundEdit(key){
   var group=ledgerRefundGroupByKey(key);if(!group||!group.done)return;
-  var raw=String(value==null?'':value).trim(),amount=raw===''?NaN:ledgerAmountInputMinor(raw,'JPY');
-  var row=document.querySelector('.ledger-refund-row[data-refund-key="'+String(key).replace(/["\\]/g,'\\$&')+'"]'),error=row&&row.querySelector('.ledger-refund-actual-error');
+  closeLedgerRefundEdit();
+  var dialog=document.createElement('div');dialog.id='ledgerRefundEditDialog';dialog.className='ledger-refund-edit-backdrop';
+  dialog.innerHTML='<section class="ledger-refund-edit" role="dialog" aria-modal="true" aria-labelledby="ledgerRefundEditTitle"><h3 id="ledgerRefundEditTitle">'+escapeHtml(ledgerRefundGroupLabel(group))+'</h3><p class="ledger-refund-edit-tax">稅額 '+escapeHtml(formatLedgerCurrencyAmount('JPY',group.expected))+'</p>'+
+    '<label for="ledgerRefundEditAmount" class="ledger-sheet-label">實際退了</label><input class="ledger-sheet-input" id="ledgerRefundEditAmount" type="number" '+ledgerAmountInputAttrs('JPY')+' min="0" value="'+escapeHtml(ledgerAmountInputText(group.received,'JPY'))+'">'+
+    '<p class="ledger-refund-actual-error" id="ledgerRefundEditError" role="alert" hidden></p>'+
+    '<div class="ledger-refund-edit-actions"><button type="button" class="btn ghost" onclick="revertLedgerRefund(\''+jsString(key)+'\')">改回待退</button><button type="button" class="btn ghost" onclick="closeLedgerRefundEdit()">取消</button><button type="button" class="btn cta" onclick="saveLedgerRefundEdit(\''+jsString(key)+'\')">儲存</button></div></section>';
+  dialog.addEventListener('click',function(event){if(event.target===dialog)closeLedgerRefundEdit();});
+  document.body.appendChild(dialog);
+  var input=document.getElementById('ledgerRefundEditAmount');if(input)input.focus();
+}
+function closeLedgerRefundEdit(){var dialog=document.getElementById('ledgerRefundEditDialog');if(dialog)dialog.remove();}
+function saveLedgerRefundEdit(key){
+  var group=ledgerRefundGroupByKey(key),error=document.getElementById('ledgerRefundEditError');if(!group)return closeLedgerRefundEdit();
+  var raw=String((document.getElementById('ledgerRefundEditAmount')||{}).value||'').trim(),amount=raw===''?NaN:ledgerAmountInputMinor(raw,'JPY');
   if(!isSafeLedgerInteger(amount)||amount<0){if(error){error.textContent='請輸入實際退回的金額（0 或正數）';error.hidden=false;}return;}
   try{personalLedgerRepository.setRefunds(ledgerRefundUpdates(group,amount,group.method,group.date||ledgerDateInputValue(appNow())));}catch(err){if(error){error.textContent=err.message||'沒有存下來，請再試一次';error.hidden=false;}return;}
-  refreshLedgerRefundPanel();
+  closeLedgerRefundEdit();refreshLedgerRefundPanel();
+}
+function revertLedgerRefund(key){
+  var group=ledgerRefundGroupByKey(key);
+  if(group){try{clearLedgerRefundGroup(group);}catch(error){toast(error.message||'沒有改回來，請再試一次');return;}}
+  closeLedgerRefundEdit();refreshLedgerRefundPanel();toast('已改回待退');
 }
 /* 離境當天(旅程最後一天)今天頁 TODAY 卡片下方一行提醒;Bar:「不需要額外的卡片」 */
 function departureRefundReminderHtml(isLastDay){
