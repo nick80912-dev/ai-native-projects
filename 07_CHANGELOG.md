@@ -1,5 +1,23 @@
 # 07 版本紀錄
 
+## 2026-11-03 — v180 可退稅移到金額下方，勾了跳出稅額視窗
+
+- **來源**：Bar 2026-11-03：
+  - 「可退稅按鈕改置上方，避免一些手key的單據漏掉可退稅與輸入稅額」。
+  - 看過畫面後：「勾選後改成跳出輸入稅額的視窗供輸入」、「看收據上的⋯⋯那行說明可以拿掉」。
+- **使用上**：
+  - 單品項：「可退稅」在金額正下方，不用打開「其他資訊」。勾了跳出「可退稅：輸入稅額」視窗，提示是照稅率算的稅額，空白按確定就照稅率估算；按取消就不勾，點視窗外只關視窗。
+  - 填好後「可退稅」旁邊顯示「稅額 ¥X ✎」（空白時「稅額 約 ¥X」，跟著金額變），點一下再改。「其他資訊 → 稅」不再重複稅額欄與可退稅。
+  - 多品項：勾第一項「可退稅」時跳出同一個視窗，填整張收據的稅額；之後再勾別的品項不再跳出。品項清單下方顯示「可退稅 稅額 ¥X ✎」，「稅（選填）」裡不再重複稅額欄。
+  - 沒有開啟可退稅的旅程（Tax Free = no）不顯示。
+- **做法**：`renderLedgerSingleRefundRow()`（放進 `renderLedgerSingleItemPrimary()`）、`renderLedgerMultiRefundTax()`、`renderLedgerTaxSummaryButton()`／`ledgerTaxSummaryText()`、`openLedgerTaxDialog()`／`confirmLedgerTaxDialog()`／`cancelLedgerTaxDialog()`／`closeLedgerTaxDialog()`；稅額欄抽成 `renderLedgerTaxAmountField()`，`ledgerTaxAmountOnTop()` 決定放上面還是留在稅區塊。視窗沿用退稅小視窗的樣式與層級（150）。資料欄位與個人備份 v11 不變。
+- **版本**：
+  - forward bump v179→v180；`builtin-snapshot.js` 以 v179 asset 離線重產，除版本外不變。
+  - 發布說明視窗為 `v180` + `['v179','v178','v177','v176']`（v175 滾出）。
+  - `tests/trip-lifecycle-wiring.test.js` 加入已發布 v179 三件組的 hash。
+- **測試**：新增 `tests/browser/refund-quick-v180.spec.js`（4 項）：單品項位置、視窗、確定與再改、存檔；取消與點外面、照稅率估算跟著金額、格式錯誤、關表單一起關；多品項只問一次、取消那一項、存檔稅額；沒有可退稅的旅程不顯示。`tests/ledger-calculator.test.js` 一項斷言改成對 `renderLedgerTaxAmountField`。
+- **回滾**：合併前關閉 PR；發布後依 `16_OPS_PLAYBOOK.md` §A1 退回 `production-v179`（`6f8658a`）的部署，再往前 bump。
+
 ## 2026-11-03 — v179 已上線 main，tag `production-v179`（待 Bar 手機審查）
 
 - Bar 看過三輪畫面後回「好」。這次照 Bar 2026-11-03 的做法：畫面確認後才跑完整測試與自動檢查。
