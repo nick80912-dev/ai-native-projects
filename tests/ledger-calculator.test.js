@@ -151,7 +151,8 @@ assert.match(singleFieldSource,/ledger-amount-field-head[\s\S]*renderLedgerCalcu
 assert.match(multiFieldSource,/renderLedgerCalculatorTrigger\(\{type:'item',key:item\.key\}/,'every dynamic item amount receives the same trigger renderer');
 /* v178(Bar 2026-11-01):優惠券欄拿掉、換成稅額;稅區塊沒有計算機按鈕 */
 assert.doesNotMatch(discountSource,/renderLedgerCalculatorTrigger/,'the tax section has no calculator trigger once the coupon field is gone');
-assert.match(discountSource,/id="ledgerTaxAmount"/,'the tax section has the tax amount field');
+/* v180(Bar 2026-11-03):稅額欄抽成 renderLedgerTaxAmountField,可退稅時改到上方的稅額視窗 */
+assert.match(discountSource,/renderLedgerTaxAmountField\(draft,helpText,''\)/,'the tax section still shows the tax amount field when it is not refundable');
 assert.doesNotMatch(discountSource,/ledgerCustomTaxRate[\s\S]{0,300}renderLedgerCalculatorTrigger/,'tax rate never receives a calculator trigger');
 
 assert.match(sheetMarkup,/role="dialog"[^>]*aria-modal="true"[^>]*aria-labelledby="ledgerCalculatorTitle"/,'calculator is an accessible modal sheet');
