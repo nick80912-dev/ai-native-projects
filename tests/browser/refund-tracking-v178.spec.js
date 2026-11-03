@@ -173,6 +173,34 @@ test('the actual refund must be a number; the record detail shows tax and refund
   expect([rows['可退稅'],rows['稅額'],rows['實際退稅']]).toEqual(['是','¥700','¥640（信用卡 · 2026/10/24）']);
 });
 
+/* v179(Bar 2026-11-03 選「多一個『不退』分頁」):決定不退的單據移到「不退」,不算待退、不影響花費,可以移回待退 */
+test('a receipt you will not claim moves to 不退 and can come back',async({page})=>{
+  await boot(page);
+  await seedRefunds(page);
+  const spendBefore=await page.evaluate(()=>myTripSpendSnapshot().total.amountJpy);
+  await page.evaluate(()=>openLedgerRefundPanel());
+  const panel=page.locator('#ledgerInfoSheet');
+  await expect(panel.getByRole('tab',{name:'不退 0'})).toBeVisible();
+  await panel.locator('#ledgerRefundPending .ledger-refund-row',{hasText:'ドン'}).locator('.ledger-refund-open').click();
+  await page.getByRole('dialog',{name:/ドン/}).getByRole('button',{name:'不退這張'}).click();
+  await expect(panel.locator('#ledgerRefundPending .ledger-refund-row')).toHaveCount(1);
+  await expect(panel.locator('.ledger-refund-hero')).toContainText('¥700');
+  await expect(page.locator('.ledger-summary-refund')).toContainText('待退 1 張');
+  const stored=await page.evaluate(()=>{const r=personalLedgerRepository.all().find(x=>x.id==='d1');return [r.refundAmount,r.refundMethod,r.isTaxFree];});
+  expect(stored).toEqual([null,'不退',true]);
+  expect(await page.evaluate(()=>myTripSpendSnapshot().total.amountJpy)).toBe(spendBefore);
+  /* 離境提醒也不算這張 */
+  expect(await page.evaluate(()=>departureRefundReminderHtml(true))).toContain('1 張收據待退稅（預計 ¥700）');
+  await panel.getByRole('tab',{name:'不退 1'}).click();
+  const skipped=panel.locator('#ledgerRefundSkipped .ledger-refund-done-row');
+  await expect(skipped).toHaveCount(1);
+  await expect(skipped).toContainText('不退');
+  await skipped.click();
+  await page.getByRole('dialog',{name:/ドン/}).getByRole('button',{name:'移回待退'}).click();
+  await expect(panel.getByRole('tab',{name:'待退 2'})).toHaveAttribute('aria-selected','true');
+  expect(await page.evaluate(()=>{const r=personalLedgerRepository.all().find(x=>x.id==='d1');return [r.refundAmount,r.refundMethod];})).toEqual([null,'']);
+});
+
 test('on the last trip day the TODAY card says how many receipts still wait for a refund',async({page})=>{
   await boot(page,'2026-10-23T12:00:00+09:00');
   await seedRefunds(page);
