@@ -5,15 +5,15 @@
 
 ## 📌 現況
 
-**正式站是 v179**（2026-11-03 發布，PR #136，`main` `6f8658a`），**最新正式 tag 是 `production-v179`**（v157–v179 每一版都有 tag）。旅程（10/18–10/23）已結束；回程後的修正、#59 收據照片、#62 不限日本、#61 收據辨識（v171–v177）與 #63 退稅追蹤（v178–v179）都已上線；v180 把「可退稅」移到金額下方、勾了跳出稅額視窗（Bar 2026-11-03）開發中。每批一版、逐版送 main 給 Bar 手機審查（Bar 2026-10-30 選定）；**改畫面時先截圖給 Bar 確認，確認後才跑完整測試與自動檢查**（Bar 2026-11-03）；上線後用 production-tags workflow 建 tag。
+**正式站是 v180**（2026-11-03 發布，PR #139，`main` `dc9f7ae`），**最新正式 tag 是 `production-v180`**（v157–v180 每一版都有 tag）。旅程（10/18–10/23）已結束；回程後的修正、#59 收據照片、#62 不限日本、#61 收據辨識（v171–v177）與 #63 退稅追蹤（v178–v180）都已上線。每批一版、逐版送 main 給 Bar 手機審查（Bar 2026-10-30 選定）；**改畫面時先截圖給 Bar 確認，確認後才跑完整測試與自動檢查**（Bar 2026-11-03）；上線後用 production-tags workflow 建 tag。
 
 | 項目 | 值 |
 |---|---|
-| **正式站** | `https://trippilot-jp.netlify.app/` — **SW v179** |
-| **`origin/main`** | `6f8658a`（PR [#136](https://github.com/nick80912-dev/ai-native-projects/pull/136)） |
-| **`dev`** | 與 `main` 同為 v179（PR [#135](https://github.com/nick80912-dev/ai-native-projects/pull/135) 合併為 `9d6ec5a`） |
+| **正式站** | `https://trippilot-jp.netlify.app/` — **SW v180** |
+| **`origin/main`** | `dc9f7ae`（PR [#139](https://github.com/nick80912-dev/ai-native-projects/pull/139)） |
+| **`dev`** | 與 `main` 同為 v180（PR [#138](https://github.com/nick80912-dev/ai-native-projects/pull/138) 合併為 `b11c42f`） |
 | 個人備份格式 | **v11**（v178 起；`PERSONAL_STATE_VERSION=11`，個人帳多了稅額與實際退稅；相容策略見 `docs/personal-state-compatibility.md`） |
-| 最新正式 tag | **`production-v179`** → `6f8658a`（v157–v179 都有 tag；上一個 `production-v178` → `e894f12`） |
+| 最新正式 tag | **`production-v180`** → `dc9f7ae`（v157–v180 都有 tag；上一個 `production-v179` → `6f8658a`） |
 | shell 世代 | repo 只保留 v154 起（ADR 0019 增補段） |
 | CI | `sanity`／`browser-qa` 跑 `ubuntu-latest`（2026-10-30 驗過 Ubuntu 26.04 後解除釘版，backlog #54）；browser-qa 時限 25 分鐘（2026-11-01 由 15 放寬，PR #127） |
 

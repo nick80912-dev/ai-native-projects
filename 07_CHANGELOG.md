@@ -1,6 +1,16 @@
 # 07 版本紀錄
 
-## 2026-11-03 — v180 可退稅移到金額下方，勾了跳出稅額視窗
+## 2026-11-03 — v180 已上線 main，tag `production-v180`（待 Bar 手機審查）
+
+- Bar 看過兩輪畫面（先是稅額欄並排，再改成跳出視窗、拿掉說明）後回「好」；畫面確認後才跑完整測試與自動檢查。
+- PR [#138](https://github.com/nick80912-dev/ai-native-projects/pull/138) 在 head `f88971c` 的 sanity／browser-qa 全綠後合併進 `dev`（`b11c42f`）。
+- PR [#139](https://github.com/nick80912-dev/ai-native-projects/pull/139)（並帶 v179 發布紀錄 PR #137）合併 `dev` → `main`，merge commit **`dc9f7ae`**；七項檢查全綠。
+- 本機完整 Chromium 444 passed，只有已知只在本機失敗的兩項。
+- **線上核對**：正式站 `sw.js` 為 `SW_VERSION='v180'`。全新 Chromium 開正式站，`APP_VERSION` 為 v180、只剩 `okayama-trip-v180` 快取，發布說明為「可退稅移到金額下方」。稅額視窗的程式在線上、金額下方有可退稅、視窗沒有收據說明；沒有 pageerror。
+- **tag**：production-tags workflow 建立 `production-v180` → `dc9f7ae`，`git ls-remote` 核對相符。
+- 回滾：依 `16_OPS_PLAYBOOK.md` §A1 Publish `commit_ref` = `6f8658a`（`production-v179`）的部署，再往前 bump。
+
+## 2026-11-03 — v180 可退稅移到金額下方，勾了跳出稅額視窗（已上線 main，見上）
 
 - **來源**：Bar 2026-11-03：
   - 「可退稅按鈕改置上方，避免一些手key的單據漏掉可退稅與輸入稅額」。
