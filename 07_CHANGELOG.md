@@ -1,6 +1,16 @@
 # 07 版本紀錄
 
-## 2026-11-03 — v179 退稅清單改成點一下就好
+## 2026-11-03 — v179 已上線 main，tag `production-v179`（待 Bar 手機審查）
+
+- Bar 看過三輪畫面後回「好」。這次照 Bar 2026-11-03 的做法：畫面確認後才跑完整測試與自動檢查。
+- PR [#135](https://github.com/nick80912-dev/ai-native-projects/pull/135) 在 head `b603c00` 的 sanity／browser-qa 全綠後合併進 `dev`（`9d6ec5a`）。過程中 `05898ed` 的 sanity 曾因小視窗層級蓋過短通知而失敗，`daf667a` 修好。
+- PR [#136](https://github.com/nick80912-dev/ai-native-projects/pull/136)（並帶 v178 發布紀錄 PR #134）合併 `dev` → `main`，merge commit **`6f8658a`**；合併 tree `c4d9865` 與 `9d6ec5a` 相同。
+- 本機完整 Chromium 440 passed，只有已知只在本機失敗的兩項。
+- **線上核對**：正式站 `sw.js` 為 `SW_VERSION='v179'`。全新 Chromium 開正式站，`APP_VERSION` 為 v179、只剩 `okayama-trip-v179` 快取，發布說明為「退稅清單改成點一下就好」。分頁與「不退」的程式在線上，v178 的記錄退稅畫面已移除；沒有 pageerror。
+- **tag**：production-tags workflow 建立 `production-v179` → `6f8658a`，`git ls-remote` 核對相符。
+- 回滾：依 `16_OPS_PLAYBOOK.md` §A1 Publish `commit_ref` = `e894f12`（`production-v178`）的部署，再往前 bump。
+
+## 2026-11-03 — v179 退稅清單改成點一下就好（已上線 main，見上）
 
 - **來源**：Bar 2026-11-03：
   - 「不需做到那麼複雜與精細，我只需要知道該張單據稅額多少，然後整理出一個退稅清單，我到時候要退稅時再確認並勾選退稅單據」；追問後選「扣掉稅額並可以有欄位讓我填寫我實際退了多少」，離境提醒與分帳卡片的「退稅」列保留。
