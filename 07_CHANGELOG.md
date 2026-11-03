@@ -1,5 +1,36 @@
 # 07 版本紀錄
 
+## 2026-11-03 — v179 退稅清單改成點一下就好
+
+- **來源**：Bar 2026-11-03：
+  - 「不需做到那麼複雜與精細，我只需要知道該張單據稅額多少，然後整理出一個退稅清單，我到時候要退稅時再確認並勾選退稅單據」；追問後選「扣掉稅額並可以有欄位讓我填寫我實際退了多少」，離境提醒與分帳卡片的「退稅」列保留。
+  - 看過畫面再調整：「實際退了的欄位移至稅額下方並排」→ 覺得擁擠、已退越來越長、勾勾一直留著，改選「分頁：待退／已退」→ 不退的單據要有地方放，選「多一個『不退』分頁」→「不需要勾選框，我只都需要點選後再決定是否要退稅與退多少」。
+  - 同時裁定：畫面位置與功能確認完才跑自動檢查與完整測試。
+- **使用上**：
+  - 分帳 → 退稅分成「待退／已退／不退」三個分頁，分頁上寫張數；上方是該分頁的金額（還沒退的稅額、已經退回的金額）。
+  - 每張收據一列：店名、品項、稅額、›。點一張跳出小視窗：
+    - 待退：「實際退了」先帶入稅額，可以改，按「已退」移到已退並從「我的總花費」扣掉；按「不退」移到不退。
+    - 已退：改金額後「儲存」，或「改回待退」。
+    - 不退：「移回待退」。
+  - 不退的單據不算待退金額與離境提醒，花費不變。本身免稅（結帳時已扣稅）或稅額 0 的單據不會出現在清單。記帳時的「可退稅」照舊決定要不要列進清單。
+  - 不再跳出「記錄退稅」畫面，也不用填退到哪裡與日期。
+- **做法**：
+  - `renderLedgerRefundPendingRow()`／`renderLedgerRefundDoneRow()`／`renderLedgerRefundSkippedRow()`、`setLedgerRefundTab()`、`openLedgerRefundEdit()`（依狀態給不同按鈕）、`saveLedgerRefundEdit()`、`skipLedgerRefund()`、`revertLedgerRefund()`、`refreshLedgerRefundPanel()`（就地重畫）。
+  - 移除 v178 的 `openLedgerRefundRecord()`、`saveLedgerRefund()`、`clearLedgerRefund()`、`setLedgerRefundMethod()` 與退款方式選項。
+  - 「不退」記成 `refundMethod='不退'`、`refundAmount` 仍是 `null`（v178 的 App 讀到會當待退，資料不會丟）。
+  - 小視窗層級 150：在清單（135）之上、短通知（200）之下，不擋「已移到已退」的通知。
+  - 資料欄位與個人備份 v11 不變。
+- **版本**：
+  - forward bump v178→v179；`builtin-snapshot.js` 以 v178 asset 離線重產，除版本外不變。
+  - 發布說明視窗為 `v179` + `['v178','v177','v176','v175']`（v174 滾出）。
+  - `tests/trip-lifecycle-wiring.test.js` 加入已發布 v178 三件組的 hash。
+- **測試**：`tests/browser/refund-tracking-v178.spec.js` 改寫兩項並新增一項（10 項）：
+  - 三個分頁與張數、清單沒有勾選框和輸入框；
+  - 點一張改實際退了多少、照稅額比例分到品項、總花費扣掉、已退再改金額與改回待退；
+  - 不退與移回待退，不退不算離境提醒；
+  - 金額不是數字時不存。
+- **回滾**：合併前關閉 PR；發布後依 `16_OPS_PLAYBOOK.md` §A1 退回 `production-v178`（`e894f12`）的部署，再往前 bump。
+
 ## 2026-11-01 — v178 已上線 main，tag `production-v178`（待 Bar 手機審查）
 
 - PR [#132](https://github.com/nick80912-dev/ai-native-projects/pull/132) 在 head `7e8e32d` 的 sanity／browser-qa 全綠後合併進 `dev`（`893e1fb`）。第一次 push `04ceb0e` 的 browser-qa 有 4 項舊斷言（優惠券欄、「免稅品」、舊標題）沒改到而失敗，`7e8e32d` 改好後全綠。
