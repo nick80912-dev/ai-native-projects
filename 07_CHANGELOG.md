@@ -5,7 +5,7 @@
 - **來源**：Bar 2026-11-03：「不需做到那麼複雜與精細，我只需要知道該張單據稅額多少，然後整理出一個退稅清單，我到時候要退稅時再確認並勾選退稅單據」。追問後選「扣掉稅額並可以有欄位讓我填寫我實際退了多少」，離境提醒與分帳卡片的「退稅」列保留。
 - **使用上**：
   - 分帳 → 退稅：每張收據一列，顯示店名、品項與稅額，右邊一個勾選框。
-  - 勾起來＝已退，「我的總花費」扣掉那張的稅額；同一列出現「實際退了」，預設是稅額，被扣手續費時可以改。取消勾選就回到待退。
+  - 勾起來＝已退，「我的總花費」扣掉那張的稅額；「實際退了」出現在稅額正下方、靠右對齊（Bar 2026-11-03「實際退了的欄位移至稅額下方並排」），預設是稅額，被扣手續費時可以改。取消勾選就回到待退。
   - 清單就地更新，不再跳出「記錄退稅」畫面，也不用填退到哪裡與日期。
 - **做法**：`renderLedgerRefundRow()`、`toggleLedgerRefundGroup()`、`setLedgerRefundActual()`、`refreshLedgerRefundPanel()`。移除 `openLedgerRefundRecord()`、`saveLedgerRefund()`、`clearLedgerRefund()`、`setLedgerRefundMethod()` 與退款方式選項。資料欄位不變：勾選時 `refundAmount`＝稅額、`refundDate`＝當天、`refundMethod` 空白；v178 記過的方式與日期照樣顯示在帳的明細。個人備份仍是 v11。
 - **版本**：forward bump v178→v179；`builtin-snapshot.js` 以 v178 asset 離線重產，除版本外不變。發布說明視窗為 `v179` + `['v178','v177','v176','v175']`（v174 滾出）。`tests/trip-lifecycle-wiring.test.js` 加入已發布 v178 三件組的 hash。
