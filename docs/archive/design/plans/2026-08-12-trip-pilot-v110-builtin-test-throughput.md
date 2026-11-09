@@ -233,7 +233,7 @@ Rejected experiment commit: `docs(qa): retain deterministic Playwright worker`.
 
 **Files:**
 - Modify: actual release/status/architecture/test documents and, only if runtime externalization ships, App/SW version and release notes.
-- Modify: `docs/superpowers/plans/2026-08-12-trip-pilot-v110-builtin-test-throughput.md` (filename retained from the original reservation)
+- Modify: `docs/archive/design/plans/2026-08-12-trip-pilot-v110-builtin-test-throughput.md` (filename retained from the original reservation)
 
 **Interfaces:**
 - Consumes: Tasks 1–4 evidence.

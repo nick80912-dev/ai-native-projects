@@ -82,7 +82,8 @@ tools/                     檢查腳本(文件標題、runtime 版本、活文�
 .github/workflows/         Sanity CI(qa.yml,main／dev push 與 PR 都跑 sanity 與 browser-qa)
 .mcp.json                  chrome-devtools MCP server 宣告(本機除錯工具,不進 runtime)
 docs/                      現行契約與手冊(personal-state-compatibility、personal-ledger-export、new-trip-handbook)、device-acceptance-log、qa/ 效能證據
-docs/superpowers/          仍被引用的功能設計規格與實作計畫(未被引用者已於 2026-10-16 刪除,可由 git 歷史取回)
+docs/superpowers/          仍被活文件、程式或測試引用的設計規格與實作計畫(7 份;未被引用者 2026-10-16 刪除,可由 git 歷史取回)
+docs/archive/              封存:2026-10-15 以前的版本紀錄原文、只剩歷史文件引用的舊設計稿(design/,2026-11-09 搬入)
 schema.js / validator.js   資料規格 SSoT / 防錯防線(Tier 1 原始碼)
 index.html / app-version.js v110 byte-locked bridge 正式入口
 shell/v182/                current App document／version／generated BUILTIN generation

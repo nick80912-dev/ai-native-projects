@@ -44,7 +44,7 @@
 
 **Files:**
 - Inspect: `日本行程V2預覽.html`
-- Inspect: `docs/superpowers/specs/2026-07-07-home-next-stop-design.md`
+- Inspect: `docs/archive/design/specs/2026-07-07-home-next-stop-design.md`
 - Inspect: `07_CHANGELOG.md`
 
 **Interfaces:**
@@ -66,7 +66,7 @@ Expected: output includes `getChecks`, `onCheck`, `findToday`, `renderToday`, an
 Run:
 
 ```powershell
-rg -n "schema.js|Google Sheet|CMS writeback|旅途中 tab|GPS|AI recommendation" "docs/superpowers/specs/2026-07-07-home-next-stop-design.md"
+rg -n "schema.js|Google Sheet|CMS writeback|旅途中 tab|GPS|AI recommendation" "docs/archive/design/specs/2026-07-07-home-next-stop-design.md"
 ```
 
 Expected: output confirms these are excluded or constrained by the spec.

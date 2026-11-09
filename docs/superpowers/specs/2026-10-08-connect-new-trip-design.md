@@ -127,7 +127,7 @@
 6. **限定日本（日圓↔台幣）**：確認後，其他國家另案處理。
 7. **讓朋友也能用「保存到過往旅程」**：要向 Google 申請 OAuth 對外發布，或把朋友加進測試使用者。可以另案處理，不影響連接功能。
 
-參考：ADR 0003、0006、0007、0016、0019、0020；`docs/superpowers/specs/2026-09-30-personal-trip-lifecycle-design.md`；`14_FILE_TIERS_AND_GATE.md`；`15_AI_EXECUTION_RULES.md`；`16_OPS_PLAYBOOK.md` §A2 與 BUILTIN 刷新章節；`tasks/backlog.md` #12、#54。
+參考：ADR 0003、0006、0007、0016、0019、0020；`docs/archive/design/specs/2026-09-30-personal-trip-lifecycle-design.md`；`14_FILE_TIERS_AND_GATE.md`；`15_AI_EXECUTION_RULES.md`；`16_OPS_PLAYBOOK.md` §A2 與 BUILTIN 刷新章節；`tasks/backlog.md` #12、#54。
 
 ## 10. 實作紀錄（2026-10-08，v150 候選）
 
