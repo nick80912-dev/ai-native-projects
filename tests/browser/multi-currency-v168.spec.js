@@ -29,6 +29,8 @@ async function openPersonalForm(page){
 
 test('a USD trip records to the cent and shows US$',async({page})=>{
   await boot(page,{currency:'USD',exchangeRate:'32',ledgerDefaultCurrency:'USD'});
+  /* v182(Bar 2026-11-09 選「匯率寫法統一」):分帳卡片、記帳表單、設定都寫「1 USD ≈ NT$32」 */
+  await expect(page.locator('.ledger-status-pill')).toHaveText('1 USD ≈ NT$32');
   await openPersonalForm(page);
   await expect(page.locator('#ledgerEntrySheet .ledger-currency-option')).toHaveText(['USD','TWD']);
   await expect(page.locator('#ledgerEntrySheet .ledger-rate')).toHaveText('1 USD ≈ NT$32');
@@ -122,7 +124,7 @@ test('the Okayama trip (JPY) looks exactly as before',async({page})=>{
   expect(await page.evaluate(()=>[tripLocalCurrencyCode(),formatLedgerCurrencyAmount('JPY',1500),formatLedgerCurrencyAmount('TWD',315)])).toEqual(['JPY','¥1,500','NT$315']);
   await openPersonalForm(page);
   await expect(page.locator('#ledgerEntrySheet .ledger-currency-option')).toHaveText(['JPY','TWD']);
-  await expect(page.locator('#ledgerEntrySheet .ledger-rate')).toHaveText(/^1 JPY = NT\$[\d.]+$/);
+  await expect(page.locator('#ledgerEntrySheet .ledger-rate')).toHaveText(/^1 JPY ≈ NT\$[\d.]+$/);   // v182:匯率寫法統一成「≈」
   await expect(page.locator('#ledgerAmount')).toHaveAttribute('inputmode','numeric');
   await page.evaluate(()=>closeLedgerEntrySheet());
   await page.evaluate(()=>openSettings('ledger'));

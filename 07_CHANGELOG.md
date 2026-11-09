@@ -1,6 +1,29 @@
 # 07 版本紀錄
 
-## 2026-11-09 — v181 可退稅移到計算機旁，稅額放在明細同一列
+## 2026-11-09 — v182 匯率寫法統一；清掉沒用到的程式（#57 重新稽核）
+
+- **來源**：Bar 2026-11-09「接著做 #57 低優先項目」。#57 的低優先項目只留下編號（B4–B7、T11、T13、T15、T18–T21、L9–L28），出發前稽核報告的內容沒有存進專案；Bar 選「重新稽核再挑」。用 v181 重新走過旅程中與旅程結束後的各頁、按鈕大小、字級與程式，列出五項，Bar 選了其中兩項：
+  - **1 匯率寫法統一**：分帳卡片寫「JPY 1 ≈ TWD 0.21」、記帳表單與設定寫「1 JPY = NT$0.21」，統一成「1 JPY ≈ NT$0.21」。
+  - **4 清掉沒用的程式**：`navQuery`、`multiItemTaxMultiplier`、`selectRecentLedgerExpenses`、`emptyDayProgress`、`hasDayProgress` 五個函式全專案沒有呼叫者，刪除。
+  - 沒選的：小字放大到 11px（#29）、小按鈕放大到 44px（#28、#41），留在原 backlog 項目。
+- **版本**：
+  - forward bump v181→v182；`builtin-snapshot.js` 以 v181 asset 離線重產，除版本外不變。
+  - 發布說明視窗為 `v182` + `['v181','v180','v179','v178']`（v177 滾出）。
+  - `tests/trip-lifecycle-wiring.test.js` 加入已發布 v181 三件組的 hash。
+- **測試**：`tests/browser/multi-currency-v168.spec.js` 改成新寫法，並加上分帳卡片的匯率字樣。
+- **回滾**：合併前關閉 PR；發布後依 `16_OPS_PLAYBOOK.md` §A1 退回 `production-v181`（`96111fd`）的部署，再往前 bump。
+
+## 2026-11-09 — v181 已上線 main，tag `production-v181`（待 Bar 手機審查）
+
+- Bar 看過兩輪畫面（可退稅移到計算機旁 → 稅額移到明細同一列靠右）後回「okay」。
+- PR [#141](https://github.com/nick80912-dev/ai-native-projects/pull/141) 在 head `f5e5162` 的 sanity／browser-qa 全綠後合併進 `dev`（`c4745ca`）。
+- PR [#142](https://github.com/nick80912-dev/ai-native-projects/pull/142)（並帶 v180 發布紀錄 PR #140）合併 `dev` → `main`，merge commit **`96111fd`**；七項檢查全綠。
+- 本機完整 Chromium 445 passed，只有已知只在本機失敗的 `personal-ledger-export`。
+- **線上核對**：正式站 `sw.js` 為 `SW_VERSION='v181'`。全新 Chromium 開正式站，`APP_VERSION` 為 v181、只剩 `okayama-trip-v181` 快取，發布說明為「可退稅移到計算機旁」；可退稅在計算機旁、稅額在明細標題列的程式都在線上；沒有 pageerror。
+- **tag**：production-tags workflow 建立 `production-v181` → `96111fd`，`git ls-remote` 核對相符。
+- 回滾：依 `16_OPS_PLAYBOOK.md` §A1 Publish `commit_ref` = `dc9f7ae`（`production-v180`）的部署，再往前 bump。
+
+## 2026-11-09 — v181 可退稅移到計算機旁，稅額放在明細同一列（已上線 main，見上）
 
 - **來源**：Bar 2026-11-09：「介面部分將可退稅按鈕移至計算機旁」；看過畫面後「稅額欄位縮排至明細那欄靠右對齊，避免表單再變長」。同一天回報岡山 Apps Script 已換成最新版（v176–v177 的收據免稅、稅率與稅額辨識生效）。
 - **使用上**：
