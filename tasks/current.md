@@ -23,6 +23,7 @@
 
 ## 🔜 接下來
 
-1. 依 `tasks/backlog.md` 順序：#57 低優先與清理、#58 Logo 與圖示（需 Bar 挑稿）、#55 繪本主題研究，以及長期項目（#3、#12、#20、#25 等）。
+1. 專案整理（Bar 2026-11-09）：舊版本資料夾只留最近三代、待辦清單只留還沒做的、版本紀錄瘦身、文件健檢與舊設計稿歸檔。
+2. 之後依 `tasks/backlog.md`：#58 Logo 與圖示（需 Bar 挑稿）、#63 團體帳退稅（等 Bar 決定），以及 #50、#52、#53 小問題與長期項目（#3、#20、#25、#38）。#55 繪本主題與 #28／#29／#41 已由 Bar 關閉。
 
 > 正式發布仍遵守 §E：PR 與 Actions 通過後才 merge；Netlify 線上驗證通過後才建立 production tag。tag 用 GitHub Actions 的 **production-tags**（`16_OPS_PLAYBOOK.md` §A5）。
