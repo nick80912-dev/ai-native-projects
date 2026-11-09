@@ -31,7 +31,7 @@ test('a USD trip records to the cent and shows US$',async({page})=>{
   await boot(page,{currency:'USD',exchangeRate:'32',ledgerDefaultCurrency:'USD'});
   await openPersonalForm(page);
   await expect(page.locator('#ledgerEntrySheet .ledger-currency-option')).toHaveText(['USD','TWD']);
-  await expect(page.locator('#ledgerEntrySheet .ledger-rate')).toHaveText('1 USD = NT$32');
+  await expect(page.locator('#ledgerEntrySheet .ledger-rate')).toHaveText('1 USD ≈ NT$32');
   await expect(page.locator('#ledgerAmount')).toHaveAttribute('inputmode','decimal');
   await expect(page.locator('#ledgerEntrySheet label[for="ledgerAmount"]')).toContainText('金額 (US$)');
   await page.locator('#ledgerAmount').fill('12.50');
@@ -92,7 +92,7 @@ test('a KRW trip names its currency in settings and keeps whole numbers',async({
   await boot(page,{currency:'KRW',exchangeRate:'0.024',ledgerDefaultCurrency:'KRW'});
   await page.evaluate(()=>openSettings('ledger'));
   const panel=page.locator('#settingsOverlay');
-  await expect(panel).toContainText('目前匯率：1 KRW = NT$0.024');
+  await expect(panel).toContainText('目前匯率：1 KRW ≈ NT$0.024');
   await expect(panel).toContainText('1 韓元可換算多少台幣');
   await expect(panel.locator('.settings-currency-option').first()).toHaveText('KRW 韓元');
   await page.evaluate(()=>closeSettings());
