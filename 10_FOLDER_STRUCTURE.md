@@ -11,7 +11,7 @@ app-version.js          v110 bridge 顯示版本（不代表 current generation�
 shell/v182/index.html   current App:UI 殼 + CSS + 內嵌 JS（依區塊分層，見下）
 shell/v182/app-version.js current App 顯示版本（必須與 sw.js 的 SW_VERSION 一致）
 shell/v182/builtin-snapshot.js 工具產生、與 current App／SW 同版的 BUILTIN 離線資產（Tier 3，禁手改）
-shell/<較舊世代>/       已發布、不可就地修改的較舊 generation；只保留最近幾代（目前 v154 起，見下方說明）
+shell/<較舊世代>/       已發布、不可就地修改的較舊 generation；只保留最近三代（目前 v180 起，見下方說明）
 navigation-intent.js    明確導覽目的地的 session-only state module
 diagnostic-impact.js    AppLog 原始紀錄的 display-only impact projection
 today-view.js           Today Hero 採買摘要的純 model／renderer module
@@ -46,7 +46,7 @@ netlify.toml            Netlify 快取 header 設定
 .ai-manifest.json       AI 導航檔(接手第一步只讀這份)
 ```
 > App UI、DOM adapter 與多數流程維持在單一 current generation document `shell/v182/index.html`；獨立 runtime modules 由 `runtime-assets.json` 登錄並以 `tools/check-runtime-assets.js` 驗證入口、SW 與文件一致性。root bridge 不是日常功能修改目標。
-> **舊 generation 保留範圍(2026-10-16 Bar 核准)**:v111–v153 共 43 個舊世代資料夾已刪除,repo 只保留最近幾代(目前 v154 起,至少 current 與前一代)。已安裝的 worker 對自己的 SHELL 一律 cache-first,只在自己 install 時才從網路抓 `shell/vNNN/`;Netlify 回滾用的是部署快照。刪掉的內容仍在 git 歷史與各 `production-vNNN` tag。詳見 ADR 0019 增補段。
+> **舊 generation 保留範圍(2026-10-16 Bar 核准)**:v111–v153 共 43 個舊世代資料夾已刪除;2026-11-09 Bar 再核准刪除 v154–v179 共 26 個,repo 只保留最近三代(目前 v180 起,至少 current 與前一代)。已安裝的 worker 對自己的 SHELL 一律 cache-first,只在自己 install 時才從網路抓 `shell/vNNN/`;Netlify 回滾用的是部署快照。刪掉的內容仍在 git 歷史與各 `production-vNNN` tag。詳見 ADR 0019 增補段。
 
 ## Current App HTML `shell/v182/index.html` 內部分層(區塊順序,即邏輯模組)
 ```
