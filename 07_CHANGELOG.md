@@ -1,6 +1,26 @@
 # 07 版本紀錄
 
-## 2026-11-09 — v182 匯率寫法統一；清掉沒用到的程式（#57 重新稽核）
+## 2026-11-09 — v182 與專案整理已上線 main，tag `production-v182`（待 Bar 手機審查）
+
+- Bar 看過三處匯率截圖後回「好」。
+- PR [#143](https://github.com/nick80912-dev/ai-native-projects/pull/143)（v182）在 head `4ed726f` 的 sanity／browser-qa 全綠後合併進 `dev`（`16e8d07`）。
+- PR [#144](https://github.com/nick80912-dev/ai-native-projects/pull/144)（專案整理，Bar 2026-11-09「重新整理我的專案內容與雜項整理」選四項）：
+  - 只留最近三代 shell（刪 v154–v179）。
+  - backlog 只留還沒做的（#55 依 Bar 關閉）。
+  - 2026-10-15 以前的版本紀錄原文搬到 `docs/archive/`。
+  - 28 份只剩歷史引用的設計稿搬到 `docs/archive/design/`。
+  - 專案定位、路線圖、README 與備份說明更新。
+  - 第一次 sanity 失敗：整理時誤把本機 `node_modules` 捷徑（symlink）一起 commit，CI 找不到真正的資料夾。`11d9389` 移除並把 `.gitignore` 改成 `node_modules`（連捷徑一起忽略），重跑全綠後合併（`2b2bf14`）。
+- PR [#145](https://github.com/nick80912-dev/ai-native-projects/pull/145) 合併 `dev` → `main`，merge commit **`4ed9627`**；七項檢查全綠。
+- **線上核對**：
+  - 正式站 `sw.js` 為 `SW_VERSION='v182'`。
+  - 全新 Chromium 開正式站，`APP_VERSION` 為 v182、只剩 `okayama-trip-v182` 快取，發布說明為「匯率寫法統一」。
+  - 五個刪除的函式已不在線上；沒有 pageerror。
+  - 前一代 `shell/v181/` 與 `shell/v180/` 回 200，已刪除的 `shell/v179/`、`shell/v154/` 回 404（符合 ADR 0019 增補）。
+- **tag**：production-tags workflow 建立 `production-v182` → `4ed9627`，`git ls-remote` 核對相符。
+- 回滾：依 `16_OPS_PLAYBOOK.md` §A1 Publish `commit_ref` = `96111fd`（`production-v181`）的部署，再往前 bump。
+
+## 2026-11-09 — v182 匯率寫法統一；清掉沒用到的程式（#57 重新稽核；已上線 main，見上）
 
 - **來源**：Bar 2026-11-09「接著做 #57 低優先項目」。#57 的低優先項目只留下編號（B4–B7、T11、T13、T15、T18–T21、L9–L28），出發前稽核報告的內容沒有存進專案；Bar 選「重新稽核再挑」。用 v181 重新走過旅程中與旅程結束後的各頁、按鈕大小、字級與程式，列出五項，Bar 選了其中兩項：
   - **1 匯率寫法統一**：分帳卡片寫「JPY 1 ≈ TWD 0.21」、記帳表單與設定寫「1 JPY = NT$0.21」，統一成「1 JPY ≈ NT$0.21」。
