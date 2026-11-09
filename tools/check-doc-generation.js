@@ -13,7 +13,7 @@
      (與 check-doc-titles.js 規則 6 同一個推導方式)。
 
    刻意不檢查的:
-     - 歷史文件(adr/、07_CHANGELOG.md、tasks/done.md、docs/superpowers/、
+     - 歷史文件(adr/、07_CHANGELOG.md、docs/archive/、tasks/done.md、docs/superpowers/、
        docs/device-acceptance-log.md;00_CONTEXT_HANDOVER.md 與 -old-*_DEPRECATED.md
        已於 2026-10-16 刪除)
        → 這些記錄「當時」的事實,寫死舊版本才是對的。
