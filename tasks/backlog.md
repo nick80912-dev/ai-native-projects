@@ -10,8 +10,8 @@
 ## 低優先(未來,不急)
 20. **SW SHELL 快取清單補齊評估**:重新盤點現行 App Shell 必要資產與離線回歸範圍，不沿用已作廢的 ZIP 打包流程。
 25. **AI Native Framework 抽取**:App 穩定落地後執行,見 `FUTURE_PLAN_framework-extraction.md`。
-28. **打卡控制觸控目標過小**:行程頁的 `.chk` 打卡方塊為 **24×24px**,整列不是熱區(往右 80px 落在 `.item-main`,不觸發)。`04_UI_GUIDELINES.md` 自訂的門檻是「所有清單觸控列 ≥44px 高」,24×24 約為建議面積的 30%,而這是走路中單手操作的元件。同頁 `.qa-btn` 為 38–41px,但準則對它有 ≥38px 的明文豁免,不在此項範圍。**Bar 於 2026-09-10 裁定暫不處理。** 屬 Tier 2,動工前需四項確認並 forward bump。
-29. **多處字級低於準則下限**:`04_UI_GUIDELINES.md` 寫「輔助 11-13px」,實測行程頁 `.dow` 星期為 **9.5px**(6 處)、`.drive-chip`／`.tag` 10.5px(13 處)、今天頁 `.h-lbl` 10.5px(6 處)、購物頁 `.fl-arw` 10px(11 處)、分帳 `ledger-status-pill`／`ledger-summary-helper` 10px。改動散布廣,需逐一評估會不會撐破既有版面。**Bar 於 2026-09-10 裁定暫不處理。** 屬 Tier 2。
+28. ~~**打卡控制觸控目標過小**~~ **(2026-11-09 Bar 裁定不列入:「這些我認為都不是問題,不列入優化討論」,本項關閉,之後稽核不再列出)**:行程頁的 `.chk` 打卡方塊為 **24×24px**,整列不是熱區(往右 80px 落在 `.item-main`,不觸發)。`04_UI_GUIDELINES.md` 自訂的門檻是「所有清單觸控列 ≥44px 高」,24×24 約為建議面積的 30%,而這是走路中單手操作的元件。同頁 `.qa-btn` 為 38–41px,但準則對它有 ≥38px 的明文豁免,不在此項範圍。**Bar 於 2026-09-10 裁定暫不處理。** 屬 Tier 2,動工前需四項確認並 forward bump。
+29. ~~**多處字級低於準則下限**~~ **(2026-11-09 Bar 裁定不列入:「這些我認為都不是問題,不列入優化討論」,本項關閉,之後稽核不再列出)**:`04_UI_GUIDELINES.md` 寫「輔助 11-13px」,實測行程頁 `.dow` 星期為 **9.5px**(6 處)、`.drive-chip`／`.tag` 10.5px(13 處)、今天頁 `.h-lbl` 10.5px(6 處)、購物頁 `.fl-arw` 10px(11 處)、分帳 `ledger-status-pill`／`ledger-summary-helper` 10px。改動散布廣,需逐一評估會不會撐破既有版面。**Bar 於 2026-09-10 裁定暫不處理。** 屬 Tier 2。
     - **2026-09-23 複審補量(v126)**:全 stylesheet 共 **45 處** `font-size < 11px`,最小 **8.5px**,分佈 8.5／9／9.5／10／10.5px。原記錄只涵蓋其中一部分。清除死 CSS 後這個數字已是活規則的實數。**本項範圍因此比原記述大**,動工前重新盤點。
     - **2026-10-03 A 批部分處理（v142 本機候選，未推送）**：依 Bar 的保守尺寸要求，星期、今天摘要標籤與最近帳務代買前後字／對象共四個 selector 改為 11px；其餘候選保留。見 `docs/ui-font-audit-2026-10-03.md`，不表示本項全面完成或真機驗收通過。
 
@@ -26,7 +26,7 @@
     - **狀態(2026-09-12)**:**Bar 明示先保留,待實機看過再決定**。本項不是懸而未決的疑問,而是**刻意等待一個特定輸入** —— 焙茶／象牙下實際使用的觀感。在那之前不應因為色相數字好看或難看而自行推進。
     - **前車之鑑**:同日的 #31 與 #37 都是「看起來像疏漏就去修」而被自動測試擋下的前提錯誤。`--entry-secondary-bg` 與它們同屬**已核定的固定色**,推翻需要的是明確裁定,不是分析。
 
-41. **Ledger 表單一批觸控目標低於 44px**:`.ledger-participant-choice` **28px**、`.ledger-proxy-add-row button` 30px、`.ledger-category-apply-actions button` 34px、`.ledger-history-compact-options .ledger-sheet-choice` 34px、`.ledger-option-row button`／`.ledger-action-popover button`／`.ledger-form-open-choice`／`.ledger-entry-heading-row .ledger-sheet-toggle` 36px、`.travel-note-kind button` 36px、`.settings-identity-actions .btn` 38px。
+41. ~~**Ledger 表單一批觸控目標低於 44px**~~ **(2026-11-09 Bar 裁定不列入:「這些我認為都不是問題,不列入優化討論」,本項關閉,之後稽核不再列出)**:`.ledger-participant-choice` **28px**、`.ledger-proxy-add-row button` 30px、`.ledger-category-apply-actions button` 34px、`.ledger-history-compact-options .ledger-sheet-choice` 34px、`.ledger-option-row button`／`.ledger-action-popover button`／`.ledger-form-open-choice`／`.ledger-entry-heading-row .ledger-sheet-toggle` 36px、`.travel-note-kind button` 36px、`.settings-identity-actions .btn` 38px。
 
     - **與 #28 的分界**:#28 是行程頁的 `.chk` 24×24px(Bar 2026-09-10 裁定暫不處理);本項是**記帳表單**這一整批,不同畫面、不同使用情境 —— 記帳多在店內站著單手操作,錯按成本是寫錯一筆帳。
     - **`.ledger-participant-choice` 28px 最該優先**:它是分攤成員的多選 chip,一次要點好幾個,而且 v123 才剛把它的選取底色主題化(表示它是活的、會被用到的元件)。
@@ -78,7 +78,7 @@
       - L4(類別可以全部刪光)、L5(刪掉的類別／支付方式讓舊紀錄存不了)、L6(簡易結算模式藏起待確認結清但徽章仍計數)、L7(個人帳列表含其他身分的紀錄)。
       - ✅ B1 剩下的情況(v166 完成,讀回的列存在手機上):App 在沒有網路時重開、CSV 還沒追上,剛記的團體帳在恢復連線前看不到。完整解法是把 fast pull 讀回的列存進本機,牽涉旅程資料鍵、備份與清除流程。
     - **低**:B4–B7、T11、T13、T15、T18–T21、L9–L28,細節見稽核報告(T9、T10、T16、T17 已於 v158 完成)。
-    - **2026-11-09 重新稽核**:原報告沒有存進專案,上面的編號已查不到內容;Bar 選「重新稽核再挑」。用 v181 列出五項,✅ v182 做了「匯率寫法統一」與「清掉五個沒用到的函式」;小字（#29）與小按鈕（#28、#41）留在原項目。之後的稽核結果要寫進 repo（`docs/`）,不要只留在對話裡。
+    - **2026-11-09 重新稽核**:原報告沒有存進專案,上面的編號已查不到內容;Bar 選「重新稽核再挑」。用 v181 列出五項,✅ v182 做了「匯率寫法統一」與「清掉五個沒用到的函式」;小字（#29）與小按鈕（#28、#41）Bar 同日裁定不是問題、不列入優化,三項關閉。之後的稽核結果要寫進 repo（`docs/`）,不要只留在對話裡。
     - **清理**:v157 已刪除舊外殼世代 v111–v153、沒被引用的計畫與規格、舊交接與作廢文件、逐版驗證文件、icon-120、`trip_expenses` 提示、`v2_cache_*` 遷移與東京天氣城市。其餘沒用的程式(約 3 KB)與試算表 Expenses 分頁仍待 Bar 決定。
     - ✅ #54(CI 解除 ubuntu-24.04 釘版)已於 2026-10-30 完成。
 
