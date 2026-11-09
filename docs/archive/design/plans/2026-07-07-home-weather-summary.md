@@ -27,7 +27,7 @@
 
 ## References
 
-- Design spec: `docs/superpowers/specs/2026-07-07-home-weather-summary-design.md`
+- Design spec: `docs/archive/design/specs/2026-07-07-home-weather-summary-design.md`
 - Open-Meteo Forecast API: https://open-meteo.com/en/docs
 - Open-Meteo Geocoding API: https://open-meteo.com/en/docs/geocoding-api
 

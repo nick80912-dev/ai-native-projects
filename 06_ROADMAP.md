@@ -12,12 +12,17 @@
 - 旅途中首頁 UX:下一站模式(完成/跳過/復原)、天氣摘要
 - 行程資料:六天大方向內容已補完(2026-07-09),剩內容微調
 - 治理層 v2:檔案風險分級(14)、AI 執行規範(15)、Ops Playbook(16)
+- 旅程生命週期:個人旅程封存到 Google Drive(ADR 0020)、連接新旅程的 Sheet(v150,ADR 0021)
+- 岡山旅程實際使用(2026-10-18–10-23)與回程後修正(v160–v166)
+- 不限日本:每趟自己的幣別、稅與天氣(v168–v170)
+- 收據:照片(v167)、雲端辨識(v171–v177)
+- 個人帳退稅追蹤(v177–v182)
 
 ## 📋 下一階段(順序)
 > 原本列在這裡的三項(手機驗收預覽版、V2 正式部署、部署包與 QA 腳本納入 repo 版控)已於 2026-07 完成;之後的發布改走 `16_OPS_PLAYBOOK.md` §E Release Flow。
-1. 岡山旅程(2026-10-18–10-23)期間只做必要修正,依 `16_OPS_PLAYBOOK.md` §A2 forward bump。
-2. 回程後:依 `tasks/backlog.md` 與出發前稽核報告處理其餘項目。
-3. 下一趟旅程:依 `docs/new-trip-handbook.md` 連接新的 Sheet(ADR 0021)。
+> 岡山旅程與回程後的項目已完成(2026-11-09 整理後,待辦見 `tasks/backlog.md`)。
+1. 下一趟旅程:依 `docs/new-trip-handbook.md` 連接新的 Sheet(ADR 0021);新旅程要用新版 Apps Script。
+2. 依 `tasks/backlog.md`:#58 Logo 與圖示(需 Bar 挑稿)、#63 團體帳退稅(等 Bar 決定)與其餘小項。
 
 ## 🔮 未來(不急)
 - AI Native Framework 抽取(見 `FUTURE_PLAN_framework-extraction.md`,App 落地後執行)

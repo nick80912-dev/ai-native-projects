@@ -3,7 +3,7 @@
 個人帳獨立匯出格式與限制見 [匯出契約](docs/personal-ledger-export.md)（v143 起提供；發布狀態以 tasks/current.md 為準）。
 
 ## 這是什麼
-六天五夜日本自駕旅遊的手機 PWA。Google Sheets 當 CMS，以單頁 App 搭配少量獨立 runtime module，部署於 Netlify。
+旅遊用的手機 PWA（TripPilot）：第一趟是 2026-10 岡山六天五夜自駕（已結束），之後每趟連接一份新的 Google Sheet，不限日本（ADR 0021、v168–v170）。Google Sheets 當 CMS，以單頁 App 搭配少量獨立 runtime module，部署於 Netlify。
 - 正式站:https://trippilot-jp.netlify.app/
 - 使用者:Bar(產品負責人,非工程師)與同行友人
 - **權威來源**:程式與文件以 **GitHub 本 repo 為唯一權威**;個人 Google Drive 只存唯讀過往旅程，不是即時帳務權威。內容資料來源為 Drive 試算表「261018-261023岡山四國六天五夜」(發布 CSV,見 03/schema.js)。
