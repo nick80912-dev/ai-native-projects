@@ -4,6 +4,8 @@
    「勾選後改成跳出輸入稅額的視窗供輸入」、「看收據上的⋯⋯那行說明可以拿掉」：
    單品項的「可退稅」在金額正下方（不用打開其他資訊）；勾了跳出稅額視窗，空白照稅率估算，取消就不勾；
    填好後旁邊顯示「稅額 ¥X ✎」，點了再改。多品項勾第一項時輸入整張的稅額，品項下方顯示。
+   v181（Bar 2026-11-09「將可退稅按鈕移至計算機旁」「稅額欄位縮排至明細那欄靠右對齊，避免表單再變長」）：
+   可退稅在金額標題列、計算機左邊；稅額放在「明細」標題同一列靠右，表單不多一列。
    ============================================================ */
 const {test,expect}=require('./support/test');
 const {installFixedDate,installOfflineAppNetwork,openApp,waitForSyncToSettle}=require('./support/qa-fixture');
@@ -50,6 +52,11 @@ test('a single entry shows 可退稅 under the amount and asks for the tax in a 
   await dialog(page).getByRole('button',{name:'確定'}).click();
   await expect(dialog(page)).toHaveCount(0);
   await expect(sheet(page).locator('#ledgerRefundTaxChip')).toContainText('稅額 ¥80');
+  /* v181:可退稅在計算機左邊,稅額在「明細」標題列靠右,明細輸入框的位置不因稅額往下移 */
+  await expect(sheet(page).locator('.ledger-amount-field-head .ledger-single-refundable + .ledger-calculator-trigger')).toHaveCount(1);
+  await expect(sheet(page).locator('.ledger-detail-head #ledgerRefundTaxChip')).toBeVisible();
+  const rows=await page.evaluate(()=>{const label=document.querySelector('.ledger-detail-head label').getBoundingClientRect(),chip=document.getElementById('ledgerRefundTaxChip').getBoundingClientRect(),detail=document.getElementById('ledgerDetail').getBoundingClientRect(),field=document.getElementById('ledgerDetail').closest('.ledger-sheet-field').getBoundingClientRect();return {sameRow:Math.abs((label.top+label.bottom)/2-(chip.top+chip.bottom)/2)<4,rightAligned:Math.abs(chip.right-detail.right)<2,chipAboveInput:chip.bottom<=detail.top+1,overflow:document.documentElement.scrollWidth>window.innerWidth,fieldTop:field.top};});
+  expect(rows).toMatchObject({sameRow:true,rightAligned:true,chipAboveInput:true,overflow:false});
   /* 下方的稅區塊不再重複稅額欄與可退稅 */
   await page.evaluate(()=>toggleLedgerEntryDetails());
   await expect(sheet(page).locator('#ledgerOptionalFields #ledgerTaxAmount')).toHaveCount(0);
