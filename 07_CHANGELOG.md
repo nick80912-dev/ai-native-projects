@@ -1,5 +1,20 @@
 # 07 版本紀錄
 
+## 2026-11-09 — v181 可退稅移到計算機旁，稅額放在明細同一列
+
+- **來源**：Bar 2026-11-09：「介面部分將可退稅按鈕移至計算機旁」；看過畫面後「稅額欄位縮排至明細那欄靠右對齊，避免表單再變長」。同一天回報岡山 Apps Script 已換成最新版（v176–v177 的收據免稅、稅率與稅額辨識生效）。
+- **使用上**：
+  - 單品項的「可退稅」放在金額標題列、計算機左邊；勾了一樣跳出 v180 的稅額視窗。
+  - 填好後「稅額 ¥X ✎」放在「明細」標題同一列靠右，點一下再改；表單不多一列。
+  - 多品項不變（每一項自己的「可退稅」、品項下方的稅額）。
+- **做法**：`renderLedgerSingleRefundToggle()` 放進 `renderLedgerSingleItemPrimary()` 的 `.ledger-amount-head-actions`（計算機左邊）；`renderLedgerSingleItemDetail()` 有稅額時改成 `.ledger-detail-head`（明細標題＋稅額）；`renderLedgerSingleRefundRow()` 只回傳稅額按鈕。資料欄位與個人備份 v11 不變。
+- **版本**：
+  - forward bump v180→v181；`builtin-snapshot.js` 以 v180 asset 離線重產，除版本外不變。
+  - 發布說明視窗為 `v181` + `['v180','v179','v178','v177']`（v176 滾出）。
+  - `tests/trip-lifecycle-wiring.test.js` 加入已發布 v180 三件組的 hash。
+- **測試**：`tests/browser/refund-quick-v180.spec.js` 第一項加上：可退稅緊鄰計算機、稅額在明細標題列且與明細輸入框右緣對齊、在輸入框上方、沒有橫向捲動。
+- **回滾**：合併前關閉 PR；發布後依 `16_OPS_PLAYBOOK.md` §A1 退回 `production-v180`（`dc9f7ae`）的部署，再往前 bump。
+
 ## 2026-11-03 — v180 已上線 main，tag `production-v180`（待 Bar 手機審查）
 
 - Bar 看過兩輪畫面（先是稅額欄並排，再改成跳出視窗、拿掉說明）後回「好」；畫面確認後才跑完整測試與自動檢查。
