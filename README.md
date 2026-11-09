@@ -3,7 +3,7 @@
 個人帳獨立匯出格式與限制見 [匯出契約](docs/personal-ledger-export.md)（v143 起提供；發布狀態以 tasks/current.md 為準）。
 
 ## 這是什麼
-六天五夜日本自駕旅遊的手機 PWA。Google Sheets 當 CMS，以單頁 App 搭配少量獨立 runtime module，部署於 Netlify。
+旅遊用的手機 PWA（TripPilot）：第一趟是 2026-10 岡山六天五夜自駕（已結束），之後每趟連接一份新的 Google Sheet，不限日本（ADR 0021、v168–v170）。Google Sheets 當 CMS，以單頁 App 搭配少量獨立 runtime module，部署於 Netlify。
 - 正式站:https://trippilot-jp.netlify.app/
 - 使用者:Bar(產品負責人,非工程師)與同行友人
 - **權威來源**:程式與文件以 **GitHub 本 repo 為唯一權威**;個人 Google Drive 只存唯讀過往旅程，不是即時帳務權威。內容資料來源為 Drive 試算表「261018-261023岡山四國六天五夜」(發布 CSV,見 03/schema.js)。
@@ -37,8 +37,8 @@
 
 ## 專案檔案
 - `index.html` / `app-version.js` — 保留 v110 predecessor bridge；讓尚未更新的 v110 worker 在 current generation 安裝失敗時仍可運作
-- `shell/v181/index.html` / `shell/v181/app-version.js` — current generation（正式版）的 App 文件與 runtime 版本來源；成功啟用的 `sw.js` 才接管 root 導覽；已發布 generation 保持不可變，repo 只保留最近幾代（見 ADR 0019 增補段）
-- `shell/v181/builtin-snapshot.js` — 由 `tools/refresh-builtin-snapshot.js` 產生的版本綁定離線資料資產；八表內容沿用已核准的 v136 種子 CSV（`tests/trip-lifecycle-wiring.test.js` 比對），升版只更新版本標記；禁止手動修改
+- `shell/v182/index.html` / `shell/v182/app-version.js` — current generation（正式版）的 App 文件與 runtime 版本來源；成功啟用的 `sw.js` 才接管 root 導覽；已發布 generation 保持不可變，repo 只保留最近幾代（見 ADR 0019 增補段）
+- `shell/v182/builtin-snapshot.js` — 由 `tools/refresh-builtin-snapshot.js` 產生的版本綁定離線資料資產；八表內容沿用已核准的 v136 種子 CSV（`tests/trip-lifecycle-wiring.test.js` 比對），升版只更新版本標記；禁止手動修改
 - `navigation-intent.js` — 明確導覽目的地的 session-only state module；DOM 定位與回饋 adapter 位於 `index.html`
 - `diagnostic-impact.js` — AppLog 原始紀錄的 display-only impact projection；顯示 adapter 位於 `index.html`
 - `today-view.js` — Today Hero 採買摘要的純 model／renderer module；資料選擇與 DOM effects 留在 `index.html`

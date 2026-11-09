@@ -5,16 +5,16 @@
 
 ## 📌 現況
 
-**正式站是 v180**（2026-11-03 發布，PR #139，`main` `dc9f7ae`），**最新正式 tag 是 `production-v180`**（v157–v180 每一版都有 tag）。旅程（10/18–10/23）已結束；回程後的修正、#59 收據照片、#62 不限日本、#61 收據辨識（v171–v177）與 #63 退稅追蹤（v178–v180）都已上線；v181 把「可退稅」移到計算機旁（Bar 2026-11-09）開發中。岡山 Apps Script 已由 Bar 換成最新版（2026-11-09）。每批一版、逐版送 main 給 Bar 手機審查（Bar 2026-10-30 選定）；**改畫面時先截圖給 Bar 確認，確認後才跑完整測試與自動檢查**（Bar 2026-11-03）；上線後用 production-tags workflow 建 tag。
+**正式站是 v181**（2026-11-09 發布，PR #142，`main` `96111fd`），**最新正式 tag 是 `production-v181`**（v157–v181 每一版都有 tag）。旅程（10/18–10/23）已結束；回程後的修正、#59 收據照片、#62 不限日本、#61 收據辨識（v171–v177）與 #63 退稅追蹤（v178–v181）都已上線；v182 匯率寫法統一與清掉沒用的程式（#57 重新稽核，Bar 2026-11-09 選定）開發中。岡山 Apps Script 已由 Bar 換成最新版（2026-11-09）。每批一版、逐版送 main 給 Bar 手機審查（Bar 2026-10-30 選定）；**改畫面時先截圖給 Bar 確認，確認後才跑完整測試與自動檢查**（Bar 2026-11-03）；上線後用 production-tags workflow 建 tag。
 
 | 項目 | 值 |
 |---|---|
-| **正式站** | `https://trippilot-jp.netlify.app/` — **SW v180** |
-| **`origin/main`** | `dc9f7ae`（PR [#139](https://github.com/nick80912-dev/ai-native-projects/pull/139)） |
-| **`dev`** | 與 `main` 同為 v180（PR [#138](https://github.com/nick80912-dev/ai-native-projects/pull/138) 合併為 `b11c42f`） |
+| **正式站** | `https://trippilot-jp.netlify.app/` — **SW v181** |
+| **`origin/main`** | `96111fd`（PR [#142](https://github.com/nick80912-dev/ai-native-projects/pull/142)） |
+| **`dev`** | 與 `main` 同為 v181（PR [#141](https://github.com/nick80912-dev/ai-native-projects/pull/141) 合併為 `c4745ca`） |
 | 個人備份格式 | **v11**（v178 起；`PERSONAL_STATE_VERSION=11`，個人帳多了稅額與實際退稅；相容策略見 `docs/personal-state-compatibility.md`） |
-| 最新正式 tag | **`production-v180`** → `dc9f7ae`（v157–v180 都有 tag；上一個 `production-v179` → `6f8658a`） |
-| shell 世代 | repo 只保留 v154 起（ADR 0019 增補段） |
+| 最新正式 tag | **`production-v181`** → `96111fd`（v157–v181 都有 tag；上一個 `production-v180` → `dc9f7ae`） |
+| shell 世代 | repo 只保留最近三代（目前 v180 起；2026-11-09 Bar 核准刪除 v154–v179，ADR 0019 增補段） |
 | CI | `sanity`／`browser-qa` 跑 `ubuntu-latest`（2026-10-30 驗過 Ubuntu 26.04 後解除釘版，backlog #54）；browser-qa 時限 25 分鐘（2026-11-01 由 15 放寬，PR #127） |
 
 ## ⏳ 還掛著的事（只有 Bar 能做）
@@ -23,6 +23,7 @@
 
 ## 🔜 接下來
 
-1. 依 `tasks/backlog.md` 順序：#57 低優先與清理、#58 Logo 與圖示（需 Bar 挑稿）、#55 繪本主題研究，以及長期項目（#3、#12、#20、#25 等）。
+1. 專案整理（Bar 2026-11-09）：舊版本資料夾只留最近三代、待辦清單只留還沒做的、版本紀錄瘦身、文件健檢與舊設計稿歸檔。
+2. 之後依 `tasks/backlog.md`：#58 Logo 與圖示（需 Bar 挑稿）、#63 團體帳退稅（等 Bar 決定），以及 #50、#52、#53 小問題與長期項目（#3、#20、#25、#38）。#55 繪本主題與 #28／#29／#41 已由 Bar 關閉。
 
 > 正式發布仍遵守 §E：PR 與 Actions 通過後才 merge；Netlify 線上驗證通過後才建立 production tag。tag 用 GitHub Actions 的 **production-tags**（`16_OPS_PLAYBOOK.md` §A5）。

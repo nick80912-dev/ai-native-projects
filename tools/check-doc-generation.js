@@ -3,7 +3,7 @@
    ============================================================
    目的:防止「文件停在舊 generation」的無聲漂移(2026-09-09 實測到 17 處)。
    為什麼需要機器檢查:較舊的 generation 目錄仍然存在於 repo(2026-10-16 起只保留最近幾代,
-   目前 v154 起),所以文件指到舊路徑不會 404、不會報錯,只會讓接手者安靜地改錯檔案;
+   目前只留最近三代),所以文件指到舊路徑不會 404、不會報錯,只會讓接手者安靜地改錯檔案;
    指到已刪除的世代同樣不會有任何東西報錯。
    runtime 端的版本鏈由 tools/check-app-version.js 守;本檔只守文件端。
 
@@ -13,7 +13,7 @@
      (與 check-doc-titles.js 規則 6 同一個推導方式)。
 
    刻意不檢查的:
-     - 歷史文件(adr/、07_CHANGELOG.md、tasks/done.md、docs/superpowers/、
+     - 歷史文件(adr/、07_CHANGELOG.md、docs/archive/、tasks/done.md、docs/superpowers/、
        docs/device-acceptance-log.md;00_CONTEXT_HANDOVER.md 與 -old-*_DEPRECATED.md
        已於 2026-10-16 刪除)
        → 這些記錄「當時」的事實,寫死舊版本才是對的。

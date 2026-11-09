@@ -147,7 +147,7 @@
 - 行程總表可加選填「行程ID」欄（依標題名稱尋找）：有填就當作站點 ID，格式為英數字、`-`、`_`（最多 40 字）且整份不可重複；沒填沿用「日期_第幾列」。
 - 「天氣地區」分頁欄位：`地區名稱,緯度,經度,關鍵字`；緯度 20–46、經度 122–154、最多 30 個地區。只在新旅程使用，岡山沿用 App 內建城市清單。
 - 本機旅程紀錄：`trip_source`（`legacy` 或 `sheet` + 發布 ID、Endpoint、Trip ID、名稱、日期）、`trip_connect_pending`（連接中斷標記）、`trip_ledger_queue_owner`（待送帳所屬旅程）、`trip_weather_regions`（天氣地區清單）。後三者是 `trip_` key，清除旅程時一起移除；`trip_source` 由連接流程覆寫。
-- 個人備份 v10 帶 `trip` 身分，旅程不符整批拒絕；見 `docs/personal-state-compatibility.md`。
+- 個人備份 v10 起帶 `trip` 身分，旅程不符整批拒絕；v11（v178 起）個人帳另帶稅額與實際退稅欄位；見 `docs/personal-state-compatibility.md`。
 
 ## 禁止事項
 - 不要把完整欄位清單手寫在本文件作為權威。
