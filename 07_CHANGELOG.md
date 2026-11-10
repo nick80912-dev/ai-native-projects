@@ -1,6 +1,20 @@
 # 07 版本紀錄
 
-## 2026-11-10 — v184 行前清單；頂端紙飛機取代岡山桃子
+## 2026-11-10 — v184 已上線 main，tag `production-v184`（待 Bar 手機審查）
+
+- Bar 看過圖示三種配色與首頁三種排法（選 C、B）後回「v184 已確認」。
+- PR [#149](https://github.com/nick80912-dev/ai-native-projects/pull/149) 在 head `62b83c5` 的 sanity／browser-qa 全綠後合併進 `dev`（`be98a2e`）。本機完整 Chromium 453 passed，只有已知只在本機失敗的 `personal-ledger-export`。
+- PR [#150](https://github.com/nick80912-dev/ai-native-projects/pull/150)（並帶 v183 發布紀錄）合併 `dev` → `main`，merge commit **`469cf8a`**；七項檢查全綠。
+- **線上核對**：
+  - 正式站 `sw.js` 為 `SW_VERSION='v184'`。
+  - 全新 Chromium 開正式站，`APP_VERSION` 為 v184、只剩 `okayama-trip-v184` 快取，發布說明為「行前清單與新圖示」。
+  - 頂端是金黃底（`rgb(255, 214, 107)`）紙飛機、沒有桃子圖，行前清單程式在線上；沒有 pageerror。
+  - 前兩代 `shell/v183/`、`shell/v182/` 回 200，已刪的 `shell/v181/` 回 404。
+  - 岡山已發布的 TripConfig 有 `Checklist GID,2140148232`，「行前確認」分頁可讀。
+- **tag**：production-tags workflow 建立 `production-v184` → `469cf8a`，`git ls-remote` 核對相符。
+- 回滾：依 `16_OPS_PLAYBOOK.md` §A1 Publish `commit_ref` = `f036ab8`（`production-v183`）的部署，再往前 bump。
+
+## 2026-11-10 — v184 行前清單；頂端紙飛機取代岡山桃子（已上線 main，見上）
 
 - **來源**：Bar 2026-11-10：「關於桃子徽章Icon 的更動討論」「希望增加行前的待辦事項或是注意事項清單」。
   - 圖示：選「簡單線條圖示」，看過後要求「紙飛機需有顏色且置中」，再選「C 金黃底＋深色飛機」。
