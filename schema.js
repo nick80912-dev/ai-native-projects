@@ -184,7 +184,10 @@ var SCHEMA = {
         { field:'ledgerEndpoint', header:'Ledger Endpoint', optional:true,
           desc:'選填(新旅程必填);這份試算表部署的 Apps Script 網頁應用程式 /exec 網址' },
         { field:'weatherRegionsGid', header:'Weather Regions GID', optional:true,
-          desc:'選填;「天氣地區」分頁的 gid(欄位:地區名稱、緯度、經度、關鍵字)。新旅程沒填就不顯示天氣;岡山沿用內建城市清單' }
+          desc:'選填;「天氣地區」分頁的 gid(欄位:地區名稱、緯度、經度、關鍵字)。新旅程沒填就不顯示天氣;岡山沿用內建城市清單' },
+        /* v184(Bar 2026-11-10 選「試算表寫、各自勾」並可在 App 自己新增):行前待辦／注意事項清單 */
+        { field:'checklistGid', header:'Checklist GID', optional:true,
+          desc:'選填;「行前清單」分頁的 gid(欄位:類型、項目、說明、期限)。類型填「待辦」或「注意」,沒填當待辦;勾選只存在各自手機' }
       ]
     }
   }
