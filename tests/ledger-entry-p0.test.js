@@ -73,9 +73,12 @@ assert.match(primarySource,/renderLedgerSingleItemDetail\(draft\)/,'amount and d
 assert.doesNotMatch(basicInfoSource,/renderLedgerSingleItemDetail\(draft\)/,'detail is not rendered again outside the primary group');
 assert.doesNotMatch(basicInfoSource,/renderLedgerSingleSecondaryFields/,'primary information does not own optional fields');
 const trackSpecificSource=extractFunction('renderLedgerTrackSpecificFields');
-assert.match(trackSpecificSource,/這筆是代購/,'the approved proxy Toggle stays in the shared track renderer');
-assert.match(trackSpecificSource,/id="ledgerProxy"/,'the proxy Toggle has one stable focus target');
-assert.match(trackSpecificSource,/draft\.isProxy\?renderLedgerProxySection/,'proxy targets only render while the Toggle is on');
+/* v185(Bar 2026-11-10):代購改成金額標題列的小勾選(renderLedgerSingleProxyToggle);勾了才在 track renderer 出現「幫誰買」 */
+const proxyToggleSource=extractFunction('renderLedgerSingleProxyToggle');
+assert.match(proxyToggleSource,/id="ledgerProxy"/,'the proxy tick has one stable focus target');
+assert.match(primarySource,/renderLedgerSingleProxyToggle\(draft\)\+renderLedgerSingleRefundToggle\(draft\)/,'the proxy tick sits beside 可退稅 in the amount row');
+assert.doesNotMatch(trackSpecificSource,/<span>這筆是代購<\/span>|ledger-proxy-switch/,'the large proxy switch is gone');
+assert.match(trackSpecificSource,/draft\.isProxy\?'<div class="ledger-sheet-field ledger-proxy-inline">'\+renderLedgerProxySection/,'proxy targets only render while the tick is on');
 assert.match(trackSpecificSource,/draft\.multi\?renderLedgerParticipantGroup\('分攤成員'/,'multi-item shared entries keep the existing participant renderer');
 assert.match(trackSpecificSource,/renderLedgerParticipantSummary\(draft\)/,'single shared entries use the compact participant summary');
 const participantSummarySource=extractFunction('renderLedgerParticipantSummary');

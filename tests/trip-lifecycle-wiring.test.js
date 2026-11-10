@@ -14,9 +14,6 @@ const hash = (file) => crypto.createHash('sha256').update(read(file).replace(/\r
 const immutable = {
   'index.html': '7e22172860865d343df8061317aa0d231f0323eb296564b10cf871d273e1682f',
   'app-version.js': '085e37a275b03dbc20630a5a500f5e5192db7c5a75f13e4725f788e0d49714cb',
-  'shell/v182/index.html': 'c25ffef907d5f3ced13a862bca0c12c0dac9a55c1bf857816dba9dd5186d389f',
-  'shell/v182/app-version.js': '511806f15119e476d77e471bcfb702821c103b4562a08f3c24821a482085f2d2',
-  'shell/v182/builtin-snapshot.js': '23b13839ef8961ed581f1f9f9e1bd4e3d7929b994e5ba7d3fb36dd0393a2d186',
   'shell/v183/index.html': '84e7178b62bceb9859beaff7daaf2c7779ed60be0e31d527790cdab5c425dc80',
   'shell/v183/app-version.js': 'b8406d7dd90ad7e18aebe796c324242d20cab9bd1c4a1952110a862c0315d45c',
   'shell/v183/builtin-snapshot.js': '04c601fbd112b53ab01d03febd334e1fd642e16df6f990948008c19c87e788ca',

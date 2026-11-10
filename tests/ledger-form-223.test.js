@@ -155,11 +155,9 @@ assert(/\.ledger-category-apply-options \.ledger-sheet-choice-grid\{[^}]*max-wid
 assert(html.includes('ledger-single-basic-info'),'single-entry essentials share one white information card');
 assert(/\.ledger-item-proxy\{[^}]*background:/.test(html),'proxy details use a contained low-saturation panel');
 assert(html.includes('ledger-item-flag-check'),'multi-item proxy uses the refined compact checked control');
-assert(html.includes('ledger-proxy-switch')&&html.includes('ledger-proxy-switch-track'),'single-item proxy uses the approved text row and switch');
-const proxyTrackSource=extract('function renderLedgerTrackSpecificFields(','function renderLedgerTaxDisclosure(');
-assert(!proxyTrackSource.includes('ledger-sheet-label">代購'),'single-item proxy does not add a redundant heading above the grouped row');
-const proxySwitchCss=(html.match(/\.ledger-sheet-field>label\.ledger-proxy-switch\{([^}]*)\}/)||[])[1]||'';
-assert(proxySwitchCss.includes('display:flex')&&proxySwitchCss.includes('justify-content:space-between')&&proxySwitchCss.includes('background:#f4e9e6')&&proxySwitchCss.includes('border:1px solid #c99c94')&&proxySwitchCss.includes('border-radius:9px'),'single-item proxy uses the approved pale warm-red grouped row with the toggle on the right');
+/* v185(Bar 2026-11-10):單品項代購從整列開關改成金額標題列的小勾選,舊的 .ledger-proxy-switch 樣式已移除 */
+assert(!html.includes('ledger-proxy-switch'),'the large single-item proxy switch and its styles are gone');
+assert(html.includes('ledger-single-proxy'),'single-item proxy is a compact tick in the amount row');
 assert(html.includes('ledger-proxy-heading'),'proxy title and helper copy share one compact heading row');
 assert(/[{},]\s*\.ledger-proxy-help,[^{}]*\{font-size:10px;font-weight:400/.test(html),'v155: proxy helper copy uses the shared 10px note style (help-note-style.test.js)');
 assert(/\.ledger-item-proxy \.ledger-sheet-choice\{[^}]*min-height:28px[^}]*border-radius:7px[^}]*font-size:10px/.test(html),'proxy target choices use the refined compact size');

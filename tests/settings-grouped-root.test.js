@@ -51,6 +51,9 @@ function renderRoot(overrides,ledgerSettings){
     'var simpleSettlementSettingsHelpOpen=false;\n'+
     extractFunction(html,'simpleSettlementSettingsHelpButton')+'\n'+
     extractFunction(html,'simpleSettlementSettingsHelpText')+'\n'+
+    extractFunction(html,'settingsTroubleshootSummary')+'\n'+
+    extractFunction(html,'renderSettingsTroubleshootPage')+'\n'+
+    'function renderSettingsHeader(title){return "<h2>"+title+"</h2>";}\n'+
     extractFunction(html,'renderSettingsRoot'),
     sandbox
   );
@@ -74,18 +77,13 @@ assert(at('>主題<')>at('>個人<')&&at('>主題<')<at('>記帳<'),'theme row s
   assert(at(label)>at('>記帳<')&&at(label)<at('>資料<'),label+' sits in 記帳');
 });
 assert(at('>資料與版本<')>at('>資料<'),'data row sits in 資料');
-assert(at('>照片健康狀態<')>at('>資料<'),'photo health row sits in 資料');
-assert(at('>資料健康狀態<')>at('>資料<')&&at('>資料健康狀態<')<at('>照片健康狀態<'),'health has its own first data-group entry');
-assert(out.includes("openSettingsPage('health')"),'health summary opens the dedicated health page');
-assert(at('>照片健康狀態<')<at('>資料與版本<'),'photo health precedes backup and version');
-assert(at('>過往旅程<')>at('>照片健康狀態<')&&at('>過往旅程<')<at('>資料與版本<'),
-  'past trips is a direct data-group child between photo health and backup');
-/* v153：旅途紀錄與診斷面板成為資料群組的直接入口，位於照片健康狀態與過往旅程之間。 */
-assert(at('>旅途紀錄<')>at('>照片健康狀態<')&&at('>旅途紀錄<')<at('>診斷面板<')&&at('>診斷面板<')<at('>過往旅程<'),
-  'travel notes and diagnostics sit between photo health and past trips');
-assert(out.includes("openSettingsPage('travel-notes')")&&out.includes("openSettingsPage('diagnostics')"),'both rows route through openSettingsPage');
-assert(out.includes('2 筆待評估'),'travel-note summary counts pending notes');
-assert(renderRoot({travelNotePendingCount:function(){return 0;}}).includes('記下異常或建議'),'travel-note summary has a zero state');
+/* v185(Bar 2026-11-10):資料健康、照片健康、旅途紀錄、診斷面板收進「疑難排解」一頁;根頁資料群組只剩三列。 */
+assert(at('>疑難排解<')>at('>資料<')&&at('>疑難排解<')<at('>過往旅程<')&&at('>過往旅程<')<at('>資料與版本<'),'data group is 疑難排解 → 過往旅程 → 資料與版本');
+assert(out.includes("openSettingsPage('troubleshoot')"),'the troubleshooting row opens its page');
+['>資料健康狀態<','>照片健康狀態<','>旅途紀錄<','>診斷面板<'].forEach(function(label){assert(at(label)<0,label+' no longer sits on the root page');});
+assert(out.includes('2 筆旅途紀錄待評估'),'the troubleshooting summary surfaces pending travel notes when data is healthy');
+assert(renderRoot({travelNotePendingCount:function(){return 0;}}).includes('資料狀態正常'),'the troubleshooting summary has a calm zero state');
+assert(renderRoot({settingsDataHealthModel:function(){return {summary:'2 項需要處理'};}}).includes('2 項需要處理'),'a data-health warning stays visible on the root row');
 const inactiveRoot=renderRoot({TripLifecycle:{readState:function(){return {mode:'inactive'};}}});
 assert(inactiveRoot.includes("openSettingsPage('past')"),'inactive settings goes directly to past trips');
 assert(inactiveRoot.includes("openSettingsPage('diagnostics')"),'inactive settings can still open the diagnostics panel');
@@ -97,7 +95,7 @@ assert(out.includes('2 位常用對象'),'proxy summary counts the stored target
 assert(out.includes('3 類別 · 2 支付方式'),'custom-option summary lists categories and payment methods');
 assert(!/\d+\s*單位/.test(out),'shopping units are no longer summarized on the root page');
 assert(out.includes('JPY · 0.22'),'ledger summary shows default currency and exchange rate');
-assert(out.includes('資料狀態正常'),'data summary reports the aggregated health state');
+assert(renderRoot({travelNotePendingCount:function(){return 0;}}).includes('資料狀態正常'),'data summary reports the aggregated health state');
 assert(out.includes('0 張 · 0 B'),'storage summary shows the device-local attachment count and size');
 assert(out.includes('海洋／岡山'),'theme summary shows the current theme name');
 
