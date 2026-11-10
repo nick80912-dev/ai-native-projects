@@ -1,6 +1,15 @@
 # 07 版本紀錄
 
-## 2026-11-10 — v183 天氣地區不限日本；離線狀態、旅程結束回顧、記帳表單更簡潔
+## 2026-11-10 — v183 已上線 main，tag `production-v183`（待 Bar 手機審查）
+
+- Bar 看過畫面、頂端狀態選字「離線版」後回「okay」。
+- PR [#147](https://github.com/nick80912-dev/ai-native-projects/pull/147) 在 head `88cd323` 的 sanity／browser-qa 全綠後合併進 `dev`（`d1b2ce8`）。本機完整 Chromium 第一次有 7 項收據照片測試失敗（那份測試還在直接點已收起的「個人」），補上先點開那一行後 7/7 通過。
+- PR [#148](https://github.com/nick80912-dev/ai-native-projects/pull/148)（並帶 v182 發布紀錄 PR #146）合併 `dev` → `main`，merge commit **`f036ab8`**。過程中 GitHub Pages 鏡像（github.io，非正式站）的 `deploy` 卡在 GitHub 端 `syncing_files` 逾時，與程式無關；在 PR 留言說明並重跑一次後通過，七項檢查全綠。
+- **線上核對**：正式站 `sw.js` 為 `SW_VERSION='v183'`；全新 Chromium 開正式站 `APP_VERSION` v183、只剩 `okayama-trip-v183` 快取、發布說明「旅程結束回顧與記帳表單更簡潔」；曼谷座標通過天氣地區檢查、下載失敗時頂端為「離線版」、回顧與帳本幣別一行的程式都在線上；沒有 pageerror。前兩代 `shell/v182/`、`shell/v181/` 回 200。
+- **tag**：production-tags workflow 建立 `production-v183` → `f036ab8`，`git ls-remote` 核對相符。
+- 回滾：依 `16_OPS_PLAYBOOK.md` §A1 Publish `commit_ref` = `4ed9627`（`production-v182`）的部署，再往前 bump。
+
+## 2026-11-10 — v183 天氣地區不限日本；離線狀態、旅程結束回顧、記帳表單更簡潔（已上線 main，見上）
 
 - **來源**：Bar 2026-11-09 問「現在這個專案適合在其它國家或行程使用了嗎」與 UI/UX 改進建議；查到天氣地區只收日本附近座標，提出 7 項 UI/UX 建議。Bar 選「先修天氣地區，再做第1、2、3項」；看過畫面後頂端狀態嫌「暫時連不上」字多，2026-11-10 選「離線版 · 時間」，其他「okay」。
 - **使用上**：
