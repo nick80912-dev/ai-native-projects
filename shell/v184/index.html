@@ -133,7 +133,7 @@ input,select,textarea{font-size:16px}
 .settings-btn{position:relative;width:44px;height:44px;min-height:44px;border:0;border-radius:50%;background:transparent;color:#fff;font-size:18px;line-height:1;display:flex;align-items:center;justify-content:center;cursor:pointer}
 .brand .sync::before,.settings-btn::before{content:"";position:absolute;z-index:0;inset:4px;border-radius:inherit;background:rgba(255,255,255,.1);pointer-events:none}
 .brand .sync>*,.settings-btn>*{position:relative;z-index:1}
-@media(max-width:390px){.brand .logo{width:24px;height:24px;flex-basis:24px}.prep-summary{margin:0 0 6px;color:var(--ink-soft);font-size:13px}.prep-heading{margin:14px 0 4px;font-size:14px}.prep-row{display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--line)}.prep-check{display:flex;align-items:flex-start;gap:10px;flex:1 1 auto;min-width:0;min-height:44px;padding:10px 0;cursor:pointer}.prep-check input{flex:0 0 auto;width:20px;height:20px;margin:1px 0 0}.prep-text{display:flex;flex-direction:column;min-width:0}.prep-title{font-size:15px;font-weight:700;overflow-wrap:anywhere}.prep-row.done .prep-title{color:var(--ink-soft);text-decoration:line-through}.prep-due{color:var(--coral);font-size:12px;font-weight:700}.prep-row.done .prep-due{color:var(--ink-soft)}.prep-note{color:var(--ink-soft);font-size:12px;overflow-wrap:anywhere}.prep-remove{flex:0 0 auto;width:44px;height:44px;border:0;background:none;color:var(--ink-soft);font-size:20px;cursor:pointer}.prep-empty{margin:4px 0;color:var(--ink-soft);font-size:13px}.prep-add{display:flex;gap:8px;margin-top:10px}.prep-add .ledger-sheet-input{flex:1 1 auto;min-width:0}.prep-add .btn{flex:0 0 auto;width:auto;margin:0;padding:0 16px}.prep-notes{margin:4px 0 0;padding-left:18px}.prep-notes li{margin:6px 0}.prep-notes li span{display:block;color:var(--ink-soft);font-size:12px}.logo-mark{display:inline-grid;place-items:center;flex:0 0 24px;border-radius:7px;background:rgba(255,255,255,.16);color:#fff;touch-action:manipulation}.logo-mark svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}.brand .sync{padding:5px 8px}}
+@media(max-width:390px){.brand .logo{width:24px;height:24px;flex-basis:24px}.prep-progress-row{position:relative;display:flex;align-items:center;gap:10px;width:100%;min-height:44px;margin-top:var(--space-3);padding:8px 12px;border:0;border-radius:10px;background:rgba(255,255,255,.14);color:#fff;font:inherit;font-size:14px;font-weight:700;text-align:left;cursor:pointer}.prep-progress{flex:1 1 auto;height:6px;border-radius:3px;background:rgba(255,255,255,.25);overflow:hidden}.prep-progress>span{display:block;height:100%;border-radius:3px;background:#ffd66b}.prep-summary{margin:0 0 6px;color:var(--ink-soft);font-size:13px}.prep-heading{margin:14px 0 4px;font-size:14px}.prep-row{display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--line)}.prep-check{display:flex;align-items:flex-start;gap:10px;flex:1 1 auto;min-width:0;min-height:44px;padding:10px 0;cursor:pointer}.prep-check input{flex:0 0 auto;width:20px;height:20px;margin:1px 0 0}.prep-text{display:flex;flex-direction:column;min-width:0}.prep-title{font-size:15px;font-weight:700;overflow-wrap:anywhere}.prep-row.done .prep-title{color:var(--ink-soft);text-decoration:line-through}.prep-due{color:var(--coral);font-size:12px;font-weight:700}.prep-row.done .prep-due{color:var(--ink-soft)}.prep-note{color:var(--ink-soft);font-size:12px;overflow-wrap:anywhere}.prep-remove{flex:0 0 auto;width:44px;height:44px;border:0;background:none;color:var(--ink-soft);font-size:20px;cursor:pointer}.prep-empty{margin:4px 0;color:var(--ink-soft);font-size:13px}.prep-add{display:flex;gap:8px;margin-top:10px}.prep-add .ledger-sheet-input{flex:1 1 auto;min-width:0}.prep-add .btn{flex:0 0 auto;width:auto;margin:0;padding:0 16px}.prep-notes{margin:4px 0 0;padding-left:18px}.prep-notes li{margin:6px 0}.prep-notes li span{display:block;color:var(--ink-soft);font-size:12px}.logo-mark{display:inline-grid;place-items:center;flex:0 0 24px;border-radius:7px;background:#ffd66b;color:#1f3b45;touch-action:manipulation}.logo-mark svg{width:17px;height:17px}.logo-mark-plane{fill:currentColor}.logo-mark-fold{fill:none;stroke:rgba(255,255,255,.55);stroke-width:1.4;stroke-linecap:round}.brand .sync{padding:5px 8px}}
 .brand .sync .dot{width:7px;height:7px;border-radius:50%;background:#5ec27a}
 .brand .sync .dot.stale{background:var(--gold)}
 .brand .sync .dot.err{background:var(--coral)}
@@ -827,8 +827,8 @@ function selectTheme(themeId){
 <div class="hdr">
 <div class="topbar">
   <div class="brand">
-    <!-- v184(Bar 2026-11-10 選「簡單線條圖示」):岡山桃子換成跟旅程無關的紙飛機線條圖示,顏色跟著頂欄主題;雙點仍開診斷面板 -->
-    <span class="logo logo-mark" id="diagnosticBadge" role="img" aria-label="TripPilot"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M21 3 10.2 13.8"/><path d="M21 3 14.4 21l-4.2-7.2L3 9.6z"/></svg></span>
+    <!-- v184(Bar 2026-11-10 選「簡單線條圖示」,再選「C 金黃底＋深色飛機」、要有顏色且置中):岡山桃子換成跟旅程無關的紙飛機;雙點仍開診斷面板 -->
+    <span class="logo logo-mark" id="diagnosticBadge" role="img" aria-label="TripPilot"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><g transform="translate(-0.9 0.9)"><path class="logo-mark-plane" d="M21 3 3 9.6l7.2 4.2L14.4 21z"/><path class="logo-mark-fold" d="M21 3 10.2 13.8"/></g></svg></span>
     <span class="t" id="brandTitle">日本行程</span>
     <span class="sim-marker" id="simMarker">模擬中</span>
     <div class="brand-actions">
@@ -3319,10 +3319,12 @@ function removePrepCustom(id){
   state.custom=state.custom.filter(function(item){return item.id!==id;});delete state.checks[id];
   if(writePrepState(state))refreshPrepChecklistViews();
 }
+/* Bar 2026-11-10 嫌首頁上方太長,選「B 進度條」:行前準備是一條進度條,採買清單與完整行程留在下面同一列 */
 function renderPrepTodayEntry(){
   var model;try{model=prepChecklistModel();}catch(error){return '';}
-  var text=model.total?'行前準備 '+model.done+'/'+model.total:'行前準備';
-  return '<button type="button" class="today-jump today-hero-action prep-launcher" onclick="openPrepChecklist()">'+escapeHtml(text)+' →</button>';
+  var percent=model.total?Math.round(model.done/model.total*100):0;
+  var count=model.total?model.done+'/'+model.total:'新增';
+  return '<button type="button" class="prep-launcher prep-progress-row" onclick="openPrepChecklist()" aria-label="行前準備，已完成 '+model.done+' / '+model.total+'"><span>行前準備</span><span class="prep-progress" aria-hidden="true"><span style="width:'+percent+'%"></span></span><span>'+escapeHtml(count)+' ›</span></button>';
 }
 function weatherCityFromText(text){
   text=String(text||'');
@@ -4175,8 +4177,8 @@ function renderToday(){
     var days=DB.trip?DB.trip.days:[];
     view.innerHTML='<div class="today-hero"><div class="lbl">TODAY · '+todayMD()+'</div>'+
       '<div class="today-pretrip-title-row"><div class="date">還沒到出發日</div>'+renderPreTripCountdown()+'</div>'+
-      renderPreTripFirstStop(days)+
-      '<div class="today-hero-actions">'+renderPrepTodayEntry()+renderShoppingTodayEntry(null,'')+
+      renderPreTripFirstStop(days)+renderPrepTodayEntry()+
+      '<div class="today-hero-actions">'+renderShoppingTodayEntry(null,'')+
       '<button class="today-jump today-hero-action" onclick="switchView(\'trip\')">查看完整行程 →</button></div></div>'+
       (days.length?'<div class="seg">行程重點</div>':'')+
       days.map(function(d,i){
