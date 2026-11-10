@@ -5,6 +5,9 @@ test('資料健康子頁直接顯示四項狀態，鍵盤可進入並返回設�
   const errors=collectPageErrors(page);
   await installOfflineAppNetwork(page);await openApp(page);await waitForSyncToSettle(page);
   await page.evaluate(()=>openSettings('root'));
+  /* v185:資料健康在「疑難排解」裡,返回也是回到疑難排解 */
+  await expect(page.getByRole('button',{name:/^疑難排解/})).toContainText('資料狀態正常');
+  await page.getByRole('button',{name:/^疑難排解/}).click();
   const row=page.getByRole('button',{name:/^資料健康狀態/});
   await expect(row).toContainText('資料狀態正常');
   await row.focus();await page.keyboard.press('Enter');
@@ -14,8 +17,9 @@ test('資料健康子頁直接顯示四項狀態，鍵盤可進入並返回設�
   await expect(health.locator('.settings-health-row')).toHaveCount(4);
   for(const key of ['trip','shared','personal','photos'])await expect(health.locator('.data-health-'+key)).toBeVisible();
   await expect(page.getByRole('button',{name:/修復|清理照片/})).toHaveCount(0);
-  await page.getByRole('button',{name:'返回設定',exact:true}).click();
+  await page.getByRole('button',{name:'返回疑難排解',exact:true}).click();
   await expect(row).toBeVisible();
+  await page.getByRole('button',{name:'返回設定',exact:true}).click();
   await page.getByRole('button',{name:/資料與版本/}).click();
   await expect(page.locator('.settings-data-health')).toHaveCount(0);
   for(const name of ['重置紀錄','清除並打包旅程','複製備份 JSON','從 JSON 還原'])await expect(page.locator('#settingsOverlay').getByRole('button',{name,exact:true})).toBeVisible();

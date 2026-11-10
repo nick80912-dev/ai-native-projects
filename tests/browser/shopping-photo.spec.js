@@ -282,6 +282,7 @@ test('照片 repository 不可用時停用照片操作但保留一般採買編�
 
 test('設定頁集中顯示附件容量並可修復引用或手動清理孤立照片',async({page})=>{
   await seedPhotoStorageManagement(page);
+  await page.getByRole('button',{name:/^疑難排解/}).click();   // v185:照片健康收進「疑難排解」
   await page.getByRole('button',{name:/照片健康狀態/}).click();
   await expect(page.getByRole('heading',{name:'照片健康狀態'})).toBeVisible();
   await expect(page.getByText('App 附件',{exact:true})).toBeVisible();
