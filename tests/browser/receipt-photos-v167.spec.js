@@ -57,6 +57,7 @@ async function boot(page){
 
 async function openForm(page,track){
   await page.evaluate(()=>{switchView('split');openLedgerEntrySheet(false);});
+  await page.locator('#ledgerEntrySheet .ledger-entry-context').click();   // v183:帳本與幣別收成一行,先點開
   await page.locator('#ledgerEntrySheet .ledger-sheet-choice',{hasText:track==='shared'?'團體':'個人'}).click();
 }
 

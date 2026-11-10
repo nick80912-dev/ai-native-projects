@@ -1,6 +1,45 @@
 # 07 版本紀錄
 
-## 2026-11-09 — v182 匯率寫法統一；清掉沒用到的程式（#57 重新稽核）
+## 2026-11-10 — v183 天氣地區不限日本；離線狀態、旅程結束回顧、記帳表單更簡潔
+
+- **來源**：Bar 2026-11-09 問「現在這個專案適合在其它國家或行程使用了嗎」與 UI/UX 改進建議；查到天氣地區只收日本附近座標，提出 7 項 UI/UX 建議。Bar 選「先修天氣地區，再做第1、2、3項」；看過畫面後頂端狀態嫌「暫時連不上」字多，2026-11-10 選「離線版 · 時間」，其他「okay」。
+- **使用上**：
+  - **天氣地區**：「天氣地區」分頁的座標改成全球合法範圍（緯度 -90～90、經度 -180～180），泰國、歐美的地區也會顯示天氣。沒填座標的列照樣略過（放寬範圍時曾把空白當成 0,0，已修正並由測試守住）。
+  - **頂端狀態**：下載不到最新資料（沒網路）時，紅點「更新失敗」改成黃點「離線版 · 10/1 22:39」，與用離線資料開啟時同一個說法；狀態面板寫「離線版：沒能下載最新資料，沿用手機裡的資料」。資料結構、驗證、儲存真的出錯仍是「更新失敗」。
+  - **旅程結束首頁**：改成回顧——「我的總花費」（點開明細）與「退稅：待退 N 張 · 金額」（點開退稅清單；沒有可退稅的單據就不顯示）；還沒結清的提醒與「前往分帳」照舊。「清除並打包旅程」移到卡片最下方的文字按鈕，不再和「查看完整行程」並排。
+  - **記帳表單**：新增消費時「帳本」「幣別」收成一行「個人帳本 · JPY ⌄」，點開才出現原本兩排；換帳本時保持展開。沒設定匯率時提醒照樣直接顯示；編輯與更正維持原樣。
+- **做法**：`weatherRegionValid()` 範圍、`parseWeatherRegionsCsv()` 空白座標為 NaN；`syncFailureIsDownload()`＋`setSyncState()` 的 `unreachable` 狀態；`endedTripRecapRows()`＋`renderEndedTripHome()`；`renderLedgerEntryContextLine()`／`toggleLedgerEntryContext()`／`renderLedgerEntrySegments()`，`setLedgerDraftTrack()` 保留 `contextOpen`。資料欄位與個人備份 v11 不變。
+- **版本**：
+  - forward bump v182→v183；`builtin-snapshot.js` 以 v182 asset 離線重產，除版本外不變。
+  - 發布說明視窗為 `v183` + `['v182','v181','v180','v179']`（v178 滾出）。
+  - `tests/trip-lifecycle-wiring.test.js` 加入已發布 v182 三件組的 hash。
+- **測試**：
+  - 新增 `tests/browser/ux-v183.spec.js`（4 項）：回顧的總花費與退稅、點退稅打開清單、打包按鈕在最下方；沒有紀錄時只顯示總花費；帳本與幣別一行、點開切換、金額緊接在下；沒匯率時直接提醒、編輯維持原樣。
+  - `tests/weather-regions.test.js` 加入夏威夷、曼谷、巴黎與不合法座標；`tests/atomic-sheet-sync.test.js` 下載失敗時頂端為「離線版 · 」；`tests/home-simplification.test.js`、`tests/browser/home-v146.spec.js` 改成新首頁版面。
+  - 十個會點「個人／團體」或幣別的瀏覽器測試先點開那一行。
+- **回滾**：合併前關閉 PR；發布後依 `16_OPS_PLAYBOOK.md` §A1 退回 `production-v182`（`4ed9627`）的部署，再往前 bump。
+
+## 2026-11-09 — v182 與專案整理已上線 main，tag `production-v182`（待 Bar 手機審查）
+
+- Bar 看過三處匯率截圖後回「好」。
+- PR [#143](https://github.com/nick80912-dev/ai-native-projects/pull/143)（v182）在 head `4ed726f` 的 sanity／browser-qa 全綠後合併進 `dev`（`16e8d07`）。
+- PR [#144](https://github.com/nick80912-dev/ai-native-projects/pull/144)（專案整理，Bar 2026-11-09「重新整理我的專案內容與雜項整理」選四項）：
+  - 只留最近三代 shell（刪 v154–v179）。
+  - backlog 只留還沒做的（#55 依 Bar 關閉）。
+  - 2026-10-15 以前的版本紀錄原文搬到 `docs/archive/`。
+  - 28 份只剩歷史引用的設計稿搬到 `docs/archive/design/`。
+  - 專案定位、路線圖、README 與備份說明更新。
+  - 第一次 sanity 失敗：整理時誤把本機 `node_modules` 捷徑（symlink）一起 commit，CI 找不到真正的資料夾。`11d9389` 移除並把 `.gitignore` 改成 `node_modules`（連捷徑一起忽略），重跑全綠後合併（`2b2bf14`）。
+- PR [#145](https://github.com/nick80912-dev/ai-native-projects/pull/145) 合併 `dev` → `main`，merge commit **`4ed9627`**；七項檢查全綠。
+- **線上核對**：
+  - 正式站 `sw.js` 為 `SW_VERSION='v182'`。
+  - 全新 Chromium 開正式站，`APP_VERSION` 為 v182、只剩 `okayama-trip-v182` 快取，發布說明為「匯率寫法統一」。
+  - 五個刪除的函式已不在線上；沒有 pageerror。
+  - 前一代 `shell/v181/` 與 `shell/v180/` 回 200，已刪除的 `shell/v179/`、`shell/v154/` 回 404（符合 ADR 0019 增補）。
+- **tag**：production-tags workflow 建立 `production-v182` → `4ed9627`，`git ls-remote` 核對相符。
+- 回滾：依 `16_OPS_PLAYBOOK.md` §A1 Publish `commit_ref` = `96111fd`（`production-v181`）的部署，再往前 bump。
+
+## 2026-11-09 — v182 匯率寫法統一；清掉沒用到的程式（#57 重新稽核；已上線 main，見上）
 
 - **來源**：Bar 2026-11-09「接著做 #57 低優先項目」。#57 的低優先項目只留下編號（B4–B7、T11、T13、T15、T18–T21、L9–L28），出發前稽核報告的內容沒有存進專案；Bar 選「重新稽核再挑」。用 v181 重新走過旅程中與旅程結束後的各頁、按鈕大小、字級與程式，列出五項，Bar 選了其中兩項：
   - **1 匯率寫法統一**：分帳卡片寫「JPY 1 ≈ TWD 0.21」、記帳表單與設定寫「1 JPY = NT$0.21」，統一成「1 JPY ≈ NT$0.21」。

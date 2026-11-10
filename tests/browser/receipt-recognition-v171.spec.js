@@ -56,6 +56,7 @@ async function boot(page,cfg){
 }
 async function openForm(page){
   await page.evaluate(()=>{switchView('split');openLedgerEntrySheet(false);});
+  await page.locator('#ledgerEntrySheet .ledger-entry-context').click();   // v183:帳本與幣別收成一行,先點開
   await page.locator('#ledgerEntrySheet .ledger-sheet-choice',{hasText:'個人'}).click();
 }
 /* v175:照片下方不再顯示辨識訊息(只在彈出視窗);訊息內容改從表單資料讀 */

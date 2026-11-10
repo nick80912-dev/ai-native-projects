@@ -24,7 +24,7 @@ function load(sourceKey){
   return context;
 }
 
-/* 解析：標題列略過、關鍵字多種分隔、超出日本範圍與重複座標略過 */
+/* 解析：標題列略過、關鍵字多種分隔、超出地球範圍與重複座標略過（v183 起日本以外的地區也收） */
 {
   const ctx=load('sheet:kyushu-2027');
   const parsed=plain(ctx.parseWeatherRegionsCsv([
@@ -32,14 +32,17 @@ function load(sourceKey){
     '福岡,33.5902,130.4017,"天神、博多,中洲"',
     '太宰府,33.5196,130.5345,太宰府天滿宮/九州國立博物館',
     '夏威夷,21.3,-157.8,Honolulu',
+    '曼谷,13.7563,100.5018,Bangkok',
+    '巴黎,48.8566,2.3522,Paris',
+    '座標錯誤,95,200,',
     '重複,33.5902,130.4017,',
     '沒座標,,,'
   ].join('\n')));
-  assert.deepStrictEqual(parsed.regions.map(region=>region.label),['福岡','太宰府']);
+  assert.deepStrictEqual(parsed.regions.map(region=>region.label),['福岡','太宰府','夏威夷','曼谷','巴黎'],'v183: regions outside Japan are kept');
   assert.deepStrictEqual(parsed.regions[0].words,['福岡','天神','博多','中洲'],'the label itself is a keyword; 、 and , both split');
   assert.deepStrictEqual(parsed.regions[1].words,['太宰府','太宰府天滿宮','九州國立博物館']);
   assert.strictEqual(parsed.regions[0].key,'r_33.590_130.402','cache key follows the coordinates, so moving a region never reuses old weather');
-  assert.strictEqual(parsed.skipped,3,'out-of-Japan, duplicate and blank coordinates are skipped');
+  assert.strictEqual(parsed.skipped,3,'impossible, duplicate and blank coordinates are skipped');
 }
 
 /* 岡山：固定清單，不讀試算表清單 */

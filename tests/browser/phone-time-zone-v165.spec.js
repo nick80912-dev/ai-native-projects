@@ -27,6 +27,7 @@ test.describe('phone set to Taiwan time',()=>{
   test('a new expense defaults to the phone date and time and is saved as the real moment',async({page})=>{
     await boot(page,'2026-10-20T11:00:00+08:00');
     await page.evaluate(m=>{closeMemberSelector();localStorage.setItem('trip_member','Bar');memberRegistrationBridge=m;switchView('split');openLedgerEntrySheet(false);},[identity('Bar')]);
+    await page.locator('#ledgerEntrySheet .ledger-entry-context').click();   // v183:帳本與幣別收成一行,先點開
     await page.locator('#ledgerEntrySheet .ledger-sheet-choice',{hasText:'個人'}).click();
     expect(await page.evaluate(()=>({date:ledgerUiState.draft.occurredDate,time:ledgerUiState.draft.occurredTime}))).toEqual({date:'2026/10/20',time:'11:00'});
     await page.locator('#ledgerAmount').fill('800');
