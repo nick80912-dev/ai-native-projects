@@ -57,6 +57,7 @@ function renderRoot(overrides,ledgerSettings){
     extractFunction(html,'renderSettingsRoot'),
     sandbox
   );
+  renderRoot.last=sandbox;
   return sandbox.renderSettingsRoot(ledgerSettings||{exchangeRate:'0.22',defaultCurrency:'JPY'});
 }
 
@@ -96,7 +97,12 @@ assert(out.includes('3 類別 · 2 支付方式'),'custom-option summary lists c
 assert(!/\d+\s*單位/.test(out),'shopping units are no longer summarized on the root page');
 assert(out.includes('JPY · 0.22'),'ledger summary shows default currency and exchange rate');
 assert(renderRoot({travelNotePendingCount:function(){return 0;}}).includes('資料狀態正常'),'data summary reports the aggregated health state');
-assert(out.includes('0 張 · 0 B'),'storage summary shows the device-local attachment count and size');
+/* v185:照片健康、旅途紀錄等四列在「疑難排解」頁 */
+renderRoot();
+const troubleshootPage=renderRoot.last.renderSettingsTroubleshootPage();
+assert(troubleshootPage.includes('0 張 · 0 B'),'storage summary shows the device-local attachment count and size');
+['health','storage','travel-notes','diagnostics'].forEach(function(id){assert(troubleshootPage.includes("openSettingsPage('"+id+"')"),id+' is reachable from the troubleshooting page');});
+assert(troubleshootPage.includes('2 筆待評估'),'the travel-note row counts pending notes');
 assert(out.includes('海洋／岡山'),'theme summary shows the current theme name');
 
 /* ---- 降級路徑 ---- */
@@ -132,7 +138,7 @@ assert(out.includes('openMemberSelector(false,false)'),'identity switch entry pr
 assert(out.includes('openMemberSelector(false,true)'),'identity add entry preserved');
 assert(out.includes('aria-label="新增身分"'),'the add-identity button keeps an accessible name');
 ["openSettingsPage('theme')","openSettingsPage('proxy')","openSettingsPage('ledger')",
- "openSettingsPage('options')","openSettingsPage('storage')","openSettingsPage('data')"].forEach(function(call){
+ "openSettingsPage('options')","openSettingsPage('troubleshoot')","openSettingsPage('data')"].forEach(function(call){
   assert(out.includes(call),'root preserves the subpage entry '+call);
 });
 
