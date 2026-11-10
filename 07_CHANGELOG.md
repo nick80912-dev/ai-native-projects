@@ -1,6 +1,40 @@
 # 07 版本紀錄
 
-## 2026-11-10 — v183 天氣地區不限日本；離線狀態、旅程結束回顧、記帳表單更簡潔
+## 2026-11-10 — v184 行前清單；頂端紙飛機取代岡山桃子
+
+- **來源**：Bar 2026-11-10：「關於桃子徽章Icon 的更動討論」「希望增加行前的待辦事項或是注意事項清單」。
+  - 圖示：選「簡單線條圖示」，看過後要求「紙飛機需有顏色且置中」，再選「C 金黃底＋深色飛機」。
+  - 清單：選「試算表寫、各自勾」，並「提供 App 也可以自己新增」；看過後嫌首頁上方太長，選「B 進度條」。
+  - 同日請我確認試算表：岡山試算表的「行前確認」分頁欄位正確，已在 TripConfig 填 `Checklist GID = 2140148232`，並清掉第 2–4 列只有類型、沒有項目的說明文字。另依 Bar 要求用 Drive 建立副本「TripPilot 下一趟（從岡山複製，待填）」：清空分帳紀錄（只留標題）與支出表金額（保留標題、類別與小計／總計公式），TripConfig 加上空白的 Trip ID、Ledger Endpoint、Weather Regions GID。
+- **使用上**：
+  - 頂端左上角的岡山桃子換成金黃底（#ffd66b）深色實心紙飛機，置中；點兩下仍開診斷面板，模擬時間的濾鏡照舊。
+  - 出發前首頁多一條「行前準備」進度條（例如 1/4 ›），採買清單與查看完整行程在下面同一列；點進度條打開「行前清單」。
+  - 清單：待辦（試算表，可勾，期限寫「10/1 前」）、我的待辦（自己新增，可刪）、注意事項（只顯示）。勾選與自己新增的只存在這支手機，依旅程分開，不同步、不進個人備份；清除並打包旅程時一起清掉（`trip_` 開頭）。
+  - 出發後不再顯示；沒有分頁時進度條寫「新增 ›」，一樣可以自己加。
+- **做法**：
+  - TripConfig 新增選填鍵 `Checklist GID`（`schema.js` 與內嵌副本同步，`09_SCHEMA_MAPPING.md` 重產）。
+  - `refreshPrepChecklist()` 與天氣地區一樣在同步成功後讀分頁，存 `trip_prep_items`；`parsePrepChecklistCsv()`（類型「注意／提醒」為注意事項，其餘待辦；項目空白或重複略過；最多 60 項）。
+  - `trip_prep_state` 存勾選與自己新增（最多 40 項）；`openPrepChecklist()` 沿用 `openLedgerInfoSheet()`。
+  - 圖示是 inline SVG（`#diagnosticBadge` 不變）；`okayama-peach-badge.png` 仍在 SW 快取清單，給 root 的 v110 bridge 用。
+  - 修正：新樣式一度被放進 390px 媒體查詢裡，較寬的手機會失去樣式，且舊的 `.brand .logo{display:block}` 讓飛機貼在左上角；移到媒體查詢外並提高選擇器權重，430px 截圖與測試確認。
+- **版本**：
+  - forward bump v183→v184；`builtin-snapshot.js` 以 v183 asset 離線重產，除版本外不變。
+  - 依「只留最近 3 份」刪除 `shell/v180`、`shell/v181`，留 v182–v184；hash 表同步。
+  - 發布說明視窗為 `v184` + `['v183','v182','v181','v180']`（v179 滾出）。
+  - `tests/trip-lifecycle-wiring.test.js` 加入已發布 v183 三件組的 hash。
+- **測試**：新增 `tests/browser/prep-checklist-v184.spec.js`（4 項）；`tests/app-now.test.js` 抓到自己新增待辦的時間沒走 `appNow()`，已改：CSV 解析（注意／待辦、期限、空白與重複略過）；首頁進度條、開清單、勾選、新增與刪除、存在手機；沒有分頁時「新增」、出發後不顯示；頂端紙飛機的底色、尺寸、置中與沒有桃子圖。`tests/pwa-shell.test.js`、`tests/theme-system.test.js`、`tests/schema-types.test.js`、`tests/home-simplification.test.js` 跟著更新。
+- **回滾**：合併前關閉 PR；發布後依 `16_OPS_PLAYBOOK.md` §A1 退回 `production-v183`（`f036ab8`）的部署，再往前 bump。
+
+## 2026-11-10 — v183 已上線 main，tag `production-v183`（待 Bar 手機審查）
+
+- Bar 看過畫面、頂端狀態選字「離線版」後回「okay」。
+- PR [#147](https://github.com/nick80912-dev/ai-native-projects/pull/147) 在 head `88cd323` 的 sanity／browser-qa 全綠後合併進 `dev`（`d1b2ce8`）。本機完整 Chromium 第一次有 7 項收據照片測試失敗（那份測試還在直接點已收起的「個人」），補上先點開那一行後 7/7 通過。
+- PR [#148](https://github.com/nick80912-dev/ai-native-projects/pull/148)（並帶 v182 發布紀錄 PR #146）合併 `dev` → `main`，merge commit **`f036ab8`**。過程中 GitHub Pages 鏡像（github.io，非正式站）的 `deploy` 卡在 GitHub 端 `syncing_files` 逾時，與程式無關；在 PR 留言說明並重跑一次後通過，七項檢查全綠。
+- **線上核對**：正式站 `sw.js` 為 `SW_VERSION='v183'`；全新 Chromium 開正式站 `APP_VERSION` v183、只剩 `okayama-trip-v183` 快取、發布說明「旅程結束回顧與記帳表單更簡潔」；曼谷座標通過天氣地區檢查、下載失敗時頂端為「離線版」、回顧與帳本幣別一行的程式都在線上；沒有 pageerror。前兩代 `shell/v182/`、`shell/v181/` 回 200。
+- **tag**：production-tags workflow 建立 `production-v183` → `f036ab8`，`git ls-remote` 核對相符。
+- 回滾：依 `16_OPS_PLAYBOOK.md` §A1 Publish `commit_ref` = `4ed9627`（`production-v182`）的部署，再往前 bump。
+
+## 2026-11-10 — v183 天氣地區不限日本；離線狀態、旅程結束回顧、記帳表單更簡潔（已上線 main，見上）
 
 - **來源**：Bar 2026-11-09 問「現在這個專案適合在其它國家或行程使用了嗎」與 UI/UX 改進建議；查到天氣地區只收日本附近座標，提出 7 項 UI/UX 建議。Bar 選「先修天氣地區，再做第1、2、3項」；看過畫面後頂端狀態嫌「暫時連不上」字多，2026-11-10 選「離線版 · 時間」，其他「okay」。
 - **使用上**：
