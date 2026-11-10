@@ -16,7 +16,7 @@
 - **測試**：
   - 新增 `tests/browser/ux-v183.spec.js`（4 項）：回顧的總花費與退稅、點退稅打開清單、打包按鈕在最下方；沒有紀錄時只顯示總花費；帳本與幣別一行、點開切換、金額緊接在下；沒匯率時直接提醒、編輯維持原樣。
   - `tests/weather-regions.test.js` 加入夏威夷、曼谷、巴黎與不合法座標；`tests/atomic-sheet-sync.test.js` 下載失敗時頂端為「離線版 · 」；`tests/home-simplification.test.js`、`tests/browser/home-v146.spec.js` 改成新首頁版面。
-  - 九個會點「個人／團體」或幣別的瀏覽器測試先點開那一行。
+  - 十個會點「個人／團體」或幣別的瀏覽器測試先點開那一行。
 - **回滾**：合併前關閉 PR；發布後依 `16_OPS_PLAYBOOK.md` §A1 退回 `production-v182`（`4ed9627`）的部署，再往前 bump。
 
 ## 2026-11-09 — v182 與專案整理已上線 main，tag `production-v182`（待 Bar 手機審查）
