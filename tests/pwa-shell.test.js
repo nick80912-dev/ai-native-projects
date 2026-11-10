@@ -70,7 +70,10 @@ assert.match(index, /<link rel="icon" type="image\/png" sizes="32x32" href="icon
 assert.match(index, /<link rel="apple-touch-icon" sizes="180x180" href="icon-180\.png">/, 'index links the Apple touch icon');
 assert.match(index, /navigator\.serviceWorker\.register\('sw\.js'\)/, 'index registers the service worker');
 
-assert.match(index, /<img class="logo" id="diagnosticBadge" src="okayama-peach-badge\.png" alt="岡山桃子">/, 'header uses the diagnostic peach badge');
+/* v184(Bar 2026-11-10):岡山桃子換成金黃底紙飛機(inline SVG);同一個 id 仍是診斷面板入口。
+   okayama-peach-badge.png 仍留在 SW 快取清單,因為 root 的 v110 bridge 還在用。 */
+assert.match(index, /<span class="logo logo-mark" id="diagnosticBadge" role="img" aria-label="TripPilot"><svg viewBox="0 0 24 24"/, 'header uses the paper-plane mark as the diagnostics entry');
+assert.doesNotMatch(index, /src="okayama-peach-badge\.png"/, 'the current shell no longer shows the Okayama peach');
 assert.match(index, /id="brandTitle"/, 'header keeps the dynamic itinerary title');
 
 const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));

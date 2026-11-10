@@ -120,3 +120,4 @@
 | Trip ID | tripId | 選填(新旅程必填);3–40 個英數字、- 或 _,每趟旅程不同,用來分開快取、待送帳與備份 |
 | Ledger Endpoint | ledgerEndpoint | 選填(新旅程必填);這份試算表部署的 Apps Script 網頁應用程式 /exec 網址 |
 | Weather Regions GID | weatherRegionsGid | 選填;「天氣地區」分頁的 gid(欄位:地區名稱、緯度、經度、關鍵字)。新旅程沒填就不顯示天氣;岡山沿用內建城市清單 |
+| Checklist GID | checklistGid | 選填;「行前清單」分頁的 gid(欄位:類型、項目、說明、期限)。類型填「待辦」或「注意」,沒填當待辦;勾選只存在各自手機 |

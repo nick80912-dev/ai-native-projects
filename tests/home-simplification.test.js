@@ -27,7 +27,7 @@ for (const file of [shellPath('index.html')]) {
   assert.doesNotMatch(html, /function renderPreTripBrief|today-pretrip-preview-lbl|出發當天 · DAY 1/, `${file} no longer renders the Day 1 preview in the pre-trip hero`);
   assert.match(
     nonTripToday,
-    /renderPreTripFirstStop\(days\)\+\s*'<div class="today-hero-actions">'\+renderShoppingTodayEntry\(null,''\)\+\s*'<button class="today-jump today-hero-action"[^']*'trip\\'\)">查看完整行程 →<\/button><\/div><\/div>'/,
+    /renderPreTripFirstStop\(days\)\+renderPrepTodayEntry\(\)\+\s*'<div class="today-hero-actions">'\+renderShoppingTodayEntry\(null,''\)\+\s*'<button class="today-jump today-hero-action"[^']*'trip\\'\)">查看完整行程 →<\/button><\/div><\/div>'/,
     `${file} puts the pre-trip Shopping launcher and full itinerary in one action row after the first stop`
   );
   assert.match(html, /\.today-hero-actions\{[^}]*display:flex[^}]*flex-wrap:wrap[^}]*gap:var\(--space-2\)/, `${file} spaces the pre-trip actions`);

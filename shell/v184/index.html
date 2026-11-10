@@ -134,6 +134,8 @@ input,select,textarea{font-size:16px}
 .brand .sync::before,.settings-btn::before{content:"";position:absolute;z-index:0;inset:4px;border-radius:inherit;background:rgba(255,255,255,.1);pointer-events:none}
 .brand .sync>*,.settings-btn>*{position:relative;z-index:1}
 @media(max-width:390px){.brand .logo{width:24px;height:24px;flex-basis:24px}.brand .sync{padding:5px 8px}}
+/* v184:行前清單進度條與頂端紙飛機(放在 390px 媒體查詢之外,所有寬度都適用) */
+.prep-progress-row{position:relative;display:flex;align-items:center;gap:10px;width:100%;min-height:44px;margin-top:var(--space-3);padding:8px 12px;border:0;border-radius:10px;background:rgba(255,255,255,.14);color:#fff;font:inherit;font-size:14px;font-weight:700;text-align:left;cursor:pointer}.prep-progress{flex:1 1 auto;height:6px;border-radius:3px;background:rgba(255,255,255,.25);overflow:hidden}.prep-progress>span{display:block;height:100%;border-radius:3px;background:#ffd66b}.prep-summary{margin:0 0 6px;color:var(--ink-soft);font-size:13px}.prep-heading{margin:14px 0 4px;font-size:14px}.prep-row{display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--line)}.prep-check{display:flex;align-items:flex-start;gap:10px;flex:1 1 auto;min-width:0;min-height:44px;padding:10px 0;cursor:pointer}.prep-check input{flex:0 0 auto;width:20px;height:20px;margin:1px 0 0}.prep-text{display:flex;flex-direction:column;min-width:0}.prep-title{font-size:15px;font-weight:700;overflow-wrap:anywhere}.prep-row.done .prep-title{color:var(--ink-soft);text-decoration:line-through}.prep-due{color:var(--coral);font-size:12px;font-weight:700}.prep-row.done .prep-due{color:var(--ink-soft)}.prep-note{color:var(--ink-soft);font-size:12px;overflow-wrap:anywhere}.prep-remove{flex:0 0 auto;width:44px;height:44px;border:0;background:none;color:var(--ink-soft);font-size:20px;cursor:pointer}.prep-empty{margin:4px 0;color:var(--ink-soft);font-size:13px}.prep-add{display:flex;gap:8px;margin-top:10px}.prep-add .ledger-sheet-input{flex:1 1 auto;min-width:0}.prep-add .btn{flex:0 0 auto;width:auto;margin:0;padding:0 16px}.prep-notes{margin:4px 0 0;padding-left:18px}.prep-notes li{margin:6px 0}.prep-notes li span{display:block;color:var(--ink-soft);font-size:12px}.brand .logo.logo-mark{display:inline-flex;align-items:center;justify-content:center;flex:0 0 24px;border-radius:7px;background:#ffd66b;color:#1f3b45;touch-action:manipulation}.logo-mark svg{display:block;flex:0 0 auto;width:17px;height:17px}.logo-mark-plane{fill:currentColor}.logo-mark-fold{fill:none;stroke:rgba(255,255,255,.55);stroke-width:1.4;stroke-linecap:round}
 .brand .sync .dot{width:7px;height:7px;border-radius:50%;background:#5ec27a}
 .brand .sync .dot.stale{background:var(--gold)}
 .brand .sync .dot.err{background:var(--coral)}
@@ -193,7 +195,7 @@ input,select,textarea{font-size:16px}
 .today-hero-top .lbl{min-width:0}.today-hero-top .loc{flex:0 0 auto;text-align:right;white-space:nowrap}
 .today-refund-reminder{display:flex;justify-content:space-between;align-items:center;gap:8px;width:100%;min-height:44px;margin-top:12px;padding:10px 0 0;border:0;border-top:1px solid var(--today-hero-summary-divider,rgba(255,255,255,.25));background:none;color:inherit;font:inherit;font-size:13px;font-weight:700;text-align:left;cursor:pointer}
 .ledger-refund-tabs{margin:4px 0 10px}.ledger-refund-hero{display:flex;flex-direction:column;align-items:center;margin:4px 0 8px}.ledger-refund-hero strong{font-size:28px}.ledger-refund-hero span{font-size:13px;opacity:.75}.ledger-refund-copy{display:flex;flex-direction:column;min-width:0;flex:1 1 auto;text-align:left}.ledger-refund-copy small{opacity:.72;font-size:12px}.ledger-refund-amount{white-space:nowrap}.ledger-refund-edit-note{margin:0 0 4px;font-size:13px;opacity:.8}.ledger-refund-skipped-row .ledger-refund-done-figures b{opacity:.6;text-decoration:line-through}.ledger-refund-done-row{display:flex;align-items:center;gap:10px;width:100%;min-height:52px;padding:8px 0;border:0;border-bottom:1px solid var(--entry-secondary-border,rgba(0,0,0,.08));background:none;color:inherit;font:inherit;cursor:pointer}.ledger-refund-done-figures{display:flex;flex-direction:column;align-items:flex-end;white-space:nowrap}.ledger-refund-done-figures small{opacity:.7;font-size:12px}.ledger-refund-chevron{opacity:.5;font-size:18px}.ledger-refund-edit-backdrop{position:fixed;inset:0;z-index:150;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(0,0,0,.35)}.ledger-refund-edit{width:min(360px,100%);padding:18px;border-radius:14px;background:var(--surface,#fffaf2);color:var(--text,#1d2b2f);box-shadow:0 12px 32px rgba(0,0,0,.25)}.ledger-refund-edit h3{margin:0 0 4px;font-size:16px}.ledger-refund-edit-tax{margin:0 0 10px;font-size:13px;opacity:.75}.ledger-refund-edit-actions{display:flex;gap:8px;margin-top:14px}.ledger-refund-edit-actions .btn{flex:1;min-height:44px}.ledger-refund-actual-error{color:var(--danger,#b3261e);font-size:12px;margin:6px 0 0}
-.ledger-refund-title{display:flex;align-items:center;gap:8px}.ledger-tax-amount-field{margin-top:10px}.ledger-tax-amount-head{margin:0 0 4px}.ledger-single-refundable{max-width:140px;flex:0 0 auto}.ledger-refund-quick{display:flex;align-items:flex-start;gap:10px;margin:2px 0 10px}.ledger-refund-quick{align-items:center}.ledger-refund-tax-chip{display:inline-flex;align-items:center;gap:6px;min-height:36px;padding:6px 12px;border:1px solid var(--line);border-radius:8px;background:#fff;color:inherit;font:inherit;font-size:14px;font-weight:700}.ledger-refund-quick-multi{margin-top:10px}.ledger-refund-quick-multi .ledger-sheet-label{margin:0}.ledger-legacy-coupon{margin-top:10px}
+.ledger-refund-title{display:flex;align-items:center;gap:8px}.ledger-tax-amount-field{margin-top:10px}.ledger-tax-amount-head{margin:0 0 4px}.ledger-single-refundable{max-width:140px;flex:0 0 auto}.ledger-detail-head{display:flex;align-items:center;justify-content:space-between;gap:8px;min-width:0;margin-bottom:4px}.ledger-detail-head>label{display:block;margin:0;font-size:12px;font-weight:900;color:var(--ink-soft)}.ledger-detail-head .ledger-refund-tax-chip{min-height:32px;padding:4px 10px;font-size:13px}.ledger-entry-context{display:inline-flex;align-items:center;gap:6px;min-height:36px;margin:2px 0 0;padding:4px 12px;border:1px solid var(--line);border-radius:999px;background:#fff;color:var(--ink-soft);font:inherit;font-size:13px;font-weight:800;cursor:pointer}.ledger-entry-context.open{background:var(--chip-bg,#f3f8f6)}.ledger-amount-head-actions{display:flex;align-items:center;gap:8px;flex:0 0 auto}.ledger-amount-head-actions .ledger-single-refundable{height:36px;min-height:36px;padding:0 12px}.ledger-refund-quick{display:flex;align-items:flex-start;gap:10px;margin:2px 0 10px}.ledger-refund-quick{align-items:center}.ledger-refund-tax-chip{display:inline-flex;align-items:center;gap:6px;min-height:36px;padding:6px 12px;border:1px solid var(--line);border-radius:8px;background:#fff;color:inherit;font:inherit;font-size:14px;font-weight:700}.ledger-refund-quick-multi{margin-top:10px}.ledger-refund-quick-multi .ledger-sheet-label{margin:0}.ledger-legacy-coupon{margin-top:10px}
 .today-hero-main{display:flex;align-items:center;justify-content:space-between;gap:var(--space-3);min-height:66px;position:relative}
 .today-weather-art{flex:0 0 76px;text-align:center;font-size:46px;line-height:1;filter:drop-shadow(0 5px 8px var(--today-hero-weather-shadow));position:relative}
 .today-hero-summary{display:grid;grid-template-columns:minmax(0,.9fr) 1px minmax(0,1.1fr);gap:10px;align-items:center;padding-top:9px;border-top:1px solid var(--today-hero-summary-border);position:relative}
@@ -378,7 +380,7 @@ button:focus-visible,[role="button"]:focus-visible,summary:focus-visible,.qa-btn
 .drive-chip.mode-ferry{background:var(--mode-ferry-bg);color:var(--mode-ink)}.drive-chip.mode-flight{background:var(--mode-flight-bg);color:var(--mode-ink)}
 .drive-chip.mode-transit{background:var(--mode-transit-bg);color:var(--mode-ink)}
 .pretrip-first-stop{position:relative;font-size:14px;opacity:.88;margin-top:2px;line-height:1.5}
-.today-hero-actions{position:relative;display:flex;flex-wrap:wrap;gap:var(--space-2);margin-top:var(--space-3)}.ended-settle-notice{margin:10px 0 0;padding:8px 10px;border-radius:9px;border:1px solid var(--warning-border);background:var(--warning-bg);color:var(--warning-ink);font-size:13px;line-height:1.45}.today-hero-actions .today-hero-action{margin-top:0}
+.today-hero-actions{position:relative;display:flex;flex-wrap:wrap;gap:var(--space-2);margin-top:var(--space-3)}.ended-recap{position:relative;margin-top:var(--space-3);border-top:1px solid rgba(255,255,255,.18)}.ended-recap-row{display:flex;align-items:center;gap:10px;width:100%;min-height:48px;padding:8px 0;border:0;border-bottom:1px solid rgba(255,255,255,.18);background:none;color:#fff;font:inherit;text-align:left;cursor:pointer}.ended-recap-row>span:first-child{flex:0 0 auto;font-size:13px;opacity:.85}.ended-recap-row>b{flex:1 1 auto;min-width:0;text-align:right;font-size:16px;font-weight:800}.ended-recap-row>b small{font-size:12px;font-weight:600;opacity:.8}.ended-recap-row>span[aria-hidden]{flex:0 0 auto;opacity:.7}.ended-pack{position:relative;display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-top:var(--space-4);padding-top:var(--space-3);border-top:1px dashed rgba(255,255,255,.22);font-size:12px;opacity:.9}.ended-pack-button{min-height:44px;padding:0 4px;border:0;background:none;color:#fff;font:inherit;font-size:13px;font-weight:700;text-decoration:underline;text-underline-offset:3px;cursor:pointer}.ended-settle-notice{margin:10px 0 0;padding:8px 10px;border-radius:9px;border:1px solid var(--warning-border);background:var(--warning-bg);color:var(--warning-ink);font-size:13px;line-height:1.45}.today-hero-actions .today-hero-action{margin-top:0}
 /* v149 Huninn:載好才由 loadHuninnFont() 加上 html.font-huninn,整頁一次換字;失敗則維持上面的系統字 */
 html.font-huninn{--font-ui:"Huninn","PingFang TC","Microsoft JhengHei",system-ui,-apple-system,sans-serif}
 html.font-huninn .brand .t{letter-spacing:0}
@@ -728,9 +730,9 @@ input:not([type="hidden"]),select,textarea{font-size:16px!important}
 .trip-status-completed{background:var(--mint);color:var(--sea-deep)}
 .shopping-target-overflow{color:var(--ink-soft);font-weight:400}
 </style>
-<script src="shell/v180/app-version.js"></script>
-<script id="builtinSnapshotMarker">var BUILTIN_HTML_VERSION='v180';var BUILTIN_HTML_TS=1790861998387;</script>
-<script src="shell/v180/builtin-snapshot.js"></script>
+<script src="shell/v184/app-version.js"></script>
+<script id="builtinSnapshotMarker">var BUILTIN_HTML_VERSION='v184';var BUILTIN_HTML_TS=1790861998387;</script>
+<script src="shell/v184/builtin-snapshot.js"></script>
 <script src="navigation-intent.js"></script>
 <script src="diagnostic-impact.js"></script>
 <script src="today-view.js"></script>
@@ -827,7 +829,8 @@ function selectTheme(themeId){
 <div class="hdr">
 <div class="topbar">
   <div class="brand">
-    <img class="logo" id="diagnosticBadge" src="okayama-peach-badge.png" alt="岡山桃子">
+    <!-- v184(Bar 2026-11-10 選「簡單線條圖示」,再選「C 金黃底＋深色飛機」、要有顏色且置中):岡山桃子換成跟旅程無關的紙飛機;雙點仍開診斷面板 -->
+    <span class="logo logo-mark" id="diagnosticBadge" role="img" aria-label="TripPilot"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><g transform="translate(-0.9 0.9)"><path class="logo-mark-plane" d="M21 3 3 9.6l7.2 4.2L14.4 21z"/><path class="logo-mark-fold" d="M21 3 10.2 13.8"/></g></svg></span>
     <span class="t" id="brandTitle">日本行程</span>
     <span class="sim-marker" id="simMarker">模擬中</span>
     <div class="brand-actions">
@@ -1056,7 +1059,10 @@ var SCHEMA = {
         { field:'ledgerEndpoint', header:'Ledger Endpoint', optional:true,
           desc:'選填(新旅程必填);這份試算表部署的 Apps Script 網頁應用程式 /exec 網址' },
         { field:'weatherRegionsGid', header:'Weather Regions GID', optional:true,
-          desc:'選填;「天氣地區」分頁的 gid(欄位:地區名稱、緯度、經度、關鍵字)。新旅程沒填就不顯示天氣;岡山沿用內建城市清單' }
+          desc:'選填;「天氣地區」分頁的 gid(欄位:地區名稱、緯度、經度、關鍵字)。新旅程沒填就不顯示天氣;岡山沿用內建城市清單' },
+        /* v184(Bar 2026-11-10 選「試算表寫、各自勾」並可在 App 自己新增):行前待辦／注意事項清單 */
+        { field:'checklistGid', header:'Checklist GID', optional:true,
+          desc:'選填;「行前清單」分頁的 gid(欄位:類型、項目、說明、期限)。類型填「待辦」或「注意」,沒填當待辦;勾選只存在各自手機' }
       ]
     }
   }
@@ -1948,6 +1954,7 @@ function syncAll(showToast){
   syncInFlight=syncInFlight.then(function(result){
     syncInFlight=null; renderSyncStatusBody();
     if(result&&result.ok&&typeof refreshWeatherRegions==='function')refreshWeatherRegions();
+    if(result&&result.ok&&typeof refreshPrepChecklist==='function')refreshPrepChecklist();
     return result;
   },function(error){
     /* v147(backlog #51):成功路徑在下載後會重查 inactive 並靜默返回;失敗路徑原本沒有。
@@ -2013,7 +2020,7 @@ function syncStatusModel(now){
   }catch(ignore){ failureRecord=null; }
   if(syncInFlight){ state='syncing'; label='同步中'; }
   else if(source==='builtin'){ state='builtin'; label='內建資料'; }
-  else if(failureRecord){ state='failed'; label='更新失敗'; }
+  else if(failureRecord){ state='failed'; label=failureRecord.stage==='download'?'離線版：沒能下載最新資料，沿用手機裡的資料':'更新失敗'; }
   else if(partialKeys.length){ state='partial'; label='部分同步'; }
   else if(source==='online'){ state='online'; label='同步正常'; }
   else{ state='offline'; label='離線資料'; }
@@ -2045,10 +2052,16 @@ function syncStatusModel(now){
     failedSources:failedSources
   };
 }
+/* v183(Bar 2026-11-09 選 UI/UX 第 1 項;2026-11-10 選字「離線版」):國外常沒網路,下載不到最新資料時不再顯示紅點「更新失敗」,
+   改成「離線版 · 時間」與黃點(與用離線資料開啟時同一個說法);資料都還在手機裡。結構、驗證、儲存這類真的出錯仍顯示「更新失敗」。 */
+function syncFailureIsDownload(){
+  try{var stored=localStorage.getItem(SNAPSHOT_FAILURE_KEY),record=stored?JSON.parse(stored):null;return !!record&&record.stage==='download';}
+  catch(ignore){return false;}
+}
 function syncHeaderModel(state,snapshot,now){
-  var labels={syncing:'同步中',online:'已同步',partial:'部分同步',failed:'更新失敗',offline:'離線版',cache:'離線版','legacy-migrated':'離線版',builtin:'內建版'};
+  var labels={syncing:'同步中',online:'已同步',partial:'部分同步',failed:'更新失敗',unreachable:'離線版',offline:'離線版',cache:'離線版','legacy-migrated':'離線版',builtin:'內建版'};
   var label=labels[state]||'更新失敗',relative=formatSyncRelativeTime(snapshot&&snapshot.createdAt,now,true),fullRelative=formatSyncRelativeTime(snapshot&&snapshot.createdAt,now,false);
-  var timed=state==='online'||state==='partial'||state==='failed'||state==='offline'||state==='cache'||state==='legacy-migrated';
+  var timed=state==='online'||state==='partial'||state==='failed'||state==='unreachable'||state==='offline'||state==='cache'||state==='legacy-migrated';
   if(!timed||relative==='時間未知')return {text:label,ariaLabel:label};
   if(state==='online')return {text:label,ariaLabel:label+'，資料更新於'+fullRelative};
   return {text:label+' · '+relative,ariaLabel:label+'，資料更新於'+fullRelative};
@@ -2113,11 +2126,12 @@ function retrySyncFromPanel(button){
 function setSyncState(state){
   var dot=document.getElementById('syncDot'),txt=document.getElementById('syncTxt'),btn=document.getElementById('syncBtn');
   if(!dot) return;
+  if(state==='failed'&&syncFailureIsDownload())state='unreachable';
   var header=syncHeaderModel(state,CURRENT_SNAPSHOT,Date.now());
   txt.textContent=header.text;btn.setAttribute('aria-label',header.ariaLabel);
   btn.classList.remove('spinning'); dot.className='dot';
   if(state==='syncing'){ btn.classList.add('spinning'); }
-  else if(state==='partial'||state==='legacy-migrated'||state==='cache'||state==='offline'||state==='builtin'){ dot.classList.add('stale'); }
+  else if(state==='partial'||state==='unreachable'||state==='legacy-migrated'||state==='cache'||state==='offline'||state==='builtin'){ dot.classList.add('stale'); }
   else if(state!=='online'){ dot.classList.add('err'); }
   renderSyncStatusBody();
 }
@@ -2342,7 +2356,6 @@ function dayProgressKey(day,dayIndex){
 }
 function getNextStopProgress(){ return lsGet('trip_next_stop_progress',{}); }
 function saveNextStopProgress(progress){ return writeTripProgressChecked(localStorage,[{key:'trip_next_stop_progress',value:progress}]); }
-function emptyDayProgress(){ return { done:{}, skip:{} }; }
 function normalizeDayProgress(progress){
   progress=progress||{};
   return { done:progress.done||{}, skip:progress.skip||{}, autoSkip:progress.autoSkip||{} };
@@ -2350,10 +2363,6 @@ function normalizeDayProgress(progress){
 function getDayProgress(day,dayIndex){
   var all=getNextStopProgress();
   return normalizeDayProgress(all[dayProgressKey(day,dayIndex)]);
-}
-function hasDayProgress(progress){
-  progress=normalizeDayProgress(progress);
-  return Object.keys(progress.done).length>0 || Object.keys(progress.skip).length>0;
 }
 function applyItemCompletion(progress,checks,itemId,status){
   delete progress.done[itemId];
@@ -2439,10 +2448,6 @@ function tripItemForNavigation(dayIndex,itemId){
   var days=DB&&DB.trip&&DB.trip.days||[],day=days[Number(dayIndex)];
   if(!day)return null;
   return (day.items||[]).filter(function(item){return item&&item.id===String(itemId);})[0]||null;
-}
-function navQuery(it,res){
-  var intent=navigationIntent(it,res);
-  return intent?encodeURIComponent(navigationDestinationQuery(intent,it,false)):'';
 }
 function navUrl(it,res){return navigationDirectionsUrl(navigationIntent(it,res),null,it,res);}
 function renderTripNavigationLink(it,res,dayIndex,className){
@@ -3142,10 +3147,11 @@ var WEATHER_CITIES=[
    不顯示天氣,不拿別趟旅程的城市清單猜。清單存在 trip_ key,清除或換旅程時一起移除。 */
 var WEATHER_REGIONS_KEY='trip_weather_regions';
 var WEATHER_REGIONS_MAX=30;
+/* v183(Bar 2026-11-09 先修天氣地區):原本只收日本附近(緯度 20–46、經度 122–154),泰國、歐美的地區會被略過;改成全球合法座標 */
 function weatherRegionValid(region){
   return !!region&&typeof region.key==='string'&&typeof region.label==='string'&&region.label&&
-    typeof region.lat==='number'&&isFinite(region.lat)&&region.lat>=20&&region.lat<=46&&
-    typeof region.lon==='number'&&isFinite(region.lon)&&region.lon>=122&&region.lon<=154&&
+    typeof region.lat==='number'&&isFinite(region.lat)&&region.lat>=-90&&region.lat<=90&&
+    typeof region.lon==='number'&&isFinite(region.lon)&&region.lon>=-180&&region.lon<=180&&
     Array.isArray(region.words)&&region.words.length>0;
 }
 function parseWeatherRegionsCsv(text){
@@ -3153,7 +3159,7 @@ function parseWeatherRegionsCsv(text){
   parseCSV(text||'').forEach(function(row){
     var label=String(row[0]||'').trim();
     if(!label||label==='地區名稱')return;
-    var lat=Number(String(row[1]||'').trim()),lon=Number(String(row[2]||'').trim());
+    var latText=String(row[1]||'').trim(),lonText=String(row[2]||'').trim(),lat=latText?Number(latText):NaN,lon=lonText?Number(lonText):NaN;
     var words=[label].concat(String(row[3]||'').split(/[、,，\/|;；]/)).map(function(word){return word.trim();})
       .filter(function(word,index,list){return word&&list.indexOf(word)===index;});
     var region={key:'r_'+lat.toFixed(3)+'_'+lon.toFixed(3),label:label,lat:lat,lon:lon,words:words};
@@ -3191,7 +3197,7 @@ function refreshWeatherRegions(){
   }).then(function(text){
     if(currentTripSourceKey()!==sourceKey)return null;
     var parsed=parseWeatherRegionsCsv(text);
-    if(parsed.skipped)AppLog.data('天氣地區有 '+parsed.skipped+' 列無法使用(緯度經度需在日本範圍內、不可重複,最多 '+WEATHER_REGIONS_MAX+' 個)');
+    if(parsed.skipped)AppLog.data('天氣地區有 '+parsed.skipped+' 列無法使用(緯度經度格式錯誤、不可重複,最多 '+WEATHER_REGIONS_MAX+' 個)');
     store(JSON.stringify({version:1,sourceKey:sourceKey,gid:gid,regions:parsed.regions}));
     return parsed.regions;
   }).catch(function(error){
@@ -3199,6 +3205,128 @@ function refreshWeatherRegions(){
     return null;
   }).then(function(result){weatherRegionsInFlight=null;return result;});
   return weatherRegionsInFlight;
+}
+/* ================= v184 行前清單 =================
+   Bar 2026-11-10:「希望增加行前的待辦事項或是注意事項清單」,選「試算表寫、各自勾」,並「提供 App 也可以自己新增」。
+   - 共用項目寫在試算表「行前清單」分頁(gid 填在 TripConfig 的 Checklist GID),欄位:類型、項目、說明、期限。
+     類型填「待辦」或「注意」(沒填當待辦);期限可填 YYYY-MM-DD、YYYY/M/D 或 M/D,選填。
+   - 勾選與自己新增的待辦只存在這支手機(trip_prep_state,依旅程分開),不上傳、不跟旅伴同步、不進個人備份。
+   - 出發前首頁顯示「行前準備 N/M」,點開清單。清除並打包旅程時跟其他 trip_ 資料一起清掉。 */
+var PREP_ITEMS_KEY='trip_prep_items',PREP_STATE_KEY='trip_prep_state',PREP_ITEMS_MAX=60,PREP_CUSTOM_MAX=40;
+function prepItemKey(type,title){var text=type+'|'+title,hash=0;for(var i=0;i<text.length;i++){hash=((hash<<5)-hash+text.charCodeAt(i))|0;}return 'p_'+(hash>>>0).toString(36);}
+function parsePrepDue(text){
+  var value=String(text||'').trim(),match;if(!value)return '';
+  match=/^(\d{4})[-\/.](\d{1,2})[-\/.](\d{1,2})$/.exec(value);
+  if(match)return Number(match[2])+'/'+Number(match[3]);
+  match=/^(\d{1,2})[-\/.](\d{1,2})$/.exec(value);
+  return match?Number(match[1])+'/'+Number(match[2]):value.slice(0,20);
+}
+function parsePrepChecklistCsv(text){
+  var items=[],seen={},skipped=0;
+  parseCSV(text||'').forEach(function(row){
+    var rawType=String(row[0]||'').trim(),title=String(row[1]||'').trim();
+    if(rawType==='類型'&&title==='項目')return;
+    if(!title){if(rawType)skipped++;return;}
+    var type=/注意|提醒|note/i.test(rawType)?'note':'todo',key=prepItemKey(type,title);
+    if(seen[key]||items.length>=PREP_ITEMS_MAX){skipped++;return;}
+    seen[key]=true;
+    items.push({key:key,type:type,title:title.slice(0,80),note:String(row[2]||'').trim().slice(0,200),due:parsePrepDue(row[3])});
+  });
+  return {items:items,skipped:skipped};
+}
+function readPrepItems(){
+  var stored;try{stored=JSON.parse(localStorage.getItem(PREP_ITEMS_KEY)||'null');}catch(ignore){return [];}
+  if(!stored||stored.version!==1||stored.sourceKey!==currentTripSourceKey()||!Array.isArray(stored.items))return [];
+  return stored.items.filter(function(item){return item&&typeof item.key==='string'&&typeof item.title==='string'&&item.title;});
+}
+function readPrepState(){
+  var stored=null;try{stored=JSON.parse(localStorage.getItem(PREP_STATE_KEY)||'null');}catch(ignore){}
+  if(!stored||stored.version!==1||stored.sourceKey!==currentTripSourceKey())stored={version:1,sourceKey:currentTripSourceKey(),checks:{},custom:[]};
+  if(!stored.checks||typeof stored.checks!=='object')stored.checks={};
+  if(!Array.isArray(stored.custom))stored.custom=[];
+  return stored;
+}
+function writePrepState(state){
+  try{localStorage.setItem(PREP_STATE_KEY,JSON.stringify(state));return true;}
+  catch(error){toast('行前清單無法保存，手機空間可能不足');return false;}
+}
+var prepItemsInFlight=null;
+function refreshPrepChecklist(){
+  if(prepItemsInFlight)return prepItemsInFlight;
+  var gid=String(DB&&DB.cfg&&DB.cfg.checklistGid||'').trim(),sourceKey=currentTripSourceKey();
+  var before=localStorage.getItem(PREP_ITEMS_KEY);
+  function store(next){
+    if(next===before)return;
+    try{if(next===null)localStorage.removeItem(PREP_ITEMS_KEY);else localStorage.setItem(PREP_ITEMS_KEY,next);}
+    catch(error){AppLog.data('行前清單無法保存：'+String(error&&error.message||error));return;}
+    if(curView==='today'&&typeof renderToday==='function')renderToday();
+  }
+  if(!/^\d{1,12}$/.test(gid)){store(null);return Promise.resolve([]);}
+  prepItemsInFlight=fetchWithTimeout(currentPubBase()+gid,FETCH_TIMEOUT).then(function(response){
+    if(!response.ok)throw new Error('HTTP '+response.status);
+    return response.text();
+  }).then(function(text){
+    if(currentTripSourceKey()!==sourceKey)return null;
+    var parsed=parsePrepChecklistCsv(text);
+    if(parsed.skipped)AppLog.data('行前清單有 '+parsed.skipped+' 列沒有使用(項目空白、重複或超過 '+PREP_ITEMS_MAX+' 項)');
+    store(JSON.stringify({version:1,sourceKey:sourceKey,gid:gid,items:parsed.items}));
+    return parsed.items;
+  }).catch(function(error){
+    AppLog.data('行前清單讀取失敗，沿用上次的清單：'+String(error&&error.message||error));
+    return null;
+  }).then(function(result){prepItemsInFlight=null;return result;});
+  return prepItemsInFlight;
+}
+function prepChecklistModel(){
+  var items=readPrepItems(),state=readPrepState();
+  var todos=items.filter(function(item){return item.type!=='note';}).map(function(item){return {key:item.key,title:item.title,note:item.note||'',due:item.due||'',done:!!state.checks[item.key],custom:false};});
+  var custom=state.custom.filter(function(item){return item&&typeof item.id==='string'&&item.title;}).map(function(item){return {key:item.id,title:item.title,note:'',due:'',done:!!state.checks[item.id],custom:true};});
+  var notes=items.filter(function(item){return item.type==='note';});
+  var all=todos.concat(custom);
+  return {todos:todos,custom:custom,notes:notes,done:all.filter(function(item){return item.done;}).length,total:all.length};
+}
+function renderPrepTodoRow(item){
+  var k=jsString(item.key);
+  return '<div class="prep-row '+(item.done?'done':'')+'"><label class="prep-check"><input type="checkbox" '+(item.done?'checked':'')+' onchange="togglePrepItem(\''+k+'\',this.checked)"><span class="prep-text"><span class="prep-title">'+escapeHtml(item.title)+'</span>'+(item.due?'<small class="prep-due">'+escapeHtml(item.due)+' 前</small>':'')+(item.note?'<small class="prep-note">'+escapeHtml(item.note)+'</small>':'')+'</span></label>'+(item.custom?'<button type="button" class="prep-remove" aria-label="刪除「'+escapeHtml(item.title)+'」" onclick="removePrepCustom(\''+k+'\')">×</button>':'')+'</div>';
+}
+function renderPrepChecklistBody(){
+  var model=prepChecklistModel(),html='';
+  html+='<p class="prep-summary">'+(model.total?'已完成 '+model.done+' / '+model.total:'還沒有待辦，可以在下面新增')+'</p>';
+  if(model.todos.length)html+='<h3 class="prep-heading">待辦</h3>'+model.todos.map(renderPrepTodoRow).join('');
+  html+='<h3 class="prep-heading">我的待辦</h3>'+(model.custom.length?model.custom.map(renderPrepTodoRow).join(''):'<p class="prep-empty">只存在這支手機，旅伴看不到。</p>');
+  html+='<div class="prep-add"><input class="ledger-sheet-input" id="prepAddInput" maxlength="80" placeholder="例如：換日幣、充電線" enterkeyhint="done" onkeydown="if(event.key===\'Enter\'){event.preventDefault();addPrepCustom();}"><button type="button" class="btn cta" onclick="addPrepCustom()">新增</button></div>';
+  if(model.notes.length)html+='<h3 class="prep-heading">注意事項</h3><ul class="prep-notes">'+model.notes.map(function(item){return '<li><b>'+escapeHtml(item.title)+'</b>'+(item.note?'<span>'+escapeHtml(item.note)+'</span>':'')+'</li>';}).join('')+'</ul>';
+  return html;
+}
+function openPrepChecklist(){openLedgerInfoSheet('行前清單','<div id="prepChecklistBody">'+renderPrepChecklistBody()+'</div>','prep');}
+function refreshPrepChecklistViews(){
+  var body=document.getElementById('prepChecklistBody');if(body)body.innerHTML=renderPrepChecklistBody();
+  if(curView==='today'&&typeof renderToday==='function')renderToday();
+}
+function togglePrepItem(key,checked){
+  var state=readPrepState();
+  if(checked)state.checks[key]=true;else delete state.checks[key];
+  if(writePrepState(state))refreshPrepChecklistViews();
+}
+function addPrepCustom(){
+  var input=document.getElementById('prepAddInput'),title=String(input&&input.value||'').trim().slice(0,80);
+  if(!title){if(input)input.focus();return;}
+  var state=readPrepState();
+  if(state.custom.length>=PREP_CUSTOM_MAX){toast('我的待辦最多 '+PREP_CUSTOM_MAX+' 項');return;}
+  state.custom.push({id:'c_'+Date.now().toString(36)+'_'+Math.random().toString(36).slice(2,6),title:title,createdAt:appNow().toISOString()});
+  if(writePrepState(state)){refreshPrepChecklistViews();var next=document.getElementById('prepAddInput');if(next)next.focus();}
+}
+function removePrepCustom(id){
+  var state=readPrepState();
+  state.custom=state.custom.filter(function(item){return item.id!==id;});delete state.checks[id];
+  if(writePrepState(state))refreshPrepChecklistViews();
+}
+/* Bar 2026-11-10 嫌首頁上方太長,選「B 進度條」:行前準備是一條進度條,採買清單與完整行程留在下面同一列 */
+function renderPrepTodayEntry(){
+  var model;try{model=prepChecklistModel();}catch(error){return '';}
+  var percent=model.total?Math.round(model.done/model.total*100):0;
+  var count=model.total?model.done+'/'+model.total:'新增';
+  return '<button type="button" class="prep-launcher prep-progress-row" onclick="openPrepChecklist()" aria-label="行前準備，已完成 '+model.done+' / '+model.total+'"><span>行前準備</span><span class="prep-progress" aria-hidden="true"><span style="width:'+percent+'%"></span></span><span>'+escapeHtml(count)+' ›</span></button>';
 }
 function weatherCityFromText(text){
   text=String(text||'');
@@ -3968,16 +4096,30 @@ function openEndedTripSettlement(){
   switchView('split');
   if(typeof openLedgerSettlementPanel==='function')openLedgerSettlementPanel();
 }
+/* v183(Bar 2026-11-09 選 UI/UX 第 2 項):旅程結束後首頁改成回顧 —— 我的總花費、待退稅、分帳是否結清;
+   「清除並打包旅程」會清掉手機裡的資料,改成卡片最下方較不顯眼的文字按鈕,不跟「查看完整行程」一樣搶眼。 */
+function endedTripRecapRows(){
+  var rows=[];
+  try{
+    var spend=myTripSpendSnapshot(),total=spend&&spend.total||{};
+    rows.push('<button type="button" class="ended-recap-row" onclick="switchView(\'split\');openMyTripSpendPanel()"><span>我的總花費</span><b>'+escapeHtml(myTripSpendAmount('JPY',total.amountJpy))+'<small> ≈ '+escapeHtml(myTripSpendAmount('TWD',total.amountTwd))+'</small></b><span aria-hidden="true">›</span></button>');
+  }catch(ignore){}
+  try{
+    var refund=personalRefundSummary();
+    if(refund.groups.length)rows.push('<button type="button" class="ended-recap-row" onclick="openLedgerRefundFromToday()"><span>退稅</span><b>'+(refund.pending.length?'待退 '+refund.pending.length+' 張 · '+escapeHtml(formatLedgerCurrencyAmount('JPY',refund.pendingTotal)):'都處理好了')+'</b><span aria-hidden="true">›</span></button>');
+  }catch(ignore){}
+  return rows.length?'<div class="ended-recap">'+rows.join('')+'</div>':'';
+}
 function renderEndedTripHome(){
   cancelHomeWeatherExpiry();homeWeatherVisibleKey=null;
   var notice=endedTripSettlementNotice();
   return '<div class="today-hero" id="endedTripHome"><div class="lbl">TODAY · '+todayMD()+'</div>'+
     '<div class="date">本趟旅程已結束</div>'+
-    '<div class="empty">要打包封存這趟旅程嗎？<br>目前紀錄仍保留在這部手機。</div>'+notice+
+    endedTripRecapRows()+notice+
     '<div class="today-hero-actions">'+
     (notice?'<button type="button" class="today-jump today-hero-action" onclick="openEndedTripSettlement()">前往分帳</button>':'')+
-    '<button type="button" class="today-jump today-hero-action" onclick="openEndedTripPacking()">清除並打包旅程</button>'+
-    '<button type="button" class="today-jump today-hero-action" onclick="switchView(\'trip\')">查看完整行程 →</button></div></div>';
+    '<button type="button" class="today-jump today-hero-action" onclick="switchView(\'trip\')">查看完整行程 →</button></div>'+
+    '<div class="ended-pack"><span>整理好了？紀錄目前仍保留在這部手機。</span><button type="button" class="ended-pack-button" onclick="openEndedTripPacking()">清除並打包旅程</button></div></div>';
 }
 function openEndedTripPacking(){
   if(!tripHasEnded()||TripLifecycle.readState(localStorage).mode!=='active') return;
@@ -4037,7 +4179,7 @@ function renderToday(){
     var days=DB.trip?DB.trip.days:[];
     view.innerHTML='<div class="today-hero"><div class="lbl">TODAY · '+todayMD()+'</div>'+
       '<div class="today-pretrip-title-row"><div class="date">還沒到出發日</div>'+renderPreTripCountdown()+'</div>'+
-      renderPreTripFirstStop(days)+
+      renderPreTripFirstStop(days)+renderPrepTodayEntry()+
       '<div class="today-hero-actions">'+renderShoppingTodayEntry(null,'')+
       '<button class="today-jump today-hero-action" onclick="switchView(\'trip\')">查看完整行程 →</button></div></div>'+
       (days.length?'<div class="seg">行程重點</div>':'')+
@@ -7613,7 +7755,6 @@ function sortLedgerExpenses(records){
     return byTime||String(a&&a.id||'').localeCompare(String(b&&b.id||''));
   });
 }
-function selectRecentLedgerExpenses(records,limit){return sortLedgerExpenses(records).slice(0,Math.max(0,Number(limit)||0));}
 function selectLatestLedgerDateExpenses(records){
   var sorted=sortLedgerExpenses(records),latest='';
   sorted.some(function(record){latest=ledgerLocalDateKey(record&&record.time);return !!latest;});
@@ -7892,11 +8033,6 @@ function normalizeLedgerParticipantSelection(names,entries){
   });
   if(!result.length)throw new Error('請選擇至少一位分攤成員');
   return result;
-}
-function multiItemTaxMultiplier(draft){
-  if(draft.taxMode==='included'||draft.taxMode==='free')return 100;
-  if(draft.taxMode!=='excluded'||(Number(draft.taxRate)!==8&&Number(draft.taxRate)!==10))throw new Error('稅制設定錯誤');
-  return 100+Number(draft.taxRate);
 }
 function ledgerTaxRateBps(draft){
   var preset=draft.taxPreset;
@@ -10266,7 +10402,7 @@ function ledgerSettingsBridgeNotice(){
 }
 function renderSettingsLedgerPage(ledgerSettings,settingsError){
   var currencyLocked=ledgerSettlementCurrencyLocked();
-  return renderSettingsHeader('帳務',false)+'<div class="settings-section"><h3>匯率與結算幣別</h3><div class="settings-current">目前匯率：<b>'+(ledgerSettings.exchangeRate?'1 '+escapeHtml(tripLocalCurrencyCode())+' = NT$'+escapeHtml(ledgerSettings.exchangeRate):'未設定（請在下面填寫，存下後全團共用）')+'</b></div>'+ledgerSettingsBridgeNotice()+'<div class="settings-rate-row"><label class="settings-help" for="ledgerExchangeRate"><b>匯率</b><br>1 '+escapeHtml(ledgerCurrencyInfo('JPY').name)+'可換算多少台幣</label><input id="ledgerExchangeRate" type="number" inputmode="decimal" min="0.000001" step="any" value="'+escapeHtml(ledgerSettings.exchangeRate)+'"></div><div class="settings-help"><b>結算幣別</b><br>全團共用：團體帳以這個幣別結算，也是新增記帳時預先選好的幣別。</div><div class="ledger-currency-grid" style="margin-top:8px"><button class="ledger-choice settings-currency-option '+(ledgerSettings.defaultCurrency==='JPY'?'on':'')+'" data-currency="JPY"'+(currencyLocked&&ledgerSettings.defaultCurrency!=='JPY'?' disabled':'')+' aria-pressed="'+(ledgerSettings.defaultCurrency==='JPY'?'true':'false')+'" onclick="selectLedgerDefaultCurrency(\'JPY\')">'+escapeHtml(tripLocalCurrencyCode()+' '+ledgerCurrencyInfo('JPY').name)+'</button><button class="ledger-choice settings-currency-option '+(ledgerSettings.defaultCurrency==='TWD'?'on':'')+'" data-currency="TWD"'+(currencyLocked&&ledgerSettings.defaultCurrency!=='TWD'?' disabled':'')+' aria-pressed="'+(ledgerSettings.defaultCurrency==='TWD'?'true':'false')+'" onclick="selectLedgerDefaultCurrency(\'TWD\')">TWD 台幣</button></div>'+(currencyLocked?'<div class="settings-help settings-currency-locked">已有還款紀錄。為了不讓已還的款在另一種幣別下不算數，結算幣別已鎖定。</div>':'')+(settingsError?'<div class="settings-help" style="color:var(--coral)">'+escapeHtml(settingsError)+'</div>':'')+'<div class="settings-help">儲存後跨裝置共用；CSV 發布可能延遲 1–5 分鐘。</div><button class="btn block" style="margin-top:10px" onclick="saveLedgerSettingsFromForm(this)">儲存共用設定</button></div>'+renderReceiptRecognitionSetting();
+  return renderSettingsHeader('帳務',false)+'<div class="settings-section"><h3>匯率與結算幣別</h3><div class="settings-current">目前匯率：<b>'+(ledgerSettings.exchangeRate?'1 '+escapeHtml(tripLocalCurrencyCode())+' ≈ NT$'+escapeHtml(ledgerSettings.exchangeRate):'未設定（請在下面填寫，存下後全團共用）')+'</b></div>'+ledgerSettingsBridgeNotice()+'<div class="settings-rate-row"><label class="settings-help" for="ledgerExchangeRate"><b>匯率</b><br>1 '+escapeHtml(ledgerCurrencyInfo('JPY').name)+'可換算多少台幣</label><input id="ledgerExchangeRate" type="number" inputmode="decimal" min="0.000001" step="any" value="'+escapeHtml(ledgerSettings.exchangeRate)+'"></div><div class="settings-help"><b>結算幣別</b><br>全團共用：團體帳以這個幣別結算，也是新增記帳時預先選好的幣別。</div><div class="ledger-currency-grid" style="margin-top:8px"><button class="ledger-choice settings-currency-option '+(ledgerSettings.defaultCurrency==='JPY'?'on':'')+'" data-currency="JPY"'+(currencyLocked&&ledgerSettings.defaultCurrency!=='JPY'?' disabled':'')+' aria-pressed="'+(ledgerSettings.defaultCurrency==='JPY'?'true':'false')+'" onclick="selectLedgerDefaultCurrency(\'JPY\')">'+escapeHtml(tripLocalCurrencyCode()+' '+ledgerCurrencyInfo('JPY').name)+'</button><button class="ledger-choice settings-currency-option '+(ledgerSettings.defaultCurrency==='TWD'?'on':'')+'" data-currency="TWD"'+(currencyLocked&&ledgerSettings.defaultCurrency!=='TWD'?' disabled':'')+' aria-pressed="'+(ledgerSettings.defaultCurrency==='TWD'?'true':'false')+'" onclick="selectLedgerDefaultCurrency(\'TWD\')">TWD 台幣</button></div>'+(currencyLocked?'<div class="settings-help settings-currency-locked">已有還款紀錄。為了不讓已還的款在另一種幣別下不算數，結算幣別已鎖定。</div>':'')+(settingsError?'<div class="settings-help" style="color:var(--coral)">'+escapeHtml(settingsError)+'</div>':'')+'<div class="settings-help">儲存後跨裝置共用；CSV 發布可能延遲 1–5 分鐘。</div><button class="btn block" style="margin-top:10px" onclick="saveLedgerSettingsFromForm(this)">儲存共用設定</button></div>'+renderReceiptRecognitionSetting();
 }
 function renderSettingsOptionsPage(){
   var rows=settingsNavRow('options-category','options','記帳類別',ledgerCategoryStore.all().length+' 項')+
@@ -10403,30 +10539,28 @@ function renderSettingsHealthPage(){
   return header+renderSettingsDataHealth();
 }
 var APP_RELEASE_NOTES=[
+  {version:'v184',date:'2026-11-10',title:'行前清單與新圖示',items:[
+    '出發前首頁多了「行前準備」進度條：試算表「行前清單」分頁寫共用的待辦與注意事項，各自在手機上勾；也能自己新增待辦。',
+    '頂端左上角的岡山桃子換成金黃底紙飛機，點兩下一樣開診斷面板。'
+  ]},
+  {version:'v183',date:'2026-11-10',title:'旅程結束回顧與記帳表單更簡潔',items:[
+    '天氣地區不限日本，泰國、歐美的地區也會顯示天氣。',
+    '沒網路時頂端寫「離線版 · 時間」與黃點，不再是紅色的「更新失敗」。',
+    '旅程結束後首頁顯示我的總花費與待退稅；「清除並打包旅程」移到卡片最下方。',
+    '記帳時帳本與幣別收成一行「個人帳本 · JPY ⌄」，點開才換。'
+  ]},
+  {version:'v182',date:'2026-11-09',title:'匯率寫法統一',items:[
+    '分帳卡片、記帳表單與設定的匯率都寫成「1 JPY ≈ NT$0.21」。',
+    '清掉幾段沒有用到的程式，畫面與資料不變。'
+  ]},
+  {version:'v181',date:'2026-11-09',title:'可退稅移到計算機旁',items:[
+    '單品項的「可退稅」放在金額那一行、計算機左邊；勾了一樣跳出稅額視窗。',
+    '填好的「稅額 ¥X ✎」放在「明細」同一列靠右，表單不會變長。'
+  ]},
   {version:'v180',date:'2026-11-03',title:'可退稅移到金額下方',items:[
     '記帳時「可退稅」放在金額正下方，不用打開「其他資訊」；勾了會跳出視窗輸入稅額，空白就照稅率估算。',
     '填好後旁邊顯示「稅額 ¥X ✎」，點一下可以改；按取消就不勾。',
     '多品項勾第一項「可退稅」時輸入整張的稅額，品項下方會顯示稅額。'
-  ]},
-  {version:'v179',date:'2026-11-03',title:'退稅清單改成點一下就好',items:[
-    '分帳 → 退稅分成「待退／已退／不退」三個分頁；每張收據一列，只顯示稅額。',
-    '點一張：實際退了多少先帶入稅額，可以改，按「已退」就從「我的總花費」扣掉；不打算退的按「不退」。',
-    '已退或不退的再點一下可以改金額、改回待退；不用再填退到哪裡與日期。'
-  ]},
-  {version:'v178',date:'2026-11-01',title:'退稅追蹤',items:[
-    '記帳的「稅與優惠券」改成「稅」：優惠券那一格換成「稅額」，收據有印就自動帶入；選「税抜」時實付＝品項加總＋稅額。',
-    '收據上的優惠券等折扣寫進備註，多品項依金額比例分到各品項；「免稅品」改叫「可退稅」。',
-    '分帳 → 個人帳多了「退稅」清單：待退與已退，收到後記實際退了多少，會從「我的總花費」扣掉；離境當天今天頁會提醒。'
-  ]},
-  {version:'v177',date:'2026-10-31',title:'收據也讀出稅額',items:[
-    '收據辨識多讀「稅額」，結果視窗列出「稅額 ¥X」。',
-    '可退稅的收據（日本 11/1 起免稅店改成先付稅、出境後再退），備註寫「可退稅（結帳時未扣稅，需另外辦理），稅額 ¥X」，之後好核對退了多少。',
-    '需要把岡山 Apps Script 換成新版才會生效。'
-  ]},
-  {version:'v176',date:'2026-10-31',title:'收據也看免稅與稅率',items:[
-    '免稅收據（結帳時已扣稅）在備註寫「免稅（結帳時已扣稅）」；之後才能退稅的寫「可退稅（結帳時未扣稅，需另外辦理）」。',
-    '多品項時，收據列的是未稅價就自動選「未稅」與稅率，加稅後等於實付；有兩種稅率時只提醒。',
-    '需要把岡山 Apps Script 換成新版才會生效。'
   ]},
 ];
 function renderAppReleaseNotes(){
@@ -11083,7 +11217,7 @@ function updateLedgerPendingStatus(){
   var node=document.getElementById('ledgerPendingStatus'), count=ledgerRepository.pendingCount();
   if(!node)return;
   if(ledgerUiState.track==='shared'&&count){node.textContent='● '+count+' 筆待同步';node.classList.add('pending');node.disabled=false;node.setAttribute('aria-label','開啟同步狀態，'+count+' 筆待同步');return;}
-  try{node.textContent=tripLocalCurrencyCode()+' 1 ≈ TWD '+currentLedgerSettings().exchangeRate;node.classList.remove('pending');node.disabled=true;node.setAttribute('aria-label','目前匯率');}
+  try{node.textContent='1 '+tripLocalCurrencyCode()+' ≈ NT$'+currentLedgerSettings().exchangeRate;node.classList.remove('pending');node.disabled=true;node.setAttribute('aria-label','目前匯率');}
   catch(error){node.textContent='匯率未設定';node.classList.remove('pending');node.disabled=true;node.setAttribute('aria-label','匯率未設定');}
 }
 /* 可見範圍診斷:每次 renderSplit 都會重跑過濾,同一則訊息只記一次
@@ -11559,6 +11693,7 @@ function setLedgerDraftTrack(track){
   }catch(error){
     toast(error.message||'切換帳本失敗');return;
   }
+  if(planned&&typeof planned==='object')planned.contextOpen=!!current.contextOpen;   // v183:換帳本時展開的那一行保持展開
   ledgerUiWorkflow.dispatch({type:'entry-track-switched',sessionId:ledgerUiState.entrySessionId,draft:planned});
 }
 function toggleLedgerCategoryApply(){var draft=ledgerUiState.draft;if(!draft)return;draft.categoryApplyOpen=!draft.categoryApplyOpen;withLedgerSheetPosition(renderLedgerEntrySheet);}
@@ -11645,7 +11780,7 @@ function ledgerSheetChoiceButtons(values,selected,handler,className){
    可新增或可能超過 5 個的集合使用獨立 Chips。 */
 function renderLedgerDraftTrack(draft){if(ledgerUiState.editing||ledgerUiState.correction)return '<div class="ledger-sheet-field ledger-entry-segment ledger-entry-segment-static"><span class="ledger-sheet-label">帳本</span><div class="ledger-rate">'+(draft.track==='personal'?'個人帳本':'團體帳本')+'（'+(ledgerUiState.correction?'更正':'編輯')+'不可切換）</div></div>';return '<div class="ledger-sheet-field ledger-entry-segment"><span class="ledger-sheet-label">帳本</span><div class="ledger-sheet-track"><button class="ledger-sheet-choice '+(draft.track==='personal'?'on':'')+'" aria-pressed="'+(draft.track==='personal'?'true':'false')+'" onclick="setLedgerDraftTrack(\'personal\')"><span class="ledger-segment-face">個人</span></button><button class="ledger-sheet-choice '+(draft.track==='shared'?'on':'')+'" aria-pressed="'+(draft.track==='shared'?'true':'false')+'" onclick="setLedgerDraftTrack(\'shared\')"><span class="ledger-segment-face">團體</span></button></div></div>';}
 function renderLedgerDraftCurrency(draft){
-  var rate=ledgerExchangeRateMissing()?'<div class="ledger-rate ledger-rate-missing" role="alert">還沒設定匯率 <button type="button" class="ledger-rate-set" onclick="openLedgerRateSettings()">去設定</button></div>':'<div class="ledger-rate">1 '+escapeHtml(tripLocalCurrencyCode())+' = NT$'+escapeHtml(currentLedgerSettings().exchangeRate)+'</div>';
+  var rate=ledgerExchangeRateMissing()?'<div class="ledger-rate ledger-rate-missing" role="alert">還沒設定匯率 <button type="button" class="ledger-rate-set" onclick="openLedgerRateSettings()">去設定</button></div>':'<div class="ledger-rate">1 '+escapeHtml(tripLocalCurrencyCode())+' ≈ NT$'+escapeHtml(currentLedgerSettings().exchangeRate)+'</div>';
   return '<div class="ledger-sheet-field ledger-entry-segment"><span class="ledger-sheet-label">幣別</span><div class="ledger-sheet-track">'+['JPY','TWD'].map(function(value){var on=value===draft.currency;return '<button class="ledger-sheet-choice ledger-currency-option '+(on?'on':'')+'" data-choice-value="'+value+'" aria-pressed="'+(on?'true':'false')+'" onclick="selectLedgerCurrency(\''+value+'\')"><span class="ledger-segment-face">'+escapeHtml(ledgerCurrencyCodeOf(value))+'</span></button>';}).join('')+'</div>'+rate+'</div>';
 }
 /* v168:還沒有匯率時,從記帳表單直接到分帳設定(表單內容保留在草稿) */
@@ -11653,7 +11788,19 @@ function openLedgerRateSettings(){
   if(typeof closeLedgerEntrySheet==='function')closeLedgerEntrySheet(false);
   openSettings('ledger');
 }
-function renderLedgerEntrySegments(draft){return '<div class="ledger-entry-segments">'+renderLedgerDraftTrack(draft)+renderLedgerDraftCurrency(draft)+'</div>';}
+/* v183(Bar 2026-11-09 選 UI/UX 第 3 項):新增消費時「帳本」「幣別」收成一行小字「個人帳本 · JPY ⌄」,
+   點開才出現原本的兩排選擇,讓「金額」成為打開表單第一眼看到的東西。還沒設定匯率時照樣直接提醒;
+   編輯與更正本來就不能切換帳本,維持原樣。 */
+function toggleLedgerEntryContext(){var draft=ledgerUiState.draft;if(draft){draft.contextOpen=!draft.contextOpen;withLedgerSheetPosition(renderLedgerEntrySheet);}}
+function renderLedgerEntryContextLine(draft){
+  var text=(draft.track==='personal'?'個人帳本':'團體帳本')+' · '+ledgerCurrencyCodeOf(draft.currency);
+  return '<button type="button" class="ledger-entry-context '+(draft.contextOpen?'open':'')+'" aria-expanded="'+(draft.contextOpen?'true':'false')+'" onclick="toggleLedgerEntryContext()"><span>'+escapeHtml(text)+'</span><span aria-hidden="true">'+(draft.contextOpen?'⌃':'⌄')+'</span></button>';
+}
+function renderLedgerEntrySegments(draft){
+  if(ledgerUiState.editing||ledgerUiState.correction)return '<div class="ledger-entry-segments">'+renderLedgerDraftTrack(draft)+renderLedgerDraftCurrency(draft)+'</div>';
+  var missing=ledgerExchangeRateMissing()?'<div class="ledger-rate ledger-rate-missing" role="alert">還沒設定匯率 <button type="button" class="ledger-rate-set" onclick="openLedgerRateSettings()">去設定</button></div>':'';
+  return renderLedgerEntryContextLine(draft)+(draft.contextOpen?'<div class="ledger-entry-segments">'+renderLedgerDraftTrack(draft)+renderLedgerDraftCurrency(draft)+'</div>':missing);
+}
 function showLedgerInlineFieldError(input,message){
   if(!input)return;
   input.classList.add('ledger-field-invalid');input.setAttribute('aria-invalid','true');
@@ -11683,9 +11830,9 @@ function handleLedgerDetailNext(event){
 }
 function renderLedgerSingleItemPrimary(draft){
   var symbol=ledgerCurrencySymbol(draft.currency).trim(),error=draft.formErrors&&draft.formErrors.amount||'';
-  return '<section class="ledger-single-primary"><div class="ledger-sheet-field"><div class="ledger-amount-field-head"><label for="ledgerAmount">金額 ('+symbol+')'+ledgerReceiptTag(draft,'amount')+'</label>'+renderLedgerCalculatorTrigger({type:'single'},'開啟金額計算機')+'</div><div class="ledger-amount-wrap"><input class="ledger-sheet-input '+(error?'ledger-field-invalid':'')+'" id="ledgerAmount" type="number" '+ledgerAmountInputAttrs(draft.currency)+' enterkeyhint="next" min="1" aria-invalid="'+(error?'true':'false')+'" value="'+escapeHtml(draft.amount)+'" oninput="updateLedgerDraftField(\'amount\',this.value);updateLedgerConversionPreview()" onkeydown="handleLedgerAmountNext(event)"><output class="ledger-amount-inline" id="ledgerConvertedPreview">—</output></div>'+(error?'<div class="ledger-inline-error">'+escapeHtml(error)+'</div>':'')+'</div>'+renderLedgerSingleRefundRow(draft)+renderLedgerSingleItemDetail(draft)+'</section>';
+  return '<section class="ledger-single-primary"><div class="ledger-sheet-field"><div class="ledger-amount-field-head"><label for="ledgerAmount">金額 ('+symbol+')'+ledgerReceiptTag(draft,'amount')+'</label><span class="ledger-amount-head-actions">'+renderLedgerSingleRefundToggle(draft)+renderLedgerCalculatorTrigger({type:'single'},'開啟金額計算機')+'</span></div><div class="ledger-amount-wrap"><input class="ledger-sheet-input '+(error?'ledger-field-invalid':'')+'" id="ledgerAmount" type="number" '+ledgerAmountInputAttrs(draft.currency)+' enterkeyhint="next" min="1" aria-invalid="'+(error?'true':'false')+'" value="'+escapeHtml(draft.amount)+'" oninput="updateLedgerDraftField(\'amount\',this.value);updateLedgerConversionPreview()" onkeydown="handleLedgerAmountNext(event)"><output class="ledger-amount-inline" id="ledgerConvertedPreview">—</output></div>'+(error?'<div class="ledger-inline-error">'+escapeHtml(error)+'</div>':'')+'</div>'+renderLedgerSingleItemDetail(draft)+'</section>';
 }
-function renderLedgerSingleItemDetail(draft){var error=draft.formErrors&&draft.formErrors.detail||'';return '<div class="ledger-sheet-field"><label for="ledgerDetail">明細</label><input class="ledger-sheet-input '+(error?'ledger-field-invalid':'')+'" id="ledgerDetail" enterkeyhint="next" aria-invalid="'+(error?'true':'false')+'" value="'+escapeHtml(draft.detail)+'" placeholder="如：晚餐拉麵、渡輪票" oninput="updateLedgerDraftField(\'detail\',this.value)" onkeydown="handleLedgerDetailNext(event)">'+(error?'<div class="ledger-inline-error">'+escapeHtml(error)+'</div>':'')+'</div>';}
+function renderLedgerSingleItemDetail(draft){var error=draft.formErrors&&draft.formErrors.detail||'';var taxChip=renderLedgerSingleRefundRow(draft);return '<div class="ledger-sheet-field">'+(taxChip?'<div class="ledger-detail-head"><label for="ledgerDetail">明細</label>'+taxChip+'</div>':'<label for="ledgerDetail">明細</label>')+'<input class="ledger-sheet-input '+(error?'ledger-field-invalid':'')+'" id="ledgerDetail" enterkeyhint="next" aria-invalid="'+(error?'true':'false')+'" value="'+escapeHtml(draft.detail)+'" placeholder="如：晚餐拉麵、渡輪票" oninput="updateLedgerDraftField(\'detail\',this.value)" onkeydown="handleLedgerDetailNext(event)">'+(error?'<div class="ledger-inline-error">'+escapeHtml(error)+'</div>':'')+'</div>';}
 function toggleLedgerEntryDetails(){var draft=ledgerUiState.draft;if(draft){draft.entryDetailsOpen=!draft.entryDetailsOpen;withLedgerSheetPosition(renderLedgerEntrySheet);}}
 function ledgerOptionalDateLabel(value,now){
   var text=String(value||'').trim(),normalized,match;
@@ -11800,10 +11947,15 @@ function ledgerTaxSummaryText(draft){
   return computed?'稅額 約 '+formatLedgerCurrencyAmount(draft.currency,ledgerAmountInputMinor(computed,draft.currency)):'稅額 未填';
 }
 function renderLedgerTaxSummaryButton(draft){return '<button type="button" class="ledger-refund-tax-chip" id="ledgerRefundTaxChip" onclick="openLedgerTaxDialog(null)"><span id="ledgerRefundTaxChipText">'+escapeHtml(ledgerTaxSummaryText(draft))+'</span>'+ledgerReceiptTag(draft,'taxAmount')+'<span aria-hidden="true">✎</span></button>';}
-function renderLedgerSingleRefundRow(draft){
+/* v181(Bar 2026-11-09「將可退稅按鈕移至計算機旁」「稅額欄位縮排至明細那欄靠右對齊，避免表單再變長」):
+   可退稅放在金額標題列、計算機左邊;勾了之後稅額放在「明細」標題同一列靠右,表單不多一列 */
+function renderLedgerSingleRefundToggle(draft){
   var tax=ledgerDraftTax(draft);if(!tax.enabled||!tax.taxFree)return '';
-  var toggle='<label class="ledger-compact-check ledger-item-flag ledger-single-refundable '+(draft.refundable?'on':'')+'"><input type="checkbox" '+(draft.refundable?'checked':'')+' onchange="setLedgerRefundable(this.checked)"><span>可退稅</span></label>';
-  return '<div class="ledger-refund-quick">'+toggle+(draft.refundable?renderLedgerTaxSummaryButton(draft):'')+'</div>';
+  return '<label class="ledger-compact-check ledger-item-flag ledger-single-refundable '+(draft.refundable?'on':'')+'"><input type="checkbox" '+(draft.refundable?'checked':'')+' onchange="setLedgerRefundable(this.checked)"><span>可退稅</span></label>';
+}
+function renderLedgerSingleRefundRow(draft){
+  var tax=ledgerDraftTax(draft);if(!tax.enabled||!tax.taxFree||!draft.refundable)return '';
+  return renderLedgerTaxSummaryButton(draft);
 }
 function renderLedgerMultiRefundTax(draft){return ledgerTaxAmountOnTop(draft)?'<div class="ledger-refund-quick ledger-refund-quick-multi"><span class="ledger-sheet-label">可退稅</span>'+renderLedgerTaxSummaryButton(draft)+'</div>':'';}
 /* 勾「可退稅」後跳出稅額視窗。itemKey：多品項時剛勾的那一項，按取消會把它取消勾選 */
@@ -13778,7 +13930,7 @@ function renderSplit(){
   if(ledgerUiState.page==='all'){view.innerHTML=renderLedgerFullHistory(records,shared,currency)+'<div id="ledgerSelectionToolbarHost">'+renderLedgerSelectionToolbar()+'</div>';return;}
   var proxy=shared?null:buildProxySummary(records,member);
   var presentation=shared?ledgerSummaryPresentation(period,currency):personalSummaryPresentation(myTripSpendSnapshot(),proxy,currency);
-  var status=pending?'● '+pending+' 筆待同步':settings?tripLocalCurrencyCode()+' 1 ≈ TWD '+settings.exchangeRate:(settingsError||'匯率未設定');
+  var status=pending?'● '+pending+' 筆待同步':settings?'1 '+tripLocalCurrencyCode()+' ≈ NT$'+settings.exchangeRate:(settingsError||'匯率未設定');
   var recent=selectLatestLedgerDateExpenses(records),recentMarkup=recent.length?(shared?'':ledgerOtherIdentityNote(records))+renderLedgerRecentGroups(recent,shared,currency,true):'<div class="empty-state"><strong>尚無消費紀錄</strong><div>旅途中第一筆支出可以從這裡開始。</div><div class="empty-actions"><button class="btn cta" onclick="openLedgerQuickEntryFromFab()">記一筆消費</button></div></div>',recentDate=ledgerRecentDateLabel(recent,Date.now()),recentSummary=recent.length?renderLedgerDateSummary(recentDate,recent,true):'';
   var testWarning=shared&&lsGet('trip_ledger_test_mode',false)?'<div class="ledger-test-warning"><strong>⚠ 目前顯示測試帳本</strong><div>不影響正式分帳</div><button class="btn ghost" onclick="openSettings(\'ledgerTestModeSection\')">前往設定關閉</button></div>':'';
   var settlementCard=shared&&hasRecords?renderLedgerSettlementCard(mergedLedgerRecords(),member,currency):'';
