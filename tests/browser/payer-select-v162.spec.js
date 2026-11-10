@@ -13,6 +13,7 @@ async function openGroupForm(page){
   await openApp(page);
   await waitForSyncToSettle(page);
   await page.evaluate(m=>{closeMemberSelector();localStorage.setItem('trip_member','Bar');memberRegistrationBridge=m;switchView('split');openLedgerEntrySheet(false);},['Bar','Amy','Ken'].map(identity));
+  await page.locator('#ledgerEntrySheet .ledger-entry-context').click();   // v183:帳本與幣別收成一行,先點開
   await page.locator('#ledgerEntrySheet .ledger-sheet-choice',{hasText:'團體'}).click();
 }
 

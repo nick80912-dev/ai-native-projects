@@ -56,6 +56,7 @@ test('1 saving the multi-select ledger form keeps the items bought',async({page}
 async function openGroupForm(page,width){
   await openAt(page,'2026-10-19T12:00:00+09:00',width);
   await page.evaluate(()=>{switchView('split');openLedgerEntrySheet(false);});
+  await page.locator('#ledgerEntrySheet .ledger-entry-context').click();   // v183:帳本與幣別收成一行,先點開
   await page.locator('#ledgerEntrySheet .ledger-sheet-choice',{hasText:'團體'}).click();
 }
 

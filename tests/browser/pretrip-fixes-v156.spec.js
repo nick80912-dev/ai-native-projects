@@ -136,6 +136,7 @@ for(const width of [320,390]){
   test('L8 the group form names the payer at '+width+'px',async({page})=>{
     await openLedgerEntry(page,width);
     const member=page.locator('#ledgerEntrySheet .ledger-sheet-member');
+    await page.locator('#ledgerEntrySheet .ledger-entry-context').click();   // v183:帳本與幣別收成一行,先點開
     await page.locator('#ledgerEntrySheet .ledger-sheet-choice',{hasText:'團體'}).click();
     /* v157:付款人改成可選的下拉選單(見 proxy-recording-v157.spec.js);只有一位成員時不能改,預設是你。 */
     await expect(member.locator('#ledgerPayer')).toHaveValue('');

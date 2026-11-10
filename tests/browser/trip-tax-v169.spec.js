@@ -24,6 +24,7 @@ async function boot(page,cfg){
 }
 async function openPersonalMultiForm(page){
   await page.evaluate(()=>openLedgerEntrySheet(false));
+  await page.locator('#ledgerEntrySheet .ledger-entry-context').click();   // v183:帳本與幣別收成一行,先點開
   await page.locator('#ledgerEntrySheet .ledger-sheet-choice',{hasText:'個人'}).click();
   await page.evaluate(()=>setLedgerDraftMulti(true));
 }
@@ -64,6 +65,7 @@ test('a trip without tax rates shows no tax options and records no tax',async({p
   expect(records).toEqual([[12000,0,false,'included']]);
   /* 單品項也沒有「稅」區塊(v178 起沒有優惠券欄) */
   await page.evaluate(()=>openLedgerEntrySheet(false));
+  await page.locator('#ledgerEntrySheet .ledger-entry-context').click();   // v183:帳本與幣別收成一行,先點開
   await page.locator('#ledgerEntrySheet .ledger-sheet-choice',{hasText:'個人'}).click();
   await page.evaluate(()=>{ledgerUiState.draft.entryDetailsOpen=true;renderLedgerEntrySheet();});
   await expect(sheet(page).locator('.ledger-optional-section-title',{hasText:/稅|優惠券/})).toHaveCount(0);
