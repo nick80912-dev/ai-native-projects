@@ -15,17 +15,18 @@ test('after the end date Home asks about packing without authorizing or clearing
   await boot(page,'2026-10-24T12:00:00+09:00');
   const home=page.locator('#view-today');
   await expect(home).toContainText('本趟旅程已結束');
-  await expect(home).toContainText('要打包封存');
   await expect(home).not.toContainText('還沒到出發日');
   await expect(home).not.toContainText('出發當天');
-  await expect(home.getByRole('button',{name:'清除並打包旅程',exact:true})).toBeVisible();
-  /* v151(Bar 2026-10-13):兩顆鈕同一列且留間距,不再相黏 */
-  const actions=await home.locator('.today-hero-actions .today-hero-action').evaluateAll(nodes=>nodes.map(node=>{
-    const box=node.getBoundingClientRect();return {text:node.textContent,left:box.left,right:box.right,top:box.top};
-  }));
-  expect(actions.map(action=>action.text)).toEqual(['清除並打包旅程','查看完整行程 →']);
-  expect(actions[1].top).toBe(actions[0].top);
-  expect(actions[1].left-actions[0].right).toBeGreaterThanOrEqual(6);
+  /* v183(Bar 2026-11-09 選 UI/UX 第 2 項):結束後首頁是回顧(我的總花費等);「清除並打包旅程」移到卡片最下方的文字按鈕,
+     不跟「查看完整行程」並排。 */
+  await expect(home.locator('.ended-recap-row').first()).toContainText('我的總花費');
+  await expect(home.locator('.today-hero-actions .today-hero-action')).toHaveText(['查看完整行程 →']);
+  await expect(home.locator('.ended-pack')).toContainText('整理好了？紀錄目前仍保留在這部手機。');
+  const pack=home.locator('.ended-pack').getByRole('button',{name:'清除並打包旅程',exact:true});
+  await expect(pack).toBeVisible();
+  const order=await page.evaluate(()=>{const actions=document.querySelector('#endedTripHome .today-hero-actions').getBoundingClientRect(),pack=document.querySelector('#endedTripHome .ended-pack-button').getBoundingClientRect();return {packBelow:pack.top>=actions.bottom,height:pack.height};});
+  expect(order.packBelow).toBe(true);
+  expect(order.height).toBeGreaterThanOrEqual(44);
   expect(await page.evaluate(()=>({mode:TripLifecycle.readState(localStorage).mode,member:localStorage.getItem('trip_member'),overlay:!!document.getElementById('settingsOverlay'),drive:!!tripDriveClient})))
     .toEqual({mode:'active',member:'Bar',overlay:false,drive:false});
 });

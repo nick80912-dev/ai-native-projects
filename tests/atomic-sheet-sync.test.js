@@ -830,8 +830,8 @@ async function testBackgroundSyncStatusSettles(){
   const failed=await failurePending;
   assert.strictEqual(failed.ok,false);
   assert.strictEqual(app.syncStatusModel().state,'failed','failed background sync settles as failed');
-  /* v183(Bar 2026-11-09):下載不到(沒網路)時頂端寫「暫時連不上」而不是「更新失敗」,仍顯示資料時間 */
-  assert(panel.txt.textContent.indexOf('暫時連不上 · ')===0,'a download failure shows a calm header that keeps the age of the retained snapshot visible');
+  /* v183(Bar 2026-11-09/10):下載不到(沒網路)時頂端寫「離線版」而不是「更新失敗」,仍顯示資料時間 */
+  assert(panel.txt.textContent.indexOf('離線版 · ')===0,'a download failure shows a calm header that keeps the age of the retained snapshot visible');
   assert(!/sync-status-retry[^>]*\sdisabled/.test(panel.body.innerHTML),'background failure reenables panel retry');
   assert(panel.body.innerHTML.indexOf('最後完整同步 2026/07/13 21:30')>=0,'background failure renders retained snapshot time');
   assert(panel.body.innerHTML.indexOf('未更新資料')>=0,'background failure renders the failed Sheet');

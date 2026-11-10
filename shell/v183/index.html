@@ -2013,7 +2013,7 @@ function syncStatusModel(now){
   }catch(ignore){ failureRecord=null; }
   if(syncInFlight){ state='syncing'; label='同步中'; }
   else if(source==='builtin'){ state='builtin'; label='內建資料'; }
-  else if(failureRecord){ state='failed'; label=failureRecord.stage==='download'?'暫時連不上，沿用手機裡的資料':'更新失敗'; }
+  else if(failureRecord){ state='failed'; label=failureRecord.stage==='download'?'離線版：沒能下載最新資料，沿用手機裡的資料':'更新失敗'; }
   else if(partialKeys.length){ state='partial'; label='部分同步'; }
   else if(source==='online'){ state='online'; label='同步正常'; }
   else{ state='offline'; label='離線資料'; }
@@ -2045,14 +2045,14 @@ function syncStatusModel(now){
     failedSources:failedSources
   };
 }
-/* v183(Bar 2026-11-09 選 UI/UX 第 1 項):國外常沒網路,下載不到最新資料時不再顯示紅點「更新失敗」,
-   改成「暫時連不上 · 時間」與黃點;資料都還在手機裡。結構、驗證、儲存這類真的出錯仍顯示「更新失敗」。 */
+/* v183(Bar 2026-11-09 選 UI/UX 第 1 項;2026-11-10 選字「離線版」):國外常沒網路,下載不到最新資料時不再顯示紅點「更新失敗」,
+   改成「離線版 · 時間」與黃點(與用離線資料開啟時同一個說法);資料都還在手機裡。結構、驗證、儲存這類真的出錯仍顯示「更新失敗」。 */
 function syncFailureIsDownload(){
   try{var stored=localStorage.getItem(SNAPSHOT_FAILURE_KEY),record=stored?JSON.parse(stored):null;return !!record&&record.stage==='download';}
   catch(ignore){return false;}
 }
 function syncHeaderModel(state,snapshot,now){
-  var labels={syncing:'同步中',online:'已同步',partial:'部分同步',failed:'更新失敗',unreachable:'暫時連不上',offline:'離線版',cache:'離線版','legacy-migrated':'離線版',builtin:'內建版'};
+  var labels={syncing:'同步中',online:'已同步',partial:'部分同步',failed:'更新失敗',unreachable:'離線版',offline:'離線版',cache:'離線版','legacy-migrated':'離線版',builtin:'內建版'};
   var label=labels[state]||'更新失敗',relative=formatSyncRelativeTime(snapshot&&snapshot.createdAt,now,true),fullRelative=formatSyncRelativeTime(snapshot&&snapshot.createdAt,now,false);
   var timed=state==='online'||state==='partial'||state==='failed'||state==='unreachable'||state==='offline'||state==='cache'||state==='legacy-migrated';
   if(!timed||relative==='時間未知')return {text:label,ariaLabel:label};
@@ -10410,6 +10410,12 @@ function renderSettingsHealthPage(){
   return header+renderSettingsDataHealth();
 }
 var APP_RELEASE_NOTES=[
+  {version:'v183',date:'2026-11-10',title:'旅程結束回顧與記帳表單更簡潔',items:[
+    '天氣地區不限日本，泰國、歐美的地區也會顯示天氣。',
+    '沒網路時頂端寫「離線版 · 時間」與黃點，不再是紅色的「更新失敗」。',
+    '旅程結束後首頁顯示我的總花費與待退稅；「清除並打包旅程」移到卡片最下方。',
+    '記帳時帳本與幣別收成一行「個人帳本 · JPY ⌄」，點開才換。'
+  ]},
   {version:'v182',date:'2026-11-09',title:'匯率寫法統一',items:[
     '分帳卡片、記帳表單與設定的匯率都寫成「1 JPY ≈ NT$0.21」。',
     '清掉幾段沒有用到的程式，畫面與資料不變。'
@@ -10427,11 +10433,6 @@ var APP_RELEASE_NOTES=[
     '分帳 → 退稅分成「待退／已退／不退」三個分頁；每張收據一列，只顯示稅額。',
     '點一張：實際退了多少先帶入稅額，可以改，按「已退」就從「我的總花費」扣掉；不打算退的按「不退」。',
     '已退或不退的再點一下可以改金額、改回待退；不用再填退到哪裡與日期。'
-  ]},
-  {version:'v178',date:'2026-11-01',title:'退稅追蹤',items:[
-    '記帳的「稅與優惠券」改成「稅」：優惠券那一格換成「稅額」，收據有印就自動帶入；選「税抜」時實付＝品項加總＋稅額。',
-    '收據上的優惠券等折扣寫進備註，多品項依金額比例分到各品項；「免稅品」改叫「可退稅」。',
-    '分帳 → 個人帳多了「退稅」清單：待退與已退，收到後記實際退了多少，會從「我的總花費」扣掉；離境當天今天頁會提醒。'
   ]},
 ];
 function renderAppReleaseNotes(){
@@ -11564,6 +11565,7 @@ function setLedgerDraftTrack(track){
   }catch(error){
     toast(error.message||'切換帳本失敗');return;
   }
+  if(planned&&typeof planned==='object')planned.contextOpen=!!current.contextOpen;   // v183:換帳本時展開的那一行保持展開
   ledgerUiWorkflow.dispatch({type:'entry-track-switched',sessionId:ledgerUiState.entrySessionId,draft:planned});
 }
 function toggleLedgerCategoryApply(){var draft=ledgerUiState.draft;if(!draft)return;draft.categoryApplyOpen=!draft.categoryApplyOpen;withLedgerSheetPosition(renderLedgerEntrySheet);}

@@ -24,6 +24,7 @@ async function boot(page,cfg){
 }
 async function openPersonalForm(page){
   await page.evaluate(()=>openLedgerEntrySheet(false));
+  await page.locator('#ledgerEntrySheet .ledger-entry-context').click();   // v183:帳本與幣別收成一行,先點開
   await page.locator('#ledgerEntrySheet .ledger-sheet-choice',{hasText:'個人'}).click();
 }
 
