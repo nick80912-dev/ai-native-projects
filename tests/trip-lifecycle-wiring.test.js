@@ -20,6 +20,9 @@ const immutable = {
   'shell/v183/index.html': '84e7178b62bceb9859beaff7daaf2c7779ed60be0e31d527790cdab5c425dc80',
   'shell/v183/app-version.js': 'b8406d7dd90ad7e18aebe796c324242d20cab9bd1c4a1952110a862c0315d45c',
   'shell/v183/builtin-snapshot.js': '04c601fbd112b53ab01d03febd334e1fd642e16df6f990948008c19c87e788ca',
+  'shell/v184/index.html': '8eda886ca476803b6c0b3b4933106e32dd9cd6e113ea275ec4667bdea2bb59cf',
+  'shell/v184/app-version.js': 'c37e4986d56eec5b142c3f45970f8e2d78cc73f2352c3ae98af4290c7f3ca9d0',
+  'shell/v184/builtin-snapshot.js': '0a99d2cf14a86f0c4c8450c58068727336ff97450352afc01767961d39be5739',
 };
 Object.keys(immutable).forEach((file) => assert.strictEqual(hash(file), immutable[file], file + ' remains immutable'));
 
