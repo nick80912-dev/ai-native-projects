@@ -133,7 +133,9 @@ input,select,textarea{font-size:16px}
 .settings-btn{position:relative;width:44px;height:44px;min-height:44px;border:0;border-radius:50%;background:transparent;color:#fff;font-size:18px;line-height:1;display:flex;align-items:center;justify-content:center;cursor:pointer}
 .brand .sync::before,.settings-btn::before{content:"";position:absolute;z-index:0;inset:4px;border-radius:inherit;background:rgba(255,255,255,.1);pointer-events:none}
 .brand .sync>*,.settings-btn>*{position:relative;z-index:1}
-@media(max-width:390px){.brand .logo{width:24px;height:24px;flex-basis:24px}.prep-progress-row{position:relative;display:flex;align-items:center;gap:10px;width:100%;min-height:44px;margin-top:var(--space-3);padding:8px 12px;border:0;border-radius:10px;background:rgba(255,255,255,.14);color:#fff;font:inherit;font-size:14px;font-weight:700;text-align:left;cursor:pointer}.prep-progress{flex:1 1 auto;height:6px;border-radius:3px;background:rgba(255,255,255,.25);overflow:hidden}.prep-progress>span{display:block;height:100%;border-radius:3px;background:#ffd66b}.prep-summary{margin:0 0 6px;color:var(--ink-soft);font-size:13px}.prep-heading{margin:14px 0 4px;font-size:14px}.prep-row{display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--line)}.prep-check{display:flex;align-items:flex-start;gap:10px;flex:1 1 auto;min-width:0;min-height:44px;padding:10px 0;cursor:pointer}.prep-check input{flex:0 0 auto;width:20px;height:20px;margin:1px 0 0}.prep-text{display:flex;flex-direction:column;min-width:0}.prep-title{font-size:15px;font-weight:700;overflow-wrap:anywhere}.prep-row.done .prep-title{color:var(--ink-soft);text-decoration:line-through}.prep-due{color:var(--coral);font-size:12px;font-weight:700}.prep-row.done .prep-due{color:var(--ink-soft)}.prep-note{color:var(--ink-soft);font-size:12px;overflow-wrap:anywhere}.prep-remove{flex:0 0 auto;width:44px;height:44px;border:0;background:none;color:var(--ink-soft);font-size:20px;cursor:pointer}.prep-empty{margin:4px 0;color:var(--ink-soft);font-size:13px}.prep-add{display:flex;gap:8px;margin-top:10px}.prep-add .ledger-sheet-input{flex:1 1 auto;min-width:0}.prep-add .btn{flex:0 0 auto;width:auto;margin:0;padding:0 16px}.prep-notes{margin:4px 0 0;padding-left:18px}.prep-notes li{margin:6px 0}.prep-notes li span{display:block;color:var(--ink-soft);font-size:12px}.logo-mark{display:inline-grid;place-items:center;flex:0 0 24px;border-radius:7px;background:#ffd66b;color:#1f3b45;touch-action:manipulation}.logo-mark svg{width:17px;height:17px}.logo-mark-plane{fill:currentColor}.logo-mark-fold{fill:none;stroke:rgba(255,255,255,.55);stroke-width:1.4;stroke-linecap:round}.brand .sync{padding:5px 8px}}
+@media(max-width:390px){.brand .logo{width:24px;height:24px;flex-basis:24px}.brand .sync{padding:5px 8px}}
+/* v184:行前清單進度條與頂端紙飛機(放在 390px 媒體查詢之外,所有寬度都適用) */
+.prep-progress-row{position:relative;display:flex;align-items:center;gap:10px;width:100%;min-height:44px;margin-top:var(--space-3);padding:8px 12px;border:0;border-radius:10px;background:rgba(255,255,255,.14);color:#fff;font:inherit;font-size:14px;font-weight:700;text-align:left;cursor:pointer}.prep-progress{flex:1 1 auto;height:6px;border-radius:3px;background:rgba(255,255,255,.25);overflow:hidden}.prep-progress>span{display:block;height:100%;border-radius:3px;background:#ffd66b}.prep-summary{margin:0 0 6px;color:var(--ink-soft);font-size:13px}.prep-heading{margin:14px 0 4px;font-size:14px}.prep-row{display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--line)}.prep-check{display:flex;align-items:flex-start;gap:10px;flex:1 1 auto;min-width:0;min-height:44px;padding:10px 0;cursor:pointer}.prep-check input{flex:0 0 auto;width:20px;height:20px;margin:1px 0 0}.prep-text{display:flex;flex-direction:column;min-width:0}.prep-title{font-size:15px;font-weight:700;overflow-wrap:anywhere}.prep-row.done .prep-title{color:var(--ink-soft);text-decoration:line-through}.prep-due{color:var(--coral);font-size:12px;font-weight:700}.prep-row.done .prep-due{color:var(--ink-soft)}.prep-note{color:var(--ink-soft);font-size:12px;overflow-wrap:anywhere}.prep-remove{flex:0 0 auto;width:44px;height:44px;border:0;background:none;color:var(--ink-soft);font-size:20px;cursor:pointer}.prep-empty{margin:4px 0;color:var(--ink-soft);font-size:13px}.prep-add{display:flex;gap:8px;margin-top:10px}.prep-add .ledger-sheet-input{flex:1 1 auto;min-width:0}.prep-add .btn{flex:0 0 auto;width:auto;margin:0;padding:0 16px}.prep-notes{margin:4px 0 0;padding-left:18px}.prep-notes li{margin:6px 0}.prep-notes li span{display:block;color:var(--ink-soft);font-size:12px}.brand .logo.logo-mark{display:inline-flex;align-items:center;justify-content:center;flex:0 0 24px;border-radius:7px;background:#ffd66b;color:#1f3b45;touch-action:manipulation}.logo-mark svg{display:block;flex:0 0 auto;width:17px;height:17px}.logo-mark-plane{fill:currentColor}.logo-mark-fold{fill:none;stroke:rgba(255,255,255,.55);stroke-width:1.4;stroke-linecap:round}
 .brand .sync .dot{width:7px;height:7px;border-radius:50%;background:#5ec27a}
 .brand .sync .dot.stale{background:var(--gold)}
 .brand .sync .dot.err{background:var(--coral)}
@@ -3311,7 +3313,7 @@ function addPrepCustom(){
   if(!title){if(input)input.focus();return;}
   var state=readPrepState();
   if(state.custom.length>=PREP_CUSTOM_MAX){toast('我的待辦最多 '+PREP_CUSTOM_MAX+' 項');return;}
-  state.custom.push({id:'c_'+Date.now().toString(36)+'_'+Math.random().toString(36).slice(2,6),title:title,createdAt:new Date().toISOString()});
+  state.custom.push({id:'c_'+Date.now().toString(36)+'_'+Math.random().toString(36).slice(2,6),title:title,createdAt:appNow().toISOString()});
   if(writePrepState(state)){refreshPrepChecklistViews();var next=document.getElementById('prepAddInput');if(next)next.focus();}
 }
 function removePrepCustom(id){
@@ -10537,6 +10539,10 @@ function renderSettingsHealthPage(){
   return header+renderSettingsDataHealth();
 }
 var APP_RELEASE_NOTES=[
+  {version:'v184',date:'2026-11-10',title:'行前清單與新圖示',items:[
+    '出發前首頁多了「行前準備」進度條：試算表「行前清單」分頁寫共用的待辦與注意事項，各自在手機上勾；也能自己新增待辦。',
+    '頂端左上角的岡山桃子換成金黃底紙飛機，點兩下一樣開診斷面板。'
+  ]},
   {version:'v183',date:'2026-11-10',title:'旅程結束回顧與記帳表單更簡潔',items:[
     '天氣地區不限日本，泰國、歐美的地區也會顯示天氣。',
     '沒網路時頂端寫「離線版 · 時間」與黃點，不再是紅色的「更新失敗」。',
@@ -10555,11 +10561,6 @@ var APP_RELEASE_NOTES=[
     '記帳時「可退稅」放在金額正下方，不用打開「其他資訊」；勾了會跳出視窗輸入稅額，空白就照稅率估算。',
     '填好後旁邊顯示「稅額 ¥X ✎」，點一下可以改；按取消就不勾。',
     '多品項勾第一項「可退稅」時輸入整張的稅額，品項下方會顯示稅額。'
-  ]},
-  {version:'v179',date:'2026-11-03',title:'退稅清單改成點一下就好',items:[
-    '分帳 → 退稅分成「待退／已退／不退」三個分頁；每張收據一列，只顯示稅額。',
-    '點一張：實際退了多少先帶入稅額，可以改，按「已退」就從「我的總花費」扣掉；不打算退的按「不退」。',
-    '已退或不退的再點一下可以改金額、改回待退；不用再填退到哪裡與日期。'
   ]},
 ];
 function renderAppReleaseNotes(){

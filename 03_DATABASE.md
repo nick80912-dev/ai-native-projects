@@ -145,6 +145,7 @@
 ## 每趟一份 Sheet（v150，ADR 0021）
 - 每趟旅程從範本複製一份新的試算表。TripConfig 新增三個選填鍵：`Trip ID`（3–40 個英數字、`-`、`_`，每趟不同）、`Ledger Endpoint`（這份試算表部署的 Apps Script `/exec` 網址）、`Weather Regions GID`（「天氣地區」分頁的 gid）。岡山試算表沒有這三鍵，照常運作；新旅程連接時強制檢查前兩鍵。
 - 行程總表可加選填「行程ID」欄（依標題名稱尋找）：有填就當作站點 ID，格式為英數字、`-`、`_`（最多 40 字）且整份不可重複；沒填沿用「日期_第幾列」。
+- 「行前清單」分頁（v184，選填，gid 填在 TripConfig `Checklist GID`）欄位：`類型,項目,說明,期限`；類型「待辦／注意」，沒填當待辦；最多 60 項。勾選與自己新增的待辦只存在手機（`trip_prep_state`）。
 - 「天氣地區」分頁欄位：`地區名稱,緯度,經度,關鍵字`；緯度 -90～90、經度 -180～180（v183 起不限日本）、最多 30 個地區。只在新旅程使用，岡山沿用 App 內建城市清單。
 - 本機旅程紀錄：`trip_source`（`legacy` 或 `sheet` + 發布 ID、Endpoint、Trip ID、名稱、日期）、`trip_connect_pending`（連接中斷標記）、`trip_ledger_queue_owner`（待送帳所屬旅程）、`trip_weather_regions`（天氣地區清單）。後三者是 `trip_` key，清除旅程時一起移除；`trip_source` 由連接流程覆寫。
 - 個人備份 v10 起帶 `trip` 身分，旅程不符整批拒絕；v11（v178 起）個人帳另帶稅額與實際退稅欄位；見 `docs/personal-state-compatibility.md`。

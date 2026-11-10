@@ -20,7 +20,7 @@ App 只在 `BUILTIN_ASSET_VERSION === APP_VERSION` 且八個 sheet 都完整時�
 
 原本的慣例是「每個已發布的舊 generation 都留在 repo 與正式站，並在 §F5 逐一確認回 200」。Bar 於 2026-10-16 核准刪除 v111–v153 共 43 個舊世代資料夾，此後**只保留最近的幾代（目前為 v154 起；至少保留 current 與前一代）**，每次發布仍須確認「前一代」可服務（`16_OPS_PLAYBOOK.md` §F5 第 4 項）。更早的世代可在之後的整理中刪除（刪除本身也要 Bar 核准），刪除時同步移除 `tests/trip-lifecycle-wiring.test.js` 保留世代 hash 表中對應的項目。
 
-2026-11-09 Bar 核准第二次整理：刪除 v154–v179 共 26 個世代資料夾（約 27 MB），之後 repo **只保留最近三代**（current、前一代與再前一代；目前為 v180–v182）。Bar 選的是「只留最近 3 份」；之後 forward bump 會多出第四代，是否在升版時順手刪最舊一代，以 Bar 當時的指示為準。刪除時 `tests/trip-lifecycle-wiring.test.js` 的 hash 表同步移除對應項目。
+2026-11-09 Bar 核准第二次整理：刪除 v154–v179 共 26 個世代資料夾（約 27 MB），之後 repo **只保留最近三代**（current、前一代與再前一代；目前為 v180–v182）。Bar 選的是「只留最近 3 份」；之後 forward bump 會多出第四代，是否在升版時順手刪最舊一代，以 Bar 當時的指示為準。v184（2026-11-10）照這個原則刪掉 v180、v181，留 v182–v184。刪除時 `tests/trip-lifecycle-wiring.test.js` 的 hash 表同步移除對應項目。
 
 為什麼安全：
 
