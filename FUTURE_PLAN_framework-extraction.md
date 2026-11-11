@@ -1,6 +1,6 @@
 # FUTURE PLAN — AI Native Framework 抽取計畫
 
-> 狀態:**執行中(2026-11-11)**。Bar 指示執行 #25,選擇私人 repo、App 文件改為「參見框架」只留差異。L1 檔案已產出(另含 `EXECUTION_RULES.md`、`FILE_TIERS.md`、`CHANGELOG.md`,由 15/14 的通用部分抽出);App 端文件已改寫。待 Bar 在 GitHub 建立空的私人 repo `ai-native-framework` 並讓 Claude 有權限後,推送並標記 v1.0.0。
+> 狀態:**已完成(2026-11-11)**。私人 repo `nick80912-dev/ai-native-framework`,tag `v1.0.0` → `0ffb62a`。L1 檔案依下方結構,另含 `EXECUTION_RULES.md`、`FILE_TIERS.md`(由 15/14 的通用部分抽出)、`CHANGELOG.md` 與 `.github/workflows/release-tag.yml`(AI 環境推不了 tag,改由 Actions 建立,檢查 VERSION 與 main)。App 端文件已改為「參見框架」只留差異。尚未做:第 6 步(第二個專案引用框架驗證通用性)。
 > 由 Bar 批准(GitHub + 版本綁定);框架抽取排入 App 完成後。本文件為執行藍圖,接手 AI 照此落地。
 
 ## 目標

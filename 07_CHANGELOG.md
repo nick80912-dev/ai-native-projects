@@ -8,6 +8,8 @@
   - `.ai-manifest.json` 的 `framework` 改為 `ai-native-framework@1.0.0`，並加 `framework_source`。
   - 以下文件改成「依框架 §x」，只留本專案差異（節號保留，舊引用不失效）：`PROJECT_CONSTITUTION.md`、`15_AI_EXECUTION_RULES.md`、`12_DEV_WORKFLOW.md`（情境 A–F 保留）、`14_FILE_TIERS_AND_GATE.md`（實際檔案清單保留）。
   - `11`／`05` 加框架引用；`08` 的理解報告模板改引用框架，閱讀順序加入框架。
+- **框架 repo**：Bar 建立私人 repo `nick80912-dev/ai-native-framework`；首版 commit 後加上 `release-tag` workflow（工作環境推不了 tag），由它建立 `v1.0.0` → `0ffb62a`，`git ls-remote --tags` 核對相符。
+- **#25 完成**，自 backlog 移除。
 - **限制**：框架是私人 repo，之後的工作階段要同時選取它，AI 才讀得到通用規則（已寫在憲章與 manifest）。
 
 ## 2026-11-11 — v185 已上線 main，tag `production-v185`（待 Bar 手機審查）
