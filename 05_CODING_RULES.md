@@ -1,7 +1,7 @@
 # 05 程式規範(快速概覽)
 
 ## 文件定位
-- 本文件是 AI / 開發者的快速規範。
+- 本文件是 AI / 開發者的快速規範。通用原則依框架 `ai-native-framework@1.0.0` 的 `CONVENTIONS.md`。
 - 詳細規範見 `11_CODING_CONVENTION.md`。
 - 資料欄位權威來源是 `schema.js`。
 - 若有衝突: `schema.js` > `09_SCHEMA_MAPPING.md` > `11_CODING_CONVENTION.md` > 本文件。

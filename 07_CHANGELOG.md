@@ -1,6 +1,49 @@
 # 07 版本紀錄
 
-## 2026-11-10 — v185 表單與設定更精簡（UI/UX 建議第 4–7 項）
+## 2026-11-11 — v186 畫面更清爽（UI/UX 建議 1–6，Bar 看過截圖回「好」）
+
+- **來源**：Bar 2026-11-11 請我給 UI/UX 與視覺建議，回「1-6 都執行並截圖我看再發版」，看過前後對照回「好」。
+- **使用上**：
+  1. **今天卡**：時間與站名已是大標題，拿掉下方重複的「這一站 12:00 站名」那一行。
+  2. **購物頁**：商場備註超過 4 行時預設只露出開頭，按「看全部（N 行）」展開、「收合」收回；展開狀態在本次使用中保留。
+  3. **行程頁**：「顯示全部／隱藏已完成」整列兩格切換改成右上的小開關「隱藏已完成」（仍是 aria-pressed 按鈕，class 保留 `trip-filter-btn` 供焦點還原）；舊 segmented 樣式移除。
+  4. **主要按鈕**：每個畫面只留一顆實心主色按鈕。今天卡只有「導航」實心，「完成」改淡綠底綠框、「看今日完整細節」改外框；分帳空白時的「記一筆消費」改外框（右下「＋」做同一件事）。
+  5. **天氣沒資料**：「暫無天氣資料」與「重試」排成同一行小字，重試是可點的文字（仍叫「重試天氣」）。
+  6. **線條圖示** ⭐：行程卡、今天卡、購物頁與資訊面板由 App 產生的 Emoji（導航、停車、資訊、景點、美食、住宿、樓層、營業、官網、交通等）改成 inline SVG 線條圖示（`LINE_ICON_PATHS`／`lineIcon()`／`iconLabelHtml()`，沿用 `.app-icon`）。標籤字串照舊以「Emoji 空白 文字」傳遞，只在輸出時換成圖示；SVG `aria-hidden`。Sheet 內容自帶的 Emoji 與分帳類別 Emoji 不變。`08_AI_HANDOVER.md` 與 manifest 的圖示規則同步更新（原「內容 Emoji 保留」由 Bar 這次核准改寫）。
+- **整理**：依「只留最近 3 份」刪除 `shell/v183`，留 v184–v186；發布說明保留最近 5 版（v182–v186）。
+
+## 2026-11-11 — #38 記帳表單次要底色維持固定（Bar 決定，無程式變更）
+
+- 依 Bar 2026-09-12「待實機看過再決定」，以 v185 做了焙茶／象牙／海洋三組對照：左邊是現在固定的 `#f3f8f6`，右邊是跟主題走（主色 6% 混白）。
+- Bar 看過回「保留」：`--entry-secondary-bg`／`--entry-secondary-border` 維持固定值，`tests/theme-system.test.js` 的斷言不變。#38 自 backlog 移除。
+
+## 2026-11-11 — #25 文件改為引用 ai-native-framework v1.0.0(文件，無 App 版本變更)⭐
+
+- **來源**：Bar 指示執行 #25，選擇私人 repo，App 的通用文件改成「參見框架」只留差異。
+- **框架 v1.0.0 內容**：README、VERSION、CONSTITUTION、WORKFLOW、EXECUTION_RULES、FILE_TIERS、CONVENTIONS、VALIDATOR_SPEC、HEALTH_CHECK、adr/TEMPLATE＋README、ai-manifest.schema.json、examples/japan-travel-app.md、CHANGELOG。已移除所有旅遊字眼；本專案 manifest 已用 JSON Schema 驗證通過。
+- **App 端**：
+  - `.ai-manifest.json` 的 `framework` 改為 `ai-native-framework@1.0.0`，並加 `framework_source`。
+  - 以下文件改成「依框架 §x」，只留本專案差異（節號保留，舊引用不失效）：`PROJECT_CONSTITUTION.md`、`15_AI_EXECUTION_RULES.md`、`12_DEV_WORKFLOW.md`（情境 A–F 保留）、`14_FILE_TIERS_AND_GATE.md`（實際檔案清單保留）。
+  - `11`／`05` 加框架引用；`08` 的理解報告模板改引用框架，閱讀順序加入框架。
+- **框架 repo**：Bar 建立私人 repo `nick80912-dev/ai-native-framework`；首版 commit 後加上 `release-tag` workflow（工作環境推不了 tag），由它建立 `v1.0.0` → `0ffb62a`，`git ls-remote --tags` 核對相符。
+- **#25 完成**，自 backlog 移除。
+- **限制**：框架是私人 repo，之後的工作階段要同時選取它，AI 才讀得到通用規則（已寫在憲章與 manifest）。
+
+## 2026-11-11 — v185 已上線 main，tag `production-v185`（待 Bar 手機審查）
+
+- Bar 看過五張截圖後回「好」。
+- PR [#152](https://github.com/nick80912-dev/ai-native-projects/pull/152) 在 head `e566e1a` 的 sanity／browser-qa 全綠後合併進 `dev`（`a0f3547`）。中間工作階段重啟，CI 綠燈後停了一段時間才繼續。
+- 本機完整 Chromium：第一輪 6 項失敗（5 項是設定頁路徑改成「疑難排解」後的舊測試，1 項是已知只在本機失敗的 `personal-ledger-export`），更新後 456 passed，只剩已知那一項。
+- PR [#153](https://github.com/nick80912-dev/ai-native-projects/pull/153) 合併 `dev` → `main`，merge commit **`3e0cfdb`**；七項檢查全綠。
+- **線上核對**：
+  - 正式站 `sw.js` 為 `SW_VERSION='v185'`。
+  - 全新 Chromium：`APP_VERSION` 為 v185、只剩 `okayama-trip-v185` 快取，發布說明是「表單與設定更精簡」。
+  - 代購小勾選、疑難排解頁、今天頁通知位置、結束後瀏覽的程式都在線上；沒有 pageerror。
+  - 前兩代 `shell/v184/`、`shell/v183/` 回 200，已刪的 `shell/v182/` 回 404。
+- **tag**：production-tags workflow 建立 `production-v185` → `3e0cfdb`，`git ls-remote` 核對相符。
+- 回滾：依 `16_OPS_PLAYBOOK.md` §A1 Publish `commit_ref` = `469cf8a`（`production-v184`）的部署，再往前 bump。
+
+## 2026-11-10 — v185 表單與設定更精簡（UI/UX 建議第 4–7 項；已上線 main，見上）
 
 - **來源**：Bar 2026-11-10 請我接著做先前 UI/UX 建議剩下的四項，並順手整理專案；看過畫面後回「好」。
 - **使用上**：

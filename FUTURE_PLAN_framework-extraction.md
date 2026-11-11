@@ -1,6 +1,6 @@
 # FUTURE PLAN — AI Native Framework 抽取計畫
 
-> 狀態:**已規劃,待執行**。觸發條件:旅遊 App 完成完整一輪(V2 驗收 → 打包 → Netlify 部署 → 線上驗證)後執行。
+> 狀態:**已完成(2026-11-11)**。私人 repo `nick80912-dev/ai-native-framework`,tag `v1.0.0` → `0ffb62a`。L1 檔案依下方結構,另含 `EXECUTION_RULES.md`、`FILE_TIERS.md`(由 15/14 的通用部分抽出)、`CHANGELOG.md` 與 `.github/workflows/release-tag.yml`(AI 環境推不了 tag,改由 Actions 建立,檢查 VERSION 與 main)。App 端文件已改為「參見框架」只留差異。尚未做:第 6 步(第二個專案引用框架驗證通用性)。
 > 由 Bar 批准(GitHub + 版本綁定);框架抽取排入 App 完成後。本文件為執行藍圖,接手 AI 照此落地。
 
 ## 目標
