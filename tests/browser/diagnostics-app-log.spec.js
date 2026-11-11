@@ -244,6 +244,7 @@ test.describe('v153 診斷面板重新整理',()=>{
     await page.getByRole('button',{name:'關閉診斷面板'}).click();
     await page.evaluate(()=>openSettings());
     const settings=page.locator('#settingsOverlay');
+    await settings.getByRole('button',{name:/^疑難排解/}).click();   // v185:旅途紀錄與診斷面板收進「疑難排解」
     await settings.getByRole('button',{name:/旅途紀錄/}).click();
     await expect(settings.locator('#settingsTitle')).toHaveText('旅途紀錄');
     await settings.getByRole('button',{name:'異常'}).first().click();
@@ -265,7 +266,8 @@ test.describe('v153 診斷面板重新整理',()=>{
     await expect(settings).toContainText('已記下 1 筆');
     await expect(settings).not.toContainText('筆待評估');
     /* 設定根頁的旅途紀錄與診斷面板兩個入口 */
-    await settings.getByRole('button',{name:'返回設定'}).click();
+    await settings.getByRole('button',{name:'返回疑難排解'}).click();
+    await expect(settings.locator('#settingsTitle')).toHaveText('疑難排解');
     await expect(settings.getByRole('button',{name:/旅途紀錄/})).toContainText('記下異常或建議');
     await settings.getByRole('button',{name:/診斷面板/}).click();
     await expect(page.locator('#settingsOverlay')).toHaveCount(0);

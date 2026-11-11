@@ -209,6 +209,9 @@ test('健康同步 header 保持精簡，partial 與設定健康摘要顯示人�
     openSettings('root');
   });
   await expect(page.locator('#syncTxt')).toHaveText('部分同步 · 剛剛');
+  /* v185:資料健康收進「疑難排解」;有狀況時根頁那一列直接寫出來 */
+  await expect(page.getByRole('button',{name:/^疑難排解/})).toContainText('2 項需注意');
+  await page.getByRole('button',{name:/^疑難排解/}).click();
   await expect(page.getByRole('button',{name:/^資料健康狀態/})).toContainText('2 項需注意');
   await page.getByRole('button',{name:/^資料健康狀態/}).click();
   await expect(page.getByRole('heading',{name:'資料健康狀態'})).toBeVisible();
