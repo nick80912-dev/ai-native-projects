@@ -1,6 +1,19 @@
 # 07 版本紀錄
 
-## 2026-11-11 — v186 畫面更清爽（UI/UX 建議 1–6，Bar 看過截圖回「好」）
+## 2026-11-11 — v186 已上線 main，tag `production-v186`（待 Bar 手機審查）
+
+- Bar 看過前後對照截圖回「好」。
+- 本機完整 Chromium：451 passed、6 failed —— 5 項是依舊畫面寫的測試（Emoji 文字、兩格篩選、「這一站」那行、回到現在按鈕高度），其中「回到現在」被我縮到 36px 是真的退步，已改回 44px；更新後相關 spec 全過。剩下 1 項是已知只在本機失敗的 `personal-ledger-export`。
+- PR [#156](https://github.com/nick80912-dev/ai-native-projects/pull/156) 在 head `7243012` 的 sanity／browser-qa 全綠後合併進 `dev`（`d166bcd`）；PR [#157](https://github.com/nick80912-dev/ai-native-projects/pull/157) 合併 `dev` → `main`，merge commit **`9a355a1`**；七項檢查全綠。
+- **線上核對**：
+  - 正式站 `sw.js` 為 `SW_VERSION='v186'`。
+  - 全新 Chromium：`APP_VERSION` 為 v186、只剩 `okayama-trip-v186` 快取，發布說明是「畫面更清爽」，沒有 pageerror。
+  - 新裝置尚未連接旅程（畫面是「尚未連接旅程」），所以行程卡無法在線上實際點開；改以正式站 `shell/v186/index.html` 與 `main` 逐位元組比對相同，並確認小開關、收合備註、線條圖示、天氣單行與淡綠「完成」的程式都在。
+  - 前兩代 `shell/v185/`、`shell/v184/` 回 200，已刪的 `shell/v183/` 回 404。
+- **tag**：production-tags workflow 建立 `production-v186` → `9a355a1`，`git ls-remote` 核對相符。
+- 回滾：依 `16_OPS_PLAYBOOK.md` §A1 Publish `commit_ref` = `3e0cfdb`（`production-v185`）的部署，再往前 bump。
+
+## 2026-11-11 — v186 畫面更清爽（UI/UX 建議 1–6，Bar 看過截圖回「好」；已上線 main，見上）
 
 - **來源**：Bar 2026-11-11 請我給 UI/UX 與視覺建議，回「1-6 都執行並截圖我看再發版」，看過前後對照回「好」。
 - **使用上**：
