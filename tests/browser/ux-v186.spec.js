@@ -29,7 +29,8 @@ test('Today: no repeated stop line, 導航 is the only solid button, weather emp
   await expect(card).toBeVisible();
   await expect(card).not.toContainText('這一站');
   const styles=await page.evaluate(()=>{
-    const solid=el=>{const bg=getComputedStyle(el).backgroundColor;return bg!=='rgba(0, 0, 0, 0)'&&bg!=='transparent'&&!/^rgb\((2[3-5]\d), (2[3-5]\d), (2[3-5]\d)\)$/.test(bg);};
+    /* 實心按鈕＝主色底白字;淡底／外框按鈕的字是主色。 */
+    const solid=el=>getComputedStyle(el).color==='rgb(255, 255, 255)';
     const done=document.querySelector('#view-today .nx-decision-btn.done'),nav=document.querySelector('#view-today .nx-drive-btn'),jump=document.querySelector('#view-today .today-jump.dark');
     return {nav:!!nav&&solid(nav),done:!!done&&solid(done),jump:!!jump&&solid(jump)};
   });

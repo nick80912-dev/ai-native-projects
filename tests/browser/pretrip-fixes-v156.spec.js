@@ -170,13 +170,13 @@ test.describe('T3 opening a cleared stop from Today shows it on the trip page',(
     await stop.click();
     await expect(page.locator('#view-trip .is-navigation-target')).toHaveAttribute('id','it_10/19_7');
     await expect(page.locator('#view-trip .navigation-target-status')).toHaveText('已定位：宮島口搭船處');
-    await expect(page.locator('#view-trip .trip-filter-btn',{hasText:'顯示全部'})).toHaveAttribute('aria-pressed','true');
+    await expect(page.locator('#view-trip .trip-hide-toggle')).toHaveAttribute('aria-pressed','false');   // v186:小開關關閉＝顯示全部
   });
 
   test('a pending stop keeps 隱藏已完成',async({page})=>{
     await openToday(page);
     await page.locator('#view-today .nx-cluster-stop',{hasText:'宮島表参道商店街'}).click();
     await expect(page.locator('#view-trip .is-navigation-target')).toHaveAttribute('id','it_10/19_9');
-    await expect(page.locator('#view-trip .trip-filter-btn',{hasText:'隱藏已完成'})).toHaveAttribute('aria-pressed','true');
+    await expect(page.locator('#view-trip .trip-hide-toggle')).toHaveAttribute('aria-pressed','true');
   });
 });
