@@ -1,6 +1,20 @@
 # 07 版本紀錄
 
-## 2026-11-10 — v185 表單與設定更精簡（UI/UX 建議第 4–7 項）
+## 2026-11-11 — v185 已上線 main，tag `production-v185`（待 Bar 手機審查）
+
+- Bar 看過五張截圖後回「好」。
+- PR [#152](https://github.com/nick80912-dev/ai-native-projects/pull/152) 在 head `e566e1a` 的 sanity／browser-qa 全綠後合併進 `dev`（`a0f3547`）。中間工作階段重啟，CI 綠燈後停了一段時間才繼續。
+- 本機完整 Chromium：第一輪 6 項失敗（5 項是設定頁路徑改成「疑難排解」後的舊測試，1 項是已知只在本機失敗的 `personal-ledger-export`），更新後 456 passed，只剩已知那一項。
+- PR [#153](https://github.com/nick80912-dev/ai-native-projects/pull/153) 合併 `dev` → `main`，merge commit **`3e0cfdb`**；七項檢查全綠。
+- **線上核對**：
+  - 正式站 `sw.js` 為 `SW_VERSION='v185'`。
+  - 全新 Chromium：`APP_VERSION` 為 v185、只剩 `okayama-trip-v185` 快取，發布說明是「表單與設定更精簡」。
+  - 代購小勾選、疑難排解頁、今天頁通知位置、結束後瀏覽的程式都在線上；沒有 pageerror。
+  - 前兩代 `shell/v184/`、`shell/v183/` 回 200，已刪的 `shell/v182/` 回 404。
+- **tag**：production-tags workflow 建立 `production-v185` → `3e0cfdb`，`git ls-remote` 核對相符。
+- 回滾：依 `16_OPS_PLAYBOOK.md` §A1 Publish `commit_ref` = `469cf8a`（`production-v184`）的部署，再往前 bump。
+
+## 2026-11-10 — v185 表單與設定更精簡（UI/UX 建議第 4–7 項；已上線 main，見上）
 
 - **來源**：Bar 2026-11-10 請我接著做先前 UI/UX 建議剩下的四項，並順手整理專案；看過畫面後回「好」。
 - **使用上**：
