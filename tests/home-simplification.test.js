@@ -61,7 +61,8 @@ for (const file of [shellPath('index.html')]) {
      (a)「目前」一詞兩義 —— 旁邊那個時間是該站的排定時間,不是現在幾點。改為「這一站」。
      (b) 剩餘站數原本要使用者自己減(`4 站` 與 `2 站已自動略過` 並排)。改為
          「共 N 站」並在 childPick.remaining > 0 時補一顆「還有 N 站」。 */
-  assert.match(html, /<b>這一站<\/b>/, `${file} labels the cluster stop line without implying the current clock time`);
+  /* v186(Bar 2026-11-11 UI/UX 第 1 項):時間與站名已是卡片大標題,「這一站」那行整行拿掉。 */
+  assert.doesNotMatch(html, /<b>這一站<\/b>/, `${file} no longer repeats the stop name under the title`);
   assert.doesNotMatch(html, /<b>目前<\/b>/, `${file} drops the ambiguous 目前 wording`);
   assert.match(html, /nx-ticket-tag">共 '\+cluster\.items\.length/, `${file} marks the cluster total as a total`);
   assert.match(html, /nx-ticket-tag">還有 '\+childPick\.remaining/, `${file} states the remaining stops instead of making the user subtract`);
@@ -111,7 +112,8 @@ for (const file of [shellPath('index.html')]) {
   assert.match(html, /想逛<small[^>]*>/, `${file} preserves the shop wishlist`);
   assert.match(html, /\.nx-ticket-low\{[^}]*grid-template-columns:minmax\(0,1fr\) auto/, `${file} gives completion the flexible primary column`);
   assert.match(html, /\.nx-decision-btn\{[^}]*font-size:16px/, `${file} keeps home decisions readable in the car`);
-  assert.match(html, /\.nx-decision-btn\.done\{[^}]*background:var\(--green\)[^}]*color:#fff/, `${file} presents completion as the primary decision`);
+  /* v186(Bar 2026-11-11 UI/UX 第 4 項):每個畫面只留一顆實心主色按鈕;今天卡的實心是「導航」,完成改淡綠底綠框。 */
+  assert.match(html, /\.nx-decision-btn\.done\{[^}]*color-mix\(in srgb,var\(--green\) 11%,#fff\)[^}]*color:var\(--green\)[^}]*border:1\.5px solid var\(--green\)/, `${file} shows completion as a tinted decision, leaving 導航 as the one solid button`);
 }
 
 console.log('home simplification tests passed');

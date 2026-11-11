@@ -50,7 +50,8 @@ test('一般地點使用目前位置,拒絕定位退回日本搜尋,明確地點
     document.body.appendChild(host);
   });
   const link=page.locator('#qaNavigationHost a');
-  await expect(link).toHaveText('🚗 導航');
+  await expect(link).toHaveText('導航');   // v186:🚗 改成線條圖示
+  await expect(link.locator('svg.ln-ico')).toHaveCount(1);
   expect(await link.textContent()).not.toContain('附近搜尋');
   expect(await link.textContent()).not.toContain('精確地點');
 
@@ -82,7 +83,7 @@ test('一般地點使用目前位置,拒絕定位退回日本搜尋,明確地點
   });
   expect(exact.href).toContain('destination=%E6%B0%B8%E6%97%BA%E5%A4%A2%E6%A8%82%E5%9F%8E%20%E5%B2%A1%E5%B1%B1%20%E6%97%A5%E6%9C%AC');
   expect(exact.onclick).toBe(null);
-  expect(exact.text).toBe('🚗 導航');
+  expect(exact.text).toBe('導航');   // v186:🚗 改成線條圖示
   expect(exact.calls).toBe(1);
 
   expect(pageErrors).toEqual([]);

@@ -59,7 +59,7 @@ test('交通標籤依方式上色，10/18 的航班顯示飛機',async({page})=>
   await page.evaluate(()=>{switchView('trip');gotoDay(0);});
   const flight=page.locator('#view-trip .drive-chip',{hasText:'TPE'});
   await expect(flight).toHaveClass(/mode-flight/);
-  await expect(flight).toContainText('✈️');
+  await expect(flight.locator('svg.ln-ico')).toHaveCount(1);   // v186:飛機改線條圖示
   const walk=page.locator('#view-trip .drive-chip',{hasText:'走路5分鐘'});
   await expect(walk).toHaveClass(/mode-walk/);
   const colors=await page.evaluate(()=>{

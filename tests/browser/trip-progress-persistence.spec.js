@@ -89,7 +89,9 @@ test('undo of the final completed cluster child reopens the controller immediate
   expect(state.checks['qa-b']).toBeUndefined();expect(state.checks['qa-a__cluster']).toBeUndefined();
   expect(state.progress.done['qa-b']).toBeUndefined();expect(state.progress.done['qa-a__cluster']).toBeUndefined();
   await expect(page.getByRole('button',{name:'完成：午餐',exact:true})).toBeVisible();
-  await expect(page.locator('.nx-cluster-ticket .nx-ticket-line').first()).toContainText('這一站 11:00 午餐');
+  /* v186:「這一站」那行已拿掉,時間與站名就是卡片大標題。 */
+  await expect(page.locator('.nx-cluster-ticket .nx-ticket-time')).toHaveText('11:00');
+  await expect(page.locator('.nx-cluster-ticket .nx-ticket-title')).toHaveText('午餐');
 });
 test('denied-read undo retains an accessible retry through repeated redraws',async({page})=>{
   await setup(page);await page.locator('.nx-decision-btn.done').click();
