@@ -359,13 +359,16 @@ test('照片健康狀態維持在資料群組並通過子頁路由與三種手�
   await openSettingsRoot(page);
 
   const storageRow=page.getByRole('button',{name:/照片健康狀態/});
-  await expect(storageRow).toBeVisible();
   const ordering=await page.evaluate(()=>{
     const dataGroup=Array.from(document.querySelectorAll('#settingsOverlay .settings-group')).find(group=>group.querySelector('.settings-group-title').textContent==='資料');
     return Array.from(dataGroup.querySelectorAll('.settings-row-main b'),node=>node.textContent);
   });
   /* v153：旅途紀錄與診斷面板加在照片健康狀態與過往旅程之間 */
-  expect(ordering).toEqual(['資料健康狀態','照片健康狀態','旅途紀錄','診斷面板','過往旅程','資料與版本']);
+  /* v185(Bar 2026-11-10):四個偏技術的入口收進「疑難排解」,根頁資料群組只剩三列 */
+  expect(ordering).toEqual(['疑難排解','過往旅程','資料與版本']);
+  await page.getByRole('button',{name:/^疑難排解/}).click();
+  await expect(page.locator('#settingsTitle')).toHaveText('疑難排解');
+  expect(await page.evaluate(()=>Array.from(document.querySelectorAll('#settingsOverlay .settings-row-main b'),node=>node.textContent))).toEqual(['資料健康狀態','照片健康狀態','旅途紀錄','診斷面板']);
   await storageRow.click();
   await expect(page.getByRole('heading',{name:'照片健康狀態'})).toBeVisible();
 
@@ -413,6 +416,9 @@ test('資料健康入口保留警告，明細更新與三種手機寬度正常',
     localStorage.setItem('trip_ledger_queue',JSON.stringify([{id:'health-1'},{id:'health-2'}]));
     openSettings('root');
   });
+  /* v185:警告先出現在根頁的「疑難排解」那一列,點進去才是資料健康狀態 */
+  await expect(page.getByRole('button',{name:/^疑難排解/})).toContainText('1 項需注意');
+  await page.getByRole('button',{name:/^疑難排解/}).click();
   const entry=page.getByRole('button',{name:/^資料健康狀態/});
   await expect(entry).toContainText('1 項需注意');
   await entry.focus();await page.keyboard.press('Space');

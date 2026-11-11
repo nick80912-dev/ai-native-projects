@@ -199,7 +199,7 @@ function readAppVersionHelpers(){
   assert(!actionSource.includes('openDiagnostics()'),'travel-note actions no longer reopen the diagnostics panel');
   assert.strictEqual((actionSource.match(/refreshTravelNotes\(\);/g)||[]).length,7,'every travel-note action refreshes the settings section');
   const settingsPageSource=html.slice(html.indexOf('function renderSettingsPage('),html.indexOf('function mergedLedgerRecords('));
-  assert(settingsPageSource.includes("if(page==='travel-notes')return renderSettingsHeader('旅途紀錄',false)+renderTravelNotesSection();"),'Settings mounts the real travel-note component');
+  assert(settingsPageSource.includes("if(page==='travel-notes')return renderSettingsHeader('旅途紀錄',false,'troubleshoot','疑難排解')+renderTravelNotesSection();"),'Settings mounts the real travel-note component');
   const openSource=html.slice(html.indexOf('function openDiagnostics('),html.indexOf('function setupDiagnostics('));
   assert(!openSource.includes('renderTravelNotesSection()'),'the diagnostics panel no longer embeds the travel-note form');
   /* v159:旅途紀錄只放在設定,診斷面板連入口列也拿掉 */

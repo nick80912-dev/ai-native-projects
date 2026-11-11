@@ -1,5 +1,19 @@
 # 07 版本紀錄
 
+## 2026-11-10 — v185 表單與設定更精簡（UI/UX 建議第 4–7 項）
+
+- **來源**：Bar 2026-11-10 請我接著做先前 UI/UX 建議剩下的四項，並順手整理專案；看過畫面後回「好」。
+- **使用上**：
+  - **代購**：單品項表單中間那一大塊粉紅色「這筆是代購」開關拿掉，改成金額標題列的小勾選「代購」（在「可退稅」左邊）；勾了才出現「幫誰買」。多品項每項自己的代購勾選不變。
+  - **設定**：資料健康狀態、照片健康狀態、旅途紀錄、診斷面板收進「疑難排解」一頁；根頁「資料」只剩疑難排解、過往旅程、資料與版本。資料有狀況或有旅途紀錄待評估時，「疑難排解」那一列直接寫出來。三個子頁的「返回」回到疑難排解。
+  - **通知**：今天頁（沒開任何面板時）通知出現在頂欄下方，不再蓋住底部的「完成／跳過」；其他頁與面板維持在底部。
+  - **行程頁**：旅程結束後單純瀏覽——沒有打卡方塊、已完成的站不變灰劃線、右上只寫「共 N 站」、沒有「隱藏已完成」。打卡紀錄不動，封存與備份照舊。
+- **整理**：移除舊代購開關的七條樣式（約 1.1 KB）；依「只留最近 3 份」刪除 `shell/v182`，留 v183–v185。重新掃過沒有呼叫者的函式：剩下的都由單元測試直接引用（純計算 helper）或是具名的事件處理函式，沒有可以安全刪的。
+- **做法**：`renderLedgerSingleProxyToggle()`；`renderSettingsTroubleshootPage()`、`settingsTroubleshootSummary()`、`SETTINGS_PAGE_IDS` 加 `troubleshoot`；`toastPlacementTop()` 與 `.toast.toast-top`；`tripBrowseOnly()`（`renderItem()`、`renderTrip()`）。資料欄位與個人備份 v11 不變。
+- **版本**：forward bump v184→v185；`builtin-snapshot.js` 以 v184 asset 離線重產，除版本外不變。發布說明視窗為 `v185` + `['v184','v183','v182','v181']`（v180 滾出）。`tests/trip-lifecycle-wiring.test.js` 加入已發布 v184 三件組的 hash、移除 v182。
+- **測試**：新增 `tests/browser/ux-v185.spec.js`（3 項）。設定頁路徑改變，更新 `data-observability`、`diagnostics-app-log`、`settings-grouped-root`（兩項）、`settings-health-page`、`shopping-photo` 六個瀏覽器測試與 `settings-grouped-root`、`travel-notes`、`ledger-entry-p0`、`ledger-form-223` 四個單元測試。
+- **回滾**：合併前關閉 PR；發布後依 `16_OPS_PLAYBOOK.md` §A1 退回 `production-v184`（`469cf8a`）的部署，再往前 bump。
+
 ## 2026-11-10 — v184 已上線 main，tag `production-v184`（待 Bar 手機審查）
 
 - Bar 看過圖示三種配色與首頁三種排法（選 C、B）後回「v184 已確認」。
