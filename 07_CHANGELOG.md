@@ -1,5 +1,22 @@
 # 07 版本紀錄
 
+## 2026-11-11 — #38 記帳表單次要底色維持固定（Bar 決定，無程式變更）
+
+- 依 Bar 2026-09-12「待實機看過再決定」，以 v185 做了焙茶／象牙／海洋三組對照：左邊是現在固定的 `#f3f8f6`，右邊是跟主題走（主色 6% 混白）。
+- Bar 看過回「保留」：`--entry-secondary-bg`／`--entry-secondary-border` 維持固定值，`tests/theme-system.test.js` 的斷言不變。#38 自 backlog 移除。
+
+## 2026-11-11 — #25 文件改為引用 ai-native-framework v1.0.0(文件，無 App 版本變更)⭐
+
+- **來源**：Bar 指示執行 #25，選擇私人 repo，App 的通用文件改成「參見框架」只留差異。
+- **框架 v1.0.0 內容**：README、VERSION、CONSTITUTION、WORKFLOW、EXECUTION_RULES、FILE_TIERS、CONVENTIONS、VALIDATOR_SPEC、HEALTH_CHECK、adr/TEMPLATE＋README、ai-manifest.schema.json、examples/japan-travel-app.md、CHANGELOG。已移除所有旅遊字眼；本專案 manifest 已用 JSON Schema 驗證通過。
+- **App 端**：
+  - `.ai-manifest.json` 的 `framework` 改為 `ai-native-framework@1.0.0`，並加 `framework_source`。
+  - 以下文件改成「依框架 §x」，只留本專案差異（節號保留，舊引用不失效）：`PROJECT_CONSTITUTION.md`、`15_AI_EXECUTION_RULES.md`、`12_DEV_WORKFLOW.md`（情境 A–F 保留）、`14_FILE_TIERS_AND_GATE.md`（實際檔案清單保留）。
+  - `11`／`05` 加框架引用；`08` 的理解報告模板改引用框架，閱讀順序加入框架。
+- **框架 repo**：Bar 建立私人 repo `nick80912-dev/ai-native-framework`；首版 commit 後加上 `release-tag` workflow（工作環境推不了 tag），由它建立 `v1.0.0` → `0ffb62a`，`git ls-remote --tags` 核對相符。
+- **#25 完成**，自 backlog 移除。
+- **限制**：框架是私人 repo，之後的工作階段要同時選取它，AI 才讀得到通用規則（已寫在憲章與 manifest）。
+
 ## 2026-11-11 — v185 已上線 main，tag `production-v185`（待 Bar 手機審查）
 
 - Bar 看過五張截圖後回「好」。

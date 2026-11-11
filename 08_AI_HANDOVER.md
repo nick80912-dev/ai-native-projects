@@ -13,19 +13,10 @@
 ## 接手第一步:Project Understanding Report(先說理解,再動手)
 任何 AI 首次接手本專案、或在無既有專案脈絡的新對話/新環境開工時,完成下方閱讀順序後**不得直接修改任何檔案**,必須先輸出理解報告並等 Bar 核准(例:「確認,可以開始實作」)。此要求是「每個 AI 接手時做一次」,不是每個任務都做;同一脈絡內的後續任務依 15 的任務分級與 14 的 Tier 規則執行。
 
-報告模板(全 repo 唯一版本,他處不得另立):
-1. 專案目的(我的理解)
-2. 已閱讀文件 / 未閱讀文件與原因
-3. 目前架構與 Data Flow 摘要
-4. 本次任務範圍(Scope)
-5. 受影響模組 / 不應觸碰的模組
-6. 是否涉及 Schema / ADR / 憲章(各 Yes/No + 說明)
-7. 潛在風險與回滾方式
-8. 提議方案與預估修改檔案清單
-9. 資訊是否足夠開始?缺什麼?
+報告模板依框架 `ai-native-framework@1.0.0` 的 `EXECUTION_RULES.md` §7(九項;本 repo 不另立)。
 
 ## 閱讀順序(最省 token)
-1. `.ai-manifest.json` → 2. `PROJECT_CONSTITUTION.md` → 3. 本文件 → 4. 相關 `adr/` → 5. **必讀** `15_AI_EXECUTION_RULES.md`(決策權限/指令效力/任務分級)→ 6. 依任務讀 `03_DATABASE.md` / `09_SCHEMA_MAPPING.md` / `05_CODING_RULES.md` / `11_CODING_CONVENTION.md` / `12_DEV_WORKFLOW.md` / `14_FILE_TIERS_AND_GATE.md` / `16_OPS_PLAYBOOK.md`
+1. `.ai-manifest.json` → 2. 框架 `CONSTITUTION.md`／`WORKFLOW.md`／`EXECUTION_RULES.md`(版本見 manifest `framework`)→ 3. `PROJECT_CONSTITUTION.md` → 4. 本文件 → 5. 相關 `adr/` → 6. **必讀** `15_AI_EXECUTION_RULES.md`(本專案差異)→ 7. 依任務讀 `03_DATABASE.md` / `09_SCHEMA_MAPPING.md` / `05_CODING_RULES.md` / `11_CODING_CONVENTION.md` / `12_DEV_WORKFLOW.md` / `14_FILE_TIERS_AND_GATE.md` / `16_OPS_PLAYBOOK.md`
 程式碼本體主要在 current generation `shell/v185/index.html` 內嵌 JS(區塊順序見 02)；root `index.html`／`app-version.js` 必須維持 frozen v110 bridge bytes。`navigation-intent.js`、`diagnostic-impact.js`、`today-view.js`、`shopping-photo-store.js`、`buy-to-ledger.js`、`ledger-ui-state.js`、`shopping-ui-state.js`、`trip-progression.js`、`trip-lifecycle.js`、`trip-archive.js`、`trip-drive.js`、`trip-source.js`、`trip-lifecycle-flow.js` 是 production-used module seams（完整清單以 `runtime-assets.json` 為準），`schema.js` / `validator.js` 是獨立權威來源。
 
 ## 工作流程(必守)

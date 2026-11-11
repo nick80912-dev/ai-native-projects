@@ -2,12 +2,8 @@
 
 > 由 Bar 於 2026-07-09 核准。本檔定義 repo 內「原始碼/可編輯資產」與「部署產物/高風險檔案」的分級,以及 Pre-Work Git Sync Gate 之上的分級保護規則。
 
-## 分級原則(Bar 核定)
-1. 原始碼、文件、憲章、harness、設定檔 → 一般 AI 開發與審查範圍。
-2. 直接影響正式上線行為的檔案 → 高風險保護範圍。
-3. AI 可對高風險檔案**提出修改建議**;要**直接修改**必須先說明:原因、影響範圍、風險、回滾方式,並取得 Bar 確認。
-4. build/產生產物不得手改,一律改來源檔或產生流程後重新產生。
-5. 分級以「改壞後是否立即影響線上使用者」為判準。
+## 分級原則
+依框架 `ai-native-framework@1.0.0` 的 `FILE_TIERS.md`(判準:改壞後是否立即影響線上使用者;Tier 2 改前須過「原因/影響/風險/回滾」;Tier 3 只能重新產生)。本檔只列本專案的實際檔案清單與差異。
 
 ## Tier 1 — 一般開發範圍(AI 可依 15 的任務分級自行修改)
 | 檔案 | 性質 |
@@ -39,7 +35,7 @@
 | `09_SCHEMA_MAPPING.md` 表格區 | `schema.js` 的 `schemaDoc()` | 改 schema.js → 重跑 schemaDoc() 貼回(檔頭註解為手寫,可直接維護) |
 | `shell/v185/builtin-snapshot.js` | 已核准 v136 七張非 Ledger 發布 CSV + `schema.js` Ledger header + App version | 先執行 preview，再以 `tools/refresh-builtin-snapshot.js` 的 write 模式產生；禁止手改或在 HTML 複製 payload |
 
-## Gate 分級規則(疊加於憲章 4.1 的 Pre-Work Git Sync Gate)
+## Gate 分級規則(疊加於憲章 4.1 的 Pre-Work Git Sync Gate;依框架 FILE_TIERS「Gate 規則」)
 - Tier 1:過 Gate 後即可依 `15_AI_EXECUTION_RULES.md` 的任務分級動工。
 - Tier 2:過 Gate 後,動工前必須額外提出「原因/影響範圍/風險/回滾方式」四項並取得 Bar 確認;交付必附回滾指引(見 16)。
 - Tier 3:任何直接編輯一律視為違規;發現產物與來源不一致 → 回報並重新產生。

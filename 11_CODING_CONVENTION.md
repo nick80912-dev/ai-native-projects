@@ -1,6 +1,6 @@
 # 11 編碼規範(Coding Convention)
 
-> 05_CODING_RULES 是快速概覽;本檔是細節版編碼規範。技術基線:vanilla JS 單一 HTML,無框架、無 build、無 npm。ES5 風格(function/var),相容老舊 WebView。
+> 通用編碼原則(Schema First、Data Driven、Renderer 單一職責、單一狀態入口、跳脫輸出、設計 token、最小修改)依框架 `ai-native-framework@1.0.0` 的 `CONVENTIONS.md`;本檔只記本專案的命名、技術基線與陷阱。05_CODING_RULES 是快速概覽;本檔是細節版編碼規範。技術基線:vanilla JS 單一 HTML,無框架、無 build、無 npm。ES5 風格(function/var),相容老舊 WebView。
 
 ## 命名規則
 - 函式:camelCase 動詞開頭 — `renderTrip` `resolveParking` `parseTable` `buildHeaderMap`。
@@ -21,8 +21,7 @@
 - 壞資料 → AppLog 警告 + 回退安全值,絕不 throw 到頂層。
 
 ## Renderer 規則
-- Renderer 只負責畫面,不抓資料、不寫 storage、不觸發同步。
-- view 切換統一走 `switchView` → `renderCurrent`(含 try/catch → Render Error 保護)。
+- 依框架 CONVENTIONS「結構」。本專案:view 切換統一走 `switchView` → `renderCurrent`(含 try/catch → Render Error 保護)。
 
 ## Storage 規則
 - 個人狀態(打卡/想逛/成員/記帳)存 localStorage,**不回寫 CMS**。
