@@ -56,7 +56,8 @@ mode='drive';
 
 /* 渲染:標籤帶 mode class;顏色是 :root 的固定 token,深色字在每個底色上 ≥ 4.5:1 */
 assert(html.includes("var mode=transportModeOf(drive),driveIcon=mode.icon;"));
-assert(html.includes(`'<span class="drive-chip mode-'+mode.key+'">'+driveIcon+' '+escapeHtml(drive)+'</span>'`));
+/* v186:交通標籤的圖示改成線條圖示(沒有對應圖示時退回原 Emoji)。 */
+assert(html.includes(`'<span class="drive-chip mode-'+mode.key+'">'+(lineIcon(driveIcon)||driveIcon+' ')+escapeHtml(drive)+'</span>'`));
 const tokens={};
 html.replace(/--mode-([a-z]+)(?:-bg)?:(#[0-9a-f]{6})/g,(m,name,hex)=>{tokens[m.split(':')[0]]=hex;return m;});
 function lum(hex){const c=[1,3,5].map(i=>parseInt(hex.slice(i,i+2),16)/255).map(x=>x<=0.03928?x/12.92:Math.pow((x+0.055)/1.055,2.4));return 0.2126*c[0]+0.7152*c[1]+0.0722*c[2];}

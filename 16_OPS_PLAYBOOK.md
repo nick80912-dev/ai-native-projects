@@ -230,7 +230,7 @@ curl -sI https://trippilot-jp.netlify.app/shell/v186/app-version.js | grep -i ca
 # 4. 前一代 generation 必須仍可服務(ADR 0019)
 #    部署換代的當下,還沒裝完前一代的裝置可能仍在抓它;回 404 會讓那次 install 失敗。
 #    以「前一代」的版本號代入,例如發布 v157 時查的是 v156。
-#    更早的世代不必逐一確認:2026-10-16 Bar 核准刪除 v111–v153,repo 只保留最近幾代(2026-11-09 起只留最近三代,目前 v183 起),
+#    更早的世代不必逐一確認:2026-10-16 Bar 核准刪除 v111–v153,repo 只保留最近幾代(2026-11-09 起只留最近三代,目前 v184 起),
 #    理由見 ADR 0019 增補段(已安裝的 worker 對自己的 SHELL 一律 cache-first,只在 install 時抓網路)。
 curl -s -o /dev/null -w "%{http_code}" https://trippilot-jp.netlify.app/shell/<前一代>/app-version.js
 ```

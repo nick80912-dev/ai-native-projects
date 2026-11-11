@@ -646,10 +646,7 @@ html.font-huninn .brand .t{letter-spacing:0}
 .past-trip-record{padding:12px 0;border-bottom:1px solid var(--line-soft);font-size:13px;line-height:1.6;overflow-wrap:anywhere}.past-trip-record p{white-space:pre-wrap;margin-top:4px}.past-trip-record dl{margin:0}.past-trip-record dl>div{display:grid;grid-template-columns:90px minmax(0,1fr);gap:8px;margin:3px 0}.past-trip-record dt{color:var(--ink-soft)}.past-trip-record dd{margin:0;white-space:pre-wrap;overflow-wrap:anywhere}.past-trip-readable h4{margin-top:14px}
 .ledger-record.pending{background:#fffaf0}.ledger-tag{display:inline-flex;border-radius:999px;background:var(--line-soft);color:var(--ink-faint);padding:2px 6px;font-size:10px;font-weight:800;margin-left:5px}.ledger-summary{display:grid;gap:7px}
 .ledger-test-warning{background:#fff3e8;color:#793b20;border:1px solid #efb28e;border-radius:12px;padding:12px;margin-bottom:12px}.ledger-test-warning strong{display:block;color:var(--coral);margin-bottom:3px}.ledger-test-warning .btn{margin-top:9px}
-.ledger-track-grid,.ledger-segment,.ledger-sheet-track,.ledger-currency-grid,.trip-filter-track{display:flex;gap:4px;background:var(--line-soft);border:1px solid var(--line);border-radius:999px;padding:4px}.ledger-track-grid{margin:0 0 12px}.ledger-track-btn,.ledger-segment-btn,.ledger-segment .ledger-sheet-choice,.ledger-sheet-track .ledger-sheet-choice,.ledger-currency-grid .ledger-choice,.trip-filter-track .trip-filter-btn{flex:1;min-width:0;min-height:40px;border:0;border-radius:999px;background:transparent;color:var(--ink-soft);padding:7px 8px;font:inherit;font-size:13px;font-weight:900}.ledger-track-btn.on,.ledger-segment-btn.on,.ledger-segment .ledger-sheet-choice.on,.ledger-sheet-track .ledger-sheet-choice.on,.ledger-currency-grid .ledger-choice.on,.trip-filter-track .trip-filter-btn.on{background:var(--sea);color:#fff;box-shadow:var(--shadow)}
-/* v133:行程篩選的 track 佔掉「回到現在」以外的寬度;按鈕維持 44px(共用規則是 40px)——
-   這是走路時單手用的控制,不因加入 segmented 而縮小觸控區。 */
-.trip-filter-track{flex:1;min-width:0}.trip-filter-track .trip-filter-btn{min-height:44px}
+.ledger-track-grid,.ledger-segment,.ledger-sheet-track,.ledger-currency-grid{display:flex;gap:4px;background:var(--line-soft);border:1px solid var(--line);border-radius:999px;padding:4px}.ledger-track-grid{margin:0 0 12px}.ledger-track-btn,.ledger-segment-btn,.ledger-segment .ledger-sheet-choice,.ledger-sheet-track .ledger-sheet-choice,.ledger-currency-grid .ledger-choice{flex:1;min-width:0;min-height:40px;border:0;border-radius:999px;background:transparent;color:var(--ink-soft);padding:7px 8px;font:inherit;font-size:13px;font-weight:900}.ledger-track-btn.on,.ledger-segment-btn.on,.ledger-segment .ledger-sheet-choice.on,.ledger-sheet-track .ledger-sheet-choice.on,.ledger-currency-grid .ledger-choice.on{background:var(--sea);color:#fff;box-shadow:var(--shadow)}
 /* v135:結算幣別鎖定時,另一個幣別按鈕 disabled。沿用 selection toolbar 的 .45,讓它看得出點不動,
    否則停用與「未選取」外觀相同,使用者會以為點了沒反應。 */
 .settings-currency-option:disabled{opacity:.45;cursor:not-allowed}
@@ -10640,6 +10637,12 @@ function renderSettingsHealthPage(){
   return header+renderSettingsDataHealth();
 }
 var APP_RELEASE_NOTES=[
+  {version:'v186',date:'2026-11-11',title:'畫面更清爽',items:[
+    '今天卡拿掉重複的站名行；只有「導航」是實心按鈕。',
+    '購物頁很長的商場備註先收起來，按「看全部」展開。',
+    '行程頁的「隱藏已完成」改成右上的小開關。',
+    '行程卡與購物頁的圖示改成線條圖示；沒有天氣資料時只顯示一行小字。'
+  ]},
   {version:'v185',date:'2026-11-10',title:'表單與設定更精簡',items:[
     '記帳的「這筆是代購」改成金額那一行的小勾選「代購」，勾了才出現幫誰買。',
     '設定的資料健康、照片健康、旅途紀錄、診斷面板收進「疑難排解」。',
@@ -10659,10 +10662,6 @@ var APP_RELEASE_NOTES=[
   {version:'v182',date:'2026-11-09',title:'匯率寫法統一',items:[
     '分帳卡片、記帳表單與設定的匯率都寫成「1 JPY ≈ NT$0.21」。',
     '清掉幾段沒有用到的程式，畫面與資料不變。'
-  ]},
-  {version:'v181',date:'2026-11-09',title:'可退稅移到計算機旁',items:[
-    '單品項的「可退稅」放在金額那一行、計算機左邊；勾了一樣跳出稅額視窗。',
-    '填好的「稅額 ¥X ✎」放在「明細」同一列靠右，表單不會變長。'
   ]},
 ];
 function renderAppReleaseNotes(){

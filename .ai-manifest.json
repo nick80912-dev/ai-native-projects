@@ -105,7 +105,7 @@
     "停車 MAP CODE 純顯示無複製鈕、『停車同Pxxx』繼承",
     "渡輪不建班次庫(末班資訊+官方時刻表連結)",
     "即時個人狀態(打卡/想逛/成員身分)、個人帳、代購對象、themeId與travelNotes存localStorage且不進Queue/CMS；v137個人Drive唯讀歷史副本不作即時同步或帳務權威；現行個人備份相容v1–v10(v10起帶旅程身分)，主題、採買單位與旅途紀錄自v8起屬備份欄位;採買照片Blob只存目前裝置IndexedDB,photoId不得進備份或跨裝置同步;團體帳只走Ledger Repository,兩軌資料與統計禁止混用;TEST團體帳與正式團體帳依目前模式平行隔離;依ADR 0006,App僅可append分帳紀錄並更新TripConfig的Exchange Rate / Ledger Default Currency兩鍵,其餘CMS欄位維持Bar手動管理且App唯讀",
-    "主題僅覆寫13個第一層--t-* token，第二層語意角色與今天/行程/購物/分帳四分頁結構保持穩定；主導覽與設定入口用inline SVG，內容Emoji與桃子診斷徽章保留",
+    "主題僅覆寫13個第一層--t-* token，第二層語意角色與今天/行程/購物/分帳四分頁結構保持穩定；主導覽、設定入口與行程卡/今天卡/購物頁由App產生的圖示用inline SVG線條圖示(v186)；Sheet內容自帶Emoji與分帳類別Emoji保留",
     "產品哲學:3秒原則、不過度工程化"
   ],
   "known_traps": [
