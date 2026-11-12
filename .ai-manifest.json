@@ -59,7 +59,7 @@
     "apps-script/ledger-sync.gs": "Apps Script部署唯一維護來源:分帳append-only與TripConfig兩鍵白名單更新",
     "docs/personal-state-compatibility.md": "個人狀態備份 v1–v10 相容策略契約(向後／向前相容、缺欄位預設值、v10 旅程身分、採買單位規則、失敗語意);可執行契約=tests/personal-state-restore-matrix.test.js,兩者不一致即為缺陷",
     "docs/new-trip-handbook.md": "v150 換下一趟旅程操作手冊(範本、每趟 Sheet、Apps Script 部署、旅伴連接步驟、錯誤訊息、發布時機);決策見 adr/0021",
-    "docs/device-acceptance-log.md": "累積裝置／PWA 驗收記錄;起於批次二v73,其後append v74/v75/v76/v88各版delta(2026-09-10由batch2-device-acceptance.md更名)"
+    "docs/device-acceptance-log.md": "待 Bar 手機審查的真機清單入口(重點以 tasks/current.md 為準);v73–v146 舊清單已封存於 docs/archive/device-acceptance-log-v73_to_v146.md"
   },
   "deploy_files": {
     "shell/v188/builtin-snapshot.js": "版本綁定的 generated BUILTIN offline runtime asset",
