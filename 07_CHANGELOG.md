@@ -1,6 +1,19 @@
 # 07 版本紀錄
 
-## 2026-11-12 — v188 航班卡、行李清單、繪本主題補到其他頁面（Bar 看過畫面回「好，兩個合成一版做」）
+## 2026-11-12 — v188 已上線 main，tag `production-v188`（待 Bar 手機審查）
+
+- Bar 回「好，兩個合成一版做」後說「marge」（merge）。
+- 本機完整 Chromium：465 passed、1 failed（已知只在本機失敗的 `personal-ledger-export`）。
+- PR [#162](https://github.com/nick80912-dev/ai-native-projects/pull/162) 在 head `d329033` 的 sanity／browser-qa 全綠後合併進 `dev`（`e9b0596`）；PR [#163](https://github.com/nick80912-dev/ai-native-projects/pull/163) 合併 `dev` → `main`，merge commit **`00b7305`**；七項檢查全綠。
+- **線上核對**：
+  - 正式站 `sw.js` 為 `SW_VERSION='v188'`。
+  - 全新 Chromium：`APP_VERSION` 為 v188、只剩 `okayama-trip-v188` 快取，發布說明是「航班卡與行李清單」，沒有 pageerror；航班解析／卡片函式與 Schema `flightsGid` 鍵在線上，行前清單模型有 `packs`，主題七個。
+  - 正式站 `shell/v188/index.html`、`schema.js` 與 `main` 逐位元組相同。
+  - 前兩代 `shell/v187/`、`shell/v186/` 回 200，已刪的 `shell/v185/` 回 404。
+- **tag**：production-tags workflow 建立 `production-v188` → `00b7305`，`git ls-remote` 核對相符。
+- 回滾：依 `16_OPS_PLAYBOOK.md` §A1 Publish `commit_ref` = `e960e9b`（`production-v187`）的部署，再往前 bump。
+
+## 2026-11-12 — v188 航班卡、行李清單、繪本主題補到其他頁面（Bar 看過畫面回「好，兩個合成一版做」；已上線 main，見上）
 
 - **來源**：Bar 2026-11-12 指示「做繪本主題的其他頁面細修，必去標籤不用，行李清單就依之前規劃的行前清單」「團體帳的退稅不用做」；看過航班卡示意圖選「資料用 A（試算表新增航班分頁）」。
 - **使用上**：
