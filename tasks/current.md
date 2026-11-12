@@ -14,7 +14,7 @@
 | **`dev`** | 與 `main` 同為 v187（PR [#159](https://github.com/nick80912-dev/ai-native-projects/pull/159) 合併為 `11ac365`） |
 | 個人備份格式 | **v11**（v178 起；`PERSONAL_STATE_VERSION=11`，個人帳多了稅額與實際退稅；相容策略見 `docs/personal-state-compatibility.md`） |
 | 最新正式 tag | **`production-v187`** → `e960e9b`（v157–v187 都有 tag；上一個 `production-v186` → `9a355a1`） |
-| shell 世代 | repo 只保留最近三代（目前 v185 起；2026-11-09 Bar 核准刪除 v154–v179，ADR 0019 增補段） |
+| shell 世代 | repo 只保留最近三代（目前 v186 起；2026-11-09 Bar 核准刪除 v154–v179，ADR 0019 增補段） |
 | CI | `sanity`／`browser-qa` 跑 `ubuntu-latest`（2026-10-30 驗過 Ubuntu 26.04 後解除釘版，backlog #54）；browser-qa 時限 25 分鐘（2026-11-01 由 15 放寬，PR #127） |
 
 ## ⏳ 還掛著的事（只有 Bar 能做）
@@ -23,6 +23,6 @@
 
 ## 🔜 接下來
 
-1. 依 `tasks/backlog.md`：#58 Logo 與圖示（需 Bar 挑稿）、#63 團體帳退稅（等 Bar 決定），以及 #50、#52、#53 小問題與長期項目（#3、#20）。#25 框架抽取已完成（`ai-native-framework` v1.0.0）；#38 Bar 看過對照後決定保留固定色。#55 繪本主題與 #28／#29／#41 已由 Bar 關閉。
+1. 依 `tasks/backlog.md`：#58 Logo 與圖示（需 Bar 挑稿），以及 #50、#52、#53 小問題與長期項目（#3、#20）。#25 框架抽取已完成（`ai-native-framework` v1.0.0）；#38 Bar 看過對照後決定保留固定色。#55 繪本主題與 #28／#29／#41 已由 Bar 關閉。 #63 團體帳退稅 Bar 2026-11-12 決定不做。
 
 > 正式發布仍遵守 §E：PR 與 Actions 通過後才 merge；Netlify 線上驗證通過後才建立 production tag。tag 用 GitHub Actions 的 **production-tags**（`16_OPS_PLAYBOOK.md` §A5）。
