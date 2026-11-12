@@ -1,5 +1,7 @@
 # ADR 0001 — Schema First
 
+> 狀態:Accepted(2026-07 治理層 v1 建立時追認)
+
 **Decision**:建立 `schema.js` 為唯一資料規格(Single Source of Truth)。所有 Sheet 欄位對應、gid、發布 URL、型別值、Expenses 版面、TripConfig 鍵集中於此;Parser 完全依 Schema 動態解析,不硬編碼欄位。
 
 **Context**:早期欄位對應(HEADER_ALIASES)寫死在 HTML,Google Sheet 欄位一改就要改程式,且散落各處難維護。Bar 希望「新增欄位不用碰 Parser」,並讓 Sheet、Parser、Validator、文件全部依賴同一份規格。

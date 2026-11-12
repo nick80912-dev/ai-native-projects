@@ -65,25 +65,26 @@ BOOT          init → bootLocal → syncInBackground
 
 ## 文件庫(權威:GitHub 本 repo)
 > **2026-07-09 核定**:程式與文件的唯一權威為 GitHub 本 repo;Google Drive「BHAIProject/日本旅遊App-docs」降級為**備份**,不再作為更新目標(Drive 工具只能建立不能更新的限制因此不再影響日常流程)。
-> 內容資料來源例外:Drive 試算表「261018-261023岡山四國六天五夜」仍是 CMS 內容的唯一來源(發布 CSV,見 03/schema.js),與文件權威分屬兩層。
+> 內容資料來源例外:每趟旅程的 Drive 試算表(第一趟是「261018-261023岡山四國六天五夜」)是該趟 CMS 內容的唯一來源(發布 CSV,見 03/schema.js),與文件權威分屬兩層。
 
 ```
 (repo 根目錄)
 .ai-manifest.json          AI 導航檔(首讀)
-PROJECT_CONSTITUTION.md    專案憲章(最高規範)
-01-13_*.md                 願景/架構/CMS/UI/規範/路線圖/CHANGELOG/交接/Schema/結構/慣例/流程/狀態
+PROJECT_CONSTITUTION.md    專案憲章(依 ai-native-framework,只記差異)
+CONTEXT.md                 專案詞彙表
+01–12_*.md                 01 定位・里程碑・長期風險/02 架構/03 CMS/04 UI/07 CHANGELOG/08 交接/09 Schema/10 結構/11 編碼規範/12 流程(05、06、13 已於 2026-11-12 併入 11 與 01)
 14_FILE_TIERS_AND_GATE.md  檔案風險分級與 Gate 保護
 15_AI_EXECUTION_RULES.md   AI 決策權限/指令效力/不確定性協議/任務分級
 16_OPS_PLAYBOOK.md         回滾手冊 + DevOps 安全規範
-adr/                       架構決策紀錄(0001-0021 + README)
+adr/                       架構決策紀錄(0001-0022 + README)
 tasks/                     即時狀態唯一權威(current/backlog/done)
 tests/                     測試資產(交付必附)
 tools/                     檢查腳本(文件標題、runtime 版本、活文件 generation 與 runtime asset 一致性)
 .github/workflows/         Sanity CI(qa.yml,main／dev push 與 PR 都跑 sanity 與 browser-qa)
 .mcp.json                  chrome-devtools MCP server 宣告(本機除錯工具,不進 runtime)
-docs/                      現行契約與手冊(personal-state-compatibility、personal-ledger-export、new-trip-handbook)、device-acceptance-log、qa/ 效能證據
-docs/superpowers/          仍被活文件、程式或測試引用的設計規格與實作計畫(7 份;未被引用者 2026-10-16 刪除,可由 git 歷史取回)
-docs/archive/              封存:2026-10-15 以前的版本紀錄原文、只剩歷史文件引用的舊設計稿(design/,2026-11-09 搬入)
+docs/                      現行契約與手冊(personal-state-compatibility、personal-ledger-export、new-trip-handbook)、device-acceptance-log(只放待驗清單入口)、qa/ 效能證據
+docs/superpowers/          仍被活文件、程式或測試引用的設計規格(5 份;不再被引用的 2026-10-16 刪除或 2026-11 移到 docs/archive/design)
+docs/archive/              封存(原文搬移,不再更新):2026-10-31 以前的版本紀錄、tasks/current.md 舊快照、v73–v146 真機驗收清單、v108–v150 測試覆蓋說明、已完成的框架抽取計畫、只剩歷史文件引用的舊設計稿(design/)
 schema.js / validator.js   資料規格 SSoT / 防錯防線(Tier 1 原始碼)
 index.html / app-version.js v110 byte-locked bridge 正式入口
 shell/v188/                current App document／version／generated BUILTIN generation

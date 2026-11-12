@@ -92,8 +92,9 @@
 
 ## E. Release Flow(發版流程)
 ```
-dev → Pull Request → Bar Review → Bar Merge → Netlify Production Deploy → Production Verification
+工作分支 → PR 進 dev(CI 綠)→ Release PR dev → main(七項檢查綠)→ Netlify Production Deploy → 線上核對(§F5)→ production tag(§A5)→ 文件紀錄 PR
 ```
+- 核准屬 Bar:改畫面先截圖,Bar 回「好」或明確說「merge／發版」後,AI 代為執行上述合併(ADR 0005 2026-11 增補)。
 **線上通道對應**(2026-07-26 核對,皆以實際端點回應為準):
 
 | 通道 | 網址 | 追蹤 | 觸發 | 定位 |

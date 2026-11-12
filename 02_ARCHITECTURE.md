@@ -19,6 +19,8 @@ root `index.html`／`app-version.js` 保留 v110 bridge；成功啟用的 curren
 3. **背景同步** 8 張 CSV:原有 7 表維持原子快照 Gate;ledger 失敗時沿用目前 ledger 快照,其餘 7 表仍可更新
 同步狀態徽章:已是最新 / 部分更新 / 離線版 / 內建版。
 
+選填分頁(天氣地區、行前清單、航班;ADR 0022)不在上述三層裡:八表同步成功後才各自下載,依 TripConfig 的 gid 鍵決定要不要抓,結果存成依旅程分開的 `trip_*` 快取;失敗沿用上次、沒有就不顯示,不影響八表的原子快照與 BUILTIN。
+
 `shell/v188/builtin-snapshot.js` 是 Tier 3 generated asset，唯一內容 authority 是 `tools/refresh-builtin-snapshot.js`。current generation HTML 只保留版本／timestamp marker 與安全 boot guard，不複製資料 payload。asset 缺失或 `BUILTIN_ASSET_VERSION !== APP_VERSION` 時，App 只接受已通過完整 shape／validation 的 local active／previous snapshot；若本機也沒有有效資料，顯示可重新載入與複製診斷的復原頁，且不建立空 DB、不啟動背景同步。SW 以同一版本 cache generation 將 immutable HTML、App version 與 asset 一起納入 App Shell；root v110 bridge 則保留 predecessor 的 inline BUILTIN，僅用於 current generation 安裝前或安裝失敗。
 
 明確頁面／overlay 導覽另外走 transient intent：純 module 只保存序號、目標 view／ID、來源與對齊資訊；`index.html` 才負責開啟 view、解析 DOM target、避開 sticky header 捲動、1 秒醒目加 0.2 秒淡出、visually-hidden live status、遺失目標降級，以及關閉 Shopping overlay 後回復來源捲動與 focus。intent 不進 localStorage、備份、Queue、CMS 或 Ledger；`shopping-list` 仍是 overlay，不改 `curView`。
