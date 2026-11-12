@@ -8,7 +8,7 @@
   "updated": "2026-11-11",
   "current_status": { "authority": "tasks/current.md" },
   "live": "https://trippilot-jp.netlify.app/",
-  "start_here": "先讀本檔 → 框架 CONSTITUTION/WORKFLOW/EXECUTION_RULES(版本見 framework)→ PROJECT_CONSTITUTION.md(憲章/流程/禁令)→ 08_AI_HANDOVER.md → 15_AI_EXECUTION_RULES.md(本專案差異,必讀)→ 相關 adr/ → 依任務讀 03_DATABASE/09_SCHEMA_MAPPING(資料與欄位)、05_CODING_RULES/11_CODING_CONVENTION(程式)、12_DEV_WORKFLOW(步驟)",
+  "start_here": "先讀本檔 → 框架 CONSTITUTION/WORKFLOW/EXECUTION_RULES(版本見 framework)→ PROJECT_CONSTITUTION.md(憲章/流程/禁令)→ 08_AI_HANDOVER.md → 15_AI_EXECUTION_RULES.md(本專案差異,必讀)→ 相關 adr/ → 依任務讀 03_DATABASE/09_SCHEMA_MAPPING(資料與欄位)、11_CODING_CONVENTION(程式)、12_DEV_WORKFLOW(步驟)、01_PROJECT(定位/里程碑/長期風險)",
   "governance": {
     "constitution": "PROJECT_CONSTITUTION.md",
     "adr_dir": "adr/（0001–0021；索引權威=adr/README.md）；架構修改前必讀",
@@ -23,7 +23,7 @@
     "proposal_format": "問題分析→可行方案→優缺點比較→相容性影響→Migration Plan(五段,經 Bar 確認才做)",
     "pre_work_git_sync_gate": "任何實作/push/部署前先 git fetch origin --prune,確認 HEAD 與目前工作分支一致(日常開發=origin/dev)且 working tree 乾淨;若不一致先盤點並經 Bar 確認,不得自動覆蓋本地改動",
     "delivery_rule": "日常交付與驗收於 dev 分支完成;dev 推送自動發布至 GitHub Pages 供驗收(Netlify 測試站已於2026-09-10永久刪除);正式發版依 16_OPS_PLAYBOOK.md §E Release Flow(PR → Bar Review → Bar Merge → Netlify Deploy)",
-    "deprecated_docs": "原作廢檔 -old-03／-old-05 與 00_CONTEXT_HANDOVER.md 已於 2026-10-16 刪除(git 歷史保留);現行 03_DATABASE.md 與 05_CODING_RULES.md 可用,09/11 提供更細規格",
+    "deprecated_docs": "原作廢檔 -old-03／-old-05 與 00_CONTEXT_HANDOVER.md 已於 2026-10-16 刪除;2026-11-12 再把 05_CODING_RULES 併入 11、06 路線圖與 13 專案狀態併入 01 後刪除(git 歷史保留)",
     "workflow": "依框架 WORKFLOW.md:Gate(第0步,見4.1)+ 十三步(讀manifest→讀handover→讀ADR→定位模組→先設計→最小修改→跑Validator→驗證資料流→更新文件→更新CHANGELOG→一致性檢查healthCheck→完成→開發摘要);A/B級任務走15§5簡化流程",
     "file_tiers": "14_FILE_TIERS_AND_GATE.md:Tier1一般開發/Tier2高風險(改前過原因-影響-風險-回滾確認)/Tier3產生產物禁手改",
     "ai_execution_rules": "15_AI_EXECUTION_RULES.md:指令預設非覆寫、不確定性三分法、檔案增刪權限、任務分級A/B/C、文件vs現實衝突協議",

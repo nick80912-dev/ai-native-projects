@@ -4,11 +4,11 @@
 >
 > - **逐版交付紀錄一律看 `07_CHANGELOG.md`**,本檔不重述。
 > - **即時狀態**(正式站是什麼版本、`dev` 是什麼版本、下一批做什麼、哪些驗收還掛著)**看 `tasks/current.md`**。
-> - 2026-09-10 收斂:本檔原本在檔頭累積 v110／v111／v112／v113 四段逐版 handover,與 `07_CHANGELOG.md` 重複且每出一版就再長一段 —— 而這是第一閱讀順序的必讀檔。已刪除該四段;其中屬於長期契約的內容(module seam、BUILTIN 刷新原子性、degraded boot、bridge byte-lock)留在下列各節與 `02_ARCHITECTURE.md`／`16_OPS_PLAYBOOK.md`／`adr/`。
+> - 2026-09-10 起本檔不再累積逐版 handover;長期契約留在下列各節與 `02_ARCHITECTURE.md`／`16_OPS_PLAYBOOK.md`／`adr/`。
 
 ## 你是誰、專案是什麼
 你是 Bar 的 AI 工程團隊(CTO/工程師/設計/QA 合一)。Bar **不會程式**,用白話下需求;你負責全部技術決策與實作,不教學、不解釋程式概念(除非被問)。
-專案:日本旅遊 PWA。Google Sheets 是 CMS,vanilla JS App 在使用者手機端抓 8 張公開 CSV 渲染,Netlify 託管。CMS 現行 Schema 3.1：Places.HID 精確關聯 Hotels.HID（3.0 起），住宿名稱只供顯示；3.1 新增 TripConfig 選填 Trip ID／Ledger Endpoint／Weather Regions GID 與行程總表選填「行程ID」，App 可連接下一趟旅程的 Sheet（ADR 0021）。current `shell/v188/index.html` 是 UI 與 DOM adapter；root `index.html`／`app-version.js` 是禁止當日常程式修改的 frozen v110 predecessor bridge。獨立 runtime modules 由 `runtime-assets.json` 登錄，包含 Navigation Intent、Diagnostic Impact、Buy-to-Ledger、Ledger/Shopping UI state 與 Trip progression。`schema.js`、`validator.js`、`sw.js` 等部署檔均在 repo 根目錄,經 GitHub 連動由 Netlify 部署(流程見 16 §E)。
+專案:旅遊 PWA(TripPilot;第一趟是日本岡山四國,之後每趟連接一份新 Sheet,不限日本)。Google Sheets 是 CMS,vanilla JS App 在使用者手機端抓 8 張公開 CSV(加上選填分頁:天氣地區、行前清單、航班,ADR 0022)渲染,Netlify 託管。CMS 現行 Schema 3.1：Places.HID 精確關聯 Hotels.HID（3.0 起），住宿名稱只供顯示；3.1 新增 TripConfig 選填 Trip ID／Ledger Endpoint／Weather Regions GID 與行程總表選填「行程ID」，App 可連接下一趟旅程的 Sheet（ADR 0021）。current `shell/v188/index.html` 是 UI 與 DOM adapter；root `index.html`／`app-version.js` 是禁止當日常程式修改的 frozen v110 predecessor bridge。獨立 runtime modules 由 `runtime-assets.json` 登錄，包含 Navigation Intent、Diagnostic Impact、Buy-to-Ledger、Ledger/Shopping UI state 與 Trip progression。`schema.js`、`validator.js`、`sw.js` 等部署檔均在 repo 根目錄,經 GitHub 連動由 Netlify 部署(流程見 16 §E)。
 
 ## 接手第一步:Project Understanding Report(先說理解,再動手)
 任何 AI 首次接手本專案、或在無既有專案脈絡的新對話/新環境開工時,完成下方閱讀順序後**不得直接修改任何檔案**,必須先輸出理解報告並等 Bar 核准(例:「確認,可以開始實作」)。此要求是「每個 AI 接手時做一次」,不是每個任務都做;同一脈絡內的後續任務依 15 的任務分級與 14 的 Tier 規則執行。
@@ -16,7 +16,7 @@
 報告模板依框架 `ai-native-framework@1.0.0` 的 `EXECUTION_RULES.md` §7(九項;本 repo 不另立)。
 
 ## 閱讀順序(最省 token)
-1. `.ai-manifest.json` → 2. 框架 `CONSTITUTION.md`／`WORKFLOW.md`／`EXECUTION_RULES.md`(版本見 manifest `framework`)→ 3. `PROJECT_CONSTITUTION.md` → 4. 本文件 → 5. 相關 `adr/` → 6. **必讀** `15_AI_EXECUTION_RULES.md`(本專案差異)→ 7. 依任務讀 `03_DATABASE.md` / `09_SCHEMA_MAPPING.md` / `05_CODING_RULES.md` / `11_CODING_CONVENTION.md` / `12_DEV_WORKFLOW.md` / `14_FILE_TIERS_AND_GATE.md` / `16_OPS_PLAYBOOK.md`
+1. `.ai-manifest.json` → 2. 框架 `CONSTITUTION.md`／`WORKFLOW.md`／`EXECUTION_RULES.md`(版本見 manifest `framework`)→ 3. `PROJECT_CONSTITUTION.md` → 4. 本文件 → 5. 相關 `adr/` → 6. **必讀** `15_AI_EXECUTION_RULES.md`(本專案差異)→ 7. 依任務讀 `01_PROJECT.md` / `03_DATABASE.md` / `09_SCHEMA_MAPPING.md` / `11_CODING_CONVENTION.md` / `12_DEV_WORKFLOW.md` / `14_FILE_TIERS_AND_GATE.md` / `16_OPS_PLAYBOOK.md`
 程式碼本體主要在 current generation `shell/v188/index.html` 內嵌 JS(區塊順序見 02)；root `index.html`／`app-version.js` 必須維持 frozen v110 bridge bytes。`navigation-intent.js`、`diagnostic-impact.js`、`today-view.js`、`shopping-photo-store.js`、`buy-to-ledger.js`、`ledger-ui-state.js`、`shopping-ui-state.js`、`trip-progression.js`、`trip-lifecycle.js`、`trip-archive.js`、`trip-drive.js`、`trip-source.js`、`trip-lifecycle-flow.js` 是 production-used module seams（完整清單以 `runtime-assets.json` 為準），`schema.js` / `validator.js` 是獨立權威來源。
 
 ## 工作流程(必守)
@@ -53,7 +53,7 @@ v146 首頁按 cfg 完整日期從 enddate 翌日起邀請打包；最後一天�
 
 「重置紀錄」只清本機個人狀態與採買照片；團體 Queue、已鎖帳務、身分和主題保留。「清除並打包旅程」以完整八表線上預檢、正式帳零餘額／無 pending claim、所有本機 Queue／bridge 收斂為守門；封存前後各預檢一次並比對摘要。可選個人 Drive 封存或不保存直接清除，兩者都只影響這部手機。封存八表與個人白名單資料，沒有照片、token、Queue 或診斷資料；過往旅程唯讀，筆記另檔追加。清除先寫 inactive，再刪本機旅程 keys 與照片；cleanup-pending 時 boot／sync／補送不得讓舊資料復活。完整連接新旅程仍屬第二階段。OAuth 公開 Client ID 可在 v137 前端，Client Secret 永遠不得提交；`drive.file` 是唯一 Drive scope。Cloud consent 目前 External Testing，只允許 Bar 測試；實體 iPhone／Android PWA 已於 2026-10-06 經 Bar 回報驗收完成。
 
-設定首頁的「資料」群組依序為資料健康狀態、照片健康狀態、過往旅程、備份／還原與版本。資料健康入口保留摘要，子頁直接顯示既有四項狀態、不再收合，返回設定首頁；照片詳細檢查／修復留在照片頁。獨立過往旅程亦返回設定首頁；inactive 首頁直達歷史，設定根頁只留歷史入口，直接進健康頁不顯示舊資料。「資料與版本」不重複健康或歷史入口，生命週期及備份功能不變。Google SDK 冷載入完成後不自動開 popup，必須由下一次使用者點擊發起授權；準備期間離頁時不重開舊頁。
+設定的「資料」群組(v185 起)只剩疑難排解、過往旅程、資料與版本;資料健康、照片健康、旅途紀錄與診斷面板收在「疑難排解」頁,子頁返回疑難排解。照片詳細檢查／修復留在照片頁;inactive 首頁直達歷史;「資料與版本」不重複健康或歷史入口,生命週期及備份功能不變。Google SDK 冷載入完成後不自動開 popup,必須由下一次使用者點擊發起授權;準備期間離頁時不重開舊頁。
 
 v141 過往旅程以 `TripDrive.resume()` 重用同次 App 尚未過期的記憶體授權，重載後須重新授權。關閉設定取消 pending connect／清除歷史 UI；離開結束旅程流程會使該次操作失效並清除授權，重新登入也不能恢復舊操作。inactive 清除憑證；401／過期不得重用。登入等待與 Drive 讀取分開呈現，頁內可取消登入，90 秒授權逾時／20 秒 Drive 讀取逾時可重試。request／selection generation 保護晚到回應（含回應內容）；token 不進 localStorage、備份或封存。真實 PWA 重入已於 2026-10-06 經 Bar 回報驗收完成；外部 400 原因仍未捕捉，不宣稱已修正。
 
@@ -90,9 +90,9 @@ v143 個人帳匯出只讀本裝置個人帳，保留原金額、代購與來源
 ## 現行診斷契約（2026-08-09）
 - `AppLog` 六類方法仍輸出既有 console level／前綴，並只在記憶體保存本次 session 最新 100 筆；每筆訊息最多 1,000 字，`snapshot()` 不暴露內部可變狀態。
 - `currentHealthFindings()` 是診斷面板的無副作用讀取；`window.healthCheck()` 才會輸出健康報告並寫入 AppLog。單純開啟面板不得製造新紀錄。
-- 桃子診斷面板（v152）另有唯讀的「目前旅程」區塊，複製報告開頭附 App 版本與同一組資訊；AppLog 原文與 ISO 時間不變。
-- 診斷面板（v153）也可從「設定 → 資料 → 診斷面板」開啟；沒有進行中旅程時只顯示摘要、目前旅程與紀錄（lifecycle 點擊防護放行 `#diagnosticOverlay`），不顯示測試工具。旅途紀錄的 UI 只在「設定 → 旅途紀錄」；v159 起面板不再有入口列。
-- 桃子診斷面板可顯示、複製與清除 AppLog；不得將紀錄改存 localStorage、IndexedDB、備份或遠端，也不得恢復已退役的 iOS 手勢事件收集。
+- 診斷面板（v152;入口是雙點頂端紙飛機圖示,v184 前是桃子徽章）另有唯讀的「目前旅程」區塊，複製報告開頭附 App 版本與同一組資訊；AppLog 原文與 ISO 時間不變。
+- 診斷面板（v153）也可從「設定 → 疑難排解 → 診斷面板」開啟；沒有進行中旅程時只顯示摘要、目前旅程與紀錄（lifecycle 點擊防護放行 `#diagnosticOverlay`），不顯示測試工具。旅途紀錄的 UI 只在「設定 → 疑難排解 → 旅途紀錄」；v159 起面板不再有入口列。
+- 診斷面板可顯示、複製與清除 AppLog；不得將紀錄改存 localStorage、IndexedDB、備份或遠端，也不得恢復已退役的 iOS 手勢事件收集。
 - 診斷面板已移除團體帳測試模式區塊；設定頁控制、TEST 前綴及正式／TEST universe 隔離仍是現行能力，不得連帶刪除。
 
 ## 現行網路／呈現降級契約（2026-08-09）
@@ -114,6 +114,6 @@ v143 個人帳匯出只讀本裝置個人帳，保留原金額、代購與來源
 ## 關鍵資源
 - 正式站:https://trippilot-jp.netlify.app/
 - GitHub Pages(日常驗收):https://nick80912-dev.github.io/ai-native-projects/
-- ~~Netlify 測試站~~:**已於 2026-09-10 由 Bar 永久刪除**。Netlify 特有的 header／redirects 行為改為發布後在正式站核對(見 `16_OPS_PLAYBOOK.md` §F5)。
-- CMS fileId:`1B5g7KuVi2WaFVVSdhqRMeTQV_tBpgnzOAv6aMQdFZJw`(gid 與資料表概覽見 03;欄位細節見 09)
+- Netlify 測試站已於 2026-09-10 刪除;Netlify 的 header／redirects 行為在發布後於正式站核對(`16_OPS_PLAYBOOK.md` §F5)。
+- 岡山 CMS fileId:`1B5g7KuVi2WaFVVSdhqRMeTQV_tBpgnzOAv6aMQdFZJw`;下一趟副本「TripPilot 下一趟」:`1H9TfSD--0h2qdfeBRchxDapCj76_FRLMwKBIrKck1EM`(gid 與資料表概覽見 03;欄位細節見 09;新旅程步驟見 `docs/new-trip-handbook.md`)
 - Bar 的溝通偏好:直接執行、精簡回報、表格化 QA 結果、繁體中文

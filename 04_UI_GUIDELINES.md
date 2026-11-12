@@ -50,6 +50,15 @@
 | 杉綠／宮島 | `#edf3ec` | `#fbfdf9` | `#1f3b2a` | `#2f6b4f` | `#bd4e24` | `#f8e4d8` | `#1d2b21` | `#475b4d` | `#6f8174` | `#d3dfd1` | `#e4ece2` | `rgba(251,253,249,.96)` | `#6f6532` |
 | 霧藍／瀨戶 | `#edf4f8` | `#fbfdff` | `#314d63` | `#356d8c` | `#9a6614` | `#f7ecd0` | `#1e303d` | `#4d6270` | `#6f8290` | `#d2dfe7` | `#e2ebf0` | `rgba(251,253,255,.96)` | `#4b746c` |
 | 焙茶／倉敷 | `#f7f0e7` | `#fff9f1` | `#49362b` | `#896748` | `#405c7a` | `#e5edf5` | `#33261d` | `#5f4e42` | `#7a695d` | `#ddcbb9` | `#eadfd2` | `rgba(255,249,241,.96)` | `#9a4f30` |
+| 繪本／和紙(v187) | `#FFFCF6` | `#ffffff` | `#3E3A39` | `#3E3A39` | `#B4472F` | `#fdebe7` | `#3E3A39` | `#5c5654` | `#756e6b` | `#3E3A39` | `#f1eadc` | `#FFFCF6` | `#6a5a8c` |
+
+### 繪本／和紙主題的外觀層(v187–v188,ADR 0008 增補)
+- 唯一允許超出 13 個 token 的主題:以 `html[data-theme="ehon"]` 覆寫框線(卡片 3px、按鈕 2.5px 墨灰 `#3E3A39`)、大圓角(卡片 22px、按鈕膠囊)、取消陰影,按鈕底下一道 3px 墨灰。
+- 四個平塗色:珊瑚粉 `#F2A497`(景點標籤、選中日期、儲存、＋)、山吹黃 `#F6D27A`(主要動作:導航、時間標籤、分帳總覽卡)、水色 `#A8D3E6`(首頁大卡、停車、航班卡)、若竹綠 `#B9DAA5`(完成、開車標籤、勾選完成)。淡色塊上的字一律墨灰;`--t-accent` 用深珊瑚 `#B4472F` 才能當白底文字。
+- 首頁插圖(inline SVG,只在此主題顯示)與切換日期彈跳都受 `prefers-reduced-motion` 全域規則約束。
+
+### 圖示(v186)
+- App 產生的圖示一律 inline SVG 線條(`LINE_ICON_PATHS`／`lineIcon()`／`iconLabelHtml()`,沿用 `.app-icon` 的 stroke 寫法),SVG `aria-hidden`、可及名稱只有文字。Sheet 內容自帶的 Emoji 與分帳類別 Emoji 保留;不引入 icon font。
 
 固定色：`--action-destructive-bg #8c1d2c`(刪除／清除資料,**不隨主題** —— 見下)、`--green #367055`、`--gold #c1963c`、`--gold-ink #85661c`，以及既有 warning／correction／shadow token。新增主題時必須補齊 13 個第一層 token 並通過自動對比測試。
 
@@ -88,7 +97,7 @@
 - **`border-radius:50%` 正圓 = 純圖示按鈕**。沒有文字、方形命中區的圖示控制項:`.settings-btn`、`.settings-close`、`.shop-search-clear`、`.ledger-fab`、`.shopping-add-button`、`.shopping-photo-warning-mark`、`.settings-member-add`(2026-09-13 補列:內容只有一個 `＋`、靠 `aria-label` 命名、38×38 近正方,條件上就是純圖示按鈕,v123 之前誤用 `.btn` 的 9px 矩形)。**它們是動作,但不套 `.btn` 的矩形** —— 圖示按鈕自成一類,改成矩形反而會讓它變成這個家族裡的異類。
 - **不得互換**。膠囊傳達「這是一個你可以切換的狀態」,矩形傳達「這會執行一件事」,正圓傳達「這是一個圖示操作」。把選取控制項改成矩形會讓它看起來像命令;把動作做成膠囊則相反。**新增元件時先問它是狀態還是動作,再決定形狀**。
 - **可選取的膠囊必須有明確的選取外觀**,不能只靠邊框顏色與文字深淺 —— 全 app 的選取狀態慣例是**填色**(`background:var(--sea)` 加白字,或淺色填底加深色字)。`0.667px` 的邊框在 12px 字級下辨識不出來。
-- **圓角尺度(2026-09-12 修訂)**:既有 token 為 `--radius-sm:6px`／`--radius-control:10px`／`--radius-card:14px`／`--radius-pill:999px`。實際使用最多的是 **8px** 與 **9px**(`.btn` 家族),兩者原本不在尺度內。**現正式承認四級之外的 8／9px 為既有主力值**,新元件應優先取用既有 token;`3／4／5／11／13／18／20／22px` 等單次使用的離群值列為可收斂對象(`tasks/backlog.md` #35)。
+- **圓角尺度(2026-09-12 修訂;v187 起所有主題的卡片 `.item`／`.nx-ticket`／`.shop-mall`／`.today-hero`／`.ledger-summary-card`／`.settings-group-card` 一律 20px,`.qa-btn`／`.btn` 與決策按鈕 14px,備註框與面板 14px,寫在樣式表最後只覆寫圓角)**:既有 token 為 `--radius-sm:6px`／`--radius-control:10px`／`--radius-card:14px`／`--radius-pill:999px`。實際使用最多的是 **8px** 與 **9px**(`.btn` 家族),兩者原本不在尺度內。**現正式承認四級之外的 8／9px 為既有主力值**,新元件應優先取用既有 token;`3／4／5／11／13／18／20／22px` 等單次使用的離群值列為可收斂對象(`tasks/backlog.md` #35)。
 
 > 頁首的同步狀態 chip(`.brand .sync`)與設定鈕(`.settings-btn`)是**成對設計**:`.brand .sync::before,.settings-btn::before` 同一條規則給兩者 `inset:4px`、`border-radius:inherit` 的 `rgba(255,255,255,.1)` 襯底。前者是狀態顯示(可點開詳情),後者是圖示動作,**形狀各依其類,不應統一**。
 
@@ -116,14 +125,14 @@
 
 ## 交通方式標籤(v149)
 - `transportModeOf()` 依交通說明判斷:飛機(TPE／OKJ／航班)→ 開車 → 步行 → 渡輪 → 大眾運輸;都不符時自駕旅程沿用開車。圖示＋文字＋顏色三者並存,不只靠顏色。
-- 顏色是 `:root` 的固定 token `--mode-*-bg`(不隨六組主題變),文字一律 `--mode-ink`,對比 5.6–7.7:1。分類標籤(機場、景點等)仍隨主題變色。
+- 顏色是 `:root` 的固定 token `--mode-*-bg`(不隨主題變),文字一律 `--mode-ink`,對比 5.6–7.7:1。分類標籤(機場、景點等)仍隨主題變色。
 
 ## 行動手勢
 - App 採單一 Scroll-only 政策：`html,body { touch-action:pan-x pan-y; }`，只允許水平與垂直捲動，不提供雙擊或捏合縮放。
 - 禁止恢復 `.wrap` transform 縮放、回彈、`setupPinchZoom()` 或 JavaScript 雙擊攔截器，避免與 WebKit visual viewport 形成雙重縮放狀態。
 - 輸入框 focus 造成縮放殘留時，仍只允許 viewport「瞬鎖約 100ms → 原始字串還原」；`maximum-scale` 與 `user-scalable=no` 不得常駐。
 - iOS App 從背景回到前景或由 page cache 恢復時，必須還原原始 viewport 字串、清除舊 inline transform，並在兩個 animation frames 後恢復原捲動座標；禁止以 reload 或重繪清除使用者狀態。
-- 桃子診斷徽章、按鈕、連結、表單控制項、垂直頁面捲動及水平清單捲動必須保持正常。
+- 頂端圖示(診斷入口)、按鈕、連結、表單控制項、垂直頁面捲動及水平清單捲動必須保持正常。
 - 正常 Dev 不長期收集 `touch`、`gesture`、`dblclick` 或 `visualViewport` 手勢事件；若問題重現，須經 Bar 核准才可啟用短期證據 Build。
 - 短期證據 Build 只能使用 passive listener，禁止呼叫 `preventDefault()`、修改 viewport、寫入 storage、記錄輸入值或完整 URL；證據判讀後的任何修正仍須另行核准。
 

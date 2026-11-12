@@ -6,34 +6,39 @@
 旅遊用的手機 PWA（TripPilot）：第一趟是 2026-10 岡山六天五夜自駕（已結束），之後每趟連接一份新的 Google Sheet，不限日本（ADR 0021、v168–v170）。Google Sheets 當 CMS，以單頁 App 搭配少量獨立 runtime module，部署於 Netlify。
 - 正式站:https://trippilot-jp.netlify.app/
 - 使用者:Bar(產品負責人,非工程師)與同行友人
-- **權威來源**:程式與文件以 **GitHub 本 repo 為唯一權威**;個人 Google Drive 只存唯讀過往旅程，不是即時帳務權威。內容資料來源為 Drive 試算表「261018-261023岡山四國六天五夜」(發布 CSV,見 03/schema.js)。
+- **權威來源**:程式與文件以 **GitHub 本 repo 為唯一權威**;個人 Google Drive 只存唯讀過往旅程，不是即時帳務權威。內容資料來源是每趟旅程各自的 Google 試算表(發布 CSV,見 03/schema.js);第一趟是「261018-261023岡山四國六天五夜」。
 
 ## 快速開始(給 AI / 開發者)
-第一閱讀順序:以 `08_AI_HANDOVER.md` 的「閱讀順序」為唯一權威;首次接手依其「接手第一步」輸出理解報告。
+第一閱讀順序以 `08_AI_HANDOVER.md` 的「閱讀順序」為準;首次接手依其「接手第一步」輸出理解報告。通用治理規則在私人 repo `ai-native-framework`(版本見 `.ai-manifest.json`),本 repo 只記專案差異。
 
-- `.ai-manifest.json`:AI 導航檔,掌握專案全貌
-- `PROJECT_CONSTITUTION.md`:專案最高規範與 AI Harness 流程
-- `08_AI_HANDOVER.md`:交接重點、禁改事項、常見陷阱
-- `adr/`:架構決策,重構或推翻既有設計前必讀
-- `03_DATABASE.md`:CMS 資料表快速概覽
-- `09_SCHEMA_MAPPING.md`:Schema / CMS 欄位細節
-- `05_CODING_RULES.md`:程式規範快速概覽
-- `11_CODING_CONVENTION.md`:程式規範細節
-- `12_DEV_WORKFLOW.md`:常見任務步驟鏈
-- `14_FILE_TIERS_AND_GATE.md`:檔案風險分級與 Gate 保護範圍
-- `15_AI_EXECUTION_RULES.md`:AI 決策權限、指令效力、不確定性協議、任務分級
-- `16_OPS_PLAYBOOK.md`:回滾手冊與 DevOps 安全規範
+| 文件 | 內容 |
+|---|---|
+| `.ai-manifest.json` | AI 導航檔,幾百字掌握全貌 |
+| `PROJECT_CONSTITUTION.md` | 專案憲章(依框架,只記差異) |
+| `01_PROJECT.md` | 專案定位、里程碑、長期風險 |
+| `02_ARCHITECTURE.md` | 架構與資料流 |
+| `03_DATABASE.md` | Google Sheet 資料表概覽 |
+| `04_UI_GUIDELINES.md` | 介面與主題規範 |
+| `07_CHANGELOG.md` | 逐版紀錄(較舊的在 `docs/archive/`) |
+| `08_AI_HANDOVER.md` | 現行契約、禁改事項、前人踩過的坑 |
+| `09_SCHEMA_MAPPING.md` | 欄位對照(由 `schemaDoc()` 產生) |
+| `10_FOLDER_STRUCTURE.md` | 資料夾與檔案職責 |
+| `11_CODING_CONVENTION.md` | 技術基線、命名、陷阱 |
+| `12_DEV_WORKFLOW.md` | 常見任務步驟鏈 |
+| `14_FILE_TIERS_AND_GATE.md` | 檔案風險分級 |
+| `15_AI_EXECUTION_RULES.md` | AI 執行規範(依框架,只記差異) |
+| `16_OPS_PLAYBOOK.md` | 發布、回滾、營運手冊 |
+| `CONTEXT.md` | 專案詞彙表 |
+| `adr/` | 架構決策紀錄;重構或推翻既有設計前必讀 |
+| `tasks/` | 即時狀態(`current.md`)、待辦(`backlog.md`)、已完成(`done.md`) |
+| `docs/` | 新旅程手冊、備份相容性契約、匯出契約、真機驗收紀錄、歷史封存 |
 
 ## 開發工作流程(必守)
-1. Bar 用白話描述需求 → AI 以資深工程團隊身分執行
-2. 只做被要求的修改,不重構整個專案
-3. 交付於 `dev` 分支驗收;正式發版依 `16_OPS_PLAYBOOK.md` §E Release Flow(PR → Bar Review → Bar Merge → Netlify Deploy)
-4. 每次修改需通過 QA(斷網/連網/旅行日情境),更新 `07_CHANGELOG.md`
-5. 資料內容改動走 Google Sheets,不改程式;程式只在功能/邏輯變動時修改
-
-## 改善設計與計畫
-
-- [2026-10-03 第一批設計](docs/superpowers/specs/2026-10-03-trippilot-reliability-and-clarity-batch1-design.md)與 [A／B／C 實作計畫](docs/superpowers/plans/2026-10-03-trippilot-batch1-index.md)：分批處理狀態／摘要、本機保存可靠性及天氣資訊，保守調整字體；每批核准、驗證與發布狀態以 `tasks/current.md` 為唯一權威。
+1. Bar 用白話描述需求 → AI 以工程團隊身分執行;改畫面先給截圖,Bar 說「好」才測試與發版。
+2. 只做被要求的修改,不重構整個專案。
+3. PR 進 `dev` → CI → Release PR(`dev` → `main`)→ Netlify → 線上核對 → production tag(`16_OPS_PLAYBOOK.md` §E)。
+4. 每次修改需通過 QA(斷網/連網/旅行日情境),更新 `07_CHANGELOG.md`。
+5. 資料內容改動走 Google Sheets,不改程式。
 
 ## 專案檔案
 - `index.html` / `app-version.js` — 保留 v110 predecessor bridge；讓尚未更新的 v110 worker 在 current generation 安裝失敗時仍可運作
@@ -58,15 +63,8 @@
 - `tests/` / `tools/` — 可重跑測試與文件一致性檢查
 - `tasks/` — 即時工作狀態唯一權威
 
-## 設定整理與個人旅程生命週期（v137–v140，已發布）
-
-「設定 → 資料」依序提供「資料健康狀態」、「照片健康狀態」、「旅途紀錄」、「診斷面板」、「過往旅程」、「資料與版本」（v160 前名為「備份、還原與版本資訊」）。資料健康入口保留正常／需注意摘要；獨立子頁直接顯示行程資料、團體帳、個人資料與照片附件四項狀態，不再收合，返回設定首頁。照片詳細檢查／修復仍在照片頁。過往旅程直接開啟列表，返回設定首頁；Google 元件尚未載入時先準備登入，再由使用者點擊授權。「資料與版本」保留「重置紀錄」、「清除並打包旅程」、備份／還原與版本，不再重複健康明細。重置只清本機個人紀錄與採買照片；不清團體 Queue、已鎖定帳務或身分。清除需八表線上預檢、無本機待同步／橋接、正式團體帳結清且無待回覆 claim；可選先封存至個人 Drive 或不保存直接清除。清除只移除本裝置的 `trip_*`、`v2_cache_*` 與採買照片，保留 inactive 標記；不刪共用 Sheet、其他旅伴手機、Drive 檔案或 SW App Shell。封存不含採買照片、Queue、token 或診斷資料，只有回顧筆記可追加。完整連接新旅程留待第二階段。
-
-過往旅程以唯讀區塊呈現每日行程、採買分配／記帳關聯、個人帳、團體紀錄及旅途紀錄；完整八表與個人設定另保留原始資料展開區。筆記確認上傳與讀回後才清草稿，失敗重試沿用同 note ID。真機清單見 `docs/device-acceptance-log.md` 的 v137 區段。
-
-v140 只整理健康資訊的入口與呈現，健康 model、旅程與帳務契約不變。已發布 v139 不覆寫；新 generation 的健康區塊不再使用 details，亦不保留已無用途的展開狀態。
-
-Google Cloud 專案 `trippilot-510301` 已啟用 Drive API，OAuth Web client「TripPilot Web PWA」的公開 Client ID 已配置於 v137；JavaScript 來源為 `https://nick80912-dev.github.io` 與 `https://trippilot-jp.netlify.app`。只使用 `drive.file`，Client Secret 不進前端或 repo。OAuth 目前為 External Testing，測試使用者只有 Bar；其他旅伴需加入測試使用者或完成 Google 對外發布流程，才可自行授權。v137 起在真實 iPhone／Android PWA 的 Google 授權、上傳讀回、清除後重啟與筆記，已於 2026-10-06 經 Bar 回報驗收完成；驗收帳號只有 Bar，其他旅伴仍受上一句 External Testing 的限制。若已發布版本有問題，依 `16_OPS_PLAYBOOK.md` §A2 forward-bump，不覆寫 v136／v137 檔案。
+## Google 授權(個人 Drive 封存,ADR 0020)
+Google Cloud 專案 `trippilot-510301` 已啟用 Drive API;OAuth Web client「TripPilot Web PWA」的公開 Client ID 在 App 內,JavaScript 來源為 `https://nick80912-dev.github.io` 與 `https://trippilot-jp.netlify.app`。只使用 `drive.file`,Client Secret 不進前端或 repo。OAuth 目前為 External Testing,測試使用者只有 Bar;其他旅伴需加入測試使用者或完成 Google 對外發布流程,才可自行授權。
 
 ## 正式部署
 - `main` 是正式 Production Branch;日常開發與驗收於 `dev` 分支完成。
