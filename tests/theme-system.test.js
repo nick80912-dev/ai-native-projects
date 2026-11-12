@@ -336,7 +336,7 @@ function extractThemeIds(html){
      v178 的退稅追蹤說明已於 2026-11-10 隨 v183 加入而滾出,同前一個處理。
      v179 的退稅清單分頁說明已於 2026-11-10 隨 v184 加入而滾出,同前一個處理。
      v180 的可退稅移到金額下方說明已於 2026-11-10 隨 v185 加入而滾出,同前一個處理。 */
-  assert.deepStrictEqual(Array.from(notes.slice(1),function(note){return note.version;}),['v186','v185','v184','v183']);
+  assert.deepStrictEqual(Array.from(notes.slice(1),function(note){return note.version;}),['v187','v186','v185','v184']);
   /* v117 的選取表達說明已於 2026-09-12 隨 v122 加入而滾出五筆視窗，同前一個處理。
   /* v118 的顏色語意收斂說明已於 2026-09-13 隨 v123 加入而滾出五筆視窗,同前一個處理。
   /* v119 的攤疊區塊說明已於 2026-09-13 隨 v124 加入而滾出五筆視窗,同前一個處理。
