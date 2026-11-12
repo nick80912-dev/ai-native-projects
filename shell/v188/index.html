@@ -182,7 +182,7 @@ html[data-theme="ehon"] .shop-filter-btn.on small{color:var(--ehon-ink)}
 .settings-theme-preview[data-theme="ehon"] .settings-theme-preview-dot{background:#F2A497;outline:2px solid #3E3A39}
 /* v188(Bar 2026-11-12):繪本主題補到其他頁面 —— 下方彈出的面板、輸入框、採買清單、成員選擇、勾選框。 */
 html[data-theme="ehon"]{accent-color:#3E3A39}
-html[data-theme="ehon"] .ledger-sheet{border:3px solid var(--ehon-ink);border-bottom:0;border-radius:24px 24px 0 0}
+html[data-theme="ehon"] [class~="ledger-sheet"]{border:3px solid var(--ehon-ink);border-bottom:0;border-radius:24px 24px 0 0}
 html[data-theme="ehon"] .ledger-sheet-input,html[data-theme="ehon"] .ledger-sheet select,html[data-theme="ehon"] .settings-panel input:not([type=checkbox]):not([type=radio]),html[data-theme="ehon"] .settings-panel select,html[data-theme="ehon"] .member-entry input{border:2px solid var(--ehon-ink);border-radius:14px}
 html[data-theme="ehon"] .shopping-list-head{background:var(--paper);border-bottom:3px solid var(--ehon-ink)}
 html[data-theme="ehon"] .shopping-add-button{background:var(--ehon-coral);color:var(--ehon-ink);border:var(--ehon-line);box-shadow:var(--ehon-drop)}
@@ -194,6 +194,34 @@ html[data-theme="ehon"] .prep-row{border-bottom:2px dashed var(--line-soft)}
 html[data-theme="ehon"] .prep-progress-row{background:#fff;border:var(--ehon-line);color:var(--ehon-ink)}
 html[data-theme="ehon"] .prep-progress{background:var(--line-soft);border:2px solid var(--ehon-ink);height:10px;border-radius:999px}
 html[data-theme="ehon"] .prep-progress span{background:var(--ehon-green)}
+/* v188 航班卡(登機證造型);繪本主題另有水色底與粗框 */
+.flight-card{position:relative;margin:12px;background:var(--card);border:1px solid var(--line);border-radius:20px;box-shadow:var(--shadow);overflow:hidden;color:var(--ink)}
+.flight-main{padding:14px 16px 12px}
+.flight-top{display:flex;justify-content:space-between;align-items:baseline;gap:8px;font-size:12px;font-weight:800;color:var(--ink-soft)}
+.flight-top .flight-kicker{letter-spacing:.06em;color:var(--sea-deep)}
+.flight-route{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:10px;margin-top:10px}
+.flight-end b{display:block;font-size:30px;line-height:1;font-weight:900;letter-spacing:.02em;color:var(--sea-deep)}
+.flight-end span{display:block;font-size:17px;font-weight:900;margin-top:4px}
+.flight-end small{display:block;font-size:11px;color:var(--ink-soft)}
+.flight-end.r{text-align:right}
+.flight-line{position:relative;min-width:0;height:24px;display:flex;align-items:center}
+.flight-line::before{content:'';flex:1;border-top:2px dashed var(--line)}
+.flight-line svg.flight-plane{width:22px;height:22px;margin:0 4px;fill:none;stroke:var(--sea);stroke-width:2;stroke-linejoin:round}
+.flight-line::after{content:'';flex:1;border-top:2px dashed var(--line)}
+.flight-perf{position:relative;border-top:2px dashed var(--line);margin:0 14px}
+.flight-perf::before,.flight-perf::after{content:'';position:absolute;top:-11px;width:20px;height:20px;border-radius:50%;background:var(--paper);border:1px solid var(--line)}
+.flight-perf::before{left:-25px}.flight-perf::after{right:-25px}
+.flight-stub{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;padding:10px 16px 14px}
+.flight-stub small{display:block;font-size:10.5px;color:var(--ink-soft);font-weight:700}
+.flight-stub b{display:block;font-size:14px;font-weight:900;overflow-wrap:anywhere}
+.flight-note{margin:0 16px 14px;font-size:12px;color:var(--ink-soft)}
+html[data-theme="ehon"] .flight-card{border:3px solid #3E3A39;border-radius:22px;box-shadow:none;background:#A8D3E6}
+html[data-theme="ehon"] .flight-card *{color:#3E3A39}
+html[data-theme="ehon"] .flight-line::before,html[data-theme="ehon"] .flight-line::after,html[data-theme="ehon"] .flight-perf{border-color:#3E3A39}
+html[data-theme="ehon"] .flight-line svg.flight-plane{stroke:#3E3A39;fill:#F6D27A}
+html[data-theme="ehon"] .flight-stub{background:#FFFCF6}
+html[data-theme="ehon"] .flight-perf::before,html[data-theme="ehon"] .flight-perf::after{background:#FFFCF6;border:3px solid #3E3A39;top:-12px}
+html[data-theme="ehon"] .flight-note{background:#FFFCF6;margin:0;padding:0 16px 14px}
 /* 首頁插圖:只有繪本主題顯示;雲與船輕輕動,「減少動態效果」時由全域規則停掉 */
 .ehon-art{display:none}
 html[data-theme="ehon"] .ehon-art{display:block;width:calc(100% + 36px);height:auto;margin:-18px -18px 14px;border-bottom:3px solid var(--ehon-ink)}
@@ -1190,7 +1218,10 @@ var SCHEMA = {
           desc:'選填;「天氣地區」分頁的 gid(欄位:地區名稱、緯度、經度、關鍵字)。新旅程沒填就不顯示天氣;岡山沿用內建城市清單' },
         /* v184(Bar 2026-11-10 選「試算表寫、各自勾」並可在 App 自己新增):行前待辦／注意事項清單 */
         { field:'checklistGid', header:'Checklist GID', optional:true,
-          desc:'選填;「行前清單」分頁的 gid(欄位:類型、項目、說明、期限)。類型填「待辦」或「注意」,沒填當待辦;勾選只存在各自手機' }
+          desc:'選填;「行前清單」分頁的 gid(欄位:類型、項目、說明、期限)。類型填「待辦」、「行李」或「注意」,沒填當待辦;勾選只存在各自手機' },
+        /* v188(Bar 2026-11-12 選「試算表新增航班分頁」):航班卡 */
+        { field:'flightsGid', header:'Flights GID', optional:true,
+          desc:'選填;「航班」分頁的 gid(欄位:日期、航空公司、班次、出發機場、出發時間、抵達機場、抵達時間、開櫃時間、航廈、托運、訂位代號、備註)。一列一班;沒填就不顯示航班卡' }
       ]
     }
   }
@@ -2087,6 +2118,7 @@ function syncAll(showToast){
     syncInFlight=null; renderSyncStatusBody();
     if(result&&result.ok&&typeof refreshWeatherRegions==='function')refreshWeatherRegions();
     if(result&&result.ok&&typeof refreshPrepChecklist==='function')refreshPrepChecklist();
+    if(result&&result.ok&&typeof refreshFlights==='function')refreshFlights();
     return result;
   },function(error){
     /* v147(backlog #51):成功路徑在下載後會重查 inactive 並靜默返回;失敗路徑原本沒有。
@@ -3563,6 +3595,123 @@ function renderPrepTodayEntry(){
   var count=model.total?model.done+'/'+model.total:'新增';
   return '<button type="button" class="prep-launcher prep-progress-row" onclick="openPrepChecklist()" aria-label="行前準備，已完成 '+model.done+' / '+model.total+'"><span>行前準備</span><span class="prep-progress" aria-hidden="true"><span style="width:'+percent+'%"></span></span><span>'+escapeHtml(count)+' ›</span></button>';
 }
+/* ================= 航班卡(v188,Bar 2026-11-12 看過示意圖、選「試算表新增航班分頁」) =================
+   - 試算表「航班」分頁一列一班,gid 填在 TripConfig 的 Flights GID;沒填就不顯示。
+   - 出發前首頁顯示下一班;搭機當天今天頁最上面顯示當天的航班;其他日子與旅程結束後不顯示。
+   - 只是把 Sheet 內容讀下來顯示,存在 localStorage 的快取(依旅程分開),不進個人備份、不上傳。
+   - 不算飛行時間:兩地時區可能不同,當地時間相減會算錯。 */
+var FLIGHT_ITEMS_KEY='trip_flight_items',FLIGHT_ITEMS_MAX=12;
+var FLIGHT_COLUMNS=[['date','日期'],['airline','航空公司'],['flightNo','班次'],['fromCode','出發機場'],['fromTime','出發時間'],['toCode','抵達機場'],['toTime','抵達時間'],['counter','開櫃時間'],['terminal','航廈'],['baggage','托運'],['pnr','訂位代號'],['note','備註']];
+function parseFlightDate(text,now){
+  var value=String(text||'').trim(),m,year,month,day;
+  if(!value)return null;
+  if((m=/^(\d{4})[-\/.](\d{1,2})[-\/.](\d{1,2})/.exec(value))){year=+m[1];month=+m[2];day=+m[3];}
+  else if((m=/^(\d{1,2})[\/.\-](\d{1,2})/.exec(value))){month=+m[1];day=+m[2];
+    var base=now||appNow();year=base.getFullYear();
+    if(Date.UTC(year,month-1,day)<Date.UTC(base.getFullYear(),base.getMonth(),base.getDate()-180))year++;}
+  else return null;
+  if(month<1||month>12||day<1)return null;
+  var serial=Date.UTC(year,month-1,day)/86400000;
+  if(Date.UTC(year,month,0)/86400000<serial)return null;
+  return {key:year*10000+month*100+day,md:('0'+month).slice(-2)+'/'+('0'+day).slice(-2),label:month+'/'+day,dow:'日一二三四五六'.charAt(((serial+4)%7+7)%7)};
+}
+function parseFlightTime(text){
+  var m=/^(\d{1,2})[:：](\d{2})/.exec(String(text||'').trim());
+  if(!m||+m[1]>23||+m[2]>59)return '';
+  return (+m[1])+':'+m[2];
+}
+function parseFlightsCsv(text,now){
+  var rows=parseCSV(text||''),map=null,flights=[],skipped=0;
+  rows.forEach(function(row){
+    var cells=row.map(function(cell){return String(cell||'').trim();});
+    if(!map){
+      if(cells.indexOf('班次')>=0||cells.indexOf('出發機場')>=0){
+        map={};FLIGHT_COLUMNS.forEach(function(col){var i=cells.indexOf(col[1]);if(i>=0)map[col[0]]=i;});return;
+      }
+    }
+    var get=function(field,index){var i=map&&map[field]!==undefined?map[field]:index;return i>=0&&i<cells.length?cells[i]:'';};
+    var f={};FLIGHT_COLUMNS.forEach(function(col,i){f[col[0]]=get(col[0],i);});
+    if(!f.date&&!f.flightNo&&!f.fromCode)return;
+    var date=parseFlightDate(f.date,now);
+    if(!map&&!date)return;   /* 表頭上方的說明列不算 */
+    if(!date||!f.fromCode||!f.toCode||flights.length>=FLIGHT_ITEMS_MAX){skipped++;return;}
+    flights.push({dateKey:date.key,md:date.md,dateLabel:date.label,dow:date.dow,
+      airline:f.airline.slice(0,30),flightNo:f.flightNo.slice(0,12),
+      fromCode:f.fromCode.toUpperCase().slice(0,4),fromTime:parseFlightTime(f.fromTime),
+      toCode:f.toCode.toUpperCase().slice(0,4),toTime:parseFlightTime(f.toTime),
+      counter:parseFlightTime(f.counter)||f.counter.slice(0,12),terminal:f.terminal.slice(0,16),baggage:f.baggage.slice(0,16),
+      pnr:f.pnr.slice(0,12),note:f.note.slice(0,120)});
+  });
+  flights.sort(function(a,b){return a.dateKey-b.dateKey||String(a.fromTime).localeCompare(String(b.fromTime),undefined,{numeric:true});});
+  return {flights:flights,skipped:skipped};
+}
+function readFlights(){
+  var stored;try{stored=JSON.parse(localStorage.getItem(FLIGHT_ITEMS_KEY)||'null');}catch(ignore){return [];}
+  if(!stored||stored.version!==1||stored.sourceKey!==currentTripSourceKey()||!Array.isArray(stored.flights))return [];
+  return stored.flights.filter(function(f){return f&&typeof f.dateKey==='number'&&f.fromCode&&f.toCode;});
+}
+var flightsInFlight=null;
+function refreshFlights(){
+  if(flightsInFlight)return flightsInFlight;
+  var gid=String(DB&&DB.cfg&&DB.cfg.flightsGid||'').trim(),sourceKey=currentTripSourceKey();
+  var before=localStorage.getItem(FLIGHT_ITEMS_KEY);
+  function store(next){
+    if(next===before)return;
+    try{if(next===null)localStorage.removeItem(FLIGHT_ITEMS_KEY);else localStorage.setItem(FLIGHT_ITEMS_KEY,next);}
+    catch(error){AppLog.data('航班資料無法保存：'+String(error&&error.message||error));return;}
+    if(curView==='today'&&typeof renderToday==='function')renderToday();
+  }
+  if(!/^\d{1,12}$/.test(gid)){store(null);return Promise.resolve([]);}
+  flightsInFlight=fetchWithTimeout(currentPubBase()+gid,FETCH_TIMEOUT).then(function(response){
+    if(!response.ok)throw new Error('HTTP '+response.status);
+    return response.text();
+  }).then(function(text){
+    if(currentTripSourceKey()!==sourceKey)return null;
+    var parsed=parseFlightsCsv(text);
+    if(parsed.skipped)AppLog.data('航班分頁有 '+parsed.skipped+' 列沒有使用(日期看不懂、缺出發或抵達機場,或超過 '+FLIGHT_ITEMS_MAX+' 班)');
+    store(JSON.stringify({version:1,sourceKey:sourceKey,gid:gid,flights:parsed.flights}));
+    return parsed.flights;
+  }).catch(function(error){
+    AppLog.data('航班資料讀取失敗，沿用上次的資料：'+String(error&&error.message||error));
+    return null;
+  }).then(function(result){flightsInFlight=null;return result;});
+  return flightsInFlight;
+}
+/* mode:'pretrip' = 下一班(今天以後最早的一班);'today' = 今天的所有航班 */
+function flightsForHome(mode){
+  var flights;try{flights=readFlights();}catch(error){return [];}
+  if(!flights.length)return [];
+  var now=appNow(),todayKey=now.getFullYear()*10000+(now.getMonth()+1)*100+now.getDate();
+  if(mode==='today')return flights.filter(function(f){return f.dateKey===todayKey;});
+  var next=flights.filter(function(f){return f.dateKey>=todayKey;});
+  return next.length?[next[0]]:[];
+}
+function flightDirectionLabel(flight){
+  var flights=readFlights();if(flights.length<2)return '航班';
+  if(flight.dateKey===flights[0].dateKey)return '去程';
+  if(flight.dateKey===flights[flights.length-1].dateKey)return '回程';
+  return '航班';
+}
+function renderFlightCard(flight,isToday){
+  var plane='<svg class="flight-plane" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M10.5 3.5a1.5 1.5 0 0 1 3 0V9l7 4v2l-7-2v4l2 1.5V20L12 19l-3.5 1v-1.5l2-1.5v-4l-7 2v-2l7-4z" transform="rotate(90 12 12)"/></svg>';
+  var kicker=isToday?'今天搭機 · '+flightDirectionLabel(flight):flightDirectionLabel(flight)+' · '+flight.dateLabel+'（'+flight.dow+'）';
+  var carrier=[flight.airline,flight.flightNo].filter(Boolean).join(' ');
+  var stub=[['開櫃',flight.counter],['航廈',flight.terminal],['托運',flight.baggage],['訂位代號',flight.pnr]].filter(function(x){return x[1];});
+  var label=kicker+'，'+(carrier?carrier+'，':'')+flight.fromCode+(flight.fromTime?' '+flight.fromTime:'')+' 飛 '+flight.toCode+(flight.toTime?' '+flight.toTime:'')+
+    stub.map(function(x){return '，'+x[0]+' '+x[1];}).join('')+(flight.note?'，'+flight.note:'');
+  return '<section class="flight-card" role="group" aria-label="'+escapeHtmlAttr(label)+'"><div class="flight-main" aria-hidden="true">'+
+    '<div class="flight-top"><span class="flight-kicker">'+escapeHtml(kicker)+'</span><span class="flight-carrier">'+escapeHtml(carrier)+'</span></div>'+
+    '<div class="flight-route"><div class="flight-end"><b>'+escapeHtml(flight.fromCode)+'</b><span>'+escapeHtml(flight.fromTime||'—')+'</span></div>'+
+    '<div class="flight-line">'+plane+'</div>'+
+    '<div class="flight-end r"><b>'+escapeHtml(flight.toCode)+'</b><span>'+escapeHtml(flight.toTime||'—')+'</span></div></div></div>'+
+    (stub.length?'<div class="flight-perf" aria-hidden="true"></div><div class="flight-stub" aria-hidden="true" style="grid-template-columns:repeat('+stub.length+',minmax(0,1fr))">'+
+      stub.map(function(x){return '<div><small>'+escapeHtml(x[0])+'</small><b>'+escapeHtml(x[1])+'</b></div>';}).join('')+'</div>':'')+
+    (flight.note?'<p class="flight-note" aria-hidden="true">'+escapeHtml(flight.note)+'</p>':'')+'</section>';
+}
+function renderHomeFlights(mode){
+  try{return flightsForHome(mode).map(function(f){return renderFlightCard(f,mode==='today');}).join('');}
+  catch(error){AppLog.render('航班卡無法顯示：'+String(error&&error.message||error));return '';}
+}
 function weatherCityFromText(text){
   text=String(text||'');
   var cities=typeof weatherCities==='function'?weatherCities():WEATHER_CITIES;
@@ -4418,6 +4567,7 @@ function renderToday(){
       renderPreTripFirstStop(days)+renderPrepTodayEntry()+
       '<div class="today-hero-actions">'+renderShoppingTodayEntry(null,'')+
       '<button class="today-jump today-hero-action" onclick="switchView(\'trip\')">查看完整行程 →</button></div></div>'+
+      renderHomeFlights('pretrip')+
       (days.length?'<div class="seg">行程重點</div>':'')+
       days.map(function(d,i){
         var hl=preTripDestinationHighlights(d,3).items.map(function(item){return item.title;}).join('、');
@@ -4451,6 +4601,7 @@ function renderToday(){
     '<div class="loc" aria-label="'+escapeHtml(progressLabel)+'">已處理 '+completed+'/'+stopCounts.total+'</div></div>'+
     '<div class="today-hero-main"><div class="date">'+day.date+(day.dow?' ('+day.dow+')':'')+'</div>'+renderTodayWeatherArt(weather)+'</div>'+
     renderTodayHeroSummary(weather,renderShoppingTodayEntry(day,currentStopRef))+departureRefundReminderHtml(ti===DB.trip.days.length-1)+'</div>';
+  h+=renderHomeFlights('today');
   h+=cluster&&clusterPick&&clusterPick.item?renderClusterNextStopCard(day,ti,pick,cluster,checks,progress,nowMinutes):renderNextStopCard(day,ti,pick);
   if(DB.trip.days[ti+1]){
     if(shouldReplaceWithTomorrowPreview(pick)) h+=renderTomorrowPreview(ti,false);
@@ -10789,6 +10940,11 @@ function renderSettingsHealthPage(){
   return header+renderSettingsDataHealth();
 }
 var APP_RELEASE_NOTES=[
+  {version:'v188',date:'2026-11-12',title:'航班卡與行李清單',items:[
+    '試算表新增「航班」分頁後，出發前首頁與搭機當天會出現登機證樣式的航班卡。',
+    '行前清單多了「行李」：試算表類型寫「行李」，或自己在手機新增。',
+    '繪本主題補到採買清單、成員選擇、設定與彈出面板。'
+  ]},
   {version:'v187',date:'2026-11-11',title:'新主題：繪本',items:[
     '設定的主題多了第七個「繪本／和紙」：和紙白底、墨灰粗線框、大圓角。',
     '選繪本主題時，今天頁上方有一張手繪插圖，切換日期會輕輕彈一下。',
@@ -10810,12 +10966,6 @@ var APP_RELEASE_NOTES=[
   {version:'v184',date:'2026-11-10',title:'行前清單與新圖示',items:[
     '出發前首頁多了「行前準備」進度條：試算表「行前清單」分頁寫共用的待辦與注意事項，各自在手機上勾；也能自己新增待辦。',
     '頂端左上角的岡山桃子換成金黃底紙飛機，點兩下一樣開診斷面板。'
-  ]},
-  {version:'v183',date:'2026-11-10',title:'旅程結束回顧與記帳表單更簡潔',items:[
-    '天氣地區不限日本，泰國、歐美的地區也會顯示天氣。',
-    '沒網路時頂端寫「離線版 · 時間」與黃點，不再是紅色的「更新失敗」。',
-    '旅程結束後首頁顯示我的總花費與待退稅；「清除並打包旅程」移到卡片最下方。',
-    '記帳時帳本與幣別收成一行「個人帳本 · JPY ⌄」，點開才換。'
   ]},
 ];
 function renderAppReleaseNotes(){
