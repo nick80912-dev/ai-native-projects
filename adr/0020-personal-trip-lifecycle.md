@@ -1,6 +1,6 @@
 # ADR 0020 — 個人旅程生命週期與 Drive 唯讀封存
 
-> 狀態：Accepted（2026-10-01，依 Bar 核准的第一階段規格；v137 dev candidate，真機驗收未完成）。
+> 狀態：Accepted（2026-10-01，依 Bar 核准的第一階段規格；v137 起上線，iPhone／Android PWA 真機驗收已於 2026-10-06 由 Bar 回報完成；驗收帳號只有 Bar，OAuth 仍為 External Testing）。
 
 ## Decision
 

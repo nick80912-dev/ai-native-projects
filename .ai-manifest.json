@@ -11,7 +11,7 @@
   "start_here": "先讀本檔 → 框架 CONSTITUTION/WORKFLOW/EXECUTION_RULES(版本見 framework)→ PROJECT_CONSTITUTION.md(憲章/流程/禁令)→ 08_AI_HANDOVER.md → 15_AI_EXECUTION_RULES.md(本專案差異,必讀)→ 相關 adr/ → 依任務讀 03_DATABASE/09_SCHEMA_MAPPING(資料與欄位)、11_CODING_CONVENTION(程式)、12_DEV_WORKFLOW(步驟)、01_PROJECT(定位/里程碑/長期風險)",
   "governance": {
     "constitution": "PROJECT_CONSTITUTION.md",
-    "adr_dir": "adr/（0001–0021；索引權威=adr/README.md）；架構修改前必讀",
+    "adr_dir": "adr/（0001–0022；索引權威=adr/README.md）；架構修改前必讀",
     "must_confirm_with_bar": [
       "換框架",
       "大重構",

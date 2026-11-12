@@ -1,5 +1,7 @@
 # ADR 0006 — Ledger Sync via Apps Script
 
+> 狀態:Accepted(2026-07;Schema 2.9 固定 21 欄)
+
 **Decision**:分帳紀錄以 Google Apps Script 回寫 Google Sheet「分帳紀錄」分頁,採 append-only 模型。App 先寫入本機佇列,收到 `{ok:true}` 或 `{ok:true,dup:true}` 才移除；刪帳以負向沖銷紀錄表示。前端透過 `ledgerRepository.add(record)`、`flushQueue()`、`pendingCount()` 存取,不讓 UI 依賴 Apps Script 細節。共用匯率與預設輸入幣別以 TripConfig 為 SSoT；App 的 CMS 寫入白名單只允許 append「分帳紀錄」及更新 `Exchange Rate` / `Ledger Default Currency`,其餘鍵維持 Bar 手動管理且 App 唯讀。部署原始碼以 `apps-script/ledger-sync.gs` 為權威。
 
 **Context**:旅伴需要在不同手機記帳並看到全團彙算,且所有裝置必須使用相同 JPY/TWD 匯率與預設輸入幣別。原本 `trip_expenses` 與匯率狀態只存在單一裝置,無法跨裝置同步,也沒有可確認送達與去重的寫入通道。
