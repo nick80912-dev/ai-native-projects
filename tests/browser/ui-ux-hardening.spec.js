@@ -162,7 +162,9 @@ test('presentation tokens preserve touched component geometry across all six the
   const expectedTokens=['11px','12px','14px','20px','24px','4px','8px','12px','16px','24px','6px','10px','14px','999px'];
   for(const theme of themes){
     expect(theme.tokens,theme.id+' token scale').toEqual(expectedTokens);
-    expect(theme.hero.radius,theme.id+' Today Hero radius').toBe('16px');
+    /* v187:所有主題卡片圓角 20、按鈕 14;繪本主題(ehon)自己是 24 與膠囊。 */
+    const ehon=theme.id==='ehon';
+    expect(theme.hero.radius,theme.id+' Today Hero radius').toBe(ehon?'24px':'20px');
     expect(theme.heroDate.fontSize,theme.id+' Today display size').toBe('24px');
     expect(theme.navigation.fontSize,theme.id+' navigation meta size').toBe('12px');
     expect(theme.navigation.radius,theme.id+' navigation status radius').toBe('8px');
@@ -170,7 +172,7 @@ test('presentation tokens preserve touched component geometry across all six the
     /* v153：診斷紀錄標題改用 --font-body(14px),仍在既有字級 token 內 */
     expect(theme.diagnosticTitle.fontSize,theme.id+' diagnostic title size').toBe('14px');
     expect(theme.primary.fontSize,theme.id+' primary action size').toBe('13.5px');
-    expect(theme.primary.radius,theme.id+' primary action radius').toBe('9px');
+    expect(theme.primary.radius,theme.id+' primary action radius').toBe(ehon?'999px':'14px');
     expect(theme.quiet.fontSize,theme.id+' quiet action size').toBe('14px');
     expect(theme.quiet.radius,theme.id+' quiet action radius').toBe('999px');
     expect(parseFloat(theme.quiet.minHeight),theme.id+' quiet target size').toBeGreaterThanOrEqual(44);

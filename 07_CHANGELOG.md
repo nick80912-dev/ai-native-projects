@@ -1,6 +1,30 @@
 # 07 版本紀錄
 
-## 2026-11-11 — v186 畫面更清爽（UI/UX 建議 1–6，Bar 看過截圖回「好」）
+## 2026-11-12 — v187 第七個主題「繪本／和紙」與大圓角（Bar 看過畫面回「好，發版」）⭐
+
+- **來源**：Bar 2026-11-11 看過旅圖 Lutu 後提供繪本風規格，選「做成第七個主題，先只做外觀」；2026-11-12 再核准把大圓角套到所有主題。
+- **使用上**：
+  - 設定 → 主題多了「繪本／和紙」：和紙白底、墨灰粗線框、大圓角、平塗；山吹黃是主要動作（導航）、若竹綠是完成、水色是首頁大卡與停車、珊瑚粉是景點標籤／選中的日期／儲存。
+  - 選繪本主題時今天頁上方有手繪插圖（岡山四國：瀨戶大橋、桃子、渡輪；其他旅程：通用的山海小屋），雲和船會輕輕動，切換日期行程卡會彈一下；手機開「減少動態效果」時不動。
+  - 所有主題的卡片圓角加大到 20、按鈕與備註框 14。
+- **技術**：`THEME_IDS` 加 `ehon`；13 個 token ＋ `html[data-theme="ehon"]` 外觀層規則；`renderEhonArt()`、`playDayBounce()`。ADR 0008 增補（七個主題、外觀層例外）；`08_AI_HANDOVER.md` 與 manifest 同步。
+- **這次不做**：航班卡片、「必去」標籤、行李清單。設定子頁、過往旅程、採買清單、結算頁在繪本主題下還沒逐頁細修。
+- **整理**：依「只留最近 3 份」刪除 `shell/v184`，留 v185–v187；發布說明保留 v183–v187。
+
+## 2026-11-11 — v186 已上線 main，tag `production-v186`（待 Bar 手機審查）
+
+- Bar 看過前後對照截圖回「好」。
+- 本機完整 Chromium：451 passed、6 failed —— 5 項是依舊畫面寫的測試（Emoji 文字、兩格篩選、「這一站」那行、回到現在按鈕高度），其中「回到現在」被我縮到 36px 是真的退步，已改回 44px；更新後相關 spec 全過。剩下 1 項是已知只在本機失敗的 `personal-ledger-export`。
+- PR [#156](https://github.com/nick80912-dev/ai-native-projects/pull/156) 在 head `7243012` 的 sanity／browser-qa 全綠後合併進 `dev`（`d166bcd`）；PR [#157](https://github.com/nick80912-dev/ai-native-projects/pull/157) 合併 `dev` → `main`，merge commit **`9a355a1`**；七項檢查全綠。
+- **線上核對**：
+  - 正式站 `sw.js` 為 `SW_VERSION='v186'`。
+  - 全新 Chromium：`APP_VERSION` 為 v186、只剩 `okayama-trip-v186` 快取，發布說明是「畫面更清爽」，沒有 pageerror。
+  - 新裝置尚未連接旅程（畫面是「尚未連接旅程」），所以行程卡無法在線上實際點開；改以正式站 `shell/v186/index.html` 與 `main` 逐位元組比對相同，並確認小開關、收合備註、線條圖示、天氣單行與淡綠「完成」的程式都在。
+  - 前兩代 `shell/v185/`、`shell/v184/` 回 200，已刪的 `shell/v183/` 回 404。
+- **tag**：production-tags workflow 建立 `production-v186` → `9a355a1`，`git ls-remote` 核對相符。
+- 回滾：依 `16_OPS_PLAYBOOK.md` §A1 Publish `commit_ref` = `3e0cfdb`（`production-v185`）的部署，再往前 bump。
+
+## 2026-11-11 — v186 畫面更清爽（UI/UX 建議 1–6，Bar 看過截圖回「好」；已上線 main，見上）
 
 - **來源**：Bar 2026-11-11 請我給 UI/UX 與視覺建議，回「1-6 都執行並截圖我看再發版」，看過前後對照回「好」。
 - **使用上**：
