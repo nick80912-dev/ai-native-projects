@@ -1,6 +1,20 @@
 # 07 版本紀錄
 
-## 2026-11-12 — v187 第七個主題「繪本／和紙」與大圓角（Bar 看過畫面回「好，發版」）⭐
+## 2026-11-12 — v187 已上線 main，tag `production-v187`（待 Bar 手機審查）
+
+- Bar 看過繪本主題實際畫面回「好，發版」，並核准大圓角套到所有主題。
+- 本機完整 Chromium：460 passed、2 failed —— 1 項是幾何測試仍寫舊圓角（首頁大卡 16、按鈕 9），已改成新值並重跑全過；另 1 項是已知只在本機失敗的 `personal-ledger-export`。
+- PR [#159](https://github.com/nick80912-dev/ai-native-projects/pull/159) 在 head `9728d93` 的 sanity／browser-qa 全綠後合併進 `dev`（`11ac365`）；PR [#160](https://github.com/nick80912-dev/ai-native-projects/pull/160) 合併 `dev` → `main`，merge commit **`e960e9b`**；七項檢查全綠。
+- **線上核對**：
+  - 正式站 `sw.js` 為 `SW_VERSION='v187'`。
+  - 全新 Chromium：`APP_VERSION` 為 v187、只剩 `okayama-trip-v187` 快取，發布說明是「新主題：繪本」，沒有 pageerror。
+  - `THEME_IDS` 有七個（含 `ehon`）；套用繪本主題後頁面底色是和紙白 `rgb(255, 252, 246)`，首頁插圖函式在線上。
+  - 正式站 `shell/v187/index.html` 與 `main` 逐位元組相同。
+  - 前兩代 `shell/v186/`、`shell/v185/` 回 200，已刪的 `shell/v184/` 回 404。
+- **tag**：production-tags workflow 建立 `production-v187` → `e960e9b`，`git ls-remote` 核對相符。
+- 回滾：依 `16_OPS_PLAYBOOK.md` §A1 Publish `commit_ref` = `9a355a1`（`production-v186`）的部署，再往前 bump。
+
+## 2026-11-12 — v187 第七個主題「繪本／和紙」與大圓角（Bar 看過畫面回「好，發版」；已上線 main，見上）⭐
 
 - **來源**：Bar 2026-11-11 看過旅圖 Lutu 後提供繪本風規格，選「做成第七個主題，先只做外觀」；2026-11-12 再核准把大圓角套到所有主題。
 - **使用上**：
