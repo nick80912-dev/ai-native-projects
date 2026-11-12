@@ -62,7 +62,7 @@ function extractThemeIds(html){
 
 (function(){
   const html=fs.readFileSync('shell/'+appVersion()+'/index.html','utf8');
-  const themeIds=['ocean','ivory','wisteria','cedar','mist','tea'];
+  const themeIds=['ocean','ivory','wisteria','cedar','mist','tea','ehon'];
   const tokenNames=[
     '--t-paper','--t-card','--t-chrome','--t-action','--t-select-bg','--t-cta-bg','--t-accent','--t-accent-bg',
     '--t-ink','--t-ink-soft','--t-ink-faint','--t-line','--t-line-soft','--t-tabbar','--t-secondary'

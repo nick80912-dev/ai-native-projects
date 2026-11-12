@@ -35,7 +35,7 @@
 - WebView 相容碼:console polyfill、fetch 相容模式(禁 AbortController)、單一吸頂容器
 - 停車 MAP CODE 純顯示(無複製鈕)、「停車同Pxxx」繼承機制
 - 渡輪不建班次資料庫;班次資訊維持備註摘要與官方時刻表連結
-- UI 的語意角色與今天／行程／購物／分帳四分頁結構不可任意改變；主題只可透過 `data-theme` 覆寫 13 個第一層 `--t-*` token，第二層 `--paper`／`--card`／`--sea-deep`／`--sea`／`--coral` 等角色名稱維持不變。主導覽、設定入口，以及行程卡／今天卡／購物頁由 App 產生的圖示一律用 inline SVG 線條圖示（v186，Bar 2026-11-11 核准）；Sheet 內容自帶的 Emoji 與分帳類別 Emoji 保留，不引入 icon font。
+- UI 的語意角色與今天／行程／購物／分帳四分頁結構不可任意改變；主題只可透過 `data-theme` 覆寫 13 個第一層 `--t-*` token（例外：v187 第七個主題 `ehon` 繪本／和紙另覆寫框線、圓角與陰影，見 ADR 0008 增補），第二層 `--paper`／`--card`／`--sea-deep`／`--sea`／`--coral` 等角色名稱維持不變。主導覽、設定入口，以及行程卡／今天卡／購物頁由 App 產生的圖示一律用 inline SVG 線條圖示（v186，Bar 2026-11-11 核准）；Sheet 內容自帶的 Emoji 與分帳類別 Emoji 保留，不引入 icon font。
 - 即時個人狀態（打卡／想逛／成員身分）、個人帳、代購對象、`themeId` 與 `travelNotes` 只存 localStorage、不進 Queue 或 CMS 雲端 Schema；v137 的個人 Drive 唯讀歷史副本是例外，但不作即時同步或帳務權威。主題、採買單位與旅途紀錄自個人備份 v8 起一併匯出／還原。團體帳一律走 Ledger Repository 跨裝置同步，兩軌資料與統計不得混用。v154 的「我的總花費」（`buildMyTripSpend()`）是唯讀投影：個人帳（不含代購）與團體帳中我分到的份額只在那張卡、明細與匯出 v2 中並列加總，不寫入任何帳本，個人帳的列表、最近消費與匯出的 `records` 仍只含個人帳；v155 起個人分頁大卡即此投影：「今天花費」（今天的個人不含代購＋今天的團體份額）、「代購」列與「整趟旅程（不含代購）」列，原本另外的「我的總花費」卡與代購卡併入大卡。依 ADR 0006，App 只可 append「分帳紀錄」並更新 TripConfig 的 `Exchange Rate` / `Ledger Default Currency`，其餘 CMS 欄位維持 Bar 手動管理且 App 唯讀
 - 產品哲學:3 秒原則、不過度工程化(能給連結就不硬轉結構化資料)
 

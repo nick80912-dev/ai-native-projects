@@ -835,6 +835,11 @@ input:not([type="hidden"]),select,textarea{font-size:16px!important}
 .trip-status-badge{display:inline-flex;align-items:center;margin-left:6px;border-radius:5px;padding:2px 6px;font-size:10px;font-weight:900;background:var(--line-soft);color:var(--ink-soft)}
 .trip-status-completed{background:var(--mint);color:var(--sea-deep)}
 .shopping-target-overflow{color:var(--ink-soft);font-weight:400}
+/* v187(Bar 2026-11-12 核准「大圓角套到所有主題」):卡片圓角 20、按鈕與備註框 14。放在樣式表最後,只覆寫圓角;
+   繪本主題自己的圓角由 html[data-theme="ehon"] 規則(權重較高)決定。 */
+.item,.nx-ticket,.shop-mall,.today-hero,.ledger-summary-card,.settings-group-card{border-radius:20px}
+.qa-btn,.nx-drive-btn,.nx-decision-btn,.nx-cluster-expand,.today-jump,.btn{border-radius:14px}
+.pc-tip,.panel.open,.floor-head,.want-box{border-radius:14px}
 </style>
 <script src="shell/v187/app-version.js"></script>
 <script id="builtinSnapshotMarker">var BUILTIN_HTML_VERSION='v187';var BUILTIN_HTML_TS=1790861998387;</script>
@@ -10761,7 +10766,8 @@ var APP_RELEASE_NOTES=[
   {version:'v187',date:'2026-11-11',title:'新主題：繪本',items:[
     '設定的主題多了第七個「繪本／和紙」：和紙白底、墨灰粗線框、大圓角。',
     '選繪本主題時，今天頁上方有一張手繪插圖，切換日期會輕輕彈一下。',
-    '手機開了「減少動態效果」時，插圖和彈跳都不會動。'
+    '手機開了「減少動態效果」時，插圖和彈跳都不會動。',
+    '所有主題的卡片和按鈕圓角加大一點。'
   ]},
   {version:'v186',date:'2026-11-11',title:'畫面更清爽',items:[
     '今天卡拿掉重複的站名行；只有「導航」是實心按鈕。',

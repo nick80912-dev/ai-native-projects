@@ -46,7 +46,7 @@ const lin=c=>{c/=255;return c<=0.03928?c/12.92:Math.pow((c+0.055)/1.055,2.4);};
 const lum=rgb=>0.2126*lin(rgb[0])+0.7152*lin(rgb[1])+0.0722*lin(rgb[2]);
 const ratio=(a,b)=>{const x=lum(a),y=lum(b);return (Math.max(x,y)+0.05)/(Math.min(x,y)+0.05);};
 const themes=Array.from(css.matchAll(/data-theme="(\w+)"\][^{]*\{([^}]*)\}/g),m=>({id:m[1],tokens:Object.fromEntries(Array.from(m[2].matchAll(/--t-([a-z-]+):(#[0-9a-fA-F]{6})/g),t=>[t[1],t[2]]))})).filter(theme=>theme.tokens['ink-soft']);
-assert.strictEqual(themes.length,6,'all six themes are checked');
+assert.strictEqual(themes.length,7,'all seven themes are checked');   // v187:加上繪本／和紙
 for(const theme of themes){
   const ink=hex(theme.tokens['ink-soft']);
   for(const surface of ['paper','card']){
