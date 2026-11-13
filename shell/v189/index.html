@@ -97,6 +97,143 @@
   --t-ink-faint:#7a695d;--t-line:#ddcbb9;--t-line-soft:#eadfd2;
   --t-tabbar:rgba(255,249,241,.96);--t-secondary:#9a4f30;
 }
+/* v187 第七個主題「繪本／和紙」(Bar 2026-11-11 核准,ADR 0008 增補):日系繪本風 —— 和紙白底、3px 墨灰粗線框、大圓角、平塗。
+   與前六組不同,這組除了 13 個第一層 token,還用 html[data-theme="ehon"] 覆寫框線、圓角與陰影(外觀層,不動結構與語意角色)。
+   四個強調色:珊瑚粉 #F2A497、山吹黃 #F6D27A、水色 #A8D3E6、若竹綠 #B9DAA5;淡色塊上的字一律墨灰 #3E3A39。
+   --t-accent 用深珊瑚 #B4472F,因為它也當文字色(在白底上要讀得到);大塊珊瑚粉由下方規則直接指定。 */
+[data-theme="ehon"]{
+  --t-paper:#FFFCF6;--t-card:#ffffff;--t-chrome:#3E3A39;--t-action:#3E3A39;--t-select-bg:#fbeab8;
+  --t-cta-bg:#B4472F;--t-accent:#B4472F;--t-accent-bg:#fdebe7;--t-ink:#3E3A39;--t-ink-soft:#5c5654;
+  --t-ink-faint:#756e6b;--t-line:#3E3A39;--t-line-soft:#f1eadc;
+  --t-tabbar:#FFFCF6;--t-secondary:#6a5a8c;
+}
+html[data-theme="ehon"]{--ehon-ink:#3E3A39;--ehon-coral:#F2A497;--ehon-yellow:#F6D27A;--ehon-water:#A8D3E6;--ehon-green:#B9DAA5;--shadow:none;--ehon-line:2.5px solid #3E3A39;--ehon-drop:0 3px 0 #3E3A39}
+html[data-theme="ehon"] .hdr{box-shadow:none;border-bottom:3px solid var(--ehon-ink)}
+html[data-theme="ehon"] .topbar{background:var(--paper)}
+html[data-theme="ehon"] .topbar .brand .t,html[data-theme="ehon"] .topbar .sync,html[data-theme="ehon"] .topbar .sync *,html[data-theme="ehon"] .topbar .settings-btn{color:var(--ehon-ink)}
+html[data-theme="ehon"] .topbar .sync{background:#fff;border:var(--ehon-line)}
+html[data-theme="ehon"] .topbar .settings-btn{background:var(--ehon-yellow);border:var(--ehon-line)}
+html[data-theme="ehon"] .topbar .logo-mark{border:var(--ehon-line);border-radius:11px}
+html[data-theme="ehon"] .daybar{background:var(--paper);border-top:0}
+html[data-theme="ehon"] .day-chip{background:#fff;color:var(--ehon-ink);border:var(--ehon-line);border-radius:16px;box-shadow:var(--ehon-drop)}
+html[data-theme="ehon"] .day-chip.active{background:var(--ehon-coral);color:var(--ehon-ink)}
+html[data-theme="ehon"] .day-chip.today-chip{box-shadow:var(--ehon-drop)}
+html[data-theme="ehon"] .day-chip.today-chip:not(.active){background:#fff4d2}
+html[data-theme="ehon"] .tabbar{border-top:3px solid var(--ehon-ink);box-shadow:none}
+html[data-theme="ehon"] .tabbar-btn.active::before{background:var(--ehon-coral);height:5px;border-radius:0 0 6px 6px}
+/* 卡片:粗框、大圓角、不用陰影 */
+html[data-theme="ehon"] .item,html[data-theme="ehon"] .nx-ticket,html[data-theme="ehon"] .shop-mall,html[data-theme="ehon"] .settings-group-card,html[data-theme="ehon"] .ledger-recent-row,html[data-theme="ehon"] .ledger-batch-card,html[data-theme="ehon"] .shopping-item,html[data-theme="ehon"] .settings-theme-card{border:3px solid var(--ehon-ink);border-radius:22px;box-shadow:none}
+html[data-theme="ehon"] .item.now-item{background:#fff7df;box-shadow:none}
+html[data-theme="ehon"] .nx-ticket::before{display:none}
+html[data-theme="ehon"] .nx-ticket-low{background:var(--paper);border-top:2.5px dashed var(--ehon-ink)}
+html[data-theme="ehon"] .today-hero{background:var(--ehon-water);color:var(--ehon-ink);border:3px solid var(--ehon-ink);border-radius:24px;box-shadow:none;overflow:hidden}
+html[data-theme="ehon"] .today-hero::before,html[data-theme="ehon"] .today-hero::after{display:none}
+html[data-theme="ehon"] .today-hero *{color:var(--ehon-ink);text-shadow:none}
+html[data-theme="ehon"] .today-hero-summary{border-top:2.5px solid var(--ehon-ink)}
+html[data-theme="ehon"] .today-hero-summary-divider{background:var(--ehon-ink);opacity:1;width:2.5px}
+html[data-theme="ehon"] .today-hero .today-jump,html[data-theme="ehon"] .today-hero .today-hero-action{background:#fff;border:var(--ehon-line);box-shadow:var(--ehon-drop)}
+/* 標籤:細框膠囊,平塗四色 */
+html[data-theme="ehon"] .tag,html[data-theme="ehon"] .drive-chip,html[data-theme="ehon"] .nx-ticket-tag{border:2px solid var(--ehon-ink);border-radius:999px;color:var(--ehon-ink)}
+html[data-theme="ehon"] .tag.play{background:var(--ehon-coral)}
+html[data-theme="ehon"] .tag.food{background:var(--ehon-yellow)}
+html[data-theme="ehon"] .tag.shop{background:var(--ehon-water)}
+html[data-theme="ehon"] .tag.stay{background:#d9cceb}
+html[data-theme="ehon"] .tag.move{background:var(--ehon-green)}
+html[data-theme="ehon"] .nx-ticket-tag{background:var(--paper)}
+html[data-theme="ehon"] .item .time,html[data-theme="ehon"] .nx-ticket-time{background:var(--ehon-yellow);color:var(--ehon-ink);border:2px solid var(--ehon-ink);border-radius:999px}
+html[data-theme="ehon"] .item .time.blank{background:transparent;border-color:transparent}
+html[data-theme="ehon"] .now-badge,html[data-theme="ehon"] .day-head .num{background:var(--ehon-coral);color:var(--ehon-ink);border:2px solid var(--ehon-ink)}
+html[data-theme="ehon"] .day-head{border-bottom:3px solid var(--ehon-ink)}
+html[data-theme="ehon"] .chk{border:2.5px solid var(--ehon-ink);border-radius:10px}
+html[data-theme="ehon"] .chk.on{background:var(--ehon-green);color:var(--ehon-ink)}
+html[data-theme="ehon"] .trip-hide-toggle.on .trip-hide-switch{background:var(--ehon-green)}
+html[data-theme="ehon"] .trip-hide-switch{outline:2px solid var(--ehon-ink)}
+/* 按鈕:膠囊、粗框、底下一道墨灰 */
+html[data-theme="ehon"] .qa-btn,html[data-theme="ehon"] .btn,html[data-theme="ehon"] .nx-decision-btn,html[data-theme="ehon"] .nx-cluster-expand,html[data-theme="ehon"] .nx-drive-btn,html[data-theme="ehon"] .today-jump,html[data-theme="ehon"] .trip-back-now{border:var(--ehon-line);border-radius:999px;box-shadow:var(--ehon-drop);color:var(--ehon-ink);font-weight:900}
+html[data-theme="ehon"] .qa-btn:active,html[data-theme="ehon"] .btn:active,html[data-theme="ehon"] .nx-decision-btn:active,html[data-theme="ehon"] .nx-drive-btn:active{transform:translateY(2px);box-shadow:0 1px 0 var(--ehon-ink)}
+html[data-theme="ehon"] .btn{background:var(--ehon-yellow)}
+html[data-theme="ehon"] .btn.cta,html[data-theme="ehon"] #view-split .empty-state .empty-actions .btn.cta{background:var(--ehon-coral);color:var(--ehon-ink);border:var(--ehon-line)}
+html[data-theme="ehon"] .btn.ghost,html[data-theme="ehon"] .btn.secondary,html[data-theme="ehon"] .btn.quiet{background:#fff}
+html[data-theme="ehon"] .qa-btn{background:#fff}
+html[data-theme="ehon"] .qa-btn.drv{background:#fff}
+html[data-theme="ehon"] .item.now-item .qa-btn.drv,html[data-theme="ehon"] .nx-drive-btn{background:var(--ehon-yellow)}
+html[data-theme="ehon"] .qa-btn.pk{background:var(--ehon-water)}
+html[data-theme="ehon"] .qa-btn.on{background:var(--ehon-ink);color:#fff}
+html[data-theme="ehon"] .nx-decision-btn.done{background:var(--ehon-green);color:var(--ehon-ink);border:var(--ehon-line)}
+html[data-theme="ehon"] .nx-decision-btn.skip,html[data-theme="ehon"] .today-jump.dark,html[data-theme="ehon"] .nx-cluster-expand{background:#fff;color:var(--ehon-ink);border:var(--ehon-line)}
+html[data-theme="ehon"] .pc-tip{border:2px solid var(--ehon-ink);border-radius:14px;background:#fff7df;color:var(--ehon-ink)}
+html[data-theme="ehon"] .note-clamp-btn{color:var(--ehon-ink)}
+html[data-theme="ehon"] .panel.open{border:2px solid var(--ehon-ink);border-radius:16px}
+/* 分帳總覽卡、＋按鈕、回頂鈕與主題預覽:原本是深色塊,繪本主題改成平塗淡色＋粗框 */
+html[data-theme="ehon"] .ledger-summary-card{background:var(--ehon-yellow);border:3px solid var(--ehon-ink);border-radius:22px;box-shadow:none}
+html[data-theme="ehon"] .ledger-summary-card,html[data-theme="ehon"] .ledger-summary-card *{color:var(--ehon-ink)!important}
+html[data-theme="ehon"] .ledger-summary-card .ledger-track-grid{background:#fff;border:2px solid var(--ehon-ink)}
+html[data-theme="ehon"] .ledger-summary-card .ledger-track-btn.on{background:var(--ehon-ink);color:#fff!important}
+html[data-theme="ehon"] .ledger-summary-card [style*="border"],html[data-theme="ehon"] .ledger-summary-card hr{border-color:var(--ehon-ink)}
+html[data-theme="ehon"] .ledger-compact-card{border:3px solid var(--ehon-ink);border-radius:20px;box-shadow:none}
+html[data-theme="ehon"] .ledger-fab{background:var(--ehon-coral);color:var(--ehon-ink);border:3px solid var(--ehon-ink);box-shadow:var(--ehon-drop)}
+html[data-theme="ehon"] .totop{background:#fff;color:var(--ehon-ink);border:var(--ehon-line);box-shadow:var(--ehon-drop)}
+html[data-theme="ehon"] .shop-search input,html[data-theme="ehon"] .shop-filter-btn,html[data-theme="ehon"] .floor-head,html[data-theme="ehon"] .want-box{border:2px solid var(--ehon-ink);box-shadow:none}
+html[data-theme="ehon"] .shop-filter-btn.on{background:var(--ehon-yellow);color:var(--ehon-ink);border-color:var(--ehon-ink)}
+html[data-theme="ehon"] .shop-filter-btn.on small{color:var(--ehon-ink)}
+.settings-theme-preview[data-theme="ehon"]{border:2px solid #3E3A39}
+.settings-theme-preview[data-theme="ehon"] .settings-theme-preview-head{background:#A8D3E6;border-bottom:2px solid #3E3A39}
+.settings-theme-preview[data-theme="ehon"] .settings-theme-preview-line{background:#F6D27A;outline:2px solid #3E3A39}
+.settings-theme-preview[data-theme="ehon"] .settings-theme-preview-dot{background:#F2A497;outline:2px solid #3E3A39}
+/* v188(Bar 2026-11-12):繪本主題補到其他頁面 —— 下方彈出的面板、輸入框、採買清單、成員選擇、勾選框。 */
+html[data-theme="ehon"]{accent-color:#3E3A39}
+html[data-theme="ehon"] [class~="ledger-sheet"]{border:3px solid var(--ehon-ink);border-bottom:0;border-radius:24px 24px 0 0}
+html[data-theme="ehon"] .ledger-sheet-input,html[data-theme="ehon"] .ledger-sheet select,html[data-theme="ehon"] .settings-panel input:not([type=checkbox]):not([type=radio]),html[data-theme="ehon"] .settings-panel select,html[data-theme="ehon"] .member-entry input{border:2px solid var(--ehon-ink);border-radius:14px}
+html[data-theme="ehon"] .shopping-list-head{background:var(--paper);border-bottom:3px solid var(--ehon-ink)}
+html[data-theme="ehon"] .shopping-add-button{background:var(--ehon-coral);color:var(--ehon-ink);border:var(--ehon-line);box-shadow:var(--ehon-drop)}
+html[data-theme="ehon"] .member-option{border:var(--ehon-line);border-radius:16px;box-shadow:var(--ehon-drop)}
+html[data-theme="ehon"] .member-option.on{background:var(--ehon-yellow);border-color:var(--ehon-ink);color:var(--ehon-ink)}
+html[data-theme="ehon"] .member-confirm{border:3px solid var(--ehon-ink);border-radius:20px}
+html[data-theme="ehon"] .settings-close,html[data-theme="ehon"] .ledger-sheet-close{border:var(--ehon-line);background:#fff;color:var(--ehon-ink)}
+html[data-theme="ehon"] .prep-row{border-bottom:2px dashed var(--line-soft)}
+html[data-theme="ehon"] .prep-progress-row{background:#fff;border:var(--ehon-line);color:var(--ehon-ink)}
+html[data-theme="ehon"] .prep-progress{background:var(--line-soft);border:2px solid var(--ehon-ink);height:10px;border-radius:999px}
+html[data-theme="ehon"] .prep-progress span{background:var(--ehon-green)}
+/* v188 航班卡(登機證造型);繪本主題另有水色底與粗框 */
+.flight-card{position:relative;margin:12px;background:var(--card);border:1px solid var(--line);border-radius:20px;box-shadow:var(--shadow);overflow:hidden;color:var(--ink)}
+.flight-main{padding:14px 16px 12px}
+.flight-top{display:flex;justify-content:space-between;align-items:baseline;gap:8px;font-size:12px;font-weight:800;color:var(--ink-soft)}
+.flight-top .flight-kicker{letter-spacing:.06em;color:var(--sea-deep)}
+.flight-route{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:10px;margin-top:10px}
+.flight-end b{display:block;font-size:30px;line-height:1;font-weight:900;letter-spacing:.02em;color:var(--sea-deep)}
+.flight-end span{display:block;font-size:17px;font-weight:900;margin-top:4px}
+.flight-end small{display:block;font-size:11px;color:var(--ink-soft)}
+.flight-end.r{text-align:right}
+.flight-line{position:relative;min-width:0;height:24px;display:flex;align-items:center}
+.flight-line::before{content:'';flex:1;border-top:2px dashed var(--line)}
+.flight-line svg.flight-plane{width:22px;height:22px;margin:0 4px;fill:none;stroke:var(--sea);stroke-width:2;stroke-linejoin:round}
+.flight-line::after{content:'';flex:1;border-top:2px dashed var(--line)}
+.flight-perf{position:relative;border-top:2px dashed var(--line);margin:0 14px}
+.flight-perf::before,.flight-perf::after{content:'';position:absolute;top:-11px;width:20px;height:20px;border-radius:50%;background:var(--paper);border:1px solid var(--line)}
+.flight-perf::before{left:-25px}.flight-perf::after{right:-25px}
+.flight-stub{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;padding:10px 16px 14px}
+.flight-stub small{display:block;font-size:10.5px;color:var(--ink-soft);font-weight:700}
+.flight-stub b{display:block;font-size:14px;font-weight:900;overflow-wrap:anywhere}
+.flight-note{margin:0 16px 14px;font-size:12px;color:var(--ink-soft)}
+html[data-theme="ehon"] .flight-card{border:3px solid #3E3A39;border-radius:22px;box-shadow:none;background:#A8D3E6}
+html[data-theme="ehon"] .flight-card *{color:#3E3A39}
+html[data-theme="ehon"] .flight-line::before,html[data-theme="ehon"] .flight-line::after,html[data-theme="ehon"] .flight-perf{border-color:#3E3A39}
+html[data-theme="ehon"] .flight-line svg.flight-plane{stroke:#3E3A39;fill:#F6D27A}
+html[data-theme="ehon"] .flight-stub{background:#FFFCF6}
+html[data-theme="ehon"] .flight-perf::before,html[data-theme="ehon"] .flight-perf::after{background:#FFFCF6;border:3px solid #3E3A39;top:-12px}
+html[data-theme="ehon"] .flight-note{background:#FFFCF6;margin:0;padding:0 16px 14px}
+/* 首頁插圖:只有繪本主題顯示;雲與船輕輕動,「減少動態效果」時由全域規則停掉 */
+.ehon-art{display:none}
+html[data-theme="ehon"] .ehon-art{display:block;width:calc(100% + 36px);height:auto;margin:-18px -18px 14px;border-bottom:3px solid var(--ehon-ink)}
+@keyframes ehonDrift{0%,100%{transform:translateX(0)}50%{transform:translateX(9px)}}
+@keyframes ehonBob{0%,100%{transform:translateY(0) rotate(0)}50%{transform:translateY(-2.5px) rotate(-1.5deg)}}
+@keyframes ehonPop{0%{transform:translateY(10px) scale(.97);opacity:.4}60%{transform:translateY(-3px) scale(1.01);opacity:1}100%{transform:none;opacity:1}}
+html[data-theme="ehon"] .ehon-art .ehon-cloud{animation:ehonDrift 9s ease-in-out infinite}
+html[data-theme="ehon"] .ehon-art .ehon-cloud.b{animation-duration:12s;animation-direction:reverse}
+html[data-theme="ehon"] .ehon-art .ehon-boat{animation:ehonBob 3.6s ease-in-out infinite;transform-box:fill-box;transform-origin:center}
+html[data-theme="ehon"] #view-trip.day-bounce .day-head,html[data-theme="ehon"] #view-trip.day-bounce .item{animation:ehonPop .42s cubic-bezier(.34,1.56,.64,1) both}
+html[data-theme="ehon"] #view-trip.day-bounce .item:nth-of-type(n+3){animation-delay:.05s}
+html[data-theme="ehon"] #view-trip.day-bounce .item:nth-of-type(n+5){animation-delay:.1s}
 @media(prefers-reduced-motion:reduce){html,*,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html{scroll-behavior:smooth;color-scheme:light}
@@ -135,7 +272,9 @@ input,select,textarea{font-size:16px}
 .brand .sync>*,.settings-btn>*{position:relative;z-index:1}
 @media(max-width:390px){.brand .logo{width:24px;height:24px;flex-basis:24px}.brand .sync{padding:5px 8px}}
 /* v184:行前清單進度條與頂端紙飛機(放在 390px 媒體查詢之外,所有寬度都適用) */
-.prep-progress-row{position:relative;display:flex;align-items:center;gap:10px;width:100%;min-height:44px;margin-top:var(--space-3);padding:8px 12px;border:0;border-radius:10px;background:rgba(255,255,255,.14);color:#fff;font:inherit;font-size:14px;font-weight:700;text-align:left;cursor:pointer}.prep-progress{flex:1 1 auto;height:6px;border-radius:3px;background:rgba(255,255,255,.25);overflow:hidden}.prep-progress>span{display:block;height:100%;border-radius:3px;background:#ffd66b}.prep-summary{margin:0 0 6px;color:var(--ink-soft);font-size:13px}.prep-heading{margin:14px 0 4px;font-size:14px}.prep-row{display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--line)}.prep-check{display:flex;align-items:flex-start;gap:10px;flex:1 1 auto;min-width:0;min-height:44px;padding:10px 0;cursor:pointer}.prep-check input{flex:0 0 auto;width:20px;height:20px;margin:1px 0 0}.prep-text{display:flex;flex-direction:column;min-width:0}.prep-title{font-size:15px;font-weight:700;overflow-wrap:anywhere}.prep-row.done .prep-title{color:var(--ink-soft);text-decoration:line-through}.prep-due{color:var(--coral);font-size:12px;font-weight:700}.prep-row.done .prep-due{color:var(--ink-soft)}.prep-note{color:var(--ink-soft);font-size:12px;overflow-wrap:anywhere}.prep-remove{flex:0 0 auto;width:44px;height:44px;border:0;background:none;color:var(--ink-soft);font-size:20px;cursor:pointer}.prep-empty{margin:4px 0;color:var(--ink-soft);font-size:13px}.prep-add{display:flex;gap:8px;margin-top:10px}.prep-add .ledger-sheet-input{flex:1 1 auto;min-width:0}.prep-add .btn{flex:0 0 auto;width:auto;margin:0;padding:0 16px}.prep-notes{margin:4px 0 0;padding-left:18px}.prep-notes li{margin:6px 0}.prep-notes li span{display:block;color:var(--ink-soft);font-size:12px}.brand .logo.logo-mark{display:inline-flex;align-items:center;justify-content:center;flex:0 0 24px;border-radius:7px;background:#ffd66b;color:#1f3b45;touch-action:manipulation}.logo-mark svg{display:block;flex:0 0 auto;width:17px;height:17px}.logo-mark-plane{fill:currentColor}.logo-mark-fold{fill:none;stroke:rgba(255,255,255,.55);stroke-width:1.4;stroke-linecap:round}
+.prep-progress-row{position:relative;display:flex;align-items:center;gap:10px;width:100%;min-height:44px;margin-top:var(--space-3);padding:8px 12px;border:0;border-radius:10px;background:rgba(255,255,255,.14);color:#fff;font:inherit;font-size:14px;font-weight:700;text-align:left;cursor:pointer}.prep-progress{flex:1 1 auto;height:6px;border-radius:3px;background:rgba(255,255,255,.25);overflow:hidden}.prep-progress>span{display:block;height:100%;border-radius:3px;background:#ffd66b}.prep-summary{margin:0 0 6px;color:var(--ink-soft);font-size:13px}.prep-heading{margin:14px 0 4px;font-size:14px}.prep-row{display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--line)}.prep-check{display:flex;align-items:flex-start;gap:10px;flex:1 1 auto;min-width:0;min-height:44px;padding:10px 0;cursor:pointer}.prep-check input{flex:0 0 auto;width:20px;height:20px;margin:1px 0 0}.prep-text{display:flex;flex-direction:column;min-width:0}.prep-title{font-size:15px;font-weight:700;overflow-wrap:anywhere}.prep-row.done .prep-title{color:var(--ink-soft);text-decoration:line-through}.prep-due{color:var(--coral);font-size:12px;font-weight:700}.prep-row.done .prep-due{color:var(--ink-soft)}.prep-note{color:var(--ink-soft);font-size:12px;overflow-wrap:anywhere}.prep-remove{flex:0 0 auto;width:44px;height:44px;border:0;background:none;color:var(--ink-soft);font-size:20px;cursor:pointer}.prep-empty{margin:4px 0;color:var(--ink-soft);font-size:13px}.prep-add{display:flex;gap:8px;margin-top:10px}
+.prep-add .prep-add-kind{flex:0 0 104px;width:104px;padding:9px 4px 9px 10px}
+.prep-heading-count{margin-left:8px;color:var(--ink-soft);font-size:12px;font-weight:700}.prep-add .ledger-sheet-input{flex:1 1 auto;min-width:0}.prep-add .btn{flex:0 0 auto;width:auto;margin:0;padding:0 16px}.prep-notes{margin:4px 0 0;padding-left:18px}.prep-notes li{margin:6px 0}.prep-notes li span{display:block;color:var(--ink-soft);font-size:12px}.brand .logo.logo-mark{display:inline-flex;align-items:center;justify-content:center;flex:0 0 24px;border-radius:7px;background:#ffd66b;color:#1f3b45;touch-action:manipulation}.logo-mark svg{display:block;flex:0 0 auto;width:17px;height:17px}.logo-mark-plane{fill:currentColor}.logo-mark-fold{fill:none;stroke:rgba(255,255,255,.55);stroke-width:1.4;stroke-linecap:round}
 .brand .sync .dot{width:7px;height:7px;border-radius:50%;background:#5ec27a}
 .brand .sync .dot.stale{background:var(--gold)}
 .brand .sync .dot.err{background:var(--coral)}
@@ -740,10 +879,15 @@ input:not([type="hidden"]),select,textarea{font-size:16px!important}
 .trip-status-badge{display:inline-flex;align-items:center;margin-left:6px;border-radius:5px;padding:2px 6px;font-size:10px;font-weight:900;background:var(--line-soft);color:var(--ink-soft)}
 .trip-status-completed{background:var(--mint);color:var(--sea-deep)}
 .shopping-target-overflow{color:var(--ink-soft);font-weight:400}
+/* v187(Bar 2026-11-12 核准「大圓角套到所有主題」):卡片圓角 20、按鈕與備註框 14。放在樣式表最後,只覆寫圓角;
+   繪本主題自己的圓角由 html[data-theme="ehon"] 規則(權重較高)決定。 */
+.item,.nx-ticket,.shop-mall,.today-hero,.ledger-summary-card,.settings-group-card{border-radius:20px}
+.qa-btn,.nx-drive-btn,.nx-decision-btn,.nx-cluster-expand,.today-jump,.btn{border-radius:14px}
+.pc-tip,.panel.open,.floor-head,.want-box{border-radius:14px}
 </style>
-<script src="shell/v186/app-version.js"></script>
-<script id="builtinSnapshotMarker">var BUILTIN_HTML_VERSION='v186';var BUILTIN_HTML_TS=1790861998387;</script>
-<script src="shell/v186/builtin-snapshot.js"></script>
+<script src="shell/v189/app-version.js"></script>
+<script id="builtinSnapshotMarker">var BUILTIN_HTML_VERSION='v189';var BUILTIN_HTML_TS=1790861998387;</script>
+<script src="shell/v189/builtin-snapshot.js"></script>
 <script src="navigation-intent.js"></script>
 <script src="diagnostic-impact.js"></script>
 <script src="today-view.js"></script>
@@ -776,14 +920,15 @@ function appVersionLabel(){
 }
 /* ---- /APP_VERSION SAFE ACCESS ---- */
 var THEME_STORAGE_KEY='trip_theme';
-var THEME_IDS=['ocean','ivory','wisteria','cedar','mist','tea'];
+var THEME_IDS=['ocean','ivory','wisteria','cedar','mist','tea','ehon'];
 var THEME_REGISTRY={
   ocean:{id:'ocean',name:'海洋／岡山',chrome:'#0e3a44'},
   ivory:{id:'ivory',name:'象牙／靛藍',chrome:'#16243d'},
   wisteria:{id:'wisteria',name:'藤紫／夜櫻',chrome:'#3b2d4d'},
   cedar:{id:'cedar',name:'杉綠／宮島',chrome:'#1f3b2a'},
   mist:{id:'mist',name:'霧藍／瀨戶',chrome:'#314d63'},
-  tea:{id:'tea',name:'焙茶／倉敷',chrome:'#49362b'}
+  tea:{id:'tea',name:'焙茶／倉敷',chrome:'#49362b'},
+  ehon:{id:'ehon',name:'繪本／和紙',chrome:'#FFFCF6'}
 };
 var themeDiagnosticQueue=[];
 var themeUnknownLogged={};
@@ -1073,7 +1218,10 @@ var SCHEMA = {
           desc:'選填;「天氣地區」分頁的 gid(欄位:地區名稱、緯度、經度、關鍵字)。新旅程沒填就不顯示天氣;岡山沿用內建城市清單' },
         /* v184(Bar 2026-11-10 選「試算表寫、各自勾」並可在 App 自己新增):行前待辦／注意事項清單 */
         { field:'checklistGid', header:'Checklist GID', optional:true,
-          desc:'選填;「行前清單」分頁的 gid(欄位:類型、項目、說明、期限)。類型填「待辦」或「注意」,沒填當待辦;勾選只存在各自手機' }
+          desc:'選填;「行前清單」分頁的 gid(欄位:類型、項目、說明、期限)。類型填「待辦」、「行李」或「注意」,沒填當待辦;勾選只存在各自手機' },
+        /* v188(Bar 2026-11-12 選「試算表新增航班分頁」):航班卡 */
+        { field:'flightsGid', header:'Flights GID', optional:true,
+          desc:'選填;「航班」分頁的 gid(欄位:日期、航空公司、班次、出發機場、出發時間、抵達機場、抵達時間、開櫃時間、航廈、托運、訂位代號、備註)。一列一班;沒填就不顯示航班卡' }
       ]
     }
   }
@@ -1970,6 +2118,7 @@ function syncAll(showToast){
     syncInFlight=null; renderSyncStatusBody();
     if(result&&result.ok&&typeof refreshWeatherRegions==='function')refreshWeatherRegions();
     if(result&&result.ok&&typeof refreshPrepChecklist==='function')refreshPrepChecklist();
+    if(result&&result.ok&&typeof refreshFlights==='function')refreshFlights();
     return result;
   },function(error){
     /* v147(backlog #51):成功路徑在下載後會重查 inactive 並靜默返回;失敗路徑原本沒有。
@@ -2953,12 +3102,37 @@ function selectTripDay(i){
   curDay=i;
   renderDaybar();
   renderTrip();
+  playDayBounce();
   if(viewUiState.trip)viewUiState.trip.scrollY=0;
   requestAnimationFrame(function(){window.scrollTo({top:0,behavior:'instant'});});
+}
+/* v187 繪本主題的首頁插圖(inline SVG,平塗＋墨灰粗線;只有 data-theme="ehon" 時由 CSS 顯示)。
+   旅程名稱含岡山／四國／瀨戶時畫瀨戶大橋與桃子,其他旅程畫通用的山、海、飛機 —— 不放錯地方的地標。 */
+function renderEhonArt(){
+  var name='';try{name=String((typeof tripName==='function'&&tripName())||'');}catch(error){name='';}
+  var local=/岡山|四國|四国|瀨戶|瀬戸/.test(name);
+  var sky='<rect x="-5" y="-5" width="370" height="180" fill="#A8D3E6" stroke="none"/><circle cx="300" cy="42" r="20" fill="#F6D27A"/>'+
+    '<path class="ehon-cloud" fill="#fff" d="M40 50a12 12 0 0 1 22-6a14 14 0 0 1 26 6a9 9 0 0 1-2 18H44a9 9 0 0 1-4-18z"/>'+
+    '<path class="ehon-cloud b" fill="#fff" d="M190 30a9 9 0 0 1 17-4a11 11 0 0 1 20 5a7 7 0 0 1-2 13h-32a7 7 0 0 1-3-14z"/>'+
+    '<path d="M-5 120q50-34 100-6q40-26 90-2q50-30 100 0q40-18 80 4v60H-5z" fill="#B9DAA5"/><path d="M-5 138h370v40H-5z" fill="#7fc0dc"/>';
+  var boat='<g class="ehon-boat"><path d="M228 150h70l-10 14h-50z" fill="#fff"/><path d="M244 150v-10h34v10" fill="#F2A497"/><path d="M256 140v-9h10v9" fill="#F6D27A"/></g>';
+  var waves='<path d="M0 158q10-6 20 0t20 0M120 160q10-6 20 0t20 0M310 160q10-6 20 0t20 0" fill="none" stroke="#fff"/>';
+  var scene=local
+    ?'<g fill="none"><path d="M20 138V92M110 138V92M200 138V92M290 138V92"/><path d="M-5 104Q20 92 20 92Q65 128 110 92Q155 128 200 92Q245 128 290 92Q335 128 365 100"/><path d="M-5 122h370" stroke-width="5"/></g>'+
+      '<g><path d="M70 150c-14-2-22-12-22-24c0-14 10-22 22-18c12-4 22 4 22 18c0 12-8 22-22 24z" fill="#F2A497"/><path d="M70 108q-2-10 6-14" fill="none"/><path d="M76 96q10-6 16 2q-10 6-16-2z" fill="#B9DAA5"/></g>'
+    :'<g class="ehon-cloud b"><path d="M118 62l44-12l6 5l-16 7l22 6l-5 5l-26-4l-12 6l-4-2l6-8z" fill="#fff"/></g>'+
+      '<g><path d="M52 138v-30l16-14l16 14v30z" fill="#fff"/><path d="M46 110l22-19l22 19" fill="none"/><path d="M63 138v-14h10v14" fill="#F2A497"/></g>';
+  return '<svg class="ehon-art" viewBox="0 0 360 170" aria-hidden="true" focusable="false" stroke="#3E3A39" stroke-width="3" stroke-linejoin="round" stroke-linecap="round">'+sky+scene+boat+waves+'</svg>';
+}
+function playDayBounce(){
+  var view=document.getElementById('view-trip');
+  if(!view||currentThemeId()!=='ehon'||!view.classList)return;
+  view.classList.remove('day-bounce');void view.offsetWidth;view.classList.add('day-bounce');
 }
 function gotoDay(i){
   curDay=i;
   switchView('trip',{type:'trip-day',dayIndex:i});
+  playDayBounce();
 }
 /* 回到「現在」= 今天那一天 + 目前這一站。逛完別天之後要回到當下,
    原本得先找到今天的 chip、再自己捲到現在的位置。 */
@@ -3310,7 +3484,8 @@ function parsePrepChecklistCsv(text){
     var rawType=String(row[0]||'').trim(),title=String(row[1]||'').trim();
     if(rawType==='類型'&&title==='項目')return;
     if(!title){if(rawType)skipped++;return;}
-    var type=/注意|提醒|note/i.test(rawType)?'note':'todo',key=prepItemKey(type,title);
+    /* v188(Bar 2026-11-12):行李清單併入行前清單 —— 類型寫「行李」(或攜帶、帶、pack)的列進「行李」區。 */
+    var type=/注意|提醒|note/i.test(rawType)?'note':/行李|攜帶|携带|帶|pack/i.test(rawType)?'pack':'todo',key=prepItemKey(type,title);
     if(seen[key]||items.length>=PREP_ITEMS_MAX){skipped++;return;}
     seen[key]=true;
     items.push({key:key,type:type,title:title.slice(0,80),note:String(row[2]||'').trim().slice(0,200),due:parsePrepDue(row[3])});
@@ -3362,11 +3537,15 @@ function refreshPrepChecklist(){
 }
 function prepChecklistModel(){
   var items=readPrepItems(),state=readPrepState();
-  var todos=items.filter(function(item){return item.type!=='note';}).map(function(item){return {key:item.key,title:item.title,note:item.note||'',due:item.due||'',done:!!state.checks[item.key],custom:false};});
-  var custom=state.custom.filter(function(item){return item&&typeof item.id==='string'&&item.title;}).map(function(item){return {key:item.id,title:item.title,note:'',due:'',done:!!state.checks[item.id],custom:true};});
+  function sheetRow(item){return {key:item.key,title:item.title,note:item.note||'',due:item.due||'',done:!!state.checks[item.key],custom:false};}
+  var todos=items.filter(function(item){return item.type==='todo';}).map(sheetRow);
+  var packs=items.filter(function(item){return item.type==='pack';}).map(sheetRow);
+  var customAll=state.custom.filter(function(item){return item&&typeof item.id==='string'&&item.title;}).map(function(item){return {key:item.id,title:item.title,note:'',due:'',done:!!state.checks[item.id],custom:true,kind:item.kind==='pack'?'pack':'todo'};});
+  var custom=customAll.filter(function(item){return item.kind==='todo';}),customPacks=customAll.filter(function(item){return item.kind==='pack';});
   var notes=items.filter(function(item){return item.type==='note';});
-  var all=todos.concat(custom);
-  return {todos:todos,custom:custom,notes:notes,done:all.filter(function(item){return item.done;}).length,total:all.length};
+  var all=todos.concat(packs,customAll);
+  return {todos:todos,packs:packs,custom:custom,customPacks:customPacks,notes:notes,done:all.filter(function(item){return item.done;}).length,total:all.length,
+    packDone:packs.concat(customPacks).filter(function(item){return item.done;}).length,packTotal:packs.length+customPacks.length};
 }
 function renderPrepTodoRow(item){
   var k=jsString(item.key);
@@ -3377,7 +3556,9 @@ function renderPrepChecklistBody(){
   html+='<p class="prep-summary">'+(model.total?'已完成 '+model.done+' / '+model.total:'還沒有待辦，可以在下面新增')+'</p>';
   if(model.todos.length)html+='<h3 class="prep-heading">待辦</h3>'+model.todos.map(renderPrepTodoRow).join('');
   html+='<h3 class="prep-heading">我的待辦</h3>'+(model.custom.length?model.custom.map(renderPrepTodoRow).join(''):'<p class="prep-empty">只存在這支手機，旅伴看不到。</p>');
-  html+='<div class="prep-add"><input class="ledger-sheet-input" id="prepAddInput" maxlength="80" placeholder="例如：換日幣、充電線" enterkeyhint="done" onkeydown="if(event.key===\'Enter\'){event.preventDefault();addPrepCustom();}"><button type="button" class="btn cta" onclick="addPrepCustom()">新增</button></div>';
+  var packRows=model.packs.concat(model.customPacks);
+  html+='<h3 class="prep-heading">行李'+(model.packTotal?'<small class="prep-heading-count">'+model.packDone+' / '+model.packTotal+'</small>':'')+'</h3>'+(packRows.length?packRows.map(renderPrepTodoRow).join(''):'<p class="prep-empty">要帶的東西可以加在這裡，或在試算表的類型寫「行李」。</p>');
+  html+='<div class="prep-add"><select class="ledger-sheet-input prep-add-kind" id="prepAddKind" aria-label="加到哪一區"><option value="todo">待辦</option><option value="pack">行李</option></select><input class="ledger-sheet-input" id="prepAddInput" maxlength="80" placeholder="例如：換日幣、充電線" enterkeyhint="done" onkeydown="if(event.key===\'Enter\'){event.preventDefault();addPrepCustom();}"><button type="button" class="btn cta" onclick="addPrepCustom()">新增</button></div>';
   if(model.notes.length)html+='<h3 class="prep-heading">注意事項</h3><ul class="prep-notes">'+model.notes.map(function(item){return '<li><b>'+escapeHtml(item.title)+'</b>'+(item.note?'<span>'+escapeHtml(item.note)+'</span>':'')+'</li>';}).join('')+'</ul>';
   return html;
 }
@@ -3395,9 +3576,12 @@ function addPrepCustom(){
   var input=document.getElementById('prepAddInput'),title=String(input&&input.value||'').trim().slice(0,80);
   if(!title){if(input)input.focus();return;}
   var state=readPrepState();
-  if(state.custom.length>=PREP_CUSTOM_MAX){toast('我的待辦最多 '+PREP_CUSTOM_MAX+' 項');return;}
-  state.custom.push({id:'c_'+Date.now().toString(36)+'_'+Math.random().toString(36).slice(2,6),title:title,createdAt:appNow().toISOString()});
-  if(writePrepState(state)){refreshPrepChecklistViews();var next=document.getElementById('prepAddInput');if(next)next.focus();}
+  var kindEl=document.getElementById('prepAddKind'),kind=kindEl&&kindEl.value==='pack'?'pack':'todo';
+  if(state.custom.length>=PREP_CUSTOM_MAX){toast('自己新增的項目最多 '+PREP_CUSTOM_MAX+' 項');return;}
+  var entry={id:'c_'+Date.now().toString(36)+'_'+Math.random().toString(36).slice(2,6),title:title,createdAt:appNow().toISOString()};
+  if(kind==='pack')entry.kind='pack';
+  state.custom.push(entry);
+  if(writePrepState(state)){refreshPrepChecklistViews();var nextKind=document.getElementById('prepAddKind');if(nextKind)nextKind.value=kind;var next=document.getElementById('prepAddInput');if(next)next.focus();}
 }
 function removePrepCustom(id){
   var state=readPrepState();
@@ -3410,6 +3594,123 @@ function renderPrepTodayEntry(){
   var percent=model.total?Math.round(model.done/model.total*100):0;
   var count=model.total?model.done+'/'+model.total:'新增';
   return '<button type="button" class="prep-launcher prep-progress-row" onclick="openPrepChecklist()" aria-label="行前準備，已完成 '+model.done+' / '+model.total+'"><span>行前準備</span><span class="prep-progress" aria-hidden="true"><span style="width:'+percent+'%"></span></span><span>'+escapeHtml(count)+' ›</span></button>';
+}
+/* ================= 航班卡(v188,Bar 2026-11-12 看過示意圖、選「試算表新增航班分頁」) =================
+   - 試算表「航班」分頁一列一班,gid 填在 TripConfig 的 Flights GID;沒填就不顯示。
+   - 出發前首頁顯示下一班;搭機當天今天頁最上面顯示當天的航班;其他日子與旅程結束後不顯示。
+   - 只是把 Sheet 內容讀下來顯示,存在 localStorage 的快取(依旅程分開),不進個人備份、不上傳。
+   - 不算飛行時間:兩地時區可能不同,當地時間相減會算錯。 */
+var FLIGHT_ITEMS_KEY='trip_flight_items',FLIGHT_ITEMS_MAX=12;
+var FLIGHT_COLUMNS=[['date','日期'],['airline','航空公司'],['flightNo','班次'],['fromCode','出發機場'],['fromTime','出發時間'],['toCode','抵達機場'],['toTime','抵達時間'],['counter','開櫃時間'],['terminal','航廈'],['baggage','托運'],['pnr','訂位代號'],['note','備註']];
+function parseFlightDate(text,now){
+  var value=String(text||'').trim(),m,year,month,day;
+  if(!value)return null;
+  if((m=/^(\d{4})[-\/.](\d{1,2})[-\/.](\d{1,2})/.exec(value))){year=+m[1];month=+m[2];day=+m[3];}
+  else if((m=/^(\d{1,2})[\/.\-](\d{1,2})/.exec(value))){month=+m[1];day=+m[2];
+    var base=now||appNow();year=base.getFullYear();
+    if(Date.UTC(year,month-1,day)<Date.UTC(base.getFullYear(),base.getMonth(),base.getDate()-180))year++;}
+  else return null;
+  if(month<1||month>12||day<1)return null;
+  var serial=Date.UTC(year,month-1,day)/86400000;
+  if(Date.UTC(year,month,0)/86400000<serial)return null;
+  return {key:year*10000+month*100+day,md:('0'+month).slice(-2)+'/'+('0'+day).slice(-2),label:month+'/'+day,dow:'日一二三四五六'.charAt(((serial+4)%7+7)%7)};
+}
+function parseFlightTime(text){
+  var m=/^(\d{1,2})[:：](\d{2})/.exec(String(text||'').trim());
+  if(!m||+m[1]>23||+m[2]>59)return '';
+  return (+m[1])+':'+m[2];
+}
+function parseFlightsCsv(text,now){
+  var rows=parseCSV(text||''),map=null,flights=[],skipped=0;
+  rows.forEach(function(row){
+    var cells=row.map(function(cell){return String(cell||'').trim();});
+    if(!map){
+      if(cells.indexOf('班次')>=0||cells.indexOf('出發機場')>=0){
+        map={};FLIGHT_COLUMNS.forEach(function(col){var i=cells.indexOf(col[1]);if(i>=0)map[col[0]]=i;});return;
+      }
+    }
+    var get=function(field,index){var i=map&&map[field]!==undefined?map[field]:index;return i>=0&&i<cells.length?cells[i]:'';};
+    var f={};FLIGHT_COLUMNS.forEach(function(col,i){f[col[0]]=get(col[0],i);});
+    if(!f.date&&!f.flightNo&&!f.fromCode)return;
+    var date=parseFlightDate(f.date,now);
+    if(!map&&!date)return;   /* 表頭上方的說明列不算 */
+    if(!date||!f.fromCode||!f.toCode||flights.length>=FLIGHT_ITEMS_MAX){skipped++;return;}
+    flights.push({dateKey:date.key,md:date.md,dateLabel:date.label,dow:date.dow,
+      airline:f.airline.slice(0,30),flightNo:f.flightNo.slice(0,12),
+      fromCode:f.fromCode.toUpperCase().slice(0,4),fromTime:parseFlightTime(f.fromTime),
+      toCode:f.toCode.toUpperCase().slice(0,4),toTime:parseFlightTime(f.toTime),
+      counter:parseFlightTime(f.counter)||f.counter.slice(0,12),terminal:f.terminal.slice(0,16),baggage:f.baggage.slice(0,16),
+      pnr:f.pnr.slice(0,12),note:f.note.slice(0,120)});
+  });
+  flights.sort(function(a,b){return a.dateKey-b.dateKey||String(a.fromTime).localeCompare(String(b.fromTime),undefined,{numeric:true});});
+  return {flights:flights,skipped:skipped};
+}
+function readFlights(){
+  var stored;try{stored=JSON.parse(localStorage.getItem(FLIGHT_ITEMS_KEY)||'null');}catch(ignore){return [];}
+  if(!stored||stored.version!==1||stored.sourceKey!==currentTripSourceKey()||!Array.isArray(stored.flights))return [];
+  return stored.flights.filter(function(f){return f&&typeof f.dateKey==='number'&&f.fromCode&&f.toCode;});
+}
+var flightsInFlight=null;
+function refreshFlights(){
+  if(flightsInFlight)return flightsInFlight;
+  var gid=String(DB&&DB.cfg&&DB.cfg.flightsGid||'').trim(),sourceKey=currentTripSourceKey();
+  var before=localStorage.getItem(FLIGHT_ITEMS_KEY);
+  function store(next){
+    if(next===before)return;
+    try{if(next===null)localStorage.removeItem(FLIGHT_ITEMS_KEY);else localStorage.setItem(FLIGHT_ITEMS_KEY,next);}
+    catch(error){AppLog.data('航班資料無法保存：'+String(error&&error.message||error));return;}
+    if(curView==='today'&&typeof renderToday==='function')renderToday();
+  }
+  if(!/^\d{1,12}$/.test(gid)){store(null);return Promise.resolve([]);}
+  flightsInFlight=fetchWithTimeout(currentPubBase()+gid,FETCH_TIMEOUT).then(function(response){
+    if(!response.ok)throw new Error('HTTP '+response.status);
+    return response.text();
+  }).then(function(text){
+    if(currentTripSourceKey()!==sourceKey)return null;
+    var parsed=parseFlightsCsv(text);
+    if(parsed.skipped)AppLog.data('航班分頁有 '+parsed.skipped+' 列沒有使用(日期看不懂、缺出發或抵達機場,或超過 '+FLIGHT_ITEMS_MAX+' 班)');
+    store(JSON.stringify({version:1,sourceKey:sourceKey,gid:gid,flights:parsed.flights}));
+    return parsed.flights;
+  }).catch(function(error){
+    AppLog.data('航班資料讀取失敗，沿用上次的資料：'+String(error&&error.message||error));
+    return null;
+  }).then(function(result){flightsInFlight=null;return result;});
+  return flightsInFlight;
+}
+/* mode:'pretrip' = 下一班(今天以後最早的一班);'today' = 今天的所有航班 */
+function flightsForHome(mode){
+  var flights;try{flights=readFlights();}catch(error){return [];}
+  if(!flights.length)return [];
+  var now=appNow(),todayKey=now.getFullYear()*10000+(now.getMonth()+1)*100+now.getDate();
+  if(mode==='today')return flights.filter(function(f){return f.dateKey===todayKey;});
+  var next=flights.filter(function(f){return f.dateKey>=todayKey;});
+  return next.length?[next[0]]:[];
+}
+function flightDirectionLabel(flight){
+  var flights=readFlights();if(flights.length<2)return '航班';
+  if(flight.dateKey===flights[0].dateKey)return '去程';
+  if(flight.dateKey===flights[flights.length-1].dateKey)return '回程';
+  return '航班';
+}
+function renderFlightCard(flight,isToday){
+  var plane='<svg class="flight-plane" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M10.5 3.5a1.5 1.5 0 0 1 3 0V9l7 4v2l-7-2v4l2 1.5V20L12 19l-3.5 1v-1.5l2-1.5v-4l-7 2v-2l7-4z" transform="rotate(90 12 12)"/></svg>';
+  var kicker=isToday?'今天搭機 · '+flightDirectionLabel(flight):flightDirectionLabel(flight)+' · '+flight.dateLabel+'（'+flight.dow+'）';
+  var carrier=[flight.airline,flight.flightNo].filter(Boolean).join(' ');
+  var stub=[['開櫃',flight.counter],['航廈',flight.terminal],['托運',flight.baggage],['訂位代號',flight.pnr]].filter(function(x){return x[1];});
+  var label=kicker+'，'+(carrier?carrier+'，':'')+flight.fromCode+(flight.fromTime?' '+flight.fromTime:'')+' 飛 '+flight.toCode+(flight.toTime?' '+flight.toTime:'')+
+    stub.map(function(x){return '，'+x[0]+' '+x[1];}).join('')+(flight.note?'，'+flight.note:'');
+  return '<section class="flight-card" role="group" aria-label="'+escapeHtmlAttr(label)+'"><div class="flight-main" aria-hidden="true">'+
+    '<div class="flight-top"><span class="flight-kicker">'+escapeHtml(kicker)+'</span><span class="flight-carrier">'+escapeHtml(carrier)+'</span></div>'+
+    '<div class="flight-route"><div class="flight-end"><b>'+escapeHtml(flight.fromCode)+'</b><span>'+escapeHtml(flight.fromTime||'—')+'</span></div>'+
+    '<div class="flight-line">'+plane+'</div>'+
+    '<div class="flight-end r"><b>'+escapeHtml(flight.toCode)+'</b><span>'+escapeHtml(flight.toTime||'—')+'</span></div></div></div>'+
+    (stub.length?'<div class="flight-perf" aria-hidden="true"></div><div class="flight-stub" aria-hidden="true" style="grid-template-columns:repeat('+stub.length+',minmax(0,1fr))">'+
+      stub.map(function(x){return '<div><small>'+escapeHtml(x[0])+'</small><b>'+escapeHtml(x[1])+'</b></div>';}).join('')+'</div>':'')+
+    (flight.note?'<p class="flight-note" aria-hidden="true">'+escapeHtml(flight.note)+'</p>':'')+'</section>';
+}
+function renderHomeFlights(mode){
+  try{return flightsForHome(mode).map(function(f){return renderFlightCard(f,mode==='today');}).join('');}
+  catch(error){AppLog.render('航班卡無法顯示：'+String(error&&error.message||error));return '';}
 }
 function weatherCityFromText(text){
   text=String(text||'');
@@ -4197,7 +4498,7 @@ function endedTripRecapRows(){
 function renderEndedTripHome(){
   cancelHomeWeatherExpiry();homeWeatherVisibleKey=null;
   var notice=endedTripSettlementNotice();
-  return '<div class="today-hero" id="endedTripHome"><div class="lbl">TODAY · '+todayMD()+'</div>'+
+  return '<div class="today-hero" id="endedTripHome">'+renderEhonArt()+'<div class="lbl">TODAY · '+todayMD()+'</div>'+
     '<div class="date">本趟旅程已結束</div>'+
     endedTripRecapRows()+notice+
     '<div class="today-hero-actions">'+
@@ -4261,11 +4562,12 @@ function renderToday(){
   var checks=getChecks();
   if(ti===null){
     var days=DB.trip?DB.trip.days:[];
-    view.innerHTML='<div class="today-hero"><div class="lbl">TODAY · '+todayMD()+'</div>'+
+    view.innerHTML='<div class="today-hero">'+renderEhonArt()+'<div class="lbl">TODAY · '+todayMD()+'</div>'+
       '<div class="today-pretrip-title-row"><div class="date">還沒到出發日</div>'+renderPreTripCountdown()+'</div>'+
       renderPreTripFirstStop(days)+renderPrepTodayEntry()+
       '<div class="today-hero-actions">'+renderShoppingTodayEntry(null,'')+
       '<button class="today-jump today-hero-action" onclick="switchView(\'trip\')">查看完整行程 →</button></div></div>'+
+      renderHomeFlights('pretrip')+
       (days.length?'<div class="seg">行程重點</div>':'')+
       days.map(function(d,i){
         var hl=preTripDestinationHighlights(d,3).items.map(function(item){return item.title;}).join('、');
@@ -4295,10 +4597,11 @@ function renderToday(){
   requestHomeWeather(ti,weatherItem);
   var weather=homeWeatherFor(ti,weatherItem);
   var progressLabel='今日已處理 '+completed+' 站，共 '+stopCounts.total+' 站';
-  var h='<div class="today-hero today-hero-trip'+(weather&&weather.status==='fresh'?' weather-on':'')+'"><div class="today-hero-top"><div class="lbl">TODAY · DAY '+(ti+1)+'</div>'+
+  var h='<div class="today-hero today-hero-trip'+(weather&&weather.status==='fresh'?' weather-on':'')+'">'+renderEhonArt()+'<div class="today-hero-top"><div class="lbl">TODAY · DAY '+(ti+1)+'</div>'+
     '<div class="loc" aria-label="'+escapeHtml(progressLabel)+'">已處理 '+completed+'/'+stopCounts.total+'</div></div>'+
     '<div class="today-hero-main"><div class="date">'+day.date+(day.dow?' ('+day.dow+')':'')+'</div>'+renderTodayWeatherArt(weather)+'</div>'+
     renderTodayHeroSummary(weather,renderShoppingTodayEntry(day,currentStopRef))+departureRefundReminderHtml(ti===DB.trip.days.length-1)+'</div>';
+  h+=renderHomeFlights('today');
   h+=cluster&&clusterPick&&clusterPick.item?renderClusterNextStopCard(day,ti,pick,cluster,checks,progress,nowMinutes):renderNextStopCard(day,ti,pick);
   if(DB.trip.days[ti+1]){
     if(shouldReplaceWithTomorrowPreview(pick)) h+=renderTomorrowPreview(ti,false);
@@ -10605,11 +10908,23 @@ function openShoppingPhotoRepairFromSettings(itemId){
     openShoppingPhotoRepair(item.id,trigger||card);
   });
 }
+/* v189(backlog #52,Bar 2026-11-13 選「只算目前模式」):健康頁與診斷面板的團體帳待送／等待讀回,只算目前模式(正式或測試)的紀錄,
+   與帳本畫面一致。送出與保護邏輯不變:佇列仍整批送、foreign 暫停判斷仍看整個佇列。 */
+function ledgerTestModeOn(){try{return !!lsGet('trip_ledger_test_mode',false);}catch(error){return false;}}
+function ledgerBacklogForMode(queue,bridge,testMode){
+  function same(item){return !!item&&isTestLedgerRecord(item)===!!testMode;}
+  return {pending:(queue||[]).filter(same).length,bridge:(bridge||[]).filter(same).length,testMode:!!testMode};
+}
+function currentLedgerBacklog(){
+  var queue=[];try{queue=ledgerRepository.queuedRecords();}catch(error){queue=[];}
+  return ledgerBacklogForMode(queue,ledgerDeliveryBridgeRecords(),ledgerTestModeOn());
+}
 function settingsDataHealthModel(input){
   var supplied=input&&typeof input==='object',source=supplied?input:{};
-  var sync=source.sync||syncStatusModel(),pending=source.pendingCount;
-  if(pending==null)pending=ledgerRepository.pendingCount();pending=Math.max(0,Number(pending)||0);
-  var bridgeCount=supplied?Math.max(0,Number(source.bridgeCount)||0):ledgerDeliveryBridgeRecords().length;
+  var sync=source.sync||syncStatusModel(),pending=source.pendingCount,backlog=null;
+  if(pending==null){backlog=currentLedgerBacklog();pending=backlog.pending;}pending=Math.max(0,Number(pending)||0);
+  var bridgeCount=supplied?Math.max(0,Number(source.bridgeCount)||0):(backlog||currentLedgerBacklog()).bridge;
+  var testMode=supplied?!!source.testMode:(backlog||currentLedgerBacklog()).testMode,modeNote=testMode?'（測試模式）':'';
   var photoSummary=source.photoSummary==null?shoppingPhotoStorageSummary():String(source.photoSummary);
   var photoAttention=source.photoAttention;
   if(photoAttention==null){var photoState=shoppingPhotoAuditState||{};photoAttention=!!(photoState.ready&&(photoState.unavailable||(photoState.invalidReferences||[]).length));}
@@ -10621,7 +10936,7 @@ function settingsDataHealthModel(input){
     summary:attention?attention+' 項需注意':'資料狀態正常',attentionCount:attention,
     rows:[
       {key:'trip',label:'行程資料',value:String(sync.label||'資料狀態未知')+relative,detail:failedLabels.length?'未更新：'+failedLabels.join('、'):''},
-      {key:'shared',label:'團體帳',value:pending?pending+' 筆待送出':bridgeCount?bridgeCount+' 筆等待讀回':'本機無待送紀錄',detail:'伺服器接收後仍需讀回；不代表其他旅伴已讀'},
+      {key:'shared',label:'團體帳'+modeNote,value:pending?pending+' 筆待送出':bridgeCount?bridgeCount+' 筆等待讀回':'本機無待送紀錄',detail:'伺服器接收後仍需讀回；不代表其他旅伴已讀'+(testMode?'；只算測試模式的紀錄':'')},
       {key:'personal',label:'個人資料',value:progressError?'行程紀錄需注意':'僅此裝置',detail:progressError||'個人記帳、採買與設定不會同步'},
       {key:'photos',label:'照片附件',value:photoSummary,detail:'照片只保存在此裝置'}
     ]
@@ -10637,6 +10952,21 @@ function renderSettingsHealthPage(){
   return header+renderSettingsDataHealth();
 }
 var APP_RELEASE_NOTES=[
+  {version:'v189',date:'2026-11-13',title:'資料健康更清楚',items:[
+    '設定 → 疑難排解 → 資料健康的「團體帳」只算目前模式；測試模式下會標「（測試模式）」。',
+    '內部檢查加強：離線需要的檔案都有收進快取。'
+  ]},
+  {version:'v188',date:'2026-11-12',title:'航班卡與行李清單',items:[
+    '試算表新增「航班」分頁後，出發前首頁與搭機當天會出現登機證樣式的航班卡。',
+    '行前清單多了「行李」：試算表類型寫「行李」，或自己在手機新增。',
+    '繪本主題補到採買清單、成員選擇、設定與彈出面板。'
+  ]},
+  {version:'v187',date:'2026-11-11',title:'新主題：繪本',items:[
+    '設定的主題多了第七個「繪本／和紙」：和紙白底、墨灰粗線框、大圓角。',
+    '選繪本主題時，今天頁上方有一張手繪插圖，切換日期會輕輕彈一下。',
+    '手機開了「減少動態效果」時，插圖和彈跳都不會動。',
+    '所有主題的卡片和按鈕圓角加大一點。'
+  ]},
   {version:'v186',date:'2026-11-11',title:'畫面更清爽',items:[
     '今天卡拿掉重複的站名行；只有「導航」是實心按鈕。',
     '購物頁很長的商場備註先收起來，按「看全部」展開。',
@@ -10648,20 +10978,6 @@ var APP_RELEASE_NOTES=[
     '設定的資料健康、照片健康、旅途紀錄、診斷面板收進「疑難排解」。',
     '今天頁的通知改出現在上方，不再蓋住「完成／跳過」。',
     '旅程結束後行程頁改成單純瀏覽，不顯示打卡方塊。'
-  ]},
-  {version:'v184',date:'2026-11-10',title:'行前清單與新圖示',items:[
-    '出發前首頁多了「行前準備」進度條：試算表「行前清單」分頁寫共用的待辦與注意事項，各自在手機上勾；也能自己新增待辦。',
-    '頂端左上角的岡山桃子換成金黃底紙飛機，點兩下一樣開診斷面板。'
-  ]},
-  {version:'v183',date:'2026-11-10',title:'旅程結束回顧與記帳表單更簡潔',items:[
-    '天氣地區不限日本，泰國、歐美的地區也會顯示天氣。',
-    '沒網路時頂端寫「離線版 · 時間」與黃點，不再是紅色的「更新失敗」。',
-    '旅程結束後首頁顯示我的總花費與待退稅；「清除並打包旅程」移到卡片最下方。',
-    '記帳時帳本與幣別收成一行「個人帳本 · JPY ⌄」，點開才換。'
-  ]},
-  {version:'v182',date:'2026-11-09',title:'匯率寫法統一',items:[
-    '分帳卡片、記帳表單與設定的匯率都寫成「1 JPY ≈ NT$0.21」。',
-    '清掉幾段沒有用到的程式，畫面與資料不變。'
   ]},
 ];
 function renderAppReleaseNotes(){
@@ -14376,9 +14692,11 @@ function diagnosticTripModel(now){
     return {value:sync.label+'；資料更新 '+sync.dataUpdated+'；最近完整同步 '+sync.lastComplete+(sync.failure?'；'+sync.failure:''),chip:sync.label,tone:tones[sync.state]||'warn',detail:'資料更新 '+sync.dataUpdated+(sync.failure?'；'+sync.failure:''),alert:alert};
   });
   row('ledger','團體帳',function(){
-    var pending=ledgerRepository.pendingCount(),bridge=ledgerDeliveryBridgeRecords().length;
+    var backlog=currentLedgerBacklog(),allPending=ledgerRepository.pendingCount(),pending=backlog.pending,bridge=backlog.bridge;
     var foreign=typeof ledgerRepository.foreignOwner==='function'?ledgerRepository.foreignOwner():'';
-    var text=foreign?pending+' 筆待送，已暫停送出（屬於其他旅程：'+foreign+'）':pending?pending+' 筆待送出':'沒有待送紀錄';
+    /* foreign 暫停是整個佇列的狀態,照舊用全部筆數;一般待送只算目前模式(backlog #52) */
+    if(foreign)pending=allPending;
+    var text=(backlog.testMode&&!foreign?'測試模式 ':'')+(foreign?pending+' 筆待送，已暫停送出（屬於其他旅程：'+foreign+'）':pending?pending+' 筆待送出':'沒有待送紀錄');
     var waiting=bridge?bridge+' 筆等待讀回':'';
     if(foreign)return {value:text+(waiting?'；'+waiting:''),chip:'已暫停送出',tone:'bad',detail:pending+' 筆屬於其他旅程（'+foreign+'）'+(waiting?'；'+waiting:''),alert:'待送的團體帳屬於其他旅程，已暫停送出；請截圖給旅程負責人'};
     if(pending)return {value:text+(waiting?'；'+waiting:''),chip:pending+' 筆待送',tone:'warn',detail:'連上網路後會自動補送'+(waiting?'；'+waiting:''),alert:'團體帳 '+pending+' 筆還沒送出，連上網路後會自動補送'};

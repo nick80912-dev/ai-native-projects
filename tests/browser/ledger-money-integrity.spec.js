@@ -7,6 +7,7 @@
      2. 結算幣別(= Ledger Default Currency,ADR 0007)有任何還款紀錄後即鎖定。
         否則改幣別後,用舊幣別確認的還款不會換算,已還清的人會重新被要求付款。
      3. 分帳頁:自己在團體還有未結清時,本次開 App 第一次進來先開「團體」。
+     4. v189(backlog #50 結案):編輯／更正不改就存,兩幣逐品項都不變(v178 起各品項存了稅額與折抵後,v135 時的換算幣別漂移已不再發生)。
    稽核時也檢查過「個人帳代購不依身分過濾」—— 那是 2026-07-18 起的刻意設計
    (ledger-proxy.test.js 守著),重新確認後保留,本檔不涉入。
    ============================================================ */
@@ -43,7 +44,7 @@ test('editing or correcting a bill without changes never changes its total',asyn
     const settings=currentLedgerSettings(),cat=ledgerCategoryStore.all()[0],pay=ledgerPayMethodStore.all()[0];
     const ctx=n=>({now:Date.parse('2026-10-19T03:00:00Z')+n,member:'Bar',settings,random:()=>0.5});
     const sum=rs=>rs.reduce((s,x)=>s+x.amountJpy+x.amountTwd,0);
-    const r={editCases:0,editTotalChanged:0,primaryItemChanged:0,correctionTotalChanged:0,singleCases:0,singleChanged:0,errors:0};
+    const r={editCases:0,editTotalChanged:0,primaryItemChanged:0,secondaryItemChanged:0,correctionTotalChanged:0,correctionItemChanged:0,singleCases:0,singleChanged:0,errors:0};
     for(let i=0;i<1500;i++){
       const multi=rnd()<0.75,cur=rnd()<0.8?'JPY':'TWD',preset=['none','8','10','custom'][ri(0,3)];
       const d={track:'personal',isProxy:false,proxyTarget:'',currency:cur,category:cat,payMethod:pay,note:'',storeName:'店',
@@ -53,14 +54,17 @@ test('editing or correcting a bill without changes never changes its total',asyn
       else{d.multi=false;d.detail='單';d.amount=String(ri(50,20000));}
       try{
         const r1=buildLedgerExpenseRecords(d,ctx(i)),r2=buildLedgerExpenseRecords(ledgerDraftFromRecords(r1,'personal'),ctx(i));
-        const prim=cur==='JPY'?'amountJpy':'amountTwd';
+        const prim=cur==='JPY'?'amountJpy':'amountTwd',sec=cur==='JPY'?'amountTwd':'amountJpy';
         if(multi){
           r.editCases++;
           if(sum(r1)!==sum(r2))r.editTotalChanged++;
           if(r1.some((x,j)=>x[prim]!==r2[j][prim]))r.primaryItemChanged++;
+          /* v189(backlog #50 結案):換算幣別逐品項也不得漂移 */
+          if(r1.some((x,j)=>x[sec]!==r2[j][sec]))r.secondaryItemChanged++;
           r1.forEach(x=>{x.participants=JSON.stringify(['Bar','Amy']);});
           const c=calculateMultiItemAmounts(ledgerCorrectionDraftFromReceipt({records:r1,rootId:r1[0].id}),settings);
           if(c.items.reduce((s,x)=>s+x.amountJpy+x.amountTwd,0)!==sum(r1))r.correctionTotalChanged++;
+          if(c.items.some((x,j)=>x.amountJpy!==r1[j].amountJpy||x.amountTwd!==r1[j].amountTwd))r.correctionItemChanged++;
         }else{
           r.singleCases++;
           if(sum(r1)!==sum(r2))r.singleChanged++;
@@ -74,6 +78,8 @@ test('editing or correcting a bill without changes never changes its total',asyn
   expect(result.singleCases).toBeGreaterThan(300);
   expect(result.editTotalChanged).toBe(0);
   expect(result.primaryItemChanged).toBe(0);
+  expect(result.secondaryItemChanged).toBe(0);
+  expect(result.correctionItemChanged).toBe(0);
   expect(result.correctionTotalChanged).toBe(0);
   expect(result.singleChanged).toBe(0);
   expect(errors).toEqual([]);
