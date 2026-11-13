@@ -5,7 +5,7 @@
 > 衝突時:`schema.js` > `09_SCHEMA_MAPPING.md` > 本檔。
 
 ## 技術基線
-- App 本體是 vanilla JS 單一 HTML(current generation `shell/v188/index.html`)加少數獨立 runtime module(清單以 `runtime-assets.json` 為準);**無框架、無打包、執行期零相依**。`package.json` 只放測試工具(Playwright),不進 App。
+- App 本體是 vanilla JS 單一 HTML(current generation `shell/v189/index.html`)加少數獨立 runtime module(清單以 `runtime-assets.json` 為準);**無框架、無打包、執行期零相依**。`package.json` 只放測試工具(Playwright),不進 App。
 - ES5 風格(function/var),相容老舊 WebView。
 - 保留 console polyfill 與 fetch 相容模式(`fetchWithTimeout`),勿「優化」掉。
 

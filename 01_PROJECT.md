@@ -49,6 +49,6 @@ AI 聊天／推薦、帳號系統、雲端多人協作(以 Google Sheets 共編�
 - 個人狀態只存 localStorage,不進 CMS;採買與收據照片 Blob 只存目前裝置 IndexedDB,不進備份或跨裝置同步。
 - 住宿關聯只用 `Places.HID → Hotels.HID` 精確對應(ADR 0017);名稱只供顯示。
 - 修改核心架構、schema、Google Sheet 欄位、既有 ADR、或 14 定義的高風險檔案前,必須先取得 Bar 確認。
-- `sw.js`、`shell/v188/app-version.js` 與 `netlify.toml` 的 cache header 屬同一 PWA 風險群組(見 14);升版時版本字串必須同步,否則 `tools/check-app-version.js` 會失敗。
+- `sw.js`、`shell/v189/app-version.js` 與 `netlify.toml` 的 cache header 屬同一 PWA 風險群組(見 14);升版時版本字串必須同步,否則 `tools/check-app-version.js` 會失敗。
 - 文件裡的 `shell/vNNN` 路徑由 `tools/check-doc-generation.js` 守住,活文件不得停在舊 generation;歷史文件(`adr/`、`07_CHANGELOG.md`、`docs/archive/`、`tasks/done.md` 等)豁免。
 - Git 推送與自動驗證**都不等於**正式站部署,也不等於 Bar 的實機驗收 —— 三者必須分別確認。

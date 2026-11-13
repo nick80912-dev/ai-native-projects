@@ -1,5 +1,14 @@
 # 07 版本紀錄
 
+## 2026-11-13 — v189 技術小項一次清(backlog #20、#50、#52、#53)
+
+- **來源**:Bar 2026-11-13 選「技術小項一次清」;#50 回「改(根治)」,#52 選「只算目前模式」。
+- **#52 資料健康只算目前模式**:設定 → 疑難排解 → 資料健康的「團體帳」待送／等待讀回,以及診斷面板「目前旅程」的團體帳列,只算目前模式(正式或 `[TEST]`)的紀錄,與帳本畫面一致;測試模式下標題寫「團體帳（測試模式）」。`ledgerBacklogForMode()`／`currentLedgerBacklog()`。送出、foreign 暫停(仍看整個佇列)、還原前的待送保護都不變。
+- **#50 結案,不改程式**:動工前以真實 App 跑 4,000 筆隨機税抜多品項帳(JPY／TWD 輸入、四種匯率、含折抵)驗證,**舊算法編輯與更正後換算幣別逐品項變動 0 筆** —— v178 起各品項存了稅額與折抵,重載時的權重已與新增時相同,v135 時的漂移不再發生。原定的根治(改依輸入幣別品項金額分配)只會讓新帳換算幣別分配改變而沒有好處,因此還原為 v188 算法;`ledger-money-integrity.spec.js` 加上換算幣別逐品項與更正逐品項不變的斷言,防止日後回歸。
+- **#53 結案,不改程式**:`sw-update-cache.spec.js` 的兩個等待 helper 已在 v146 改為 `expect.poll` ＋ await evaluate,且有「helper 在 controller 與快取真的存在前保持等待」的專屬測試;沒有剩下的 `waitForFunction(async…)`。
+- **#20 SW SHELL 盤點**:current shell 用到的每個本機 script／icon／manifest 都在 `sw.js` SHELL,SHELL 每一項都存在;`okayama-peach-badge.png` 因 root v110 bridge 仍使用而保留;Google 字型與登入 SDK 為外部選用資源,刻意不快取(字型失敗退回系統字)。`tests/pwa-shell.test.js` 新增雙向檢查守住。
+- **整理**:刪除 `shell/v186`,留 v187–v189;發布說明保留 v185–v189;backlog 移除 #20、#50、#52、#53。
+
 ## 2026-11-12 — 文件與 ADR 整理(Bar 選 A 內容校正＋B 歸檔＋C 合併;只改文件,App 版本不變)⭐
 
 - **C 合併**:
