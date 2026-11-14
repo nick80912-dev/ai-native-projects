@@ -1,5 +1,14 @@
 # 07 版本紀錄
 
+## 2026-11-13 — v189 已上線 main，tag `production-v189`（待 Bar 手機審查）
+
+- Bar 回「好」後因工作階段中斷暫停,再回「繼續發版」。
+- 本機完整 Chromium:467 passed、1 failed(已知只在本機失敗的 `personal-ledger-export`)。
+- PR [#166](https://github.com/nick80912-dev/ai-native-projects/pull/166) 在 head `82e7c67` 的 sanity／browser-qa 全綠後合併進 `dev`(`6d1765e`);PR [#167](https://github.com/nick80912-dev/ai-native-projects/pull/167) 合併 `dev` → `main`,merge commit **`5cacb20`**;七項檢查全綠。
+- **線上核對**:正式站 `sw.js` 為 `SW_VERSION='v189'`;全新 Chromium `APP_VERSION` v189、只剩 `okayama-trip-v189` 快取、發布說明「資料健康更清楚」、無 pageerror;`ledgerBacklogForMode`／`currentLedgerBacklog` 在線上;`shell/v189/index.html` 與 `main` 逐位元組相同;`shell/v188/`、`shell/v187/` 回 200,已刪的 `shell/v186/` 回 404。
+- **tag**:production-tags workflow 建立 `production-v189` → `5cacb20`,`git ls-remote` 核對相符。
+- 回滾:依 `16_OPS_PLAYBOOK.md` §A1 Publish `commit_ref` = `00b7305`(`production-v188`)的部署,再往前 bump。
+
 ## 2026-11-13 — v189 技術小項一次清(backlog #20、#50、#52、#53)
 
 - **來源**:Bar 2026-11-13 選「技術小項一次清」;#50 回「改(根治)」,#52 選「只算目前模式」。
