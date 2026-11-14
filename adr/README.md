@@ -17,10 +17,10 @@ Decision · Context · Alternatives Considered · Why This Decision · Expected 
 | 0002 | Data-Driven UI(卡片由資料型別驅動,禁猜測) | Accepted |
 | 0003 | Google Sheet 作為 CMS | Accepted |
 | 0004 | Renderer 架構(型別 → 卡片 → 面板) | Accepted |
-| 0005 | Dev/Main Branch Strategy | Accepted |
+| 0005 | Dev/Main Branch Strategy | Accepted(2026-11 增補實際發版方式) |
 | 0006 | Ledger Sync via Apps Script | Accepted |
 | 0007 | 團體結算:握手式結清事實(Settlement Handshake) | Accepted |
-| 0008 | 主題系統交付範圍:六組淺色主題(Six-Theme Scope Ratification) | Accepted |
+| 0008 | 主題系統交付範圍:淺色主題(六組追認;v187 增為七組,含繪本外觀層例外) | Accepted(2026-11 增補) |
 | 0009 | Buy-to-Ledger 垂直切片與 Runtime Seam | Accepted |
 | 0010 | Ledger UI 歷史瀏覽 Workflow／State Seam | Accepted |
 | 0011 | Ledger Entry Session Workflow／State Seam | Accepted |
@@ -32,7 +32,8 @@ Decision · Context · Alternatives Considered · Why This Decision · Expected 
 | 0017 | 住宿停靠點以 HID 引用住宿主檔 | Accepted |
 | 0018 | 導覽、診斷與 Today 呈現模組邊界 | Accepted |
 | 0019 | 版本綁定的 Generated BUILTIN 離線資產 | Accepted |
-| 0020 | 個人旅程生命週期與 Drive 唯讀封存 | Accepted（v137 candidate；真機待驗） |
-| 0021 | 連接下一趟旅程（每趟一份 Sheet） | Accepted（v150 實作；2026-10-13 隨 v151 發布） |
+| 0020 | 個人旅程生命週期與 Drive 唯讀封存 | Accepted（v137 上線；2026-10-06 真機驗收完成） |
+| 0021 | 連接下一趟旅程（每趟一份 Sheet） | Accepted（2026-10-13 隨 v151 發布） |
+| 0022 | 試算表選填分頁（天氣地區、行前清單、航班） | Accepted（2026-11-12；v170／v184／v188） |
 
-新增 ADR:複製格式、編號遞增、更新本索引。
+新增 ADR:複製格式(框架 `adr/TEMPLATE.md`)、編號遞增、更新本索引。已接受的 ADR 有後續變更時,在文末加「YYYY-MM 增補」小節並更新本表狀態,不改寫原決定。

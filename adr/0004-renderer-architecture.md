@@ -1,5 +1,7 @@
 # ADR 0004 — Renderer 架構
 
+> 狀態:Accepted(2026-07 治理層 v1 建立時追認)
+
 **Decision**:渲染採「型別 → 卡片 → 面板」三層。resolveRef 解析行程 ID 欄(Pxxx/Rxxx)取得資料 → typeTag 依 Places.Type 決定卡片類別 → renderItem 組出卡片與快速動作列 → 各面板函式(parkingPanel/infoPanel/restRows...)產出摺疊內容。共用元件函式(kvRow/tipBox/linkRow/storeRow)不重複邏輯。
 
 **Context**:單一 HTML 內嵌 vanilla JS,需在無框架下維持渲染邏輯清晰、可擴充、AI 易懂。

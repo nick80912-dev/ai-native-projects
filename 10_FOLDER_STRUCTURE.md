@@ -3,15 +3,15 @@
 > 原則:每個檔案責任單一,命名一致,AI 一眼知道去哪修改。不使用 common/misc/temp 這類模糊命名。
 
 ## 正式 App 與 PWA 檔案(Netlify 部署樹)
-> root `index.html`／`app-version.js` 是 byte-locked v110 bridge；current App 位於 `shell/v188/`，只有 current worker 成功啟用後才接管 root 導覽。裝置照片、採買轉記帳、Ledger UI、Shopping UI 與 Trip progression 各有獨立 runtime 邊界。
+> root `index.html`／`app-version.js` 是 byte-locked v110 bridge；current App 位於 `shell/v189/`，只有 current worker 成功啟用後才接管 root 導覽。裝置照片、採買轉記帳、Ledger UI、Shopping UI 與 Trip progression 各有獨立 runtime 邊界。
 
 ```
 index.html              v110 bridge App（必須維持 origin/main v110 bytes）
 app-version.js          v110 bridge 顯示版本（不代表 current generation，禁止升為 current generation）
-shell/v188/index.html   current App:UI 殼 + CSS + 內嵌 JS（依區塊分層，見下）
-shell/v188/app-version.js current App 顯示版本（必須與 sw.js 的 SW_VERSION 一致）
-shell/v188/builtin-snapshot.js 工具產生、與 current App／SW 同版的 BUILTIN 離線資產（Tier 3，禁手改）
-shell/<較舊世代>/       已發布、不可就地修改的較舊 generation；只保留最近三代（目前 v186 起，見下方說明）
+shell/v189/index.html   current App:UI 殼 + CSS + 內嵌 JS（依區塊分層，見下）
+shell/v189/app-version.js current App 顯示版本（必須與 sw.js 的 SW_VERSION 一致）
+shell/v189/builtin-snapshot.js 工具產生、與 current App／SW 同版的 BUILTIN 離線資產（Tier 3，禁手改）
+shell/<較舊世代>/       已發布、不可就地修改的較舊 generation；只保留最近三代（目前 v187 起，見下方說明）
 navigation-intent.js    明確導覽目的地的 session-only state module
 diagnostic-impact.js    AppLog 原始紀錄的 display-only impact projection
 today-view.js           Today Hero 採買摘要的純 model／renderer module
@@ -45,13 +45,13 @@ okayama-peach-badge.png 診斷徽章圖
 netlify.toml            Netlify 快取 header 設定
 .ai-manifest.json       AI 導航檔(接手第一步只讀這份)
 ```
-> App UI、DOM adapter 與多數流程維持在單一 current generation document `shell/v188/index.html`；獨立 runtime modules 由 `runtime-assets.json` 登錄並以 `tools/check-runtime-assets.js` 驗證入口、SW 與文件一致性。root bridge 不是日常功能修改目標。
-> **舊 generation 保留範圍(2026-10-16 Bar 核准)**:v111–v153 共 43 個舊世代資料夾已刪除;2026-11-09 Bar 再核准刪除 v154–v179 共 26 個,repo 只保留最近三代(目前 v186 起,至少 current 與前一代)。已安裝的 worker 對自己的 SHELL 一律 cache-first,只在自己 install 時才從網路抓 `shell/vNNN/`;Netlify 回滾用的是部署快照。刪掉的內容仍在 git 歷史與各 `production-vNNN` tag。詳見 ADR 0019 增補段。
+> App UI、DOM adapter 與多數流程維持在單一 current generation document `shell/v189/index.html`；獨立 runtime modules 由 `runtime-assets.json` 登錄並以 `tools/check-runtime-assets.js` 驗證入口、SW 與文件一致性。root bridge 不是日常功能修改目標。
+> **舊 generation 保留範圍(2026-10-16 Bar 核准)**:v111–v153 共 43 個舊世代資料夾已刪除;2026-11-09 Bar 再核准刪除 v154–v179 共 26 個,repo 只保留最近三代(目前 v187 起,至少 current 與前一代)。已安裝的 worker 對自己的 SHELL 一律 cache-first,只在自己 install 時才從網路抓 `shell/vNNN/`;Netlify 回滾用的是部署快照。刪掉的內容仍在 git 歷史與各 `production-vNNN` tag。詳見 ADR 0019 增補段。
 
-## Current App HTML `shell/v188/index.html` 內部分層(區塊順序,即邏輯模組)
+## Current App HTML `shell/v189/index.html` 內部分層(區塊順序,即邏輯模組)
 ```
 SCHEMA        來自 schema.js(pubBase + sheets.*.gid + 欄位/型別規格)
-BUILTIN       由 shell/v188/builtin-snapshot.js 載入的 8 表離線後備；current HTML 只留安全 guard
+BUILTIN       由 shell/v189/builtin-snapshot.js 載入的 8 表離線後備；current HTML 只留安全 guard
 UTILS         storage / toast / CSV parser / copyText / date
 VALIDATOR     來自 validator.js(表頭驗證 + 六類日誌 + session-only 診斷緩衝)
 PARSER        parseTable / parseKeyValue / parseExpensesFree(Schema 驅動)
@@ -65,28 +65,29 @@ BOOT          init → bootLocal → syncInBackground
 
 ## 文件庫(權威:GitHub 本 repo)
 > **2026-07-09 核定**:程式與文件的唯一權威為 GitHub 本 repo;Google Drive「BHAIProject/日本旅遊App-docs」降級為**備份**,不再作為更新目標(Drive 工具只能建立不能更新的限制因此不再影響日常流程)。
-> 內容資料來源例外:Drive 試算表「261018-261023岡山四國六天五夜」仍是 CMS 內容的唯一來源(發布 CSV,見 03/schema.js),與文件權威分屬兩層。
+> 內容資料來源例外:每趟旅程的 Drive 試算表(第一趟是「261018-261023岡山四國六天五夜」)是該趟 CMS 內容的唯一來源(發布 CSV,見 03/schema.js),與文件權威分屬兩層。
 
 ```
 (repo 根目錄)
 .ai-manifest.json          AI 導航檔(首讀)
-PROJECT_CONSTITUTION.md    專案憲章(最高規範)
-01-13_*.md                 願景/架構/CMS/UI/規範/路線圖/CHANGELOG/交接/Schema/結構/慣例/流程/狀態
+PROJECT_CONSTITUTION.md    專案憲章(依 ai-native-framework,只記差異)
+CONTEXT.md                 專案詞彙表
+01–12_*.md                 01 定位・里程碑・長期風險/02 架構/03 CMS/04 UI/07 CHANGELOG/08 交接/09 Schema/10 結構/11 編碼規範/12 流程(05、06、13 已於 2026-11-12 併入 11 與 01)
 14_FILE_TIERS_AND_GATE.md  檔案風險分級與 Gate 保護
 15_AI_EXECUTION_RULES.md   AI 決策權限/指令效力/不確定性協議/任務分級
 16_OPS_PLAYBOOK.md         回滾手冊 + DevOps 安全規範
-adr/                       架構決策紀錄(0001-0021 + README)
+adr/                       架構決策紀錄(0001-0022 + README)
 tasks/                     即時狀態唯一權威(current/backlog/done)
 tests/                     測試資產(交付必附)
 tools/                     檢查腳本(文件標題、runtime 版本、活文件 generation 與 runtime asset 一致性)
 .github/workflows/         Sanity CI(qa.yml,main／dev push 與 PR 都跑 sanity 與 browser-qa)
 .mcp.json                  chrome-devtools MCP server 宣告(本機除錯工具,不進 runtime)
-docs/                      現行契約與手冊(personal-state-compatibility、personal-ledger-export、new-trip-handbook)、device-acceptance-log、qa/ 效能證據
-docs/superpowers/          仍被活文件、程式或測試引用的設計規格與實作計畫(7 份;未被引用者 2026-10-16 刪除,可由 git 歷史取回)
-docs/archive/              封存:2026-10-15 以前的版本紀錄原文、只剩歷史文件引用的舊設計稿(design/,2026-11-09 搬入)
+docs/                      現行契約與手冊(personal-state-compatibility、personal-ledger-export、new-trip-handbook)、device-acceptance-log(只放待驗清單入口)、qa/ 效能證據
+docs/superpowers/          仍被活文件、程式或測試引用的設計規格(5 份;不再被引用的 2026-10-16 刪除或 2026-11 移到 docs/archive/design)
+docs/archive/              封存(原文搬移,不再更新):2026-10-31 以前的版本紀錄、tasks/current.md 舊快照、v73–v146 真機驗收清單、v108–v150 測試覆蓋說明、已完成的框架抽取計畫、只剩歷史文件引用的舊設計稿(design/)
 schema.js / validator.js   資料規格 SSoT / 防錯防線(Tier 1 原始碼)
 index.html / app-version.js v110 byte-locked bridge 正式入口
-shell/v188/                current App document／version／generated BUILTIN generation
+shell/v189/                current App document／version／generated BUILTIN generation
 shopping-photo-store.js    採買照片的裝置本機 IndexedDB 邊界
 ledger-receipts.js         分帳收據照片的純函式（照片在獨立的裝置本機 IndexedDB）
 trip-currency.js           旅程幣別的純函式（不限日本）

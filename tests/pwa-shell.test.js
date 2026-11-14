@@ -171,4 +171,26 @@ assert.notStrictEqual(
   'the legacy 512px PWA icon has been replaced',
 );
 
+/* v189(backlog #20 SW SHELL 快取清單盤點):離線要能開,current shell 用到的每個本機資源都必須在 SW SHELL 裡,
+   SHELL 列的每個檔也都必須真的存在。外部資源(Google 字型、Google 登入 SDK)刻意不快取:字型失敗退回系統字,
+   登入只在連網時使用。root v110 bridge 還在用 okayama-peach-badge.png,所以它留在 SHELL。 */
+(function(){
+  const shellIndex=fs.readFileSync(indexPath,'utf8');
+  const sw=fs.readFileSync(serviceWorkerPath,'utf8');
+  const shellList=(/var SHELL = \[([\s\S]*?)\];/.exec(sw)||[])[1]||'';
+  const shellEntries=Array.from(shellList.matchAll(/'\.\/([^']+)'/g),m=>m[1]);
+  assert(shellEntries.length>20,'SHELL list parsed');
+  shellEntries.forEach(entry=>assert(fs.existsSync(path.join(root,entry)),'SHELL entry exists on disk: '+entry));
+  const refs=new Set();
+  for(const m of shellIndex.matchAll(/<(?:script|link|img)\b[^>]*?(?:src|href)="([^"]+)"/g)){
+    const ref=m[1];
+    if(/^(?:https?:|data:|mailto:|#|\/\/)/.test(ref)||/[+'{]/.test(ref))continue;
+    refs.add(ref.replace(/^\.\//,'').split(/[?#]/)[0]);
+  }
+  assert(refs.size>=15,'local shell references parsed ('+refs.size+')');
+  refs.forEach(ref=>assert(shellEntries.includes(ref),'shell resource is cached for offline use: '+ref));
+  const external=Array.from(shellIndex.matchAll(/(?:src|href)="(https?:\/\/[^"]+)"/g),m=>new URL(m[1]).host);
+  external.forEach(host=>assert(['fonts.googleapis.com','fonts.gstatic.com','accounts.google.com','apis.google.com'].includes(host)||/google/.test(host),'only known optional external hosts: '+host));
+})();
+
 console.log('PWA shell tests passed');
