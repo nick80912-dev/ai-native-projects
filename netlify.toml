@@ -20,12 +20,12 @@
     Cache-Control = "no-cache, no-store, must-revalidate"
 
 [[headers]]
-  for = "/shell/v190/app-version.js"
+  for = "/shell/v191/app-version.js"
   [headers.values]
     Cache-Control = "no-cache, no-store, must-revalidate"
 
 [[headers]]
-  for = "/shell/v190/builtin-snapshot.js"
+  for = "/shell/v191/builtin-snapshot.js"
   [headers.values]
     Cache-Control = "no-cache, no-store, must-revalidate"
 
