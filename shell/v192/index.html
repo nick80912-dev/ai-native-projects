@@ -703,6 +703,9 @@ html.font-huninn .brand .t{letter-spacing:0}
 /* Bar 2026-11-15:往下捲看行程時,上方資訊卡凍結(sticky);繪本插圖由完整收成細長版 */
 .today-hero.today-hero-compact{position:sticky;top:var(--today-sticky-top,56px);z-index:20}
 .today-hero-art{display:none}
+/* 凍結時上方的 8px 空隙用頁面底色蓋住,捲過去的行程字不會從縫裡露出來 */
+.today-hero.today-hero-compact.is-stuck{box-shadow:0 -12px 0 0 var(--paper),var(--shadow-lg)}
+html[data-theme="ehon"] .today-hero.today-hero-compact.is-stuck{box-shadow:0 -12px 0 0 var(--paper)}
 html[data-theme="ehon"] .today-hero-compact .today-hero-art{display:block;position:relative;margin:-9px -14px 9px;padding-top:47.2%;overflow:hidden;border-bottom:3px solid var(--ehon-ink);transition:padding-top .25s ease}
 html[data-theme="ehon"] .today-hero-compact .today-hero-art .ehon-art{position:absolute;left:0;bottom:0;width:100%;height:auto;margin:0;border-bottom:0}
 html[data-theme="ehon"] .today-hero-compact.is-stuck .today-hero-art{padding-top:23.3%}
@@ -4722,7 +4725,8 @@ function updateTodayHeroStuck(){
   var hero=document.querySelector('#view-today .today-hero-compact');
   if(!hero||curView!=='today')return;
   var hdr=document.querySelector('.hdr');
-  document.documentElement.style.setProperty('--today-sticky-top',(hdr?Math.round(hdr.getBoundingClientRect().height):0)+'px');
+  /* Bar 2026-11-15:凍結時卡片和上排之間留 8px 空隙,不要貼緊 */
+  document.documentElement.style.setProperty('--today-sticky-top',((hdr?Math.round(hdr.getBoundingClientRect().height):0)+8)+'px');
   var y=window.pageYOffset||0,stuck=hero.classList.contains('is-stuck');
   if(!stuck&&y>60)hero.classList.add('is-stuck');
   else if(stuck&&y<8)hero.classList.remove('is-stuck');
