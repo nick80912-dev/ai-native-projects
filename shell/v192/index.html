@@ -700,7 +700,12 @@ html.font-huninn .brand .t{letter-spacing:0}
 .today-hero.today-hero-compact{padding:9px 14px 8px}
 .today-hero-compact .today-hero-compact-title{display:flex;align-items:baseline;gap:8px;min-width:0}
 .today-hero-compact .date{font-size:19px;margin:0}
-html[data-theme="ehon"] .today-hero-compact .ehon-art-slim{margin:-9px -14px 9px;width:calc(100% + 28px)}
+/* Bar 2026-11-15:往下捲看行程時,上方資訊卡凍結(sticky);繪本插圖由完整收成細長版 */
+.today-hero.today-hero-compact{position:sticky;top:var(--today-sticky-top,56px);z-index:20}
+.today-hero-art{display:none}
+html[data-theme="ehon"] .today-hero-compact .today-hero-art{display:block;position:relative;margin:-9px -14px 9px;padding-top:47.2%;overflow:hidden;border-bottom:3px solid var(--ehon-ink);transition:padding-top .25s ease}
+html[data-theme="ehon"] .today-hero-compact .today-hero-art .ehon-art{position:absolute;left:0;bottom:0;width:100%;height:auto;margin:0;border-bottom:0}
+html[data-theme="ehon"] .today-hero-compact.is-stuck .today-hero-art{padding-top:23.3%}
 .today-hero-compact .loc{font-weight:800;background:rgba(255,255,255,.16);border-radius:999px;padding:3px 10px}
 .today-hero-compact .today-hero-summary{margin-top:7px;padding-top:5px}
 .today-hero-compact .today-hero-summary-item{min-height:34px}
@@ -4689,8 +4694,8 @@ function renderTodayList(day,ti){
   var progressLabel='今日已完成 '+doneN+' 站，共 '+stops.length+' 站';
   /* Bar 2026-11-15「今天頁上方的資訊卡縮小一點」:清單模式用精簡版 —— 日期與完成數同一行,天氣／採買一行,繪本插圖不顯示 */
   var h='<div class="today-hero today-hero-trip today-hero-compact'+(weather&&weather.status==='fresh'?' weather-on':'')+'">'+
-    /* 繪本插圖改成細長版:只取下半段(山、海、船),高度約 70px */
-    renderEhonArt().replace('<svg class="ehon-art" viewBox="0 0 360 170"','<svg class="ehon-art ehon-art-slim" viewBox="0 84 360 84" preserveAspectRatio="xMidYMid slice"')+
+    /* 繪本插圖:在頂端時完整顯示;往下捲看行程時,資訊卡凍結在上方、插圖收成細長版(只露出下半段的橋、海、船) */
+    '<div class="today-hero-art">'+renderEhonArt()+'</div>'+
     '<div class="today-hero-top"><div class="today-hero-compact-title"><span class="lbl">DAY '+(ti+1)+'</span><span class="date">'+day.date+(day.dow?' ('+day.dow+')':'')+'</span></div>'+
     '<div class="loc" aria-label="'+escapeHtml(progressLabel)+'">完成 '+doneN+'/'+stops.length+'</div></div>'+
     renderTodayHeroSummary(weather,renderShoppingTodayEntry(day,next?next.id:''))+departureRefundReminderHtml(ti===DB.trip.days.length-1)+'</div>';
@@ -4712,6 +4717,18 @@ function renderTodayList(day,ti){
   h+='<button class="today-jump dark" onclick="gotoDay('+ti+')">看今日完整細節 →</button>';
   return h;
 }
+/* 往下捲超過 60px 才收成細長版、回到 8px 內才展開(兩個門檻避免在交界來回跳) */
+function updateTodayHeroStuck(){
+  var hero=document.querySelector('#view-today .today-hero-compact');
+  if(!hero||curView!=='today')return;
+  var hdr=document.querySelector('.hdr');
+  document.documentElement.style.setProperty('--today-sticky-top',(hdr?Math.round(hdr.getBoundingClientRect().height):0)+'px');
+  var y=window.pageYOffset||0,stuck=hero.classList.contains('is-stuck');
+  if(!stuck&&y>60)hero.classList.add('is-stuck');
+  else if(stuck&&y<8)hero.classList.remove('is-stuck');
+}
+window.addEventListener('scroll',updateTodayHeroStuck,{passive:true});
+window.addEventListener('resize',updateTodayHeroStuck);
 /* 拖拉:只有按住 ≡ 才會拖(touch-action:none),清單其他地方照常捲動;放開時依手指位置決定新順序 */
 var todayListDrag=null;
 function todayListRows(){var card=document.getElementById('todayListCard');return card?Array.prototype.slice.call(card.querySelectorAll('.today-list-row')):[];}
@@ -4809,6 +4826,9 @@ function renderToday(){
   var day=DB.trip.days[ti];
   if(todayListMode()){
     view.innerHTML=(tripProgressErrorMessage?'<div class="empty" id="tripProgressError" role="alert">'+escapeHtml(tripProgressErrorMessage)+'</div>':'')+renderTodayList(day,ti);
+    var hero=view.querySelector('.today-hero-compact');
+    if(hero&&(window.pageYOffset||0)>60)hero.classList.add('is-stuck');
+    updateTodayHeroStuck();
     return;
   }
   var items=homeNextStopItems(day.items);
