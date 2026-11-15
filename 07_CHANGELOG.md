@@ -1,5 +1,13 @@
 # 07 版本紀錄
 
+## 2026-11-15 — v190 已上線 main，tag `production-v190`
+
+- 本機完整 Chromium:462 passed、7 failed —— `personal-ledger-export`(已知只在本機失敗),以及 `trip-connect`「下載行程後…」與 5 個 `view-context` 捲動測試;後六個在未改動的 `origin/dev`(v189)本機也同樣失敗,屬本機環境,CI 全綠。
+- PR [#170](https://github.com/nick80912-dev/ai-native-projects/pull/170) 在 head `78d1cca` 的 sanity／browser-qa 全綠後合併進 `dev`(`4be9860`);PR [#171](https://github.com/nick80912-dev/ai-native-projects/pull/171) 七項檢查全綠後合併進 `main`(`76a80cd`)。
+- **線上核對**:正式站 `sw.js` 為 `SW_VERSION='v190'`;全新 Chromium `APP_VERSION` v190、只剩 `okayama-trip-v190` 快取、發布說明「繪本多一個顏色」、`--ehon-violet` 為 `#C9B8E3`、主題仍七組、無 pageerror;線上 `shell/v190/index.html` 與 `origin/main` 位元組相同;v188／v189 仍 200,v187 為 404。
+- **tag**:production-tags workflow 建立 `production-v190` → `76a80cd`。
+- 回滾:依 `16_OPS_PLAYBOOK.md` §A1 Publish `commit_ref` = `5cacb20`(`production-v189`)的部署,再往前 bump。
+
 ## 2026-11-15 — v190 繪本主題加第五色「藤紫」
 
 - **來源**:Bar 2026-11-15 問繪本配色是否還能加顏色;看過示意圖後回「同意繪本加第五色」,同一批提的第八個主題「夏海／青海波」**不做**。
