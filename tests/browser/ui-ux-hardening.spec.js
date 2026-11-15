@@ -104,9 +104,9 @@ test('settings and sync keep compact chrome inside 44px targets at phone widths'
   }
 });
 
-test('all six themes preserve sliders currentColor and compact header chrome',async({page})=>{
+test('all themes preserve sliders currentColor and compact header chrome',async({page})=>{
   const themes=await page.evaluate(()=>THEME_IDS.map(id=>{
-    document.documentElement.dataset.theme=id;
+    applyTheme(id,{persist:false});  /* v190:繪本系還要設 data-theme-style,一律走 applyTheme */
     const settings=document.querySelector('.settings-btn'),sync=document.getElementById('syncBtn'),icon=settings.querySelector('.settings-sliders');
     return {
       id,
@@ -132,9 +132,9 @@ test('all six themes preserve sliders currentColor and compact header chrome',as
   expect(themes.find(theme=>theme.id==='tea')).toMatchObject({paper:'#f7f0e7',accent:'#405c7a',secondary:'#9a4f30'});
 });
 
-test('presentation tokens preserve touched component geometry across all six themes',async({page})=>{
+test('presentation tokens preserve touched component geometry across all themes',async({page})=>{
   const themes=await page.evaluate(()=>THEME_IDS.map(id=>{
-    document.documentElement.dataset.theme=id;
+    applyTheme(id,{persist:false});  /* v190:繪本系還要設 data-theme-style,一律走 applyTheme */
     const fixture=document.createElement('div');
     fixture.innerHTML='<div class="navigation-target-status navigation-target-status-visible">找不到對應地點</div>'+
       '<div class="diag-log-entry diag-impact-degraded"><b>診斷</b><span>目前仍可使用</span></div>'+
@@ -162,8 +162,8 @@ test('presentation tokens preserve touched component geometry across all six the
   const expectedTokens=['11px','12px','14px','20px','24px','4px','8px','12px','16px','24px','6px','10px','14px','999px'];
   for(const theme of themes){
     expect(theme.tokens,theme.id+' token scale').toEqual(expectedTokens);
-    /* v187:所有主題卡片圓角 20、按鈕 14;繪本主題(ehon)自己是 24 與膠囊。 */
-    const ehon=theme.id==='ehon';
+    /* v187:所有主題卡片圓角 20、按鈕 14;繪本系(繪本 ehon、v190 夏海 umi)自己是 24 與膠囊。 */
+    const ehon=theme.id==='ehon'||theme.id==='umi';
     expect(theme.hero.radius,theme.id+' Today Hero radius').toBe(ehon?'24px':'20px');
     expect(theme.heroDate.fontSize,theme.id+' Today display size').toBe('24px');
     expect(theme.navigation.fontSize,theme.id+' navigation meta size').toBe('12px');
