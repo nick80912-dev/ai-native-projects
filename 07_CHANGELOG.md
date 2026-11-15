@@ -1,5 +1,13 @@
 # 07 版本紀錄
 
+## 2026-11-15 — v191 已上線 main，tag `production-v191`
+
+- 本機完整 Chromium:463 passed、7 failed(與 v190 相同的 7 項本機環境失敗;CI 全綠)。
+- PR [#173](https://github.com/nick80912-dev/ai-native-projects/pull/173) 在 head `e95f400` 的 sanity／browser-qa 全綠後合併進 `dev`(`4bbbeaf`);PR [#174](https://github.com/nick80912-dev/ai-native-projects/pull/174) 七項檢查全綠後合併進 `main`(`495cfcd`)。
+- **線上核對**:正式站 `sw.js` 為 `SW_VERSION='v191'`;全新 Chromium `APP_VERSION` v191、只剩 `okayama-trip-v191` 快取、發布說明「購物頁更有色彩」、無 pageerror;線上 `shell/v191/index.html` 與 `origin/main` 位元組相同(含 `sm-tone` 樣式);v189／v190 仍 200,v188 為 404。全新瀏覽器在本環境 10 秒內仍「同步中」、購物頁沒有資料,購物頁色彩以 CI 與本機截圖為準,待 Bar 手機確認。
+- **tag**:production-tags workflow 建立 `production-v191` → `495cfcd`。
+- 回滾:依 `16_OPS_PLAYBOOK.md` §A1 Publish `commit_ref` = `76a80cd`(`production-v190`)的部署,再往前 bump。
+
 ## 2026-11-15 — v191 購物頁更有色彩
 
 - **來源**:Bar 2026-11-15「購物分頁顏色有點蒼白」;看過示意圖選 1–3 都做、只改繪本(「海洋與其它主題不用改」),再加「展開樓層加底色,其它主題也是」,看過實際截圖回「Great」。
