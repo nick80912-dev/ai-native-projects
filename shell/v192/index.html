@@ -849,7 +849,22 @@ html[data-theme="ehon"] .today-list-reset{border:var(--ehon-line);color:var(--eh
 .ledger-delete-copy{font-size:14px;color:var(--ink);margin:8px 0 14px}.ledger-delete-label{display:block;font-size:13px;font-weight:800;color:var(--ink);margin-bottom:6px}.ledger-delete-reason{width:100%;min-height:48px;border:1px solid var(--line);border-radius:10px;padding:10px 12px;font:inherit;font-size:16px;background:#fff}.ledger-delete-error{min-height:18px;color:var(--coral);font-size:12px;font-weight:800;margin-top:6px}
 .settings-health-heading{display:flex;align-items:center;gap:10px}.settings-health-heading h3{flex:1;min-width:0;margin:0}.settings-health-summary-status{color:var(--ink-soft);font-size:11px;text-align:right;overflow-wrap:anywhere}.settings-data-health>.settings-health-list{padding-top:10px}
 .toggle-row{display:flex;align-items:center;justify-content:space-between;gap:12px}.toggle-row input{width:22px;height:22px}.settings-help{margin-top:6px}
-.trip-lifecycle-actions{display:grid;gap:9px;margin-top:12px}.trip-lifecycle-actions .btn{width:100%;min-height:48px}.trip-lifecycle-status{margin-top:10px;font-size:13px;line-height:1.5;color:var(--ink-soft);overflow-wrap:anywhere}.trip-lifecycle-status.error{color:var(--coral)}.trip-inactive .tabbar,.trip-inactive .trip-tabs,.trip-inactive .daybar,.trip-inactive #syncBtn{display:none}.trip-inactive .view:not(#view-today){display:none!important}.trip-inactive .view#view-today{display:block!important}.trip-inactive-card{margin:28px auto;max-width:520px;padding:24px;border:1px solid var(--line);border-radius:16px;background:var(--card);text-align:center}.trip-inactive-card h1{font-size:20px;margin-bottom:8px}.trip-inactive-card p{color:var(--ink-soft);font-size:13px;line-height:1.6}
+.trip-lifecycle-actions{display:grid;gap:9px;margin-top:12px}.trip-lifecycle-actions .btn{width:100%;min-height:48px}.trip-lifecycle-status{margin-top:10px;font-size:13px;line-height:1.5;color:var(--ink-soft);overflow-wrap:anywhere}.trip-lifecycle-status.error{color:var(--coral)}.trip-inactive .tabbar,.trip-inactive .trip-tabs,.trip-inactive .daybar,.trip-inactive #syncBtn{display:none}.trip-inactive .view:not(#view-today){display:none!important}.trip-inactive .view#view-today{display:block!important}.trip-inactive-card{margin:24px auto;max-width:520px;padding:26px 18px 18px;border:1px solid var(--line);border-radius:20px;background:var(--card);text-align:center;box-shadow:var(--shadow)}
+.trip-inactive-icon{width:56px;height:56px;margin:0 auto 12px;border-radius:18px;background:var(--mint);color:var(--sea-deep);display:flex;align-items:center;justify-content:center}
+.trip-inactive-icon .app-icon{width:28px;height:28px}
+.trip-inactive-actions{display:grid;gap:10px;margin-top:18px;text-align:left}
+.trip-inactive-action{display:flex;align-items:center;gap:10px;width:100%;text-align:left;min-height:64px;padding:12px 14px;border:1px solid var(--line);border-radius:16px;background:var(--card);color:var(--ink);font:inherit;cursor:pointer}
+.trip-inactive-action>span:first-child{flex:1;min-width:0}
+.trip-inactive-action b{display:block;font-size:16px;font-weight:900}
+.trip-inactive-action small{display:block;margin-top:3px;font-size:12px;color:var(--ink-soft);line-height:1.45}
+.trip-inactive-action.primary{background:var(--sea);border-color:var(--sea);color:#fff}
+.trip-inactive-action.primary small{color:rgba(255,255,255,.86)}
+.trip-inactive-chevron{font-size:24px;line-height:1;opacity:.7}
+html[data-theme="ehon"] .trip-inactive-card{border:3px solid var(--ehon-ink);border-radius:24px;box-shadow:none}
+html[data-theme="ehon"] .trip-inactive-icon{background:var(--ehon-yellow);border:2.5px solid var(--ehon-ink);color:var(--ehon-ink)}
+html[data-theme="ehon"] .trip-inactive-action{border:var(--ehon-line);border-radius:18px;box-shadow:var(--ehon-drop);color:var(--ehon-ink)}
+html[data-theme="ehon"] .trip-inactive-action.primary{background:var(--ehon-coral);color:var(--ehon-ink)}
+html[data-theme="ehon"] .trip-inactive-action.primary small{color:var(--ehon-ink)}.trip-inactive-card h1{font-size:20px;margin-bottom:8px}.trip-inactive-card p{color:var(--ink-soft);font-size:13px;line-height:1.6}
 .past-trip-raw{max-width:100%;white-space:pre-wrap;overflow-wrap:anywhere;font-size:11px;line-height:1.5;padding:10px;background:var(--paper);border-radius:8px}.settings-section details{padding:9px 0;border-top:1px solid var(--line-soft)}.settings-section details summary{cursor:pointer;font-weight:800}.past-trip-notes p{white-space:pre-wrap;overflow-wrap:anywhere}
 .past-trip-record{padding:12px 0;border-bottom:1px solid var(--line-soft);font-size:13px;line-height:1.6;overflow-wrap:anywhere}.past-trip-record p{white-space:pre-wrap;margin-top:4px}.past-trip-record dl{margin:0}.past-trip-record dl>div{display:grid;grid-template-columns:90px minmax(0,1fr);gap:8px;margin:3px 0}.past-trip-record dt{color:var(--ink-soft)}.past-trip-record dd{margin:0;white-space:pre-wrap;overflow-wrap:anywhere}.past-trip-readable h4{margin-top:14px}
 .ledger-record.pending{background:#fffaf0}.ledger-tag{display:inline-flex;border-radius:999px;background:var(--line-soft);color:var(--ink-faint);padding:2px 6px;font-size:10px;font-weight:800;margin-left:5px}.ledger-summary{display:grid;gap:7px}
@@ -11010,7 +11025,8 @@ function settingsNavRow(page,iconKey,title,summary){
 /* 設定根頁 = 三個常駐群組(個人／記帳／資料)。子頁內容與資料語意完全不變,只重排根頁。 */
 function renderSettingsRoot(ledgerSettings){
   var lifecycleMode=TripLifecycle.readState(localStorage).mode;
-  if(lifecycleMode!=='active')return renderSettingsHeader('設定',true)+settingsGroup('資料',
+  /* v192:旅程清除後也能換主題 */
+  if(lifecycleMode!=='active')return renderSettingsHeader('設定',true)+settingsGroup('個人',settingsNavRow('theme','theme','主題',(THEME_REGISTRY[currentThemeId()]||THEME_REGISTRY.ocean).name))+settingsGroup('資料',
     (lifecycleMode==='cleanup-pending'?'':settingsNavRow('connect','data','連接新旅程','貼上新旅程試算表的發布連結'))+
     settingsNavRow('past','history','過往旅程','查看已封存的旅程')+
     settingsNavRow('diagnostics','diagnostics','診斷面板','版本、旅程狀態與紀錄'));
@@ -14746,10 +14762,20 @@ function renderInactiveHome(message){
   var lifecycleMode=TripLifecycle.readState(localStorage).mode,pending=lifecycleMode==='cleanup-pending',unconnected=lifecycleMode==='unconnected';
   /* v150：「已清除」與「尚未連接」都可以連接新旅程；清理未完成時先完成清理。 */
   var heading=unconnected?'尚未連接旅程':'目前沒有進行中的旅程';
-  var defaultMessage=unconnected?'請向旅程負責人索取新旅程試算表的「發布到網路」連結，貼上後就能開始使用。':'這部手機的舊旅程已清除。可以連接下一趟旅程；若先前封存，可到過往旅程查看。';
-  if(today)today.innerHTML='<div class="trip-inactive-card"><h1>'+heading+'</h1><p>'+escapeHtml(message||defaultMessage)+'</p>'+
-    (pending?'<button type="button" class="btn" onclick="retryTripCleanup()">重試本機清理</button>':'<div class="trip-lifecycle-actions"><button type="button" class="btn" onclick="openConnectTrip()">連接新旅程</button></div>')+
-    '<button type="button" class="btn ghost" onclick="openPastTrips()">過往旅程</button></div>';
+  /* v192(Bar 2026-11-15 封存後畫面優化):說清楚上一趟有沒有封存、在哪裡看;兩個選項做成一樣大、各附一句說明 */
+  var archived=!!TripLifecycle.readState(localStorage).archiveId;
+  var defaultMessage=unconnected?'請向旅程負責人索取新旅程試算表的「發布到網路」連結，貼上後就能開始使用。'
+    :archived?'上一趟旅程已封存到你的 Google 雲端硬碟，手機上的資料已清除。':'這部手機的舊旅程已清除（沒有封存）。';
+  var icon='<svg class="app-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M21 3 3 9.6l7.2 4.2L14.4 21z"></path><path d="M21 3 10.2 13.8"></path></svg>';
+  var action=function(onclick,title,detail,primary){
+    return '<button type="button" class="trip-inactive-action'+(primary?' primary':'')+'" onclick="'+onclick+'"><span><b>'+title+'</b><small>'+detail+'</small></span><span class="trip-inactive-chevron" aria-hidden="true">›</span></button>';
+  };
+  if(today)today.innerHTML='<div class="trip-inactive-card"><div class="trip-inactive-icon">'+icon+'</div><h1>'+heading+'</h1><p>'+escapeHtml(message||defaultMessage)+'</p>'+
+    (pending?'<button type="button" class="btn" onclick="retryTripCleanup()">重試本機清理</button>':'')+
+    '<div class="trip-inactive-actions">'+
+      (pending?'':action('openConnectTrip()','連接新旅程','貼上新旅程試算表的「發布到網路」連結',true))+
+      action('openPastTrips()','過往旅程','查看封存在 Google 雲端硬碟的旅程，需要登入 Google',false)+
+    '</div></div>';
   var tabs=document.getElementById('tripTabs');if(tabs)tabs.innerHTML='';
   var daybar=document.getElementById('daybar');if(daybar)daybar.innerHTML='';
   if(typeof ledgerFastPullController!=='undefined')ledgerFastPullController.stop();
@@ -14826,7 +14852,7 @@ function init(){
   if(sourceBoot.error){renderTripSourceProblem(sourceBoot.error);return;}
   var lifecycleState=TripLifecycle.readState(localStorage);
   if(lifecycleState.mode!=='active'){
-    renderInactiveHome(lifecycleState.mode==='cleanup-pending'?'本機清理尚未完成，請稍候；若失敗可重試。':lifecycleState.mode==='unconnected'?'':'這部手機的舊旅程已清除。');
+    renderInactiveHome(lifecycleState.mode==='cleanup-pending'?'本機清理尚未完成，請稍候；若失敗可重試。':lifecycleState.mode==='unconnected'?'':'');
     if(lifecycleState.mode==='cleanup-pending')tripFlow().resumeCleanup().then(function(){renderInactiveHome();},function(error){
       renderInactiveHome('本機清理未完成：'+String(error&&error.message||error));
     });
@@ -14885,7 +14911,9 @@ function guardTripLifecycleInteraction(event){
     try{var lock=JSON.parse(localStorage.getItem('trip_lifecycle_lock')||'null');locked=!!(lock&&lock.expiresAt>Date.now());}catch(error){}
     if(!locked)return;
     if(event.target&&event.target.closest&&event.target.closest('[onclick="closeSettings()"]'))return;
-  }else if(event.target&&event.target.closest&&event.target.closest('.trip-inactive-card,#settingsOverlay,#diagnosticOverlay'))return;
+  /* v192(Bar 2026-11-15「設定頁面無法點選」):旅程清除後,右上角設定鈕也被這道防護擋掉,只剩卡片上的兩顆按鈕能用。
+     設定鈕要放行(設定根頁在這個狀態本來就只有連接新旅程、過往旅程、診斷面板)。 */
+  }else if(event.target&&event.target.closest&&event.target.closest('.trip-inactive-card,.settings-btn,#settingsOverlay,#diagnosticOverlay'))return;
   event.preventDefault();event.stopImmediatePropagation();
 }
 ['click','input','change','submit'].forEach(function(type){document.addEventListener(type,guardTripLifecycleInteraction,true);});
