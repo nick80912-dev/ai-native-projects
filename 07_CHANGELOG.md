@@ -1,5 +1,21 @@
 # 07 版本紀錄
 
+## 2026-11-15 — v191 購物頁更有色彩
+
+- **來源**:Bar 2026-11-15「購物分頁顏色有點蒼白」;看過示意圖選 1–3 都做、只改繪本(「海洋與其它主題不用改」),再加「展開樓層加底色,其它主題也是」,看過實際截圖回「Great」。
+- **繪本**:商場名稱整條上色,依商場順序五色輪流(`sm-tone-0..4`:珊瑚、水色、若竹、藤紫、山吹;同一間商場在搜尋與想逛畫面同色);樓層編號放進山吹黃膠囊;「想逛店家:0 家」改奶油底實線框。
+- **所有主題**:樓層展開時,標題下緣變直角、與店家清單接成一塊有框的面板(一般主題用頁面底色 `--paper`、框線 `--sea`;繪本用奶油底、墨灰粗框)。
+- **測試**:新增 `tests/browser/shop-colour-v191.spec.js`(繪本五色、膠囊、奶油底;七個主題的展開面板;其他主題的商場名稱與樓層編號不變)。
+- **整理**:刪除 `shell/v188`,留 v189–v191;發布說明保留 v187–v191;`16_OPS_PLAYBOOK.md` 的錨點補為 `production-v190`。
+
+## 2026-11-15 — v190 已上線 main，tag `production-v190`
+
+- 本機完整 Chromium:462 passed、7 failed —— `personal-ledger-export`(已知只在本機失敗),以及 `trip-connect`「下載行程後…」與 5 個 `view-context` 捲動測試;後六個在未改動的 `origin/dev`(v189)本機也同樣失敗,屬本機環境,CI 全綠。
+- PR [#170](https://github.com/nick80912-dev/ai-native-projects/pull/170) 在 head `78d1cca` 的 sanity／browser-qa 全綠後合併進 `dev`(`4be9860`);PR [#171](https://github.com/nick80912-dev/ai-native-projects/pull/171) 七項檢查全綠後合併進 `main`(`76a80cd`)。
+- **線上核對**:正式站 `sw.js` 為 `SW_VERSION='v190'`;全新 Chromium `APP_VERSION` v190、只剩 `okayama-trip-v190` 快取、發布說明「繪本多一個顏色」、`--ehon-violet` 為 `#C9B8E3`、主題仍七組、無 pageerror;線上 `shell/v190/index.html` 與 `origin/main` 位元組相同;v188／v189 仍 200,v187 為 404。
+- **tag**:production-tags workflow 建立 `production-v190` → `76a80cd`。
+- 回滾:依 `16_OPS_PLAYBOOK.md` §A1 Publish `commit_ref` = `5cacb20`(`production-v189`)的部署,再往前 bump。
+
 ## 2026-11-15 — v190 繪本主題加第五色「藤紫」
 
 - **來源**:Bar 2026-11-15 問繪本配色是否還能加顏色;看過示意圖後回「同意繪本加第五色」,同一批提的第八個主題「夏海／青海波」**不做**。
