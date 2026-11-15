@@ -1,5 +1,26 @@
 # 07 版本紀錄
 
+## 2026-11-15 — v190 繪本主題加第五色「藤紫」
+
+- **來源**:Bar 2026-11-15 問繪本配色是否還能加顏色;看過示意圖後回「同意繪本加第五色」,同一批提的第八個主題「夏海／青海波」**不做**。
+- **藤紫 `#C9B8E3`**:航班卡底色由水色改藤紫(原本和今天卡同為水色,出發前疊在一起分不開);住宿標籤由寫死的 `#d9cceb` 改用同一個藤紫。
+- **整理**:繪本外觀層、主題預覽與首頁插圖的色碼全部改走 `--ehon-*` 變數(墨灰、珊瑚、山吹、水色、若竹、藤紫、海、奶油、今天),定義在 `[data-theme="ehon"]` 區塊;畫面除上述兩處外不變。
+- **測試**:新增 `tests/browser/ehon-violet-v190.spec.js`(繪本的航班卡與住宿標籤是藤紫、今天卡仍是水色;海洋主題不受影響)。
+- **整理**:刪除 `shell/v187`,留 v188–v190;發布說明保留 v186–v190。
+
+## 2026-11-14 — Bar 手機審查 v178–v189 通過
+
+- Bar 回報「手機審查通過」,涵蓋 v178–v189(退稅追蹤、匯率寫法、天氣地區、離線狀態、旅程結束回顧、行前清單與行李、紙飛機圖示、代購小勾選、疑難排解、線條圖示、繪本主題、大圓角、航班卡、資料健康模式)。`tasks/current.md` 的審查項目移除。
+
+## 2026-11-13 — v189 已上線 main，tag `production-v189`（待 Bar 手機審查）
+
+- Bar 回「好」後因工作階段中斷暫停,再回「繼續發版」。
+- 本機完整 Chromium:467 passed、1 failed(已知只在本機失敗的 `personal-ledger-export`)。
+- PR [#166](https://github.com/nick80912-dev/ai-native-projects/pull/166) 在 head `82e7c67` 的 sanity／browser-qa 全綠後合併進 `dev`(`6d1765e`);PR [#167](https://github.com/nick80912-dev/ai-native-projects/pull/167) 合併 `dev` → `main`,merge commit **`5cacb20`**;七項檢查全綠。
+- **線上核對**:正式站 `sw.js` 為 `SW_VERSION='v189'`;全新 Chromium `APP_VERSION` v189、只剩 `okayama-trip-v189` 快取、發布說明「資料健康更清楚」、無 pageerror;`ledgerBacklogForMode`／`currentLedgerBacklog` 在線上;`shell/v189/index.html` 與 `main` 逐位元組相同;`shell/v188/`、`shell/v187/` 回 200,已刪的 `shell/v186/` 回 404。
+- **tag**:production-tags workflow 建立 `production-v189` → `5cacb20`,`git ls-remote` 核對相符。
+- 回滾:依 `16_OPS_PLAYBOOK.md` §A1 Publish `commit_ref` = `00b7305`(`production-v188`)的部署,再往前 bump。
+
 ## 2026-11-13 — v189 技術小項一次清(backlog #20、#50、#52、#53)
 
 - **來源**:Bar 2026-11-13 選「技術小項一次清」;#50 回「改(根治)」,#52 選「只算目前模式」。
