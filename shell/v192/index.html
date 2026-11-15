@@ -722,7 +722,7 @@ html[data-theme="ehon"] .today-hero-compact .loc{background:#fff;border:2px soli
 .today-list-card{background:var(--card);border:1px solid var(--line);border-radius:20px;box-shadow:var(--shadow);overflow:hidden}
 .today-list-row{position:relative;display:flex;align-items:center;gap:6px;padding:8px 8px 8px 2px;border-top:1px solid var(--line-soft);background:var(--card);color:var(--ink);transition:opacity .2s}
 .today-list-row:first-child{border-top:0}
-.today-list-handle{flex:none;width:36px;align-self:stretch;min-height:44px;margin:-8px 0;display:flex;align-items:center;justify-content:center;color:var(--ink-faint);font-size:20px;line-height:1;touch-action:none;cursor:grab;user-select:none;-webkit-user-select:none}
+.today-list-handle{flex:none;width:36px;align-self:stretch;min-height:44px;margin:-8px 0;display:flex;align-items:center;justify-content:center;color:var(--ink-faint);font-size:20px;line-height:1;touch-action:none;cursor:grab;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
 .today-list-time{flex:none;width:44px;font-weight:800;color:var(--sea);font-size:13px}
 .today-list-main{flex:1;min-width:0;border:0;background:transparent;text-align:left;padding:4px 0;font:inherit;color:inherit;cursor:pointer}
 .today-list-main b{display:block;font-size:15px;font-weight:800;line-height:1.3;overflow-wrap:anywhere}
@@ -4727,6 +4727,7 @@ function updateTodayHeroStuck(){
   var hdr=document.querySelector('.hdr');
   /* Bar 2026-11-15:凍結時卡片和上排之間留 8px 空隙,不要貼緊 */
   document.documentElement.style.setProperty('--today-sticky-top',((hdr?Math.round(hdr.getBoundingClientRect().height):0)+8)+'px');
+  if(todayListDrag)return;   // 拖拉中不切換插圖大小,否則清單位置會跳,手指下的列對不上
   var y=window.pageYOffset||0,stuck=hero.classList.contains('is-stuck');
   if(!stuck&&y>60)hero.classList.add('is-stuck');
   else if(stuck&&y<8)hero.classList.remove('is-stuck');
@@ -4736,46 +4737,74 @@ window.addEventListener('resize',updateTodayHeroStuck);
 /* 拖拉:只有按住 ≡ 才會拖(touch-action:none),清單其他地方照常捲動;放開時依手指位置決定新順序 */
 var todayListDrag=null;
 function todayListRows(){var card=document.getElementById('todayListCard');return card?Array.prototype.slice.call(card.querySelectorAll('.today-list-row')):[];}
+/* 自動捲動的範圍:上緣是凍結小卡的下緣(不是螢幕頂端,否則手指移到小卡下方時清單不會往上捲),下緣是分頁列的上緣 */
+function todayListScrollZone(){
+  var hero=document.querySelector('#view-today .today-hero-compact'),tabbar=document.querySelector('.tabbar');
+  var top=(hero?Math.max(0,hero.getBoundingClientRect().bottom):0)+44;
+  var bottom=(tabbar?tabbar.getBoundingClientRect().top:window.innerHeight)-44;
+  return {top:top,bottom:Math.max(top+40,bottom)};
+}
 function todayListDragStart(event,dayIndex){
   var handle=event.currentTarget,row=handle&&handle.parentNode;
   if(!row||todayListDrag)return;
   event.preventDefault();
   var rows=todayListRows();
-  todayListDrag={dayIndex:dayIndex,row:row,handle:handle,pointerId:event.pointerId,startY:event.clientY,startScroll:window.pageYOffset,from:rows.indexOf(row),to:rows.indexOf(row)};
+  todayListDrag={dayIndex:dayIndex,row:row,handle:handle,pointerId:event.pointerId,startY:event.clientY,lastY:event.clientY,
+    startScroll:window.pageYOffset,from:rows.indexOf(row),to:rows.indexOf(row),raf:0};
   try{handle.setPointerCapture(event.pointerId);}catch(error){}
   row.classList.add('dragging');
   handle.addEventListener('pointermove',todayListDragMove);
   handle.addEventListener('pointerup',todayListDragEnd);
   handle.addEventListener('pointercancel',todayListDragCancel);
+  todayListDrag.raf=requestAnimationFrame(todayListAutoScrollTick);
 }
-function todayListDragMove(event){
-  var drag=todayListDrag;if(!drag||event.pointerId!==drag.pointerId)return;
-  event.preventDefault();
-  if(event.clientY<90)window.scrollBy(0,-10);
-  else if(event.clientY>window.innerHeight-110)window.scrollBy(0,10);
-  var dy=event.clientY-drag.startY+(window.pageYOffset-drag.startScroll);
+function todayListDragUpdate(clientY){
+  var drag=todayListDrag;if(!drag)return;
+  var dy=clientY-drag.startY+(window.pageYOffset-drag.startScroll);
   drag.row.style.transform='translateY('+dy+'px)';
-  var rows=todayListRows(),to=drag.from;
+  var rows=todayListRows(),to=drag.from,zone=todayListScrollZone();
+  /* 被凍結小卡蓋住的列不算目標,手指要等它捲出來才放得進去 */
+  var y=Math.max(clientY,zone.top-44);
   rows.forEach(function(r){r.classList.remove('drop-before','drop-after');});
   for(var i=0;i<rows.length;i++){
     if(rows[i]===drag.row)continue;
     var rect=rows[i].getBoundingClientRect(),mid=rect.top+rect.height/2;
-    if(i<drag.from&&event.clientY<mid){to=i;break;}
-    if(i>drag.from&&event.clientY>mid)to=i;
+    if(i<drag.from&&y<mid){to=i;break;}
+    if(i>drag.from&&y>mid)to=i;
   }
   drag.to=to;
   if(to!==drag.from&&rows[to])rows[to].classList.add(to<drag.from?'drop-before':'drop-after');
 }
+function todayListDragMove(event){
+  var drag=todayListDrag;if(!drag||event.pointerId!==drag.pointerId)return;
+  event.preventDefault();
+  drag.lastY=event.clientY;
+  todayListDragUpdate(event.clientY);
+}
+/* 手指停在上下緣時持續捲動(不必一直動手指);越靠近邊緣捲得越快 */
+function todayListAutoScrollTick(){
+  var drag=todayListDrag;if(!drag)return;
+  var zone=todayListScrollZone(),speed=0;
+  if(drag.lastY<zone.top)speed=-Math.min(22,4+Math.ceil((zone.top-drag.lastY)/3));
+  else if(drag.lastY>zone.bottom)speed=Math.min(22,4+Math.ceil((drag.lastY-zone.bottom)/3));
+  if(speed){
+    /* 頁面設了平滑捲動,這裡要立即捲動,否則位置還沒變就算下一格 */
+    try{window.scrollBy({top:speed,left:0,behavior:'instant'});}catch(error){window.scrollBy(0,speed);}
+  }
+  todayListDragUpdate(drag.lastY);
+  drag.raf=requestAnimationFrame(todayListAutoScrollTick);
+}
 function todayListDragFinish(commit){
   var drag=todayListDrag;if(!drag)return;
   todayListDrag=null;
+  if(drag.raf)cancelAnimationFrame(drag.raf);
   drag.handle.removeEventListener('pointermove',todayListDragMove);
   drag.handle.removeEventListener('pointerup',todayListDragEnd);
   drag.handle.removeEventListener('pointercancel',todayListDragCancel);
   var rows=todayListRows();
   rows.forEach(function(r){r.classList.remove('drop-before','drop-after');});
   drag.row.classList.remove('dragging');drag.row.style.transform='';
-  if(!commit||drag.to===drag.from){if(drag.redraw)renderToday();return;}
+  if(!commit||drag.to===drag.from){if(drag.redraw)renderToday();updateTodayHeroStuck();return;}
   var ids=rows.map(function(r){return r.getAttribute('data-stop-id');});
   var moved=ids.splice(drag.from,1)[0];ids.splice(drag.to,0,moved);
   moveTodayStop(drag.dayIndex,ids);
