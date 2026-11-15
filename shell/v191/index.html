@@ -189,6 +189,7 @@ html[data-theme="ehon"] .shop-mall.sm-tone-3 .sm-name{background:var(--ehon-viol
 html[data-theme="ehon"] .shop-mall.sm-tone-4 .sm-name{background:var(--ehon-yellow)}
 html[data-theme="ehon"] .floor-head .fl-f{display:inline-block;min-width:34px;text-align:center;padding:1px 8px;border-radius:999px;background:var(--ehon-yellow);color:var(--ehon-ink);border:2px solid var(--ehon-ink)}
 html[data-theme="ehon"] .want-box-empty{background:var(--ehon-cream);border-style:solid}
+html[data-theme="ehon"] .floor-body.open{background:var(--ehon-cream);border:2px solid var(--ehon-ink);border-top:0}
 .settings-theme-preview[data-theme="ehon"]{border:2px solid var(--ehon-ink)}
 .settings-theme-preview[data-theme="ehon"] .settings-theme-preview-head{background:var(--ehon-water);border-bottom:2px solid var(--ehon-ink)}
 .settings-theme-preview[data-theme="ehon"] .settings-theme-preview-line{background:var(--ehon-yellow);outline:2px solid var(--ehon-ink)}
@@ -694,6 +695,9 @@ html.font-huninn .brand .t{letter-spacing:0}
 .floor-head.on .fl-arw{transform:rotate(180deg)}
 .floor-body{display:none;padding:6px 4px}
 .floor-body.open{display:block;animation:fade .25s ease}
+/* v191(Bar 2026-11-15,所有主題):樓層展開時標題與店家清單接成一塊有底色的面板,看得出「打開了」 */
+.floor-head.on{border-radius:14px 14px 0 0}
+.floor-body.open{background:var(--paper);border:1px solid var(--sea);border-top:0;border-radius:0 0 14px 14px;padding:6px 6px 8px}
 .store-row{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:9px;cursor:pointer}
 .store-row:focus-visible{outline:2px solid var(--sea);outline-offset:-2px}
 .store-row:active{background:var(--line-soft)}
@@ -10965,9 +10969,10 @@ function renderSettingsHealthPage(){
   return header+renderSettingsDataHealth();
 }
 var APP_RELEASE_NOTES=[
-  {version:'v191',date:'2026-11-15',title:'繪本的購物頁更有色彩',items:[
+  {version:'v191',date:'2026-11-15',title:'購物頁更有色彩',items:[
     '繪本主題的購物頁：每間商場的名稱整條上色，五色輪流。',
-    '樓層編號放進黃色小膠囊；還沒加想逛店家時改成淡奶油底。'
+    '樓層編號放進黃色小膠囊；還沒加想逛店家時改成淡奶油底。',
+    '所有主題：展開樓層時，店家清單有底色，和樓層標題接成一塊。'
   ]},
   {version:'v190',date:'2026-11-15',title:'繪本多一個顏色',items:[
     '繪本主題多一個藤紫色：住宿標籤和航班卡改用藤紫，和今天卡的水藍分得開。'
