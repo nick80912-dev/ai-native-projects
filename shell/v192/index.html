@@ -14767,8 +14767,11 @@ function renderInactiveHome(message){
   var defaultMessage=unconnected?'請向旅程負責人索取新旅程試算表的「發布到網路」連結，貼上後就能開始使用。'
     :archived?'上一趟旅程已封存到你的 Google 雲端硬碟，手機上的資料已清除。':'這部手機的舊旅程已清除（沒有封存）。';
   var icon='<svg class="app-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M21 3 3 9.6l7.2 4.2L14.4 21z"></path><path d="M21 3 10.2 13.8"></path></svg>';
+  var actionSeq=0;
   var action=function(onclick,title,detail,primary){
-    return '<button type="button" class="trip-inactive-action'+(primary?' primary':'')+'" onclick="'+onclick+'"><span><b>'+title+'</b><small>'+detail+'</small></span><span class="trip-inactive-chevron" aria-hidden="true">›</span></button>';
+    /* 可存取名稱只有標題(與原本的按鈕一致),說明文字用 aria-describedby 補充 */
+    var id='tripInactiveDetail'+(++actionSeq);
+    return '<button type="button" class="trip-inactive-action'+(primary?' primary':'')+'" onclick="'+onclick+'" aria-label="'+title+'" aria-describedby="'+id+'"><span><b>'+title+'</b><small id="'+id+'">'+detail+'</small></span><span class="trip-inactive-chevron" aria-hidden="true">›</span></button>';
   };
   if(today)today.innerHTML='<div class="trip-inactive-card"><div class="trip-inactive-icon">'+icon+'</div><h1>'+heading+'</h1><p>'+escapeHtml(message||defaultMessage)+'</p>'+
     (pending?'<button type="button" class="btn" onclick="retryTripCleanup()">重試本機清理</button>':'')+
