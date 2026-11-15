@@ -19,13 +19,12 @@
 
 ## ⏳ 還掛著的事（只有 Bar 能做）
 
-1. **下一趟旅程的試算表副本**「TripPilot 下一趟（從岡山複製，待填）」：TripConfig 填旅程名稱／日期／Trip ID；換行程內容；「航班」分頁填航班（表頭與 `Flights GID` 已設好）；Apps Script 指令碼屬性加 `GEMINI_API_KEY`；部署 Apps Script 並把網址填進 Ledger Endpoint；發布到網路。
-2. **#58 Logo**：三種稿（A 太陽富士山、B 紙飛機航線、C 圖釘紙飛機）已給，等 Bar 選。
+目前沒有。Bar 2026-11-15:下一趟旅程**尚未規劃**(試算表副本「TripPilot 下一趟(從岡山複製,待填)」保留,要用時依 `docs/new-trip-handbook.md` 填);#58 Logo **暫時不做**(沒有特別想法,三種稿保留在 backlog 說明)。
 
-> ✅ **手機審查 v178–v189 已通過**（Bar 2026-11-14 回報）。
+> ✅ **手機審查 v178–v189 已通過**（Bar 2026-11-14 回報）；v190 藤紫與 v191 購物頁顏色 Bar 2026-11-15 手機確認 OK。
 
 ## 🔜 接下來
 
-1. 依 `tasks/backlog.md`：只剩 #3 驗收後微調（目前無回報問題）與 #58 Logo（等 Bar 選稿）。#20／#50／#52／#53 已於 v189 結案；#25 框架抽取已完成；#38 保留固定色；#55、#28／#29／#41、#63 已由 Bar 關閉。
+1. 依 `tasks/backlog.md`：只剩 #3 驗收後微調（目前無回報問題）；#58 Logo 暫緩（Bar 2026-11-15）。#20／#50／#52／#53 已於 v189 結案；#25 框架抽取已完成；#38 保留固定色；#55、#28／#29／#41、#63 已由 Bar 關閉。
 
 > 正式發布仍遵守 §E：PR 與 Actions 通過後才 merge；Netlify 線上驗證通過後才建立 production tag。tag 用 GitHub Actions 的 **production-tags**（`16_OPS_PLAYBOOK.md` §A5）。
