@@ -72,6 +72,8 @@ async function prepareLauncher(page, type) {
       curDay = 0;
       switchView('trip');
     });
+    /* v194:行程頁是時間軸,站卡平常收起;先展開有「樓層」鈕的那一站 */
+    await page.locator('#view-trip .item').filter({ has: page.locator('.qa-btn.sp') }).first().locator('.tl-toggle').click();
     const launcher = page.locator('#view-trip .qa-btn.sp').first();
     await expect(launcher).toBeVisible();
     return {
