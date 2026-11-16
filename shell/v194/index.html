@@ -743,8 +743,8 @@ html[data-theme="ehon"] .past-trip-card{border:var(--ehon-line);border-radius:18
 html[data-theme="ehon"] .past-trip-card b{color:var(--ehon-ink)}
 /* v194 行程頁時間軸 */
 #view-trip .tl{margin:8px 0 24px}
-#view-trip .item.tl-item{display:grid;grid-template-columns:58px 18px minmax(0,1fr);column-gap:6px;background:transparent;border:0;box-shadow:none;border-radius:0;margin:0;overflow:visible;animation:none}
-.tl-link{display:grid;grid-template-columns:58px 18px minmax(0,1fr);column-gap:6px;min-height:14px}
+#view-trip .item.tl-item{display:grid;grid-template-columns:46px 20px minmax(0,1fr);column-gap:6px;background:transparent;border:0;box-shadow:none;border-radius:0;margin:0;overflow:visible;animation:none}
+.tl-link{display:grid;grid-template-columns:46px 20px minmax(0,1fr);column-gap:6px;min-height:14px}
 .tl-time{font-size:13px;font-weight:900;color:var(--sea-deep);text-align:right;padding-top:15px;font-variant-numeric:tabular-nums;line-height:1.2;overflow-wrap:anywhere}
 .tl-time small{display:block;font-size:11px;font-weight:700;color:var(--ink-faint);margin-top:3px}
 .tl-rail{position:relative;display:flex;justify-content:center}
@@ -786,14 +786,6 @@ html[data-theme="ehon"] .tl-item.cat-play .tl-card{border-left-color:var(--ehon-
 html[data-theme="ehon"] .tl-item.cat-stay .tl-card{border-left-color:var(--ehon-violet)}
 html[data-theme="ehon"] .tl-item.cat-shop .tl-card{border-left-color:var(--ehon-water)}
 html[data-theme="ehon"] .tl-item.cat-move .tl-card{border-left-color:var(--ehon-green)}
-.tl-leave{color:var(--sea)!important;font-weight:800!important;white-space:nowrap;font-size:10.5px!important;letter-spacing:-.02em}
-.tl-leave.late{color:#8c1d2c!important}
-.tl-stay{display:inline-block;margin-top:5px;font-size:12px;font-weight:800;color:var(--ink-soft)}
-.tl-stay.tight{color:#8b531a;background:#fff3cf;border-radius:8px;padding:2px 8px}
-.tl-stay.late{color:#8c1d2c;background:#fbe4e4;border-radius:8px;padding:3px 8px;line-height:1.5}
-.tl-move-text{display:flex;flex-direction:column;min-width:0;line-height:1.4}
-.tl-move-when{font-weight:800;color:var(--sea-deep)}
-html[data-theme="ehon"] .tl-move-when{color:var(--ehon-ink)}
 .today-list{margin:14px 12px 0}
 .today-list-bar{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:2px 4px 8px;font-size:12px;color:var(--ink-soft);font-weight:700}
 .today-list-bar b{font-size:15px;color:var(--ink);font-weight:900}
@@ -3420,55 +3412,17 @@ function tripStopDrive(it){
   var res=resolveRef(it),p=res&&res.kind==='place'?res.p:null;
   return extractDrive(it.move)||(p&&p.travel)||(res&&res.kind==='rest'&&res.r.travel)||'';
 }
-/* Bar 2026-11-16:時間軸主要是看交通與通勤時間 —— 幾點到、幾點要離開、停多久、哪一站來不及。
-   抵達 = 這站的時間;離開 = 下一站時間 − 路上時間;停留 = 離開 − 抵達。路上時間從交通文字讀(「開車1小時」「步行10分鐘,纜車3分鐘」→ 加總)。
-   讀不到路上時間、或中間夾著沒寫時間的站,就只寫「～下一站時間」,不硬算。 */
-function timelineClockMinutes(text){
-  var m=String(text||'').match(/(\d{1,2})\s*[:：]\s*(\d{2})/);
-  if(!m)return null;
-  var h=+m[1],mi=+m[2];
-  return h<=30&&mi<60?h*60+mi:null;
-}
-function timelineTravelMinutes(text){
-  var t=String(text||''),total=0,found=false,re=/(\d+(?:\.\d+)?)\s*(小時|hr|h|分鐘|分|min)/gi,m;
-  while((m=re.exec(t))){found=true;total+=/小時|hr|^h$/i.test(m[2])?Math.round(parseFloat(m[1])*60):Math.round(parseFloat(m[1]));}
-  return found?total:null;
-}
-function timelineClockText(minutes){
-  var h=Math.floor(minutes/60),mi=minutes%60;
-  return h+':'+(mi<10?'0':'')+mi;
-}
-function timelineDurationText(minutes){
-  if(minutes<60)return minutes+' 分';
-  var h=Math.floor(minutes/60),mi=minutes%60;
-  return h+' 小時'+(mi?' '+mi+' 分':'');
-}
-function tripTimelinePlan(items){
-  return items.map(function(it,index){
-    var next=items[index+1]||null,plan={arrive:timelineClockMinutes(it.time),nextTime:'',leave:null,stay:null,travel:null};
-    for(var j=index+1;j<items.length;j++){if(items[j]&&items[j].time){plan.nextTime=items[j].time;break;}}
-    if(next){
-      plan.travel=timelineTravelMinutes(tripStopDrive(next));
-      var nextArrive=timelineClockMinutes(next.time);
-      if(plan.arrive!==null&&nextArrive!==null&&plan.travel!==null){
-        plan.leave=nextArrive-plan.travel;
-        plan.stay=plan.leave-plan.arrive;
-      }
-    }
-    return plan;
-  });
-}
 function renderTripTimeline(items,checks,currentItemId,progress){
-  var plans=tripTimelinePlan(items),h='',prevTitle='';
+  var h='',prevTitle='';
   items.forEach(function(it,index){
+    var next=null;for(var j=index+1;j<items.length;j++){if(items[j]&&items[j].time){next=items[j];break;}}
     var title=tripItemPresentation(it,resolveRef(it)).title;
     if(index>0){
-      var drive=tripStopDrive(it),mode=transportModeOf(drive),prev=plans[index-1];
-      var when=prev.leave!==null?'<span class="tl-move-when">'+timelineClockText(prev.leave)+' 出發 → '+escapeHtml(it.time)+' 抵達</span>':'';
+      var drive=tripStopDrive(it),mode=transportModeOf(drive);
       h+='<div class="tl-link" aria-hidden="'+(drive?'false':'true')+'"><div class="tl-time"></div><div class="tl-rail"></div><div class="tl-move">'+
-        (drive?'<span class="tl-move-ico mode-'+mode.key+'">'+(lineIcon(mode.icon)||mode.icon)+'</span><span class="tl-move-text"><b>'+escapeHtml(drive)+'</b>'+when+'<em>'+escapeHtml(prevTitle)+' → '+escapeHtml(title)+'</em></span>':'')+'</div></div>';
+        (drive?'<span class="tl-move-ico mode-'+mode.key+'">'+(lineIcon(mode.icon)||mode.icon)+'</span><span><b>'+escapeHtml(drive)+'</b> <em>'+escapeHtml(prevTitle)+' → '+escapeHtml(title)+'</em></span>':'')+'</div></div>';
     }
-    h+=renderItem(it,checks,currentItemId,progress,plans[index]);
+    h+=renderItem(it,checks,currentItemId,progress,{nextTime:next?next.time:''});
     prevTitle=title;
   });
   return h;
@@ -3540,13 +3494,10 @@ function renderItem(it,checks,currentItemId,dayProgress,timeline){
     var mapLink='<a class="tl-map" href="https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(mapQuery)+'" target="_blank" rel="noopener" aria-label="'+escapeHtmlAttr('在地圖上看：'+presentation.title)+'">'+(lineIcon('📍')||'')+'地圖</a>';
     var toggle=(qa||panels)?'<button type="button" class="tl-toggle" aria-expanded="'+(open?'true':'false')+'" aria-label="'+escapeHtmlAttr((open?'收起：':'展開：')+presentation.title)+'" onclick="toggleTripStop(\''+jsHtmlAttrString(it.id)+'\',this)"><span aria-hidden="true">▾</span></button>':'';
     return '<div class="item tl-item cat-'+(cat?cat.cls:'none')+(pastDone?' past-done':'')+(open?' tl-open':'')+'" id="it_'+it.id+'">'+
-      '<div class="tl-time">'+escapeHtml(it.time||'')+(timeline.leave!==null?'<small class="tl-leave'+(timeline.stay<0?' late':'')+'">'+timelineClockText(Math.max(0,timeline.leave))+' 離開</small>':timeline.nextTime?'<small>～'+escapeHtml(timeline.nextTime)+'</small>':'')+'</div>'+
+      '<div class="tl-time">'+escapeHtml(it.time||'')+(timeline.nextTime?'<small>～'+escapeHtml(timeline.nextTime)+'</small>':'')+'</div>'+
       '<div class="tl-rail" aria-hidden="true"><span class="tl-dot"></span></div>'+
       '<div class="tl-card"><div class="tl-head"><div class="tl-main">'+
         '<div class="act">'+escapeHtml(presentation.title)+(pastDone?'<span class="past-done-badge">✓ 完成</span>':'')+'</div>'+
-        /* 「出發／移動」這類站沒有停留,不標停留也不警告 */
-        (timeline.stay!==null&&!(cat&&cat.cls==='move')?(timeline.stay<0?'<div class="tl-stay late" role="note">⚠ 來不及：照下一站時間要在 '+timelineClockText(Math.max(0,timeline.leave))+' 離開，比抵達還早 '+timelineDurationText(-timeline.stay)+'</div>':
-          timeline.stay===0?'':timeline.stay<15?'<div class="tl-stay tight">⏱ 很趕：只能停 '+timelineDurationText(timeline.stay)+'</div>':'<div class="tl-stay">停留 '+timelineDurationText(timeline.stay)+'</div>'):'')+
         (presentation.meta?'<div class="place-row"><span class="place item-meta">'+escapeHtml(presentation.meta)+'</span></div>':'')+
         (cat?'<div class="chip-row"><span class="tag '+cat.cls+'">'+iconLabelHtml(cat.label,true)+'</span></div>':'')+
       '</div>'+((hasPlaceTxt||res)?mapLink:'')+toggle+'</div>'+
@@ -11440,8 +11391,7 @@ function renderSettingsHealthPage(){
 }
 var APP_RELEASE_NOTES=[
   {version:'v194',date:'2026-11-16',title:'行程頁改成時間軸',items:[
-    '行程頁改成時間軸：每站寫幾點到、幾點要離開、停留多久；站與站之間寫交通方式、幾點出發幾點抵達。',
-    '路上時間不夠會標「來不及」，停留太短會標「很趕」，方便調整行程。',
+    '行程頁改成時間軸：左邊是時間（到下一站的時間），站與站之間標出交通方式與時間。',
     '站卡平常收起，按 ▾ 展開導航、停車與資訊；右上「地圖」直接開 Google 地圖。從今天頁點進來的那一站會自動展開。'
   ]},
   {version:'v193',date:'2026-11-16',title:'過往旅程更好讀',items:[
