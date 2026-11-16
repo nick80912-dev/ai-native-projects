@@ -714,11 +714,31 @@ html[data-theme="ehon"] .today-hero-compact.is-stuck .today-hero-art{padding-top
 .today-hero-compact .today-hero-summary-item{min-height:34px}
 html[data-theme="ehon"] .today-hero-compact{border-radius:20px}
 html[data-theme="ehon"] .today-hero-compact .loc{background:#fff;border:2px solid var(--ehon-ink)}
-.past-trip-card{display:block;width:100%;text-align:left;border:1px solid var(--line);border-radius:16px;background:var(--card);color:var(--ink);padding:13px 15px;font:inherit;cursor:pointer}
+.past-trip-card{display:flex;align-items:center;gap:10px;width:100%;text-align:left;border:1px solid var(--line);border-radius:16px;background:var(--card);color:var(--ink);padding:13px 15px;font:inherit;cursor:pointer}
+.past-trip-card>span:first-child{flex:1;min-width:0}
+.past-trip-chevron{font-size:24px;color:var(--ink-faint)}
+.past-trip-back{border:0;background:transparent;color:var(--sea);font:inherit;font-size:14px;font-weight:800;padding:4px 0 10px;cursor:pointer}
+.past-trip-summary{border-radius:20px;padding:16px;background:linear-gradient(140deg,var(--sea-deep),var(--sea));color:#fff}
+.past-trip-summary h2{margin:0;font-size:21px;color:#fff}
+.past-trip-summary-range{margin:6px 0 0;font-size:14px;font-weight:800}
+.past-trip-summary-meta{margin:3px 0 0;font-size:12px;opacity:.85}
+.past-trip-stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:12px}
+.past-trip-stat{background:rgba(255,255,255,.14);border-radius:12px;padding:8px 10px;min-width:0}
+.past-trip-stat small{display:block;font-size:11px;opacity:.85}
+.past-trip-stat b{display:block;font-size:15px;margin-top:2px;overflow-wrap:anywhere}
+.past-trip-block{margin-top:18px}
+.past-trip-block h3{font-size:16px;margin:0 0 8px}
+.past-trip-note{border:1px solid var(--line);border-radius:14px;padding:10px 12px;margin-bottom:8px;background:var(--card)}
+.past-trip-note p{margin:0;white-space:pre-wrap}
+.past-trip-note small{color:var(--ink-soft);font-size:12px}
+.past-trip-advanced{margin-top:22px;color:var(--ink-soft)}
+html[data-theme="ehon"] .past-trip-summary{background:var(--ehon-water);color:var(--ehon-ink);border:3px solid var(--ehon-ink);border-radius:22px}
+html[data-theme="ehon"] .past-trip-summary h2{color:var(--ehon-ink)}
+html[data-theme="ehon"] .past-trip-stat{background:#fff;border:2px solid var(--ehon-ink)}
+html[data-theme="ehon"] .past-trip-note{border:2px solid var(--ehon-ink)}
 .past-trip-card b{display:block;font-size:16px;font-weight:900;color:var(--sea-deep)}
 .past-trip-card .past-trip-range{display:block;margin-top:4px;font-size:13.5px;font-weight:800;color:var(--ink)}
 .past-trip-card small{display:block;margin-top:3px;font-size:12px;color:var(--ink-soft)}
-.past-trip-card.on{border-color:var(--sea);background:var(--mint)}
 html[data-theme="ehon"] .past-trip-card{border:var(--ehon-line);border-radius:18px;box-shadow:var(--ehon-drop)}
 html[data-theme="ehon"] .past-trip-card b{color:var(--ehon-ink)}
 .today-list{margin:14px 12px 0}
@@ -11275,8 +11295,9 @@ function renderSettingsHealthPage(){
   return header+renderSettingsDataHealth();
 }
 var APP_RELEASE_NOTES=[
-  {version:'v193',date:'2026-11-16',title:'過往旅程寫出去回日期',items:[
-    '過往旅程清單每一趟寫出出發與回程日期、星期和天數，以及封存日期。'
+  {version:'v193',date:'2026-11-16',title:'過往旅程更好讀',items:[
+    '過往旅程清單每一趟寫出出發與回程日期、星期和天數，以及封存日期。',
+    '點開一趟旅程是獨立一頁：最上面是摘要（完成站數、採買、個人帳、團體帳），接著是回顧筆記；原始資料收在最底。'
   ]},
   {version:'v192',date:'2026-11-15',title:'今天頁改成行程清單',items:[
     '今天頁列出今天每一站，不再依時間自動跳站；按「完成」該站變淡。',
@@ -11504,7 +11525,7 @@ function renderPastTripSnapshot(archive){
     }).join('');
   }).join('');
   var shared=[];try{shared=parseLedgerSheetCsv(archive.sheets.ledger.csv);}catch(error){}
-  return '<div class="past-trip-readable"><p class="settings-help">封存成員：'+escapeHtml(personal.member||'未選擇')+' · 採買 '+personal.shoppingItems.length+' 筆 · 個人帳 '+personal.personalLedger.length+' 筆</p>'+
+  return '<div class="past-trip-readable">'+
     '<details open><summary>行程紀錄</summary>'+(days||'<p class="settings-help">沒有行程紀錄</p>')+'</details>'+
     '<details><summary>採買紀錄</summary>'+pastTripObjectCards(personal.shoppingItems)+'</details>'+
     '<details><summary>個人帳務</summary>'+pastTripObjectCards(personal.personalLedger)+'</details>'+
@@ -11528,6 +11549,37 @@ function pastTripRangeText(trip){
   var days=Math.round((b.stamp-a.stamp)/86400000)+1;
   return '去 '+start+' → 回 '+end+' · '+days+' 天';
 }
+function pastTripDateText(text){
+  var p=pastTripDateParts(text);if(!p)return String(text||'');
+  var pad=function(n){return (n<10?'0':'')+n;};
+  return p.y+'/'+pad(p.m)+'/'+pad(p.d);
+}
+/* 摘要卡:一眼看完這趟 —— 日期與天數、封存成員、完成站數、採買、個人帳、團體帳 */
+function renderPastTripSummary(archive){
+  var personal=archive.personal||{},checks=personal.checks||{},progress=personal.nextStopProgress||{};
+  var doneIds={};Object.keys(checks).forEach(function(id){if(checks[id])doneIds[id]=true;});
+  Object.keys(progress).forEach(function(key){var day=progress[key]||{};Object.keys(day.done||{}).forEach(function(id){if(day.done[id])doneIds[id]=true;});});
+  var stops=[];try{buildItin(parseCSV(archive.sheets.itin.csv)).days.forEach(function(day){(day.items||[]).forEach(function(it){if(isTripCheckableItem(it))stops.push(it);});});}catch(error){}
+  var doneStops=stops.filter(function(it){return doneIds[it.id];}).length;
+  var shopping=personal.shoppingItems||[],bought=shopping.filter(function(it){return it&&it.done;}).length;
+  var ledger=personal.personalLedger||[],twd=0;ledger.forEach(function(r){var n=Number(r&&r.amountTwd);if(isFinite(n))twd+=n;});
+  var shared=[];try{shared=parseLedgerSheetCsv(archive.sheets.ledger.csv);}catch(error){}
+  var stat=function(label,value){return '<div class="past-trip-stat"><small>'+label+'</small><b>'+value+'</b></div>';};
+  return '<section class="past-trip-summary"><h2>'+escapeHtml(archive.trip.name)+'</h2>'+
+    '<p class="past-trip-summary-range">'+escapeHtml(pastTripRangeText(archive.trip))+'</p>'+
+    '<p class="past-trip-summary-meta">封存成員 '+escapeHtml(personal.member||'未選擇')+' · 封存於 '+escapeHtml(pastTripDateText(archive.archivedAt))+'</p>'+
+    '<div class="past-trip-stats">'+
+      stat('完成站數',stops.length?doneStops+' / '+stops.length:'—')+
+      stat('採買',shopping.length?bought+' / '+shopping.length+' 項':'0 項')+
+      stat('個人帳',ledger.length+' 筆'+(ledger.length?' · NT$'+Math.round(twd).toLocaleString('en-US'):''))+
+      stat('團體帳',shared.length+' 筆')+
+    '</div></section>';
+}
+function closePastTrip(){
+  pastTripsSelectionId++;
+  pastTripsUi.selected=null;pastTripsUi.notes=[];pastTripsUi.noteDraft=null;pastTripsUi.noteSaving=false;pastTripsUi.notesLoading=false;
+  rerenderOpenSettingsPage();
+}
 function renderPastTripsPage(){
   var state=pastTripsUi,body='';
   if(state.status==='preparing')body='<p class="settings-help" role="status">正在準備 Google 登入…</p>';
@@ -11535,23 +11587,28 @@ function renderPastTripsPage(){
   else if(state.status==='loading')body='<p class="settings-help">正在從 Google Drive 讀取過往旅程…</p>';
   else if(state.status==='error')body='<p class="trip-lifecycle-status error" role="alert">'+escapeHtml(state.error||'無法讀取過往旅程')+'</p><button type="button" class="btn" onclick="openPastTrips()">重新登入並重試</button>';
   else if(state.status==='ready'){
+    var sel=state.selected!==null&&state.archives[state.selected]&&state.archives[state.selected].archive?state.archives[state.selected].archive:null;
+    if(sel){
+      /* v193(Bar 2026-11-16 選第一版):點開一趟旅程就是獨立一頁 —— 摘要卡、回顧筆記、內容,原始資料收在最底 */
+      var archive=sel,busy=state.noteSaving||state.notesLoading;
+      body='<button type="button" class="past-trip-back" onclick="closePastTrip()">‹ 全部過往旅程</button>'+
+        renderPastTripSummary(archive)+
+        '<section class="past-trip-block"><h3>回顧筆記</h3><div class="past-trip-notes">'+(state.notesLoading?'<p class="settings-help" role="status">正在讀取回顧筆記…</p>':state.notes.length?state.notes.map(function(note){return '<article class="past-trip-note"><p>'+escapeHtml(note.text)+'</p><small>'+escapeHtml(pastTripDateText(note.createdAt))+'</small></article>';}).join(''):'<p class="settings-help">尚無回顧筆記</p>')+'</div>'+
+        '<textarea id="pastTripNoteText" class="state-box" maxlength="2000" placeholder="寫下這趟旅行的回顧…"'+(busy?' disabled':'')+'>'+escapeHtml(state.noteDraft&&state.noteDraft.archiveId===archive.archiveId?state.noteDraft.text:'')+'</textarea>'+
+        '<button type="button" class="btn" onclick="addPastTripNote()"'+(busy?' disabled':'')+'>新增回顧筆記</button><div id="pastTripNoteStatus" class="trip-lifecycle-status" role="status"></div></section>'+
+        '<section class="past-trip-block"><h3>旅程內容</h3>'+renderPastTripSnapshot(archive)+'</section>'+
+        '<details class="past-trip-advanced"><summary>進階：原始資料</summary><p class="settings-help">封存當時試算表與個人紀錄的原始內容，一般不需要看。</p>'+TripArchive.SHEETS.map(function(key){return '<details><summary>'+escapeHtml(pastTripSheetLabel(key))+'</summary><pre class="past-trip-raw">'+escapeHtml(archive.sheets[key].csv)+'</pre></details>';}).join('')+
+        '<details><summary>個人紀錄與設定</summary><pre class="past-trip-raw">'+escapeHtml(JSON.stringify(archive.personal,null,2))+'</pre></details></details>';
+      return renderSettingsHeader('過往旅程',false)+'<div class="settings-section">'+body+'</div>';
+    }
     body='<p class="settings-help">目前帳號：'+escapeHtml(state.account&&state.account.email||'未知')+'。封存唯讀；回顧筆記只能新增。</p>';
     if(!state.archives.length)body+='<p class="settings-help">尚無過往旅程。</p>';
     else body+='<div class="trip-lifecycle-actions">'+state.archives.map(function(item,index){
       return item.error?'<div class="trip-lifecycle-status error">封存 '+escapeHtml(item.name||item.fileId)+' 無法讀取：'+escapeHtml(item.error)+'</div>':
-        '<button type="button" class="past-trip-card'+(state.selected===index?' on':'')+'" onclick="selectPastTrip('+index+')" aria-label="'+escapeHtmlAttr(item.archive.trip.name+'，'+pastTripRangeText(item.archive.trip))+'">'+
-          '<b>'+escapeHtml(item.archive.trip.name)+'</b><span class="past-trip-range">'+escapeHtml(pastTripRangeText(item.archive.trip))+'</span>'+
-          (item.archive.archivedAt?'<small>封存於 '+escapeHtml(String(item.archive.archivedAt).slice(0,10))+'</small>':'')+'</button>';
+        '<button type="button" class="past-trip-card" onclick="selectPastTrip('+index+')" aria-label="'+escapeHtmlAttr(item.archive.trip.name+'，'+pastTripRangeText(item.archive.trip))+'">'+
+          '<span><b>'+escapeHtml(item.archive.trip.name)+'</b><span class="past-trip-range">'+escapeHtml(pastTripRangeText(item.archive.trip))+'</span>'+
+          (item.archive.archivedAt?'<small>封存於 '+escapeHtml(pastTripDateText(item.archive.archivedAt))+'</small>':'')+'</span><span class="past-trip-chevron" aria-hidden="true">›</span></button>';
     }).join('')+'</div>';
-    if(state.selected!==null&&state.archives[state.selected]&&state.archives[state.selected].archive){
-      var archive=state.archives[state.selected].archive;
-      body+='<section class="settings-section"><h2>'+escapeHtml(archive.trip.name)+'</h2><p class="settings-help">'+escapeHtml(pastTripRangeText(archive.trip))+' · 封存於 '+escapeHtml(String(archive.archivedAt).slice(0,10))+'</p>';
-      body+=renderPastTripSnapshot(archive);
-      body+='<details><summary>完整原始資料</summary>'+TripArchive.SHEETS.map(function(key){return '<details><summary>'+escapeHtml(pastTripSheetLabel(key))+'</summary><pre class="past-trip-raw">'+escapeHtml(archive.sheets[key].csv)+'</pre></details>';}).join('')+
-        '<details><summary>個人紀錄與設定</summary><pre class="past-trip-raw">'+escapeHtml(JSON.stringify(archive.personal,null,2))+'</pre></details></details>';
-      body+='<h3>回顧筆記</h3><div class="past-trip-notes">'+(state.notes.length?state.notes.map(function(note){return '<article class="settings-section"><p>'+escapeHtml(note.text)+'</p><small>'+escapeHtml(note.createdAt)+'</small></article>';}).join(''):'<p class="settings-help">尚無回顧筆記</p>')+'</div>';
-      body+='<textarea id="pastTripNoteText" class="state-box" maxlength="2000" placeholder="寫下這趟旅行的回顧…"'+(state.noteSaving||state.notesLoading?' disabled':'')+'>'+escapeHtml(state.noteDraft&&state.noteDraft.archiveId===archive.archiveId?state.noteDraft.text:'')+'</textarea><button type="button" class="btn" onclick="addPastTripNote()"'+(state.noteSaving||state.notesLoading?' disabled':'')+'>新增回顧筆記</button><div id="pastTripNoteStatus" class="trip-lifecycle-status" role="status"></div></section>';
-    }
   }else body='<p class="settings-help">按下方按鈕連接自己的 Google 帳號。</p><button type="button" class="btn" onclick="loadPastTrips()">連接 Google Drive</button>';
   return renderSettingsHeader('過往旅程',false)+'<div class="settings-section">'+body+'</div>';
 }
