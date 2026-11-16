@@ -764,7 +764,8 @@ html[data-theme="ehon"] .past-trip-card b{color:var(--ehon-ink)}
 .tl-open .tl-body{display:block;margin-top:10px;padding-top:10px;border-top:1px dashed var(--line)}
 .tl-body .qa-row{padding:0}
 .tl-body .panel{margin:8px 0 0}
-.tl-move{display:flex;align-items:center;gap:7px;padding:6px 0;font-size:12.5px;color:var(--ink-soft);min-width:0}
+.tl-move{display:flex;align-items:center;flex-wrap:wrap;gap:4px 7px;padding:7px 0;font-size:12px;color:var(--ink-soft);min-width:0}
+.tl-move .drive-chip{max-width:100%}
 .tl-move b{font-weight:800;color:var(--ink)}
 .tl-move em{font-style:normal;color:var(--ink-faint)}
 .tl-move-ico{flex:none;width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:var(--mint);color:var(--sea-deep)}
@@ -3418,10 +3419,12 @@ function renderTripTimeline(items,checks,currentItemId,progress){
   items.forEach(function(it,index){
     var next=null;for(var j=index+1;j<items.length;j++){if(items[j]&&items[j].time){next=items[j];break;}}
     var title=tripItemPresentation(it,resolveRef(it)).title;
-    if(index>0){
-      var drive=tripStopDrive(it),mode=transportModeOf(drive);
+    var drive=tripStopDrive(it),mode=transportModeOf(drive);
+    /* 第一站也可能有交通(例如當天的航班),畫在它上面 */
+    if(index>0||drive){
       h+='<div class="tl-link" aria-hidden="'+(drive?'false':'true')+'"><div class="tl-time"></div><div class="tl-rail"></div><div class="tl-move">'+
-        (drive?'<span class="tl-move-ico mode-'+mode.key+'">'+(lineIcon(mode.icon)||mode.icon)+'</span><span><b>'+escapeHtml(drive)+'</b> <em>'+escapeHtml(prevTitle)+' → '+escapeHtml(title)+'</em></span>':'')+'</div></div>';
+        /* 交通段沿用 v149 的交通方式色彩標籤(開車、步行、渡輪、航班…各有顏色) */
+        (drive?'<span class="drive-chip mode-'+mode.key+'">'+(lineIcon(mode.icon)||mode.icon+' ')+escapeHtml(drive)+'</span><em>'+(prevTitle?escapeHtml(prevTitle)+' → ':'前往 ')+escapeHtml(title)+'</em>':'')+'</div></div>';
     }
     h+=renderItem(it,checks,currentItemId,progress,{nextTime:next?next.time:''});
     prevTitle=title;
