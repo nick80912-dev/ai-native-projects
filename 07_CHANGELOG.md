@@ -1,5 +1,12 @@
 # 07 版本紀錄
 
+## 2026-11-16 — v192 已上線 main，tag `production-v192`
+
+- PR [#177](https://github.com/nick80912-dev/ai-native-projects/pull/177) 在 head `1f2fb02` 的 sanity／browser-qa 全綠後合併進 `dev`(`04403a9`);PR [#178](https://github.com/nick80912-dev/ai-native-projects/pull/178) 七項檢查全綠後合併進 `main`(`a34bca0`)。
+- **線上核對**:正式站 `sw.js` 為 `SW_VERSION='v192'`;全新 Chromium `APP_VERSION` v192、只剩 `okayama-trip-v192` 快取、發布說明「今天頁改成行程清單」、清單模式函式存在、無 pageerror;線上 `shell/v192/index.html` 與 `origin/main` 位元組相同;v190／v191 仍 200,v189 為 404;`privacy.html` 200。
+- **tag**:production-tags workflow 建立 `production-v192` → `a34bca0`。
+- 回滾:依 `16_OPS_PLAYBOOK.md` §A1 Publish `commit_ref` = `495cfcd`(`production-v191`)的部署,再往前 bump。
+
 ## 2026-11-16 — v192 今天頁改成行程清單;行程頁單純顯示;封存後畫面與設定修正 ⭐
 
 - **來源**:Bar 2026-11-15「今天頁會照時間顯示卡片,沒照時間走就亂掉;行程頁又卡在打卡／略過,要按好幾次才找到目前位置」。看過概念圖後決定:今天頁不判斷時間、不用卡片,改整頁清單;卡片改成功能開關;按鈕叫「完成」(按了該站變淡);可拖拉臨時調整;導航等細節到行程頁看;行程頁維持原順序,那天過完後照實際順序與完成紀錄。再補:上方資訊卡縮小、往下捲時凍結(與上排留空隙)、繪本插圖頂端完整／捲動後細長;拖拉時小卡不擋、會自動捲動(Bar 要求協助測試拖曳)。最後回「目前可以」。
