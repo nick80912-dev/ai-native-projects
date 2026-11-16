@@ -9,7 +9,7 @@ async function setup(page){
     Object.defineProperty(navigator,'onLine',{configurable:true,get:()=>false});
     window.fetch=()=>Promise.reject(new TypeError('QA_OFFLINE'));
     if(!sessionStorage.getItem('qa-progress-started')){
-      localStorage.clear();localStorage.setItem('trip_member','Bar');localStorage.setItem('trip_source','{"version":1,"kind":"legacy","migratedAt":0}');sessionStorage.setItem('qa-progress-started','1');
+      localStorage.clear();localStorage.setItem('trip_member','Bar');localStorage.setItem('trip_today_mode','"card"');/* v192: these cases cover the time-based card */localStorage.setItem('trip_source','{"version":1,"kind":"legacy","migratedAt":0}');sessionStorage.setItem('qa-progress-started','1');
     }
   });
   await openApp(page);await waitForSyncToSettle(page);
@@ -134,9 +134,10 @@ test('unverified rollback explains the partial state rather than claiming succes
   await expect(page.locator('.data-health-personal')).toContainText('紀錄可能未完整儲存');
 });
 test('keyboard check-in failure keeps focus, checked state and a readable error',async({page})=>{
-  await setup(page);await page.evaluate(()=>switchView('trip'));await fault(page,'all');
-  const check=page.locator('#it_qa-a .chk');await check.focus();await check.press('Space');
-  await expect(check).toBeFocused();await expect(check).toHaveAttribute('aria-checked','false');
+  /* v192:行程頁沒有打卡了;同樣的保證改在今天頁清單的「完成」鍵驗證 */
+  await setup(page);await page.evaluate(()=>{localStorage.setItem('trip_today_mode','"list"');switchView('today');renderToday();});await fault(page,'all');
+  const done=page.locator('.today-list-row[data-stop-id="qa-a"] .today-list-done');await done.focus();await done.press('Space');
+  await expect(done).toBeFocused();await expect(done).toHaveAttribute('aria-pressed','false');
   await expect(page.locator('#toast')).toContainText('未能儲存');
 });
 test('failed automatic reconciliation does not repeat writes or success toasts on render',async({page})=>{

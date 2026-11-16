@@ -69,7 +69,9 @@ test('after the trip the itinerary is browse-only and the check-in records stay'
   await expect(page.locator('#view-trip .item').first()).toBeVisible();
   await expect(page.locator('#view-trip .item .chk')).toHaveCount(0);
   await expect(page.locator('#view-trip .item.checked')).toHaveCount(0);
-  await expect(page.locator('#view-trip .day-head .prog')).toHaveText(/^共 \d+ 站$/);
+  /* v192(Bar 2026-11-15):那一天過完後,行程頁照實際順序與完成紀錄顯示 —— 完成的站變淡並標「✓ 完成」 */
+  await expect(page.locator('#view-trip .item.past-done')).toHaveCount(1);
+  await expect(page.locator('#view-trip .day-head .prog')).toHaveText(/^完成 1 \/ 共 \d+$/);
   await expect(page.locator('#view-trip .trip-filter')).toBeHidden();
   expect(await page.evaluate(()=>localStorage.getItem('trip_checks'))).toBe(seeded);
 });

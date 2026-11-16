@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TripPilot 隱私權政策</title>
+<style>
+body{margin:0;background:#f5f1e8;color:#22303a;font-family:"PingFang TC","Microsoft JhengHei",system-ui,-apple-system,sans-serif;line-height:1.7}
+main{max-width:720px;margin:0 auto;padding:28px 18px 48px}
+h1{font-size:24px;margin:0 0 4px}
+h2{font-size:17px;margin:26px 0 6px}
+p,li{font-size:15px}
+ul{padding-left:20px}
+.meta{color:#5c6b73;font-size:13px}
+a{color:#12707f}
+.en{margin-top:32px;padding-top:16px;border-top:1px solid #e5ddcd;color:#5c6b73;font-size:13px}
+</style>
+</head>
+<body>
+<main>
+<h1>TripPilot 隱私權政策</h1>
+<p class="meta">最後更新：2026 年 11 月 16 日</p>
+
+<p>TripPilot 是給一起旅行的親友使用的行程與分帳 App（<a href="https://trippilot-jp.netlify.app/">trippilot-jp.netlify.app</a>）。我們沒有帳號系統，也沒有自己的伺服器保存你的資料。本頁說明 App 會用到哪些資料、存在哪裡。</p>
+
+<h2>1. 行程資料</h2>
+<p>行程、地點、餐廳、購物與住宿等內容，來自旅程負責人自己的 Google 試算表（已「發布到網路」的公開連結）。App 只讀取這些內容來顯示，不會修改試算表。</p>
+
+<h2>2. 只存在你手機上的資料</h2>
+<p>個人記帳、打卡與完成紀錄、想逛清單、採買清單、收據照片、主題與其他設定，都只存在你這支手機的瀏覽器儲存空間，不會上傳。清除旅程或清除瀏覽器資料時會一併刪除。</p>
+
+<h2>3. 團體帳</h2>
+<p>你記下的團體帳（金額、類別、付款人、分攤成員、備註）會送到旅程負責人自己部署的 Google Apps Script，寫進旅程的 Google 試算表，讓同行的人看到同一份帳。</p>
+
+<h2>4. 收據辨識（選用）</h2>
+<p>只有在你按下收據辨識時，收據照片才會送到旅程負責人的 Google Apps Script，再交給 Google Gemini 辨識品項與金額。辨識結果回到你的手機，照片不會被另外保存。</p>
+
+<h2>5. Google 登入與 Google 雲端硬碟（封存旅程）</h2>
+<ul>
+<li>只有在你選擇「封存旅程」或查看「過往旅程」時，App 才會請你登入 Google。</li>
+<li>App 只要求 <code>drive.file</code> 權限：只能建立與讀取 TripPilot 自己建立的檔案，看不到你雲端硬碟裡的其他檔案。</li>
+<li>封存檔存在<strong>你自己的</strong> Google 雲端硬碟，只有你看得到。</li>
+<li>登入取得的授權只暫存在 App 執行期間的記憶體中，不會傳給任何第三方，也不會被保存下來。</li>
+</ul>
+
+<h2>6. 其他會連線的服務</h2>
+<ul>
+<li>天氣：向 Open-Meteo 查詢行程地點的天氣，只傳送地點座標。</li>
+<li>字型：從 Google Fonts 下載顯示用字型。</li>
+<li>導航：按「導航」時開啟 Google 地圖。</li>
+</ul>
+
+<h2>7. 我們不做的事</h2>
+<p>不販售、不出租、不分享你的資料；不放廣告；不做追蹤或行為分析。</p>
+
+<h2>8. 刪除資料與撤銷授權</h2>
+<ul>
+<li>手機上的資料：在 App「設定 → 資料與版本」清除旅程，或清除瀏覽器資料。</li>
+<li>封存檔：刪除你 Google 雲端硬碟中 TripPilot 建立的檔案。</li>
+<li>Google 授權：到 <a href="https://myaccount.google.com/permissions">Google 帳戶的第三方存取權</a> 移除 TripPilot。</li>
+</ul>
+
+<h2>9. 聯絡</h2>
+<p>如有任何問題，請聯絡邀請你使用 TripPilot 的旅程負責人。</p>
+
+<div class="en">
+<p><strong>English summary.</strong> TripPilot has no accounts and no server of its own. Itinerary data is read from the trip owner's published Google Sheet. Personal data stays on your device. Shared expenses are sent to the trip owner's Google Apps Script and Sheet. When you choose to archive a trip, TripPilot asks for the <code>drive.file</code> scope only, to create and read its own archive files in your own Google Drive; access tokens are kept in memory only and are never shared. TripPilot's use and transfer of information received from Google APIs adheres to the Google API Services User Data Policy, including the Limited Use requirements. We do not sell, share or advertise with your data. You can revoke access at any time at myaccount.google.com/permissions.</p>
+</div>
+</main>
+</body>
+</html>

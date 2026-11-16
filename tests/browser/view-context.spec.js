@@ -249,7 +249,7 @@ async function openSomePanels(page) {
 
 /* 注意:tripHideDone 預設為 true,所以被打卡的那一筆會**刻意**離開結果集。
    本測試驗的是「仍然存在的項目」的面板不得被無故收掉;被篩除者另見下方測試。 */
-test('detail panels of surviving items are kept when another item is checked off', async ({ page }) => {
+test('detail panels of surviving items are kept when the trip page redraws', async ({ page }) => {
   const result = await page.evaluate(() => {
     switchView('trip');
     const items = Array.from(document.querySelectorAll('#view-trip .item'));
@@ -265,7 +265,7 @@ test('detail panels of surviving items are kept when another item is checked off
     });
     const before = document.querySelectorAll('#view-trip [id^="pn_"].open').length;
 
-    victim.querySelector('.chk').click();   /* 觸發 renderTrip() */
+    renderTrip();   /* v192:行程頁沒有打卡了,直接重畫(原本由打卡觸發) */
 
     return {
       opened,
@@ -279,7 +279,7 @@ test('detail panels of surviving items are kept when another item is checked off
   expect(result.opened.length).toBeGreaterThan(0);
   expect(result.before).toBe(result.opened.length);
   expect(result.survivorsStillHere).toBe(true);
-  /* 改版前這裡會是 0 —— 每打一次卡所有面板全部收合 */
+  /* 改版前這裡會是 0 —— 每次重畫所有面板全部收合 */
   expect(result.after).toBe(result.before);
 });
 
@@ -294,20 +294,18 @@ test('detail panels survive leaving and returning to the trip tab', async ({ pag
   expect(after.open).toBe(before.open);
 });
 
-test('panel state for filtered-out items is dropped, not accumulated', async ({ page }) => {
+test('panel state for items that are no longer rendered is dropped, not accumulated', async ({ page }) => {
   const result = await page.evaluate(() => {
     switchView('trip');
     const firstItem = document.querySelector('#view-trip .item');
     const itemId = firstItem.id.replace(/^it_/, '');
-    /* 先展開這一筆的面板 */
     const btn = firstItem.querySelector('.qa-btn[onclick^="togglePanel"]');
     if (btn) btn.click();
     const keysBefore = Object.keys(viewUiState.trip.openPanels);
-
-    /* 打卡後開啟「隱藏已完成」,讓它離開結果集 */
-    firstItem.querySelector('.chk').click();
-    setTripHideDone(true);
-
+    /* v192:行程頁不再有「隱藏已完成」;改成讓這一站從資料裡消失(例如試算表刪掉),再重畫 */
+    const day = DB.trip.days[curDay];
+    day.items = day.items.filter((it) => it.id !== itemId);
+    renderTrip();
     return {
       itemId,
       keysBefore,
@@ -315,97 +313,26 @@ test('panel state for filtered-out items is dropped, not accumulated', async ({ 
       stillRendered: !!document.getElementById('it_' + itemId),
     };
   });
-
   expect(result.keysBefore.some((k) => k.indexOf(result.itemId) === 0)).toBe(true);
   expect(result.stillRendered).toBe(false);
-  /* 被篩除的 item 不得在暫態狀態裡無限累積 */
   expect(result.keysAfter.some((k) => k.indexOf(result.itemId) === 0)).toBe(false);
 });
 
-/* ---------- 打卡的鍵盤操作與焦點 ---------- */
-
-test('check-in is a keyboard operable checkbox', async ({ page }) => {
-  const meta = await page.evaluate(() => {
-    switchView('trip');
-    const chk = document.querySelector('#view-trip .item .chk');
-    return {
-      role: chk.getAttribute('role'),
-      tabindex: chk.getAttribute('tabindex'),
-      checked: chk.getAttribute('aria-checked'),
-      label: chk.getAttribute('aria-label'),
-      glyphHidden: chk.querySelector('[aria-hidden="true"]') !== null,
-    };
-  });
-  expect(meta.role).toBe('checkbox');
-  expect(meta.tabindex).toBe('0');
-  expect(meta.checked).toBe('false');
-  expect(meta.label).toBeTruthy();
-  expect(meta.glyphHidden).toBe(true);
-});
-
-test('Space checks in from the keyboard and Enter works too', async ({ page }) => {
-  await page.evaluate(() => { switchView('trip'); setTripHideDone(false); });
-  const chk = page.locator('#view-trip .item .chk').first();
-  await chk.focus();
-  await page.keyboard.press(' ');
-  await expect(page.locator('#view-trip .item .chk').first()).toHaveAttribute('aria-checked', 'true');
-
-  await page.locator('#view-trip .item .chk').first().focus();
+/* ---------- 打卡 ----------
+   v192(Bar 2026-11-15「行程分頁的打卡與略過功能可以不用,單純顯示行程即可」):行程頁的核取方塊、鍵盤打卡與焦點回復測試
+   隨功能移除。完成改在今天頁清單的「完成」鈕(原生 <button>,aria-pressed),鍵盤與焦點在下面驗證。 */
+test('the trip page has no check-in; Today list 完成 is a keyboard operable toggle that keeps focus', async ({ page }) => {
+  await page.evaluate(() => { switchView('trip'); });
+  await expect(page.locator('#view-trip .item .chk')).toHaveCount(0);
+  await page.evaluate(() => { localStorage.setItem('trip_today_mode', '"list"'); switchView('today'); renderToday(); });
+  const first = page.locator('#view-today .today-list-done').first();
+  await first.focus();
+  await page.keyboard.press('Space');
+  await expect(page.locator('#view-today .today-list-done').first()).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.locator('#view-today .today-list-done').first()).toBeFocused();
   await page.keyboard.press('Enter');
-  await expect(page.locator('#view-trip .item .chk').first()).toHaveAttribute('aria-checked', 'false');
-});
-
-test('keyboard check-in restores focus, mouse click does not steal it', async ({ page }) => {
-  const result = await page.evaluate(() => {
-    switchView('trip');
-    setTripHideDone(false);   /* 讓目標留在結果集內 */
-
-    const chk = document.querySelector('#view-trip .item .chk');
-    const itemId = chk.closest('.item').id;
-    chk.focus();
-    chk.dispatchEvent(new KeyboardEvent('keydown', { key: ' ', bubbles: true }));
-    const afterKeyboard = {
-      onSameItem: document.activeElement.closest('.item') && document.activeElement.closest('.item').id === itemId,
-      isChk: document.activeElement.classList.contains('chk'),
-    };
-
-    /* 滑鼠路徑:先把焦點放到別處,點擊後不該被搶走 */
-    document.body.focus();
-    const parked = document.activeElement;
-    document.querySelector('#view-trip .item .chk').click();
-    const afterMouse = { stolen: document.activeElement !== parked && document.activeElement.classList.contains('chk') };
-
-    return { afterKeyboard, afterMouse };
-  });
-
-  expect(result.afterKeyboard.isChk).toBe(true);
-  expect(result.afterKeyboard.onSameItem).toBe(true);
-  expect(result.afterMouse.stolen).toBe(false);
-});
-
-/* 契約的例外:使用者刻意讓目標離開結果集時,焦點移往下一個合理目標 */
-test('when the checked item leaves the list, focus moves to a sensible next target', async ({ page }) => {
-  const result = await page.evaluate(() => {
-    switchView('trip');
-    setTripHideDone(true);    /* 打完卡該筆會離開結果集 */
-
-    const chk = document.querySelector('#view-trip .item .chk');
-    const itemId = chk.closest('.item').id;
-    chk.focus();
-    chk.dispatchEvent(new KeyboardEvent('keydown', { key: ' ', bubbles: true }));
-
-    const active = document.activeElement;
-    return {
-      victimGone: !document.getElementById(itemId),
-      focusLost: active === document.body || active === null,
-      onNextChk: active.classList.contains('chk'),
-      onFilter: active.classList.contains('trip-filter-btn'),
-    };
-  });
-
-  expect(result.victimGone).toBe(true);
-  expect(result.focusLost).toBe(false);
-  expect(result.onNextChk || result.onFilter).toBe(true);
+  await expect(page.locator('#view-today .today-list-done').first()).toHaveAttribute('aria-pressed', 'false');
+  await expect(page.locator('#view-today .today-list-done').first()).toBeFocused();
 });
 
 /* ---------- 回到現在 ---------- */

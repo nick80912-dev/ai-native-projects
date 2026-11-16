@@ -48,11 +48,12 @@ test('T4 the cluster card head is keyboard operable',async({page})=>{
   expect(await page.evaluate(()=>curView)).toBe('trip');
 });
 
-for(const [when,expected] of [['2026-10-22T10:00:00+09:00',{loc:'已處理 2/11',remain:'今日還有 8 個行程',prog:'完成 0 · 略過 2 / 共 11'}],['2026-10-19T15:45:00+09:00',{loc:'已處理 9/14',remain:'今日還有 4 個行程',prog:'完成 0 · 略過 9 / 共 14'}]]){
+for(const [when,expected] of [['2026-10-22T10:00:00+09:00',{loc:'已處理 2/11',remain:'今日還有 8 個行程',prog:'共 11 站'}],['2026-10-19T15:45:00+09:00',{loc:'已處理 9/14',remain:'今日還有 4 個行程',prog:'共 14 站'}]]){
   test('T10 Today and the trip page count the same stops at '+when.slice(5,16),async({page})=>{
     await openAt(page,when);
     await expect(page.locator('#view-today .today-hero .loc')).toHaveText(expected.loc);
     await expect(page.locator('#view-today .nx-remain')).toHaveText(expected.remain);
+    /* v192:行程頁只顯示行程(沒有完成／略過),表頭只寫總站數,總數仍與今天頁一致 */
     await page.evaluate(()=>{curDay=findToday();switchView('trip');});
     await expect(page.locator('#view-trip .day-head .prog')).toHaveText(expected.prog);
   });

@@ -34,6 +34,7 @@ function makeSandbox(){
   const writes = {};
   const sandbox = {
     TripProgression,
+    todayListMode:function(){return false;},   // v192: these cases describe the time-based card mode (the list mode never auto-skips)
     tripProgressRenderReadOnly:false,
     tripProgressErrorMessage:'',
     tripProgressFailureSeen:{},
