@@ -775,6 +775,7 @@ html[data-theme="ehon"] .past-trip-card b{color:var(--ehon-ink)}
 .tl-item.cat-stay .tl-card{border-left-color:#8a7bb8}.tl-item.cat-stay .tl-dot{border-color:#8a7bb8}
 .tl-item.cat-shop .tl-card{border-left-color:#4a8fc0}.tl-item.cat-shop .tl-dot{border-color:#4a8fc0}
 html[data-theme="ehon"] #view-trip .item.tl-item{border:0;box-shadow:none;border-radius:0}
+#view-trip .item.tl-item.now-item{background:transparent;box-shadow:none}
 html[data-theme="ehon"] .tl-card{border:3px solid var(--ehon-ink);border-left-width:8px;border-radius:20px;box-shadow:none}
 html[data-theme="ehon"] .tl-rail::before{background:var(--ehon-green)}
 html[data-theme="ehon"] .tl-link .tl-rail::before{background:repeating-linear-gradient(var(--ehon-ink) 0 5px,transparent 5px 10px)}
@@ -3493,7 +3494,7 @@ function renderItem(it,checks,currentItemId,dayProgress,timeline){
     var mapQuery=presentation.title+(p&&p.mapcode?'':'');
     var mapLink='<a class="tl-map" href="https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(mapQuery)+'" target="_blank" rel="noopener" aria-label="'+escapeHtmlAttr('在地圖上看：'+presentation.title)+'">'+(lineIcon('📍')||'')+'地圖</a>';
     var toggle=(qa||panels)?'<button type="button" class="tl-toggle" aria-expanded="'+(open?'true':'false')+'" aria-label="'+escapeHtmlAttr((open?'收起：':'展開：')+presentation.title)+'" onclick="toggleTripStop(\''+jsHtmlAttrString(it.id)+'\',this)"><span aria-hidden="true">▾</span></button>':'';
-    return '<div class="item tl-item cat-'+(cat?cat.cls:'none')+(pastDone?' past-done':'')+(open?' tl-open':'')+'" id="it_'+it.id+'">'+
+    return '<div class="item tl-item cat-'+(cat?cat.cls:'none')+(pastDone?' past-done':'')+(open?' tl-open':'')+(isNow?' now-item':'')+'" id="it_'+it.id+'">'+
       '<div class="tl-time">'+escapeHtml(it.time||'')+(timeline.nextTime?'<small>～'+escapeHtml(timeline.nextTime)+'</small>':'')+'</div>'+
       '<div class="tl-rail" aria-hidden="true"><span class="tl-dot"></span></div>'+
       '<div class="tl-card"><div class="tl-head"><div class="tl-main">'+
