@@ -3448,8 +3448,9 @@ function renderTrip(){
     (pastDay&&(actual.adjusted||pastDoneN)?'<div class="trip-past-note">這天已結束：'+(actual.adjusted?'依當天實際順序與完成紀錄顯示':'依當天完成紀錄顯示')+'</div>':'')+
     /* v186(Bar 2026-11-11 UI/UX 第 3 項):「顯示全部／隱藏已完成」原本是整列兩格大切換,比行程本身還醒目;
        改成右側一個小開關(仍是 aria-pressed 按鈕,class 保留 trip-filter-btn 供焦點還原退路)。 */
-    '<div class="trip-filter"'+(browse?' style="display:none"':'')+'>'+
-    '<button type="button" class="trip-filter-btn trip-hide-toggle'+(tripHideDone?' on':'')+'" aria-pressed="'+(tripHideDone?'true':'false')+'" onclick="setTripHideDone(!tripHideDone)"><span class="trip-hide-switch" aria-hidden="true"></span>隱藏已完成</button>'+
+    /* v192:行程頁一律單純瀏覽,「隱藏已完成」不再出現;旅程中看別天時仍保留「回到現在」 */
+    '<div class="trip-filter"'+(browse&&!(findToday()!==null&&findToday()!==curDay)?' style="display:none"':'')+'>'+
+    (browse?'':'<button type="button" class="trip-filter-btn trip-hide-toggle'+(tripHideDone?' on':'')+'" aria-pressed="'+(tripHideDone?'true':'false')+'" onclick="setTripHideDone(!tripHideDone)"><span class="trip-hide-switch" aria-hidden="true"></span>隱藏已完成</button>')+
     /* 只在「它做得到別處做不到的事」時出現,兩個條件都必要:
        ① 今天要真的落在行程範圍內,否則按了沒反應;
        ② 人必須不在今天那一天 —— 待在今天時,「隱藏已完成」已把過去的站點移走,
