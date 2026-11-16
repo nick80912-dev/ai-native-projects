@@ -10,6 +10,9 @@ async function installBaseLocalState(page){
     localStorage.setItem('trip_member','Bar');
     /* v150: an existing Okayama device. A fresh device (no trip data, no source) starts unconnected from 2026-10-24 (Taiwan time). */
     localStorage.setItem('trip_source','{"version":1,"kind":"legacy","migratedAt":0}');
+    /* v192: the today page defaults to the list; the existing suites describe the time-based card, so they keep it.
+       List-mode specs switch to 'list' explicitly. */
+    localStorage.setItem('trip_today_mode','"card"');
   });
 }
 

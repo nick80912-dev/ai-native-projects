@@ -43,16 +43,13 @@ test('Today: no repeated stop line, 導航 is the only solid button, weather emp
   }
 });
 
-test('Itinerary: one hide-done switch with aria-pressed, line icons instead of emoji',async({page})=>{
+test('Itinerary: no hide-done switch any more (v192), line icons instead of emoji',async({page})=>{
   await boot(page);
+  /* v186 的「隱藏已完成」小開關在 v192(Bar 2026-11-15「行程頁單純顯示行程」)移除:行程頁一律列出整天 */
   await page.evaluate(()=>{setTripHideDone(true);switchView('trip');});
-  const toggle=page.locator('#view-trip .trip-hide-toggle');
-  await expect(toggle).toHaveCount(1);
-  await expect(toggle).toHaveText('隱藏已完成');
-  await expect(toggle).toHaveAttribute('aria-pressed','true');
-  await toggle.click();
-  await expect(page.locator('#view-trip .trip-hide-toggle')).toHaveAttribute('aria-pressed','false');
-  await expect(page.locator('#view-trip .trip-filter-track')).toHaveCount(0);
+  await expect(page.locator('#view-trip .trip-hide-toggle')).toHaveCount(0);
+  await expect(page.locator('#view-trip .item .chk')).toHaveCount(0);
+  expect(await page.evaluate(()=>document.querySelectorAll('#view-trip .item').length)).toBe(await page.evaluate(()=>DB.trip.days[curDay].items.length));
   const nav=page.locator('#view-trip .qa-btn.drv').first();
   await expect(nav.locator('svg.ln-ico')).toHaveCount(1);
   await expect(nav).toHaveText(/^(導航|步行|路線)$/);

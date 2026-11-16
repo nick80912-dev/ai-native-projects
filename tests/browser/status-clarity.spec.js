@@ -83,7 +83,8 @@ test('photo health stays quiet when capacity estimation is unsupported',async({p
  await expect(capacity).toContainText('瀏覽器未提供容量估算');
  await expect(page.locator('.shopping-photo-storage-warning')).toHaveCount(0);
 });
-test('itinerary distinguishes completed, manual skip, auto skip and pending after navigation',async({page})=>{
+test('during the trip the itinerary only lists stops; skip and auto skip stay recorded (v192)',async({page})=>{
+ /* v192(Bar 2026-11-15):行程頁單純顯示行程 —— 不再分「已完成／已略過／自動略過」;卡片模式的跳過與自動略過仍照樣記錄 */
  await page.evaluate(()=>{
   localStorage.removeItem('trip_next_stop_progress');localStorage.removeItem('trip_checks');
   DB.trip.days[0].items=[['auto','08:00'],['manual','13:00'],['done','14:00'],['pending','15:00']].map(([id,time])=>({id:'clarity-'+id,time,act:'狀態-'+id,place:'',ref:'',move:'',note:''}));
@@ -93,16 +94,13 @@ test('itinerary distinguishes completed, manual skip, auto skip and pending afte
  await expect(page.getByRole('button',{name:'開啟完整行程：狀態-manual',exact:true})).toBeVisible();
  await page.getByRole('button',{name:'跳過',exact:true}).click();
  await page.getByRole('button',{name:'行程',exact:true}).click();
- await page.locator('#it_clarity-done .chk').focus();await page.keyboard.press('Space');
- await expect(page.locator('#it_clarity-done')).toContainText('已完成');
- await expect(page.locator('#it_clarity-manual')).toContainText('已略過');
- await expect(page.locator('#it_clarity-auto')).toContainText('自動略過');
- await expect(page.locator('#it_clarity-pending .trip-status-badge')).toHaveCount(0);
- await expect(page.locator('#it_clarity-done .chk')).toHaveAttribute('aria-checked','true');
- await expect(page.locator('#it_clarity-manual .chk')).toHaveAttribute('aria-checked','false');
- await page.getByRole('button',{name:'今天',exact:true}).click();
- await page.getByRole('button',{name:'行程',exact:true}).click();
- await expect(page.locator('#it_clarity-manual')).toContainText('已略過');
+ await expect(page.locator('#view-trip .item')).toHaveCount(4);
+ await expect(page.locator('#view-trip .chk')).toHaveCount(0);
+ await expect(page.locator('#view-trip .trip-status-badge,#view-trip .auto-skip-badge')).toHaveCount(0);
+ const progress=await page.evaluate(()=>JSON.parse(localStorage.getItem('trip_next_stop_progress')));
+ const day=Object.values(progress)[0];
+ expect(day.skip['clarity-manual']).toBe(true);
+ expect(day.autoSkip['clarity-auto']).toBe(true);
 });
 test('native partial purchase shows purchased progress separately from ledger coverage',async({page})=>{
  await seed(page);

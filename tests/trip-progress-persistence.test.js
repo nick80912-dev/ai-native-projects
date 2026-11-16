@@ -31,6 +31,7 @@ function uiContext(storage){
     DB:{trip:{days:[day]}},curDay:0,curView:'trip',lastNextStopAction:null,
     tripProgressAutoFailures:{},tripProgressFailureSeen:{},tripProgressErrorMessage:'',tripProgressRenderReadOnly:false,
     TripProgression:require('../trip-progression'),findToday:()=>0,currentMinutes:()=>12*60,
+    todayListMode:function(){return false;},   // v192: these cases describe the time-based card mode (the list mode never auto-skips)
     lsGet:(key,fallback)=>{try{const raw=storage.getItem(key);return raw===null?fallback:JSON.parse(raw);}catch(ignore){return fallback;}},
     document:{querySelectorAll:()=>[],getElementById:()=>null},
     AppLog:{repo:()=>{}},renderToday:()=>{},renderTrip:()=>{},restoreTripCheckFocus:()=>{},

@@ -163,20 +163,20 @@ test.describe('T3 opening a cleared stop from Today shows it on the trip page',(
     await page.locator('#view-today .nx-cluster-expand').click();
   }
 
-  test('an auto-skipped stop switches the filter to 顯示全部 and is located',async({page})=>{
+  test('an auto-skipped stop is located on the full-day trip page',async({page})=>{
     await openToday(page);
     const stop=page.locator('#view-today .nx-cluster-stop',{hasText:'宮島口搭船處'});
     await expect(stop).toContainText('自動略過');
     await stop.click();
     await expect(page.locator('#view-trip .is-navigation-target')).toHaveAttribute('id','it_10/19_7');
     await expect(page.locator('#view-trip .navigation-target-status')).toHaveText('已定位：宮島口搭船處');
-    await expect(page.locator('#view-trip .trip-hide-toggle')).toHaveAttribute('aria-pressed','false');   // v186:小開關關閉＝顯示全部
+    /* v192:行程頁一律列出整天,沒有「隱藏已完成」可切換 */
+    await expect(page.locator('#view-trip .trip-hide-toggle')).toHaveCount(0);
   });
 
-  test('a pending stop keeps 隱藏已完成',async({page})=>{
+  test('a pending stop is located too',async({page})=>{
     await openToday(page);
     await page.locator('#view-today .nx-cluster-stop',{hasText:'宮島表参道商店街'}).click();
     await expect(page.locator('#view-trip .is-navigation-target')).toHaveAttribute('id','it_10/19_9');
-    await expect(page.locator('#view-trip .trip-hide-toggle')).toHaveAttribute('aria-pressed','true');
   });
 });

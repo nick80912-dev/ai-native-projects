@@ -36,6 +36,7 @@ function renderRoot(overrides,ledgerSettings){
     THEME_REGISTRY:{ocean:{id:'ocean',name:'海洋／岡山'},tea:{id:'tea',name:'焙茶／倉敷'}},
     currentThemeId:function(){ return 'ocean'; },
     isSimpleSettlementMode:function(){ return false; },
+    todayListMode:function(){ return true; },   // v192:今天頁預設清單,根頁「個人」多一列卡片開關
     appVersionLabel:function(){ return version; },
     shoppingPhotoStorageSummary:function(){ return '0 張 · 0 B'; },
     settingsDataHealthModel:function(){ return {summary:'資料狀態正常'}; },
