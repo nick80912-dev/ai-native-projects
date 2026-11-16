@@ -364,3 +364,24 @@ test('筆記儲存中切換旅程，不會讓新旅程的新增按鈕永久停�
   expect(await page.evaluate(()=>pastTripsUi.noteDraft)).toBeNull();
   expect(errors).toEqual([]);
 });
+
+test('v193 過往旅程:清單寫去回日期與天數,點開是獨立一頁(摘要、回顧筆記在前,原始資料在最底)',async({page})=>{
+  const errors=collectPageErrors(page);
+  await installOfflineAppNetwork(page);await openApp(page);await waitForSyncToSettle(page);
+  await installDriveFixture(page);await page.evaluate(()=>openSettings('root'));
+  await page.getByRole('button',{name:'過往旅程'}).click();
+  const card=page.locator('.past-trip-card').first();
+  await expect(card).toContainText('去 2026/10/18（日） → 回 10/23（五） · 6 天');
+  await expect(card).toContainText('封存於 2026/10/24');
+  await card.click();
+  await expect(page.locator('.past-trip-card')).toHaveCount(0);
+  await expect(page.locator('.past-trip-summary')).toContainText('去 2026/10/18（日） → 回 10/23（五） · 6 天');
+  await expect(page.locator('.past-trip-summary .past-trip-stat')).toHaveCount(4);
+  await expect(page.locator('.past-trip-summary')).toContainText('1 筆 · NT$400');
+  await expect(page.locator('.past-trip-notes')).toContainText('2026/10/25');
+  const order=await page.evaluate(()=>{const p=document.querySelector('.settings-panel').innerHTML;return [p.indexOf('past-trip-summary'),p.indexOf('回顧筆記'),p.indexOf('旅程內容'),p.indexOf('進階：原始資料')];});
+  expect(order.every((v,i)=>v>=0&&(i===0||v>order[i-1]))).toBe(true);
+  await page.getByRole('button',{name:'‹ 全部過往旅程'}).click();
+  await expect(page.locator('.past-trip-card')).toHaveCount(1);
+  expect(errors).toEqual([]);
+});
