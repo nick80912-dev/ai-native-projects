@@ -32,6 +32,7 @@ schema.js               唯一資料規格(SSoT):欄位/gid/型別值/發布URL
 validator.js            防錯防線:AppLog 六類 + session-only 100 筆緩衝 + buildHeaderMap + healthCheck
 sw.js                   Service Worker:離線快取(改版 bump VERSION)
 manifest.webmanifest    PWA 安裝資訊
+privacy.html            隱私權政策(v192;Google OAuth 品牌設定的隱私權政策網址,不屬 App Shell)
 icon-16.png             瀏覽器小圖示
 icon-32.png             瀏覽器小圖示
 icon-152.png            iOS PWA 圖示

@@ -4690,17 +4690,24 @@ function resetTodayOrder(dayIndex){
   renderToday();toast('已恢復原順序');
 }
 function isStopDone(it,progress,checks){return !!(it&&(checks[it.id]||progress&&progress.done&&progress.done[it.id]));}
+function refocusTodayListDone(id){
+  var rows=document.querySelectorAll('#view-today .today-list-row');
+  for(var i=0;i<rows.length;i++){if(rows[i].getAttribute('data-stop-id')===id){var b=rows[i].querySelector('.today-list-done');if(b)b.focus();return;}}
+}
 function toggleTodayListDone(dayIndex,id){
   var day=DB.trip&&DB.trip.days?DB.trip.days[dayIndex]:null;if(!day)return;
+  /* 重畫後把焦點放回同一站的「完成」鍵(成功或失敗都一樣),鍵盤／讀屏使用者不會掉回頁首 */
+  var hadFocus=!!(document.activeElement&&document.activeElement.classList&&document.activeElement.classList.contains('today-list-done'));
   var state=readTripProgressChecked(localStorage);
-  if(!state.ok){reportTripProgressFailure(state,'today-list-done');renderToday();return;}
+  if(!state.ok){reportTripProgressFailure(state,'today-list-done');renderToday();if(hadFocus)refocusTodayListDone(id);return;}
   var progress=normalizeDayProgress(state.progress[dayProgressKey(day,dayIndex)]);
   var wasDone=!!(state.checks[id]||progress.done[id]);
   var result=setItemCompletion(day,dayIndex,id,wasDone?'clear':'done');
-  if(!result.ok){reportTripProgressFailure(result,'today-list-done');renderToday();return;}
+  if(!result.ok){reportTripProgressFailure(result,'today-list-done');renderToday();if(hadFocus)refocusTodayListDone(id);return;}
   clearTripProgressFailure();
   renderToday();
   if(curView==='trip')renderTrip();
+  if(hadFocus)refocusTodayListDone(id);
   toast(wasDone?'已取消完成':'已完成 ✓');
 }
 function renderTodayList(day,ti){

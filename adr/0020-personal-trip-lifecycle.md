@@ -43,3 +43,7 @@ localStorage 不是跨分頁交易資料庫；互斥鎖、互動守門及同步�
 
 
 第二階段才提供連接／切換新 Google Sheets；本 ADR 不授權顯示未實作的「連接新旅程」。正式使用前須由 Bar 在 iPhone 與 Android 實體 PWA 各驗 Google 授權、Drive 上傳讀回、清除重啟與筆記；v137 仍按 ADR 0019 的不可變 generation 與 forward-bump 回滾。變更 Drive scope、封存格式、團體帳預檢或 inactive 邊界需更新本 ADR 與回歸測試。
+
+## 2026-11-16 增補:OAuth 改為正式版
+
+同行友人封存時顯示沒有權限 —— OAuth 仍是 External Testing,測試使用者只有 Bar。Bar 2026-11-16 在 Google Auth Platform 發布為正式版(品牌:名稱 TripPilot、首頁、隱私權政策 `privacy.html`,不上傳 Logo 以免進入品牌驗證);scope 仍只有 `drive.file`。使用者第一次授權可能看到「Google 尚未驗證這個應用程式」,按「進階」繼續即可。
