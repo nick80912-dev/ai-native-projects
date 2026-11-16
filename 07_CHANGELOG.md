@@ -1,5 +1,13 @@
 # 07 版本紀錄
 
+## 2026-11-16 — v193 已上線 main，tag `production-v193`
+
+- PR [#180](https://github.com/nick80912-dev/ai-native-projects/pull/180) 在 head `0bf4297` 的 sanity／browser-qa 全綠後合併進 `dev`(`24f402b`);PR [#181](https://github.com/nick80912-dev/ai-native-projects/pull/181) 七項檢查全綠後合併進 `main`(`796c205`)。
+- **線上核對**:正式站 `sw.js` 為 `SW_VERSION='v193'`;全新 Chromium `APP_VERSION` v193、只剩 `okayama-trip-v193` 快取、發布說明「過往旅程更好讀」、`pastTripRangeText` 回「去 2026/10/18（日） → 回 10/23（五） · 6 天」、無 pageerror;線上 `shell/v193/index.html` 與 `origin/main` 位元組相同;v191／v192 仍 200,v190 為 404;`privacy.html` 200。
+- **tag**:production-tags workflow 建立 `production-v193` → `796c205`。
+- 回滾:依 `16_OPS_PLAYBOOK.md` §A1 Publish `commit_ref` = `a34bca0`(`production-v192`)的部署,再往前 bump。
+- 過往旅程第二版(行程按天、帳務小計、採買分組)記入 backlog #64。
+
 ## 2026-11-16 — v193 過往旅程更好讀(第一版)
 
 - **來源**:Bar 2026-11-16「過往旅程列出去與回的時程」,再問「過往旅程可以有哪些建議的呈現方式」;我列 9 項,Bar 選第一版先做 1、2、3、7、8、9,看過截圖回「Okay」。第二版(行程按天切換、帳務小計、採買分已買／沒買)之後再做。
