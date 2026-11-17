@@ -358,7 +358,7 @@ test('照片健康狀態維持在資料群組並通過子頁路由與三種手�
   await waitForSyncToSettle(page);
   await openSettingsRoot(page);
 
-  const storageRow=page.getByRole('button',{name:/照片健康狀態/});
+  const storageRow=page.getByRole('button',{name:/資料與照片狀態/});  // v198:資料健康與照片健康合成一頁
   const ordering=await page.evaluate(()=>{
     const dataGroup=Array.from(document.querySelectorAll('#settingsOverlay .settings-group')).find(group=>group.querySelector('.settings-group-title').textContent==='資料');
     return Array.from(dataGroup.querySelectorAll('.settings-row-main b'),node=>node.textContent);
@@ -368,9 +368,9 @@ test('照片健康狀態維持在資料群組並通過子頁路由與三種手�
   expect(ordering).toEqual(['疑難排解','過往旅程','資料與版本']);
   await page.getByRole('button',{name:/^疑難排解/}).click();
   await expect(page.locator('#settingsTitle')).toHaveText('疑難排解');
-  expect(await page.evaluate(()=>Array.from(document.querySelectorAll('#settingsOverlay .settings-row-main b'),node=>node.textContent))).toEqual(['資料健康狀態','照片健康狀態','旅途紀錄','診斷面板']);
+  expect(await page.evaluate(()=>Array.from(document.querySelectorAll('#settingsOverlay .settings-row-main b'),node=>node.textContent))).toEqual(['資料與照片狀態','旅途紀錄','診斷面板']);
   await storageRow.click();
-  await expect(page.getByRole('heading',{name:'照片健康狀態'})).toBeVisible();
+  await expect(page.getByRole('heading',{name:'資料與照片狀態'})).toBeVisible();
 
   for(const size of WIDTHS){
     await page.setViewportSize({width:size.w,height:size.h});
@@ -391,7 +391,7 @@ test('照片健康狀態維持在資料群組並通過子頁路由與三種手�
   }
 
   await page.getByRole('button',{name:/返回/}).click();
-  await expect(page.getByRole('button',{name:/照片健康狀態/})).toBeVisible();
+  await expect(page.getByRole('button',{name:/資料與照片狀態/})).toBeVisible();
   expect(pageErrors).toEqual([]);
 });
 
@@ -419,7 +419,7 @@ test('資料健康入口保留警告，明細更新與三種手機寬度正常',
   /* v185:警告先出現在根頁的「疑難排解」那一列,點進去才是資料健康狀態 */
   await expect(page.getByRole('button',{name:/^疑難排解/})).toContainText('1 項需注意');
   await page.getByRole('button',{name:/^疑難排解/}).click();
-  const entry=page.getByRole('button',{name:/^資料健康狀態/});
+  const entry=page.getByRole('button',{name:/^資料與照片狀態/});  // v198:合成一頁
   await expect(entry).toContainText('1 項需注意');
   await entry.focus();await page.keyboard.press('Space');
   const health=page.locator('.settings-data-health');
