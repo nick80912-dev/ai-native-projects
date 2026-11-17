@@ -182,16 +182,18 @@ test('過往旅程只讀顯示封存，回顧筆記文字不執行 HTML',async({
   await expect(page.getByRole('button',{name:/岡山回憶/})).toBeVisible();
   await page.getByRole('button',{name:/岡山回憶/}).click();
   await expect(page.getByRole('heading',{name:'岡山回憶'})).toBeVisible();
+  await page.getByRole('tab',{name:'筆記'}).click();
   await expect(page.locator('#settingsOverlay')).toContainText('<img src=x onerror=alert(1)> 很棒');
   await expect(page.locator('#settingsOverlay img')).toHaveCount(0);
-  await expect(page.locator('#settingsOverlay button',{hasText:/編輯|刪除/})).toHaveCount(0);
-  await page.locator('summary').filter({hasText:/^採買紀錄$/}).click();
-  await expect(page.locator('.past-trip-readable')).toContainText('白桃果醬');
-  await expect(page.locator('.past-trip-readable')).toContainText('對象：Jane');
-  await expect(page.locator('.past-trip-readable')).toContainText('數量：2');
-  await page.locator('summary').filter({hasText:/^個人帳務$/}).click();
-  await expect(page.locator('.past-trip-readable')).toContainText('1800');
-  await expect(page.locator('.past-trip-readable')).toContainText('400');
+  await expect(page.locator('#settingsOverlay button',{hasText:/刪除/})).toHaveCount(0);
+  /* v196:採買與帳務各有分頁 */
+  await page.getByRole('tab',{name:'採買'}).click();
+  await expect(page.locator('#pastTripPanel')).toContainText('白桃果醬');
+  await expect(page.locator('#pastTripPanel')).toContainText('給 Jane ×2');
+  await page.getByRole('tab',{name:'帳務'}).click();
+  await page.getByRole('button',{name:'個人帳'}).click();
+  await expect(page.locator('#pastTripPanel')).toContainText('¥1,800');
+  await expect(page.locator('#pastTripPanel')).toContainText('NT$400');
   await page.setViewportSize({width:320,height:700});
   const overflow=await page.evaluate(()=>{
     const panel=document.querySelector('#settingsOverlay .settings-panel');
@@ -251,6 +253,7 @@ test('新增回顧筆記後重新讀回，原筆記保持不變',async({page})=>
   await page.evaluate(()=>openSettings('root'));
   await page.getByRole('button',{name:'過往旅程'}).click();
   await page.getByRole('button',{name:/岡山回憶/}).click();
+  await page.getByRole('tab',{name:'筆記'}).click();
   await expect(page.locator('.past-trip-notes')).toContainText('旅程很棒');
   await page.locator('#pastTripNoteText').fill('下次再來');
   await page.getByRole('button',{name:'新增回顧筆記'}).click();
@@ -268,6 +271,7 @@ test('筆記上傳失敗後重試沿用同一 note ID',async({page})=>{
   await page.evaluate(()=>openSettings('root'));
   await page.getByRole('button',{name:'過往旅程'}).click();
   await page.getByRole('button',{name:/岡山回憶/}).click();
+  await page.getByRole('tab',{name:'筆記'}).click();
   await page.locator('#pastTripNoteText').fill('下次再來');
   await page.getByRole('button',{name:'新增回顧筆記'}).click();
   await expect(page.locator('#pastTripNoteStatus')).toContainText('筆記未儲存');
@@ -312,6 +316,7 @@ test('筆記清單讀回失敗保留草稿及 retry ID，重試不重複上傳',
   await page.evaluate(()=>openSettings('root'));
   await page.getByRole('button',{name:'過往旅程'}).click();
   await page.getByRole('button',{name:/岡山回憶/}).click();
+  await page.getByRole('tab',{name:'筆記'}).click();
   await expect(page.locator('.past-trip-notes')).toContainText('旅程很棒');
   await page.evaluate(()=>{
     const original=window.fetch;let failed=false;
@@ -340,6 +345,7 @@ test('筆記儲存中切換旅程，不會讓新旅程的新增按鈕永久停�
   await installDriveFixture(page);await page.evaluate(()=>openSettings('root'));
   await page.getByRole('button',{name:'過往旅程'}).click();
   await page.getByRole('button',{name:/岡山回憶/}).click();
+  await page.getByRole('tab',{name:'筆記'}).click();
   await expect(page.locator('.past-trip-notes')).toContainText('旅程很棒');
   await page.evaluate(()=>{
     const second=JSON.parse(JSON.stringify(pastTripsUi.archives[0]));second.archive.archiveId='second';second.archive.trip.name='第二趟旅程';
@@ -352,9 +358,11 @@ test('筆記儲存中切換旅程，不會讓新旅程的新增按鈕永久停�
   /* v193:點開的旅程是獨立一頁,換旅程要先回到清單 */
   await page.getByRole('button',{name:'‹ 全部過往旅程'}).click();
   await page.getByRole('button',{name:/第二趟旅程/}).click();
+  await page.getByRole('tab',{name:'筆記'}).click();
   await expect(page.getByRole('button',{name:'新增回顧筆記'})).toBeEnabled();
   await page.getByRole('button',{name:'‹ 全部過往旅程'}).click();
   await page.getByRole('button',{name:/岡山回憶/}).click();
+  await page.getByRole('tab',{name:'筆記'}).click();
   await expect(page.locator('.past-trip-notes')).toContainText('旅程很棒');
   await page.locator('#pastTripNoteText').fill('回來後的新草稿');
   await page.evaluate(()=>window.__qaReleaseNote('note-file'));
@@ -365,7 +373,7 @@ test('筆記儲存中切換旅程，不會讓新旅程的新增按鈕永久停�
   expect(errors).toEqual([]);
 });
 
-test('v193 過往旅程:清單寫去回日期與天數,點開是獨立一頁(摘要、回顧筆記在前,原始資料在最底)',async({page})=>{
+test('v193/v196 過往旅程:清單寫去回日期與天數,點開是獨立一頁(摘要卡、分頁;原始資料收在最底的小按鈕)',async({page})=>{
   const errors=collectPageErrors(page);
   await installOfflineAppNetwork(page);await openApp(page);await waitForSyncToSettle(page);
   await installDriveFixture(page);await page.evaluate(()=>openSettings('root'));
@@ -378,9 +386,17 @@ test('v193 過往旅程:清單寫去回日期與天數,點開是獨立一頁(摘
   await expect(page.locator('.past-trip-summary')).toContainText('去 2026/10/18（日） → 回 10/23（五） · 6 天');
   await expect(page.locator('.past-trip-summary .past-trip-stat')).toHaveCount(4);
   await expect(page.locator('.past-trip-summary')).toContainText('1 筆 · NT$400');
+  /* v196(Bar 2026-11-17):不顯示完成站數;分頁總覽／行程／帳務／採買／筆記,預設總覽 */
+  await expect(page.locator('.past-trip-summary')).not.toContainText('完成站數');
+  await expect(page.getByRole('tab')).toHaveText(['總覽','行程','帳務','採買','筆記']);
+  await expect(page.getByRole('tab',{name:'總覽'})).toHaveAttribute('aria-selected','true');
+  await expect(page.locator('.past-trip-raw')).toHaveCount(0);
+  await page.getByRole('button',{name:'顯示原始資料'}).click();
+  await expect(page.locator('.past-trip-advanced')).toContainText('行程');
+  await page.getByRole('button',{name:'隱藏原始資料'}).click();
+  await expect(page.locator('.past-trip-advanced')).toHaveCount(0);
+  await page.getByRole('tab',{name:'筆記'}).click();
   await expect(page.locator('.past-trip-notes')).toContainText('2026/10/25');
-  const order=await page.evaluate(()=>{const p=document.querySelector('.settings-panel').innerHTML;return [p.indexOf('past-trip-summary'),p.indexOf('回顧筆記'),p.indexOf('旅程內容'),p.indexOf('進階：原始資料')];});
-  expect(order.every((v,i)=>v>=0&&(i===0||v>order[i-1]))).toBe(true);
   await page.getByRole('button',{name:'‹ 全部過往旅程'}).click();
   await expect(page.locator('.past-trip-card')).toHaveCount(1);
   expect(errors).toEqual([]);

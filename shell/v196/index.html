@@ -11983,7 +11983,7 @@ function renderPastTripLedgerPanel(model){
   var seg=pastTripSeg([['group','團體帳'],['personal','個人帳']],view.ledger,'setPastTripLedger','帳本');
   if(view.ledger==='personal'){
     var member=canonicalMemberName(model.member);
-    var mine=model.personalRecords.filter(function(r){return r&&(!member||canonicalMemberName(r.member)===member);});
+    var mine=model.personalRecords.filter(function(r){return r&&(!member||!r.member||canonicalMemberName(r.member)===member);});
     if(!mine.length)return seg+'<p class="settings-help">沒有個人帳。</p>';
     return seg+pastTripGroupByDate(mine).map(function(group){
       var subtotal=group.records.reduce(function(sum,r){return sum+(ledgerRecordMetadata(r).isProxy?0:ledgerAmountValue(r.amountTwd));},0);
