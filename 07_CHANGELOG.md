@@ -1,5 +1,24 @@
 # 07 版本紀錄
 
+## 2026-11-17 — v197 小地方調整
+
+- **來源**:Bar 2026-11-17 問「其它微調優化部分？」,我列 3 項,Bar 選全做並補充:日期寫成 10/19(一)、幣別用那趟旅程當時的設定、只有代購的那天直接顯示代購金額、過往旅程清單卡片不寫天數並縮小高度、「匯出帳務到記序」改成「匯出帳本」。看過截圖回「okay」。
+- **行程頁日期按鈕**:`10/19·一` → `10/19(一)`(「一」在小字裡像破折號)。
+- **過往旅程幣別**:`pastTripJpy` 改用封存試算表 TripConfig 的幣別(`TripCurrency.normalizeCode(cfg.currency)`,沒有就 JPY),不再寫死 ¥。
+- **個人帳每日小計**:分開算一般與代購;只有代購的那天顯示「代購 NT$x」,兩者都有時並列。
+- **過往旅程清單**:卡片只留名稱與「去 … → 回 …」兩行(`pastTripRangeText` 不再加天數,摘要卡也一樣),內距縮小;封存日期只在摘要卡顯示。
+- **匯出**:按鈕改名「匯出帳本」,格式不變(記序可匯入)。
+- **測試**:新增 `tests/browser/day-chip-weekday-v197.spec.js`;`past-trips` 與 `past-trips-v196` 跟著改,另加幣別案例。
+- **整理**:刪除 `shell/v194`,留 v195–v197;發布說明保留 v193–v197。
+
+## 2026-11-17 — v196 已上線 main，tag `production-v196`
+
+- PR [#189](https://github.com/nick80912-dev/ai-native-projects/pull/189) 在 head `8ea1282` 的 sanity／browser-qa 全綠後合併進 `dev`(`b60f38f`)。
+- 發布 PR [#190](https://github.com/nick80912-dev/ai-native-projects/pull/190) 第一次顯示與 `main` 衝突:v195 以 squash 進 `main`(`85718e3`),git 不認得那與 `dev` 上的 v195 是同一份內容。`main` 的樹與 `dev`@`c97ae5b` 完全相同,所以 PR [#191](https://github.com/nick80912-dev/ai-native-projects/pull/191) 把 `main` 併回 `dev`、衝突全取 `dev` 這邊(檔案零變動)。之後 #190 七項檢查全綠,這次改用 **merge commit** 合併進 `main`(`e0ab64b`),往後發布不再因 squash 產生同樣衝突。
+- **線上核對**:正式站 `sw.js` 為 `SW_VERSION='v196'`;全新 Chromium `APP_VERSION` v196、只剩 `okayama-trip-v196` 快取、發布說明「過往旅程分頁瀏覽」、過往旅程分頁／匯出／筆記修改函式存在、無 pageerror;線上 `shell/v196/index.html` 與 `origin/main` 位元組相同;v194／v195 仍 200,v193 為 404;線上 `trip-drive.js` 含 `replaces` 寫入。
+- **tag**:production-tags workflow 建立 `production-v196` → `e0ab64b`。
+- 回滾:依 `16_OPS_PLAYBOOK.md` §A1 Publish `commit_ref` = `85718e3`(`production-v195`)的部署,再往前 bump。
+
 ## 2026-11-17 — v196 過往旅程分頁瀏覽
 
 - **來源**:backlog #64。Bar 2026-11-17 提出行程按天、團體帳與個人帳、採買分已買／沒買;我另外建議花費總覽、每天花費、住宿、筆記依天分組。Bar 選分頁按鈕、花費總覽加圓餅圖並要「匯出分帳紀錄到記序」、每天花費與住宿,不要筆記依天分組,回顧筆記要能修改。看過截圖後再要求:完成的站不特別處理也不記錄、原始資料放到不顯眼的按鈕、改過的筆記不標示;回「okay」。

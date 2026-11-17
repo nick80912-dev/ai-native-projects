@@ -1,5 +1,5 @@
 /* v196 過往旅程分頁(Bar 2026-11-17,backlog #64)
-   - 總覽:我的花費圓餅圖(個人＋團體分攤,不含代購)與「匯出帳務到記序」(與匯出本趟個人帳同格式 v2)。
+   - 總覽:我的花費圓餅圖(個人＋團體分攤,不含代購)與「匯出帳本」(v197 前叫「匯出帳務到記序」;與匯出本趟個人帳同格式 v2,記序可匯入)。
    - 行程:按天切換;不顯示完成狀態;每天下面有當天花費與當晚住宿(適用日期 10/18-10/23 = 入住到退房前一晚)。
    - 帳務:團體帳(結算結果、每人先付／分攤、全團支出依日期)／個人帳(依日期、小計不含代購)。
    - 採買:已買／沒買,依店家分組。筆記:鉛筆圖示修改 = 新增一筆帶 replaces 的版本,只顯示最新版、不標「已修改」。
@@ -50,6 +50,17 @@ async function setup(page,theme){
   await page.waitForTimeout(600);
 }
 
+test('v197: amounts use the archived trip currency, not a hard-coded yen sign',async({page})=>{
+  await setup(page,'ocean');
+  const krw=await page.evaluate(()=>{
+    const m=pastTripModelCache.model;const before=m.db.cfg.currency;m.db.cfg.currency='KRW';
+    const out=pastTripJpy(1800);m.db.cfg.currency=before;return {krw:out,jpy:pastTripJpy(1800)};
+  });
+  expect(krw.krw).not.toContain('¥');
+  expect(krw.krw).toContain('1,800');
+  expect(krw.jpy).toContain('¥');
+});
+
 test('overview shows my spend by category and exports the archived ledger for 記序',async({page})=>{
   const errors=collectPageErrors(page);
   await setup(page,'ocean');
@@ -65,7 +76,7 @@ test('overview shows my spend by category and exports the archived ledger for �
     URL.createObjectURL=blob=>{window.__qaBlob=blob;return create.call(URL,blob);};
     HTMLAnchorElement.prototype.click=function(){window.__qaExport={name:this.download};};
   });
-  await page.getByRole('button',{name:'匯出帳務到記序'}).click();
+  await page.getByRole('button',{name:'匯出帳本'}).click();
   const exported=await page.evaluate(async()=>({name:window.__qaExport&&window.__qaExport.name,text:await window.__qaBlob.text()}));
   expect(exported.name).toBe('TripPilot-個人帳-岡山四國六天五夜-2026-10-18.json');
   const payload=JSON.parse(exported.text);
@@ -73,7 +84,7 @@ test('overview shows my spend by category and exports the archived ledger for �
   expect(payload.records).toHaveLength(6);
   expect(payload.groupShare.items).toHaveLength(6);
   expect(payload.totals).toMatchObject({member:'Bar',personalTwd:4582,proxyCount:1,totalTwd:8108});
-  await expect(page.locator('#pastTripExportStatus')).toContainText('可匯入記序');
+  await expect(page.locator('#pastTripExportStatus')).toContainText('請確認保存');
   expect(errors).toEqual([]);
 });
 
@@ -103,7 +114,10 @@ test('ledger tab shows the settlement and day groups; shopping splits bought and
   await expect(page.locator('#pastTripPanel .past-trip-transfer')).toHaveCount(2);
   await expect(page.locator('#pastTripPanel')).toContainText('全團支出 · 6 筆');
   await page.getByRole('button',{name:'個人帳'}).click();
-  await expect(page.locator('#pastTripPanel .past-trip-subtotal').first()).toContainText('小計 NT$0');
+  /* v197:10/18 只有代購,直接顯示代購金額,不顯示「小計 NT$0」 */
+  await expect(page.locator('#pastTripPanel .past-trip-subtotal').first()).toContainText('代購 NT$390');
+  await expect(page.locator('#pastTripPanel .past-trip-subtotal').first()).not.toContainText('小計');
+  await expect(page.locator('#pastTripPanel .past-trip-subtotal').nth(1)).toContainText('小計 NT$1,571');
   await expect(page.locator('#pastTripPanel')).toContainText('代購 · Jane');
   await page.getByRole('tab',{name:'採買'}).click();
   await expect(page.getByRole('button',{name:'已買 3'})).toHaveAttribute('aria-pressed','true');
