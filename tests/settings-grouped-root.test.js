@@ -37,6 +37,7 @@ function renderRoot(overrides,ledgerSettings){
     currentThemeId:function(){ return 'ocean'; },
     isSimpleSettlementMode:function(){ return false; },
     todayListMode:function(){ return true; },   // v192:今天頁預設清單,根頁「個人」多一列卡片開關
+    ehonArtEnabled:function(){ return true; },   // v195:繪本插圖開關(只在繪本主題出現)
     appVersionLabel:function(){ return version; },
     shoppingPhotoStorageSummary:function(){ return '0 張 · 0 B'; },
     settingsDataHealthModel:function(){ return {summary:'資料狀態正常'}; },
