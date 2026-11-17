@@ -181,7 +181,7 @@
       var properties={trippilot_kind:'note',trippilot_archive_id:String(archiveId),trippilot_note_id:String(note.id)};
       function verifyNote(id){return readArchive(id).then(function(content){
         var saved;try{saved=JSON.parse(content);}catch(error){throw new Error('Archive note readback is invalid');}
-        if(String(saved.id)!==String(note.id)||saved.text!==note.text||String(saved.createdAt)!==String(note.createdAt))throw new Error('Archive note readback does not match');
+        if(String(saved.id)!==String(note.id)||saved.text!==note.text||String(saved.createdAt)!==String(note.createdAt)||String(saved.replaces||'')!==String(note.replaces||''))throw new Error('Archive note readback does not match');
         return id;
       });}
       return list(properties).then(function(found){
@@ -192,7 +192,10 @@
             trippilot_kind:'note',trippilot_archive_id:String(archiveId),trippilot_note_id:String(note.id),trippilot_status:'prepared'
           }};
           if(!existing)metadata.parents=[parent];
-          return uploadJson(existing,metadata,JSON.stringify({id:String(note.id),text:note.text,createdAt:String(note.createdAt)}));
+          /* v196:修改回顧筆記 = 新增一筆帶 replaces(原筆記 ID)的版本;舊版保留,讀取時只顯示最新版 */
+          var body={id:String(note.id),text:note.text,createdAt:String(note.createdAt)};
+          if(note.replaces)body.replaces=String(note.replaces);
+          return uploadJson(existing,metadata,JSON.stringify(body));
         }).then(function(id){
           return json(BASE+'/files/'+encodeURIComponent(id)+'?fields=id,appProperties',{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({
             appProperties:{trippilot_kind:'note',trippilot_archive_id:String(archiveId),trippilot_note_id:String(note.id),trippilot_status:'complete'}
