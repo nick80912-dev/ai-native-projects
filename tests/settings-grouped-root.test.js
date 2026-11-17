@@ -103,7 +103,9 @@ assert(renderRoot({travelNotePendingCount:function(){return 0;}}).includes('資�
 renderRoot();
 const troubleshootPage=renderRoot.last.renderSettingsTroubleshootPage();
 assert(troubleshootPage.includes('0 張 · 0 B'),'storage summary shows the device-local attachment count and size');
-['health','storage','travel-notes','diagnostics'].forEach(function(id){assert(troubleshootPage.includes("openSettingsPage('"+id+"')"),id+' is reachable from the troubleshooting page');});
+/* v198:資料健康與照片健康合成「資料與照片狀態」一頁(health);storage 頁保留給採買修復的深連結 */
+['health','travel-notes','diagnostics'].forEach(function(id){assert(troubleshootPage.includes("openSettingsPage('"+id+"')"),id+' is reachable from the troubleshooting page');});
+assert(!troubleshootPage.includes("openSettingsPage('storage')"),'storage is merged into the health row');
 assert(troubleshootPage.includes('2 筆待評估'),'the travel-note row counts pending notes');
 assert(out.includes('海洋／岡山'),'theme summary shows the current theme name');
 

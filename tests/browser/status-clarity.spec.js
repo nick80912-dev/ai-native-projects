@@ -77,7 +77,7 @@ test('photo health stays quiet when capacity estimation is unsupported',async({p
   await refreshShoppingPhotoAudit({force:true});
   openSettings('storage');
  });
- await expect(page.getByRole('heading',{name:'照片健康狀態',exact:true})).toBeVisible();
+ await expect(page.getByRole('heading',{name:'資料與照片狀態',exact:true})).toBeVisible();
  await expect(page.getByRole('button',{name:/修復/})).toHaveCount(0);
  const capacity=page.locator('.shopping-photo-storage-card').filter({hasText:'App 儲存空間（估計）'});
  await expect(capacity).toContainText('瀏覽器未提供容量估算');

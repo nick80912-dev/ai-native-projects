@@ -260,7 +260,7 @@ test('容量不足時保留原引用並在修復流程顯示 inline 提示',asyn
   expect(await page.evaluate(()=>shoppingListStore.all().find(value=>value.id==='photo-item').photoId)).toBe(oldId);
   await manageStorage.click();
   await expect(page.locator('#shoppingPhotoRepair')).toHaveCount(0);
-  await expect(page.getByRole('heading',{name:'照片健康狀態',exact:true})).toBeVisible();
+  await expect(page.getByRole('heading',{name:'資料與照片狀態',exact:true})).toBeVisible();
 });
 
 test('照片 repository 不可用時停用照片操作但保留一般採買編輯',async({page})=>{
@@ -274,7 +274,7 @@ test('照片 repository 不可用時停用照片操作但保留一般採買編�
     renderShoppingFormSheet();
   });
   await expect(page.locator('.shopping-photo-note[role="status"]')).toContainText('此裝置目前無法使用照片附件');
-  await expect(page.locator('.shopping-photo-note[role="status"]')).toContainText('照片健康狀態');
+  await expect(page.locator('.shopping-photo-note[role="status"]')).toContainText('資料與照片狀態');
   await expect(page.locator('#shoppingPhotoInput')).toBeDisabled();
   await page.locator('#shoppingName').fill('仍可編輯');
   await expect(page.locator('#shoppingName')).toHaveValue('仍可編輯');
@@ -283,12 +283,12 @@ test('照片 repository 不可用時停用照片操作但保留一般採買編�
 test('設定頁集中顯示附件容量並可修復引用或手動清理孤立照片',async({page})=>{
   await seedPhotoStorageManagement(page);
   await page.getByRole('button',{name:/^疑難排解/}).click();   // v185:照片健康收進「疑難排解」
-  await page.getByRole('button',{name:/照片健康狀態/}).click();
-  await expect(page.getByRole('heading',{name:'照片健康狀態'})).toBeVisible();
+  await page.getByRole('button',{name:/資料與照片狀態/}).click();   // v198:合成一頁
+  await expect(page.getByRole('heading',{name:'資料與照片狀態'})).toBeVisible();
   await expect(page.getByText('App 附件',{exact:true})).toBeVisible();
   await expect(page.getByText(/3 張/)).toBeVisible();
   await expect(page.getByText('App 儲存空間（估計）',{exact:true})).toBeVisible();
-  await expect(page.getByText(/1 個附件待修復/)).toBeVisible();
+  await expect(page.locator('.shopping-photo-storage-grid').getByText(/1 個附件待修復/)).toBeVisible();
   await expect(page.getByText(/最近檢查/)).toBeVisible();
 
   await page.getByRole('button',{name:'修復 遺失附件'}).click();

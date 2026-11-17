@@ -212,9 +212,9 @@ test('健康同步 header 保持精簡，partial 與設定健康摘要顯示人�
   /* v185:資料健康收進「疑難排解」;有狀況時根頁那一列直接寫出來 */
   await expect(page.getByRole('button',{name:/^疑難排解/})).toContainText('2 項需注意');
   await page.getByRole('button',{name:/^疑難排解/}).click();
-  await expect(page.getByRole('button',{name:/^資料健康狀態/})).toContainText('2 項需注意');
-  await page.getByRole('button',{name:/^資料健康狀態/}).click();
-  await expect(page.getByRole('heading',{name:'資料健康狀態'})).toBeVisible();
+  await expect(page.getByRole('button',{name:/^資料與照片狀態/})).toContainText('2 項需注意');
+  await page.getByRole('button',{name:/^資料與照片狀態/}).click();
+  await expect(page.getByRole('heading',{name:'資料與照片狀態'})).toBeVisible();
   await expect(page.locator('.data-health-trip')).toContainText('部分同步 · 剛剛');
   await expect(page.locator('.data-health-trip')).toContainText('未更新：分帳資料');
   await expect(page.locator('.data-health-shared')).toContainText('1 筆待送出');
