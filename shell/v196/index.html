@@ -245,6 +245,16 @@ html[data-theme="ehon"] .ehon-art{display:block;width:calc(100% + 36px);height:a
 html[data-theme="ehon"] .ehon-art .ehon-cloud{animation:ehonDrift 9s ease-in-out infinite}
 html[data-theme="ehon"] .ehon-art .ehon-cloud.b{animation-duration:12s;animation-direction:reverse}
 html[data-theme="ehon"] .ehon-art .ehon-boat{animation:ehonBob 3.6s ease-in-out infinite;transform-box:fill-box;transform-origin:center}
+@keyframes ehonRain{0%{transform:translate(4px,-14px);opacity:0}25%{opacity:1}100%{transform:translate(-4px,18px);opacity:0}}
+@keyframes ehonSnow{0%{transform:translate(0,-16px);opacity:0}25%{opacity:1}100%{transform:translate(6px,22px);opacity:0}}
+@keyframes ehonSmoke{0%{transform:translateY(4px);opacity:.2}50%{opacity:1}100%{transform:translateY(-6px);opacity:0}}
+@keyframes ehonRoll{0%,100%{transform:translateX(0)}50%{transform:translateX(-6px)}}
+html[data-theme="ehon"] .ehon-art .ehon-rain{animation:ehonRain 1.1s linear infinite}
+html[data-theme="ehon"] .ehon-art .ehon-rain.b{animation-delay:-.55s}
+html[data-theme="ehon"] .ehon-art .ehon-snow{animation:ehonSnow 5s linear infinite}
+html[data-theme="ehon"] .ehon-art .ehon-snow.b{animation-delay:-2.5s}
+html[data-theme="ehon"] .ehon-art .ehon-smoke{animation:ehonSmoke 3s ease-in-out infinite}
+html[data-theme="ehon"] .ehon-art .ehon-tram{animation:ehonRoll 4s ease-in-out infinite}
 html[data-theme="ehon"] #view-trip.day-bounce .day-head,html[data-theme="ehon"] #view-trip.day-bounce .item{animation:ehonPop .42s cubic-bezier(.34,1.56,.64,1) both}
 html[data-theme="ehon"] #view-trip.day-bounce .item:nth-of-type(n+3){animation-delay:.05s}
 html[data-theme="ehon"] #view-trip.day-bounce .item:nth-of-type(n+5){animation-delay:.1s}
@@ -732,6 +742,57 @@ html[data-theme="ehon"] .today-hero-compact .loc{background:#fff;border:2px soli
 .past-trip-note p{margin:0;white-space:pre-wrap}
 .past-trip-note small{color:var(--ink-soft);font-size:12px}
 .past-trip-advanced{margin-top:22px;color:var(--ink-soft)}
+.past-trip-raw-toggle{display:block;margin:28px auto 4px;border:0;background:transparent;color:var(--ink-faint);font:inherit;font-size:12px;text-decoration:underline;cursor:pointer;padding:6px}
+/* v196 過往旅程分頁(Bar 2026-11-17) */
+.past-trip-tabs{display:flex;gap:6px;overflow-x:auto;margin:14px 0 4px;padding-bottom:2px;scrollbar-width:none}
+.past-trip-tabs::-webkit-scrollbar{display:none}
+.past-trip-tabs button,.past-trip-seg button,.past-trip-days button{flex:0 0 auto;border:1px solid var(--line);background:var(--card);color:var(--ink);font:inherit;font-size:14px;font-weight:800;border-radius:999px;padding:7px 14px;cursor:pointer;min-height:36px}
+.past-trip-tabs button[aria-selected="true"],.past-trip-seg button[aria-pressed="true"],.past-trip-days button[aria-pressed="true"]{background:var(--sea-deep);border-color:var(--sea-deep);color:#fff}
+.past-trip-seg{display:flex;gap:6px;margin:6px 0 10px}
+.past-trip-seg button{flex:1}
+.past-trip-days{display:flex;gap:6px;overflow-x:auto;margin:8px 0 10px;scrollbar-width:none}
+.past-trip-days::-webkit-scrollbar{display:none}
+.past-trip-days button{display:flex;flex-direction:column;align-items:center;line-height:1.15;padding:6px 12px;border-radius:14px}
+.past-trip-days button small{font-size:11px;font-weight:700;opacity:.8}
+.past-trip-card-box{border:1px solid var(--line);border-radius:16px;background:var(--card);padding:12px 14px;margin-top:12px}
+.past-trip-card-box h3{font-size:15px;margin:0 0 8px}
+.past-trip-spend{display:flex;align-items:center;gap:14px}
+.past-trip-donut{flex:0 0 112px;width:112px;height:112px}
+.past-trip-spend-total small{display:block;font-size:12px;color:var(--ink-soft)}
+.past-trip-spend-total b{display:block;font-size:22px}
+.past-trip-spend-total span{display:block;font-size:12px;color:var(--ink-soft);margin-top:2px}
+.past-trip-legend{list-style:none;margin:10px 0 0;padding:0}
+.past-trip-legend li{display:flex;align-items:center;gap:8px;padding:5px 0;border-top:1px dashed var(--line);font-size:14px}
+.past-trip-legend li:first-child{border-top:0}
+.past-trip-legend i{width:10px;height:10px;border-radius:50%;flex:0 0 10px}
+.past-trip-legend span{flex:1;min-width:0}
+.past-trip-legend em{font-style:normal;color:var(--ink-soft);font-size:12px;margin-left:4px}
+.past-trip-export{margin-top:12px}
+.past-trip-export .btn{width:100%}
+.past-trip-row{display:flex;align-items:flex-start;gap:10px;padding:9px 0;border-top:1px dashed var(--line)}
+.past-trip-row:first-child{border-top:0}
+.past-trip-row>span:not(.amt):not(.past-trip-time){flex:1;min-width:0;text-align:left}
+.past-trip-row .amt{text-align:right}
+.past-trip-row b{font-size:14px}
+.past-trip-row small{display:block;color:var(--ink-soft);font-size:12px;margin-top:2px}
+.past-trip-row .amt{font-weight:800;white-space:nowrap;font-size:14px}
+.past-trip-time{flex:0 0 46px;font-weight:800;font-size:13px;color:var(--sea-deep);padding-top:1px}
+.past-trip-tag{display:inline-block;font-size:11px;font-weight:800;border-radius:999px;padding:1px 7px;margin-left:6px;background:var(--line-soft);color:var(--ink-soft);vertical-align:1px}
+.past-trip-leg{font-size:12px;color:var(--ink-soft);padding:2px 0 2px 56px}
+.past-trip-subtotal{display:flex;justify-content:space-between;font-size:13px;font-weight:800;color:var(--ink-soft);margin:14px 0 2px}
+.past-trip-dayfoot{display:grid;gap:8px;margin-top:12px}
+.past-trip-dayfoot>div{border-radius:14px;background:var(--line-soft);padding:10px 12px}
+.past-trip-dayfoot small{display:block;font-size:12px;color:var(--ink-soft)}
+.past-trip-dayfoot b{display:block;font-size:15px;margin-top:2px}
+.past-trip-transfer{display:flex;justify-content:space-between;gap:8px;padding:6px 0;font-weight:800}
+.past-trip-note-head{display:flex;align-items:flex-start;gap:8px}
+.past-trip-note-head p{flex:1}
+.past-trip-note-edit{flex:0 0 auto;border:0;background:transparent;color:var(--sea-deep);padding:4px;cursor:pointer;width:36px;height:36px;display:inline-flex;align-items:center;justify-content:center;border-radius:10px}
+.past-trip-note-edit svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.past-trip-note-actions{display:flex;gap:8px;margin-top:8px}
+html[data-theme="ehon"] .past-trip-tabs button,html[data-theme="ehon"] .past-trip-seg button,html[data-theme="ehon"] .past-trip-days button{border:2px solid var(--ehon-ink)}
+html[data-theme="ehon"] .past-trip-tabs button[aria-selected="true"],html[data-theme="ehon"] .past-trip-seg button[aria-pressed="true"],html[data-theme="ehon"] .past-trip-days button[aria-pressed="true"]{background:var(--ehon-yellow);color:var(--ehon-ink);border-color:var(--ehon-ink)}
+html[data-theme="ehon"] .past-trip-card-box{border:3px solid var(--ehon-ink);border-radius:20px}
 html[data-theme="ehon"] .past-trip-summary{background:var(--ehon-water);color:var(--ehon-ink);border:3px solid var(--ehon-ink);border-radius:22px}
 html[data-theme="ehon"] .past-trip-summary h2{color:var(--ehon-ink)}
 html[data-theme="ehon"] .past-trip-stat{background:#fff;border:2px solid var(--ehon-ink)}
@@ -741,6 +802,53 @@ html[data-theme="ehon"] .past-trip-note{border:2px solid var(--ehon-ink)}
 .past-trip-card small{display:block;margin-top:3px;font-size:12px;color:var(--ink-soft)}
 html[data-theme="ehon"] .past-trip-card{border:var(--ehon-line);border-radius:18px;box-shadow:var(--ehon-drop)}
 html[data-theme="ehon"] .past-trip-card b{color:var(--ehon-ink)}
+/* v194 行程頁時間軸 */
+#view-trip .tl{margin:8px 0 24px}
+#view-trip .item.tl-item{display:grid;grid-template-columns:46px 20px minmax(0,1fr);column-gap:6px;background:transparent;border:0;box-shadow:none;border-radius:0;margin:0;overflow:visible;animation:none}
+.tl-link{display:grid;grid-template-columns:46px 20px minmax(0,1fr);column-gap:6px;min-height:14px}
+.tl-time{font-size:13px;font-weight:900;color:var(--sea-deep);text-align:right;padding-top:15px;font-variant-numeric:tabular-nums;line-height:1.2;overflow-wrap:anywhere}
+.tl-time small{display:block;font-size:11px;font-weight:700;color:var(--ink-faint);margin-top:3px}
+.tl-rail{position:relative;display:flex;justify-content:center}
+.tl-rail::before{content:"";position:absolute;top:0;bottom:0;width:4px;border-radius:4px;background:var(--mint)}
+.tl-link .tl-rail::before{width:3px;background:repeating-linear-gradient(var(--line) 0 5px,transparent 5px 10px)}
+.tl-dot{position:relative;z-index:1;margin-top:16px;width:14px;height:14px;border-radius:50%;background:var(--card);border:3px solid var(--sea)}
+.tl-card{margin:6px 0;min-width:0;border:1px solid var(--line);border-left:5px solid var(--sea);border-radius:16px;background:var(--card);box-shadow:var(--shadow);padding:11px 11px 11px 12px}
+.tl-head{display:flex;gap:7px;align-items:flex-start}
+.tl-main{flex:1;min-width:0}
+.tl-item .act{font-size:15.5px;font-weight:900;line-height:1.35}
+.tl-item .chip-row{margin-top:6px}
+.tl-map{flex:none;display:inline-flex;align-items:center;gap:3px;min-height:32px;border:1px solid var(--sea);color:var(--sea);border-radius:999px;font-size:12px;font-weight:800;padding:0 10px;background:var(--card);text-decoration:none}
+.tl-map .ln-ico{width:14px;height:14px}
+.tl-toggle{flex:none;width:32px;height:32px;border-radius:50%;border:1px solid var(--line);background:var(--card);color:var(--ink-soft);font-size:16px;line-height:1;cursor:pointer;transition:transform .2s}
+.tl-open .tl-toggle{transform:rotate(180deg);background:var(--mint)}
+.tl-body{display:none}
+.tl-open .tl-body{display:block;margin-top:10px;padding-top:10px;border-top:1px dashed var(--line)}
+.tl-body .qa-row{padding:0}
+.tl-body .panel{margin:8px 0 0}
+.tl-move{display:flex;align-items:center;flex-wrap:wrap;gap:4px 7px;padding:7px 0;font-size:12px;color:var(--ink-soft);min-width:0}
+.tl-move .drive-chip{max-width:100%}
+.tl-move b{font-weight:800;color:var(--ink)}
+.tl-move em{font-style:normal;color:var(--ink-faint)}
+.tl-move-ico{flex:none;width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:var(--mint);color:var(--sea-deep)}
+.tl-move-ico .ln-ico{width:15px;height:15px}
+.tl-item.past-done{opacity:1}.tl-item.past-done .tl-card{opacity:.5}.tl-item.past-done .tl-dot{background:var(--sea)}
+.tl-item.cat-food .tl-card{border-left-color:#e8a14b}.tl-item.cat-food .tl-dot{border-color:#e8a14b}
+.tl-item.cat-play .tl-card{border-left-color:var(--coral)}.tl-item.cat-play .tl-dot{border-color:var(--coral)}
+.tl-item.cat-stay .tl-card{border-left-color:#8a7bb8}.tl-item.cat-stay .tl-dot{border-color:#8a7bb8}
+.tl-item.cat-shop .tl-card{border-left-color:#4a8fc0}.tl-item.cat-shop .tl-dot{border-color:#4a8fc0}
+html[data-theme="ehon"] #view-trip .item.tl-item{border:0;box-shadow:none;border-radius:0}
+#view-trip .item.tl-item.now-item{background:transparent;box-shadow:none}
+html[data-theme="ehon"] .tl-card{border:3px solid var(--ehon-ink);border-left-width:8px;border-radius:20px;box-shadow:none}
+html[data-theme="ehon"] .tl-rail::before{background:var(--ehon-green)}
+html[data-theme="ehon"] .tl-link .tl-rail::before{background:repeating-linear-gradient(var(--ehon-ink) 0 5px,transparent 5px 10px)}
+html[data-theme="ehon"] .tl-dot{border-color:var(--ehon-ink)}
+html[data-theme="ehon"] .tl-map,html[data-theme="ehon"] .tl-toggle{border:2px solid var(--ehon-ink);color:var(--ehon-ink)}
+html[data-theme="ehon"] .tl-move-ico{background:var(--ehon-green);border:2px solid var(--ehon-ink);color:var(--ehon-ink)}
+html[data-theme="ehon"] .tl-item.cat-food .tl-card{border-left-color:var(--ehon-yellow)}
+html[data-theme="ehon"] .tl-item.cat-play .tl-card{border-left-color:var(--ehon-coral)}
+html[data-theme="ehon"] .tl-item.cat-stay .tl-card{border-left-color:var(--ehon-violet)}
+html[data-theme="ehon"] .tl-item.cat-shop .tl-card{border-left-color:var(--ehon-water)}
+html[data-theme="ehon"] .tl-item.cat-move .tl-card{border-left-color:var(--ehon-green)}
 .today-list{margin:14px 12px 0}
 .today-list-bar{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:2px 4px 8px;font-size:12px;color:var(--ink-soft);font-weight:700}
 .today-list-bar b{font-size:15px;color:var(--ink);font-weight:900}
@@ -996,9 +1104,9 @@ input:not([type="hidden"]),select,textarea{font-size:16px!important}
 .qa-btn,.nx-drive-btn,.nx-decision-btn,.nx-cluster-expand,.today-jump,.btn{border-radius:14px}
 .pc-tip,.panel.open,.floor-head,.want-box{border-radius:14px}
 </style>
-<script src="shell/v193/app-version.js"></script>
-<script id="builtinSnapshotMarker">var BUILTIN_HTML_VERSION='v193';var BUILTIN_HTML_TS=1790861998387;</script>
-<script src="shell/v193/builtin-snapshot.js"></script>
+<script src="shell/v196/app-version.js"></script>
+<script id="builtinSnapshotMarker">var BUILTIN_HTML_VERSION='v196';var BUILTIN_HTML_TS=1790861998387;</script>
+<script src="shell/v196/builtin-snapshot.js"></script>
 <script src="navigation-intent.js"></script>
 <script src="diagnostic-impact.js"></script>
 <script src="today-view.js"></script>
@@ -3196,6 +3304,8 @@ function openTripItem(dayIndex,itemId){
     var item=day?(day.items||[]).filter(function(it){return it&&it.id===itemId;})[0]:null;
     if(item&&isTripCheckableItem(item)&&isTripItemCleared(item,day,dayIndex,getChecks()))tripHideDone=false;
   }
+  /* v194:從今天頁點進來的那一站直接展開,導航與資訊就在眼前 */
+  viewUiState.trip.openPanels[tripPanelKey(itemId,'stop')]=true;
   switchView('trip',{type:'trip-item',itemId:itemId});
 }
 function renderDaybar(){
@@ -3220,21 +3330,98 @@ function selectTripDay(i){
 }
 /* v187 繪本主題的首頁插圖(inline SVG,平塗＋墨灰粗線;只有 data-theme="ehon" 時由 CSS 顯示)。
    旅程名稱含岡山／四國／瀨戶時畫瀨戶大橋與桃子,其他旅程畫通用的山、海、飛機 —— 不放錯地方的地標。 */
-function renderEhonArt(){
-  var name='';try{name=String((typeof tripName==='function'&&tripName())||'');}catch(error){name='';}
-  var local=/岡山|四國|四国|瀨戶|瀬戸/.test(name);
+/* v195(Bar 2026-11-17 插圖):繪本插圖依「當地現在的天氣」換場景 —— 下雨用雨天城市、下雪用雪景,其他用通用版;
+   不從試算表選。沒有天氣(離線、還沒抓到)就用通用版。設定「繪本插圖」可以整個關掉。
+   動畫(雨、雪、炊煙、電車、雲、船)在「減少動態效果」時由全域規則停掉。 */
+var EHON_ART_KEY='trip_ehon_art';
+function ehonArtEnabled(){return lsGet(EHON_ART_KEY,true)!==false;}
+function setEhonArtEnabled(input){
+  lsSet(EHON_ART_KEY,!!(input&&input.checked));
+  var summary=document.getElementById('settingsEhonArtSummary');
+  if(summary)summary.textContent=ehonArtEnabled()?'顯示':'隱藏';
+  renderToday();
+}
+function ehonWeatherScene(weather){
+  var code=weather&&weather.status==='fresh'&&typeof weather.code==='number'?weather.code:null;
+  if(code===null)return '';
+  if((code>=71&&code<=77)||code===85||code===86)return 'snow';
+  if((code>=51&&code<=67)||(code>=80&&code<=82)||code>=95)return 'rain';
+  return '';
+}
+function ehonFill(v){return 'style="fill:var(--ehon-'+v+')"';}
+/* 動畫的 CSS transform 會蓋掉 SVG 的 transform 屬性,所以位置放內層、動畫 class 放外層 */
+function ehonCloud(x,y,s,cls){return '<g class="ehon-cloud'+(cls?' '+cls:'')+'"><path transform="translate('+x+' '+y+') scale('+(s||1)+')" fill="#fff" d="M0 20a12 12 0 0 1 22-6a14 14 0 0 1 26 6a9 9 0 0 1-2 18H4a9 9 0 0 1-4-18z"/></g>';}
+function ehonWindows(x,y,cols,rows,dx,dy,lit){
+  var o='';
+  for(var r=0;r<rows;r++)for(var c=0;c<cols;c++)o+='<rect x="'+(x+c*dx)+'" y="'+(y+r*dy)+'" width="6" height="7" rx="1" '+(lit&&((r+c)%3===0)?ehonFill('yellow'):'fill="#fff"')+' stroke-width="2"/>';
+  return o;
+}
+function ehonRainScene(){
+  var F=ehonFill;
+  var sky='<rect x="-5" y="-5" width="370" height="180" fill="#b9c9d6" stroke="none"/>'+ehonCloud(14,8,1.1)+ehonCloud(84,0,1.2,'b')+ehonCloud(262,8,1.1);
+  var back='<g stroke-width="2.5" fill="#d3dde5"><path d="M8 118V78h22v40M36 118V64h18v54M262 118V70h20v48M318 118V84h24v34"/></g>';
+  var blocks='<path d="M58 118V66h40v52" '+F('yellow')+'/><path d="M54 66h48l-6-8h-36z" '+F('coral')+'/>'+ehonWindows(66,76,3,3,11,13,true)+
+    '<path d="M104 118V88h34v30" '+F('coral')+'/>'+ehonWindows(110,95,3,1,10,0,true)+'<path d="M102 88h38" fill="none"/><path d="M112 118v-10h18v10" fill="#fff"/>'+
+    '<path d="M168 118V44l12-18 12 18v74" '+F('water')+'/><path d="M162 62h36l-5 11h-26z" fill="#fff"/><path d="M174 84h12M174 98h12" fill="none" stroke-width="2.5"/><path d="M180 26v-10" fill="none"/><circle cx="180" cy="13" r="4" '+F('coral')+'/>'+
+    '<path d="M206 118V80h34v38" '+F('green')+'/>'+ehonWindows(212,88,3,2,10,13,true)+
+    '<path d="M246 118V56h38v62" '+F('violet')+'/><path d="M252 50h26v6h-26z" fill="#fff"/>'+ehonWindows(253,66,3,3,11,14,true)+
+    '<path d="M290 118V92h30v26" '+F('cream')+'/><path d="M286 92l19-12 19 12z" '+F('coral')+'/>'+ehonWindows(296,100,2,1,12,0,true);
+  var tree=function(x){return '<path d="M'+x+' 128v-10" fill="none"/><circle cx="'+x+'" cy="110" r="9" '+F('green')+'/>';};
+  var street='<path d="M-5 118h370v14H-5z" fill="#e4e0d6"/><path d="M-5 132h370v45H-5z" fill="#9fb0bb"/><path d="M-5 150h370M-5 158h370" fill="none" stroke-width="2.5"/><path d="M20 141h24M90 141h24M160 141h24M300 141h24" fill="none" stroke="#fff" stroke-width="3"/>';
+  var lamp='<path d="M330 132V100q0-6 7-6" fill="none" stroke-width="2.5"/><circle cx="338" cy="96" r="3.5" '+F('yellow')+' stroke-width="2"/>';
+  var tram='<g class="ehon-tram"><rect x="186" y="112" width="104" height="34" rx="10" '+F('coral')+'/><path d="M186 136h104" fill="none" stroke-width="2.5"/>'+
+    '<rect x="196" y="119" width="16" height="11" rx="2" fill="#fff" stroke-width="2.5"/><rect x="218" y="119" width="16" height="11" rx="2" fill="#fff" stroke-width="2.5"/><rect x="240" y="119" width="16" height="11" rx="2" fill="#fff" stroke-width="2.5"/><rect x="262" y="119" width="18" height="11" rx="2" '+F('yellow')+' stroke-width="2.5"/>'+
+    '<circle cx="204" cy="148" r="5" fill="#fff"/><circle cx="272" cy="148" r="5" fill="#fff"/></g>';
+  var puddle=function(x,w){return '<ellipse cx="'+x+'" cy="154" rx="'+w+'" ry="3.5" fill="#cfe0ea" stroke-width="2.5"/><path class="ehon-ripple" d="M'+(x-w/3)+' 154q'+(w/3)+'-3 '+(w*2/3)+' 0" fill="none" stroke="#fff" stroke-width="2"/>';};
+  var walker='<g><path d="M70 160v-14M76 160v-14" fill="none" stroke-width="2.5"/><path d="M66 147h14v-14a7 7 0 0 0-14 0z" '+F('yellow')+' stroke-width="2.5"/><circle cx="73" cy="124" r="5" fill="#fff" stroke-width="2.5"/><path d="M73 120v-8" fill="none" stroke-width="2.5"/><path d="M52 113a21 13 0 0 1 42 0z" '+F('coral')+'/><path d="M59 113v-4M73 113v-13M87 113v-4" fill="none" stroke-width="2"/></g>';
+  var rain='';
+  for(var i=0;i<34;i++){var x=(i*37)%372-2,y=(i*53)%150-4;rain+='<path d="M'+x+' '+y+'l-5 12"/>';}
+  return sky+back+blocks+street+tree(22)+tree(148)+lamp+tram+puddle(36,16)+puddle(140,20)+puddle(320,14)+walker+
+    '<g class="ehon-rain" stroke="#fff" stroke-width="2.5" fill="none">'+rain+'</g><g class="ehon-rain b"><g stroke="#fff" stroke-width="2.5" fill="none" transform="translate(18 -26)">'+rain+'</g></g>';
+}
+function ehonSnowScene(){
+  var F=ehonFill;
+  var sky='<rect x="-5" y="-5" width="370" height="180" fill="#cfe6f2" stroke="none"/>'+ehonCloud(150,8,.8,'b');
+  var mtn='<path d="M-5 112l70-74 52 46 46-36 68 52 50-38 84 58v60H-5z" fill="#fff"/><path d="M65 38l-20 21 10-3 10 7 10-7 10 3z" '+F('water')+'/>';
+  var ground='<path d="M-5 118q90-12 180 0t190-4v64H-5z" fill="#fff"/>';
+  var pine=function(x,y,k){return '<g transform="translate('+x+' '+y+') scale('+k+')"><path d="M0 -40l-16 26h8l-12 18h40l-12-18h8z" '+F('green')+'/><path d="M-6 -24l6-8 6 8M-10 -6l10-6 10 6" fill="#fff" stroke-width="2.5"/><path d="M0 4v8" fill="none"/></g>';};
+  var x=286;
+  var house='<path d="M'+x+' 136v-24h40v24z" '+F('cream')+'/><path d="M'+(x-6)+' 114l26-20 26 20z" '+F('violet')+'/><path d="M'+(x-8)+' 116q4-6 10-2q8-8 18-2q8-6 16 0q6-4 10 2" fill="#fff" stroke-width="2.5"/><rect x="'+(x+7)+'" y="118" width="10" height="9" rx="1" '+F('yellow')+' stroke-width="2.5"/><path d="M'+(x+24)+' 136v-14h9v14" fill="#fff" stroke-width="2.5"/><path d="M'+(x+30)+' 104v-12h7v8" '+F('coral')+' stroke-width="2.5"/><path class="ehon-smoke" d="M'+(x+33)+' 88q-5-6 0-12q5-6 0-12" fill="none" stroke="#fff" stroke-width="3.5"/>';
+  var ink='style="fill:var(--ehon-ink)" stroke="none"';
+  var snowman='<circle cx="200" cy="146" r="15" fill="#fff"/><circle cx="200" cy="121" r="11" fill="#fff"/><path d="M190 112h20v-5l-3-8h-14l-3 8z" '+F('coral')+'/><path d="M188 112h24" fill="none"/><circle cx="196" cy="120" r="1.6" '+ink+'/><circle cx="204" cy="120" r="1.6" '+ink+'/><path d="M199 124l9 2-9 2z" '+F('yellow')+' stroke-width="2"/><path d="M189 131q11 5 22 0" fill="none" style="stroke:var(--ehon-coral)" stroke-width="5"/><path d="M209 133l3 9" fill="none" style="stroke:var(--ehon-coral)" stroke-width="5"/><path d="M186 142l-14-10M214 142l14-10" fill="none" stroke-width="2.5"/><circle cx="200" cy="142" r="1.6" '+ink+'/><circle cx="200" cy="150" r="1.6" '+ink+'/>';
+  var flakes='';
+  for(var i=0;i<24;i++)flakes+='<circle cx="'+((i*41)%366)+'" cy="'+((i*29)%160+2)+'" r="'+(1.8+(i%3)*.9)+'"/>';
+  return sky+mtn+ground+pine(40,132,1)+pine(120,134,.85)+house+snowman+
+    '<g class="ehon-snow" fill="#fff" stroke="none">'+flakes+'</g><g class="ehon-snow b"><g fill="#fff" stroke="none" transform="translate(20 -40)">'+flakes+'</g></g>';
+}
+function ehonGeneralScene(local){
+  var F=ehonFill;
   var sky='<rect x="-5" y="-5" width="370" height="180" style="fill:var(--ehon-water)" stroke="none"/><circle cx="300" cy="42" r="20" style="fill:var(--ehon-yellow)"/>'+
     '<path class="ehon-cloud" fill="#fff" d="M40 50a12 12 0 0 1 22-6a14 14 0 0 1 26 6a9 9 0 0 1-2 18H44a9 9 0 0 1-4-18z"/>'+
     '<path class="ehon-cloud b" fill="#fff" d="M190 30a9 9 0 0 1 17-4a11 11 0 0 1 20 5a7 7 0 0 1-2 13h-32a7 7 0 0 1-3-14z"/>'+
     '<path d="M-5 120q50-34 100-6q40-26 90-2q50-30 100 0q40-18 80 4v60H-5z" style="fill:var(--ehon-green)"/><path d="M-5 138h370v40H-5z" style="fill:var(--ehon-sea)"/>';
-  var boat='<g class="ehon-boat"><path d="M228 150h70l-10 14h-50z" fill="#fff"/><path d="M244 150v-10h34v10" style="fill:var(--ehon-coral)"/><path d="M256 140v-9h10v9" style="fill:var(--ehon-yellow)"/></g>';
+  var boat='<g class="ehon-boat"><path d="M228 150h70l-10 14h-50z" fill="#fff"/><path d="M244 150v-10h34v10" '+F('coral')+'/><path d="M256 140v-9h10v9" '+F('yellow')+'/></g>';
   var waves='<path d="M0 158q10-6 20 0t20 0M120 160q10-6 20 0t20 0M310 160q10-6 20 0t20 0" fill="none" stroke="#fff"/>';
-  var scene=local
-    ?'<g fill="none"><path d="M20 138V92M110 138V92M200 138V92M290 138V92"/><path d="M-5 104Q20 92 20 92Q65 128 110 92Q155 128 200 92Q245 128 290 92Q335 128 365 100"/><path d="M-5 122h370" stroke-width="5"/></g>'+
-      '<g><path d="M70 150c-14-2-22-12-22-24c0-14 10-22 22-18c12-4 22 4 22 18c0 12-8 22-22 24z" style="fill:var(--ehon-coral)"/><path d="M70 108q-2-10 6-14" fill="none"/><path d="M76 96q10-6 16 2q-10 6-16-2z" style="fill:var(--ehon-green)"/></g>'
-    :'<g class="ehon-cloud b"><path d="M118 62l44-12l6 5l-16 7l22 6l-5 5l-26-4l-12 6l-4-2l6-8z" fill="#fff"/></g>'+
-      '<g><path d="M52 138v-30l16-14l16 14v30z" fill="#fff"/><path d="M46 110l22-19l22 19" fill="none"/><path d="M63 138v-14h10v14" style="fill:var(--ehon-coral)"/></g>';
-  return '<svg class="ehon-art" viewBox="0 0 360 170" aria-hidden="true" focusable="false" style="stroke:var(--ehon-ink)" stroke-width="3" stroke-linejoin="round" stroke-linecap="round">'+sky+scene+boat+waves+'</svg>';
+  if(local){
+    return sky+'<g fill="none"><path d="M20 138V92M110 138V92M200 138V92M290 138V92"/><path d="M-5 104Q20 92 20 92Q65 128 110 92Q155 128 200 92Q245 128 290 92Q335 128 365 100"/><path d="M-5 122h370" stroke-width="5"/></g>'+
+      '<g><path d="M70 150c-14-2-22-12-22-24c0-14 10-22 22-18c12-4 22 4 22 18c0 12-8 22-22 24z" '+F('coral')+'/><path d="M70 108q-2-10 6-14" fill="none"/><path d="M76 96q10-6 16 2q-10 6-16-2z" '+F('green')+'/></g>'+boat+waves;
+  }
+  /* v195:通用版多一點細節 —— 小屋窗與煙囪、樹、燈塔、海鷗、小帆船 */
+  var plane='<g class="ehon-cloud b"><path d="M118 62l44-12l6 5l-16 7l22 6l-5 5l-26-4l-12 6l-4-2l6-8z" fill="#fff"/></g>';
+  var gulls='<path d="M236 70q5-5 10 0q5-5 10 0M258 60q4-4 8 0q4-4 8 0" fill="none" stroke-width="2.5"/>';
+  var house='<path d="M74 100v-10h7v6" '+F('coral')+' stroke-width="2.5"/><path d="M52 138v-30l16-14l16 14v30z" fill="#fff"/><path d="M46 110l22-19l22 19" fill="none"/><path d="M63 138v-14h10v14" '+F('coral')+'/><rect x="56" y="110" width="8" height="8" rx="1" '+F('yellow')+' stroke-width="2.5"/>';
+  var tree=function(x,y,r,c){return '<path d="M'+x+' '+(y+r+8)+'v-'+(r+2)+'" fill="none" stroke-width="2.5"/><circle cx="'+x+'" cy="'+y+'" r="'+r+'" '+F(c)+'/>';};
+  var pine='<path d="M206 104l-10 18h20z" style="fill:#8fbf7a"/><path d="M222 110l-8 14h16z" style="fill:#8fbf7a"/>';
+  var light='<path d="M326 120v-34h14v34" fill="#fff"/><path d="M326 98h14M326 110h14" fill="none" style="stroke:var(--ehon-coral)" stroke-width="4"/><path d="M324 86h18l-3-8h-12z" '+F('coral')+'/><path d="M326 120h14" fill="none"/>';
+  var sail='<g class="ehon-boat"><path d="M150 160h30l-5 6h-20z" fill="#fff" stroke-width="2.5"/><path d="M166 160v-24l12 22z" '+F('yellow')+' stroke-width="2.5"/></g>';
+  return sky+plane+gulls+tree(24,116,8,'green')+house+tree(104,118,7,'yellow')+pine+light+boat+sail+waves;
+}
+function renderEhonArt(weather){
+  if(!ehonArtEnabled())return '';
+  var name='';try{name=String((typeof tripName==='function'&&tripName())||'');}catch(error){name='';}
+  var scene=ehonWeatherScene(weather);
+  var body=scene==='rain'?ehonRainScene():scene==='snow'?ehonSnowScene():ehonGeneralScene(/岡山|四國|四国|瀨戶|瀬戸/.test(name));
+  return '<svg class="ehon-art'+(scene?' ehon-art-'+scene:'')+'" data-scene="'+(scene||'general')+'" viewBox="0 0 360 170" aria-hidden="true" focusable="false" style="stroke:var(--ehon-ink)" stroke-width="3" stroke-linejoin="round" stroke-linecap="round">'+body+'</svg>';
 }
 function playDayBounce(){
   var view=document.getElementById('view-trip');
@@ -3360,7 +3547,39 @@ function transportModeOf(text){
    「現在」標示保留,已完成／已略過的小標也不顯示。今天頁的「完成／跳過」不變。 */
 function tripBrowseOnly(){return true;}
 var tripPastDayRender=null;
-function renderItem(it,checks,currentItemId,dayProgress){
+/* v194 時間軸:結束時間用下一站的開始時間推算(Bar 2026-11-16 選);交通段 = 下一站的交通欄／資料庫交通時間 */
+function tripStopDrive(it){
+  var res=resolveRef(it),p=res&&res.kind==='place'?res.p:null;
+  return extractDrive(it.move)||(p&&p.travel)||(res&&res.kind==='rest'&&res.r.travel)||'';
+}
+function renderTripTimeline(items,checks,currentItemId,progress){
+  var h='',prevTitle='';
+  items.forEach(function(it,index){
+    var next=null;for(var j=index+1;j<items.length;j++){if(items[j]&&items[j].time){next=items[j];break;}}
+    var title=tripItemPresentation(it,resolveRef(it)).title;
+    var drive=tripStopDrive(it),mode=transportModeOf(drive);
+    /* 第一站也可能有交通(例如當天的航班),畫在它上面 */
+    if(index>0||drive){
+      h+='<div class="tl-link" aria-hidden="'+(drive?'false':'true')+'"><div class="tl-time"></div><div class="tl-rail"></div><div class="tl-move">'+
+        /* 交通段沿用 v149 的交通方式色彩標籤(開車、步行、渡輪、航班…各有顏色) */
+        (drive?'<span class="drive-chip mode-'+mode.key+'">'+(lineIcon(mode.icon)||mode.icon+' ')+escapeHtml(drive)+'</span><em>'+(prevTitle?escapeHtml(prevTitle)+' → ':'前往 ')+escapeHtml(title)+'</em>':'')+'</div></div>';
+    }
+    h+=renderItem(it,checks,currentItemId,progress,{nextTime:next?next.time:''});
+    prevTitle=title;
+  });
+  return h;
+}
+function toggleTripStop(itemId,btn){
+  var key=tripPanelKey(itemId,'stop'),open=!viewUiState.trip.openPanels[key];
+  if(open)viewUiState.trip.openPanels[key]=true;else{delete viewUiState.trip.openPanels[key];['pk','nf','mo'].forEach(function(kind){delete viewUiState.trip.openPanels[tripPanelKey(itemId,kind)];});}
+  var el=document.getElementById('it_'+itemId);
+  if(el){
+    el.classList.toggle('tl-open',open);
+    if(!open)Array.prototype.forEach.call(el.querySelectorAll('.panel.open,.qa-btn.on'),function(node){node.classList.remove('open');node.classList.remove('on');});
+  }
+  if(btn){btn.setAttribute('aria-expanded',open?'true':'false');btn.setAttribute('aria-label',(open?'收起：':'展開：')+((el&&el.querySelector('.act')||{}).textContent||''));}
+}
+function renderItem(it,checks,currentItemId,dayProgress,timeline){
   var browse=tripBrowseOnly();
   var done=!browse&&checks[it.id];
   var pastDone=!!(browse&&tripPastDayRender&&isStopDone(it,tripPastDayRender.progress,checks));
@@ -3408,6 +3627,24 @@ function renderItem(it,checks,currentItemId,dayProgress){
       (it.move?'<div class="sec move"><div class="sec-lbl">'+iconLabelHtml('🚗 交通')+'</div>'+highlightNote(it.move)+'</div>':'')+
       (it.note?'<div class="sec" style="margin-top:8px"><div class="sec-lbl">'+iconLabelHtml('📝 備註')+'</div>'+renderNote(it.note)+'</div>':'')+
       '</div>';
+  }
+  /* v194(Bar 2026-11-16 時間軸):行程頁改成時間軸 —— 左邊時間(～下一站時間,推算),中間時間線與圓點,右邊站卡;
+     站卡平常收起(只有標題、類型、地圖、▼),展開才有導航／停車／資訊／更多;交通段畫在兩站之間(見 renderTrip) */
+  if(browse&&timeline){
+    var open=isTripPanelOpen(it.id,'stop')||isTripPanelOpen(it.id,'pk')||isTripPanelOpen(it.id,'nf')||isTripPanelOpen(it.id,'mo');
+    var mapQuery=presentation.title+(p&&p.mapcode?'':'');
+    var mapLink='<a class="tl-map" href="https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(mapQuery)+'" target="_blank" rel="noopener" aria-label="'+escapeHtmlAttr('在地圖上看：'+presentation.title)+'">'+(lineIcon('📍')||'')+'地圖</a>';
+    var toggle=(qa||panels)?'<button type="button" class="tl-toggle" aria-expanded="'+(open?'true':'false')+'" aria-label="'+escapeHtmlAttr((open?'收起：':'展開：')+presentation.title)+'" onclick="toggleTripStop(\''+jsHtmlAttrString(it.id)+'\',this)"><span aria-hidden="true">▾</span></button>':'';
+    return '<div class="item tl-item cat-'+(cat?cat.cls:'none')+(pastDone?' past-done':'')+(open?' tl-open':'')+(isNow?' now-item':'')+'" id="it_'+it.id+'">'+
+      '<div class="tl-time">'+escapeHtml(it.time||'')+(timeline.nextTime?'<small>～'+escapeHtml(timeline.nextTime)+'</small>':'')+'</div>'+
+      '<div class="tl-rail" aria-hidden="true"><span class="tl-dot"></span></div>'+
+      '<div class="tl-card"><div class="tl-head"><div class="tl-main">'+
+        '<div class="act">'+escapeHtml(presentation.title)+(pastDone?'<span class="past-done-badge">✓ 完成</span>':'')+'</div>'+
+        (presentation.meta?'<div class="place-row"><span class="place item-meta">'+escapeHtml(presentation.meta)+'</span></div>':'')+
+        (cat?'<div class="chip-row"><span class="tag '+cat.cls+'">'+iconLabelHtml(cat.label,true)+'</span></div>':'')+
+      '</div>'+((hasPlaceTxt||res)?mapLink:'')+toggle+'</div>'+
+      '<div class="tl-body">'+(qa?'<div class="qa-row">'+qa+'</div>':'')+panels+'</div>'+
+      '</div></div>';
   }
   return '<div class="item '+(done?'checked':'')+(pastDone?' past-done':'')+' '+(isNow?'now-item':'')+'" id="it_'+it.id+'">'+
     '<div class="item-main">'+
@@ -3487,7 +3724,7 @@ function renderTrip(){
     (findToday()!==null&&findToday()!==curDay
       ?'<button type="button" class="trip-back-now" onclick="backToNow()">⏱ 回到現在</button>':'')+
     '</div>'+
-    (visibleActs.length?visibleItems.map(function(it){return renderItem(it,checks,currentItemId,progress);}).join(''):'<div class="empty-state">今天的行程都已完成 ✓</div>');
+    (visibleActs.length?'<div class="tl">'+renderTripTimeline(visibleItems,checks,currentItemId,progress)+'</div>':'<div class="empty-state">今天的行程都已完成 ✓</div>');
 }
 
 /* ================= 今天模式 ================= */
@@ -4748,7 +4985,7 @@ function renderTodayList(day,ti){
   /* Bar 2026-11-15「今天頁上方的資訊卡縮小一點」:清單模式用精簡版 —— 日期與完成數同一行,天氣／採買一行,繪本插圖不顯示 */
   var h='<div class="today-hero today-hero-trip today-hero-compact'+(weather&&weather.status==='fresh'?' weather-on':'')+'">'+
     /* 繪本插圖:在頂端時完整顯示;往下捲看行程時,資訊卡凍結在上方、插圖收成細長版(只露出下半段的橋、海、船) */
-    '<div class="today-hero-art">'+renderEhonArt()+'</div>'+
+    (ehonArtEnabled()?'<div class="today-hero-art">'+renderEhonArt(weather)+'</div>':'')+
     '<div class="today-hero-top"><div class="today-hero-compact-title"><span class="lbl">DAY '+(ti+1)+'</span><span class="date">'+day.date+(day.dow?' ('+day.dow+')':'')+'</span></div>'+
     '<div class="loc" aria-label="'+escapeHtml(progressLabel)+'">完成 '+doneN+'/'+stops.length+'</div></div>'+
     renderTodayHeroSummary(weather,renderShoppingTodayEntry(day,next?next.id:''))+departureRefundReminderHtml(ti===DB.trip.days.length-1)+'</div>';
@@ -4935,7 +5172,7 @@ function renderToday(){
   requestHomeWeather(ti,weatherItem);
   var weather=homeWeatherFor(ti,weatherItem);
   var progressLabel='今日已處理 '+completed+' 站，共 '+stopCounts.total+' 站';
-  var h='<div class="today-hero today-hero-trip'+(weather&&weather.status==='fresh'?' weather-on':'')+'">'+renderEhonArt()+'<div class="today-hero-top"><div class="lbl">TODAY · DAY '+(ti+1)+'</div>'+
+  var h='<div class="today-hero today-hero-trip'+(weather&&weather.status==='fresh'?' weather-on':'')+'">'+renderEhonArt(weather)+'<div class="today-hero-top"><div class="lbl">TODAY · DAY '+(ti+1)+'</div>'+
     '<div class="loc" aria-label="'+escapeHtml(progressLabel)+'">已處理 '+completed+'/'+stopCounts.total+'</div></div>'+
     '<div class="today-hero-main"><div class="date">'+day.date+(day.dow?' ('+day.dow+')':'')+'</div>'+renderTodayWeatherArt(weather)+'</div>'+
     renderTodayHeroSummary(weather,renderShoppingTodayEntry(day,currentStopRef))+departureRefundReminderHtml(ti===DB.trip.days.length-1)+'</div>';
@@ -11078,6 +11315,9 @@ function renderSettingsRoot(ledgerSettings){
   /* v192:今天頁預設是清單;打開這個開關才用原本依時間的卡片 */
   var todayCard=!todayListMode();
   var todayModeRow='<div class="settings-row settings-row-toggle"><span class="settings-row-icon">'+SETTINGS_ROW_ICONS.options+'</span><label class="settings-row-main" for="settingsTodayCardMode"><b>今天頁用卡片顯示</b></label><span class="settings-row-summary" id="settingsTodayModeSummary">'+(todayCard?'卡片':'清單')+'</span><input id="settingsTodayCardMode" type="checkbox" '+(todayCard?'checked ':'')+'aria-label="今天頁用卡片顯示（依時間顯示下一站）" onchange="setTodayCardMode(this)"></div>';
+  /* v195:繪本插圖開關,跟「今天頁用卡片顯示」放一起;只有繪本主題有插圖,所以只在繪本主題出現 */
+  var ehonArtOn=ehonArtEnabled();
+  var ehonArtRow=currentThemeId()==='ehon'?'<div class="settings-row settings-row-toggle"><span class="settings-row-icon">'+SETTINGS_ROW_ICONS.theme+'</span><label class="settings-row-main" for="settingsEhonArt"><b>繪本插圖</b></label><span class="settings-row-summary" id="settingsEhonArtSummary">'+(ehonArtOn?'顯示':'隱藏')+'</span><input id="settingsEhonArt" type="checkbox" '+(ehonArtOn?'checked ':'')+'aria-label="繪本插圖（依天氣換晴天、雨天或雪景）" onchange="setEhonArtEnabled(this)"></div>':'';
   var simpleRow='<div class="settings-row settings-row-toggle"><span class="settings-row-icon">'+SETTINGS_ROW_ICONS.settlement+'</span><label class="settings-row-main" for="settingsSimpleSettlement"><b>簡易結算模式</b></label>'+simpleSettlementSettingsHelpButton()+'<span class="settings-row-summary">'+(simpleOn?'已啟用':'已關閉')+'</span><input id="settingsSimpleSettlement" type="checkbox" '+(simpleOn?'checked ':'')+'aria-label="簡易結算模式（保留已確認結清）" onchange="setSimpleSettlementMode(this)"></div>'+simpleSettlementSettingsHelpText();
   /* 測試模式關閉時完全不渲染 —— 不留佔位、不留隱藏節點(設計規格 §2.2.5)。
      根頁永遠不放可直接切換的 checkbox,避免誤觸整條團體帳軌道;要切換一律進控制頁。 */
@@ -11088,7 +11328,7 @@ function renderSettingsRoot(ledgerSettings){
     settingsGroup('個人',
       identityRow+
       settingsNavRow('theme','theme','主題',theme.name)+
-      todayModeRow)+
+      todayModeRow+ehonArtRow)+
     settingsGroup('記帳',
       settingsNavRow('proxy','proxy','代購對象',proxyCount+' 位常用對象')+
       settingsNavRow('ledger','ledger','帳務',ledgerSettings.defaultCurrency+' · '+(ledgerSettings.exchangeRate||'未設定'))+
@@ -11295,6 +11535,21 @@ function renderSettingsHealthPage(){
   return header+renderSettingsDataHealth();
 }
 var APP_RELEASE_NOTES=[
+  {version:'v196',date:'2026-11-17',title:'過往旅程分頁瀏覽',items:[
+    '點開一趟過往旅程，上方有「總覽／行程／帳務／採買／筆記」分頁。',
+    '總覽有我的花費圓餅圖，並可「匯出帳務到記序」；行程按天切換，每天下面有當天花費與當晚住宿。',
+    '帳務分團體帳（結算結果與全團支出）和個人帳（每天小計）；採買分已買／沒買。',
+    '回顧筆記右邊有鉛筆圖示，可以修改內容；原始資料收到頁面最底的「顯示原始資料」。'
+  ]},
+  {version:'v195',date:'2026-11-17',title:'繪本插圖跟著天氣換',items:[
+    '繪本主題的插圖會看當地天氣：下雨換成雨天城市（雨絲會落下），下雪換成雪景（雪花飄落），其他時候是通用版。',
+    '通用版多了樹、燈塔、海鷗和小帆船。',
+    '不想看插圖：設定 → 繪本插圖，關掉就不顯示。'
+  ]},
+  {version:'v194',date:'2026-11-16',title:'行程頁改成時間軸',items:[
+    '行程頁改成時間軸：左邊是時間（到下一站的時間），站與站之間標出交通方式與時間。',
+    '站卡平常收起，按 ▾ 展開導航、停車與資訊；右上「地圖」直接開 Google 地圖。從今天頁點進來的那一站會自動展開。'
+  ]},
   {version:'v193',date:'2026-11-16',title:'過往旅程更好讀',items:[
     '過往旅程清單每一趟寫出出發與回程日期、星期和天數，以及封存日期。',
     '點開一趟旅程是獨立一頁：最上面是摘要（完成站數、採買、個人帳、團體帳），接著是回顧筆記；原始資料收在最底。'
@@ -11304,18 +11559,6 @@ var APP_RELEASE_NOTES=[
     '按住左邊的 ≡ 可以拖拉，臨時調整今天的順序（只存在這支手機）。',
     '點站名或 › 直接到行程頁看導航與資訊；行程頁只顯示行程，那天過完後照實際順序顯示。',
     '想用原本的卡片：設定 → 今天頁用卡片顯示。'
-  ]},
-  {version:'v191',date:'2026-11-15',title:'購物頁更有色彩',items:[
-    '繪本主題的購物頁：每間商場的名稱整條上色，五色輪流。',
-    '樓層編號放進黃色小膠囊；還沒加想逛店家時改成淡奶油底。',
-    '所有主題：展開樓層時，店家清單有底色，和樓層標題接成一塊。'
-  ]},
-  {version:'v190',date:'2026-11-15',title:'繪本多一個顏色',items:[
-    '繪本主題多一個藤紫色：住宿標籤和航班卡改用藤紫，和今天卡的水藍分得開。'
-  ]},
-  {version:'v189',date:'2026-11-13',title:'資料健康更清楚',items:[
-    '設定 → 疑難排解 → 資料健康的「團體帳」只算目前模式；測試模式下會標「（測試模式）」。',
-    '內部檢查加強：離線需要的檔案都有收進快取。'
   ]},
 
 ];
@@ -11554,13 +11797,9 @@ function pastTripDateText(text){
   var pad=function(n){return (n<10?'0':'')+n;};
   return p.y+'/'+pad(p.m)+'/'+pad(p.d);
 }
-/* 摘要卡:一眼看完這趟 —— 日期與天數、封存成員、完成站數、採買、個人帳、團體帳 */
+/* 摘要卡:一眼看完這趟 —— 日期與天數、封存成員、我的花費、採買、個人帳、團體帳(v196 起不顯示完成站數) */
 function renderPastTripSummary(archive){
-  var personal=archive.personal||{},checks=personal.checks||{},progress=personal.nextStopProgress||{};
-  var doneIds={};Object.keys(checks).forEach(function(id){if(checks[id])doneIds[id]=true;});
-  Object.keys(progress).forEach(function(key){var day=progress[key]||{};Object.keys(day.done||{}).forEach(function(id){if(day.done[id])doneIds[id]=true;});});
-  var stops=[];try{buildItin(parseCSV(archive.sheets.itin.csv)).days.forEach(function(day){(day.items||[]).forEach(function(it){if(isTripCheckableItem(it))stops.push(it);});});}catch(error){}
-  var doneStops=stops.filter(function(it){return doneIds[it.id];}).length;
+  var personal=archive.personal||{};
   var shopping=personal.shoppingItems||[],bought=shopping.filter(function(it){return it&&it.done;}).length;
   var ledger=personal.personalLedger||[],twd=0;ledger.forEach(function(r){var n=Number(r&&r.amountTwd);if(isFinite(n))twd+=n;});
   var shared=[];try{shared=parseLedgerSheetCsv(archive.sheets.ledger.csv);}catch(error){}
@@ -11569,15 +11808,307 @@ function renderPastTripSummary(archive){
     '<p class="past-trip-summary-range">'+escapeHtml(pastTripRangeText(archive.trip))+'</p>'+
     '<p class="past-trip-summary-meta">封存成員 '+escapeHtml(personal.member||'未選擇')+' · 封存於 '+escapeHtml(pastTripDateText(archive.archivedAt))+'</p>'+
     '<div class="past-trip-stats">'+
-      stat('完成站數',stops.length?doneStops+' / '+stops.length:'—')+
+      stat('我的花費',(function(){try{var m=pastTripModel(archive);return m.member?pastTripTwd(m.spend.total.amountTwd):'—';}catch(error){return '—';}})())+
       stat('採買',shopping.length?bought+' / '+shopping.length+' 項':'0 項')+
       stat('個人帳',ledger.length+' 筆'+(ledger.length?' · NT$'+Math.round(twd).toLocaleString('en-US'):''))+
       stat('團體帳',shared.length+' 筆')+
     '</div></section>';
 }
+/* ================= v196 過往旅程分頁(Bar 2026-11-17,backlog #64) =================
+   總覽(摘要＋花費圓餅圖＋匯出到記序＋原始資料)／行程(按天切換,當天花費與住宿)／帳務(團體帳與個人帳)／
+   採買(已買／沒買)／筆記(回顧筆記可修改:新增一筆帶 replaces 的版本,只顯示最新版)。全部只讀封存檔,不改封存。 */
+var PAST_TRIP_TABS=[['overview','總覽'],['trip','行程'],['ledger','帳務'],['shop','採買'],['notes','筆記']];
+var pastTripModelCache={id:'',model:null};
+function pastTripView(){
+  var ui=pastTripsUi;
+  if(!ui.view)ui.view={tab:'overview',day:0,ledger:'group',shop:'bought',editing:'',editDraft:''};
+  return ui.view;
+}
+function pastTripModel(archive){
+  if(pastTripModelCache.id===archive.archiveId&&pastTripModelCache.model)return pastTripModelCache.model;
+  var raw={};Object.keys(archive.sheets||{}).forEach(function(key){raw[key]=archive.sheets[key]&&archive.sheets[key].csv||'';});
+  var db;try{db=createDB(raw);}catch(error){db={trip:{days:[]},places:{},hotels:[],shop:[],ledger:[],cfg:{}};}
+  var personal=archive.personal||{},member=String(personal.member||'').trim();
+  var groupAll=[];try{groupAll=ledgerUniverseRecords(spendLedgerRecords(db.ledger||[]),'formal');}catch(error){groupAll=[];}
+  var personalRecords=Array.isArray(personal.personalLedger)?personal.personalLedger:[];
+  var spend=buildMyTripSpend(personalRecords,groupAll,member,0);
+  var start=pastTripDateParts(archive.trip&&archive.trip.startDate);
+  var days=(db.trip&&db.trip.days||[]).map(function(day,index){
+    var key='';
+    if(start){var d=timestampDate(start.stamp+index*86400000);var pad=function(n){return (n<10?'0':'')+n;};key=d.getUTCFullYear()+'-'+pad(d.getUTCMonth()+1)+'-'+pad(d.getUTCDate());}
+    return {day:day,index:index,key:key};
+  });
+  var model={db:db,member:member,spend:spend,groupRecords:groupAll,personalRecords:personalRecords,days:days};
+  pastTripModelCache={id:archive.archiveId,model:model};
+  return model;
+}
+function pastTripSelectedArchive(){
+  var item=pastTripsUi.archives[pastTripsUi.selected];
+  return item&&item.archive?item.archive:null;
+}
+function renderPastTripTabs(){
+  var view=pastTripView();
+  return '<div class="past-trip-tabs" role="tablist" aria-label="過往旅程內容">'+PAST_TRIP_TABS.map(function(tab){
+    var on=view.tab===tab[0];
+    return '<button type="button" role="tab" aria-selected="'+(on?'true':'false')+'" onclick="setPastTripTab(\''+tab[0]+'\')">'+tab[1]+'</button>';
+  }).join('')+'</div>';
+}
+function setPastTripTab(tab){pastTripView().tab=tab;rerenderOpenSettingsPage();}
+function setPastTripDay(index){pastTripView().day=index;rerenderOpenSettingsPage();}
+function setPastTripLedger(track){pastTripView().ledger=track;rerenderOpenSettingsPage();}
+function setPastTripShop(filter){pastTripView().shop=filter;rerenderOpenSettingsPage();}
+function pastTripSeg(items,current,handler,label){
+  return '<div class="past-trip-seg" role="group" aria-label="'+escapeHtmlAttr(label)+'">'+items.map(function(item){
+    return '<button type="button" aria-pressed="'+(current===item[0]?'true':'false')+'" onclick="'+handler+'(\''+item[0]+'\')">'+escapeHtml(item[1])+'</button>';
+  }).join('')+'</div>';
+}
+function pastTripTwd(value){return 'NT$'+Math.round(Number(value)||0).toLocaleString('en-US');}
+function pastTripJpy(value){return '¥'+Math.round(Number(value)||0).toLocaleString('en-US');}
+function renderPastTripPanel(archive){
+  var view=pastTripView(),model=pastTripModel(archive);
+  if(view.tab==='trip')return renderPastTripDayPanel(archive,model);
+  if(view.tab==='ledger')return renderPastTripLedgerPanel(model);
+  if(view.tab==='shop')return renderPastTripShopPanel(model);
+  if(view.tab==='notes')return renderPastTripNotesPanel(archive);
+  return renderPastTripOverviewPanel(archive,model);
+}
+/* ---- 總覽:花費圓餅圖、匯出到記序、原始資料 ---- */
+var PAST_TRIP_PIE_COLORS=['#F2A497','#F6D27A','#7FC0DC','#B9DAA5','#C9B8E3','#B8B2A7'];
+function pastTripPieSlices(categories){
+  var rows=(categories||[]).filter(function(c){return c.totalTwd>0;}).sort(function(a,b){return b.totalTwd-a.totalTwd;});
+  var top=rows.slice(0,5),rest=rows.slice(5),other=rest.reduce(function(sum,c){return sum+c.totalTwd;},0);
+  var slices=top.map(function(c){return {label:c.category,value:c.totalTwd};});
+  if(other>0)slices.push({label:'其他',value:other});
+  return slices;
+}
+function renderPastTripDonut(slices,total){
+  var r=40,c=2*Math.PI*r,offset=0;
+  var arcs=slices.map(function(slice,i){
+    var len=total?slice.value/total*c:0;
+    var arc='<circle cx="56" cy="56" r="'+r+'" fill="none" stroke="'+PAST_TRIP_PIE_COLORS[i%PAST_TRIP_PIE_COLORS.length]+'" stroke-width="22" stroke-dasharray="'+len.toFixed(2)+' '+(c-len).toFixed(2)+'" stroke-dashoffset="'+(-offset).toFixed(2)+'" transform="rotate(-90 56 56)"/>';
+    offset+=len;return arc;
+  }).join('');
+  return '<svg class="past-trip-donut" viewBox="0 0 112 112" role="img" aria-label="花費類別比例"><circle cx="56" cy="56" r="40" fill="none" stroke="var(--line-soft)" stroke-width="22"/>'+arcs+'</svg>';
+}
+function renderPastTripOverviewPanel(archive,model){
+  var spend=model.spend,slices=pastTripPieSlices(spend.categories),total=spend.total.amountTwd;
+  var legend=slices.map(function(slice,i){
+    var pct=total?Math.round(slice.value/total*100):0;
+    return '<li><i style="background:'+PAST_TRIP_PIE_COLORS[i%PAST_TRIP_PIE_COLORS.length]+'"></i><span>'+escapeHtml(slice.label)+'<em>'+pct+'%</em></span><b>'+pastTripTwd(slice.value)+'</b></li>';
+  }).join('');
+  var spendBox=model.member?
+    '<section class="past-trip-card-box"><h3>我的花費</h3>'+(total>0?
+      '<div class="past-trip-spend">'+renderPastTripDonut(slices,total)+'<div class="past-trip-spend-total"><small>'+escapeHtml(model.member)+' 這趟總共</small><b>'+pastTripTwd(total)+'</b><span>個人 '+pastTripTwd(spend.personal.amountTwd)+' ＋ 團體分攤 '+pastTripTwd(spend.group.amountTwd)+'</span>'+(spend.proxy.count?'<span>不含代購 '+pastTripTwd(spend.proxy.amountTwd)+'</span>':'')+'</div></div><ul class="past-trip-legend">'+legend+'</ul>'
+      :'<p class="settings-help">這趟沒有記到花費。</p>')+
+    '<div class="past-trip-export"><button type="button" class="btn ghost" onclick="exportPastTripLedger()">匯出帳務到記序</button><div id="pastTripExportStatus" class="trip-lifecycle-status" role="status" aria-live="polite"></div></div></section>'
+    :'<section class="past-trip-card-box"><h3>我的花費</h3><p class="settings-help">封存時沒有選擇身分，無法計算個人花費。</p></section>';
+  return spendBox+
+''; /* 原始資料移到頁面最底的小按鈕(Bar 2026-11-17「平常根本不會用到」) */
+}
+function renderPastTripRaw(archive){
+  if(!pastTripView().raw)return '<button type="button" class="past-trip-raw-toggle" onclick="pastTripView().raw=true;rerenderOpenSettingsPage()">顯示原始資料</button>';
+  return '<div class="past-trip-advanced"><button type="button" class="past-trip-raw-toggle" onclick="pastTripView().raw=false;rerenderOpenSettingsPage()">隱藏原始資料</button><p class="settings-help">封存當時試算表與個人紀錄的原始內容，一般不需要看。</p>'+TripArchive.SHEETS.map(function(key){return '<details><summary>'+escapeHtml(pastTripSheetLabel(key))+'</summary><pre class="past-trip-raw">'+escapeHtml(archive.sheets[key]&&archive.sheets[key].csv||'')+'</pre></details>';}).join('')+
+    '<details><summary>團體分帳完整紀錄</summary><p class="settings-help">保存當時的完整紀錄，包含更正、刪除與結算紀錄。</p>'+(function(){var shared=[];try{shared=parseLedgerSheetCsv(archive.sheets.ledger.csv);}catch(error){}return pastTripObjectCards(shared);})()+'</details>'+
+    '<details><summary>旅途紀錄</summary>'+pastTripObjectCards((archive.personal||{}).travelNotes)+'</details>'+
+    '<details><summary>個人紀錄與設定</summary><pre class="past-trip-raw">'+escapeHtml(JSON.stringify(archive.personal,null,2))+'</pre></details></div>';
+}
+/* ---- 行程:按天切換,當天花費與住宿 ---- */
+function pastTripDaySpend(model,key){
+  var twd=0,jpy=0,count=0,member=canonicalMemberName(model.member);
+  if(!key||!member)return {twd:0,jpy:0,count:0};
+  model.personalRecords.forEach(function(record){
+    if(!record||canonicalMemberName(record.member)!==member||ledgerRecordMetadata(record).isProxy)return;
+    if(ledgerLocalDateKey(record.time)!==key)return;
+    twd+=ledgerAmountValue(record.amountTwd);jpy+=ledgerAmountValue(record.amountJpy);count++;
+  });
+  model.spend.groupItems.forEach(function(item){
+    if(ledgerLocalDateKey(item.time)!==key)return;
+    twd+=item.shareTwd||0;jpy+=item.shareJpy||0;count++;
+  });
+  return {twd:twd,jpy:jpy,count:count};
+}
+function pastTripDayHotel(model,day){
+  var hotel=null,db=model.db;
+  (day.items||[]).forEach(function(item){
+    var ref=String(item.ref||'').toUpperCase().trim(),place=db.places&&db.places[ref];
+    var hid=String(place&&place.hotelId||'').toUpperCase().trim();
+    if(hid){var found=(db.hotels||[]).filter(function(h){return String(h.hotelId||'').toUpperCase().trim()===hid;})[0];if(found)hotel=found;}
+  });
+  if(!hotel){
+    /* 「適用日期」寫成 10/18-10/23(入住到退房):這段期間的每一晚(不含退房那天)住這裡;也接受單一日期或逗號分隔 */
+    var md=function(text){var m=String(text||'').match(/(\d{1,2})\s*\/\s*(\d{1,2})/);return m?(+m[1])*100+(+m[2]):0;};
+    var today=md(day.date);
+    (db.hotels||[]).forEach(function(h){
+      String(h.dates||'').split(/[,，、]/).forEach(function(part){
+        var ends=part.split(/[-~～–]/),a=md(ends[0]),b=ends.length>1?md(ends[1]):0;
+        if(!today||!a)return;
+        if(b?(today>=a&&today<b):today===a)hotel=h;
+      });
+    });
+  }
+  return hotel;
+}
+function renderPastTripDayPanel(archive,model){
+  var view=pastTripView(),days=model.days;
+  if(!days.length)return '<p class="settings-help">沒有行程紀錄。</p>';
+  if(view.day>=days.length)view.day=0;
+  var chips='<div class="past-trip-days" role="group" aria-label="選擇天數">'+days.map(function(entry,i){
+    return '<button type="button" aria-pressed="'+(view.day===i?'true':'false')+'" onclick="setPastTripDay('+i+')"><span>DAY '+(i+1)+'</span><small>'+escapeHtml(entry.day.date||'')+'</small></button>';
+  }).join('')+'</div>';
+  var entry=days[view.day],day=entry.day,items=(day.items||[]);
+  var rows=items.map(function(item){
+    var place='';try{var ref=String(item.ref||'').toUpperCase().trim(),p=model.db.places&&model.db.places[ref];place=p&&p.name||'';}catch(error){}
+    var leg=item.move?'<div class="past-trip-leg">'+escapeHtml(item.move)+'</div>':'';
+    return leg+'<div class="past-trip-row"><span class="past-trip-time">'+escapeHtml(item.time||'')+'</span><span><b>'+escapeHtml(item.act||place||'')+'</b>'+
+      (place&&place!==item.act?'<small>'+escapeHtml(place)+'</small>':'')+(item.note?'<small>'+escapeHtml(item.note)+'</small>':'')+'</span></div>';
+  }).join('');
+  var spend=pastTripDaySpend(model,entry.key),hotel=pastTripDayHotel(model,day);
+  var foot='<div class="past-trip-dayfoot"><div><small>這天的花費（個人＋團體分攤）</small><b>'+(spend.count?pastTripTwd(spend.twd)+' · '+spend.count+' 筆':'沒有記帳')+'</b></div>'+
+    '<div><small>當晚住宿</small><b>'+(hotel?escapeHtml(hotel.name):'—')+'</b>'+(hotel&&hotel.addr?'<small>'+escapeHtml(hotel.addr)+'</small>':'')+'</div></div>';
+  return chips+'<div class="past-trip-card-box"><h3>DAY '+(view.day+1)+' · '+escapeHtml(day.date||'')+' '+escapeHtml(day.dow||'')+'</h3>'+(rows||'<p class="settings-help">這天沒有行程。</p>')+'</div>'+foot;
+}
+/* ---- 帳務:團體帳(結算結果＋明細)／個人帳(依天分組、每天小計) ---- */
+function pastTripDateLabel(key){var parts=String(key||'').split('-');return parts.length===3?Number(parts[1])+'/'+Number(parts[2]):(key||'日期不明');}
+function pastTripGroupByDate(records){
+  var groups={},order=[];
+  records.slice().sort(function(a,b){return String(a.time||'').localeCompare(String(b.time||''));}).forEach(function(record){
+    var key=ledgerLocalDateKey(record.time)||'';
+    if(!groups[key]){groups[key]=[];order.push(key);}
+    groups[key].push(record);
+  });
+  return order.map(function(key){return {key:key,records:groups[key]};});
+}
+function renderPastTripLedgerPanel(model){
+  var view=pastTripView();
+  var seg=pastTripSeg([['group','團體帳'],['personal','個人帳']],view.ledger,'setPastTripLedger','帳本');
+  if(view.ledger==='personal'){
+    var member=canonicalMemberName(model.member);
+    var mine=model.personalRecords.filter(function(r){return r&&(!member||!r.member||canonicalMemberName(r.member)===member);});
+    if(!mine.length)return seg+'<p class="settings-help">沒有個人帳。</p>';
+    return seg+pastTripGroupByDate(mine).map(function(group){
+      var subtotal=group.records.reduce(function(sum,r){return sum+(ledgerRecordMetadata(r).isProxy?0:ledgerAmountValue(r.amountTwd));},0);
+      return '<div class="past-trip-subtotal"><span>'+escapeHtml(pastTripDateLabel(group.key))+' · '+group.records.length+' 筆</span><span>小計 '+pastTripTwd(subtotal)+'</span></div><div class="past-trip-card-box" style="margin-top:4px">'+group.records.map(function(r){
+        var proxy=ledgerRecordMetadata(r).isProxy;
+        return '<div class="past-trip-row"><span><b>'+escapeHtml(r.detail||r.storeName||r.category||'未命名')+'</b>'+(proxy?'<span class="past-trip-tag">代購'+(r.proxyTarget?' · '+escapeHtml(r.proxyTarget):'')+'</span>':'')+'<small>'+escapeHtml([r.category,r.storeName,r.payMethod].filter(Boolean).join(' · '))+'</small></span><span class="amt">'+pastTripJpy(r.amountJpy)+'<small>'+pastTripTwd(r.amountTwd)+'</small></span></div>';
+      }).join('')+'</div>';
+    }).join('')+'<p class="settings-help">小計不含代購。</p>';
+  }
+  var records=model.groupRecords.filter(function(r){return r&&r.recordType==='expense';});
+  if(!records.length)return seg+'<p class="settings-help">沒有團體帳。</p>';
+  var settlement=null;try{settlement=ledgerCurrentMemberSettlement(model.db.ledger||[],model.member,'formal');}catch(error){settlement=null;}
+  var currency='JPY';try{currency=normalizeLedgerSettings(model.db.cfg||{}).defaultCurrency==='TWD'?'TWD':'JPY';}catch(error){}
+  var fmt=currency==='TWD'?pastTripTwd:pastTripJpy;
+  var transfers=settlement?(currency==='TWD'?settlement.twd:settlement.jpy):[];
+  var balanceRows=settlement?settlement.balances.members.map(function(m){
+    return '<div class="past-trip-row"><span><b>'+escapeHtml(m.member)+'</b><small>先付 '+fmt(currency==='TWD'?m.paidTwd:m.paidJpy)+' · 分攤 '+fmt(currency==='TWD'?m.owedTwd:m.owedJpy)+'</small></span></div>';
+  }).join(''):'';
+  var settle='<section class="past-trip-card-box"><h3>結算結果</h3>'+(transfers.length?transfers.map(function(t){return '<div class="past-trip-transfer"><span>'+escapeHtml(t.from)+' → '+escapeHtml(t.to)+'</span><span>'+fmt(t.amount)+'</span></div>';}).join('')+'<p class="settings-help">封存時還沒結清的款項。</p>':'<p class="settings-help" style="margin:0">大家都結清了。</p>')+balanceRows+'</section>';
+  var total=records.reduce(function(sum,r){return sum+ledgerAmountValue(r.amountTwd);},0);
+  var list=pastTripGroupByDate(records).map(function(group){
+    var sub=group.records.reduce(function(sum,r){return sum+ledgerAmountValue(r.amountTwd);},0);
+    return '<div class="past-trip-subtotal"><span>'+escapeHtml(pastTripDateLabel(group.key))+' · '+group.records.length+' 筆</span><span>'+pastTripTwd(sub)+'</span></div><div class="past-trip-card-box" style="margin-top:4px">'+group.records.map(function(r){
+      var participants=parseParticipants(r,function(){})||[];
+      return '<div class="past-trip-row"><span><b>'+escapeHtml(r.detail||r.storeName||r.category||'未命名')+'</b><small>'+escapeHtml((r.member||'未知')+' 付 · '+participants.length+' 人分'+(r.category?' · '+r.category:''))+'</small></span><span class="amt">'+pastTripJpy(r.amountJpy)+'<small>'+pastTripTwd(r.amountTwd)+'</small></span></div>';
+    }).join('')+'</div>';
+  }).join('');
+  return seg+settle+'<div class="past-trip-subtotal" style="margin-top:16px"><span>全團支出 · '+records.length+' 筆</span><span>'+pastTripTwd(total)+'</span></div>'+list+'<p class="settings-help">只列有效的支出；更正前的舊紀錄、刪除與結算紀錄在「總覽 → 進階」。</p>';
+}
+/* ---- 採買:已買／沒買,依店家或站點分組 ---- */
+function pastTripShopGroupLabel(model,item){
+  var ref=String(item.stopRef||item.mallId||'').trim();
+  if(ref){
+    var shop=(model.db.shop||[]).filter(function(s){return String(s.shopId||s.id||'').toUpperCase()===ref.toUpperCase();})[0];
+    if(shop&&(shop.mall||shop.name))return shop.mall||shop.name;
+    var place=model.db.places&&model.db.places[ref.toUpperCase()];if(place&&place.name)return place.name;
+    var found='';model.days.forEach(function(d){(d.day.items||[]).forEach(function(it){if(it.id===ref)found=it.act||'';});});
+    if(found)return found;
+  }
+  return item.storeName||'其他';
+}
+function renderPastTripShopPanel(model){
+  var view=pastTripView(),items=(pastTripSelectedArchive()&&pastTripSelectedArchive().personal.shoppingItems)||[];
+  var bought=items.filter(function(it){return it&&it.done;}),todo=items.filter(function(it){return it&&!it.done;});
+  var seg=pastTripSeg([['bought','已買 '+bought.length],['todo','沒買 '+todo.length]],view.shop,'setPastTripShop','採買狀態');
+  var list=view.shop==='todo'?todo:bought;
+  if(!list.length)return seg+'<p class="settings-help">'+(view.shop==='todo'?'全部都買到了。':'沒有已買的項目。')+'</p>';
+  var byId={};model.personalRecords.forEach(function(r){if(r&&r.id)byId[r.id]=r;});
+  var groups={},order=[];
+  list.forEach(function(it){var label=pastTripShopGroupLabel(model,it);if(!groups[label]){groups[label]=[];order.push(label);}groups[label].push(it);});
+  return seg+order.map(function(label){
+    return '<div class="past-trip-card-box"><h3>'+escapeHtml(label)+'</h3>'+groups[label].map(function(it){
+      var allocations=Array.isArray(it.allocations)?it.allocations:[],qty=0,targets=[],amount=0;
+      allocations.forEach(function(a){qty+=Number(a.quantity)||0;if(a.target)targets.push(a.target+(a.quantity?' ×'+a.quantity:''));(a.ledgerLinks||[]).forEach(function(link){var r=byId[link.recordId];if(r)amount+=ledgerAmountValue(r.amountJpy);});});
+      return '<div class="past-trip-row"><span><b>'+escapeHtml(it.name||'未命名')+'</b><small>'+escapeHtml([qty?qty+' '+(it.unit||''):'',targets.length?'給 '+targets.join('、'):''].filter(Boolean).join(' · '))+'</small></span>'+(amount?'<span class="amt">'+pastTripJpy(amount)+'</span>':'')+'</div>';
+    }).join('')+'</div>';
+  }).join('');
+}
+/* ---- 筆記:回顧筆記可修改(新增一筆帶 replaces 的版本) ---- */
+function pastTripLatestNotes(notes){
+  var chains={},order=[];
+  (notes||[]).forEach(function(note){
+    var root=note.replaces||note.id;
+    if(!chains[root]){chains[root]={root:root,first:null,latest:null};order.push(root);}
+    var chain=chains[root];
+    if(!note.replaces)chain.first=note;
+    if(!chain.latest||String(note.createdAt).localeCompare(String(chain.latest.createdAt))>=0)chain.latest=note;
+  });
+  return order.map(function(root){var c=chains[root];return {root:root,text:c.latest.text,createdAt:(c.first||c.latest).createdAt,editedAt:c.latest!==c.first&&c.first?c.latest.createdAt:'',latestId:c.latest.id};});
+}
+var PAST_TRIP_EDIT_ICON='<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M13.5 6.5l4 4"/></svg>';
+function startPastTripNoteEdit(root){var view=pastTripView(),note=pastTripLatestNotes(pastTripsUi.notes).filter(function(n){return n.root===root;})[0];view.editing=root;view.editDraft=note?note.text:'';rerenderOpenSettingsPage();var el=document.getElementById('pastTripNoteEditText');if(el)el.focus();}
+function cancelPastTripNoteEdit(){var view=pastTripView();view.editing='';view.editDraft='';rerenderOpenSettingsPage();}
+function renderPastTripNotesPanel(archive){
+  var state=pastTripsUi,view=pastTripView(),busy=state.noteSaving||state.notesLoading;
+  var notes=pastTripLatestNotes(state.notes);
+  var list=state.notesLoading?'<p class="settings-help" role="status">正在讀取回顧筆記…</p>':notes.length?notes.map(function(note){
+    var meta=pastTripDateText(note.createdAt);
+    if(view.editing===note.root)return '<article class="past-trip-note"><textarea id="pastTripNoteEditText" class="state-box" maxlength="2000" aria-label="修改回顧筆記"'+(busy?' disabled':'')+' oninput="pastTripView().editDraft=this.value">'+escapeHtml(view.editDraft)+'</textarea><div class="past-trip-note-actions"><button type="button" class="btn" onclick="savePastTripNoteEdit()"'+(busy?' disabled':'')+'>儲存修改</button><button type="button" class="btn ghost" onclick="cancelPastTripNoteEdit()"'+(busy?' disabled':'')+'>取消</button></div></article>';
+    return '<article class="past-trip-note"><div class="past-trip-note-head"><p>'+escapeHtml(note.text)+'</p><button type="button" class="past-trip-note-edit" aria-label="修改這則回顧筆記" onclick="startPastTripNoteEdit(\''+jsHtmlAttrString(note.root)+'\')"'+(busy?' disabled':'')+'>'+PAST_TRIP_EDIT_ICON+'</button></div><small>'+escapeHtml(meta)+'</small></article>';
+  }).join(''):'<p class="settings-help">還沒有回顧筆記。</p>';
+  return '<section class="past-trip-block"><h3>回顧筆記</h3><div class="past-trip-notes">'+list+'</div>'+
+    '<textarea id="pastTripNoteText" class="state-box" maxlength="2000" placeholder="寫下這趟旅行的回顧…"'+(busy?' disabled':'')+'>'+escapeHtml(state.noteDraft&&state.noteDraft.archiveId===archive.archiveId&&!state.noteDraft.replaces?state.noteDraft.text:'')+'</textarea>'+
+    '<button type="button" class="btn" onclick="addPastTripNote()"'+(busy?' disabled':'')+'>新增回顧筆記</button><div id="pastTripNoteStatus" class="trip-lifecycle-status" role="status"></div></section>';
+}
+function savePastTripNoteEdit(){
+  var view=pastTripView(),input=document.getElementById('pastTripNoteEditText');
+  var text=String(input?input.value:view.editDraft).trim(),root=view.editing;
+  if(!root||!text)return Promise.resolve();
+  var current=pastTripLatestNotes(pastTripsUi.notes).filter(function(n){return n.root===root;})[0];
+  if(current&&current.text===text){cancelPastTripNoteEdit();return Promise.resolve();}
+  return addPastTripNote({text:text,replaces:root}).then(function(){if(!pastTripsUi.noteSaving){view.editing='';view.editDraft='';rerenderOpenSettingsPage();}});
+}
+/* ---- 匯出到記序:與「匯出本趟個人帳」同一格式(v2),資料取自封存 ---- */
+function pastTripLedgerExportJson(archive){
+  var model=pastTripModel(archive),trip=archive.trip||{};
+  var name=String(trip.name||'').trim(),startDate=String(trip.startDate||'').trim(),endDate=String(trip.endDate||'').trim();
+  if(!name||!startDate||!endDate)throw new Error('旅程資訊不完整');
+  var sourceSheetId=String(archive.sourceSheetId||''),tripKey=JSON.stringify([sourceSheetId,startDate,endDate]),seen=Object.create(null);
+  var member=canonicalMemberName(model.member);
+  var projected=model.personalRecords.filter(function(r){return r&&(!member||canonicalMemberName(r.member)===member);}).map(function(record){var out=projectPersonalLedgerExportRecord(record,tripKey);if(seen[out.id])throw new Error('個人帳紀錄 ID 重複');seen[out.id]=true;return out;});
+  var spend=model.spend;
+  var groupShare={member:spend.member,pendingCount:spend.group.pendingCount,unattributedCount:spend.group.unattributedCount,items:spend.groupItems.map(function(item){
+    return {sourceRecordId:item.id,sourceKey:tripKey+'/group/'+encodeURIComponent(item.id),time:item.time,category:item.category,detail:item.detail,storeName:item.storeName,payer:item.payer,participantCount:item.participantCount,shareJpy:item.shareJpy,shareTwd:item.shareTwd,pending:item.pending};
+  })};
+  var totals={member:spend.member,personalJpy:spend.personal.amountJpy,personalTwd:spend.personal.amountTwd,proxyJpy:spend.proxy.amountJpy,proxyTwd:spend.proxy.amountTwd,proxyCount:spend.proxy.count,groupShareJpy:spend.group.amountJpy,groupShareTwd:spend.group.amountTwd,totalJpy:spend.total.amountJpy,totalTwd:spend.total.amountTwd};
+  return JSON.stringify({format:'trippilot-personal-ledger',version:2,exportedAt:appNow().toISOString(),trip:{name:name,startDate:startDate,endDate:endDate,sourceSheetId:sourceSheetId,sourceKey:tripKey},records:projected,groupShare:groupShare,totals:totals},null,2);
+}
+function exportPastTripLedger(){
+  var status=document.getElementById('pastTripExportStatus'),url='',link=null;
+  function show(text){if(status)status.textContent=text;else toast(text);}
+  try{
+    var archive=pastTripSelectedArchive();if(!archive)throw new Error('沒有選擇旅程');
+    var text=pastTripLedgerExportJson(archive),payload=JSON.parse(text);
+    if(!payload.records.length&&!payload.groupShare.items.length){show('這趟沒有個人帳或團體份額可匯出');return false;}
+    if(!window.Blob||!window.URL||typeof URL.createObjectURL!=='function')throw new Error('此裝置無法下載檔案');
+    url=URL.createObjectURL(new Blob([text],{type:'application/json;charset=utf-8'}));
+    link=document.createElement('a');link.href=url;link.download='TripPilot-個人帳-'+payload.trip.name.replace(/[\\/:*?"<>|\u0000-\u001f]/g,'_').slice(0,60)+'-'+payload.trip.startDate.replace(/[^0-9-]/g,'')+'.json';link.hidden=true;document.body.appendChild(link);link.click();link.remove();
+    var savedUrl=url;setTimeout(function(){URL.revokeObjectURL(savedUrl);},60000);
+    show('已送出 '+payload.records.length+' 筆個人帳、'+payload.groupShare.items.length+' 筆團體份額的檔案下載，可匯入記序');return true;
+  }catch(error){if(link&&link.parentNode)link.remove();if(url)URL.revokeObjectURL(url);show('無法匯出：'+String(error&&error.message||error));return false;}
+}
 function closePastTrip(){
   pastTripsSelectionId++;
-  pastTripsUi.selected=null;pastTripsUi.notes=[];pastTripsUi.noteDraft=null;pastTripsUi.noteSaving=false;pastTripsUi.notesLoading=false;
+  pastTripsUi.selected=null;pastTripsUi.notes=[];pastTripsUi.noteDraft=null;pastTripsUi.noteSaving=false;pastTripsUi.notesLoading=false;pastTripsUi.view=null;
   rerenderOpenSettingsPage();
 }
 function renderPastTripsPage(){
@@ -11589,19 +12120,12 @@ function renderPastTripsPage(){
   else if(state.status==='ready'){
     var sel=state.selected!==null&&state.archives[state.selected]&&state.archives[state.selected].archive?state.archives[state.selected].archive:null;
     if(sel){
-      /* v193(Bar 2026-11-16 選第一版):點開一趟旅程就是獨立一頁 —— 摘要卡、回顧筆記、內容,原始資料收在最底 */
-      var archive=sel,busy=state.noteSaving||state.notesLoading;
+      /* v196(Bar 2026-11-17 #64):點開一趟旅程 —— 摘要卡下面一排分頁:總覽／行程／帳務／採買／筆記 */
       body='<button type="button" class="past-trip-back" onclick="closePastTrip()">‹ 全部過往旅程</button>'+
-        renderPastTripSummary(archive)+
-        '<section class="past-trip-block"><h3>回顧筆記</h3><div class="past-trip-notes">'+(state.notesLoading?'<p class="settings-help" role="status">正在讀取回顧筆記…</p>':state.notes.length?state.notes.map(function(note){return '<article class="past-trip-note"><p>'+escapeHtml(note.text)+'</p><small>'+escapeHtml(pastTripDateText(note.createdAt))+'</small></article>';}).join(''):'<p class="settings-help">尚無回顧筆記</p>')+'</div>'+
-        '<textarea id="pastTripNoteText" class="state-box" maxlength="2000" placeholder="寫下這趟旅行的回顧…"'+(busy?' disabled':'')+'>'+escapeHtml(state.noteDraft&&state.noteDraft.archiveId===archive.archiveId?state.noteDraft.text:'')+'</textarea>'+
-        '<button type="button" class="btn" onclick="addPastTripNote()"'+(busy?' disabled':'')+'>新增回顧筆記</button><div id="pastTripNoteStatus" class="trip-lifecycle-status" role="status"></div></section>'+
-        '<section class="past-trip-block"><h3>旅程內容</h3>'+renderPastTripSnapshot(archive)+'</section>'+
-        '<details class="past-trip-advanced"><summary>進階：原始資料</summary><p class="settings-help">封存當時試算表與個人紀錄的原始內容，一般不需要看。</p>'+TripArchive.SHEETS.map(function(key){return '<details><summary>'+escapeHtml(pastTripSheetLabel(key))+'</summary><pre class="past-trip-raw">'+escapeHtml(archive.sheets[key].csv)+'</pre></details>';}).join('')+
-        '<details><summary>個人紀錄與設定</summary><pre class="past-trip-raw">'+escapeHtml(JSON.stringify(archive.personal,null,2))+'</pre></details></details>';
+        renderPastTripSummary(sel)+renderPastTripTabs()+'<div id="pastTripPanel" role="tabpanel">'+renderPastTripPanel(sel)+'</div>'+renderPastTripRaw(sel);
       return renderSettingsHeader('過往旅程',false)+'<div class="settings-section">'+body+'</div>';
     }
-    body='<p class="settings-help">目前帳號：'+escapeHtml(state.account&&state.account.email||'未知')+'。封存唯讀；回顧筆記只能新增。</p>';
+    body='<p class="settings-help">目前帳號：'+escapeHtml(state.account&&state.account.email||'未知')+'。封存內容唯讀；回顧筆記可以新增與修改。</p>';
     if(!state.archives.length)body+='<p class="settings-help">尚無過往旅程。</p>';
     else body+='<div class="trip-lifecycle-actions">'+state.archives.map(function(item,index){
       return item.error?'<div class="trip-lifecycle-status error">封存 '+escapeHtml(item.name||item.fileId)+' 無法讀取：'+escapeHtml(item.error)+'</div>':
@@ -11759,12 +12283,12 @@ function selectPastTrip(index,rethrowError){
   var item=pastTripsUi.archives[index];if(!item||!item.archive)return;
   if(pastTripsUi.selected===index&&!rethrowError&&!pastTripsUi.notesError)return Promise.resolve();
   var requestId=pastTripsRequestId;
-  if(pastTripsUi.selected!==index){pastTripsSelectionId++;pastTripsUi.noteDraft=null;pastTripsUi.noteSaving=false;}
+  if(pastTripsUi.selected!==index){pastTripsSelectionId++;pastTripsUi.noteDraft=null;pastTripsUi.noteSaving=false;pastTripsUi.view=null;}
   var selectionId=pastTripsSelectionId;
   pastTripsUi.selected=index;pastTripsUi.notes=[];pastTripsUi.notesLoading=true;pastTripsUi.notesError=false;rerenderOpenSettingsPage();
   return tripDrive().listNotes(item.archive.archiveId).then(function(files){
     if(requestId!==pastTripsRequestId||selectionId!==pastTripsSelectionId||pastTripsUi.selected!==index)return;
-    pastTripsUi.notes=files.map(function(file){var note=JSON.parse(file.content);return {id:String(note.id||''),text:String(note.text||''),createdAt:String(note.createdAt||file.createdTime||'')};})
+    pastTripsUi.notes=files.map(function(file){var note=JSON.parse(file.content);return {id:String(note.id||''),text:String(note.text||''),createdAt:String(note.createdAt||file.createdTime||''),replaces:String(note.replaces||'')};})
       .sort(function(a,b){return a.createdAt.localeCompare(b.createdAt);});
     pastTripsUi.notesLoading=false;
     rerenderOpenSettingsPage();
@@ -11775,13 +12299,16 @@ function selectPastTrip(index,rethrowError){
     if(rethrowError)throw error;
   });
 }
-function addPastTripNote(){
-  if(pastTripsUi.noteSaving||pastTripsUi.notesLoading)return;
-  var item=pastTripsUi.archives[pastTripsUi.selected],input=document.getElementById('pastTripNoteText');
-  var text=input&&input.value.trim();if(!item||!item.archive||!text)return;
+function addPastTripNote(edit){
+  if(pastTripsUi.noteSaving||pastTripsUi.notesLoading)return Promise.resolve();
+  /* v196:edit={text,replaces} 是修改既有筆記 —— 一樣新增一筆,帶 replaces(原筆記 ID),舊版留在 Drive */
+  var replaces=edit&&edit.replaces?String(edit.replaces):'';
+  var item=pastTripsUi.archives[pastTripsUi.selected],input=replaces?document.getElementById('pastTripNoteEditText'):document.getElementById('pastTripNoteText');
+  var text=replaces?String(edit.text||'').trim():input&&input.value.trim();if(!item||!item.archive||!text)return Promise.resolve();
   var note=pastTripsUi.noteDraft;
-  if(!note||note.text!==text||note.archiveId!==item.archive.archiveId){
+  if(!note||note.text!==text||note.archiveId!==item.archive.archiveId||String(note.replaces||'')!==replaces){
     note={id:'note-'+Date.now()+'-'+Math.floor(Math.random()*0x100000000).toString(36),text:text,createdAt:timestampDate(Date.now()).toISOString(),archiveId:item.archive.archiveId};
+    if(replaces)note.replaces=replaces;
     pastTripsUi.noteDraft=note;
   }
   var requestId=pastTripsRequestId,selectionId=pastTripsSelectionId,index=pastTripsUi.selected,accountId=pastTripsUi.account&&pastTripsUi.account.accountId;
@@ -11790,13 +12317,13 @@ function addPastTripNote(){
     pastTripsUi.archives[index]&&pastTripsUi.archives[index].archive&&pastTripsUi.archives[index].archive.archiveId===note.archiveId;}
   pastTripsUi.noteSaving=true;
   if(input)input.disabled=true;
-  var button=document.querySelector('#settingsOverlay button[onclick="addPastTripNote()"]');if(button)button.disabled=true;
+  var button=document.querySelector(replaces?'#settingsOverlay button[onclick="savePastTripNoteEdit()"]':'#settingsOverlay button[onclick="addPastTripNote()"]');if(button)button.disabled=true;
   var status=document.getElementById('pastTripNoteStatus');if(status)status.textContent='正在儲存筆記…';
   return tripDrive().appendNote(item.archive.archiveId,note).then(function(){
     if(!stillCurrent())return;
     return selectPastTrip(index,true).then(function(){
       if(!stillCurrent())return;
-      if(!pastTripsUi.notes.some(function(saved){return saved.id===note.id&&saved.text===note.text&&saved.createdAt===note.createdAt;}))throw new Error('筆記讀回內容不一致');
+      if(!pastTripsUi.notes.some(function(saved){return saved.id===note.id&&saved.text===note.text&&saved.createdAt===note.createdAt&&String(saved.replaces||'')===String(note.replaces||'');}))throw new Error('筆記讀回內容不一致');
       pastTripsUi.noteDraft=null;pastTripsUi.noteSaving=false;rerenderOpenSettingsPage();
     });
   }).catch(function(error){

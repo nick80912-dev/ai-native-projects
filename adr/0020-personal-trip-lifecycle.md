@@ -47,3 +47,5 @@ localStorage 不是跨分頁交易資料庫；互斥鎖、互動守門及同步�
 ## 2026-11-16 增補:OAuth 改為正式版
 
 同行友人封存時顯示沒有權限 —— OAuth 仍是 External Testing,測試使用者只有 Bar。Bar 2026-11-16 在 Google Auth Platform 發布為正式版(品牌:名稱 TripPilot、首頁、隱私權政策 `privacy.html`,不上傳 Logo 以免進入品牌驗證);scope 仍只有 `drive.file`。使用者第一次授權可能看到「Google 尚未驗證這個應用程式」,按「進階」繼續即可。
+
+**增補(2026-11-17,v196)**:回顧筆記可以修改,仍維持「以獨立檔案追加」:修改是新增一筆筆記檔,內容多一個 `replaces`(原筆記 ID),舊版保留在 Drive;App 只顯示每條鏈最新的一筆。封存檔本身不變。
