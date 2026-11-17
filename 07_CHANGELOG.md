@@ -1,5 +1,12 @@
 # 07 版本紀錄
 
+## 2026-11-17 — v198 已上線 main，tag `production-v198`
+
+- PR [#197](https://github.com/nick80912-dev/ai-native-projects/pull/197) 在 head `cc04691` 的 sanity／browser-qa 全綠後合併進 `dev`(`8bd6cbc`);PR [#198](https://github.com/nick80912-dev/ai-native-projects/pull/198) 七項檢查全綠,以 merge commit 合併進 `main`(`97bdd2d`)。
+- **線上核對**:正式站 `sw.js` 為 `SW_VERSION='v198'`;全新 Chromium `APP_VERSION` v198、只剩 `okayama-trip-v198` 快取、發布說明「設定頁整理」、`renderSettingsStorageBody` 存在且更新說明有「看更早的更新」、無 pageerror;線上 `shell/v198/index.html` 與 `origin/main` 位元組相同;v196／v197 仍 200,v195 為 404。
+- **tag**:production-tags workflow 建立 `production-v198` → `97bdd2d`。
+- 回滾:依 `16_OPS_PLAYBOOK.md` §A1 Publish `commit_ref` = `741ec82`(`production-v197`)的部署,再往前 bump。
+
 ## 2026-11-17 — v198 設定頁整理
 
 - **來源**:Bar 2026-11-17 問設定頁的優化建議,我列 5 項,Bar 回「1-5 都做」,看過截圖回「okay」。(之前另一個 v198「完成的站不變淡」做好後 Bar 改回保留變淡,已撤回、未發布。)
