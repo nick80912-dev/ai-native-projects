@@ -69,7 +69,7 @@ for (const selector of ['.brand .sync', '.settings-btn', '.day-chip', '.shop-fil
 assert.doesNotMatch(html, /function openShoppingPhotoStorageFailure\(/);
 assert.doesNotMatch(html, /function closeShoppingPhotoStorageFailure\(/);
 assert.doesNotMatch(html, /id=['"]shoppingPhotoStorageFailure/);
-assert.match(html, /照片健康狀態/,'Settings exposes one photo-health destination');
+assert.match(html, /資料與照片狀態/,'Settings exposes one photo-health destination (v198: merged into 資料與照片狀態)');
 const photoField = extractFunction(html, 'renderShoppingPhotoField');
 assert.match(photoField, /role="status"[^>]*aria-live="polite"/);
 assert.match(photoField, /shoppingUiState\.photoError/);
