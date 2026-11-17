@@ -172,5 +172,9 @@ test('a finished day shows the actual order and done stops on the trip page; tod
   const pastTrip=await tripTitles();
   expect(pastTrip).not.toEqual(todayTrip);
   await expect(page.locator('#view-trip .item.past-done')).toHaveCount(1);
+  /* v198(Bar 2026-11-17):完成的站只打勾,整張卡不變淡 */
+  await expect(page.locator('#view-trip .item.past-done')).toContainText('完成');
+  const fade=await page.evaluate(()=>{const it=document.querySelector('#view-trip .item.past-done');const card=it.querySelector('.tl-card')||it;return [getComputedStyle(it).opacity,getComputedStyle(card).opacity];});
+  expect(fade).toEqual(['1','1']);
   expect(before.length).toBe(14);
 });
