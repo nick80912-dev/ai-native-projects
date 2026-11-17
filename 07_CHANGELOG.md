@@ -1,5 +1,14 @@
 # 07 版本紀錄
 
+## 2026-11-17 — v195 繪本插圖跟著天氣換
+
+- **來源**:backlog #65 ⑧。Bar 2026-11-17 看場景示意後選「先做城市、雪景、下雨並再稍微豐富一點點」;再改為「通常都由天氣預報作判斷,下雨切雨天版、下雪切雪景,不透過試算表選填」;雪景「稍微修簡單一點點」;通用版「稍微修正豐富一些」,並要「關於插圖的開關,跟卡片模式開關放一起」。看過 App 截圖回「Okay」。
+- **場景**:`renderEhonArt(weather)` 依 `ehonWeatherScene` —— 天氣為 fresh 時,WMO 51–67／80–82／95–99 → 雨天城市(雨絲兩層交錯落下、水窪、撐傘小人、電車);71–77／85–86 → 雪景(雪山、兩棵松、雪人、冒煙小屋,雪花飄落);其他或沒有天氣 → 晴天版。岡山／四國行程的晴天仍是桃子與大橋;其他旅程用加了細節的通用版(小屋窗與煙囪、樹、松、燈塔、海鷗、小帆船)。沒有 TripConfig 新鍵。
+- **開關**:設定「個人」在「今天頁用卡片顯示」下面多一列「繪本插圖」(`trip_ehon_art`,只存這支手機,預設顯示);只在繪本主題出現。關掉時今天頁、旅程結束與無行程首頁都不畫插圖。
+- **動畫**:雨、雪、炊煙、電車;「減少動態效果」由全域規則停掉。動畫的 CSS transform 會蓋掉 SVG `transform` 屬性,所以位置放內層、動畫 class 放外層。
+- **測試**:新增 `tests/browser/ehon-weather-art-v195.spec.js`;`settings-grouped-root` 加 `ehonArtEnabled` stub。
+- **整理**:刪除 `shell/v192`,留 v193–v195;發布說明保留 v191–v195。
+
 ## 2026-11-17 — v194 已上線 main，tag `production-v194`
 
 - PR [#183](https://github.com/nick80912-dev/ai-native-projects/pull/183) 在 head `2bb8c73` 的 sanity／browser-qa 全綠後合併進 `dev`(`421f178`);PR [#184](https://github.com/nick80912-dev/ai-native-projects/pull/184) 七項檢查全綠後合併進 `main`(`f911e58`)。
