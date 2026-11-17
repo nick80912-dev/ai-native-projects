@@ -1,5 +1,14 @@
 # 07 版本紀錄
 
+## 2026-11-17 — v198 設定頁整理
+
+- **來源**:Bar 2026-11-17 問設定頁的優化建議,我列 5 項,Bar 回「1-5 都做」,看過截圖回「okay」。(之前另一個 v198「完成的站不變淡」做好後 Bar 改回保留變淡,已撤回、未發布。)
+- **資料與版本**:順序改成 個人帳匯出 → 本機備份／還原 → 版本 → 目前旅程;「重置紀錄」「清除並打包旅程」移到最底、改成紅框按鈕(`btn danger-outline`);所有按鈕整排寬度;更新說明只顯示最新一版,其餘收進「看更早的更新(N 版)」(`renderAppReleaseNotes(true)`)。
+- **資料與照片狀態**:疑難排解裡「資料健康狀態」「照片健康狀態」合成一列一頁(health 頁 = 資料概況＋照片附件,`renderSettingsStorageBody`);storage 頁保留為採買修復的深連結,畫面相同;App 內提示文字改指「資料與照片狀態」。
+- **通知位置**:今天頁頂部的通知,打開設定時移到底部,不再擋住設定頁標題。
+- **測試**:`settings-health-page`(新順序、紅框、只顯示最新一版、通知位置)、`settings-grouped-root`、`shopping-photo`、`data-observability`、`status-clarity`、`trip-progress-persistence` 跟著改;`theme-system`／`settings-grouped-root` 單元測試同步。
+- **整理**:刪除 `shell/v195`,留 v196–v198;發布說明保留 v194–v198。
+
 ## 2026-11-17 — v197 已上線 main，tag `production-v197`
 
 - PR [#194](https://github.com/nick80912-dev/ai-native-projects/pull/194) 在 head `aa0415c` 的 sanity／browser-qa 全綠後合併進 `dev`(`f24f97c`);PR [#195](https://github.com/nick80912-dev/ai-native-projects/pull/195) 七項檢查全綠、無衝突,以 merge commit 合併進 `main`(`741ec82`)。

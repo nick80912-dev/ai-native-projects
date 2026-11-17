@@ -126,7 +126,7 @@ test('keyboard failed undo keeps focus on the retry action',async({page})=>{
 test('unverified rollback explains the partial state rather than claiming success',async({page})=>{
   await setup(page);await fault(page,'rollback');await page.locator('.nx-decision-btn.done').click();
   await expect(page.locator('#toast')).toContainText('紀錄可能未完整儲存');
-  await expect(page.locator('#tripProgressError')).toContainText('資料健康狀態');
+  await expect(page.locator('#tripProgressError')).toContainText('資料與照片狀態');
   expect(await page.evaluate(()=>JSON.parse(localStorage.getItem('trip_next_stop_progress')).day_1_10_18.done['qa-a'])).toBe(true);
   expect(await page.evaluate(()=>localStorage.getItem('trip_checks'))).toBeNull();
   await page.evaluate(()=>openSettingsPage('health'));

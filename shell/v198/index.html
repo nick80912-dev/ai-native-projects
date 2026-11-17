@@ -2699,8 +2699,8 @@ function reportTripProgressFailure(result,operationKey,retryAction){
   var automatic=String(operationKey||'').indexOf('auto-')===0;
   /* 自動重繪不得覆蓋手動失敗的重試入口；本次 session 已有錯誤時保持安靜。 */
   if(automatic&&tripProgressErrorMessage) return;
-  tripProgressErrorMessage=code==='restore-unverified'?'紀錄可能未完整儲存，請查看資料健康狀態':
-    code==='read-failed'||code==='invalid-state'?'目前無法讀取行程紀錄，請查看資料健康狀態':
+  tripProgressErrorMessage=code==='restore-unverified'?'紀錄可能未完整儲存，請查看「資料與照片狀態」':
+    code==='read-failed'||code==='invalid-state'?'目前無法讀取行程紀錄，請查看「資料與照片狀態」':
     code==='inactive'?'目前沒有進行中的旅程':'這次操作未能儲存，請稍後重試';
   var key=String(operationKey||'')+':'+code;
   if(automatic&&tripProgressFailureSeen[key]) return;
@@ -4557,7 +4557,7 @@ function renderNextStopSecondaryActions(meta){
     '</div>';
 }
 function renderNextStopCard(day,dayIndex,pick){
-  if(pick.source==='storage-error') return '<div class="nx-empty-ticket"><div class="nx-ticket-title">行程紀錄暫時無法讀取</div><div class="nx-ticket-line">請查看資料健康狀態，不會清空原有紀錄。</div></div>';
+  if(pick.source==='storage-error') return '<div class="nx-empty-ticket"><div class="nx-ticket-title">行程紀錄暫時無法讀取</div><div class="nx-ticket-line">請查看「資料與照片狀態」，不會清空原有紀錄。</div></div>';
   var it=pick.item;
   if(!it){
     return '<div class="nx-empty-ticket"><div class="nx-ticket-title" style="font-size:20px">今日行程完成</div><div class="nx-ticket-line">可以慢慢休息，或切到完整行程查看後續安排。</div></div>';
@@ -5597,7 +5597,7 @@ function renderShoppingForm(){
 function renderShoppingPhotoField(form,pending){
   var hasPhoto=!!String(form&&form.photoId||'').trim(),unavailable=shoppingPhotoAuditState.ready&&shoppingPhotoAuditState.unavailable,disabled=pending||unavailable?' disabled':'';
   var error=String(shoppingUiState.photoError||''),message=error||
-    (unavailable?'此裝置目前無法使用照片附件；請至設定的「照片健康狀態」查看。':pending?'正在處理照片…':hasPhoto?'已夾帶一張照片；只保存在本裝置，不包含於備份。':'照片只保存在本裝置，不包含於備份。');
+    (unavailable?'此裝置目前無法使用照片附件；請至設定的「資料與照片狀態」查看。':pending?'正在處理照片…':hasPhoto?'已夾帶一張照片；只保存在本裝置，不包含於備份。':'照片只保存在本裝置，不包含於備份。');
   return '<div class="shopping-field"><span class="shopping-field-label">照片附件（選填）</span><input id="shoppingPhotoInput" type="file" accept="image/*" hidden onchange="selectShoppingPhoto(this)"'+disabled+'>'+
     '<div class="shopping-photo-field-actions'+(hasPhoto?'':' shopping-photo-field-actions-single')+'"><button type="button" class="btn ghost" onclick="document.getElementById(\'shoppingPhotoInput\').click()"'+disabled+'>'+(hasPhoto?'更換照片':'選擇照片')+'</button>'+
     (hasPhoto?'<button type="button" class="btn ghost" onclick="removeShoppingFormPhoto()"'+disabled+'>移除照片</button>':'')+'</div>'+
@@ -11424,7 +11424,8 @@ function shoppingPhotoInvalidItem(ref){
   return shoppingListStore.all().filter(function(item){return item&&item.id===ref.itemId;})[0]||null;
 }
 function renderSettingsStoragePage(){
-  return renderSettingsHeader('照片健康狀態',false,'troubleshoot','疑難排解')+renderSettingsStorageBody();
+  /* v198:照片健康併入「資料與照片狀態」;storage 仍是採買修復的深連結入口,畫面與 health 相同 */
+  return renderSettingsHealthPage();
 }
 function renderSettingsStorageBody(){
   var state=shoppingPhotoAuditState,capacity=state.capacity||{},invalid=state.invalidReferences||[],orphans=state.orphanPhotos||[];
