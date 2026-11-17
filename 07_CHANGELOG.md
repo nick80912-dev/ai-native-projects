@@ -1,5 +1,12 @@
 # 07 版本紀錄
 
+## 2026-11-17 — v197 已上線 main，tag `production-v197`
+
+- PR [#194](https://github.com/nick80912-dev/ai-native-projects/pull/194) 在 head `aa0415c` 的 sanity／browser-qa 全綠後合併進 `dev`(`f24f97c`);PR [#195](https://github.com/nick80912-dev/ai-native-projects/pull/195) 七項檢查全綠、無衝突,以 merge commit 合併進 `main`(`741ec82`)。
+- **線上核對**:正式站 `sw.js` 為 `SW_VERSION='v197'`;全新 Chromium `APP_VERSION` v197、只剩 `okayama-trip-v197` 快取、發布說明「小地方調整」、`pastTripRangeText` 回「去 2026/10/18（日） → 回 10/23（五）」(不含天數)、無 pageerror;線上 `shell/v197/index.html` 與 `origin/main` 位元組相同;v195／v196 仍 200,v194 為 404。
+- **tag**:production-tags workflow 建立 `production-v197` → `741ec82`。
+- 回滾:依 `16_OPS_PLAYBOOK.md` §A1 Publish `commit_ref` = `e0ab64b`(`production-v196`)的部署,再往前 bump。
+
 ## 2026-11-17 — v197 小地方調整
 
 - **來源**:Bar 2026-11-17 問「其它微調優化部分？」,我列 3 項,Bar 選全做並補充:日期寫成 10/19(一)、幣別用那趟旅程當時的設定、只有代購的那天直接顯示代購金額、過往旅程清單卡片不寫天數並縮小高度、「匯出帳務到記序」改成「匯出帳本」。看過截圖回「okay」。
