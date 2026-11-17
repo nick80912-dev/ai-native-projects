@@ -379,11 +379,14 @@ test('v193/v196 過往旅程:清單寫去回日期與天數,點開是獨立一�
   await installDriveFixture(page);await page.evaluate(()=>openSettings('root'));
   await page.getByRole('button',{name:'過往旅程'}).click();
   const card=page.locator('.past-trip-card').first();
-  await expect(card).toContainText('去 2026/10/18（日） → 回 10/23（五） · 6 天');
-  await expect(card).toContainText('封存於 2026/10/24');
+  await expect(card).toContainText('去 2026/10/18（日） → 回 10/23（五）');
+  /* v197(Bar):清單卡片不寫天數、不寫封存日期,縮成兩行 */
+  await expect(card).not.toContainText('天');
+  await expect(card).not.toContainText('封存於');
   await card.click();
   await expect(page.locator('.past-trip-card')).toHaveCount(0);
-  await expect(page.locator('.past-trip-summary')).toContainText('去 2026/10/18（日） → 回 10/23（五） · 6 天');
+  await expect(page.locator('.past-trip-summary')).toContainText('去 2026/10/18（日） → 回 10/23（五）');
+  await expect(page.locator('.past-trip-summary')).toContainText('封存於 2026/10/24');
   await expect(page.locator('.past-trip-summary .past-trip-stat')).toHaveCount(4);
   await expect(page.locator('.past-trip-summary')).toContainText('1 筆 · NT$400');
   /* v196(Bar 2026-11-17):不顯示完成站數;分頁總覽／行程／帳務／採買／筆記,預設總覽 */
