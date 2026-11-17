@@ -1,5 +1,12 @@
 # 07 版本紀錄
 
+## 2026-11-17 — v195 已上線 main，tag `production-v195`
+
+- PR [#186](https://github.com/nick80912-dev/ai-native-projects/pull/186) 在 head `6744de8` 的 sanity／browser-qa 全綠後合併進 `dev`(`c97ae5b`);PR [#187](https://github.com/nick80912-dev/ai-native-projects/pull/187) 七項檢查全綠後合併進 `main`(`85718e3`)。
+- **線上核對**:正式站 `sw.js` 為 `SW_VERSION='v195'`;全新 Chromium `APP_VERSION` v195、只剩 `okayama-trip-v195` 快取、發布說明「繪本插圖跟著天氣換」、`ehonWeatherScene` 對 61／73／1 回 rain／snow／空字串、無 pageerror;線上 `shell/v195/index.html` 與 `origin/main` 位元組相同;v193／v194 仍 200,v192 為 404。
+- **tag**:production-tags workflow 建立 `production-v195` → `85718e3`。
+- 回滾:依 `16_OPS_PLAYBOOK.md` §A1 Publish `commit_ref` = `f911e58`(`production-v194`)的部署,再往前 bump。
+
 ## 2026-11-17 — v195 繪本插圖跟著天氣換
 
 - **來源**:backlog #65 ⑧。Bar 2026-11-17 看場景示意後選「先做城市、雪景、下雨並再稍微豐富一點點」;再改為「通常都由天氣預報作判斷,下雨切雨天版、下雪切雪景,不透過試算表選填」;雪景「稍微修簡單一點點」;通用版「稍微修正豐富一些」,並要「關於插圖的開關,跟卡片模式開關放一起」。看過 App 截圖回「Okay」。
