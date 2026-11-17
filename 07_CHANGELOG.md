@@ -1,5 +1,12 @@
 # 07 版本紀錄
 
+## 2026-11-17 — v194 已上線 main，tag `production-v194`
+
+- PR [#183](https://github.com/nick80912-dev/ai-native-projects/pull/183) 在 head `2bb8c73` 的 sanity／browser-qa 全綠後合併進 `dev`(`421f178`);PR [#184](https://github.com/nick80912-dev/ai-native-projects/pull/184) 七項檢查全綠後合併進 `main`(`f911e58`)。
+- **線上核對**:正式站 `sw.js` 為 `SW_VERSION='v194'`;全新 Chromium `APP_VERSION` v194、只剩 `okayama-trip-v194` 快取、發布說明「行程頁改成時間軸」、時間軸函式存在、無 pageerror;線上 `shell/v194/index.html` 與 `origin/main` 位元組相同;v192／v193 仍 200,v191 為 404。
+- **tag**:production-tags workflow 建立 `production-v194` → `f911e58`。
+- 回滾:依 `16_OPS_PLAYBOOK.md` §A1 Publish `commit_ref` = `796c205`(`production-v193`)的部署,再往前 bump。
+
 ## 2026-11-16 — v194 行程頁改成時間軸
 
 - **來源**:Bar 2026-11-16 提供別的旅遊 App 截圖,要求評估納入規劃(backlog #65);先看時間軸概念圖,回「好，用下一站時間推算」。之後依「想看交通與通勤時間」加做的「幾點離開／停留／來不及」版本,Bar 看過截圖回「看起來變複雜了，按照前次的時間軸規劃就好」—— 已撤回,不採用。也看過「依時間移動的現在標記」三種示意(另加紅點、用站點變色、站點沿線移動),Bar 回「放棄時間軸跟著動這個想法」。
