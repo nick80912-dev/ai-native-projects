@@ -341,7 +341,7 @@ function extractThemeIds(html){
      v187 的繪本主題說明已於 2026-11-15 隨 v192 加入而滾出,同前一個處理。
      v188 的航班卡說明已於 2026-11-16 隨 v193 加入而滾出,同前一個處理。
      v189 的資料健康說明已於 2026-11-16 隨 v194 加入而滾出,同前一個處理。 */
-  assert.deepStrictEqual(Array.from(notes.slice(1),function(note){return note.version;}),['v196','v195','v194','v193']);
+  assert.deepStrictEqual(Array.from(notes.slice(1),function(note){return note.version;}),['v197','v196','v195','v194']);
   /* v117 的選取表達說明已於 2026-09-12 隨 v122 加入而滾出五筆視窗，同前一個處理。
   /* v118 的顏色語意收斂說明已於 2026-09-13 隨 v123 加入而滾出五筆視窗,同前一個處理。
   /* v119 的攤疊區塊說明已於 2026-09-13 隨 v124 加入而滾出五筆視窗,同前一個處理。
@@ -369,7 +369,7 @@ function extractThemeIds(html){
   });
   assert(!JSON.stringify(notes).includes('canonical'),'user notes avoid internal implementation jargon');
   const dataPageSource=html.slice(html.indexOf('function renderSettingsDataPage('),html.indexOf('function renderSettingsPage('));
-  assert(dataPageSource.includes('renderAppReleaseNotes()'),'release notes render only in Data and Version');
+  assert(dataPageSource.includes('renderAppReleaseNotes(true)'),'release notes render only in Data and Version (v198: latest first, older folded)');
   assert.strictEqual((dataPageSource.match(/SW /g)||[]).length,1,'Data and Version shows the SW version once');
 
   /* v123:v121 把選取底色抽成 --t-select-bg(--mint)後,仍有三處寫死 ocean 青綠調。
