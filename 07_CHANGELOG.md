@@ -1,5 +1,21 @@
 # 07 版本紀錄
 
+## 2026-11-17 — v195 繪本插圖跟著天氣換
+
+- **來源**:backlog #65 ⑧。Bar 2026-11-17 看場景示意後選「先做城市、雪景、下雨並再稍微豐富一點點」;再改為「通常都由天氣預報作判斷,下雨切雨天版、下雪切雪景,不透過試算表選填」;雪景「稍微修簡單一點點」;通用版「稍微修正豐富一些」,並要「關於插圖的開關,跟卡片模式開關放一起」。看過 App 截圖回「Okay」。
+- **場景**:`renderEhonArt(weather)` 依 `ehonWeatherScene` —— 天氣為 fresh 時,WMO 51–67／80–82／95–99 → 雨天城市(雨絲兩層交錯落下、水窪、撐傘小人、電車);71–77／85–86 → 雪景(雪山、兩棵松、雪人、冒煙小屋,雪花飄落);其他或沒有天氣 → 晴天版。岡山／四國行程的晴天仍是桃子與大橋;其他旅程用加了細節的通用版(小屋窗與煙囪、樹、松、燈塔、海鷗、小帆船)。沒有 TripConfig 新鍵。
+- **開關**:設定「個人」在「今天頁用卡片顯示」下面多一列「繪本插圖」(`trip_ehon_art`,只存這支手機,預設顯示);只在繪本主題出現。關掉時今天頁、旅程結束與無行程首頁都不畫插圖。
+- **動畫**:雨、雪、炊煙、電車;「減少動態效果」由全域規則停掉。動畫的 CSS transform 會蓋掉 SVG `transform` 屬性,所以位置放內層、動畫 class 放外層。
+- **測試**:新增 `tests/browser/ehon-weather-art-v195.spec.js`;`settings-grouped-root` 加 `ehonArtEnabled` stub。
+- **整理**:刪除 `shell/v192`,留 v193–v195;發布說明保留 v191–v195。
+
+## 2026-11-17 — v194 已上線 main，tag `production-v194`
+
+- PR [#183](https://github.com/nick80912-dev/ai-native-projects/pull/183) 在 head `2bb8c73` 的 sanity／browser-qa 全綠後合併進 `dev`(`421f178`);PR [#184](https://github.com/nick80912-dev/ai-native-projects/pull/184) 七項檢查全綠後合併進 `main`(`f911e58`)。
+- **線上核對**:正式站 `sw.js` 為 `SW_VERSION='v194'`;全新 Chromium `APP_VERSION` v194、只剩 `okayama-trip-v194` 快取、發布說明「行程頁改成時間軸」、時間軸函式存在、無 pageerror;線上 `shell/v194/index.html` 與 `origin/main` 位元組相同;v192／v193 仍 200,v191 為 404。
+- **tag**:production-tags workflow 建立 `production-v194` → `f911e58`。
+- 回滾:依 `16_OPS_PLAYBOOK.md` §A1 Publish `commit_ref` = `796c205`(`production-v193`)的部署,再往前 bump。
+
 ## 2026-11-16 — v194 行程頁改成時間軸
 
 - **來源**:Bar 2026-11-16 提供別的旅遊 App 截圖,要求評估納入規劃(backlog #65);先看時間軸概念圖,回「好，用下一站時間推算」。之後依「想看交通與通勤時間」加做的「幾點離開／停留／來不及」版本,Bar 看過截圖回「看起來變複雜了，按照前次的時間軸規劃就好」—— 已撤回,不採用。也看過「依時間移動的現在標記」三種示意(另加紅點、用站點變色、站點沿線移動),Bar 回「放棄時間軸跟著動這個想法」。
