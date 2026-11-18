@@ -1,5 +1,23 @@
 # 07 版本紀錄
 
+## 2026-11-18 — v202 設定與過往旅程整理
+
+- **來源**:Bar 2026-11-18 要過往旅程、設定各分頁與診斷面板的優化建議,我列 10 項並附原圖對照,Bar「以上都採納」。
+- **過往旅程**:點開一趟後只留左上「‹ 返回」(回旅程清單,`renderPastTripHeader`),拿掉「‹ 全部過往旅程」;大綠卡只在「總覽」,其他分頁縮成一行旅程名稱與日期(`renderPastTripSummaryLine`);總覽圓餅旁不再重複總額,改列「個人／團體分攤／不含代購」;清單說明不顯示帳號 Email。
+- **設定**:設定頁的勾選框改成主題色滑動開關(只改外觀,仍是 checkbox);代購對象頁拿掉卡片內重複的標題;旅途紀錄的按鈕改整排,沒有紀錄時只寫「尚無旅途紀錄」;帳務頁「CSV 發布可能延遲 1–5 分鐘」改成「其他手機約幾分鐘內會看到」。
+- **資料與照片狀態**:照片張數、手機剩餘空間與最近檢查合成一張卡;照片沒問題時概況不再列「照片附件」;「0 個附件待修復」只在真的有照片找不到時出現(改稱「N 張照片找不到」);團體帳說明改成「記帳都已送到雲端／送出後要等雲端確認才算完成」。
+- **資料與版本**:「SW v202」→「目前版本 v202」;最新更新與「看更早的更新」之間只留一條線。
+- **診斷面板**:「岡山舊旅程（內建）」→「岡山（App 內建行程）」;岡山保護期結束後畫面不再列(除錯報告仍有);沒有白話翻譯的工程訊息改用白話標題(原文留在「技術細節」),同類訊息合併並標「×N」(`groupDiagnosticLogEntries`)。
+- **測試**:單元 `diagnostics-app-log`(新增合併與白話標題)、`settings-grouped-root`、`help-note-style`、`app-version-fallback`、`pwa-shell`、`theme-system`;瀏覽器 `past-trips`、`past-trips-v196`、`diagnostics-app-log`、`settings-health-page`、`settings-grouped-root`、`shopping-photo`、`status-clarity`。
+- **整理**:刪除 `shell/v199`,留 v200–v202;發布說明保留 v198–v202。
+
+## 2026-11-18 — v201 已上線 main，tag `production-v201`
+
+- PR [#204](https://github.com/nick80912-dev/ai-native-projects/pull/204) 在 sanity／browser-qa 全綠後合併進 `dev`(`64d3d56`);PR [#205](https://github.com/nick80912-dev/ai-native-projects/pull/205) 七項檢查全綠,以 merge commit 合併進 `main`(`a1384fa`)。
+- **線上核對**:正式站 `sw.js` 為 `SW_VERSION='v201'`;全新 Chromium `APP_VERSION` v201、只剩 `okayama-trip-v201` 快取、發布說明「購物與分帳小地方」、`formatLedgerDateKey('2026-10-19')` 為 `10/19(一)`、無 pageerror;線上 `shell/v201/index.html` 與 `origin/main` 位元組相同;v199／v200 仍 200,v198 為 404。
+- **tag**:production-tags workflow 建立 `production-v201` → `a1384fa`。
+- 回滾:依 `16_OPS_PLAYBOOK.md` §A1 Publish `commit_ref` = `df4b0d3`(`production-v200`)的部署,再往前 bump。
+
 ## 2026-11-18 — v201 購物與分帳小地方
 
 - **來源**:Bar 2026-11-18 要購物頁與「最近消費」等小頁面的優化建議,我列 7 項,Bar「1-7 都做」並要求附原圖對照;看過對照圖後,第 2 項(店家標籤固定放第二行)維持原樣,其餘確認。

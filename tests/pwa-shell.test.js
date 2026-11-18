@@ -148,7 +148,7 @@ assert.ok(netlify.includes('for = "/' + shellPath('builtin-snapshot.js') + '"'),
 assert.match(index, /function appVersion\(\)\{/, 'index defines the safe version accessor');
 assert.match(index, /function appVersionLabel\(\)\{/, 'index defines the display-safe version accessor');
 assert.match(index, /appVersion:travelNoteBoundedText\(appVersion\(\),24\)/, 'travel notes read the version through the helper');
-assert.match(index, /SW '\+escapeHtml\(appVersionLabel\(\)\)/, 'the data-and-version page reads the version through the helper');
+assert.match(index, /目前版本 '\+escapeHtml\(appVersionLabel\(\)\)/, 'the data-and-version page reads the version through the helper');
 const releaseNotes = /var APP_RELEASE_NOTES=\[([\s\S]*?)\n\];/.exec(index);
 assert.ok(releaseNotes, 'release notes list is present');
 assert.ok(releaseNotes[1].includes("{version:'" + appVersion() + "'"), 'release notes carry an entry for the current version');

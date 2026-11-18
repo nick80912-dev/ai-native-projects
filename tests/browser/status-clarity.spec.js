@@ -79,8 +79,8 @@ test('photo health stays quiet when capacity estimation is unsupported',async({p
  });
  await expect(page.getByRole('heading',{name:'資料與照片狀態',exact:true})).toBeVisible();
  await expect(page.getByRole('button',{name:/修復/})).toHaveCount(0);
- const capacity=page.locator('.shopping-photo-storage-card').filter({hasText:'App 儲存空間（估計）'});
- await expect(capacity).toContainText('瀏覽器未提供容量估算');
+ const capacity=page.locator('.shopping-photo-storage-card').first();   // v202:照片、空間與檢查合成一張卡
+ await expect(capacity).toContainText('手機沒有提供剩餘空間');
  await expect(page.locator('.shopping-photo-storage-warning')).toHaveCount(0);
 });
 test('during the trip the itinerary only lists stops; skip and auto skip stay recorded (v192)',async({page})=>{

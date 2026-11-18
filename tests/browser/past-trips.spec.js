@@ -356,11 +356,11 @@ test('筆記儲存中切換旅程，不會讓新旅程的新增按鈕永久停�
   await page.getByRole('button',{name:'新增回顧筆記'}).click();
   await expect(page.getByRole('button',{name:'新增回顧筆記'})).toBeDisabled();
   /* v193:點開的旅程是獨立一頁,換旅程要先回到清單 */
-  await page.getByRole('button',{name:'‹ 全部過往旅程'}).click();
+  await page.getByRole('button',{name:'返回全部過往旅程',exact:true}).click();
   await page.getByRole('button',{name:/第二趟旅程/}).click();
   await page.getByRole('tab',{name:'筆記'}).click();
   await expect(page.getByRole('button',{name:'新增回顧筆記'})).toBeEnabled();
-  await page.getByRole('button',{name:'‹ 全部過往旅程'}).click();
+  await page.getByRole('button',{name:'返回全部過往旅程',exact:true}).click();
   await page.getByRole('button',{name:/岡山回憶/}).click();
   await page.getByRole('tab',{name:'筆記'}).click();
   await expect(page.locator('.past-trip-notes')).toContainText('旅程很棒');
@@ -400,7 +400,7 @@ test('v193/v196 過往旅程:清單寫去回日期與天數,點開是獨立一�
   await expect(page.locator('.past-trip-advanced')).toHaveCount(0);
   await page.getByRole('tab',{name:'筆記'}).click();
   await expect(page.locator('.past-trip-notes')).toContainText('2026/10/25');
-  await page.getByRole('button',{name:'‹ 全部過往旅程'}).click();
+  await page.getByRole('button',{name:'返回全部過往旅程',exact:true}).click();
   await expect(page.locator('.past-trip-card')).toHaveCount(1);
   expect(errors).toEqual([]);
 });
