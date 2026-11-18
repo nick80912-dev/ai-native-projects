@@ -62,7 +62,7 @@ assert.deepStrictEqual(
   ['new-b','new-a'],
   'recent expenses contain every valid record from the newest device-local date only'
 );
-assert.strictEqual(helperSandbox.formatLedgerDateKey('2026-07-19'),'2026/07/19');
+assert.strictEqual(helperSandbox.formatLedgerDateKey('2026-07-19'),'7/19(日)');  // v201(Bar):日期寫法與行程頁一致
 
 const deletion=helperSandbox.createLedgerDeletion(dated[2],'Bar','輸入錯誤',Date.parse('2026-07-20T08:00:00+08:00'),()=>0.5);
 const effective=helperSandbox.effectiveLedgerRecords(dated.slice(0,3).concat(deletion));
