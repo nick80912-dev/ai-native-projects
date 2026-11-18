@@ -60,7 +60,7 @@ test.describe('v155 個人大卡：今天花費、代購、整趟旅程',()=>{
     expect(order).toEqual(['ledger-summary-card','ledger-recent-section']);
     await page.evaluate(()=>setLedgerTrack('shared'));
     await expect(page.locator('.ledger-summary-row')).toHaveCount(0);
-    await expect(page.locator('.ledger-summary-trip')).toContainText('與我相關旅程累計');
+    await expect(page.locator('.ledger-summary-trip')).toContainText('與我有關累計');
     expect(pageErrors).toEqual([]);
   });
 
