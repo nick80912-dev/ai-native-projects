@@ -41,7 +41,9 @@ test('the 繪本 shopping page is tinted and every theme shows an open floor as 
   expect(ehon.tones.slice(0,5)).toEqual(['0','1','2','3','4']);
   expect(ehon.names.slice(0,5)).toEqual(['rgb(242, 164, 151)','rgb(168, 211, 230)','rgb(185, 218, 165)','rgb(201, 184, 227)','rgb(246, 210, 122)']);
   expect(ehon.pill).toBe('rgb(246, 210, 122)');
-  expect(ehon.empty).toBe('rgb(255, 247, 223)');
+  /* v199(Bar 2026-11-18):沒有想逛時不再每個商場一列「0 家」,改成頁首提示一次 */
+  expect(ehon.empty).toBeNull();
+  await expect(page.locator('#view-shop .shop-wants-hint')).toHaveCount(1);
   expect(ehon.body).toEqual({bg:'rgb(255, 247, 223)',top:'0px',bottomRadius:'14px'});
   expect(ehon.closedRadius).toBe('14px');
   expect(ehon.openHeadRadius).toBe('0px');

@@ -865,7 +865,7 @@ html[data-theme="ehon"] .tl-item.cat-move .tl-card{border-left-color:var(--ehon-
 .today-list-done{flex:none;min-height:36px;min-width:58px;border:1.5px solid var(--sea);border-radius:999px;background:transparent;color:var(--sea);font:inherit;font-size:13px;font-weight:800;padding:0 12px;cursor:pointer}
 .today-list-go{flex:none;width:30px;height:36px;border:0;background:transparent;color:var(--ink-faint);font-size:22px;line-height:1;cursor:pointer}
 .today-list-row.done{opacity:.45}
-/* v199(Bar 2026-11-18):沒完成是框線按鈕,完成後才是實心「已完成 ✓」 */.today-list-row.done .today-list-done{background:var(--sea);color:#fff;border-color:var(--sea)}
+/* v199(Bar 2026-11-18):沒完成是框線按鈕,完成後才是實心「完成 ✓」 */.today-list-row.done .today-list-done{background:var(--sea);color:#fff;border-color:var(--sea)}
 .today-list-row.dragging{z-index:3;opacity:1;box-shadow:0 10px 26px rgba(0,0,0,.22);border-radius:14px;outline:2px solid var(--sea);transition:none}
 .today-list-row.dragging .today-list-handle{color:var(--sea);cursor:grabbing}
 .today-list-row.drop-before{box-shadow:inset 0 3px 0 var(--sea)}
@@ -4998,7 +4998,7 @@ function renderTodayList(day,ti){
       '<span class="today-list-handle" role="button" aria-label="'+escapeHtmlAttr('按住拖拉調整順序：'+p.title)+'" onpointerdown="todayListDragStart(event,'+ti+')">≡</span>'+
       '<span class="today-list-time">'+escapeHtml(it.time||'·')+'</span>'+
       '<button type="button" class="today-list-main" onclick="openTripItem('+ti+',\''+idArg+'\')"><b>'+escapeHtml(p.title)+'</b>'+(p.meta?'<small>'+escapeHtml(p.meta)+'</small>':'')+'</button>'+
-      '<button type="button" class="today-list-done" aria-pressed="'+(done?'true':'false')+'" onclick="toggleTodayListDone('+ti+',\''+idArg+'\')">'+(done?'已完成 ✓':'完成')+'</button>'+
+      '<button type="button" class="today-list-done" aria-pressed="'+(done?'true':'false')+'" onclick="toggleTodayListDone('+ti+',\''+idArg+'\')">'+(done?'完成 ✓':'完成')+'</button>'+  /* v199(Bar):「完成 ✓」比「已完成 ✓」短,按鈕寬度不變 */
       '<button type="button" class="today-list-go" aria-label="'+escapeHtmlAttr('在行程頁看：'+p.title)+'" onclick="openTripItem('+ti+',\''+idArg+'\')">›</button>'+
     '</div>';
   }).join('');
@@ -6565,7 +6565,12 @@ function toggleWant(id){
      鍵盤使用者連按第二下就沒有作用。重繪後把焦點放回同一家店。 */
   var keyboard=document.activeElement&&document.activeElement.getAttribute
     &&document.activeElement.getAttribute('data-want')===id;
+  /* v199:沒有想逛時不再預留「0 家」那一列,第一次勾選會在上方多出想逛清單;
+     重繪後把畫面捲回來,讓剛點的那一列留在原本的位置,不會跳動。 */
+  var anchorTop=null;
+  try{var before=document.querySelector('.floor-body.open [data-want="'+(window.CSS&&CSS.escape?CSS.escape(id):id)+'"]');if(before)anchorTop=before.getBoundingClientRect().top;}catch(ignore){}
   renderShopResults();
+  if(anchorTop!==null){try{var after=document.querySelector('.floor-body.open [data-want="'+(window.CSS&&CSS.escape?CSS.escape(id):id)+'"]');if(after){var delta=after.getBoundingClientRect().top-anchorTop;if(Math.abs(delta)>1)window.scrollBy({top:delta,left:0,behavior:'instant'});}}catch(ignore){}}
   if(keyboard) focusShopRow(id);
 }
 function toggleFloor(fkey,btn){
@@ -11543,7 +11548,7 @@ function renderSettingsHealthPage(){
 }
 var APP_RELEASE_NOTES=[
   {version:'v199',date:'2026-11-18',title:'各頁面清爽一點',items:[
-    '今天頁：還沒完成的站是框線按鈕，完成後才變成實心的「已完成 ✓」。',
+    '今天頁：還沒完成的站是框線按鈕，完成後變成實心的「完成 ✓」。',
     '行程頁：交通段只留交通標籤，不再重複寫起訖站名。',
     '購物頁：沒有想逛店家時只在最上面提示一次；商場營業時間排成一行，備註預設只露一行。',
     '採買清單的關閉按鈕和其他面板一致。'

@@ -1,5 +1,15 @@
 # 07 版本紀錄
 
+## 2026-11-18 — v199 各頁面清爽一點
+
+- **來源**:Bar 2026-11-17 問其它頁面的優化建議,我列 5 項,Bar「1-5 都做」;看截圖後第 1 項改成「完成 ✓」(不寫「已完成」以免按鈕太寬),其餘「okay」。
+- **今天頁**:「完成」按鈕沒完成時是框線樣式,完成後是實心「完成 ✓」(繪本主題:白底 → 綠底)。
+- **行程頁**:交通段只留交通方式標籤,不再重複寫「A → B」起訖站名。
+- **購物頁**:沒有想逛店家時,不再每個商場一列「想逛店家：0 家」,改成頁首提示一次;第一次勾選店家時,畫面會捲回讓剛點的那一列留在原位。商場營業時間同一行用「·」分隔;商場備註預設只露一行(`renderClampedNoteBlock(…,1)`)。
+- **採買清單**:關閉按鈕改用與設定頁相同的圓底「×」。
+- **測試**:`today-list-v192`、`trip-timeline-v194`、`shop-colour-v191`、`shop-interaction` 跟著改;`ui-ux-v112` 單元測試改成檢查「·」分隔。
+- **整理**:刪除 `shell/v196`,留 v197–v199;發布說明保留 v195–v199。
+
 ## 2026-11-17 — v198 已上線 main，tag `production-v198`
 
 - PR [#197](https://github.com/nick80912-dev/ai-native-projects/pull/197) 在 head `cc04691` 的 sanity／browser-qa 全綠後合併進 `dev`(`8bd6cbc`);PR [#198](https://github.com/nick80912-dev/ai-native-projects/pull/198) 七項檢查全綠,以 merge commit 合併進 `main`(`97bdd2d`)。
