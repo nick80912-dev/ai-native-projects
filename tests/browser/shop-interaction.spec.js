@@ -70,12 +70,13 @@ test('toggling a want updates the row in place without rebuilding the list', asy
 /* 第一次標記確實會重繪 —— 這是設計上的邊界,寫成測試以免日後被誤當成缺陷「修掉」。
    v158(T16):還沒有想逛店家時已有同高的提示框,重繪後同一列不會往下跳。 */
 test('the first mark in a mall re-renders the want block without moving the rows below', async ({ page }) => {
+  /* v199(Bar 2026-11-18):沒有想逛時不再預留「0 家」那一列;第一次勾選多出想逛清單時,
+     畫面捲回讓剛點的那一列留在原位 */
   const result = await page.evaluate(() => {
     document.querySelector('.floor-head').click();
     const target = document.querySelectorAll('.floor-body.open .store-row')[0];
     const placeholder = document.querySelector('.want-box.want-box-empty');
     const topBefore = target.getBoundingClientRect().top;
-    const placeholderHeight = placeholder ? placeholder.getBoundingClientRect().height : 0;
     target.click();
     const rowNow = document.querySelectorAll('.floor-body.open .store-row')[0];
     const box = document.querySelector('.want-box[data-want-box]');
@@ -84,15 +85,13 @@ test('the first mark in a mall re-renders the want block without moving the rows
       hasWantBoxNow: !!box,
       rebuilt: rowNow !== target,
       moved: Math.abs(rowNow.getBoundingClientRect().top - topBefore),
-      heights: [Math.round(placeholderHeight), Math.round(box.getBoundingClientRect().height)],
       headHeight: Math.round(box.querySelector('.want-head').getBoundingClientRect().height),
     };
   });
-  expect(result.hadPlaceholder).toBe(true);
+  expect(result.hadPlaceholder).toBe(false);
   expect(result.hasWantBoxNow).toBe(true);
   expect(result.rebuilt).toBe(true);
   expect(result.moved).toBeLessThanOrEqual(1);
-  expect(result.heights[0]).toBe(result.heights[1]);
   expect(result.headHeight).toBeGreaterThanOrEqual(44);
 });
 

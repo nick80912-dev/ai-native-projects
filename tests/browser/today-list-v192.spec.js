@@ -33,7 +33,8 @@ test('the list shows every stop of the day, never auto-skips, and 完成 fades a
   await expect(page.locator('.today-hero-compact .loc')).toHaveText('完成 0/14');
   await row(page,1).locator('.today-list-done').click();
   await expect(row(page,1)).toHaveClass(/done/);
-  await expect(row(page,1).locator('.today-list-done')).toHaveText('已完成 ✓');
+  await expect(row(page,1).locator('.today-list-done')).toHaveText('完成 ✓');  // v199:縮短成「完成 ✓」
+  await expect(row(page,1).locator('.today-list-done')).toHaveCSS('border-top-style','solid');
   await expect(page.locator('.today-hero-compact .loc')).toHaveText('完成 1/14');
   expect(await page.evaluate(()=>!!getChecks()['10/20_1'])).toBe(true);
   await row(page,1).locator('.today-list-done').click();

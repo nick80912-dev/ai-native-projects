@@ -19,8 +19,9 @@ assert.match(html,/\.sm-hours\{font-size:13px/,'opening hours are readable at 13
 /* v134(backlog #49):商場營業時間以「 / 」分段,原本擠成一串,換行會切在段落中間
    (Ario 斷在「美食廣|場」)。改為一段一行;🕒 與清單分兩欄,續行對齊第一段。
    資料中只有 P001、P039 用「 / 」,餐廳的「、」是同一項目的兩個時段,不得切。 */
-assert.match(html,/<div class="sm-hours"><span>'\+lineIcon\('🕒'\)\+'<\/span><span class="sm-hours-list">'\+escapeHtml\(p\.hours\)\.split\(' \/ '\)\.join\('<br>'\)/,
-  'mall opening hours put each " / " segment on its own line');
+/* v199(Bar 2026-11-18「商場資訊卡偏長」):各時段改成同一行以「 · 」分隔,窄螢幕自然換行 */
+assert.match(html,/<div class="sm-hours"><span>'\+lineIcon\('🕒'\)\+'<\/span><span class="sm-hours-list">'\+escapeHtml\(p\.hours\)\.split\(' \/ '\)\.join\(' · '\)/,
+  'mall opening hours keep the " / " segments apart with a separator');
 assert.doesNotMatch(html,/'<div class="sm-hours">🕒 '\+escapeHtml\(p\.hours\)\+'<\/div>'/,
   'mall opening hours are no longer one run-on string');
 assert.match(html,/\.sm-hours\{[^}]*display:flex;gap:4px\}/,'the clock icon and the hours list sit in two columns');
