@@ -75,14 +75,14 @@ const sharedPresentation=plain(mod.ledgerSummaryPresentation({
   count:4,total:{amountJpy:2400,amountTwd:480},today:{count:1,amountJpy:900,amountTwd:180}
 },'TWD'));
 assert.deepStrictEqual(sharedPresentation,{
-  todayLabel:'與我相關 · 今日消費 · 1 筆',todayPrimary:'NT$180',todaySecondary:'¥900',
-  totalLabel:'與我相關旅程累計 · 4 筆',totalAmount:'NT$480'
+  todayLabel:'今天團體花費 · 1 筆',todayPrimary:'NT$180',todaySecondary:'¥900',
+  totalLabel:'與我有關累計 · 4 筆',totalAmount:'NT$480'
 });
 assert.deepStrictEqual(plain(mod.ledgerSummaryPresentation({
   count:3,total:{amountJpy:600,amountTwd:120},today:{count:0,amountJpy:0,amountTwd:0}
 },'JPY')),{
-  todayLabel:'與我相關 · 今日消費 · 0 筆',todayPrimary:'¥0',todaySecondary:'NT$0',
-  totalLabel:'與我相關旅程累計 · 3 筆',totalAmount:'¥600'
+  todayLabel:'今天團體花費 · 0 筆',todayPrimary:'¥0',todaySecondary:'NT$0',
+  totalLabel:'與我有關累計 · 3 筆',totalAmount:'¥600'
 },'zero Today spending stays explicit instead of falling back to the cumulative amount');
 
 /* v155（Bar 2026-10-14）：個人大卡＝今天花費（個人不含代購＋團體份額）、代購列、整趟旅程（不含代購）。 */
