@@ -463,7 +463,7 @@ input,select,textarea{font-size:16px}
 .btn{background:var(--action-primary-bg);color:var(--action-primary-ink);border:none;border-radius:9px;padding:9px 15px;font-size:13.5px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap}
 .btn:active{transform:scale(.97)}
 .btn.ghost{background:var(--action-secondary-bg);color:var(--action-secondary-ink);border:1px solid var(--action-secondary-border)}
-.btn.cta{background:var(--action-cta-bg);color:var(--action-cta-ink)}.btn.danger{background:var(--action-destructive-bg);color:var(--action-destructive-ink)}
+.btn.cta{background:var(--action-cta-bg);color:var(--action-cta-ink)}.btn.danger-outline{background:transparent;color:var(--action-destructive-bg);border:1.5px solid var(--action-destructive-bg)}.settings-release-more{margin-top:8px}.settings-release-more>summary{cursor:pointer;font-size:13px;font-weight:800;color:var(--sea-deep);padding:6px 0}.settings-subheading{font-size:14px;margin:16px 4px 8px}.btn.danger{background:var(--action-destructive-bg);color:var(--action-destructive-ink)}
 .btn.sm{padding:7px 12px;font-size:12.5px}
 .btn.block{width:100%;margin-top:4px}
 /* v130(backlog #40):鍵盤焦點通則。原本全 App 235 個 <button> 只有 13 條
@@ -585,7 +585,7 @@ html.font-huninn .brand .t{letter-spacing:0}
 .pc-v{flex:1;color:#3f4a50;word-break:break-word}
 .pc-tip{margin-top:9px;font-size:12.5px;line-height:1.65;color:#8a6416;background:#fdf6e0;border-radius:8px;padding:8px 11px}
 .note-clamp .note-clamp-body{max-height:5.2em;overflow:hidden;-webkit-mask-image:linear-gradient(#000 55%,transparent);mask-image:linear-gradient(#000 55%,transparent)}
-.note-clamp.open .note-clamp-body{max-height:none;-webkit-mask-image:none;mask-image:none}
+.note-clamp-1 .note-clamp-body{max-height:1.6em}.note-clamp.open .note-clamp-body{max-height:none;-webkit-mask-image:none;mask-image:none}
 .note-clamp-btn{display:block;margin:4px 0 0 auto;min-height:32px;border:0;background:transparent;color:#8a6416;font:inherit;font-size:12.5px;font-weight:900;text-decoration:underline;text-underline-offset:3px;cursor:pointer;padding:4px 0}
 .note-rich{display:block}
 .note-p{margin:0 0 5px;line-height:1.65;word-break:break-word}
@@ -680,7 +680,7 @@ html.font-huninn .brand .t{letter-spacing:0}
    🕒 與清單分兩欄排,續行一律對齊第一段,不依賴 emoji 在各平台的寬度(懸掛縮排實測差 2px)。
    清單另以 pre-line 保留 CMS 原文換行(見 04_UI_GUIDELINES「CMS 欄位的換行」)。 */
 .sm-hours{font-size:13px;color:var(--ink-soft);margin-top:4px;line-height:1.5;display:flex;gap:4px}
-.sm-hours-list{white-space:pre-line;min-width:0}
+.sm-hours-list{white-space:pre-line;min-width:0}.shop-wants-hint{margin:2px 2px 10px;font-size:12.5px;font-weight:800;color:var(--ink-soft)}
 .sm-actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}
 .shop-filter{display:flex;gap:7px;overflow-x:auto;padding:2px 2px 10px;margin-bottom:8px;scrollbar-width:none}
 .shop-filter::-webkit-scrollbar{display:none}
@@ -724,7 +724,7 @@ html[data-theme="ehon"] .today-hero-compact.is-stuck .today-hero-art{padding-top
 .today-hero-compact .today-hero-summary-item{min-height:34px}
 html[data-theme="ehon"] .today-hero-compact{border-radius:20px}
 html[data-theme="ehon"] .today-hero-compact .loc{background:#fff;border:2px solid var(--ehon-ink)}
-.past-trip-card{display:flex;align-items:center;gap:10px;width:100%;text-align:left;border:1px solid var(--line);border-radius:16px;background:var(--card);color:var(--ink);padding:13px 15px;font:inherit;cursor:pointer}
+.past-trip-card{display:flex;align-items:center;gap:10px;width:100%;text-align:left;border:1px solid var(--line);border-radius:16px;background:var(--card);color:var(--ink);padding:9px 14px;font:inherit;cursor:pointer}
 .past-trip-card>span:first-child{flex:1;min-width:0}
 .past-trip-chevron{font-size:24px;color:var(--ink-faint)}
 .past-trip-back{border:0;background:transparent;color:var(--sea);font:inherit;font-size:14px;font-weight:800;padding:4px 0 10px;cursor:pointer}
@@ -797,8 +797,8 @@ html[data-theme="ehon"] .past-trip-summary{background:var(--ehon-water);color:va
 html[data-theme="ehon"] .past-trip-summary h2{color:var(--ehon-ink)}
 html[data-theme="ehon"] .past-trip-stat{background:#fff;border:2px solid var(--ehon-ink)}
 html[data-theme="ehon"] .past-trip-note{border:2px solid var(--ehon-ink)}
-.past-trip-card b{display:block;font-size:16px;font-weight:900;color:var(--sea-deep)}
-.past-trip-card .past-trip-range{display:block;margin-top:4px;font-size:13.5px;font-weight:800;color:var(--ink)}
+.past-trip-card b{display:block;font-size:15px;font-weight:900;color:var(--sea-deep)}
+.past-trip-card .past-trip-range{display:block;margin-top:1px;font-size:12.5px;font-weight:700;color:var(--ink)}
 .past-trip-card small{display:block;margin-top:3px;font-size:12px;color:var(--ink-soft)}
 html[data-theme="ehon"] .past-trip-card{border:var(--ehon-line);border-radius:18px;box-shadow:var(--ehon-drop)}
 html[data-theme="ehon"] .past-trip-card b{color:var(--ehon-ink)}
@@ -862,10 +862,10 @@ html[data-theme="ehon"] .tl-item.cat-move .tl-card{border-left-color:var(--ehon-
 .today-list-main{flex:1;min-width:0;border:0;background:transparent;text-align:left;padding:4px 0;font:inherit;color:inherit;cursor:pointer}
 .today-list-main b{display:block;font-size:15px;font-weight:800;line-height:1.3;overflow-wrap:anywhere}
 .today-list-main small{display:block;font-size:12px;color:var(--ink-soft);margin-top:2px}
-.today-list-done{flex:none;min-height:36px;min-width:58px;border:0;border-radius:999px;background:var(--sea);color:#fff;font:inherit;font-size:13px;font-weight:800;padding:0 12px;cursor:pointer}
+.today-list-done{flex:none;min-height:36px;min-width:58px;border:1.5px solid var(--sea);border-radius:999px;background:transparent;color:var(--sea);font:inherit;font-size:13px;font-weight:800;padding:0 12px;cursor:pointer}
 .today-list-go{flex:none;width:30px;height:36px;border:0;background:transparent;color:var(--ink-faint);font-size:22px;line-height:1;cursor:pointer}
 .today-list-row.done{opacity:.45}
-.today-list-row.done .today-list-done{background:transparent;color:var(--ink-soft);border:1px solid var(--line)}
+/* v199(Bar 2026-11-18):沒完成是框線按鈕,完成後才是實心「已完成 ✓」 */.today-list-row.done .today-list-done{background:var(--sea);color:#fff;border-color:var(--sea)}
 .today-list-row.dragging{z-index:3;opacity:1;box-shadow:0 10px 26px rgba(0,0,0,.22);border-radius:14px;outline:2px solid var(--sea);transition:none}
 .today-list-row.dragging .today-list-handle{color:var(--sea);cursor:grabbing}
 .today-list-row.drop-before{box-shadow:inset 0 3px 0 var(--sea)}
@@ -878,8 +878,8 @@ html[data-theme="ehon"] .today-list-card{border:3px solid var(--ehon-ink);border
 html[data-theme="ehon"] .today-list-row{border-top:2px dashed var(--line-soft)}
 html[data-theme="ehon"] .today-list-row:first-child{border-top:0}
 html[data-theme="ehon"] .today-list-time{background:var(--ehon-yellow);color:var(--ehon-ink);border:2px solid var(--ehon-ink);border-radius:999px;text-align:center;width:auto;min-width:46px;padding:1px 4px;font-size:12px}
-html[data-theme="ehon"] .today-list-done{background:var(--ehon-green);color:var(--ehon-ink);border:2px solid var(--ehon-ink);box-shadow:var(--ehon-drop)}
-html[data-theme="ehon"] .today-list-row.done .today-list-done{background:#fff;box-shadow:none}
+html[data-theme="ehon"] .today-list-done{background:#fff;color:var(--ehon-ink);border:2px solid var(--ehon-ink);box-shadow:none}
+html[data-theme="ehon"] .today-list-row.done .today-list-done{background:var(--ehon-green);box-shadow:var(--ehon-drop)}
 html[data-theme="ehon"] .today-list-reset{border:var(--ehon-line);color:var(--ehon-ink);background:#fff}
 
 /* v191(Bar 2026-11-15,所有主題):樓層展開時標題與店家清單接成一塊有底色的面板,看得出「打開了」 */
@@ -1104,9 +1104,9 @@ input:not([type="hidden"]),select,textarea{font-size:16px!important}
 .qa-btn,.nx-drive-btn,.nx-decision-btn,.nx-cluster-expand,.today-jump,.btn{border-radius:14px}
 .pc-tip,.panel.open,.floor-head,.want-box{border-radius:14px}
 </style>
-<script src="shell/v196/app-version.js"></script>
-<script id="builtinSnapshotMarker">var BUILTIN_HTML_VERSION='v196';var BUILTIN_HTML_TS=1790861998387;</script>
-<script src="shell/v196/builtin-snapshot.js"></script>
+<script src="shell/v199/app-version.js"></script>
+<script id="builtinSnapshotMarker">var BUILTIN_HTML_VERSION='v199';var BUILTIN_HTML_TS=1790861998387;</script>
+<script src="shell/v199/builtin-snapshot.js"></script>
 <script src="navigation-intent.js"></script>
 <script src="diagnostic-impact.js"></script>
 <script src="today-view.js"></script>
@@ -2699,8 +2699,8 @@ function reportTripProgressFailure(result,operationKey,retryAction){
   var automatic=String(operationKey||'').indexOf('auto-')===0;
   /* 自動重繪不得覆蓋手動失敗的重試入口；本次 session 已有錯誤時保持安靜。 */
   if(automatic&&tripProgressErrorMessage) return;
-  tripProgressErrorMessage=code==='restore-unverified'?'紀錄可能未完整儲存，請查看資料健康狀態':
-    code==='read-failed'||code==='invalid-state'?'目前無法讀取行程紀錄，請查看資料健康狀態':
+  tripProgressErrorMessage=code==='restore-unverified'?'紀錄可能未完整儲存，請查看「資料與照片狀態」':
+    code==='read-failed'||code==='invalid-state'?'目前無法讀取行程紀錄，請查看「資料與照片狀態」':
     code==='inactive'?'目前沒有進行中的旅程':'這次操作未能儲存，請稍後重試';
   var key=String(operationKey||'')+':'+code;
   if(automatic&&tripProgressFailureSeen[key]) return;
@@ -2906,12 +2906,13 @@ function renderNoteBlock(text, icon){
 /* v186(Bar 2026-11-11 UI/UX 第 2 項):購物頁商場備註可能十幾行(優惠券說明),把樓層與店家擠到很下面。
    超過 4 行時預設只露出前段,按「看全部」展開;展開狀態以 key 記在本次瀏覽,重繪不會又收起來。 */
 var noteClampOpen={};
-function renderClampedNoteBlock(text,key){
+function renderClampedNoteBlock(text,key,maxLines){
   if(!text) return '';
   var lines=String(text).split(/\r?\n/).filter(function(line){ return line.trim(); }).length;
-  if(lines<=4) return renderNoteBlock(text);
+  var limit=maxLines||4;
+  if(lines<=limit&&!(limit===1&&String(text).length>40)) return renderNoteBlock(text);
   var open=!!noteClampOpen[key];
-  return '<div class="pc-tip note-clamp'+(open?' open':'')+'" data-note-key="'+escapeHtmlAttr(key)+'" data-note-lines="'+lines+'">'+
+  return '<div class="pc-tip note-clamp'+(limit===1?' note-clamp-1':'')+(open?' open':'')+'" data-note-key="'+escapeHtmlAttr(key)+'" data-note-lines="'+lines+'">'+
     '<div class="note-clamp-body">'+renderNote(text)+'</div>'+
     '<button type="button" class="note-clamp-btn" aria-expanded="'+(open?'true':'false')+'" onclick="toggleNoteClamp(this)">'+(open?'收合':'看全部（'+lines+' 行）')+'</button></div>';
 }
@@ -3316,7 +3317,7 @@ function renderDaybar(){
   bar.style.display='flex';
   var md=todayMD();
   bar.innerHTML=t.days.map(function(d,i){
-    return '<button class="day-chip '+(i===curDay&&curView==='trip'?'active':'')+' '+(d.date===md?'today-chip':'')+'" onclick="selectTripDay('+i+')">Day '+(i+1)+'<span class="dow">'+d.date+(d.dow?'·'+d.dow:'')+'</span></button>';
+    return '<button class="day-chip '+(i===curDay&&curView==='trip'?'active':'')+' '+(d.date===md?'today-chip':'')+'" onclick="selectTripDay('+i+')">Day '+(i+1)+'<span class="dow">'+d.date+(d.dow?'('+d.dow+')':'')+'</span></button>';  /* v197:10/19(一),原本「·一」看起來像破折號 */
   }).join('');
 }
 function selectTripDay(i){
@@ -3562,7 +3563,7 @@ function renderTripTimeline(items,checks,currentItemId,progress){
     if(index>0||drive){
       h+='<div class="tl-link" aria-hidden="'+(drive?'false':'true')+'"><div class="tl-time"></div><div class="tl-rail"></div><div class="tl-move">'+
         /* 交通段沿用 v149 的交通方式色彩標籤(開車、步行、渡輪、航班…各有顏色) */
-        (drive?'<span class="drive-chip mode-'+mode.key+'">'+(lineIcon(mode.icon)||mode.icon+' ')+escapeHtml(drive)+'</span><em>'+(prevTitle?escapeHtml(prevTitle)+' → ':'前往 ')+escapeHtml(title)+'</em>':'')+'</div></div>';
+        (drive?'<span class="drive-chip mode-'+mode.key+'">'+(lineIcon(mode.icon)||mode.icon+' ')+escapeHtml(drive)+'</span>':'')+'</div></div>';  /* v199:起訖站名就在上下兩張卡片,不再重複寫一行 */
     }
     h+=renderItem(it,checks,currentItemId,progress,{nextTime:next?next.time:''});
     prevTitle=title;
@@ -4557,7 +4558,7 @@ function renderNextStopSecondaryActions(meta){
     '</div>';
 }
 function renderNextStopCard(day,dayIndex,pick){
-  if(pick.source==='storage-error') return '<div class="nx-empty-ticket"><div class="nx-ticket-title">行程紀錄暫時無法讀取</div><div class="nx-ticket-line">請查看資料健康狀態，不會清空原有紀錄。</div></div>';
+  if(pick.source==='storage-error') return '<div class="nx-empty-ticket"><div class="nx-ticket-title">行程紀錄暫時無法讀取</div><div class="nx-ticket-line">請查看「資料與照片狀態」，不會清空原有紀錄。</div></div>';
   var it=pick.item;
   if(!it){
     return '<div class="nx-empty-ticket"><div class="nx-ticket-title" style="font-size:20px">今日行程完成</div><div class="nx-ticket-line">可以慢慢休息，或切到完整行程查看後續安排。</div></div>';
@@ -5597,7 +5598,7 @@ function renderShoppingForm(){
 function renderShoppingPhotoField(form,pending){
   var hasPhoto=!!String(form&&form.photoId||'').trim(),unavailable=shoppingPhotoAuditState.ready&&shoppingPhotoAuditState.unavailable,disabled=pending||unavailable?' disabled':'';
   var error=String(shoppingUiState.photoError||''),message=error||
-    (unavailable?'此裝置目前無法使用照片附件；請至設定的「照片健康狀態」查看。':pending?'正在處理照片…':hasPhoto?'已夾帶一張照片；只保存在本裝置，不包含於備份。':'照片只保存在本裝置，不包含於備份。');
+    (unavailable?'此裝置目前無法使用照片附件；請至設定的「資料與照片狀態」查看。':pending?'正在處理照片…':hasPhoto?'已夾帶一張照片；只保存在本裝置，不包含於備份。':'照片只保存在本裝置，不包含於備份。');
   return '<div class="shopping-field"><span class="shopping-field-label">照片附件（選填）</span><input id="shoppingPhotoInput" type="file" accept="image/*" hidden onchange="selectShoppingPhoto(this)"'+disabled+'>'+
     '<div class="shopping-photo-field-actions'+(hasPhoto?'':' shopping-photo-field-actions-single')+'"><button type="button" class="btn ghost" onclick="document.getElementById(\'shoppingPhotoInput\').click()"'+disabled+'>'+(hasPhoto?'更換照片':'選擇照片')+'</button>'+
     (hasPhoto?'<button type="button" class="btn ghost" onclick="removeShoppingFormPhoto()"'+disabled+'>移除照片</button>':'')+'</div>'+
@@ -6090,7 +6091,7 @@ function renderShoppingListOverlay(){
   var panel=document.querySelector('#shoppingListOverlay .shopping-list-panel');if(!panel)return;
   closeShoppingItemActions();   // 重繪後原本的觸發按鈕已不存在,浮層必須跟著收掉
   var items=shoppingCurrentTabItems();
-  panel.innerHTML='<header class="shopping-list-head"><h2 id="shoppingListTitle">採買清單</h2><div class="shopping-list-head-actions"><button type="button" class="shopping-add-button" aria-label="新增採買項目" onclick="startShoppingAdd()">＋</button><button type="button" class="shopping-icon-button" aria-label="關閉採買清單" onclick="closeShoppingList()">×</button></div></header>'+
+  panel.innerHTML='<header class="shopping-list-head"><h2 id="shoppingListTitle">採買清單</h2><div class="shopping-list-head-actions"><button type="button" class="shopping-add-button" aria-label="新增採買項目" onclick="startShoppingAdd()">＋</button><button type="button" class="settings-close shopping-list-close" aria-label="關閉採買清單" onclick="closeShoppingList()">×</button></div></header>'+
     '<nav class="shopping-list-segment" aria-label="採買狀態"><div class="shopping-list-segment-track"><button type="button" class="'+(shoppingUiState.tab==='pending'?'on':'')+'" aria-pressed="'+(shoppingUiState.tab==='pending'?'true':'false')+'" onclick="setShoppingTab(\'pending\')">待買</button><button type="button" class="'+(shoppingUiState.tab==='done'?'on':'')+'" aria-pressed="'+(shoppingUiState.tab==='done'?'true':'false')+'" onclick="setShoppingTab(\'done\')">已買</button></div></nav>'+
     renderShoppingSplitForm()+
     '<div class="shopping-list-tools"><strong>'+(shoppingUiState.tab==='pending'?'待買商品':'已買商品')+' · '+items.length+' 項</strong>'+renderShoppingListSelectionControls(items)+'</div>'+
@@ -6668,6 +6669,10 @@ function renderShopResults(){
     }).join('')+
     '</div>';
   /* 只在想逛模式且真的有資料時出現:破壞性操作不該常駐在探索用的「全部」頁籤上 */
+  /* v199:還沒勾任何想逛店家時,只在這裡提示一次(原本每個商場各寫一次「想逛店家：0 家」) */
+  if(shopPlaceFilter!=='wants'&&!wantTotal&&!_shopQ){
+    h+='<div class="shop-wants-hint">⭐ 在樓層裡勾選店家，就會加入「想逛」</div>';
+  }
   if(shopPlaceFilter==='wants'&&wantTotal){
     h+='<div class="shop-wants-actions"><button type="button" class="btn ghost" onclick="clearAllShopWants()">清除全部想逛</button></div>';
   }
@@ -6706,9 +6711,9 @@ function renderShopResults(){
       return;
     }
     h+='<div class="shop-mall sm-tone-'+(mi%5)+'" id="shopmall_'+cssId(pkey)+'"><div class="sm-name">'+lineIcon('🏬')+escapeHtml(p.name)+'</div>'+
-      (p.hours?'<div class="sm-hours"><span>'+lineIcon('🕒')+'</span><span class="sm-hours-list">'+escapeHtml(p.hours).split(' / ').join('<br>')+'</span></div>':'')+
+      (p.hours?'<div class="sm-hours"><span>'+lineIcon('🕒')+'</span><span class="sm-hours-list">'+escapeHtml(p.hours).split(' / ').join(' · ')+'</span></div>':'')+
       (p.web?'<div class="sm-actions"><a class="qa-btn nf" href="'+escapeHtml(p.web)+'" target="_blank" rel="noopener">'+iconLabelHtml('🌐 官方資訊')+'</a></div>':'')+
-      renderClampedNoteBlock(p.note,'shop:'+pkey);
+      renderClampedNoteBlock(p.note,'shop:'+pkey,1);  /* v199:商場備註預設只露一行 */
     if(wanted.length){
       var wkey=shopWantListStateKey(p,mi);
       var wopen=!!shopWantListOpen[wkey];
@@ -6716,9 +6721,7 @@ function renderShopResults(){
         '<span data-want-head="'+escapeHtml(wkey)+'">⭐ 想逛店家：'+wanted.length+' 家</span><span>'+(wopen?'收合':'展開')+'</span></button>'+
         (wopen?'<div class="want-body">'+wanted.map(function(s){return storeRow(s,shopWantStoreKey(m.place,mi,s),true);}).join('')+'</div>':'')+
         '</div>';
-    }else if(m.stores.length){
-      h+='<div class="want-box want-box-empty"><div class="want-head want-head-empty"><span>⭐ 想逛店家：0 家</span><span>勾選下方店家加入</span></div></div>';
-    }
+    }  /* v199:沒有想逛店家時不再每個商場重複「0 家」,只在頁面最上面提示一次 */
     var floors={};
     m.stores.forEach(function(s){ (floors[s.floor||'其他']=floors[s.floor||'其他']||[]).push(s); });
     if(!m.stores.length){
@@ -11203,6 +11206,8 @@ function addLedgerProxyTargetFromSettings(){
 }
 function removeLedgerProxyTargetFromSettings(value){ledgerProxyTargetStore.remove(value);openSettings('ledgerProxyTargetSettingsSection');toast('代購對象已刪除');}
 function openSettings(targetId){
+  /* v198(Bar 2026-11-17):今天頁頂部的通知不要蓋住設定頁標題 —— 打開設定時移到底部 */
+  try{var toastEl=document.getElementById('toast');if(toastEl&&toastEl.classList.contains('toast-top'))toastEl.classList.remove('toast-top');}catch(ignore){}
   captureSettingsScroll();
   var target=normalizeSettingsTarget(targetId);
   settingsUiState.page=target.page;
@@ -11227,7 +11232,7 @@ function openSettings(targetId){
       if(input)input.focus();
     },0);
   }
-  if(settingsUiState.page==='storage')setTimeout(enterShoppingPhotoSettings,0);
+  if(settingsUiState.page==='storage'||settingsUiState.page==='health')setTimeout(enterShoppingPhotoSettings,0);
   if(settingsUiState.page==='data')loadTripGoogleIdentity().catch(function(){});
 }
 var settingsUiState={page:'root',scrollTopByPage:{},anchorId:''};
@@ -11351,8 +11356,7 @@ function settingsTroubleshootSummary(dataHealth,travelNotePending){
 function renderSettingsTroubleshootPage(){
   var dataHealth=settingsDataHealthModel(),travelNotePending=travelNotePendingCount();
   return renderSettingsHeader('疑難排解',false)+settingsGroup('狀態檢查',
-      settingsNavRow('health','health','資料健康狀態',dataHealth.summary)+
-      settingsNavRow('storage','storage','照片健康狀態',shoppingPhotoStorageSummary()))+
+      settingsNavRow('health','health','資料與照片狀態',dataHealth.summary+' · '+shoppingPhotoStorageSummary()))+
     settingsGroup('回報與診斷',
       settingsNavRow('travel-notes','notes','旅途紀錄',travelNotePending?travelNotePending+' 筆待評估':'記下異常或建議')+
       settingsNavRow('diagnostics','diagnostics','診斷面板','版本、同步與紀錄'));
@@ -11423,6 +11427,10 @@ function shoppingPhotoInvalidItem(ref){
   return shoppingListStore.all().filter(function(item){return item&&item.id===ref.itemId;})[0]||null;
 }
 function renderSettingsStoragePage(){
+  /* v198:照片健康併入「資料與照片狀態」;storage 仍是採買修復的深連結入口,畫面與 health 相同 */
+  return renderSettingsHealthPage();
+}
+function renderSettingsStorageBody(){
   var state=shoppingPhotoAuditState,capacity=state.capacity||{},invalid=state.invalidReferences||[],orphans=state.orphanPhotos||[];
   var capacityValue=capacity.available
     ? formatShoppingPhotoBytes(capacity.usageBytes)+' / '+formatShoppingPhotoBytes(capacity.quotaBytes)
@@ -11434,8 +11442,7 @@ function renderSettingsStoragePage(){
     var item=shoppingPhotoInvalidItem(ref),name=item&&item.name||'已刪除的採買項目';
     return '<button type="button" class="shopping-photo-storage-repair shopping-photo-storage-action" aria-label="修復 '+escapeHtml(name)+'" onclick="openShoppingPhotoRepairFromSettings(\''+jsHtmlAttrString(ref.itemId)+'\')"><span>'+escapeHtml(name)+'</span><b>修復 ›</b></button>';
   }).join('');
-  return renderSettingsHeader('照片健康狀態',false,'troubleshoot','疑難排解')+
-    '<div class="shopping-photo-storage-grid">'+
+  return '<div class="shopping-photo-storage-grid">'+
       '<section class="shopping-photo-storage-card"><div class="shopping-photo-storage-primary">App 附件</div><div class="shopping-photo-storage-value">'+state.storedPhotoCount+' 張 · '+formatShoppingPhotoBytes(state.storedBytes)+'</div><div class="shopping-photo-storage-note">其中 '+orphans.length+' 張未被採買清單使用；背景清理會保留一天緩衝。</div></section>'+
       '<section class="shopping-photo-storage-card"><div class="shopping-photo-storage-primary">App 儲存空間（估計）</div><div class="shopping-photo-storage-value">'+escapeHtml(capacityValue)+'</div><div class="shopping-photo-storage-secondary">'+escapeHtml(capacityDetail)+'</div>'+(capacity.low?'<div class="shopping-photo-storage-warning">儲存空間偏低，新增照片可能失敗。</div>':'')+'</section>'+
       '<section class="shopping-photo-storage-card"><div class="shopping-photo-storage-primary">附件檢查</div><div class="shopping-photo-storage-secondary">最近檢查：'+escapeHtml(shoppingPhotoCheckedAtLabel(state.checkedAt))+'</div>'+(state.unavailable?'<div class="shopping-photo-storage-warning">此裝置目前無法使用照片附件。</div>':'')+'<div class="shopping-photo-storage-actions"><button type="button" class="btn shopping-photo-storage-action" onclick="checkShoppingPhotoStorage()">立即檢查</button><button type="button" class="btn ghost shopping-photo-storage-action" onclick="confirmShoppingPhotoCleanup()">清理未使用照片'+(orphans.length?'（'+orphans.length+'）':'')+'</button></div></section>'+
@@ -11456,10 +11463,10 @@ function rerenderOpenSettingsPage(){
   panel.scrollTop=scrollTop;
 }
 function enterShoppingPhotoSettings(){
-  if(shoppingPhotoSettingsEntered||settingsUiState.page!=='storage'||!document.getElementById('settingsOverlay'))return;
+  if(shoppingPhotoSettingsEntered||(settingsUiState.page!=='storage'&&settingsUiState.page!=='health')||!document.getElementById('settingsOverlay'))return;
   shoppingPhotoSettingsEntered=true;
   refreshShoppingPhotoAudit({force:true,reason:'settings'}).then(function(){
-    if(settingsUiState.page==='storage'&&document.getElementById('settingsOverlay'))rerenderOpenSettingsPage();
+    if((settingsUiState.page==='storage'||settingsUiState.page==='health')&&document.getElementById('settingsOverlay'))rerenderOpenSettingsPage();
   });
 }
 function checkShoppingPhotoStorage(){
@@ -11530,14 +11537,30 @@ function renderSettingsDataHealth(){
   return '<div class="settings-section settings-data-health"><div class="settings-health-heading"><h3>資料概況</h3><span class="settings-health-summary-status">'+escapeHtml(model.summary)+'</span></div><div class="settings-health-list">'+model.rows.map(function(row){return '<div class="settings-health-row data-health-'+escapeHtml(row.key)+'"><span class="settings-health-main"><b>'+escapeHtml(row.label)+'</b>'+(row.detail?'<span>'+escapeHtml(row.detail)+'</span>':'')+'</span><strong>'+escapeHtml(row.value)+'</strong></div>';}).join('')+'</div></div>';
 }
 function renderSettingsHealthPage(){
-  var header=renderSettingsHeader('資料健康狀態',false,'troubleshoot','疑難排解');
+  var header=renderSettingsHeader('資料與照片狀態',false,'troubleshoot','疑難排解');  /* v198:資料健康與照片健康合成一頁 */
   if(TripLifecycle.readState(localStorage).mode!=='active')return header+'<div class="settings-section"><p class="settings-help">目前沒有進行中的旅程</p></div>';
-  return header+renderSettingsDataHealth();
+  return header+renderSettingsDataHealth()+'<h3 class="settings-subheading">照片附件</h3>'+renderSettingsStorageBody();
 }
 var APP_RELEASE_NOTES=[
+  {version:'v199',date:'2026-11-18',title:'各頁面清爽一點',items:[
+    '今天頁：還沒完成的站是框線按鈕，完成後才變成實心的「已完成 ✓」。',
+    '行程頁：交通段只留交通標籤，不再重複寫起訖站名。',
+    '購物頁：沒有想逛店家時只在最上面提示一次；商場營業時間排成一行，備註預設只露一行。',
+    '採買清單的關閉按鈕和其他面板一致。'
+  ]},
+  {version:'v198',date:'2026-11-17',title:'設定頁整理',items:[
+    '資料與版本：備份與匯出放上面，「重置紀錄／清除並打包旅程」移到最底並改成紅框按鈕；更新說明只顯示最新一版。',
+    '按鈕統一整排寬度；「資料健康」與「照片健康」合成「資料與照片狀態」一頁。',
+    '今天頁的通知不再蓋住設定頁的標題。'
+  ]},
+  {version:'v197',date:'2026-11-17',title:'小地方調整',items:[
+    '行程頁上方日期改成 10/19(一)。',
+    '過往旅程：金額用那趟旅程設定的幣別；只有代購的那天直接顯示代購金額；清單卡片縮小，不再寫天數。',
+    '過往旅程的「匯出帳務到記序」改名為「匯出帳本」。'
+  ]},
   {version:'v196',date:'2026-11-17',title:'過往旅程分頁瀏覽',items:[
     '點開一趟過往旅程，上方有「總覽／行程／帳務／採買／筆記」分頁。',
-    '總覽有我的花費圓餅圖，並可「匯出帳務到記序」；行程按天切換，每天下面有當天花費與當晚住宿。',
+    '總覽有我的花費圓餅圖，並可匯出帳本；行程按天切換，每天下面有當天花費與當晚住宿。',
     '帳務分團體帳（結算結果與全團支出）和個人帳（每天小計）；採買分已買／沒買。',
     '回顧筆記右邊有鉛筆圖示，可以修改內容；原始資料收到頁面最底的「顯示原始資料」。'
   ]},
@@ -11546,26 +11569,17 @@ var APP_RELEASE_NOTES=[
     '通用版多了樹、燈塔、海鷗和小帆船。',
     '不想看插圖：設定 → 繪本插圖，關掉就不顯示。'
   ]},
-  {version:'v194',date:'2026-11-16',title:'行程頁改成時間軸',items:[
-    '行程頁改成時間軸：左邊是時間（到下一站的時間），站與站之間標出交通方式與時間。',
-    '站卡平常收起，按 ▾ 展開導航、停車與資訊；右上「地圖」直接開 Google 地圖。從今天頁點進來的那一站會自動展開。'
-  ]},
-  {version:'v193',date:'2026-11-16',title:'過往旅程更好讀',items:[
-    '過往旅程清單每一趟寫出出發與回程日期、星期和天數，以及封存日期。',
-    '點開一趟旅程是獨立一頁：最上面是摘要（完成站數、採買、個人帳、團體帳），接著是回顧筆記；原始資料收在最底。'
-  ]},
-  {version:'v192',date:'2026-11-15',title:'今天頁改成行程清單',items:[
-    '今天頁列出今天每一站，不再依時間自動跳站；按「完成」該站變淡。',
-    '按住左邊的 ≡ 可以拖拉，臨時調整今天的順序（只存在這支手機）。',
-    '點站名或 › 直接到行程頁看導航與資訊；行程頁只顯示行程，那天過完後照實際順序顯示。',
-    '想用原本的卡片：設定 → 今天頁用卡片顯示。'
-  ]},
 
 ];
-function renderAppReleaseNotes(){
-  return '<div class="settings-release-list">'+APP_RELEASE_NOTES.map(function(note){
-    return '<article class="settings-release"><div class="settings-release-head"><strong>'+escapeHtml(note.version+' '+note.title)+'</strong><span>'+escapeHtml(note.date)+'</span></div><ul>'+note.items.map(function(item){return '<li>'+escapeHtml(item)+'</li>';}).join('')+'</ul></article>';
-  }).join('')+'</div>';
+function renderAppReleaseNote(note){
+  return '<article class="settings-release"><div class="settings-release-head"><strong>'+escapeHtml(note.version+' '+note.title)+'</strong><span>'+escapeHtml(note.date)+'</span></div><ul>'+note.items.map(function(item){return '<li>'+escapeHtml(item)+'</li>';}).join('')+'</ul></article>';
+}
+/* v198:latestOnly 時只顯示最新一版,其他收進「看更早的更新」 */
+function renderAppReleaseNotes(latestOnly){
+  if(!latestOnly)return '<div class="settings-release-list">'+APP_RELEASE_NOTES.map(renderAppReleaseNote).join('')+'</div>';
+  var rest=APP_RELEASE_NOTES.slice(1);
+  return '<div class="settings-release-list">'+(APP_RELEASE_NOTES[0]?renderAppReleaseNote(APP_RELEASE_NOTES[0]):'')+
+    (rest.length?'<details class="settings-release-more"><summary>看更早的更新（'+rest.length+' 版）</summary>'+rest.map(renderAppReleaseNote).join('')+'</details>':'')+'</div>';
 }
 var TRIP_GOOGLE_CLIENT_ID='812330004270-6limrm2sl15s3aohum4nrnas97kopfma.apps.googleusercontent.com';
 var TRIP_SOURCE_SHEET_ID='1B5g7KuVi2WaFVVSdhqRMeTQV_tBpgnzOAv6aMQdFZJw';
@@ -11789,8 +11803,7 @@ function pastTripRangeText(trip){
   var start=a.y+'/'+pad(a.m)+'/'+pad(a.d)+'（'+a.dow+'）';
   if(!b||b.stamp<a.stamp)return start;
   var end=(b.y!==a.y?b.y+'/':'')+pad(b.m)+'/'+pad(b.d)+'（'+b.dow+'）';
-  var days=Math.round((b.stamp-a.stamp)/86400000)+1;
-  return '去 '+start+' → 回 '+end+' · '+days+' 天';
+  return '去 '+start+' → 回 '+end;   /* v197(Bar):不另外寫天數 */
 }
 function pastTripDateText(text){
   var p=pastTripDateParts(text);if(!p)return String(text||'');
@@ -11863,7 +11876,9 @@ function pastTripSeg(items,current,handler,label){
   }).join('')+'</div>';
 }
 function pastTripTwd(value){return 'NT$'+Math.round(Number(value)||0).toLocaleString('en-US');}
-function pastTripJpy(value){return '¥'+Math.round(Number(value)||0).toLocaleString('en-US');}
+/* v197:當地幣別用那趟旅程封存時的設定(TripConfig 的幣別),不寫死日圓 */
+function pastTripLocalCode(){var m=pastTripModelCache.model,code='';try{code=m&&m.db&&m.db.cfg?TripCurrency.normalizeCode(m.db.cfg.currency):'';}catch(error){code='';}return code||'JPY';}
+function pastTripJpy(value){return TripCurrency.format(Math.round(Number(value)||0),pastTripLocalCode());}
 function renderPastTripPanel(archive){
   var view=pastTripView(),model=pastTripModel(archive);
   if(view.tab==='trip')return renderPastTripDayPanel(archive,model);
@@ -11900,7 +11915,7 @@ function renderPastTripOverviewPanel(archive,model){
     '<section class="past-trip-card-box"><h3>我的花費</h3>'+(total>0?
       '<div class="past-trip-spend">'+renderPastTripDonut(slices,total)+'<div class="past-trip-spend-total"><small>'+escapeHtml(model.member)+' 這趟總共</small><b>'+pastTripTwd(total)+'</b><span>個人 '+pastTripTwd(spend.personal.amountTwd)+' ＋ 團體分攤 '+pastTripTwd(spend.group.amountTwd)+'</span>'+(spend.proxy.count?'<span>不含代購 '+pastTripTwd(spend.proxy.amountTwd)+'</span>':'')+'</div></div><ul class="past-trip-legend">'+legend+'</ul>'
       :'<p class="settings-help">這趟沒有記到花費。</p>')+
-    '<div class="past-trip-export"><button type="button" class="btn ghost" onclick="exportPastTripLedger()">匯出帳務到記序</button><div id="pastTripExportStatus" class="trip-lifecycle-status" role="status" aria-live="polite"></div></div></section>'
+    '<div class="past-trip-export"><button type="button" class="btn ghost" onclick="exportPastTripLedger()">匯出帳本</button><div id="pastTripExportStatus" class="trip-lifecycle-status" role="status" aria-live="polite"></div></div></section>'
     :'<section class="past-trip-card-box"><h3>我的花費</h3><p class="settings-help">封存時沒有選擇身分，無法計算個人花費。</p></section>';
   return spendBox+
 ''; /* 原始資料移到頁面最底的小按鈕(Bar 2026-11-17「平常根本不會用到」) */
@@ -11986,12 +12001,14 @@ function renderPastTripLedgerPanel(model){
     var mine=model.personalRecords.filter(function(r){return r&&(!member||!r.member||canonicalMemberName(r.member)===member);});
     if(!mine.length)return seg+'<p class="settings-help">沒有個人帳。</p>';
     return seg+pastTripGroupByDate(mine).map(function(group){
-      var subtotal=group.records.reduce(function(sum,r){return sum+(ledgerRecordMetadata(r).isProxy?0:ledgerAmountValue(r.amountTwd));},0);
-      return '<div class="past-trip-subtotal"><span>'+escapeHtml(pastTripDateLabel(group.key))+' · '+group.records.length+' 筆</span><span>小計 '+pastTripTwd(subtotal)+'</span></div><div class="past-trip-card-box" style="margin-top:4px">'+group.records.map(function(r){
+      var subtotal=0,proxy=0;group.records.forEach(function(r){if(ledgerRecordMetadata(r).isProxy)proxy+=ledgerAmountValue(r.amountTwd);else subtotal+=ledgerAmountValue(r.amountTwd);});
+      /* v197:只有代購的那天直接顯示代購金額,不顯示「小計 NT$0」 */
+      var sums=[];if(subtotal||!proxy)sums.push('小計 '+pastTripTwd(subtotal));if(proxy)sums.push('代購 '+pastTripTwd(proxy));
+      return '<div class="past-trip-subtotal"><span>'+escapeHtml(pastTripDateLabel(group.key))+' · '+group.records.length+' 筆</span><span>'+sums.join(' · ')+'</span></div><div class="past-trip-card-box" style="margin-top:4px">'+group.records.map(function(r){
         var proxy=ledgerRecordMetadata(r).isProxy;
         return '<div class="past-trip-row"><span><b>'+escapeHtml(r.detail||r.storeName||r.category||'未命名')+'</b>'+(proxy?'<span class="past-trip-tag">代購'+(r.proxyTarget?' · '+escapeHtml(r.proxyTarget):'')+'</span>':'')+'<small>'+escapeHtml([r.category,r.storeName,r.payMethod].filter(Boolean).join(' · '))+'</small></span><span class="amt">'+pastTripJpy(r.amountJpy)+'<small>'+pastTripTwd(r.amountTwd)+'</small></span></div>';
       }).join('')+'</div>';
-    }).join('')+'<p class="settings-help">小計不含代購。</p>';
+    }).join('')+'<p class="settings-help">小計不含代購，代購另外列出。</p>';
   }
   var records=model.groupRecords.filter(function(r){return r&&r.recordType==='expense';});
   if(!records.length)return seg+'<p class="settings-help">沒有團體帳。</p>';
@@ -12103,7 +12120,7 @@ function exportPastTripLedger(){
     url=URL.createObjectURL(new Blob([text],{type:'application/json;charset=utf-8'}));
     link=document.createElement('a');link.href=url;link.download='TripPilot-個人帳-'+payload.trip.name.replace(/[\\/:*?"<>|\u0000-\u001f]/g,'_').slice(0,60)+'-'+payload.trip.startDate.replace(/[^0-9-]/g,'')+'.json';link.hidden=true;document.body.appendChild(link);link.click();link.remove();
     var savedUrl=url;setTimeout(function(){URL.revokeObjectURL(savedUrl);},60000);
-    show('已送出 '+payload.records.length+' 筆個人帳、'+payload.groupShare.items.length+' 筆團體份額的檔案下載，可匯入記序');return true;
+    show('已送出 '+payload.records.length+' 筆個人帳、'+payload.groupShare.items.length+' 筆團體份額的檔案下載，請確認保存');return true;
   }catch(error){if(link&&link.parentNode)link.remove();if(url)URL.revokeObjectURL(url);show('無法匯出：'+String(error&&error.message||error));return false;}
 }
 function closePastTrip(){
@@ -12130,8 +12147,7 @@ function renderPastTripsPage(){
     else body+='<div class="trip-lifecycle-actions">'+state.archives.map(function(item,index){
       return item.error?'<div class="trip-lifecycle-status error">封存 '+escapeHtml(item.name||item.fileId)+' 無法讀取：'+escapeHtml(item.error)+'</div>':
         '<button type="button" class="past-trip-card" onclick="selectPastTrip('+index+')" aria-label="'+escapeHtmlAttr(item.archive.trip.name+'，'+pastTripRangeText(item.archive.trip))+'">'+
-          '<span><b>'+escapeHtml(item.archive.trip.name)+'</b><span class="past-trip-range">'+escapeHtml(pastTripRangeText(item.archive.trip))+'</span>'+
-          (item.archive.archivedAt?'<small>封存於 '+escapeHtml(pastTripDateText(item.archive.archivedAt))+'</small>':'')+'</span><span class="past-trip-chevron" aria-hidden="true">›</span></button>';
+          '<span><b>'+escapeHtml(item.archive.trip.name)+'</b><span class="past-trip-range">'+escapeHtml(pastTripRangeText(item.archive.trip))+'</span></span><span class="past-trip-chevron" aria-hidden="true">›</span></button>';  /* v197:卡片縮成兩行,封存日期只在點開後的摘要卡 */
     }).join('')+'</div>';
   }else body='<p class="settings-help">按下方按鈕連接自己的 Google 帳號。</p><button type="button" class="btn" onclick="loadPastTrips()">連接 Google Drive</button>';
   return renderSettingsHeader('過往旅程',false)+'<div class="settings-section">'+body+'</div>';
@@ -12335,10 +12351,11 @@ function addPastTripNote(edit){
 function renderSettingsDataPage(){
   var active=TripLifecycle.readState(localStorage).mode==='active';
   var version='<div class="settings-section"><div class="settings-version-row"><b>版本</b><span>SW '+escapeHtml(appVersionLabel())+'</span></div>';
-  var lifecycle=active?'<div class="settings-section"><div class="settings-section-heading"><h3>目前旅程</h3>'+settingsInfoButton('trip','目前旅程說明')+'</div><p class="settings-help">清除後可在首頁按「連接新旅程」接下一趟；團體帳未結清或待同步時不可清除。</p><div class="trip-lifecycle-actions"><button type="button" class="btn ghost" onclick="resetTripRecords()">重置紀錄</button><button type="button" class="btn" onclick="beginTripEnd()">清除並打包旅程</button></div><div id="tripEndStatus" class="trip-lifecycle-status" role="status" aria-live="polite"></div><div id="tripEndChoices" class="trip-lifecycle-actions"></div></div>':'';
-  if(!active)return renderSettingsHeader('資料與版本',false)+version+'</div>';
-  var personal='<div class="settings-section"><div class="settings-section-heading"><h3>個人帳匯出</h3>'+settingsInfoButton('personal','個人帳匯出說明')+'</div><p class="settings-help">請先匯出再清除旅程；檔案包含個人帳務，請妥善保存。</p><button type="button" class="btn ghost" onclick="exportTripPersonalLedger()">匯出本趟個人帳</button><div id="personalLedgerExportStatus" class="trip-lifecycle-status" role="status" aria-live="polite"></div></div>';
-  return renderSettingsHeader('資料與版本',false)+lifecycle+personal+'<div class="settings-section"><div class="settings-section-heading"><h3>本機資料備份／還原</h3>'+settingsInfoButton('backup','備份／還原說明')+'</div><p class="settings-help">還原會覆蓋目前資料及待同步記帳。照片不包含於備份。</p><div class="settings-actions"><button class="btn ghost" onclick="exportPersonalState()">複製備份 JSON</button><button class="btn" onclick="openPersonalStateRestore()">從 JSON 還原</button></div></div>'+version+'<h3>最近更新</h3>'+renderAppReleaseNotes()+'</div>';
+  var lifecycle=active?'<div class="settings-section"><div class="settings-section-heading"><h3>目前旅程</h3>'+settingsInfoButton('trip','目前旅程說明')+'</div><p class="settings-help">清除後可在首頁按「連接新旅程」接下一趟；團體帳未結清或待同步時不可清除。</p><div class="trip-lifecycle-actions"><button type="button" class="btn danger-outline" onclick="resetTripRecords()">重置紀錄</button><button type="button" class="btn danger-outline" onclick="beginTripEnd()">清除並打包旅程</button></div><div id="tripEndStatus" class="trip-lifecycle-status" role="status" aria-live="polite"></div><div id="tripEndChoices" class="trip-lifecycle-actions"></div></div>':'';
+  if(!active)return renderSettingsHeader('資料與版本',false)+version+'<h3>最近更新</h3>'+renderAppReleaseNotes(true)+'</div>';
+  var personal='<div class="settings-section"><div class="settings-section-heading"><h3>個人帳匯出</h3>'+settingsInfoButton('personal','個人帳匯出說明')+'</div><p class="settings-help">請先匯出再清除旅程；檔案包含個人帳務，請妥善保存。</p><div class="trip-lifecycle-actions"><button type="button" class="btn ghost" onclick="exportTripPersonalLedger()">匯出本趟個人帳</button></div><div id="personalLedgerExportStatus" class="trip-lifecycle-status" role="status" aria-live="polite"></div></div>';
+  /* v198(Bar 2026-11-17):備份與匯出在上、版本只顯示最新一版、危險的「重置／清除旅程」移到最底並改成紅框按鈕 */
+  return renderSettingsHeader('資料與版本',false)+personal+'<div class="settings-section"><div class="settings-section-heading"><h3>本機資料備份／還原</h3>'+settingsInfoButton('backup','備份／還原說明')+'</div><p class="settings-help">還原會覆蓋目前資料及待同步記帳。照片不包含於備份。</p><div class="trip-lifecycle-actions"><button class="btn ghost" onclick="exportPersonalState()">複製備份 JSON</button><button class="btn ghost" onclick="openPersonalStateRestore()">從 JSON 還原</button></div></div>'+version+'<h3>最近更新</h3>'+renderAppReleaseNotes(true)+'</div>'+lifecycle;
 }
 function renderSettingsPage(page,ledgerSettings,settingsError){
   if(page==='theme')return renderSettingsThemePage();
