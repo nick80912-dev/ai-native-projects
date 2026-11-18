@@ -463,7 +463,7 @@ input,select,textarea{font-size:16px}
 .btn{background:var(--action-primary-bg);color:var(--action-primary-ink);border:none;border-radius:9px;padding:9px 15px;font-size:13.5px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap}
 .btn:active{transform:scale(.97)}
 .btn.ghost{background:var(--action-secondary-bg);color:var(--action-secondary-ink);border:1px solid var(--action-secondary-border)}
-.btn.cta{background:var(--action-cta-bg);color:var(--action-cta-ink)}.ledger-summary-share{display:inline-block;margin:2px 0 10px;padding:3px 10px;border-radius:999px;background:rgba(255,255,255,.16);font-size:13.5px;font-weight:800}.ledger-summary-info{border:0;background:transparent;color:inherit;opacity:.75;font:inherit;font-size:15px;min-width:32px;min-height:32px;cursor:pointer}.btn.danger-outline{background:transparent;color:var(--action-destructive-bg);border:1.5px solid var(--action-destructive-bg)}.settings-release-more{margin-top:8px}.settings-release-more>summary{cursor:pointer;font-size:13px;font-weight:800;color:var(--sea-deep);padding:6px 0}.settings-subheading{font-size:14px;margin:16px 4px 8px}.btn.danger{background:var(--action-destructive-bg);color:var(--action-destructive-ink)}
+.btn.cta{background:var(--action-cta-bg);color:var(--action-cta-ink)}.ledger-summary-info{border:0;background:transparent;color:inherit;opacity:.75;font:inherit;font-size:15px;min-width:32px;min-height:32px;cursor:pointer}.btn.danger-outline{background:transparent;color:var(--action-destructive-bg);border:1.5px solid var(--action-destructive-bg)}.settings-release-more{margin-top:8px}.settings-release-more>summary{cursor:pointer;font-size:13px;font-weight:800;color:var(--sea-deep);padding:6px 0}.settings-subheading{font-size:14px;margin:16px 4px 8px}.btn.danger{background:var(--action-destructive-bg);color:var(--action-destructive-ink)}
 .btn.sm{padding:7px 12px;font-size:12.5px}
 .btn.block{width:100%;margin-top:4px}
 /* v130(backlog #40):鍵盤焦點通則。原本全 App 235 個 <button> 只有 13 條
@@ -8755,15 +8755,14 @@ function buildLedgerPeriodSummary(records,now){
   });
   return {count:source.length,total:total,today:today};
 }
-function ledgerSummaryPresentation(period,currency,myShareToday){
+function ledgerSummaryPresentation(period,currency){
   /* 團體分頁大卡：有我參與的今日團體支出(全團總額)與旅程累計。個人分頁另見 personalSummaryPresentation。
-     v200(Bar 2026-11-18):「與我相關」容易被看成自己花的錢 —— 標題改清楚,並多一行「你分攤」。 */
+     v200(Bar 2026-11-18):「與我相關」容易被看成自己花的錢 —— 標題改清楚;自己要付多少看下方「我的結算狀態」,大卡不另加一行。 */
   period=period||{};var today=period.today||{},total=period.total||{};
   var primary=currency==='TWD'?'TWD':'JPY',secondary=primary==='JPY'?'TWD':'JPY';
   var primaryField=primary==='JPY'?'amountJpy':'amountTwd',secondaryField=secondary==='JPY'?'amountJpy':'amountTwd';
   return {
     todayLabel:'今天的團體支出（有你參與） · '+Number(today.count||0)+' 筆',
-    todayNote:myShareToday?'你分攤 '+formatLedgerCurrencyAmount(primary,ledgerAmountValue(myShareToday[primaryField])):'',
     todayPrimary:formatLedgerCurrencyAmount(primary,ledgerAmountValue(today[primaryField])),
     todaySecondary:formatLedgerCurrencyAmount(secondary,ledgerAmountValue(today[secondaryField])),
     totalLabel:'有你參與的旅程累計 · '+Number(period.count||0)+' 筆',
@@ -11550,7 +11549,7 @@ function renderSettingsHealthPage(){
 }
 var APP_RELEASE_NOTES=[
   {version:'v200',date:'2026-11-18',title:'分帳頁更好讀',items:[
-    '團體帳大卡改寫成「今天的團體支出（有你參與）」，下面多一行「你分攤」多少。',
+    '團體帳大卡的標題改成「今天的團體支出（有你參與）」；自己要付多少看下方「我的結算狀態」。',
     '上方說明收進 ⓘ；消費列表的「誰付款・幾人分攤」字放大並移到第二行。',
     '新增消費的金額還沒輸入時不再顯示「—」；今天頁的通知換頁後不再擋住分帳頁的按鈕。'
   ]},
@@ -15300,23 +15299,20 @@ function renderSplit(){
   var currency=ledgerUiState.displayCurrency||(settings&&settings.defaultCurrency)||'JPY';if(currency!=='JPY'&&currency!=='TWD')currency='JPY';
   if(ledgerUiState.page==='all'){view.innerHTML=renderLedgerFullHistory(records,shared,currency)+'<div id="ledgerSelectionToolbarHost">'+renderLedgerSelectionToolbar()+'</div>';return;}
   var proxy=shared?null:buildProxySummary(records,member);
-  var myShareToday=null;if(shared){try{var spendToday=myTripSpendSnapshot().today;myShareToday={amountJpy:spendToday.groupJpy,amountTwd:spendToday.groupTwd};}catch(ignore){}}
-  var presentation=shared?ledgerSummaryPresentation(period,currency,myShareToday):personalSummaryPresentation(myTripSpendSnapshot(),proxy,currency);
+  var presentation=shared?ledgerSummaryPresentation(period,currency):personalSummaryPresentation(myTripSpendSnapshot(),proxy,currency);
   var status=pending?'● '+pending+' 筆待同步':settings?'1 '+tripLocalCurrencyCode()+' ≈ NT$'+settings.exchangeRate:(settingsError||'匯率未設定');
   var recent=selectLatestLedgerDateExpenses(records),recentMarkup=recent.length?(shared?'':ledgerOtherIdentityNote(records))+renderLedgerRecentGroups(recent,shared,currency,true):'<div class="empty-state"><strong>尚無消費紀錄</strong><div>旅途中第一筆支出可以從這裡開始。</div><div class="empty-actions"><button class="btn cta" onclick="openLedgerQuickEntryFromFab()">記一筆消費</button></div></div>',recentDate=ledgerRecentDateLabel(recent,Date.now()),recentSummary=recent.length?renderLedgerDateSummary(recentDate,recent,true):'';
   var testWarning=shared&&lsGet('trip_ledger_test_mode',false)?'<div class="ledger-test-warning"><strong>⚠ 目前顯示測試帳本</strong><div>不影響正式分帳</div><button class="btn ghost" onclick="openSettings(\'ledgerTestModeSection\')">前往設定關閉</button></div>':'';
   var settlementCard=shared&&hasRecords?renderLedgerSettlementCard(mergedLedgerRecords(),member,currency):'';
   var chevron='<span class="ledger-card-chevron" aria-hidden="true">〉</span>';
-  var summaryNote=presentation.todayNote&&!shared?'<span class="ledger-summary-note">'+escapeHtml(presentation.todayNote)+'</span>':'';
-  /* v200:團體大卡「你分攤」放在金額下面,字比小註記大,一眼看得到 */
-  var shareLine=shared&&presentation.todayNote?'<div class="ledger-summary-share">'+escapeHtml(presentation.todayNote)+'</div>':'';
+  var summaryNote=presentation.todayNote?'<span class="ledger-summary-note">'+escapeHtml(presentation.todayNote)+'</span>':'';
   var summaryFooter=shared?'<div class="ledger-summary-trip"><span>'+escapeHtml(presentation.totalLabel)+'</span><strong>'+escapeHtml(presentation.totalAmount)+'</strong></div>':
     (presentation.proxyAmount?'<button class="ledger-summary-row ledger-summary-proxy" onclick="openLedgerProxyPanel()"><span>代購</span><strong>'+escapeHtml(presentation.proxyAmount)+'</strong>'+chevron+'</button>':'')+
     '<button class="ledger-summary-row ledger-summary-total" onclick="openMyTripSpendPanel()"><span>'+escapeHtml(presentation.tripLabel)+'</span><span class="ledger-summary-note">'+escapeHtml(presentation.tripNote)+'</span><strong>'+escapeHtml(presentation.tripAmount)+'</strong>'+chevron+'</button>'+
     renderLedgerRefundSummaryRow(chevron);
   var selectionButton=hasRecords?'<button class="ledger-view-all" onclick="'+(ledgerUiState.selectionMode?'cancelLedgerSelectionMode()':'enterLedgerSelectionMode()')+'">'+(ledgerUiState.selectionMode?'取消':'選取')+'</button>':'';
   view.innerHTML=testWarning+'<div class="ledger-dashboard '+(shared?'ledger-shared-dashboard':'')+'">'+
-    '<section class="ledger-summary-card"><div class="ledger-track-grid" role="group" aria-label="記帳模式"><button class="ledger-track-btn '+(!shared?'on':'')+'" aria-pressed="'+(!shared?'true':'false')+'" onclick="setLedgerTrack(\'personal\')">個人</button><button class="ledger-track-btn '+(shared?'on':'')+'" aria-pressed="'+(shared?'true':'false')+'" onclick="setLedgerTrack(\'shared\')">團體</button></div><div class="ledger-summary-meta"><button id="ledgerPendingStatus" class="ledger-status-pill ledger-summary-rate '+(pending?'pending':'')+'" '+(pending?'':'disabled')+' onclick="openLedgerSyncPanel()">'+escapeHtml(status)+'</button><button type="button" class="ledger-summary-info" aria-label="記帳說明" onclick="openLedgerSummaryInfo()">ⓘ</button></div><div class="ledger-summary-count"><span>'+escapeHtml(presentation.todayLabel)+'</span>'+summaryNote+'</div><button class="ledger-summary-amount" onclick="toggleLedgerDisplayCurrency()" aria-label="切換今日與旅程累計顯示幣別"><strong>'+escapeHtml(presentation.todayPrimary)+'</strong><span>≈ '+escapeHtml(presentation.todaySecondary)+'</span></button>'+shareLine+summaryFooter+'</section>'+
+    '<section class="ledger-summary-card"><div class="ledger-track-grid" role="group" aria-label="記帳模式"><button class="ledger-track-btn '+(!shared?'on':'')+'" aria-pressed="'+(!shared?'true':'false')+'" onclick="setLedgerTrack(\'personal\')">個人</button><button class="ledger-track-btn '+(shared?'on':'')+'" aria-pressed="'+(shared?'true':'false')+'" onclick="setLedgerTrack(\'shared\')">團體</button></div><div class="ledger-summary-meta"><button id="ledgerPendingStatus" class="ledger-status-pill ledger-summary-rate '+(pending?'pending':'')+'" '+(pending?'':'disabled')+' onclick="openLedgerSyncPanel()">'+escapeHtml(status)+'</button><button type="button" class="ledger-summary-info" aria-label="記帳說明" onclick="openLedgerSummaryInfo()">ⓘ</button></div><div class="ledger-summary-count"><span>'+escapeHtml(presentation.todayLabel)+'</span>'+summaryNote+'</div><button class="ledger-summary-amount" onclick="toggleLedgerDisplayCurrency()" aria-label="切換今日與旅程累計顯示幣別"><strong>'+escapeHtml(presentation.todayPrimary)+'</strong><span>≈ '+escapeHtml(presentation.todaySecondary)+'</span></button>'+summaryFooter+'</section>'+
     settlementCard+
     '<section class="ledger-recent-section">'+renderLedgerRecentHeading(selectionButton,hasRecords)+recentSummary+'<div class="ledger-recent-list">'+recentMarkup+'</div></section></div>'+renderLedgerSelectionToolbar()+'<button class="ledger-fab" aria-label="新增消費" onclick="openLedgerQuickEntryFromFab()">＋</button>';
 }
