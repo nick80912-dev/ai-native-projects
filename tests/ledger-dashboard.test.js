@@ -111,8 +111,8 @@ assert(!recentHeading.includes('今日'),'recent heading never duplicates Today 
 assert(!mod.renderLedgerRecentHeading('',false).includes('查看全部 〉'),'empty tracks hide the complete-history management entry');
 assert.strictEqual(typeof mod.renderLedgerTodayHint,'undefined','the old zero-Today hint is removed because the summary always shows Today');
 assert.strictEqual(typeof mod.ledgerRecentDateLabel,'function','dashboard exposes one recent-date label rule');
-assert.strictEqual(mod.ledgerRecentDateLabel([{time:new Date(now).toISOString()}],now),'今天','the current local date is labelled Today');
-assert.strictEqual(mod.ledgerRecentDateLabel(recent,now+86400000),'2026/07/18','historical recent spending keeps its formatted date');
+assert.strictEqual(mod.ledgerRecentDateLabel([{time:new Date(now).toISOString()}],now).indexOf('今天 '),0,'the current local date is labelled Today (v201: followed by the date)');
+assert.strictEqual(mod.ledgerRecentDateLabel(recent,now+86400000),'7/18(六)','historical recent spending keeps its formatted date (v201: 7/18(六))');
 
 assert.strictEqual(mod.ledgerLocalDateKey('not-a-date'),'','invalid dates do not create a misleading group key');
 assert.deepStrictEqual(Array.from(mod.selectLatestLedgerDateExpenses([])),[],'an empty track has no recent date');

@@ -890,7 +890,7 @@ html[data-theme="ehon"] .today-list-reset{border:var(--ehon-line);color:var(--eh
 .store-row:active{background:var(--line-soft)}
 .st-chk{flex:0 0 auto;width:22px;height:22px;border-radius:6px;border:2px solid var(--line);background:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;color:#fff}
 .st-chk.on{background:var(--gold);border-color:var(--gold)}
-.st-n{flex:1;min-width:0;font-size:14px;font-weight:600}.st-name{display:block}.st-tags{display:flex;flex-wrap:wrap;gap:4px;margin-top:3px;line-height:1}
+.st-n{flex:1;font-size:14px;font-weight:600}
 .st-f{font-size:11px;color:var(--ink-faint);font-weight:600}
 .store-cat{display:inline-block;margin-left:5px;padding:1px 5px;border-radius:4px;background:var(--line-soft);color:var(--ink-soft);font-size:10px;font-weight:700;vertical-align:1px}
 /* 分帳儀表板 */
@@ -6625,8 +6625,7 @@ function storeRow(s,id,on){
     ' aria-checked="'+(on?'true':'false')+'" onclick="'+call+'"'+
     ' onkeydown="activateKeyboardButton(event,function(){'+call+'})">'+
     '<span class="st-chk'+(on?' on':'')+'" aria-hidden="true">'+(on?'✓':'')+'</span>'+
-    /* v201(Bar 2026-11-18):分類／必逛／免稅固定放第二行,店名長短不同時每列一樣整齊 */
-    '<span class="st-n"><span class="st-name">'+escapeHtml(s.name)+'</span>'+((s.cat||must||tax)?'<span class="st-tags">'+(s.cat?'<span class="store-cat">'+escapeHtml(s.cat)+'</span>':'')+(must?'<span class="st-must">必逛</span>':'')+(tax?'<span class="st-tax">免稅</span>':'')+'</span>':'')+'</span>'+
+    '<span class="st-n">'+escapeHtml(s.name)+(s.cat?' <span class="store-cat">'+escapeHtml(s.cat)+'</span>':'')+(must?' <span class="st-must">必逛</span>':'')+(tax?' <span class="st-tax">免稅</span>':'')+'</span>'+
     '<span class="st-f">'+escapeHtml([s.floor,s.note?s.note.replace('櫃位 ',''):''].filter(Boolean).join('·'))+'</span></div>';
 }
 function renderShop(){
@@ -11554,7 +11553,7 @@ function renderSettingsHealthPage(){
 }
 var APP_RELEASE_NOTES=[
   {version:'v201',date:'2026-11-18',title:'購物與分帳小地方',items:[
-    '購物頁：店家的分類、必逛、免稅標籤固定放第二行；「清除全部想逛」移到清單最下面。',
+    '購物頁：「清除全部想逛」移到清單最下面。',
     '新增採買：關閉鈕和其他面板一致；還沒有代購對象時，「幫誰買」只留輸入框。',
     '分帳：結算的「結清」按鈕寫完整；完整紀錄的日期寫成 10/19(一)；操作選單改用線條圖示。'
   ]},
