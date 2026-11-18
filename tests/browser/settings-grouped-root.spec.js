@@ -400,7 +400,7 @@ test('健康子頁立即重繪或關閉重開仍直接顯示所有明細',async(
   await page.evaluate(()=>openSettings('health'));
   for(let attempt=0;attempt<4;attempt++){
     await page.evaluate(()=>rerenderOpenSettingsPage());
-    await expect(page.locator('.settings-health-row')).toHaveCount(4);
+    await expect(page.locator('.settings-health-row')).toHaveCount(3);   // v202:照片沒問題時不在概況重複一列
     await expect(page.locator('.settings-health-list')).toBeVisible();
   }
   await page.evaluate(()=>{

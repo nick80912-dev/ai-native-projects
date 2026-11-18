@@ -77,6 +77,12 @@ sandbox.AppLog.snapshot=function(){return many;};
 sandbox.showAllDiagnosticLogs();
 assert.strictEqual((section.outerHTML.match(/class="diag-log-entry /g)||[]).length,7,'顯示全部 re-renders every entry');
 assert(!section.outerHTML.includes('顯示全部'),'the expand button disappears once everything is shown');
+/* v202:沒有白話翻譯的工程訊息改用白話標題(原文收進技術細節),同樣的訊息合併並標次數 */
+const tech=[1,2,3].map(function(n){return {at:'2026-08-09T01:0'+n+':00.000Z',category:'sync',level:'warn',message:'cfg 第'+n+'次抓取失敗:QA_OFFLINE — 自動重試'};});
+const grouped=sandbox.renderDiagnosticAppLogSection(tech);
+assert.strictEqual((grouped.match(/class="diag-log-entry /g)||[]).length,1,'repeated technical messages collapse into one entry');
+assert(grouped.includes('有一次同步沒有成功，App 會自動再試 <small class="diag-log-count">×3</small>'),'the entry has a plain title and the repeat count');
+assert(grouped.includes('<details><summary>技術細節</summary><code>原始：cfg 第3次抓取失敗'),'the newest raw message stays behind 技術細節');
 sandbox.diagUiState.showAllLogs=false;
 sandbox.AppLog.snapshot=function(){return entries.map(function(entry){return Object.assign({},entry);});};
 sandbox.TripDiagnosticImpact.project=realProject;

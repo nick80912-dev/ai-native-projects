@@ -56,7 +56,7 @@ for(const theme of themes){
 }
 
 /* 照片健康狀態：兩句說明另有 class，容量與檢查時間等數據行不受影響 */
-assert(html.includes('<div class="shopping-photo-storage-note">其中 ')&&html.includes('<div class="shopping-photo-storage-note">遺失的照片不會自動移除'),'the two photo storage sentences use the note style');
-assert(html.includes('<div class="shopping-photo-storage-secondary">\'+escapeHtml(capacityDetail)'),'data lines keep their own style');
+assert(html.includes('<div class="shopping-photo-storage-note">其中 ')&&html.includes('<div class="shopping-photo-storage-note">請逐筆重新選擇照片'),'the two photo storage sentences use the note style');
+assert(html.includes('<div class="shopping-photo-storage-secondary">\'+(capacity.available?\'手機還能用約 '),'data lines keep their own style');
 
 console.log('help note style tests passed');
