@@ -65,7 +65,7 @@ test.describe('v152 診斷面板',()=>{
       openDiagnostics();
     });
     const trip=page.locator('#diagTripSection');
-    await expect(trip.locator('[data-key="trip"]')).toHaveText('岡山舊旅程（內建）');
+    await expect(trip.locator('[data-key="trip"]')).toHaveText('岡山（App 內建行程）');
     await expect(trip.locator('[data-key="mode"] .diag-chip.ok')).toHaveText('進行中');
     await expect(trip.locator('[data-key="grace"] .diag-chip.info')).toHaveText('進行中');
     await expect(trip.locator('[data-key="grace"]')).toContainText('到 10/24 00:00（台灣時間）');
@@ -86,7 +86,7 @@ test.describe('v152 診斷面板',()=>{
     await page.getByRole('button',{name:'複製除錯報告'}).click();
     const report=await page.evaluate(()=>window.__copied[0].text);
     expect(report).toContain('App：'+await page.evaluate(()=>APP_VERSION));
-    expect(report).toContain('- 連接的旅程：岡山舊旅程（內建）');
+    expect(report).toContain('- 連接的旅程：岡山（App 內建行程）');
     expect(report).toContain('- 團體帳：2 筆待送出');
     expect(report).toContain('2026-10-19T01:00:00.000Z [data] 天氣讀取未完成；可於首頁重試。');
     expect(pageErrors).toEqual([]);
@@ -107,7 +107,7 @@ test.describe('v152 診斷面板',()=>{
     const trip=page.locator('#diagTripSection');
     await expect(trip.locator('[data-key="ledger"] .diag-chip.bad')).toHaveText('已暫停送出');
     await expect(trip.locator('[data-key="ledger"]')).toContainText('1 筆屬於其他旅程（sheet:kyushu-2027）');
-    await expect(trip.locator('[data-key="grace"] .diag-chip')).toHaveText('已結束');
+    await expect(trip.locator('[data-key="grace"]')).toHaveCount(0);   // v202:岡山保護期結束後不再顯示(除錯報告仍有)
     const summary=page.locator('#diagSummary');
     await expect(summary).toHaveClass(/diag-summary bad/);
     await expect(summary).toContainText('待送的團體帳屬於其他旅程，已暫停送出；請截圖給旅程負責人');

@@ -14,8 +14,8 @@ test('資料健康子頁直接顯示四項狀態，鍵盤可進入並返回設�
   await expect(page.getByRole('heading',{name:'資料與照片狀態',exact:true})).toBeVisible();
   const health=page.locator('.settings-data-health');
   await expect(health.locator('details,summary')).toHaveCount(0);
-  await expect(health.locator('.settings-health-row')).toHaveCount(4);
-  for(const key of ['trip','shared','personal','photos'])await expect(health.locator('.data-health-'+key)).toBeVisible();
+  await expect(health.locator('.settings-health-row')).toHaveCount(3);
+  for(const key of ['trip','shared','personal'])await expect(health.locator('.data-health-'+key)).toBeVisible();
   /* v198:同一頁下方接著照片附件的容量與檢查 */
   await expect(page.locator('.shopping-photo-storage-grid')).toBeVisible();
   await page.getByRole('button',{name:'返回疑難排解',exact:true}).click();
@@ -30,7 +30,7 @@ test('資料健康子頁直接顯示四項狀態，鍵盤可進入並返回設�
   await expect(page.locator('#settingsOverlay').getByRole('button',{name:'清除並打包旅程',exact:true})).toHaveClass(/danger-outline/);
   await expect(page.locator('.settings-release-list > .settings-release')).toHaveCount(1);
   await expect(page.locator('.settings-release-more summary')).toContainText('看更早的更新');
-  await expect(page.locator('.settings-version-row')).toContainText('SW');
+  await expect(page.locator('.settings-version-row')).toContainText('目前版本 v');
   expect(errors).toEqual([]);
 });
 

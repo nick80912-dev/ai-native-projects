@@ -185,10 +185,9 @@ const healthy=JSON.parse(JSON.stringify(healthSandbox.settingsDataHealthModel({
 assert.strictEqual(healthy.summary,'資料狀態正常');
 assert.deepStrictEqual(healthy.rows,[
   {key:'trip',label:'行程資料',value:'同步正常 · 3 分鐘前',detail:''},
-  {key:'shared',label:'團體帳',value:'本機無待送紀錄',detail:'伺服器接收後仍需讀回；不代表其他旅伴已讀'},
-  {key:'personal',label:'個人資料',value:'僅此裝置',detail:'個人記帳、採買與設定不會同步'},
-  {key:'photos',label:'照片附件',value:'0 張 · 0 B',detail:'照片只保存在此裝置'}
-]);
+  {key:'shared',label:'團體帳',value:'本機無待送紀錄',detail:'記帳都已送到雲端'},
+  {key:'personal',label:'個人資料',value:'僅此裝置',detail:'個人記帳、採買與照片只存在這支手機'}
+]);  /* v202:照片沒問題時不在概況重複一列(下方另有照片卡) */
 assert.strictEqual(JSON.stringify(healthy).includes('個人資料","value":"已同步'),false,'personal local data is never labelled synced');
 
 const partial=JSON.parse(JSON.stringify(healthSandbox.settingsDataHealthModel({

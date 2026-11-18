@@ -71,7 +71,7 @@ vm.runInContext(extractFunction(html, 'renderSettingsDataPage'), dataPage);
 let markup;
 assert.doesNotThrow(() => { markup = dataPage.renderSettingsDataPage(); },
   'the data-and-version page opens even when app-version.js never loaded');
-assert.ok(markup.includes('SW 未知'), 'a missing version degrades to SW 未知 instead of throwing');
+assert.ok(markup.includes('目前版本 未知'), 'a missing version degrades to 目前版本 未知 instead of throwing');
 assert.ok(markup.includes('複製備份 JSON') && markup.includes('從 JSON 還原'),
   'backup and restore stay reachable without the version file');
 assert.ok(!markup.includes('資料健康狀態'),'backup/version no longer duplicates health details');
@@ -88,7 +88,7 @@ const dataPageOk = vm.createContext({
 vm.runInContext(helperSource, dataPageOk);
 vm.runInContext(extractFunction(html, 'settingsInfoButton'), dataPageOk);
 vm.runInContext(extractFunction(html, 'renderSettingsDataPage'), dataPageOk);
-assert.ok(dataPageOk.renderSettingsDataPage().includes('SW v99'), 'the real version is shown when available');
+assert.ok(dataPageOk.renderSettingsDataPage().includes('目前版本 v99'), 'the real version is shown when available');
 
 /* ---- 3. index.html 內不得有 helper 以外的裸讀 ---- */
 /* 結束標記本身也含 APP_VERSION 字樣,一併排除 */

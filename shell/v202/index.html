@@ -463,7 +463,7 @@ input,select,textarea{font-size:16px}
 .btn{background:var(--action-primary-bg);color:var(--action-primary-ink);border:none;border-radius:9px;padding:9px 15px;font-size:13.5px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap}
 .btn:active{transform:scale(.97)}
 .btn.ghost{background:var(--action-secondary-bg);color:var(--action-secondary-ink);border:1px solid var(--action-secondary-border)}
-.btn.cta{background:var(--action-cta-bg);color:var(--action-cta-ink)}.btn.danger-outline{background:transparent;color:var(--action-destructive-bg);border:1.5px solid var(--action-destructive-bg)}.settings-release-more{margin-top:8px}.settings-release-more>summary{cursor:pointer;font-size:13px;font-weight:800;color:var(--sea-deep);padding:6px 0}.settings-subheading{font-size:14px;margin:16px 4px 8px}.btn.danger{background:var(--action-destructive-bg);color:var(--action-destructive-ink)}
+.btn.cta{background:var(--action-cta-bg);color:var(--action-cta-ink)}.ledger-summary-info{border:0;background:transparent;color:inherit;opacity:.75;font:inherit;font-size:15px;min-width:32px;min-height:32px;cursor:pointer}.btn.danger-outline{background:transparent;color:var(--action-destructive-bg);border:1.5px solid var(--action-destructive-bg)}.settings-release-more{margin-top:8px}.settings-release-more>summary{cursor:pointer;font-size:13px;font-weight:800;color:var(--sea-deep);padding:6px 0}.settings-subheading{font-size:14px;margin:16px 4px 8px}.btn.danger{background:var(--action-destructive-bg);color:var(--action-destructive-ink)}
 .btn.sm{padding:7px 12px;font-size:12.5px}
 .btn.block{width:100%;margin-top:4px}
 /* v130(backlog #40):鍵盤焦點通則。原本全 App 235 個 <button> 只有 13 條
@@ -1031,7 +1031,7 @@ html[data-theme="ehon"] .trip-inactive-action.primary small{color:var(--ehon-ink
 .ledger-summary-card .ledger-track-grid{margin-bottom:8px;border-color:rgba(255,255,255,.2);background:rgba(255,255,255,.1)}.ledger-summary-card .ledger-track-btn{color:rgba(255,255,255,.72)}.ledger-summary-card .ledger-track-btn.on{background:#fff;color:var(--sea-deep);box-shadow:none}.ledger-summary-meta{display:flex;justify-content:space-between;align-items:center;gap:8px;min-width:0;margin-bottom:10px}.ledger-summary-rate{min-width:0;min-height:0;padding:0;border:0;border-radius:0;background:transparent;color:rgba(255,255,255,.72);font:inherit;font-size:10px;font-weight:800;line-height:1.3;white-space:nowrap}.ledger-summary-rate.pending{background:transparent;color:rgba(255,240,190,.9);cursor:pointer;padding:9px 6px;margin:-9px -6px}.ledger-summary-rate:disabled{opacity:1}.ledger-summary-helper{min-width:0;color:rgba(255,255,255,.56);font-size:10px;font-weight:400;line-height:1.3;text-align:right;white-space:nowrap}.ledger-summary-count{font-size:12px;color:rgba(255,255,255,.72);font-weight:800}.ledger-summary-amount{width:100%;min-height:68px;border:0;background:transparent;color:inherit;text-align:left;font:inherit;padding:7px 0}.ledger-summary-amount strong{display:block;font-size:30px;line-height:1.15;overflow-wrap:anywhere}.ledger-summary-amount span{display:block;font-size:13px;color:rgba(255,255,255,.7);margin-top:4px}.ledger-summary-trip{display:flex;align-items:center;justify-content:space-between;gap:10px;border-top:1px solid rgba(255,255,255,.2);padding-top:9px;color:rgba(255,255,255,.72);font-size:11px;font-weight:800;min-width:0}.ledger-summary-trip span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.ledger-summary-trip strong{flex:0 0 auto;color:#fff;font-size:13px;font-variant-numeric:tabular-nums}.ledger-summary-count{display:flex;align-items:baseline;flex-wrap:wrap;column-gap:8px;row-gap:2px;min-width:0}.ledger-summary-note{min-width:0;font-size:10px;font-weight:400;line-height:1.3;color:rgba(255,255,255,.56)}.ledger-other-identity-note{margin:0 0 8px;font-size:12px;line-height:1.45;color:var(--ink-soft)}.ledger-category-apply-help,.ledger-proxy-help,.ledger-tax-help,.ledger-settlement-hint,.ledger-detail-lock-note,.member-confirm-note,.settings-health-main span,.shopping-photo-storage-note,.ledger-payer-note{font-size:10px;font-weight:400;line-height:1.3;color:var(--note-ink)}.settings-help,.diag-help,.ledger-spend-notes,.diag-log-entry span{font-size:var(--font-meta);font-weight:400;color:var(--note-ink)}.ledger-summary-row{display:flex;width:100%;min-width:0;min-height:44px;align-items:center;gap:8px;margin:0;border:0;border-top:1px solid rgba(255,255,255,.2);border-radius:0;padding:4px 0;background:transparent;color:rgba(255,255,255,.78);font:inherit;font-size:12px;font-weight:800;text-align:left;cursor:pointer}.ledger-summary-row>span:first-child{flex:0 0 auto}.ledger-summary-row .ledger-summary-note{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.ledger-summary-row strong{flex:0 0 auto;margin-left:auto;color:#fff;font-size:15px;font-variant-numeric:tabular-nums;white-space:nowrap}.ledger-summary-row .ledger-card-chevron{color:#fff}.ledger-summary-row:last-child{margin-bottom:-4px}.ledger-recent-section{margin-top:-4px}.ledger-shared-dashboard .ledger-recent-section{margin-top:-2px}
 .ledger-compact-card{min-width:0;min-height:112px;border:1px solid var(--line);border-radius:8px;background:var(--card);padding:12px;box-shadow:var(--shadow);display:flex;flex-direction:column;align-items:stretch;justify-content:flex-start;text-align:left}.ledger-compact-card h3{font-size:12px;color:var(--ink-soft);margin-bottom:7px}.ledger-compact-card strong{display:block;font-size:18px;color:var(--sea-deep);line-height:1.3;overflow-wrap:anywhere}.ledger-compact-card p{font-size:11px;color:var(--ink-faint);margin-top:5px;line-height:1.45}.ledger-compact-card h3,.ledger-compact-card strong,.ledger-compact-card p{width:100%;margin-left:0;margin-right:0}.ledger-section-head{display:flex;align-items:center;justify-content:space-between;gap:6px 10px;min-width:0;flex-wrap:wrap}.ledger-section-head h3{font-size:15px;color:var(--sea-deep)}.ledger-recent-heading{min-width:0;flex:1 1 150px}.ledger-section-head-actions{display:flex;align-items:center;flex:0 0 auto;white-space:nowrap}.ledger-view-all{min-height:44px;border:0;background:transparent;color:var(--sea);font:inherit;font-size:13px;font-weight:900;padding:5px 0 5px 12px}.ledger-home-summary-card{width:100%;min-height:106px;padding:10px 12px;border-radius:8px;display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:auto minmax(39px,1fr) auto;gap:5px}.ledger-home-summary-head{display:flex;align-items:center;justify-content:space-between;gap:10px;min-width:0}.ledger-home-summary-head h3{min-width:0;margin:0}.ledger-card-head-action{display:inline-flex;align-items:center;gap:10px;flex:0 0 auto;white-space:nowrap}.ledger-card-chevron{display:inline-flex;width:18px;height:18px;align-items:center;justify-content:center;font-family:inherit;font-size:18px;font-weight:700;line-height:1;color:var(--sea);opacity:1}
 .ledger-shared-settlement-amount{align-self:start;margin-top:0;font-size:18px!important}.ledger-shared-settlement-card.receivable .ledger-shared-settlement-amount{color:var(--sea-deep)}.ledger-shared-settlement-card.payable .ledger-shared-settlement-amount{color:var(--coral)}.ledger-shared-settlement-progress{min-width:0;margin-top:0!important;color:var(--ink-soft)!important;font-size:11px!important;font-weight:800;line-height:1.35;overflow-wrap:anywhere}.ledger-sync-summary{margin-bottom:10px;color:var(--ink-soft);font-size:13px;font-weight:800}.ledger-sync-message{margin-bottom:10px;padding:9px;border-radius:8px;background:var(--line-soft);color:var(--ink-soft);font-size:12px;line-height:1.45;overflow-wrap:anywhere}.ledger-sync-records{display:grid;gap:0;margin-bottom:12px}.ledger-sync-record{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:3px 10px;padding:9px 0;border-bottom:1px solid var(--line-soft);min-width:0}.ledger-sync-record strong{min-width:0;overflow-wrap:anywhere}.ledger-sync-record time{grid-column:1/-1;color:var(--ink-faint);font-size:11px}.ledger-sync-retry{width:100%;min-height:44px}.ledger-sync-retry:disabled{opacity:.55}
-.ledger-recent-list{display:grid;gap:12px;min-width:0}.ledger-date-group{display:grid;gap:7px;min-width:0}.ledger-recent-row,.ledger-batch-card{position:relative;width:100%;min-width:0;min-height:72px;border:1px solid var(--line);border-radius:8px;background:var(--card);padding:0;display:grid;grid-template-columns:minmax(0,1fr) 44px;overflow:visible}.ledger-recent-row.ledger-selection-card,.ledger-batch-card.ledger-selection-card{grid-template-columns:44px minmax(0,1fr)}.ledger-recent-body,.ledger-batch-body{min-width:0;border:0;background:transparent;padding:10px;text-align:left;font:inherit;color:var(--ink);display:grid;grid-template-columns:minmax(0,1fr) auto;gap:5px 10px;align-items:center}.ledger-recent-main{min-width:0}.ledger-recent-body .ledger-recent-main,.ledger-batch-body .ledger-recent-main{min-width:0;display:grid;grid-template-rows:repeat(2,minmax(0,auto));gap:2px;overflow:hidden}.ledger-recent-line{display:flex;align-items:center;gap:3px 5px;min-width:0;white-space:nowrap;overflow:hidden}.ledger-recent-detail,.ledger-recent-location{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.ledger-recent-detail strong{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.ledger-recent-body .ledger-recent-context,.ledger-batch-body .ledger-recent-context{display:inline-flex;flex:0 1 auto;min-width:0;max-width:55%;align-items:center;flex-wrap:nowrap;gap:3px;overflow:hidden;white-space:nowrap}.ledger-recent-context .shopping-target-affix{font-size:8.5px;white-space:nowrap}.ledger-recent-context .shopping-target-badge{min-width:0;padding:1px 5px;font-size:9px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.ledger-recent-location{color:var(--sea-deep);font-size:10px}.ledger-recent-statuses{display:flex;flex:0 1 auto;min-width:0;align-items:center;gap:3px;overflow:hidden;white-space:nowrap}.ledger-recent-statuses:empty{display:none}.ledger-recent-statuses .ledger-recent-badge,.ledger-recent-context .ledger-recent-badge{flex:0 1 auto;min-width:0;padding:1px 5px;font-size:9px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.ledger-recent-main strong{display:block;font-size:14px;overflow-wrap:anywhere}.ledger-dual-amounts{display:grid;justify-items:end;align-content:start;align-self:center;white-space:nowrap;font-variant-numeric:tabular-nums}.ledger-dual-amounts strong{font-size:14px;color:var(--sea-deep)}.ledger-dual-amounts span{font-size:10px;color:var(--ink-soft);margin-top:2px}.ledger-recent-badge{display:inline-flex;border-radius:999px;background:var(--line-soft);color:var(--ink-soft);padding:2px 6px;font-size:10px;font-weight:800}.ledger-recent-badge.pending{background:var(--status-pending-bg);color:var(--status-pending-ink)}.ledger-record-menu-button{border:0;background:transparent;color:var(--ink-soft);font-size:22px;min-width:44px;min-height:44px;align-self:start}.ledger-select-check{display:grid;place-items:center;width:44px;min-width:44px}.ledger-select-check input{width:19px;height:19px;margin:0}.ledger-batch-card.partial{border-color:var(--gold)}.ledger-batch-card.selected,.ledger-recent-row.selected{border-color:var(--sea);box-shadow:0 0 0 1px var(--sea)}.ledger-batch-children{grid-column:1/-1;display:grid;gap:7px;padding:0 8px 8px 24px}.ledger-batch-children[hidden]{display:none}.ledger-batch-child{box-shadow:none}.ledger-batch-chevron{display:inline-block;margin-left:5px;transition:transform .2s}.ledger-batch-card.expanded .ledger-batch-chevron{transform:rotate(180deg)}.ledger-action-popover{position:fixed;z-index:155;width:104px;box-sizing:border-box;padding:4px;border:1px solid var(--line);border-radius:10px;background:#fff;box-shadow:var(--shadow-lg);display:grid;gap:2px}.ledger-action-popover.readonly{width:min(260px,calc(100vw - 16px))}.ledger-action-message{margin:0;padding:8px;color:var(--ink-soft);font-size:12px;line-height:1.45;overflow-wrap:anywhere}.ledger-action-popover button{min-height:36px;border:0;border-radius:7px;background:transparent;color:var(--ink);font:inherit;font-size:12px;text-align:left;padding:6px 8px}.ledger-action-popover button:active{background:var(--line-soft)}.ledger-action-popover .danger{color:var(--action-destructive-ink-on-surface)}.ledger-selection-toolbar{position:fixed;z-index:120;left:12px;right:12px;bottom:calc(var(--tabbar-height) + env(safe-area-inset-bottom) + 10px);max-width:596px;margin:0 auto;display:flex;align-items:center;gap:8px;padding:9px 10px;border-radius:12px;background:var(--sea-deep);color:#fff;box-shadow:var(--shadow-lg)}.ledger-selection-toolbar span{flex:1;min-width:0;font-size:13px;font-weight:900}.ledger-selection-toolbar button{min-height:40px;border:0;border-radius:999px;padding:7px 12px;background:#fff;color:var(--sea-deep);font:inherit;font-size:12px;font-weight:900}.ledger-selection-toolbar button.danger{background:var(--action-destructive-bg);color:var(--action-destructive-ink)}.ledger-selection-toolbar button:disabled{opacity:.45}.ledger-selection-mode .ledger-fab{display:none}.ledger-selection-mode .ledger-dashboard{padding-bottom:88px}.ledger-fab{position:fixed;right:16px;bottom:calc(var(--tabbar-height) + env(safe-area-inset-bottom) + 14px);z-index:90;width:52px;height:52px;border-radius:50%;border:0;background:var(--coral);color:#fff;font:inherit;font-size:28px;line-height:1;box-shadow:var(--shadow-lg)}
+.ledger-recent-list{display:grid;gap:12px;min-width:0}.ledger-date-group{display:grid;gap:7px;min-width:0}.ledger-recent-row,.ledger-batch-card{position:relative;width:100%;min-width:0;min-height:72px;border:1px solid var(--line);border-radius:8px;background:var(--card);padding:0;display:grid;grid-template-columns:minmax(0,1fr) 44px;overflow:visible}.ledger-recent-row.ledger-selection-card,.ledger-batch-card.ledger-selection-card{grid-template-columns:44px minmax(0,1fr)}.ledger-recent-body,.ledger-batch-body{min-width:0;border:0;background:transparent;padding:10px;text-align:left;font:inherit;color:var(--ink);display:grid;grid-template-columns:minmax(0,1fr) auto;gap:5px 10px;align-items:center}.ledger-recent-main{min-width:0}.ledger-recent-body .ledger-recent-main,.ledger-batch-body .ledger-recent-main{min-width:0;display:grid;grid-template-rows:repeat(2,minmax(0,auto));gap:2px;overflow:hidden}.ledger-recent-line{display:flex;align-items:center;gap:3px 5px;min-width:0;white-space:nowrap;overflow:hidden}.ledger-recent-detail,.ledger-recent-location{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.ledger-recent-detail strong{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.ledger-recent-body .ledger-recent-context,.ledger-batch-body .ledger-recent-context{display:inline-flex;flex:0 1 auto;min-width:0;max-width:55%;align-items:center;flex-wrap:nowrap;gap:3px;overflow:hidden;white-space:nowrap}.ledger-recent-context .shopping-target-affix{font-size:8.5px;white-space:nowrap}.ledger-recent-context .shopping-target-badge{min-width:0;padding:1px 5px;font-size:9px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.ledger-recent-location{color:var(--sea-deep);font-size:10px}.ledger-recent-statuses{display:flex;flex:0 1 auto;min-width:0;align-items:center;gap:3px;overflow:hidden;white-space:nowrap}.ledger-recent-statuses:empty{display:none}.ledger-recent-statuses .ledger-recent-badge,.ledger-recent-context .ledger-recent-badge{flex:0 1 auto;min-width:0;padding:1px 6px;font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.ledger-recent-main strong{display:block;font-size:14px;overflow-wrap:anywhere}.ledger-dual-amounts{display:grid;justify-items:end;align-content:start;align-self:center;white-space:nowrap;font-variant-numeric:tabular-nums}.ledger-dual-amounts strong{font-size:14px;color:var(--sea-deep)}.ledger-dual-amounts span{font-size:10px;color:var(--ink-soft);margin-top:2px}.ledger-recent-badge{display:inline-flex;border-radius:999px;background:var(--line-soft);color:var(--ink-soft);padding:2px 7px;font-size:11px;font-weight:800}.ledger-recent-badge.pending{background:var(--status-pending-bg);color:var(--status-pending-ink)}.ledger-record-menu-button{border:0;background:transparent;color:var(--ink-soft);font-size:22px;min-width:44px;min-height:44px;align-self:start}.ledger-select-check{display:grid;place-items:center;width:44px;min-width:44px}.ledger-select-check input{width:19px;height:19px;margin:0}.ledger-batch-card.partial{border-color:var(--gold)}.ledger-batch-card.selected,.ledger-recent-row.selected{border-color:var(--sea);box-shadow:0 0 0 1px var(--sea)}.ledger-batch-children{grid-column:1/-1;display:grid;gap:7px;padding:0 8px 8px 24px}.ledger-batch-children[hidden]{display:none}.ledger-batch-child{box-shadow:none}.ledger-batch-chevron{display:inline-block;margin-left:5px;transition:transform .2s}.ledger-batch-card.expanded .ledger-batch-chevron{transform:rotate(180deg)}.ledger-action-popover{position:fixed;z-index:155;width:104px;box-sizing:border-box;padding:4px;border:1px solid var(--line);border-radius:10px;background:#fff;box-shadow:var(--shadow-lg);display:grid;gap:2px}.ledger-action-popover.readonly{width:min(260px,calc(100vw - 16px))}.ledger-action-message{margin:0;padding:8px;color:var(--ink-soft);font-size:12px;line-height:1.45;overflow-wrap:anywhere}.ledger-action-popover button{min-height:36px;border:0;border-radius:7px;background:transparent;color:var(--ink);font:inherit;font-size:12px;text-align:left;padding:6px 8px}.ledger-action-popover button,.shopping-action-popover button{display:flex;align-items:center;gap:8px}.ledger-action-popover button .app-icon,.shopping-action-popover button .app-icon{width:16px;height:16px;flex:0 0 16px;stroke:currentColor;fill:none;stroke-width:2}.ledger-action-popover button:active{background:var(--line-soft)}.ledger-action-popover .danger{color:var(--action-destructive-ink-on-surface)}.ledger-selection-toolbar{position:fixed;z-index:120;left:12px;right:12px;bottom:calc(var(--tabbar-height) + env(safe-area-inset-bottom) + 10px);max-width:596px;margin:0 auto;display:flex;align-items:center;gap:8px;padding:9px 10px;border-radius:12px;background:var(--sea-deep);color:#fff;box-shadow:var(--shadow-lg)}.ledger-selection-toolbar span{flex:1;min-width:0;font-size:13px;font-weight:900}.ledger-selection-toolbar button{min-height:40px;border:0;border-radius:999px;padding:7px 12px;background:#fff;color:var(--sea-deep);font:inherit;font-size:12px;font-weight:900}.ledger-selection-toolbar button.danger{background:var(--action-destructive-bg);color:var(--action-destructive-ink)}.ledger-selection-toolbar button:disabled{opacity:.45}.ledger-selection-mode .ledger-fab{display:none}.ledger-selection-mode .ledger-dashboard{padding-bottom:88px}.ledger-fab{position:fixed;right:16px;bottom:calc(var(--tabbar-height) + env(safe-area-inset-bottom) + 14px);z-index:90;width:52px;height:52px;border-radius:50%;border:0;background:var(--coral);color:#fff;font:inherit;font-size:28px;line-height:1;box-shadow:var(--shadow-lg)}
 .ledger-history-controls{display:grid;gap:10px;margin:10px 0 14px}.ledger-history-search-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center}.ledger-history-filter-btn{position:relative;min-height:46px;border:1px solid var(--line);border-radius:999px;background:#fff;color:var(--sea-deep);padding:8px 14px;font:inherit;font-weight:900}.ledger-history-filter-btn.on{background:var(--mint)}.ledger-filter-badge{position:absolute;right:-5px;top:-7px;min-width:20px;height:20px;border-radius:999px;background:var(--coral);color:#fff;display:grid;place-items:center;font-size:11px}.ledger-history-filter-panel{display:grid;gap:12px;padding:12px;border:1px solid var(--line);border-radius:10px;background:#fff}.ledger-history-filter-panel[hidden],.ledger-filter-badge[hidden]{display:none!important}.ledger-history-filter-group{display:grid;gap:6px}.ledger-history-summary{font-size:13px;color:var(--ink-soft);font-weight:900}
 .ledger-spend-hero{text-align:center;padding:2px 0 10px}.ledger-spend-hero strong{display:block;font-size:26px;font-weight:900;color:var(--ink)}.ledger-spend-hero span{font-size:13px;color:var(--ink-soft)}.ledger-spend-hero p{margin-top:6px;font-size:13px;color:var(--ink)}.ledger-spend-heading{font-size:13px;color:var(--sea-deep);margin:10px 0 4px}.ledger-spend-list{display:grid}.ledger-spend-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:6px 0;border-bottom:1px solid var(--line)}.ledger-spend-row>span{min-width:0;display:flex;flex-wrap:wrap;align-items:baseline;column-gap:6px;line-height:1.35}.ledger-spend-row>span b{font-size:13px;color:var(--ink);overflow-wrap:anywhere}.ledger-spend-row>span small{font-size:12px;color:var(--ink-soft)}.ledger-spend-row>b{flex:0 0 auto;font-size:14px;color:var(--ink);white-space:nowrap}.ledger-spend-notes{margin:10px 0 0;padding-left:18px;line-height:1.6}
 .ledger-compact-action{width:100%;appearance:none;-webkit-appearance:none;text-align:left;font:inherit;color:inherit}.ledger-compact-action:active{transform:translateY(1px)}.ledger-history{display:grid;gap:12px}.ledger-history-head{display:flex;align-items:center;gap:8px}.ledger-history-head h2{font-size:19px;color:var(--sea-deep)}.ledger-history-back{width:44px;height:44px;border:0;background:transparent;color:var(--sea-deep);font-size:22px}.ledger-history-filter{display:grid;grid-template-columns:1fr 1fr;gap:7px}.ledger-history-filter button{min-height:44px;border:1px solid var(--line);border-radius:8px;background:#fff;color:var(--ink-soft);font:inherit;font-weight:900}.ledger-history-filter button.on{background:var(--sea);border-color:var(--sea);color:#fff}.ledger-detail-sheet{max-height:85dvh}.ledger-detail-rows{display:grid;gap:0}.ledger-detail-row{display:grid;grid-template-columns:92px minmax(0,1fr);gap:10px;padding:9px 0;border-bottom:1px solid var(--line);font-size:13px}.ledger-detail-row dt{color:var(--ink-faint);font-weight:800}.ledger-detail-row dd{margin:0;color:var(--ink);overflow-wrap:anywhere}.ledger-detail-actions{margin-top:14px}.ledger-detail-lock-note{margin-top:12px}.ledger-detail-actions .btn{width:100%;min-height:44px}.ledger-settlement-status{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 0;border-bottom:1px solid var(--line)}.ledger-settlement-status strong{font-size:16px;color:var(--sea-deep)}.ledger-settlement-section{margin-top:14px}.ledger-settlement-section h3{font-size:13px;color:var(--ink-soft);margin-bottom:7px}.ledger-settlement-list{display:grid;gap:6px}.ledger-settlement-line{display:flex;justify-content:space-between;gap:10px;padding:8px 0;border-bottom:1px solid var(--line-soft);font-size:12px}.ledger-settlement-line>span{display:flex;align-items:center;gap:6px;flex-wrap:wrap}.ledger-settle-actions{display:inline-flex;gap:6px;flex:0 0 auto}.ledger-settle-row{flex-direction:column;align-items:stretch;gap:6px}.ledger-settle-main,.ledger-settle-foot{display:flex;align-items:center;justify-content:space-between;gap:10px;min-width:0}.ledger-settle-who{min-width:0;overflow-wrap:anywhere}.ledger-settle-state{display:inline-flex;align-items:center;gap:6px;flex:0 0 auto}.ledger-settle-pending{opacity:.92}.ledger-settle-rejected{opacity:.75}.ledger-settle-reject-quick{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}.ledger-receiver-settle-options{display:grid;gap:8px;margin:12px 0}.ledger-receiver-settle-option{display:flex;flex-direction:column;align-items:flex-start;gap:2px;width:100%;min-height:52px;text-align:left;padding:8px 12px;white-space:normal}.ledger-receiver-settle-option b{font-size:15px}.ledger-receiver-settle-option small{font-size:12px;font-weight:400;opacity:.85}.ledger-settlement-line span:last-child{text-align:right;font-weight:900}.ledger-settlement-warning{margin-top:12px;color:var(--coral);font-size:12px;font-weight:800}.ledger-settle-chip{display:inline-flex;align-items:center;padding:3px 8px;border-radius:999px;background:#eef4f5;color:var(--ink-soft);font-size:11px;font-weight:900;white-space:nowrap}.ledger-settle-awaiting-you .ledger-settle-chip{background:#fdf0e6;color:#b45309}.ledger-settle-rejected .ledger-settle-chip{background:#fdeaea;color:var(--coral)}.ledger-settle-sync-error .ledger-settle-chip{background:#fdeaea;color:var(--coral)}.ledger-settle-sync{font-size:11px;font-weight:800;color:var(--ink-faint);white-space:nowrap}.ledger-settle-reason{min-width:0;flex:1;font-size:11px;font-weight:700;color:var(--ink-faint);overflow-wrap:anywhere}.ledger-settle-note{font-size:11px;font-weight:700;color:var(--ink-faint)}.ledger-settlement-amount{display:flex;flex-direction:column;align-items:flex-end;gap:2px;text-align:right;font-size:13.5px}.ledger-settlement-hint{font-style:normal}.ledger-settlement-links{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px}.ledger-settlement-links .btn{flex:1 1 auto}.tabbar-badge{position:absolute;top:-2px;right:-6px;width:8px;height:8px;border-radius:50%;background:var(--coral);box-shadow:0 0 0 2px #fff}.tabbar-btn .ic{position:relative}
@@ -1063,7 +1063,7 @@ body.ledger-sheet-open{overflow:hidden}.ledger-sheet-overlay{position:fixed;inse
 .today-shopping-launcher{width:100%;min-height:44px;margin:9px 0 0;border:0;border-bottom:1px solid var(--line);background:transparent;color:var(--sea);padding:8px 2px;text-align:right;font:inherit;font-size:13px;font-weight:900;touch-action:manipulation}
 .today-hero-action{display:inline-flex;align-items:center;justify-content:center;width:auto;min-height:44px;margin-top:var(--space-3);background:rgba(255,255,255,.16);color:#fff;border:none;border-radius:var(--radius-control);padding:9px var(--space-4);font:inherit;font-size:13.5px;font-weight:600;line-height:1.2;cursor:pointer;position:relative;touch-action:manipulation}
 body.shopping-list-open{overflow:hidden}.shopping-list-overlay{position:fixed;inset:0;z-index:145;background:var(--paper)}.shopping-list-panel{--shopping-list-sticky-offset:calc(127px + env(safe-area-inset-top));width:min(100%,620px);height:100dvh;margin:0 auto;overflow-y:auto;touch-action:pan-y;overscroll-behavior:contain;background:var(--paper);padding:0 12px calc(92px + env(safe-area-inset-bottom));box-sizing:border-box}.shopping-list-head{position:sticky;z-index:4;top:0;display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:58px;margin:0 -12px;padding:calc(7px + env(safe-area-inset-top)) 12px 7px;background:rgba(249,247,241,.97);border-bottom:1px solid var(--line);backdrop-filter:blur(10px)}.shopping-list-head h2{min-width:0;font-size:19px;color:var(--sea-deep)}.shopping-list-head-actions{display:flex;align-items:center;gap:4px}.shopping-icon-button{min-width:44px;min-height:44px;border:0;border-radius:9px;background:transparent;color:var(--sea-deep);font:inherit;font-size:22px;font-weight:900}.shopping-add-button{width:44px;height:44px;border:0;border-radius:50%;background:var(--coral);color:#fff;font:inherit;font-size:25px;line-height:1}.shopping-list-segment{position:sticky;z-index:3;top:calc(59px + env(safe-area-inset-top));display:flex;gap:4px;margin:0 -12px 12px;padding:9px 12px;background:var(--paper)}.shopping-list-segment-track{display:flex;width:100%;gap:4px;padding:4px;border:1px solid var(--line);border-radius:999px;background:var(--line-soft)}.shopping-list-segment button{flex:1;min-width:0;min-height:40px;border:0;border-radius:999px;background:transparent;color:var(--ink-soft);font:inherit;font-size:13px;font-weight:900}.shopping-list-segment button.on{background:var(--sea);color:#fff;box-shadow:var(--shadow)}
-.shopping-form{margin:0 0 14px;padding:12px;border:1px solid var(--line);border-radius:10px;background:#fff;box-shadow:var(--shadow)}.shopping-form-head{display:flex;align-items:center;justify-content:space-between;gap:10px}.shopping-form-head h3{font-size:15px;color:var(--sea-deep)}.shopping-field{display:grid;gap:6px;margin-top:11px;min-width:0}.shopping-field label,.shopping-field-label{font-size:12px;font-weight:900;color:var(--ink-soft)}.shopping-input,.shopping-select{width:100%;min-width:0;min-height:46px;border:1px solid var(--line);border-radius:8px;background:#fff;padding:9px 11px;font:inherit;box-sizing:border-box}.shopping-chip-grid{display:flex;flex-wrap:wrap;gap:7px}.shopping-chip{min-height:40px;border:1px solid var(--line);border-radius:999px;background:#fff;color:var(--ink-soft);padding:7px 12px;font:inherit;font-size:12px;font-weight:800}.shopping-chip.on{border-color:var(--sea);background:var(--mint);color:var(--sea-deep)}.shopping-target-summary{font-size:12px;font-weight:800;color:var(--ink-soft)}.shopping-target-add{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:7px}.shopping-target-add button{min-width:44px;min-height:44px;border:1px dashed var(--sea);border-radius:8px;background:#fff;color:var(--sea);font:inherit;font-weight:900}.shopping-form-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:13px}.shopping-form-actions .btn{min-height:44px}.shopping-form-actions .shopping-save-another{grid-column:1/-1}
+.shopping-form{margin:0 0 14px;padding:12px;border:1px solid var(--line);border-radius:10px;background:#fff;box-shadow:var(--shadow)}.shopping-form-close{width:36px;height:36px;font-size:22px}.shopping-form-head{display:flex;align-items:center;justify-content:space-between;gap:10px}.shopping-form-head h3{font-size:15px;color:var(--sea-deep)}.shopping-field{display:grid;gap:6px;margin-top:11px;min-width:0}.shopping-field label,.shopping-field-label{font-size:12px;font-weight:900;color:var(--ink-soft)}.shopping-input,.shopping-select{width:100%;min-width:0;min-height:46px;border:1px solid var(--line);border-radius:8px;background:#fff;padding:9px 11px;font:inherit;box-sizing:border-box}.shopping-chip-grid{display:flex;flex-wrap:wrap;gap:7px}.shopping-chip{min-height:40px;border:1px solid var(--line);border-radius:999px;background:#fff;color:var(--ink-soft);padding:7px 12px;font:inherit;font-size:12px;font-weight:800}.shopping-chip.on{border-color:var(--sea);background:var(--mint);color:var(--sea-deep)}.shopping-target-summary{font-size:12px;font-weight:800;color:var(--ink-soft)}.shopping-target-add{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:7px}.shopping-target-add button{min-width:44px;min-height:44px;border:1px dashed var(--sea);border-radius:8px;background:#fff;color:var(--sea);font:inherit;font-weight:900}.shopping-form-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:13px}.shopping-form-actions .btn{min-height:44px}.shopping-form-actions .shopping-save-another{grid-column:1/-1}
 .shopping-form-overlay{z-index:150}.shopping-form-sheet{width:min(100%,620px);max-height:100dvh;overflow-y:auto;touch-action:pan-y;overscroll-behavior:contain;padding-bottom:calc(18px + env(safe-area-inset-bottom))}.shopping-form-sheet .shopping-form{margin:0;border:0;box-shadow:none}.shopping-photo-inline-error{color:var(--coral);font-weight:800}
 .shopping-list-tools{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px}.shopping-list-tools strong{font-size:13px;color:var(--ink-soft)}.shopping-list-tools button{min-height:40px;border:0;background:transparent;color:var(--sea);padding:4px 0 4px 12px;font:inherit;font-size:12px;font-weight:900}.shopping-group{display:grid;gap:7px;margin-top:13px}.shopping-list-panel .shopping-group{scroll-margin-top:var(--shopping-list-sticky-offset)}.shopping-group-title{font-size:12px;color:var(--ink-faint);font-weight:900}.shopping-group-hint{margin:-2px 0 1px;color:var(--ink-faint);font-size:11px;line-height:1.45;overflow-wrap:anywhere}.shopping-group-orphan .shopping-group-title,.shopping-group-orphan .shopping-group-hint{color:var(--coral)}.shopping-item-orphan{border-color:var(--coral)}.shopping-field-notice{margin:1px 0 0;color:var(--ink-faint);font-size:11px;line-height:1.45;overflow-wrap:anywhere}.shopping-item-title-row{display:flex;align-items:center;flex-wrap:wrap;gap:4px 6px;min-width:0;overflow-wrap:anywhere}.shopping-card-target-summary{display:inline-flex;align-items:center;flex-wrap:wrap;gap:3px;font-weight:400}.shopping-target-affix{color:var(--ink-soft);font-weight:400}.shopping-target-badge{display:inline-flex;align-items:center;background:var(--coral-bg);color:var(--coral);border-radius:6px;border:0;padding:2px 7px;font-size:10.5px;font-weight:800;line-height:1.3}.shopping-category-badge{display:inline-flex;align-items:center;background:var(--shopping-category-bg);color:var(--shopping-category-ink);border-radius:6px;border:0;padding:2px 7px;font-size:10.5px;font-weight:800;line-height:1.3}.shopping-link-badge{display:inline-flex;align-items:center;border-radius:999px;padding:1px 7px;font-size:10px;font-weight:900;white-space:nowrap}.shopping-link-linked{background:var(--mint);color:var(--sea-deep)}.shopping-link-partial{background:var(--status-partial-bg);color:var(--sea-deep)}.shopping-link-unverified{background:var(--status-unverified-bg);color:var(--status-unverified-ink)}.shopping-link-unlinked{background:var(--line-soft);color:var(--ink-faint)}.shopping-selection-toolbar-done{grid-template-columns:auto minmax(0,1fr) minmax(0,1fr) minmax(0,.9fr)}.shopping-selection-toolbar-done button.danger{background:var(--action-destructive-bg);color:var(--action-destructive-ink)}.shopping-split-form{border-color:var(--sea)}.shopping-split-remainder{margin:0;min-height:46px;display:flex;align-items:center;border:1px dashed var(--line);border-radius:8px;background:var(--line-soft);padding:9px 11px;font-size:16px;font-weight:900;color:var(--sea-deep)}.shopping-selection-toolbar-stacked{grid-template-columns:minmax(0,1fr);gap:6px}.shopping-selection-actions{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}.shopping-selection-toolbar-stacked .shopping-selection-actions button.danger{background:var(--action-destructive-bg);color:var(--action-destructive-ink)}.shopping-field-notice-warn{color:var(--coral)}.shopping-clear-binding{justify-self:start;min-height:40px;border:1px dashed var(--action-destructive-ink-on-surface);border-radius:8px;background:#fff;color:var(--action-destructive-ink-on-surface);padding:6px 12px;font:inherit;font-size:12px;font-weight:900}.shopping-item{display:grid;grid-template-columns:44px minmax(0,1fr) auto;align-items:center;gap:6px;min-width:0;border:1px solid var(--line);border-radius:9px;background:#fff;padding:8px 7px}.shopping-item-location{margin-top:3px;color:var(--ink-faint);font-size:11px;line-height:1.35;overflow-wrap:anywhere}.shopping-item-menu{min-width:40px;min-height:40px;border:0;border-radius:9px;background:transparent;color:var(--ink-soft);font:inherit;font-size:20px;font-weight:900;line-height:1}.shopping-item-primary{min-height:40px;padding:0 10px;border:1px solid var(--sea);border-radius:999px;background:#fff;color:var(--sea-deep);font:inherit;font-size:12px;font-weight:900;white-space:nowrap}.shopping-item-primary.shopping-item-secondary{border-color:var(--line);background:transparent;color:var(--ink-soft);font-weight:700}.shopping-quantity-row{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:9px}.shopping-quantity-row>.shopping-field{margin-top:0}.shopping-action-popover{width:auto;min-width:120px}.shopping-item-check{display:grid;place-items:center;width:44px;min-height:44px}.shopping-item-check input{width:20px;height:20px;margin:0}.shopping-item-body{min-width:0}.shopping-item-body strong{display:block;font-size:14px;overflow-wrap:anywhere}.shopping-item-meta{display:flex;align-items:center;flex-wrap:wrap;gap:3px 7px;margin-top:4px;color:var(--ink-faint);font-size:11px;line-height:1.35}.shopping-item-actions{display:flex;align-items:center}.shopping-item-actions button{min-width:40px;min-height:40px;border:0;background:transparent;color:var(--sea);font:inherit;font-size:12px;font-weight:900}.shopping-item-actions button.danger{color:var(--action-destructive-ink-on-surface)}.shopping-empty{padding:36px 12px;text-align:center;color:var(--ink-faint);font-size:13px}.shopping-selection-toolbar{position:fixed;z-index:148;left:12px;right:12px;bottom:calc(10px + env(safe-area-inset-bottom));width:min(calc(100% - 24px),596px);margin:0 auto;display:grid;grid-template-columns:auto minmax(0,1fr) minmax(0,1.35fr);align-items:center;gap:7px;padding:9px;border-radius:12px;background:var(--sea-deep);box-shadow:var(--shadow-lg);box-sizing:border-box}.shopping-selection-toolbar span{color:#fff;font-size:12px;font-weight:900}.shopping-selection-toolbar button{min-width:0;min-height:42px;border:0;border-radius:999px;background:#fff;color:var(--sea-deep);padding:7px 9px;font:inherit;font-size:11px;font-weight:900}.shopping-selection-toolbar button.danger{background:var(--action-destructive-bg);color:var(--action-destructive-ink)}.shopping-selection-toolbar button:disabled{opacity:.45}
 .is-navigation-target{outline:3px solid var(--coral);outline-offset:3px;background:var(--coral-bg)}.is-navigation-target-fading{transition:outline-color .2s ease,background-color .2s ease}.navigation-target-status{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;white-space:nowrap!important;border:0!important}.navigation-target-status-visible{position:static!important;width:auto!important;height:auto!important;padding:6px 10px!important;margin:0 0 var(--space-2)!important;overflow:visible!important;clip:auto!important;white-space:normal!important;border-radius:8px;background:var(--line-soft);color:var(--sea-deep);font-size:var(--font-meta);font-weight:800}@media(prefers-reduced-motion:reduce){.is-navigation-target-fading{transition:none!important}}
@@ -1103,10 +1103,22 @@ input:not([type="hidden"]),select,textarea{font-size:16px!important}
 .item,.nx-ticket,.shop-mall,.today-hero,.ledger-summary-card,.settings-group-card{border-radius:20px}
 .qa-btn,.nx-drive-btn,.nx-decision-btn,.nx-cluster-expand,.today-jump,.btn{border-radius:14px}
 .pc-tip,.panel.open,.floor-head,.want-box{border-radius:14px}
+
+/* v202 設定與過往旅程整理 */
+.past-trip-summary-line{display:flex;align-items:baseline;justify-content:space-between;gap:10px;padding:2px 2px 12px}.past-trip-summary-line h2{margin:0;font-size:16px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.past-trip-summary-line span{font-size:13px;color:var(--ink-soft);flex:0 0 auto}
+.past-trip-spend-total span{display:block}
+.settings-release-list>.settings-release:first-child{border-bottom:0;padding-bottom:0}.settings-release-more{border-top:1px solid var(--line-soft);padding-top:6px}
+#settingsOverlay .settings-row input[type=checkbox]{-webkit-appearance:none;appearance:none;flex:0 0 auto;width:46px;height:28px;margin:0;border-radius:999px;background:var(--line);position:relative;cursor:pointer;transition:background .18s}
+#settingsOverlay .settings-row input[type=checkbox]::after{content:"";position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.25);transition:transform .18s}
+#settingsOverlay .settings-row input[type=checkbox]:checked{background:var(--sea)}
+#settingsOverlay .settings-row input[type=checkbox]:checked::after{transform:translateX(18px)}
+#settingsOverlay .settings-row input[type=checkbox]:focus-visible{outline:2px solid var(--sea);outline-offset:2px}
+.travel-note-empty{text-align:center;margin:4px 0 0}
+.diag-log-count{font-size:12px;font-weight:700;color:var(--ink-faint)}
 </style>
-<script src="shell/v199/app-version.js"></script>
-<script id="builtinSnapshotMarker">var BUILTIN_HTML_VERSION='v199';var BUILTIN_HTML_TS=1790861998387;</script>
-<script src="shell/v199/builtin-snapshot.js"></script>
+<script src="shell/v202/app-version.js"></script>
+<script id="builtinSnapshotMarker">var BUILTIN_HTML_VERSION='v202';var BUILTIN_HTML_TS=1790861998387;</script>
+<script src="shell/v202/builtin-snapshot.js"></script>
 <script src="navigation-intent.js"></script>
 <script src="diagnostic-impact.js"></script>
 <script src="today-view.js"></script>
@@ -5586,11 +5598,11 @@ function renderShoppingForm(){
       escapeHtml(stopState==='orphan'?'原本綁定的行程站點已從行程中移除。請改選有效站點，或清除綁定改為隨時可買。':'行程資料尚未確認來源，暫時保留原綁定，不會自動更動。')+
       '</p><button type="button" class="shopping-clear-binding" onclick="clearShoppingStopBinding()">清除綁定，改為隨時可買</button>';
   }
-  return '<form class="shopping-form" aria-busy="'+(pending?'true':'false')+'" onsubmit="event.preventDefault();saveShoppingForm()"><div class="shopping-form-head"><h3 id="shoppingFormTitle">'+(form.id?'編輯採買項目':'新增採買項目')+'</h3><button type="button" class="shopping-icon-button" aria-label="關閉表單" onclick="cancelShoppingForm()"'+disabled+'>×</button></div>'+
+  return '<form class="shopping-form" aria-busy="'+(pending?'true':'false')+'" onsubmit="event.preventDefault();saveShoppingForm()"><div class="shopping-form-head"><h3 id="shoppingFormTitle">'+(form.id?'編輯採買項目':'新增採買項目')+'</h3><button type="button" class="settings-close shopping-form-close" aria-label="關閉表單" onclick="cancelShoppingForm()"'+disabled+'>×</button></div>'+
     '<div class="shopping-field"><label for="shoppingName">品名（必填）</label><input class="shopping-input" id="shoppingName" maxlength="80" value="'+escapeHtml(form.name)+'" oninput="updateShoppingFormField(\'name\',this.value,false)"></div>'+
     '<div class="shopping-field"><span class="shopping-field-label">分類（選填）</span><div class="shopping-chip-grid">'+categories+'</div></div>'+
     renderShoppingQuantityFields(form)+
-    '<div class="shopping-field"><span class="shopping-field-label">幫誰買（可多選）</span><div class="shopping-chip-grid">'+(targets||'<span class="settings-help">尚未建立代購對象</span>')+'</div><span class="shopping-target-summary">已選 '+selectedTargets.length+' 位'+(selectedTargets.length&&quantityPreview?' · '+escapeHtml(quantityPreview):'')+'</span><div class="shopping-target-add"><input class="shopping-input" id="shoppingBuyForNew" maxlength="12" placeholder="新增對象"><button type="button" onclick="addShoppingBuyFor()">新增</button></div></div>'+
+    '<div class="shopping-field"><span class="shopping-field-label">幫誰買（可多選）</span>'+(targets?'<div class="shopping-chip-grid">'+targets+'</div>':'')+(selectedTargets.length?'<span class="shopping-target-summary">已選 '+selectedTargets.length+' 位'+(quantityPreview?' · '+escapeHtml(quantityPreview):'')+'</span>':'')+'<div class="shopping-target-add"><input class="shopping-input" id="shoppingBuyForNew" maxlength="12" placeholder="新增對象"><button type="button" onclick="addShoppingBuyFor()">新增</button></div></div>'+
     '<div class="shopping-field"><label for="shoppingStopRef">選擇行程站點（選填）</label><select class="shopping-select" id="shoppingStopRef" onchange="updateShoppingFormField(\'stopRef\',this.value,true)">'+options+'</select>'+stopNotice+'</div>'+
     renderShoppingPhotoField(form,pending)+
     '<div class="shopping-form-actions"><button type="button" class="btn ghost" onclick="cancelShoppingForm()"'+disabled+'>取消</button><button type="submit" class="btn cta"'+disabled+'>儲存</button>'+(!form.id?'<button type="button" class="btn shopping-save-another" onclick="saveShoppingForm(true)"'+disabled+'>儲存並新增</button>':'')+'</div></form>';
@@ -5721,8 +5733,8 @@ function openShoppingItemActions(id,event){
   closeShoppingItemActions();
   var linkState=shoppingItemLinkState(item),safeId=jsHtmlAttrString(id),actions=[];
   if(linkState.state==='linked')actions.push('<button role="menuitem" onclick="closeShoppingItemActions();releaseShoppingLedgerLink(\''+safeId+'\')">改回未記帳</button>');
-  actions.push('<button role="menuitem" onclick="closeShoppingItemActions();startShoppingEdit(\''+safeId+'\')">編輯 ✏️</button>');
-  actions.push('<button role="menuitem" class="danger" onclick="closeShoppingItemActions();deleteShoppingItem(\''+safeId+'\')">刪除 🗑️</button>');
+  actions.push('<button role="menuitem" onclick="closeShoppingItemActions();startShoppingEdit(\''+safeId+'\')"><svg class="app-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 20h4L19 9l-4-4L4 16z"></path><path d="M13.5 6.5l4 4"></path></svg>編輯</button>');
+  actions.push('<button role="menuitem" class="danger" onclick="closeShoppingItemActions();deleteShoppingItem(\''+safeId+'\')"><svg class="app-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 7h16"></path><path d="M9 7V4h6v3"></path><path d="M6 7l1 13h10l1-13"></path></svg>刪除</button>');
   var trigger=event&&event.currentTarget,rect=trigger&&trigger.getBoundingClientRect?trigger.getBoundingClientRect():{left:8,right:52,top:8,bottom:52};
   var popover=document.createElement('div');
   popover.id='shoppingItemActionPopover';popover.className='ledger-action-popover shopping-action-popover';popover.setAttribute('role','menu');
@@ -6678,9 +6690,8 @@ function renderShopResults(){
   if(shopPlaceFilter!=='wants'&&!wantTotal&&!_shopQ){
     h+='<div class="shop-wants-hint">⭐ 在樓層裡勾選店家，就會加入「想逛」</div>';
   }
-  if(shopPlaceFilter==='wants'&&wantTotal){
-    h+='<div class="shop-wants-actions"><button type="button" class="btn ghost" onclick="clearAllShopWants()">清除全部想逛</button></div>';
-  }
+  /* v201(Bar 2026-11-18):「清除全部想逛」一次清掉全部,移到清單最下面避免誤按 */
+  var clearWantsHtml=shopPlaceFilter==='wants'&&wantTotal?'<div class="shop-wants-actions shop-wants-actions-bottom"><button type="button" class="btn ghost" onclick="clearAllShopWants()">清除全部想逛</button></div>':'';
   var rendered=0;
   /* 摘要的數字必須來自**實際渲染的那一輪**,不另外再算一次 —— 兩份計算遲早會不一致 */
   var searchHits=0,searchPlaces=0,summaryAt=h.length;
@@ -6766,7 +6777,7 @@ function renderShopResults(){
   }
   /* 刻意不在這裡置中篩選 chip:重繪不代表篩選改變,每次都捲動會把使用者
      手動捲到的位置一直拉回去。改由 setShopPlaceFilter() 與首次渲染呼叫。 */
-  box.innerHTML=h;
+  box.innerHTML=h+(rendered?clearWantsHtml:'');
 }
 
 /* ================= ledgerRepository(Apps Script append-only 寫入) ================= */
@@ -8730,7 +8741,12 @@ function selectLatestLedgerDateExpenses(records){
   sorted.some(function(record){latest=ledgerLocalDateKey(record&&record.time);return !!latest;});
   return latest?sorted.filter(function(record){return ledgerLocalDateKey(record&&record.time)===latest;}):[];
 }
-function formatLedgerDateKey(value){return String(value||'').replace(/-/g,'/');}
+/* v201(Bar 2026-11-18):日期標題和行程頁一樣寫成 10/19(一) */
+function formatLedgerDateKey(value){
+  var m=String(value||'').match(/^(\d{4})-(\d{2})-(\d{2})$/);if(!m)return String(value||'').replace(/-/g,'/');
+  var stamp=Date.UTC(+m[1],+m[2]-1,+m[3]),dow='日一二三四五六'.charAt(((Math.round(stamp/86400000)%7)+11)%7);
+  return (+m[2])+'/'+(+m[3])+'('+dow+')';
+}
 function groupLedgerExpensesByDate(records){
   var groups=[],byDate={};
   sortLedgerExpenses(records).forEach(function(record){
@@ -8756,15 +8772,16 @@ function buildLedgerPeriodSummary(records,now){
   return {count:source.length,total:total,today:today};
 }
 function ledgerSummaryPresentation(period,currency){
-  /* 團體分頁大卡：與我相關的今日消費與旅程累計。個人分頁另見 personalSummaryPresentation。 */
+  /* 團體分頁大卡：有我參與的今日團體支出(全團總額)與旅程累計。個人分頁另見 personalSummaryPresentation。
+     v200(Bar 2026-11-18):「與我相關」容易被看成自己花的錢 —— 標題改清楚;自己要付多少看下方「我的結算狀態」,大卡不另加一行。 */
   period=period||{};var today=period.today||{},total=period.total||{};
   var primary=currency==='TWD'?'TWD':'JPY',secondary=primary==='JPY'?'TWD':'JPY';
   var primaryField=primary==='JPY'?'amountJpy':'amountTwd',secondaryField=secondary==='JPY'?'amountJpy':'amountTwd';
   return {
-    todayLabel:'與我相關 · 今日消費 · '+Number(today.count||0)+' 筆',
+    todayLabel:'今天團體花費 · '+Number(today.count||0)+' 筆',
     todayPrimary:formatLedgerCurrencyAmount(primary,ledgerAmountValue(today[primaryField])),
     todaySecondary:formatLedgerCurrencyAmount(secondary,ledgerAmountValue(today[secondaryField])),
-    totalLabel:'與我相關旅程累計 · '+Number(period.count||0)+' 筆',
+    totalLabel:'與我有關累計 · '+Number(period.count||0)+' 筆',
     totalAmount:formatLedgerCurrencyAmount(primary,ledgerAmountValue(total[primaryField]))
   };
 }
@@ -9957,7 +9974,7 @@ function renderLedgerRecentHeading(selectionButton,hasRecords){
 }
 function ledgerRecentDateLabel(records,now){
   var key=records&&records.length?ledgerLocalDateKey(records[0].time):'',todayKey=ledgerLocalDateKey(timestampDate(now));
-  return key?(key===todayKey?'今天':formatLedgerDateKey(key)):'';
+  return key?(key===todayKey?'今天 '+formatLedgerDateKey(key):formatLedgerDateKey(key)):'';
 }
 function ledgerSettlementCardProgress(model,hasData){
   if(hasData===false)return '新增團體支出後會自動計算';
@@ -10878,11 +10895,13 @@ function renderTravelNotesSection(){
     '<div class="settings-section"><h3>'+(travelNoteUiState.editingId?'修改旅途紀錄':'新增旅途紀錄')+'</h3><p class="settings-help">記下旅途中遇到的異常或優化建議，只存在這支手機；回來後可複製摘要一起評估。</p>'+
     '<div class="travel-note-row"><span>類型</span><div class="travel-note-kind" role="group" aria-label="類型"><button class="'+(travelNoteUiState.kind==='issue'?'on':'')+'" aria-pressed="'+(travelNoteUiState.kind==='issue'?'true':'false')+'" onclick="setTravelNoteKind(\'issue\')">異常</button><button class="'+(travelNoteUiState.kind==='suggestion'?'on':'')+'" aria-pressed="'+(travelNoteUiState.kind==='suggestion'?'true':'false')+'" onclick="setTravelNoteKind(\'suggestion\')">優化建議</button></div></div>'+
     '<textarea id="travelNoteText" class="travel-note-editor" maxlength="500" aria-label="紀錄內容" placeholder="輸入 1–500 字">'+escapeHtml(travelNoteUiState.draftText)+'</textarea>'+
-    '<div class="diag-actions"><button class="primary" onclick="saveTravelNote()">'+(travelNoteUiState.editingId?'儲存修改':'儲存紀錄')+'</button>'+(travelNoteUiState.editingId?'<button onclick="cancelTravelNoteEdit()">取消修改</button>':'')+'</div></div>'+
-    '<div class="settings-section"><h3>已記下 '+notes.length+' 筆'+(pending?'（'+pending+' 筆待評估）':'')+'</h3>'+
+    '<div class="trip-lifecycle-actions"><button class="btn" onclick="saveTravelNote()">'+(travelNoteUiState.editingId?'儲存修改':'儲存紀錄')+'</button>'+(travelNoteUiState.editingId?'<button class="btn ghost" onclick="cancelTravelNoteEdit()">取消修改</button>':'')+'</div></div>'+
+    /* v202:還沒有紀錄時只寫一行,不顯示篩選與匯出 */
+    (notes.length?'<div class="settings-section"><h3>已記下 '+notes.length+' 筆'+(pending?'（'+pending+' 筆待評估）':'')+'</h3>'+
     '<div class="travel-note-row"><span>篩選</span><div class="travel-note-filters" role="group" aria-label="篩選"><button class="'+(travelNoteUiState.filter==='all'?'on':'')+'" aria-pressed="'+(travelNoteUiState.filter==='all'?'true':'false')+'" onclick="setTravelNoteFilter(\'all\')">全部</button><button class="'+(travelNoteUiState.filter==='issue'?'on':'')+'" aria-pressed="'+(travelNoteUiState.filter==='issue'?'true':'false')+'" onclick="setTravelNoteFilter(\'issue\')">異常</button><button class="'+(travelNoteUiState.filter==='suggestion'?'on':'')+'" aria-pressed="'+(travelNoteUiState.filter==='suggestion'?'true':'false')+'" onclick="setTravelNoteFilter(\'suggestion\')">優化建議</button></div></div>'+
     '<div class="travel-note-list">'+(rows||'<div class="travel-note-empty">尚無旅途紀錄</div>')+'</div>'+
-    '<div class="diag-actions"><button onclick="copyTravelNotes(\'text\')">複製摘要</button><button onclick="copyTravelNotes(\'json\')">匯出 JSON</button></div></div>'+
+    '<div class="trip-lifecycle-actions"><button class="btn ghost" onclick="copyTravelNotes(\'text\')">複製摘要</button><button class="btn ghost" onclick="copyTravelNotes(\'json\')">匯出 JSON</button></div></div>'
+    :'<p class="settings-help travel-note-empty">尚無旅途紀錄</p>')+
     '</div>';
 }
 /* ================= SETTINGS 2.0 ================= */
@@ -11385,7 +11404,7 @@ function renderSettingsThemePage(){
   return renderSettingsHeader('主題',false)+'<div class="settings-section"><h3>選擇主題</h3>'+renderThemeSettingsSheet()+'</div>';
 }
 function renderSettingsProxyPage(){
-  return renderSettingsHeader('代購對象',false)+'<div class="settings-section" id="ledgerProxyTargetSettingsSection"><h3>代購對象</h3><div class="settings-help">常用對象會顯示在個人記帳表單；刪除不影響既有紀錄。</div>'+renderLedgerProxyTargetManager()+'</div>';
+  return renderSettingsHeader('代購對象',false)+'<div class="settings-section" id="ledgerProxyTargetSettingsSection"><div class="settings-help">常用對象會顯示在個人記帳表單；刪除不影響既有紀錄。</div>'+renderLedgerProxyTargetManager()+'</div>';
 }
 /* v161(B2):上次修改沒有確認送達雲端時說清楚,並告訴使用者多久後會改回雲端值。 */
 function ledgerSettingsBridgeNotice(){
@@ -11395,7 +11414,7 @@ function ledgerSettingsBridgeNotice(){
 }
 function renderSettingsLedgerPage(ledgerSettings,settingsError){
   var currencyLocked=ledgerSettlementCurrencyLocked();
-  return renderSettingsHeader('帳務',false)+'<div class="settings-section"><h3>匯率與結算幣別</h3><div class="settings-current">目前匯率：<b>'+(ledgerSettings.exchangeRate?'1 '+escapeHtml(tripLocalCurrencyCode())+' ≈ NT$'+escapeHtml(ledgerSettings.exchangeRate):'未設定（請在下面填寫，存下後全團共用）')+'</b></div>'+ledgerSettingsBridgeNotice()+'<div class="settings-rate-row"><label class="settings-help" for="ledgerExchangeRate"><b>匯率</b><br>1 '+escapeHtml(ledgerCurrencyInfo('JPY').name)+'可換算多少台幣</label><input id="ledgerExchangeRate" type="number" inputmode="decimal" min="0.000001" step="any" value="'+escapeHtml(ledgerSettings.exchangeRate)+'"></div><div class="settings-help"><b>結算幣別</b><br>全團共用：團體帳以這個幣別結算，也是新增記帳時預先選好的幣別。</div><div class="ledger-currency-grid" style="margin-top:8px"><button class="ledger-choice settings-currency-option '+(ledgerSettings.defaultCurrency==='JPY'?'on':'')+'" data-currency="JPY"'+(currencyLocked&&ledgerSettings.defaultCurrency!=='JPY'?' disabled':'')+' aria-pressed="'+(ledgerSettings.defaultCurrency==='JPY'?'true':'false')+'" onclick="selectLedgerDefaultCurrency(\'JPY\')">'+escapeHtml(tripLocalCurrencyCode()+' '+ledgerCurrencyInfo('JPY').name)+'</button><button class="ledger-choice settings-currency-option '+(ledgerSettings.defaultCurrency==='TWD'?'on':'')+'" data-currency="TWD"'+(currencyLocked&&ledgerSettings.defaultCurrency!=='TWD'?' disabled':'')+' aria-pressed="'+(ledgerSettings.defaultCurrency==='TWD'?'true':'false')+'" onclick="selectLedgerDefaultCurrency(\'TWD\')">TWD 台幣</button></div>'+(currencyLocked?'<div class="settings-help settings-currency-locked">已有還款紀錄。為了不讓已還的款在另一種幣別下不算數，結算幣別已鎖定。</div>':'')+(settingsError?'<div class="settings-help" style="color:var(--coral)">'+escapeHtml(settingsError)+'</div>':'')+'<div class="settings-help">儲存後跨裝置共用；CSV 發布可能延遲 1–5 分鐘。</div><button class="btn block" style="margin-top:10px" onclick="saveLedgerSettingsFromForm(this)">儲存共用設定</button></div>'+renderReceiptRecognitionSetting();
+  return renderSettingsHeader('帳務',false)+'<div class="settings-section"><h3>匯率與結算幣別</h3><div class="settings-current">目前匯率：<b>'+(ledgerSettings.exchangeRate?'1 '+escapeHtml(tripLocalCurrencyCode())+' ≈ NT$'+escapeHtml(ledgerSettings.exchangeRate):'未設定（請在下面填寫，存下後全團共用）')+'</b></div>'+ledgerSettingsBridgeNotice()+'<div class="settings-rate-row"><label class="settings-help" for="ledgerExchangeRate"><b>匯率</b><br>1 '+escapeHtml(ledgerCurrencyInfo('JPY').name)+'可換算多少台幣</label><input id="ledgerExchangeRate" type="number" inputmode="decimal" min="0.000001" step="any" value="'+escapeHtml(ledgerSettings.exchangeRate)+'"></div><div class="settings-help"><b>結算幣別</b><br>全團共用：團體帳以這個幣別結算，也是新增記帳時預先選好的幣別。</div><div class="ledger-currency-grid" style="margin-top:8px"><button class="ledger-choice settings-currency-option '+(ledgerSettings.defaultCurrency==='JPY'?'on':'')+'" data-currency="JPY"'+(currencyLocked&&ledgerSettings.defaultCurrency!=='JPY'?' disabled':'')+' aria-pressed="'+(ledgerSettings.defaultCurrency==='JPY'?'true':'false')+'" onclick="selectLedgerDefaultCurrency(\'JPY\')">'+escapeHtml(tripLocalCurrencyCode()+' '+ledgerCurrencyInfo('JPY').name)+'</button><button class="ledger-choice settings-currency-option '+(ledgerSettings.defaultCurrency==='TWD'?'on':'')+'" data-currency="TWD"'+(currencyLocked&&ledgerSettings.defaultCurrency!=='TWD'?' disabled':'')+' aria-pressed="'+(ledgerSettings.defaultCurrency==='TWD'?'true':'false')+'" onclick="selectLedgerDefaultCurrency(\'TWD\')">TWD 台幣</button></div>'+(currencyLocked?'<div class="settings-help settings-currency-locked">已有還款紀錄。為了不讓已還的款在另一種幣別下不算數，結算幣別已鎖定。</div>':'')+(settingsError?'<div class="settings-help" style="color:var(--coral)">'+escapeHtml(settingsError)+'</div>':'')+'<div class="settings-help">儲存後全團共用；其他手機約幾分鐘內會看到。</div><button class="btn block" style="margin-top:10px" onclick="saveLedgerSettingsFromForm(this)">儲存共用設定</button></div>'+renderReceiptRecognitionSetting();
 }
 function renderSettingsOptionsPage(){
   var rows=settingsNavRow('options-category','options','記帳類別',ledgerCategoryStore.all().length+' 項')+
@@ -11437,21 +11456,14 @@ function renderSettingsStoragePage(){
 }
 function renderSettingsStorageBody(){
   var state=shoppingPhotoAuditState,capacity=state.capacity||{},invalid=state.invalidReferences||[],orphans=state.orphanPhotos||[];
-  var capacityValue=capacity.available
-    ? formatShoppingPhotoBytes(capacity.usageBytes)+' / '+formatShoppingPhotoBytes(capacity.quotaBytes)
-    : '瀏覽器未提供容量估算';
-  var capacityDetail=capacity.available
-    ? '約剩 '+formatShoppingPhotoBytes(capacity.remainingBytes)+'（'+Math.round(capacity.remainingRatio*100)+'%）'
-    : '照片仍只保存在此裝置；可由下方立即檢查實際附件狀態。';
   var repairs=invalid.map(function(ref){
     var item=shoppingPhotoInvalidItem(ref),name=item&&item.name||'已刪除的採買項目';
     return '<button type="button" class="shopping-photo-storage-repair shopping-photo-storage-action" aria-label="修復 '+escapeHtml(name)+'" onclick="openShoppingPhotoRepairFromSettings(\''+jsHtmlAttrString(ref.itemId)+'\')"><span>'+escapeHtml(name)+'</span><b>修復 ›</b></button>';
   }).join('');
   return '<div class="shopping-photo-storage-grid">'+
-      '<section class="shopping-photo-storage-card"><div class="shopping-photo-storage-primary">App 附件</div><div class="shopping-photo-storage-value">'+state.storedPhotoCount+' 張 · '+formatShoppingPhotoBytes(state.storedBytes)+'</div><div class="shopping-photo-storage-note">其中 '+orphans.length+' 張未被採買清單使用；背景清理會保留一天緩衝。</div></section>'+
-      '<section class="shopping-photo-storage-card"><div class="shopping-photo-storage-primary">App 儲存空間（估計）</div><div class="shopping-photo-storage-value">'+escapeHtml(capacityValue)+'</div><div class="shopping-photo-storage-secondary">'+escapeHtml(capacityDetail)+'</div>'+(capacity.low?'<div class="shopping-photo-storage-warning">儲存空間偏低，新增照片可能失敗。</div>':'')+'</section>'+
-      '<section class="shopping-photo-storage-card"><div class="shopping-photo-storage-primary">附件檢查</div><div class="shopping-photo-storage-secondary">最近檢查：'+escapeHtml(shoppingPhotoCheckedAtLabel(state.checkedAt))+'</div>'+(state.unavailable?'<div class="shopping-photo-storage-warning">此裝置目前無法使用照片附件。</div>':'')+'<div class="shopping-photo-storage-actions"><button type="button" class="btn shopping-photo-storage-action" onclick="checkShoppingPhotoStorage()">立即檢查</button><button type="button" class="btn ghost shopping-photo-storage-action" onclick="confirmShoppingPhotoCleanup()">清理未使用照片'+(orphans.length?'（'+orphans.length+'）':'')+'</button></div></section>'+
-      '<section class="shopping-photo-storage-card"><div class="shopping-photo-storage-primary">'+invalid.length+' 個附件待修復</div><div class="shopping-photo-storage-note">遺失的照片不會自動移除；請逐筆重新選擇照片或移除引用。</div><div class="shopping-photo-storage-repairs">'+(repairs||'<div class="shopping-photo-storage-secondary">目前沒有需要修復的附件。</div>')+'</div></section>'+
+      /* v202:照片數量、手機空間與檢查合成一張卡;沒有要修復的照片時不顯示修復卡 */
+      '<section class="shopping-photo-storage-card"><div class="shopping-photo-storage-value">'+state.storedPhotoCount+' 張 · '+formatShoppingPhotoBytes(state.storedBytes)+'</div>'+(orphans.length?'<div class="shopping-photo-storage-note">其中 '+orphans.length+' 張沒有用在採買清單，隔天會自動清掉。</div>':'')+'<div class="shopping-photo-storage-secondary">'+(capacity.available?'手機還能用約 '+escapeHtml(formatShoppingPhotoBytes(capacity.remainingBytes)):'手機沒有提供剩餘空間')+' · 最近檢查 '+escapeHtml(shoppingPhotoCheckedAtLabel(state.checkedAt))+'</div>'+(capacity.low?'<div class="shopping-photo-storage-warning">儲存空間偏低，新增照片可能失敗。</div>':'')+(state.unavailable?'<div class="shopping-photo-storage-warning">此裝置目前無法使用照片附件。</div>':'')+'<div class="shopping-photo-storage-actions"><button type="button" class="btn shopping-photo-storage-action" onclick="checkShoppingPhotoStorage()">立即檢查</button><button type="button" class="btn ghost shopping-photo-storage-action" onclick="confirmShoppingPhotoCleanup()">清理未使用照片'+(orphans.length?'（'+orphans.length+'）':'')+'</button></div></section>'+
+      (invalid.length?'<section class="shopping-photo-storage-card"><div class="shopping-photo-storage-primary">'+invalid.length+' 張照片找不到</div><div class="shopping-photo-storage-note">請逐筆重新選擇照片，或移除這張照片。</div><div class="shopping-photo-storage-repairs">'+repairs+'</div></section>':'')+
     '</div>';
 }
 function settingsRenderContext(){
@@ -11531,10 +11543,9 @@ function settingsDataHealthModel(input){
     summary:attention?attention+' 項需注意':'資料狀態正常',attentionCount:attention,
     rows:[
       {key:'trip',label:'行程資料',value:String(sync.label||'資料狀態未知')+relative,detail:failedLabels.length?'未更新：'+failedLabels.join('、'):''},
-      {key:'shared',label:'團體帳'+modeNote,value:pending?pending+' 筆待送出':bridgeCount?bridgeCount+' 筆等待讀回':'本機無待送紀錄',detail:'伺服器接收後仍需讀回；不代表其他旅伴已讀'+(testMode?'；只算測試模式的紀錄':'')},
-      {key:'personal',label:'個人資料',value:progressError?'行程紀錄需注意':'僅此裝置',detail:progressError||'個人記帳、採買與設定不會同步'},
-      {key:'photos',label:'照片附件',value:photoSummary,detail:'照片只保存在此裝置'}
-    ]
+      {key:'shared',label:'團體帳'+modeNote,value:pending?pending+' 筆待送出':bridgeCount?bridgeCount+' 筆等待讀回':'本機無待送紀錄',detail:(pending||bridgeCount?'送出後要等雲端確認才算完成':'記帳都已送到雲端')+(testMode?'；只算測試模式的紀錄':'')},
+      {key:'personal',label:'個人資料',value:progressError?'行程紀錄需注意':'僅此裝置',detail:progressError||'個人記帳、採買與照片只存在這支手機'}
+    ].concat(photoAttention?[{key:'photos',label:'照片附件',value:photoSummary,detail:'照片只保存在此裝置'}]:[])
   };
 }
 function renderSettingsDataHealth(){
@@ -11547,6 +11558,21 @@ function renderSettingsHealthPage(){
   return header+renderSettingsDataHealth()+'<h3 class="settings-subheading">照片附件</h3>'+renderSettingsStorageBody();
 }
 var APP_RELEASE_NOTES=[
+  {version:'v202',date:'2026-11-18',title:'設定與過往旅程整理',items:[
+    '過往旅程：只留左上「返回」；行程、帳務、採買、筆記分頁的大卡縮成一行；清單不再顯示帳號。',
+    '設定：開關改成主題色的滑動開關；代購對象、旅途紀錄、資料與照片狀態、資料與版本的重複字和工程用語拿掉。',
+    '診斷面板：說明改成白話，同樣的訊息合併並標上次數。'
+  ]},
+  {version:'v201',date:'2026-11-18',title:'購物與分帳小地方',items:[
+    '購物頁：「清除全部想逛」移到清單最下面。',
+    '新增採買：關閉鈕和其他面板一致；還沒有代購對象時，「幫誰買」只留輸入框。',
+    '分帳：結算的「結清」按鈕寫完整；完整紀錄的日期寫成 10/19(一)；操作選單改用線條圖示。'
+  ]},
+  {version:'v200',date:'2026-11-18',title:'分帳頁更好讀',items:[
+    '團體帳大卡改寫成「今天團體花費」「與我有關累計」；自己要付多少看下方「我的結算狀態」。',
+    '上方說明收進 ⓘ；消費列表的「誰付款・幾人分攤」字放大並移到第二行。',
+    '新增消費的金額還沒輸入時不再顯示「—」；今天頁的通知換頁後不再擋住分帳頁的按鈕。'
+  ]},
   {version:'v199',date:'2026-11-18',title:'各頁面清爽一點',items:[
     '今天頁：還沒完成的站是框線按鈕，完成後變成實心的「完成 ✓」。',
     '行程頁：交通段只留交通標籤，不再重複寫起訖站名。',
@@ -11557,22 +11583,6 @@ var APP_RELEASE_NOTES=[
     '資料與版本：備份與匯出放上面，「重置紀錄／清除並打包旅程」移到最底並改成紅框按鈕；更新說明只顯示最新一版。',
     '按鈕統一整排寬度；「資料健康」與「照片健康」合成「資料與照片狀態」一頁。',
     '今天頁的通知不再蓋住設定頁的標題。'
-  ]},
-  {version:'v197',date:'2026-11-17',title:'小地方調整',items:[
-    '行程頁上方日期改成 10/19(一)。',
-    '過往旅程：金額用那趟旅程設定的幣別；只有代購的那天直接顯示代購金額；清單卡片縮小，不再寫天數。',
-    '過往旅程的「匯出帳務到記序」改名為「匯出帳本」。'
-  ]},
-  {version:'v196',date:'2026-11-17',title:'過往旅程分頁瀏覽',items:[
-    '點開一趟過往旅程，上方有「總覽／行程／帳務／採買／筆記」分頁。',
-    '總覽有我的花費圓餅圖，並可匯出帳本；行程按天切換，每天下面有當天花費與當晚住宿。',
-    '帳務分團體帳（結算結果與全團支出）和個人帳（每天小計）；採買分已買／沒買。',
-    '回顧筆記右邊有鉛筆圖示，可以修改內容；原始資料收到頁面最底的「顯示原始資料」。'
-  ]},
-  {version:'v195',date:'2026-11-17',title:'繪本插圖跟著天氣換',items:[
-    '繪本主題的插圖會看當地天氣：下雨換成雨天城市（雨絲會落下），下雪換成雪景（雪花飄落），其他時候是通用版。',
-    '通用版多了樹、燈塔、海鷗和小帆船。',
-    '不想看插圖：設定 → 繪本插圖，關掉就不顯示。'
   ]},
 
 ];
@@ -11816,6 +11826,14 @@ function pastTripDateText(text){
   return p.y+'/'+pad(p.m)+'/'+pad(p.d);
 }
 /* 摘要卡:一眼看完這趟 —— 日期與天數、封存成員、我的花費、採買、個人帳、團體帳(v196 起不顯示完成站數) */
+function renderPastTripHeader(){
+  return '<div class="settings-head"><div class="settings-title-wrap"><button class="settings-back" aria-label="返回全部過往旅程" onclick="closePastTrip()">‹ 返回</button><h2 id="settingsTitle">過往旅程</h2></div><button class="settings-close" aria-label="關閉" onclick="closeSettings()">×</button></div>';
+}
+function renderPastTripSummaryLine(archive){
+  var t=archive.trip||{};
+  var md=function(v){var m=/^\d{4}-(\d{2})-(\d{2})/.exec(String(v||''));return m?Number(m[1])+'/'+Number(m[2]):'';};
+  return '<div class="past-trip-summary-line"><h2>'+escapeHtml(t.name||'')+'</h2><span>'+escapeHtml(md(t.startDate)+'–'+md(t.endDate))+'</span></div>';
+}
 function renderPastTripSummary(archive){
   var personal=archive.personal||{};
   var shopping=personal.shoppingItems||[],bought=shopping.filter(function(it){return it&&it.done;}).length;
@@ -11918,7 +11936,7 @@ function renderPastTripOverviewPanel(archive,model){
   }).join('');
   var spendBox=model.member?
     '<section class="past-trip-card-box"><h3>我的花費</h3>'+(total>0?
-      '<div class="past-trip-spend">'+renderPastTripDonut(slices,total)+'<div class="past-trip-spend-total"><small>'+escapeHtml(model.member)+' 這趟總共</small><b>'+pastTripTwd(total)+'</b><span>個人 '+pastTripTwd(spend.personal.amountTwd)+' ＋ 團體分攤 '+pastTripTwd(spend.group.amountTwd)+'</span>'+(spend.proxy.count?'<span>不含代購 '+pastTripTwd(spend.proxy.amountTwd)+'</span>':'')+'</div></div><ul class="past-trip-legend">'+legend+'</ul>'
+      '<div class="past-trip-spend">'+renderPastTripDonut(slices,total)+'<div class="past-trip-spend-total"><span>個人 '+pastTripTwd(spend.personal.amountTwd)+'</span><span>團體分攤 '+pastTripTwd(spend.group.amountTwd)+'</span>'+(spend.proxy.count?'<span>不含代購 '+pastTripTwd(spend.proxy.amountTwd)+'</span>':'')+'</div></div><ul class="past-trip-legend">'+legend+'</ul>'
       :'<p class="settings-help">這趟沒有記到花費。</p>')+
     '<div class="past-trip-export"><button type="button" class="btn ghost" onclick="exportPastTripLedger()">匯出帳本</button><div id="pastTripExportStatus" class="trip-lifecycle-status" role="status" aria-live="polite"></div></div></section>'
     :'<section class="past-trip-card-box"><h3>我的花費</h3><p class="settings-help">封存時沒有選擇身分，無法計算個人花費。</p></section>';
@@ -12143,11 +12161,11 @@ function renderPastTripsPage(){
     var sel=state.selected!==null&&state.archives[state.selected]&&state.archives[state.selected].archive?state.archives[state.selected].archive:null;
     if(sel){
       /* v196(Bar 2026-11-17 #64):點開一趟旅程 —— 摘要卡下面一排分頁:總覽／行程／帳務／採買／筆記 */
-      body='<button type="button" class="past-trip-back" onclick="closePastTrip()">‹ 全部過往旅程</button>'+
-        renderPastTripSummary(sel)+renderPastTripTabs()+'<div id="pastTripPanel" role="tabpanel">'+renderPastTripPanel(sel)+'</div>'+renderPastTripRaw(sel);
-      return renderSettingsHeader('過往旅程',false)+'<div class="settings-section">'+body+'</div>';
+      /* v202:只留左上一個返回(回到旅程清單);大綠卡只在總覽,其他分頁縮成一行 */
+      body=(pastTripView().tab==='overview'?renderPastTripSummary(sel):renderPastTripSummaryLine(sel))+renderPastTripTabs()+'<div id="pastTripPanel" role="tabpanel">'+renderPastTripPanel(sel)+'</div>'+renderPastTripRaw(sel);
+      return renderPastTripHeader()+'<div class="settings-section">'+body+'</div>';
     }
-    body='<p class="settings-help">目前帳號：'+escapeHtml(state.account&&state.account.email||'未知')+'。封存內容唯讀；回顧筆記可以新增與修改。</p>';
+    body='<p class="settings-help past-trip-intro">封存內容唯讀，回顧筆記可以新增和修改。</p>';
     if(!state.archives.length)body+='<p class="settings-help">尚無過往旅程。</p>';
     else body+='<div class="trip-lifecycle-actions">'+state.archives.map(function(item,index){
       return item.error?'<div class="trip-lifecycle-status error">封存 '+escapeHtml(item.name||item.fileId)+' 無法讀取：'+escapeHtml(item.error)+'</div>':
@@ -12355,7 +12373,7 @@ function addPastTripNote(edit){
 }
 function renderSettingsDataPage(){
   var active=TripLifecycle.readState(localStorage).mode==='active';
-  var version='<div class="settings-section"><div class="settings-version-row"><b>版本</b><span>SW '+escapeHtml(appVersionLabel())+'</span></div>';
+  var version='<div class="settings-section"><div class="settings-version-row"><b>版本</b><span>目前版本 '+escapeHtml(appVersionLabel())+'</span></div>';
   var lifecycle=active?'<div class="settings-section"><div class="settings-section-heading"><h3>目前旅程</h3>'+settingsInfoButton('trip','目前旅程說明')+'</div><p class="settings-help">清除後可在首頁按「連接新旅程」接下一趟；團體帳未結清或待同步時不可清除。</p><div class="trip-lifecycle-actions"><button type="button" class="btn danger-outline" onclick="resetTripRecords()">重置紀錄</button><button type="button" class="btn danger-outline" onclick="beginTripEnd()">清除並打包旅程</button></div><div id="tripEndStatus" class="trip-lifecycle-status" role="status" aria-live="polite"></div><div id="tripEndChoices" class="trip-lifecycle-actions"></div></div>':'';
   if(!active)return renderSettingsHeader('資料與版本',false)+version+'<h3>最近更新</h3>'+renderAppReleaseNotes(true)+'</div>';
   var personal='<div class="settings-section"><div class="settings-section-heading"><h3>個人帳匯出</h3>'+settingsInfoButton('personal','個人帳匯出說明')+'</div><p class="settings-help">請先匯出再清除旅程；檔案包含個人帳務，請妥善保存。</p><div class="trip-lifecycle-actions"><button type="button" class="btn ghost" onclick="exportTripPersonalLedger()">匯出本趟個人帳</button></div><div id="personalLedgerExportStatus" class="trip-lifecycle-status" role="status" aria-live="polite"></div></div>';
@@ -13106,7 +13124,7 @@ function updateLedgerConversionPreview(){
   var preview=document.getElementById('ledgerConvertedPreview'),draft=ledgerUiState.draft;if(!preview||!draft)return;
   try{
     syncLedgerTaxPlaceholder();
-    if(draft.amount===''){preview.textContent='—';return;}
+    if(draft.amount===''){preview.textContent='';return;}  /* v200:沒輸入時留白(原本的「—」像負號) */
     var minor=ledgerAmountInputMinor(draft.amount,draft.currency);if(!isFinite(minor))throw new Error('金額格式錯誤');
     var converted=convertLedgerAmounts(draft.currency,minor,currentLedgerSettings().exchangeRate);
     preview.textContent='≈ '+(draft.currency==='JPY'?formatLedgerCurrencyAmount('TWD',converted.amountTwd):formatLedgerCurrencyAmount('JPY',converted.amountJpy));
@@ -14365,7 +14383,7 @@ function renderLedgerRecentRecord(record,shared,currency){
   var storeCategory=[record.storeName,record.category?ledgerCategoryEmoji(record.category)+' '+record.category:''].filter(Boolean).join(' · ');
   var locationMarkup='<span class="ledger-recent-location">'+escapeHtml(storeCategory)+'</span>';
   var modeClass=ledgerUiState.selectionMode?'ledger-selection-card ':'',menu=ledgerUiState.selectionMode?'':'<button class="ledger-record-menu-button" aria-label="消費操作" onclick="openLedgerRecordActions(\''+jsHtmlAttrString(record.id)+'\',event)">⋯</button>';
-  return '<article class="ledger-recent-row '+modeClass+(selected?'selected':'')+'">'+renderLedgerSelectionControl([record])+'<button class="ledger-recent-body" onclick="handleLedgerRecordCardClick(\''+jsHtmlAttrString(record.id)+'\',event)"><span class="ledger-recent-main"><span class="ledger-recent-line ledger-recent-primary-line"><span class="ledger-recent-detail"><strong>'+escapeHtml(record.detail||'未命名')+'</strong></span>'+proxyTargetMarkup+sharedParticipantMarkup+'</span><span class="ledger-recent-line ledger-recent-secondary-line">'+locationMarkup+'<span class="ledger-recent-statuses">'+statuses.join('')+'</span></span></span>'+formatLedgerDualAmounts(record)+'</button>'+menu+'</article>';
+  return '<article class="ledger-recent-row '+modeClass+(selected?'selected':'')+'">'+renderLedgerSelectionControl([record])+'<button class="ledger-recent-body" onclick="handleLedgerRecordCardClick(\''+jsHtmlAttrString(record.id)+'\',event)"><span class="ledger-recent-main"><span class="ledger-recent-line ledger-recent-primary-line"><span class="ledger-recent-detail"><strong>'+escapeHtml(record.detail||'未命名')+'</strong></span>'+proxyTargetMarkup+'</span><span class="ledger-recent-line ledger-recent-secondary-line">'+locationMarkup+sharedParticipantMarkup+'<span class="ledger-recent-statuses">'+statuses.join('')+'</span></span></span>'+formatLedgerDualAmounts(record)+'</button>'+menu+'</article>';
 }
 function renderLedgerBatchCard(records,shared,currency){
   var first=records[0],batchId=String(first.batchId||''),expanded=!!ledgerUiState.expandedBatches[batchId],selection=ledgerBatchSelectionState(records,ledgerUiState.selectedRecordIds||{}),totals=records.reduce(function(sum,record){sum.amountJpy+=Number(record.amountJpy||0);sum.amountTwd+=Number(record.amountTwd||0);return sum;},{amountJpy:0,amountTwd:0});
@@ -14385,7 +14403,7 @@ function renderLedgerDateSummary(label,records,showCount){
 function renderLedgerRecentGroups(records,shared,currency,hideDateLabel){
   var todayKey=ledgerLocalDateKey(timestampDate(Date.now()));
   return groupLedgerExpensesByDate(records).map(function(group){
-    var label=group.date===todayKey?'今天':formatLedgerDateKey(group.date);
+    var label=group.date===todayKey?'今天 '+formatLedgerDateKey(group.date):formatLedgerDateKey(group.date);
     return '<section class="ledger-date-group">'+(hideDateLabel?'':renderLedgerDateSummary(label,group.records,false))+groupLedgerDisplayUnits(group.records).map(function(unit){return unit.type==='batch'?renderLedgerBatchCard(unit.records,shared,currency):renderLedgerRecentRecord(unit.records[0],shared,currency);}).join('')+'</section>';
   }).join('');
 }
@@ -14426,6 +14444,8 @@ function closeLedgerInfoSheet(){
 function ledgerInfoSheetReturnsToSettlement(kind){
   return kind==='settlement-history'||kind==='settlement-breakdown';
 }
+/* v200:大卡上方說明收進 ⓘ */
+function openLedgerSummaryInfo(){openLedgerInfoSheet('記帳說明','<p class="settings-help">個人帳只留在這支手機；團體帳會跨裝置同步給同行的人。</p><p class="settings-help">團體大卡的金額是與你有關的消費總額（大家一起付的），你自己要付多少請看下方「我的結算狀態」。</p>');}
 function openLedgerInfoSheet(title,body,kind){
   closeLedgerInfoSheet();var overlay=document.createElement('div');overlay.id='ledgerInfoSheet';overlay.className='ledger-sheet-overlay';
   if(kind)overlay.setAttribute('data-sheet-kind',kind);
@@ -14459,8 +14479,8 @@ function openLedgerRecordActions(id,event,isBatch){
   var editable=personal?true:model.canEdit,deletable=personal?true:model.canDelete,actions=[];
   var remove=isBatch?'deleteLedgerBatchFromAction(\''+safeId+'\')':personal?'deletePersonalLedgerRecord(\''+safeId+'\')':'openSharedLedgerDelete(\''+safeId+'\')';
   if(model&&model.canCorrect)actions.push('<button role="menuitem" onclick="closeLedgerRecordActions();openLedgerCorrectionSheet(\''+safeId+'\')">更正收據</button>');
-  if(editable)actions.push('<button role="menuitem" onclick="closeLedgerRecordActions();editLedgerRecord(\''+safeId+'\')">編輯 ✏️</button>');
-  if(deletable)actions.push('<button role="menuitem" class="danger" onclick="closeLedgerRecordActions();'+remove+'">刪除 🗑️</button>');
+  if(editable)actions.push('<button role="menuitem" onclick="closeLedgerRecordActions();editLedgerRecord(\''+safeId+'\')"><svg class="app-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 20h4L19 9l-4-4L4 16z"></path><path d="M13.5 6.5l4 4"></path></svg>編輯</button>');
+  if(deletable)actions.push('<button role="menuitem" class="danger" onclick="closeLedgerRecordActions();'+remove+'"><svg class="app-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 7h16"></path><path d="M9 7V4h6v3"></path><path d="M6 7l1 13h10l1-13"></path></svg>刪除</button>');
   if(actions.length)popover.innerHTML=actions.join('');
   else{popover.className+=' readonly';popover.innerHTML='<p class="ledger-action-message">'+escapeHtml(model&&model.message||(canonicalMemberName(record.member)?'僅付款人可編輯或刪除此筆團體紀錄':LEDGER_OWNER_UNKNOWN_MESSAGE))+'</p>';}
   popover.onclick=function(clickEvent){clickEvent.stopPropagation();};document.body.appendChild(popover);
@@ -14875,7 +14895,7 @@ function ledgerReceiverSettleLine(item){
   var lockKey=settlementClaimLockKey(ledgerUniverseMode(),item.from,item.to,item.currency);
   var busy=settlementActionPhase(lockKey)==='submitting';
   var action=busy?'<button class="btn sm" disabled><span class="button-spinner"></span>送出中…</button>':
-    '<button class="btn sm" onclick="openReceiverSettleDialog(\''+jsHtmlAttrString(item.from)+'\','+Number(item.amount)+',\''+jsHtmlAttrString(item.currency)+'\')">結清…</button>';
+    '<button class="btn sm" onclick="openReceiverSettleDialog(\''+jsHtmlAttrString(item.from)+'\','+Number(item.amount)+',\''+jsHtmlAttrString(item.currency)+'\')">結清</button>';  /* v201:原本「結清…」看起來像字被切掉 */
   return '<div class="ledger-settlement-line ledger-settle-row ledger-settle-to-receive">'+
     '<div class="ledger-settle-main"><span class="ledger-settle-who">'+escapeHtml(item.from)+' '+escapeHtml(formatLedgerCurrencyAmount(item.currency,item.amount))+'</span>'+
     '<span class="ledger-settle-state"><span class="ledger-settle-chip">應收</span><span class="ledger-settle-actions">'+action+'</span></span></div></div>';
@@ -15309,7 +15329,7 @@ function renderSplit(){
     renderLedgerRefundSummaryRow(chevron);
   var selectionButton=hasRecords?'<button class="ledger-view-all" onclick="'+(ledgerUiState.selectionMode?'cancelLedgerSelectionMode()':'enterLedgerSelectionMode()')+'">'+(ledgerUiState.selectionMode?'取消':'選取')+'</button>':'';
   view.innerHTML=testWarning+'<div class="ledger-dashboard '+(shared?'ledger-shared-dashboard':'')+'">'+
-    '<section class="ledger-summary-card"><div class="ledger-track-grid" role="group" aria-label="記帳模式"><button class="ledger-track-btn '+(!shared?'on':'')+'" aria-pressed="'+(!shared?'true':'false')+'" onclick="setLedgerTrack(\'personal\')">個人</button><button class="ledger-track-btn '+(shared?'on':'')+'" aria-pressed="'+(shared?'true':'false')+'" onclick="setLedgerTrack(\'shared\')">團體</button></div><div class="ledger-summary-meta"><button id="ledgerPendingStatus" class="ledger-status-pill ledger-summary-rate '+(pending?'pending':'')+'" '+(pending?'':'disabled')+' onclick="openLedgerSyncPanel()">'+escapeHtml(status)+'</button><span class="ledger-summary-helper">個人帳留在本機；團體帳跨裝置同步。</span></div><div class="ledger-summary-count"><span>'+escapeHtml(presentation.todayLabel)+'</span>'+summaryNote+'</div><button class="ledger-summary-amount" onclick="toggleLedgerDisplayCurrency()" aria-label="切換今日與旅程累計顯示幣別"><strong>'+escapeHtml(presentation.todayPrimary)+'</strong><span>≈ '+escapeHtml(presentation.todaySecondary)+'</span></button>'+summaryFooter+'</section>'+
+    '<section class="ledger-summary-card"><div class="ledger-track-grid" role="group" aria-label="記帳模式"><button class="ledger-track-btn '+(!shared?'on':'')+'" aria-pressed="'+(!shared?'true':'false')+'" onclick="setLedgerTrack(\'personal\')">個人</button><button class="ledger-track-btn '+(shared?'on':'')+'" aria-pressed="'+(shared?'true':'false')+'" onclick="setLedgerTrack(\'shared\')">團體</button></div><div class="ledger-summary-meta"><button id="ledgerPendingStatus" class="ledger-status-pill ledger-summary-rate '+(pending?'pending':'')+'" '+(pending?'':'disabled')+' onclick="openLedgerSyncPanel()">'+escapeHtml(status)+'</button><button type="button" class="ledger-summary-info" aria-label="記帳說明" onclick="openLedgerSummaryInfo()">ⓘ</button></div><div class="ledger-summary-count"><span>'+escapeHtml(presentation.todayLabel)+'</span>'+summaryNote+'</div><button class="ledger-summary-amount" onclick="toggleLedgerDisplayCurrency()" aria-label="切換今日與旅程累計顯示幣別"><strong>'+escapeHtml(presentation.todayPrimary)+'</strong><span>≈ '+escapeHtml(presentation.todaySecondary)+'</span></button>'+summaryFooter+'</section>'+
     settlementCard+
     '<section class="ledger-recent-section">'+renderLedgerRecentHeading(selectionButton,hasRecords)+recentSummary+'<div class="ledger-recent-list">'+recentMarkup+'</div></section></div>'+renderLedgerSelectionToolbar()+'<button class="ledger-fab" aria-label="新增消費" onclick="openLedgerQuickEntryFromFab()">＋</button>';
 }
@@ -15334,6 +15354,8 @@ function ensureLedgerMember(){
   openMemberSelector(false);return false;
 }
 function switchView(v,intent){
+  /* v200:今天頁頂部的通知,換到其他頁時移到底部,不擋住分帳頁的「個人／團體」等按鈕 */
+  try{var toastEl=document.getElementById('toast');if(v!=='today'&&toastEl&&toastEl.classList.contains('toast-top'))toastEl.classList.remove('toast-top');}catch(ignore){}
   if(v==='split'&&!ensureLedgerMember()){pendingViewAfterMember='split';return;}
   /* 分帳次層頁再點「分帳」仍先回 dashboard,沿用現況 */
   if(v==='split'&&curView==='split'){
@@ -15628,7 +15650,7 @@ function diagnosticTripModel(now){
     var source=CURRENT_TRIP_SOURCE;
     if(!source)return mode==='active'?'無法讀取':'沒有連接旅程';
     if(source.kind==='sheet')return (source.tripName||'新旅程')+'（Trip ID：'+source.tripId+'）';
-    return '岡山舊旅程（內建）';
+    return '岡山（App 內建行程）';
   });
   row('mode','旅程狀態',function(){
     var labels={active:'進行中','cleanup-pending':'清理中',complete:'已清除',unconnected:'尚未連接'};
@@ -15663,6 +15685,8 @@ function diagnosticTripModel(now){
   return rows;
 }
 function renderDiagnosticTripSection(rows){
+  /* v202:岡山保護期結束後不再顯示這一列(除錯報告仍保留) */
+  rows=rows.filter(function(item){return !(item.key==='grace'&&item.chip==='已結束');});
   return '<div class="diag-section" id="diagTripSection"><h3>目前旅程</h3><dl class="diag-kv">'+rows.map(function(item){
     var value=item.chip?'<span class="diag-chip '+escapeHtml(item.tone||'muted')+'">'+escapeHtml(item.chip)+'</span>'+(item.detail?'<small>'+escapeHtml(item.detail)+'</small>':''):escapeHtml(item.value);
     return '<dt>'+escapeHtml(item.label)+'</dt><dd class="diag-trip-row" data-key="'+escapeHtml(item.key)+'">'+value+'</dd>';
@@ -15713,17 +15737,35 @@ function diagnosticSummaryModel(rows,findings,entries){
 function renderDiagnosticSummary(summary,findings){
   return '<div class="diag-summary '+summary.level+'" id="diagSummary"><div class="diag-summary-title">'+escapeHtml(summary.title)+'</div>'+(summary.items.length?'<ul>'+summary.items.map(function(item){return '<li>'+escapeHtml(item)+'</li>';}).join('')+'</ul>':'')+'<div class="diag-summary-meta">App 版本 <span id="diagShellVersion">讀取中…</span> · '+(findings.length?'資料檢查 '+findings.length+' 項提醒':'資料檢查正常')+'</div></div>';
 }
-function renderDiagnosticLogEntry(entry){
-  var projected=TripDiagnosticImpact.project(entry);
+/* v202:沒有白話翻譯的工程訊息,標題改成白話,原文只放在「技術細節」;同樣的訊息合併並標次數 */
+function diagnosticLogFriendlyTitle(entry,projected){
+  var raw=String(projected.raw||'');
+  if(projected.raw!==projected.title||!/[A-Za-z_]{3,}/.test(raw))return projected.title;
+  if(/抓取失敗|讀取失敗|下載失敗/.test(raw))return '有一次'+diagnosticCategoryLabel(entry.category)+'沒有成功，App 會自動再試';
+  return diagnosticCategoryLabel(entry.category)+'時出現一則訊息';
+}
+function renderDiagnosticLogEntry(entry,count,projected){
+  projected=projected||TripDiagnosticImpact.project(entry);
+  var title=diagnosticLogFriendlyTitle(entry,projected);
   var impact=projected.impact==='請查看原始紀錄'&&projected.raw===projected.title?'若持續出現，請複製除錯報告給旅程負責人':projected.impact;
   var line=[impact,projected.fallback].filter(Boolean).join(' · ');
-  return '<div class="diag-log-entry diag-impact-'+projected.severity+'"><b>'+escapeHtml(projected.title)+'</b>'+(line?'<span>'+escapeHtml(line)+'</span>':'')+'<div class="diag-log-meta"><em>'+escapeHtml(formatDiagnosticTime(entry.at)+' · '+diagnosticCategoryLabel(entry.category))+'</em>'+(projected.raw!==projected.title?'<details><summary>技術細節</summary><code>原始：'+escapeHtml(projected.raw)+'</code></details>':'')+'</div></div>';
+  return '<div class="diag-log-entry diag-impact-'+projected.severity+'"><b>'+escapeHtml(title)+(count>1?' <small class="diag-log-count">×'+count+'</small>':'')+'</b>'+(line?'<span>'+escapeHtml(line)+'</span>':'')+'<div class="diag-log-meta"><em>'+escapeHtml(formatDiagnosticTime(entry.at)+' · '+diagnosticCategoryLabel(entry.category))+'</em>'+(projected.raw!==title?'<details><summary>技術細節</summary><code>原始：'+escapeHtml(projected.raw)+'</code></details>':'')+'</div></div>';
+}
+function groupDiagnosticLogEntries(entries){
+  var groups=[],byKey={};
+  entries.forEach(function(entry){
+    var projected=TripDiagnosticImpact.project(entry);
+    var key=entry.category+'|'+diagnosticLogFriendlyTitle(entry,projected);
+    if(byKey[key]){byKey[key].count++;return;}
+    byKey[key]={entry:entry,count:1,projected:projected};groups.push(byKey[key]);
+  });
+  return groups;
 }
 /* v153：最新的在上面，預設只顯示 5 則，不再有內層捲動。 */
 function renderDiagnosticAppLogSection(entries){
-  var ordered=entries.slice().reverse();
+  var ordered=groupDiagnosticLogEntries(entries.slice().reverse());
   var shown=diagUiState.showAllLogs?ordered:ordered.slice(0,DIAGNOSTIC_LOG_PREVIEW);
-  var rows=shown.map(renderDiagnosticLogEntry).join('');
+  var rows=shown.map(function(group){return renderDiagnosticLogEntry(group.entry,group.count,group.projected);}).join('');
   var more=ordered.length>shown.length?'<button class="diag-more" onclick="showAllDiagnosticLogs()">顯示全部 '+ordered.length+' 則</button>':'';
   return '<div class="diag-section" id="diagAppLogSection"><div class="diag-section-head"><h3>紀錄 <small>本次開啟後 '+entries.length+' 則</small></h3>'+(entries.length?'<button class="diag-text-btn" onclick="clearDiagnosticAppLog()">清除紀錄</button>':'')+'</div><div class="diag-log" id="diagAppLogList">'+(rows||'尚無紀錄')+'</div>'+more+'</div>';
 }

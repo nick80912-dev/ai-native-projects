@@ -65,7 +65,8 @@ test('overview shows my spend by category and exports the archived ledger for �
   const errors=collectPageErrors(page);
   await setup(page,'ocean');
   /* 個人(不含代購白桃果醬 390)= 1430+141+910+195+1906 = 4582;團體每筆三人分 */
-  await expect(page.locator('.past-trip-spend-total b')).toHaveText('NT$8,108');
+  await expect(page.locator('.past-trip-stat').first()).toContainText('NT$8,108');   // v202:總額只在上方綠卡,圓餅旁只列組成
+  await expect(page.locator('.past-trip-spend-total')).toContainText('個人 NT$4,582');
   await expect(page.locator('.past-trip-spend-total')).toContainText('不含代購 NT$390');
   await expect(page.locator('.past-trip-legend li').first()).toContainText('購物');
   await expect(page.locator('.past-trip-donut circle')).toHaveCount(6);

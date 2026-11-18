@@ -285,10 +285,9 @@ test('設定頁集中顯示附件容量並可修復引用或手動清理孤立�
   await page.getByRole('button',{name:/^疑難排解/}).click();   // v185:照片健康收進「疑難排解」
   await page.getByRole('button',{name:/資料與照片狀態/}).click();   // v198:合成一頁
   await expect(page.getByRole('heading',{name:'資料與照片狀態'})).toBeVisible();
-  await expect(page.getByText('App 附件',{exact:true})).toBeVisible();
   await expect(page.getByText(/3 張/)).toBeVisible();
-  await expect(page.getByText('App 儲存空間（估計）',{exact:true})).toBeVisible();
-  await expect(page.locator('.shopping-photo-storage-grid').getByText(/1 個附件待修復/)).toBeVisible();
+  await expect(page.getByText(/手機還能用約|手機沒有提供剩餘空間/)).toBeVisible();   // v202:照片、空間與檢查合成一張卡
+  await expect(page.locator('.shopping-photo-storage-grid').getByText(/1 張照片找不到/)).toBeVisible();
   await expect(page.getByText(/最近檢查/)).toBeVisible();
 
   await page.getByRole('button',{name:'修復 遺失附件'}).click();
@@ -328,10 +327,10 @@ test('六主題下附件管理文字、修復文字與警示迴紋針對比皆�
       const storageBg=getComputedStyle(storage).backgroundColor;
       result[id]={
         icon:iconContrast,
-        primary:contrast(getComputedStyle(storage.querySelector('.shopping-photo-storage-primary')).color,storageBg),
+        primary:(node=>contrast(getComputedStyle(node).color,getComputedStyle(node.closest('.shopping-photo-storage-card')).backgroundColor))(panel.querySelector('.shopping-photo-storage-primary')),  /* v202:照片卡沒有小標,量修復卡的標題 */
         /* v155：說明句改用 .shopping-photo-storage-note（共用說明字樣式）；數據行仍是 secondary，各自量自己的卡片底色 */
         secondary:(node=>contrast(getComputedStyle(node).color,getComputedStyle(node.closest('.shopping-photo-storage-card')).backgroundColor))(panel.querySelector('.shopping-photo-storage-secondary')),
-        note:contrast(getComputedStyle(storage.querySelector('.shopping-photo-storage-note')).color,storageBg),
+        note:(node=>contrast(getComputedStyle(node).color,getComputedStyle(node.closest('.shopping-photo-storage-card')).backgroundColor))(panel.querySelector('.shopping-photo-storage-note')),
         repairTitle,repairCopy,
         overflow:document.documentElement.scrollWidth-document.documentElement.clientWidth,
         actionHeight:Math.min(...Array.from(panel.querySelectorAll('.shopping-photo-storage-action'),node=>node.getBoundingClientRect().height))
