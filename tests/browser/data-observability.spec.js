@@ -109,7 +109,7 @@ test('個人與團體摘要以今日為主、旅程累計為次，三種手機�
     setLedgerTrack('shared');
   });
   /* v200(Bar 2026-11-18):標題寫清楚是有你參與的團體支出總額;Bar 不要另加「你分攤」 */
-  await expect(page.locator('.ledger-summary-count')).toHaveText('今天與我有關花費 · 1 筆');
+  await expect(page.locator('.ledger-summary-count')).toHaveText('今天團體花費 · 1 筆');
   await expect(page.locator('.ledger-summary-card')).not.toContainText('你分攤');
   await expect(page.locator('.ledger-summary-trip')).toContainText('與我有關累計 · 2 筆');
   await expect(page.locator('.ledger-summary-card')).not.toContainText('我的支出');
