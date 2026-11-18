@@ -1,5 +1,12 @@
 # 07 版本紀錄
 
+## 2026-11-18 — v200 已上線 main，tag `production-v200`
+
+- PR [#202](https://github.com/nick80912-dev/ai-native-projects/pull/202)(原本是 v199 發布紀錄,之後一併放入 v200)在 head `154aeb8` 的 sanity／browser-qa 全綠後合併進 `dev`(`09b1f7d`);PR [#203](https://github.com/nick80912-dev/ai-native-projects/pull/203) 七項檢查全綠,以 merge commit 合併進 `main`(`df4b0d3`)。
+- **線上核對**:正式站 `sw.js` 為 `SW_VERSION='v200'`;全新 Chromium `APP_VERSION` v200、只剩 `okayama-trip-v200` 快取、發布說明「分帳頁更好讀」、團體大卡標題「今天團體花費」、無 pageerror;線上 `shell/v200/index.html` 與 `origin/main` 位元組相同;v198／v199 仍 200,v197 為 404。
+- **tag**:production-tags workflow 建立 `production-v200` → `df4b0d3`。
+- 回滾:依 `16_OPS_PLAYBOOK.md` §A1 Publish `commit_ref` = `954aa00`(`production-v199`)的部署,再往前 bump。
+
 ## 2026-11-18 — v200 分帳頁更好讀
 
 - **來源**:Bar 2026-11-18 要分帳頁的優化建議,我列 5 項,Bar「1-5 都做」。看截圖後:不要「你分攤」那一行(看「我的結算狀態」就好,大卡別變大);標題幾經討論定為「今天團體花費」,下一行維持「與我有關累計」;回「that's okay」。
