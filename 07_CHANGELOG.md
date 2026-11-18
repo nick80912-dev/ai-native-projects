@@ -1,5 +1,16 @@
 # 07 版本紀錄
 
+## 2026-11-18 — v200 分帳頁更好讀
+
+- **來源**:Bar 2026-11-18 要分帳頁的優化建議,我列 5 項,Bar「1-5 都做」。看截圖後:不要「你分攤」那一行(看「我的結算狀態」就好,大卡別變大);標題幾經討論定為「今天團體花費」,下一行維持「與我有關累計」;回「that's okay」。
+- **通知位置**:今天頁頂部的通知,換到其他頁(`switchView`)時移到底部,不再擋住分帳頁的「個人／團體」切換。
+- **團體大卡**:「與我相關 · 今日消費」→「今天團體花費 · N 筆」;「與我相關旅程累計」→「與我有關累計 · N 筆」。金額與計算不變。
+- **說明收進 ⓘ**:大卡上方只留匯率,「個人帳留在本機；團體帳跨裝置同步」與「大卡是消費總額、自己的份額看我的結算狀態」收進 ⓘ(`openLedgerSummaryInfo`)。
+- **消費列表**:「誰付款・幾人分攤」標籤字放大(9–10px → 11px),移到第二行和類別放一起。
+- **新增消費**:金額還沒輸入時,換算位置留白(原本的「—」像負號)。
+- **測試**:`data-observability` 跟著改;單元測試 `ledger-dashboard`、`ledger-entry-settings`、`ledger-list-actions`、`ledger-member-visibility` 同步新文字與 ⓘ。
+- **整理**:刪除 `shell/v197`,留 v198–v200;發布說明保留 v196–v200。
+
 ## 2026-11-18 — v199 已上線 main，tag `production-v199`
 
 - PR [#200](https://github.com/nick80912-dev/ai-native-projects/pull/200) 在 head `8278977` 的 sanity／browser-qa 全綠後合併進 `dev`(`de2cddd`);PR [#201](https://github.com/nick80912-dev/ai-native-projects/pull/201) 七項檢查全綠,以 merge commit 合併進 `main`(`954aa00`)。
