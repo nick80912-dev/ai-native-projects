@@ -21,7 +21,8 @@ test('the trip page is a timeline: next-stop time, transport legs, collapsed car
   await expect(items.nth(0).locator('.tl-time')).toContainText('7:00');
   await expect(items.nth(0).locator('.tl-time small')).toHaveText('～8:00');
   await expect(page.locator('#view-trip .tl-link').first()).toContainText('開車1小時');
-  await expect(page.locator('#view-trip .tl-link').first()).toContainText('→ 岡村春子商店-魚春');
+  /* v199(Bar 2026-11-18):起訖站名就在上下兩張卡片,交通段只留標籤 */
+  await expect(page.locator('#view-trip .tl-link').first()).not.toContainText('→');
   /* 收起時看不到導航;按 ▾ 展開才看得到 */
   const second=items.nth(1);
   await expect(second.locator('.qa-btn.drv')).toBeHidden();
