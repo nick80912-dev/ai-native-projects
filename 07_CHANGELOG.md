@@ -1,5 +1,20 @@
 # 07 版本紀錄
 
+## 2026-11-18 — v201 購物與分帳小地方
+
+- **來源**:Bar 2026-11-18 要購物頁與「最近消費」等小頁面的優化建議,我列 7 項,Bar「1-7 都做」並要求附原圖對照;看過對照圖後,第 2 項(店家標籤固定放第二行)維持原樣,其餘確認。
+- **購物**:新增／編輯採買的關閉鈕改成與其他面板相同的圓底「×」;還沒有代購對象時,「幫誰買」只留輸入框與「新增」(不再顯示「尚未建立代購對象」「已選 0 位」),有選對象才顯示「已選 N 位」;想逛模式的「清除全部想逛」移到清單最下面。
+- **分帳**:收款人結清按鈕「結清…」→「結清」;完整紀錄與最近消費的日期標題改成「今天 10/20(二)」「10/19(一)」(`formatLedgerDateKey`,星期以 `Date.UTC` 推算);帳務與採買的操作選單改用線條圖示(鉛筆、垃圾桶),刪除維持紅字。
+- **測試**:`settlement-receiver-v160` 跟著改;單元測試 `ledger-225`、`ledger-dashboard`、`ledger-list-actions` 同步新日期寫法與圖示。
+- **整理**:刪除 `shell/v198`,留 v199–v201;發布說明保留 v197–v201。
+
+## 2026-11-18 — v200 已上線 main，tag `production-v200`
+
+- PR [#202](https://github.com/nick80912-dev/ai-native-projects/pull/202)(原本是 v199 發布紀錄,之後一併放入 v200)在 head `154aeb8` 的 sanity／browser-qa 全綠後合併進 `dev`(`09b1f7d`);PR [#203](https://github.com/nick80912-dev/ai-native-projects/pull/203) 七項檢查全綠,以 merge commit 合併進 `main`(`df4b0d3`)。
+- **線上核對**:正式站 `sw.js` 為 `SW_VERSION='v200'`;全新 Chromium `APP_VERSION` v200、只剩 `okayama-trip-v200` 快取、發布說明「分帳頁更好讀」、團體大卡標題「今天團體花費」、無 pageerror;線上 `shell/v200/index.html` 與 `origin/main` 位元組相同;v198／v199 仍 200,v197 為 404。
+- **tag**:production-tags workflow 建立 `production-v200` → `df4b0d3`。
+- 回滾:依 `16_OPS_PLAYBOOK.md` §A1 Publish `commit_ref` = `954aa00`(`production-v199`)的部署,再往前 bump。
+
 ## 2026-11-18 — v200 分帳頁更好讀
 
 - **來源**:Bar 2026-11-18 要分帳頁的優化建議,我列 5 項,Bar「1-5 都做」。看截圖後:不要「你分攤」那一行(看「我的結算狀態」就好,大卡別變大);標題幾經討論定為「今天團體花費」,下一行維持「與我有關累計」;回「that's okay」。

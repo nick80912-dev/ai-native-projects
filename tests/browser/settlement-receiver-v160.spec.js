@@ -1,6 +1,6 @@
 /* v160(Bar 2026-10-30,回程後第一批)
    ============================================================
-   #60 收款人可以直接結清:「應收」那一列按「結清…」,選「已收到」或「不用付了」,不用等對方按「我已付款」。
+   #60 收款人可以直接結清:「應收」那一列按「結清」(v201 前寫「結清…」),選「已收到」或「不用付了」,不用等對方按「我已付款」。
    B3  結清被退回後重新標記,改用目前的轉帳建議金額(原本送出被退回那筆的舊金額)。
    T14 旅程結束後首頁先提醒還沒結清的帳,並給「前往分帳」。
    T5  清除旅程被擋下時,原因用白話寫(原本是「無法清除：無法清除：pending-queue」)。
@@ -39,7 +39,7 @@ for(const [kind,button,label,note] of [['received','已收到','已收到','〔B
     const row=page.locator('.ledger-settle-to-receive');
     await expect(row).toContainText('Amy ¥3,000');
     await expect(row.locator('.ledger-settle-chip')).toHaveText('應收');
-    await row.getByRole('button',{name:'結清…'}).click();
+    await row.getByRole('button',{name:'結清',exact:true}).click();
     const dialog=page.locator('#ledgerReceiverSettleDialog');
     await expect(dialog.locator('h2')).toHaveText('結清 Amy 的 ¥3,000？');
     await dialog.getByRole('button',{name:new RegExp('^'+button)}).click();
@@ -65,7 +65,7 @@ for(const [kind,button,label,note] of [['received','已收到','已收到','〔B
 test('#60 undo within 10 seconds puts the line back',async({page})=>{
   await openAs(page,'Bar',[expense('e-1','Bar',['Bar','Amy'],6000)]);
   await page.evaluate(()=>openLedgerSettlementPanel());
-  await page.locator('.ledger-settle-to-receive').getByRole('button',{name:'結清…'}).click();
+  await page.locator('.ledger-settle-to-receive').getByRole('button',{name:'結清',exact:true}).click();
   await page.locator('#ledgerReceiverSettleDialog').getByRole('button',{name:/^已收到/}).click();
   await page.locator('#toast').getByRole('button',{name:'復原'}).click();
   await expect(page.locator('#toast')).toContainText('已復原，款項回到應收');
@@ -87,7 +87,7 @@ for(const width of [320,390]){
     await page.setViewportSize({width,height:740});
     await openAs(page,'Bar',[expense('e-1','Bar',['Bar','Amy'],6000)]);
     await page.evaluate(()=>{openLedgerSettlementPanel();});
-    await page.locator('.ledger-settle-to-receive').getByRole('button',{name:'結清…'}).click();
+    await page.locator('.ledger-settle-to-receive').getByRole('button',{name:'結清',exact:true}).click();
     const fit=await page.evaluate(()=>{const panel=document.querySelector('#ledgerReceiverSettleDialog .state-dialog-panel');
       const options=[...panel.querySelectorAll('.ledger-receiver-settle-option')].map(b=>({h:Math.round(b.getBoundingClientRect().height),over:b.scrollWidth>b.clientWidth+1}));
       return {page:document.documentElement.scrollWidth<=window.innerWidth,options};});

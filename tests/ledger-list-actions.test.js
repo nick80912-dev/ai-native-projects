@@ -86,7 +86,8 @@ vm.runInContext(extractFunction(html,'closeLedgerRecordActions')+'\n'+extractFun
 const trigger={getBoundingClientRect(){return {left:300,right:344,top:100,bottom:144};}};
 actionsSandbox.openLedgerRecordActions('a',{stopPropagation(){},currentTarget:trigger},false);
 assert.strictEqual(actionHost.current.dataset.actionKey,'record:a','popover identifies its source record');
-assert(actionHost.current.innerHTML.includes('編輯 ✏️')&&actionHost.current.innerHTML.includes('刪除 🗑️'),'popover appends the approved action icons');
+/* v201(Bar 2026-11-18):彩色 emoji 換成線條圖示 */
+assert(actionHost.current.innerHTML.includes('編輯</button>')&&actionHost.current.innerHTML.includes('刪除</button>')&&actionHost.current.innerHTML.includes('class="app-icon"')&&!actionHost.current.innerHTML.includes('✏️'),'popover uses line icons for edit and delete');
 actionsSandbox.openLedgerRecordActions('a',{stopPropagation(){},currentTarget:trigger},false);
 assert.strictEqual(actionHost.current,null,'clicking the same ellipsis closes the popover');
 actionsSandbox.openLedgerRecordActions('a',{stopPropagation(){},currentTarget:trigger},false);
