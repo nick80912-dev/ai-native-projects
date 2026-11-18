@@ -8762,10 +8762,10 @@ function ledgerSummaryPresentation(period,currency){
   var primary=currency==='TWD'?'TWD':'JPY',secondary=primary==='JPY'?'TWD':'JPY';
   var primaryField=primary==='JPY'?'amountJpy':'amountTwd',secondaryField=secondary==='JPY'?'amountJpy':'amountTwd';
   return {
-    todayLabel:'今天的團體支出（有你參與） · '+Number(today.count||0)+' 筆',
+    todayLabel:'今天與我有關花費 · '+Number(today.count||0)+' 筆',
     todayPrimary:formatLedgerCurrencyAmount(primary,ledgerAmountValue(today[primaryField])),
     todaySecondary:formatLedgerCurrencyAmount(secondary,ledgerAmountValue(today[secondaryField])),
-    totalLabel:'有你參與的旅程累計 · '+Number(period.count||0)+' 筆',
+    totalLabel:'與我有關累計 · '+Number(period.count||0)+' 筆',
     totalAmount:formatLedgerCurrencyAmount(primary,ledgerAmountValue(total[primaryField]))
   };
 }
@@ -11549,7 +11549,7 @@ function renderSettingsHealthPage(){
 }
 var APP_RELEASE_NOTES=[
   {version:'v200',date:'2026-11-18',title:'分帳頁更好讀',items:[
-    '團體帳大卡的標題改成「今天的團體支出（有你參與）」；自己要付多少看下方「我的結算狀態」。',
+    '團體帳大卡改寫成「今天與我有關花費」「與我有關累計」；自己要付多少看下方「我的結算狀態」。',
     '上方說明收進 ⓘ；消費列表的「誰付款・幾人分攤」字放大並移到第二行。',
     '新增消費的金額還沒輸入時不再顯示「—」；今天頁的通知換頁後不再擋住分帳頁的按鈕。'
   ]},
@@ -14428,7 +14428,7 @@ function ledgerInfoSheetReturnsToSettlement(kind){
   return kind==='settlement-history'||kind==='settlement-breakdown';
 }
 /* v200:大卡上方說明收進 ⓘ */
-function openLedgerSummaryInfo(){openLedgerInfoSheet('記帳說明','<p class="settings-help">個人帳只留在這支手機；團體帳會跨裝置同步給同行的人。</p>');}
+function openLedgerSummaryInfo(){openLedgerInfoSheet('記帳說明','<p class="settings-help">個人帳只留在這支手機；團體帳會跨裝置同步給同行的人。</p><p class="settings-help">團體大卡的金額是與你有關的消費總額（大家一起付的），你自己要付多少請看下方「我的結算狀態」。</p>');}
 function openLedgerInfoSheet(title,body,kind){
   closeLedgerInfoSheet();var overlay=document.createElement('div');overlay.id='ledgerInfoSheet';overlay.className='ledger-sheet-overlay';
   if(kind)overlay.setAttribute('data-sheet-kind',kind);
