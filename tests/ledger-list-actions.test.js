@@ -155,7 +155,7 @@ assert(html.includes('function formatLedgerLocalOccurrence('),'local occurrence 
 assert(html.includes('尚無消費紀錄')&&html.includes('記一筆消費'),'recent empty state provides the next action directly');
 
 const splitSource=html.slice(html.indexOf('function renderSplit()'),html.indexOf('/* ================= 導覽 / 啟動'));
-const copyIndex=splitSource.indexOf('個人帳留在本機；團體帳跨裝置同步。');
+const copyIndex=splitSource.indexOf('openLedgerSummaryInfo()');  // v200:說明收進 ⓘ
 const recentIndex=splitSource.indexOf('renderLedgerRecentHeading');
 assert(copyIndex>0&&copyIndex<recentIndex,'dual-track explanation remains in the summary before the recent heading renderer');
 

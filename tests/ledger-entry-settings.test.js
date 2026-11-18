@@ -261,7 +261,8 @@ function response(payload){
   assert(!splitSource.includes('openMemberSelector(false'),'Split page does not offer identity switching or registration');
   assert(html.includes('var ledgerUiState=TripLedgerUiState.createState();'),'fresh App sessions use the canonical Ledger UI state module');
   assert.strictEqual(TripLedgerUiState.createState().track,'personal','fresh App sessions default to the personal track');
-  assert(splitSource.includes('個人帳留在本機；團體帳跨裝置同步。'),'Split uses the fixed dual-track explanation');
+  /* v200(Bar 2026-11-18):雙軌說明收進大卡的 ⓘ */
+  assert(splitSource.includes('openLedgerSummaryInfo()')&&html.includes('個人帳只留在這支手機；團體帳會跨裝置同步給同行的人。'),'Split keeps the dual-track explanation behind the ⓘ button');
   assert(splitSource.includes("setLedgerTrack(\\'personal\\')")&&splitSource.includes("setLedgerTrack(\\'shared\\')"),'Split exposes personal/shared segmented controls');
   assert(entrySource.includes("if(track==='personal')")&&entrySource.includes('personalLedgerRepository.add'),'personal entries use only the personal repository');
   assert(entrySource.includes('ledgerRepository.enqueueBatch'),'shared entries retain the atomic shared repository queue');
