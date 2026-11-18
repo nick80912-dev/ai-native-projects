@@ -1,5 +1,12 @@
 # 07 版本紀錄
 
+## 2026-11-18 — v199 已上線 main，tag `production-v199`
+
+- PR [#200](https://github.com/nick80912-dev/ai-native-projects/pull/200) 在 head `8278977` 的 sanity／browser-qa 全綠後合併進 `dev`(`de2cddd`);PR [#201](https://github.com/nick80912-dev/ai-native-projects/pull/201) 七項檢查全綠,以 merge commit 合併進 `main`(`954aa00`)。
+- **線上核對**:正式站 `sw.js` 為 `SW_VERSION='v199'`;全新 Chromium `APP_VERSION` v199、只剩 `okayama-trip-v199` 快取、發布說明「各頁面清爽一點」、購物頁提示存在、無 pageerror;線上 `shell/v199/index.html` 與 `origin/main` 位元組相同;v197／v198 仍 200,v196 為 404。
+- **tag**:production-tags workflow 建立 `production-v199` → `954aa00`。
+- 回滾:依 `16_OPS_PLAYBOOK.md` §A1 Publish `commit_ref` = `97bdd2d`(`production-v198`)的部署,再往前 bump。
+
 ## 2026-11-18 — v199 各頁面清爽一點
 
 - **來源**:Bar 2026-11-17 問其它頁面的優化建議,我列 5 項,Bar「1-5 都做」;看截圖後第 1 項改成「完成 ✓」(不寫「已完成」以免按鈕太寬),其餘「okay」。

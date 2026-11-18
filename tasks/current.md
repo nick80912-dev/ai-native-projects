@@ -5,15 +5,15 @@
 
 ## 📌 現況
 
-**正式站是 v198**（2026-11-17 發布，PR #198，`main` `97bdd2d`），**最新正式 tag 是 `production-v198`**（v157–v198 每一版都有 tag）。旅程（10/18–10/23）已結束；回程後的修正、#59 收據照片、#62 不限日本、#61 收據辨識（v171–v177）與 #63 退稅追蹤（v178–v181）都已上線；v182 匯率寫法統一與專案整理（Bar 2026-11-09）也已上線；v183 天氣地區不限日本、離線狀態、旅程結束回顧與記帳表單收成一行（Bar 2026-11-09／10）已上線；v184 頂端紙飛機圖示與行前清單（Bar 2026-11-10）也已上線；v185 代購小勾選、疑難排解、今天頁通知位置與結束後行程瀏覽（Bar 2026-11-10）也已上線；v186 畫面更清爽（UI/UX 建議 1–6：線條圖示、小開關、收合備註等，Bar 2026-11-11）也已上線；v187 第七個主題「繪本／和紙」與所有主題的大圓角（Bar 2026-11-11／12）也已上線；v188 航班卡（試算表「航班」分頁）、行前清單的行李區、繪本主題補到其他頁面（Bar 2026-11-12）也已上線；v189 資料健康的團體帳只算目前模式，並結案 backlog #20／#50／#53（Bar 2026-11-13）也已上線。下一趟的試算表副本「TripPilot 下一趟（從岡山複製，待填）」已建立（Bar 2026-11-10），待 Bar 填內容、加 GEMINI_API_KEY、部署 Apps Script 與發布到網路。岡山 Apps Script 已由 Bar 換成最新版（2026-11-09）。每批一版、逐版送 main 給 Bar 手機審查（Bar 2026-10-30 選定）；**改畫面時先截圖給 Bar 確認，確認後才跑完整測試與自動檢查**（Bar 2026-11-03）；上線後用 production-tags workflow 建 tag。
+**正式站是 v199**（2026-11-18 發布，PR #201，`main` `954aa00`），**最新正式 tag 是 `production-v199`**（v157–v199 每一版都有 tag）。旅程（10/18–10/23）已結束；回程後的修正、#59 收據照片、#62 不限日本、#61 收據辨識（v171–v177）與 #63 退稅追蹤（v178–v181）都已上線；v182 匯率寫法統一與專案整理（Bar 2026-11-09）也已上線；v183 天氣地區不限日本、離線狀態、旅程結束回顧與記帳表單收成一行（Bar 2026-11-09／10）已上線；v184 頂端紙飛機圖示與行前清單（Bar 2026-11-10）也已上線；v185 代購小勾選、疑難排解、今天頁通知位置與結束後行程瀏覽（Bar 2026-11-10）也已上線；v186 畫面更清爽（UI/UX 建議 1–6：線條圖示、小開關、收合備註等，Bar 2026-11-11）也已上線；v187 第七個主題「繪本／和紙」與所有主題的大圓角（Bar 2026-11-11／12）也已上線；v188 航班卡（試算表「航班」分頁）、行前清單的行李區、繪本主題補到其他頁面（Bar 2026-11-12）也已上線；v189 資料健康的團體帳只算目前模式，並結案 backlog #20／#50／#53（Bar 2026-11-13）也已上線。下一趟的試算表副本「TripPilot 下一趟（從岡山複製，待填）」已建立（Bar 2026-11-10），待 Bar 填內容、加 GEMINI_API_KEY、部署 Apps Script 與發布到網路。岡山 Apps Script 已由 Bar 換成最新版（2026-11-09）。每批一版、逐版送 main 給 Bar 手機審查（Bar 2026-10-30 選定）；**改畫面時先截圖給 Bar 確認，確認後才跑完整測試與自動檢查**（Bar 2026-11-03）；上線後用 production-tags workflow 建 tag。
 
 | 項目 | 值 |
 |---|---|
-| **正式站** | `https://trippilot-jp.netlify.app/` — **SW v198** |
-| **`origin/main`** | `97bdd2d`（PR [#198](https://github.com/nick80912-dev/ai-native-projects/pull/198)，merge commit） |
-| **`dev`** | 與 `main` 同為 v198（PR [#197](https://github.com/nick80912-dev/ai-native-projects/pull/197) 合併為 `8bd6cbc`） |
+| **正式站** | `https://trippilot-jp.netlify.app/` — **SW v199** |
+| **`origin/main`** | `954aa00`（PR [#201](https://github.com/nick80912-dev/ai-native-projects/pull/201)，merge commit） |
+| **`dev`** | 與 `main` 同為 v199（PR [#200](https://github.com/nick80912-dev/ai-native-projects/pull/200) 合併為 `de2cddd`） |
 | 個人備份格式 | **v11**（v178 起；`PERSONAL_STATE_VERSION=11`，個人帳多了稅額與實際退稅；相容策略見 `docs/personal-state-compatibility.md`） |
-| 最新正式 tag | **`production-v198`** → `97bdd2d`（v157–v198 都有 tag；上一個 `production-v197` → `741ec82`） |
+| 最新正式 tag | **`production-v199`** → `954aa00`（v157–v199 都有 tag；上一個 `production-v198` → `97bdd2d`） |
 | shell 世代 | repo 只保留最近三代（目前 v197 起；2026-11-09 Bar 核准刪除 v154–v179，ADR 0019 增補段） |
 | CI | `sanity`／`browser-qa` 跑 `ubuntu-latest`（2026-10-30 驗過 Ubuntu 26.04 後解除釘版，backlog #54）；browser-qa 時限 25 分鐘（2026-11-01 由 15 放寬，PR #127） |
 
