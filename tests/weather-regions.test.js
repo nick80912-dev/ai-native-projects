@@ -69,7 +69,9 @@ function load(sourceKey){
 }
 
 /* 接線：同步成功後更新地區清單；清單放在 trip_ key，清除與換旅程時會被移除 */
-assert.match(html,/if\(result&&result\.ok&&typeof refreshWeatherRegions==='function'\)refreshWeatherRegions\(\);/);
+/* v205:同步成功後先讀分頁清單(沒填 GID 時依名稱找),再讀天氣地區 */
+assert.match(html,/if\(result&&result\.ok\)\(typeof refreshSheetTabs==='function'\?refreshSheetTabs\(\):Promise\.resolve\(\)\)\.then\(function\(\)\{\s*if\(typeof refreshWeatherRegions==='function'\)refreshWeatherRegions\(\);/);
+assert.match(html,/var gid=optionalSheetGid\('weather',DB&&DB\.cfg&&DB\.cfg\.weatherRegionsGid\)/,'a blank Weather Regions GID falls back to the tab named 天氣地區');
 assert.match(html,/var WEATHER_REGIONS_KEY='trip_weather_regions';/);
 assert.match(html,/var cities=typeof weatherCities==='function'\?weatherCities\(\):WEATHER_CITIES;/);
 

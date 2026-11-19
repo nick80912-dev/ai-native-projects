@@ -8,8 +8,11 @@
  * v173:App 另送支付方式與類別的選項清單,AI 從清單選一個(行動支付錢包 → 行動支付;餐廳 → 餐飲;電車 → 交通…)。
  * v176:另回 taxFree(deducted 結帳已扣稅／refundable 之後可退稅)、taxRates(印在收據上的稅率)、pricesIncludeTax(品項是否含稅)。
  * v177:另回 taxAmount(收據上的稅額合計)。
+ * v205:?action=info 另回 scriptVersion(App 用它提醒更新)與 receiptRecognition(只回有沒有設定 GEMINI_API_KEY,不回金鑰)。
  * GitHub 內此檔為唯一維護來源；部署內容必須與此檔一致。
  */
+/* v205:這份程式的版本。App 的 TripSource.SCRIPT_VERSION_REQUIRED 比這個新時會提醒「請更新 Apps Script」。 */
+var SCRIPT_VERSION = '2026-11-19';
 var LEDGER_COLUMNS = 21;
 /* 與 schema.js 分帳紀錄 21 欄的 header 一致(tests/apps-script-settings.test.js 鎖住)。 */
 var LEDGER_HEADERS = [
@@ -124,7 +127,9 @@ function tripInfo() {
         if (!ledgerHeaderMatches(c, header[c])) { headerOk = false; break; }
       }
     }
-    return out({ok:true,tripId:tripId,ledgerHeaderOk:headerOk});
+    var receiptRecognition = false;
+    try { receiptRecognition = !!String(PropertiesService.getScriptProperties().getProperty('GEMINI_API_KEY') || '').trim(); } catch (ignore) {}
+    return out({ok:true,tripId:tripId,ledgerHeaderOk:headerOk,scriptVersion:SCRIPT_VERSION,receiptRecognition:receiptRecognition});
   } catch (err) {
     return out({ok:false,error:'info read failed'});
   }
