@@ -20,7 +20,7 @@ test('the seventh theme can be picked, restyles cards, and shows the home illust
   await expect(page.locator('#view-today .ehon-art').first()).toBeHidden();
   expect(await page.evaluate(()=>getComputedStyle(document.querySelector('#view-today .nx-ticket')).borderRadius)).toBe('20px');
   await page.evaluate(()=>openSettings('theme'));
-  await expect(page.locator('.settings-theme-card')).toHaveCount(7);
+  await expect(page.locator('.settings-theme-card')).toHaveCount(6);   // v204:霧藍併入海洋
   await page.locator('.settings-theme-card',{hasText:'繪本／和紙'}).click();
   await expect(page.locator('html')).toHaveAttribute('data-theme','ehon');
   await expect(page.locator('.settings-theme-card[aria-pressed="true"]')).toContainText('繪本／和紙');

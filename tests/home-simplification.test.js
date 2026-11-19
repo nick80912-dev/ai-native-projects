@@ -14,7 +14,7 @@ for (const file of [shellPath('index.html')]) {
   const renderToday = html.slice(html.indexOf('function renderToday(){'), html.indexOf('/* ================= 購物模式'));
   assert.match(renderToday, /var items=homeNextStopItems\(day\.items\)/, `${file} routes Today through cluster controllers`);
   assert.match(renderToday, /clusterParentForPick\(day\.items,pick\.item\)/, `${file} resolves the original parent before rendering a cluster`);
-  assert.match(renderToday, /today-hero-top[\s\S]*TODAY · DAY[\s\S]*class="loc"/, `${file} keeps Today and progress on the same top row`);
+  assert.match(renderToday, /today-hero-top[\s\S]*今天 · 第[\s\S]*class="loc"/, `${file} keeps Today and progress on the same top row`);
   const nonTripToday = renderToday.slice(renderToday.indexOf('if(ti===null)'), renderToday.indexOf('var day=DB.trip.days[ti]'));
   assert.match(
     nonTripToday,
@@ -113,7 +113,8 @@ for (const file of [shellPath('index.html')]) {
   assert.match(html, /\.nx-ticket-low\{[^}]*grid-template-columns:minmax\(0,1fr\) auto/, `${file} gives completion the flexible primary column`);
   assert.match(html, /\.nx-decision-btn\{[^}]*font-size:16px/, `${file} keeps home decisions readable in the car`);
   /* v186(Bar 2026-11-11 UI/UX 第 4 項):每個畫面只留一顆實心主色按鈕;今天卡的實心是「導航」,完成改淡綠底綠框。 */
-  assert.match(html, /\.nx-decision-btn\.done\{[^}]*color-mix\(in srgb,var\(--green\) 11%,#fff\)[^}]*color:var\(--green\)[^}]*border:1\.5px solid var\(--green\)/, `${file} shows completion as a tinted decision, leaving 導航 as the one solid button`);
+  /* v204(Bar 2026-11-19):完成改跟著主題主色(--sea),仍是淡底框線,導航仍是唯一實心 */
+  assert.match(html, /\.nx-decision-btn\.done\{[^}]*color-mix\(in srgb,var\(--sea\) 11%,#fff\)[^}]*color:var\(--sea\)[^}]*border:1\.5px solid var\(--sea\)/, `${file} shows completion as a tinted decision, leaving 導航 as the one solid button`);
 }
 
 console.log('home simplification tests passed');

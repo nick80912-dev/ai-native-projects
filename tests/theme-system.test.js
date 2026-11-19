@@ -62,7 +62,7 @@ function extractThemeIds(html){
 
 (function(){
   const html=fs.readFileSync('shell/'+appVersion()+'/index.html','utf8');
-  const themeIds=['ocean','ivory','wisteria','cedar','mist','tea','ehon'];
+  const themeIds=['ocean','ivory','wisteria','cedar','tea','ehon'];   // v204:霧藍併入海洋
   const tokenNames=[
     '--t-paper','--t-card','--t-chrome','--t-action','--t-select-bg','--t-cta-bg','--t-accent','--t-accent-bg',
     '--t-ink','--t-ink-soft','--t-ink-faint','--t-line','--t-line-soft','--t-tabbar','--t-secondary'
@@ -88,7 +88,7 @@ function extractThemeIds(html){
 
   /* Break caught: Cedar, Mist and Tea drift back to near-identical white surfaces,
      coral accents and the same purple secondary color, making the theme picker cosmetic. */
-  const priorityThemes=['cedar','mist','tea'].map(id=>({id,block:themeBlock(html,id)}));
+  const priorityThemes=['cedar','tea','wisteria'].map(id=>({id,block:themeBlock(html,id)}));
   for(let i=0;i<priorityThemes.length;i++){
     for(let j=i+1;j<priorityThemes.length;j++){
       assert(
@@ -104,7 +104,9 @@ function extractThemeIds(html){
   const prioritySecondaries=priorityThemes.map(theme=>cssValue(theme.block,'--t-secondary'));
   assert.strictEqual(new Set(prioritySecondaries).size,3,'priority themes no longer share one secondary color');
   assert(prioritySecondaries.every(color=>color!=='#7659a0'),'priority themes do not inherit the old shared purple secondary');
-  assert(hueDegrees(cssValue(themeBlock(html,'mist'),'--t-accent'))>=35&&hueDegrees(cssValue(themeBlock(html,'mist'),'--t-accent'))<=50,'Mist uses a warm sun accent');
+  /* v204(Bar 2026-11-19):霧藍和海洋太像,合併成海洋 */
+  assert(!/\[data-theme="mist"\]\{/.test(html),'the mist theme block is gone');
+  assert(html.includes("var THEME_MERGED={mist:'ocean'};"),'old mist devices map to ocean');
   assert(hueDegrees(cssValue(themeBlock(html,'tea'),'--t-accent'))>=195&&hueDegrees(cssValue(themeBlock(html,'tea'),'--t-accent'))<=225,'Tea uses a Kurashiki indigo accent');
 
   const baseBlock=themeBlock(html,'ocean');
@@ -250,10 +252,15 @@ function extractThemeIds(html){
   };
   vm.createContext(sandbox);
   vm.runInContext(html.slice(moduleStart,moduleEnd),sandbox);
-  assert.strictEqual(sandbox.applyTheme('mist').id,'mist');
-  assert.strictEqual(root.dataset.theme,'mist');
-  assert.strictEqual(meta.content,'#314d63');
-  assert.strictEqual(storage.getItem('trip_theme'),'mist');
+  assert.strictEqual(sandbox.applyTheme('tea').id,'tea');
+  assert.strictEqual(root.dataset.theme,'tea');
+  assert.strictEqual(meta.content,'#49362b');
+  assert.strictEqual(storage.getItem('trip_theme'),'tea');
+  /* v204:霧藍併入海洋 —— 舊的 mist 直接換成海洋並存回去,不算未知主題 */
+  assert.strictEqual(sandbox.applyTheme('mist').id,'ocean');
+  assert.strictEqual(root.dataset.theme,'ocean');
+  assert.strictEqual(storage.getItem('trip_theme'),'ocean');
+  assert.strictEqual(logMessages.length,0,'a merged theme is not reported as unknown');
   assert.strictEqual(sandbox.applyTheme('unknown').id,'ocean');
   assert.strictEqual(root.dataset.theme,'ocean');
   assert.strictEqual(logMessages.length,1,'unknown stored theme is recorded once for diagnostics');
@@ -341,7 +348,7 @@ function extractThemeIds(html){
      v187 的繪本主題說明已於 2026-11-15 隨 v192 加入而滾出,同前一個處理。
      v188 的航班卡說明已於 2026-11-16 隨 v193 加入而滾出,同前一個處理。
      v189 的資料健康說明已於 2026-11-16 隨 v194 加入而滾出,同前一個處理。 */
-  assert.deepStrictEqual(Array.from(notes.slice(1),function(note){return note.version;}),['v202','v201','v200','v199']);
+  assert.deepStrictEqual(Array.from(notes.slice(1),function(note){return note.version;}),['v203','v202','v201','v200']);
   /* v117 的選取表達說明已於 2026-09-12 隨 v122 加入而滾出五筆視窗，同前一個處理。
   /* v118 的顏色語意收斂說明已於 2026-09-13 隨 v123 加入而滾出五筆視窗,同前一個處理。
   /* v119 的攤疊區塊說明已於 2026-09-13 隨 v124 加入而滾出五筆視窗,同前一個處理。

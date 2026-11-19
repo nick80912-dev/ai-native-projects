@@ -534,7 +534,7 @@ assert.strictEqual(sandbox.shouldShowCompactTomorrowPreview({ item:null }, 22*60
 const tomorrowOut = sandbox.renderTomorrowPreview(0, false);
 assert(tomorrowOut.includes('class="tomorrow-card"'));
 assert(!tomorrowOut.includes('tomorrow-card compact'));
-assert(tomorrowOut.includes('DAY 2'));
+assert(tomorrowOut.includes('第 2 天'));
 assert(tomorrowOut.includes('Breakfast'));
 
 const tomorrowCompactOut = sandbox.renderTomorrowPreview(0, true);
