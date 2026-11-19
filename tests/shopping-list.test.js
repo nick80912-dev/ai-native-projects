@@ -412,7 +412,7 @@ assert.strictEqual(typeof mod.shoppingUnitStore.add,'function');
 assert.strictEqual(typeof mod.shoppingUnitStore.remove,'function');
 
 /* 卡片資訊分行:屬性一行、地點一行,不再與動作混排 */
-assert.strictEqual(mod.shoppingItemLocationLine({stopRef:'x'},{dayIndex:0,name:'麵酒一照庵 岡山本店'},'resolved'),'DAY 1 · 麵酒一照庵 岡山本店');
+assert.strictEqual(mod.shoppingItemLocationLine({stopRef:'x'},{dayIndex:0,name:'麵酒一照庵 岡山本店'},'resolved'),'第 1 天 · 麵酒一照庵 岡山本店');
 assert.strictEqual(mod.shoppingItemLocationLine({stopRef:'x'},null,'orphan'),'原行程站點已不存在');
 assert.strictEqual(mod.shoppingItemLocationLine({stopRef:'x'},null,'pending'),'行程站點待確認');
 assert.strictEqual(mod.shoppingItemLocationLine({stopRef:''},null,'unbound'),'','隨時可買不佔一行');
@@ -967,7 +967,7 @@ vm.createContext(cardSandbox);
 vm.runInContext(proxyTargetRenderer,cardSandbox);
 vm.runInContext(renderShoppingItemSource,cardSandbox);
 [
-  {stopRef:'resolved',__state:'resolved',location:'DAY 2 · 岡山站'},
+  {stopRef:'resolved',__state:'resolved',location:'第 2 天 · 岡山站'},
   {stopRef:'pending',__state:'pending',location:'行程站點待確認'},
   {stopRef:'orphan',__state:'orphan',location:'原行程站點已不存在'},
   {stopRef:'',__state:'unbound',location:''}
