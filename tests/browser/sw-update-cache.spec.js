@@ -80,7 +80,8 @@ async function waitForShellCached(page,expectedKey,expectedAssets) {
 test('readiness helpers stay pending until the controller and requested cache assets actually exist',async({page})=>{
   let releaseWorker;
   const workerGate=new Promise(resolve=>{releaseWorker=resolve;});
-  await page.route('**/sw.js',async route=>{await workerGate;await route.continue();});
+  /* 2026-11-19:新版 Chromium 的 SW 主程式請求只經過 context 層的 route,page.route 攔不到 */
+  await page.context().route('**/sw.js',async route=>{await workerGate;await route.continue();});
   await page.goto(ORIGIN+'/index.html');
   let workerReady=false;
   const workerWait=waitForActiveWorker(page).then(()=>{workerReady=true;});

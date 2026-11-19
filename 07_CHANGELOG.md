@@ -1,5 +1,27 @@
 # 07 版本紀錄
 
+## 2026-11-19 — v203 診斷面板修正與健檢
+
+- **來源**:Bar 2026-11-19「點開診斷面板後滑動畫面,後方頁面會跟著滑動」。
+- **原因**:診斷面板是蓋在頁面上的固定層,在暗底上滑、或面板內捲到底後,捲動會傳到後面的整頁。
+- **修正**:打開時在 `html`／`body` 加 `diag-open`(`overflow:hidden`),關閉時移除;暗底 `touch-action:none`、`overscroll-behavior:contain`,面板內容 `touch-action:pan-y` 照常捲動。關閉後後面頁面維持原位置、可再捲動。
+- **測試**:新增瀏覽器 `diagnostics-scroll-lock`(修正前 scrollY 200 → 689,修正後不變)。
+- **健檢(Bar「A-F 都做」)**:
+  - **A** CI 的 Node 20(2026-04 停止維護)→ 22。
+  - **B** `@playwright/test` 1.62.0 → 1.65.1(Chromium 159)。本機較新 Chromium 才會失敗的 7 項都是測試寫法問題,已修:`view-context` 捲動前先等畫格(switchView 在下一個畫格才還原位置);`sw-update-cache` 改用 context 層 route 攔 SW 主程式;`trip-connect` 重新載入後等 App 起來再讀;`personal-ledger-export` 的檔名是本機缺 UTF-8 語系造成(Chromium 遇到非 ASCII 檔名改成 download),App 與手機不受影響。
+  - **C** `netlify.toml` 全站加 `X-Content-Type-Options: nosniff`、`Referrer-Policy: strict-origin-when-cross-origin`、`X-Frame-Options: DENY`、`frame-ancestors 'none'`(`pwa-shell` 測試守著)。
+  - **D** 刪除 23 個 App 已不呼叫的函式(約 7.9 KB),測試改測 App 實際在用的路徑(例如編輯權限改測 `assertCanEditLedgerRecord`、自動略過改用 `setItemCompletion(...,'auto-skip')`)。另有 4 個看似沒用的其實是具名事件監聽器,保留。
+  - **E** 行程卡片、下一站按鈕、行前清單與退稅視窗的 ID 放進 `onclick` 前一律 `jsHtmlAttrString`;新增 `tests/inline-handler-escaping.test.js`。
+  - **F** 新增 `adr/TEMPLATE.md`;新旅程手冊與設定規格裡兩個指向已刪除檔案的路徑改寫成說明文字。
+- **整理**:刪除 `shell/v200`,留 v201–v203;發布說明保留 v199–v203。
+
+## 2026-11-18 — v202 已上線 main，tag `production-v202`
+
+- PR [#206](https://github.com/nick80912-dev/ai-native-projects/pull/206) 在 sanity／browser-qa 全綠後合併進 `dev`(`c31e0db`);PR [#207](https://github.com/nick80912-dev/ai-native-projects/pull/207) 七項檢查全綠,以 merge commit 合併進 `main`(`0a76c46`)。
+- **線上核對**:正式站 `sw.js` 為 `SW_VERSION='v202'`;全新 Chromium `APP_VERSION` v202、只剩 `okayama-trip-v202` 快取、發布說明「設定與過往旅程整理」、`groupDiagnosticLogEntries`／`renderPastTripSummaryLine` 存在、無 pageerror;線上 `shell/v202/index.html` 與 `origin/main` 位元組相同;v200／v201 仍 200,v199 為 404。
+- **tag**:production-tags workflow 建立 `production-v202` → `0a76c46`。
+- 回滾:依 `16_OPS_PLAYBOOK.md` §A1 Publish `commit_ref` = `a1384fa`(`production-v201`)的部署,再往前 bump。
+
 ## 2026-11-18 — v202 設定與過往旅程整理
 
 - **來源**:Bar 2026-11-18 要過往旅程、設定各分頁與診斷面板的優化建議,我列 10 項並附原圖對照,Bar「以上都採納」。

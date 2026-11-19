@@ -23,6 +23,9 @@ test.beforeEach(async ({ page }) => {
 
 /* 捲到指定位置並等它真的停下來(避開 CSS smooth 的動畫尾巴) */
 async function scrollTo(page, y) {
+  /* 2026-11-19(Playwright 1.65 / Chromium 159):switchView 在下一個畫格才還原位置;
+     先等兩個畫格,才不會在還原之前就捲動、被還原蓋掉 */
+  await page.evaluate(() => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))));
   await page.evaluate((target) => {
     const doc = document.scrollingElement;
     doc.scrollTop = target;
@@ -40,6 +43,8 @@ test('each tab keeps its own scroll position across switches', async ({ page }) 
   expect(tripY).toBeGreaterThan(100);
 
   await page.evaluate(() => switchView('shop'));
+  /* 位置在下一個畫格才還原;等兩個畫格再讀(2026-11-19,忙碌時曾讀到還原前的 483) */
+  await page.evaluate(() => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))));
   const shopTop = await page.evaluate(() => Math.round(document.scrollingElement.scrollTop));
   /* 換到沒去過的分頁應該在頂端,而不是沿用上一個分頁的位置 */
   expect(shopTop).toBe(0);

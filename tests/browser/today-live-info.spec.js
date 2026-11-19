@@ -472,7 +472,8 @@ test('weather failure keeps generic Shopping entry usable', async ({ page }) => 
       rightGap:Math.round(box.right-text.right)
     };
   });
-  expect(genericLayout.justifyContent).toBe('flex-end');
+  /* 2026-11-19:Chromium 159 把 CSS 的 flex-end 計算值寫成 flow-end;兩種都代表靠右,真正的對齊由下一行 rightGap 驗證 */
+  expect(['flex-end','flow-end','end']).toContain(genericLayout.justifyContent);
   expect(Math.abs(genericLayout.rightGap)).toBeLessThanOrEqual(1);
   await summary.evaluate((element)=>element.click());
   await expect(page.locator('#shoppingListOverlay')).toBeVisible();

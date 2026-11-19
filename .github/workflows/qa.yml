@@ -29,7 +29,7 @@ jobs:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
         with:
-          node-version: '20'
+          node-version: '22'
       - name: 文件標題/檔名一致性 + manifest 檢查
         run: node tools/check-doc-titles.js
       - name: 版本一致性檢查(app-version.js / sw.js / index.html / netlify.toml)
@@ -46,7 +46,7 @@ jobs:
 
   browser-qa:
     # 同上(backlog #54)。本 job 的 `playwright install --with-deps` 依 runner OS 裝系統套件,
-    # 換 OS 大版本時最可能出事的一步;@playwright/test 固定 1.62.0。
+    # 換 OS 大版本時最可能出事的一步;@playwright/test 固定 1.65.1(2026-11-19 由 1.62.0 升級,Chromium 159)。
     runs-on: ubuntu-latest
     # 2026-10-31:測試增加到 432 項,較慢的 runner 在 15 分鐘到時才跑到第 319 項(全部通過),
     # 同一個 commit 的另一次只要 10.4 分鐘;放寬到 25 分鐘,避免慢機器整批被取消。
@@ -55,7 +55,7 @@ jobs:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
         with:
-          node-version: '20'
+          node-version: '22'
           cache: npm
       - name: 安裝 Playwright 測試依賴
         run: npm ci

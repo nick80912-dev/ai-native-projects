@@ -65,7 +65,6 @@ function makeSandbox(){
     extractFunction('markNextStop'),
     extractFunction('setItemCompletion'),
     extractFunction('applyItemCompletion'),
-    extractFunction('autoSkipStaleItem'),
     extractFunction('isAutoSkipped'),
     extractFunction('isNextStopCleared'),
     extractFunction('pickNextStop'),
@@ -75,7 +74,6 @@ function makeSandbox(){
     extractFunction('getChildStopCluster'),
     extractFunction('homeNextStopItems'),
     extractFunction('pickClusterChild'),
-    extractFunction('completeClusterParent'),
     extractFunction('reconcileClusterController'),
     extractFunction('clusterCompletionChange')
   ].join('\n'), sandbox);
@@ -185,7 +183,7 @@ assert.strictEqual(makeSandbox().parseStartMinutes(''), null, '未填時間不�
 /* ---- 情境6:手動完成/跳過會清除 autoSkip 標記(手動動作優先) ---- */
 {
   const sb = makeSandbox();
-  sb.autoSkipStaleItem(day, dayIndex, 'x');
+  sb.setItemCompletion(day, dayIndex, 'x', 'auto-skip');   // 2026-11-19:autoSkipStaleItem 已刪除,直接寫入自動略過
   let progress = sb.getDayProgress(day, dayIndex);
   assert.strictEqual(!!progress.autoSkip['x'], true);
   sb.markNextStop(day, dayIndex, 'x', 'done'); // 使用者事後確認其實有完成

@@ -606,9 +606,8 @@ test('#19/#42 每個 settlement key 只顯示最新可操作 generation,較舊�
   const latest = mod.latestSettlementGenerations(res);
   assert.strictEqual(latest.length, 1, 'one settlement key yields exactly one actionable row');
   assert.strictEqual(latest[0].claim.id, 'gen2', 'the newest generation is the actionable one');
-  // join() rather than deepStrictEqual: arrays built inside the vm realm have a foreign prototype.
-  const history = mod.olderSettlementGenerations(res);
-  assert.strictEqual(history.map(function (e) { return e.claim.id; }).join(','), 'gen1', 'the older rejected generation moves to history');
+  /* 2026-11-19:olderSettlementGenerations 沒有 App 呼叫,已刪除;較舊的 generation 不會出現在可操作列 */
+  assert.strictEqual(res.entries.some(function (e) { return e.claim.id === 'gen1'; }), true, 'the older rejected generation is still derived, just not actionable');
 });
 
 test('#19 only the newest rejected generation may offer 重新標記已付款', function () {
@@ -623,7 +622,7 @@ test('#19 only the newest rejected generation may offer 重新標記已付款', 
   assert.strictEqual(latest.length, 1);
   assert.strictEqual(latest[0].claim.id, 'r2', 'only the newest rejected generation is actionable');
   assert.strictEqual(mod.settlementEntryStatus(latest[0], 'Bar').canRemark, true, 'the payer may re-mark the newest rejection');
-  assert.strictEqual(mod.settlementEntryStatus(mod.olderSettlementGenerations(res)[0], 'Bar').canRemark, false, 'older rejections may not be re-marked');
+  assert.strictEqual(mod.settlementEntryStatus(res.entries.filter(function (e) { return e.claim.id === 'r1'; })[0], 'Bar').canRemark, false, 'older rejections may not be re-marked');
 });
 
 // ===== §3 狀態文案與按鈕顯示 =====

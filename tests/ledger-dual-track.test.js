@@ -70,16 +70,6 @@ assert.strictEqual(shared.recordType,'expense');
 assert.strictEqual(shared.targetRecordId,'');
 assert.strictEqual(shared.deleteReason,'');
 assert.strictEqual(shared.batchId,'batch-1');
-assert.strictEqual(
-  mod.buildParticipantSnapshot([{name:'Bar'},{name:'Amy'},{name:'Bar'}],'Bar'),
-  '["Bar","Amy"]',
-  'shared participant snapshots preserve registration order and deduplicate names'
-);
-assert.strictEqual(
-  mod.buildParticipantSnapshot([{name:'Amy'}],'Bar'),
-  '["Amy","Bar"]',
-  'the current payer is included when absent from registered entries'
-);
 
 const personalSummary=mod.summarizePersonalLedgerRecords([
   {id:'personal-test-text',time:'2026-07-18T08:00:00.000Z',member:'Bar',category:'其他',detail:'[TEST] 商品名稱',amountJpy:300,amountTwd:63,note:'',payMethod:'現金'}

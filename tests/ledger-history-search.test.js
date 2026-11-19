@@ -31,8 +31,6 @@ assert.deepStrictEqual(plain(sandbox.filterLedgerHistory(records,' ramen ',{}).m
 assert.deepStrictEqual(plain(sandbox.filterLedgerHistory(records,'',{category:'餐飲',payMethod:'現金'}).map(record=>record.id)),['store-hit','meal-cash']);
 assert.deepStrictEqual(plain(sandbox.filterLedgerHistory(records,'',{categories:['餐飲','交通'],payMethods:['現金']}).map(record=>record.id)),['store-hit','meal-cash'],'open-set chips support combined multi-selection');
 assert.deepStrictEqual(plain(sandbox.filterLedgerHistory(records,'',{proxy:'proxy'}).map(record=>record.id)),['note-hit']);
-assert.deepStrictEqual(Object.keys(plain(sandbox.groupLedgerHistory([records[3],records[0]],'category'))),['交通','餐飲']);
-assert.deepStrictEqual(Object.keys(plain(sandbox.groupLedgerHistory([records[0],records[1]],'date'))),['2026-07-19','2026-07-18']);
 
 sandbox.ledgerUiState={historyGrouping:'category'};
 sandbox.escapeHtml=function(value){return String(value);};

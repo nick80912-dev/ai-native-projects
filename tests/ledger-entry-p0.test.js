@@ -177,9 +177,6 @@ assert.match(validationSource,/!draft\.multi[\s\S]*errors\.amount/,'single-entry
 assert.match(validationSource,/!draft\.multi[\s\S]*errors\.detail/,'single-entry validation reports a missing detail before persistence');
 const saveSource=extractFunction('saveLedgerEntry');
 assert.doesNotMatch(saveSource,/validation\.firstField==='detail'[\s\S]{0,120}draft\.entryDetailsOpen=true/,'detail validation never opens optional secondary fields');
-const focusSource=extractFunction('focusLedgerValidationError');
-assert.match(focusSource,/ledgerAmount/,'invalid amount returns focus to the amount input');
-assert.match(focusSource,/ledgerDetail/,'invalid detail returns focus to the always-visible detail input');
 
 assert.match(html,/\.ledger-single-primary/,'single entry has a dedicated primary amount surface');
 assert.match(html,/\.ledger-entry-summary/,'single entry has a compact summary disclosure');

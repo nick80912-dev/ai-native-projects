@@ -57,7 +57,6 @@ vm.runInContext([
   extractFunction('renderScheduleLinks'),
   extractFunction('isTripCheckableItem'),
   extractFunction('isTripItemCleared'),
-  extractFunction('getCurrentTripItemId'),
   extractFunction('shouldReplaceWithTomorrowPreview'),
   extractFunction('shouldShowCompactTomorrowPreview'),
   extractFunction('renderTomorrowPreview'),
@@ -541,23 +540,6 @@ assert(tomorrowOut.includes('Breakfast'));
 const tomorrowCompactOut = sandbox.renderTomorrowPreview(0, true);
 assert(tomorrowCompactOut.includes('class="tomorrow-card compact"'));
 
-const currentId = sandbox.getCurrentTripItemId(
-  { items:[{ id:'done', act:'done' }, { id:'next', act:'next main', place:'next place' }] },
-  0,
-  { done:true }
-);
-assert.strictEqual(currentId, 'next');
-
-sandbox.getDayProgress = function(){ return { done:{}, skip:{ parent:true } }; };
-const currentAfterSkip = sandbox.getCurrentTripItemId(
-  { items:[
-    { id:'parent', act:'Island walk', place:'Shrine' },
-    { id:'child', act:'', place:'Child scenic stop' },
-    { id:'next-main', act:'Next main stop', place:'Station' }
-  ] },
-  0,
-  {}
-);
-assert.strictEqual(currentAfterSkip, 'next-main');
+/* 2026-11-19:getCurrentTripItemId 已沒有 App 呼叫並刪除;下一站的選擇由 pickNextStop 負責,見 pick-next-stop.test.js */
 
 console.log('renderNote tests passed');

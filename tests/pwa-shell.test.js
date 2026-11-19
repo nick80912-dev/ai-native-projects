@@ -144,6 +144,9 @@ assert.match(netlify, /for = "\/app-version\.js"/, 'Netlify pins the version fil
 assert.ok(netlify.includes('for = "/' + shellPath('app-version.js') + '"'), 'Netlify pins the immutable current version file header');
 assert.ok(netlify.includes('for = "/' + shellPath('builtin-snapshot.js') + '"'), 'Netlify prevents a stale generated BUILTIN asset from mixing with new HTML');
 
+/* 2026-11-19 健檢:全站基本安全標頭 */
+assert.ok(/for = "\/\*"[\s\S]*X-Content-Type-Options = "nosniff"[\s\S]*Referrer-Policy = "strict-origin-when-cross-origin"[\s\S]*X-Frame-Options = "DENY"[\s\S]*frame-ancestors 'none'/.test(netlify), 'Netlify sends the basic security headers on every path');
+
 /* ---- index.html:APP_VERSION 一律走安全 helper(缺檔時不得 ReferenceError)---- */
 assert.match(index, /function appVersion\(\)\{/, 'index defines the safe version accessor');
 assert.match(index, /function appVersionLabel\(\)\{/, 'index defines the display-safe version accessor');
