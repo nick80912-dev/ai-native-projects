@@ -365,7 +365,7 @@ test('照片健康狀態維持在資料群組並通過子頁路由與三種手�
   });
   /* v153：旅途紀錄與診斷面板加在照片健康狀態與過往旅程之間 */
   /* v185(Bar 2026-11-10):四個偏技術的入口收進「疑難排解」,根頁資料群組只剩三列 */
-  expect(ordering).toEqual(['疑難排解','過往旅程','資料與版本']);
+  expect(ordering).toEqual(['疑難排解','邀請旅伴','過往旅程','資料與版本']);   // v205:進行中的旅程多一列邀請旅伴
   await page.getByRole('button',{name:/^疑難排解/}).click();
   await expect(page.locator('#settingsTitle')).toHaveText('疑難排解');
   expect(await page.evaluate(()=>Array.from(document.querySelectorAll('#settingsOverlay .settings-row-main b'),node=>node.textContent))).toEqual(['資料與照片狀態','旅途紀錄','診斷面板']);
