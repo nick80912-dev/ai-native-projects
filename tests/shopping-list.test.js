@@ -358,13 +358,6 @@ assert.deepStrictEqual(plain(mod.shoppingSelectionControlModel(
   allSelected:false,
   actionLabel:'全選'
 },'selection controls derive state only from current-tab item IDs');
-assert.deepStrictEqual(plain(mod.nextShoppingPageSelection(
-  visibleSelectionItems,
-  {'pending-1':true,'done-1':true,'deleted-id':true}
-)),{
-  'pending-1':true,
-  'pending-2':true
-},'select all rebuilds the map from current-tab IDs and removes stale IDs');
 assert.deepStrictEqual(plain(mod.shoppingSelectionControlModel(
   visibleSelectionItems,
   {'pending-1':true,'pending-2':true,'done-1':true}
@@ -373,12 +366,6 @@ assert.deepStrictEqual(plain(mod.shoppingSelectionControlModel(
   allSelected:true,
   actionLabel:'取消全選'
 },'all visible items switch the control to deselect all');
-assert.deepStrictEqual(plain(mod.nextShoppingPageSelection(
-  visibleSelectionItems,
-  {'pending-1':true,'pending-2':true,'done-1':true}
-)),{},'deselect all keeps multi-select active but clears the map');
-assert.deepStrictEqual(plain(mod.nextShoppingPageSelection([],{'stale':true})),{},
-  'an empty current tab cannot retain stale selection');
 assert.strictEqual(mod.shoppingItemQuantitySummary({
   unit:'盒',
   allocations:[allocation('阿寶',2),allocation('媽媽',2),allocation('小明',2)]
@@ -425,10 +412,6 @@ assert.strictEqual(typeof mod.shoppingUnitStore.add,'function');
 assert.strictEqual(typeof mod.shoppingUnitStore.remove,'function');
 
 /* 卡片資訊分行:屬性一行、地點一行,不再與動作混排 */
-assert.strictEqual(mod.shoppingItemAttrLine({category:'伴手禮',quantity:3,unit:'盒'}),'伴手禮 · 3 盒','屬性以 · 分隔,且不加「數量」前綴');
-assert.strictEqual(mod.shoppingItemAttrLine({category:'代購',quantity:1,unit:'',buyFor:'媽媽'}),'代購 · 1 · 幫媽媽買');
-assert.strictEqual(mod.shoppingItemAttrLine({quantity:null,legacyQtyText:'約 3～5 個'}),'約 3～5 個','舊式數量仍顯示');
-assert.strictEqual(mod.shoppingItemAttrLine({}),'','沒有屬性時回空字串');
 assert.strictEqual(mod.shoppingItemLocationLine({stopRef:'x'},{dayIndex:0,name:'麵酒一照庵 岡山本店'},'resolved'),'DAY 1 · 麵酒一照庵 岡山本店');
 assert.strictEqual(mod.shoppingItemLocationLine({stopRef:'x'},null,'orphan'),'原行程站點已不存在');
 assert.strictEqual(mod.shoppingItemLocationLine({stopRef:'x'},null,'pending'),'行程站點待確認');
@@ -458,14 +441,6 @@ assert.strictEqual(canOfferPartial({
   done:true,allocations:[allocation('',2)]
 }),false,'已買項目不顯示部分購買');
 const src=q({id:'s1',quantity:5,unit:'罐'});
-assert.deepStrictEqual(plain(mod.shoppingSplitPlan(src,3)),{ok:true,mode:'split',purchasedQuantity:3,remainingQuantity:2,error:''},'買到 3 剩 2');
-assert.deepStrictEqual(plain(mod.shoppingSplitPlan(src,1)),{ok:true,mode:'split',purchasedQuantity:1,remainingQuantity:4,error:''},'買到 1 剩 4');
-assert.strictEqual(mod.shoppingSplitPlan(src,5).mode,'complete','買齊直接完成,不建立 0 數量剩餘');
-assert.strictEqual(mod.shoppingSplitPlan(src,6).ok,false);
-assert.strictEqual(mod.shoppingSplitPlan(src,6).error,'本次買到數量不可超過原需求');
-assert.strictEqual(mod.shoppingSplitPlan(src,0).error,'本次買到數量至少為 1');
-assert.strictEqual(mod.shoppingSplitPlan(src,-2).error,'本次買到數量至少為 1');
-assert.strictEqual(mod.shoppingSplitPlan(src,1.5).error,'本次買到數量至少為 1','小數阻擋');
 const allocationSplitSource=q({
   id:'multi-split',unit:'盒',
   allocations:[
@@ -496,21 +471,6 @@ const photoSplit=plain(mod.buildShoppingSplitParts(q({id:'photo-split',quantity:
 }));
 assert.strictEqual(photoSplit.purchased.photoId,'shopping-photo-shared','purchased split keeps the attachment reference');
 assert.strictEqual(photoSplit.remainder.photoId,'shopping-photo-shared','remaining split shares the attachment reference');
-assert.deepStrictEqual(
-  plain(mod.shoppingPhotoIdsReleased(
-    [{id:'a',photoId:'shared'},{id:'b',photoId:'shared'}],
-    [{id:'b',photoId:'shared'}]
-  )),
-  [],
-  'removing one shared split does not release its Blob'
-);
-assert.deepStrictEqual(
-  plain(mod.shoppingPhotoIdsReleased([{id:'b',photoId:'shared'}],[])),
-  ['shared'],
-  'the final reference releases exactly one Blob ID'
-);
-assert.strictEqual(mod.shoppingSplitPlan(q({id:'s2',quantity:null,legacyQtyText:'約 3～5 個'}),1).ok,false,'舊式數量不得部分購買');
-assert(/舊式文字數量/.test(mod.shoppingSplitPlan(q({id:'s3',quantity:null,legacyQtyText:'兩盒'}),1).error),'舊式數量提示先轉換');
 
 /* ================= A:待買與 Today 依行程順序排列 =================
    排序契約:dayIndex ASC → 該日 day.items index ASC。

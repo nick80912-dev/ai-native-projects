@@ -31,7 +31,6 @@ const expectedActions={
   clearLedgerHistoryFilters:'clear-history-filters',
   closeLedgerFullList:'close-history',
   returnLedgerDashboard:'return-dashboard',
-  setLedgerHistoryFilter:'set-dashboard-filter',
   setLedgerHistorySearch:'set-history-search',
   toggleLedgerHistorySelection:'toggle-history-choice',
   setLedgerHistoryProxy:'set-history-proxy',

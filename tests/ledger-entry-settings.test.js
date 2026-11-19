@@ -297,7 +297,7 @@ function response(payload){
   assert(settingsNavSource.includes('normalizeSettingsTarget'),'every Settings entry resolves through the routing table');
   assert(html.includes('scrollTopByPage'),'root and every subpage preserve independent scroll positions');
   assert(settingsNavSource.includes('captureSettingsScroll'),'Settings captures scroll before rerender or navigation');
-  assert(html.includes('function backToSettingsRoot('),'Settings subpages return to the root context');
+  assert(html.includes("renderSettingsHeader(title,isRoot,backPage,backLabel)")||/function renderSettingsHeader\(title,isRoot,backPage,backLabel\)/.test(html),'Settings subpages return to the root context through the header back button');
   const optionsHub=renderCustomOptionsHub(html);
   const hubLabels=['記帳類別','支付方式','採買單位'];
   hubLabels.forEach(function(label){assert(optionsHub.includes('>'+label+'<'),'custom-options hub includes '+label);});
@@ -355,8 +355,8 @@ function response(payload){
 
   /* 2026-08-09：診斷面板移除測試模式區塊，但控制頁與 router 保留。 */
   assert(!diagnosticsSource.includes('openTestModeSettings()'),'diagnostics no longer links to the test-mode control page');
-  assert(html.includes("function openTestModeSettings(){")&&html.includes("openSettings('test-mode')"),
-    'the retained compatibility helper still navigates through the Settings router');
+  assert(html.includes("if(page==='test-mode')return renderSettingsTestModePage();"),
+    'the test-mode control page is still reachable through the Settings router');
 
   /* 根頁不再常駐測試模式,也不得帶任何可直接切換的控制項(§2.2.5／§3.4) */
   assert(!settingsRootSource.includes('setLedgerTestMode'),'the Settings root never carries a test-mode toggle');

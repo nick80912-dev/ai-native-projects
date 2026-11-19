@@ -284,22 +284,22 @@ test('根頁與各子頁(含 test-mode)各自保存捲動位置',async({page})=>
     const dataStart=Math.round(panel().scrollTop);
     panel().scrollTop=45;
     const dataScroll=Math.round(panel().scrollTop);
-    backToSettingsRoot();
+    openSettingsPage('root');
     const rootRestored=Math.round(panel().scrollTop);
     openSettingsPage('data');
     const dataRestored=Math.round(panel().scrollTop);
-    backToSettingsRoot();
+    openSettingsPage('root');
     openSettingsPage('test-mode');
     /* captureSettingsScroll() 是在「離開某頁」時才寫入該頁的 slot,
        所以 test-mode 的 slot 要等返回根頁之後才存在 —— 這裡刻意在離開後才讀。 */
-    backToSettingsRoot();
+    openSettingsPage('root');
     openSettingsPage('health');
     panel().scrollTop=10;
     const healthScroll=Math.round(panel().scrollTop);
-    backToSettingsRoot();
+    openSettingsPage('root');
     openSettingsPage('health');
     const healthRestored=Math.round(panel().scrollTop);
-    backToSettingsRoot();
+    openSettingsPage('root');
     const slots=Object.keys(settingsUiState.scrollTopByPage);
     return {scrollable,rootScroll,dataStart,dataScroll,rootRestored,dataRestored,healthScroll,healthRestored,slots};
   });

@@ -18,7 +18,7 @@
 
 **因此**：
 
-- `docs/batch2-device-acceptance.md` 的 **v73 驗收標準（含 E1 七區順序、E2 摘要含 `N 單位`）維持有效，不得提前改成 v74 標準，不得覆蓋或抹除 v73 已完成的驗收證據。**
+- batch2-device-acceptance.md（v73 驗收文件，已移除，內容見 git 歷史與 `docs/archive/device-acceptance-log-v73_to_v146.md`） 的 **v73 驗收標準（含 E1 七區順序、E2 摘要含 `N 單位`）維持有效，不得提前改成 v74 標準，不得覆蓋或抹除 v73 已完成的驗收證據。**
 - v74 的 delta 驗收標準寫在本文件 §8，待 v73 正式發布後才併入驗收清單。
 
 ## 1. 問題與目標
@@ -274,7 +274,7 @@ ledgerTestModeSection: {
 
 ## 8. v74 delta 驗收標準（待 v73 發布後才併入驗收清單）
 
-> ⚠️ **本節不得提前套用到 v73。** `docs/batch2-device-acceptance.md` 現行的 v73 E1（七區順序）與 E2（摘要含 `N 單位`）**仍是有效的 v73 驗收標準**，已完成的 v73 驗收證據不得被覆蓋或抹除。
+> ⚠️ **本節不得提前套用到 v73。** batch2-device-acceptance.md（v73 驗收文件，已移除，內容見 git 歷史與 `docs/archive/device-acceptance-log-v73_to_v146.md`） 現行的 v73 E1（七區順序）與 E2（摘要含 `N 單位`）**仍是有效的 v73 驗收標準**，已完成的 v73 驗收證據不得被覆蓋或抹除。
 
 ### v74 新 E1
 

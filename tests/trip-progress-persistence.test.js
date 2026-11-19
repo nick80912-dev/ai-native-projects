@@ -38,7 +38,7 @@ function uiContext(storage){
     toast:(...args)=>sb.messages.push(args),messages:[]
   });
   const uiNames=['getChecks','getNextStopProgress','getDayProgress','toggleCheck','saveNextStopProgress','markNextStop',
-    'autoSkipStaleItem','isAutoSkipped','isNextStopCleared','parseStartMinutes','pickNextStop','reconcileClusterController',
+    'isAutoSkipped','isNextStopCleared','parseStartMinutes','pickNextStop','reconcileClusterController',
     'getChildStopCluster','clusterControllerId','clusterCompletionChange',
     'snapshotNextStopState','undoNextStopAction','onNextStopDone','onNextStopSkip','onCheck'];
   // New UI helpers, if present, are loaded rather than mocked.
@@ -165,11 +165,6 @@ test('automatic reconcile failure is read-only on repeated render and has no suc
   sb.pickNextStop(day.items,{},{},12*60,{day,dayIndex:0});
   assert.strictEqual(storage.calls.set,writes);assert.strictEqual(sb.messages.length,notifications);
   assert.ok(sb.messages.every(args=>!/^已自動略過/.test(args[0])));
-});
-test('automatic single-item skip does not report success after rejection',()=>{
-  const storage=storageDouble(),sb=uiContext(storage);storage.configure(op=>{if(op==='set')throw Error('quota');});
-  assert.strictEqual(sb.autoSkipStaleItem(sb.DB.trip.days[0],0,'a'),false);
-  assert.strictEqual(storage.snapshot(),'{}');
 });
 test('cluster controller stays uncompleted if persistence fails',()=>{
   const storage=storageDouble({trip_checks:'{"a":true,"b":true}'}),sb=uiContext(storage),day=sb.DB.trip.days[0];

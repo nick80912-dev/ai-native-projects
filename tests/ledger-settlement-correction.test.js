@@ -42,6 +42,8 @@ function loadModule(){
 function plain(value){return JSON.parse(JSON.stringify(value));}
 
 const mod=loadModule();
+/* 2026-11-19:canEditLedgerRecord 已沒有 App 呼叫;改測 App 編輯時實際用的 assertCanEditLedgerRecord */
+function canEditViaAssert(record,member,records){try{mod.assertCanEditLedgerRecord(record,member,records);return true;}catch(error){return false;}}
 
 assert.strictEqual(
   mod.isLedgerCorrectionItemRecord({recordType:'expense_correction_item'}),
@@ -464,7 +466,7 @@ const replacementB=Object.assign({},protectedRecord,{
   participants:'["Bar","Cara"]'
 });
 assert.strictEqual(
-  mod.canEditLedgerRecord(protectedRecord,'Bar'),
+  canEditViaAssert(protectedRecord,'Bar'),
   false,
   'removing the protected predicate from edit permissions would reopen confirmed history'
 );

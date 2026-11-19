@@ -38,7 +38,7 @@ function plain(value){return JSON.parse(JSON.stringify(value));}
 const mod=loadModule();
 const uiSource=appHtml();
 const participantHelperStart=uiSource.indexOf('function canonicalMemberName(');
-const participantHelperEnd=uiSource.indexOf('function buildParticipantSnapshot(',participantHelperStart);
+const participantHelperEnd=uiSource.indexOf('\nfunction ',uiSource.indexOf('\n',participantHelperStart));
 const itemModeStart=uiSource.indexOf('function ledgerDraftItem(');
 const itemModeEnd=uiSource.indexOf('function toggleLedgerItemParticipant(',itemModeStart);
 assert(participantHelperStart>=0&&participantHelperEnd>participantHelperStart,'participant canonicalizer source exists');
