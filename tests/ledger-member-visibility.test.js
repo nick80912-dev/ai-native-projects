@@ -39,6 +39,8 @@ function loadModule(){
 }
 
 const mod=loadModule();
+/* 2026-11-19:canEditLedgerRecord 已沒有 App 呼叫;改測 App 編輯時實際用的 assertCanEditLedgerRecord */
+function canEditViaAssert(record,member,records){try{mod.assertCanEditLedgerRecord(record,member,records);return true;}catch(error){return false;}}
 const html=mod.__htmlSource;
 const ME='Mark';
 const ids=list=>Array.from(list,record=>record.id);
@@ -59,16 +61,16 @@ assert.strictEqual(mod.isLedgerRecordRelatedToMember(unrelated,ME),false,'#4 既
 assert(!JSON.parse(payerOnly.participants).some(name=>name===ME),'代墊測資本身確實不含目前成員,#2 不是假通過');
 
 /* ---------- 團體消費擁有權:可見性不是授權 ---------- */
-assert.strictEqual(mod.canEditLedgerRecord(payerOnly,ME),true,'付款人可編輯自己的團體消費');
+assert.strictEqual(canEditViaAssert(payerOnly,ME),true,'付款人可編輯自己的團體消費');
 assert.strictEqual(mod.canDeleteLedgerRecord(payerOnly,ME),true,'付款人可刪除自己的團體消費');
-assert.strictEqual(mod.canEditLedgerRecord(participantOnly,ME),false,'分攤者看得到但不可編輯付款人的消費');
+assert.strictEqual(canEditViaAssert(participantOnly,ME),false,'分攤者看得到但不可編輯付款人的消費');
 assert.strictEqual(mod.canDeleteLedgerRecord(participantOnly,ME),false,'分攤者看得到但不可刪除付款人的消費');
-assert.strictEqual(mod.canEditLedgerRecord(unrelated,ME),false,'非付款人且非分攤者不可編輯');
+assert.strictEqual(canEditViaAssert(unrelated,ME),false,'非付款人且非分攤者不可編輯');
 assert.strictEqual(mod.canDeleteLedgerRecord(unrelated,ME),false,'非付款人且非分攤者不可刪除');
 
 const missingOwner={id:'owner-missing',time:day(20),member:'',participants:'["Mark","Jane"]',recordType:'expense',amountJpy:50,amountTwd:10};
 assert.strictEqual(mod.isLedgerRecordRelatedToMember(missingOwner,ME),true,'缺付款人的紀錄若依既有可見性規則可見,仍維持可見');
-assert.strictEqual(mod.canEditLedgerRecord(missingOwner,ME),false,'缺付款人時 fail-closed 禁止編輯');
+assert.strictEqual(canEditViaAssert(missingOwner,ME),false,'缺付款人時 fail-closed 禁止編輯');
 assert.strictEqual(mod.canDeleteLedgerRecord(missingOwner,ME),false,'缺付款人時 fail-closed 禁止刪除');
 assert.throws(
   function(){mod.assertCanEditLedgerRecord(missingOwner,ME);},
@@ -166,7 +168,7 @@ assert.strictEqual(mod.canonicalMemberName('　Mark　'),'Mark','全形空白與
 assert.strictEqual(mod.isLedgerRecordRelatedToMember({id:'k1',member:'　Mark　',participants:'["Jane"]'},'Mark'),true,'#12 付款人姓名格式不同仍判定為同一人');
 assert.strictEqual(mod.isLedgerRecordRelatedToMember({id:'k2',member:'Jane',participants:'["Baron","Mark  Lee"]'},'Mark Lee'),true,'#12 participants 內的多餘空白不影響比對');
 assert.strictEqual(mod.isLedgerRecordRelatedToMember({id:'k3',member:'Jane',participants:'["Markus"]'},'Mark'),false,'正規化不得放寬成前綴比對');
-assert.strictEqual(mod.canEditLedgerRecord({id:'k4',member:'　Mark　',recordType:'expense'},'Mark'),true,'所有權比對沿用全形空白正規化');
+assert.strictEqual(canEditViaAssert({id:'k4',member:'　Mark　',recordType:'expense'},'Mark'),true,'所有權比對沿用全形空白正規化');
 assert.strictEqual(mod.canDeleteLedgerRecord({id:'k5',member:'Mark  Lee',recordType:'expense'},'Mark Lee'),true,'所有權比對沿用連續空白正規化');
 
 /* ---------- UI 與 handler 雙層守門 ---------- */
@@ -181,7 +183,7 @@ function renderActionMenu(record,track,member,records,isBatch){
     ledgerRecordActionModel(source,id,currentMember,batch){
       const selected=batch?mod.ledgerEditSelection(source,id):source.filter(function(item){return item.id===id;});
       const owner=selected[0]&&selected[0].member;
-      const editable=selected.length>0&&selected.every(function(item){return mod.canEditLedgerRecord(item,currentMember);});
+      const editable=selected.length>0&&selected.every(function(item){return canEditViaAssert(item,currentMember);});
       return {
         records:selected,receipt:null,canEdit:editable,canDelete:editable,canCorrect:false,
         message:owner?(editable?'':'僅付款人可編輯或刪除此筆團體紀錄'):mod.LEDGER_OWNER_UNKNOWN_MESSAGE

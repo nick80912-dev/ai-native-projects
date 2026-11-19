@@ -58,9 +58,9 @@ sandbox.shoppingUiWorkflow={
       else delete shoppingUiState.selected[action.id];
       sandbox.renderShoppingListOverlay();
     }else if(action.type==='toggle-visible-selection'){
-      shoppingUiState.selected=sandbox.nextShoppingPageSelection(
-        action.ids.map(id=>({id})),shoppingUiState.selected
-      );
+      /* 2026-11-19:nextShoppingPageSelection 已刪除;這裡照真正 workflow 的規則:全選了就清空,否則選滿目前分頁 */
+      const allOn=action.ids.length>0&&action.ids.every(id=>shoppingUiState.selected[id]);
+      shoppingUiState.selected=allOn?{}:Object.fromEntries(action.ids.map(id=>[id,true]));
       sandbox.renderShoppingListOverlay();
       sandbox.requestAnimationFrame(function(){
         const button=sandbox.document.getElementById('shoppingSelectAllButton');
@@ -73,7 +73,6 @@ sandbox.shoppingUiWorkflow={
 vm.createContext(sandbox);
 [
   'shoppingSelectionControlModel',
-  'nextShoppingPageSelection',
   'shoppingCurrentTabItems',
   'setShoppingTab',
   'toggleShoppingSelectionMode',

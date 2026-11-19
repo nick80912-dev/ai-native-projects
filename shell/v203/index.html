@@ -2791,18 +2791,6 @@ function markNextStop(day,dayIndex,itemId,status){
 /* 時間不能重來、行程不會同天回訪:已過時間且從未手動處理的項目,除了「最後一個」保留待確認外,
    其餘自動標記為略過(寫入 progress.skip,並記錄於 autoSkip 供 UI 顯示標籤與一鍵修正)。
    回傳 true 代表這次呼叫「新」標記了(用於決定是否要 toast),false 代表本來就已清除過,不重複動作。 */
-function autoSkipStaleItem(day,dayIndex,itemId){
-  if(todayListMode()) return false;   // v192:清單模式不自動略過
-  if(typeof findToday==='function'&&findToday()!==dayIndex) return false;
-  if(tripProgressRenderReadOnly||tripProgressErrorMessage) return false;
-  var state=readTripProgressChecked(localStorage);
-  if(!state.ok){reportTripProgressFailure(state,'auto-skip-read');return false;}
-  var progress=normalizeDayProgress(state.progress[dayProgressKey(day,dayIndex)]);
-  if(progress.done[itemId]||progress.skip[itemId]) return false;
-  var result=setItemCompletion(day,dayIndex,itemId,'auto-skip');
-  if(!result.ok) reportTripProgressFailure(result,'auto-skip-'+dayProgressKey(day,dayIndex)+'-'+itemId);
-  return result.ok;
-}
 function isAutoSkipped(itemId,progress){
   return !!(progress&&progress.autoSkip&&progress.autoSkip[itemId]);
 }
@@ -2850,7 +2838,6 @@ function tripItemForNavigation(dayIndex,itemId){
   if(!day)return null;
   return (day.items||[]).filter(function(item){return item&&item.id===String(itemId);})[0]||null;
 }
-function navUrl(it,res){return navigationDirectionsUrl(navigationIntent(it,res),null,it,res);}
 function renderTripNavigationLink(it,res,dayIndex,className){
   var intent=navigationIntent(it,res);if(!intent)return '';
   var mode=navigationTravelMode(it,res),label=mode==='walking'?'🚶 步行':mode==='driving'?'🚗 導航':'🚃 路線';
@@ -3304,13 +3291,6 @@ function isTripCheckableItem(it){
 function isTripItemCleared(it,day,dayIndex,checks){
   return isNextStopCleared(it,getDayProgress(day,dayIndex),checks);
 }
-function getCurrentTripItemId(day,dayIndex,checks){
-  if(!day) return null;
-  checks=checks||getChecks();
-  var items=(day.items||[]).filter(function(it){ return it&&it.id&&it.act; });
-  var next=items.find(function(it){ return !isTripItemCleared(it,day,dayIndex,checks); });
-  return next?next.id:null;
-}
 /* 走共用的 switchView 路徑,不再自己複製一份 view／tabbar 切換的 body ——
    複製版本無法參與捲動保存與意圖機制,兩邊行為只會愈長愈不一樣。 */
 function openTripItem(dayIndex,itemId){
@@ -3623,19 +3603,19 @@ function renderItem(it,checks,currentItemId,dayProgress,timeline){
     qa+=renderTripNavigationLink(it,res,curDay,'qa-btn drv');
   }
   var pk=p&&(p.mapcode||p.pfee||p.pnote)?parkingPanel(p):'';
-  if(pk&&transport()==='drive') qa+='<button class="qa-btn pk'+(isTripPanelOpen(it.id,'pk')?' on':'')+'" onclick="togglePanel(\''+it.id+'\',\'pk\',this)">'+iconLabelHtml('🅿 停車')+'</button>';
+  if(pk&&transport()==='drive') qa+='<button class="qa-btn pk'+(isTripPanelOpen(it.id,'pk')?' on':'')+'" onclick="togglePanel(\''+jsHtmlAttrString(it.id)+'\',\'pk\',this)">'+iconLabelHtml('🅿 停車')+'</button>';
   var info=infoPanel(res);
   if(info){
     var lbl='ℹ️ 資訊';
     if(res.kind==='rest') lbl='🍜 資訊';
     else if(p){ lbl=({shopping:'🏬 資訊',restarea:'🍜 美食',hotel:'🏨 資訊',ferry:'⛴ 渡輪',parking:'🚗 租車',fuel:'⛽ 加油資訊'})[p.tnorm]||'ℹ️ 資訊'; }
-    qa+='<button class="qa-btn '+(p&&p.tnorm==='ferry'?'fr':'nf')+(isTripPanelOpen(it.id,'nf')?' on':'')+'" onclick="togglePanel(\''+it.id+'\',\'nf\',this)">'+iconLabelHtml(lbl)+'</button>';
+    qa+='<button class="qa-btn '+(p&&p.tnorm==='ferry'?'fr':'nf')+(isTripPanelOpen(it.id,'nf')?' on':'')+'" onclick="togglePanel(\''+jsHtmlAttrString(it.id)+'\',\'nf\',this)">'+iconLabelHtml(lbl)+'</button>';
   }
   if(p&&p.tnorm==='shopping'&&DB.shop.some(function(s){return (s.placeId||'').toUpperCase()===(p.placeId||'').toUpperCase();})){
     qa+='<button class="qa-btn sp" onclick="openShopPlace(\''+jsString(p.placeId)+'\')">'+iconLabelHtml('🏬 樓層')+'</button>';
   }
   var hasMore=it.move||it.note;
-  if(hasMore) qa+='<button class="qa-btn mo'+(isTripPanelOpen(it.id,'mo')?' on':'')+'" onclick="togglePanel(\''+it.id+'\',\'mo\',this)">'+iconLabelHtml('📝 更多')+'</button>';
+  if(hasMore) qa+='<button class="qa-btn mo'+(isTripPanelOpen(it.id,'mo')?' on':'')+'" onclick="togglePanel(\''+jsHtmlAttrString(it.id)+'\',\'mo\',this)">'+iconLabelHtml('📝 更多')+'</button>';
 
   var panels='',pnCls=function(kind){ return 'panel'+(isTripPanelOpen(it.id,kind)?' open':''); };
   if(pk) panels+='<div class="'+pnCls('pk')+'" id="pn_pk_'+it.id+'">'+pk+'</div>';
@@ -3925,7 +3905,7 @@ function prepChecklistModel(){
     packDone:packs.concat(customPacks).filter(function(item){return item.done;}).length,packTotal:packs.length+customPacks.length};
 }
 function renderPrepTodoRow(item){
-  var k=jsString(item.key);
+  var k=jsHtmlAttrString(item.key);  /* v203 健檢:放進雙引號屬性,也要轉義 " < > & */
   return '<div class="prep-row '+(item.done?'done':'')+'"><label class="prep-check"><input type="checkbox" '+(item.done?'checked':'')+' onchange="togglePrepItem(\''+k+'\',this.checked)"><span class="prep-text"><span class="prep-title">'+escapeHtml(item.title)+'</span>'+(item.due?'<small class="prep-due">'+escapeHtml(item.due)+' 前</small>':'')+(item.note?'<small class="prep-note">'+escapeHtml(item.note)+'</small>':'')+'</span></label>'+(item.custom?'<button type="button" class="prep-remove" aria-label="刪除「'+escapeHtml(item.title)+'」" onclick="removePrepCustom(\''+k+'\')">×</button>':'')+'</div>';
 }
 function renderPrepChecklistBody(){
@@ -4247,12 +4227,6 @@ function readWeatherEnvelope(city){
   var cached=lsGet(weatherCacheKey(city),null);
   return cached&&typeof cached==='object'&&cached.data&&typeof cached.data==='object'?cached:null;
 }
-function getCachedWeather(city){
-  var cached=readWeatherEnvelope(city),view=weatherPresentation(cached,city,Date.now());
-  if(view.status!=='fresh')return null;
-  var copy={};Object.keys(cached.data).forEach(function(k){copy[k]=cached.data[k];});
-  copy.rain=view.rain;return copy;
-}
 function setCachedWeather(city,data,timestamp){
   try{
     var key=weatherCacheKey(city),bytes=JSON.stringify({t:timestamp===undefined?Date.now():timestamp,data:data});
@@ -4304,14 +4278,6 @@ function loadWeatherEnvelope(city,canUse,force){
   }).catch(function(err){
     if(allowed())weatherDiagnostic('network');
     return null;
-  });
-}
-function loadWeatherForCity(city){
-  return loadWeatherEnvelope(city).then(function(envelope){
-    var view=weatherPresentation(envelope,city,Date.now());
-    if(view.status!=='fresh')return null;
-    var copy={};Object.keys(envelope.data).forEach(function(k){copy[k]=envelope.data[k];});
-    copy.rain=view.rain;return copy;
   });
 }
 function pickNextStop(items,progress,checks,nowMinutes,dayRef){
@@ -4419,9 +4385,6 @@ function reconcileClusterController(day,dayIndex,cluster,progress,checks){
   }
   return false;
 }
-function completeClusterParent(day,dayIndex,cluster,progress,checks){
-  return reconcileClusterController(day,dayIndex,cluster,progress,checks);
-}
 function syncCompletedClusterParents(day,dayIndex){
   var changed=false;
   (day&&day.items||[]).forEach(function(parent){
@@ -4511,7 +4474,7 @@ function renderClusterNextStopCard(day,dayIndex,pick,cluster,checks,progress,now
     renderNextStopMore(current.id,currentMeta)+
     (canNav?'<div class="nx-primary-actions">'+renderTripNavigationLink(current,res,dayIndex,'nx-drive-btn')+'</div>':'')+
     renderNextStopSecondaryActions(currentMeta)+
-    '<div class="nx-ticket-low"><button class="nx-decision-btn done" onclick="onNextStopDone('+dayIndex+',\''+current.id+'\')" aria-label="完成：'+escapeHtml(clusterItemName(current))+'">完成</button><button class="nx-decision-btn skip" onclick="onNextStopSkip('+dayIndex+',\''+current.id+'\')" aria-label="跳過：'+escapeHtml(clusterItemName(current))+'">跳過</button></div></div>';
+    '<div class="nx-ticket-low"><button class="nx-decision-btn done" onclick="onNextStopDone('+dayIndex+',\''+jsHtmlAttrString(current.id)+'\')" aria-label="完成：'+escapeHtml(clusterItemName(current))+'">完成</button><button class="nx-decision-btn skip" onclick="onNextStopSkip('+dayIndex+',\''+jsHtmlAttrString(current.id)+'\')" aria-label="跳過：'+escapeHtml(clusterItemName(current))+'">跳過</button></div></div>';
   h+=renderTodayRemaining(day,dayIndex,checks);
   return h;
 }
@@ -4585,7 +4548,7 @@ function renderNextStopCard(day,dayIndex,pick){
   var canNav=(it.place&&it.place.trim())||res;
   var buy=renderNextStopBuy(it.id);
   var h='<div class="nx-ticket'+(buy?' has-next-buy':'')+'">'+
-    '<div class="nx-ticket-main openable" role="button" tabindex="0" aria-label="開啟完整行程：'+escapeHtml(meta.place.replace(/\n/g,' '))+'" onclick="openTripItem('+dayIndex+',\''+it.id+'\')" onkeydown="activateKeyboardButton(event,function(){openTripItem('+dayIndex+',\''+it.id+'\')})">'+
+    '<div class="nx-ticket-main openable" role="button" tabindex="0" aria-label="開啟完整行程：'+escapeHtml(meta.place.replace(/\n/g,' '))+'" onclick="openTripItem('+dayIndex+',\''+jsHtmlAttrString(it.id)+'\')" onkeydown="activateKeyboardButton(event,function(){openTripItem('+dayIndex+',\''+jsHtmlAttrString(it.id)+'\')})">'+
       '<div class="nx-ticket-kicker">NEXT STOP · DAY '+(dayIndex+1)+'</div>'+
       (it.time?'<div class="nx-ticket-time">'+escapeHtml(it.time)+'</div>':'')+
       '<div class="nx-ticket-title">'+escapeHtml(meta.place.replace(/\n/g,' '))+'</div>'+
@@ -4608,8 +4571,8 @@ function renderNextStopCard(day,dayIndex,pick){
     (canNav?'<div class="nx-primary-actions">'+renderTripNavigationLink(it,res,dayIndex,'nx-drive-btn')+'</div>':'')+
     renderNextStopSecondaryActions(meta)+
     '<div class="nx-ticket-low">'+
-      '<button class="nx-decision-btn done" onclick="onNextStopDone('+dayIndex+',\''+it.id+'\')">完成</button>'+
-      '<button class="nx-decision-btn skip" onclick="onNextStopSkip('+dayIndex+',\''+it.id+'\')">跳過</button>'+
+      '<button class="nx-decision-btn done" onclick="onNextStopDone('+dayIndex+',\''+jsHtmlAttrString(it.id)+'\')">完成</button>'+
+      '<button class="nx-decision-btn skip" onclick="onNextStopSkip('+dayIndex+',\''+jsHtmlAttrString(it.id)+'\')">跳過</button>'+
     '</div>'+
   '</div>';
   h+=renderTodayRemaining(day,dayIndex);
@@ -6216,9 +6179,6 @@ function openShoppingMultiLedgerEntry(items){
     messages:{unverified:'記帳狀態尚待確認，請先完成同步或重新確認',alreadyLinked:'選取項目目前沒有未記帳項目'}
   });
 }
-function openShoppingLedgerSourcesEntry(sources,keepShoppingList){
-  return openShoppingLedgerDraftPlan(buyToLedgerDomain.createDraftPlan(sources),keepShoppingList);
-}
 function openShoppingLedgerDraftPlan(plan,keepShoppingList){
   if(plan.mode==='single'){
     var seed=plan.seed;
@@ -6976,35 +6936,12 @@ function shoppingQuantityLabel(item){
    狀態徽章、分類／數量／代購對象、地點原本擠在同一行,再與三顆動作按鈕搶寬度,
    地點被推到第三行且與上一行斷開。改為固定三層:品名 → 屬性 → 地點,動作另收進 ⋯。
    分隔符與帳本、Today 卡片一致用「·」;數量已有單位,不再加「數量」前綴。 */
-function shoppingItemAttrLine(item){
-  var source=item&&typeof item==='object'?item:{},parts=[];
-  if(source.category)parts.push(String(source.category));
-  var amount=shoppingQuantityLabel(source);
-  if(amount)parts.push(amount);
-  if(String(source.buyFor||'').trim())parts.push('幫'+String(source.buyFor).trim()+'買');
-  return parts.join(' · ');
-}
 function shoppingItemLocationLine(item,stop,state){
   if(stop)return 'DAY '+(stop.dayIndex+1)+' · '+stop.name;
   return SHOPPING_STOP_STATE_LABEL_TEXT[state]||'';
 }
 var SHOPPING_STOP_STATE_LABEL_TEXT={pending:'行程站點待確認',orphan:'原行程站點已不存在'};
 /* 部分購買的計算與驗證。剩餘數量由系統算,使用者只輸入本次買到。 */
-function shoppingSplitPlan(source,purchasedQuantity){
-  var item=source&&typeof source==='object'?source:{};
-  var allocation=shoppingItemAllocations(item)[0];
-  var quantity=item.quantity;
-  if(quantity===undefined&&allocation)quantity=allocation.quantity;
-  if(quantity===undefined||quantity===null)
-    return {ok:false,mode:'',purchasedQuantity:0,remainingQuantity:0,error:'此項目仍使用舊式文字數量，請先編輯為數字與單位，再使用部分購買'};
-  if(!isSafeShoppingQuantity(purchasedQuantity))
-    return {ok:false,mode:'',purchasedQuantity:0,remainingQuantity:0,error:'本次買到數量至少為 1'};
-  if(purchasedQuantity>quantity)
-    return {ok:false,mode:'',purchasedQuantity:0,remainingQuantity:0,error:'本次買到數量不可超過原需求'};
-  if(purchasedQuantity===quantity)
-    return {ok:true,mode:'complete',purchasedQuantity:purchasedQuantity,remainingQuantity:0,error:''};
-  return {ok:true,mode:'split',purchasedQuantity:purchasedQuantity,remainingQuantity:quantity-purchasedQuantity,error:''};
-}
 function shoppingItemAllocations(item){
   return item&&Array.isArray(item.allocations)?item.allocations:[];
 }
@@ -7159,12 +7096,6 @@ function shoppingSelectionControlModel(items,selected){
   });
   var allSelected=ids.length>0&&ids.every(function(id){return !!(selected&&selected[id]);});
   return {ids:ids,allSelected:allSelected,actionLabel:allSelected?'取消全選':'全選'};
-}
-function nextShoppingPageSelection(items,selected){
-  var model=shoppingSelectionControlModel(items,selected),next={};
-  if(model.allSelected)return next;
-  model.ids.forEach(function(id){next[id]=true;});
-  return next;
 }
 function shoppingItemTargetSummary(item){
   var targets=shoppingTargetAllocations(item).map(function(allocation){return allocation.target;});
@@ -7566,10 +7497,6 @@ function shoppingPhotoReferenceSet(items){
   var refs={};
   (items||[]).forEach(function(item){var id=String(item&&item.photoId||'').trim();if(id)refs[id]=true;});
   return refs;
-}
-function shoppingPhotoIdsReleased(before,after){
-  var prior=shoppingPhotoReferenceSet(before),next=shoppingPhotoReferenceSet(after);
-  return Object.keys(prior).filter(function(id){return !next[id];});
 }
 function cleanupShoppingPhotoIds(ids){
   return Promise.all((ids||[]).map(function(id){
@@ -8091,13 +8018,6 @@ function isLedgerCorrectionItemRecord(record){return !!record&&record.recordType
 function isLedgerCorrectionCommitRecord(record){return !!record&&record.recordType==='expense_correction_commit';}
 function isLedgerVoidCommitRecord(record){return !!record&&record.recordType==='expense_void_commit';}
 function isLedgerCorrectionRecord(record){return isLedgerCorrectionItemRecord(record)||isLedgerCorrectionCommitRecord(record)||isLedgerVoidCommitRecord(record);}
-function buildParticipantSnapshot(entries,currentMember){
-  var names=[],seen={};
-  (entries||[]).forEach(function(entry){var name=String(entry&&entry.name||'').trim(),key=canonicalMemberName(name);if(key&&!seen[key]){seen[key]=true;names.push(name);}});
-  var current=String(currentMember||'').trim(),currentKey=canonicalMemberName(current);
-  if(currentKey&&!seen[currentKey])names.push(current);
-  return JSON.stringify(names);
-}
 function ledgerDetailWithoutTestPrefix(record){ return String(record&&record.detail||'').replace(/^\[TEST\]\s*/,'').trim(); }
 function isIdentityRegistrationRecord(record){ return !!record&&(record.recordType==='identity_registration'||ledgerDetailWithoutTestPrefix(record)==='[身分註冊]'); }
 function isDeletionRecord(record){ return !!record&&record.recordType==='deletion'; }
@@ -8155,7 +8075,6 @@ function ledgerRecordCorrectionProtected(record,records){
   var receipt=ledgerReceiptForRecord(records,record.id,function(){});
   return !receipt||!!receipt.protected;
 }
-function canEditLedgerRecord(record,currentMember,records){return isLedgerRecordActionTarget(record)&&ledgerRecordOwnerMatches(record,currentMember)&&!ledgerRecordCorrectionProtected(record,records);}
 function canDeleteLedgerRecord(record,currentMember,records){return isLedgerRecordActionTarget(record)&&ledgerRecordOwnerMatches(record,currentMember)&&!ledgerRecordCorrectionProtected(record,records);}
 function assertCanEditLedgerRecord(record,currentMember,records){
   if(!isLedgerRecordActionTarget(record))throw new Error('此類紀錄不可編輯');
@@ -8889,10 +8808,6 @@ function buildMyTripSpend(personalRecords,groupRecords,member,now){
   result.groupItems.sort(function(a,b){return String(b.time).localeCompare(String(a.time));});
   return result;
 }
-function filterLedgerHistoryRecords(records,track,filter){
-  var source=(records||[]).slice();
-  return track==='personal'&&filter==='proxy'?source.filter(function(record){return record&&record.isProxy===true;}):source;
-}
 function normalizeLedgerHistoryText(value){return String(value==null?'':value).replace(/\u3000/g,' ').replace(/\s+/g,' ').trim().toLowerCase();}
 function filterLedgerHistory(records,query,filters){
   var needle=normalizeLedgerHistoryText(query),options=filters||{};
@@ -8909,14 +8824,6 @@ function filterLedgerHistory(records,query,filters){
     if(options.taxExempt==='non-tax-exempt'&&meta.isTaxFree)return false;
     return true;
   });
-}
-function groupLedgerHistory(records,mode){
-  var groups={};
-  (records||[]).forEach(function(record){
-    var key=mode==='category'?(String(record&&record.category||'').trim()||'未分類'):(ledgerLocalDateKey(record&&record.time)||'日期不明');
-    if(!groups[key])groups[key]=[];groups[key].push(record);
-  });
-  return groups;
 }
 function ledgerSettlementStatus(current,currency){
   currency=String(currency||'').toUpperCase();
@@ -9459,9 +9366,6 @@ function deriveSettlements(records,warnFn,universe){
 /* 主面板只顯示每個 settlement key 的最新可操作 generation;較舊的 rejected／confirmed 進歷史。 */
 function latestSettlementGenerations(handshake){
   return ((handshake&&handshake.entries)||[]).filter(function(entry){return entry.latest;});
-}
-function olderSettlementGenerations(handshake){
-  return ((handshake&&handshake.entries)||[]).filter(function(entry){return !entry.latest;});
 }
 function applyConfirmedSettlements(balances,confirmedEntries){
   var source=balances&&Array.isArray(balances.members)?balances:{members:[],memberOrder:[],invalidRecords:[]};
@@ -11299,7 +11203,6 @@ function captureSettingsScroll(){
 }
 /* v153：「診斷面板」列關掉設定再開面板（面板疊層低於設定頁）。 */
 function openSettingsPage(pageId){if(pageId==='past')return openPastTrips();if(pageId==='connect')return openConnectTrip();if(pageId==='diagnostics'){closeSettings();return openDiagnostics();}openSettings(pageId);}
-function backToSettingsRoot(){openSettings('root');}
 function renderSettingsHeader(title,isRoot,backPage,backLabel){
   var target=backPage||'root';
   var label=backLabel||'設定';
@@ -11563,8 +11466,9 @@ function renderSettingsHealthPage(){
   return header+renderSettingsDataHealth()+'<h3 class="settings-subheading">照片附件</h3>'+renderSettingsStorageBody();
 }
 var APP_RELEASE_NOTES=[
-  {version:'v203',date:'2026-11-19',title:'診斷面板捲動修正',items:[
-    '打開診斷面板後滑動，後面的頁面不再跟著捲。'
+  {version:'v203',date:'2026-11-19',title:'診斷面板修正與健檢',items:[
+    '打開診斷面板後滑動，後面的頁面不再跟著捲。',
+    '整體健檢：清掉沒在用的程式、行程按鈕更耐用（試算表的編號有引號也不會失效）、網站加上基本安全設定。'
   ]},
   {version:'v202',date:'2026-11-18',title:'設定與過往旅程整理',items:[
     '過往旅程：只留左上「返回」；行程、帳務、採買、筆記分頁的大卡縮成一行；清單不再顯示帳號。',
@@ -11789,23 +11693,6 @@ function pastTripObjectCards(records){
       return key!=='photoId'&&record[key]!==''&&record[key]!=null&&(!Array.isArray(record[key])||record[key].length);
     }).map(function(key){return '<div><dt>'+escapeHtml(pastTripFieldLabel(key))+'</dt><dd>'+escapeHtml(pastTripFieldValue(record[key]))+'</dd></div>';}).join('')+'</dl></article>';
   }).join('');
-}
-function renderPastTripSnapshot(archive){
-  var itinerary=buildItin(parseCSV(archive.sheets.itin.csv)),personal=archive.personal;
-  var days=itinerary.days.map(function(day,index){
-    return '<h4>DAY '+(index+1)+' · '+escapeHtml(day.date)+' '+escapeHtml(day.dow)+'</h4>'+day.items.map(function(item){
-      return '<article class="past-trip-record"><strong>'+escapeHtml([item.time,item.act,item.place].filter(Boolean).join(' · '))+'</strong>'+
-        (personal.checks&&personal.checks[item.id]?'<span class="settings-help"> · 已打卡</span>':'')+
-        (item.move?'<p>'+escapeHtml(item.move)+'</p>':'')+(item.note?'<p>'+escapeHtml(item.note)+'</p>':'')+'</article>';
-    }).join('');
-  }).join('');
-  var shared=[];try{shared=parseLedgerSheetCsv(archive.sheets.ledger.csv);}catch(error){}
-  return '<div class="past-trip-readable">'+
-    '<details open><summary>行程紀錄</summary>'+(days||'<p class="settings-help">沒有行程紀錄</p>')+'</details>'+
-    '<details><summary>採買紀錄</summary>'+pastTripObjectCards(personal.shoppingItems)+'</details>'+
-    '<details><summary>個人帳務</summary>'+pastTripObjectCards(personal.personalLedger)+'</details>'+
-    '<details><summary>團體分帳紀錄</summary><p class="settings-help">保存當時的完整紀錄，包含更正、刪除與結算紀錄。</p>'+pastTripObjectCards(shared)+'</details>'+
-    '<details><summary>旅途紀錄</summary>'+pastTripObjectCards(personal.travelNotes)+'</details></div>';
 }
 /* v193(Bar 2026-11-16「過往旅程列出去與回的時程」):清單與標題都寫出發與回程日期、星期與天數 */
 function pastTripDateParts(text){
@@ -14062,16 +13949,6 @@ function persistLedgerEditedRecords(records,editing){
   var batch=buildSharedLedgerEditBatch(originals,records,{member:getCurrentMember(),now:Date.now(),random:Math.random,records:freshRecords});
   var result=ledgerRepository.enqueueBatch(batch);result.edited=true;result.savedRecords=batch;return Promise.resolve(result);
 }
-function focusLedgerValidationError(validation){
-  requestAnimationFrame(function(){
-    var target=null;
-    if(validation.firstField==='amount')target=document.getElementById('ledgerAmount');
-    else if(validation.firstField==='detail')target=document.getElementById('ledgerDetail');
-    else if(validation.firstField==='storeName')target=document.getElementById('ledgerStoreName');
-    else if(validation.firstItemKey){var safeKey=String(validation.firstItemKey).replace(/[^a-zA-Z0-9_-]/g,'_');target=document.getElementById((validation.firstItemField==='amount'?'ledgerItemAmount_':'ledgerItemName_')+safeKey);}
-    if(!target)return;try{target.scrollIntoView({block:'center',behavior:'smooth'});}catch(ignore){target.scrollIntoView();}try{target.focus({preventScroll:true});}catch(ignoreFocus){target.focus();}
-  });
-}
 function ledgerValidationErrorTarget(validation){
   if(validation.firstField==='amount')return 'ledgerAmount';
   if(validation.firstField==='detail')return 'ledgerDetail';
@@ -14287,7 +14164,6 @@ function submitSharedLedgerDeletion(){
   if(typeof forgetLedgerReceiptsFor==='function')forgetLedgerReceiptsFor(originals,spendLedgerRecords(mergedLedgerRecords()));
   return promise.then(function(delivery){renderSplit();toast(delivery.ok?'刪除已同步':'刪除已記錄,待同步');return delivery;},function(error){renderSplit();toast(error.message||'刪除失敗');throw error;});
 }
-function formatLedgerAmounts(record){ return formatLedgerCurrencyAmount('JPY',record.amountJpy)+' / '+formatLedgerCurrencyAmount('TWD',record.amountTwd); }
 function ledgerAmountTotals(records){
   return (records||[]).reduce(function(sum,record){sum.amountJpy+=Number(record&&record.amountJpy||0);sum.amountTwd+=Number(record&&record.amountTwd||0);return sum;},{amountJpy:0,amountTwd:0});
 }
@@ -14300,7 +14176,6 @@ function formatLedgerLocalOccurrence(value){
   var day=date.getFullYear()+'/'+pad(date.getMonth()+1)+'/'+pad(date.getDate());
   return date.getHours()===0&&date.getMinutes()===0?day:day+' '+pad(date.getHours())+':'+pad(date.getMinutes());
 }
-function ledgerRecordParticipantLabel(record){var participants=parseParticipants(record,function(){});return participants?participants.length+' 人分攤':'分攤資料異常';}
 function groupLedgerDisplayUnits(records){
   var units=[],batchUnits={};
   (records||[]).forEach(function(record){
@@ -15132,7 +15007,7 @@ function clearLedgerRefundGroup(group){var updates={};group.records.forEach(func
 function openLedgerRefundEdit(key){
   var group=ledgerRefundGroupByKey(key);if(!group)return;
   closeLedgerRefundEdit();
-  var k=jsString(key),body,dialog=document.createElement('div');dialog.id='ledgerRefundEditDialog';dialog.className='ledger-refund-edit-backdrop';
+  var k=jsHtmlAttrString(key),body,dialog=document.createElement('div');dialog.id='ledgerRefundEditDialog';dialog.className='ledger-refund-edit-backdrop';
   if(group.done){
     body='<label for="ledgerRefundEditAmount" class="ledger-sheet-label">實際退了</label><input class="ledger-sheet-input" id="ledgerRefundEditAmount" type="number" '+ledgerAmountInputAttrs('JPY')+' min="0" value="'+escapeHtml(ledgerAmountInputText(group.received,'JPY'))+'">'+
       '<p class="ledger-refund-actual-error" id="ledgerRefundEditError" role="alert" hidden></p>'+
@@ -15191,7 +15066,6 @@ function returnLedgerDashboard(){
   if(document.body.classList.contains('ledger-sheet-open'))return false;
   ledgerUiWorkflow.dispatch({type:'return-dashboard'});return true;
 }
-function setLedgerHistoryFilter(value){ledgerUiWorkflow.dispatch({type:'set-dashboard-filter',value:value});}
 function ledgerHistoryFilteredRecords(records){return filterLedgerHistory(records,ledgerUiState.historyQuery,{categories:ledgerUiState.historyCategories,payMethods:ledgerUiState.historyPayMethods,proxy:ledgerUiState.track==='personal'?ledgerUiState.historyProxy:'all',taxExempt:tripTaxSettings().taxFree?ledgerUiState.historyTaxExempt:'all'});}
 function renderLedgerHistoryGrouped(records,shared,currency){
   if(!records.length)return '<div class="empty-state">沒有符合條件的紀錄</div>';
@@ -15610,7 +15484,6 @@ function closeDiagnostics(restoreFocus){
   if(restoreFocus!==false&&target&&target.isConnected&&typeof target.focus==='function')target.focus();
 }
 /* 保留既有測試模式控制頁 helper 與 Settings router；診斷面板不再顯示此入口。 */
-function openTestModeSettings(){ closeDiagnostics(false); openSettings('test-mode'); }
 /* 真機驗收用:回報「這台裝置實際啟用的外殼版本」,不是伺服器上有什麼。
    sw.js 的 activate 會刪掉所有非當前 CACHE_NAME 的快取,所以 Cache Storage 裡
    剩下的那一筆就是答案 —— 版本字串一律讀自真實快取,index.html 不得自行寫死,

@@ -89,7 +89,7 @@ test('during the trip the itinerary only lists stops; skip and auto skip stay re
   localStorage.removeItem('trip_next_stop_progress');localStorage.removeItem('trip_checks');
   DB.trip.days[0].items=[['auto','08:00'],['manual','13:00'],['done','14:00'],['pending','15:00']].map(([id,time])=>({id:'clarity-'+id,time,act:'狀態-'+id,place:'',ref:'',move:'',note:''}));
   curDay=0;tripHideDone=false;
-  autoSkipStaleItem(DB.trip.days[0],0,'clarity-auto');renderToday();
+  setItemCompletion(DB.trip.days[0],0,'clarity-auto','auto-skip');renderToday();
  });
  await expect(page.getByRole('button',{name:'開啟完整行程：狀態-manual',exact:true})).toBeVisible();
  await page.getByRole('button',{name:'跳過',exact:true}).click();

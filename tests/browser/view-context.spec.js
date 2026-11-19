@@ -23,6 +23,9 @@ test.beforeEach(async ({ page }) => {
 
 /* 捲到指定位置並等它真的停下來(避開 CSS smooth 的動畫尾巴) */
 async function scrollTo(page, y) {
+  /* 2026-11-19(Playwright 1.65 / Chromium 159):switchView 在下一個畫格才還原位置;
+     先等兩個畫格,才不會在還原之前就捲動、被還原蓋掉 */
+  await page.evaluate(() => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))));
   await page.evaluate((target) => {
     const doc = document.scrollingElement;
     doc.scrollTop = target;

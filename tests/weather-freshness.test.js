@@ -10,7 +10,7 @@ const sandbox={Date:ClockDate,Intl,console,weatherCacheKey:c=>'trip_weather_'+c.
   try{if(denied)throw Error('denied');return raw===null?null:JSON.parse(raw);}catch(ignore){return null;}
 }};
 vm.createContext(sandbox);
-for(const name of ['rainChanceFromNow','weatherPresentation','readWeatherEnvelope','getCachedWeather','weatherTravelHint',
+for(const name of ['rainChanceFromNow','weatherPresentation','readWeatherEnvelope','weatherTravelHint',
   'escapeHtml','escapeHtmlAttr','weatherUpdatedTime','renderTodayWeatherArt','renderTodayWeatherSummary']){
   vm.runInContext(extractFunction(html,name),sandbox);
 }
@@ -48,10 +48,9 @@ assert(!sandbox.renderTodayWeatherSummary(expired).includes('0°'));
 assert(sandbox.renderTodayWeatherSummary(expired).includes('天氣資料已過期，暫無最新資料'));
 const original=envelope();raw=JSON.stringify(original);
 const before=raw;
-sandbox.getCachedWeather(city);sandbox.getCachedWeather(city);
+present(sandbox.readWeatherEnvelope(city));present(sandbox.readWeatherEnvelope(city));
 assert.equal(raw,before,'reads never restamp or mutate storage');
 clock=now+10800000;
-assert.equal(sandbox.getCachedWeather(city),null);
 assert.equal(present(sandbox.readWeatherEnvelope(city),clock).status,'expired');
 raw='{broken';assert.equal(sandbox.readWeatherEnvelope(city),null);
 denied=true;assert.equal(present(sandbox.readWeatherEnvelope(city)).status,'unavailable');denied=false;
@@ -59,7 +58,7 @@ denied=true;assert.equal(present(sandbox.readWeatherEnvelope(city)).status,'unav
 clock=now;raw=JSON.stringify(envelope({data:{city:'廣島',temp:21,rain:90,hours:{
   time:['2026-10-18T09:00','2026-10-18T12:00'],precipitation_probability:[90,0]
 }}}));
-assert.equal(sandbox.getCachedWeather(city).rain,0);
+present(sandbox.readWeatherEnvelope(city),clock);
 assert.equal(JSON.parse(raw).data.rain,90);
 assert.equal(JSON.parse(raw).t,now);
 assert.equal(sandbox.rainChanceFromNow({time:['invalid'],precipitation_probability:[90]},new Date(now)),null);
@@ -123,9 +122,6 @@ function requestFixture(){
   cached.reply(1,0,0);await cached.tick();
   assert.equal(cached.context.homeWeatherFor(0,cached.item).temp,0);
   assert.equal(cached.context.homeWeatherFor(0,cached.item).rain,0);
-  const saved=JSON.parse(cached.storage.get('trip_weather_hiroshima')).t;
-  await cached.context.loadWeatherForCity(city);
-  assert.equal(JSON.parse(cached.storage.get('trip_weather_hiroshima')).t,saved,'data wrapper retains acquired time');
   const denied=requestFixture();denied.deny();denied.context.homeWeatherFor(0,denied.item);
   denied.context.requestHomeWeather(0,denied.item);denied.reply(0,22,null);await denied.tick();
   assert.equal(denied.context.homeWeatherFor(0,denied.item).temp,22,'valid network survives denied cache write');

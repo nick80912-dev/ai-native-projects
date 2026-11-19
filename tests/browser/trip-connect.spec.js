@@ -190,8 +190,9 @@ test('下載行程後，舊旅程的待送帳不會送到新旅程的 Endpoint',
     page.waitForEvent('load'),
     page.getByRole('button',{name:'下載行程'}).click()
   ]);
+  /* 2026-11-19:新版 Chromium 的 load 事件可能先來自第一次載入,重新載入後的 script 還沒跑;等 App 真的起來再讀 */
+  await page.waitForFunction(()=>typeof TripLifecycle!=='undefined'&&typeof CURRENT_SNAPSHOT!=='undefined'&&CURRENT_SNAPSHOT&&syncInFlight===null);
   expect((await storageSnapshot(page)).snapshotKey).toBe('sheet:kyushu-2027');
-  await page.waitForFunction(()=>typeof CURRENT_SNAPSHOT!=='undefined'&&CURRENT_SNAPSHOT&&syncInFlight===null);
   const result=await page.evaluate(async()=>{
     const posts=[];
     window.fetch=(input,init)=>{if(init&&init.method==='POST')posts.push(String(input));return Promise.reject(new TypeError('QA_BLOCKED'));};
