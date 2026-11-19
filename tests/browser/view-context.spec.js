@@ -43,6 +43,8 @@ test('each tab keeps its own scroll position across switches', async ({ page }) 
   expect(tripY).toBeGreaterThan(100);
 
   await page.evaluate(() => switchView('shop'));
+  /* 位置在下一個畫格才還原;等兩個畫格再讀(2026-11-19,忙碌時曾讀到還原前的 483) */
+  await page.evaluate(() => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))));
   const shopTop = await page.evaluate(() => Math.round(document.scrollingElement.scrollTop));
   /* 換到沒去過的分頁應該在頂端,而不是沿用上一個分頁的位置 */
   expect(shopTop).toBe(0);
