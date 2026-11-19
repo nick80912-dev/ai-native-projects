@@ -1,5 +1,25 @@
 # 07 版本紀錄
 
+## 2026-11-19 — v205 連接新旅程更順
+
+- **來源**:Bar 2026-11-19 問連接新旅程的優化建議,我列 9 項;第 8 項(整理下一趟試算表)Bar 已自己完成,其餘選 1、2、3、5、6、7。看過截圖後 QR code 選「先不做」(下載來的第三方 QR 程式在工作環境裡不允許執行;邀請連結＋手機分享已夠用),第 7 項的 Apps Script 由 Bar 自己貼上部署。
+- **1 邀請旅伴**:設定「資料」新增「邀請旅伴」(`TripSource.inviteLink`,`/?join=<發布 ID>`),可分享(手機的分享選單,例如 LINE)或複製。旅伴點開:開機讀 `?join=` → 存 `tp_join_pending`(7 天,清除旅程時保留)→ 清掉網址參數 → 打開「連接新旅程」;已清除的手機直接帶入並自動檢查。貼上邀請連結本身也接受。
+- **2 清除後直接連接**:還在上一趟時連接頁有「前往清除並打包」;清除完成直接打開連接頁。
+- **3 上一趟的名字**:`tp_last_member`(清除旅程時保留)。新旅程還沒選身分時,名字在名單上就直接問「這趟也是嗎?」,不在就預填新增欄。
+- **4 預覽**:多列當地幣別、匯率、結算幣別,以及天氣地區／行前清單／航班有沒有。
+- **5 選填分頁依名稱找**:讀 Google 的 `pubhtml?headers=false` 分頁清單(`TripSource.parseSheetTabs`),「天氣地區」「行前清單／行前確認」「航班」在 TripConfig GID 沒填時自動使用;快取 `trip_sheet_tabs`(6 小時)。已確認正式 Google 回應帶 CORS 且讀得到岡山表的分頁清單。
+- **6 一次列出全部問題**:`inspect` 收集所有 TripConfig 與 Apps Script 錯誤(第一個錯的 code 照舊),畫面列出「試算表有 N 個地方要修」;匯率未填、Apps Script 舊版、收據辨識未設定列為提醒,不擋連接。
+- **7 Apps Script**:`ledger-sync.gs` 加 `SCRIPT_VERSION='2026-11-19'`,`?action=info` 另回 `scriptVersion` 與 `receiptRecognition`(只回有沒有 `GEMINI_API_KEY`,不回金鑰);App 版本較舊或沒回報時提醒更新。
+- **測試**:單元 `trip-source`(多問題、版本與金鑰提醒、分頁清單、邀請連結)、`apps-script-settings`、`weather-regions`;新增瀏覽器 `connect-trip-v205`(邀請連結自動檢查、還在旅程中、一次列出問題)。
+- **整理**:刪除 `shell/v202`,留 v203–v205;發布說明保留 v201–v205。
+
+## 2026-11-19 — v204 已上線 main，tag `production-v204`
+
+- PR [#210](https://github.com/nick80912-dev/ai-native-projects/pull/210) 全綠後合併進 `dev`(`e03013d`);PR [#211](https://github.com/nick80912-dev/ai-native-projects/pull/211) 七項檢查全綠,以 merge commit 合併進 `main`(`a4ad8fd`)。
+- **線上核對**:正式站 `sw.js` 為 `SW_VERSION='v204'`;全新 Chromium `APP_VERSION` v204、只剩 `okayama-trip-v204` 快取、發布說明「配色與按鈕整理」、主題 6 個且 `normalizeThemeId('mist')==='ocean'`、無 pageerror;線上 `shell/v204/index.html` 與 `origin/main` 位元組相同;v202／v203 仍 200,v201 為 404。
+- **tag**:production-tags workflow 建立 `production-v204` → `a4ad8fd`。
+- 回滾:依 `16_OPS_PLAYBOOK.md` §A1 Publish `commit_ref` = `5900e84`(`production-v203`)的部署,再往前 bump。
+
 ## 2026-11-19 — v204 配色與按鈕整理
 
 - **來源**:Bar 2026-11-19 要主題配色與按鈕樣式的優化建議,我列 9 項並附 7 主題 × 6 畫面對照,Bar 選 1、2、3、5、6、7、8 並把 4 改成「合併成一個」;看過對照圖後第 5 項(小字放大到 12px)不要,其他確認。

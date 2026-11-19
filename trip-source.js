@@ -42,6 +42,9 @@
     var value=text(input);
     if(!value)return {ok:false,reason:'empty'};
     if(PUB_ID_RE.test(value))return {ok:true,pubId:value};
+    /* v205:旅伴點的 TripPilot 邀請連結(…/?join=2PACX-…)也接受 */
+    var joined=joinFromSearch(value);
+    if(joined&&/^https:\/\/[^/?#\s]+\/?(?:index\.html)?\?/.test(value))return {ok:true,pubId:joined};
     var match=/^https:\/\/docs\.google\.com\/spreadsheets\/d\/e\/([^/?#\s]+)\/(?:pubhtml|pub)(?:[?#][^\s]*)?$/.exec(value);
     if(match&&PUB_ID_RE.test(match[1]))return {ok:true,pubId:match[1]};
     if(/^https:\/\/docs\.google\.com\/spreadsheets\/d\/(?!e\/)[A-Za-z0-9_-]+/.test(value))return {ok:false,reason:'edit-link'};
@@ -50,6 +53,51 @@
   function pubBaseFor(pubId){
     if(!PUB_ID_RE.test(text(pubId)))throw new Error('Invalid Google Sheets publish ID');
     return 'https://docs.google.com/spreadsheets/d/e/'+text(pubId)+'/pub?single=true&output=csv&gid=';
+  }
+  /* ===== v205(Bar 2026-11-19)連接新旅程優化 =====
+     邀請連結:旅伴點 https://<App>/?join=<發布 ID> 就打開「連接新旅程」並帶入連結。
+     選填分頁:Google 的公開頁(pubhtml)列出每個分頁的名稱與 gid,App 依名稱找天氣地區／行前清單／航班,
+     TripConfig 的 GID 沒填也能用(有填仍以 TripConfig 為準)。 */
+  var APP_URL='https://trippilot-jp.netlify.app/';
+  var SCRIPT_VERSION_REQUIRED='2026-11-19';
+  var OPTIONAL_TABS={weather:['天氣地區'],checklist:['行前清單','行前確認'],flights:['航班']};
+  function joinFromSearch(value){
+    var match=/[?&]join=([^&#\s]+)/.exec(String(value==null?'':value));
+    if(!match)return '';
+    var id;try{id=decodeURIComponent(match[1]);}catch(error){return '';}
+    return PUB_ID_RE.test(id)?id:'';
+  }
+  function inviteLink(pubId,appUrl){
+    if(!PUB_ID_RE.test(text(pubId)))throw new Error('Invalid Google Sheets publish ID');
+    return String(appUrl||APP_URL).replace(/[?#].*$/,'').replace(/\/?$/,'/')+'?join='+encodeURIComponent(text(pubId));
+  }
+  function pubIdFromBase(base){
+    var match=/\/spreadsheets\/d\/e\/(2PACX-[A-Za-z0-9_-]+)\//.exec(text(base));
+    return match?match[1]:'';
+  }
+  function pubHtmlFor(pubId){
+    if(!PUB_ID_RE.test(text(pubId)))throw new Error('Invalid Google Sheets publish ID');
+    /* 帶一個參數:App 的 fetchWithTimeout 會再接 &_ts=,沒有 ? 會變成錯誤網址 */
+    return 'https://docs.google.com/spreadsheets/d/e/'+text(pubId)+'/pubhtml?headers=false';
+  }
+  function decodeJsString(value){
+    return String(value).replace(/\\u([0-9a-fA-F]{4})/g,function(_,hex){return String.fromCharCode(parseInt(hex,16));})
+      .replace(/\\x([0-9a-fA-F]{2})/g,function(_,hex){return String.fromCharCode(parseInt(hex,16));})
+      .replace(/\\(.)/g,'$1');
+  }
+  /* 回傳 {分頁名稱: gid};讀不懂就回空物件,呼叫端照舊只看 TripConfig */
+  function parseSheetTabs(html){
+    var tabs={},re=/\{name:\s*"((?:[^"\\]|\\.){1,100})",\s*pageUrl:\s*"(?:[^"\\]|\\.)*?gid(?:=|\\x3d|\\u003d)(\d{1,12})/g,match;
+    while((match=re.exec(String(html==null?'':html)))){
+      var name=decodeJsString(match[1]).trim();
+      if(name&&!Object.prototype.hasOwnProperty.call(tabs,name))tabs[name]=match[2];
+    }
+    return tabs;
+  }
+  function optionalTabGid(tabs,kind){
+    var names=OPTIONAL_TABS[kind]||[];
+    for(var i=0;i<names.length;i++)if(tabs&&Object.prototype.hasOwnProperty.call(tabs,names[i])&&/^\d{1,12}$/.test(String(tabs[names[i]])))return String(tabs[names[i]]);
+    return '';
   }
   function validEndpoint(url){return ENDPOINT_RE.test(text(url));}
   function validTripId(id){return TRIP_ID_RE.test(text(id));}
@@ -201,25 +249,53 @@
           try{prepared=options.prepare(download.raw);}
           catch(error){throw failure(error&&error.stage==='structure'?'STRUCTURE':'VALIDATION','試算表內容不符合範本：'+String(error&&error.message||error),error);}
           var cfg=prepared.db&&prepared.db.cfg||{};
+          /* v205(Bar 2026-11-19):一次列出全部問題 —— errors 擋住連接,warnings 只提醒 */
+          var errors=[],warnings=[];
+          function problem(code,message){errors.push({code:code,message:message});}
           var tripId=text(cfg.tripId),endpoint=text(cfg.ledgerEndpoint);
-          if(!validTripId(tripId))throw failure('CFG_TRIP_ID','TripConfig 的 Trip ID 需要 3–40 個英數字（可含 - 與 _）');
-          if(!validEndpoint(endpoint))throw failure('CFG_ENDPOINT','TripConfig 的 Ledger Endpoint 不是已部署的 Apps Script 網址');
+          if(!validTripId(tripId))problem('CFG_TRIP_ID','TripConfig 的 Trip ID 需要 3–40 個英數字（可含 - 與 _）');
+          if(!validEndpoint(endpoint))problem('CFG_ENDPOINT','TripConfig 的 Ledger Endpoint 不是已部署的 Apps Script 網址');
           var start=text(cfg.startdate),end=text(cfg.enddate);
-          if(!DATE_RE.test(start)||!DATE_RE.test(end)||start>end)throw failure('CFG_DATES','TripConfig 的 Start Date／End Date 需為 YYYY-MM-DD，且開始不晚於結束');
+          if(!DATE_RE.test(start)||!DATE_RE.test(end)||start>end)problem('CFG_DATES','TripConfig 的 Start Date／End Date 需為 YYYY-MM-DD，且開始不晚於結束');
           /* v168(backlog #62):不限日本。匯率可以不填(之後在 App 補填);結算幣別是台幣或當地幣別 */
           var rateText=text(cfg.exchangeRate),rate=Number(rateText),local=text(cfg.currency).toUpperCase()||'JPY',currency=text(cfg.ledgerDefaultCurrency).toUpperCase();
-          if(!/^[A-Z]{3}$/.test(local))throw failure('CFG_CURRENCY','TripConfig 的 Currency 需為三個英文字母的幣別代碼（例如 KRW、USD）');
-          if((rateText&&!(rate>0))||(currency&&currency!=='TWD'&&currency!==local))throw failure('CFG_CURRENCY','TripConfig 的匯率需大於 0（也可以不填，之後在 App 補填），結算幣別只能是台幣或這趟的當地幣別');
-          return Promise.resolve().then(function(){return options.fetchInfo(endpoint);}).catch(function(error){
-            throw failure('INFO_FAILED','無法連到這份試算表的 Apps Script，請確認已部署為網頁應用程式',error);
-          }).then(function(info){
-            if(!info||info.ok!==true)throw failure('INFO_FAILED','Apps Script 沒有回報這份試算表的資訊');
-            if(text(info.tripId)!==tripId)throw failure('INFO_MISMATCH','Ledger Endpoint 屬於另一份試算表（Trip ID 不同），帳會記錯地方');
-            if(info.ledgerHeaderOk!==true)throw failure('LEDGER_HEADER','「分帳紀錄」分頁的標題列和範本不一致');
+          if(!/^[A-Z]{3}$/.test(local))problem('CFG_CURRENCY','TripConfig 的 Currency 需為三個英文字母的幣別代碼（例如 KRW、USD）');
+          else if((rateText&&!(rate>0))||(currency&&currency!=='TWD'&&currency!==local))problem('CFG_CURRENCY','TripConfig 的匯率需大於 0（也可以不填，之後在 App 補填），結算幣別只能是台幣或這趟的當地幣別');
+          if(!rateText)warnings.push('還沒填匯率（Exchange Rate）：可以出發前在 App「設定 → 帳務」補填');
+          var tabsPromise=typeof options.fetchTabs==='function'
+            ?Promise.resolve().then(function(){return options.fetchTabs(pubHtmlFor(parsed.pubId));}).then(parseSheetTabs,function(){return null;})
+            :Promise.resolve(null);
+          var infoPromise=validTripId(tripId)&&validEndpoint(endpoint)
+            ?Promise.resolve().then(function(){return options.fetchInfo(endpoint);}).then(function(info){return {info:info};},function(error){return {error:error};})
+            :Promise.resolve(null);
+          return Promise.all([tabsPromise,infoPromise]).then(function(results){
+            var tabs=results[0],infoResult=results[1],info=infoResult&&infoResult.info;
+            if(infoResult&&infoResult.error)problem('INFO_FAILED','無法連到這份試算表的 Apps Script，請確認已部署為網頁應用程式');
+            else if(infoResult&&(!info||info.ok!==true))problem('INFO_FAILED','Apps Script 沒有回報這份試算表的資訊');
+            else if(infoResult){
+              if(text(info.tripId)!==tripId)problem('INFO_MISMATCH','Ledger Endpoint 屬於另一份試算表（Trip ID 不同），帳會記錯地方');
+              if(info.ledgerHeaderOk!==true)problem('LEDGER_HEADER','「分帳紀錄」分頁的標題列和範本不一致');
+              /* v205(#7):舊版 Apps Script 不回報版本 → 提醒更新;收據辨識只回報有沒有設定,不傳金鑰 */
+              if(!text(info.scriptVersion)||text(info.scriptVersion)<SCRIPT_VERSION_REQUIRED)warnings.push('Apps Script 是舊版：請貼上最新的 ledger-sync.gs，再到「部署 → 管理部署作業」更新成新版本');
+              else if(info.receiptRecognition===false)warnings.push('收據辨識還沒設定（Apps Script 沒有 GEMINI_API_KEY）：記帳照常，只是加收據照片時不會自動讀取');
+            }
+            var optional={};
+            Object.keys(OPTIONAL_TABS).forEach(function(kind){
+              var field={weather:'weatherRegionsGid',checklist:'checklistGid',flights:'flightsGid'}[kind];
+              optional[kind]=/^\d{1,12}$/.test(text(cfg[field]))||!!optionalTabGid(tabs,kind);
+            });
+            if(errors.length){
+              var first=failure(errors[0].code,errors[0].message);
+              first.problems=errors.map(function(item){return item.message;});first.warnings=warnings.slice();
+              throw first;
+            }
             prepared.snapshot.sourceKey='sheet:'+tripId;
+            var preview=previewOf(prepared.db,cfg);
+            preview.currency=local;preview.exchangeRate=rateText;preview.settlementCurrency=currency||local;
+            preview.optional=optional;preview.warnings=warnings;
             return {
               pubId:parsed.pubId,tripId:tripId,ledgerEndpoint:endpoint,tripName:text(cfg.tripname),startDate:start,endDate:end,
-              snapshot:prepared.snapshot,preview:previewOf(prepared.db,cfg)
+              snapshot:prepared.snapshot,preview:preview,tabs:tabs||null
             };
           });
         });
@@ -259,7 +335,9 @@
 
   return {
     SOURCE_KEY:SOURCE_KEY,PENDING_KEY:PENDING_KEY,LEGACY_KEY:LEGACY_KEY,LEGACY_GRACE_UNTIL:LEGACY_GRACE_UNTIL,
-    parsePublishedLink:parsePublishedLink,pubBaseFor:pubBaseFor,validEndpoint:validEndpoint,validTripId:validTripId,
+    parsePublishedLink:parsePublishedLink,pubBaseFor:pubBaseFor,
+    APP_URL:APP_URL,SCRIPT_VERSION_REQUIRED:SCRIPT_VERSION_REQUIRED,OPTIONAL_TABS:OPTIONAL_TABS,joinFromSearch:joinFromSearch,
+    inviteLink:inviteLink,pubIdFromBase:pubIdFromBase,pubHtmlFor:pubHtmlFor,parseSheetTabs:parseSheetTabs,optionalTabGid:optionalTabGid,validEndpoint:validEndpoint,validTripId:validTripId,
     sourceKey:sourceKey,normalizeRecord:normalizeRecord,legacyRecord:legacyRecord,readSource:readSource,writeSource:writeSource,
     hasLegacyTripData:hasLegacyTripData,classifyBoot:classifyBoot,recoverPendingConnect:recoverPendingConnect,
     createConnectFlow:createConnectFlow
