@@ -78,7 +78,7 @@ test('personal entry uses one optional-information disclosure and preserves prox
   expect(errors).toEqual([]);
 });
 
-test('single save-another uses a visible theme-aware secondary background while multi keeps its original button',async({page})=>{
+test('single save-another is a theme-coloured outline button while multi keeps its original button',async({page})=>{
   const errors=collectPageErrors(page);
   await prepareEntry(page,390);
   await page.evaluate(()=>setLedgerDraftTrack('personal'));
@@ -86,13 +86,15 @@ test('single save-another uses a visible theme-aware secondary background while 
   const styles=await page.evaluate(()=>THEME_IDS.map(id=>{
     applyTheme(id,{persist:false});
     const button=document.getElementById('ledgerSaveAnother'),style=getComputedStyle(button);
-    return {id:id,background:style.backgroundColor,color:style.color,height:button.getBoundingClientRect().height};
+    return {id:id,background:style.backgroundColor,border:style.borderTopColor,borderWidth:parseFloat(style.borderTopWidth),color:style.color,height:button.getBoundingClientRect().height};
   }));
   styles.forEach(style=>{
-    expect(style.background,style.id+' needs a visible secondary background').not.toBe('rgba(0, 0, 0, 0)');
+    /* v204(Bar 2026-11-19):「儲存並再記一筆」改成框線按鈕,不和實心的「儲存」搶 */
+    expect(style.borderWidth,style.id+' draws a visible outline').toBeGreaterThanOrEqual(1);
+    expect(style.border,style.id+' outline is not transparent').not.toBe('rgba(0, 0, 0, 0)');
     expect(style.height,style.id+' keeps the touch target').toBeGreaterThanOrEqual(44);
   });
-  expect(new Set(styles.map(style=>style.background)).size).toBeGreaterThan(1);
+  expect(new Set(styles.map(style=>style.border)).size).toBeGreaterThan(1);
 
   await page.evaluate(()=>setLedgerDraftMulti(true));
   await expect(page.locator('#ledgerSaveAnother')).not.toHaveClass(/ledger-save-another-quiet/);

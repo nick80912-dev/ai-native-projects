@@ -178,7 +178,7 @@ test('本機照片清理失敗後保持空白並可重試，不聲稱原旅程�
   await expect.poll(()=>page.evaluate(()=>TripLifecycle.readState(localStorage).mode)).toBe('cleanup-pending');
   await expect(page.getByText('目前沒有進行中的旅程')).toBeVisible();
   await expect(page.getByRole('button',{name:'重試本機清理'})).toBeVisible();
-  expect(await page.locator('#view-today').textContent()).not.toContain('TODAY · DAY');
+  expect(await page.locator('#view-today').textContent()).not.toContain('今天 · 第');
   await page.evaluate(()=>{shoppingPhotoStore.clearAll=window.__qaOriginalClearAll;});
   await page.getByRole('button',{name:'重試本機清理'}).click();
   await expect.poll(()=>page.evaluate(()=>TripLifecycle.readState(localStorage).mode)).toBe('complete');

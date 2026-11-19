@@ -88,7 +88,7 @@ test('旅行日 mock Date 讓今天頁落在 Day 1 且沒有 pageerror',async({p
   expect(state.currentDay).toBe(0);
   expect(state.appNow).toBe('2026-10-18T00:30:00.000Z');
   expect(state.health).toEqual([]);
-  await expect(page.locator('#view-today .today-hero .lbl')).toHaveText('TODAY · DAY 1');
+  await expect(page.locator('#view-today .today-hero .lbl')).toHaveText('今天 · 第 1 天');
   await expect(page.locator('#view-today .today-hero .date')).toContainText('10/18');
   expect(pageErrors).toEqual([]);
 });

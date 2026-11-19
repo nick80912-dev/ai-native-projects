@@ -64,7 +64,7 @@ async function prepareLauncher(page, type) {
     await page.evaluate(() => switchView('today'));
     const launcher = page.locator('#view-today .today-pretrip-day').first();
     await expect(launcher).toBeVisible();
-    return { launcher, targetId: 'tripday_0', status: '已定位：Day 1' };
+    return { launcher, targetId: 'tripday_0', status: '已定位：第 1 天' };
   }
 
   if (type === 'openShopPlace') {

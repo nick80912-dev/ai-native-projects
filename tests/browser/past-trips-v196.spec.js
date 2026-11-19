@@ -93,11 +93,11 @@ test('trip tab switches days, shows the day spend and the hotel, and never marks
   const errors=collectPageErrors(page);
   await setup(page,'ocean');
   await page.getByRole('tab',{name:'行程'}).click();
-  await expect(page.locator('.past-trip-days button[aria-pressed="true"]')).toContainText('DAY 1');
+  await expect(page.locator('.past-trip-days button[aria-pressed="true"]')).toContainText('第 1 天');
   await expect(page.locator('#pastTripPanel .past-trip-row.done')).toHaveCount(0);
   await expect(page.locator('#pastTripPanel')).not.toContainText('完成');
   await page.locator('.past-trip-days button').nth(2).click();
-  await expect(page.locator('#pastTripPanel h3').first()).toContainText('DAY 3');
+  await expect(page.locator('#pastTripPanel h3').first()).toContainText('第 3 天');
   /* 10/20:個人無印 910 ＋ 團體 715/3 與 1170/3 的份額 */
   await expect(page.locator('.past-trip-dayfoot')).toContainText('3 筆');
   await expect(page.locator('.past-trip-dayfoot')).toContainText('Guest House Life Field');

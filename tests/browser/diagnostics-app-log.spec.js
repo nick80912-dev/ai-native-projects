@@ -216,7 +216,7 @@ test.describe('v153 診斷面板重新整理',()=>{
     expect(rows.minDayHeight).toBeGreaterThanOrEqual(44);
     expect(rows.sameRow).toBe(true);
     const tools=page.locator('#diagToolsSection');
-    await tools.getByRole('button',{name:'Day 2',exact:true}).click();
+    await tools.getByRole('button',{name:'第 2 天',exact:true}).click();
     await expect(page.locator('#diagTime')).toHaveValue('2026-10-19T08:00');
     await tools.getByRole('button',{name:'套用',exact:true}).click();
     await expect(page.locator('#diagnosticOverlay')).toHaveCount(0);

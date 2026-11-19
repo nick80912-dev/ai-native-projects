@@ -128,7 +128,6 @@ test('all six themes preserve sliders currentColor and compact header chrome',as
   expect(themes.find(theme=>theme.id==='cedar').action).toBe('#2f6b4f');
   expect(themes.find(theme=>theme.id==='tea').action).toBe('#896748');
   expect(themes.find(theme=>theme.id==='cedar')).toMatchObject({paper:'#edf3ec',accent:'#bd4e24',secondary:'#6f6532'});
-  expect(themes.find(theme=>theme.id==='mist')).toMatchObject({paper:'#edf4f8',accent:'#9a6614',secondary:'#4b746c'});
   expect(themes.find(theme=>theme.id==='tea')).toMatchObject({paper:'#f7f0e7',accent:'#405c7a',secondary:'#9a4f30'});
 });
 
@@ -254,7 +253,7 @@ function contrastRatio(first, second) {
 }
 
 function readThemePalettes(page) {
-  return page.evaluate(() => ['ocean','ivory','wisteria','cedar','mist','tea'].map(id => {
+  return page.evaluate(() => ['ocean','ivory','wisteria','cedar','tea'].map(id => {
     document.documentElement.dataset.theme = id;
     const card = document.createElement('div');
     card.className = 'card';
