@@ -359,9 +359,9 @@ assert.strictEqual(postApp.lock.waited, true, 'doPost 仍取 script lock');
 
 /* ================= v150 doGet?action=info(連接新旅程,ADR 0021) ================= */
 const infoApp = loadAppScript();
-assert.deepStrictEqual(infoApp.get({action:'info'}), {ok:true, tripId:'', ledgerHeaderOk:true}, '岡山試算表沒有 Trip ID 時回空字串');
+assert.deepStrictEqual(infoApp.get({action:'info'}), {ok:true, tripId:'', ledgerHeaderOk:true, scriptVersion:'2026-11-19', receiptRecognition:false}, '岡山試算表沒有 Trip ID 時回空字串');
 infoApp.cfg.data.push(['Trip ID', ' kyushu-2027 ']);
-assert.deepStrictEqual(infoApp.get({action:'info'}), {ok:true, tripId:'kyushu-2027', ledgerHeaderOk:true}, '回報 TripConfig 的 Trip ID');
+assert.deepStrictEqual(infoApp.get({action:'info'}), {ok:true, tripId:'kyushu-2027', ledgerHeaderOk:true, scriptVersion:'2026-11-19', receiptRecognition:false}, '回報 TripConfig 的 Trip ID');
 assert.strictEqual(infoApp.lock.waited, false, 'info 不取 script lock');
 infoApp.ledger.data[0][4] = '品項';
 assert.strictEqual(infoApp.get({action:'info'}).ledgerHeaderOk, false, '分帳紀錄標題被改過時回報 false');
@@ -370,7 +370,14 @@ narrowInfoApp.ledger.data[0] = narrowInfoApp.ledger.data[0].slice(0, 16);
 assert.strictEqual(narrowInfoApp.get({action:'info'}).ledgerHeaderOk, false, '欄數不足 21 時回報 false');
 const noCfgApp = loadAppScript();
 delete noCfgApp.sheets.TripConfig;
-assert.deepStrictEqual(noCfgApp.get({action:'info'}), {ok:true, tripId:'', ledgerHeaderOk:true}, '沒有 TripConfig 分頁時 Trip ID 為空,App 會拒絕連接');
+assert.deepStrictEqual(noCfgApp.get({action:'info'}), {ok:true, tripId:'', ledgerHeaderOk:true, scriptVersion:'2026-11-19', receiptRecognition:false}, '沒有 TripConfig 分頁時 Trip ID 為空,App 會拒絕連接');
+/* v205:info 回報版本;收據辨識只回「有沒有設定金鑰」,絕不回傳金鑰本身 */
+const keyedInfoApp = loadAppScript();
+keyedInfoApp.sandbox.PropertiesService = {getScriptProperties(){ return {getProperty(name){ return name==='GEMINI_API_KEY' ? 'secret-key-value' : null; }}; }};
+const keyedInfo = keyedInfoApp.get({action:'info'});
+assert.strictEqual(keyedInfo.receiptRecognition, true, 'a saved GEMINI_API_KEY is reported as configured');
+assert.ok(JSON.stringify(keyedInfo).indexOf('secret-key-value') < 0, 'info never returns the key itself');
+assert.match(gsSource, /var SCRIPT_VERSION = '\d{4}-\d{2}-\d{2}';/, 'the script declares its version');
 const infoSource = gsSource.slice(gsSource.indexOf('function tripInfo('), gsSource.indexOf('function appendLedger('));
 assert.ok(infoSource.length > 0 && infoSource.indexOf('LockService') < 0 && infoSource.indexOf('appendRow') < 0 && infoSource.indexOf('setValue') < 0 && infoSource.indexOf('getId') < 0,
   'info 唯讀、不取鎖、不回傳 Spreadsheet ID');

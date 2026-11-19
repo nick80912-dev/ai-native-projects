@@ -165,7 +165,7 @@ test('已有岡山紀錄的舊手機升級後沿用岡山旅程，不能直接�
   expect(state.source).toMatchObject({version:1,kind:'legacy'});
   expect(await page.evaluate(()=>localStorage.getItem('trip_checks'))).toBe('{"10/18_0":true}');
   await page.evaluate(()=>openSettingsPage('connect'));
-  await expect(page.locator('.settings-panel')).toContainText('清除並打包旅程');
+  await expect(page.locator('.settings-panel')).toContainText('前往清除並打包');
   await expect(page.locator('#connectTripLink')).toHaveCount(0);
   expect(errors).toEqual([]);
 });

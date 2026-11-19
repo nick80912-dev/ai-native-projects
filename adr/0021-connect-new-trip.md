@@ -64,3 +64,9 @@ Bar 2026-10-31：「該專案未來不只回去日本，有可能會去其他國
 - Schema 3.1：TripConfig 新增選填 `Trip ID`、`Ledger Endpoint`、`Weather Regions GID`；行程總表新增選填「行程ID」欄（依標題名稱尋找，格式與唯一性由 validator 擋下）。
 - `apps-script/ledger-sync.gs` 新增唯讀 `doGet?action=info`；岡山的部署不需要更新（`legacy` 不呼叫它），新旅程的 Sheet 從範本複製時一併帶上新版程式。
 - 變更 `trip_source` 格式、開機分類規則、連接交易順序或 `sourceKey` 語意，需更新本 ADR 與 `tests/trip-source.test.js`、`tests/browser/trip-connect.spec.js`。
+
+## 2026-11 增補（v205，Bar 2026-11-19 核准）：邀請連結、選填分頁依名稱、一次列出問題
+
+- **邀請連結**：`https://<App>/?join=<發布 ID>`。只接受合法的發布 ID；開機時記到 `tp_join_pending`（非 `trip_` 開頭，清除旅程時保留，7 天後失效）並從網址移除。連接仍走原本的「檢查 → 預覽 → 確認」交易，邀請連結不會跳過預覽或自動確認。
+- **選填分頁**：讀 Google 發布頁 `pubhtml?headers=false` 的分頁名稱與 gid；TripConfig 有填 GID 時以 GID 為準。讀不到分頁清單不影響連接與同步。
+- **檢查結果**：TripConfig 與 Apps Script 的問題一次收集；第一個錯的 code 維持原值。Apps Script 版本與收據辨識金鑰只作提醒；`?action=info` 只回報「有沒有設定金鑰」，不回傳金鑰。

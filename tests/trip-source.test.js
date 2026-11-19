@@ -144,6 +144,7 @@ function harness(options){
       calls.snapshots.push(snapshot);s.setItem('trip_data_snapshot_state',JSON.stringify({formatVersion:1,active:snapshot,previous:null}));
     },
     members:function(db){return ['Bar'];},
+    fetchTabs:options.tabs?function(url){calls.tabs=(calls.tabs||[]).concat(url);return options.tabs(url);}:undefined,
     now:function(){return 42;}
   });
   return {storage:s,flow,calls};
@@ -158,7 +159,10 @@ function expectCode(promise,code,label){
   const candidate=await h.flow.inspect('https://docs.google.com/spreadsheets/d/e/'+PUB+'/pubhtml');
   assert.deepStrictEqual(h.calls.download,[TripSource.pubBaseFor(PUB)]);
   assert.deepStrictEqual(h.calls.info,[ENDPOINT]);
-  assert.deepStrictEqual(candidate.preview,{tripName:'九州五日',startDate:'2027-03-01',endDate:'2027-03-05',dayCount:2,stopCount:3,days:[{date:'03/01',count:2},{date:'03/02',count:1}],members:['Bar']});
+  /* v205:預覽多列幣別、匯率、結算幣別與選填分頁;舊版 Apps Script(沒回報版本)會出一條提醒 */
+  assert.deepStrictEqual(JSON.parse(JSON.stringify(candidate.preview)),{tripName:'九州五日',startDate:'2027-03-01',endDate:'2027-03-05',dayCount:2,stopCount:3,days:[{date:'03/01',count:2},{date:'03/02',count:1}],members:['Bar'],
+    currency:'JPY',exchangeRate:'0.21',settlementCurrency:'JPY',optional:{weather:false,checklist:false,flights:false},
+    warnings:['Apps Script 是舊版：請貼上最新的 ledger-sync.gs，再到「部署 → 管理部署作業」更新成新版本']});
   assert.strictEqual(h.storage.getItem(TripSource.SOURCE_KEY),null,'inspect never writes');
   assert.strictEqual(TripLifecycle.readState(h.storage).mode,'complete');
   const result=await h.flow.commit(candidate);
@@ -231,6 +235,46 @@ function expectCode(promise,code,label){
   h.storage.setItem('trip_lifecycle_lock',JSON.stringify({id:'other',expiresAt:Date.now()+60000}));
   await h.flow.commit(c3).then(function(){assert.fail('locked commit should fail');},function(error){assert.match(String(error.message),/locked/i);});
   assert.strictEqual(TripLifecycle.readState(h.storage).mode,'complete');
+
+  /* ===== v205(Bar 2026-11-19)連接新旅程優化 ===== */
+  /* 6:一次列出全部問題;第一個錯的 code 照舊,方便診斷 */
+  h=harness({cfg:Object.assign(goodCfg(),{tripId:'',startdate:'2027-03-05',enddate:'2027-03-01',currency:'KR'})});
+  await h.flow.inspect(PUB).then(function(){assert.fail('three problems should fail');},function(error){
+    assert.strictEqual(error.code,'CFG_TRIP_ID');
+    assert.strictEqual(error.problems.length,3,'every TripConfig problem is listed at once');
+    assert(/Start Date/.test(error.problems[1])&&/Currency/.test(error.problems[2]));
+  });
+  assert.deepStrictEqual(h.calls.info,[],'an invalid Trip ID skips the Apps Script check instead of guessing');
+  /* 7:新版 Apps Script 回報版本;收據辨識只回報有沒有金鑰 */
+  h=harness({info:function(){return Promise.resolve({ok:true,tripId:'kyushu-2027',ledgerHeaderOk:true,scriptVersion:TripSource.SCRIPT_VERSION_REQUIRED,receiptRecognition:false});}});
+  let c4=await h.flow.inspect(PUB);
+  assert.deepStrictEqual(Array.from(c4.preview.warnings),['收據辨識還沒設定（Apps Script 沒有 GEMINI_API_KEY）：記帳照常，只是加收據照片時不會自動讀取']);
+  h=harness({cfg:Object.assign(goodCfg(),{exchangeRate:''}),info:function(){return Promise.resolve({ok:true,tripId:'kyushu-2027',ledgerHeaderOk:true,scriptVersion:'2099-01-01',receiptRecognition:true});}});
+  c4=await h.flow.inspect(PUB);
+  assert.deepStrictEqual(Array.from(c4.preview.warnings),['還沒填匯率（Exchange Rate）：可以出發前在 App「設定 → 帳務」補填']);
+  /* 5:依分頁名稱找選填分頁;讀不到分頁清單也不影響連接 */
+  const pubhtml='items.push({name: "行程總表", pageUrl: "https:\\/\\/docs.google.com\\/x\\/pubhtml\\/sheet?headers\\x3dfalse&gid=11", gid: "11"});'+
+    'items.push({name: "\\u5929\\u6c23\\u5730\\u5340", pageUrl: "https:\\/\\/x?gid=22"});items.push({name: "行前確認", pageUrl: "https:\\/\\/x?headers\\x3dfalse&gid=33"});';
+  const tabs=TripSource.parseSheetTabs(pubhtml);
+  assert.deepStrictEqual(JSON.parse(JSON.stringify(tabs)),{'行程總表':'11','天氣地區':'22','行前確認':'33'});
+  assert.strictEqual(TripSource.optionalTabGid(tabs,'checklist'),'33','行前確認 counts as the checklist tab');
+  assert.strictEqual(TripSource.optionalTabGid(tabs,'flights'),'');
+  assert.deepStrictEqual(TripSource.parseSheetTabs('<html>nothing</html>'),{});
+  h=harness({tabs:function(){return Promise.resolve(pubhtml);}});
+  c4=await h.flow.inspect(PUB);
+  assert.deepStrictEqual(h.calls.tabs,[TripSource.pubHtmlFor(PUB)]);
+  assert.deepStrictEqual(JSON.parse(JSON.stringify(c4.preview.optional)),{weather:true,checklist:true,flights:false});
+  h=harness({tabs:function(){return Promise.reject(new Error('blocked'));}});
+  c4=await h.flow.inspect(PUB);
+  assert.strictEqual(c4.preview.optional.weather,false,'an unreadable tab list never blocks connecting');
+  /* 1:邀請連結 */
+  const invite=TripSource.inviteLink(PUB);
+  assert.strictEqual(invite,'https://trippilot-jp.netlify.app/?join='+PUB);
+  assert.strictEqual(TripSource.joinFromSearch('?join='+PUB+'&x=1'),PUB);
+  assert.strictEqual(TripSource.joinFromSearch('?join=not-a-pub-id'),'','a malformed join value is ignored');
+  assert.deepStrictEqual(TripSource.parsePublishedLink(invite),{ok:true,pubId:PUB},'a pasted invite link connects too');
+  assert.strictEqual(TripSource.pubIdFromBase(TripSource.pubBaseFor(PUB)),PUB);
+  assert.throws(function(){TripSource.inviteLink('x');});
 
   console.log('trip source tests passed');
 })().catch(function(error){console.error(error);process.exit(1);});
