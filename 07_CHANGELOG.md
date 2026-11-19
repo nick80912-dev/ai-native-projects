@@ -1,5 +1,25 @@
 # 07 版本紀錄
 
+## 2026-11-19 — v204 配色與按鈕整理
+
+- **來源**:Bar 2026-11-19 要主題配色與按鈕樣式的優化建議,我列 9 項並附 7 主題 × 6 畫面對照,Bar 選 1、2、3、5、6、7、8 並把 4 改成「合併成一個」;看過對照圖後第 5 項(小字放大到 12px)不要,其他確認。
+- **1 開關**:設定頁開關關閉時一律淺色(原本繪本主題的線條色是深墨,關閉看起來像打開);繪本關閉白底、打開若竹綠。
+- **2 主要按鈕同一色**:`--action-cta-bg` 改用 `--t-action`,儲存、分帳的＋與導航都是主題主色;橘色等強調色只留給時間標籤與提醒。
+- **3 完成**:卡片模式的「完成」由固定的 `--green` 改成主題主色 `--sea`。
+- **4 主題合併**:霧藍併入海洋,主題剩 6 個。`THEME_MERGED={mist:'ocean'}`:舊手機存的 mist 開啟時直接換成 ocean 並存回去,不記成未知主題。
+- **6 中文標籤**:「TODAY · DAY 3」→「今天 · 第 3 天」、「NEXT STOP」→「下一站」、行程頁「Day 1」→「第 1 天」;購物分組、下拉選單、過往旅程與明日預覽的天數一起改,字距由 .14em 收成 .04em。
+- **7 次要按鈕**:「儲存並再記一筆」(記帳與採買)改成框線按鈕。
+- **8 繪本細框**:外層卡片保留粗框,卡片內的按鈕、輸入框改 1.5px,設定列的按鈕拿掉陰影。
+- **測試**:`theme-system`、`help-note-style`(6 個主題)、`home-simplification`、`render-note`、`shopping-list` 跟著新文字與顏色改;霧藍合併有單元測試。
+- **整理**:刪除 `shell/v201`,留 v202–v204;發布說明保留 v200–v204。
+
+## 2026-11-19 — v203 已上線 main，tag `production-v203`
+
+- PR [#208](https://github.com/nick80912-dev/ai-native-projects/pull/208) 在 head `c2eb789` 全綠後合併進 `dev`(`36f484a`);途中 CI 的 Chromium 159 讓 `today-live-info` 讀到 `flow-end`(等同 flex-end),測試改成兩者都接受並保留右緣對齊檢查;`view-context` 也改成等兩個畫格再讀位置。PR [#209](https://github.com/nick80912-dev/ai-native-projects/pull/209) 七項檢查全綠,以 merge commit 合併進 `main`(`5900e84`)。
+- **線上核對**:正式站 `sw.js` 為 `SW_VERSION='v203'`;全新 Chromium `APP_VERSION` v203、只剩 `okayama-trip-v203` 快取、發布說明「診斷面板修正與健檢」、無 pageerror;線上 `shell/v203/index.html` 與 `origin/main` 位元組相同;v201／v202 仍 200,v200 為 404;回應標頭已有 `x-content-type-options: nosniff`、`referrer-policy`、`x-frame-options: DENY`、`frame-ancestors 'none'`。
+- **tag**:production-tags workflow 建立 `production-v203` → `5900e84`。
+- 回滾:依 `16_OPS_PLAYBOOK.md` §A1 Publish `commit_ref` = `0a76c46`(`production-v202`)的部署,再往前 bump。
+
 ## 2026-11-19 — v203 診斷面板修正與健檢
 
 - **來源**:Bar 2026-11-19「點開診斷面板後滑動畫面,後方頁面會跟著滑動」。

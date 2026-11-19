@@ -33,7 +33,7 @@ test('after the end date Home asks about packing without authorizing or clearing
 
 for(const fixture of [
   {date:'2026-10-17T23:59:59+09:00',label:'還沒到出發日'},
-  {date:'2026-10-23T23:59:59+09:00',label:'TODAY · DAY 6'},
+  {date:'2026-10-23T23:59:59+09:00',label:'今天 · 第 6 天'},
   {date:'2026-10-24T00:00:00+09:00',label:'本趟旅程已結束'},
   {date:'2027-10-18T12:00:00+09:00',label:'本趟旅程已結束'}
 ])test('Home respects the full trip year and end-day boundary: '+fixture.date,async({page})=>{
@@ -47,7 +47,7 @@ test('Home left open across midnight updates without changing personal records',
   await page.clock.install({time:new Date('2026-10-23T23:59:00+09:00')});
   await installOfflineAppNetwork(page);await openApp(page);await waitForSyncToSettle(page);
   await page.clock.pauseAt(new Date('2026-10-23T23:59:58+09:00'));
-  await expect(page.locator('#view-today')).toContainText('TODAY · DAY 6');
+  await expect(page.locator('#view-today')).toContainText('今天 · 第 6 天');
   const before=await page.evaluate(()=>({progress:localStorage.getItem('trip_next_stop_progress'),checks:localStorage.getItem('trip_checks'),member:localStorage.getItem('trip_member')}));
   await page.clock.fastForward(2100);
   await expect(page.locator('#view-today')).toContainText('本趟旅程已結束');
@@ -58,7 +58,7 @@ test('Home left open across midnight updates without changing personal records',
 
 for(const event of ['visibilitychange','pageshow'])test('Home checks the trip end when resuming: '+event,async({page})=>{
   await boot(page,'2026-10-23T23:59:58+09:00');
-  await expect(page.locator('#view-today')).toContainText('TODAY · DAY 6');
+  await expect(page.locator('#view-today')).toContainText('今天 · 第 6 天');
   await page.evaluate(event=>{
     localStorage.setItem('trip_time_simulation',JSON.stringify({mode:'custom',value:'2026-10-24T00:00:01+09:00'}));
     (event==='pageshow'?window:document).dispatchEvent(new Event(event));
@@ -96,7 +96,7 @@ test('hidden Home cancels its deadline and catches up only on return',async({pag
     window.dispatchEvent(new Event('pageshow'));
   });
   expect(await page.evaluate(()=>homeTripEndTimer)).toBe(null);
-  await expect(page.locator('#view-today')).toContainText('TODAY · DAY 6');
+  await expect(page.locator('#view-today')).toContainText('今天 · 第 6 天');
   await page.evaluate(()=>{window.qaHomeHidden=false;document.dispatchEvent(new Event('visibilitychange'));});
   await expect(page.locator('#view-today')).toContainText('本趟旅程已結束');
 });

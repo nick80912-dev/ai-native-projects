@@ -14,12 +14,12 @@ const hash = (file) => crypto.createHash('sha256').update(read(file).replace(/\r
 const immutable = {
   'index.html': '7e22172860865d343df8061317aa0d231f0323eb296564b10cf871d273e1682f',
   'app-version.js': '085e37a275b03dbc20630a5a500f5e5192db7c5a75f13e4725f788e0d49714cb',
-  'shell/v201/index.html': '0bea1e455b55a220dc10a515500dcbed4ff3d8bba8313d23295da87911673fea',
-  'shell/v201/app-version.js': 'b8c2f36ea56196952fe18b38a480c101b87a76d1cbc68335f5d545f8d63541f1',
-  'shell/v201/builtin-snapshot.js': '1aabeb2f189cdf34f5560555732cd2b0ebc0104a21b5611bc258ecf06a5ec105',
   'shell/v202/index.html': 'aa9125ec0d4b04cf068afcc5b855e5956a1c0293f15b35696fc642155cbed7bf',
   'shell/v202/app-version.js': '143a82c4802479116bb42e6b1bac2ee7a00767babf21b907c1741f603b2b4205',
   'shell/v202/builtin-snapshot.js': 'ace54e9fade058e8a18b44bffe7d693c85d34546acb46318d79b73e9e830b486',
+  'shell/v203/index.html': 'a167ea472b624811e64afde025cf43fe1d57206becc045a6c4732786843b758b',
+  'shell/v203/app-version.js': 'ccfc585fb969c8d5961b6138fe29ce412e3decae29fbb28860e594d6b6eb4794',
+  'shell/v203/builtin-snapshot.js': '9641035c97fd21f765f4f532a609f9156b235ba8f3ff7f085fee8ef935617eeb',
 };
 Object.keys(immutable).forEach((file) => assert.strictEqual(hash(file), immutable[file], file + ' remains immutable'));
 

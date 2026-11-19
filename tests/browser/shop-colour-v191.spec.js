@@ -48,7 +48,7 @@ test('the 繪本 shopping page is tinted and every theme shows an open floor as 
   expect(ehon.closedRadius).toBe('14px');
   expect(ehon.openHeadRadius).toBe('0px');
   expect(ehon.overflow).toBe(false);
-  for(const theme of ['ocean','ivory','wisteria','cedar','mist','tea']){
+  for(const theme of ['ocean','ivory','wisteria','cedar','tea']){
     const r=await shop(page,theme);
     expect(r.names.every(c=>c==='rgba(0, 0, 0, 0)'),theme+' mall names stay plain').toBe(true);
     expect(r.pill,theme+' floor label stays plain').toBe('rgba(0, 0, 0, 0)');

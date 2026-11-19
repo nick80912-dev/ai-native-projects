@@ -41,7 +41,7 @@ test('inactive trip hides export and active info dialogs close with their parent
  await expect(page.getByRole('button',{name:'匯出本趟個人帳',exact:true})).toHaveCount(0);
 });
 test('six themes and three phone widths retain compact controls and visible modal content',async({page})=>{
- for(const theme of ['ocean','ivory','wisteria','cedar','mist','tea']){await page.evaluate(theme=>document.documentElement.setAttribute('data-theme',theme),theme);
+ for(const theme of ['ocean','ivory','wisteria','cedar','tea']){await page.evaluate(theme=>document.documentElement.setAttribute('data-theme',theme),theme);
  for(const width of [320,375,390]){await page.setViewportSize({width,height:844});const info=page.getByRole('button',{name:'個人帳匯出說明',exact:true});expect(await info.evaluate(e=>e.getBoundingClientRect().height)).toBeGreaterThanOrEqual(44);await info.click();
  expect(await page.locator('#settingsInfoDialog').evaluate(e=>e.scrollWidth<=e.clientWidth)).toBe(true);await page.keyboard.press('Escape');expect(await page.locator('#settingsOverlay .settings-panel').evaluate(e=>e.scrollWidth<=e.clientWidth)).toBe(true);}}
 });
