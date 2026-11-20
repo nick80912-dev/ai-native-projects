@@ -116,9 +116,9 @@ assert.strictEqual(mod.ledgerRecentDateLabel(recent,now+86400000),'7/18(六)','h
 
 assert.strictEqual(mod.ledgerLocalDateKey('not-a-date'),'','invalid dates do not create a misleading group key');
 assert.deepStrictEqual(Array.from(mod.selectLatestLedgerDateExpenses([])),[],'an empty track has no recent date');
-assert.strictEqual(mod.ledgerSharedRecordParticipantLabel({member:'Bar',participants:'["Bar","Amy"]'},'Bar',['Bar','Amy']),'我付款 · 全員分攤','the current payer and full registered group use the compact shared label');
-assert.strictEqual(mod.ledgerSharedRecordParticipantLabel({member:'Amy',participants:'["Bar","Amy"]'},'Bar',['Bar','Amy','Cara','Dana']),'Amy付款 · 2 人分攤','another payer reports the physical participant count');
-assert.strictEqual(mod.ledgerSharedRecordParticipantLabel({member:'Amy',participants:''},'Bar',['Bar','Amy']),'Amy付款 · 分攤資料異常','invalid participant snapshots are not guessed');
+assert.strictEqual(mod.ledgerSharedRecordParticipantLabel({member:'Bar',participants:'["Bar","Amy"]'},'Bar',['Bar','Amy']),'我付 · 全員','the current payer and full registered group use the compact shared label');
+assert.strictEqual(mod.ledgerSharedRecordParticipantLabel({member:'Amy',participants:'["Bar","Amy"]'},'Bar',['Bar','Amy','Cara','Dana']),'Amy付 · 2 人','another payer reports the physical participant count');
+assert.strictEqual(mod.ledgerSharedRecordParticipantLabel({member:'Amy',participants:''},'Bar',['Bar','Amy']),'Amy付 · 分攤資料異常','invalid participant snapshots are not guessed');
 
 const html=mod.__htmlSource;
 assert.match(html,/\.ledger-compact-card\{[^}]*display:flex[^}]*flex-direction:column[^}]*align-items:stretch[^}]*text-align:left/,'dashboard cards share one left-aligned flex contract');

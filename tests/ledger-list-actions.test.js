@@ -114,7 +114,8 @@ assert(html.includes('function renderLedgerRecordDetail(')&&html.includes('openL
 /* ---- backlog #10:受保護紀錄的文案(2026-07-30 Bar 裁定,只改顯示層)----
    tag 只負責快速辨識,完整原因移交明細頁。以下三組斷言分別鎖住:
    新文案存在、舊文案完全移除、原鎖帳行為一字未動。 */
-assert(recent.includes('<span class="ledger-recent-badge">已鎖帳</span>'),'受保護的團體紀錄 badge 顯示「已鎖帳」');
+/* v206(Bar 2026-11-20):列表不再標「已鎖帳」(全團結清後每筆都鎖帳),明細頁的鎖帳說明仍在 */
+assert(!recent.includes('<span class="ledger-recent-badge">已鎖帳</span>'),'the list no longer badges locked records');
 assert(!html.includes('還款確認後保護'),'舊文案「還款確認後保護」已從整份 index.html 移除');
 
 const recordDetailSource=extractFunction(html,'renderLedgerRecordDetail');
