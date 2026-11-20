@@ -1,5 +1,23 @@
 # 07 版本紀錄
 
+## 2026-11-20 — v206 分帳列表更精簡
+
+- **來源**:Bar 2026-11-20 傳手機截圖,團體帳列表一筆的第二行擠了分類、「哈囉祺付款・4 人分攤」「PN 代記」「已鎖帳」,分類被擠成「··」,「已鎖帳」壓到台幣金額。我提 4 項,Bar「1-3 都做,4 收進明細」;看圖後要求分類名稱保留。
+- **1**:列表不再標「已鎖帳」(全團結清後每筆都鎖帳);點開明細仍有鎖帳說明與「查看不可改寫歷史」。
+- **2**:分類名稱保留,但改放在店名前面(`🍜 餐飲 · 店名`),窄螢幕省略的是店名。
+- **3**:付款標籤縮短:「X付款 · N 人分攤」→「X付 · N 人」、「我付款 · 全員分攤」→「我付 · 全員」;多品項「X付款 · 分攤依品項」→「X付 · 依品項」。
+- **4**:「X 代記」從列表移到點開後的明細(新列「代記:X 幫忙記的」),明細的備註同時拿掉〔X 代記〕標記避免重複。
+- **測試**:單元 `ledger-dashboard`、`ledger-225`、`ledger-list-actions`;瀏覽器 `data-observability`、`proxy-recording-v157`。
+- **整理**:刪除 `shell/v203`,留 v204–v206;發布說明保留 v202–v206。
+
+## 2026-11-19 — v205 已上線 main，tag `production-v205`
+
+- PR [#212](https://github.com/nick80912-dev/ai-native-projects/pull/212) 全綠後合併進 `dev`(`3faf4cd`);PR [#213](https://github.com/nick80912-dev/ai-native-projects/pull/213) 七項檢查全綠,以 merge commit 合併進 `main`(`67af8e0`)。
+- **線上核對**:正式站 `sw.js` 為 `SW_VERSION='v205'`;全新 Chromium `APP_VERSION` v205、只剩 `okayama-trip-v205` 快取、發布說明「連接新旅程更順」、`TripSource.inviteLink` 與邀請頁存在、`SCRIPT_VERSION_REQUIRED` 為 `2026-11-19`、無 pageerror;線上 `shell/v205/index.html` 與根目錄 `trip-source.js` 皆與 `origin/main` 位元組相同;v203／v204 仍 200,v202 為 404。
+- **Apps Script**:Bar 2026-11-19 已在「仙台行」試算表貼上新版並部署;`?action=info` 回 `scriptVersion:'2026-11-19'`、`receiptRecognition:true`、`ledgerHeaderOk:true`。該表 TripConfig 的 Trip ID 尚空、Trip Name／日期仍是岡山,待 Bar 填。
+- **tag**:production-tags workflow 建立 `production-v205` → `67af8e0`。
+- 回滾:依 `16_OPS_PLAYBOOK.md` §A1 Publish `commit_ref` = `a4ad8fd`(`production-v204`)的部署,再往前 bump。
+
 ## 2026-11-19 — v205 連接新旅程更順
 
 - **來源**:Bar 2026-11-19 問連接新旅程的優化建議,我列 9 項;第 8 項(整理下一趟試算表)Bar 已自己完成,其餘選 1、2、3、5、6、7。看過截圖後 QR code 選「先不做」(下載來的第三方 QR 程式在工作環境裡不允許執行;邀請連結＋手機分享已夠用),第 7 項的 Apps Script 由 Bar 自己貼上部署。

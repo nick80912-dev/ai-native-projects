@@ -85,7 +85,11 @@ test('2 a record kept for another payer is theirs, tagged, listed for the record
   const saved=await page.evaluate(()=>{const record=ledgerRepository.queuedRecords().filter(item=>item.detail==='咖啡')[0];return {member:record.member,note:record.note,participants:record.participants};});
   expect(saved).toEqual({member:'Amy',note:'〔Bar 代記〕',participants:'["Amy","Ken"]'});
   const row=page.locator('#view-split .ledger-recent-row',{hasText:'咖啡'});
-  await expect(row).toContainText('Bar 代記');
+  /* v206(Bar 2026-11-20):列表不再標代記,點開明細看得到 */
+  await expect(row).not.toContainText('代記');
+  await row.locator('.ledger-recent-body').click();
+  await expect(page.locator('.ledger-detail-row',{hasText:'代記'})).toContainText('Bar 幫忙記的');
+  await page.keyboard.press('Escape');
   /* Bar 不在分攤裡:團體大卡的「與我相關」金額不算這筆 */
   await expect(page.locator('#view-split .ledger-summary-card')).not.toContainText('500');
   /* Amy 的手機:這筆是她付的,算在她分到的份額;「整趟旅程」明細看得到 Bar 代記。 */
