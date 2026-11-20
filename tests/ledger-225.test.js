@@ -112,7 +112,7 @@ assert.deepStrictEqual(plain(openedDetails),['record-b'],'normal card clicks sti
 const rendererSandbox={
   ledgerUiState:{selectionMode:true,selectedRecordIds:{a:true},expandedBatches:{}},
   ledgerRecordMetadata(record){return {isProxy:!!record.isProxy,proxyTarget:record.proxyTarget||'',isTaxFree:!!record.isTaxFree};},isTestLedgerRecord(record){return !!record.isTest;},ledgerRecordParticipantLabel(){return '1 人分攤';},
-  ledgerSharedRecordParticipantLabel(){return '我付款 · 全員分攤';},getCurrentMember(){return 'Bar';},registeredMembersForCurrentMode(){return [{name:'Bar'}];},
+  ledgerSharedRecordParticipantLabel(){return '我付 · 全員';},getCurrentMember(){return 'Bar';},registeredMembersForCurrentMode(){return [{name:'Bar'}];},
   ledgerCategoryEmoji(){return '🍜';},escapeHtml(value){return String(value||'');},jsHtmlAttrString(value){return String(value||'');},
   formatLedgerDualAmounts(){return '<span>amount</span>';},renderLedgerSelectionControl(){return '<input type="checkbox">';},
   renderLedgerRecentRecord(record){return '<article data-child="'+record.id+'"></article>';}
@@ -139,26 +139,30 @@ assert.strictEqual((renderedRecord.match(/ledger-recent-primary-line/g)||[]).len
 assert.strictEqual((renderedRecord.match(/ledger-recent-secondary-line/g)||[]).length,1,'a recent record renders one secondary content row');
 assert(!renderedRecord.includes('ledger-recent-payment')&&!renderedRecord.includes('現金'),'personal list cards hide payment method');
 assert(renderedRecord.indexOf('章魚燒')<renderedRecord.indexOf('ledger-proxy-target-summary'),'personal primary row places the item before proxy context');
-assert(renderedRecord.includes('<span class="ledger-recent-location">丸五市場 · 🍜 餐飲</span>'),'personal secondary row keeps store before category');
+assert(renderedRecord.includes('<span class="ledger-recent-location">🍜 餐飲 · 丸五市場</span>'),'v206: category comes first so a narrow screen trims the store name, never the category');
 assert(!renderedRecord.includes('ledger-recent-badges')&&!renderedRecord.includes('has-badges'),'recent records do not create a third badge row');
 const renderedCategoryOnly=rendererSandbox.renderLedgerRecentRecord({id:'category-only',detail:'B',category:'餐飲',payMethod:''},false,'JPY');
 assert(renderedCategoryOnly.includes('<span class="ledger-recent-location">🍜 餐飲</span>'),'a missing store does not hide category');
 assert(!renderedCategoryOnly.includes('ledger-recent-payment'),'a missing payment method does not render empty metadata');
 assert(renderedCategoryOnly.includes('ledger-recent-primary-line')&&renderedCategoryOnly.includes('ledger-recent-secondary-line'),'optional metadata never removes either content row');
 const renderedSharedRecord=rendererSandbox.renderLedgerRecentRecord({id:'shared-a',member:'Bar',detail:'團體晚餐',storeName:'團體餐廳',category:'餐飲',payMethod:'現金',participants:'["Bar","Amy"]',isTaxFree:true,isTest:true,pending:true,_correctionProtected:true},true,'JPY');
-assert(renderedSharedRecord.includes('我付款 · 全員分攤'),'shared record cards render payer and split context together');
+assert(renderedSharedRecord.includes('我付 · 全員'),'shared record cards render payer and split context together');
 /* v157:幫別人代記的團體帳,備註尾端的「〔Ken 代記〕」顯示成小標;沒有代記的帳不顯示。 */
 const renderedProxyRecorded=rendererSandbox.renderLedgerRecentRecord({id:'shared-k',member:'Amy',detail:'晚餐',category:'餐飲',payMethod:'現金',participants:'["Amy","Ken"]',note:'〔Ken 代記〕'},true,'JPY');
-assert(renderedProxyRecorded.includes('<span class="ledger-recent-badge">Ken 代記</span>'),'a record kept for someone else shows who recorded it');
+/* v206(Bar 2026-11-20):代記收進點開後的明細,列表不再標 */
+assert(!renderedProxyRecorded.includes('代記'),'the recorder is no longer a list badge');
+assert(extractFunction(html,'ledgerRecordDetailRows').includes("rows.push(['代記',recorder+' 幫忙記的'])"),'the record detail names who recorded it');
 assert(!renderedSharedRecord.includes('代記'),'a record the payer kept shows no recorder badge');
 assert(renderedSharedRecord.includes('class="ledger-shared-participant-summary ledger-recent-context"'),'shared payer and split context uses the compact first-row context seam');
 assert(!renderedSharedRecord.includes('ledger-recent-payment')&&!renderedSharedRecord.includes('現金'),'shared list cards hide payment method');
 assert(renderedSharedRecord.indexOf('團體晚餐')<renderedSharedRecord.indexOf('ledger-shared-participant-summary'),'shared primary row places the item before payer/allocation context');
 const sharedSecondaryStart=renderedSharedRecord.indexOf('ledger-recent-secondary-line');
 /* v178:「免稅品」改叫「可退稅」(日本 11/1 起先付稅、出境後退) */
-const sharedOrder=['團體餐廳','🍜 餐飲','可退稅','TEST','待同步','已鎖帳'].map(text=>renderedSharedRecord.indexOf(text,sharedSecondaryStart));
-assert(sharedOrder.every((position,index)=>position>=0&&(index===0||position>sharedOrder[index-1])),'shared secondary row follows store, category, tax-free, TEST, pending and lock order');
-assert(renderedSharedRecord.includes('<span class="ledger-shared-participant-summary ledger-recent-context"><span class="ledger-recent-badge">我付款 · 全員分攤</span>'),'shared payer/allocation uses the neutral compact badge');
+/* v206:分類在店名前面;「已鎖帳」不在列表標 */
+const sharedOrder=['🍜 餐飲','團體餐廳','可退稅','TEST','待同步'].map(text=>renderedSharedRecord.indexOf(text,sharedSecondaryStart));
+assert(sharedOrder.every((position,index)=>position>=0&&(index===0||position>sharedOrder[index-1])),'shared secondary row follows category, store, tax-free, TEST and pending order');
+assert(renderedSharedRecord.indexOf('已鎖帳',sharedSecondaryStart)<0,'locked records carry no list badge');
+assert(renderedSharedRecord.includes('<span class="ledger-shared-participant-summary ledger-recent-context"><span class="ledger-recent-badge">我付 · 全員</span>'),'shared payer/allocation uses the neutral compact badge');
 assert(renderedSharedRecord.includes('<span class="ledger-recent-badge pending">待同步</span>'),'pending sync keeps its dedicated palette class');
 const renderedCorrected=rendererSandbox.renderLedgerRecentRecord({id:'shared-corrected',detail:'更正項目',_correctionProtected:true,_correctionVersionCount:2},true,'JPY');
 assert(renderedCorrected.includes('已更正 2 次')&&!renderedCorrected.includes('已鎖帳'),'corrected status replaces rather than accompanies locked status');
@@ -181,17 +185,17 @@ const sharedBatchBody=batchBodyMarkup(rendererSandbox.renderLedgerBatchCard([
   {id:'shared-batch-a',batchId:'shared-batch',member:'Amy',detail:'早餐',payMethod:'現金',amountJpy:1,amountTwd:1},
   {id:'shared-batch-b',batchId:'shared-batch',member:'Amy',detail:'咖啡',payMethod:'現金',amountJpy:2,amountTwd:2}
 ],true,'JPY'));
-assert(sharedBatchBody.includes('Amy付款 · 分攤依品項')&&!sharedBatchBody.includes('現金'),'shared batch parent shows payer/allocation disclosure without payment method');
+assert(sharedBatchBody.includes('Amy付 · 依品項')&&!sharedBatchBody.includes('現金'),'shared batch parent shows payer/allocation disclosure without payment method');
 const multiPayerBatchBody=batchBodyMarkup(rendererSandbox.renderLedgerBatchCard([
   {id:'shared-multi-a',batchId:'shared-multi',member:'Amy',detail:'早餐',amountJpy:1,amountTwd:1},
   {id:'shared-multi-b',batchId:'shared-multi',member:'Bar',detail:'咖啡',amountJpy:2,amountTwd:2}
 ],true,'JPY'));
-assert(multiPayerBatchBody.includes('Amy、Bar付款 · 分攤依品項'),'shared batch parent preserves unique payer encounter order');
+assert(multiPayerBatchBody.includes('Amy、Bar付 · 依品項'),'shared batch parent preserves unique payer encounter order');
 const missingPayerBatchBody=batchBodyMarkup(rendererSandbox.renderLedgerBatchCard([
   {id:'shared-missing-a',batchId:'shared-missing',member:'',detail:'早餐',amountJpy:1,amountTwd:1},
   {id:'shared-missing-b',batchId:'shared-missing',detail:'咖啡',amountJpy:2,amountTwd:2}
 ],true,'JPY'));
-assert(missingPayerBatchBody.includes('分攤依品項')&&!missingPayerBatchBody.includes('未指定付款'),'shared batch parent does not invent a missing payer');
+assert(missingPayerBatchBody.includes('依品項分攤')&&!missingPayerBatchBody.includes('未指定付款'),'shared batch parent does not invent a missing payer');
 rendererSandbox.ledgerUiState.expandedBatches['batch-a']=true;
 const expandedBatch=rendererSandbox.renderLedgerBatchCard([
   {id:'a',batchId:'batch-a',detail:'A',category:'food',payMethod:'cash',amountJpy:1,amountTwd:1},

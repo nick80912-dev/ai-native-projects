@@ -86,7 +86,7 @@ test('個人與團體摘要以今日為主、旅程累計為次，三種手機�
   await expect(personal.locator('.ledger-recent-primary-line')).toContainText(/早餐超長品項名稱用來驗證手機省略號.*幫.*Amy 長名稱.*買/);
   await expect(personal.locator('.ledger-recent-payment')).toHaveCount(0);
   await expect(personal).not.toContainText('現金');
-  await expect(personal.locator('.ledger-recent-secondary-line')).toHaveText(/早餐店超長分店名稱用來驗證手機省略號.*🍜 餐飲/);
+  await expect(personal.locator('.ledger-recent-secondary-line')).toHaveText(/🍜 餐飲.*早餐店超長分店名稱用來驗證手機省略號/);
   await expect(personal.locator('.ledger-recent-badges')).toHaveCount(0);
   await personal.locator('.ledger-recent-body').click();
   const detail=page.getByRole('dialog',{name:'消費明細'});
@@ -117,15 +117,16 @@ test('個人與團體摘要以今日為主、旅程累計為次，三種手機�
   const shared=page.locator('.ledger-recent-row').filter({hasText:'團體早餐超長品項'}).first();
   await expect(shared.locator('.ledger-recent-primary-line')).toContainText('團體早餐超長品項名稱用來驗證手機省略號');
   /* v200:「誰付款・幾人分攤」移到第二行 */
-  await expect(shared.locator('.ledger-recent-secondary-line')).toContainText(/Amy付款.*2 人分攤/);
+  await expect(shared.locator('.ledger-recent-secondary-line')).toContainText(/Amy付 · 2 人/);   // v206:縮短
   await expect(shared.locator('.ledger-recent-payment')).toHaveCount(0);
   await expect(shared).not.toContainText('現金');
-  await expect(shared.locator('.ledger-shared-participant-summary')).toContainText(/Amy付款.*2 人分攤/);
+  await expect(shared.locator('.ledger-shared-participant-summary')).toContainText(/Amy付 · 2 人/);
   await expect(shared.locator('.ledger-recent-badges')).toHaveCount(0);
-  await expect(shared.locator('.ledger-recent-secondary-line')).toContainText(/團體早餐店超長分店名稱用來驗證手機省略號.*🍜 餐飲.*可退稅.*待同步.*已鎖帳/);   // v178:「免稅品」改叫「可退稅」
+  await expect(shared.locator('.ledger-recent-secondary-line')).toContainText(/🍜 餐飲.*團體早餐店超長分店名稱用來驗證手機省略號.*可退稅.*待同步/);   // v206:分類在前、不標已鎖帳
+  await expect(shared.locator('.ledger-recent-secondary-line')).not.toContainText('已鎖帳');   // v178:「免稅品」改叫「可退稅」
   const neutralColors=await shared.evaluate(row=>{
     const context=row.querySelector('.ledger-shared-participant-summary .ledger-recent-badge');
-    const locked=Array.from(row.querySelectorAll('.ledger-recent-badge')).find(node=>node.textContent.includes('已鎖帳'));
+    const locked=Array.from(row.querySelectorAll('.ledger-recent-badge')).find(node=>node.textContent.includes('可退稅'));   // v206:已鎖帳不標了,改比對同一組中性色的「可退稅」
     const pending=row.querySelector('.ledger-recent-badge.pending');
     const colors=node=>({background:getComputedStyle(node).backgroundColor,color:getComputedStyle(node).color});
     return {context:colors(context),locked:colors(locked),pending:colors(pending)};
@@ -163,7 +164,7 @@ test('個人與團體摘要以今日為主、旅程累計為次，三種手機�
     renderSplit();
   });
   const sharedBatch=page.locator('.ledger-batch-card').filter({hasText:'團體早餐批次店'}).first();
-  await expect(sharedBatch.locator('.ledger-batch-body')).toContainText('Amy付款 · 分攤依品項');
+  await expect(sharedBatch.locator('.ledger-batch-body')).toContainText('Amy付 · 依品項');
   await expect(sharedBatch.locator('.ledger-batch-body')).not.toContainText('現金');
   for(const size of WIDTHS){
     await page.setViewportSize(size);
