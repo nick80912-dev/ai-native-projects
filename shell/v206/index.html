@@ -11510,7 +11510,7 @@ function renderSettingsHealthPage(){
 }
 var APP_RELEASE_NOTES=[
   {version:'v206',date:'2026-11-20',title:'分帳列表更精簡',items:[
-    '團體帳列表一行放得下：「哈囉祺付款・4 人分攤」縮成「哈囉祺付・4 人」，分類只留圖示。',
+    '團體帳列表一行放得下：「哈囉祺付款・4 人分攤」縮成「哈囉祺付・4 人」。',
     '「已鎖帳」「代記」不在列表標示，點開那筆消費就看得到。'
   ]},
   {version:'v205',date:'2026-11-19',title:'連接新旅程更順',items:[
@@ -14425,9 +14425,9 @@ function renderLedgerRecentRecord(record,shared,currency){
   if(record.pending)statuses.push('<span class="ledger-recent-badge pending">待同步</span>');
   if(shared&&Number(record._correctionVersionCount||0)>0)statuses.push('<span class="ledger-recent-badge">已更正 '+Number(record._correctionVersionCount)+' 次</span>');
   /* v206:「已鎖帳」不在列表標 —— 全團結清後每筆都鎖帳,點開這筆的詳細內容仍有說明 */
-  /* v206:分類只留圖示(文字放在 title／讀屏) */
-  var storeCategory=[record.storeName,record.category?ledgerCategoryEmoji(record.category):''].filter(Boolean).join(' · ');
-  var locationMarkup='<span class="ledger-recent-location"'+(record.category?' title="'+escapeHtmlAttr(record.category)+'" aria-label="'+escapeHtmlAttr([record.storeName,record.category].filter(Boolean).join(' · '))+'"':'')+'>'+escapeHtml(storeCategory)+'</span>';
+  /* v206(Bar 2026-11-20):分類名稱要看得到 —— 分類放前面,空間不夠時省略的是店名 */
+  var storeCategory=[record.category?ledgerCategoryEmoji(record.category)+' '+record.category:'',record.storeName].filter(Boolean).join(' · ');
+  var locationMarkup='<span class="ledger-recent-location">'+escapeHtml(storeCategory)+'</span>';
   var modeClass=ledgerUiState.selectionMode?'ledger-selection-card ':'',menu=ledgerUiState.selectionMode?'':'<button class="ledger-record-menu-button" aria-label="消費操作" onclick="openLedgerRecordActions(\''+jsHtmlAttrString(record.id)+'\',event)">⋯</button>';
   return '<article class="ledger-recent-row '+modeClass+(selected?'selected':'')+'">'+renderLedgerSelectionControl([record])+'<button class="ledger-recent-body" onclick="handleLedgerRecordCardClick(\''+jsHtmlAttrString(record.id)+'\',event)"><span class="ledger-recent-main"><span class="ledger-recent-line ledger-recent-primary-line"><span class="ledger-recent-detail"><strong>'+escapeHtml(record.detail||'未命名')+'</strong></span>'+proxyTargetMarkup+'</span><span class="ledger-recent-line ledger-recent-secondary-line">'+locationMarkup+sharedParticipantMarkup+'<span class="ledger-recent-statuses">'+statuses.join('')+'</span></span></span>'+formatLedgerDualAmounts(record)+'</button>'+menu+'</article>';
 }
