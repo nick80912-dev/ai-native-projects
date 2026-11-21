@@ -13,10 +13,15 @@
 #   當時它只在 PR 跑,若照 dev 的綠勾發布就會送出防線已死的版本。
 #   結論:Chromium 那 ~5 分鐘買的是「SW 換代正確性」,而那正是本專案最貴的失敗模式
 #   (裝置端無聲壞掉、且依 ADR 0019 不得倒退覆寫,只能 forward bump)。
+#
+#   2026-11-21 修訂(Bar 核准健檢第 2 項):拿掉 dev push。現在所有改動都走「PR 進 dev → PR dev→main」,
+#   兩個 PR 都在合併後的內容上跑完整 sanity／browser-qa,上面 v114 的教訓(依 dev 綠勾發布)已由
+#   「發布 PR 本身一定要綠」接住。dev push 那一次與發布 PR 測的是同一個 commit,只是重複等 12 分鐘。
+#   main push 保留:合併後才跑、不擋任何人,留一份正式版的綠勾紀錄。
 name: qa-sanity
 on:
   push:
-    branches: [main, dev]
+    branches: [main]
   pull_request:
 
 jobs:

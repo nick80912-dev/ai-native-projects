@@ -67,8 +67,7 @@ test.describe('v152 診斷面板',()=>{
     const trip=page.locator('#diagTripSection');
     await expect(trip.locator('[data-key="trip"]')).toHaveText('岡山（App 內建行程）');
     await expect(trip.locator('[data-key="mode"] .diag-chip.ok')).toHaveText('進行中');
-    await expect(trip.locator('[data-key="grace"] .diag-chip.info')).toHaveText('進行中');
-    await expect(trip.locator('[data-key="grace"]')).toContainText('到 10/24 00:00（台灣時間）');
+    await expect(trip.locator('[data-key="grace"]')).toHaveCount(0);   // 2026-11-21:岡山保護期已結束,不再列
     await expect(trip.locator('[data-key="sync"]')).toContainText('資料更新');
     await expect(trip.locator('[data-key="ledger"] .diag-chip.warn')).toHaveText('2 筆待送');
     await expect(trip.locator('[data-key="ledger"]')).toContainText('連上網路後會自動補送');
@@ -107,7 +106,7 @@ test.describe('v152 診斷面板',()=>{
     const trip=page.locator('#diagTripSection');
     await expect(trip.locator('[data-key="ledger"] .diag-chip.bad')).toHaveText('已暫停送出');
     await expect(trip.locator('[data-key="ledger"]')).toContainText('1 筆屬於其他旅程（sheet:kyushu-2027）');
-    await expect(trip.locator('[data-key="grace"]')).toHaveCount(0);   // v202:岡山保護期結束後不再顯示(除錯報告仍有)
+    await expect(trip.locator('[data-key="grace"]')).toHaveCount(0);
     const summary=page.locator('#diagSummary');
     await expect(summary).toHaveClass(/diag-summary bad/);
     await expect(summary).toContainText('待送的團體帳屬於其他旅程，已暫停送出；請截圖給旅程負責人');
