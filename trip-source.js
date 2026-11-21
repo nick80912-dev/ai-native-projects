@@ -28,6 +28,7 @@
   ];
   /* 岡山保護期（Bar 2026-10-11 核准）：v150 在岡山旅程前上線，旅伴手機大多還沒有紀錄。
      台灣時間 10/24 00:00 以前，沒有紀錄的手機也沿用岡山；之後第一次開啟的新手機才是「尚未連接」。 */
+  /* 2026-10-24 已結束;常數與 legacy-grace 分支留著,v205／v206 外殼與時鐘設錯的手機仍會讀到 */
   var LEGACY_GRACE_UNTIL=Date.parse('2026-10-24T00:00:00+08:00');
 
   function text(value){return String(value==null?'':value).trim();}

@@ -180,7 +180,9 @@ assert.doesNotMatch(saveSource,/validation\.firstField==='detail'[\s\S]{0,120}dr
 
 assert.match(html,/\.ledger-single-primary/,'single entry has a dedicated primary amount surface');
 assert.match(html,/\.ledger-entry-summary/,'single entry has a compact summary disclosure');
-assert.match(html,/\.ledger-sheet-actions \.ledger-save-another-quiet[^{]*\{[^}]*min-height:44px[^}]*border:1px solid color-mix\(in srgb,var\(--sea\) 34%,var\(--line\)\)[^}]*background:color-mix\(in srgb,var\(--sea\) 14%,var\(--card\)\)/,'save-and-add-another keeps its touch target and derives its secondary surface from the active theme');
+/* v207:CSS 整理拿掉第一條規則裡被 v204 框線樣式覆蓋的 border/background;實際生效的外觀由後面那條規則決定 */
+assert.match(html,/\.ledger-sheet-actions \.ledger-save-another-quiet[^{]*\{[^}]*min-height:44px/,'save-and-add-another keeps its touch target');
+assert.match(html,/\.ledger-sheet-actions \.ledger-save-another-quiet,\.shopping-form-actions \.shopping-save-another\{background:transparent;border:1\.5px solid var\(--sea\);color:var\(--sea\)\}/,'save-and-add-another is an outlined button in the active theme colour (v204)');
 assert.match(html,/\.ledger-sheet-actions\{[^}]*position:sticky[^}]*env\(safe-area-inset-bottom\)/,'the save actions remain sticky and safe-area aware above the keyboard');
 
 assert.match(createSource,/multiBillDetailsOpen:false/,'a new multi-item bill starts with its repeated bill settings collapsed');
