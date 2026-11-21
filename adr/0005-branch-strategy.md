@@ -17,7 +17,7 @@
 **Future Impact**:治理生效後,所有 AI 預設以 `origin/dev` 作為日常同步與交付基準;正式 Release 固定遵循 `dev → Pull Request → Bar Review → Bar Merge → main → Netlify Deploy`,未經 Bar 核准不得 Push 或 Merge 至 `main`。正式站 `https://trippilot-jp.netlify.app/` 追蹤 `main`;測試站 `https://dev-trippilot-jp.netlify.app/` 追蹤 `dev`。
 
 ### 2026-11 增補:實際發版方式(Bar 2026-10-30 起「每批一版、逐版送 main」)
-- AI 在工作分支開 PR 進 `dev`,CI(`sanity`、`browser-qa`)綠燈後合併;再開 Release PR(`dev` → `main`),七項檢查綠燈後合併,Netlify 自動部署。
+- AI 在工作分支開 PR 進 `dev`,CI(`sanity`、`browser-qa`)綠燈後合併;再開 Release PR(`dev` → `main`),全部檢查綠燈後合併(2026-11-21 起共五項:dev push 不再重複跑 CI),Netlify 自動部署。
 - **核准仍屬 Bar**:改畫面先給截圖,Bar 回「好」或明確說「merge／發版」才進入上述流程;AI 代為按下合併是執行 Bar 的核准,不是自行決定發版。
 - 合併後 AI 做線上核對(`16_OPS_PLAYBOOK.md` §F5),以 production-tags workflow 建 `production-vNNN`,再以一個只改文件的 PR 記錄發版結果。
 
