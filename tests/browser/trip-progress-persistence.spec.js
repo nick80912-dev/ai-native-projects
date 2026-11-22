@@ -133,13 +133,7 @@ test('unverified rollback explains the partial state rather than claiming succes
   await expect(page.locator('.settings-health-summary-status')).toContainText('需注意');
   await expect(page.locator('.data-health-personal')).toContainText('紀錄可能未完整儲存');
 });
-test('keyboard check-in failure keeps focus, checked state and a readable error',async({page})=>{
-  /* v192:行程頁沒有打卡了;同樣的保證改在今天頁清單的「完成」鍵驗證 */
-  await setup(page);await page.evaluate(()=>{localStorage.setItem('trip_today_mode','"list"');switchView('today');renderToday();});await fault(page,'all');
-  const done=page.locator('.today-list-row[data-stop-id="qa-a"] .today-list-done');await done.focus();await done.press('Space');
-  await expect(done).toBeFocused();await expect(done).toHaveAttribute('aria-pressed','false');
-  await expect(page.locator('#toast')).toContainText('未能儲存');
-});
+/* v208:今天頁清單的「完成」鍵已拿掉(完成／跳過只留在卡片模式);卡片模式的寫入失敗由上面的 rollback 測試驗證 */
 test('failed automatic reconciliation does not repeat writes or success toasts on render',async({page})=>{
   await setup(page);await fault(page,'all');
   const result=await page.evaluate(()=>{
