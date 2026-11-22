@@ -18,7 +18,7 @@
 | **`dev`** | 與 `main` 同為 v206（PR [#214](https://github.com/nick80912-dev/ai-native-projects/pull/214) 合併為 `da7ba86`） |
 | 個人備份格式 | **v11**（v178 起；`PERSONAL_STATE_VERSION=11`；相容策略見 `docs/personal-state-compatibility.md`） |
 | 最新正式 tag | **`production-v206`** → `aa2362c`（v157–v206 都有 tag；上一個 `production-v205` → `67af8e0`） |
-| shell 世代 | repo 只保留最近三代（目前 v205 起；ADR 0019 增補段）；升版用 `node tools/bump-version.js`（2026-11-21 起） |
+| shell 世代 | repo 只保留最近三代（目前 v206 起；ADR 0019 增補段）；升版用 `node tools/bump-version.js`（2026-11-21 起） |
 | CI | `sanity`／`browser-qa` 跑 `ubuntu-latest`、Node 22、Playwright 1.65.1；觸發：PR 與 main push（2026-11-21 起不再跑 dev push）；browser-qa 時限 25 分鐘 |
 
 ## ⏳ 還掛著的事（只有 Bar 能做）
