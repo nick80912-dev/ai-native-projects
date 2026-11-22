@@ -326,18 +326,16 @@ test('panel state for items that are no longer rendered is dropped, not accumula
 /* ---------- 打卡 ----------
    v192(Bar 2026-11-15「行程分頁的打卡與略過功能可以不用,單純顯示行程即可」):行程頁的核取方塊、鍵盤打卡與焦點回復測試
    隨功能移除。完成改在今天頁清單的「完成」鈕(原生 <button>,aria-pressed),鍵盤與焦點在下面驗證。 */
-test('the trip page has no check-in; Today list 完成 is a keyboard operable toggle that keeps focus', async ({ page }) => {
+/* v208(Bar 2026-11-22):清單模式的「完成」鈕也拿掉(完成／跳過只留在卡片模式);站名仍是可用鍵盤操作的按鈕 */
+test('the trip page has no check-in; Today list has no 完成 and its stops open by keyboard', async ({ page }) => {
   await page.evaluate(() => { switchView('trip'); });
   await expect(page.locator('#view-trip .item .chk')).toHaveCount(0);
   await page.evaluate(() => { localStorage.setItem('trip_today_mode', '"list"'); switchView('today'); renderToday(); });
-  const first = page.locator('#view-today .today-list-done').first();
+  await expect(page.locator('#view-today .today-list-done')).toHaveCount(0);
+  const first = page.locator('#view-today .today-list-main').first();
   await first.focus();
-  await page.keyboard.press('Space');
-  await expect(page.locator('#view-today .today-list-done').first()).toHaveAttribute('aria-pressed', 'true');
-  await expect(page.locator('#view-today .today-list-done').first()).toBeFocused();
   await page.keyboard.press('Enter');
-  await expect(page.locator('#view-today .today-list-done').first()).toHaveAttribute('aria-pressed', 'false');
-  await expect(page.locator('#view-today .today-list-done').first()).toBeFocused();
+  await expect(page.locator('#view-trip')).toBeVisible();
 });
 
 /* ---------- 回到現在 ---------- */

@@ -873,6 +873,7 @@ html[data-theme="ehon"] .tl-item.cat-move .tl-card{border-left-color:var(--ehon-
 .today-next-map .ln-ico{width:14px;height:14px}
 #view-trip .clock-now-line{margin:2px -4px 4px;padding-left:0}
 #view-trip .clock-now-line::before{flex-basis:56px}
+#view-trip .clock-now-line.is-navigation-target{outline:0;box-shadow:none;background:transparent;border-color:transparent}
 .tl-item.clock-past .tl-card,.tl-item.clock-past .tl-time{opacity:.5}
 .trip-order-note{display:flex;align-items:center;justify-content:space-between;gap:8px}
 .trip-order-note button{flex:none;border:0;background:transparent;color:inherit;font:inherit;font-weight:900;text-decoration:underline;padding:6px 0;cursor:pointer}
@@ -3615,7 +3616,9 @@ function renderTripTimeline(items,checks,currentItemId,progress,clock){
         /* 交通段沿用 v149 的交通方式色彩標籤(開車、步行、渡輪、航班…各有顏色) */
         (drive?'<span class="drive-chip mode-'+mode.key+'">'+(lineIcon(mode.icon)||mode.icon+' ')+escapeHtml(drive)+'</span>':'')+'</div></div>';  /* v199:起訖站名就在上下兩張卡片,不再重複寫一行 */
     }
-    h+=renderItem(it,checks,currentItemId,progress,{nextTime:next?next.time:'',clock:clock});
+    /* v208:今天頁拖拉過順序時,下一列可能比這站早(11:50～11:40),這種結束時間不畫 */
+    var startMin=firstStartMinutes(it.time),endMin=next?firstStartMinutes(next.time):null;
+    h+=renderItem(it,checks,currentItemId,progress,{nextTime:next&&(startMin===null||endMin===null||endMin>startMin)?next.time:'',clock:clock});
     prevTitle=title;
   });
   if(clock&&!clock.lineBeforeId&&items.length)h+=clockNowLineHtml(clock.nowMinutes,'tripNowLine');
